@@ -57,7 +57,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
 
       {/* Content */}
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-6">
+        <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5 lg:space-y-6">
           <BasicInfo user={user} />
           <Statistics user={user} total={total} userSent={userSent} botSent={botSent} onOpenDialog={onOpenDialog} />
           <UserStatus user={user} onToggle={handleUserStatusToggle} />

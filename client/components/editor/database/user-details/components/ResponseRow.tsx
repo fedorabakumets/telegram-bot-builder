@@ -36,8 +36,8 @@ export function ResponseRow({ variableKey, rawValue }: ResponseRowProps): React.
 
   return (
     <TableRow>
-      <TableCell className="align-top">
-        <div className="font-medium text-sm">{displayName}</div>
+      <TableCell className="align-top min-w-[80px] sm:min-w-[100px]">
+        <div className="font-medium text-[10px] sm:text-sm break-words">{displayName}</div>
       </TableCell>
       <TableCell className="align-top">
         <ResponseCell responseData={responseData} answerValue={answerValue} />

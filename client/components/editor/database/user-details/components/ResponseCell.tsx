@@ -43,7 +43,7 @@ export function ResponseCell({ responseData, answerValue }: ResponseCellProps): 
   // Медиа из ответа
   if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
     return (
-      <div className="rounded-lg overflow-hidden max-w-[150px] space-y-1">
+      <div className="rounded-lg overflow-hidden max-w-[100px] sm:max-w-[150px] space-y-1">
         {responseData.media.map((m, idx) => {
           const url = typeof m === 'string' ? m : m.url;
           return (
@@ -61,7 +61,7 @@ export function ResponseCell({ responseData, answerValue }: ResponseCellProps): 
 
   // Текст
   return (
-    <p className="text-sm text-green-800 dark:text-green-200 font-medium">
+    <p className="text-xs sm:text-sm text-green-800 dark:text-green-200 font-medium break-words">
       {answerValue}
     </p>
   );

@@ -28,14 +28,14 @@ interface PanelHeaderProps {
  */
 export function PanelHeader({ user, onClose, formatUserName }: PanelHeaderProps): React.JSX.Element {
   return (
-    <div className="flex items-center justify-between gap-2 p-3 border-b">
+    <div className="flex items-center justify-between gap-2 p-2 sm:p-3 border-b">
       <div className="flex items-center gap-2 min-w-0">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-          <User className="w-4 h-4 text-white" />
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+          <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
         </div>
         <div className="min-w-0">
-          <h3 className="font-medium text-sm truncate">Детали пользователя</h3>
-          <p className="text-xs text-muted-foreground truncate">{formatUserName(user)}</p>
+          <h3 className="font-medium text-xs sm:text-sm truncate">Детали пользователя</h3>
+          <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{formatUserName(user)}</p>
         </div>
       </div>
       <Button
@@ -43,6 +43,7 @@ export function PanelHeader({ user, onClose, formatUserName }: PanelHeaderProps)
         size="icon"
         onClick={onClose}
         data-testid="button-close-user-details-panel"
+        className="h-8 w-8 sm:h-9 sm:w-9"
       >
         <X className="w-4 h-4" />
       </Button>

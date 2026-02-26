@@ -23,7 +23,7 @@ interface ResponseImageProps {
  */
 export function ResponseImage({ src, alt }: ResponseImageProps): React.JSX.Element {
   return (
-    <div className="rounded-lg overflow-hidden max-w-[150px]">
+    <div className="rounded-lg overflow-hidden max-w-[100px] sm:max-w-[150px]">
       <img
         src={src}
         alt={alt}

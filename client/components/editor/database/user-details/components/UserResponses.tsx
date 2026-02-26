@@ -43,27 +43,27 @@ export function UserResponses({ user }: UserResponsesProps): React.JSX.Element |
   return (
     <>
       <Separator />
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-primary" />
-          <Label className="text-sm font-semibold">Ответы пользователя</Label>
-          <Badge variant="secondary" className="text-xs">
+      <div className="space-y-2 sm:space-y-3">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+          <Label className="text-xs sm:text-sm font-semibold">Ответы пользователя</Label>
+          <Badge variant="secondary" className="text-[10px] sm:text-xs">
             {totalCount}
           </Badge>
         </div>
-        <div className="pl-6">
+        <div className="pl-5 sm:pl-6">
           {totalCount > 48 && (
-            <div className="text-xs text-muted-foreground mb-2">
-              Отображены первые 48 ответов из {totalCount}
+            <div className="text-[10px] sm:text-xs text-muted-foreground mb-2">
+              Отображены первые 48 из {totalCount}
             </div>
           )}
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-1/3 font-semibold">Переменная</TableHead>
-                  <TableHead className="w-1/3 font-semibold">Ответ</TableHead>
-                  <TableHead className="w-1/3 font-semibold">Тип</TableHead>
+                  <TableHead className="w-1/3 font-semibold text-[10px] sm:text-xs">Переменная</TableHead>
+                  <TableHead className="w-1/3 font-semibold text-[10px] sm:text-xs">Ответ</TableHead>
+                  <TableHead className="w-1/3 font-semibold text-[10px] sm:text-xs">Тип</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

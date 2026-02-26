@@ -28,26 +28,26 @@ interface DatesSectionProps {
 export function DatesSection({ user, formatDate }: DatesSectionProps): React.JSX.Element {
   return (
     <>
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-primary" />
-          <Label className="text-sm font-semibold">Даты</Label>
+      <div className="space-y-2 sm:space-y-3">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+          <Label className="text-xs sm:text-sm font-semibold">Даты</Label>
         </div>
-        <div className="grid gap-2 pl-6">
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="w-3 h-3 text-muted-foreground" />
-            <span className="text-muted-foreground">Регистрация:</span>
-            <span className="font-medium">{formatDate(user.createdAt)}</span>
+        <div className="grid gap-1.5 sm:gap-2 pl-5 sm:pl-6">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm">
+            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground" />
+            <span className="text-muted-foreground whitespace-nowrap">Регистрация:</span>
+            <span className="font-medium truncate">{formatDate(user.createdAt)}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="w-3 h-3 text-muted-foreground" />
-            <span className="text-muted-foreground">Обновление:</span>
-            <span className="font-medium">{formatDate(user.updatedAt)}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm">
+            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground" />
+            <span className="text-muted-foreground whitespace-nowrap">Обновление:</span>
+            <span className="font-medium truncate">{formatDate(user.updatedAt)}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="w-3 h-3 text-muted-foreground" />
-            <span className="text-muted-foreground">Активность:</span>
-            <span className="font-medium">{formatDate(user.lastInteraction)}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm">
+            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground" />
+            <span className="text-muted-foreground whitespace-nowrap">Активность:</span>
+            <span className="font-medium truncate">{formatDate(user.lastInteraction)}</span>
           </div>
         </div>
       </div>

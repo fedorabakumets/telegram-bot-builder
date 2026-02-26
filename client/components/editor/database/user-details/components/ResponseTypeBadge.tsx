@@ -31,7 +31,7 @@ export function ResponseTypeBadge({ type }: ResponseTypeBadgeProps): React.JSX.E
   };
 
   return (
-    <Badge variant="outline" className="text-xs">
+    <Badge variant="outline" className="text-[10px] sm:text-xs">
       {typeLabels[type] || String(type)}
     </Badge>
   );
