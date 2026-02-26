@@ -1,50 +1,20 @@
 import React from 'react';
-import { SimpleLayoutConfig } from '../simple-layout-customizer';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
 import { useMediaQuery } from '@/components/editor/properties/media/use-media-query';
 import { CodeResizeHandle } from '../code-resize-handle';
 import { DialogResizeHandle } from '../dialog-resize-handle';
+import { FlexibleLayoutProps } from './types';
 
 /**
- * @interface FlexibleLayoutProps
- * @description Свойства гибкого компонента макета
- * @property {SimpleLayoutConfig} config - Конфигурация макета
- * @property {React.ReactNode} headerContent - Контент заголовка
- * @property {React.ReactNode} sidebarContent - Контент боковой панели
- * @property {React.ReactNode} canvasContent - Контент холста
- * @property {React.ReactNode} propertiesContent - Контент панели свойств
- * @property {React.ReactNode} [codeContent] - Контент панели кода
- * @property {React.ReactNode} [codeEditorContent] - Контент редактора кода
- * @property {React.ReactNode} [dialogContent] - Контент диалогового окна
- * @property {React.ReactNode} [userDetailsContent] - Контент информации о пользователе
- * @property {React.ReactNode} [fileExplorerContent] - Контент панели проводника файлов
- * @property {(newConfig: SimpleLayoutConfig) => void} [onConfigChange] - Функция обратного вызова при изменении конфигурации
- * @property {boolean} [hideOnMobile] - Скрывать боковые панели на маленьких устройствах
- * @property {string} [currentTab] - Текущая активная вкладка
+ * @fileoverview Гибкий компонент макета интерфейса
+ * @description Позволяет настраивать расположение элементов интерфейса
  */
-interface FlexibleLayoutProps {
-  config: SimpleLayoutConfig;
-  headerContent: React.ReactNode;
-  sidebarContent: React.ReactNode;
-  canvasContent: React.ReactNode;
-  propertiesContent: React.ReactNode;
-  codeContent?: React.ReactNode;
-  codeEditorContent?: React.ReactNode;
-  dialogContent?: React.ReactNode;
-  userDetailsContent?: React.ReactNode;
-  fileExplorerContent?: React.ReactNode;
-  onConfigChange?: (newConfig: SimpleLayoutConfig) => void;
-  hideOnMobile?: boolean; // Скрывать боковые панели на маленьких устройствах
-  currentTab?: string; // Текущая активная вкладка
-}
 
 /**
- * @function FlexibleLayout
- * @description Гибкий компонент макета интерфейса
- * Позволяет настраивать расположение элементов интерфейса в зависимости от конфигурации
- * @param {FlexibleLayoutProps} props - Свойства компонента
- * @returns {JSX.Element} Гибкий компонент макета
+ * Гибкий компонент макета
+ * @param props - Свойства компонента
+ * @returns JSX элемент макета
  */
 export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   config,
