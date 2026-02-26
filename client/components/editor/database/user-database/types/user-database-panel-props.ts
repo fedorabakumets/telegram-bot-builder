@@ -1,21 +1,46 @@
 /**
  * @fileoverview Типы для компонента UserDatabasePanel
- * @description Экспортирует все типы, используемые в компоненте базы данных пользователей
+ * @description Определяет входные параметры (props) для основного компонента панели базы данных пользователей
+ * @module
  */
 
 import { UserBotData } from '@shared/schema';
 
 /**
- * Свойства компонента UserDatabasePanel
- * @interface
+ * Входные параметры компонента UserDatabasePanel
+ * @interface UserDatabasePanelProps
+ * @description Определяет обязательные и опциональные свойства для инициализации компонента
  */
 export interface UserDatabasePanelProps {
-  /** Идентификатор проекта */
+  /**
+   * Уникальный идентификатор проекта в базе данных
+   * @type {number}
+   * @required
+   */
   projectId: number;
-  /** Название проекта */
+
+  /**
+   * Отображаемое название проекта
+   * @type {string}
+   * @required
+   */
   projectName: string;
-  /** Функция для открытия панели диалога с пользователем */
+
+  /**
+   * Callback-функция для открытия внешней панели диалога с пользователем
+   * @type {(user: UserBotData) => void}
+   * @param {UserBotData} user - Данные пользователя для начала диалога
+   * @optional
+   * @description Если не передана, используется встроенное модальное окно диалога
+   */
   onOpenDialogPanel?: (user: UserBotData) => void;
-  /** Функция для открытия панели с деталями пользователя */
+
+  /**
+   * Callback-функция для открытия внешней панели с детальной информацией о пользователе
+   * @type {(user: UserBotData) => void}
+   * @param {UserBotData} user - Данные пользователя для просмотра деталей
+   * @optional
+   * @description Если не передана, используется встроенное модальное окно деталей
+   */
   onOpenUserDetailsPanel?: (user: UserBotData) => void;
 }
