@@ -11,12 +11,12 @@ import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow
 } from '@/components/ui/table';
 import { UserBotData } from '@shared/schema';
+import { ResponseRow } from './ResponseRow';
 
 /**
  * @interface UserResponsesProps
@@ -67,109 +67,9 @@ export function UserResponses({ user }: UserResponsesProps): React.JSX.Element |
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {entries.map(([key, value]: [string, unknown]) => {
-                  let responseData: any = value;
-                  if (typeof value === 'string') {
-                    try {
-                      responseData = JSON.parse(value);
-                    } catch {
-                      responseData = { value, type: 'text' };
-                    }
-                  } else if (typeof value === 'object' && value !== null) {
-                    responseData = value;
-                  } else {
-                    responseData = { value: String(value), type: 'text' };
-                  }
-
-                  const answerValue = String(
-                    responseData?.value !== undefined
-                      ? responseData.value
-                      : typeof value === 'object' && value !== null
-                        ? JSON.stringify(value)
-                        : String(value)
-                  );
-
-                  return (
-                    <TableRow key={key}>
-                      <TableCell className="align-top">
-                        <div className="font-medium text-sm">
-                          {key.startsWith('response_') ? key.replace('response_', 'Ответ ') : key}
-                        </div>
-                      </TableCell>
-                      <TableCell className="align-top">
-                        {(() => {
-                          if (responseData?.photoUrl) {
-                            return (
-                              <div className="rounded-lg overflow-hidden max-w-[150px]">
-                                <img
-                                  src={responseData.photoUrl}
-                                  alt="Фото ответ"
-                                  className="w-full h-auto rounded-lg"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                              </div>
-                            );
-                          }
-
-                          if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
-                            return (
-                              <div className="rounded-lg overflow-hidden max-w-[150px] space-y-1">
-                                {responseData.media.map((m: any, idx: number) => (
-                                  <img
-                                    key={idx}
-                                    src={m.url || m}
-                                    alt="Ответ фото"
-                                    className="w-full h-auto rounded-lg"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).style.display = 'none';
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                            );
-                          }
-
-                          const valueStr = String(answerValue);
-                          const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
-
-                          if (isImageUrl) {
-                            return (
-                              <div className="rounded-lg overflow-hidden max-w-[150px]">
-                                <img
-                                  src={valueStr}
-                                  alt="Ответ"
-                                  className="w-full h-auto rounded-lg"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                              </div>
-                            );
-                          }
-
-                          return (
-                            <p className="text-sm text-green-800 dark:text-green-200 font-medium">
-                              {valueStr}
-                            </p>
-                          );
-                        })()}
-                      </TableCell>
-                      <TableCell className="align-top">
-                        {responseData?.type && (
-                          <Badge variant="outline" className="text-xs">
-                            {responseData.type === 'text' ? 'Текст' :
-                              responseData.type === 'number' ? 'Число' :
-                                responseData.type === 'email' ? 'Email' :
-                                  responseData.type === 'phone' ? 'Телефон' :
-                                    String(responseData.type)}
-                          </Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                {entries.map(([key, value]) => (
+                  <ResponseRow key={key} variableKey={key} rawValue={value} />
+                ))}
               </TableBody>
             </Table>
           </div>
