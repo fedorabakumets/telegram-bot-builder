@@ -4,7 +4,7 @@
  */
 
 import { Badge } from '@/components/ui/badge';
-import { Crown, UserX } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 
 /**

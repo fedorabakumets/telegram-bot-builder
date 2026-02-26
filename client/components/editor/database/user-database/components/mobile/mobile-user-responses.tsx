@@ -3,7 +3,6 @@
  * @description Отображает превью последних ответов пользователя в мобильной карточке
  */
 
-import { Badge } from '@/components/ui/badge';
 import { UserBotData } from '@shared/schema';
 
 /**

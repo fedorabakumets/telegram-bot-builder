@@ -46,6 +46,7 @@ import { useUserDatabase, useUserMutations } from './hooks';
 import { StatsCards } from './components/stats';
 import { ResponsesTabTable } from './components/responses';
 import { MobileUserList } from './components/mobile';
+import { DesktopTable } from './components/desktop';
 
 /**
  * @function UserDatabasePanel
@@ -689,195 +690,20 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
                   scrollToBottom={scrollToBottom}
                 />
               ) : (
-                // Desktop table layout - modern & compact
-                (<div className="p-2 sm:p-3">
-                  <div className="rounded-lg border border-border bg-card/40 overflow-hidden">
-                    <Table>
-                      <TableHeader className="bg-muted/40 hover:bg-muted/50">
-                        <TableRow className="border-b border-border/50 hover:bg-transparent">
-                          <TableHead className="font-semibold h-10">Пользователь</TableHead>
-                          <TableHead className="font-semibold h-10">Статус</TableHead>
-                          <TableHead className="text-center font-semibold h-10">Сообщения</TableHead>
-                          <TableHead className="font-semibold h-10">Ответы</TableHead>
-                          <TableHead className="text-sm font-semibold h-10">Активность</TableHead>
-                          <TableHead className="text-sm font-semibold h-10">Регистрация</TableHead>
-                          <TableHead className="text-right font-semibold h-10">Действия</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredAndSortedUsers.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                              <div className="flex flex-col items-center gap-2">
-                                <Users className="w-8 h-8 opacity-30" />
-                                <span>{searchQuery ? 'П??льзователи не найдены' : 'Нет пользователей'}</span>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredAndSortedUsers.map((user, index) => (
-                            <TableRow
-                              key={user.id || index}
-                              className="border-b border-border/30 hover:bg-muted/30 transition-colors h-14 cursor-pointer"
-                              onClick={() => {
-                                // Если доступны обе функции открытия панелей, открываем обе
-                                if (onOpenUserDetailsPanel && onOpenDialogPanel) {
-                                  onOpenUserDetailsPanel(user);
-                                  onOpenDialogPanel(user);
-                                }
-                              }}
-                            >
-                              <TableCell className="py-2">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-sm truncate">{formatUserName(user)}</div>
-                                    <div className="text-xs text-muted-foreground truncate">ID: {user.id}</div>
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell className="py-2">
-                                <div className="flex flex-wrap gap-1">
-                                  <Badge
-                                    variant={Boolean(user.isActive) ? "default" : "secondary"}
-                                    className="text-xs"
-                                  >
-                                    {Boolean(user.isActive) ? "Активен" : "Неактивен"}
-                                  </Badge>
-                                  {Boolean(user.isPremium) && <Badge variant="outline" className="text-xs h-5"><Crown className="w-2.5 h-2.5 mr-0.5" /></Badge>}
-                                  {Boolean(user.isBlocked) && <Badge variant="destructive" className="text-xs">X</Badge>}
-                                </div>
-                              </TableCell>
-                              <TableCell className="py-2 text-center">
-                                <span className="text-sm font-medium">{user.interactionCount || 0}</span>
-                              </TableCell>
-                              <TableCell className="py-2 max-w-sm">
-                                {(user.userData && Object.keys(user.userData).length > 0) ? (
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex-1 min-w-0">
-                                      {Object.entries(user.userData).slice(0, 1).map(([key, value]) => {
-                                        let responseData = value;
-                                        if (typeof value === 'string') {
-                                          try {
-                                            responseData = JSON.parse(value);
-                                          } catch {
-                                            responseData = { value: value, type: 'text' };
-                                          }
-                                        }
-                                        const answer = responseData?.value ?
-                                          (responseData.value.length > 30 ? `${responseData.value.substring(0, 30)}...` : String(responseData.value)) :
-                                          (typeof value === 'string' ? (value.length > 30 ? `${value.substring(0, 30)}...` : value) : '');
-                                        return (
-                                          <div key={key} className="text-xs text-muted-foreground truncate">
-                                            <span className="inline-block truncate max-w-full">{answer}</span>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                    <Badge variant="secondary" className="text-xs flex-shrink-0">
-                                      {Object.keys(user.userData).length}
-                                    </Badge>
-                                  </div>
-                                ) : (
-                                  <span className="text-xs text-muted-foreground/60">-</span>
-                                )}
-                              </TableCell>
-                              <TableCell className="py-2 text-xs text-muted-foreground">
-                                {formatDate(user.lastInteraction) || '-'}
-                              </TableCell>
-                              <TableCell className="py-2 text-xs text-muted-foreground">
-                                {formatDate(user.createdAt) || '-'}
-                              </TableCell>
-                              <TableCell className="py-2 text-right">
-                                <div className="flex items-center justify-end gap-0.5">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    data-testid={`button-view-user-${index}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (onOpenUserDetailsPanel) {
-                                        onOpenUserDetailsPanel(user);
-                                      } else {
-                                        setSelectedUser(user);
-                                        setShowUserDetails(true);
-                                      }
-                                    }}
-                                    title="Подробно"
-                                  >
-                                    <Eye className="w-3.5 h-3.5" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    data-testid={`button-show-dialog-${index}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (onOpenDialogPanel) {
-                                        onOpenDialogPanel(user);
-                                      } else {
-                                        setSelectedUserForDialog(user);
-                                        setShowDialog(true);
-                                        setTimeout(() => scrollToBottom(), 200);
-                                      }
-                                    }}
-                                    title="Чат"
-                                  >
-                                    <MessageSquare className="w-3.5 h-3.5" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    data-testid={`button-toggle-active-${index}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleUserStatusToggle(user, 'isActive');
-                                    }}
-                                    title={user.isActive === 1 ? "Деактивировать" : "Активировать"}
-                                  >
-                                    {user.isActive === 1 ?
-                                      <UserX className="w-3.5 h-3.5 text-destructive" /> :
-                                      <UserCheck className="w-3.5 h-3.5 text-green-600" />}
-                                  </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                                        data-testid={`button-delete-user-${index}`}
-                                        title="Удалить"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Удалить пользователя?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Это действие нельзя отменить. Все данные пользователя "{formatUserName(user)}" будут удалены.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Отмена</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => deleteUserMutation.mutate(user.id)}>
-                                          Удалить
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>)
+                <DesktopTable
+                  users={filteredAndSortedUsers}
+                  searchQuery={searchQuery}
+                  formatUserName={formatUserName}
+                  onOpenUserDetailsPanel={onOpenUserDetailsPanel}
+                  onOpenDialogPanel={onOpenDialogPanel}
+                  handleUserStatusToggle={handleUserStatusToggle}
+                  setSelectedUser={setSelectedUser}
+                  setShowUserDetails={setShowUserDetails}
+                  setSelectedUserForDialog={setSelectedUserForDialog}
+                  setShowDialog={setShowDialog}
+                  scrollToBottom={scrollToBottom}
+                  deleteUserMutation={deleteUserMutation}
+                />
               )}
             </TabsContent>
 
