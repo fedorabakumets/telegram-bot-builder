@@ -4,7 +4,7 @@
  */
 
 import React, { ReactNode } from 'react';
-import { ResizablePanel } from '@/components/ui/resizable';
+import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { TopBar } from './top-bar';
 import { BottomBar } from './bottom-bar';
 import { ComboLeftPanel } from './combo-left-panel';
