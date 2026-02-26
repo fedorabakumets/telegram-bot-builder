@@ -60,10 +60,22 @@ export function ResponsesTabTable({ users }: ResponsesTabTableProps): React.JSX.
         </TableHeader>
         <TableBody>
           {users.flatMap((user) => {
-            if (!user.userData || typeof user.userData !== 'object' || Object.keys(user.userData).length === 0) {
+            // Проверяем, является ли userData строкой JSON
+            let userGameData: Record<string, unknown> = {};
+            if (typeof user.userData === 'string') {
+              try {
+                userGameData = JSON.parse(user.userData) as Record<string, unknown>;
+              } catch {
+                userGameData = {};
+              }
+            } else if (user.userData && typeof user.userData === 'object' && !Array.isArray(user.userData)) {
+              userGameData = user.userData as Record<string, unknown>;
+            }
+
+            if (Object.keys(userGameData).length === 0) {
               return [];
             }
-            return Object.entries(user.userData).map(([key, value], index) => (
+            return Object.entries(userGameData).map(([key, value], index) => (
               <ResponseRow
                 key={`${user.id}-${key}-${index}`}
                 user={user}

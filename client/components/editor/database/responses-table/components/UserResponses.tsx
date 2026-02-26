@@ -29,8 +29,22 @@ const ITEMS_PER_PAGE = 12;
  * @returns {JSX.Element | null} Таблица ответов или null
  */
 export function UserResponses({ user }: UserResponsesProps): React.JSX.Element | null {
-  const userData = user.userData as Record<string, unknown>;
-  const hasUserData = userData && typeof userData === 'object' && !Array.isArray(userData) && Object.keys(userData).length > 0;
+  let userData: Record<string, unknown>;
+  
+  // Проверяем, является ли userData строкой JSON
+  if (typeof user.userData === 'string') {
+    try {
+      userData = JSON.parse(user.userData) as Record<string, unknown>;
+    } catch {
+      userData = {};
+    }
+  } else if (user.userData && typeof user.userData === 'object' && !Array.isArray(user.userData)) {
+    userData = user.userData as Record<string, unknown>;
+  } else {
+    userData = {};
+  }
+
+  const hasUserData = Object.keys(userData).length > 0;
 
   if (!hasUserData) {
     return null;
