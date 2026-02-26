@@ -123,7 +123,7 @@ export function ResponseCard({
             getPhotoUrlFromMessages={getPhotoUrlFromMessages}
           />
 
-          {!responseData?.media && !responseData?.photoUrl && !responseData?.type?.includes('photo') && !responseData?.type?.includes('image') && (
+          {!responseData?.media && !responseData?.photoUrl && !(responseData?.type === 'photo' || responseData?.type === 'image') && !String(answerValue).startsWith('/uploads/') && (
             <div className="text-green-800 dark:text-green-200 leading-relaxed font-medium">
               {String(answerValue)}
             </div>
