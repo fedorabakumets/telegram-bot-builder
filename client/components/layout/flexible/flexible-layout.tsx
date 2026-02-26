@@ -1,6 +1,5 @@
 import React from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
 import { useMediaQuery } from '@/components/editor/properties/media/use-media-query';
 import { CodeResizeHandle } from '../code-resize-handle';
 import { DialogResizeHandle } from '../dialog-resize-handle';
