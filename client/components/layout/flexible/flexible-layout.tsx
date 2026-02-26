@@ -7,6 +7,7 @@ import { DialogResizeHandle } from '../dialog-resize-handle';
 import { FlexibleLayoutProps } from './types';
 import { useElementContent } from './hooks';
 import { getVisibleElements, getElementsByPosition, calculateTotalRightSize, isUsersTabLayout } from './utils';
+import { EmptyState } from './components';
 
 /**
  * @fileoverview Гибкий компонент макета интерфейса
@@ -51,90 +52,12 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   const createSimpleLayout = () => {
     if (visibleElements.length === 0) {
       return (
-        <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground bg-background relative">
-          <div className="text-center mb-8">
-            <h3 className="text-lg font-medium mb-2">
-              {hideOnMobile && isMobile ? 'Мобильный режим' : 'Все панели скрыты'}
-            </h3>
-            <p className="text-sm">
-              {hideOnMobile && isMobile 
-                ? 'На мобильных устройствах боковые панели скрыты для экономии места' 
-                : 'Используйте кнопки ниже для показа панелей'
-              }
-            </p>
-          </div>
-          
-          {/* Кнопки управления макетом */}
-          <div className="flex items-center space-x-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 p-3">
-            <button
-              onClick={() => {
-                if (onConfigChange) {
-                  const newConfig = { ...config };
-                  const headerElement = newConfig.elements.find(el => el.id === 'header');
-                  if (headerElement) {
-                    headerElement.visible = true;
-                    onConfigChange(newConfig);
-                  }
-                }
-              }}
-              className="p-3 rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400"
-              title="Показать шапку"
-            >
-              <Navigation className="w-5 h-5" />
-            </button>
-            
-            <button
-              onClick={() => {
-                if (onConfigChange) {
-                  const newConfig = { ...config };
-                  const sidebarElement = newConfig.elements.find(el => el.id === 'sidebar');
-                  if (sidebarElement) {
-                    sidebarElement.visible = true;
-                    onConfigChange(newConfig);
-                  }
-                }
-              }}
-              className="p-3 rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400"
-              title="Показать боковую панель"
-            >
-              <Sidebar className="w-5 h-5" />
-            </button>
-            
-            <button
-              onClick={() => {
-                if (onConfigChange) {
-                  const newConfig = { ...config };
-                  const canvasElement = newConfig.elements.find(el => el.id === 'canvas');
-                  if (canvasElement) {
-                    canvasElement.visible = true;
-                    onConfigChange(newConfig);
-                  }
-                }
-              }}
-              className="p-3 rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400"
-              title="Показать холст"
-            >
-              <Monitor className="w-5 h-5" />
-            </button>
-            
-            <button
-              onClick={() => {
-                if (onConfigChange) {
-                  const newConfig = { ...config };
-                  const propertiesElement = newConfig.elements.find(el => el.id === 'properties');
-                  if (propertiesElement) {
-                    propertiesElement.visible = true;
-                    onConfigChange(newConfig);
-                  }
-                }
-              }}
-              className="p-3 rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400"
-              title="Показать панель свойств"
-            >
-              <Sliders className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+        <EmptyState
+          config={config}
+          isMobile={isMobile}
+          hideOnMobile={hideOnMobile}
+          onConfigChange={onConfigChange}
+        />
       );
     }
 
