@@ -20,6 +20,22 @@ interface ResponseMediaProps {
 }
 
 /**
+ * Определяет тип медиа по URL или типу
+ */
+function getMediaType(url: string, type?: string): 'audio' | 'video' | 'image' | null {
+  if (type === 'audio' || url.includes('.mp3') || url.includes('.ogg') || url.includes('.wav')) {
+    return 'audio';
+  }
+  if (type === 'video' || url.includes('.mp4') || url.includes('.webm') || url.includes('.mov')) {
+    return 'video';
+  }
+  if (type === 'photo' || type === 'image' || url.includes('.jpg') || url.includes('.jpeg') || url.includes('.png') || url.includes('.gif')) {
+    return 'image';
+  }
+  return null;
+}
+
+/**
  * Компонент медиа в ответе
  * @param props - Пропсы компонента
  * @returns JSX компонент медиа или null
@@ -33,17 +49,19 @@ export function ResponseMedia({
 
   // Медиа массив
   if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
+    const hasError = mediaError;
+    
     return (
       <div className="space-y-2">
         {responseData.media.map((m: any, idx: number) => {
           const url = typeof m === 'string' ? m : m.url;
-          const isAudio = url?.includes('.mp3') || url?.includes('.ogg') || url?.includes('.wav') || responseData?.type === 'audio';
-          const isVideo = url?.includes('.mp4') || url?.includes('.webm') || url?.includes('.mov') || responseData?.type === 'video';
+          const mediaType = getMediaType(url, responseData?.type);
 
-          if (isAudio) {
-            if (mediaError) {
-              return <FileNotFound key={idx} />;
-            }
+          if (hasError) {
+            return <FileNotFound key={idx} />;
+          }
+
+          if (mediaType === 'audio') {
             return (
               <audio
                 key={idx}
@@ -55,10 +73,7 @@ export function ResponseMedia({
             );
           }
 
-          if (isVideo) {
-            if (mediaError) {
-              return <FileNotFound key={idx} />;
-            }
+          if (mediaType === 'video') {
             return (
               <video
                 key={idx}
@@ -70,19 +85,19 @@ export function ResponseMedia({
             );
           }
 
-          // Фото
-          if (mediaError) {
-            return <FileNotFound key={idx} />;
+          if (mediaType === 'image') {
+            return (
+              <img
+                key={idx}
+                src={url}
+                alt="Ответ фото"
+                className="w-full h-auto rounded-lg"
+                onError={() => setMediaError(true)}
+              />
+            );
           }
-          return (
-            <img
-              key={idx}
-              src={url}
-              alt="Ответ фото"
-              className="w-full h-auto rounded-lg"
-              onError={() => setMediaError(true)}
-            />
-          );
+
+          return <FileNotFound key={idx} />;
         })}
       </div>
     );
@@ -155,10 +170,12 @@ export function ResponseMedia({
 
   // Тип audio
   if (responseData?.type === 'audio' || answerValue.includes('.mp3') || answerValue.includes('.ogg') || answerValue.includes('.wav')) {
+    const isUrl = answerValue.startsWith('http://') || answerValue.startsWith('https://') || answerValue.startsWith('/uploads/');
+    
     if (mediaError) {
       return <FileNotFound />;
     }
-    const isUrl = answerValue.startsWith('http://') || answerValue.startsWith('https://') || answerValue.startsWith('/uploads/');
+    
     if (isUrl) {
       return (
         <audio
@@ -169,14 +186,17 @@ export function ResponseMedia({
         />
       );
     }
+    return <FileNotFound />;
   }
 
   // Тип video
   if (responseData?.type === 'video' || answerValue.includes('.mp4') || answerValue.includes('.webm') || answerValue.includes('.mov')) {
+    const isUrl = answerValue.startsWith('http://') || answerValue.startsWith('https://') || answerValue.startsWith('/uploads/');
+    
     if (mediaError) {
       return <FileNotFound />;
     }
-    const isUrl = answerValue.startsWith('http://') || answerValue.startsWith('https://') || answerValue.startsWith('/uploads/');
+    
     if (isUrl) {
       return (
         <video
@@ -187,6 +207,7 @@ export function ResponseMedia({
         />
       );
     }
+    return <FileNotFound />;
   }
 
   // File ID check
@@ -208,6 +229,7 @@ export function ResponseMedia({
         </div>
       );
     }
+    return <FileNotFound />;
   }
 
   // URL check для изображений

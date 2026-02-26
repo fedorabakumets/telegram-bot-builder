@@ -80,6 +80,38 @@ export function ResponseRow({
         {(() => {
           const valueStr = String(answerValue);
           const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
+          const isAudioFile = valueStr.includes('.mp3') || valueStr.includes('.ogg') || valueStr.includes('.wav') || responseData?.type === 'audio';
+          const isVideoFile = valueStr.includes('.mp4') || valueStr.includes('.webm') || valueStr.includes('.mov') || responseData?.type === 'video';
+
+          // Аудио файл
+          if (isAudioFile && isImageUrl) {
+            if (imageError) {
+              return <FileNotFound />;
+            }
+            return (
+              <audio
+                src={valueStr}
+                controls
+                className="w-full"
+                onError={() => setImageError(true)}
+              />
+            );
+          }
+
+          // Видео файл
+          if (isVideoFile && isImageUrl) {
+            if (imageError) {
+              return <FileNotFound />;
+            }
+            return (
+              <video
+                src={valueStr}
+                controls
+                className="w-full rounded-lg"
+                onError={() => setImageError(true)}
+              />
+            );
+          }
 
           // Если это URL изображения (не photo тип)
           if (isImageUrl && !responseData?.media && !responseData?.photoUrl && responseData?.type !== 'photo' && responseData?.type !== 'image') {

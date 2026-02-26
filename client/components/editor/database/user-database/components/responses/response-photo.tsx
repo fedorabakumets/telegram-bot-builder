@@ -1,6 +1,6 @@
 /**
  * @fileoverview Компонент отображения фото в ответе пользователя
- * @description Рендерит изображение из различных источников (media, photoUrl, URL)
+ * @description Рендерит изображение, аудио, видео из различных источников
  */
 
 import { ResponseData } from '../../types';
@@ -29,30 +29,62 @@ export function ResponsePhoto({
   answerValue,
   getPhotoUrlFromMessages,
 }: ResponsePhotoProps): React.JSX.Element | null {
-  const [imageError, setImageError] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
 
   // Медиа массив
   if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
     return (
       <div className="rounded-lg overflow-hidden max-w-md space-y-2">
-        {responseData.media.map((m: any, idx: number) => (
-          <img
-            key={idx}
-            src={m.url || m}
-            alt="Ответ фото"
-            className="w-full h-auto rounded-lg"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
-        ))}
+        {responseData.media.map((m: any, idx: number) => {
+          const url = typeof m === 'string' ? m : m.url;
+          const isAudio = url?.includes('.mp3') || url?.includes('.ogg') || url?.includes('.wav');
+          const isVideo = url?.includes('.mp4') || url?.includes('.webm') || url?.includes('.mov');
+
+          if (mediaError) {
+            return <FileNotFound key={idx} />;
+          }
+
+          if (isAudio) {
+            return (
+              <audio
+                key={idx}
+                src={url}
+                controls
+                className="w-full"
+                onError={() => setMediaError(true)}
+              />
+            );
+          }
+
+          if (isVideo) {
+            return (
+              <video
+                key={idx}
+                src={url}
+                controls
+                className="w-full rounded-lg"
+                onError={() => setMediaError(true)}
+              />
+            );
+          }
+
+          return (
+            <img
+              key={idx}
+              src={url}
+              alt="Ответ фото"
+              className="w-full h-auto rounded-lg"
+              onError={() => setMediaError(true)}
+            />
+          );
+        })}
       </div>
     );
   }
 
   // Photo URL
   if (responseData?.photoUrl) {
-    if (imageError) {
+    if (mediaError) {
       return <FileNotFound />;
     }
     return (
@@ -61,7 +93,7 @@ export function ResponsePhoto({
           src={responseData.photoUrl}
           alt="Фото ответ"
           className="w-full h-auto rounded-lg border border-border"
-          onError={() => setImageError(true)}
+          onError={() => setMediaError(true)}
         />
       </div>
     );
@@ -72,7 +104,7 @@ export function ResponsePhoto({
     const valueStr = String(answerValue || '');
     const isUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
 
-    if (imageError) {
+    if (mediaError) {
       return <FileNotFound />;
     }
 
@@ -83,7 +115,7 @@ export function ResponsePhoto({
             src={valueStr}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
-            onError={() => setImageError(true)}
+            onError={() => setMediaError(true)}
           />
         </div>
       );
@@ -97,7 +129,7 @@ export function ResponsePhoto({
             src={photoUrl}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
-            onError={() => setImageError(true)}
+            onError={() => setMediaError(true)}
           />
         </div>
       );
@@ -109,6 +141,48 @@ export function ResponsePhoto({
         <span className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Фото (загрузка...)</span>
       </div>
     );
+  }
+
+  // Тип audio
+  if (responseData?.type === 'audio' || answerValue.includes('.mp3') || answerValue.includes('.ogg') || answerValue.includes('.wav')) {
+    const isUrl = answerValue.startsWith('http://') || answerValue.startsWith('https://') || answerValue.startsWith('/uploads/');
+    
+    if (mediaError) {
+      return <FileNotFound />;
+    }
+    
+    if (isUrl) {
+      return (
+        <audio
+          src={answerValue}
+          controls
+          className="w-full"
+          onError={() => setMediaError(true)}
+        />
+      );
+    }
+    return <FileNotFound />;
+  }
+
+  // Тип video
+  if (responseData?.type === 'video' || answerValue.includes('.mp4') || answerValue.includes('.webm') || answerValue.includes('.mov')) {
+    const isUrl = answerValue.startsWith('http://') || answerValue.startsWith('https://') || answerValue.startsWith('/uploads/');
+    
+    if (mediaError) {
+      return <FileNotFound />;
+    }
+    
+    if (isUrl) {
+      return (
+        <video
+          src={answerValue}
+          controls
+          className="w-full rounded-lg"
+          onError={() => setMediaError(true)}
+        />
+      );
+    }
+    return <FileNotFound />;
   }
 
   return null;
