@@ -4,7 +4,7 @@
  */
 
 import { TableCell } from '@/components/ui/table';
-import { formatDate } from '../../utils/format-date';
+import { formatDate } from '../../../utils';
 
 /**
  * Пропсы компонента DesktopDateCell

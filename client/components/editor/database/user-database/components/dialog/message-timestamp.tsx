@@ -3,7 +3,7 @@
  * @description Отображает время отправки сообщения
  */
 
-import { formatDate } from '../../utils/format-date';
+import { formatDate } from '../../../utils';
 
 /**
  * Пропсы компонента MessageTimestamp

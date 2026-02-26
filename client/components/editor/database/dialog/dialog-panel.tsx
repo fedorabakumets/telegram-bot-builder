@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { DialogPanelProps, BotMessageWithMedia } from './types';
-import { formatUserName } from './utils/format-user-name';
+import { formatUserName } from '../utils';
 import { useSendMessage } from './hooks/use-send-message';
 import { MessageBubble } from './components/message-bubble';
 import { DialogHeader } from './components/dialog-header';

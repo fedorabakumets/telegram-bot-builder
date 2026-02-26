@@ -3,7 +3,7 @@
  * Отображает дату и время отправки
  */
 
-import { formatDate } from '../utils/format-date';
+import { formatDate } from '../../utils';
 
 /**
  * Свойства времени сообщения

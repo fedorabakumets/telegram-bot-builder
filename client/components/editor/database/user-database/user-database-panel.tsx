@@ -15,7 +15,7 @@ import { useUserDatabasePanelData, useUserDatabasePanelMutations } from './panel
 import { useVariableToQuestionMap, useUserMessageCounts, useFilteredAndSortedUsers } from './panel/panel-memo';
 import { useUserDatabasePanelHandlers } from './panel/panel-handlers';
 import { useEffect } from 'react';
-import { formatUserName } from './utils/format-user-name';
+import { formatUserName } from '../utils';
 
 /**
  * Компонент панели базы данных пользователей

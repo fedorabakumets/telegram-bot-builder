@@ -4,7 +4,7 @@
  */
 
 import { Label } from '@/components/ui/label';
-import { formatDate } from '../../utils/format-date';
+import { formatDate } from '../../../utils';
 
 /**
  * Пропсы компонента UserDates

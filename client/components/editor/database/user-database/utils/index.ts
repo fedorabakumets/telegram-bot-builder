@@ -1,7 +1,6 @@
 /**
- * @fileoverview Баррель-файл для экспорта всех утилит
- * @description Централизованный экспорт всех утилит компонента UserDatabasePanel
+ * @fileoverview Баррель-файл для экспорта утилит
+ * @description Экспорт переиспользуемых утилит из общей папки database/utils
  */
 
-export * from './format-date';
-export * from './format-user-name';
+export { formatDate, formatUserName } from '../../utils';

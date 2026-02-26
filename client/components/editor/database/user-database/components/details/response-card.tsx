@@ -6,7 +6,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Edit, MessageSquare } from 'lucide-react';
 import { VariableToQuestionMap } from '../../types';
-import { formatDate } from '../../utils/format-date';
+import { formatDate } from '../../../utils';
 import { ResponseMedia } from './response-media';
 
 /**

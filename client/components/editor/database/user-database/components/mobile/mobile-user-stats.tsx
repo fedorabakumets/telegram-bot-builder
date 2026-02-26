@@ -3,7 +3,7 @@
  * @description Отображает количество сообщений и последнюю активность
  */
 
-import { formatDate } from '../../utils/format-date';
+import { formatDate } from '../../../utils';
 import { UserBotData } from '@shared/schema';
 
 /**
