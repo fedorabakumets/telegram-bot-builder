@@ -74,12 +74,6 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
   const [showUserDetails, setShowUserDetails] = useState(false);
 
   /**
-   * @type {boolean}
-   * @description Флаг загрузки данных
-   */
-  const [] = useState(false);
-
-  /**
    * @type {SortField}
    * @description Поле, по которому производится сортировка пользователей
    */
@@ -108,24 +102,6 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
    * @description Фильтр по статусу блокировки пользователя
    */
   const [filterBlocked] = useState<boolean | null>(null);
-
-  /**
-   * @type {'all' | 'today' | 'week' | 'month'}
-   * @description Фильтр по периоду активности пользователя
-   */
-  const [] = useState<'all' | 'today' | 'week' | 'month'>('all');
-
-  /**
-   * @type {number[]}
-   * @description Массив идентификаторов выбранных пользователей
-   */
-  const [] = useState<number[]>([]);
-
-  /**
-   * @type {boolean}
-   * @description Флаг отображения модального окна
-   */
-  const [] = useState(false);
 
   /**
    * @type {boolean}
@@ -435,7 +411,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     <>
       {newFunction_2(projectId, projectName, isDatabaseEnabled, toggleDatabaseMutation, handleRefresh, deleteAllUsersMutation, stats, searchQuery, setSearchQuery, filterActive, setFilterActive, filterPremium, setFilterPremium, sortField, sortDirection, setSortField, setSortDirection, isMobile, filteredAndSortedUsers, formatUserName, onOpenUserDetailsPanel, setSelectedUser, setShowUserDetails, onOpenDialogPanel, setSelectedUserForDialog, setShowDialog, scrollToBottom, handleUserStatusToggle, formatDate, deleteUserMutation, project)}
       {newFunction(showUserDetails, setShowUserDetails, isMobile, selectedUser, userMessageCounts, handleUserStatusToggle, formatDate, variableToQuestionMap, getPhotoUrlFromMessages)}
-      {newFunction_1(showDialog, setShowDialog, isMobile, selectedUserForDialog, formatUserName, messagesScrollRef, messagesLoading, messages, formatDate, messageText, setMessageText, sendMessageMutation)}
+      {newFunction_1(showDialog, setShowDialog, isMobile, selectedUserForDialog, formatUserName, messagesScrollRef, isMessagesLoading, messages, formatDate, messageText, setMessageText, sendMessageMutation)}
     </>
   );
 }
