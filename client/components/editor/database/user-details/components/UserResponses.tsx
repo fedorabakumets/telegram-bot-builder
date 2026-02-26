@@ -59,12 +59,11 @@ export function UserResponses({ user }: UserResponsesProps): React.JSX.Element |
           )}
           <div className="rounded-md border overflow-hidden w-full">
             <div className="overflow-x-auto">
-              <Table className="w-full min-w-[280px] text-[9px] xs:text-[10px] sm:text-xs">
+              <Table className="w-full min-w-[240px] text-[9px] xs:text-[10px] sm:text-xs">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[35%] min-w-[70px] font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Переменная</TableHead>
-                    <TableHead className="w-[45%] min-w-[90px] font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Ответ</TableHead>
-                    <TableHead className="w-[20%] min-w-[50px] font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Тип</TableHead>
+                    <TableHead className="w-[40%] min-w-[80px] font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Переменная</TableHead>
+                    <TableHead className="w-[60%] min-w-[120px] font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Ответ</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
