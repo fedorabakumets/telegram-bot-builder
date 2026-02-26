@@ -45,6 +45,7 @@ import { formatUserName } from './utils/format-user-name';
 import { useUserDatabase, useUserMutations } from './hooks';
 import { StatsCards } from './components/stats';
 import { ResponsesTabTable } from './components/responses';
+import { MobileUserList } from './components/mobile';
 
 /**
  * @function UserDatabasePanel
@@ -674,149 +675,19 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
 
             <TabsContent value="users" className="mt-2">
               {isMobile ? (
-                // Mobile card layout
-                (<div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
-                  {filteredAndSortedUsers.length === 0 ? (
-                    <div className="text-center py-8">
-                      <div className="text-muted-foreground">
-                        {searchQuery ? 'Пользователи не найдены' : 'Пользователи еще не взаимодействовали с ботом'}
-                      </div>
-                    </div>
-                  ) : (
-                    filteredAndSortedUsers.map((user, index): React.JSX.Element => (
-                      <Card key={user.id || index} className="p-4" data-testid={`user-card-mobile-${index}`}>
-                        <div className="space-y-3">
-                          {/* User Header */}
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="font-medium text-base">{formatUserName(user)}</div>
-                              <div className="text-sm text-muted-foreground">ID: {user.id}</div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                data-testid={`button-view-user-${index}`}
-                                onClick={() => {
-                                  if (onOpenUserDetailsPanel) {
-                                    onOpenUserDetailsPanel(user);
-                                  } else {
-                                    setSelectedUser(user);
-                                    setShowUserDetails(true);
-                                  }
-                                }}
-                              >
-                                <Eye className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                data-testid={`button-show-dialog-${index}`}
-                                onClick={() => {
-                                  // Если предоставлена внешняя функция открытия диалога, используем её
-                                  if (onOpenDialogPanel) {
-                                    onOpenDialogPanel(user);
-                                  } else {
-                                    // Иначе открываем встроенный диалог
-                                    setSelectedUserForDialog(user);
-                                    setShowDialog(true);
-                                    setTimeout(() => scrollToBottom(), 200);
-                                  }
-                                }}
-                              >
-                                <MessageSquare className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                data-testid={`button-toggle-active-${index}`}
-                                onClick={() => handleUserStatusToggle(user, 'isActive')}
-                                className={user.isActive === 1 ? "text-red-600" : "text-green-600"}
-                              >
-                                {user.isActive === 1 ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Status Badges */}
-                          {(() => (
-                            <div className="flex flex-wrap gap-2">
-                              <Badge variant={Number(user.isActive) === 1 ? "default" : "secondary"}>
-                                {Number(user.isActive) === 1 ? "Активен" : "Неактивен"}
-                              </Badge>
-                              {Number(user.isPremium) === 1 ? (
-                                <Badge variant="outline" className="text-yellow-600">
-                                  <Crown className="w-3 h-3 mr-1" />
-                                  Premium
-                                </Badge>
-                              ) : null}
-                              {Number(user.isBlocked) === 1 ? (
-                                <Badge variant="destructive">Заблокирован</Badge>
-                              ) : null}
-                              {Number(user.isBot) === 1 ? (
-                                <Badge variant="outline">Бот</Badge>
-                              ) : null}
-                            </div>
-                          ))()}
-
-                          {/* Stats */}
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <div className="text-muted-foreground">Сообщений</div>
-                              <div className="font-medium">{user.interactionCount || 0}</div>
-                            </div>
-                            <div>
-                              <div className="text-muted-foreground">Последняя активность</div>
-                              <div className="font-medium text-xs">{formatDate(user.lastInteraction)}</div>
-                            </div>
-                          </div>
-
-                          {/* Recent Responses */}
-                          {(user.userData && Object.keys(user.userData).length > 0) && (
-                            <div className="border-t pt-3">
-                              <div className="text-sm font-medium mb-2">Последние ответы:</div>
-                              <div className="space-y-2">
-                                {Object.entries(user.userData || {}).slice(0, 1).map(([key, value]) => {
-                                  let responseData = value;
-                                  if (typeof value === 'string') {
-                                    try {
-                                      responseData = JSON.parse(value);
-                                    } catch {
-                                      responseData = { value: value, type: 'text' };
-                                    }
-                                  }
-
-                                  return (
-                                    <div key={key} className="text-xs bg-muted/50 rounded-lg p-2">
-                                      <div className="text-muted-foreground mb-1">{String(key)}:</div>
-                                      <div className="font-medium">
-                                        {(() => {
-                                          const responseValue = (responseData as any)?.value;
-                                          if (responseValue) {
-                                            return responseValue.length > 50 ? `${responseValue.substring(0, 50)}...` : responseValue;
-                                          }
-                                          if (typeof value === 'string') {
-                                            return value.length > 50 ? `${value.substring(0, 50)}...` : value;
-                                          }
-                                          return JSON.stringify(value) || 'N/A';
-                                        })()}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                                {Object.keys(user.userData || {}).length > 1 && (
-                                  <div className="text-xs text-muted-foreground">
-                                    +{Object.keys(user.userData || {}).length - 1} еще...
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-                    ))
-                  )}
-                </div>)
+                <MobileUserList
+                  users={filteredAndSortedUsers}
+                  searchQuery={searchQuery}
+                  formatUserName={formatUserName}
+                  onOpenUserDetailsPanel={onOpenUserDetailsPanel}
+                  onOpenDialogPanel={onOpenDialogPanel}
+                  handleUserStatusToggle={handleUserStatusToggle}
+                  setSelectedUser={setSelectedUser}
+                  setShowUserDetails={setShowUserDetails}
+                  setSelectedUserForDialog={setSelectedUserForDialog}
+                  setShowDialog={setShowDialog}
+                  scrollToBottom={scrollToBottom}
+                />
               ) : (
                 // Desktop table layout - modern & compact
                 (<div className="p-2 sm:p-3">
