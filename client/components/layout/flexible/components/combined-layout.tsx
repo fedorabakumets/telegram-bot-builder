@@ -4,11 +4,12 @@
  */
 
 import React, { ReactNode } from 'react';
-import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { ResizablePanelGroup } from '@/components/ui/resizable';
 import { TopBar } from './top-bar';
 import { BottomBar } from './bottom-bar';
 import { LeftPanel } from './left-panel';
 import { RightPanels } from './right-panels';
+import { CenterPanel } from './center-panel';
 
 /**
  * Пропсы компонента CombinedLayout
@@ -77,18 +78,15 @@ export function CombinedLayout(props: CombinedLayoutProps): React.JSX.Element {
               {leftContent}
             </LeftPanel>
           )}
-          <ResizablePanel
+          <CenterPanel
             id="combo-center-panel"
             order={centerOrder}
             defaultSize={rightElements.length > 0 ? 60 : 80}
             minSize={centerMinSize}
             maxSize={centerMaxSize}
-            className="overflow-hidden"
           >
-            <div className="h-full w-full bg-background overflow-hidden flex flex-col">
-              {centerContent}
-            </div>
-          </ResizablePanel>
+            {centerContent}
+          </CenterPanel>
           {rightElements.length > 0 && (
             <RightPanels
               elements={rightElements}
