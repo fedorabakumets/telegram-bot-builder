@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import {
   MessageSquare,
   RefreshCw,
@@ -17,6 +15,7 @@ import {
 import { DialogPanelProps, BotMessageWithMedia } from './types';
 import { formatDate } from './utils/format-date';
 import { formatUserName } from './utils/format-user-name';
+import { useSendMessage } from './hooks/use-send-message';
 
 /**
  * Компонент панели диалога с пользователем бота
@@ -60,32 +59,10 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
     }
   }, [messagesLoading, messages.length, user?.userId]);
 
-  /**
-   * Мутация для отправки сообщения пользователю
-   * Отправляет сообщение через API и обновляет список сообщений
-   */
-  const sendMessageMutation = useMutation({
-    mutationFn: async ({ messageText }: { messageText: string }) => {
-      if (!user) throw new Error('No user selected');
-      return apiRequest('POST', `/api/projects/${projectId}/users/${user.userId}/send-message`, {
-        messageText
-      });
-    },
-    onSuccess: () => {
-      setMessageText('');
-      refetchMessages();
-      toast({
-        title: "Сообщение отправлено",
-        description: "Сообщение успешно отправлено пользователю",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось отправить сообщение",
-        variant: "destructive",
-      });
-    }
+  /** Мутация отправки сообщения */
+  const sendMessageMutation = useSendMessage(projectId, user?.userId, () => {
+    setMessageText('');
+    refetchMessages();
   });
 
   if (!user) {
