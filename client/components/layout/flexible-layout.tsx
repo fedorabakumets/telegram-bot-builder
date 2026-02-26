@@ -306,12 +306,17 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   {getElementContent(leftEl.type)}
                 </div>
               </ResizablePanel>
-              <CodeResizeHandle direction="vertical" />
+              {leftEl.type === 'userDetails' ? (
+                <DialogResizeHandle direction="vertical" />
+              ) : (
+                <CodeResizeHandle direction="vertical" />
+              )}
             </>
           )}
           <ResizablePanel
             id="center-panel"
             order={2}
+            defaultSize={centerEl.size || 50}
             minSize={50}
             maxSize={rightElements.length > 0 ? 70 : 85}
             className="overflow-hidden"
@@ -384,7 +389,11 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                     {getElementContent(leftEl.type)}
                   </div>
                 </ResizablePanel>
-                <DialogResizeHandle direction="vertical" />
+                {leftEl.type === 'userDetails' ? (
+                  <DialogResizeHandle direction="vertical" />
+                ) : (
+                  <CodeResizeHandle direction="vertical" />
+                )}
               </>
             )}
             <ResizablePanel

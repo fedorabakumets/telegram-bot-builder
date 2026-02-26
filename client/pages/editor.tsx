@@ -1612,7 +1612,7 @@ export default function Editor() {
       data: component.defaultData || {}
     };
 
-    // Логируем добавление в историю ��ействий
+    // Логируем добавление в историю ����ействий
     console.log('📝 Добавление узла:', component.type);
     handleActionLog('add', `Добавлен узел "${component.type}"`);
 
@@ -1860,7 +1860,7 @@ export default function Editor() {
             </div>
           </div>
         ) : currentTab === 'users' ? (
-          <div className="h-full">
+          <div className="h-full overflow-hidden">
             <UserDatabasePanel
               projectId={activeProject.id}
               projectName={activeProject.name}
