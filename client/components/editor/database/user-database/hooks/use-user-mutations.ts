@@ -22,13 +22,20 @@ interface UseUserMutationsParams {
 
 /**
  * Возвращаемые значения мутаций
+ * @interface UseUserMutationsReturn
+ * @description Содержит все мутации для управления пользователями
  */
 interface UseUserMutationsReturn {
-  deleteUserMutation: ReturnType<typeof useMutation>;
-  updateUserMutation: ReturnType<typeof useMutation>;
-  deleteAllUsersMutation: ReturnType<typeof useMutation>;
-  toggleDatabaseMutation: ReturnType<typeof useMutation>;
-  sendMessageMutation: ReturnType<typeof useMutation>;
+  /** Мутация удаления пользователя */
+  deleteUserMutation: any;
+  /** Мутация обновления данных пользователя */
+  updateUserMutation: any;
+  /** Мутация удаления всех пользователей */
+  deleteAllUsersMutation: any;
+  /** Мутация переключения базы данных */
+  toggleDatabaseMutation: any;
+  /** Мутация отправки сообщения пользователю */
+  sendMessageMutation: any;
 }
 
 /**
