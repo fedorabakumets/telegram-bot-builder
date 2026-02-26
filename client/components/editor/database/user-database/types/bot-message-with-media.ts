@@ -1,9 +1,9 @@
 /**
- * @fileoverview Типы для компонента UserDatabasePanel
- * @description Экспортирует все типы, используемые в компоненте базы данных пользователей
+ * @fileoverview Тип сообщения бота с медиа-данными
+ * @description Расширяет BotMessage дополнительными медиа-полями
  */
 
-import { BotMessage, UserBotData } from '@shared/schema';
+import { BotMessage } from '@shared/schema';
 
 /**
  * BotMessage с дополнительными медиа-данными
