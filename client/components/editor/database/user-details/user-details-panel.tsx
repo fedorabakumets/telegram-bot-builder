@@ -17,7 +17,7 @@ import { DatesSection } from './components/DatesSection';
 import { TagsSection } from './components/TagsSection';
 import { UserResponses } from '../responses-table/components/UserResponses';
 import { RawJson } from './components/RawJson';
-import { UserNavigation } from './components/UserNavigation';
+import { UserSelect } from './components/UserSelect';
 
 /**
  * @function UserDetailsPanel
@@ -47,7 +47,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog, onSel
     <div className="h-full bg-background overflow-auto">
       <div className="p-2 xs:p-2.5 sm:p-3 lg:p-4 space-y-3 xs:space-y-3.5 sm:space-y-4 lg:space-y-5">
         <PanelHeader user={user} onClose={onClose} formatUserName={formatUserName} />
-        <UserNavigation user={user} users={users} onSelectUser={handleSelectUser} />
+        <UserSelect user={user} users={users} formatUserName={formatUserName} onSelectUser={handleSelectUser} />
         <BasicInfo user={user} />
         <Statistics user={user} total={total} userSent={userSent} botSent={botSent} onOpenDialog={onOpenDialog} />
         <UserStatus user={user} onToggle={handleUserStatusToggle} />
