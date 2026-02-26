@@ -12,11 +12,13 @@ import type { ResponsesUserFilterProps } from '../types';
  * @returns JSX компонент фильтра
  */
 export function ResponsesUserFilter({
-  users,
+  users = [],
   selectedUser,
   onSelectUser,
   formatUserName,
 }: ResponsesUserFilterProps): React.JSX.Element {
+  const usersArray = Array.isArray(users) ? users : [];
+
   return (
     <Select
       value={selectedUser?.id.toString() || 'all'}
@@ -24,7 +26,7 @@ export function ResponsesUserFilter({
         if (value === 'all') {
           onSelectUser(null);
         } else {
-          const user = users.find((u) => u.id.toString() === value);
+          const user = usersArray.find((u) => u.id.toString() === value);
           onSelectUser(user || null);
         }
       }}
@@ -34,7 +36,7 @@ export function ResponsesUserFilter({
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">Все пользователи</SelectItem>
-        {users.map((user) => (
+        {usersArray.map((user) => (
           <SelectItem key={user.id} value={user.id.toString()}>
             {formatUserName(user)}
           </SelectItem>

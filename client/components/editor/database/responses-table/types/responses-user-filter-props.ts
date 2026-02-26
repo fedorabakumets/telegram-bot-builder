@@ -10,7 +10,7 @@ import type { UserBotData } from '@shared/schema';
  */
 export interface ResponsesUserFilterProps {
   /** Список всех пользователей */
-  users: UserBotData[];
+  users?: UserBotData[];
   /** Выбранный пользователь */
   selectedUser: UserBotData | null;
   /** Функция выбора пользователя */

@@ -34,12 +34,12 @@ interface UseResponsesFilterReturn {
 export function useResponsesFilter(
   params: UseResponsesFilterParams
 ): UseResponsesFilterReturn {
-  const { users } = params;
+  const { users = [] } = params;
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
 
   const filteredUsers = useMemo(() => {
-    if (!selectedUser) return users;
-    return users.filter((u) => u.id === selectedUser.id);
+    if (!selectedUser) return users || [];
+    return (users || []).filter((u) => u.id === selectedUser.id);
   }, [users, selectedUser]);
 
   return {
