@@ -93,7 +93,7 @@ export function useUserDatabasePanelData(
     selectedUserId,
   } = params;
 
-  return useUserDatabase({
+  const data = useUserDatabase({
     projectId,
     searchQuery,
     showDialog,
@@ -101,6 +101,20 @@ export function useUserDatabasePanelData(
     selectedUserForDialogUserId,
     selectedUserId,
   });
+
+  return {
+    project: data.project,
+    users: data.users,
+    stats: data.stats,
+    searchResults: data.searchResults,
+    messages: data.messages,
+    userDetailsMessages: data.userDetailsMessages,
+    isLoading: data.isLoading,
+    isMessagesLoading: data.isMessagesLoading,
+    refetchUsers: data.refetchUsers,
+    refetchStats: data.refetchStats,
+    refetchMessages: data.refetchMessages,
+  };
 }
 
 /**

@@ -13,7 +13,6 @@ import { parseResponseData } from '../utils';
  */
 export function MobileUserResponses({
   user,
-  maxLength = 50,
 }: UserResponsesPreviewProps): React.JSX.Element | null {
   if (!user.userData || Object.keys(user.userData).length === 0) {
     return null;

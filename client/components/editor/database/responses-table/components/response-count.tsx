@@ -13,10 +13,9 @@ import type { ResponseCountProps } from '../types';
  */
 export function ResponseCount({
   currentPage,
-  _totalPages,
   itemsPerPage,
   totalCount,
-}: ResponseCountProps & { _totalPages?: number }): React.JSX.Element {
+}: Omit<ResponseCountProps, 'totalPages'>): React.JSX.Element {
   if (totalCount === 0) return <></>;
   
   const start = (currentPage - 1) * itemsPerPage + 1;

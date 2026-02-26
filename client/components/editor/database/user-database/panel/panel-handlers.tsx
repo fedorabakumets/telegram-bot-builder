@@ -77,14 +77,14 @@ export function useUserDatabasePanelHandlers(
    * Прокрутка вниз
    */
   const scrollToBottom = () => {
-    if (messagesScrollRef.current) {
-      setTimeout(() => {
-        const scrollElement = messagesScrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-        if (scrollElement) {
-          scrollElement.scrollTop = scrollElement.scrollHeight;
-        }
-      }, 100);
-    }
+    if (!messagesScrollRef.current) return;
+    
+    setTimeout(() => {
+      const scrollElement = messagesScrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+    }, 100);
   };
 
   /**
