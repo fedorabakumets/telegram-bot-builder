@@ -6,7 +6,7 @@ import { DialogResizeHandle } from '../dialog-resize-handle';
 import { FlexibleLayoutProps } from './types';
 import { useElementContent } from './hooks';
 import { getVisibleElements, getElementsByPosition, calculateTotalRightSize, isUsersTabLayout } from './utils';
-import { EmptyState, SingleElementLayout, TopBottomLayout } from './components';
+import { EmptyState, SingleElementLayout, TopBottomLayout, SidePanelsLayout } from './components';
 
 /**
  * @fileoverview Гибкий компонент макета интерфейса
@@ -92,84 +92,21 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     if ((leftEl || rightElements.length > 0) && centerEl && !topEl && !bottomEl) {
       const leftSize = leftEl?.size || 0;
       const isUsersTab = isUsersTabLayout(leftEl, rightElements);
-      const hasDialog = rightElements.some(el => el.type === 'dialog');
-      const centerMinSize = isUsersTab ? 20 : 50;
-      const centerMaxSize = isUsersTab ? 80 : (rightElements.length > 0 ? 70 : 85);
-      const sideMinSize = isUsersTab ? 10 : 15;
-      const sideMaxSize = isUsersTab ? 45 : 40;
 
       return (
-        <ResizablePanelGroup direction="horizontal" className="h-full">
-          {leftEl && (
-            <>
-              <ResizablePanel
-                id="left-panel"
-                order={1}
-                defaultSize={leftSize}
-                minSize={sideMinSize}
-                maxSize={sideMaxSize}
-                className="overflow-hidden"
-              >
-                <div className="h-full w-full bg-background overflow-hidden flex flex-col">
-                  {getElementContent(leftEl.type)}
-                </div>
-              </ResizablePanel>
-              {leftEl.type === 'userDetails' ? (
-                <DialogResizeHandle direction="vertical" />
-              ) : (
-                <CodeResizeHandle direction="vertical" />
-              )}
-            </>
-          )}
-          <ResizablePanel
-            id="center-panel"
-            order={2}
-            defaultSize={centerEl.size || 50}
-            minSize={centerMinSize}
-            maxSize={centerMaxSize}
-            className="overflow-hidden"
-          >
-            <div className="h-full w-full bg-background overflow-hidden flex flex-col">
-              {getElementContent(centerEl.type)}
-            </div>
-          </ResizablePanel>
-          {rightElements.length > 0 && (
-            <>
-              {hasDialog ? (
-                <DialogResizeHandle direction="vertical" />
-              ) : (
-                <CodeResizeHandle direction="vertical" />
-              )}
-              <ResizablePanel
-                id="right-panel"
-                order={3}
-                defaultSize={totalRightSize}
-                minSize={sideMinSize}
-                maxSize={sideMaxSize}
-                className="overflow-hidden"
-              >
-                <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-                  {rightElements.flatMap((rightEl, index) => [
-                    ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle />] : []),
-                    <ResizablePanel
-                      key={`panel-${rightEl.id}`}
-                      id={`right-subpanel-${rightEl.id}`}
-                      order={index + 1}
-                      defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
-                      minSize={sideMinSize}
-                      maxSize={100}
-                      className="overflow-hidden"
-                    >
-                      <div className="h-full w-full overflow-hidden flex flex-col">
-                        {getElementContent(rightEl.type)}
-                      </div>
-                    </ResizablePanel>
-                  ])}
-                </ResizablePanelGroup>
-              </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
+        <SidePanelsLayout
+          leftContent={leftEl ? getElementContent(leftEl.type) : null}
+          leftType={leftEl?.type}
+          centerContent={getElementContent(centerEl.type)}
+          centerSize={centerEl.size || 50}
+          rightElements={rightElements.map(el => ({
+            id: el.id,
+            type: el.type,
+            content: getElementContent(el.type),
+            size: el.size,
+          }))}
+          isUsersTab={isUsersTab}
+        />
       );
     }
 
