@@ -40,20 +40,20 @@ export function Statistics({ user, total, userSent, botSent, onOpenDialog }: Sta
           <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
           <Label className="text-xs sm:text-sm font-semibold truncate">Статистика</Label>
         </div>
-        <div className="grid grid-cols-3 auto-cols-min gap-1.5 sm:gap-2 pl-5 sm:pl-6">
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-1.5 sm:p-3 text-center min-w-[70px]">
+        <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] [@media(max-width:180px)]:grid-cols-[repeat(2,minmax(0,1fr))] [@media(max-width:130px)]:grid-cols-1 gap-1.5 sm:gap-2 pl-5 sm:pl-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-1.5 sm:p-3 text-center min-w-0">
             <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 break-all">
               {total}
             </div>
             <div className="text-[10px] sm:text-xs text-muted-foreground">Всего</div>
           </div>
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-1.5 sm:p-3 text-center min-w-[70px]">
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-1.5 sm:p-3 text-center min-w-0">
             <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400 break-all">
               {userSent}
             </div>
             <div className="text-[10px] sm:text-xs text-muted-foreground">От юзера</div>
           </div>
-          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-1.5 sm:p-3 text-center min-w-[70px]">
+          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-1.5 sm:p-3 text-center min-w-0">
             <div className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400 break-all">
               {botSent}
             </div>
