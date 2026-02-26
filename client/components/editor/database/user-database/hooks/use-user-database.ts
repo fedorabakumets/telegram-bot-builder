@@ -1,48 +1,15 @@
 /**
- * @fileoverview Хуки для загрузки данных базы данных пользователей
- * @description Содержит useQuery хуки для получения пользователей, статистики и сообщений
+ * @fileoverview Главный хук для загрузки данных базы данных пользователей
+ * @description Агрегирует все useQuery хуки для получения данных о пользователях
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { BotProject, UserBotData } from '@shared/schema';
-import { BotMessageWithMedia, UserStats } from '../types';
-
-/**
- * Параметры хука useUserDatabase
- */
-interface UseUserDatabaseParams {
-  /** Идентификатор проекта */
-  projectId: number;
-  /** Поисковый запрос */
-  searchQuery: string;
-  /** Флаг открытия диалога */
-  showDialog: boolean;
-  /** Флаг открытия деталей пользователя */
-  showUserDetails: boolean;
-  /** ID выбранного пользователя для диалога */
-  selectedUserForDialogUserId?: string;
-  /** ID выбранного пользователя для деталей */
-  selectedUserId?: string;
-}
-
-/**
- * Возвращаемые значения хука useUserDatabase
- */
-interface UseUserDatabaseReturn {
-  project?: BotProject;
-  users: UserBotData[];
-  stats: UserStats;
-  searchResults: UserBotData[];
-  messages: BotMessageWithMedia[];
-  userDetailsMessages: BotMessageWithMedia[];
-  isLoading: boolean;
-  isUsersLoading: boolean;
-  isStatsLoading: boolean;
-  isMessagesLoading: boolean;
-  refetchUsers: () => void;
-  refetchStats: () => void;
-  refetchMessages: () => void;
-}
+import { UseUserDatabaseParams, UseUserDatabaseReturn } from './types';
+import { useProject } from './queries/use-project';
+import { useUsers } from './queries/use-users';
+import { useStats } from './queries/use-stats';
+import { useSearchUsers } from './queries/use-search-users';
+import { useDialogMessages } from './queries/use-dialog-messages';
+import { useUserDetailsMessages } from './queries/use-user-details-messages';
 
 /**
  * Хук для загрузки всех данных базы данных пользователей
@@ -59,66 +26,31 @@ export function useUserDatabase(params: UseUserDatabaseParams): UseUserDatabaseR
     selectedUserId,
   } = params;
 
-  // Загрузка данных проекта
-  const { data: project } = useQuery<BotProject>({
-    queryKey: [`/api/projects/${projectId}`],
-  });
+  const { project } = useProject({ projectId });
 
-  // Загрузка списка пользователей
+  const { users, isUsersLoading, refetchUsers } = useUsers({ projectId });
+
+  const { stats, isStatsLoading, refetchStats } = useStats({ projectId });
+
+  const { searchResults } = useSearchUsers({ projectId, searchQuery });
+
   const {
-    data: users = [],
-    isLoading: usersLoading,
-    refetch: refetchUsers,
-  } = useQuery<UserBotData[]>({
-    queryKey: [`/api/projects/${projectId}/users`],
-    staleTime: 0,
-    gcTime: 0,
+    messages,
+    isMessagesLoading,
+    refetchMessages,
+  } = useDialogMessages({
+    projectId,
+    userId: selectedUserForDialogUserId,
+    enabled: showDialog,
   });
 
-  // Загрузка статистики пользователей
-  const {
-    data: stats = {},
-    isLoading: statsLoading,
-    refetch: refetchStats,
-  } = useQuery<UserStats>({
-    queryKey: [`/api/projects/${projectId}/users/stats`],
-    staleTime: 0,
-    gcTime: 0,
+  const { userDetailsMessages } = useUserDetailsMessages({
+    projectId,
+    userId: selectedUserId,
+    enabled: showUserDetails,
   });
 
-  // Поиск пользователей
-  const { data: searchResults = [] } = useQuery<UserBotData[]>({
-    queryKey: [`/api/projects/${projectId}/users/search`, searchQuery],
-    enabled: searchQuery.length > 0,
-    queryFn: async () => {
-      const response = await fetch(
-        `/api/projects/${projectId}/users/search?q=${encodeURIComponent(searchQuery)}`
-      );
-      return response.json();
-    },
-  });
-
-  // Загрузка сообщений для диалога
-  const {
-    data: messages = [],
-    isLoading: messagesLoading,
-    refetch: refetchMessages,
-  } = useQuery<BotMessageWithMedia[]>({
-    queryKey: [`/api/projects/${projectId}/users/${selectedUserForDialogUserId}/messages`],
-    enabled: showDialog && !!selectedUserForDialogUserId,
-    staleTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
-
-  // Загрузка сообщений для деталей пользователя
-  const { data: userDetailsMessages = [] } = useQuery<BotMessageWithMedia[]>({
-    queryKey: [`/api/projects/${projectId}/users/${selectedUserId}/messages`],
-    enabled: showUserDetails && !!selectedUserId,
-    staleTime: 0,
-  });
-
-  const isLoading = usersLoading || statsLoading;
+  const isLoading = isUsersLoading || isStatsLoading;
 
   return {
     project,
@@ -128,9 +60,9 @@ export function useUserDatabase(params: UseUserDatabaseParams): UseUserDatabaseR
     messages,
     userDetailsMessages,
     isLoading,
-    isUsersLoading: usersLoading,
-    isStatsLoading: statsLoading,
-    isMessagesLoading: messagesLoading,
+    isUsersLoading,
+    isStatsLoading,
+    isMessagesLoading,
     refetchUsers,
     refetchStats,
     refetchMessages,
