@@ -107,17 +107,17 @@ export function StatsCards({ stats }: StatsCardsProps) {
         {STATS_DATA.map((stat, idx) => (
           <div
             key={idx}
-            className={`${stat.bg} group flex-shrink-0 snap-start w-full max-w-[180px] rounded-xl p-4 flex flex-col items-center gap-3 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50`}
+            className={`${stat.bg} group flex-shrink-0 snap-start w-full sm:w-[160px] md:w-[140px] lg:w-[160px] xl:w-[180px] rounded-xl p-3 sm:p-4 flex flex-col items-center gap-2 sm:gap-3 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50`}
             data-testid={`stat-card-${idx}`}
           >
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
-              <stat.icon className="w-6 h-6 text-white" />
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
+              <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-foreground tabular-nums leading-none">
+              <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums leading-none">
                 {statValues[idx]}
               </p>
-              <p className="text-xs font-medium text-muted-foreground mt-1 uppercase tracking-wide">
+              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mt-1 uppercase tracking-wide">
                 {stat.label}
               </p>
             </div>
