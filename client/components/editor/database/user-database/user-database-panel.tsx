@@ -15,6 +15,7 @@ import { useUserDatabasePanelData, useUserDatabasePanelMutations } from './panel
 import { useVariableToQuestionMap, useUserMessageCounts, useFilteredAndSortedUsers } from './panel/panel-memo';
 import { useUserDatabasePanelHandlers } from './panel/panel-handlers';
 import { useEffect } from 'react';
+import { formatUserName } from './utils/format-user-name';
 
 /**
  * Компонент панели базы данных пользователей
@@ -215,21 +216,4 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
       />
     </>
   );
-}
-
-/**
- * Функция форматирования имени пользователя
- * @param user - Данные пользователя
- * @returns Отформатированное имя
- */
-function formatUserName(user: UserBotData): string {
-  const firstName = user.firstName;
-  const lastName = user.lastName;
-  const userName = user.userName;
-  const userId = user.userId;
-
-  const parts = [firstName, lastName].filter(Boolean);
-  if (parts.length > 0) return parts.join(' ');
-  if (userName) return `@${userName}`;
-  return `ID: ${userId}`;
 }

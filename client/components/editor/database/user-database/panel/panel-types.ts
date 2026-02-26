@@ -3,6 +3,7 @@
  * @description Интерфейсы пропсов и параметров
  */
 
+import React from 'react';
 import { UserBotData } from '@shared/schema';
 import { SortField, SortDirection } from '../types';
 
@@ -69,23 +70,23 @@ export interface UserDatabasePanelState {
  */
 export interface UserDatabasePanelSetters {
   /** Установка поискового запроса */
-  setSearchQuery: (value: string) => void;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   /** Установка выбранного пользователя */
-  setSelectedUser: (user: UserBotData | null) => void;
+  setSelectedUser: React.Dispatch<React.SetStateAction<UserBotData | null>>;
   /** Установка флага показа деталей */
-  setShowUserDetails: (show: boolean) => void;
+  setShowUserDetails: React.Dispatch<React.SetStateAction<boolean>>;
   /** Установка поля сортировки */
-  setSortField: (field: SortField) => void;
+  setSortField: React.Dispatch<React.SetStateAction<SortField>>;
   /** Установка направления сортировки */
-  setSortDirection: (direction: SortDirection) => void;
+  setSortDirection: React.Dispatch<React.SetStateAction<SortDirection>>;
   /** Установка фильтра по статусу */
-  setFilterActive: (value: boolean | null) => void;
+  setFilterActive: React.Dispatch<React.SetStateAction<boolean | null>>;
   /** Установка фильтра по Premium */
-  setFilterPremium: (value: boolean | null) => void;
+  setFilterPremium: React.Dispatch<React.SetStateAction<boolean | null>>;
   /** Установка флага показа диалога */
-  setShowDialog: (show: boolean) => void;
+  setShowDialog: React.Dispatch<React.SetStateAction<boolean>>;
   /** Установка пользователя для диалога */
-  setSelectedUserForDialog: (user: UserBotData | null) => void;
+  setSelectedUserForDialog: React.Dispatch<React.SetStateAction<UserBotData | null>>;
   /** Установка текста сообщения */
-  setMessageText: (text: string) => void;
+  setMessageText: React.Dispatch<React.SetStateAction<string>>;
 }
