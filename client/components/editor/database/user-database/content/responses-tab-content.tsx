@@ -7,6 +7,7 @@ import { TabsContent } from '@/components/ui/tabs';
 import { ResponsesTabTable, ResponsesUserFilter } from '../../responses-table/components';
 import { useResponsesFilter } from '../../responses-table/hooks';
 import { UserBotData } from '@shared/schema';
+import { Label } from '@/components/ui/label';
 
 /**
  * Пропсы компонента ResponsesTabContent
@@ -31,7 +32,10 @@ export function ResponsesTabContent(props: ResponsesTabContentProps): React.JSX.
   return (
     <TabsContent value="responses" className="mt-3 px-2 sm:px-3">
       <div className="p-2 sm:p-3 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="user-filter" className="text-sm font-medium whitespace-nowrap">
+            Фильтр:
+          </Label>
           <ResponsesUserFilter
             users={users}
             selectedUser={selectedUser}
