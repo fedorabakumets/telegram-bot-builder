@@ -47,6 +47,7 @@ import { StatsCards } from './components/stats';
 import { ResponsesTabTable } from './components/responses';
 import { MobileUserList } from './components/mobile';
 import { DesktopTable } from './components/desktop';
+import { MessageDialog } from './components/dialog';
 
 /**
  * @function UserDatabasePanel
@@ -415,7 +416,23 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     <>
       {newFunction_2(projectId, projectName, isDatabaseEnabled, toggleDatabaseMutation, handleRefresh, deleteAllUsersMutation, stats, searchQuery, setSearchQuery, filterActive, setFilterActive, filterPremium, setFilterPremium, sortField, sortDirection, setSortField, setSortDirection, isMobile, filteredAndSortedUsers, formatUserName, onOpenUserDetailsPanel, setSelectedUser, setShowUserDetails, onOpenDialogPanel, setSelectedUserForDialog, setShowDialog, scrollToBottom, handleUserStatusToggle, formatDate, deleteUserMutation, project)}
       {newFunction(showUserDetails, setShowUserDetails, isMobile, selectedUser, userMessageCounts, handleUserStatusToggle, formatDate, variableToQuestionMap, getPhotoUrlFromMessages)}
-      {newFunction_1(showDialog, setShowDialog, isMobile, selectedUserForDialog, formatUserName, messagesScrollRef, isMessagesLoading, messages, formatDate, messageText, setMessageText, sendMessageMutation)}
+      <MessageDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        selectedUser={selectedUserForDialog}
+        formatUserName={formatUserName}
+        messagesScrollRef={messagesScrollRef}
+        isMessagesLoading={isMessagesLoading}
+        messages={messages}
+        messageText={messageText}
+        setMessageText={setMessageText}
+        isSending={sendMessageMutation.isPending}
+        sendMessage={(text) => {
+          if (selectedUserForDialog?.userId) {
+            sendMessageMutation.mutate({ messageText: text, userId: selectedUserForDialog.userId });
+          }
+        }}
+      />
     </>
   );
 }
@@ -718,185 +735,6 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
       )}
     </div>
   </ScrollArea>;
-}
-
-function newFunction_1(showDialog: boolean, setShowDialog: React.Dispatch<React.SetStateAction<boolean>>, isMobile: boolean, selectedUserForDialog: { projectId: number; id: number; firstName: string | null; lastName: string | null; createdAt: Date | null; updatedAt: Date | null; userId: string; userName: string | null; languageCode: string | null; isBot: number | null; isPremium: number | null; lastInteraction: Date | null; interactionCount: number | null; userData: unknown; currentState: string | null; preferences: unknown; commandsUsed: unknown; sessionsCount: number | null; totalMessagesSent: number | null; totalMessagesReceived: number | null; deviceInfo: string | null; locationData: unknown; contactData: unknown; isBlocked: number | null; isActive: number | null; tags: string[] | null; notes: string | null; } | null, formatUserName: (user: UserBotData) => string, messagesScrollRef: React.RefObject<HTMLDivElement>, messagesLoading: boolean, messages: BotMessageWithMedia[], formatDate: (date: unknown) => string, messageText: string, setMessageText: React.Dispatch<React.SetStateAction<string>>, sendMessageMutation) {
-  return <Dialog open={showDialog} onOpenChange={setShowDialog}>
-    <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh]' : 'max-w-2xl max-h-[80vh]'} flex flex-col`}>
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5" />
-          Диалог с пользователем
-        </DialogTitle>
-        <DialogDescription>
-          {selectedUserForDialog && formatUserName(selectedUserForDialog)}
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Messages Area */}
-        <ScrollArea ref={messagesScrollRef} className="h-[400px] pr-4" data-testid="messages-scroll-area">
-          {messagesLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">Загрузка сообщений...</span>
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="empty-messages-state">
-              <MessageSquare className="w-12 h-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Нет сообщений</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Начните диалог, отправив первое сообщение
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4 py-4">
-              {messages.map((message, index) => {
-                const isBot = message.messageType === 'bot';
-                const isUser = message.messageType === 'user';
-
-                return (
-                  <div
-                    key={message.id || index}
-                    className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
-                    data-testid={`message-${message.messageType}-${index}`}
-                  >
-                    <div className={`flex gap-2 max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                      {/* Avatar */}
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isBot ? 'bg-blue-100 dark:bg-blue-900' : 'bg-green-100 dark:bg-green-900'}`}>
-                        {isBot ? (
-                          <Bot className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        ) : (
-                          <User className="w-4 h-4 text-green-600 dark:text-green-400" />
-                        )}
-                      </div>
-
-                      {/* Message Content */}
-                      <div className="flex flex-col gap-1">
-                        {/* Медиа-файлы если есть */}
-                        {message.media && Array.isArray(message.media) && message.media.length > 0 && (
-                          <div className="rounded-lg overflow-hidden max-w-xs space-y-2">
-                            {message.media.map((m: any, idx: number) => (
-                              <img
-                                key={idx}
-                                src={m.url}
-                                alt="Photo"
-                                className="w-full h-auto rounded-lg"
-                                data-testid={`photo-${message.id}-${idx}`}
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }} />
-                            ))}
-                          </div>
-                        )}
-
-                        <div className={`rounded-lg px-4 py-2 ${isBot
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100'
-                          : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'}`}>
-                          <p className="text-sm whitespace-pre-wrap break-words">
-                            {message?.messageText ? String(message.messageText) : ''}
-                          </p>
-                        </div>
-
-                        {/* Кнопки для сообщений бота */}
-                        {isBot && message.messageData && typeof message.messageData === 'object' && 'buttons' in message.messageData && Array.isArray((message.messageData as Record<string, any>).buttons) && ((message.messageData as Record<string, any>).buttons as Array<any>).length > 0 ? (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {(Array.isArray((message.messageData as any)?.buttons) ? (message.messageData as any).buttons : []).map((button: any, btnIndex: number) => (
-                              <div
-                                key={btnIndex}
-                                className="inline-flex items-center px-3 py-1 text-xs rounded-md border bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300"
-                                data-testid={`button-preview-${index}-${btnIndex}`}
-                              >
-                                {String(button?.text ?? '')}
-                              </div>
-                            ))}
-                          </div>
-                        ) : null}
-
-                        {/* Информация о нажатой кнопке для сообщений пользователя */}
-                        {isUser && message.messageData && typeof message.messageData === 'object' && 'button_clicked' in message.messageData && message.messageData.button_clicked ? (
-                          <div className="mt-1">
-                            <div className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200">
-                              <span>✓</span>
-                              <span>
-                                {'button_text' in message.messageData && message.messageData.button_text
-                                  ? `Нажата: ${message.messageData.button_text}`
-                                  : 'Нажата кнопка'}
-                              </span>
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {/* Timestamp */}
-                        {message.createdAt && (
-                          <span className="text-xs text-muted-foreground">{String(formatDate(message.createdAt))}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </ScrollArea>
-
-        <Separator className="my-4" />
-
-        {/* Message Input Form */}
-        <div className="space-y-3">
-          <Label htmlFor="message-input" className="text-sm font-medium">
-            Отправить сообщение
-          </Label>
-          <div className="flex gap-2">
-            <Textarea
-              id="message-input"
-              data-testid="textarea-message-input"
-              placeholder="Введите сообщение..."
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  if (messageText.trim() && !sendMessageMutation.isPending && selectedUserForDialog?.userId) {
-                    sendMessageMutation.mutate({ messageText: messageText.trim(), userId: selectedUserForDialog.userId });
-                  }
-                }
-              }}
-              rows={3}
-              disabled={sendMessageMutation.isPending}
-              className="flex-1 resize-none" />
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-muted-foreground">
-              Нажмите Enter для отправки, Shift+Enter для новой строки
-            </p>
-            <Button
-              data-testid="button-send-message"
-              onClick={() => {
-                if (messageText.trim() && !sendMessageMutation.isPending && selectedUserForDialog?.userId) {
-                  sendMessageMutation.mutate({ messageText: messageText.trim(), userId: selectedUserForDialog.userId });
-                }
-              }}
-              disabled={!messageText.trim() || sendMessageMutation.isPending}
-              size="sm"
-            >
-              {sendMessageMutation.isPending ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Отправка...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Отправить
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </DialogContent>
-  </Dialog>;
 }
 
 function newFunction(showUserDetails: boolean, setShowUserDetails: React.Dispatch<React.SetStateAction<boolean>>, isMobile: boolean, selectedUser: { id: number; firstName: string | null; lastName: string | null; createdAt: Date | null; updatedAt: Date | null; projectId: number; userId: string; userName: string | null; languageCode: string | null; isBot: number | null; isPremium: number | null; lastInteraction: Date | null; interactionCount: number | null; userData: unknown; currentState: string | null; preferences: unknown; commandsUsed: unknown; sessionsCount: number | null; totalMessagesSent: number | null; totalMessagesReceived: number | null; deviceInfo: string | null; locationData: unknown; contactData: unknown; isBlocked: number | null; isActive: number | null; tags: string[] | null; notes: string | null; } | null, userMessageCounts: { userSent: number; botSent: number; total: number; }, handleUserStatusToggle: (user: UserBotData, field: "isActive" | "isBlocked" | "isPremium") => void, formatDate: (date: unknown) => string, variableToQuestionMap: Record<string, string>, getPhotoUrlFromMessages: (fileId: string) => string | null) {
