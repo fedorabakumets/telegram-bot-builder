@@ -102,12 +102,12 @@ export function StatsCards({ stats }: StatsCardsProps) {
 
   return (
     <div className="w-full overflow-x-auto">
-      {/* Горизонтальная прокрутка - карточки в одну строку */}
-      <div className="flex gap-2 min-w-max p-3">
+      {/* Горизонтальная прокрутка - карточки в одну строку на всю ширину */}
+      <div className="flex gap-2 min-w-max w-full p-3">
         {STATS_DATA.map((stat, idx) => (
           <div
             key={idx}
-            className={`${stat.bg} group flex-shrink-0 snap-start w-[140px] rounded-xl p-4 flex flex-col items-center gap-3 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50`}
+            className={`${stat.bg} group flex-shrink-0 snap-start w-full max-w-[180px] rounded-xl p-4 flex flex-col items-center gap-3 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50`}
             data-testid={`stat-card-${idx}`}
           >
             <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
