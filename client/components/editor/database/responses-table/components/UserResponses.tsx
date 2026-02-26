@@ -74,14 +74,14 @@ export function UserResponses({ user }: UserResponsesProps): React.JSX.Element |
     <>
       <Separator />
       <div className="space-y-1.5 xs:space-y-2 sm:space-y-2.5 w-full">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2">
+        <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-0 w-full">
+          <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 min-w-0">
             <MessageSquare className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
             <Label className="text-[10px] xs:text-xs sm:text-sm font-semibold truncate">Ответы пользователя</Label>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 xs:gap-2 flex-shrink-0">
             <div className="flex items-center gap-1 text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">
-              <span>Показывать:</span>
+              <span className="whitespace-nowrap">Показывать:</span>
               <ItemsPerPageSelector value={itemsPerPage} onChange={setItemsPerPage} />
             </div>
             <ResponseCount
