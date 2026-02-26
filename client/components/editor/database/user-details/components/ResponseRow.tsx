@@ -36,13 +36,13 @@ export function ResponseRow({ variableKey, rawValue }: ResponseRowProps): React.
 
   return (
     <TableRow>
-      <TableCell className="align-top min-w-[80px] sm:min-w-[100px]">
-        <div className="font-medium text-[10px] sm:text-sm break-words">{displayName}</div>
+      <TableCell className="align-top min-w-[80px] max-w-[120px]">
+        <div className="font-medium text-[10px] sm:text-sm break-words line-clamp-2">{displayName}</div>
       </TableCell>
-      <TableCell className="align-top">
+      <TableCell className="align-top min-w-[100px] max-w-none">
         <ResponseCell responseData={responseData} answerValue={answerValue} />
       </TableCell>
-      <TableCell className="align-top">
+      <TableCell className="align-top min-w-[60px]">
         <ResponseTypeBadge type={responseData?.type} />
       </TableCell>
     </TableRow>

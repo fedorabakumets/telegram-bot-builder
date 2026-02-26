@@ -58,20 +58,22 @@ export function UserResponses({ user }: UserResponsesProps): React.JSX.Element |
             </div>
           )}
           <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-1/3 font-semibold text-[10px] sm:text-xs">Переменная</TableHead>
-                  <TableHead className="w-1/3 font-semibold text-[10px] sm:text-xs">Ответ</TableHead>
-                  <TableHead className="w-1/3 font-semibold text-[10px] sm:text-xs">Тип</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entries.map(([key, value]) => (
-                  <ResponseRow key={key} variableKey={key} rawValue={value} />
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-1/3 min-w-[80px] font-semibold text-[10px] sm:text-xs">Переменная</TableHead>
+                    <TableHead className="w-1/3 min-w-[100px] font-semibold text-[10px] sm:text-xs">Ответ</TableHead>
+                    <TableHead className="w-1/3 min-w-[60px] font-semibold text-[10px] sm:text-xs">Тип</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {entries.map(([key, value]) => (
+                    <ResponseRow key={key} variableKey={key} rawValue={value} />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
       </div>

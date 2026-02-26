@@ -37,12 +37,12 @@ export function RawJson({ user }: RawJsonProps): React.JSX.Element | null {
           <Hash className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           <Label className="text-xs sm:text-sm font-semibold">Все данные (JSON)</Label>
         </div>
-        <div className="pl-5 sm:pl-6">
+        <div className="pl-5 sm:pl-6 w-full min-w-0">
           <Textarea
             value={JSON.stringify(user.userData, null, 2)}
             readOnly
             rows={6}
-            className="text-[10px] sm:text-xs font-mono bg-muted resize-none w-full"
+            className="text-[10px] sm:text-xs font-mono bg-muted resize-none w-full min-w-0 overflow-auto"
           />
         </div>
       </div>
