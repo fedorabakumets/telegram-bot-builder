@@ -21,7 +21,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 
-import { DialogPanel } from '@/components/editor/database/dialog-panel';
+import { DialogPanel } from '@/components/editor/database/dialog/dialog-panel';
 import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import { UserDatabasePanel } from '@/components/editor/database/user-database-panel';
 import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';

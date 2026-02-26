@@ -14,41 +14,9 @@ import {
   User,
   X
 } from 'lucide-react';
-import { UserBotData, BotMessage } from '@shared/schema';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
-
-/**
- * Расширенный тип сообщения бота с медиафайлами
- * Добавляет поддержку изображений и других медиафайлов к базовому типу BotMessage
- */
-type BotMessageWithMedia = BotMessage & {
-  media?: Array<{
-    /** Идентификатор медиафайла */
-    id: number;
-    /** URL медиафайла */
-    url: string;
-    /** Тип медиафайла (image, video, document и т.д.) */
-    type: string;
-    /** Ширина изображения (опционально) */
-    width?: number;
-    /** Высота изображения (опционально) */
-    height?: number;
-  }>;
-};
-
-/**
- * Свойства компонента панели диалога
- * @interface DialogPanelProps
- */
-interface DialogPanelProps {
-  /** Идентификатор проекта */
-  projectId: number;
-  /** Данные пользователя для диалога */
-  user: UserBotData | null;
-  /** Колбэк для закрытия панели */
-  onClose: () => void;
-}
+import { DialogPanelProps, BotMessageWithMedia } from './types';
+import { formatDate } from './utils/format-date';
+import { formatUserName } from './utils/format-user-name';
 
 /**
  * Компонент панели диалога с пользователем бота
@@ -91,37 +59,6 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
       }, 100);
     }
   }, [messagesLoading, messages.length, user?.userId]);
-
-  /**
-   * Форматирование даты для отображения
-   * Использует русскую локализацию для date-fns
-   * @param date - Дата для форматирования
-   * @returns Отформатированная строка даты или пустая строка при ошибке
-   */
-  const formatDate = (date: Date | string | null | undefined): string => {
-    if (!date) return '';
-    try {
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
-      return format(dateObj, 'PPp', { locale: ru });
-    } catch {
-      return '';
-    }
-  };
-
-  /**
-   * Форматирование имени пользователя для отображения
-   * Объединяет имя, фамилию и username в читаемый формат
-   * @param userData - Данные пользователя
-   * @returns Отформатированное имя или ID пользователя
-   */
-  const formatUserName = (userData: UserBotData | null): string => {
-    if (!userData) return '';
-    const parts = [];
-    if (userData.firstName) parts.push(userData.firstName);
-    if (userData.lastName) parts.push(userData.lastName);
-    if (userData.userName) parts.push(`@${userData.userName}`);
-    return parts.length > 0 ? parts.join(' ') : `ID: ${userData.userId}`;
-  };
 
   /**
    * Мутация для отправки сообщения пользователю
