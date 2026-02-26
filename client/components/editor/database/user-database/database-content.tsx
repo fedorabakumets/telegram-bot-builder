@@ -3,4 +3,5 @@
  * @description Экспортирует DatabaseContent из content-модуля
  */
 
-export { DatabaseContent, DatabaseContentProps } from './content/database-layout';
+export { DatabaseContent } from './content/database-layout';
+export type { DatabaseContentProps } from './content/database-content-props';
