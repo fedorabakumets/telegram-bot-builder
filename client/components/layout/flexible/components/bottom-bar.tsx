@@ -18,9 +18,9 @@ interface BottomBarProps {
 /**
  * Компонент нижней панели
  * @param props - Пропсы компонента
- * @returns JSX элемент
+ * @returns JSX элемент или null
  */
-export function BottomBar(props: BottomBarProps): React.JSX.Element {
+export function BottomBar(props: BottomBarProps): React.JSX.Element | null {
   const { children, size = 100 } = props;
 
   if (!children) return null;

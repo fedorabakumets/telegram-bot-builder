@@ -18,9 +18,9 @@ interface TopBarProps {
 /**
  * Компонент верхней панели
  * @param props - Пропсы компонента
- * @returns JSX элемент
+ * @returns JSX элемент или null
  */
-export function TopBar(props: TopBarProps): React.JSX.Element {
+export function TopBar(props: TopBarProps): React.JSX.Element | null {
   const { children, size = 10 } = props;
 
   if (!children) return null;
