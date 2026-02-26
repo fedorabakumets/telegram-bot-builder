@@ -11,7 +11,6 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   User,
-  X,
   Calendar,
   MessageSquare,
   Edit,
@@ -30,6 +29,8 @@ import { useUserMessages } from './hooks/useUserMessages';
 import { useVariableMapping } from './hooks/useVariableMapping';
 import { useUpdateUser } from './hooks/useUpdateUser';
 import { UserDetailsPanelProps, BotMessageWithMedia } from './types';
+import { EmptyState } from './components/EmptyState';
+import { PanelHeader } from './components/PanelHeader';
 
 /**
  * @function UserDetailsPanel
@@ -62,38 +63,13 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
     updateUserMutation.mutate({ [field]: !currentValue ? 1 : 0 } as Partial<UserBotData>);
   };
 
-  // Если пользователь не выбран
   if (!user) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-4">
-        <User className="w-12 h-12 mb-4" />
-        <p className="text-center">Выберите пользователя для просмотра деталей</p>
-      </div>
-    );
+    return <EmptyState />;
   }
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2 p-3 border-b">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-            <User className="w-4 h-4 text-white" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="font-medium text-sm truncate">Детали пользователя</h3>
-            <p className="text-xs text-muted-foreground truncate">{formatUserName(user)}</p>
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          data-testid="button-close-user-details-panel"
-        >
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
+      <PanelHeader user={user} onClose={onClose} formatUserName={formatUserName} />
 
       {/* Content */}
       <ScrollArea className="flex-1">
