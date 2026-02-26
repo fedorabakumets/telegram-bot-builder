@@ -43,6 +43,7 @@ import { BotMessageWithMedia, UserDatabasePanelProps, SortField, SortDirection, 
 import { formatDate } from './utils/format-date';
 import { formatUserName } from './utils/format-user-name';
 import { useUserDatabase, useUserMutations } from './hooks';
+import { StatsCards } from './components/stats';
 
 /**
  * @function UserDatabasePanel
@@ -545,106 +546,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
 
           {/* Stats Grid - Modern Responsive Design */}
           {isDatabaseEnabled && stats && (
-            <div className="space-y-3">
-              {/* Mobile: Horizontal scroll with snap */}
-              <div className="block sm:hidden">
-                <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-2 px-2">
-                  {[
-                    { icon: Users, label: 'Всего', value: stats.totalUsers, gradient: 'from-blue-500 to-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
-                    { icon: Activity, label: 'Активны', value: stats.activeUsers, gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
-                    { icon: Shield, label: 'Заблок.', value: stats.blockedUsers, gradient: 'from-rose-500 to-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40' },
-                    { icon: Crown, label: 'Premium', value: stats.premiumUsers, gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
-                    { icon: MessageSquare, label: 'Сообщ.', value: stats.totalInteractions, gradient: 'from-violet-500 to-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40' },
-                    { icon: BarChart3, label: 'Среднее', value: stats.avgInteractionsPerUser, gradient: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950/40' },
-                    { icon: Edit, label: 'Ответы', value: stats.usersWithResponses || 0, gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/40' },
-                  ].map((stat, idx) => {
-                    const Icon = stat.icon;
-                    return (
-                      <div
-                        key={idx}
-                        className={`${stat.bg} flex-shrink-0 snap-start w-[100px] rounded-xl p-3 flex flex-col items-center gap-2 transition-transform duration-200 active:scale-95`}
-                        data-testid={`stat-card-mobile-${idx}`}
-                      >
-                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-sm`}>
-                          <Icon className="w-4 h-4 text-white" />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-foreground tabular-nums">{stat.value ?? 0}</p>
-                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                {/* Scroll indicator dots */}
-                <div className="flex justify-center gap-1 mt-2">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
-                  ))}
-                </div>
-              </div>
-
-              {/* Tablet: 2 rows grid */}
-              <div className="hidden sm:grid md:hidden grid-cols-4 gap-2">
-                {[
-                  { icon: Users, label: 'Всего пользователей', value: stats.totalUsers, gradient: 'from-blue-500 to-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40', textColor: 'text-blue-600 dark:text-blue-400' },
-                  { icon: Activity, label: 'Активных', value: stats.activeUsers, gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40', textColor: 'text-emerald-600 dark:text-emerald-400' },
-                  { icon: Shield, label: 'Заблокировано', value: stats.blockedUsers, gradient: 'from-rose-500 to-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40', textColor: 'text-rose-600 dark:text-rose-400' },
-                  { icon: Crown, label: 'Premium', value: stats.premiumUsers, gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40', textColor: 'text-amber-600 dark:text-amber-400' },
-                  { icon: MessageSquare, label: 'Сообщений', value: stats.totalInteractions, gradient: 'from-violet-500 to-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40', textColor: 'text-violet-600 dark:text-violet-400' },
-                  { icon: BarChart3, label: 'Среднее/юзер', value: stats.avgInteractionsPerUser, gradient: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-950/40', textColor: 'text-indigo-600 dark:text-indigo-400' },
-                  { icon: Edit, label: 'С ответами', value: stats.usersWithResponses || 0, gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-50 dark:bg-orange-950/40', textColor: 'text-orange-600 dark:text-orange-400' },
-                ].map((stat, idx) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div
-                      key={idx}
-                      className={`${stat.bg} rounded-xl p-3 flex items-center gap-3 transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${idx === 6 ? 'col-span-4 sm:col-span-1' : ''}`}
-                      data-testid={`stat-card-tablet-${idx}`}
-                    >
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-sm flex-shrink-0`}>
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xl font-bold text-foreground tabular-nums">{stat.value ?? 0}</p>
-                        <p className="text-xs text-muted-foreground truncate">{stat.label}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Desktop: Single row with all stats */}
-              <div className="hidden md:flex gap-2 justify-between">
-                {[
-                  { icon: Users, label: 'Всего', fullLabel: 'Всего пользователей', value: stats.totalUsers, gradient: 'from-blue-500 to-blue-600', bg: 'bg-blue-50/80 dark:bg-blue-950/40', ring: 'ring-blue-200 dark:ring-blue-800' },
-                  { icon: Activity, label: 'Активны', fullLabel: 'Активных пользователей', value: stats.activeUsers, gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50/80 dark:bg-emerald-950/40', ring: 'ring-emerald-200 dark:ring-emerald-800' },
-                  { icon: Shield, label: 'Заблок.', fullLabel: 'Заблокировано', value: stats.blockedUsers, gradient: 'from-rose-500 to-rose-600', bg: 'bg-rose-50/80 dark:bg-rose-950/40', ring: 'ring-rose-200 dark:ring-rose-800' },
-                  { icon: Crown, label: 'Premium', fullLabel: 'Premium пользователей', value: stats.premiumUsers, gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50/80 dark:bg-amber-950/40', ring: 'ring-amber-200 dark:ring-amber-800' },
-                  { icon: MessageSquare, label: 'Сообщ.', fullLabel: 'Всего сообщений', value: stats.totalInteractions, gradient: 'from-violet-500 to-violet-600', bg: 'bg-violet-50/80 dark:bg-violet-950/40', ring: 'ring-violet-200 dark:ring-violet-800' },
-                  { icon: BarChart3, label: 'Среднее', fullLabel: 'Сообщений на пользователя', value: stats.avgInteractionsPerUser, gradient: 'from-indigo-500 to-indigo-600', bg: 'bg-indigo-50/80 dark:bg-indigo-950/40', ring: 'ring-indigo-200 dark:ring-indigo-800' },
-                  { icon: Edit, label: 'Ответы', fullLabel: 'Пользователей с ответами', value: stats.usersWithResponses || 0, gradient: 'from-orange-500 to-orange-600', bg: 'bg-orange-50/80 dark:bg-orange-950/40', ring: 'ring-orange-200 dark:ring-orange-800' },
-                ].map((stat, idx) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div
-                      key={idx}
-                      className={`${stat.bg} group flex-1 rounded-xl p-3 lg:p-4 flex flex-col items-center gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.03] cursor-default ring-1 ${stat.ring} ring-opacity-50`}
-                      title={stat.fullLabel}
-                      data-testid={`stat-card-desktop-${idx}`}
-                    >
-                      <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
-                        <Icon className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xl lg:text-2xl font-bold text-foreground tabular-nums leading-none">{stat.value ?? 0}</p>
-                        <p className="text-[10px] lg:text-xs font-medium text-muted-foreground mt-1 uppercase tracking-wide">{stat.label}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <StatsCards stats={stats} />
           )}
 
           {/* Modern Search & Filters */}
