@@ -75,7 +75,19 @@ export function ResponsePhoto({
     if (isUrl) {
       return (
         <div className="rounded-lg overflow-hidden max-w-md">
-          <img src={valueStr} alt="Фото ответ" className="w-full h-auto rounded-lg border border-border" />
+          <img
+            src={valueStr}
+            alt="Фото ответ"
+            className="w-full h-auto rounded-lg border border-border"
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              img.style.display = 'none';
+              const fallback = document.createElement('div');
+              fallback.className = 'text-xs text-muted-foreground italic';
+              fallback.textContent = 'Файл не найден';
+              img.parentNode?.appendChild(fallback);
+            }}
+          />
         </div>
       );
     }
@@ -84,7 +96,19 @@ export function ResponsePhoto({
     if (photoUrl) {
       return (
         <div className="rounded-lg overflow-hidden max-w-md">
-          <img src={photoUrl} alt="Фото ответ" className="w-full h-auto rounded-lg border border-border" />
+          <img
+            src={photoUrl}
+            alt="Фото ответ"
+            className="w-full h-auto rounded-lg border border-border"
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              img.style.display = 'none';
+              const fallback = document.createElement('div');
+              fallback.className = 'text-xs text-muted-foreground italic';
+              fallback.textContent = 'Файл не найден';
+              img.parentNode?.appendChild(fallback);
+            }}
+          />
         </div>
       );
     }

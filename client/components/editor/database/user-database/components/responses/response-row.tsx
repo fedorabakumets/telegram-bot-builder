@@ -80,7 +80,19 @@ export function ResponseRow({
           if (isImageUrl && !responseData?.media && !responseData?.photoUrl) {
             return (
               <div className="rounded-lg overflow-hidden max-w-[150px]">
-                <img src={valueStr} alt="Ответ" className="w-full h-auto rounded-lg" />
+                <img
+                  src={valueStr}
+                  alt="Ответ"
+                  className="w-full h-auto rounded-lg"
+                  onError={(e) => {
+                    const img = e.target as HTMLImageElement;
+                    img.style.display = 'none';
+                    const fallback = document.createElement('div');
+                    fallback.className = 'text-xs text-muted-foreground italic';
+                    fallback.textContent = 'Файл не найден';
+                    img.parentNode?.appendChild(fallback);
+                  }}
+                />
               </div>
             );
           }

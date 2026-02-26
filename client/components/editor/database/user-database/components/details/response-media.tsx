@@ -80,7 +80,19 @@ export function ResponseMedia({
     if (isUrl) {
       return (
         <div className="rounded-lg overflow-hidden max-w-md">
-          <img src={valueStr} alt="Фото ответ" className="w-full h-auto rounded-lg border border-border" />
+          <img
+            src={valueStr}
+            alt="Фото ответ"
+            className="w-full h-auto rounded-lg border border-border"
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              img.style.display = 'none';
+              const fallback = document.createElement('div');
+              fallback.className = 'text-xs text-muted-foreground italic';
+              fallback.textContent = 'Файл не найден';
+              img.parentNode?.appendChild(fallback);
+            }}
+          />
         </div>
       );
     }
@@ -89,7 +101,19 @@ export function ResponseMedia({
     if (photoUrl) {
       return (
         <div className="rounded-lg overflow-hidden max-w-md">
-          <img src={photoUrl} alt="Фото ответ" className="w-full h-auto rounded-lg border border-border" />
+          <img
+            src={photoUrl}
+            alt="Фото ответ"
+            className="w-full h-auto rounded-lg border border-border"
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              img.style.display = 'none';
+              const fallback = document.createElement('div');
+              fallback.className = 'text-xs text-muted-foreground italic';
+              fallback.textContent = 'Файл не найден';
+              img.parentNode?.appendChild(fallback);
+            }}
+          />
         </div>
       );
     }
@@ -110,7 +134,19 @@ export function ResponseMedia({
     if (photoUrl) {
       return (
         <div className="rounded-lg overflow-hidden max-w-md">
-          <img src={photoUrl} alt="Фото ответ" className="w-full h-auto rounded-lg border border-border" />
+          <img
+            src={photoUrl}
+            alt="Фото ответ"
+            className="w-full h-auto rounded-lg border border-border"
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              img.style.display = 'none';
+              const fallback = document.createElement('div');
+              fallback.className = 'text-xs text-muted-foreground italic';
+              fallback.textContent = 'Файл не найден';
+              img.parentNode?.appendChild(fallback);
+            }}
+          />
         </div>
       );
     }
@@ -124,7 +160,19 @@ export function ResponseMedia({
   if (isImageUrl) {
     return (
       <div className="rounded-lg overflow-hidden max-w-md">
-        <img src={answerValue} alt="Ответ" className="w-full h-auto rounded-lg" />
+        <img
+          src={answerValue}
+          alt="Ответ"
+          className="w-full h-auto rounded-lg"
+          onError={(e) => {
+            const img = e.target as HTMLImageElement;
+            img.style.display = 'none';
+            const fallback = document.createElement('div');
+            fallback.className = 'text-xs text-muted-foreground italic';
+            fallback.textContent = 'Файл не найден';
+            img.parentNode?.appendChild(fallback);
+          }}
+        />
       </div>
     );
   }
