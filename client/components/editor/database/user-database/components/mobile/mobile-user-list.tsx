@@ -48,7 +48,7 @@ export function MobileUserList(props: MobileUserListProps): React.JSX.Element {
   }
 
   return (
-    <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {users.map((user, index) => (
         <MobileUserCard key={user.id || index} user={user} index={index} {...props} />
       ))}

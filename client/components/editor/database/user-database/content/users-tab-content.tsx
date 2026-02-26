@@ -52,36 +52,38 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
 
   return (
     <TabsContent value="users" className="mt-3 px-2 sm:px-3">
-      {isMobile ? (
-        <MobileUserList
-          users={filteredAndSortedUsers}
-          searchQuery={searchQuery}
-          formatUserName={formatUserName}
-          onOpenUserDetailsPanel={onOpenUserDetailsPanel}
-          onOpenDialogPanel={onOpenDialogPanel}
-          handleUserStatusToggle={handleUserStatusToggle}
-          setSelectedUser={setSelectedUser}
-          setShowUserDetails={setShowUserDetails}
-          setSelectedUserForDialog={setSelectedUserForDialog}
-          setShowDialog={setShowDialog}
-          scrollToBottom={scrollToBottom}
-        />
-      ) : (
-        <DesktopTable
-          users={filteredAndSortedUsers}
-          searchQuery={searchQuery}
-          formatUserName={formatUserName}
-          onOpenUserDetailsPanel={onOpenUserDetailsPanel}
-          onOpenDialogPanel={onOpenDialogPanel}
-          handleUserStatusToggle={handleUserStatusToggle}
-          setSelectedUser={setSelectedUser}
-          setShowUserDetails={setShowUserDetails}
-          setSelectedUserForDialog={setSelectedUserForDialog}
-          setShowDialog={setShowDialog}
-          scrollToBottom={scrollToBottom}
-          deleteUserMutation={deleteUserMutation}
-        />
-      )}
+      <div className="p-2 sm:p-3 space-y-3">
+        {isMobile ? (
+          <MobileUserList
+            users={filteredAndSortedUsers}
+            searchQuery={searchQuery}
+            formatUserName={formatUserName}
+            onOpenUserDetailsPanel={onOpenUserDetailsPanel}
+            onOpenDialogPanel={onOpenDialogPanel}
+            handleUserStatusToggle={handleUserStatusToggle}
+            setSelectedUser={setSelectedUser}
+            setShowUserDetails={setShowUserDetails}
+            setSelectedUserForDialog={setSelectedUserForDialog}
+            setShowDialog={setShowDialog}
+            scrollToBottom={scrollToBottom}
+          />
+        ) : (
+          <DesktopTable
+            users={filteredAndSortedUsers}
+            searchQuery={searchQuery}
+            formatUserName={formatUserName}
+            onOpenUserDetailsPanel={onOpenUserDetailsPanel}
+            onOpenDialogPanel={onOpenDialogPanel}
+            handleUserStatusToggle={handleUserStatusToggle}
+            setSelectedUser={setSelectedUser}
+            setShowUserDetails={setShowUserDetails}
+            setSelectedUserForDialog={setSelectedUserForDialog}
+            setShowDialog={setShowDialog}
+            scrollToBottom={scrollToBottom}
+            deleteUserMutation={deleteUserMutation}
+          />
+        )}
+      </div>
     </TabsContent>
   );
 }

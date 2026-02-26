@@ -48,21 +48,19 @@ export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
   const { users, searchQuery } = props;
 
   return (
-    <div className="p-2 sm:p-3">
-      <div className="rounded-lg border border-border bg-card/40 overflow-hidden">
-        <Table>
-          <DesktopTableHeader />
-          <TableBody>
-            {users.length === 0 ? (
-              <DesktopEmptyRow searchQuery={searchQuery} />
-            ) : (
-              users.map((user, index) => (
-                <DesktopTableRow key={user.id || index} user={user} index={index} {...props} />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+    <div className="rounded-lg border border-border bg-card/40 overflow-hidden">
+      <Table>
+        <DesktopTableHeader />
+        <TableBody>
+          {users.length === 0 ? (
+            <DesktopEmptyRow searchQuery={searchQuery} />
+          ) : (
+            users.map((user, index) => (
+              <DesktopTableRow key={user.id || index} user={user} index={index} {...props} />
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }
