@@ -1,10 +1,10 @@
 /**
  * @fileoverview Компонент вкладки ответов
- * @description Отображает таблицу ответов пользователей с фильтрацией
+ * @description Отображает таблицу ответов пользователей с фильтрацией и пагинацией
  */
 
 import { TabsContent } from '@/components/ui/tabs';
-import { ResponsesTabTable, ResponsesUserFilter } from '../../responses-table/components';
+import { ResponsesUserFilter, ResponsesTableWithPagination } from '../../responses-table/components';
 import { useResponsesFilter } from '../../responses-table/hooks';
 import { UserBotData } from '@shared/schema';
 import { Label } from '@/components/ui/label';
@@ -43,7 +43,7 @@ export function ResponsesTabContent(props: ResponsesTabContentProps): React.JSX.
             formatUserName={formatUserName}
           />
         </div>
-        <ResponsesTabTable users={filteredUsers} />
+        <ResponsesTableWithPagination users={filteredUsers} />
       </div>
     </TabsContent>
   );
