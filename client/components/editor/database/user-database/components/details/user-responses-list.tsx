@@ -3,7 +3,8 @@
  * @description Отображает все ответы пользователя в виде списка карточек
  */
 
-import { Badge, Label } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { MessageSquare } from 'lucide-react';
 import { ResponseData, VariableToQuestionMap } from '../../types';
 import { ResponseCard } from './response-card';
