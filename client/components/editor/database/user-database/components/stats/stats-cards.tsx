@@ -107,17 +107,17 @@ export function StatsCards({ stats }: StatsCardsProps) {
         {STATS_DATA.map((stat, idx) => (
           <div
             key={idx}
-            className={`${stat.bg} flex-shrink-0 snap-start w-[120px] rounded-xl p-3 flex flex-col items-center gap-2 transition-transform duration-200 active:scale-95`}
+            className={`${stat.bg} group flex-shrink-0 snap-start w-[140px] rounded-xl p-4 flex flex-col items-center gap-3 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50`}
             data-testid={`stat-card-${idx}`}
           >
-            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-sm`}>
-              <stat.icon className="w-5 h-5 text-white" />
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
+              <stat.icon className="w-6 h-6 text-white" />
             </div>
             <div className="text-center">
-              <p className="text-xl font-bold text-foreground tabular-nums">
+              <p className="text-2xl font-bold text-foreground tabular-nums leading-none">
                 {statValues[idx]}
               </p>
-              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+              <p className="text-xs font-medium text-muted-foreground mt-1 uppercase tracking-wide">
                 {stat.label}
               </p>
             </div>
