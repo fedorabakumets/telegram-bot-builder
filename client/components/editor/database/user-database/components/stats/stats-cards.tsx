@@ -13,7 +13,6 @@ import {
   Users,
 } from 'lucide-react';
 import { UserStats } from '../../types';
-import { TabletStatCard } from './tablet-stat-card';
 
 /**
  * Пропсы компонента статистики
@@ -103,15 +102,25 @@ export function StatsCards({ stats }: StatsCardsProps) {
 
   return (
     <div className="w-full overflow-x-auto">
-      {/* Горизонтальная прокрутка на всех размерах - карточки в одну строку */}
+      {/* Горизонтальная прокрутка - карточки в одну строку */}
       <div className="flex gap-2 min-w-max p-3">
         {STATS_DATA.map((stat, idx) => (
-          <div key={idx} className="flex-shrink-0 w-[140px] sm:w-[160px]">
-            <TabletStatCard
-              {...stat}
-              value={statValues[idx]}
-              testId={`stat-card-${idx}`}
-            />
+          <div
+            key={idx}
+            className={`${stat.bg} flex-shrink-0 snap-start w-[100px] rounded-xl p-3 flex flex-col items-center gap-2 transition-transform duration-200 active:scale-95`}
+            data-testid={`stat-card-${idx}`}
+          >
+            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-sm`}>
+              <stat.icon className="w-4 h-4 text-white" />
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-foreground tabular-nums">
+                {statValues[idx]}
+              </p>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                {stat.label}
+              </p>
+            </div>
           </div>
         ))}
       </div>
