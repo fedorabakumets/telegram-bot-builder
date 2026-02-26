@@ -4,6 +4,7 @@
  */
 
 import { ResponseData } from '../../types';
+import { useState } from 'react';
 
 /**
  * Пропсы компонента ResponsePhoto
@@ -27,6 +28,8 @@ export function ResponsePhoto({
   answerValue,
   getPhotoUrlFromMessages,
 }: ResponsePhotoProps): React.JSX.Element | null {
+  const [imageError, setImageError] = useState(false);
+
   // Медиа массив
   if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
     return (
@@ -48,20 +51,18 @@ export function ResponsePhoto({
 
   // Photo URL
   if (responseData?.photoUrl) {
+    if (imageError) {
+      return (
+        <div className="text-xs text-muted-foreground italic">Файл не найден</div>
+      );
+    }
     return (
       <div className="rounded-lg overflow-hidden max-w-md">
         <img
           src={responseData.photoUrl}
           alt="Фото ответ"
           className="w-full h-auto rounded-lg border border-border"
-          onError={(e) => {
-            const img = e.target as HTMLImageElement;
-            img.style.display = 'none';
-            const fallback = document.createElement('div');
-            fallback.className = 'text-xs text-muted-foreground italic';
-            fallback.textContent = 'Файл не найден';
-            img.parentNode?.appendChild(fallback);
-          }}
+          onError={() => setImageError(true)}
         />
       </div>
     );
@@ -72,6 +73,12 @@ export function ResponsePhoto({
     const valueStr = String(answerValue || '');
     const isUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
 
+    if (imageError) {
+      return (
+        <div className="text-xs text-muted-foreground italic">Файл не найден</div>
+      );
+    }
+
     if (isUrl) {
       return (
         <div className="rounded-lg overflow-hidden max-w-md">
@@ -79,14 +86,7 @@ export function ResponsePhoto({
             src={valueStr}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
-            onError={(e) => {
-              const img = e.target as HTMLImageElement;
-              img.style.display = 'none';
-              const fallback = document.createElement('div');
-              fallback.className = 'text-xs text-muted-foreground italic';
-              fallback.textContent = 'Файл не найден';
-              img.parentNode?.appendChild(fallback);
-            }}
+            onError={() => setImageError(true)}
           />
         </div>
       );
@@ -100,19 +100,13 @@ export function ResponsePhoto({
             src={photoUrl}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
-            onError={(e) => {
-              const img = e.target as HTMLImageElement;
-              img.style.display = 'none';
-              const fallback = document.createElement('div');
-              fallback.className = 'text-xs text-muted-foreground italic';
-              fallback.textContent = 'Файл не найден';
-              img.parentNode?.appendChild(fallback);
-            }}
+            onError={() => setImageError(true)}
           />
         </div>
       );
     }
 
+    // File_id без URL — показываем заглушку
     return (
       <div className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
         <span className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Фото (загрузка...)</span>

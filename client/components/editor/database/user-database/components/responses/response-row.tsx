@@ -73,13 +73,14 @@ export function ResponseRow({
         </div>
       </TableCell>
       <TableCell className="py-2 max-w-sm">
-        <ResponsePhoto responseData={responseData} answerValue={String(answerValue)} getPhotoUrlFromMessages={() => null} />
         {(() => {
           const valueStr = String(answerValue);
           const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
-          if (isImageUrl && !responseData?.media && !responseData?.photoUrl) {
+          
+          // Если это URL изображения (не photo тип)
+          if (isImageUrl && !responseData?.media && !responseData?.photoUrl && responseData?.type !== 'photo' && responseData?.type !== 'image') {
             return (
-              <div className="rounded-lg overflow-hidden max-w-[150px]">
+              <div className="rounded-lg overflow-hidden max-w-[150px] relative">
                 <img
                   src={valueStr}
                   alt="Ответ"
@@ -96,8 +97,15 @@ export function ResponseRow({
               </div>
             );
           }
+          
+          // Если это photo/image тип — используем ResponsePhoto
+          if (responseData?.media || responseData?.photoUrl || responseData?.type === 'photo' || responseData?.type === 'image') {
+            return <ResponsePhoto responseData={responseData} answerValue={valueStr} getPhotoUrlFromMessages={() => null} />;
+          }
+          
+          // Обычный текст
           return (
-            <p className="text-sm text-green-800 dark:text-green-200 font-medium">{valueStr === 'undefined' || valueStr === 'null' ? '-' : valueStr}</p>
+            <p className="text-sm text-green-800 dark:text-green-200 font-medium break-all">{valueStr === 'undefined' || valueStr === 'null' ? '-' : valueStr}</p>
           );
         })()}
       </TableCell>
