@@ -3,9 +3,6 @@
  * @description Форматирует дату в удобочитаемый формат на русском языке
  */
 
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
-
 /**
  * Форматирует дату в удобочитаемый формат
  * @param date - Дата для форматирования
@@ -21,7 +18,6 @@ export function formatDate(
   }
 ): string {
   const {
-    format: dateFormat = 'PPp',
     timeZone = 'Europe/Moscow',
     fallback = 'Не указано'
   } = options ?? {};

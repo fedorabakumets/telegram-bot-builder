@@ -29,9 +29,8 @@ export function UserResponsesPreview({
   const entries = Object.entries(user.userData);
   const [key, value] = entries[0];
   const responseData = parseResponseData(value);
-  const answer = responseData.value
-    ? (responseData.value.length > maxLength ? `${responseData.value.substring(0, maxLength)}...` : String(responseData.value))
-    : (typeof value === 'string' ? (value.length > maxLength ? `${value.substring(0, maxLength)}...` : value) : '');
+  const answerValue = String(responseData.value ?? '');
+  const answer = answerValue.length > maxLength ? `${answerValue.substring(0, maxLength)}...` : answerValue;
 
   return (
     <TableCell className="py-2 max-w-sm">

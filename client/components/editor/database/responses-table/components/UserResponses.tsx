@@ -14,7 +14,6 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { UserBotData } from '@shared/schema';
 import { ResponseRow } from './ResponseRow';
 import { PaginationControls } from './pagination-controls';
 import { ResponseCount } from './response-count';

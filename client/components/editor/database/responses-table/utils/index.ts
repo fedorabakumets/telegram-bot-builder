@@ -4,4 +4,3 @@
  */
 
 export { parseResponseData, getAnswerValue } from './parseResponseData';
-export type { ResponseData } from './parseResponseData';

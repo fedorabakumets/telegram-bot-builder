@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { ItemsPerPageSelectorProps } from '../types';
+import type { ItemsPerPageSelectorProps, ItemsPerPageValue } from '../types';
 
 /**
  * Опции количества элементов на странице

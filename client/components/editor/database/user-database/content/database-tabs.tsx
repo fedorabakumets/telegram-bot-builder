@@ -3,7 +3,7 @@
  * @description Отображает Tabs с переключателями и контентом
  */
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UsersTabContent } from './users-tab-content';
 import { ResponsesTabContent } from './responses-tab-content';
 import { DatabaseContentProps } from './database-content-props';
