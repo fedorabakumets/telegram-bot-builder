@@ -59,7 +59,11 @@ interface CanvasToolbarProps {
   /** Колбэк для копирования в буфер обмена */
   onCopyToClipboard?: (nodeIds: string[]) => void;
   /** Колбэк для вставки из буфера обмена */
-  onPasteFromClipboard?: () => void;
+  onPasteFromClipboard?: (offsetX?: number, offsetY?: number) => void;
+  /** Позиция последнего клика для вставки */
+  lastClickPosition?: { x: number; y: number };
+  /** Transform последнего клика (pan и zoom) */
+  clickTransform?: { pan: { x: number; y: number }; zoom: number };
   /** Колбэк переключения видимости заголовка */
   onToggleHeader?: () => void;
   /** Колбэк переключения видимости боковой панели */
@@ -108,6 +112,8 @@ export function CanvasToolbar({
   onSave,
   onCopyToClipboard,
   onPasteFromClipboard,
+  lastClickPosition,
+  clickTransform,
   onToggleHeader,
   onToggleSidebar,
   onToggleCanvas,
@@ -160,6 +166,8 @@ export function CanvasToolbar({
             <ClipboardButtons
               onCopyToClipboard={onCopyToClipboard}
               onPasteFromClipboard={onPasteFromClipboard}
+              lastClickPosition={lastClickPosition}
+              clickTransform={clickTransform}
               selectedNodeId={selectedNodeId}
               hasClipboardData={hasClipboardData}
             />

@@ -12,7 +12,11 @@ interface ClipboardButtonsProps {
   /** Колбэк для копирования в буфер обмена */
   onCopyToClipboard?: (nodeIds: string[]) => void;
   /** Колбэк для вставки из буфера обмена */
-  onPasteFromClipboard?: () => void;
+  onPasteFromClipboard?: (offsetX?: number, offsetY?: number) => void;
+  /** Позиция последнего клика для вставки */
+  lastClickPosition?: { x: number; y: number };
+  /** Transform последнего клика (pan и zoom) */
+  clickTransform?: { pan: { x: number; y: number }; zoom: number };
   /** Идентификатор выбранного узла */
   selectedNodeId: string | null;
   /** Наличие данных в буфере обмена */
@@ -28,6 +32,8 @@ interface ClipboardButtonsProps {
 export function ClipboardButtons({
   onCopyToClipboard,
   onPasteFromClipboard,
+  lastClickPosition,
+  clickTransform,
   selectedNodeId,
   hasClipboardData
 }: ClipboardButtonsProps) {
@@ -51,6 +57,28 @@ export function ClipboardButtons({
    */
   const pasteIconClasses = 'text-slate-600 dark:text-slate-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors';
 
+  /**
+   * Обработчик клика кнопки вставки
+   * Вычисляет координаты вставки так же, как и для Ctrl+V
+   */
+  const handlePasteClick = () => {
+    if (onPasteFromClipboard && lastClickPosition && clickTransform) {
+      // Формула: client / zoom - pan (вычитаем отрицательный = добавляем)
+      const targetX = lastClickPosition.x / (clickTransform.zoom / 100) - clickTransform.pan.x;
+      const targetY = lastClickPosition.y / (clickTransform.zoom / 100) - clickTransform.pan.y;
+      console.log('📍 Вставка кнопкой:', {
+        targetX, targetY,
+        click: lastClickPosition,
+        clickTransform,
+        formula: `${lastClickPosition.x} / ${clickTransform.zoom / 100} - ${clickTransform.pan.x} = ${targetX}`
+      });
+      onPasteFromClipboard(targetX, targetY);
+    } else if (onPasteFromClipboard) {
+      // Fallback без координат
+      onPasteFromClipboard();
+    }
+  };
+
   return (
     <>
       {onCopyToClipboard && selectedNodeId && (
@@ -65,7 +93,7 @@ export function ClipboardButtons({
 
       {onPasteFromClipboard && hasClipboardData && (
         <button
-          onClick={onPasteFromClipboard}
+          onClick={handlePasteClick}
           className={`${buttonBaseClasses} ${inactiveClasses}`}
           title="Вставить из буфера (Shift + Ctrl + V)"
         >

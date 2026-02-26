@@ -1048,6 +1048,8 @@ export function Canvas({
         onSave={onSave}
         onCopyToClipboard={onCopyToClipboard}
         onPasteFromClipboard={onPasteFromClipboard}
+        lastClickPosition={lastClickPosition}
+        clickTransform={clickTransform}
         onToggleHeader={onToggleHeader}
         onToggleSidebar={onToggleSidebar}
         onToggleCanvas={onToggleCanvas}
