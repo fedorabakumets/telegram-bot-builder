@@ -1,56 +1,18 @@
 // @ts-nocheck
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { BotProject, UserBotData } from '@shared/schema';
-import {
-  Activity,
-  ArrowUpDown,
-  BarChart3,
-  Bot,
-  Calendar,
-  Crown,
-  Database,
-  Edit,
-  Eye,
-  MessageSquare,
-  RefreshCw,
-  Search,
-  Send,
-  Shield,
-  Trash2,
-  User,
-  UserCheck,
-  Users,
-  UserX
-} from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { GoogleSheetsExportButton } from '../../google-sheets/GoogleSheetsExportButton';
-import { BotMessageWithMedia, UserDatabasePanelProps, SortField, SortDirection, UserStats, ResponseData, VariableToQuestionMap, UserMessageCounts } from './types';
+import { UserDatabasePanelProps, SortField, SortDirection, UserStats, VariableToQuestionMap, UserMessageCounts } from './types';
 import { formatDate } from './utils/format-date';
 import { formatUserName } from './utils/format-user-name';
 import { useUserDatabase, useUserMutations } from './hooks';
-import { StatsCards } from './components/stats';
-import { ResponsesTabTable } from './components/responses';
-import { MobileUserList } from './components/mobile';
-import { DesktopTable } from './components/desktop';
 import { MessageDialog } from './components/dialog';
 import { UserDetailsDialog } from './components/details';
-import { DatabaseHeader, DatabaseToggle, HeaderActions, ExportInfo, DatabaseDisabled } from './components/header';
-import { FiltersContainer } from './components/filters';
+import { DatabaseContent } from './database-content';
 
 /**
  * @function UserDatabasePanel
@@ -476,172 +438,4 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
       />
     </>
   );
-}
-
-function DatabaseContent(props: DatabaseContentProps): React.JSX.Element {
-  const {
-    projectId,
-    projectName,
-    isDatabaseEnabled,
-    toggleDatabaseMutation,
-    handleRefresh,
-    deleteAllUsersMutation,
-    stats,
-    searchQuery,
-    filterActive,
-    setFilterActive,
-    filterPremium,
-    setFilterPremium,
-    sortField,
-    sortDirection,
-    setSortField,
-    setSortDirection,
-    isMobile,
-    filteredAndSortedUsers,
-    formatUserName,
-    onOpenUserDetailsPanel,
-    setSelectedUser,
-    setShowUserDetails,
-    onOpenDialogPanel,
-    setSelectedUserForDialog,
-    setShowDialog,
-    scrollToBottom,
-    handleUserStatusToggle,
-    deleteUserMutation,
-    project,
-  } = props;
-
-  return (
-    <ScrollArea className="h-full w-full">
-      <div className="flex flex-col bg-background">
-        <div className="border-b border-border/50 bg-card">
-          <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5">
-            <DatabaseHeader projectName={projectName} />
-
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <DatabaseToggle
-                isDatabaseEnabled={isDatabaseEnabled}
-                onToggle={(checked) => toggleDatabaseMutation.mutate(checked)}
-                isPending={toggleDatabaseMutation.isPending}
-              />
-
-              {isDatabaseEnabled && (
-                <HeaderActions
-                  projectId={projectId}
-                  projectName={projectName}
-                  onRefresh={handleRefresh}
-                  onDeleteAll={() => deleteAllUsersMutation.mutate()}
-                />
-              )}
-            </div>
-
-            <ExportInfo project={project} />
-
-            {isDatabaseEnabled && stats && <StatsCards stats={stats} />}
-
-            {isDatabaseEnabled && (
-              <FiltersContainer
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                filterActive={filterActive?.toString() || 'all'}
-                setFilterActive={setFilterActive}
-                filterPremium={filterPremium?.toString() || 'all'}
-                setFilterPremium={setFilterPremium}
-                sortField={sortField}
-                sortDirection={sortDirection}
-                setSort={(field, direction) => {
-                  setSortField(field);
-                  setSortDirection(direction);
-                }}
-              />
-            )}
-          </div>
-        </div>
-
-        {!isDatabaseEnabled && <DatabaseDisabled />}
-
-        {isDatabaseEnabled && (
-          <div>
-            <Tabs defaultValue="users" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 flex-shrink-0 m-3 sm:m-4">
-                <TabsTrigger value="users">Пользователи</TabsTrigger>
-                <TabsTrigger value="responses">Ответы пользователей</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="users" className="mt-2">
-                {isMobile ? (
-                  <MobileUserList
-                    users={filteredAndSortedUsers}
-                    searchQuery={searchQuery}
-                    formatUserName={formatUserName}
-                    onOpenUserDetailsPanel={onOpenUserDetailsPanel}
-                    onOpenDialogPanel={onOpenDialogPanel}
-                    handleUserStatusToggle={handleUserStatusToggle}
-                    setSelectedUser={setSelectedUser}
-                    setShowUserDetails={setShowUserDetails}
-                    setSelectedUserForDialog={setSelectedUserForDialog}
-                    setShowDialog={setShowDialog}
-                    scrollToBottom={scrollToBottom}
-                  />
-                ) : (
-                  <DesktopTable
-                    users={filteredAndSortedUsers}
-                    searchQuery={searchQuery}
-                    formatUserName={formatUserName}
-                    onOpenUserDetailsPanel={onOpenUserDetailsPanel}
-                    onOpenDialogPanel={onOpenDialogPanel}
-                    handleUserStatusToggle={handleUserStatusToggle}
-                    setSelectedUser={setSelectedUser}
-                    setShowUserDetails={setShowUserDetails}
-                    setSelectedUserForDialog={setSelectedUserForDialog}
-                    setShowDialog={setShowDialog}
-                    scrollToBottom={scrollToBottom}
-                    deleteUserMutation={deleteUserMutation}
-                  />
-                )}
-              </TabsContent>
-
-              <TabsContent value="responses" className="mt-2">
-                <div className="p-2 sm:p-3">
-                  <ResponsesTabTable users={filteredAndSortedUsers} />
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        )}
-      </div>
-    </ScrollArea>
-  );
-}
-
-interface DatabaseContentProps {
-  projectId: number;
-  projectName: string;
-  isDatabaseEnabled: boolean;
-  toggleDatabaseMutation: any;
-  handleRefresh: () => void;
-  deleteAllUsersMutation: any;
-  stats: { totalUsers?: number; activeUsers?: number; blockedUsers?: number; premiumUsers?: number; totalInteractions?: number; avgInteractionsPerUser?: number; usersWithResponses?: number };
-  searchQuery: string;
-  filterActive: boolean | null;
-  setFilterActive: React.Dispatch<React.SetStateAction<boolean | null>>;
-  filterPremium: boolean | null;
-  setFilterPremium: React.Dispatch<React.SetStateAction<boolean | null>>;
-  sortField: string;
-  sortDirection: string;
-  setSortField: React.Dispatch<React.SetStateAction<SortField>>;
-  setSortDirection: React.Dispatch<React.SetStateAction<SortDirection>>;
-  isMobile: boolean;
-  filteredAndSortedUsers: UserBotData[];
-  formatUserName: (user: UserBotData) => string;
-  onOpenUserDetailsPanel: ((user: UserBotData) => void) | undefined;
-  setSelectedUser: React.Dispatch<React.SetStateAction<UserBotData | null>>;
-  setShowUserDetails: React.Dispatch<React.SetStateAction<boolean>>;
-  onOpenDialogPanel: ((user: UserBotData) => void) | undefined;
-  setSelectedUserForDialog: React.Dispatch<React.SetStateAction<UserBotData | null>>;
-  setShowDialog: React.Dispatch<React.SetStateAction<boolean>>;
-  scrollToBottom: () => void;
-  handleUserStatusToggle: (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => void;
-  deleteUserMutation: any;
-  project?: BotProject;
 }
