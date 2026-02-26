@@ -43,28 +43,28 @@ export function UserResponses({ user }: UserResponsesProps): React.JSX.Element |
   return (
     <>
       <Separator />
-      <div className="space-y-2 xs:space-y-2.5 sm:space-y-3 w-full">
-        <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2">
-          <MessageSquare className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
-          <Label className="text-xs xs:text-sm font-semibold truncate w-full">Ответы пользователя</Label>
-          <Badge variant="secondary" className="text-[10px] xs:text-xs sm:text-xs flex-shrink-0">
+      <div className="space-y-1.5 xs:space-y-2 sm:space-y-2.5 w-full">
+        <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2">
+          <MessageSquare className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
+          <Label className="text-[10px] xs:text-xs sm:text-sm font-semibold truncate w-full">Ответы пользователя</Label>
+          <Badge variant="secondary" className="text-[9px] xs:text-[10px] sm:text-xs flex-shrink-0 px-1 xs:px-1.5 sm:px-2 py-0">
             {totalCount}
           </Badge>
         </div>
-        <div className="pl-4 xs:pl-5 sm:pl-6 w-full">
+        <div className="pl-3 xs:pl-4 sm:pl-5 w-full">
           {totalCount > 48 && (
-            <div className="text-[10px] xs:text-xs sm:text-xs text-muted-foreground mb-2">
+            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground mb-1.5">
               Отображены первые 48 из {totalCount}
             </div>
           )}
           <div className="rounded-md border overflow-hidden w-full">
             <div className="overflow-x-auto">
-              <Table className="w-full min-w-[320px]">
+              <Table className="w-full min-w-[280px] text-[9px] xs:text-[10px] sm:text-xs">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-1/3 min-w-[80px] font-semibold text-[10px] xs:text-[10px] sm:text-xs whitespace-nowrap">Переменная</TableHead>
-                    <TableHead className="w-1/3 min-w-[100px] font-semibold text-[10px] xs:text-[10px] sm:text-xs whitespace-nowrap">Ответ</TableHead>
-                    <TableHead className="w-1/3 min-w-[60px] font-semibold text-[10px] xs:text-[10px] sm:text-xs whitespace-nowrap">Тип</TableHead>
+                    <TableHead className="w-[35%] min-w-[70px] font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Переменная</TableHead>
+                    <TableHead className="w-[45%] min-w-[90px] font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Ответ</TableHead>
+                    <TableHead className="w-[20%] min-w-[50px] font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Тип</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

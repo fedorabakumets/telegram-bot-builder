@@ -35,14 +35,14 @@ export function ResponseRow({ variableKey, rawValue }: ResponseRowProps): React.
     : variableKey;
 
   return (
-    <TableRow className="hover:bg-muted/50">
-      <TableCell className="align-top min-w-[80px] max-w-[120px] py-2 xs:py-2.5 sm:py-3">
-        <div className="font-medium text-[10px] xs:text-[10px] sm:text-sm break-words line-clamp-2">{displayName}</div>
+    <TableRow className="hover:bg-muted/50 border-b border-border/30">
+      <TableCell className="align-top min-w-[70px] max-w-[100px] py-1.5 xs:py-2 sm:py-2.5 px-2 xs:px-2.5 sm:px-3">
+        <div className="font-medium text-[9px] xs:text-[10px] sm:text-xs break-words line-clamp-2 leading-tight">{displayName}</div>
       </TableCell>
-      <TableCell className="align-top min-w-[100px] py-2 xs:py-2.5 sm:py-3">
+      <TableCell className="align-top min-w-[90px] py-1.5 xs:py-2 sm:py-2.5 px-2 xs:px-2.5 sm:px-3">
         <ResponseCell responseData={responseData} answerValue={answerValue} />
       </TableCell>
-      <TableCell className="align-top min-w-[60px] py-2 xs:py-2.5 sm:py-3">
+      <TableCell className="align-top min-w-[50px] py-1.5 xs:py-2 sm:py-2.5 px-2 xs:px-2.5 sm:px-3">
         <ResponseTypeBadge type={responseData?.type} />
       </TableCell>
     </TableRow>
