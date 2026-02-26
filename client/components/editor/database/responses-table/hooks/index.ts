@@ -4,3 +4,4 @@
  */
 
 export { useResponsePagination } from './use-response-pagination';
+export { useResponsesFilter } from './use-responses-filter';

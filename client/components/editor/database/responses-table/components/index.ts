@@ -16,3 +16,4 @@ export { FileNotFound } from './file-not-found';
 export { UserResponsesPreview } from './user-responses-preview';
 export { MobileUserResponses } from './mobile-user-responses';
 export { UserResponsesList } from './user-responses-list';
+export { ResponsesUserFilter } from './responses-user-filter';

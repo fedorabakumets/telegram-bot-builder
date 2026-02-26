@@ -48,7 +48,10 @@ export function DatabaseTabs(props: DatabaseTabsProps): React.JSX.Element {
       </TabsList>
 
       <UsersTabContent isMobile={isMobile} {...restProps} />
-      <ResponsesTabContent users={restProps.filteredAndSortedUsers} />
+      <ResponsesTabContent
+        users={restProps.filteredAndSortedUsers}
+        formatUserName={restProps.formatUserName}
+      />
     </Tabs>
   );
 }

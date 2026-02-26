@@ -13,3 +13,4 @@ export type { ResponseData } from './response-data';
 export type { FileNotFoundProps } from './file-not-found-props';
 export type { UserResponsesPreviewProps } from './user-responses-preview-props';
 export type { UserResponsesListProps } from './user-responses-list-props';
+export type { ResponsesUserFilterProps } from './responses-user-filter-props';
