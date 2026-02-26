@@ -58,8 +58,8 @@ export function ResponsePhoto({
             const img = e.target as HTMLImageElement;
             img.style.display = 'none';
             const fallback = document.createElement('div');
-            fallback.className = 'inline-flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800';
-            fallback.innerHTML = '<span class="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Файл не найден</span>';
+            fallback.className = 'text-xs text-muted-foreground italic';
+            fallback.textContent = 'Файл не найден';
             img.parentNode?.appendChild(fallback);
           }}
         />
