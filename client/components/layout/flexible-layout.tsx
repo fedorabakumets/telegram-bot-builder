@@ -288,6 +288,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     if ((leftEl || rightElements.length > 0) && centerEl && !topEl && !bottomEl) {
       const leftSize = leftEl?.size || 0;
       const totalRightSize = rightElements.reduce((sum, el) => sum + el.size, 0);
+      const hasDialog = rightElements.some(el => el.type === 'dialog');
 
       return (
         <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -321,7 +322,11 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           </ResizablePanel>
           {rightElements.length > 0 && (
             <>
-              <CodeResizeHandle direction="vertical" />
+              {hasDialog ? (
+                <DialogResizeHandle direction="vertical" />
+              ) : (
+                <CodeResizeHandle direction="vertical" />
+              )}
               <ResizablePanel
                 id="right-panel"
                 order={3}
@@ -396,7 +401,11 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             </ResizablePanel>
             {rightElements.length > 0 && (
               <>
-                <CodeResizeHandle direction="vertical" />
+                {rightElements.some(el => el.type === 'dialog') ? (
+                  <DialogResizeHandle direction="vertical" />
+                ) : (
+                  <CodeResizeHandle direction="vertical" />
+                )}
                 <ResizablePanel
                   id="combo-right-panel"
                   order={3}
