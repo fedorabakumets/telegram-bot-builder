@@ -4,13 +4,11 @@
  */
 
 import React, { ReactNode } from 'react';
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from '@/components/ui/resizable';
-import { CodeResizeHandle } from '../../code-resize-handle';
-import { DialogResizeHandle } from '../../dialog-resize-handle';
+import { ResizablePanel } from '@/components/ui/resizable';
+import { TopBar } from './top-bar';
+import { BottomBar } from './bottom-bar';
+import { ComboLeftPanel } from './combo-left-panel';
+import { ComboRightPanels } from './combo-right-panels';
 
 /**
  * Пропсы компонента CombinedLayout
@@ -47,58 +45,36 @@ interface CombinedLayoutProps {
 export function CombinedLayout(props: CombinedLayoutProps): React.JSX.Element {
   const {
     topContent,
-    topSize = 10,
+    topSize,
     leftContent,
     leftType,
     centerContent,
     rightElements,
     bottomContent,
-    bottomSize = 100,
+    bottomSize,
   } = props;
 
-  const totalRightSize = rightElements.reduce((sum, el) => sum + el.size, 0);
   const hasDialog = rightElements.some(el => el.type === 'dialog');
   const hasUserDetails = leftType === 'userDetails';
   const centerMinSize = hasDialog || hasUserDetails ? 20 : 50;
-  const rightMinSize = hasDialog ? 10 : 15;
-  const rightMaxSize = hasDialog ? 45 : 40;
+  const centerMaxSize = rightElements.length > 0 ? 80 : 85;
 
   return (
     <div className="h-full flex flex-col">
-      {topContent && (
-        <div className="bg-background" style={{ minHeight: `${topSize}rem` }}>
-          {topContent}
-        </div>
-      )}
+      <TopBar size={topSize}>{topContent}</TopBar>
       <div className="flex-1 min-h-0">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {leftContent && (
-            <>
-              <ResizablePanel
-                id="combo-left-panel"
-                order={1}
-                defaultSize={leftType === 'userDetails' ? 20 : 25}
-                minSize={hasUserDetails ? 10 : 15}
-                maxSize={hasUserDetails ? 45 : 40}
-                className="w-full overflow-hidden"
-              >
-                <div className="h-full w-full border-r border-border bg-background overflow-hidden">
-                  {leftContent}
-                </div>
-              </ResizablePanel>
-              {leftType === 'userDetails' ? (
-                <DialogResizeHandle direction="vertical" />
-              ) : (
-                <CodeResizeHandle direction="vertical" />
-              )}
-            </>
+            <ComboLeftPanel type={leftType}>
+              {leftContent}
+            </ComboLeftPanel>
           )}
           <ResizablePanel
             id="combo-center-panel"
             order={2}
             defaultSize={rightElements.length > 0 ? 60 : 80}
             minSize={centerMinSize}
-            maxSize={rightElements.length > 0 ? 80 : 85}
+            maxSize={centerMaxSize}
             className="overflow-hidden"
           >
             <div className="h-full w-full bg-background overflow-hidden flex flex-col">
@@ -106,54 +82,11 @@ export function CombinedLayout(props: CombinedLayoutProps): React.JSX.Element {
             </div>
           </ResizablePanel>
           {rightElements.length > 0 && (
-            <>
-              {hasDialog ? (
-                <DialogResizeHandle direction="vertical" />
-              ) : (
-                <CodeResizeHandle direction="vertical" />
-              )}
-              <ResizablePanel
-                id="combo-right-panel"
-                order={3}
-                defaultSize={totalRightSize}
-                minSize={rightMinSize}
-                maxSize={rightMaxSize}
-                className="w-full overflow-hidden"
-              >
-                <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-                  {rightElements.flatMap((rightEl, index) => [
-                    ...(index > 0 ? (
-                      <ResizableHandle
-                        key={`handle-${rightEl.id}`}
-                        withHandle
-                        className="bg-gradient-to-r from-transparent via-slate-200/0 to-transparent hover:from-purple-500/15 hover:via-purple-500/30 hover:to-purple-500/15 dark:hover:from-purple-600/15 dark:hover:via-purple-500/25 dark:hover:to-purple-600/15 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md"
-                      />
-                    ) : []),
-                    <ResizablePanel
-                      key={`panel-${rightEl.id}`}
-                      id={`combo-right-subpanel-${rightEl.id}`}
-                      order={index + 1}
-                      defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
-                      minSize={rightEl.type === 'dialog' ? 10 : 10}
-                      maxSize={100}
-                      className="overflow-hidden"
-                    >
-                      <div className="h-full w-full overflow-hidden flex flex-col">
-                        {rightEl.content}
-                      </div>
-                    </ResizablePanel>
-                  ])}
-                </ResizablePanelGroup>
-              </ResizablePanel>
-            </>
+            <ComboRightPanels elements={rightElements} />
           )}
         </ResizablePanelGroup>
       </div>
-      {bottomContent && (
-        <div className="border-t border-border bg-background" style={{ minHeight: `${bottomSize}px` }}>
-          {bottomContent}
-        </div>
-      )}
+      <BottomBar size={bottomSize}>{bottomContent}</BottomBar>
     </div>
   );
 }
