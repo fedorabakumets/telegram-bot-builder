@@ -9,6 +9,7 @@ import { Hash } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { UserBotData } from '@shared/schema';
+import { CopyJsonButton } from './copy-json-button';
 
 /**
  * @interface RawJsonProps
@@ -36,6 +37,7 @@ export function RawJson({ user }: RawJsonProps): React.JSX.Element | null {
         <div className="flex items-center gap-1.5 sm:gap-2">
           <Hash className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
           <Label className="text-xs sm:text-sm font-semibold">Все данные (JSON)</Label>
+          <CopyJsonButton data={user.userData} />
         </div>
         <div className="pl-5 sm:pl-6 w-full min-w-0">
           <Textarea
