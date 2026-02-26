@@ -12,7 +12,7 @@ import { UserInfoGrid } from './user-info-grid';
 import { UserStatusToggle } from './user-status-toggle';
 import { UserDates } from './user-dates';
 import { UserTags } from './user-tags';
-import { UserResponsesList } from './user-responses-list';
+import { UserResponsesList } from '../../../responses-table/components/user-responses-list';
 import { UserJsonData } from './user-json-data';
 
 /**

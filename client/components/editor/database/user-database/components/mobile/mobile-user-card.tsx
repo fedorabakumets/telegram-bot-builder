@@ -8,7 +8,7 @@ import { UserBotData } from '@shared/schema';
 import { MobileUserHeader } from './mobile-user-header';
 import { MobileUserBadges } from './mobile-user-badges';
 import { MobileUserStats } from './mobile-user-stats';
-import { MobileUserResponses } from './mobile-user-responses';
+import { MobileUserResponses } from '../../../responses-table/components/mobile-user-responses';
 
 /**
  * Пропсы компонента MobileUserCard

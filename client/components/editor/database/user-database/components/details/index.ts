@@ -8,7 +8,6 @@ export * from './user-info-grid';
 export * from './user-status-toggle';
 export * from './user-dates';
 export * from './user-tags';
-export * from './user-responses-list';
 export * from './response-card';
 export * from './response-media';
 export * from './user-json-data';

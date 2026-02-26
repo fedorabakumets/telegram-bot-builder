@@ -9,4 +9,3 @@ export * from './mobile-user-card';
 export * from './mobile-user-header';
 export * from './mobile-user-badges';
 export * from './mobile-user-stats';
-export * from './mobile-user-responses';

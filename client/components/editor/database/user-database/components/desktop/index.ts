@@ -10,6 +10,5 @@ export * from './desktop-table-row';
 export * from './desktop-user-cell';
 export * from './desktop-status-cell';
 export * from './desktop-messages-cell';
-export * from './desktop-responses-cell';
 export * from './desktop-date-cell';
 export * from './desktop-actions-cell';

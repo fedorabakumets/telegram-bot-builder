@@ -8,7 +8,7 @@ import { UserBotData } from '@shared/schema';
 import { DesktopUserCell } from './desktop-user-cell';
 import { DesktopStatusCell } from './desktop-status-cell';
 import { DesktopMessagesCell } from './desktop-messages-cell';
-import { DesktopResponsesCell } from './desktop-responses-cell';
+import { UserResponsesPreview } from '../../../responses-table/components/user-responses-preview';
 import { DesktopDateCell } from './desktop-date-cell';
 import { DesktopActionsCell } from './desktop-actions-cell';
 
@@ -64,7 +64,7 @@ export function DesktopTableRow(props: DesktopTableRowProps): React.JSX.Element 
       <DesktopUserCell user={user} formatUserName={props.formatUserName} />
       <DesktopStatusCell user={user} />
       <DesktopMessagesCell user={user} />
-      <DesktopResponsesCell user={user} />
+      <UserResponsesPreview user={user} />
       <DesktopDateCell date={user.lastInteraction} />
       <DesktopDateCell date={user.createdAt} />
       <DesktopActionsCell {...props} />
