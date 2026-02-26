@@ -51,8 +51,8 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
   } = props;
 
   return (
-    <TabsContent value="users" className="mt-3 px-2 sm:px-3">
-      <div className="p-2 sm:p-3 space-y-3">
+    <TabsContent value="users" className="mt-3 w-full block px-2 sm:px-3">
+      <div className="p-2 sm:p-3 space-y-3 w-full">
         {isMobile ? (
           <MobileUserList
             users={filteredAndSortedUsers}
