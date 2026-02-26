@@ -1,6 +1,6 @@
 // @ts-nocheck
-import React, { useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,8 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import {
   User,
   X,
@@ -25,39 +23,13 @@ import {
   UserCheck,
   UserX
 } from 'lucide-react';
-import { UserBotData, BotMessage, BotProject } from '@shared/schema';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
-
-/**
- * @typedef {Object} BotMessageWithMedia
- * @property {BotMessage} - Расширенное сообщение бота с дополнительными полями медиа
- * @property {Array<{id: number, url: string, type: string, width?: number, height?: number}>} [media] - Массив медиафайлов, прикрепленных к сообщению
- */
-type BotMessageWithMedia = BotMessage & {
-  media?: Array<{
-    id: number;
-    url: string;
-    type: string;
-    width?: number;
-    height?: number;
-  }>;
-};
-
-/**
- * @interface UserDetailsPanelProps
- * @description Интерфейс свойств компонента панели деталей пользователя
- * @property {number} projectId - Идентификатор проекта
- * @property {UserBotData | null} user - Данные пользователя или null, если пользователь не выбран
- * @property {Function} onClose - Функция закрытия панели
- * @property {Function} [onOpenDialog] - Необязательная функция открытия диалога с пользователем
- */
-interface UserDetailsPanelProps {
-  projectId: number;
-  user: UserBotData | null;
-  onClose: () => void;
-  onOpenDialog?: (user: UserBotData) => void;
-}
+import { UserBotData, BotProject } from '@shared/schema';
+import { formatDate } from './utils/formatDate';
+import { formatUserName } from './utils/formatUserName';
+import { useUserMessages } from './hooks/useUserMessages';
+import { useVariableMapping } from './hooks/useVariableMapping';
+import { useUpdateUser } from './hooks/useUpdateUser';
+import { UserDetailsPanelProps, BotMessageWithMedia } from './types';
 
 /**
  * @function UserDetailsPanel
@@ -66,160 +38,23 @@ interface UserDetailsPanelProps {
  * @returns {JSX.Element} Элемент интерфейса с информацией о пользователе
  */
 export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: UserDetailsPanelProps): React.JSX.Element {
-  const { toast } = useToast();
-  const qClient = useQueryClient();
 
   /**
-   * @constant {BotProject} project - Данные проекта, полученные через react-query
+   * @constant {BotProject} project - Данные проекта
    */
   const { data: project } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectId}`],
   });
 
-  /**
-   * @constant {BotMessageWithMedia[]} messages - Массив сообщений пользователя, полученных через react-query
-   */
-  const { data: messages = [] } = useQuery<BotMessageWithMedia[]>({
-    queryKey: [`/api/projects/${projectId}/users/${user?.userId}/messages`],
-    enabled: !!user?.userId,
-    staleTime: 0,
-  });
+  const { messages, total, userSent, botSent } = useUserMessages(projectId, user?.userId);
+
+  const variableToQuestionMap = useVariableMapping(project);
+
+  const updateUserMutation = useUpdateUser(projectId, user);
 
   /**
-   * @constant {Object} userMessageCounts - Подсчет сообщений пользователя
-   * @property {number} total - Общее количество сообщений
-   * @property {number} userSent - Количество сообщений от пользователя
-   * @property {number} botSent - Количество сообщений от бота
-   */
-  const userMessageCounts = useMemo(() => {
-    const userSent = messages.filter(m => m.messageType === 'user').length;
-    const botSent = messages.filter(m => m.messageType === 'bot').length;
-    return {
-      total: messages.length,
-      userSent,
-      botSent
-    };
-  }, [messages]);
-
-  /**
-   * @constant {Record<string, string>} variableToQuestionMap - Карта соответствия переменных вопросам из проекта
-   * @description Создает карту соответствия между переменными ввода и текстами вопросов из проекта
-   * для отображения контекста ответов пользователя
-   */
-  const variableToQuestionMap = useMemo(() => {
-    const mapping: Record<string, string> = {};
-    if (!project?.data) return mapping;
-
-    try {
-      const flowData = typeof project.data === 'string'
-        ? JSON.parse(project.data as string)
-        : project.data as any;
-
-      const sheets = flowData?.sheets || [];
-      for (const sheet of sheets) {
-        const nodes = sheet?.nodes || [];
-        for (const node of nodes) {
-          const data = node?.data;
-          if (!data) continue;
-
-          const questionText = data.messageText;
-          if (!questionText) continue;
-
-          if (data.inputVariable) {
-            mapping[data.inputVariable] = questionText;
-          }
-          if (data.photoInputVariable) {
-            mapping[data.photoInputVariable] = questionText;
-          }
-          if (data.videoInputVariable) {
-            mapping[data.videoInputVariable] = questionText;
-          }
-          if (data.audioInputVariable) {
-            mapping[data.audioInputVariable] = questionText;
-          }
-          if (data.documentInputVariable) {
-            mapping[data.documentInputVariable] = questionText;
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error parsing project data for variable mapping:', e);
-    }
-
-    return mapping;
-  }, [project?.data]);
-
-
-  /**
-   * @function formatDate
-   * @description Форматирует дату в удобочитаемый формат на русском языке
-   * @param {unknown} date - Дата для форматирования (может быть любого типа)
-   * @returns {string} Отформатированная строка даты или 'Не указано'
-   */
-  const formatDate = (date: unknown): string => {
-    if (!date) return 'Не указано';
-    try {
-      const dateObj = typeof date === 'string' ? new Date(date) :
-        date instanceof Date ? date :
-          typeof date === 'number' ? new Date(date) :
-            'Не указано';
-
-      if (dateObj === 'Не указано') return 'Не указано';
-
-      return format(dateObj, 'PPp', { locale: ru });
-    } catch {
-      return 'Не указано';
-    }
-  };
-
-  /**
-   * @function formatUserName
-   * @description Форматирует имя пользователя для отображения
-   * @param {UserBotData|null} userData - Данные пользователя
-   * @returns {string} Отформатированное имя пользователя
-   */
-  const formatUserName = (userData: UserBotData | null): string => {
-    if (!userData) return '';
-    const parts = [];
-    if (userData.firstName) parts.push(userData.firstName);
-    if (userData.lastName) parts.push(userData.lastName);
-    if (userData.userName) parts.push(`@${userData.userName}`);
-    return parts.length > 0 ? parts.join(' ') : `ID: ${userData.userId}`;
-  };
-
-  /**
-   * @constant {Object} updateUserMutation - Мутация для обновления данных пользователя
-   * @description Реализует логику обновления данных пользователя через API запрос
-   * и управляет состоянием после успешного или неудачного обновления
-   */
-  const updateUserMutation = useMutation({
-    mutationFn: async (updates: Partial<UserBotData>) => {
-      if (!user) throw new Error('No user selected');
-      return apiRequest('PUT', `/api/users/${user.userId}`, updates);
-    },
-    onSuccess: () => {
-      qClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      qClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
-      qClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users/search`] });
-      toast({
-        title: "Сохранено",
-        description: "Данные пользователя обновлены",
-      });
-    },
-    onError: (error: any) => {
-      console.error('Update user error:', error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось обновить данные",
-        variant: "destructive",
-      });
-    }
-  });
-
-  /**
-   * @function handleUserStatusToggle
-   * @description Переключает статус активности пользователя
-   * @param {'isActive'} field - Поле статуса, которое нужно переключить
+   * Переключает статус активности пользователя
+   * @param {'isActive'} field - Поле статуса для переключения
    */
   const handleUserStatusToggle = (field: 'isActive') => {
     if (!user) return;
@@ -227,7 +62,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
     updateUserMutation.mutate({ [field]: !currentValue ? 1 : 0 } as Partial<UserBotData>);
   };
 
-  // Если пользователь не выбран, отобразить сообщение
+  // Если пользователь не выбран
   if (!user) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-4">
@@ -303,19 +138,19 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
             <div className="grid grid-cols-3 gap-2 pl-6">
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
                 <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  {userMessageCounts.total}
+                  {total}
                 </div>
                 <div className="text-xs text-muted-foreground">Всего</div>
               </div>
               <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
                 <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {userMessageCounts.userSent}
+                  {userSent}
                 </div>
                 <div className="text-xs text-muted-foreground">От юзера</div>
               </div>
               <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 text-center">
                 <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                  {userMessageCounts.botSent}
+                  {botSent}
                 </div>
                 <div className="text-xs text-muted-foreground">От бота</div>
               </div>

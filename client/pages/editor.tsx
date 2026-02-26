@@ -24,7 +24,7 @@ import { useLocation } from 'wouter';
 import { DialogPanel } from '@/components/editor/database/dialog-panel';
 import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import { UserDatabasePanel } from '@/components/editor/database/user-database-panel';
-import { UserDetailsPanel } from '@/components/editor/database/user-details-panel';
+import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
 import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
