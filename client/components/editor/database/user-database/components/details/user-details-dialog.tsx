@@ -38,9 +38,9 @@ interface UserDetailsDialogProps {
 /**
  * Компонент диалога деталей пользователя
  * @param props - Пропсы компонента
- * @returns JSX компонент диалога
+ * @returns JSX компонент диалога или null
  */
-export function UserDetailsDialog(props: UserDetailsDialogProps): React.JSX.Element {
+export function UserDetailsDialog(props: UserDetailsDialogProps): React.JSX.Element | null {
   const {
     open,
     onOpenChange,
@@ -64,35 +64,33 @@ export function UserDetailsDialog(props: UserDetailsDialogProps): React.JSX.Elem
       >
         <UserDetailsHeader />
 
-        {selectedUser && (
-          <div className="space-y-6">
-            <UserInfoGrid
-              selectedUser={selectedUser}
-              userMessageCounts={userMessageCounts}
-              isMobile={isMobile}
+        <div className="space-y-6">
+          <UserInfoGrid
+            selectedUser={selectedUser}
+            userMessageCounts={userMessageCounts}
+            isMobile={isMobile}
+          />
+
+          <UserStatusToggle selectedUser={selectedUser} handleUserStatusToggle={handleUserStatusToggle} />
+
+          <UserDates
+            createdAt={selectedUser.createdAt}
+            updatedAt={selectedUser.updatedAt}
+            lastInteraction={selectedUser.lastInteraction}
+          />
+
+          <UserTags tags={selectedUser.tags || []} />
+
+          {selectedUser.userData && Object.keys(selectedUser.userData).length > 0 ? (
+            <UserResponsesList
+              userData={selectedUser.userData}
+              variableToQuestionMap={variableToQuestionMap}
+              getPhotoUrlFromMessages={getPhotoUrlFromMessages}
             />
+          ) : null}
 
-            <UserStatusToggle selectedUser={selectedUser} handleUserStatusToggle={handleUserStatusToggle} />
-
-            <UserDates
-              createdAt={selectedUser.createdAt}
-              updatedAt={selectedUser.updatedAt}
-              lastInteraction={selectedUser.lastInteraction}
-            />
-
-            <UserTags tags={selectedUser.tags || []} />
-
-            {selectedUser.userData && Object.keys(selectedUser.userData).length > 0 && (
-              <UserResponsesList
-                userData={selectedUser.userData as Record<string, unknown>}
-                variableToQuestionMap={variableToQuestionMap}
-                getPhotoUrlFromMessages={getPhotoUrlFromMessages}
-              />
-            )}
-
-            <UserJsonData userData={selectedUser.userData} />
-          </div>
-        )}
+          <UserJsonData userData={selectedUser.userData} />
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -14,7 +14,7 @@ import { ResponseCard } from './response-card';
  */
 interface UserResponsesListProps {
   /** Данные ответов пользователя */
-  userData: Record<string, unknown>;
+  userData: Record<string, unknown> | unknown;
   /** Карта вопросов */
   variableToQuestionMap: VariableToQuestionMap;
   /** Функция поиска URL фото */
@@ -30,7 +30,12 @@ export function UserResponsesList({
   userData,
   variableToQuestionMap,
   getPhotoUrlFromMessages,
-}: UserResponsesListProps): React.JSX.Element {
+}: UserResponsesListProps): React.JSX.Element | null {
+  // Проверяем что userData это объект
+  if (!userData || typeof userData !== 'object' || Array.isArray(userData)) {
+    return null;
+  }
+
   const entries = Object.entries(userData);
 
   return (

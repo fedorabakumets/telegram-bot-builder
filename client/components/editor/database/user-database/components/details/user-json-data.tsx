@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
  */
 interface UserJsonDataProps {
   /** Данные пользователя */
-  userData: unknown;
+  userData: unknown | null;
 }
 
 /**
@@ -25,7 +25,7 @@ export function UserJsonData({ userData }: UserJsonDataProps): React.JSX.Element
       <Label className="text-sm font-medium">Все данные пользователя (JSON)</Label>
       <div className="mt-2">
         <Textarea
-          value={JSON.stringify(userData, null, 2)}
+          value={JSON.stringify(userData ?? {}, null, 2)}
           readOnly
           rows={6}
           className="text-xs font-mono bg-muted"
