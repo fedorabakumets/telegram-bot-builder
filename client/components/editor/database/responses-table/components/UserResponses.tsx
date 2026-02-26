@@ -29,11 +29,14 @@ const ITEMS_PER_PAGE = 12;
  * @returns {JSX.Element | null} Таблица ответов или null
  */
 export function UserResponses({ user }: UserResponsesProps): React.JSX.Element | null {
-  if (!user.userData || typeof user.userData !== 'object' || Object.keys(user.userData as Record<string, unknown>).length === 0) {
+  const userData = user.userData as Record<string, unknown>;
+  const hasUserData = userData && typeof userData === 'object' && !Array.isArray(userData) && Object.keys(userData).length > 0;
+
+  if (!hasUserData) {
     return null;
   }
 
-  const entries = Object.entries(user.userData as Record<string, unknown>);
+  const entries = Object.entries(userData);
   const totalCount = entries.length;
 
   const {

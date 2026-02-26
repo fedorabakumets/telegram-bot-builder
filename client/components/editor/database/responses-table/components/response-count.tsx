@@ -17,6 +17,8 @@ export function ResponseCount({
   itemsPerPage,
   totalCount,
 }: ResponseCountProps): React.JSX.Element {
+  if (totalCount === 0) return <></>;
+  
   const start = (currentPage - 1) * itemsPerPage + 1;
   const end = Math.min(currentPage * itemsPerPage, totalCount);
 
