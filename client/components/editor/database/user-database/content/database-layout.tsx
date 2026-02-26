@@ -9,6 +9,7 @@ import { DatabaseHeaderSection } from './database-header-section';
 import { DatabaseStatsSection } from './database-stats-section';
 import { DatabaseFiltersSection } from './database-filters-section';
 import { DatabaseTabs } from './database-tabs';
+import { DatabaseDisabled } from '../components/header';
 
 /**
  * Компонент контента панели базы данных
@@ -26,7 +27,11 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
   return (
     <ScrollArea className="h-full w-full">
       <div className="flex flex-col bg-background">
-        <DatabaseHeaderSection {...restProps} project={project || null} />
+        <DatabaseHeaderSection
+          {...restProps}
+          isDatabaseEnabled={isDatabaseEnabled}
+          project={project || null}
+        />
         {!isDatabaseEnabled && <DatabaseDisabled />}
         {isDatabaseEnabled && (
           <>
