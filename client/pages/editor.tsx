@@ -1978,6 +1978,7 @@ export default function Editor() {
                   user={selectedUserDetails}
                   onClose={handleCloseUserDetailsPanel}
                   onOpenDialog={handleOpenDialogPanel}
+                  onSelectUser={handleOpenUserDetailsPanel}
                 />
               )
             }

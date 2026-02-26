@@ -33,4 +33,6 @@ export interface UserDetailsPanelProps {
   onClose: () => void;
   /** Функция открытия диалога с пользователем */
   onOpenDialog?: (user: UserBotData) => void;
+  /** Функция выбора пользователя */
+  onSelectUser?: (user: UserBotData) => void;
 }
