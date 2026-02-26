@@ -31,6 +31,11 @@ interface ComboRightPanelsProps {
 }
 
 /**
+ * Стили для resize handle
+ */
+const HANDLE_CLASS = "bg-gradient-to-r from-transparent via-slate-200/0 to-transparent hover:from-purple-500/15 hover:via-purple-500/30 hover:to-purple-500/15 dark:hover:from-purple-600/15 dark:hover:via-purple-500/25 dark:hover:to-purple-600/15 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md";
+
+/**
  * Компонент правой субпанели
  */
 function ComboRightSubPanel({ el, index, totalSize }: {
@@ -38,12 +43,10 @@ function ComboRightSubPanel({ el, index, totalSize }: {
   index: number;
   totalSize: number;
 }) {
-  const handleClass = "bg-gradient-to-r from-transparent via-slate-200/0 to-transparent hover:from-purple-500/15 hover:via-purple-500/30 hover:to-purple-500/15 dark:hover:from-purple-600/15 dark:hover:via-purple-500/25 dark:hover:to-purple-600/15 transition-all duration-300 w-0.5 hover:w-1.5 active:w-2 cursor-col-resize relative flex items-center justify-center group shadow-sm hover:shadow-md";
-
   return (
     <>
       {index > 0 && (
-        <ResizableHandle key={`handle-${el.id}`} withHandle className={handleClass} />
+        <ResizableHandle key={`handle-${el.id}`} withHandle className={HANDLE_CLASS} />
       )}
       <ResizablePanel
         key={`panel-${el.id}`}
