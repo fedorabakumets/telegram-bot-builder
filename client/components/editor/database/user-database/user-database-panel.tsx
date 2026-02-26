@@ -12,7 +12,8 @@ import { useUserDatabasePanelState } from './panel/panel-state';
 import { useUserDatabasePanelData, useUserDatabasePanelMutations } from './panel/panel-hooks';
 import { useVariableToQuestionMap, useFilteredAndSortedUsers } from './panel/panel-memo';
 import { useUserDatabasePanelHandlers } from './panel/panel-handlers';
-import { formatUserName } from '../utils';
+import { useResponsive } from './hooks/use-responsive';
+import { formatUserName } from './utils';
 
 /**
  * Компонент панели базы данных пользователей
@@ -21,6 +22,9 @@ import { formatUserName } from '../utils';
  */
 export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Element {
   const { projectId, projectName, onOpenDialogPanel, onOpenUserDetailsPanel } = props;
+
+  // Хук адаптивности
+  const { containerRef, width, height, breakpoint, visibleColumns, statsColumns } = useResponsive();
 
   // Хук состояния
   const { state, setters } = useUserDatabasePanelState();
@@ -107,36 +111,41 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
   }
 
   return (
-    <DatabaseContent
-      projectId={projectId}
-      projectName={projectName}
-      isDatabaseEnabled={project?.userDatabaseEnabled === 1}
-      toggleDatabaseMutation={toggleDatabaseMutation}
-      handleRefresh={() => {
-        refetchUsers();
-        refetchStats();
-      }}
-      deleteAllUsersMutation={deleteAllUsersMutation}
-      stats={stats}
-      searchQuery={searchQuery}
-      setSearchQuery={setSearchQuery}
-      filterActive={filterActive}
-      setFilterActive={setFilterActive}
-      filterPremium={filterPremium}
-      setFilterPremium={setFilterPremium}
-      sortField={sortField}
-      sortDirection={sortDirection}
-      setSortField={setSortField}
-      setSortDirection={setSortDirection}
-      isMobile={isMobile}
-      filteredAndSortedUsers={filteredAndSortedUsers}
-      formatUserName={formatUserName}
-      onOpenUserDetailsPanel={onOpenUserDetailsPanel}
-      onOpenDialogPanel={onOpenDialogPanel}
-      handleUserStatusToggle={handleUserStatusToggle}
-      deleteUserMutation={deleteUserMutation}
-      project={project}
-      variableToQuestionMap={variableToQuestionMap}
-    />
+    <div ref={containerRef} className="h-full w-full flex flex-col">
+      <DatabaseContent
+        projectId={projectId}
+        projectName={projectName}
+        isDatabaseEnabled={project?.userDatabaseEnabled === 1}
+        toggleDatabaseMutation={toggleDatabaseMutation}
+        handleRefresh={() => {
+          refetchUsers();
+          refetchStats();
+        }}
+        deleteAllUsersMutation={deleteAllUsersMutation}
+        stats={stats}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        filterActive={filterActive}
+        setFilterActive={setFilterActive}
+        filterPremium={filterPremium}
+        setFilterPremium={setFilterPremium}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        setSortField={setSortField}
+        setSortDirection={setSortDirection}
+        isMobile={isMobile}
+        filteredAndSortedUsers={filteredAndSortedUsers}
+        formatUserName={formatUserName}
+        onOpenUserDetailsPanel={onOpenUserDetailsPanel}
+        onOpenDialogPanel={onOpenDialogPanel}
+        handleUserStatusToggle={handleUserStatusToggle}
+        deleteUserMutation={deleteUserMutation}
+        project={project}
+        variableToQuestionMap={variableToQuestionMap}
+        panelDimensions={{ width, height, breakpoint }}
+        visibleColumns={visibleColumns}
+        statsColumns={statsColumns}
+      />
+    </div>
   );
 }

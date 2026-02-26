@@ -27,6 +27,8 @@ interface DesktopTableProps {
   handleUserStatusToggle: (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => void;
   /** Мутация удаления пользователя */
   deleteUserMutation: any;
+  /** Количество видимых колонок */
+  visibleColumns?: number;
 }
 
 /**
@@ -35,19 +37,19 @@ interface DesktopTableProps {
  * @returns JSX компонент таблицы
  */
 export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
-  const { users, searchQuery } = props;
+  const { users, searchQuery, visibleColumns } = props;
 
   return (
-    <div className="rounded-lg border border-border bg-card/40 overflow-hidden w-full max-w-full">
+    <div className="rounded-lg border border-border bg-card/40 overflow-hidden w-full">
       <div className="overflow-x-auto">
-        <Table className="w-full min-w-[600px] max-w-full">
-          <DesktopTableHeader />
+        <Table className="w-full">
+          <DesktopTableHeader visibleColumns={visibleColumns} />
           <TableBody>
             {users.length === 0 ? (
               <DesktopEmptyRow searchQuery={searchQuery} />
             ) : (
               users.map((user, index) => (
-                <DesktopTableRow key={user.id || index} user={user} index={index} {...props} />
+                <DesktopTableRow key={user.id || index} user={user} index={index} visibleColumns={visibleColumns} {...props} />
               ))
             )}
           </TableBody>

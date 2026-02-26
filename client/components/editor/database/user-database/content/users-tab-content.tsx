@@ -21,6 +21,7 @@ type UsersTabContentProps = Pick<
   | 'onOpenDialogPanel'
   | 'handleUserStatusToggle'
   | 'deleteUserMutation'
+  | 'visibleColumns'
 >;
 
 /**
@@ -38,6 +39,7 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
     onOpenDialogPanel,
     handleUserStatusToggle,
     deleteUserMutation,
+    visibleColumns,
   } = props;
 
   return (
@@ -61,6 +63,7 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
             onOpenDialogPanel={onOpenDialogPanel}
             handleUserStatusToggle={handleUserStatusToggle}
             deleteUserMutation={deleteUserMutation}
+            visibleColumns={visibleColumns}
           />
         )}
       </div>

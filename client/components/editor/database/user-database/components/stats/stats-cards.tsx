@@ -15,7 +15,6 @@ import {
 import { UserStats } from '../../types';
 import { MobileStatCard } from './mobile-stat-card';
 import { TabletStatCard } from './tablet-stat-card';
-import { DesktopStatCard } from './desktop-stat-card';
 
 /**
  * Пропсы компонента статистики
@@ -23,6 +22,10 @@ import { DesktopStatCard } from './desktop-stat-card';
 interface StatsCardsProps {
   /** Статистика пользователей */
   stats: UserStats;
+  /** Количество колонок сетки */
+  statsColumns?: number;
+  /** Размеры панели */
+  panelDimensions?: { width: number; height: number; breakpoint: string };
 }
 
 /**
@@ -92,7 +95,7 @@ const STATS_DATA = [
  * @param props - Пропсы компонента
  * @returns JSX компонент сетки статистики
  */
-export function StatsCards({ stats }: StatsCardsProps) {
+export function StatsCards({ stats, statsColumns = 4 }: StatsCardsProps) {
   const statValues = [
     stats.totalUsers,
     stats.activeUsers,
@@ -103,9 +106,18 @@ export function StatsCards({ stats }: StatsCardsProps) {
     stats.usersWithResponses || 0,
   ];
 
+  // Динамические классы для сетки
+  const gridClasses = {
+    1: 'grid-cols-1',
+    2: 'grid-cols-2',
+    3: 'grid-cols-3',
+    4: 'grid-cols-4',
+  };
+  const gridClass = gridClasses[statsColumns as keyof typeof gridClasses] || 'grid-cols-4';
+
   return (
     <div className="space-y-3 pt-3 px-3 sm:px-4 w-full">
-      {/* Мобильная версия */}
+      {/* Мобильная версия - горизонтальный скролл */}
       <div className="block sm:hidden">
         <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-m-scrollbar-hide">
           {STATS_DATA.map((stat, idx) => (
@@ -117,36 +129,16 @@ export function StatsCards({ stats }: StatsCardsProps) {
             />
           ))}
         </div>
-        <div className="flex justify-center gap-1 mt-2">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30"
-            />
-          ))}
-        </div>
       </div>
 
-      {/* Планшетная версия */}
-      <div className="hidden sm:grid md:hidden grid-cols-4 gap-2">
+      {/* Desktop/Tablet версия - адаптивная сетка */}
+      <div className={`hidden sm:grid ${gridClass} gap-2`}>
         {STATS_DATA.map((stat, idx) => (
           <TabletStatCard
             key={idx}
             {...stat}
             value={statValues[idx]}
-            testId={`stat-card-tablet-${idx}`}
-          />
-        ))}
-      </div>
-
-      {/* Desktop версия */}
-      <div className="hidden md:flex gap-2">
-        {STATS_DATA.map((stat, idx) => (
-          <DesktopStatCard
-            key={idx}
-            {...stat}
-            value={statValues[idx]}
-            testId={`stat-card-desktop-${idx}`}
+            testId={`stat-card-${idx}`}
           />
         ))}
       </div>

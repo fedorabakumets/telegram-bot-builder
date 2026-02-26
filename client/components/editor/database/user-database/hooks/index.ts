@@ -6,3 +6,5 @@
 export * from './use-user-database';
 export * from './use-user-mutations';
 export * from './types';
+export * from './use-panel-dimensions';
+export * from './use-responsive';

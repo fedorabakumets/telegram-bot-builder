@@ -21,6 +21,7 @@ type DatabaseTabsProps = Pick<
   | 'onOpenDialogPanel'
   | 'handleUserStatusToggle'
   | 'deleteUserMutation'
+  | 'visibleColumns'
 >;
 
 /**
@@ -29,7 +30,7 @@ type DatabaseTabsProps = Pick<
  * @returns JSX компонент вкладок
  */
 export function DatabaseTabs(props: DatabaseTabsProps): React.JSX.Element {
-  const { isMobile, ...restProps } = props;
+  const { isMobile, visibleColumns, ...restProps } = props;
 
   return (
     <Tabs defaultValue="users" className="w-full pb-4">
@@ -42,7 +43,7 @@ export function DatabaseTabs(props: DatabaseTabsProps): React.JSX.Element {
         </TabsTrigger>
       </TabsList>
 
-      <UsersTabContent isMobile={isMobile} {...restProps} />
+      <UsersTabContent isMobile={isMobile} visibleColumns={visibleColumns} {...restProps} />
       <ResponsesTabContent
         users={restProps.filteredAndSortedUsers}
         formatUserName={restProps.formatUserName}

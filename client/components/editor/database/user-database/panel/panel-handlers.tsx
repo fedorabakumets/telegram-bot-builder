@@ -33,7 +33,7 @@ interface UseUserDatabasePanelHandlersReturn {
  */
 export function useUserDatabasePanelHandlers(
   params: UseUserDatabasePanelHandlersParams,
-  _userDetailsMessages: any[]
+  _userDetailsMessages: undefined
 ): UseUserDatabasePanelHandlersReturn {
   const { updateUserMutation, toast } = params;
 

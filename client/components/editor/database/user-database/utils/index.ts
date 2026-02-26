@@ -4,3 +4,4 @@
  */
 
 export { formatDate, formatUserName } from '../../utils';
+export * from './responsive-utils';

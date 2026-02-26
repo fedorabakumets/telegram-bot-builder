@@ -21,6 +21,9 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
     isDatabaseEnabled,
     isMobile,
     project,
+    statsColumns,
+    panelDimensions,
+    visibleColumns,
     ...restProps
   } = props;
 
@@ -35,9 +38,17 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
         {!isDatabaseEnabled && <DatabaseDisabled />}
         {isDatabaseEnabled && (
           <div className="flex-1 flex flex-col min-h-0 w-full">
-            <DatabaseStatsSection stats={restProps.stats} />
+            <DatabaseStatsSection 
+              stats={restProps.stats} 
+              statsColumns={statsColumns}
+              panelDimensions={panelDimensions}
+            />
             <DatabaseFiltersSection {...restProps} />
-            <DatabaseTabs {...restProps} isMobile={isMobile} />
+            <DatabaseTabs 
+              {...restProps} 
+              isMobile={isMobile}
+              visibleColumns={visibleColumns}
+            />
           </div>
         )}
       </div>
