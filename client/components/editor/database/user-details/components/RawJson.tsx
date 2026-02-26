@@ -43,7 +43,7 @@ export function RawJson({ user }: RawJsonProps): React.JSX.Element | null {
           <Textarea
             value={JSON.stringify(user.userData, null, 2)}
             readOnly
-            rows={12}
+            rows={18}
             className="text-[10px] sm:text-xs font-mono bg-muted resize-none w-full min-w-0 overflow-auto"
           />
         </div>
