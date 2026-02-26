@@ -10,11 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   User,
-  Calendar,
   MessageSquare,
   Edit,
-  Tag,
-  Clock,
   Hash,
   AtSign
 } from 'lucide-react';
@@ -30,6 +27,8 @@ import { PanelHeader } from './components/PanelHeader';
 import { BasicInfo } from './components/BasicInfo';
 import { Statistics } from './components/Statistics';
 import { UserStatus } from './components/UserStatus';
+import { DatesSection } from './components/DatesSection';
+import { TagsSection } from './components/TagsSection';
 
 /**
  * @function UserDetailsPanel
@@ -76,53 +75,8 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
           <BasicInfo user={user} />
           <Statistics user={user} total={total} userSent={userSent} botSent={botSent} onOpenDialog={onOpenDialog} />
           <UserStatus user={user} onToggle={handleUserStatusToggle} />
-
-          {/* Dates */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-primary" />
-              <Label className="text-sm font-semibold">Даты</Label>
-            </div>
-            <div className="grid gap-2 pl-6">
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-3 h-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Регистрация:</span>
-                <span className="font-medium">{formatDate(user.createdAt) as string}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-3 h-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Обновление:</span>
-                <span className="font-medium">{formatDate(user.updatedAt) as string}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-3 h-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Активность:</span>
-                <span className="font-medium">{formatDate(user.lastInteraction) as string}</span>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Tags */}
-          {user.tags && Array.isArray(user.tags) && user.tags.length > 0 && (
-            <>
-              <Separator />
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-primary" />
-                  <Label className="text-sm font-semibold">Теги</Label>
-                </div>
-                <div className="flex flex-wrap gap-1 pl-6">
-                  {user.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {String(tag)}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
+          <DatesSection user={user} formatDate={formatDate} />
+          <TagsSection user={user} />
 
           {/* User Responses */}
           {user.userData && typeof user.userData === 'object' && Object.keys(user.userData as Record<string, unknown>).length > 0 && (
