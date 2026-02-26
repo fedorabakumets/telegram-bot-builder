@@ -44,6 +44,7 @@ import { formatDate } from './utils/format-date';
 import { formatUserName } from './utils/format-user-name';
 import { useUserDatabase, useUserMutations } from './hooks';
 import { StatsCards } from './components/stats';
+import { ResponsesTabTable } from './components/responses';
 
 /**
  * @function UserDatabasePanel
@@ -1011,124 +1012,7 @@ function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled
 
             <TabsContent value="responses" className="mt-2">
               <div className="p-2 sm:p-3">
-                <div className="rounded-lg border border-border bg-card/40 overflow-hidden">
-                  <Table>
-                    <TableHeader className="bg-muted/40 hover:bg-muted/50">
-                      <TableRow className="border-b border-border/50 hover:bg-transparent">
-                        <TableHead className="font-semibold h-10">Пользователь</TableHead>
-                        <TableHead className="font-semibold h-10">Переменная</TableHead>
-                        <TableHead className="font-semibold h-10">Ответ</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredAndSortedUsers.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={3} className="text-center py-12 text-muted-foreground">
-                            <div className="flex flex-col items-center gap-2">
-                              <MessageSquare className="w-8 h-8 opacity-30" />
-                              <span>Нет пользователей или ответов</span>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredAndSortedUsers.flatMap((user, userIndex) => {
-                          if (!user.userData || typeof user.userData !== 'object' || Object.keys(user.userData).length === 0) {
-                            return [];
-                          }
-
-                          return Object.entries(user.userData).map(([key, value], responseIndex) => {
-                            let responseData: any = value;
-                            if (typeof value === 'string') {
-                              try {
-                                responseData = JSON.parse(value);
-                              } catch {
-                                responseData = { value: value, type: 'text' };
-                              }
-                            } else if (typeof value === 'object' && value !== null) {
-                              responseData = value;
-                            } else {
-                              responseData = { value: String(value), type: 'text' };
-                            }
-
-                            const answerValue: string = String(responseData?.value !== undefined ? responseData.value :
-                              (typeof value === 'object' && value !== null ? JSON.stringify(value as object) : String(value as string)));
-
-                            return (
-                              <TableRow key={`${user.id || userIndex}-${key}-${responseIndex}`} className="border-b border-border/30 hover:bg-muted/30 transition-colors h-14">
-                                <TableCell className="py-2">
-                                  <div className="font-medium text-sm truncate">{formatUserName(user)}</div>
-                                  <div className="text-xs text-muted-foreground truncate">ID: {user.id}</div>
-                                </TableCell>
-                                <TableCell className="py-2">
-                                  <div className="font-medium text-sm">
-                                    {key.startsWith('response_') ? key.replace('response_', 'Ответ ') : key}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="py-2 max-w-sm">
-                                  {(() => {
-                                    if (responseData?.photoUrl) {
-                                      return (
-                                        <div className="rounded-lg overflow-hidden max-w-[150px]">
-                                          <img
-                                            src={responseData.photoUrl}
-                                            alt="Фото ответ"
-                                            className="w-full h-auto rounded-lg"
-                                            onError={(e) => {
-                                              (e.target as HTMLImageElement).style.display = 'none';
-                                            }} />
-                                        </div>
-                                      );
-                                    }
-
-                                    if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
-                                      return (
-                                        <div className="rounded-lg overflow-hidden max-w-[150px] space-y-1">
-                                          {responseData.media.map((m: any, idx: number) => (
-                                            <img
-                                              key={idx}
-                                              src={m.url || m}
-                                              alt="Ответ фото"
-                                              className="w-full h-auto rounded-lg"
-                                              onError={(e) => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                              }} />
-                                          ))}
-                                        </div>
-                                      );
-                                    }
-
-                                    const valueStr = String(answerValue);
-                                    const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
-
-                                    if (isImageUrl) {
-                                      return (
-                                        <div className="rounded-lg overflow-hidden max-w-[150px]">
-                                          <img
-                                            src={valueStr}
-                                            alt="Ответ"
-                                            className="w-full h-auto rounded-lg"
-                                            onError={(e) => {
-                                              (e.target as HTMLImageElement).style.display = 'none';
-                                            }} />
-                                        </div>
-                                      );
-                                    }
-
-                                    return (
-                                      <p className="text-sm text-green-800 dark:text-green-200 font-medium">
-                                        {valueStr}
-                                      </p>
-                                    );
-                                  })()}
-                                </TableCell>
-                              </TableRow>
-                            );
-                          });
-                        })
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                <ResponsesTabTable users={filteredAndSortedUsers} />
               </div>
             </TabsContent>
 
