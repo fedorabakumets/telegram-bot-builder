@@ -27,9 +27,9 @@ const DEFAULT_ITEMS_PER_PAGE: ItemsPerPageValue = 12;
  */
 export function ResponsesTableWithPagination({
   users,
-  itemsPerPage: initialItemsPerPage = DEFAULT_ITEMS_PER_PAGE,
 }: ResponsesTableWithPaginationProps): React.JSX.Element | null {
-  const [itemsPerPage, setItemsPerPage] = React.useState<ItemsPerPageValue>(initialItemsPerPage);
+  const [itemsPerPage, setItemsPerPage] = React.useState<ItemsPerPageValue>(DEFAULT_ITEMS_PER_PAGE);
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   // Собираем все ответы от всех пользователей
   const allEntries = React.useMemo(() => {
@@ -63,43 +63,19 @@ export function ResponsesTableWithPagination({
     return entries;
   }, [users]);
 
-  const {
-    currentPage,
-    totalPages,
-    visibleEntries,
-    goToPage,
-    nextPage,
-    prevPage,
-  } = React.useMemo(() => {
-    const total = Math.ceil(allEntries.length / itemsPerPage);
-    const start = (1 - 1) * itemsPerPage;
-    const visible = allEntries.slice(0, itemsPerPage);
+  const totalPages = Math.ceil(allEntries.length / itemsPerPage);
 
-    return {
-      currentPage: 1,
-      totalPages: total,
-      visibleEntries: visible,
-      goToPage: (page: number) => {
-        const clampedPage = Math.max(1, Math.min(page, total));
-        return clampedPage;
-      },
-      nextPage: () => Math.min(1 + 1, total),
-      prevPage: () => Math.max(1 - 1, 1),
-    };
-  }, [allEntries, itemsPerPage]);
-
-  // Пересчитываем видимые записи при изменении страницы
-  const [currentPageState, setCurrentPageState] = React.useState(1);
-  const totalPagesCalc = Math.ceil(allEntries.length / itemsPerPage);
-
-  const visibleEntriesFinal = React.useMemo(() => {
-    const start = (currentPageState - 1) * itemsPerPage;
+  const visibleEntries = React.useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
     return allEntries.slice(start, start + itemsPerPage);
-  }, [allEntries, currentPageState, itemsPerPage]);
+  }, [allEntries, currentPage, itemsPerPage]);
 
   const goToPage = (page: number) => {
-    setCurrentPageState(Math.max(1, Math.min(page, totalPagesCalc)));
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
+
+  const nextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   if (allEntries.length === 0) {
     return null;
@@ -110,11 +86,11 @@ export function ResponsesTableWithPagination({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Показывать:</span>
-          <ItemsPerPageSelector value={itemsPerPage} onChange={setItemsPerPage} />
+          <ItemsPerPageSelector value={itemsPerPage} onChange={(val) => { setItemsPerPage(val); setCurrentPage(1); }} />
         </div>
         <ResponseCount
-          currentPage={currentPageState}
-          totalPages={totalPagesCalc}
+          currentPage={currentPage}
+          totalPages={totalPages}
           itemsPerPage={itemsPerPage}
           totalCount={allEntries.length}
         />
@@ -130,7 +106,7 @@ export function ResponsesTableWithPagination({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {visibleEntriesFinal.map(([_, entry]) => (
+              {visibleEntries.map((entry) => (
                 <ResponseRow
                   key={`${entry.user.id}-${entry.key}-${entry.index}`}
                   user={entry.user}
@@ -144,11 +120,11 @@ export function ResponsesTableWithPagination({
         </div>
       </div>
       <PaginationControls
-        currentPage={currentPageState}
-        totalPages={totalPagesCalc}
+        currentPage={currentPage}
+        totalPages={totalPages}
         goToPage={goToPage}
-        nextPage={() => goToPage(currentPageState + 1)}
-        prevPage={() => goToPage(currentPageState - 1)}
+        nextPage={nextPage}
+        prevPage={prevPage}
       />
     </div>
   );
