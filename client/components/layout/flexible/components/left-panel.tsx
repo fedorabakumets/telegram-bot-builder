@@ -37,16 +37,16 @@ export function LeftPanel(props: LeftPanelProps): React.JSX.Element {
   const {
     children,
     type,
-    minSize = 15,
-    maxSize = 40,
+    minSize,
+    maxSize,
     id = 'left-panel',
     order = 1,
     containerClassName = 'h-full w-full bg-background overflow-hidden flex flex-col',
   } = props;
 
   const isUserDetails = type === 'userDetails';
-  const finalMinSize = props.minSize ?? (isUserDetails ? 10 : 15);
-  const finalMaxSize = props.maxSize ?? (isUserDetails ? 45 : 40);
+  const finalMinSize = minSize ?? (isUserDetails ? 10 : 15);
+  const finalMaxSize = maxSize ?? (isUserDetails ? 45 : 40);
 
   return (
     <>
