@@ -129,6 +129,10 @@ export function serveStatic(app: Express) {
   // подключаем middleware для статических файлов
   app.use(express.static(distPath));
 
+  // подключаем middleware для загруженных файлов
+  const uploadsPath = path.resolve(import.meta.dirname, "..", "..", "uploads");
+  app.use("/uploads", express.static(uploadsPath));
+
   /**
    * Обработка всех остальных маршрутов.
    * Если файл не найден, возвращаем index.html для поддержки клиентского роутинга.
