@@ -30,7 +30,6 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
   const [messageText, setMessageText] = useState('');
   // Ссылка на контейнер сообщений для автопрокрутки
   const messagesScrollRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
 
   /**
    * Загрузка сообщений диалога с пользователем
@@ -60,7 +59,7 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
   }, [messagesLoading, messages.length, user?.userId]);
 
   /** Мутация отправки сообщения */
-  const sendMessageMutation = useSendMessage(projectId, user?.userId, () => {
+  const sendMessageMutation = useSendMessage(projectId, user?.userId ? Number(user.userId) : undefined, () => {
     setMessageText('');
     refetchMessages();
   });
