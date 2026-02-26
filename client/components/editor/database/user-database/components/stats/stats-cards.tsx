@@ -13,7 +13,6 @@ import {
   Users,
 } from 'lucide-react';
 import { UserStats } from '../../types';
-import { MobileStatCard } from './mobile-stat-card';
 import { TabletStatCard } from './tablet-stat-card';
 
 /**
@@ -22,10 +21,6 @@ import { TabletStatCard } from './tablet-stat-card';
 interface StatsCardsProps {
   /** Статистика пользователей */
   stats: UserStats;
-  /** Количество колонок сетки */
-  statsColumns?: number;
-  /** Размеры панели */
-  panelDimensions?: { width: number; height: number; breakpoint: string };
 }
 
 /**
@@ -95,7 +90,7 @@ const STATS_DATA = [
  * @param props - Пропсы компонента
  * @returns JSX компонент сетки статистики
  */
-export function StatsCards({ stats, statsColumns = 4 }: StatsCardsProps) {
+export function StatsCards({ stats }: StatsCardsProps) {
   const statValues = [
     stats.totalUsers,
     stats.activeUsers,
@@ -106,40 +101,18 @@ export function StatsCards({ stats, statsColumns = 4 }: StatsCardsProps) {
     stats.usersWithResponses || 0,
   ];
 
-  // Динамические классы для сетки
-  const gridClasses = {
-    1: 'grid-cols-1',
-    2: 'grid-cols-2',
-    3: 'grid-cols-3',
-    4: 'grid-cols-4',
-  };
-  const gridClass = gridClasses[statsColumns as keyof typeof gridClasses] || 'grid-cols-4';
-
   return (
-    <div className="space-y-3 pt-3 px-3 sm:px-4 w-full">
-      {/* Мобильная версия - горизонтальный скролл */}
-      <div className="block sm:hidden">
-        <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-m-scrollbar-hide">
-          {STATS_DATA.map((stat, idx) => (
-            <MobileStatCard
-              key={idx}
+    <div className="w-full overflow-x-auto">
+      {/* Горизонтальная прокрутка на всех размерах - карточки в одну строку */}
+      <div className="flex gap-2 min-w-max p-3">
+        {STATS_DATA.map((stat, idx) => (
+          <div key={idx} className="flex-shrink-0 w-[140px] sm:w-[160px]">
+            <TabletStatCard
               {...stat}
               value={statValues[idx]}
-              testId={`stat-card-mobile-${idx}`}
+              testId={`stat-card-${idx}`}
             />
-          ))}
-        </div>
-      </div>
-
-      {/* Desktop/Tablet версия - адаптивная сетка */}
-      <div className={`hidden sm:grid ${gridClass} gap-2`}>
-        {STATS_DATA.map((stat, idx) => (
-          <TabletStatCard
-            key={idx}
-            {...stat}
-            value={statValues[idx]}
-            testId={`stat-card-${idx}`}
-          />
+          </div>
         ))}
       </div>
     </div>

@@ -6,19 +6,6 @@
 import { BotProject, UserBotData } from '@shared/schema';
 import { SortField, SortDirection } from '../types';
 import { VariableToQuestionMap } from '../types';
-import { Breakpoint } from '../utils/responsive-utils';
-
-/**
- * Размеры панели
- */
-export interface PanelDimensions {
-  /** Ширина панели в пикселях */
-  width: number;
-  /** Высота панели в пикселях */
-  height: number;
-  /** Текущий брейкпоинт */
-  breakpoint: Breakpoint;
-}
 
 /**
  * Пропсы компонента DatabaseContent
@@ -87,10 +74,6 @@ export interface DatabaseContentProps {
   project?: BotProject;
   /** Карта вопросов для ответов */
   variableToQuestionMap?: VariableToQuestionMap;
-  /** Размеры панели */
-  panelDimensions?: PanelDimensions;
   /** Количество видимых колонок */
   visibleColumns?: number;
-  /** Количество колонок статистики */
-  statsColumns?: number;
 }

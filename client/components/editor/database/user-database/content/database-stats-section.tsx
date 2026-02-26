@@ -4,13 +4,22 @@
  */
 
 import { StatsCards } from '../components/stats';
-import { DatabaseContentProps } from './database-content-props';
 
 /**
  * Пропсы компонента DatabaseStatsSection
  */
-interface DatabaseStatsSectionProps
-  extends Pick<DatabaseContentProps, 'stats' | 'statsColumns' | 'panelDimensions'> {}
+interface DatabaseStatsSectionProps {
+  /** Статистика пользователей */
+  stats?: {
+    totalUsers?: number;
+    activeUsers?: number;
+    blockedUsers?: number;
+    premiumUsers?: number;
+    totalInteractions?: number;
+    avgInteractionsPerUser?: number;
+    usersWithResponses?: number;
+  };
+}
 
 /**
  * Компонент секции статистики
@@ -18,11 +27,11 @@ interface DatabaseStatsSectionProps
  * @returns JSX компонент статистики
  */
 export function DatabaseStatsSection(props: DatabaseStatsSectionProps): React.JSX.Element | null {
-  const { stats, statsColumns, panelDimensions } = props;
+  const { stats } = props;
 
   if (!stats) {
     return null;
   }
 
-  return <StatsCards stats={stats} statsColumns={statsColumns} panelDimensions={panelDimensions} />;
+  return <StatsCards stats={stats} />;
 }

@@ -24,7 +24,7 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
   const { projectId, projectName, onOpenDialogPanel, onOpenUserDetailsPanel } = props;
 
   // Хук адаптивности
-  const { containerRef, width, height, breakpoint, visibleColumns, statsColumns } = useResponsive();
+  const { containerRef, visibleColumns } = useResponsive();
 
   // Хук состояния
   const { state, setters } = useUserDatabasePanelState();
@@ -142,9 +142,7 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
         deleteUserMutation={deleteUserMutation}
         project={project}
         variableToQuestionMap={variableToQuestionMap}
-        panelDimensions={{ width, height, breakpoint }}
         visibleColumns={visibleColumns}
-        statsColumns={statsColumns}
       />
     </div>
   );
