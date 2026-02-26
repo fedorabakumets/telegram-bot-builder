@@ -104,10 +104,10 @@ export function StatsCards({ stats }: StatsCardsProps) {
   ];
 
   return (
-    <div className="space-y-3 -mx-2">
+    <div className="space-y-3 pt-2">
       {/* Мобильная версия */}
       <div className="block sm:hidden">
-        <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-m-scrollbar-hide -mx-2 px-2">
+        <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-m-scrollbar-hide">
           {STATS_DATA.map((stat, idx) => (
             <MobileStatCard
               key={idx}
@@ -128,7 +128,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       </div>
 
       {/* Планшетная версия */}
-      <div className="hidden sm:grid md:hidden grid-cols-4 gap-2 px-2">
+      <div className="hidden sm:grid md:hidden grid-cols-4 gap-2">
         {STATS_DATA.map((stat, idx) => (
           <TabletStatCard
             key={idx}
@@ -140,7 +140,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       </div>
 
       {/* Desktop версия */}
-      <div className="hidden md:flex gap-2 px-2">
+      <div className="hidden md:flex gap-2">
         {STATS_DATA.map((stat, idx) => (
           <DesktopStatCard
             key={idx}
