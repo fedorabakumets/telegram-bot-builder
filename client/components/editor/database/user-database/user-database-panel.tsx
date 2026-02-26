@@ -49,6 +49,8 @@ import { MobileUserList } from './components/mobile';
 import { DesktopTable } from './components/desktop';
 import { MessageDialog } from './components/dialog';
 import { UserDetailsDialog } from './components/details';
+import { DatabaseHeader, DatabaseToggle, HeaderActions, ExportInfo, DatabaseDisabled } from './components/header';
+import { FiltersContainer } from './components/filters';
 
 /**
  * @function UserDatabasePanel
@@ -415,7 +417,37 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
 
   return (
     <>
-      {newFunction_2(projectId, projectName, isDatabaseEnabled, toggleDatabaseMutation, handleRefresh, deleteAllUsersMutation, stats, searchQuery, setSearchQuery, filterActive, setFilterActive, filterPremium, setFilterPremium, sortField, sortDirection, setSortField, setSortDirection, isMobile, filteredAndSortedUsers, formatUserName, onOpenUserDetailsPanel, setSelectedUser, setShowUserDetails, onOpenDialogPanel, setSelectedUserForDialog, setShowDialog, scrollToBottom, handleUserStatusToggle, formatDate, deleteUserMutation, project)}
+      <DatabaseContent
+        projectId={projectId}
+        projectName={projectName}
+        isDatabaseEnabled={isDatabaseEnabled}
+        toggleDatabaseMutation={toggleDatabaseMutation}
+        handleRefresh={handleRefresh}
+        deleteAllUsersMutation={deleteAllUsersMutation}
+        stats={stats}
+        searchQuery={searchQuery}
+        filterActive={filterActive}
+        setFilterActive={setFilterActive}
+        filterPremium={filterPremium}
+        setFilterPremium={setFilterPremium}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        setSortField={setSortField}
+        setSortDirection={setSortDirection}
+        isMobile={isMobile}
+        filteredAndSortedUsers={filteredAndSortedUsers}
+        formatUserName={formatUserName}
+        onOpenUserDetailsPanel={onOpenUserDetailsPanel}
+        setSelectedUser={setSelectedUser}
+        setShowUserDetails={setShowUserDetails}
+        onOpenDialogPanel={onOpenDialogPanel}
+        setSelectedUserForDialog={setSelectedUserForDialog}
+        setShowDialog={setShowDialog}
+        scrollToBottom={scrollToBottom}
+        handleUserStatusToggle={handleUserStatusToggle}
+        deleteUserMutation={deleteUserMutation}
+        project={project}
+      />
       <UserDetailsDialog
         open={showUserDetails}
         onOpenChange={setShowUserDetails}
@@ -446,302 +478,170 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
   );
 }
 
-function newFunction_2(projectId: number, projectName: string, isDatabaseEnabled: boolean, toggleDatabaseMutation, handleRefresh: () => void, deleteAllUsersMutation, stats: { totalUsers?: number; activeUsers?: number; blockedUsers?: number; premiumUsers?: number; totalInteractions?: number; avgInteractionsPerUser?: number; usersWithResponses?: number; }, searchQuery: string, setSearchQuery: React.Dispatch<React.SetStateAction<string>>, filterActive: boolean | null, setFilterActive: React.Dispatch<React.SetStateAction<boolean | null>>, filterPremium: boolean | null, setFilterPremium: React.Dispatch<React.SetStateAction<boolean | null>>, sortField: string, sortDirection: string, setSortField: React.Dispatch<React.SetStateAction<SortField>>, setSortDirection: React.Dispatch<React.SetStateAction<SortDirection>>, isMobile: boolean, filteredAndSortedUsers: { projectId: number; id: number; firstName: string | null; lastName: string | null; createdAt: Date | null; updatedAt: Date | null; userId: string; userName: string | null; languageCode: string | null; isBot: number | null; isPremium: number | null; lastInteraction: Date | null; interactionCount: number | null; userData: unknown; currentState: string | null; preferences: unknown; commandsUsed: unknown; sessionsCount: number | null; totalMessagesSent: number | null; totalMessagesReceived: number | null; deviceInfo: string | null; locationData: unknown; contactData: unknown; isBlocked: number | null; isActive: number | null; tags: string[] | null; notes: string | null; }[], formatUserName: (user: UserBotData) => string, onOpenUserDetailsPanel: ((user: UserBotData) => void) | undefined, setSelectedUser: React.Dispatch<React.SetStateAction<{ projectId: number; id: number; firstName: string | null; lastName: string | null; createdAt: Date | null; updatedAt: Date | null; userId: string; userName: string | null; languageCode: string | null; isBot: number | null; isPremium: number | null; lastInteraction: Date | null; interactionCount: number | null; userData: unknown; currentState: string | null; preferences: unknown; commandsUsed: unknown; sessionsCount: number | null; totalMessagesSent: number | null; totalMessagesReceived: number | null; deviceInfo: string | null; locationData: unknown; contactData: unknown; isBlocked: number | null; isActive: number | null; tags: string[] | null; notes: string | null; } | null>>, setShowUserDetails: React.Dispatch<React.SetStateAction<boolean>>, onOpenDialogPanel: ((user: UserBotData) => void) | undefined, setSelectedUserForDialog: React.Dispatch<React.SetStateAction<{ projectId: number; id: number; firstName: string | null; lastName: string | null; createdAt: Date | null; updatedAt: Date | null; userId: string; userName: string | null; languageCode: string | null; isBot: number | null; isPremium: number | null; lastInteraction: Date | null; interactionCount: number | null; userData: unknown; currentState: string | null; preferences: unknown; commandsUsed: unknown; sessionsCount: number | null; totalMessagesSent: number | null; totalMessagesReceived: number | null; deviceInfo: string | null; locationData: unknown; contactData: unknown; isBlocked: number | null; isActive: number | null; tags: string[] | null; notes: string | null; } | null>>, setShowDialog: React.Dispatch<React.SetStateAction<boolean>>, scrollToBottom: () => void, handleUserStatusToggle: (user: UserBotData, field: "isActive" | "isBlocked" | "isPremium") => void, formatDate: (date: unknown) => string, deleteUserMutation, project?: BotProject) {
-  return <ScrollArea className="h-full w-full">
-    <div className="flex flex-col bg-background">
-      <div className="border-b border-border/50 bg-card">
-        <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5">
-          {/* Modern Header with Glassmorphism */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-purple-500/10 dark:from-blue-500/20 dark:via-cyan-500/10 dark:to-purple-500/20 p-4 sm:p-5 lg:p-6">
-            {/* Decorative background elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+function DatabaseContent(props: DatabaseContentProps): React.JSX.Element {
+  const {
+    projectId,
+    projectName,
+    isDatabaseEnabled,
+    toggleDatabaseMutation,
+    handleRefresh,
+    deleteAllUsersMutation,
+    stats,
+    searchQuery,
+    filterActive,
+    setFilterActive,
+    filterPremium,
+    setFilterPremium,
+    sortField,
+    sortDirection,
+    setSortField,
+    setSortDirection,
+    isMobile,
+    filteredAndSortedUsers,
+    formatUserName,
+    onOpenUserDetailsPanel,
+    setSelectedUser,
+    setShowUserDetails,
+    onOpenDialogPanel,
+    setSelectedUserForDialog,
+    setShowDialog,
+    scrollToBottom,
+    handleUserStatusToggle,
+    deleteUserMutation,
+    project,
+  } = props;
 
-            <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
-              {/* Icon and Title */}
-              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/25">
-                  <Users className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground leading-tight tracking-tight">
-                    База данных пользователей
-                  </h2>
-                  <p className="text-sm sm:text-base text-muted-foreground mt-0.5 truncate">
-                    {projectName}
-                  </p>
-                </div>
-              </div>
+  return (
+    <ScrollArea className="h-full w-full">
+      <div className="flex flex-col bg-background">
+        <div className="border-b border-border/50 bg-card">
+          <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5">
+            <DatabaseHeader projectName={projectName} />
 
-              {/* Status Badge & Controls */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                {/* Database Status Toggle */}
-                <div
-                  className={`flex items-center gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border-2 transition-all duration-300 backdrop-blur-sm ${isDatabaseEnabled
-                    ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 shadow-emerald-500/10 shadow-lg'
-                    : 'bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/30 shadow-rose-500/10 shadow-lg'}`}
-                  data-testid="database-toggle-container"
-                >
-                  <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${isDatabaseEnabled ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                  <Label
-                    htmlFor="db-toggle"
-                    className={`text-sm font-semibold cursor-pointer whitespace-nowrap ${isDatabaseEnabled ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`}
-                  >
-                    {isDatabaseEnabled ? 'Активна' : 'Отключена'}
-                  </Label>
-                  <Switch
-                    id="db-toggle"
-                    data-testid="switch-database-toggle"
-                    checked={isDatabaseEnabled}
-                    onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
-                    disabled={toggleDatabaseMutation.isPending} />
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <DatabaseToggle
+                isDatabaseEnabled={isDatabaseEnabled}
+                onToggle={(checked) => toggleDatabaseMutation.mutate(checked)}
+                isPending={toggleDatabaseMutation.isPending}
+              />
 
-                {/* Action Buttons */}
-                {isDatabaseEnabled && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleRefresh}
-                      variant="outline"
-                      size="sm"
-                      className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl border-2 hover:bg-background/80 backdrop-blur-sm"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                      <span className="hidden sm:inline ml-2">Обновить</span>
-                    </Button>
-                    {projectId && projectName ? (
-                      <GoogleSheetsExportButton projectId={projectId} projectName={projectName} />
-                    ) : null}
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl border-2 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span className="hidden sm:inline ml-2">Очистить</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Удалить все данные пользователей?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Это действие нельзя отменить. Все данные пользователей для этого бота будут удалены навсегда.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Отмена</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteAllUsersMutation.mutate()}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Удалить все
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Последняя экспортированная Google Таблица */}
-          {project?.lastExportedGoogleSheetUrl && (
-            <div className="flex items-center gap-2 text-sm bg-green-50 dark:bg-green-950/20 px-3 py-2 rounded-lg border border-green-200 dark:border-green-800">
-              <span className="text-green-600 dark:text-green-400">📊</span>
-              <span className="text-muted-foreground">Последний экспорт:</span>
-              <a
-                href={project.lastExportedGoogleSheetUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-green-600 dark:text-green-400 hover:underline font-medium"
-              >
-                Открыть Google Таблицу
-              </a>
-              {project.lastExportedAt && (
-                <span className="text-xs text-muted-foreground ml-auto">
-                  {new Date(project.lastExportedAt).toLocaleString('ru-RU', {
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </span>
+              {isDatabaseEnabled && (
+                <HeaderActions
+                  projectId={projectId}
+                  projectName={projectName}
+                  onRefresh={handleRefresh}
+                  onDeleteAll={() => deleteAllUsersMutation.mutate()}
+                />
               )}
             </div>
-          )}
 
-          {/* Stats Grid - Modern Responsive Design */}
-          {isDatabaseEnabled && stats && (
-            <StatsCards stats={stats} />
-          )}
+            <ExportInfo project={project} />
 
-          {/* Modern Search & Filters */}
-          {isDatabaseEnabled && (
-            <div className="bg-muted/30 dark:bg-muted/10 rounded-xl p-3 sm:p-4 space-y-3">
-              {/* Search Input with modern styling */}
-              <div className="relative group">
-                <div className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center transition-colors group-focus-within:bg-primary/20">
-                  <Search className="w-4 h-4 text-primary" />
-                </div>
-                <Input
-                  placeholder="Поиск по имени, username или ID..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-14 sm:pl-16 pr-4 h-11 sm:h-12 text-sm sm:text-base rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 focus:border-primary/40 focus:ring-0 transition-all"
-                  data-testid="input-search-users" />
-              </div>
+            {isDatabaseEnabled && stats && <StatsCards stats={stats} />}
 
-              {/* Filters Row - Responsive Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                {/* Status Filter */}
-                <Select value={filterActive?.toString() || 'all'} onValueChange={(value) => setFilterActive(value === 'all' ? null : value === 'true')}>
-                  <SelectTrigger className="h-10 sm:h-11 text-sm rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 transition-all" data-testid="select-status-filter">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center">
-                        <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      </div>
-                      <SelectValue placeholder="Статус" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Все статусы</SelectItem>
-                    <SelectItem value="true">Активные</SelectItem>
-                    <SelectItem value="false">Неактивные</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Premium Filter */}
-                <Select value={filterPremium?.toString() || 'all'} onValueChange={(value) => setFilterPremium(value === 'all' ? null : value === 'true')}>
-                  <SelectTrigger className="h-10 sm:h-11 text-sm rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 transition-all" data-testid="select-premium-filter">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center">
-                        <Crown className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <SelectValue placeholder="Premium" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Все пользователи</SelectItem>
-                    <SelectItem value="true">Только Premium</SelectItem>
-                    <SelectItem value="false">Обычные</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Sort Filter */}
-                {/* Селектор сортировки пользователей по различным полям и направлениям */}
-                <Select value={`${sortField}-${sortDirection}`} onValueChange={(value) => {
-                  // Разделяем значение на поле сортировки и направление
-                  const [field, direction] = value.split('-') as [SortField, SortDirection];
+            {isDatabaseEnabled && (
+              <FiltersContainer
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                filterActive={filterActive?.toString() || 'all'}
+                setFilterActive={setFilterActive}
+                filterPremium={filterPremium?.toString() || 'all'}
+                setFilterPremium={setFilterPremium}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                setSort={(field, direction) => {
                   setSortField(field);
                   setSortDirection(direction);
-                }}>
-                  <SelectTrigger className="h-10 sm:h-11 text-sm rounded-xl border-2 border-transparent bg-background shadow-sm hover:border-primary/20 transition-all" data-testid="select-sort-filter">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-6 h-6 rounded-md bg-indigo-500/10 flex items-center justify-center">
-                        <ArrowUpDown className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                      </div>
-                      <SelectValue placeholder="Сортировка" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lastInteraction-desc">Последняя активность</SelectItem>
-                    <SelectItem value="lastInteraction-asc">Давняя активность</SelectItem>
-                    <SelectItem value="interactionCount-desc">Больше сообщений</SelectItem>
-                    <SelectItem value="interactionCount-asc">Меньше сообщений</SelectItem>
-                    <SelectItem value="createdAt-desc">Сначала новые</SelectItem>
-                    <SelectItem value="createdAt-asc">Сначала старые</SelectItem>
-                    <SelectItem value="firstName-asc">Имя А-Я</SelectItem>
-                    <SelectItem value="firstName-desc">Имя Я-А</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
+                }}
+              />
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Database Disabled Warning */}
-      {!isDatabaseEnabled && (
-        <div className="flex-1 flex items-center justify-center p-8">
-          <Card className="max-w-md w-full border-2 border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/50">
-            <div className="p-8 text-center space-y-4">
-              <div className="flex justify-center">
-                <div className="rounded-full bg-red-100 dark:bg-red-900/50 p-4">
-                  <Database className="w-12 h-12 text-red-600 dark:text-red-400" />
+        {!isDatabaseEnabled && <DatabaseDisabled />}
+
+        {isDatabaseEnabled && (
+          <div>
+            <Tabs defaultValue="users" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 flex-shrink-0 m-3 sm:m-4">
+                <TabsTrigger value="users">Пользователи</TabsTrigger>
+                <TabsTrigger value="responses">Ответы пользователей</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="users" className="mt-2">
+                {isMobile ? (
+                  <MobileUserList
+                    users={filteredAndSortedUsers}
+                    searchQuery={searchQuery}
+                    formatUserName={formatUserName}
+                    onOpenUserDetailsPanel={onOpenUserDetailsPanel}
+                    onOpenDialogPanel={onOpenDialogPanel}
+                    handleUserStatusToggle={handleUserStatusToggle}
+                    setSelectedUser={setSelectedUser}
+                    setShowUserDetails={setShowUserDetails}
+                    setSelectedUserForDialog={setSelectedUserForDialog}
+                    setShowDialog={setShowDialog}
+                    scrollToBottom={scrollToBottom}
+                  />
+                ) : (
+                  <DesktopTable
+                    users={filteredAndSortedUsers}
+                    searchQuery={searchQuery}
+                    formatUserName={formatUserName}
+                    onOpenUserDetailsPanel={onOpenUserDetailsPanel}
+                    onOpenDialogPanel={onOpenDialogPanel}
+                    handleUserStatusToggle={handleUserStatusToggle}
+                    setSelectedUser={setSelectedUser}
+                    setShowUserDetails={setShowUserDetails}
+                    setSelectedUserForDialog={setSelectedUserForDialog}
+                    setShowDialog={setShowDialog}
+                    scrollToBottom={scrollToBottom}
+                    deleteUserMutation={deleteUserMutation}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="responses" className="mt-2">
+                <div className="p-2 sm:p-3">
+                  <ResponsesTabTable users={filteredAndSortedUsers} />
                 </div>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-red-900 dark:text-red-100 mb-2">
-                  База данных выключена
-                </h3>
-                <p className="text-red-700 dark:text-red-300 text-sm">
-                  Включите базу данных с помощью переключателя выше, чтобы начать сохранять данные пользователей и просматривать статистику.
-                </p>
-              </div>
-              <div className="pt-2">
-                <p className="text-xs text-red-600/80 dark:text-red-400/80">
-                  Пока база данных выключена, бот продолжает работать, но данные пользователей не сохраняются.
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+      </div>
+    </ScrollArea>
+  );
+}
 
-      {/* Tabs */}
-      {isDatabaseEnabled && (
-        <div>
-          <Tabs defaultValue="users" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 flex-shrink-0 m-3 sm:m-4">
-              <TabsTrigger value="users">Пользователи</TabsTrigger>
-              <TabsTrigger value="responses">Ответы пользователей</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="users" className="mt-2">
-              {isMobile ? (
-                <MobileUserList
-                  users={filteredAndSortedUsers}
-                  searchQuery={searchQuery}
-                  formatUserName={formatUserName}
-                  onOpenUserDetailsPanel={onOpenUserDetailsPanel}
-                  onOpenDialogPanel={onOpenDialogPanel}
-                  handleUserStatusToggle={handleUserStatusToggle}
-                  setSelectedUser={setSelectedUser}
-                  setShowUserDetails={setShowUserDetails}
-                  setSelectedUserForDialog={setSelectedUserForDialog}
-                  setShowDialog={setShowDialog}
-                  scrollToBottom={scrollToBottom}
-                />
-              ) : (
-                <DesktopTable
-                  users={filteredAndSortedUsers}
-                  searchQuery={searchQuery}
-                  formatUserName={formatUserName}
-                  onOpenUserDetailsPanel={onOpenUserDetailsPanel}
-                  onOpenDialogPanel={onOpenDialogPanel}
-                  handleUserStatusToggle={handleUserStatusToggle}
-                  setSelectedUser={setSelectedUser}
-                  setShowUserDetails={setShowUserDetails}
-                  setSelectedUserForDialog={setSelectedUserForDialog}
-                  setShowDialog={setShowDialog}
-                  scrollToBottom={scrollToBottom}
-                  deleteUserMutation={deleteUserMutation}
-                />
-              )}
-            </TabsContent>
-
-            <TabsContent value="responses" className="mt-2">
-              <div className="p-2 sm:p-3">
-                <ResponsesTabTable users={filteredAndSortedUsers} />
-              </div>
-            </TabsContent>
-
-          </Tabs>
-        </div>
-      )}
-    </div>
-  </ScrollArea>;
+interface DatabaseContentProps {
+  projectId: number;
+  projectName: string;
+  isDatabaseEnabled: boolean;
+  toggleDatabaseMutation: any;
+  handleRefresh: () => void;
+  deleteAllUsersMutation: any;
+  stats: { totalUsers?: number; activeUsers?: number; blockedUsers?: number; premiumUsers?: number; totalInteractions?: number; avgInteractionsPerUser?: number; usersWithResponses?: number };
+  searchQuery: string;
+  filterActive: boolean | null;
+  setFilterActive: React.Dispatch<React.SetStateAction<boolean | null>>;
+  filterPremium: boolean | null;
+  setFilterPremium: React.Dispatch<React.SetStateAction<boolean | null>>;
+  sortField: string;
+  sortDirection: string;
+  setSortField: React.Dispatch<React.SetStateAction<SortField>>;
+  setSortDirection: React.Dispatch<React.SetStateAction<SortDirection>>;
+  isMobile: boolean;
+  filteredAndSortedUsers: UserBotData[];
+  formatUserName: (user: UserBotData) => string;
+  onOpenUserDetailsPanel: ((user: UserBotData) => void) | undefined;
+  setSelectedUser: React.Dispatch<React.SetStateAction<UserBotData | null>>;
+  setShowUserDetails: React.Dispatch<React.SetStateAction<boolean>>;
+  onOpenDialogPanel: ((user: UserBotData) => void) | undefined;
+  setSelectedUserForDialog: React.Dispatch<React.SetStateAction<UserBotData | null>>;
+  setShowDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  scrollToBottom: () => void;
+  handleUserStatusToggle: (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => void;
+  deleteUserMutation: any;
+  project?: BotProject;
 }
