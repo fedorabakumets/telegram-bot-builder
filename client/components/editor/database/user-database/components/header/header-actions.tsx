@@ -1,11 +1,11 @@
 /**
  * @fileoverview Компонент кнопок действий заголовка
- * @description Кнопки: Обновить, Google Sheets экспорт, Очистить базу
+ * @description Кнопки: Google Sheets экспорт, Очистить базу
  */
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { GoogleSheetsExportButton } from '../../../../google-sheets/GoogleSheetsExportButton';
 
 /**
@@ -35,15 +35,6 @@ export function HeaderActions({
 }: HeaderActionsProps): React.JSX.Element {
   return (
     <div className="flex gap-2">
-      <Button
-        onClick={onRefresh}
-        variant="outline"
-        size="sm"
-        className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl border-2 hover:bg-background/80 backdrop-blur-sm"
-      >
-        <RefreshCw className="w-4 h-4" />
-        <span className="hidden sm:inline ml-2">Обновить</span>
-      </Button>
       <GoogleSheetsExportButton projectId={projectId} projectName={projectName} />
       <AlertDialog>
         <AlertDialogTrigger asChild>
