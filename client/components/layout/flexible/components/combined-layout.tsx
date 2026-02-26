@@ -59,6 +59,9 @@ export function CombinedLayout(props: CombinedLayoutProps): React.JSX.Element {
   const centerMinSize = hasDialog || hasUserDetails ? 20 : 50;
   const centerMaxSize = rightElements.length > 0 ? 80 : 85;
 
+  const centerOrder = leftContent ? 2 : 1;
+  const rightOrder = leftContent ? 3 : 2;
+
   return (
     <div className="h-full flex flex-col">
       <TopBar size={topSize}>{topContent}</TopBar>
@@ -71,7 +74,7 @@ export function CombinedLayout(props: CombinedLayoutProps): React.JSX.Element {
           )}
           <ResizablePanel
             id="combo-center-panel"
-            order={2}
+            order={centerOrder}
             defaultSize={rightElements.length > 0 ? 60 : 80}
             minSize={centerMinSize}
             maxSize={centerMaxSize}
@@ -82,7 +85,7 @@ export function CombinedLayout(props: CombinedLayoutProps): React.JSX.Element {
             </div>
           </ResizablePanel>
           {rightElements.length > 0 && (
-            <ComboRightPanels elements={rightElements} />
+            <ComboRightPanels elements={rightElements} order={rightOrder} />
           )}
         </ResizablePanelGroup>
       </div>

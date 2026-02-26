@@ -51,6 +51,9 @@ export function SidePanelsLayout(props: SidePanelsLayoutProps): React.JSX.Elemen
   const sideMinSize = isUsersTab ? 10 : 15;
   const sideMaxSize = isUsersTab ? 45 : 40;
 
+  const centerOrder = leftContent ? 2 : 1;
+  const rightOrder = leftContent ? 3 : 2;
+
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full">
       {leftContent && (
@@ -64,7 +67,7 @@ export function SidePanelsLayout(props: SidePanelsLayoutProps): React.JSX.Elemen
       )}
       <ResizablePanel
         id="center-panel"
-        order={2}
+        order={centerOrder}
         defaultSize={centerSize}
         minSize={centerMinSize}
         maxSize={centerMaxSize}
@@ -79,6 +82,7 @@ export function SidePanelsLayout(props: SidePanelsLayoutProps): React.JSX.Elemen
           elements={rightElements}
           minSize={sideMinSize}
           maxSize={sideMaxSize}
+          order={rightOrder}
         />
       )}
     </ResizablePanelGroup>

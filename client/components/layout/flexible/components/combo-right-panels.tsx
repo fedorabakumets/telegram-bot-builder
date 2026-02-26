@@ -28,6 +28,8 @@ interface RightElement {
 interface ComboRightPanelsProps {
   /** Элементы */
   elements: RightElement[];
+  /** Порядок панели */
+  order?: number;
 }
 
 /**
@@ -71,7 +73,7 @@ function ComboRightSubPanel({ el, index, totalSize }: {
  * @returns JSX элемент
  */
 export function ComboRightPanels(props: ComboRightPanelsProps): React.JSX.Element {
-  const { elements } = props;
+  const { elements, order = 3 } = props;
   const hasDialog = elements.some(el => el.type === 'dialog');
   const totalSize = elements.reduce((sum, el) => sum + el.size, 0);
   const rightMinSize = hasDialog ? 10 : 15;
@@ -86,7 +88,7 @@ export function ComboRightPanels(props: ComboRightPanelsProps): React.JSX.Elemen
       )}
       <ResizablePanel
         id="combo-right-panel"
-        order={3}
+        order={order}
         defaultSize={totalSize}
         minSize={rightMinSize}
         maxSize={rightMaxSize}

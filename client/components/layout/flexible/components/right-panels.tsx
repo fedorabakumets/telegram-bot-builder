@@ -32,6 +32,8 @@ interface RightPanelsProps {
   minSize: number;
   /** Максимальный размер */
   maxSize: number;
+  /** Порядок панели */
+  order?: number;
 }
 
 /**
@@ -69,7 +71,7 @@ function RightSubPanel({ el, index, totalSize, minSize }: {
  * @returns JSX элемент
  */
 export function RightPanels(props: RightPanelsProps): React.JSX.Element {
-  const { elements, minSize, maxSize } = props;
+  const { elements, minSize, maxSize, order = 3 } = props;
   const hasDialog = elements.some(el => el.type === 'dialog');
   const totalSize = elements.reduce((sum, el) => sum + el.size, 0);
 
@@ -82,7 +84,7 @@ export function RightPanels(props: RightPanelsProps): React.JSX.Element {
       )}
       <ResizablePanel
         id="right-panel"
-        order={3}
+        order={order}
         defaultSize={totalSize}
         minSize={minSize}
         maxSize={maxSize}
