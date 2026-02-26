@@ -5,6 +5,7 @@ import { useMediaQuery } from '@/components/editor/properties/media/use-media-qu
 import { CodeResizeHandle } from '../code-resize-handle';
 import { DialogResizeHandle } from '../dialog-resize-handle';
 import { FlexibleLayoutProps } from './types';
+import { useElementContent } from './hooks';
 
 /**
  * @fileoverview Гибкий компонент макета интерфейса
@@ -28,41 +29,21 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   userDetailsContent,
   fileExplorerContent,
   onConfigChange,
-  hideOnMobile = false}) => {
-  // Определяем мобильное устройство (экраны меньше 1200px для тестирования)
+  hideOnMobile = false,
+}) => {
   const isMobile = useMediaQuery('(max-width: 1200px)');
 
-
-  /**
-   * @function getElementContent
-   * @description Возвращает контент элемента по его типу
-   * @param {string} type - Тип элемента ('header', 'sidebar', 'canvas', 'properties', 'code', 'codeEditor', 'dialog', 'userDetails', 'fileExplorer')
-   * @returns {React.ReactNode | null} Контент элемента или null
-   */
-  const getElementContent = (type: string) => {
-    switch (type) {
-      case 'header':
-        return headerContent;
-      case 'sidebar':
-        return sidebarContent;
-      case 'canvas':
-        return canvasContent;
-      case 'properties':
-        return propertiesContent;
-      case 'code':
-        return codeContent;
-      case 'codeEditor':
-        return codeEditorContent;
-      case 'dialog':
-        return dialogContent;
-      case 'userDetails':
-        return userDetailsContent;
-      case 'fileExplorer':
-        return fileExplorerContent;
-      default:
-        return null;
-    }
-  };
+  const { getElementContent } = useElementContent({
+    headerContent,
+    sidebarContent,
+    canvasContent,
+    propertiesContent,
+    codeContent,
+    codeEditorContent,
+    dialogContent,
+    userDetailsContent,
+    fileExplorerContent,
+  });
 
 
   /**
