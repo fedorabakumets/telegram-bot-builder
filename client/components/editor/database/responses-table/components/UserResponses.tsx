@@ -16,12 +16,13 @@ import {
 } from '@/components/ui/table';
 import { UserBotData } from '@shared/schema';
 import { ResponseRow } from './ResponseRow';
-import { useResponsePagination } from '../hooks/use-response-pagination';
 import { PaginationControls } from './pagination-controls';
 import { ResponseCount } from './response-count';
+import { ItemsPerPageSelector } from './items-per-page-selector';
 import type { UserResponsesProps } from '../types';
+import type { ItemsPerPageValue } from '../types';
 
-const ITEMS_PER_PAGE = 12;
+const DEFAULT_ITEMS_PER_PAGE: ItemsPerPageValue = 12;
 
 /**
  * Компонент ответов пользователя
@@ -29,8 +30,10 @@ const ITEMS_PER_PAGE = 12;
  * @returns {JSX.Element | null} Таблица ответов или null
  */
 export function UserResponses({ user }: UserResponsesProps): React.JSX.Element | null {
+  const [itemsPerPage, setItemsPerPage] = React.useState<ItemsPerPageValue>(DEFAULT_ITEMS_PER_PAGE);
+
   let userData: Record<string, unknown>;
-  
+
   // Проверяем, является ли userData строкой JSON
   if (typeof user.userData === 'string') {
     try {
@@ -52,29 +55,43 @@ export function UserResponses({ user }: UserResponsesProps): React.JSX.Element |
 
   const entries = Object.entries(userData);
   const totalCount = entries.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  const {
-    currentPage,
-    totalPages,
-    visibleEntries,
-    goToPage,
-    nextPage,
-    prevPage,
-  } = useResponsePagination({ entries, itemsPerPage: ITEMS_PER_PAGE });
+  const [currentPage, setCurrentPage] = React.useState(1);
+
+  const visibleEntries = React.useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return entries.slice(start, start + itemsPerPage);
+  }, [entries, currentPage, itemsPerPage]);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  const nextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   return (
     <>
       <Separator />
       <div className="space-y-1.5 xs:space-y-2 sm:space-y-2.5 w-full">
-        <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2">
-          <MessageSquare className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
-          <Label className="text-[10px] xs:text-xs sm:text-sm font-semibold truncate w-full">Ответы пользователя</Label>
-          <ResponseCount
-            currentPage={currentPage}
-            totalPages={totalPages}
-            itemsPerPage={ITEMS_PER_PAGE}
-            totalCount={totalCount}
-          />
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2">
+            <MessageSquare className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 text-primary flex-shrink-0" />
+            <Label className="text-[10px] xs:text-xs sm:text-sm font-semibold truncate">Ответы пользователя</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">
+              <span>Показывать:</span>
+              <ItemsPerPageSelector value={itemsPerPage} onChange={setItemsPerPage} />
+            </div>
+            <ResponseCount
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={itemsPerPage}
+              totalCount={totalCount}
+            />
+          </div>
         </div>
         <div className="pl-3 xs:pl-4 sm:pl-5 w-full">
           <div className="rounded-md border overflow-hidden w-full">

@@ -15,3 +15,4 @@ export type { UserResponsesPreviewProps } from './user-responses-preview-props';
 export type { UserResponsesListProps } from './user-responses-list-props';
 export type { ResponsesUserFilterProps } from './responses-user-filter-props';
 export type { ResponsesTableWithPaginationProps } from './responses-table-with-pagination-props';
+export type { ItemsPerPageSelectorProps, ItemsPerPageValue } from './items-per-page-selector-props';
