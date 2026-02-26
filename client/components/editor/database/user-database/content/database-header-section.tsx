@@ -41,7 +41,7 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
   } = props;
 
   return (
-    <div className="border-b border-border/50 bg-card">
+    <div className="border-b border-border/50 bg-card w-full">
       <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5">
         <DatabaseHeader projectName={projectName} />
 

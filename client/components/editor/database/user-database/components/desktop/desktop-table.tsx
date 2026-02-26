@@ -48,9 +48,9 @@ export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
   const { users, searchQuery } = props;
 
   return (
-    <div className="rounded-lg border border-border bg-card/40 overflow-hidden">
+    <div className="rounded-lg border border-border bg-card/40 overflow-hidden w-full max-w-full">
       <div className="overflow-x-auto">
-        <Table className="w-full min-w-[600px]">
+        <Table className="w-full min-w-[600px] max-w-full">
           <DesktopTableHeader />
           <TableBody>
             {users.length === 0 ? (

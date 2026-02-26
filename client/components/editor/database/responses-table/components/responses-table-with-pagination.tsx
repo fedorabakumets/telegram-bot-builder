@@ -79,7 +79,7 @@ export function ResponsesTableWithPagination({
   const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 w-full max-w-full">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">
           <span className="whitespace-nowrap">Показывать:</span>
@@ -92,9 +92,9 @@ export function ResponsesTableWithPagination({
           totalCount={allEntries.length}
         />
       </div>
-      <div className="rounded-md border overflow-hidden w-full">
+      <div className="rounded-md border overflow-hidden w-full max-w-full">
         <div className="overflow-x-auto">
-          <Table className="w-full min-w-[600px] text-[9px] xs:text-[10px] sm:text-xs">
+          <Table className="w-full min-w-[600px] max-w-full text-[9px] xs:text-[10px] sm:text-xs">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="font-semibold text-[9px] xs:text-[10px] sm:text-xs whitespace-nowrap px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2">Пользователь</TableHead>
