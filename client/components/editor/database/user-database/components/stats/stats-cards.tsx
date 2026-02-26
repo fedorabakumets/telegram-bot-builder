@@ -107,8 +107,9 @@ export function StatsCards({ stats }: StatsCardsProps) {
         {STATS_DATA.map((stat, idx) => (
           <div
             key={idx}
-            className={`${stat.bg} group flex-shrink-0 snap-start w-[calc(50%-8px)] sm:w-[calc(33.333%-10px)] md:w-[calc(25%-12px)] lg:w-[calc(20%-12px)] xl:w-[120px] rounded-xl p-2 sm:p-3 flex flex-col items-center gap-1.5 sm:gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50`}
+            className={`${stat.bg} group flex-shrink-0 snap-start w-[calc(50%-8px)] sm:w-[calc(33.333%-10px)] md:w-[calc(25%-12px)] lg:w-[calc(20%-12px)] xl:w-[120px] rounded-xl p-2 sm:p-3 flex flex-col items-center gap-1.5 sm:gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50 cursor-default`}
             data-testid={`stat-card-${idx}`}
+            title={stat.fullLabel}
           >
             <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow`}>
               <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
