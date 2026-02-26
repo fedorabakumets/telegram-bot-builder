@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -14,13 +13,10 @@ import {
   Calendar,
   MessageSquare,
   Edit,
-  Activity,
   Tag,
   Clock,
   Hash,
-  AtSign,
-  UserCheck,
-  UserX
+  AtSign
 } from 'lucide-react';
 import { UserBotData, BotProject } from '@shared/schema';
 import { formatDate } from './utils/formatDate';
@@ -31,6 +27,9 @@ import { useUpdateUser } from './hooks/useUpdateUser';
 import { UserDetailsPanelProps, BotMessageWithMedia } from './types';
 import { EmptyState } from './components/EmptyState';
 import { PanelHeader } from './components/PanelHeader';
+import { BasicInfo } from './components/BasicInfo';
+import { Statistics } from './components/Statistics';
+import { UserStatus } from './components/UserStatus';
 
 /**
  * @function UserDetailsPanel
@@ -74,138 +73,36 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog }: Use
       {/* Content */}
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
-          {/* Basic Info */}
+          <BasicInfo user={user} />
+          <Statistics user={user} total={total} userSent={userSent} botSent={botSent} onOpenDialog={onOpenDialog} />
+          <UserStatus user={user} onToggle={handleUserStatusToggle} />
+
+          {/* Dates */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <User className="w-4 h-4 text-primary" />
-              <Label className="text-sm font-semibold">Основная информация</Label>
+              <Calendar className="w-4 h-4 text-primary" />
+              <Label className="text-sm font-semibold">Даты</Label>
             </div>
-            <div className="grid gap-3 pl-6">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground min-w-[100px]">Имя:</span>
-                <span className="text-sm font-medium">{user.firstName && typeof user.firstName === 'string' ? user.firstName : 'Не указано'}</span>
+            <div className="grid gap-2 pl-6">
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="w-3 h-3 text-muted-foreground" />
+                <span className="text-muted-foreground">Регистрация:</span>
+                <span className="font-medium">{formatDate(user.createdAt) as string}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground min-w-[100px]">Username:</span>
-                <span className="text-sm font-medium">
-                  {user.userName && typeof user.userName === 'string' ? (
-                    <span className="flex items-center gap-1">
-                      <AtSign className="w-3 h-3" />
-                      {user.userName}
-                    </span>
-                  ) : 'Не указано'}
-                </span>
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="w-3 h-3 text-muted-foreground" />
+                <span className="text-muted-foreground">Обновление:</span>
+                <span className="font-medium">{formatDate(user.updatedAt) as string}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground min-w-[100px]">Telegram ID:</span>
-                <span className="text-sm font-mono bg-muted px-2 py-0.5 rounded">{String(user.userId)}</span>
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="w-3 h-3 text-muted-foreground" />
+                <span className="text-muted-foreground">Активность:</span>
+                <span className="font-medium">{formatDate(user.lastInteraction) as string}</span>
               </div>
             </div>
           </div>
 
           <Separator />
-
-          {/* Statistics */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-primary" />
-              <Label className="text-sm font-semibold">Статистика</Label>
-            </div>
-            <div className="grid grid-cols-3 gap-2 pl-6">
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  {total}
-                </div>
-                <div className="text-xs text-muted-foreground">Всего</div>
-              </div>
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {userSent}
-                </div>
-                <div className="text-xs text-muted-foreground">От юзера</div>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                  {botSent}
-                </div>
-                <div className="text-xs text-muted-foreground">От бота</div>
-              </div>
-            </div>
-            {onOpenDialog && (
-              <div className="pl-6">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onOpenDialog(user)}
-                  className="w-full"
-                  data-testid="button-open-dialog-from-details"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Открыть историю диалога
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* Status */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              {user.isActive && Number(user.isActive) !== 0 ? (
-                <UserCheck className="w-4 h-4 text-green-500" />
-              ) : (
-                <UserX className="w-4 h-4 text-red-500" />
-              )}
-              <Label className="text-sm font-semibold">Статус пользователя</Label>
-            </div>
-            <div className="pl-6 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-sm">Активен</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Пользователь может взаимодействовать с ботом
-                  </p>
-                </div>
-                <Switch
-                  checked={Boolean(user.isActive)}
-                  onCheckedChange={() => handleUserStatusToggle('isActive')}
-                  data-testid="switch-user-active"
-                />
-              </div>
-            </div>
-          </div>
-
-          {(() => (
-            <>
-              <Separator />
-
-              {/* Dates */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <Label className="text-sm font-semibold">Даты</Label>
-                </div>
-                <div className="grid gap-2 pl-6">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">Регистрация:</span>
-                    <span className="font-medium">{formatDate(user.createdAt) as string}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">Обновление:</span>
-                    <span className="font-medium">{formatDate(user.updatedAt) as string}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">Активность:</span>
-                    <span className="font-medium">{formatDate(user.lastInteraction) as string}</span>
-                  </div>
-                </div>
-              </div>
-            </>
-          ))()}
 
           {/* Tags */}
           {user.tags && Array.isArray(user.tags) && user.tags.length > 0 && (

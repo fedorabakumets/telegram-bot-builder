@@ -1,0 +1,82 @@
+/**
+ * @fileoverview Компонент статистики сообщений пользователя
+ * @description Отображает количество сообщений и кнопку диалога
+ */
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Activity, MessageSquare } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { UserBotData } from '@shared/schema';
+
+/**
+ * @interface StatisticsProps
+ * @description Свойства компонента статистики
+ */
+interface StatisticsProps {
+  /** Данные пользователя */
+  user: UserBotData;
+  /** Общее количество сообщений */
+  total: number;
+  /** Количество сообщений от пользователя */
+  userSent: number;
+  /** Количество сообщений от бота */
+  botSent: number;
+  /** Функция открытия диалога */
+  onOpenDialog?: (user: UserBotData) => void;
+}
+
+/**
+ * Компонент статистики
+ * @param {StatisticsProps} props - Свойства компонента
+ * @returns {JSX.Element} Секция со статистикой
+ */
+export function Statistics({ user, total, userSent, botSent, onOpenDialog }: StatisticsProps): React.JSX.Element {
+  return (
+    <>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Activity className="w-4 h-4 text-primary" />
+          <Label className="text-sm font-semibold">Статистика</Label>
+        </div>
+        <div className="grid grid-cols-3 gap-2 pl-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+              {total}
+            </div>
+            <div className="text-xs text-muted-foreground">Всего</div>
+          </div>
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-green-600 dark:text-green-400">
+              {userSent}
+            </div>
+            <div className="text-xs text-muted-foreground">От юзера</div>
+          </div>
+          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 text-center">
+            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+              {botSent}
+            </div>
+            <div className="text-xs text-muted-foreground">От бота</div>
+          </div>
+        </div>
+        {onOpenDialog && (
+          <div className="pl-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenDialog(user)}
+              className="w-full"
+              data-testid="button-open-dialog-from-details"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Открыть историю диалога
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <Separator />
+    </>
+  );
+}
