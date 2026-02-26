@@ -3,6 +3,7 @@
  * @description Отображает данные ответа пользователя в таблице вкладки "Ответы"
  */
 
+import { useState } from 'react';
 import { TableRow, TableCell } from '@/components/ui/table';
 import { UserBotData } from '@shared/schema';
 import { ResponsePhoto } from './response-photo';
@@ -33,6 +34,8 @@ export function ResponseRow({
   responseIndex,
   value,
 }: ResponseRowProps): React.JSX.Element {
+  const [imageError, setImageError] = useState(false);
+
   // Парсинг ответа
   let responseData: any = value;
   if (typeof value === 'string') {
@@ -80,18 +83,16 @@ export function ResponseRow({
 
           // Если это URL изображения (не photo тип)
           if (isImageUrl && !responseData?.media && !responseData?.photoUrl && responseData?.type !== 'photo' && responseData?.type !== 'image') {
+            if (imageError) {
+              return <FileNotFound />;
+            }
             return (
-              <div className="rounded-lg overflow-hidden max-w-[150px] relative">
-                <img
-                  src={valueStr}
-                  alt="Ответ"
-                  className="w-full h-auto rounded-lg"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-                <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
-              </div>
+              <img
+                src={valueStr}
+                alt="Ответ"
+                className="w-full h-auto rounded-lg"
+                onError={() => setImageError(true)}
+              />
             );
           }
 

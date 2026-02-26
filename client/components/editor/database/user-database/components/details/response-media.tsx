@@ -3,6 +3,7 @@
  * @description Показывает фото/изображения из ответа
  */
 
+import { useState } from 'react';
 import { ResponseData } from '../../types';
 import { FileNotFound } from '../file-not-found';
 
@@ -28,6 +29,8 @@ export function ResponseMedia({
   answerValue,
   getPhotoUrlFromMessages,
 }: ResponseMediaProps): React.JSX.Element | null {
+  const [imageError, setImageError] = useState(false);
+
   // Медиа массив
   if (responseData?.media && Array.isArray(responseData.media) && responseData.media.length > 0) {
     return (
@@ -49,17 +52,17 @@ export function ResponseMedia({
 
   // Photo URL
   if (responseData?.photoUrl) {
+    if (imageError) {
+      return <FileNotFound />;
+    }
     return (
-      <div className="rounded-lg overflow-hidden max-w-md relative">
+      <div className="rounded-lg overflow-hidden max-w-md">
         <img
           src={responseData.photoUrl}
           alt="Фото ответ"
           className="w-full h-auto rounded-lg border border-border"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = 'none';
-          }}
+          onError={() => setImageError(true)}
         />
-        <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
       </div>
     );
   }
@@ -72,18 +75,19 @@ export function ResponseMedia({
       valueStr.startsWith('https://') ||
       valueStr.startsWith('/uploads/');
 
+    if (imageError) {
+      return <FileNotFound />;
+    }
+
     if (isUrl) {
       return (
-        <div className="rounded-lg overflow-hidden max-w-md relative">
+        <div className="rounded-lg overflow-hidden max-w-md">
           <img
             src={valueStr}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
+            onError={() => setImageError(true)}
           />
-          <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
         </div>
       );
     }
@@ -91,16 +95,13 @@ export function ResponseMedia({
     const photoUrl = getPhotoUrlFromMessages(valueStr);
     if (photoUrl) {
       return (
-        <div className="rounded-lg overflow-hidden max-w-md relative">
+        <div className="rounded-lg overflow-hidden max-w-md">
           <img
             src={photoUrl}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
+            onError={() => setImageError(true)}
           />
-          <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
         </div>
       );
     }
@@ -119,17 +120,17 @@ export function ResponseMedia({
   if (isLikelyFileId) {
     const photoUrl = getPhotoUrlFromMessages(answerValue);
     if (photoUrl) {
+      if (imageError) {
+        return <FileNotFound />;
+      }
       return (
-        <div className="rounded-lg overflow-hidden max-w-md relative">
+        <div className="rounded-lg overflow-hidden max-w-md">
           <img
             src={photoUrl}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
+            onError={() => setImageError(true)}
           />
-          <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
         </div>
       );
     }
@@ -141,17 +142,17 @@ export function ResponseMedia({
     answerValue.startsWith('https://') ||
     answerValue.startsWith('/uploads/');
   if (isImageUrl) {
+    if (imageError) {
+      return <FileNotFound />;
+    }
     return (
-      <div className="rounded-lg overflow-hidden max-w-md relative">
+      <div className="rounded-lg overflow-hidden max-w-md">
         <img
           src={answerValue}
           alt="Ответ"
           className="w-full h-auto rounded-lg"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = 'none';
-          }}
+          onError={() => setImageError(true)}
         />
-        <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
       </div>
     );
   }
