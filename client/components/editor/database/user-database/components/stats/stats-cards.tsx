@@ -101,13 +101,13 @@ export function StatsCards({ stats }: StatsCardsProps) {
   ];
 
   return (
-    <div className="w-full">
-      {/* Адаптивная сетка с переносом и плавным уменьшением карточек */}
-      <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 p-3">
+    <div className="w-full overflow-x-auto">
+      {/* Карточки в одну строку с уменьшением при сужении */}
+      <div className="flex gap-1.5 sm:gap-2 min-w-max w-full p-3">
         {STATS_DATA.map((stat, idx) => (
           <div
             key={idx}
-            className={`${stat.bg} group flex-shrink-0 snap-start w-[calc(50%-12px)] sm:w-[calc(33.333%-14px)] md:w-[calc(25%-16px)] lg:w-[calc(20%-16px)] xl:w-[calc(16.666%-16px)] 2xl:w-[140px] rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 md:p-3 flex flex-col items-center gap-1 sm:gap-1.5 md:gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50 cursor-default`}
+            className={`${stat.bg} group flex-shrink-0 snap-start w-full max-w-[140px] sm:max-w-[120px] md:max-w-[110px] lg:max-w-[100px] xl:max-w-[120px] rounded-lg sm:rounded-xl p-1.5 sm:p-2.5 md:p-3 flex flex-col items-center gap-1 sm:gap-1.5 md:gap-2 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-95 ring-1 ${stat.ring} ring-opacity-50 cursor-default`}
             data-testid={`stat-card-${idx}`}
             title={stat.fullLabel}
           >
