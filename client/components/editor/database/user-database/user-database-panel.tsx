@@ -41,8 +41,9 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleSheetsExportButton } from '../../google-sheets/GoogleSheetsExportButton';
-import { BotMessageWithMedia, SortField, SortDirection, UserStats, ResponseData, VariableToQuestionMap, UserMessageCounts } from './types';
+import { BotMessageWithMedia, UserDatabasePanelProps, SortField, SortDirection, UserStats, ResponseData, VariableToQuestionMap, UserMessageCounts } from './types';
 import { formatDate } from './utils/format-date';
+import { formatUserName } from './utils/format-user-name';
 
 /**
  * @function UserDatabasePanel
@@ -616,24 +617,6 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
         variant: "destructive",
       });
     }
-  };
-
-  /**
-   * @function formatUserName
-   * @description Форматирует имя пользователя для отображения
-   * @param {UserBotData} user - Данные пользователя
-   * @returns {string} Отформатированное имя пользователя (имя + фамилия, или username, или ID)
-   */
-  const formatUserName = (user: UserBotData) => {
-    const firstName = user.firstName;
-    const lastName = user.lastName;
-    const userName = user.userName;
-    const userId = user.userId;
-
-    const parts = [firstName, lastName].filter(Boolean);
-    if (parts.length > 0) return parts.join(' ');
-    if (userName) return `@${userName}`;
-    return `ID: ${userId}`;
   };
 
   if (usersLoading || statsLoading) {
