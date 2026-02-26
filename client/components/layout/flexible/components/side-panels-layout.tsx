@@ -4,13 +4,9 @@
  */
 
 import React, { ReactNode } from 'react';
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from '@/components/ui/resizable';
-import { CodeResizeHandle } from '../../code-resize-handle';
-import { DialogResizeHandle } from '../../dialog-resize-handle';
+import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { LeftPanel } from './left-panel';
+import { RightPanels } from './right-panels';
 
 /**
  * Пропсы компонента SidePanelsLayout
@@ -54,31 +50,17 @@ export function SidePanelsLayout(props: SidePanelsLayoutProps): React.JSX.Elemen
   const centerMaxSize = isUsersTab ? 80 : (rightElements.length > 0 ? 70 : 85);
   const sideMinSize = isUsersTab ? 10 : 15;
   const sideMaxSize = isUsersTab ? 45 : 40;
-  const hasDialog = rightElements.some(el => el.type === 'dialog');
-  const totalRightSize = rightElements.reduce((sum, el) => sum + el.size, 0);
 
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full">
       {leftContent && (
-        <>
-          <ResizablePanel
-            id="left-panel"
-            order={1}
-            defaultSize={leftType === 'userDetails' ? 20 : 25}
-            minSize={sideMinSize}
-            maxSize={sideMaxSize}
-            className="overflow-hidden"
-          >
-            <div className="h-full w-full bg-background overflow-hidden flex flex-col">
-              {leftContent}
-            </div>
-          </ResizablePanel>
-          {leftType === 'userDetails' ? (
-            <DialogResizeHandle direction="vertical" />
-          ) : (
-            <CodeResizeHandle direction="vertical" />
-          )}
-        </>
+        <LeftPanel
+          type={leftType}
+          minSize={sideMinSize}
+          maxSize={sideMaxSize}
+        >
+          {leftContent}
+        </LeftPanel>
       )}
       <ResizablePanel
         id="center-panel"
@@ -93,40 +75,11 @@ export function SidePanelsLayout(props: SidePanelsLayoutProps): React.JSX.Elemen
         </div>
       </ResizablePanel>
       {rightElements.length > 0 && (
-        <>
-          {hasDialog ? (
-            <DialogResizeHandle direction="vertical" />
-          ) : (
-            <CodeResizeHandle direction="vertical" />
-          )}
-          <ResizablePanel
-            id="right-panel"
-            order={3}
-            defaultSize={totalRightSize}
-            minSize={sideMinSize}
-            maxSize={sideMaxSize}
-            className="overflow-hidden"
-          >
-            <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-              {rightElements.flatMap((rightEl, index) => [
-                ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle />] : []),
-                <ResizablePanel
-                  key={`panel-${rightEl.id}`}
-                  id={`right-subpanel-${rightEl.id}`}
-                  order={index + 1}
-                  defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
-                  minSize={sideMinSize}
-                  maxSize={100}
-                  className="overflow-hidden"
-                >
-                  <div className="h-full w-full overflow-hidden flex flex-col">
-                    {rightEl.content}
-                  </div>
-                </ResizablePanel>
-              ])}
-            </ResizablePanelGroup>
-          </ResizablePanel>
-        </>
+        <RightPanels
+          elements={rightElements}
+          minSize={sideMinSize}
+          maxSize={sideMaxSize}
+        />
       )}
     </ResizablePanelGroup>
   );
