@@ -15,9 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import { BotProject, UserBotData } from '@shared/schema';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity,
   ArrowUpDown,
@@ -44,6 +42,7 @@ import { GoogleSheetsExportButton } from '../../google-sheets/GoogleSheetsExport
 import { BotMessageWithMedia, UserDatabasePanelProps, SortField, SortDirection, UserStats, ResponseData, VariableToQuestionMap, UserMessageCounts } from './types';
 import { formatDate } from './utils/format-date';
 import { formatUserName } from './utils/format-user-name';
+import { useUserDatabase, useUserMutations } from './hooks';
 
 /**
  * @function UserDatabasePanel
@@ -159,20 +158,44 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
   const { toast } = useToast();
 
   /**
-   * @type {Object}
-   * @description Клиент для управления кэшем запросов
-   */
-  const qClient = useQueryClient();
-
-  /**
    * @type {boolean}
    * @description Флаг мобильного режима
    */
   const isMobile = useIsMobile();
 
-  // Fetch project data to get userDatabaseEnabled setting and flowData
-  const { data: project } = useQuery<BotProject>({
-    queryKey: [`/api/projects/${projectId}`],
+  // Хук для загрузки данных
+  const {
+    project,
+    users,
+    stats,
+    searchResults,
+    messages,
+    userDetailsMessages,
+    isLoading,
+    isMessagesLoading,
+    refetchUsers,
+    refetchStats,
+    refetchMessages,
+  } = useUserDatabase({
+    projectId,
+    searchQuery,
+    showDialog,
+    showUserDetails,
+    selectedUserForDialogUserId: selectedUserForDialog?.userId,
+    selectedUserId: selectedUser?.userId,
+  });
+
+  // Хук для мутаций
+  const {
+    deleteUserMutation,
+    updateUserMutation,
+    deleteAllUsersMutation,
+    toggleDatabaseMutation,
+    sendMessageMutation,
+  } = useUserMutations({
+    projectId,
+    refetchUsers,
+    refetchStats,
   });
 
   /**
@@ -189,7 +212,6 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
         ? JSON.parse(project.data as string)
         : project.data as any;
 
-      // Iterate through all sheets and nodes
       const sheets = flowData?.sheets || [];
       for (const sheet of sheets) {
         const nodes = sheet?.nodes || [];
@@ -197,27 +219,21 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
           const data = node?.data;
           if (!data) continue;
 
-          // Get the question text (messageText)
           const questionText = data.messageText;
           if (!questionText) continue;
 
-          // Map inputVariable to questionText
           if (data.inputVariable) {
             mapping[data.inputVariable] = questionText;
           }
-          // Map photoInputVariable to questionText
           if (data.photoInputVariable) {
             mapping[data.photoInputVariable] = questionText;
           }
-          // Map videoInputVariable to questionText
           if (data.videoInputVariable) {
             mapping[data.videoInputVariable] = questionText;
           }
-          // Map audioInputVariable to questionText
           if (data.audioInputVariable) {
             mapping[data.audioInputVariable] = questionText;
           }
-          // Map documentInputVariable to questionText
           if (data.documentInputVariable) {
             mapping[data.documentInputVariable] = questionText;
           }
@@ -230,53 +246,9 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     return mapping;
   }, [project?.data]);
 
-  // Fetch user data
-  const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery<UserBotData[]>({
-    queryKey: [`/api/projects/${projectId}/users`],
-    staleTime: 0,
-    gcTime: 0,
-  });
-
-  // Fetch user stats  
-  const { data: stats = {}, isLoading: statsLoading, refetch: refetchStats } = useQuery<{
-    totalUsers?: number;
-    activeUsers?: number;
-    blockedUsers?: number;
-    premiumUsers?: number;
-    totalInteractions?: number;
-    avgInteractionsPerUser?: number;
-    usersWithResponses?: number;
-  }>({
-    queryKey: [`/api/projects/${projectId}/users/stats`],
-    staleTime: 0,
-    gcTime: 0,
-  });
-
-  // Search users
-  /**
-   * @constant {UserBotData[]} searchResults
-   * @description Результаты поиска пользователей по поисковому запросу
-   * @description Выполняет поиск пользователей через API при наличии поискового запроса
-   */
-  const { data: searchResults = [] } = useQuery<UserBotData[]>({
-    queryKey: [`/api/projects/${projectId}/users/search`, searchQuery],
-    enabled: searchQuery.length > 0,
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/users/search?q=${encodeURIComponent(searchQuery)}`),
-  });
-
-  // Fetch messages for dialog
-  const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessageWithMedia[]>({
-    queryKey: [`/api/projects/${projectId}/users/${selectedUserForDialog?.userId}/messages`],
-    enabled: showDialog && !!selectedUserForDialog?.userId,
-    staleTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
-
   /**
    * @function scrollToBottom
    * @description Прокручивает область сообщений в самый низ
-   * @description Используется для автоматической прокрутки к последнему сообщению в диалоге
    */
   const scrollToBottom = () => {
     if (messagesScrollRef.current) {
@@ -291,43 +263,33 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
 
   // Auto-scroll to bottom when messages finish loading or user changes
   useEffect(() => {
-    if (showDialog && !messagesLoading) {
+    if (showDialog && !isMessagesLoading) {
       scrollToBottom();
     }
-  }, [showDialog, messagesLoading, selectedUserForDialog?.userId]);
+  }, [showDialog, isMessagesLoading, selectedUserForDialog?.userId]);
 
-  // Fetch messages for user details modal (to get photo URLs)
-  const { data: userDetailsMessages = [] } = useQuery<BotMessageWithMedia[]>({
-    queryKey: [`/api/projects/${projectId}/users/${selectedUser?.userId}/messages`],
-    enabled: showUserDetails && !!selectedUser?.userId,
-    staleTime: 0,
-  });
-
-  // Helper function to find photo URL from messages by file_id
+  /**
+   * @function getPhotoUrlFromMessages
+   * @description Ищет URL фотографии в сообщениях по file_id
+   */
   const getPhotoUrlFromMessages = (fileId: string): string | null => {
     if (!fileId || !userDetailsMessages.length) return null;
 
     for (const msg of userDetailsMessages) {
-      // Check if message has media with matching URL pattern or file_id reference
       if (msg.media && Array.isArray(msg.media)) {
         for (const m of msg.media) {
-          if (m.url) {
-            return m.url;
-          }
+          if (m.url) return m.url;
         }
       }
-      // Check messageData for photo with matching file_id
       const msgData = msg.messageData as Record<string, any> | null;
       if (msgData?.photo?.file_id === fileId && msg.media?.[0]?.url) {
         return msg.media[0].url;
       }
-      // Also check if this is a photo answer message
       if (msgData?.is_photo_answer && msg.media?.[0]?.url) {
         return msg.media[0].url;
       }
     }
 
-    // Find any user message with photo media
     const photoMessages = userDetailsMessages.filter(
       m => m.messageType === 'user' && m.media && m.media.length > 0
     );
@@ -338,7 +300,10 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     return null;
   };
 
-  // Calculate real message counts from loaded messages
+  /**
+   * @constant {UserMessageCounts} userMessageCounts
+   * @description Подсчёт сообщений пользователя из истории диалога
+   */
   const userMessageCounts = useMemo(() => {
     if (!userDetailsMessages.length) {
       return { userSent: 0, botSent: 0, total: 0 };
@@ -347,172 +312,6 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     const botSent = userDetailsMessages.filter(m => m.messageType === 'bot').length;
     return { userSent, botSent, total: userDetailsMessages.length };
   }, [userDetailsMessages]);
-
-  // Delete user mutation
-  const deleteUserMutation = useMutation({
-    mutationFn: (userId: number) => {
-      console.log(`Attempting to delete user with ID: ${userId}`);
-      return apiRequest('DELETE', `/api/users/${userId}`);
-    },
-    onSuccess: (data) => {
-      console.log("User deletion successful:", data);
-      // Force clear cache and refetch
-      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
-
-      // Delay refetch to ensure cache is cleared
-      setTimeout(() => {
-        refetchUsers();
-        refetchStats();
-      }, 100);
-
-      toast({
-        title: "Пользователь удален",
-        description: "Данные пользователя успешно удалены",
-      });
-    },
-    onError: (error) => {
-      console.error("User deletion failed:", error);
-      toast({
-        title: "Ошибка удаления",
-        description: "Не удалось удалить пользователя. Проверьте консоль для подробностей.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Update user mutation
-  /**
-   * @constant {Object} updateUserMutation
-   * @description Мутация для обновления данных пользователя
-   * @description Обновляет данные пользователя через API, нормализуя булевы значения в 0/1 для базы данных
-   */
-  const updateUserMutation = useMutation({
-    mutationFn: ({ userId, data }: { userId: number; data: Partial<UserBotData> }) => {
-      // Convert boolean values to 0/1 for database
-      const normalizedData = {
-        ...data,
-        ...(data.isActive !== undefined && { isActive: data.isActive ? 1 : 0 }),
-        ...(data.isBlocked !== undefined && { isBlocked: data.isBlocked ? 1 : 0 }),
-        ...(data.isPremium !== undefined && { isPremium: data.isPremium ? 1 : 0 }),
-      };
-      return apiRequest('PUT', `/api/users/${userId}`, normalizedData);
-    },
-    onSuccess: () => {
-      // Принудительно очищаем кэш и обновляем данные
-      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
-
-      // Принудительно обновляем данные
-      setTimeout(() => {
-        refetchUsers();
-        refetchStats();
-      }, 100);
-
-      toast({
-        title: "Статус изменен",
-        description: "Статус пользователя успешно обновлен",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось обновить статус пользователя",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Delete all users mutation
-  const deleteAllUsersMutation = useMutation({
-    mutationFn: () => {
-      console.log(`Attempting to delete all users for project: ${projectId}`);
-      return apiRequest('DELETE', `/api/projects/${projectId}/users`);
-    },
-    onSuccess: (data) => {
-      console.log("Bulk deletion successful:", data);
-      // Force clear cache and refetch
-      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
-
-      // Delay refetch to ensure cache is cleared
-      setTimeout(() => {
-        refetchUsers();
-        refetchStats();
-      }, 100);
-
-      const deletedCount = data?.deletedCount || 0;
-      toast({
-        title: "База данных очищена",
-        description: `Удалено записей: ${deletedCount}. Все пользовательские данные удалены.`,
-      });
-    },
-    onError: (error) => {
-      console.error("Bulk deletion failed:", error);
-      toast({
-        title: "Ошибка очистки базы",
-        description: "Не удалось очистить базу данных. Проверьте консоль для подробностей.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Toggle user database enabled mutation
-  const toggleDatabaseMutation = useMutation({
-    mutationFn: (enabled: boolean) =>
-      apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
-    onSuccess: (_data, enabled) => {
-      qClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
-      toast({
-        title: enabled ? "База данных включена" : "База данных выключена",
-        description: enabled
-          ? "Функции работы с базой данных пользователей будут генерироваться в коде бота."
-          : "Функции работы с базой данных НЕ будут генерироваться в коде бота.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось изменить настройку базы данных",
-        variant: "destructive",
-      });
-    }
-  });
-
-  /**
-   * @constant {Object} sendMessageMutation
-   * @description Мутация для отправки сообщения пользователю
-   * @description Отправляет сообщение выбранному пользователю через API и обновляет кэш сообщений
-   */
-  const sendMessageMutation = useMutation({
-    mutationFn: (data: { messageText: string }) => {
-      console.log('selectedUserForDialog:', selectedUserForDialog);
-      console.log('userId field:', selectedUserForDialog?.userId);
-
-      const userId = selectedUserForDialog?.userId;
-      if (!userId) {
-        throw new Error('User ID is required');
-      }
-      return apiRequest('POST', `/api/projects/${projectId}/users/${userId}/send-message`, data);
-    },
-    onSuccess: () => {
-      qClient.invalidateQueries({
-        queryKey: [`/api/projects/${projectId}/users/${selectedUserForDialog?.userId}/messages`]
-      });
-      setMessageText('');
-      toast({
-        title: "Сообщение отправлено",
-        description: "Сообщение успешно отправлено пользователю",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Ошибка отправки",
-        description: error?.message || "Не удалось отправить сообщение",
-        variant: "destructive",
-      });
-    }
-  });
 
   // Refetch messages when dialog opens
   useEffect(() => {
@@ -619,7 +418,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
     }
   };
 
-  if (usersLoading || statsLoading) {
+  if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -1599,8 +1398,8 @@ function newFunction_1(showDialog: boolean, setShowDialog: React.Dispatch<React.
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  if (messageText.trim() && !sendMessageMutation.isPending) {
-                    sendMessageMutation.mutate({ messageText: messageText.trim() });
+                  if (messageText.trim() && !sendMessageMutation.isPending && selectedUserForDialog?.userId) {
+                    sendMessageMutation.mutate({ messageText: messageText.trim(), userId: selectedUserForDialog.userId });
                   }
                 }
               }}
@@ -1615,8 +1414,8 @@ function newFunction_1(showDialog: boolean, setShowDialog: React.Dispatch<React.
             <Button
               data-testid="button-send-message"
               onClick={() => {
-                if (messageText.trim() && !sendMessageMutation.isPending) {
-                  sendMessageMutation.mutate({ messageText: messageText.trim() });
+                if (messageText.trim() && !sendMessageMutation.isPending && selectedUserForDialog?.userId) {
+                  sendMessageMutation.mutate({ messageText: messageText.trim(), userId: selectedUserForDialog.userId });
                 }
               }}
               disabled={!messageText.trim() || sendMessageMutation.isPending}
