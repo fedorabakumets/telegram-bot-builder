@@ -6,6 +6,7 @@
 import { TableRow, TableCell } from '@/components/ui/table';
 import { UserBotData } from '@shared/schema';
 import { ResponsePhoto } from './response-photo';
+import { FileNotFound } from '../file-not-found';
 
 /**
  * Пропсы компонента ResponseRow
@@ -76,7 +77,7 @@ export function ResponseRow({
         {(() => {
           const valueStr = String(answerValue);
           const isImageUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
-          
+
           // Если это URL изображения (не photo тип)
           if (isImageUrl && !responseData?.media && !responseData?.photoUrl && responseData?.type !== 'photo' && responseData?.type !== 'image') {
             return (
@@ -86,23 +87,19 @@ export function ResponseRow({
                   alt="Ответ"
                   className="w-full h-auto rounded-lg"
                   onError={(e) => {
-                    const img = e.target as HTMLImageElement;
-                    img.style.display = 'none';
-                    const fallback = document.createElement('div');
-                    fallback.className = 'text-xs text-muted-foreground italic';
-                    fallback.textContent = 'Файл не найден';
-                    img.parentNode?.appendChild(fallback);
+                    (e.target as HTMLImageElement).style.display = 'none';
                   }}
                 />
+                <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
               </div>
             );
           }
-          
+
           // Если это photo/image тип — используем ResponsePhoto
           if (responseData?.media || responseData?.photoUrl || responseData?.type === 'photo' || responseData?.type === 'image') {
             return <ResponsePhoto responseData={responseData} answerValue={valueStr} getPhotoUrlFromMessages={() => null} />;
           }
-          
+
           // Обычный текст
           return (
             <p className="text-sm text-green-800 dark:text-green-200 font-medium break-all">{valueStr === 'undefined' || valueStr === 'null' ? '-' : valueStr}</p>

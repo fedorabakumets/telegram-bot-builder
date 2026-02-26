@@ -4,6 +4,7 @@
  */
 
 import { ResponseData } from '../../types';
+import { FileNotFound } from '../file-not-found';
 
 /**
  * Пропсы компонента ResponseMedia
@@ -49,20 +50,16 @@ export function ResponseMedia({
   // Photo URL
   if (responseData?.photoUrl) {
     return (
-      <div className="rounded-lg overflow-hidden max-w-md">
+      <div className="rounded-lg overflow-hidden max-w-md relative">
         <img
           src={responseData.photoUrl}
           alt="Фото ответ"
           className="w-full h-auto rounded-lg border border-border"
           onError={(e) => {
-            const img = e.target as HTMLImageElement;
-            img.style.display = 'none';
-            const fallback = document.createElement('div');
-            fallback.className = 'text-xs text-muted-foreground italic';
-            fallback.textContent = 'Файл не найден';
-            img.parentNode?.appendChild(fallback);
+            (e.target as HTMLImageElement).style.display = 'none';
           }}
         />
+        <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
       </div>
     );
   }
@@ -77,20 +74,16 @@ export function ResponseMedia({
 
     if (isUrl) {
       return (
-        <div className="rounded-lg overflow-hidden max-w-md">
+        <div className="rounded-lg overflow-hidden max-w-md relative">
           <img
             src={valueStr}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
             onError={(e) => {
-              const img = e.target as HTMLImageElement;
-              img.style.display = 'none';
-              const fallback = document.createElement('div');
-              fallback.className = 'text-xs text-muted-foreground italic';
-              fallback.textContent = 'Файл не найден';
-              img.parentNode?.appendChild(fallback);
+              (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
+          <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
         </div>
       );
     }
@@ -98,20 +91,16 @@ export function ResponseMedia({
     const photoUrl = getPhotoUrlFromMessages(valueStr);
     if (photoUrl) {
       return (
-        <div className="rounded-lg overflow-hidden max-w-md">
+        <div className="rounded-lg overflow-hidden max-w-md relative">
           <img
             src={photoUrl}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
             onError={(e) => {
-              const img = e.target as HTMLImageElement;
-              img.style.display = 'none';
-              const fallback = document.createElement('div');
-              fallback.className = 'text-xs text-muted-foreground italic';
-              fallback.textContent = 'Файл не найден';
-              img.parentNode?.appendChild(fallback);
+              (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
+          <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
         </div>
       );
     }
@@ -131,20 +120,16 @@ export function ResponseMedia({
     const photoUrl = getPhotoUrlFromMessages(answerValue);
     if (photoUrl) {
       return (
-        <div className="rounded-lg overflow-hidden max-w-md">
+        <div className="rounded-lg overflow-hidden max-w-md relative">
           <img
             src={photoUrl}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
             onError={(e) => {
-              const img = e.target as HTMLImageElement;
-              img.style.display = 'none';
-              const fallback = document.createElement('div');
-              fallback.className = 'text-xs text-muted-foreground italic';
-              fallback.textContent = 'Файл не найден';
-              img.parentNode?.appendChild(fallback);
+              (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
+          <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
         </div>
       );
     }
@@ -157,20 +142,16 @@ export function ResponseMedia({
     answerValue.startsWith('/uploads/');
   if (isImageUrl) {
     return (
-      <div className="rounded-lg overflow-hidden max-w-md">
+      <div className="rounded-lg overflow-hidden max-w-md relative">
         <img
           src={answerValue}
           alt="Ответ"
           className="w-full h-auto rounded-lg"
           onError={(e) => {
-            const img = e.target as HTMLImageElement;
-            img.style.display = 'none';
-            const fallback = document.createElement('div');
-            fallback.className = 'text-xs text-muted-foreground italic';
-            fallback.textContent = 'Файл не найден';
-            img.parentNode?.appendChild(fallback);
+            (e.target as HTMLImageElement).style.display = 'none';
           }}
         />
+        <FileNotFound className="absolute bottom-1 left-1 bg-background/80 px-1 rounded" />
       </div>
     );
   }

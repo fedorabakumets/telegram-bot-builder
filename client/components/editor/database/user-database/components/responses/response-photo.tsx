@@ -5,6 +5,7 @@
 
 import { ResponseData } from '../../types';
 import { useState } from 'react';
+import { FileNotFound } from '../file-not-found';
 
 /**
  * Пропсы компонента ResponsePhoto
@@ -52,9 +53,7 @@ export function ResponsePhoto({
   // Photo URL
   if (responseData?.photoUrl) {
     if (imageError) {
-      return (
-        <div className="text-xs text-muted-foreground italic">Файл не найден</div>
-      );
+      return <FileNotFound />;
     }
     return (
       <div className="rounded-lg overflow-hidden max-w-md">
@@ -74,9 +73,7 @@ export function ResponsePhoto({
     const isUrl = valueStr.startsWith('http://') || valueStr.startsWith('https://') || valueStr.startsWith('/uploads/');
 
     if (imageError) {
-      return (
-        <div className="text-xs text-muted-foreground italic">Файл не найден</div>
-      );
+      return <FileNotFound />;
     }
 
     if (isUrl) {
