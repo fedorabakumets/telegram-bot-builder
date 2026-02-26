@@ -14,7 +14,7 @@ import { Statistics } from './components/Statistics';
 import { UserStatus } from './components/UserStatus';
 import { DatesSection } from './components/DatesSection';
 import { TagsSection } from './components/TagsSection';
-import { UserResponses } from './components/UserResponses';
+import { UserResponses } from '../responses-table/components/UserResponses';
 import { RawJson } from './components/RawJson';
 
 /**

@@ -5,19 +5,8 @@
  */
 
 import React from 'react';
-import { ResponseData } from '../utils/parseResponseData';
+import type { ResponseData, ResponseCellProps } from '../types';
 import { ResponsePhoto } from '@/components/editor/database/user-database/components/responses/response-photo';
-
-/**
- * @interface ResponseCellProps
- * @description Свойства ячейки ответа
- */
-interface ResponseCellProps {
-  /** Данные ответа */
-  responseData: ResponseData;
-  /** Отображаемое значение */
-  answerValue: string;
-}
 
 /**
  * Компонент ячейки с ответом

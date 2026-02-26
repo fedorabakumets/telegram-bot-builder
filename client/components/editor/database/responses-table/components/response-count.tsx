@@ -4,20 +4,7 @@
  */
 
 import { Badge } from '@/components/ui/badge';
-
-/**
- * Пропсы компонента ResponseCount
- */
-interface ResponseCountProps {
-  /** Текущая страница */
-  currentPage: number;
-  /** Общее количество страниц */
-  totalPages: number;
-  /** Количество элементов на странице */
-  itemsPerPage: number;
-  /** Общее количество ответов */
-  totalCount: number;
-}
+import type { ResponseCountProps } from '../types';
 
 /**
  * Компонент счёта ответов

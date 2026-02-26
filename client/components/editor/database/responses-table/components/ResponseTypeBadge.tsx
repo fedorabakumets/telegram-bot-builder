@@ -5,15 +5,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-
-/**
- * @interface ResponseTypeBadgeProps
- * @description Свойства бейджа типа
- */
-interface ResponseTypeBadgeProps {
-  /** Тип ответа */
-  type?: string;
-}
+import type { ResponseTypeBadgeProps } from '../types';
 
 /**
  * Компонент бейджа типа ответа

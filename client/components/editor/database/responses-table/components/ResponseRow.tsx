@@ -7,17 +7,7 @@ import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { getAnswerValue, parseResponseData } from '../utils/parseResponseData';
 import { ResponseCell } from './ResponseCell';
-
-/**
- * @interface ResponseRowProps
- * @description Свойства строки ответа
- */
-interface ResponseRowProps {
-  /** Ключ переменной */
-  variableKey: string;
-  /** Сырое значение ответа */
-  rawValue: unknown;
-}
+import type { ResponseRowProps } from '../types';
 
 /**
  * Компонент строки таблицы ответов

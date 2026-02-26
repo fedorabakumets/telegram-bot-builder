@@ -19,15 +19,7 @@ import { ResponseRow } from './ResponseRow';
 import { useResponsePagination } from '../hooks/use-response-pagination';
 import { PaginationControls } from './pagination-controls';
 import { ResponseCount } from './response-count';
-
-/**
- * @interface UserResponsesProps
- * @description Свойства компонента ответов
- */
-interface UserResponsesProps {
-  /** Данные пользователя */
-  user: UserBotData;
-}
+import type { UserResponsesProps } from '../types';
 
 const ITEMS_PER_PAGE = 12;
 

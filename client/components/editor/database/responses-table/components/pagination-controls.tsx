@@ -5,22 +5,7 @@
 
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-/**
- * Пропсы компонента PaginationControls
- */
-interface PaginationControlsProps {
-  /** Текущая страница */
-  currentPage: number;
-  /** Общее количество страниц */
-  totalPages: number;
-  /** Перейти на страницу */
-  goToPage: (page: number) => void;
-  /** Предыдущая страница */
-  prevPage: () => void;
-  /** Следующая страница */
-  nextPage: () => void;
-}
+import type { PaginationControlsProps } from '../types';
 
 /**
  * Компонент кнопок пагинации
