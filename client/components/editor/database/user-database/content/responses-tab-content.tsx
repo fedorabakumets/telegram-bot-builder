@@ -24,7 +24,7 @@ export function ResponsesTabContent(props: ResponsesTabContentProps): React.JSX.
   const { users } = props;
 
   return (
-    <TabsContent value="responses" className="mt-2">
+    <TabsContent value="responses" className="mt-3 px-2 sm:px-3">
       <div className="p-2 sm:p-3">
         <ResponsesTabTable users={users} />
       </div>

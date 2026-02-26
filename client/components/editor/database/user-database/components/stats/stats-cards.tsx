@@ -104,7 +104,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
   ];
 
   return (
-    <div className="space-y-3 pt-2">
+    <div className="space-y-3 pt-3 px-3 sm:px-4">
       {/* Мобильная версия */}
       <div className="block sm:hidden">
         <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-m-scrollbar-hide">

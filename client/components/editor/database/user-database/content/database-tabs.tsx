@@ -37,10 +37,14 @@ export function DatabaseTabs(props: DatabaseTabsProps): React.JSX.Element {
   const { isMobile, ...restProps } = props;
 
   return (
-    <Tabs defaultValue="users" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 flex-shrink-0 m-3 sm:m-4">
-        <TabsTrigger value="users">Пользователи</TabsTrigger>
-        <TabsTrigger value="responses">Ответы пользователей</TabsTrigger>
+    <Tabs defaultValue="users" className="w-full px-3 sm:px-4 pb-4">
+      <TabsList className="grid w-full grid-cols-2 flex-shrink-0 bg-muted/80 backdrop-blur-sm">
+        <TabsTrigger value="users" className="text-sm font-medium">
+          Пользователи
+        </TabsTrigger>
+        <TabsTrigger value="responses" className="text-sm font-medium">
+          Ответы пользователей
+        </TabsTrigger>
       </TabsList>
 
       <UsersTabContent isMobile={isMobile} {...restProps} />

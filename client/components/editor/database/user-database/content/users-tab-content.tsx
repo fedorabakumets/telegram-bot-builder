@@ -51,7 +51,7 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
   } = props;
 
   return (
-    <TabsContent value="users" className="mt-2">
+    <TabsContent value="users" className="mt-3 px-2 sm:px-3">
       {isMobile ? (
         <MobileUserList
           users={filteredAndSortedUsers}
