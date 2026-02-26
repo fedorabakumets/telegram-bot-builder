@@ -33,7 +33,7 @@ interface MessageBubbleProps {
 export function MessageBubble({ message, index }: MessageBubbleProps) {
   const isBot = message.messageType === 'bot';
   const isUser = message.messageType === 'user';
-  const messageType = isBot ? 'bot' : 'user';
+  const messageType: 'bot' | 'user' = isBot ? 'bot' : 'user';
 
   return (
     <div

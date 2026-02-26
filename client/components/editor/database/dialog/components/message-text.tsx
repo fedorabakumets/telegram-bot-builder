@@ -18,6 +18,7 @@ interface MessageTextProps {
  */
 export function MessageText({ text, messageType }: MessageTextProps) {
   const isBot = messageType === 'bot';
+  const trimmedText = text ? String(text).trimEnd() : '';
 
   return (
     <div className={`rounded-lg px-3 py-2 ${
@@ -26,7 +27,7 @@ export function MessageText({ text, messageType }: MessageTextProps) {
           : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
       }`}>
       <p className="text-sm whitespace-pre-wrap break-words">
-        {text ? String(text) : ''}
+        {trimmedText}
       </p>
     </div>
   );
