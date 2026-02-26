@@ -6,6 +6,7 @@ import { CodeResizeHandle } from '../code-resize-handle';
 import { DialogResizeHandle } from '../dialog-resize-handle';
 import { FlexibleLayoutProps } from './types';
 import { useElementContent } from './hooks';
+import { getVisibleElements, getElementsByPosition, calculateTotalRightSize, isUsersTabLayout } from './utils';
 
 /**
  * @fileoverview Гибкий компонент макета интерфейса
@@ -45,25 +46,9 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     fileExplorerContent,
   });
 
+  const visibleElements = getVisibleElements(config, hideOnMobile, isMobile);
 
-  /**
-   * @function createSimpleLayout
-   * @description Создает упрощенный CSS Grid layout на основе конфигурации
-   * @returns {JSX.Element} Сгенерированный макет
-   */
-  // Создаем упрощенный CSS Grid layout
   const createSimpleLayout = () => {
-    const visibleElements = config.elements.filter(el => {
-      if (!el.visible) return false;
-      
-      // Скрываем боковые панели на мобильных устройствах, если включен режим hideOnMobile
-      if (hideOnMobile && isMobile && (el.type === 'sidebar' || el.type === 'properties')) {
-        return false;
-      }
-      
-      return true;
-    });
-    
     if (visibleElements.length === 0) {
       return (
         <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground bg-background relative">
@@ -166,53 +151,9 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     }
 
     // Определяем элементы по позициям
-    const topEl = visibleElements.find(el => el.position === 'top');
-    const bottomEl = visibleElements.find(el => el.position === 'bottom');
-    const leftEl = visibleElements.find(el => el.position === 'left');
-    const rightElements = visibleElements.filter(el => el.position === 'right');
-    const centerEl = visibleElements.find(el => el.position === 'center');
+    const { topEl, bottomEl, leftEl, rightElements, centerEl } = getElementsByPosition(visibleElements);
 
-    // Простая структура: top / middle / bottom
-    const rows = [];
-    const areas = [];
-    
-    // Верхняя строка
-    if (topEl) {
-      rows.push(`${topEl.size}px`);
-      areas.push('"header header header"');
-    }
-    
-    // Средняя строка
-    rows.push('1fr');
-    let middleArea = '"';
-    if (leftEl) middleArea += 'sidebar ';
-    else middleArea += '. ';
-    
-    if (centerEl) middleArea += 'main ';
-    else middleArea += '. ';
-    
-    if (rightElements.length > 0) middleArea += 'properties';
-    else middleArea += '.';
-    
-    middleArea += '"';
-    areas.push(middleArea);
-    
-    // Нижняя строка  
-    if (bottomEl) {
-      rows.push(`${bottomEl.size}px`);
-      areas.push('"footer footer footer"');
-    }
-
-    // Колонки
-    const columns = [];
-    if (leftEl) columns.push(`${leftEl.size}%`);
-    else columns.push('0px');
-    
-    columns.push('1fr');
-    
-    const totalRightSize = rightElements.reduce((sum, el) => sum + el.size, 0);
-    if (totalRightSize > 0) columns.push(`${totalRightSize}%`);
-    else columns.push('0px');
+    const totalRightSize = calculateTotalRightSize(rightElements);
 
     // Если есть только верхняя/нижняя панель и основной контент
     if (topEl && !leftEl && rightElements.length === 0 && (centerEl || bottomEl)) {
@@ -238,11 +179,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     // Если есть боковые панели и основной контент
     if ((leftEl || rightElements.length > 0) && centerEl && !topEl && !bottomEl) {
       const leftSize = leftEl?.size || 0;
-      const totalRightSize = rightElements.reduce((sum, el) => sum + el.size, 0);
-      const hasDialog = rightElements.some(el => el.type === 'dialog');
-      const hasUserDetails = leftEl?.type === 'userDetails';
-      // Если есть диалог или детали пользователя, уменьшаем minSize для центра
-      const isUsersTab = hasDialog || hasUserDetails;
+      const isUsersTab = isUsersTabLayout(leftEl, rightElements);
       const centerMinSize = isUsersTab ? 20 : 50;
       const centerMaxSize = isUsersTab ? 80 : (rightElements.length > 0 ? 70 : 85);
       const sideMinSize = isUsersTab ? 10 : 15;
