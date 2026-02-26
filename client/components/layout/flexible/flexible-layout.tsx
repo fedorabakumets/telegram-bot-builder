@@ -6,7 +6,7 @@ import { DialogResizeHandle } from '../dialog-resize-handle';
 import { FlexibleLayoutProps } from './types';
 import { useElementContent } from './hooks';
 import { getVisibleElements, getElementsByPosition, calculateTotalRightSize, isUsersTabLayout } from './utils';
-import { EmptyState, SingleElementLayout } from './components';
+import { EmptyState, SingleElementLayout, TopBottomLayout } from './components';
 
 /**
  * @fileoverview Гибкий компонент макета интерфейса
@@ -77,22 +77,14 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 
     // Если есть только верхняя/нижняя панель и основной контент
     if (topEl && !leftEl && rightElements.length === 0 && (centerEl || bottomEl)) {
-      // Скрываем ResizableHandle на мобильных устройствах для вкладки "Бот"
-
       return (
-        <ResizablePanelGroup direction="vertical" className="h-full gap-0">
-          <ResizablePanel id="top-panel" order={1} defaultSize={isMobile ? 7 : topEl.size} minSize={isMobile ? 7 : 15} maxSize={30} className="p-0 m-0">
-            <div className="h-full bg-background overflow-auto">
-              {getElementContent(topEl.type)}
-            </div>
-          </ResizablePanel>
-          <ResizableHandle className="!hidden" style={{ height: 0, margin: 0, padding: 0 }} />
-          <ResizablePanel id="main-panel" order={2} defaultSize={isMobile ? 93 : (100 - topEl.size)} className="p-0 m-0">
-            <div className="h-full bg-background overflow-auto">
-              {centerEl ? getElementContent(centerEl.type) : (bottomEl ? getElementContent(bottomEl.type) : null)}
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        <TopBottomLayout
+          topContent={getElementContent(topEl.type)}
+          centerContent={centerEl ? getElementContent(centerEl.type) : null}
+          bottomContent={bottomEl ? getElementContent(bottomEl.type) : null}
+          topSize={topEl.size}
+          isMobile={isMobile}
+        />
       );
     }
 
