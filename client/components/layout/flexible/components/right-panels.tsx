@@ -35,6 +35,35 @@ interface RightPanelsProps {
 }
 
 /**
+ * Компонент правой субпанели
+ */
+function RightSubPanel({ el, index, totalSize, minSize }: {
+  el: RightElement;
+  index: number;
+  totalSize: number;
+  minSize: number;
+}) {
+  return (
+    <>
+      {index > 0 && <ResizableHandle key={`handle-${el.id}`} withHandle />}
+      <ResizablePanel
+        key={`panel-${el.id}`}
+        id={`right-subpanel-${el.id}`}
+        order={index + 1}
+        defaultSize={totalSize > 0 ? (el.size / totalSize) * 100 : 50}
+        minSize={minSize}
+        maxSize={100}
+        className="overflow-hidden"
+      >
+        <div className="h-full w-full overflow-hidden flex flex-col">
+          {el.content}
+        </div>
+      </ResizablePanel>
+    </>
+  );
+}
+
+/**
  * Компонент группы правых панелей
  * @param props - Пропсы компонента
  * @returns JSX элемент
@@ -60,22 +89,15 @@ export function RightPanels(props: RightPanelsProps): React.JSX.Element {
         className="overflow-hidden"
       >
         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-          {elements.flatMap((el, index) => [
-            ...(index > 0 ? [<ResizableHandle key={`handle-${el.id}`} withHandle />] : []),
-            <ResizablePanel
-              key={`panel-${el.id}`}
-              id={`right-subpanel-${el.id}`}
-              order={index + 1}
-              defaultSize={totalSize > 0 ? (el.size / totalSize) * 100 : 50}
+          {elements.map((el, index) => (
+            <RightSubPanel
+              key={el.id}
+              el={el}
+              index={index}
+              totalSize={totalSize}
               minSize={minSize}
-              maxSize={100}
-              className="overflow-hidden"
-            >
-              <div className="h-full w-full overflow-hidden flex flex-col">
-                {el.content}
-              </div>
-            </ResizablePanel>
-          ])}
+            />
+          ))}
         </ResizablePanelGroup>
       </ResizablePanel>
     </>
