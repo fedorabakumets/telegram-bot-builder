@@ -3,3 +3,4 @@
  */
 
 export * from './empty-state';
+export * from './single-element-layout';

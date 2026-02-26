@@ -6,7 +6,7 @@ import { DialogResizeHandle } from '../dialog-resize-handle';
 import { FlexibleLayoutProps } from './types';
 import { useElementContent } from './hooks';
 import { getVisibleElements, getElementsByPosition, calculateTotalRightSize, isUsersTabLayout } from './utils';
-import { EmptyState } from './components';
+import { EmptyState, SingleElementLayout } from './components';
 
 /**
  * @fileoverview Гибкий компонент макета интерфейса
@@ -64,11 +64,9 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     if (visibleElements.length === 1) {
       const singleElement = visibleElements[0];
       return (
-        <div className="h-full w-full overflow-hidden bg-background">
-          <div className="h-full w-full">
-            {getElementContent(singleElement.type)}
-          </div>
-        </div>
+        <SingleElementLayout>
+          {getElementContent(singleElement.type)}
+        </SingleElementLayout>
       );
     }
 
