@@ -6,7 +6,7 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BotProject, UserBotData } from '@shared/schema';
-import { SortField, SortDirection } from '../types';
+import { SortField, SortDirection } from './types';
 import { StatsCards } from './components/stats';
 import { ResponsesTabTable } from './components/responses';
 import { MobileUserList } from './components/mobile';
@@ -34,6 +34,8 @@ export interface DatabaseContentProps {
   stats: { totalUsers?: number; activeUsers?: number; blockedUsers?: number; premiumUsers?: number; totalInteractions?: number; avgInteractionsPerUser?: number; usersWithResponses?: number };
   /** Поисковый запрос */
   searchQuery: string;
+  /** Функция изменения поискового запроса */
+  setSearchQuery: (value: string) => void;
   /** Фильтр по статусу */
   filterActive: boolean | null;
   /** Установка фильтра статуса */
@@ -43,9 +45,9 @@ export interface DatabaseContentProps {
   /** Установка фильтра Premium */
   setFilterPremium: React.Dispatch<React.SetStateAction<boolean | null>>;
   /** Поле сортировки */
-  sortField: string;
+  sortField: SortField;
   /** Направление сортировки */
-  sortDirection: string;
+  sortDirection: SortDirection;
   /** Установка поля сортировки */
   setSortField: React.Dispatch<React.SetStateAction<SortField>>;
   /** Установка направления сортировки */
@@ -93,6 +95,7 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
     deleteAllUsersMutation,
     stats,
     searchQuery,
+    setSearchQuery,
     filterActive,
     setFilterActive,
     filterPremium,
@@ -140,7 +143,7 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
               )}
             </div>
 
-            <ExportInfo project={project} />
+            <ExportInfo project={project || null} />
 
             {isDatabaseEnabled && stats && <StatsCards stats={stats} />}
 
@@ -149,9 +152,9 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 filterActive={filterActive?.toString() || 'all'}
-                setFilterActive={setFilterActive}
+                setFilterActive={(value) => setFilterActive(value === 'all' ? null : value === 'true')}
                 filterPremium={filterPremium?.toString() || 'all'}
-                setFilterPremium={setFilterPremium}
+                setFilterPremium={(value) => setFilterPremium(value === 'all' ? null : value === 'true')}
                 sortField={sortField}
                 sortDirection={sortDirection}
                 setSort={(field, direction) => {

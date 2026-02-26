@@ -388,6 +388,7 @@ export function UserDatabasePanel({ projectId, projectName, onOpenDialogPanel, o
         deleteAllUsersMutation={deleteAllUsersMutation}
         stats={stats}
         searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
         filterActive={filterActive}
         setFilterActive={setFilterActive}
         filterPremium={filterPremium}

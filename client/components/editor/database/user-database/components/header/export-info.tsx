@@ -10,7 +10,7 @@ import { BotProject } from '@shared/schema';
  */
 interface ExportInfoProps {
   /** Данные проекта */
-  project: BotProject;
+  project: BotProject | null;
 }
 
 /**
