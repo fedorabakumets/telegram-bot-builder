@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { ResponseData } from '../../types';
-import { FileNotFound } from '../file-not-found';
+import { FileNotFound } from '../../../responses-table/components/file-not-found';
 import { FileText } from 'lucide-react';
 
 /**
