@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { ResponseRowTable } from './response-row';
+import { ResponseRow } from './response-row';
 import { PaginationControls } from './pagination-controls';
 import { ResponseCount } from './response-count';
 import { ItemsPerPageSelector } from './items-per-page-selector';
@@ -131,7 +131,7 @@ export function ResponsesTableWithPagination({
             </TableHeader>
             <TableBody>
               {visibleEntriesFinal.map(([_, entry]) => (
-                <ResponseRowTable
+                <ResponseRow
                   key={`${entry.user.id}-${entry.key}-${entry.index}`}
                   user={entry.user}
                   keyName={entry.key}

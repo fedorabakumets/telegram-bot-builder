@@ -10,7 +10,7 @@ export { ResponseCount } from './response-count';
 export { PaginationControls } from './pagination-controls';
 export { UserResponses } from './UserResponses';
 export { ResponsePhoto } from './response-photo';
-export { ResponseRow as ResponseRowTable } from './response-row';
+export { ResponseRow as ResponseRowTable } from './ResponseRow';
 export { ResponsesTabTable } from './responses-tab-table';
 export { FileNotFound } from './file-not-found';
 export { UserResponsesPreview } from './user-responses-preview';
