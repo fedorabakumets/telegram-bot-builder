@@ -1,11 +1,8 @@
 import React from 'react';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useMediaQuery } from '@/components/editor/properties/media/use-media-query';
-import { CodeResizeHandle } from '../code-resize-handle';
-import { DialogResizeHandle } from '../dialog-resize-handle';
 import { FlexibleLayoutProps } from './types';
 import { useElementContent } from './hooks';
-import { getVisibleElements, getElementsByPosition, calculateTotalRightSize, isUsersTabLayout } from './utils';
+import { getVisibleElements, getElementsByPosition, isUsersTabLayout } from './utils';
 import { EmptyState, SingleElementLayout, TopBottomLayout, SidePanelsLayout, CombinedLayout } from './components';
 
 /**
@@ -73,8 +70,6 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     // Определяем элементы по позициям
     const { topEl, bottomEl, leftEl, rightElements, centerEl } = getElementsByPosition(visibleElements);
 
-    const totalRightSize = calculateTotalRightSize(rightElements);
-
     // Если есть только верхняя/нижняя панель и основной контент
     if (topEl && !leftEl && rightElements.length === 0 && (centerEl || bottomEl)) {
       return (
@@ -90,7 +85,6 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 
     // Если есть боковые панели и основной контент
     if ((leftEl || rightElements.length > 0) && centerEl && !topEl && !bottomEl) {
-      const leftSize = leftEl?.size || 0;
       const isUsersTab = isUsersTabLayout(leftEl, rightElements);
 
       return (
@@ -110,7 +104,6 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
       );
     }
 
-    // Комбинированный макет (верх + боковые панели)
     return (
       <CombinedLayout
         topContent={topEl ? getElementContent(topEl.type) : null}
@@ -135,10 +128,4 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
       {createSimpleLayout()}
     </div>
   );
-};
-
-/**
- * @exports FlexibleLayout
- * @description Экспортирует компонент FlexibleLayout по умолчанию
- */
-export default FlexibleLayout;
+}
