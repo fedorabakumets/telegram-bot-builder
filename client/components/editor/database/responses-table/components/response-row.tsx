@@ -8,7 +8,7 @@ import { FileText } from 'lucide-react';
 import { TableRow, TableCell } from '@/components/ui/table';
 import { UserBotData } from '@shared/schema';
 import { ResponsePhoto } from './response-photo';
-import { FileNotFound } from '../file-not-found';
+import { FileNotFound } from './file-not-found';
 
 /**
  * Пропсы компонента ResponseRow

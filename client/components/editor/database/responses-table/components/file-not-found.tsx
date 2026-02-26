@@ -3,13 +3,7 @@
  * @description Лаконичное сообщение об ошибке загрузки файла
  */
 
-/**
- * Пропсы компонента FileNotFound
- */
-interface FileNotFoundProps {
-  /** Дополнительный CSS-класс */
-  className?: string;
-}
+import type { FileNotFoundProps } from '../types';
 
 /**
  * Компонент сообщения о ненайденном файле

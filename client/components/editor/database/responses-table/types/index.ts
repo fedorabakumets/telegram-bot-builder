@@ -10,3 +10,4 @@ export type { PaginationControlsProps } from './pagination-controls-props';
 export type { ResponseCountProps } from './response-count-props';
 export type { UserResponsesProps } from './user-responses-props';
 export type { ResponseData } from './response-data';
+export type { FileNotFoundProps } from './file-not-found-props';

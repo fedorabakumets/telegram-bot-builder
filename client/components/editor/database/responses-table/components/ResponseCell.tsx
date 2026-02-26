@@ -6,7 +6,7 @@
 
 import React from 'react';
 import type { ResponseData, ResponseCellProps } from '../types';
-import { ResponsePhoto } from '@/components/editor/database/user-database/components/responses/response-photo';
+import { ResponsePhoto } from './response-photo';
 
 /**
  * Компонент ячейки с ответом

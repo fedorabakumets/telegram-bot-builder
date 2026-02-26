@@ -9,3 +9,7 @@ export { ResponseTypeBadge } from './ResponseTypeBadge';
 export { ResponseCount } from './response-count';
 export { PaginationControls } from './pagination-controls';
 export { UserResponses } from './UserResponses';
+export { ResponsePhoto } from './response-photo';
+export { ResponseRow as ResponseRowTable } from './response-row';
+export { ResponsesTabTable } from './responses-tab-table';
+export { FileNotFound } from './file-not-found';

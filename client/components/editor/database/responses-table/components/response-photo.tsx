@@ -3,9 +3,9 @@
  * @description Рендерит изображение, аудио, видео, документы из различных источников
  */
 
-import { ResponseData } from '../../types';
+import type { ResponseData } from '../types';
 import { useState } from 'react';
-import { FileNotFound } from '../file-not-found';
+import { FileNotFound } from './file-not-found';
 import { FileText } from 'lucide-react';
 
 /**

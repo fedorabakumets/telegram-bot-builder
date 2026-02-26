@@ -4,7 +4,7 @@
  */
 
 import { TabsContent } from '@/components/ui/tabs';
-import { ResponsesTabTable } from '../components/responses';
+import { ResponsesTabTable } from '../../responses-table/components/responses-tab-table';
 import { UserBotData } from '@shared/schema';
 
 /**
