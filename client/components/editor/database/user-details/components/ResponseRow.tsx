@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { ResponseData, getAnswerValue, parseResponseData } from '../utils/parseResponseData';
+import { getAnswerValue, parseResponseData } from '../utils/parseResponseData';
 import { ResponseCell } from './ResponseCell';
 
 /**

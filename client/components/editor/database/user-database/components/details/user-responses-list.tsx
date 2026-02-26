@@ -6,7 +6,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { MessageSquare } from 'lucide-react';
-import { ResponseData, VariableToQuestionMap } from '../../types';
+import { VariableToQuestionMap } from '../../types';
 import { ResponseCard } from './response-card';
 
 /**
