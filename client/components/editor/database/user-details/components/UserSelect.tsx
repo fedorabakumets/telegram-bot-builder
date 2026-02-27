@@ -38,7 +38,7 @@ export function UserSelect({ user, users, formatUserName, onSelectUser }: UserSe
         }
       }}
     >
-      <SelectTrigger className="w-full">
+      <SelectTrigger className="w-full h-7 text-[10px] xs:text-[10px] sm:text-xs px-2 py-0.5 border-0 shadow-none bg-transparent hover:bg-accent/50 focus:ring-0 focus:ring-offset-0 [&>span]:text-muted-foreground">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
