@@ -1,12 +1,12 @@
 /**
  * @fileoverview Компонент ввода сообщения
- * Поле ввода и кнопка отправки
+ * Поле ввода с форматированием и кнопка отправки
  */
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { RefreshCw, Send } from 'lucide-react';
+import { InlineRichEditor } from '@/components/editor/properties/inline-rich-editor';
 
 /**
  * Свойства компонента ввода
@@ -19,7 +19,7 @@ interface DialogInputProps {
 }
 
 /**
- * Компонент ввода и отправки сообщения
+ * Компонент ввода и отправки сообщения с поддержкой форматирования
  */
 export function DialogInput({ isPending, onSend }: DialogInputProps) {
   const [messageText, setMessageText] = useState('');
@@ -33,23 +33,12 @@ export function DialogInput({ isPending, onSend }: DialogInputProps) {
 
   return (
     <div className="p-3 space-y-2">
-      <div className="flex gap-2">
-        <Textarea
-          data-testid="dialog-panel-textarea-message"
-          placeholder="Введите сообщение..."
-          value={messageText}
-          onChange={(e) => setMessageText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-          rows={2}
-          disabled={isPending}
-          className="flex-1 resize-none text-sm"
-        />
-      </div>
+      <InlineRichEditor
+        value={messageText}
+        onChange={setMessageText}
+        placeholder="Введите сообщение..."
+        enableMarkdown={false}
+      />
       <div className="flex justify-between items-center">
         <p className="text-xs text-muted-foreground">
           Enter - отправить
