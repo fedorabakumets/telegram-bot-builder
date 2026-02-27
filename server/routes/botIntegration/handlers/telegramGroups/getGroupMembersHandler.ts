@@ -13,6 +13,8 @@ import {
     analyzeTelegramError,
     getErrorStatusCode
 } from "../../../../utils/telegram-error-handler";
+import { isLargeGroup, createLargeGroupResponse } from "./utils/checkGroupSize";
+import { fetchGroupMembers, createMembersResponse } from "./utils/fetchGroupMembers";
 
 /**
  * Обрабатывает запрос на получение участников группы
@@ -54,25 +56,15 @@ export async function getGroupMembersHandler(req: Request, res: Response): Promi
             return;
         }
 
-        if (chatInfo.result.members_count && chatInfo.result.members_count > 200) {
-            res.status(400).json({
-                message: "Невозможно получить список участников для больших групп",
-                error: "Telegram API позволяет получать полный список участников только для небольших групп (<200 участников). Для больших групп доступны только администраторы.",
-                membersCount: chatInfo.result.members_count
-            });
+        if (chatInfo.result.members_count && isLargeGroup(chatInfo.result.members_count)) {
+            res.status(400).json(createLargeGroupResponse(chatInfo.result.members_count));
             return;
         }
 
         try {
-            const adminsResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChatAdministrators`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: groupId })
-            });
+            const adminsResult = await fetchGroupMembers(defaultToken, groupId);
 
-            const adminsResult = await adminsResponse.json();
-
-            if (!adminsResponse.ok) {
+            if (!adminsResult.ok) {
                 res.status(400).json({
                     message: "Ошибка при получении участников",
                     error: adminsResult.description || "Неизвестная ошибка"
@@ -81,14 +73,7 @@ export async function getGroupMembersHandler(req: Request, res: Response): Promi
             }
 
             const memberCount = chatInfo.result.members_count || 'Неизвестно';
-
-            res.json({
-                members: adminsResult.result,
-                isPartialList: true,
-                totalCount: memberCount,
-                message: `Группа содержит ${memberCount} участников. Показаны только администраторы (${adminsResult.result.length}).`,
-                explanation: "Telegram API ограничивает доступ к списку участников по соображениям приватности. Доступны только администраторы."
-            });
+            res.json(createMembersResponse(adminsResult.result, memberCount));
         } catch (error) {
             const errorInfo = analyzeTelegramError(error);
             console.error("Ошибка получения участников:", errorInfo);
