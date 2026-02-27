@@ -22,7 +22,7 @@ export function serveStatic(app: Express): void {
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
+      `Не найдена директория сборки: ${distPath}. Убедитесь, что клиент собран (npm run build)`,
     );
   }
 
