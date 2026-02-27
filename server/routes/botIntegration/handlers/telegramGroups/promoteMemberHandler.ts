@@ -9,10 +9,6 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
-import {
-    analyzeTelegramError,
-    getErrorStatusCode
-} from "../../../../utils/telegram-error-handler";
 
 /**
  * Обрабатывает запрос на повышение участника

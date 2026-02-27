@@ -8,7 +8,6 @@
  * @module setupBotIntegrationRoutes
  */
 
-import { insertBotGroupSchema, insertBotMessageSchema, sendMessageSchema } from "@shared/schema";
 import type { Express } from "express";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
 import { getMessagesHandler, sendMessageHandler, saveMessageHandler, deleteMessagesHandler } from "./botIntegration/handlers/messages";
@@ -18,11 +17,6 @@ import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, u
 import { sendGroupMessageHandler, getGroupInfoHandler, getGroupMembersCountHandler, getBotAdminStatusHandler, getGroupAdminsHandler, getGroupMembersHandler, checkMemberHandler, getSavedMembersHandler, banMemberHandler, unbanMemberHandler, promoteMemberHandler, demoteMemberHandler } from "./botIntegration/handlers/telegramGroups";
 import { storage } from "../storages/storage";
 import { telegramClientManager } from "../telegram/telegram-client";
-import { downloadTelegramAudio, downloadTelegramDocument, downloadTelegramPhoto, downloadTelegramVideo } from "../telegram/telegram-media";
-import {
-  analyzeTelegramError,
-  getErrorStatusCode
-} from "../utils/telegram-error-handler";
 
 /**
  * Настраивает маршруты интеграции с ботами

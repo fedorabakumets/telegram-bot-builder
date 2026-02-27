@@ -1,5 +1,5 @@
 /**
- * @fileoverview Хендлер проверки статуса участника
+ * @fileoverview Обработчик проверки статуса участника
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на проверку статуса участника группы.
@@ -17,11 +17,11 @@ import { getFriendlyStatus } from "./utils/getFriendlyStatus";
 import { saveMemberToDb } from "./utils/saveMemberToDb";
 
 /**
- * Обрабатывает запрос на проверку статуса участника
+ * Обрабатывает запрос на проверку статуса участника группы
  *
  * @function checkMemberHandler
- * @param {Request} req - Объект запроса
- * @param {Response} res - Объект ответа
+ * @param {Request} req - Объект запроса Express
+ * @param {Response} res - Объект ответа Express
  * @returns {Promise<void>}
  */
 export async function checkMemberHandler(req: Request, res: Response): Promise<void> {
@@ -49,7 +49,7 @@ export async function checkMemberHandler(req: Request, res: Response): Promise<v
 
         const result = await response.json();
 
-        console.log("Telegram API response for check member:", {
+        console.log("Ответ Telegram API при проверке участника:", {
             ok: response.ok,
             status: response.status,
             result: result,
@@ -58,7 +58,7 @@ export async function checkMemberHandler(req: Request, res: Response): Promise<v
         });
 
         if (!response.ok) {
-            console.error("Failed to check member status via Telegram API:", result);
+            console.error("Не удалось проверить статус участника через Telegram API:", result);
             if (result.description && result.description.includes("user not found")) {
                 res.status(400).json({
                     message: "Пользователь не найден",
@@ -84,7 +84,7 @@ export async function checkMemberHandler(req: Request, res: Response): Promise<v
             }
         };
 
-        console.log("Sending response:", responseData);
+        console.log("Отправка ответа:", responseData);
         res.json(responseData);
     } catch (error) {
         const errorInfo = analyzeTelegramError(error);
