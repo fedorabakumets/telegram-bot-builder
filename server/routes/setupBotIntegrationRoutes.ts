@@ -11,6 +11,7 @@
 import { insertBotGroupSchema, insertBotMessageSchema, sendMessageSchema } from "@shared/schema";
 import type { Express } from "express";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
+import { getMessagesHandler, sendMessageHandler, saveMessageHandler, deleteMessagesHandler } from "./botIntegration/handlers/messages";
 import { storage } from "../storages/storage";
 import { telegramClientManager } from "../telegram/telegram-client";
 import { downloadTelegramAudio, downloadTelegramDocument, downloadTelegramPhoto, downloadTelegramVideo } from "../telegram/telegram-media";
@@ -64,36 +65,8 @@ export function setupBotIntegrationRoutes(app: Express) {
      * Возвращает сообщения пользователя для указанного проекта
      *
      * @route GET /api/projects/:projectId/users/:userId/messages
-     * @param {Object} req - Объект запроса
-     * @param {Object} req.params - Параметры запроса
-     * @param {string} req.params.projectId - Идентификатор проекта
-     * @param {string} req.params.userId - Идентификатор пользователя
-     * @param {Object} req.query - Параметры запроса
-     * @param {string} req.query.limit - (Опционально) Ограничение количества сообщений
-     * @param {Object} res - Объект ответа
-     * @returns {void}
-     *
-     * @description
-     * Возвращает список сообщений для указанного пользователя в проекте.
-     * Поддерживает ограничение количества возвращаемых сообщений.
      */
-    app.get("/api/projects/:projectId/users/:userId/messages", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.projectId);
-            const userId = req.params.userId;
-            const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
-
-            if (isNaN(projectId)) {
-                return res.status(400).json({ message: "Invalid project ID" });
-            }
-
-            const messages = await storage.getBotMessagesWithMedia(projectId, userId, limit);
-            return res.json(messages);
-        } catch (error) {
-            console.error("Failed to get messages:", error);
-            return res.status(500).json({ message: "Failed to get messages" });
-        }
-    });
+    app.get("/api/projects/:projectId/users/:userId/messages", getMessagesHandler);
 
     /**
      * Обработчик маршрута POST /api/projects/:projectId/users/:userId/send-message
@@ -101,90 +74,8 @@ export function setupBotIntegrationRoutes(app: Express) {
      * Отправляет сообщение пользователю от имени администратора
      *
      * @route POST /api/projects/:projectId/users/:userId/send-message
-     * @param {Object} req - Объект запроса
-     * @param {Object} req.params - Параметры запроса
-     * @param {string} req.params.projectId - Идентификатор проекта
-     * @param {string} req.params.userId - Идентификатор пользователя
-     * @param {Object} req.body - Тело запроса
-     * @param {string} req.body.messageText - Текст сообщения
-     * @param {Object} res - Объект ответа
-     * @returns {void}
-     *
-     * @description
-     * Отправляет сообщение пользователю через Telegram Bot API.
-     * Валидирует тело запроса с помощью Zod схемы.
-     * Сохраняет сообщение в базу данных.
      */
-    app.post("/api/projects/:projectId/users/:userId/send-message", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.projectId);
-            const userId = req.params.userId;
-
-            if (isNaN(projectId)) {
-                return res.status(400).json({ message: "Invalid project ID" });
-            }
-
-            // Validate request body with Zod
-            const validationResult = sendMessageSchema.safeParse(req.body);
-            if (!validationResult.success) {
-                return res.status(400).json({
-                    message: "Invalid request body",
-                    errors: validationResult.error.errors
-                });
-            }
-
-            const { messageText } = validationResult.data;
-
-            // Get the default bot token
-            const defaultToken = await storage.getDefaultBotToken(projectId);
-            if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
-            }
-
-            // Send message via Telegram Bot API
-            const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/sendMessage`;
-            const response = await fetch(telegramApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    chat_id: userId,
-                    text: messageText.trim()
-                })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                return res.status(400).json({
-                    message: "Failed to send message",
-                    error: result.description || "Unknown error"
-                });
-            }
-
-            // Save message to database
-            await storage.createBotMessage({
-                projectId,
-                userId,
-                messageType: "bot",
-                messageText: messageText.trim(),
-                messageData: { sentFromAdmin: true }
-            });
-
-            return res.json({ message: "Message sent successfully", result });
-        } catch (error) {
-            const errorInfo = analyzeTelegramError(error);
-            console.error("Failed to send message:", errorInfo);
-            
-            const statusCode = getErrorStatusCode(errorInfo.type);
-            return res.status(statusCode).json({
-                message: errorInfo.userFriendlyMessage,
-                errorType: errorInfo.type,
-                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
-            });
-        }
-    });
+    app.post("/api/projects/:projectId/users/:userId/send-message", sendMessageHandler);
 
     /**
      * Обработчик маршрута POST /api/projects/:projectId/messages
@@ -192,41 +83,8 @@ export function setupBotIntegrationRoutes(app: Express) {
      * Сохраняет сообщение от бота в базу данных
      *
      * @route POST /api/projects/:projectId/messages
-     * @param {Object} req - Объект запроса
-     * @param {Object} req.params - Параметры запроса
-     * @param {string} req.params.projectId - Идентификатор проекта
-     * @param {Object} req.body - Тело запроса с данными сообщения
-     * @param {Object} res - Объект ответа
-     * @returns {void}
-     *
-     * @description
-     * Сохраняет сообщение от бота в базу данных.
-     * Валидирует тело запроса с помощью Zod схемы.
      */
-    app.post("/api/projects/:projectId/messages", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.projectId);
-
-            if (isNaN(projectId)) {
-                return res.status(400).json({ message: "Invalid project ID" });
-            }
-
-            // Validate request body with Zod
-            const validationResult = insertBotMessageSchema.safeParse({ ...req.body, projectId });
-            if (!validationResult.success) {
-                return res.status(400).json({
-                    message: "Invalid message data",
-                    errors: validationResult.error.errors
-                });
-            }
-
-            const message = await storage.createBotMessage(validationResult.data);
-            return res.json({ message: "Message saved successfully", data: message });
-        } catch (error) {
-            console.error("Failed to save message:", error);
-            return res.status(500).json({ message: "Failed to save message" });
-        }
-    });
+    app.post("/api/projects/:projectId/messages", saveMessageHandler);
 
     /**
      * Обработчик маршрута DELETE /api/projects/:projectId/users/:userId/messages
@@ -234,32 +92,8 @@ export function setupBotIntegrationRoutes(app: Express) {
      * Удаляет историю сообщений пользователя
      *
      * @route DELETE /api/projects/:projectId/users/:userId/messages
-     * @param {Object} req - Объект запроса
-     * @param {Object} req.params - Параметры запроса
-     * @param {string} req.params.projectId - Идентификатор проекта
-     * @param {string} req.params.userId - Идентификатор пользователя
-     * @param {Object} res - Объект ответа
-     * @returns {void}
-     *
-     * @description
-     * Удаляет все сообщения пользователя в проекте.
      */
-    app.delete("/api/projects/:projectId/users/:userId/messages", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.projectId);
-            const userId = req.params.userId;
-
-            if (isNaN(projectId)) {
-                return res.status(400).json({ message: "Invalid project ID" });
-            }
-
-            const success = await storage.deleteBotMessages(projectId, userId);
-            return res.json({ message: "Messages deleted successfully", deleted: success });
-        } catch (error) {
-            console.error("Failed to delete messages:", error);
-            return res.status(500).json({ message: "Failed to delete messages" });
-        }
-    });
+    app.delete("/api/projects/:projectId/users/:userId/messages", deleteMessagesHandler);
 
     /**
      * Обработчик маршрута POST /api/projects/:projectId/media/register-telegram-photo
