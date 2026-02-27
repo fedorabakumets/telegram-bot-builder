@@ -12,6 +12,7 @@ import { insertBotGroupSchema, insertBotMessageSchema, sendMessageSchema } from 
 import type { Express } from "express";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
 import { getMessagesHandler, sendMessageHandler, saveMessageHandler, deleteMessagesHandler } from "./botIntegration/handlers/messages";
+import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { storage } from "../storages/storage";
 import { telegramClientManager } from "../telegram/telegram-client";
 import { downloadTelegramAudio, downloadTelegramDocument, downloadTelegramPhoto, downloadTelegramVideo } from "../telegram/telegram-media";
@@ -101,106 +102,8 @@ export function setupBotIntegrationRoutes(app: Express) {
      * Регистрирует медиафайл из Telegram и связывает его с сообщением
      *
      * @route POST /api/projects/:projectId/media/register-telegram-photo
-     * @param {Object} req - Объект запроса
-     * @param {Object} req.params - Параметры запроса
-     * @param {string} req.params.projectId - Идентификатор проекта
-     * @param {Object} req.body - Тело запроса
-     * @param {string} req.body.messageId - Идентификатор сообщения
-     * @param {string} req.body.fileId - Идентификатор файла в Telegram
-     * @param {string} req.body.botToken - Токен бота для доступа к файлу
-     * @param {string} req.body.mediaType - Тип медиа ('photo', 'video', 'audio', 'document')
-     * @param {string} req.body.originalFileName - (Опционально) Оригинальное имя файла
-     * @param {Object} res - Объект ответа
-     * @returns {void}
-     *
-     * @description
-     * Загружает медиафайл из Telegram, сохраняет его локально, создает запись в базе данных
-     * и связывает с указанным сообщением.
      */
-    app.post("/api/projects/:projectId/media/register-telegram-photo", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.projectId);
-
-            if (isNaN(projectId)) {
-                return res.status(400).json({ message: "Invalid project ID" });
-            }
-
-            const { messageId, fileId, botToken, mediaType = 'photo', originalFileName } = req.body;
-
-            if (!messageId || !fileId || !botToken) {
-                return res.status(400).json({
-                    message: "Missing required fields: messageId, fileId, botToken"
-                });
-            }
-
-            // Download media from Telegram based on type
-            let downloadedFile;
-            switch (mediaType) {
-                case 'video':
-                    downloadedFile = await downloadTelegramVideo(botToken, fileId, projectId);
-                    break;
-                case 'audio':
-                    downloadedFile = await downloadTelegramAudio(botToken, fileId, projectId);
-                    break;
-                case 'document':
-                    downloadedFile = await downloadTelegramDocument(botToken, fileId, projectId, originalFileName);
-                    break;
-                case 'photo':
-                default:
-                    downloadedFile = await downloadTelegramPhoto(botToken, fileId, projectId);
-                    break;
-            }
-
-            // Generate URL for the file (relative from public root)
-            const fileUrl = `/${downloadedFile.filePath}`;
-
-            // Determine file type based on media type
-            let fileType: 'photo' | 'video' | 'audio' | 'document';
-            if (mediaType === 'video') {
-                fileType = 'video';
-            } else if (mediaType === 'audio') {
-                fileType = 'audio';
-            } else if (mediaType === 'document') {
-                fileType = 'document';
-            } else {
-                fileType = 'photo';
-            }
-
-            // Create media file record in database
-            const mediaFile = await storage.createMediaFile({
-                projectId,
-                fileName: downloadedFile.fileName,
-                fileType,
-                filePath: downloadedFile.filePath,
-                fileSize: downloadedFile.fileSize,
-                mimeType: downloadedFile.mimeType,
-                url: fileUrl,
-                description: `Telegram ${mediaType} from user`,
-                tags: [],
-                isPublic: 0,
-            });
-
-            // Link media file to message
-            await storage.createBotMessageMedia({
-                messageId: parseInt(messageId),
-                mediaFileId: mediaFile.id,
-                mediaKind: fileType,
-                orderIndex: 0,
-            });
-
-            return res.json({
-                message: "Media registered successfully",
-                mediaFile,
-                url: fileUrl
-            });
-        } catch (error) {
-            console.error("Failed to register Telegram media:", error);
-            return res.status(500).json({
-                message: "Failed to register media",
-                error: error instanceof Error ? error.message : 'Unknown error'
-            });
-        }
-    });
+    app.post("/api/projects/:projectId/media/register-telegram-photo", registerTelegramMediaHandler);
 
     // Bot Groups API
     // Get groups for a project
