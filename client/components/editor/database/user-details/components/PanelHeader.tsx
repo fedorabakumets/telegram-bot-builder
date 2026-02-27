@@ -19,6 +19,38 @@ interface PanelHeaderProps {
   onClose: () => void;
   /** Форматированное имя пользователя */
   formatUserName: (user: UserBotData | null) => string;
+  /** Идентификатор проекта для прокси аватара */
+  projectId?: number;
+}
+
+/**
+ * Компонент аватара пользователя
+ */
+function UserAvatar({ user, projectId }: { user: UserBotData; projectId?: number }) {
+  const hasPhoto = user?.avatarUrl && projectId && user?.userId;
+
+  if (hasPhoto) {
+    const avatarUrl = `/api/projects/${projectId}/users/${user.userId}/avatar`;
+
+    return (
+      <img
+        src={avatarUrl}
+        alt={formatUserName(user)}
+        className="w-7 xs:w-7 sm:w-8 h-7 xs:h-7 sm:h-8 rounded-full object-cover flex-shrink-0"
+        onError={(e) => {
+          (e.target as HTMLImageElement).style.display = 'none';
+          const fallback = e.target.parentElement?.querySelector('.fallback-avatar');
+          if (fallback) fallback.style.display = 'flex';
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="w-7 xs:w-7 sm:w-8 h-7 xs:h-7 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+      <User className="w-3.5 xs:w-3.5 sm:w-4 h-3.5 xs:h-3.5 sm:h-4 text-white" />
+    </div>
+  );
 }
 
 /**
@@ -26,13 +58,11 @@ interface PanelHeaderProps {
  * @param {PanelHeaderProps} props - Свойства компонента
  * @returns {JSX.Element} Элемент заголовка
  */
-export function PanelHeader({ user, onClose, formatUserName }: PanelHeaderProps): React.JSX.Element {
+export function PanelHeader({ user, onClose, formatUserName, projectId }: PanelHeaderProps): React.JSX.Element {
   return (
     <div className="flex items-center justify-between gap-2 p-2 xs:p-2.5 sm:p-3 border-b">
       <div className="flex items-center gap-2 min-w-0">
-        <div className="w-7 xs:w-7 sm:w-8 h-7 xs:h-7 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-          <User className="w-3.5 xs:w-3.5 sm:w-4 h-3.5 xs:h-3.5 sm:h-4 text-white" />
-        </div>
+        <UserAvatar user={user} projectId={projectId} />
         <div className="min-w-0">
           <h3 className="font-medium text-xs xs:text-xs sm:text-sm truncate">Детали пользователя</h3>
           <p className="text-[10px] xs:text-[10px] sm:text-xs text-muted-foreground truncate">{formatUserName(user)}</p>
