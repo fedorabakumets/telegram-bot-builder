@@ -8,15 +8,9 @@ import 'dotenv/config';
 
 async function fetchUserAvatars() {
   const databaseUrl = process.env.DATABASE_URL;
-  const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
 
   if (!databaseUrl) {
     console.error('❌ DATABASE_URL не найден');
-    process.exit(1);
-  }
-
-  if (!telegramBotToken) {
-    console.error('❌ TELEGRAM_BOT_TOKEN не найден');
     process.exit(1);
   }
 
@@ -25,6 +19,21 @@ async function fetchUserAvatars() {
   const pool = new Pool({ connectionString: databaseUrl });
 
   try {
+    // Получаем токен бота по умолчанию
+    const tokenResult = await pool.query(`
+      SELECT token FROM bot_tokens 
+      WHERE is_default = true 
+      LIMIT 1
+    `);
+
+    if (tokenResult.rows.length === 0) {
+      console.error('❌ Токен бота не найден в БД');
+      process.exit(1);
+    }
+
+    const telegramBotToken = tokenResult.rows[0].token;
+    console.log(`🤖 Используем токен бота: ${telegramBotToken.substring(0, 10)}...`);
+
     // Получаем всех пользователей без avatar_url
     const result = await pool.query(`
       SELECT user_id, username, first_name, last_name 
