@@ -4,8 +4,8 @@
  */
 
 import { TableCell } from '@/components/ui/table';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { UserBotData } from '@shared/schema';
+import { UserAvatar } from '../../../dialog/components/user-avatar';
 
 /**
  * Пропсы компонента DesktopUserCell
@@ -20,40 +20,15 @@ interface DesktopUserCellProps {
 }
 
 /**
- * Генерирует инициалы из имени пользователя
- * @param user - Данные пользователя
- * @returns Строка с инициалами
- */
-function getInitials(user: UserBotData): string {
-  const firstName = user.firstName || '';
-  const lastName = user.lastName || '';
-  
-  if (firstName && lastName) {
-    return `${firstName[0]}${lastName[0]}`.toUpperCase();
-  }
-  if (firstName) {
-    return firstName.slice(0, 2).toUpperCase();
-  }
-  return 'U';
-}
-
-/**
  * Компонент ячейки пользователя
  * @param props - Пропсы компонента
  * @returns JSX компонент ячейки
  */
 export function DesktopUserCell({ user, formatUserName, projectId }: DesktopUserCellProps): React.JSX.Element {
-  const avatarUrl = `/api/projects/${projectId}/users/${user.userId}/avatar`;
-  
   return (
     <TableCell className="py-2">
       <div className="flex items-center gap-3 min-w-0">
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={avatarUrl} alt={formatUserName(user)} className="object-cover" />
-          <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-            {getInitials(user)}
-          </AvatarFallback>
-        </Avatar>
+        <UserAvatar messageType="user" user={user} projectId={projectId} />
         <div className="flex-1 min-w-0">
           <div className="font-medium text-sm truncate">{formatUserName(user)}</div>
           <div className="text-xs text-muted-foreground truncate">ID: {user.id}</div>
