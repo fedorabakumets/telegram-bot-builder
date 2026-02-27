@@ -311,6 +311,8 @@ export const botUsers = pgTable("bot_users", {
   lastName: text("last_name"),
   /** URL аватарки пользователя */
   avatarUrl: text("avatar_url"),
+  /** Флаг бота (0 = человек, 1 = бот) */
+  isBot: integer("is_bot").default(0),
   /** Дата регистрации пользователя */
   registeredAt: timestamp("registered_at").defaultNow(),
   /** Дата последнего взаимодействия */

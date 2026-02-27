@@ -69,14 +69,15 @@ async function fetchBotAvatar() {
 
     const fullAvatarUrl = `https://api.telegram.org/file/bot${telegramBotToken}/${fileData.result.file_path}`;
 
-    // Сохраняем бота в bot_users с avatar_url
+    // Сохраняем бота в bot_users с avatar_url и is_bot = 1
     await pool.query(`
-      INSERT INTO bot_users (user_id, username, first_name, avatar_url)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO bot_users (user_id, username, first_name, avatar_url, is_bot)
+      VALUES ($1, $2, $3, $4, 1)
       ON CONFLICT (user_id) DO UPDATE SET
         avatar_url = EXCLUDED.avatar_url,
         username = EXCLUDED.username,
-        first_name = EXCLUDED.first_name
+        first_name = EXCLUDED.first_name,
+        is_bot = 1
     `, [botId.toString(), bot.username, bot.first_name, fullAvatarUrl]);
 
     console.log(`✅ Аватарка бота сохранена: ${fullAvatarUrl}`);
