@@ -7,7 +7,7 @@
  * @module botIntegration/handlers/telegramGroups/utils/saveMemberToDb
  */
 
-import { storage } from "../../../../storages/storage";
+import { storage } from "../../../../../storages/storage";
 import { createMemberData } from "./createMemberData";
 import { updateMemberData } from "./updateMemberData";
 
@@ -34,7 +34,7 @@ export async function saveMemberToDb(
         }
 
         const existingMembers = await storage.getGroupMembers(group.id);
-        const existingMember = existingMembers.find(m => m.userId.toString() === userId);
+        const existingMember = existingMembers.find((m) => m.userId.toString() === userId);
 
         if (!existingMember) {
             const memberData = createMemberData(group.id, userId, member);
