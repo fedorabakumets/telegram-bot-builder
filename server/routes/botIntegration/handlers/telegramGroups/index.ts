@@ -12,6 +12,8 @@ export { getGroupMembersCountHandler } from "./getGroupMembersCountHandler";
 export { getBotAdminStatusHandler } from "./getBotAdminStatusHandler";
 export { getGroupAdminsHandler } from "./getGroupAdminsHandler";
 export { getGroupMembersHandler } from "./getGroupMembersHandler";
+export { checkGroupHandler } from "./handlers/checkGroupHandler";
+export { getMembersHandler } from "./handlers/getMembersHandler";
 export { checkMemberHandler } from "./checkMemberHandler";
 export { getSavedMembersHandler } from "./getSavedMembersHandler";
 export { banMemberHandler } from "./banMemberHandler";
