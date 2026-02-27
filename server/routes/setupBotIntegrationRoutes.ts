@@ -40,6 +40,59 @@ import {
  */
 export function setupBotIntegrationRoutes(app: Express) {
     /**
+     * Обработчик маршрута GET /api/projects/:projectId/users/:userId/avatar
+     *
+     * Возвращает аватарку пользователя через прокси (скрывает токен бота)
+     *
+     * @route GET /api/projects/:projectId/users/:userId/avatar
+     */
+    app.get("/api/projects/:projectId/users/:userId/avatar", async (req, res) => {
+        try {
+            const projectId = parseInt(req.params.projectId);
+            const userId = req.params.userId;
+
+            if (isNaN(projectId)) {
+                return res.status(400).json({ message: "Invalid project ID" });
+            }
+
+            // Получаем токен бота по умолчанию
+            const defaultToken = await storage.getDefaultBotToken(projectId);
+            if (!defaultToken) {
+                return res.status(400).json({ message: "Bot token not found" });
+            }
+
+            // Получаем avatar_url из БД
+            const userResult = await storage.getUserBotDataByProjectAndUser(projectId, userId);
+            if (!userResult?.avatarUrl) {
+                return res.status(404).json({ message: "Avatar not found" });
+            }
+
+            // Извлекаем file_path из полного URL
+            const fileUrl = userResult.avatarUrl;
+            const filePath = fileUrl.replace(`https://api.telegram.org/file/bot${defaultToken.token}/`, '');
+
+            // Проксируем запрос к Telegram
+            const telegramFileUrl = `https://api.telegram.org/file/bot${defaultToken.token}/${filePath}`;
+            const response = await fetch(telegramFileUrl);
+
+            if (!response.ok) {
+                return res.status(404).json({ message: "Failed to fetch avatar" });
+            }
+
+            // Перенаправляем контент
+            res.set('Content-Type', response.headers.get('content-type') || 'image/jpeg');
+            res.set('Cache-Control', 'public, max-age=86400'); // Кэш на 24 часа
+            
+            const buffer = await response.arrayBuffer();
+            res.send(Buffer.from(buffer));
+
+        } catch (error) {
+            console.error("Error fetching avatar:", error);
+            res.status(500).json({ message: "Failed to fetch avatar" });
+        }
+    });
+
+    /**
      * Обработчик маршрута GET /api/projects/:projectId/users/:userId/messages
      *
      * Возвращает сообщения пользователя для указанного проекта

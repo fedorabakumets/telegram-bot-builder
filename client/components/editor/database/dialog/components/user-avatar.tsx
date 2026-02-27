@@ -14,14 +14,16 @@ interface UserAvatarProps {
   messageType: 'bot' | 'user';
   /** Данные пользователя для получения avatarUrl */
   user?: UserBotData | null;
+  /** Идентификатор проекта для прокси аватара */
+  projectId?: number;
 }
 
 /**
  * Компонент аватара для сообщения с поддержкой реальных фото
  */
-export function UserAvatar({ messageType, user }: UserAvatarProps) {
+export function UserAvatar({ messageType, user, projectId }: UserAvatarProps) {
   const isBot = messageType === 'bot';
-  const hasPhoto = user?.avatarUrl;
+  const hasPhoto = user?.avatarUrl && projectId;
 
   if (isBot) {
     return (
@@ -31,15 +33,16 @@ export function UserAvatar({ messageType, user }: UserAvatarProps) {
     );
   }
 
-  if (hasPhoto) {
+  if (hasPhoto && user?.userId) {
+    const avatarUrl = `/api/projects/${projectId}/users/${user.userId}/avatar`;
+    
     return (
       <img
-        src={user.avatarUrl}
+        src={avatarUrl}
         alt="User avatar"
         className="flex-shrink-0 w-7 h-7 rounded-full object-cover"
         onError={(e) => {
           (e.target as HTMLImageElement).style.display = 'none';
-          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
         }}
       />
     );

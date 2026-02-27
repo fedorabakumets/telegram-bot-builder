@@ -89,7 +89,7 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
         ) : (
           <div className="space-y-3 py-2">
             {messages.map((message, index) => (
-              <MessageBubble key={message.id || index} message={message} index={index} user={user} />
+              <MessageBubble key={message.id || index} message={message} index={index} user={user} projectId={projectId} />
             ))}
           </div>
         )}

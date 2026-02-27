@@ -68,14 +68,17 @@ async function fetchUserAvatars() {
           const fileData = await fileResponse.json();
 
           if (fileData.ok && fileData.result.file_path) {
+            // Строим полный URL для файла
+            const fullAvatarUrl = `https://api.telegram.org/file/bot${telegramBotToken}/${fileData.result.file_path}`;
+            
             // Обновляем avatar_url в БД
             await pool.query(`
               UPDATE bot_users 
               SET avatar_url = $1 
               WHERE user_id = $2
-            `, [fileData.result.file_path, user.user_id]);
+            `, [fullAvatarUrl, user.user_id]);
             
-            console.log(`✅ ${user.username || user.first_name || userId}: ${fileData.result.file_path}`);
+            console.log(`✅ ${user.username || user.first_name || userId}: ${fullAvatarUrl}`);
             updated++;
           }
         } else {

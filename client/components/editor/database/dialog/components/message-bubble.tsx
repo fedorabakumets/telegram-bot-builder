@@ -28,12 +28,14 @@ interface MessageBubbleProps {
   index: number;
   /** Данные пользователя для аватара */
   user?: UserBotData | null;
+  /** Идентификатор проекта для прокси аватара */
+  projectId?: number;
 }
 
 /**
  * Компонент отображения одного сообщения
  */
-export function MessageBubble({ message, index, user }: MessageBubbleProps) {
+export function MessageBubble({ message, index, user, projectId }: MessageBubbleProps) {
   const isBot = message.messageType === 'bot';
   const isUser = message.messageType === 'user';
   const messageType: 'bot' | 'user' = isBot ? 'bot' : 'user';
@@ -44,7 +46,7 @@ export function MessageBubble({ message, index, user }: MessageBubbleProps) {
       data-testid={`dialog-message-${message.messageType}-${index}`}
     >
       <div className={`flex gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-        <MessageAvatar messageType={messageType} user={messageType === 'user' ? user : null} />
+        <MessageAvatar messageType={messageType} user={messageType === 'user' ? user : null} projectId={projectId} />
 
         <div className="flex flex-col gap-1">
           <MessageMedia media={message.media} />

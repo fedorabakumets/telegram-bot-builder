@@ -14,11 +14,13 @@ interface MessageAvatarProps {
   messageType: 'bot' | 'user';
   /** Данные пользователя для avatarUrl */
   user?: UserBotData | null;
+  /** Идентификатор проекта для прокси аватара */
+  projectId?: number;
 }
 
 /**
  * Компонент аватара для сообщения
  */
-export function MessageAvatar({ messageType, user }: MessageAvatarProps) {
-  return <UserAvatar messageType={messageType} user={user} />;
+export function MessageAvatar({ messageType, user, projectId }: MessageAvatarProps) {
+  return <UserAvatar messageType={messageType} user={user} projectId={projectId} />;
 }
