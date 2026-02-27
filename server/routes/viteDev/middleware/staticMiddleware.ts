@@ -18,7 +18,7 @@ import path from "path";
  * @param {Express} app - Приложение Express
  */
 export function serveStatic(app: Express): void {
-  const distPath = path.resolve(import.meta.dirname, "..", "..", "dist");
+  const distPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "dist");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
@@ -28,7 +28,7 @@ export function serveStatic(app: Express): void {
 
   app.use(express.static(distPath));
 
-  const uploadsPath = path.resolve(import.meta.dirname, "..", "..", "uploads");
+  const uploadsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "uploads");
   app.use("/uploads", express.static(uploadsPath));
 
   app.use("*", (_req, res) => {
