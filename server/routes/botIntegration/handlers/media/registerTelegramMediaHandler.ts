@@ -8,13 +8,9 @@
  */
 
 import type { Request, Response } from "express";
-import {
-    downloadTelegramAudio,
-    downloadTelegramDocument,
-    downloadTelegramPhoto,
-    downloadTelegramVideo
-} from "../../../../telegram/telegram-media";
 import { storage } from "../../../../storages/storage";
+import { downloadMediaFromTelegram } from "./utils/downloadMedia";
+import { getFileType } from "./utils/getFileType";
 
 /**
  * Обрабатывает запрос на регистрацию медиафайла
@@ -42,40 +38,17 @@ export async function registerTelegramMediaHandler(req: Request, res: Response):
             return;
         }
 
-        // Загружаем медиа из Telegram в зависимости от типа
-        let downloadedFile;
-        switch (mediaType) {
-            case 'video':
-                downloadedFile = await downloadTelegramVideo(botToken, fileId, projectId);
-                break;
-            case 'audio':
-                downloadedFile = await downloadTelegramAudio(botToken, fileId, projectId);
-                break;
-            case 'document':
-                downloadedFile = await downloadTelegramDocument(botToken, fileId, projectId, originalFileName);
-                break;
-            case 'photo':
-            default:
-                downloadedFile = await downloadTelegramPhoto(botToken, fileId, projectId);
-                break;
-        }
+        const downloadedFile = await downloadMediaFromTelegram(
+            botToken,
+            fileId,
+            projectId,
+            mediaType,
+            originalFileName
+        );
 
-        // Генерируем URL для файла (относительно от public root)
         const fileUrl = `/${downloadedFile.filePath}`;
+        const fileType = getFileType(mediaType);
 
-        // Определяем тип файла на основе типа медиа
-        let fileType: 'photo' | 'video' | 'audio' | 'document';
-        if (mediaType === 'video') {
-            fileType = 'video';
-        } else if (mediaType === 'audio') {
-            fileType = 'audio';
-        } else if (mediaType === 'document') {
-            fileType = 'document';
-        } else {
-            fileType = 'photo';
-        }
-
-        // Создаём запись медиафайла в базе данных
         const mediaFile = await storage.createMediaFile({
             projectId,
             fileName: downloadedFile.fileName,
@@ -89,7 +62,6 @@ export async function registerTelegramMediaHandler(req: Request, res: Response):
             isPublic: 0,
         });
 
-        // Связываем медиафайл с сообщением
         await storage.createBotMessageMedia({
             messageId: parseInt(messageId),
             mediaFileId: mediaFile.id,
