@@ -12,3 +12,11 @@ export type { BotGroup } from "./botGroup";
 export type { TelegramBotInfo } from "./telegramBotInfo";
 export type { SendMessageResponse } from "./sendMessageResponse";
 export type { CreateMessageInput } from "./createMessageInput";
+
+// Общие типы хендлеров
+export type {
+    HandlerResponse,
+    ChatPermissions,
+    InviteLinkOptions,
+    UserSearchResult
+} from "./handler.types";
