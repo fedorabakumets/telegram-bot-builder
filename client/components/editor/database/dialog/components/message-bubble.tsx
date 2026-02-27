@@ -4,6 +4,7 @@
  */
 
 import { BotMessageWithMedia } from '../types';
+import { UserBotData } from '@shared/schema';
 import { MessageAvatar } from './message-avatar';
 import { MessageMedia } from './message-media';
 import { MessageText } from './message-text';
@@ -25,12 +26,14 @@ interface MessageBubbleProps {
   message: BotMessageWithMedia;
   /** Индекс сообщения в списке */
   index: number;
+  /** Данные пользователя для аватара */
+  user?: UserBotData | null;
 }
 
 /**
  * Компонент отображения одного сообщения
  */
-export function MessageBubble({ message, index }: MessageBubbleProps) {
+export function MessageBubble({ message, index, user }: MessageBubbleProps) {
   const isBot = message.messageType === 'bot';
   const isUser = message.messageType === 'user';
   const messageType: 'bot' | 'user' = isBot ? 'bot' : 'user';
@@ -41,7 +44,7 @@ export function MessageBubble({ message, index }: MessageBubbleProps) {
       data-testid={`dialog-message-${message.messageType}-${index}`}
     >
       <div className={`flex gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-        <MessageAvatar messageType={messageType} />
+        <MessageAvatar messageType={messageType} user={messageType === 'user' ? user : null} />
 
         <div className="flex flex-col gap-1">
           <MessageMedia media={message.media} />
