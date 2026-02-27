@@ -35,4 +35,6 @@ export interface DialogPanelProps {
   user: UserBotData | null;
   /** Колбэк закрытия панели */
   onClose: () => void;
+  /** Функция выбора пользователя */
+  onSelectUser?: (user: UserBotData) => void;
 }

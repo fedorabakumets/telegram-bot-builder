@@ -10,8 +10,10 @@ import { Separator } from '@/components/ui/separator';
 import { DialogPanelProps, BotMessageWithMedia } from './types';
 import { formatUserName } from '../utils';
 import { useSendMessage } from './hooks/use-send-message';
+import { useUserList } from '../../user-details/hooks/useUserList';
 import { MessageBubble } from './components/message-bubble';
 import { DialogHeader } from './components/dialog-header';
+import { UserSelect } from '../../user-details/components/UserSelect';
 import { DialogWarning } from './components/dialog-warning';
 import { EmptyDialog } from './components/empty-dialog';
 import { DialogInput } from './components/dialog-input';
@@ -23,14 +25,16 @@ import { NoUserSelected } from './components/no-user-selected';
  * @param projectId - Идентификатор проекта
  * @param user - Данные пользователя для диалога
  * @param onClose - Функция закрытия панели
+ * @param onSelectUser - Функция выбора пользователя
  * @returns JSX элемент панели диалога
  */
-export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
+export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPanelProps) {
   const [showWarning, setShowWarning] = useState(() => {
     if (typeof window === 'undefined') return true;
     return localStorage.getItem('dialog-warning-dismissed') !== 'true';
   });
   const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const { users } = useUserList(projectId);
 
   const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessageWithMedia[]>({
     queryKey: [`/api/projects/${projectId}/users/${user?.userId}/messages`],
@@ -61,9 +65,27 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
     return <NoUserSelected />;
   }
 
+  const handleSelectUser = onSelectUser || (() => {});
+
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
-      <DialogHeader userName={formatUserName(user)} onClose={onClose} />
+      <DialogHeader
+        userName={formatUserName(user)}
+        user={user}
+        users={users}
+        formatUserName={formatUserName}
+        onSelectUser={handleSelectUser}
+        onClose={onClose}
+      />
+
+      <div className="p-2 xs:p-2.5 sm:p-3 border-b">
+        <UserSelect
+          user={user}
+          users={users}
+          formatUserName={formatUserName}
+          onSelectUser={handleSelectUser}
+        />
+      </div>
 
       {showWarning && <DialogWarning onClose={() => {
         localStorage.setItem('dialog-warning-dismissed', 'true');
