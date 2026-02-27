@@ -10,7 +10,6 @@
 
 import { insertBotGroupSchema, insertBotMessageSchema, sendMessageSchema } from "@shared/schema";
 import type { Express } from "express";
-import type { BotMessage, MediaFile, BotGroup, TelegramBotInfo, SendMessageResponse, CreateMessageInput } from "./botIntegration/types";
 import { storage } from "../storages/storage";
 import { telegramClientManager } from "../telegram/telegram-client";
 import { downloadTelegramAudio, downloadTelegramDocument, downloadTelegramPhoto, downloadTelegramVideo } from "../telegram/telegram-media";
