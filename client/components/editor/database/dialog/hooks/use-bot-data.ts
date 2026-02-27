@@ -13,7 +13,7 @@ import { UserBotData } from '@shared/schema';
  */
 export function useBotData(projectId: number) {
   const { data: bot, isLoading } = useQuery<UserBotData | null>({
-    queryKey: [`/api/projects/${projectId}/bot`],
+    queryKey: [`/api/projects/${projectId}/bot/data`],
     enabled: !!projectId,
   });
 

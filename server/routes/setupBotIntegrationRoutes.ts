@@ -40,13 +40,13 @@ import {
  */
 export function setupBotIntegrationRoutes(app: Express) {
     /**
-     * Обработчик маршрута GET /api/projects/:projectId/bot
+     * Обработчик маршрута GET /api/projects/:projectId/bot/data
      *
      * Возвращает данные бота из bot_users
      *
-     * @route GET /api/projects/:projectId/bot
+     * @route GET /api/projects/:projectId/bot/data
      */
-    app.get("/api/projects/:projectId/bot", async (req, res) => {
+    app.get("/api/projects/:projectId/bot/data", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
 
