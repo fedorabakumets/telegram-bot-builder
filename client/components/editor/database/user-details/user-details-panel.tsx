@@ -46,7 +46,7 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog, onSel
   return (
     <div className="h-full bg-background overflow-auto">
       <div className="p-2 xs:p-2.5 sm:p-3 lg:p-4 space-y-3 xs:space-y-3.5 sm:space-y-4 lg:space-y-5">
-        <PanelHeader user={user} onClose={onClose} formatUserName={formatUserName} projectId={projectId} />
+        <PanelHeader user={user} users={users} onClose={onClose} formatUserName={formatUserName} onSelectUser={handleSelectUser} projectId={projectId} />
         <UserSelect user={user} users={users} formatUserName={formatUserName} onSelectUser={handleSelectUser} />
         <BasicInfo user={user} />
         <Statistics user={user} total={total} userSent={userSent} botSent={botSent} onOpenDialog={onOpenDialog} />

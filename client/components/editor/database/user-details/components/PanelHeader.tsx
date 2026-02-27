@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, X } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 
@@ -15,10 +16,14 @@ import { UserBotData } from '@shared/schema';
 interface PanelHeaderProps {
   /** Данные пользователя */
   user: UserBotData;
+  /** Все пользователи */
+  users: UserBotData[];
   /** Функция закрытия панели */
   onClose: () => void;
   /** Форматированное имя пользователя */
   formatUserName: (user: UserBotData | null) => string;
+  /** Функция выбора пользователя */
+  onSelectUser?: (user: UserBotData) => void;
   /** Идентификатор проекта для прокси аватара */
   projectId?: number;
 }
@@ -58,14 +63,33 @@ function UserAvatar({ user, projectId, formatUserName }: { user: UserBotData; pr
  * @param {PanelHeaderProps} props - Свойства компонента
  * @returns {JSX.Element} Элемент заголовка
  */
-export function PanelHeader({ user, onClose, formatUserName, projectId }: PanelHeaderProps): React.JSX.Element {
+export function PanelHeader({ user, users, onClose, formatUserName, onSelectUser, projectId }: PanelHeaderProps): React.JSX.Element {
   return (
     <div className="flex items-center justify-between gap-2 p-2 xs:p-2.5 sm:p-3 border-b">
       <div className="flex items-center gap-2 min-w-0">
         <UserAvatar user={user} projectId={projectId} formatUserName={formatUserName} />
-        <div className="min-w-0">
-          <h3 className="font-medium text-xs xs:text-xs sm:text-sm truncate">Детали пользователя</h3>
-          <p className="text-[10px] xs:text-[10px] sm:text-xs text-muted-foreground truncate">{formatUserName(user)}</p>
+        <div className="min-w-0 flex items-center gap-1">
+          <h3 className="font-medium text-xs xs:text-xs sm:text-sm truncate leading-none">Детали пользователя</h3>
+          <Select
+            value={user.userId.toString()}
+            onValueChange={(value) => {
+              const selectedUser = users.find((u) => u.userId.toString() === value);
+              if (selectedUser && onSelectUser) {
+                onSelectUser(selectedUser);
+              }
+            }}
+          >
+            <SelectTrigger className="h-7 text-[10px] xs:text-[10px] sm:text-xs px-2 py-0.5 border-0 shadow-none bg-transparent hover:bg-accent/50 focus:ring-0 focus:ring-offset-0 [&>span]:text-muted-foreground [&>span]:leading-tight min-w-[120px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {users.map((u) => (
+                <SelectItem key={u.userId} value={u.userId.toString()}>
+                  {formatUserName(u)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <Button
