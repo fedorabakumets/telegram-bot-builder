@@ -4,7 +4,6 @@
  */
 
 import { Pool } from 'pg';
-import { TelegramBot } from 'telegraf';
 import 'dotenv/config';
 
 async function fetchUserAvatars() {
@@ -24,7 +23,6 @@ async function fetchUserAvatars() {
   console.log('🔧 Начало загрузки аватарок пользователей...');
 
   const pool = new Pool({ connectionString: databaseUrl });
-  const bot = new TelegramBot(telegramBotToken);
 
   try {
     // Получаем всех пользователей без avatar_url
@@ -45,22 +43,30 @@ async function fetchUserAvatars() {
       const userId = Number(user.user_id);
       
       try {
-        // Получаем фото профиля пользователя
-        const photos = await bot.getUserProfilePhotos(userId, { limit: 1 });
-        
-        if (photos.photos && photos.photos.length > 0 && photos.photos[0].length > 0) {
-          const lastPhoto = photos.photos[0][photos.photos[0].length - 1];
-          const file = await bot.getFile(lastPhoto.file_id);
+        // Получаем фото профиля пользователя через Bot API
+        const photosResponse = await fetch(
+          `https://api.telegram.org/bot${telegramBotToken}/getUserProfilePhotos?user_id=${userId}&limit=1`
+        );
+        const photosData = await photosResponse.json();
+
+        if (photosData.ok && photosData.result.photos && photosData.result.photos.length > 0) {
+          const lastPhoto = photosData.result.photos[0][photosData.result.photos[0].length - 1];
           
-          if (file.file_path) {
+          // Получаем file_path
+          const fileResponse = await fetch(
+            `https://api.telegram.org/bot${telegramBotToken}/getFile?file_id=${lastPhoto.file_id}`
+          );
+          const fileData = await fileResponse.json();
+
+          if (fileData.ok && fileData.result.file_path) {
             // Обновляем avatar_url в БД
             await pool.query(`
               UPDATE bot_users 
               SET avatar_url = $1 
               WHERE user_id = $2
-            `, [file.file_path, user.user_id]);
+            `, [fileData.result.file_path, user.user_id]);
             
-            console.log(`✅ ${user.username || user.first_name || userId}: ${file.file_path}`);
+            console.log(`✅ ${user.username || user.first_name || userId}: ${fileData.result.file_path}`);
             updated++;
           }
         } else {
@@ -84,7 +90,6 @@ async function fetchUserAvatars() {
     console.error('❌ Ошибка:', error);
   } finally {
     await pool.end();
-    await bot.stop('Fetching avatars');
     console.log('✅ Завершено');
   }
 }
