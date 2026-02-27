@@ -25,6 +25,7 @@ import { formatOptions } from './format-options';
 import { valueToHtml, htmlToValue } from './html-converter';
 import { useTextStats } from './hooks/useTextStats';
 import { useUndoRedo } from './hooks/useUndoRedo';
+import { useEditorSync } from './hooks/useEditorSync';
 
 /**
  * Компонент встроенного редактора с поддержкой форматирования текста
@@ -61,66 +62,8 @@ export function InlineRichEditor({
   /** Управление отменой/повтором */
   const { undo, redo, saveToUndoStack } = useUndoRedo(value, onChange, toast);
 
-  /**
-   * Обновляет содержимое редактора при изменении значения
-   */
-  useEffect(() => {
-    if (editorRef.current && !isFormatting) {
-      const html = valueToHtml(value, enableMarkdown);
-      if (editorRef.current.innerHTML !== html) {
-        // Save current selection
-        const selection = window.getSelection();
-        let range = null;
-        let offset = 0;
-
-        if (selection && selection.rangeCount > 0) {
-          try {
-            range = selection.getRangeAt(0);
-            offset = range.startOffset;
-          } catch (e) {
-            // Ignore selection errors
-          }
-        }
-
-        editorRef.current.innerHTML = html;
-
-        // Restore selection
-        if (range && selection) {
-          try {
-            const newRange = document.createRange();
-            const walker = document.createTreeWalker(
-              editorRef.current,
-              NodeFilter.SHOW_TEXT,
-              null
-            );
-
-            let currentOffset = 0;
-            let targetNode = null;
-
-            while (walker.nextNode()) {
-              const node = walker.currentNode;
-              const nodeLength = node.textContent?.length || 0;
-
-              if (currentOffset + nodeLength >= offset) {
-                targetNode = node;
-                break;
-              }
-              currentOffset += nodeLength;
-            }
-
-            if (targetNode) {
-              newRange.setStart(targetNode, Math.min(offset - currentOffset, targetNode.textContent?.length || 0));
-              newRange.collapse(true);
-              selection.removeAllRanges();
-              selection.addRange(newRange);
-            }
-          } catch (e) {
-            // Ignore range errors
-          }
-        }
-      }
-    }
-  }, [value, valueToHtml, enableMarkdown, isFormatting]);
+  /** Синхронизация DOM редактора со значением */
+  useEditorSync({ editorRef, value, isFormatting, valueToHtml, enableMarkdown });
 
   /**
    * Обрабатывает ввод в contenteditable элементе
