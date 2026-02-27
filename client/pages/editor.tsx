@@ -338,12 +338,17 @@ export default function Editor() {
         if (element.id === 'dialog') {
           return { ...element, visible: false };
         }
-        if (element.id === 'properties') {
-          return { ...element, visible: true };
-        }
         return element;
       })
     }));
+  }, []);
+
+  /**
+   * Обработчик выбора пользователя в панели диалога
+   * @param {UserBotData} user - Выбранный пользователь
+   */
+  const handleSelectDialogUser = useCallback((user: UserBotData) => {
+    setSelectedDialogUser(user);
   }, []);
 
   /**
@@ -1968,6 +1973,7 @@ export default function Editor() {
                   projectId={activeProject.id}
                   user={selectedDialogUser}
                   onClose={handleCloseDialogPanel}
+                  onSelectUser={handleSelectDialogUser}
                 />
               )
             }
