@@ -13,7 +13,6 @@ import { useSendMessage } from './hooks/use-send-message';
 import { useUserList } from '@/components/editor/database/user-details/hooks/useUserList';
 import { MessageBubble } from './components/message-bubble';
 import { DialogHeader } from './components/dialog-header';
-import { UserSelect } from '@/components/editor/database/user-details/components/UserSelect';
 import { DialogWarning } from './components/dialog-warning';
 import { EmptyDialog } from './components/empty-dialog';
 import { DialogInput } from './components/dialog-input';
@@ -69,16 +68,13 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
 
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
-      <DialogHeader onClose={onClose} />
-
-      <div className="p-2 xs:p-2.5 sm:p-3 border-b">
-        <UserSelect
-          user={user}
-          users={users}
-          formatUserName={formatUserName}
-          onSelectUser={handleSelectUser}
-        />
-      </div>
+      <DialogHeader
+        user={user}
+        users={users}
+        formatUserName={formatUserName}
+        onSelectUser={handleSelectUser}
+        onClose={onClose}
+      />
 
       {showWarning && <DialogWarning onClose={() => {
         localStorage.setItem('dialog-warning-dismissed', 'true');
