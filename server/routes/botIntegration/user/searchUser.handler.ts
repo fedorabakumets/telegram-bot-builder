@@ -6,6 +6,9 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../storages/storage";
+import { resolveUserId } from "./utils/resolveUserId";
+import { getTelegramUser } from "./utils/getTelegramUser";
+import { searchLocalDatabase } from "./utils/searchLocalDatabase";
 
 /**
  * Поиск пользователя по username или ID
@@ -40,42 +43,13 @@ export async function searchUserHandler(req: Request, res: Response): Promise<vo
         }
 
         // Поиск в локальной базе данных
-        const localUserBotData = await storage.searchUserBotData(projectId, query);
-        const localBotUsers = await storage.searchBotUsers(query);
+        const localResult = searchLocalDatabase(
+            await storage.searchUserBotData(projectId, query),
+            await storage.searchBotUsers(query)
+        );
 
-        // Проверяем user_bot_data (специфично для проекта)
-        if (localUserBotData && localUserBotData.length > 0) {
-            const user = localUserBotData[0];
-            res.json({
-                success: true,
-                user: {
-                    id: parseInt(user.userId),
-                    first_name: user.firstName,
-                    last_name: user.lastName,
-                    username: user.userName,
-                    type: 'private'
-                },
-                userId: user.userId,
-                source: 'local_project'
-            });
-            return;
-        }
-
-        // Проверяем bot_users (глобальная таблица пользователей)
-        if (localBotUsers && localBotUsers.length > 0) {
-            const user = localBotUsers[0];
-            res.json({
-                success: true,
-                user: {
-                    id: user.userId,
-                    first_name: user.firstName,
-                    last_name: user.lastName,
-                    username: user.username,
-                    type: 'private'
-                },
-                userId: user.userId.toString(),
-                source: 'local_global'
-            });
+        if (localResult.found) {
+            res.json(localResult.data);
             return;
         }
 
@@ -85,7 +59,7 @@ export async function searchUserHandler(req: Request, res: Response): Promise<vo
         if (!userId) {
             res.status(404).json({
                 message: "Пользователь не найден",
-                error: "Пользователь не найден ни в локальной базе данных, ни через Telegram API. Убедитесь, что пользователь взаимодействовал с ботом или имеет публичный username."
+                error: "Пользователь не найден ни в локальной базе данных, ни через Telegram API."
             });
             return;
         }
@@ -110,83 +84,5 @@ export async function searchUserHandler(req: Request, res: Response): Promise<vo
     } catch (error) {
         console.error("Не удалось найти пользователя:", error);
         res.status(500).json({ message: "Не удалось найти пользователя" });
-    }
-}
-
-/**
- * Определяет ID пользователя по запросу (username или numeric ID)
- *
- * @param {string} token - Токен бота
- * @param {string} query - Поисковый запрос (username или ID)
- * @returns {Promise<string | null>} ID пользователя или null
- */
-async function resolveUserId(token: string, query: string): Promise<string | null> {
-    // Если числовой ID - возвращаем как есть
-    if (/^\d+$/.test(query)) {
-        return query;
-    }
-
-    // Если username - пробуем получить через @username
-    const username = query.startsWith('@') ? query.slice(1) : query;
-
-    try {
-        const chatResponse = await fetch(`https://api.telegram.org/bot${token}/getChat`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                chat_id: `@${username}`
-            })
-        });
-
-        const chatResult = await chatResponse.json();
-        if (chatResponse.ok && chatResult.result && chatResult.result.id) {
-            return chatResult.result.id.toString();
-        }
-    } catch (error) {
-        console.log('Поиск по username не удался, у пользователя может не быть публичного username');
-    }
-
-    return null;
-}
-
-/**
- * Получает информацию о пользователе через Telegram API
- *
- * @param {string} token - Токен бота
- * @param {string} userId - ID пользователя
- * @returns {Promise<{ success: boolean; data?: any; error?: string }>}
- */
-async function getTelegramUser(token: string, userId: string): Promise<{ success: boolean; data?: any; error?: string }> {
-    try {
-        const userResponse = await fetch(`https://api.telegram.org/bot${token}/getChat`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                chat_id: userId
-            })
-        });
-
-        const userResult = await userResponse.json();
-
-        if (!userResponse.ok) {
-            return {
-                success: false,
-                error: userResult.description || "Неизвестная ошибка"
-            };
-        }
-
-        return {
-            success: true,
-            data: userResult.result
-        };
-    } catch (error: any) {
-        return {
-            success: false,
-            error: error.message || "Неизвестная ошибка"
-        };
     }
 }
