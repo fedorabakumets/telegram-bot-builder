@@ -27,6 +27,7 @@ import { useTextStats } from './hooks/useTextStats';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { useEditorSync } from './hooks/useEditorSync';
 import { useFormatting } from './hooks/useFormatting';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 /**
  * Компонент встроенного редактора с поддержкой форматирования текста
@@ -87,57 +88,13 @@ export function InlineRichEditor({
     setIsFormatting
   });
 
-  /**
-   * Обрабатывает горячие клавиши для форматирования
-   * @param e - Событие клавиатуры
-   */
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      const key = e.key.toLowerCase();
-
-      switch (key) {
-        case 'b':
-          e.preventDefault();
-          applyFormatting(formatOptions[0]);
-          break;
-        case 'i':
-          e.preventDefault();
-          applyFormatting(formatOptions[1]);
-          break;
-        case 'u':
-          e.preventDefault();
-          applyFormatting(formatOptions[2]);
-          break;
-        case 'e':
-          e.preventDefault();
-          applyFormatting(formatOptions[4]);
-          break;
-        case 'q':
-          e.preventDefault();
-          applyFormatting(formatOptions[5]);
-          break;
-        case 'h':
-          e.preventDefault();
-          applyFormatting(formatOptions[6]);
-          break;
-        case 'x':
-          if (e.shiftKey) {
-            e.preventDefault();
-            applyFormatting(formatOptions[3]);
-          }
-          break;
-        case 'z':
-          if (e.shiftKey) {
-            e.preventDefault();
-            redo();
-          } else {
-            e.preventDefault();
-            undo();
-          }
-          break;
-      }
-    }
-  }, [applyFormatting, formatOptions]);
+  /** Обработка горячих клавиш */
+  const { handleKeyDown } = useKeyboardShortcuts({
+    applyFormatting,
+    undo,
+    redo,
+    formatOptions
+  });
 
   /**
    * Копирует форматированный текст в буфер обмена
