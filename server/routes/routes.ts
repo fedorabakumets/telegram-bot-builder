@@ -1702,6 +1702,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           CASE WHEN bu.is_bot = 1 THEN TRUE ELSE FALSE END AS "isBot"
         FROM bot_users bu
         LEFT JOIN bot_messages bm ON bm.user_id = bu.user_id::text AND bm.project_id = $1
+        WHERE bu.is_bot = 0
         GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.avatar_url, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active, bu.is_bot
         ORDER BY bu.last_interaction DESC
       `, [projectId]);
