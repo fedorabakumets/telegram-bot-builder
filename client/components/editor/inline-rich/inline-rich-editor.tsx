@@ -26,6 +26,7 @@ import { valueToHtml, htmlToValue } from './html-converter';
 import { useTextStats } from './hooks/useTextStats';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { useEditorSync } from './hooks/useEditorSync';
+import { useFormatting } from './hooks/useFormatting';
 
 /**
  * Компонент встроенного редактора с поддержкой форматирования текста
@@ -65,9 +66,7 @@ export function InlineRichEditor({
   /** Синхронизация DOM редактора со значением */
   useEditorSync({ editorRef, value, isFormatting, valueToHtml, enableMarkdown });
 
-  /**
-   * Обрабатывает ввод в contenteditable элементе
-   */
+  /** Обработчик ввода */
   const handleInput = useCallback(() => {
     if (editorRef.current) {
       setIsFormatting(true);
@@ -78,93 +77,15 @@ export function InlineRichEditor({
     }
   }, [onChange, htmlToValue, enableMarkdown]);
 
-  /**
-   * Применяет форматирование к выделенному тексту
-   * @param format - Опция форматирования для применения
-   */
-  const applyFormatting = useCallback((format: typeof formatOptions[0]) => {
-    if (!editorRef.current) return;
-
-    saveToUndoStack();
-    setIsFormatting(true);
-
-    // Автоматически переключаемся в HTML режим при использовании кнопок форматирования
-    if (onFormatModeChange) {
-      onFormatModeChange('html');
-    }
-
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) {
-      toast({
-        title: "Нет выделения",
-        description: "Выделите текст для форматирования или поставьте курсор в нужное место",
-        variant: "default"
-      });
-      setIsFormatting(false);
-      return;
-    }
-
-    try {
-      const range = selection.getRangeAt(0);
-      const selectedText = range.toString();
-
-      if (format.command === 'bold' || format.command === 'italic' || format.command === 'underline' || format.command === 'strikethrough') {
-        // Use document.execCommand for basic formatting
-        document.execCommand(format.command, false, undefined);
-      } else if (format.command === 'code') {
-        // Custom code formatting
-        if (selectedText) {
-          const codeElement = document.createElement('code');
-          codeElement.textContent = selectedText;
-          range.deleteContents();
-          range.insertNode(codeElement);
-          range.selectNode(codeElement);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
-      } else if (format.command === 'quote') {
-        // Custom quote formatting
-        if (selectedText) {
-          const quoteElement = document.createElement('blockquote');
-          quoteElement.textContent = selectedText;
-          range.deleteContents();
-          range.insertNode(quoteElement);
-          range.selectNode(quoteElement);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
-      } else if (format.command === 'heading') {
-        // Custom heading formatting
-        if (selectedText) {
-          const headingElement = document.createElement('h3');
-          headingElement.textContent = selectedText;
-          range.deleteContents();
-          range.insertNode(headingElement);
-          range.selectNode(headingElement);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
-      }
-
-      // Update the value
-      setTimeout(() => {
-        handleInput();
-        toast({
-          title: "Форматирование применено",
-          description: `${format.name} применен к выделенному тексту`,
-          variant: "default"
-        });
-      }, 0);
-    } catch (e) {
-      toast({
-        title: "Ошибка форматирования",
-        description: "Не удалось применить форматирование",
-        variant: "destructive"
-      });
-    }
-
-    setTimeout(() => setIsFormatting(false), 100);
-  }, [saveToUndoStack, handleInput, toast, onFormatModeChange]);
+  /** Применение форматирования */
+  const { applyFormatting } = useFormatting({
+    editorRef,
+    saveToUndoStack,
+    handleInput,
+    toast,
+    onFormatModeChange,
+    setIsFormatting
+  });
 
   /**
    * Обрабатывает горячие клавиши для форматирования
