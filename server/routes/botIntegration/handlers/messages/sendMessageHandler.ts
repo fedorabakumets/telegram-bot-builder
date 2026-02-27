@@ -58,7 +58,8 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
             },
             body: JSON.stringify({
                 chat_id: userId,
-                text: messageText.trim()
+                text: messageText.trim(),
+                parse_mode: 'HTML'
             })
         });
 
