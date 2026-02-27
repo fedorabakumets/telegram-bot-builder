@@ -6,6 +6,7 @@
 import { TableRow } from '@/components/ui/table';
 import { UserBotData } from '@shared/schema';
 import { DesktopUserCell } from './desktop-user-cell';
+import { DesktopLastMessageCell } from './desktop-last-message-cell';
 import { DesktopActionsCell } from './desktop-actions-cell';
 
 /**
@@ -40,6 +41,11 @@ const CELL_RENDERERS = [
     key: 'user',
     render: (props: DesktopTableRowProps) => <DesktopUserCell user={props.user} formatUserName={props.formatUserName} projectId={props.projectId} />,
     alwaysVisible: true
+  },
+  {
+    key: 'lastMessage',
+    render: (props: DesktopTableRowProps) => <DesktopLastMessageCell user={props.user} projectId={props.projectId} />,
+    alwaysVisible: false
   },
   {
     key: 'actions',

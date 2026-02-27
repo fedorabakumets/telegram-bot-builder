@@ -18,6 +18,7 @@ interface DesktopTableHeaderProps {
  */
 const COLUMNS_CONFIG = [
   { key: 'user', label: 'Пользователь', alwaysVisible: true },
+  { key: 'lastMessage', label: 'Последнее сообщение', alwaysVisible: false },
   { key: 'actions', label: 'Действия', alwaysVisible: true, align: 'right' as const },
 ];
 

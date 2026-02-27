@@ -5,3 +5,4 @@
 
 export { formatDate, formatUserName } from '../../utils';
 export * from './responsive-utils';
+export { formatRelativeTime } from './format-relative-time';
