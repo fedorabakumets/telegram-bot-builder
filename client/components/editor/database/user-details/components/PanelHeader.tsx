@@ -26,7 +26,7 @@ interface PanelHeaderProps {
 /**
  * Компонент аватара пользователя
  */
-function UserAvatar({ user, projectId }: { user: UserBotData; projectId?: number }) {
+function UserAvatar({ user, projectId, formatUserName }: { user: UserBotData; projectId?: number; formatUserName: (user: UserBotData | null) => string }) {
   const hasPhoto = user?.avatarUrl && projectId && user?.userId;
 
   if (hasPhoto) {
@@ -62,7 +62,7 @@ export function PanelHeader({ user, onClose, formatUserName, projectId }: PanelH
   return (
     <div className="flex items-center justify-between gap-2 p-2 xs:p-2.5 sm:p-3 border-b">
       <div className="flex items-center gap-2 min-w-0">
-        <UserAvatar user={user} projectId={projectId} />
+        <UserAvatar user={user} projectId={projectId} formatUserName={formatUserName} />
         <div className="min-w-0">
           <h3 className="font-medium text-xs xs:text-xs sm:text-sm truncate">Детали пользователя</h3>
           <p className="text-[10px] xs:text-[10px] sm:text-xs text-muted-foreground truncate">{formatUserName(user)}</p>
