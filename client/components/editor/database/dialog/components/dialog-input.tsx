@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Send } from 'lucide-react';
-import { InlineRichEditor } from '@/components/editor/inline-rich/inline-rich-editor';
+import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 
 /**
  * Свойства компонента ввода
@@ -33,11 +33,10 @@ export function DialogInput({ isPending, onSend }: DialogInputProps) {
 
   return (
     <div className="p-3 space-y-2">
-      <InlineRichEditor
+      <CompactInlineEditor
         value={messageText}
         onChange={setMessageText}
         placeholder="Введите сообщение..."
-        enableMarkdown={false}
       />
       <div className="flex justify-between items-center">
         <p className="text-xs text-muted-foreground">

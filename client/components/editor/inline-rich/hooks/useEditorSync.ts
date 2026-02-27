@@ -3,14 +3,14 @@
  * @description Обновляет innerHTML contenteditable элемента при изменении значения
  */
 
-import { useEffect, RefObject } from 'react';
+import { useEffect } from 'react';
 
 /**
  * Параметры хука useEditorSync
  */
 export interface UseEditorSyncOptions {
   /** Ref на DOM элемент редактора */
-  editorRef: RefObject<HTMLDivElement | null>;
+  editorRef: React.RefObject<HTMLDivElement>;
   /** Текущее значение редактора */
   value: string;
   /** Флаг активного форматирования */

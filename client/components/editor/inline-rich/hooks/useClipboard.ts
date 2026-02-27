@@ -5,14 +5,24 @@
 
 import { useCallback, RefObject } from 'react';
 
+/** Тип уведомления */
+type ToastOptions = {
+  title: string;
+  description: string;
+  variant?: 'default' | 'destructive';
+};
+
+/** Тип функции toast */
+type ToastFn = (toast: ToastOptions) => void;
+
 /**
  * Параметры хука useClipboard
  */
 export interface UseClipboardOptions {
   /** Ref на DOM элемент редактора */
-  editorRef: RefObject<HTMLDivElement | null>;
+  editorRef: RefObject<HTMLDivElement>;
   /** Функция для показа уведомлений */
-  toast: (options: { title: string; description: string; variant: string }) => void;
+  toast: ToastFn;
 }
 
 /**

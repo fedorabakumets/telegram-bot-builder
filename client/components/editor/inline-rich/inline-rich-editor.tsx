@@ -15,12 +15,12 @@ import { StatsBar } from './components/StatsBar';
 export function InlineRichEditor(props: InlineRichEditorProps) {
   const { editorRef, wordCount, charCount, undo, redo, applyFormatting, handleKeyDown, copyFormatted, insertVariable, handleInput } = useInlineRichEditor(props);
 
-  const variablesMenu = <VariablesMenu availableVariables={props.availableVariables} insertVariable={insertVariable} />;
+  const variablesMenu = <VariablesMenu availableVariables={props.availableVariables || []} insertVariable={insertVariable} />;
 
   return (
     <div className="space-y-2 sm:space-y-3">
       <EditorToolbar formatOptions={formatOptions} applyFormatting={applyFormatting} undo={undo} redo={redo} canUndo={true} canRedo={true} copyFormatted={copyFormatted} variablesMenu={variablesMenu} />
-      <EditorContent value={props.value} onInput={handleInput} onKeyDown={handleKeyDown} placeholder={props.placeholder} innerRef={editorRef}>
+      <EditorContent value={props.value} onInput={handleInput} onKeyDown={handleKeyDown} placeholder={props.placeholder || "Введите текст сообщения..."} innerRef={editorRef}>
         <StatsBar wordCount={wordCount} charCount={charCount} />
       </EditorContent>
     </div>

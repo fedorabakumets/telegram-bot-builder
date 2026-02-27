@@ -7,11 +7,9 @@ import { Button } from '@/components/ui/button';
 import {
   RotateCcw,
   RotateCw,
-  Copy,
-  Plus
+  Copy
 } from 'lucide-react';
 import type { FormatOption } from '../format-options';
-import type { Variable } from '../types';
 
 /**
  * Свойства компонента EditorToolbar
@@ -31,10 +29,6 @@ export interface EditorToolbarProps {
   canRedo: boolean;
   /** Функция копирования в буфер */
   copyFormatted: () => void;
-  /** Функция вставки переменной */
-  insertVariable: (name: string) => void;
-  /** Доступные переменные */
-  availableVariables: Variable[];
   /** Компонент меню переменных */
   variablesMenu: React.ReactNode;
 }

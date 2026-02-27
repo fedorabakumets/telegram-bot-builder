@@ -3,21 +3,31 @@
  * @description Обрабатывает применение стилей (жирный, курсив и т.д.) к выделенному тексту
  */
 
-import { useCallback, RefObject } from 'react';
+import { useCallback } from 'react';
 import type { FormatOption } from '../format-options';
+
+/** Тип уведомления */
+type ToastOptions = {
+  title: string;
+  description: string;
+  variant?: 'default' | 'destructive';
+};
+
+/** Тип функции toast */
+type ToastFn = (toast: ToastOptions) => void;
 
 /**
  * Параметры хука useFormatting
  */
 export interface UseFormattingOptions {
   /** Ref на DOM элемент редактора */
-  editorRef: RefObject<HTMLDivElement | null>;
+  editorRef: React.RefObject<HTMLDivElement>;
   /** Функция сохранения в стек отмены */
   saveToUndoStack: () => void;
   /** Функция обработки ввода */
   handleInput: () => void;
   /** Функция для показа уведомлений */
-  toast: (options: { title: string; description: string; variant: string }) => void;
+  toast: ToastFn;
   /** Callback при изменении режима форматирования */
   onFormatModeChange?: (formatMode: 'html' | 'markdown' | 'none') => void;
   /** Флаг установки форматирования */

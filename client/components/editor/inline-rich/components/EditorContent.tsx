@@ -3,7 +3,7 @@
  * @description ContentEditable div с placeholder и обработчиками событий
  */
 
-import { useRef } from 'react';
+import type { RefObject } from 'react';
 
 /**
  * Свойства компонента EditorContent
@@ -18,7 +18,7 @@ export interface EditorContentProps {
   /** Текст-заполнитель */
   placeholder: string;
   /** Ref для доступа к DOM элементу */
-  innerRef: React.RefObject<HTMLDivElement | null>;
+  innerRef: RefObject<HTMLDivElement>;
   /** Дочерние элементы (например, StatsBar) */
   children?: React.ReactNode;
 }
@@ -49,9 +49,9 @@ export function EditorContent({
         contentEditable
         onInput={onInput}
         onKeyDown={onKeyDown}
-        className="min-h-[120px] sm:min-h-[140px] p-3 sm:p-4 w-full text-sm sm:text-base bg-transparent text-slate-900 dark:text-slate-100 focus:outline-none whitespace-pre-wrap selection:bg-blue-200 dark:selection:bg-blue-900"
+        className="min-h-[80px] sm:min-h-[100px] max-h-[200px] overflow-y-auto p-3 sm:p-4 w-full text-sm sm:text-base bg-transparent text-slate-900 dark:text-slate-100 focus:outline-none whitespace-pre-wrap selection:bg-blue-200 dark:selection:bg-blue-900"
         style={{
-          lineHeight: '1.6',
+          lineHeight: '1.5',
           overflowWrap: 'break-word',
           wordBreak: 'break-word'
         }}

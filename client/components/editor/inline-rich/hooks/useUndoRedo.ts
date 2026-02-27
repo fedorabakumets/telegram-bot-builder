@@ -5,6 +5,16 @@
 
 import { useState, useCallback } from 'react';
 
+/** Тип уведомления */
+type ToastOptions = {
+  title: string;
+  description: string;
+  variant?: 'default' | 'destructive';
+};
+
+/** Тип функции toast */
+type ToastFn = (toast: ToastOptions) => void;
+
 /**
  * Результат работы хука useUndoRedo
  */
@@ -31,7 +41,7 @@ export interface UseUndoRedoReturn {
 export function useUndoRedo(
   value: string,
   onChange: (value: string) => void,
-  toast: (options: { title: string; description: string; variant: string }) => void
+  toast: ToastFn
 ): UseUndoRedoReturn {
   const [undoStack, setUndoStack] = useState<string[]>([]);
   const [redoStack, setRedoStack] = useState<string[]>([]);

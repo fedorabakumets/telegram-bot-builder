@@ -3,15 +3,25 @@
  * @description Вставляет переменные вида {variableName} в позицию курсора
  */
 
-import { useCallback, RefObject } from 'react';
+import { useCallback } from 'react';
 import type { Variable } from '../types';
+
+/** Тип уведомления */
+type ToastOptions = {
+  title: string;
+  description: string;
+  variant?: 'default' | 'destructive';
+};
+
+/** Тип функции toast */
+type ToastFn = (toast: ToastOptions) => void;
 
 /**
  * Параметры хука useVariableInsert
  */
 export interface UseVariableInsertOptions {
   /** Ref на DOM элемент редактора */
-  editorRef: RefObject<HTMLDivElement | null>;
+  editorRef: React.RefObject<HTMLDivElement>;
   /** Массив доступных переменных */
   availableVariables: Variable[];
   /** Функция сохранения в стек отмены */
@@ -19,7 +29,7 @@ export interface UseVariableInsertOptions {
   /** Функция обработки ввода */
   handleInput: () => void;
   /** Функция для показа уведомлений */
-  toast: (options: { title: string; description: string; variant: string }) => void;
+  toast: ToastFn;
   /** Callback при выборе медиапеременной */
   onMediaVariableSelect?: (variableName: string, mediaType: string) => void;
   /** Флаг установки форматирования */
@@ -44,7 +54,7 @@ export function useVariableInsert({
     const variable = availableVariables.find(v => v.name === variableName);
     const isMediaVariable = variable?.mediaType !== undefined;
 
-    if (isMediaVariable && onMediaVariableSelect && variable) {
+    if (isMediaVariable && onMediaVariableSelect && variable && variable.mediaType) {
       onMediaVariableSelect(variableName, variable.mediaType);
       toast({
         title: "Медиа прикреплено",

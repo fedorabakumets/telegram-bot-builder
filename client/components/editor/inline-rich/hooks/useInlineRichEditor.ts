@@ -22,7 +22,7 @@ import { formatOptions } from '../format-options';
  */
 export interface UseInlineRichEditorReturn {
   /** Ref на DOM элемент редактора */
-  editorRef: React.RefObject<HTMLDivElement | null>;
+  editorRef: React.RefObject<HTMLDivElement>;
   /** Флаг активного форматирования */
   isFormatting: boolean;
   /** Статистика текста */
@@ -64,14 +64,14 @@ export function useInlineRichEditor(
     value: props.value,
     isFormatting,
     valueToHtml,
-    enableMarkdown: props.enableMarkdown
+    enableMarkdown: props.enableMarkdown ?? false
   });
 
   const { handleInput } = useEditorInput({
     editorRef,
     htmlToValue,
     onChange: props.onChange,
-    enableMarkdown: props.enableMarkdown,
+    enableMarkdown: props.enableMarkdown ?? false,
     setIsFormatting
   });
 
@@ -95,7 +95,7 @@ export function useInlineRichEditor(
 
   const { insertVariable } = useVariableInsert({
     editorRef,
-    availableVariables: props.availableVariables,
+    availableVariables: props.availableVariables ?? [],
     saveToUndoStack,
     handleInput,
     toast,
