@@ -41,7 +41,7 @@ export function DialogHeader({
           <MessageSquare className="w-3.5 xs:w-3.5 sm:w-4 h-3.5 xs:h-3.5 sm:h-4 text-white" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="font-medium text-xs xs:text-xs sm:text-sm truncate mb-1">Диалог</h3>
+          <h3 className="font-medium text-xs xs:text-xs sm:text-sm truncate leading-none">Диалог</h3>
           <Select
             value={user.userId.toString()}
             onValueChange={(value) => {
@@ -51,7 +51,7 @@ export function DialogHeader({
               }
             }}
           >
-            <SelectTrigger className="h-7 text-[10px] xs:text-[10px] sm:text-xs px-2 py-0.5 border-0 shadow-none bg-transparent hover:bg-accent/50 focus:ring-0 focus:ring-offset-0 [&>span]:text-muted-foreground">
+            <SelectTrigger className="h-7 text-[10px] xs:text-[10px] sm:text-xs px-2 py-0.5 border-0 shadow-none bg-transparent hover:bg-accent/50 focus:ring-0 focus:ring-offset-0 [&>span]:text-muted-foreground [&>span]:leading-tight">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
