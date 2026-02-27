@@ -11,7 +11,7 @@ import type { Response } from "express";
 import {
     analyzeTelegramError,
     getErrorStatusCode
-} from "../../../utils/telegram-error-handler";
+} from "../../../../utils/telegram-error-handler";
 import { fetchGroupMembers, createMembersResponse } from "../utils/fetchGroupMembers";
 
 /**
