@@ -66,7 +66,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
         const buffer = await response.arrayBuffer();
         res.send(Buffer.from(buffer));
     } catch (error) {
-        console.error("Error fetching avatar:", error);
+        console.error("Ошибка получения аватарки:", error);
         res.status(500).json({ message: "Не удалось получить аватарку" });
     }
 }

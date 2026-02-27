@@ -52,7 +52,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
 
         res.json(result.rows[0]);
     } catch (error) {
-        console.error("Error fetching bot data:", error);
+        console.error("Ошибка получения данных бота:", error);
         res.status(500).json({ message: "Не удалось получить данные бота" });
     }
 }
