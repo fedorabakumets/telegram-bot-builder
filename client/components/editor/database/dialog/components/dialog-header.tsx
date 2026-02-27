@@ -1,26 +1,15 @@
 /**
  * @fileoverview Компонент заголовка панели диалога
- * Отображает имя пользователя, переключатель и кнопку закрытия
+ * Отображает иконку и кнопку закрытия
  */
 
 import { X, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { UserBotData } from '@shared/schema';
 
 /**
  * Свойства заголовка
  */
 interface DialogHeaderProps {
-  /** Имя пользователя */
-  userName: string;
-  /** Текущий пользователь */
-  user: UserBotData;
-  /** Все пользователи */
-  users: UserBotData[];
-  /** Функция форматирования имени */
-  formatUserName: (user: UserBotData) => string;
-  /** Функция выбора пользователя */
-  onSelectUser: (user: UserBotData) => void;
   /** Колбэк закрытия */
   onClose: () => void;
 }
@@ -28,14 +17,7 @@ interface DialogHeaderProps {
 /**
  * Компонент заголовка панели диалога
  */
-export function DialogHeader({
-  userName,
-  user,
-  users,
-  formatUserName,
-  onSelectUser,
-  onClose
-}: DialogHeaderProps) {
+export function DialogHeader({ onClose }: DialogHeaderProps) {
   return (
     <div className="flex items-center justify-between gap-2 p-2 xs:p-2.5 sm:p-3 border-b">
       <div className="flex items-center gap-2 min-w-0">
@@ -44,7 +26,6 @@ export function DialogHeader({
         </div>
         <div className="min-w-0">
           <h3 className="font-medium text-xs xs:text-xs sm:text-sm truncate">Диалог</h3>
-          <p className="text-[10px] xs:text-[10px] sm:text-xs text-muted-foreground truncate">{userName}</p>
         </div>
       </div>
       <Button

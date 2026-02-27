@@ -69,14 +69,7 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
 
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
-      <DialogHeader
-        userName={formatUserName(user)}
-        user={user}
-        users={users}
-        formatUserName={formatUserName}
-        onSelectUser={handleSelectUser}
-        onClose={onClose}
-      />
+      <DialogHeader onClose={onClose} />
 
       <div className="p-2 xs:p-2.5 sm:p-3 border-b">
         <UserSelect
