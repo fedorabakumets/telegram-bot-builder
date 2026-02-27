@@ -8,7 +8,7 @@
  */
 
 import type { Request, Response } from 'express';
-import { stopBot } from '../../bots/stopBot';
+import { stopBot } from '../../../bots/stopBot';
 
 /**
  * Обрабатывает запрос на остановку бота

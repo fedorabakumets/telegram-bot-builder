@@ -8,8 +8,8 @@
  */
 
 import type { Request, Response } from 'express';
-import { findActiveProcessForProject } from '../../utils/findActiveProcessForProject';
-import { storage } from '../../storages/storage';
+import { findActiveProcessForProject } from '../../../utils/findActiveProcessForProject';
+import { storage } from '../../../storages/storage';
 import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils/processChecker';
 import { restoreProcessTracking } from '../utils/processRestorer';
 

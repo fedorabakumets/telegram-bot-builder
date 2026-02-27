@@ -8,8 +8,8 @@
  */
 
 import type { Request, Response } from 'express';
-import { startBot } from '../../bots/startBot';
-import { storage } from '../../storages/storage';
+import { startBot } from '../../../bots/startBot';
+import { storage } from '../../../storages/storage';
 
 /**
  * Обрабатывает запрос на запуск бота

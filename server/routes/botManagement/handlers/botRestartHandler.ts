@@ -8,9 +8,9 @@
  */
 
 import type { Request, Response } from 'express';
-import { startBot } from '../../bots/startBot';
-import { stopBot } from '../../bots/stopBot';
-import { storage } from '../../storages/storage';
+import { startBot } from '../../../bots/startBot';
+import { stopBot } from '../../../bots/stopBot';
+import { storage } from '../../../storages/storage';
 
 /**
  * Обрабатывает запрос на перезапуск бота
