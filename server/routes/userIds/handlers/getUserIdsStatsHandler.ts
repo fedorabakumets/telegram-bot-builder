@@ -9,7 +9,7 @@
 
 import type { Request, Response } from 'express';
 import { Pool } from 'pg';
-import { getUserIdsStats } from '../../handlers/user-ids-handler';
+import { getUserIdsStats } from '../../../handlers/user-ids-handler';
 
 /**
  * Обрабатывает запрос на получение статистики

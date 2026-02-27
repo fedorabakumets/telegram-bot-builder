@@ -9,7 +9,7 @@
 
 import type { Request, Response } from 'express';
 import { Pool } from 'pg';
-import { deleteUserId } from '../../handlers/user-ids-handler';
+import { deleteUserId } from '../../../handlers/user-ids-handler';
 
 /**
  * Обрабатывает запрос на удаление ID

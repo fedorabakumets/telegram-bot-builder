@@ -16,8 +16,6 @@ interface HeaderActionsProps {
   projectId: number;
   /** Название проекта */
   projectName: string;
-  /** Функция обновления */
-  onRefresh: () => void;
   /** Функция очистки базы */
   onDeleteAll: () => void;
 }
@@ -30,7 +28,6 @@ interface HeaderActionsProps {
 export function HeaderActions({
   projectId,
   projectName,
-  onRefresh,
   onDeleteAll,
 }: HeaderActionsProps): React.JSX.Element {
   return (

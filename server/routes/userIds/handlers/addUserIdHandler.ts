@@ -9,7 +9,7 @@
 
 import type { Request, Response } from 'express';
 import { Pool } from 'pg';
-import { addUserId } from '../../handlers/user-ids-handler';
+import { addUserId } from '../../../handlers/user-ids-handler';
 
 /**
  * Обрабатывает запрос на добавление ID
