@@ -61,7 +61,15 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
       .replace(/<div[^>]*>/g, '\n')
       .replace(/<\/div>/g, '');
   } else {
+    // Даже без Markdown сохраняем теги форматирования для Telegram
     text = text
+      .replace(/<strong[^>]*>(.*?)<\/strong>/g, '<b>$1</b>')
+      .replace(/<em[^>]*>(.*?)<\/em>/g, '<i>$1</i>')
+      .replace(/<u[^>]*>(.*?)<\/u>/g, '<u>$1</u>')
+      .replace(/<s[^>]*>(.*?)<\/s>/g, '<s>$1</s>')
+      .replace(/<code[^>]*>(.*?)<\/code>/g, '<code>$1</code>')
+      .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '<blockquote>$1</blockquote>')
+      .replace(/<h[3-5][^>]*>(.*?)<\/h[3-5]>/g, '<b>$1</b>')
       .replace(/<br\s*\/?>/g, '\n')
       .replace(/<div[^>]*>/g, '\n')
       .replace(/<\/div>/g, '');
