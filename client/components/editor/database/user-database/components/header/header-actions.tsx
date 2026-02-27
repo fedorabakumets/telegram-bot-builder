@@ -16,6 +16,8 @@ interface HeaderActionsProps {
   projectId: number;
   /** Название проекта */
   projectName: string;
+  /** Функция обновления (не используется в этом компоненте) */
+  onRefresh?: () => void;
   /** Функция очистки базы */
   onDeleteAll: () => void;
 }
