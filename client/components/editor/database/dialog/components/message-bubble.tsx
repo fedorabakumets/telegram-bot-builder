@@ -7,7 +7,7 @@ import { BotMessageWithMedia } from '../types';
 import { UserBotData } from '@shared/schema';
 import { MessageAvatar } from './message-avatar';
 import { MessageMedia } from './message-media';
-import { MessageText } from './message-text';
+import { FormattedText } from './formatted-text';
 import { MessageButtons } from './message-buttons';
 import { ButtonClickedInfo } from './button-clicked-info';
 import { MessageTimestamp } from './message-timestamp';
@@ -58,7 +58,7 @@ export function MessageBubble({ message, index, user, bot, projectId }: MessageB
         <div className="flex flex-col gap-1">
           <MessageMedia media={message.media} />
 
-          <MessageText text={message.messageText} messageType={messageType} />
+          <FormattedText text={message.messageText} messageType={messageType} />
 
           {isBot && hasButtons(message) && (
             <MessageButtons buttons={getButtons(message)} index={index} />
