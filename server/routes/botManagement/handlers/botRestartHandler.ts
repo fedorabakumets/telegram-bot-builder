@@ -30,13 +30,13 @@ export async function handleBotRestart(req: Request, res: Response): Promise<voi
 
         const instance = await storage.getBotInstance(projectId);
         if (!instance) {
-            res.status(404).json({ message: "Bot instance not found" });
+            res.status(404).json({ message: "Экземпляр бота не найден" });
             return;
         }
 
         const stopResult = await stopBot(projectId, instance.tokenId);
         if (!stopResult.success) {
-            res.status(500).json({ message: stopResult.error || "Failed to stop bot" });
+            res.status(500).json({ message: stopResult.error || "Не удалось остановить бота" });
             return;
         }
 
@@ -44,27 +44,27 @@ export async function handleBotRestart(req: Request, res: Response): Promise<voi
 
         const project = await storage.getBotProject(projectId);
         if (!project) {
-            res.status(404).json({ message: "Project not found" });
+            res.status(404).json({ message: "Проект не найден" });
             return;
         }
 
         const defaultToken = await storage.getDefaultBotToken(projectId);
         if (!defaultToken || !defaultToken.token || !defaultToken.id) {
-            res.status(400).json({ message: "Default bot token not found" });
+            res.status(400).json({ message: "Токен бота по умолчанию не найден" });
             return;
         }
 
         const startResult = await startBot(projectId, defaultToken.token, defaultToken.id);
         if (startResult.success) {
             res.json({
-                message: "Bot restarted successfully",
+                message: "Бот успешно перезапущен",
                 processId: startResult.processId
             });
         } else {
-            res.status(500).json({ message: startResult.error || "Failed to start bot after restart" });
+            res.status(500).json({ message: startResult.error || "Не удалось запустить бота после перезапуска" });
         }
     } catch (error) {
         console.error('Ошибка перезапуска бота:', error);
-        res.status(500).json({ message: "Failed to restart bot" });
+        res.status(500).json({ message: "Не удалось перезапустить бота" });
     }
 }

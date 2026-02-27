@@ -28,17 +28,17 @@ export async function handleBotStop(req: Request, res: Response): Promise<void> 
         const { tokenId } = req.body;
 
         if (!tokenId) {
-            res.status(400).json({ message: "Token ID is required" });
+            res.status(400).json({ message: "Требуется ID токена" });
             return;
         }
 
         const result = await stopBot(projectId, tokenId);
         if (result.success) {
-            res.json({ message: "Bot stopped successfully" });
+            res.json({ message: "Бот успешно остановлен" });
         } else {
-            res.status(500).json({ message: result.error || "Failed to stop bot" });
+            res.status(500).json({ message: result.error || "Не удалось остановить бота" });
         }
     } catch (error) {
-        res.status(500).json({ message: "Failed to stop bot" });
+        res.status(500).json({ message: "Не удалось остановить бота" });
     }
 }

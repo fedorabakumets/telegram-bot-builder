@@ -30,7 +30,7 @@ export async function handleBotStart(req: Request, res: Response): Promise<void>
 
         const project = await storage.getBotProject(projectId);
         if (!project) {
-            res.status(404).json({ message: "Project not found" });
+            res.status(404).json({ message: "Проект не найден" });
             return;
         }
 
@@ -54,13 +54,13 @@ export async function handleBotStart(req: Request, res: Response): Promise<void>
         }
 
         if (!botToken || !actualTokenId) {
-            res.status(400).json({ message: "Bot token is required" });
+            res.status(400).json({ message: "Требуется токен бота" });
             return;
         }
 
         const existingInstance = await storage.getBotInstanceByToken(actualTokenId);
         if (existingInstance && existingInstance.status === 'running') {
-            res.status(400).json({ message: "Bot is already running" });
+            res.status(400).json({ message: "Бот уже запущен" });
             return;
         }
 
@@ -68,14 +68,14 @@ export async function handleBotStart(req: Request, res: Response): Promise<void>
         if (result.success) {
             await storage.markTokenAsUsed(actualTokenId);
             res.json({
-                message: "Bot started successfully",
+                message: "Бот успешно запущен",
                 processId: result.processId,
                 tokenUsed: true
             });
         } else {
-            res.status(500).json({ message: result.error || "Failed to start bot" });
+            res.status(500).json({ message: result.error || "Не удалось запустить бота" });
         }
     } catch (error) {
-        res.status(500).json({ message: "Failed to start bot" });
+        res.status(500).json({ message: "Не удалось запустить бота" });
     }
 }

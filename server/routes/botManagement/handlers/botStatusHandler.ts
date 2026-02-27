@@ -80,6 +80,6 @@ export async function handleBotStatus(req: Request, res: Response): Promise<void
         }
 
         console.error('Ошибка получения статуса бота:', error);
-        res.status(500).json({ message: "Failed to get bot status" });
+        res.status(500).json({ message: "Не удалось получить статус бота" });
     }
 }
