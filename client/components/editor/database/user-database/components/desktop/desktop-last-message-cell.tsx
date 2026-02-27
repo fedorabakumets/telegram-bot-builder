@@ -26,7 +26,7 @@ interface DesktopLastMessageCellProps {
 export function DesktopLastMessageCell({ user, projectId }: DesktopLastMessageCellProps): React.JSX.Element {
   const { data: lastMessage } = useLastMessage(projectId, user.id);
 
-  const messageText = lastMessage?.text || 'Нет сообщений';
+  const messageText = lastMessage?.messageText || 'Нет сообщений';
   const timeAgo = formatRelativeTime(lastMessage?.createdAt || user.lastInteraction);
 
   return (
