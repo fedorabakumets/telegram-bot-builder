@@ -16,6 +16,7 @@ import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHa
 import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, updateBotShortDescriptionHandler } from "./botIntegration/handlers/botInfo";
 import { sendGroupMessageHandler, getGroupInfoHandler, getGroupMembersCountHandler, getBotAdminStatusHandler, getGroupAdminsHandler, getGroupMembersHandler, checkMemberHandler, getSavedMembersHandler, banMemberHandler, unbanMemberHandler, promoteMemberHandler, demoteMemberHandler } from "./botIntegration/handlers/telegramGroups";
 import { searchUserHandler } from "./botIntegration/user/searchUser.handler";
+import { restrictMemberHandler } from "./botIntegration/groups/members/restrictMember.handler";
 import { storage } from "../storages/storage";
 import { telegramClientManager } from "../telegram/telegram-client";
 
@@ -139,51 +140,7 @@ export function setupBotIntegrationRoutes(app: Express) {
     app.get("/api/projects/:projectId/bot/search-user/:query", searchUserHandler);
 
     // Ограничение участника группы
-    app.post("/api/projects/:projectId/bot/restrict-member", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.projectId);
-            const { groupId, userId, permissions, untilDate } = req.body;
-
-            if (!groupId || !userId) {
-                return res.status(400).json({ message: "Требуются ID группы и ID пользователя" });
-            }
-
-            const defaultToken = await storage.getDefaultBotToken(projectId);
-            if (!defaultToken) {
-                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
-            }
-
-            const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/restrictChatMember`;
-            const response = await fetch(telegramApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    chat_id: groupId,
-                    user_id: userId,
-                    permissions: permissions,
-                    until_date: untilDate || undefined
-                })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                console.error("Ошибка Bot API при ограничении участника:", result);
-                return res.status(400).json({
-                    message: "Не удалось ограничить участника",
-                    error: result.description || "Неизвестная ошибка",
-                    details: result
-                });
-            }
-
-            res.json({ success: true, message: "Участник успешно ограничен" });
-        } catch (error) {
-            console.error("Не удалось ограничить участника:", error);
-            res.status(500).json({ message: "Не удалось ограничить участника" });
-        }
-    });
+    app.post("/api/projects/:projectId/bot/restrict-member", restrictMemberHandler);
 
     // Установка фото группы через Bot API
     app.post("/api/projects/:projectId/bot/set-group-photo", async (req, res) => {
