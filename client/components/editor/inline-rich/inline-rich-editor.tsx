@@ -2,13 +2,6 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  Code,
-  Quote,
-  Heading3,
   RotateCcw,
   RotateCw,
   Copy,
@@ -27,42 +20,9 @@ import {
   DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-
-/**
- * Интерфейс для описания переменной, доступной в редакторе
- */
-interface Variable {
-  /** Имя переменной */
-  name: string;
-  /** Идентификатор узла, к которому относится переменная */
-  nodeId: string;
-  /** Тип узла (user-input, start, command, system, conditional и т.д.) */
-  nodeType: string;
-  /** Описание переменной (опционально) */
-  description?: string;
-  /** Тип медиа для медиапеременных (photo, video, audio, document) */
-  mediaType?: string;
-}
-
-/**
- * Свойства компонента InlineRichEditor
- */
-interface InlineRichEditorProps {
-  /** Текущее значение редактора */
-  value: string;
-  /** Функция обратного вызова при изменении значения */
-  onChange: (value: string) => void;
-  /** Текст-заполнитель для пустого редактора */
-  placeholder?: string;
-  /** Включить поддержку Markdown */
-  enableMarkdown?: boolean;
-  /** Функция обратного вызова при изменении режима форматирования */
-  onFormatModeChange?: (formatMode: 'html' | 'markdown' | 'none') => void;
-  /** Массив доступных переменных для вставки */
-  availableVariables?: Variable[];
-  /** Функция обратного вызова при выборе медиапеременной */
-  onMediaVariableSelect?: (variableName: string, mediaType: string) => void;
-}
+import type { InlineRichEditorProps } from './types';
+import { formatOptions } from './format-options';
+import { valueToHtml, htmlToValue } from './html-converter';
 
 /**
  * Компонент встроенного редактора с поддержкой форматирования текста
@@ -122,80 +82,11 @@ export function InlineRichEditor({
   }, [value]);
 
   /**
-   * Преобразует текст в HTML для отображения в contenteditable
-   * @param text - Исходный текст
-   * @returns HTML строка для отображения
-   */
-  const valueToHtml = useCallback((text: string) => {
-    if (!text) return '';
-
-    let html = text;
-
-    if (enableMarkdown) {
-      // Convert markdown to HTML for contenteditable
-      html = html
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
-        .replace(/__(.*?)__/g, '<u>$1</u>')
-        .replace(/~~(.*?)~~/g, '<s>$1</s>')
-        .replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">$1</code>')
-        .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-        .replace(/^# (.+)$/gm, '<h3>$1</h3>')
-        .replace(/^## (.+)$/gm, '<h4>$1</h4>')
-        .replace(/^### (.+)$/gm, '<h5>$1</h5>')
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-        .replace(/\n/g, '<br>');
-    } else {
-      // For HTML mode, just convert newlines to br tags
-      html = html.replace(/\n/g, '<br>');
-    }
-
-    return html;
-  }, [enableMarkdown]);
-
-  /**
-   * Преобразует HTML обратно в текстовое значение
-   * @param html - HTML строка
-   * @returns Текстовое значение
-   */
-  const htmlToValue = useCallback((html: string) => {
-    if (!html) return '';
-
-    let text = html;
-
-    if (enableMarkdown) {
-      // Convert HTML back to markdown
-      text = text
-        .replace(/<strong[^>]*>(.*?)<\/strong>/g, '**$1**')
-        .replace(/<em[^>]*>(.*?)<\/em>/g, '*$1*')
-        .replace(/<u[^>]*>(.*?)<\/u>/g, '__$1__')
-        .replace(/<s[^>]*>(.*?)<\/s>/g, '~~$1~~')
-        .replace(/<code[^>]*>(.*?)<\/code>/g, '`$1`')
-        .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '> $1')
-        .replace(/<h3[^>]*>(.*?)<\/h3>/g, '# $1')
-        .replace(/<h4[^>]*>(.*?)<\/h4>/g, '## $1')
-        .replace(/<h5[^>]*>(.*?)<\/h5>/g, '### $1')
-        .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g, '[$2]($1)')
-        .replace(/<br\s*\/?>/g, '\n')
-        .replace(/<div[^>]*>/g, '\n')
-        .replace(/<\/div>/g, '');
-    } else {
-      // For HTML mode, just convert br tags to newlines
-      text = text
-        .replace(/<br\s*\/?>/g, '\n')
-        .replace(/<div[^>]*>/g, '\n')
-        .replace(/<\/div>/g, '');
-    }
-
-    return text;
-  }, [enableMarkdown]);
-
-  /**
    * Обновляет содержимое редактора при изменении значения
    */
   useEffect(() => {
     if (editorRef.current && !isFormatting) {
-      const html = valueToHtml(value);
+      const html = valueToHtml(value, enableMarkdown);
       if (editorRef.current.innerHTML !== html) {
         // Save current selection
         const selection = window.getSelection();
@@ -249,7 +140,7 @@ export function InlineRichEditor({
         }
       }
     }
-  }, [value, valueToHtml, isFormatting]);
+  }, [value, valueToHtml, enableMarkdown, isFormatting]);
 
   /**
    * Обрабатывает ввод в contenteditable элементе
@@ -258,73 +149,11 @@ export function InlineRichEditor({
     if (editorRef.current) {
       setIsFormatting(true);
       const html = editorRef.current.innerHTML;
-      const text = htmlToValue(html);
+      const text = htmlToValue(html, enableMarkdown);
       onChange(text);
       setTimeout(() => setIsFormatting(false), 0);
     }
-  }, [onChange, htmlToValue]);
-
-  /**
-   * Конфигурация опций форматирования с иконками и горячими клавишами
-   */
-  const formatOptions = [
-    {
-      command: 'bold',
-      icon: Bold,
-      name: 'Жирный',
-      shortcut: 'Ctrl+B',
-      markdown: '**текст**',
-      html: '<strong>текст</strong>'
-    },
-    {
-      command: 'italic',
-      icon: Italic,
-      name: 'Курсив',
-      shortcut: 'Ctrl+I',
-      markdown: '*текст*',
-      html: '<em>текст</em>'
-    },
-    {
-      command: 'underline',
-      icon: Underline,
-      name: 'Подчеркнутый',
-      shortcut: 'Ctrl+U',
-      markdown: '__текст__',
-      html: '<u>текст</u>'
-    },
-    {
-      command: 'strikethrough',
-      icon: Strikethrough,
-      name: 'Зачеркнутый',
-      shortcut: 'Ctrl+Shift+X',
-      markdown: '~~текст~~',
-      html: '<s>текст</s>'
-    },
-    {
-      command: 'code',
-      icon: Code,
-      name: 'Код',
-      shortcut: 'Ctrl+E',
-      markdown: '`код`',
-      html: '<code>код</code>'
-    },
-    {
-      command: 'quote',
-      icon: Quote,
-      name: 'Цитата',
-      shortcut: 'Ctrl+Q',
-      markdown: '> цитата',
-      html: '<blockquote>цитата</blockquote>'
-    },
-    {
-      command: 'heading',
-      icon: Heading3,
-      name: 'Заголовок',
-      shortcut: 'Ctrl+H',
-      markdown: '# заголовок',
-      html: '<h3>заголовок</h3>'
-    }
-  ];
+  }, [onChange, htmlToValue, enableMarkdown]);
 
   /**
    * Применяет форматирование к выделенному тексту
