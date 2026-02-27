@@ -61,14 +61,23 @@ export function setupBotIntegrationRoutes(app: Express) {
                 return res.status(400).json({ message: "Bot token not found" });
             }
 
-            // Получаем avatar_url из БД
-            const userResult = await storage.getUserBotDataByProjectAndUser(projectId, userId);
-            if (!userResult?.avatarUrl) {
+            // Получаем avatar_url из таблицы bot_users
+            const { Pool } = await import('pg');
+            const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+            
+            const userResult = await pool.query(
+                'SELECT avatar_url FROM bot_users WHERE user_id = $1',
+                [userId]
+            );
+
+            await pool.end();
+
+            if (!userResult.rows.length || !userResult.rows[0].avatar_url) {
                 return res.status(404).json({ message: "Avatar not found" });
             }
 
             // Извлекаем file_path из полного URL
-            const fileUrl = userResult.avatarUrl;
+            const fileUrl = userResult.rows[0].avatar_url;
             const filePath = fileUrl.replace(`https://api.telegram.org/file/bot${defaultToken.token}/`, '');
 
             // Проксируем запрос к Telegram
@@ -82,7 +91,7 @@ export function setupBotIntegrationRoutes(app: Express) {
             // Перенаправляем контент
             res.set('Content-Type', response.headers.get('content-type') || 'image/jpeg');
             res.set('Cache-Control', 'public, max-age=86400'); // Кэш на 24 часа
-            
+
             const buffer = await response.arrayBuffer();
             res.send(Buffer.from(buffer));
 
