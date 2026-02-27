@@ -1,0 +1,71 @@
+/**
+ * @fileoverview Утилиты конвертации между текстом и HTML
+ * @description Преобразование Markdown ↔ HTML для contenteditable редактора
+ */
+
+/**
+ * Преобразует текст в HTML для отображения в contenteditable
+ * @param text - Исходный текст
+ * @param enableMarkdown - Включить поддержку Markdown
+ * @returns HTML строка для отображения
+ */
+export function valueToHtml(text: string, enableMarkdown: boolean): string {
+  if (!text) return '';
+
+  let html = text;
+
+  if (enableMarkdown) {
+    html = html
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+      .replace(/__(.*?)__/g, '<u>$1</u>')
+      .replace(/~~(.*?)~~/g, '<s>$1</s>')
+      .replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">$1</code>')
+      .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+      .replace(/^# (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h4>$1</h4>')
+      .replace(/^### (.+)$/gm, '<h5>$1</h5>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+      .replace(/\n/g, '<br>');
+  } else {
+    html = html.replace(/\n/g, '<br>');
+  }
+
+  return html;
+}
+
+/**
+ * Преобразует HTML обратно в текстовое значение
+ * @param html - HTML строка
+ * @param enableMarkdown - Включить поддержку Markdown
+ * @returns Текстовое значение
+ */
+export function htmlToValue(html: string, enableMarkdown: boolean): string {
+  if (!html) return '';
+
+  let text = html;
+
+  if (enableMarkdown) {
+    text = text
+      .replace(/<strong[^>]*>(.*?)<\/strong>/g, '**$1**')
+      .replace(/<em[^>]*>(.*?)<\/em>/g, '*$1*')
+      .replace(/<u[^>]*>(.*?)<\/u>/g, '__$1__')
+      .replace(/<s[^>]*>(.*?)<\/s>/g, '~~$1~~')
+      .replace(/<code[^>]*>(.*?)<\/code>/g, '`$1`')
+      .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '> $1')
+      .replace(/<h3[^>]*>(.*?)<\/h3>/g, '# $1')
+      .replace(/<h4[^>]*>(.*?)<\/h4>/g, '## $1')
+      .replace(/<h5[^>]*>(.*?)<\/h5>/g, '### $1')
+      .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g, '[$2]($1)')
+      .replace(/<br\s*\/?>/g, '\n')
+      .replace(/<div[^>]*>/g, '\n')
+      .replace(/<\/div>/g, '');
+  } else {
+    text = text
+      .replace(/<br\s*\/?>/g, '\n')
+      .replace(/<div[^>]*>/g, '\n')
+      .replace(/<\/div>/g, '');
+  }
+
+  return text;
+}

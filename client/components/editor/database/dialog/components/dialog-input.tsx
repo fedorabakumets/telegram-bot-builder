@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Send } from 'lucide-react';
-import { InlineRichEditor } from '@/components/editor/properties/inline-rich-editor';
+import { InlineRichEditor } from '@/components/editor/inline-rich/inline-rich-editor';
 
 /**
  * Свойства компонента ввода

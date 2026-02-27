@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { useState, useMemo, useEffect } from 'react';
 
-import { InlineRichEditor } from './inline-rich-editor';
+import { InlineRichEditor } from '../inline-rich/inline-rich-editor';
 import { SYSTEM_VARIABLES } from './system-variables';
 import { VariableDropdown } from './system-variables-dropdown';
 import { SectionHeader } from './section-header';
