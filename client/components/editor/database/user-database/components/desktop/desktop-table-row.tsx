@@ -45,7 +45,7 @@ const CELL_RENDERERS = [
   {
     key: 'lastMessage',
     render: (props: DesktopTableRowProps) => <DesktopLastMessageCell user={props.user} projectId={props.projectId} />,
-    alwaysVisible: false
+    alwaysVisible: true
   },
   {
     key: 'actions',
