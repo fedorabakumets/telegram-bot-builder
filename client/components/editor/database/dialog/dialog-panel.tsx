@@ -3,7 +3,7 @@
  * Координирует все компоненты диалога
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -26,6 +26,7 @@ import { NoUserSelected } from './components/no-user-selected';
  * @returns JSX элемент панели диалога
  */
 export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
+  const [showWarning, setShowWarning] = useState(true);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
 
   const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessageWithMedia[]>({
@@ -61,7 +62,7 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
     <div className="h-full flex flex-col bg-background overflow-hidden">
       <DialogHeader userName={formatUserName(user)} onClose={onClose} />
 
-      <DialogWarning />
+      {showWarning && <DialogWarning onClose={() => setShowWarning(false)} />}
 
       <ScrollArea ref={messagesScrollRef} className="flex-1 p-3 min-h-0" data-testid="dialog-messages-scroll-area">
         {messagesLoading ? (
