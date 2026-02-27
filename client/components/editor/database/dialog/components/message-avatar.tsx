@@ -14,6 +14,8 @@ interface MessageAvatarProps {
   messageType: 'bot' | 'user';
   /** Данные пользователя для avatarUrl */
   user?: UserBotData | null;
+  /** Данные бота для avatarUrl */
+  bot?: UserBotData | null;
   /** Идентификатор проекта для прокси аватара */
   projectId?: number;
 }
@@ -21,6 +23,8 @@ interface MessageAvatarProps {
 /**
  * Компонент аватара для сообщения
  */
-export function MessageAvatar({ messageType, user, projectId }: MessageAvatarProps) {
-  return <UserAvatar messageType={messageType} user={user} projectId={projectId} />;
+export function MessageAvatar({ messageType, user, bot, projectId }: MessageAvatarProps) {
+  // Для бота используем данные бота, для пользователя - данные пользователя
+  const avatarData = messageType === 'bot' ? bot : user;
+  return <UserAvatar messageType={messageType} user={avatarData} projectId={projectId} />;
 }

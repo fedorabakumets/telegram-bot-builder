@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { DialogPanelProps, BotMessageWithMedia } from './types';
 import { formatUserName } from '../utils';
 import { useSendMessage } from './hooks/use-send-message';
+import { useBotData } from './hooks/use-bot-data';
 import { useUserList } from '@/components/editor/database/user-details/hooks/useUserList';
 import { MessageBubble } from './components/message-bubble';
 import { DialogHeader } from './components/dialog-header';
@@ -34,6 +35,7 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
   });
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const { users } = useUserList(projectId);
+  const { bot } = useBotData(projectId);
 
   const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessageWithMedia[]>({
     queryKey: [`/api/projects/${projectId}/users/${user?.userId}/messages`],
@@ -89,7 +91,14 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
         ) : (
           <div className="space-y-3 py-2">
             {messages.map((message, index) => (
-              <MessageBubble key={message.id || index} message={message} index={index} user={user} projectId={projectId} />
+              <MessageBubble
+                key={message.id || index}
+                message={message}
+                index={index}
+                user={message.messageType === 'user' ? user : null}
+                bot={message.messageType === 'bot' ? bot : null}
+                projectId={projectId}
+              />
             ))}
           </div>
         )}
