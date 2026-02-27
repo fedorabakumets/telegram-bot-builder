@@ -45,7 +45,7 @@ export async function handleGetUser(req: Request, res: Response): Promise<void> 
             user
         });
     } catch (error: any) {
-        console.error("Get telegram user error:", error);
+        console.error("Ошибка получения пользователя Telegram:", error);
         res.status(500).json({
             success: false,
             error: "Ошибка получения пользователя"

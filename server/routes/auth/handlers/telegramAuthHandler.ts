@@ -52,7 +52,7 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
         req.session.telegramUser = userData;
         await saveSession(req);
 
-        console.log(`✅ Telegram auth successful for user: ${first_name} (@${username}) - Session SAVED with ID: ${userData.id}`);
+        console.log(`✅ Telegram авторизация успешна для: ${first_name} (@${username}) - Сессия СОХРАНЕНА с ID: ${userData.id}`);
 
         res.json({
             success: true,
@@ -60,7 +60,7 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
             user: userData
         });
     } catch (error: any) {
-        console.error("Telegram auth error:", error);
+        console.error("Ошибка авторизации через Telegram:", error);
         res.status(500).json({
             success: false,
             error: "Ошибка авторизации"
