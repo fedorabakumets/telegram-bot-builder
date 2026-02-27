@@ -102,25 +102,25 @@ export function setupBotIntegrationRoutes(app: Express) {
      */
     app.post("/api/projects/:projectId/media/register-telegram-photo", registerTelegramMediaHandler);
 
-    // Bot Groups API
+    // API групп ботов
     app.get("/api/projects/:id/groups", getGroupsHandler);
     app.post("/api/projects/:id/groups", createGroupHandler);
     app.put("/api/projects/:projectId/groups/:groupId", updateGroupHandler);
     app.delete("/api/projects/:projectId/groups/:groupId", deleteGroupHandler);
 
-    // Get bot information (getMe)
+    // Получение информации о боте (getMe)
     app.get("/api/projects/:id/bot/info", getBotInfoHandler);
 
-    // Update bot name
+    // Обновление имени бота
     app.put("/api/projects/:id/bot/name", updateBotNameHandler);
 
-    // Update bot description
+    // Обновление описания бота
     app.put("/api/projects/:id/bot/description", updateBotDescriptionHandler);
 
-    // Update bot short description
+    // Обновление краткого описания бота
     app.put("/api/projects/:id/bot/short-description", updateBotShortDescriptionHandler);
 
-    // Telegram Bot API integration for groups
+    // Интеграция Telegram Bot API для групп
     app.post("/api/projects/:projectId/bot/send-group-message", sendGroupMessageHandler);
     app.get("/api/projects/:projectId/bot/group-info/:groupId", getGroupInfoHandler);
     app.get("/api/projects/:projectId/bot/group-members-count/:groupId", getGroupMembersCountHandler);
@@ -134,19 +134,19 @@ export function setupBotIntegrationRoutes(app: Express) {
     app.post("/api/projects/:projectId/bot/promote-member", promoteMemberHandler);
     app.post("/api/projects/:projectId/bot/demote-member", demoteMemberHandler);
 
-    // Search user by username or ID for promotion
+    // Поиск пользователя по username или ID для повышения
     app.get("/api/projects/:projectId/bot/search-user/:query", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
             const query = req.params.query;
 
             if (!query) {
-                return res.status(400).json({ message: "Search query is required" });
+                return res.status(400).json({ message: "Требуется поисковый запрос" });
             }
 
             const defaultToken = await storage.getDefaultBotToken(projectId);
             if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
+                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             }
 
             // Сначала попробуем найти пользователя в локальной базе данных
@@ -216,13 +216,13 @@ export function setupBotIntegrationRoutes(app: Express) {
                         userId = chatResult.result.id.toString();
                     }
                 } catch (error) {
-                    console.log('Username search failed, user might not have public username');
+                    console.log('Поиск по username не удался, у пользователя может не быть публичного username');
                 }
             }
 
             if (!userId) {
                 return res.status(404).json({
-                    message: "User not found",
+                    message: "Пользователь не найден",
                     error: "Пользователь не найден ни в локальной базе данных, ни через Telegram API. Убедитесь, что пользователь взаимодействовал с ботом или имеет публичный username."
                 });
             }
@@ -242,8 +242,8 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             if (!userResponse.ok) {
                 return res.status(400).json({
-                    message: "Failed to get user info",
-                    error: userResult.description || "Unknown error"
+                    message: "Не удалось получить информацию о пользователе",
+                    error: userResult.description || "Неизвестная ошибка"
                 });
             }
 
@@ -254,24 +254,24 @@ export function setupBotIntegrationRoutes(app: Express) {
                 source: 'telegram'
             });
         } catch (error) {
-            console.error("Failed to search user:", error);
-            res.status(500).json({ message: "Failed to search user" });
+            console.error("Не удалось найти пользователя:", error);
+            res.status(500).json({ message: "Не удалось найти пользователя" });
         }
     });
 
-    // Restrict group member
+    // Ограничение участника группы
     app.post("/api/projects/:projectId/bot/restrict-member", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
             const { groupId, userId, permissions, untilDate } = req.body;
 
             if (!groupId || !userId) {
-                return res.status(400).json({ message: "Group ID and User ID are required" });
+                return res.status(400).json({ message: "Требуются ID группы и ID пользователя" });
             }
 
             const defaultToken = await storage.getDefaultBotToken(projectId);
             if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
+                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             }
 
             const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/restrictChatMember`;
@@ -291,34 +291,34 @@ export function setupBotIntegrationRoutes(app: Express) {
             const result = await response.json();
 
             if (!response.ok) {
-                console.error("Bot API restrict member failed:", result);
+                console.error("Ошибка Bot API при ограничении участника:", result);
                 return res.status(400).json({
-                    message: "Failed to restrict member",
-                    error: result.description || "Unknown error",
+                    message: "Не удалось ограничить участника",
+                    error: result.description || "Неизвестная ошибка",
                     details: result
                 });
             }
 
-            res.json({ success: true, message: "Member restricted successfully" });
+            res.json({ success: true, message: "Участник успешно ограничен" });
         } catch (error) {
-            console.error("Failed to restrict member:", error);
-            res.status(500).json({ message: "Failed to restrict member" });
+            console.error("Не удалось ограничить участника:", error);
+            res.status(500).json({ message: "Не удалось ограничить участника" });
         }
     });
 
-    // Set group photo using Bot API
+    // Установка фото группы через Bot API
     app.post("/api/projects/:projectId/bot/set-group-photo", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
             const { groupId, photoPath } = req.body;
 
             if (!groupId || !photoPath) {
-                return res.status(400).json({ message: "Group ID and photo path are required" });
+                return res.status(400).json({ message: "Требуются ID группы и путь к фото" });
             }
 
             const defaultToken = await storage.getDefaultBotToken(projectId);
             if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
+                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             }
 
             // Читаем файл и отправляем через multipart/form-data
@@ -360,34 +360,34 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             if (!response.ok) {
                 return res.status(400).json({
-                    message: "Failed to set group photo",
-                    error: result.description || "Unknown error"
+                    message: "Не удалось установить фото группы",
+                    error: result.description || "Неизвестная ошибка"
                 });
             }
 
-            res.json({ success: true, message: "Group photo updated successfully" });
+            res.json({ success: true, message: "Фото группы успешно обновлено" });
         } catch (error: any) {
-            console.error("Failed to set group photo:", error);
+            console.error("Не удалось установить фото группы:", error);
             res.status(500).json({
-                message: "Failed to set group photo",
-                error: error.message || "Unknown error"
+                message: "Не удалось установить фото группы",
+                error: error.message || "Неизвестная ошибка"
             });
         }
     });
 
-    // Set group title
+    // Установка названия группы
     app.post("/api/projects/:projectId/bot/set-group-title", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
             const { groupId, title } = req.body;
 
             if (!groupId || !title) {
-                return res.status(400).json({ message: "Group ID and title are required" });
+                return res.status(400).json({ message: "Требуются ID группы и название" });
             }
 
             const defaultToken = await storage.getDefaultBotToken(projectId);
             if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
+                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             }
 
             const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setChatTitle`;
@@ -406,31 +406,31 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             if (!response.ok) {
                 return res.status(400).json({
-                    message: "Failed to set group title",
-                    error: result.description || "Unknown error"
+                    message: "Не удалось установить название группы",
+                    error: result.description || "Неизвестная ошибка"
                 });
             }
 
-            res.json({ success: true, message: "Group title updated successfully" });
+            res.json({ success: true, message: "Название группы успешно обновлено" });
         } catch (error) {
-            console.error("Failed to set group title:", error);
-            res.status(500).json({ message: "Failed to set group title" });
+            console.error("Не удалось установить название группы:", error);
+            res.status(500).json({ message: "Не удалось установить название группы" });
         }
     });
 
-    // Set group description
+    // Установка описания группы
     app.post("/api/projects/:projectId/bot/set-group-description", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
             const { groupId, description } = req.body;
 
             if (!groupId || !description) {
-                return res.status(400).json({ message: "Group ID and description are required" });
+                return res.status(400).json({ message: "Требуются ID группы и описание" });
             }
 
             const defaultToken = await storage.getDefaultBotToken(projectId);
             if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
+                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             }
 
             const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setChatDescription`;
@@ -449,31 +449,31 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             if (!response.ok) {
                 return res.status(400).json({
-                    message: "Failed to set group description",
-                    error: result.description || "Unknown error"
+                    message: "Не удалось установить описание группы",
+                    error: result.description || "Неизвестная ошибка"
                 });
             }
 
-            res.json({ success: true, message: "Group description updated successfully" });
+            res.json({ success: true, message: "Описание группы успешно обновлено" });
         } catch (error) {
-            console.error("Failed to set group description:", error);
-            res.status(500).json({ message: "Failed to set group description" });
+            console.error("Не удалось установить описание группы:", error);
+            res.status(500).json({ message: "Не удалось установить описание группы" });
         }
     });
 
-    // Set group username (make public/private)
+    // Установка username группы (сделать публичной/приватной)
     app.post("/api/projects/:projectId/bot/set-group-username", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
             const { groupId, username } = req.body;
 
             if (!groupId) {
-                return res.status(400).json({ message: "Group ID is required" });
+                return res.status(400).json({ message: "Требуется ID группы" });
             }
 
             const defaultToken = await storage.getDefaultBotToken(projectId);
             if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
+                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             }
 
             // Для установки username нужны права создателя или админа, используем Client API если доступен
@@ -486,7 +486,7 @@ export function setupBotIntegrationRoutes(app: Express) {
 
                     res.json({
                         success: true,
-                        message: username ? "Group username set successfully" : "Group made private successfully",
+                        message: username ? "Username группы успешно установлен" : "Группа сделана приватной",
                         result
                     });
                     return;
@@ -495,32 +495,32 @@ export function setupBotIntegrationRoutes(app: Express) {
                 console.log("Client API не доступен, используем Bot API:", clientError);
             }
 
-            // Fallback: используем Bot API (ограниченная функциональ��ость)
+            // Fallback: используем Bot API (ограниченная функциональность)
             // Bot API не может изменять username, только создатель через Client API
             return res.status(400).json({
-                message: "Setting group username requires creator/admin privileges. Please use Telegram Client API authorization.",
+                message: "Для установки username группы требуются права создателя/администратора. Пожалуйста, используйте авторизацию через Telegram Client API.",
                 requiresClientApi: true
             });
 
         } catch (error) {
-            console.error("Failed to set group username:", error);
-            res.status(500).json({ message: "Failed to set group username" });
+            console.error("Не удалось установить username группы:", error);
+            res.status(500).json({ message: "Не удалось установить username группы" });
         }
     });
 
-    // Pin message in group
+    // Закрепление сообщения в группе
     app.post("/api/projects/:projectId/bot/pin-message", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
             const { groupId, messageId, disableNotification } = req.body;
 
             if (!groupId || !messageId) {
-                return res.status(400).json({ message: "Group ID and message ID are required" });
+                return res.status(400).json({ message: "Требуются ID группы и ID сообщения" });
             }
 
             const defaultToken = await storage.getDefaultBotToken(projectId);
             if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
+                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             }
 
             const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/pinChatMessage`;
@@ -540,31 +540,31 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             if (!response.ok) {
                 return res.status(400).json({
-                    message: "Failed to pin message",
-                    error: result.description || "Unknown error"
+                    message: "Не удалось закрепить сообщение",
+                    error: result.description || "Неизвестная ошибка"
                 });
             }
 
-            res.json({ success: true, message: "Message pinned successfully" });
+            res.json({ success: true, message: "Сообщение успешно закреплено" });
         } catch (error) {
-            console.error("Failed to pin message:", error);
-            res.status(500).json({ message: "Failed to pin message" });
+            console.error("Не удалось закрепить сообщение:", error);
+            res.status(500).json({ message: "Не удалось закрепить сообщение" });
         }
     });
 
-    // Unpin message in group
+    // Открепление сообщения в группе
     app.post("/api/projects/:projectId/bot/unpin-message", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
             const { groupId, messageId } = req.body;
 
             if (!groupId) {
-                return res.status(400).json({ message: "Group ID is required" });
+                return res.status(400).json({ message: "Требуется ID группы" });
             }
 
             const defaultToken = await storage.getDefaultBotToken(projectId);
             if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
+                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             }
 
             const telegramApiUrl = messageId
@@ -586,31 +586,31 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             if (!response.ok) {
                 return res.status(400).json({
-                    message: "Failed to unpin message",
-                    error: result.description || "Unknown error"
+                    message: "Не удалось открепить сообщение",
+                    error: result.description || "Неизвестная ошибка"
                 });
             }
 
-            res.json({ success: true, message: messageId ? "Message unpinned successfully" : "All messages unpinned successfully" });
+            res.json({ success: true, message: messageId ? "Сообщение успешно откреплено" : "Все сообщения успешно откреплены" });
         } catch (error) {
-            console.error("Failed to unpin message:", error);
-            res.status(500).json({ message: "Failed to unpin message" });
+            console.error("Не удалось открепить сообщение:", error);
+            res.status(500).json({ message: "Не удалось открепить сообщение" });
         }
     });
 
-    // Create new invite link for group
+    // Создание новой ссылки-приглашения для группы
     app.post("/api/projects/:projectId/bot/create-invite-link", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
             const { groupId, name, expireDate, memberLimit, createsJoinRequest } = req.body;
 
             if (!groupId) {
-                return res.status(400).json({ message: "Group ID is required" });
+                return res.status(400).json({ message: "Требуется ID группы" });
             }
 
             const defaultToken = await storage.getDefaultBotToken(projectId);
             if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
+                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             }
 
             const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/createChatInviteLink`;
@@ -632,35 +632,35 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             if (!response.ok) {
                 return res.status(400).json({
-                    message: "Failed to create invite link",
-                    error: result.description || "Unknown error"
+                    message: "Не удалось создать ссылку-приглашение",
+                    error: result.description || "Неизвестная ошибка"
                 });
             }
 
             res.json({
                 success: true,
                 inviteLink: result.result,
-                message: "Invite link created successfully"
+                message: "Ссылка-приглашение успешно создана"
             });
         } catch (error) {
-            console.error("Failed to create invite link:", error);
-            res.status(500).json({ message: "Failed to create invite link" });
+            console.error("Не удалось создать ссылку-приглашение:", error);
+            res.status(500).json({ message: "Не удалось создать ссылку-приглашение" });
         }
     });
 
-    // Delete message in group
+    // Удаление сообщения в группе
     app.post("/api/projects/:projectId/bot/delete-message", async (req, res) => {
         try {
             const projectId = parseInt(req.params.projectId);
             const { groupId, messageId } = req.body;
 
             if (!groupId || !messageId) {
-                return res.status(400).json({ message: "Group ID and message ID are required" });
+                return res.status(400).json({ message: "Требуются ID группы и ID сообщения" });
             }
 
             const defaultToken = await storage.getDefaultBotToken(projectId);
             if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found for this project" });
+                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             }
 
             const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/deleteMessage`;
@@ -679,55 +679,55 @@ export function setupBotIntegrationRoutes(app: Express) {
 
             if (!response.ok) {
                 return res.status(400).json({
-                    message: "Failed to delete message",
-                    error: result.description || "Unknown error"
+                    message: "Не удалось удалить сообщение",
+                    error: result.description || "Неизвестная ошибка"
                 });
             }
 
-            res.json({ success: true, message: "Message deleted successfully" });
+            res.json({ success: true, message: "Сообщение успешно удалено" });
         } catch (error) {
-            console.error("Failed to delete message:", error);
-            res.status(500).json({ message: "Failed to delete message" });
+            console.error("Не удалось удалить сообщение:", error);
+            res.status(500).json({ message: "Не удалось удалить сообщение" });
         }
     });
 
-    // Telegram Client API endpoints
-    // Save user Telegram API credentials
+    // Конечные точки Telegram Client API
+    // Сохранение данных Telegram API пользователя
     app.post("/api/telegram-settings", async (req, res) => {
         try {
             const { userId, apiId, apiHash } = req.body;
 
             if (!userId || !apiId || !apiHash) {
                 return res.status(400).json({
-                    message: "userId, apiId, and apiHash are required"
+                    message: "Требуются userId, apiId и apiHash"
                 });
             }
 
-            // Here we would save to database - for now, return success
-            // TODO: Implement storage.createUserTelegramSettings()
+            // Здесь мы сохраняем в базу данных - пока возвращаем успех
+            // TODO: Реализовать storage.createUserTelegramSettings()
             res.json({
-                message: "Telegram API credentials saved successfully",
+                message: "Данные Telegram API успешно сохранены",
                 success: true
             });
         } catch (error) {
-            console.error("Failed to save Telegram API credentials:", error);
-            res.status(500).json({ message: "Failed to save credentials" });
+            console.error("Не удалось сохранить данные Telegram API:", error);
+            res.status(500).json({ message: "Не удалось сохранить данные" });
         }
     });
 
-    // Get group members using Telegram Client API (общая база)
+    // Получение участников группы через Telegram Client API (общая база)
     app.get("/api/telegram-client/group-members/:groupId", async (req, res) => {
         try {
             const { groupId } = req.params;
 
-            // Check if API credentials are available
+            // Проверяем доступны ли API-credentials
             const apiId = process.env.TELEGRAM_API_ID;
             const apiHash = process.env.TELEGRAM_API_HASH;
 
             if (!apiId || !apiHash) {
-                console.log('⚠️ CLIENT API: Telegram API credentials not configured, returning demo data');
+                console.log('⚠️ CLIENT API: Данные Telegram API не настроены, возвращаем демо-данные');
 
-                // Return demo data when credentials are not configured
+                // Возвращаем демо-данные, когда данные не настроены
                 return res.json({
                     success: true,
                     message: "🎭 Демо-режим: показаны примерные участники",
@@ -774,7 +774,7 @@ export function setupBotIntegrationRoutes(app: Express) {
             console.log(`🔍 CLIENT API: Получение участников группы ${groupId} через Client API`);
 
             try {
-                // Try to use real Telegram Client API to get group members
+                // Пробуем использовать настоящий Telegram Client API для получения участников группы
                 const members = await telegramClientManager.getGroupMembers('default', groupId);
 
                 if (members && members.length > 0) {
@@ -804,18 +804,18 @@ export function setupBotIntegrationRoutes(app: Express) {
                         ]
                     });
                 } else {
-                    throw new Error('No members found or Client API not connected');
+                    throw new Error('Участники не найдены или Client API не подключен');
                 }
             } catch (error: any) {
-                console.log(`⚠️ CLIENT API: Ошибка получения реальных данных: ${error?.message || 'Unknown error'}`);
+                console.log(`⚠️ CLIENT API: Ошибка получения реальных данных: ${error?.message || 'Неизвестная ошибка'}`);
                 console.log('📝 CLIENT API: Требуется настройка Telegram клиента');
 
                 res.status(400).json({
                     success: false,
                     message: "❌ Client API требует настройки",
-                    explanation: "Для по��учения полного списка участников необходимо настроить Telegram Client API с номером телефона",
+                    explanation: "Для получения полного списка участников необходимо настроить Telegram Client API с номером телефона",
                     groupId,
-                    error: error?.message || 'Unknown error',
+                    error: error?.message || 'Неизвестная ошибка',
                     requirements: [
                         "Подключение к Telegram Client API с номером телефона",
                         "Авторизация через код подтверждения",
@@ -825,8 +825,8 @@ export function setupBotIntegrationRoutes(app: Express) {
                 });
             }
         } catch (error) {
-            console.error("Failed to get group members via Client API:", error);
-            res.status(500).json({ message: "Failed to get group members via Client API" });
+            console.error("Не удалось получить участников группы через Client API:", error);
+            res.status(500).json({ message: "Не удалось получить участников группы через Client API" });
         }
     });
 }
