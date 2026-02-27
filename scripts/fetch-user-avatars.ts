@@ -50,9 +50,11 @@ async function fetchUserAvatars() {
 
     for (const user of users) {
       const userId = Number(user.user_id);
-      
+
       try {
-        // Получаем фото профиля пользователя через Bot API
+        // Пробуем получить аватарку через getUserProfilePhotos (для пользователей)
+        let fileData: any = null;
+        
         const photosResponse = await fetch(
           `https://api.telegram.org/bot${telegramBotToken}/getUserProfilePhotos?user_id=${userId}&limit=1`
         );
@@ -60,27 +62,44 @@ async function fetchUserAvatars() {
 
         if (photosData.ok && photosData.result.photos && photosData.result.photos.length > 0) {
           const lastPhoto = photosData.result.photos[0][photosData.result.photos[0].length - 1];
-          
+
           // Получаем file_path
           const fileResponse = await fetch(
             `https://api.telegram.org/bot${telegramBotToken}/getFile?file_id=${lastPhoto.file_id}`
           );
-          const fileData = await fileResponse.json();
+          fileData = await fileResponse.json();
+        } else {
+          // Если не удалось получить через getUserProfilePhotos, пробуем getChat (для ботов)
+          const chatResponse = await fetch(
+            `https://api.telegram.org/bot${telegramBotToken}/getChat?chat_id=${userId}`
+          );
+          const chatData = await chatResponse.json();
 
-          if (fileData.ok && fileData.result.file_path) {
-            // Строим полный URL для файла
-            const fullAvatarUrl = `https://api.telegram.org/file/bot${telegramBotToken}/${fileData.result.file_path}`;
+          if (chatData.ok && chatData.result?.photo) {
+            const photo = chatData.result.photo;
+            // Используем большое фото
+            const photoFile = photo.big_file_id || photo.small_file_id;
             
-            // Обновляем avatar_url в БД
-            await pool.query(`
-              UPDATE bot_users 
-              SET avatar_url = $1 
-              WHERE user_id = $2
-            `, [fullAvatarUrl, user.user_id]);
-            
-            console.log(`✅ ${user.username || user.first_name || userId}: ${fullAvatarUrl}`);
-            updated++;
+            const fileResponse = await fetch(
+              `https://api.telegram.org/bot${telegramBotToken}/getFile?file_id=${photoFile}`
+            );
+            fileData = await fileResponse.json();
           }
+        }
+
+        if (fileData?.ok && fileData.result.file_path) {
+          // Строим полный URL для файла
+          const fullAvatarUrl = `https://api.telegram.org/file/bot${telegramBotToken}/${fileData.result.file_path}`;
+
+          // Обновляем avatar_url в БД
+          await pool.query(`
+            UPDATE bot_users
+            SET avatar_url = $1
+            WHERE user_id = $2
+          `, [fullAvatarUrl, user.user_id]);
+
+          console.log(`✅ ${user.username || user.first_name || userId}: ${fullAvatarUrl}`);
+          updated++;
         } else {
           console.log(`⏭️  ${user.username || user.first_name || userId}: нет аватарки`);
         }
