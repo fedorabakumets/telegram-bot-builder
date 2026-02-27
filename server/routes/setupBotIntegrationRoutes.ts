@@ -27,8 +27,6 @@ import { createInviteLinkHandler } from "./botIntegration/groups/moderation/crea
 import { deleteMessageHandler } from "./botIntegration/groups/moderation/deleteMessage.handler";
 import { telegramSettingsHandler } from "./botIntegration/telegram/settings.handler";
 import { groupMembersHandler } from "./botIntegration/telegram/client/groupMembers.handler";
-import { storage } from "../storages/storage";
-import { telegramClientManager } from "../telegram/telegram-client";
 
 /**
  * Настраивает маршруты интеграции с ботами
