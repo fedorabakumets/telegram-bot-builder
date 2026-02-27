@@ -12,6 +12,8 @@ import { useVariableInsert } from './hooks/useVariableInsert';
 import { useClipboard } from './hooks/useClipboard';
 import { EditorToolbar } from './components/EditorToolbar';
 import { VariablesMenu } from './components/VariablesMenu';
+import { EditorContent } from './components/EditorContent';
+import { StatsBar } from './components/StatsBar';
 
 /**
  * Компонент встроенного редактора с поддержкой форматирования текста
@@ -116,44 +118,15 @@ export function InlineRichEditor({
       />
 
       {/* Область редактора */}
-      <div className="relative border border-slate-300/60 dark:border-slate-700/60 rounded-lg bg-white dark:bg-slate-950 overflow-hidden transition-all hover:border-slate-400/80 dark:hover:border-slate-600/80 focus-within:ring-2 focus-within:ring-blue-500/50 dark:focus-within:ring-blue-500/30">
-        {/* Placeholder */}
-        {!value && (
-          <div className="absolute top-3 sm:top-4 left-3 sm:left-4 text-slate-400 dark:text-slate-600 text-sm sm:text-base pointer-events-none font-medium">
-            {placeholder}
-          </div>
-        )}
-
-        {/* Редактируемая область */}
-        <div
-          ref={editorRef}
-          contentEditable
-          onInput={handleInput}
-          onKeyDown={handleKeyDown}
-          className="min-h-[120px] sm:min-h-[140px] p-3 sm:p-4 w-full text-sm sm:text-base bg-transparent text-slate-900 dark:text-slate-100 focus:outline-none whitespace-pre-wrap selection:bg-blue-200 dark:selection:bg-blue-900"
-          style={{
-            lineHeight: '1.6',
-            overflowWrap: 'break-word',
-            wordBreak: 'break-word'
-          }}
-          data-placeholder={placeholder}
-        />
-
-        {/* Панель статистики */}
-        <div className="flex items-center justify-end gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-200/50 dark:border-slate-800/50">
-          <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-            <i className="fas fa-align-left mr-1 sm:mr-1.5"></i>
-            <span className="hidden sm:inline">{wordCount} слов</span>
-            <span className="sm:hidden">{wordCount}</span>
-          </span>
-          <div className="w-px h-3 bg-slate-300/30 dark:bg-slate-700/30"></div>
-          <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-            <i className="fas fa-font mr-1 sm:mr-1.5"></i>
-            <span className="hidden sm:inline">{charCount} символов</span>
-            <span className="sm:hidden">{charCount}</span>
-          </span>
-        </div>
-      </div>
+      <EditorContent
+        value={value}
+        onInput={handleInput}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        innerRef={editorRef}
+      >
+        <StatsBar wordCount={wordCount} charCount={charCount} />
+      </EditorContent>
     </div>
   );
 }
