@@ -8,7 +8,7 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../../storages/storage";
+import { storage } from "../../../../../storages/storage";
 import { isLargeGroup, createLargeGroupResponse } from "../utils/checkGroupSize";
 
 /**
