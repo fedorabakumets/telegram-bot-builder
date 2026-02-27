@@ -1,10 +1,10 @@
 /**
- * @fileoverview Хендлер разбана участника группы
+ * @fileoverview Хендлер бана участника группы
  *
  * Этот модуль предоставляет функцию для обработки запросов
- * на разбан участника группы через Telegram Bot API.
+ * на бан участника группы через Telegram Bot API.
  *
- * @module botIntegration/handlers/telegramGroups/unbanMemberHandler
+ * @module botIntegration/groups/members/banMember
  */
 
 import type { Request, Response } from "express";
@@ -15,17 +15,17 @@ import {
 } from "../../../../utils/telegram-error-handler";
 
 /**
- * Обрабатывает запрос на разбан участника
+ * Обрабатывает запрос на бан участника
  *
- * @function unbanMemberHandler
+ * @function banMemberHandler
  * @param {Request} req - Объект запроса
  * @param {Response} res - Объект ответа
  * @returns {Promise<void>}
  */
-export async function unbanMemberHandler(req: Request, res: Response): Promise<void> {
+export async function banMemberHandler(req: Request, res: Response): Promise<void> {
     try {
         const projectId = parseInt(req.params.projectId);
-        const { groupId, userId } = req.body;
+        const { groupId, userId, untilDate } = req.body;
 
         if (!groupId || !userId) {
             res.status(400).json({ message: "Требуется ID группы и ID пользователя" });
@@ -38,14 +38,14 @@ export async function unbanMemberHandler(req: Request, res: Response): Promise<v
             return;
         }
 
-        const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/unbanChatMember`;
+        const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/banChatMember`;
         const response = await fetch(telegramApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 chat_id: groupId,
                 user_id: userId,
-                only_if_banned: true
+                until_date: untilDate || undefined
             })
         });
 
@@ -53,16 +53,16 @@ export async function unbanMemberHandler(req: Request, res: Response): Promise<v
 
         if (!response.ok) {
             res.status(400).json({
-                message: "Не удалось разбанить участника",
+                message: "Не удалось забанить участника",
                 error: result.description || "Неизвестная ошибка"
             });
             return;
         }
 
-        res.json({ success: true, message: "Участник разбанен" });
+        res.json({ success: true, message: "Участник забанен" });
     } catch (error) {
         const errorInfo = analyzeTelegramError(error);
-        console.error("Ошибка разбана участника:", errorInfo);
+        console.error("Ошибка бана участника:", errorInfo);
         const statusCode = getErrorStatusCode(errorInfo.type);
         res.status(statusCode).json({
             message: errorInfo.userFriendlyMessage,

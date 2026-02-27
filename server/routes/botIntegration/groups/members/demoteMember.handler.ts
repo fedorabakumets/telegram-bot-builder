@@ -4,7 +4,7 @@
  * Этот модуль предоставляет функцию для обработки запросов
  * на понижение администратора до обычного участника через Telegram Bot API.
  *
- * @module botIntegration/handlers/telegramGroups/demoteMemberHandler
+ * @module botIntegration/groups/members/demoteMemberHandler
  */
 
 import type { Request, Response } from "express";

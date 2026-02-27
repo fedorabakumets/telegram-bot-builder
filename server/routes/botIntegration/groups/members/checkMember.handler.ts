@@ -4,7 +4,7 @@
  * Этот модуль предоставляет функцию для обработки запросов
  * на проверку статуса участника группы.
  *
- * @module botIntegration/handlers/telegramGroups/checkMemberHandler
+ * @module botIntegration/groups/members/checkMemberHandler
  */
 
 import type { Request, Response } from "express";

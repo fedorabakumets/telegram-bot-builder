@@ -4,7 +4,7 @@
  * Этот модуль предоставляет функцию для обработки запросов
  * на повышение участника до администратора через Telegram Bot API.
  *
- * @module botIntegration/handlers/telegramGroups/promoteMemberHandler
+ * @module botIntegration/groups/members/promoteMemberHandler
  */
 
 import type { Request, Response } from "express";
