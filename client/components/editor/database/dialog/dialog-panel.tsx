@@ -26,7 +26,10 @@ import { NoUserSelected } from './components/no-user-selected';
  * @returns JSX элемент панели диалога
  */
 export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
-  const [showWarning, setShowWarning] = useState(true);
+  const [showWarning, setShowWarning] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('dialog-warning-dismissed') !== 'true';
+  });
   const messagesScrollRef = useRef<HTMLDivElement>(null);
 
   const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessageWithMedia[]>({
@@ -62,7 +65,10 @@ export function DialogPanel({ projectId, user, onClose }: DialogPanelProps) {
     <div className="h-full flex flex-col bg-background overflow-hidden">
       <DialogHeader userName={formatUserName(user)} onClose={onClose} />
 
-      {showWarning && <DialogWarning onClose={() => setShowWarning(false)} />}
+      {showWarning && <DialogWarning onClose={() => {
+        localStorage.setItem('dialog-warning-dismissed', 'true');
+        setShowWarning(false);
+      }} />}
 
       <ScrollArea ref={messagesScrollRef} className="flex-1 p-3 min-h-0" data-testid="dialog-messages-scroll-area">
         {messagesLoading ? (
