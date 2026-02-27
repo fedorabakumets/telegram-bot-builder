@@ -1,8 +1,8 @@
 /**
- * @fileoverview Хендлер получения аватарки пользователя
+ * @fileoverview Хендлер получения аватарки пользователя или бота
  *
  * Этот модуль предоставляет функцию для обработки запросов
- * на получение аватарки пользователя через прокси.
+ * на получение аватарки через прокси.
  *
  * @module botIntegration/handlers/botData/getAvatarHandler
  */
@@ -11,7 +11,7 @@ import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 
 /**
- * Обрабатывает запрос на получение аватарки пользователя
+ * Обрабатывает запрос на получение аватарки пользователя или бота
  *
  * @function getAvatarHandler
  * @param {Request} req - Объект запроса
@@ -37,21 +37,35 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
         const { Pool } = await import('pg');
         const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-        const userResult = await pool.query(
-            'SELECT avatar_url FROM bot_users WHERE user_id = $1',
-            [userId]
-        );
+        // Проверяем, это аватарка бота или пользователя
+        const isBotAvatar = userId === 'bot' || userId === defaultToken.token.split(':')[0];
+        
+        let avatarUrl: string | null = null;
+
+        if (isBotAvatar) {
+            // Получаем аватарку бота из bot_tokens
+            const botResult = await pool.query(
+                'SELECT bot_photo_url FROM bot_tokens WHERE id = $1',
+                [defaultToken.id]
+            );
+            avatarUrl = botResult.rows[0]?.bot_photo_url || null;
+        } else {
+            // Получаем аватарку пользователя из bot_users
+            const userResult = await pool.query(
+                'SELECT avatar_url FROM bot_users WHERE user_id = $1',
+                [userId]
+            );
+            avatarUrl = userResult.rows[0]?.avatar_url || null;
+        }
 
         await pool.end();
 
-        if (!userResult.rows.length || !userResult.rows[0].avatar_url) {
+        if (!avatarUrl) {
             res.status(404).json({ message: "Аватарка не найдена" });
             return;
         }
 
-        const fileUrl = userResult.rows[0].avatar_url;
-        const filePath = fileUrl.replace(`https://api.telegram.org/file/bot${defaultToken.token}/`, '');
-
+        const filePath = avatarUrl.replace(`https://api.telegram.org/file/bot${defaultToken.token}/`, '');
         const telegramFileUrl = `https://api.telegram.org/file/bot${defaultToken.token}/${filePath}`;
         const response = await fetch(telegramFileUrl);
 
