@@ -5,7 +5,7 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
+import { storage } from "../../../../storages/storage";
 
 /**
  * Ограничивает права участника группы

@@ -5,7 +5,7 @@
  */
 
 import type { Request, Response } from "express";
-import { telegramClientManager } from "../../../telegram/telegram-client";
+import { telegramClientManager } from "../../../../telegram/telegram-client";
 
 /**
  * Получает участников группы через Telegram Client API

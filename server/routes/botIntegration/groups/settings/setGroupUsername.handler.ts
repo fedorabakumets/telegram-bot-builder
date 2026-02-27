@@ -5,8 +5,8 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
-import { telegramClientManager } from "../../../telegram/telegram-client";
+import { storage } from "../../../../storages/storage";
+import { telegramClientManager } from "../../../../telegram/telegram-client";
 
 /**
  * Устанавливает username группы (делает публичной/приватной)
@@ -39,11 +39,7 @@ export async function setGroupUsernameHandler(req: Request, res: Response): Prom
         }
 
         // Пытаемся использовать Client API для установки username
-        const result = await setChatUsername(
-            defaultToken.token,
-            groupId,
-            username
-        );
+        const result = await setChatUsername(groupId, username);
 
         if (result.requiresClientApi) {
             res.status(400).json({
@@ -79,23 +75,21 @@ export async function setGroupUsernameHandler(req: Request, res: Response): Prom
  * Устанавливает username группы через Client API
  *
  * @function setChatUsername
- * @param {string} token - Токен бота
  * @param {string} groupId - ID группы
  * @param {string} username - Новый username (или пустая строка)
  * @returns {Promise<{ success?: boolean; error?: string; requiresClientApi?: boolean }>}
  */
 async function setChatUsername(
-    token: string,
     groupId: string,
     username: string
 ): Promise<{ success?: boolean; error?: string; requiresClientApi?: boolean }> {
     try {
-        const result = await telegramClientManager.setChatUsername(
+        await telegramClientManager.setChatUsername(
             'default',
             groupId,
             username
         );
-        return { success: true, result };
+        return { success: true };
     } catch (error) {
         console.log("Client API не доступен:", error);
         // Bot API не может изменять username

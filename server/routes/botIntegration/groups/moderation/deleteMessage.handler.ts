@@ -5,7 +5,7 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../../storages/storage";
+import { storage } from "../../../../storages/storage";
 
 /**
  * Удаляет сообщение в группе через Telegram Bot API
