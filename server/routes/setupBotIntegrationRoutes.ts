@@ -10,6 +10,7 @@
 
 import { insertBotGroupSchema, insertBotMessageSchema, sendMessageSchema } from "@shared/schema";
 import type { Express } from "express";
+import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
 import { storage } from "../storages/storage";
 import { telegramClientManager } from "../telegram/telegram-client";
 import { downloadTelegramAudio, downloadTelegramDocument, downloadTelegramPhoto, downloadTelegramVideo } from "../telegram/telegram-media";
@@ -46,45 +47,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route GET /api/projects/:projectId/bot/data
      */
-    app.get("/api/projects/:projectId/bot/data", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.projectId);
-
-            if (isNaN(projectId)) {
-                return res.status(400).json({ message: "Invalid project ID" });
-            }
-
-            // Получаем токен бота по умолчанию
-            const defaultToken = await storage.getDefaultBotToken(projectId);
-            if (!defaultToken) {
-                return res.json(null);
-            }
-
-            // Извлекаем ID бота из токена
-            const botId = defaultToken.token.split(':')[0];
-
-            // Получаем данные бота из bot_users
-            const { Pool } = await import('pg');
-            const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-            
-            const result = await pool.query(
-                'SELECT * FROM bot_users WHERE user_id = $1',
-                [botId]
-            );
-
-            await pool.end();
-
-            if (!result.rows.length) {
-                return res.json(null);
-            }
-
-            res.json(result.rows[0]);
-
-        } catch (error) {
-            console.error("Error fetching bot data:", error);
-            res.status(500).json({ message: "Failed to fetch bot data" });
-        }
-    });
+    app.get("/api/projects/:projectId/bot/data", getBotDataHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/users/:userId/avatar
@@ -93,60 +56,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route GET /api/projects/:projectId/users/:userId/avatar
      */
-    app.get("/api/projects/:projectId/users/:userId/avatar", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.projectId);
-            const userId = req.params.userId;
-
-            if (isNaN(projectId)) {
-                return res.status(400).json({ message: "Invalid project ID" });
-            }
-
-            // Получаем токен бота по умолчанию
-            const defaultToken = await storage.getDefaultBotToken(projectId);
-            if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found" });
-            }
-
-            // Получаем avatar_url из таблицы bot_users
-            const { Pool } = await import('pg');
-            const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-            
-            const userResult = await pool.query(
-                'SELECT avatar_url FROM bot_users WHERE user_id = $1',
-                [userId]
-            );
-
-            await pool.end();
-
-            if (!userResult.rows.length || !userResult.rows[0].avatar_url) {
-                return res.status(404).json({ message: "Avatar not found" });
-            }
-
-            // Извлекаем file_path из полного URL
-            const fileUrl = userResult.rows[0].avatar_url;
-            const filePath = fileUrl.replace(`https://api.telegram.org/file/bot${defaultToken.token}/`, '');
-
-            // Проксируем запрос к Telegram
-            const telegramFileUrl = `https://api.telegram.org/file/bot${defaultToken.token}/${filePath}`;
-            const response = await fetch(telegramFileUrl);
-
-            if (!response.ok) {
-                return res.status(404).json({ message: "Failed to fetch avatar" });
-            }
-
-            // Перенаправляем контент
-            res.set('Content-Type', response.headers.get('content-type') || 'image/jpeg');
-            res.set('Cache-Control', 'public, max-age=86400'); // Кэш на 24 часа
-
-            const buffer = await response.arrayBuffer();
-            res.send(Buffer.from(buffer));
-
-        } catch (error) {
-            console.error("Error fetching avatar:", error);
-            res.status(500).json({ message: "Failed to fetch avatar" });
-        }
-    });
+    app.get("/api/projects/:projectId/users/:userId/avatar", getAvatarHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/users/:userId/messages
