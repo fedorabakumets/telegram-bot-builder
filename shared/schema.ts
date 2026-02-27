@@ -289,6 +289,8 @@ export const userBotData = pgTable("user_bot_data", {
   tags: text("tags").array().default([]),
   /** Заметки администратора */
   notes: text("notes"),
+  /** URL аватарки пользователя */
+  avatarUrl: text("avatar_url"),
   /** Дата создания записи */
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления записи */

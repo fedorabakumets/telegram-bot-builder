@@ -1684,12 +1684,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
 
       const result = await pool.query(`
-        SELECT 
+        SELECT
           bu.user_id AS id,
           bu.user_id AS "userId",
           bu.username AS "userName",
           bu.first_name AS "firstName",
           bu.last_name AS "lastName",
+          bu.avatar_url AS "avatarUrl",
           bu.registered_at AS "registeredAt",
           bu.registered_at AS "createdAt",
           bu.last_interaction AS "lastInteraction",
@@ -1701,7 +1702,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           FALSE AS "isBot"
         FROM bot_users bu
         LEFT JOIN bot_messages bm ON bm.user_id = bu.user_id::text AND bm.project_id = $1
-        GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active
+        GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.avatar_url, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active
         ORDER BY bu.last_interaction DESC
       `, [projectId]);
 
