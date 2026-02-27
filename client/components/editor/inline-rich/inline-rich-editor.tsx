@@ -29,6 +29,7 @@ import { useEditorSync } from './hooks/useEditorSync';
 import { useFormatting } from './hooks/useFormatting';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useVariableInsert } from './hooks/useVariableInsert';
+import { useClipboard } from './hooks/useClipboard';
 
 /**
  * Компонент встроенного редактора с поддержкой форматирования текста
@@ -97,21 +98,8 @@ export function InlineRichEditor({
     formatOptions
   });
 
-  /**
-   * Копирует форматированный текст в буфер обмена
-   */
-  const copyFormatted = useCallback(() => {
-    if (editorRef.current) {
-      const html = editorRef.current.innerHTML;
-      navigator.clipboard.writeText(html).then(() => {
-        toast({
-          title: "Скопировано",
-          description: "Форматированный текст скопирован в буфер обмена",
-          variant: "default"
-        });
-      });
-    }
-  }, [toast]);
+  /** Копирование в буфер */
+  const { copyFormatted } = useClipboard({ editorRef, toast });
 
   /** Вставка переменных */
   const { insertVariable } = useVariableInsert({
