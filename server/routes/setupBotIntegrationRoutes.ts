@@ -15,6 +15,7 @@ import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler } from "./botIntegration/handlers/groups";
 import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, updateBotShortDescriptionHandler } from "./botIntegration/handlers/botInfo";
 import { sendGroupMessageHandler, getGroupInfoHandler, getGroupMembersCountHandler, getBotAdminStatusHandler, getGroupAdminsHandler, getGroupMembersHandler, checkMemberHandler, getSavedMembersHandler, banMemberHandler, unbanMemberHandler, promoteMemberHandler, demoteMemberHandler } from "./botIntegration/handlers/telegramGroups";
+import { searchUserHandler } from "./botIntegration/user/searchUser.handler";
 import { storage } from "../storages/storage";
 import { telegramClientManager } from "../telegram/telegram-client";
 
@@ -135,129 +136,7 @@ export function setupBotIntegrationRoutes(app: Express) {
     app.post("/api/projects/:projectId/bot/demote-member", demoteMemberHandler);
 
     // Поиск пользователя по username или ID для повышения
-    app.get("/api/projects/:projectId/bot/search-user/:query", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.projectId);
-            const query = req.params.query;
-
-            if (!query) {
-                return res.status(400).json({ message: "Требуется поисковый запрос" });
-            }
-
-            const defaultToken = await storage.getDefaultBotToken(projectId);
-            if (!defaultToken) {
-                return res.status(400).json({ message: "Токен бота не найден для этого проекта" });
-            }
-
-            // Сначала попробуем найти пользователя в локальной базе данных
-            const localUserBotData = await storage.searchUserBotData(projectId, query);
-            const localBotUsers = await storage.searchBotUsers(query);
-
-            // Проверяем user_bot_data (специфично для проекта)
-            if (localUserBotData && localUserBotData.length > 0) {
-                const user = localUserBotData[0];
-                return res.json({
-                    success: true,
-                    user: {
-                        id: parseInt(user.userId),
-                        first_name: user.firstName,
-                        last_name: user.lastName,
-                        username: user.userName,
-                        type: 'private'
-                    },
-                    userId: user.userId,
-                    source: 'local_project'
-                });
-            }
-
-            // Проверяем bot_users (глобальная таблица пользователей)
-            if (localBotUsers && localBotUsers.length > 0) {
-                const user = localBotUsers[0];
-                return res.json({
-                    success: true,
-                    user: {
-                        id: user.userId,
-                        first_name: user.firstName,
-                        last_name: user.lastName,
-                        username: user.username,
-                        type: 'private'
-                    },
-                    userId: user.userId.toString(),
-                    source: 'local_global'
-                });
-            }
-
-            // Если не найден в локальной базе, пробуем через Telegram API
-            const isNumeric = /^\d+$/.test(query);
-            let userId = null;
-
-            if (isNumeric) {
-                userId = query;
-            } else {
-                // Если это username, убираем @ если есть
-                const username = query.startsWith('@') ? query.slice(1) : query;
-
-                // Для поиска по username нужно использовать getChatMember или getChat
-                // Но Bot API не предоставляет прямого поиска по username
-                // Поэтому попробуем сначала получить информацию через @username
-                try {
-                    const chatResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChat`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            chat_id: `@${username}`
-                        })
-                    });
-
-                    const chatResult = await chatResponse.json();
-                    if (chatResponse.ok && chatResult.result && chatResult.result.id) {
-                        userId = chatResult.result.id.toString();
-                    }
-                } catch (error) {
-                    console.log('Поиск по username не удался, у пользователя может не быть публичного username');
-                }
-            }
-
-            if (!userId) {
-                return res.status(404).json({
-                    message: "Пользователь не найден",
-                    error: "Пользователь не найден ни в локальной базе данных, ни через Telegram API. Убедитесь, что пользователь взаимодействовал с ботом или имеет публичный username."
-                });
-            }
-
-            // Получаем информацию о пользователе
-            const userResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChat`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    chat_id: userId
-                })
-            });
-
-            const userResult = await userResponse.json();
-
-            if (!userResponse.ok) {
-                return res.status(400).json({
-                    message: "Не удалось получить информацию о пользователе",
-                    error: userResult.description || "Неизвестная ошибка"
-                });
-            }
-
-            res.json({
-                success: true,
-                user: userResult.result,
-                userId: userId,
-                source: 'telegram'
-            });
-        } catch (error) {
-            console.error("Не удалось найти пользователя:", error);
-            res.status(500).json({ message: "Не удалось найти пользователя" });
-        }
-    });
+    app.get("/api/projects/:projectId/bot/search-user/:query", searchUserHandler);
 
     // Ограничение участника группы
     app.post("/api/projects/:projectId/bot/restrict-member", async (req, res) => {
