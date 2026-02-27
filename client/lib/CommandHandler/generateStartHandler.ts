@@ -98,11 +98,21 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   codeLines.push('    username = message.from_user.username');
   codeLines.push('    first_name = message.from_user.first_name');
   codeLines.push('    last_name = message.from_user.last_name');
+  codeLines.push('    avatar_url = None');
+  codeLines.push('    # Получаем аватарку пользователя');
+  codeLines.push('    try:');
+  codeLines.push('        photos = await bot.get_user_profile_photos(user_id)');
+  codeLines.push('        if photos.photos and len(photos.photos) > 0:');
+  codeLines.push('            last_photo = photos.photos[-1][-1]');
+  codeLines.push('            file = await bot.get_file(last_photo.file_id)');
+  codeLines.push('            avatar_url = file.file_path');
+  codeLines.push('    except Exception as e:');
+  codeLines.push('        logging.warning(f"Не удалось получить аватарку: {e}")');
   codeLines.push('');
 
   if (userDatabaseEnabled) {
     codeLines.push('    # Сохраняем пользователя в базу данных');
-    codeLines.push('    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)');
+    codeLines.push('    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name, avatar_url)');
     codeLines.push('');
     codeLines.push('    # Сохраняем переменные пользователя в базу данных');
     codeLines.push('    user_name = init_user_variables(user_id, message.from_user)');

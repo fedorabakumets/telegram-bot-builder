@@ -309,6 +309,8 @@ export const botUsers = pgTable("bot_users", {
   firstName: text("first_name"),
   /** Фамилия пользователя */
   lastName: text("last_name"),
+  /** URL аватарки пользователя */
+  avatarUrl: text("avatar_url"),
   /** Дата регистрации пользователя */
   registeredAt: timestamp("registered_at").defaultNow(),
   /** Дата последнего взаимодействия */
