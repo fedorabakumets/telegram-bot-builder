@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { InlineRichEditorProps } from './types';
 import { formatOptions } from './format-options';
 import { valueToHtml, htmlToValue } from './html-converter';
+import { useTextStats } from './hooks/useTextStats';
 
 /**
  * Компонент встроенного редактора с поддержкой форматирования текста
@@ -48,10 +49,6 @@ export function InlineRichEditor({
   availableVariables = [],
   onMediaVariableSelect
 }: InlineRichEditorProps) {
-  /** Количество слов в тексте */
-  const [wordCount, setWordCount] = useState(0);
-  /** Количество символов в тексте */
-  const [charCount, setCharCount] = useState(0);
   /** Стек для отмены действий */
   const [undoStack, setUndoStack] = useState<string[]>([]);
   /** Стек для повтора действий */
@@ -62,6 +59,8 @@ export function InlineRichEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   /** Хук для показа уведомлений */
   const { toast } = useToast();
+  /** Статистика текста */
+  const { wordCount, charCount } = useTextStats(value);
 
   /**
    * Сохраняет текущее состояние в стек отмены
@@ -69,16 +68,6 @@ export function InlineRichEditor({
   const saveToUndoStack = useCallback(() => {
     setUndoStack(prev => [...prev.slice(-19), value]);
     setRedoStack([]);
-  }, [value]);
-
-  /**
-   * Обновляет счетчики слов и символов при изменении текста
-   */
-  useEffect(() => {
-    const plainText = value.replace(/<[^>]*>/g, '').replace(/\*\*|__|~~|`/g, '');
-    const words = plainText.trim().split(/\s+/).filter(word => word.length > 0);
-    setWordCount(words.length);
-    setCharCount(plainText.length);
   }, [value]);
 
   /**
