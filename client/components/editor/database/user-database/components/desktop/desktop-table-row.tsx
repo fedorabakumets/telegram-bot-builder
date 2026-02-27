@@ -28,6 +28,8 @@ interface DesktopTableRowProps {
   deleteUserMutation: any;
   /** Количество видимых колонок */
   visibleColumns?: number;
+  /** ID проекта */
+  projectId: number;
 }
 
 /**
@@ -36,7 +38,7 @@ interface DesktopTableRowProps {
 const CELL_RENDERERS = [
   {
     key: 'user',
-    render: (props: DesktopTableRowProps) => <DesktopUserCell user={props.user} formatUserName={props.formatUserName} />,
+    render: (props: DesktopTableRowProps) => <DesktopUserCell user={props.user} formatUserName={props.formatUserName} projectId={props.projectId} />,
     alwaysVisible: true
   },
   {

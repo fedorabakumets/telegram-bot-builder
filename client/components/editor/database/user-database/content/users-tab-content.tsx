@@ -22,6 +22,7 @@ type UsersTabContentProps = Pick<
   | 'handleUserStatusToggle'
   | 'deleteUserMutation'
   | 'visibleColumns'
+  | 'projectId'
 >;
 
 /**
@@ -40,6 +41,7 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
     handleUserStatusToggle,
     deleteUserMutation,
     visibleColumns,
+    projectId,
   } = props;
 
   return (
@@ -64,6 +66,7 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
             handleUserStatusToggle={handleUserStatusToggle}
             deleteUserMutation={deleteUserMutation}
             visibleColumns={visibleColumns}
+            projectId={projectId}
           />
         )}
       </div>

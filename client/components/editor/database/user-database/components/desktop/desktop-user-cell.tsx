@@ -4,7 +4,7 @@
  */
 
 import { TableCell } from '@/components/ui/table';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { UserBotData } from '@shared/schema';
 
 /**
@@ -15,6 +15,8 @@ interface DesktopUserCellProps {
   user: UserBotData;
   /** Функция форматирования имени */
   formatUserName: (user: UserBotData) => string;
+  /** ID проекта */
+  projectId: number;
 }
 
 /**
@@ -40,11 +42,14 @@ function getInitials(user: UserBotData): string {
  * @param props - Пропсы компонента
  * @returns JSX компонент ячейки
  */
-export function DesktopUserCell({ user, formatUserName }: DesktopUserCellProps): React.JSX.Element {
+export function DesktopUserCell({ user, formatUserName, projectId }: DesktopUserCellProps): React.JSX.Element {
+  const avatarUrl = `/api/projects/${projectId}/users/${user.userId}/avatar`;
+  
   return (
     <TableCell className="py-2">
       <div className="flex items-center gap-3 min-w-0">
         <Avatar className="h-8 w-8">
+          <AvatarImage src={avatarUrl} alt={formatUserName(user)} className="object-cover" />
           <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
             {getInitials(user)}
           </AvatarFallback>
