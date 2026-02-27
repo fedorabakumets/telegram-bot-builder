@@ -14,12 +14,7 @@ export { getGroupAdminsHandler } from "./getGroupAdminsHandler";
 export { getGroupMembersHandler } from "./getGroupMembersHandler";
 export { checkGroupHandler } from "./handlers/checkGroupHandler";
 export { getMembersHandler } from "./handlers/getMembersHandler";
-export { checkMemberHandler } from "./checkMemberHandler";
 export { getSavedMembersHandler } from "./getSavedMembersHandler";
-export { banMemberHandler } from "./banMemberHandler";
-export { unbanMemberHandler } from "./unbanMemberHandler";
-export { promoteMemberHandler } from "./promoteMemberHandler";
-export { demoteMemberHandler } from "./demoteMemberHandler";
 
 // Утилиты
 export { getBotAdminRights } from "./utils/getBotAdminRights";

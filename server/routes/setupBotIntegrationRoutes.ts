@@ -14,19 +14,13 @@ import { getMessagesHandler, sendMessageHandler, saveMessageHandler, deleteMessa
 import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler } from "./botIntegration/handlers/groups";
 import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, updateBotShortDescriptionHandler } from "./botIntegration/handlers/botInfo";
-import { sendGroupMessageHandler, getGroupInfoHandler, getGroupMembersCountHandler, getBotAdminStatusHandler, getGroupAdminsHandler, getGroupMembersHandler, checkMemberHandler, getSavedMembersHandler, banMemberHandler, unbanMemberHandler, promoteMemberHandler, demoteMemberHandler } from "./botIntegration/handlers/telegramGroups";
-import { searchUserHandler } from "./botIntegration/user/searchUser.handler";
-import { restrictMemberHandler } from "./botIntegration/groups/members/restrictMember.handler";
-import { setGroupPhotoHandler } from "./botIntegration/groups/settings/setGroupPhoto.handler";
-import { setGroupTitleHandler } from "./botIntegration/groups/settings/setGroupTitle.handler";
-import { setGroupDescriptionHandler } from "./botIntegration/groups/settings/setGroupDescription.handler";
-import { setGroupUsernameHandler } from "./botIntegration/groups/settings/setGroupUsername.handler";
-import { pinMessageHandler } from "./botIntegration/groups/moderation/pinMessage.handler";
-import { unpinMessageHandler } from "./botIntegration/groups/moderation/unpinMessage.handler";
-import { createInviteLinkHandler } from "./botIntegration/groups/moderation/createInviteLink.handler";
-import { deleteMessageHandler } from "./botIntegration/groups/moderation/deleteMessage.handler";
-import { telegramSettingsHandler } from "./botIntegration/telegram/settings.handler";
-import { groupMembersHandler } from "./botIntegration/telegram/client/groupMembers.handler";
+import { sendGroupMessageHandler, getGroupInfoHandler, getGroupMembersCountHandler, getBotAdminStatusHandler, getGroupAdminsHandler, getGroupMembersHandler, getSavedMembersHandler } from "./botIntegration/handlers/telegramGroups";
+import { checkMemberHandler, banMemberHandler, unbanMemberHandler, promoteMemberHandler, demoteMemberHandler } from "./botIntegration/groups/members";
+import { searchUserHandler } from "./botIntegration/user";
+import { restrictMemberHandler } from "./botIntegration/groups/members";
+import { setGroupPhotoHandler, setGroupTitleHandler, setGroupDescriptionHandler, setGroupUsernameHandler } from "./botIntegration/groups/settings";
+import { pinMessageHandler, unpinMessageHandler, createInviteLinkHandler, deleteMessageHandler } from "./botIntegration/groups/moderation";
+import { telegramSettingsHandler, groupMembersHandler } from "./botIntegration/telegram";
 
 /**
  * Настраивает маршруты интеграции с ботами

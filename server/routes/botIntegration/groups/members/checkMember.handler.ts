@@ -13,8 +13,8 @@ import {
     analyzeTelegramError,
     getErrorStatusCode
 } from "../../../../utils/telegram-error-handler";
-import { getFriendlyStatus } from "./utils/getFriendlyStatus";
-import { saveMemberToDb } from "./utils/saveMemberToDb";
+import { getFriendlyStatus } from "../../handlers/telegramGroups/utils/getFriendlyStatus";
+import { saveMemberToDb } from "../../handlers/telegramGroups/utils/saveMemberToDb";
 
 /**
  * Обрабатывает запрос на проверку статуса участника группы
