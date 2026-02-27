@@ -31,6 +31,7 @@
     "dev": "cross-env NODE_ENV=development tsx --tsconfig tsconfig.node.json server/index.ts",
     "migrate": "tsx --tsconfig tsconfig.node.json scripts/run-migrations.ts",
     "fetch-avatars": "tsx --tsconfig tsconfig.node.json scripts/fetch-user-avatars.ts",
+    "fetch-bot-avatar": "tsx --tsconfig tsconfig.node.json scripts/fetch-bot-avatar.ts",
     "update-avatar-urls": "tsx --tsconfig tsconfig.node.json scripts/update-avatar-urls.ts",
     "start": "npm run migrate && cross-env NODE_ENV=production tsx --tsconfig tsconfig.node.json server/index.ts",
     "build": "npm run build:client",
