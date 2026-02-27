@@ -75,6 +75,7 @@ export function DesktopTableRow(props: DesktopTableRowProps): React.JSX.Element 
       className="border-b border-border/30 hover:bg-muted/30 transition-colors h-14 cursor-pointer"
       onClick={() => {
         props.onOpenUserDetailsPanel?.(user);
+        props.onOpenDialogPanel?.(user);
       }}
     >
       {cellsToShow.map((cell, idx) => (
