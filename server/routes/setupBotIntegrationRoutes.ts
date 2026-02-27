@@ -14,6 +14,7 @@ import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/b
 import { getMessagesHandler, sendMessageHandler, saveMessageHandler, deleteMessagesHandler } from "./botIntegration/handlers/messages";
 import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler } from "./botIntegration/handlers/groups";
+import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, updateBotShortDescriptionHandler } from "./botIntegration/handlers/botInfo";
 import { storage } from "../storages/storage";
 import { telegramClientManager } from "../telegram/telegram-client";
 import { downloadTelegramAudio, downloadTelegramDocument, downloadTelegramPhoto, downloadTelegramVideo } from "../telegram/telegram-media";
@@ -113,250 +114,16 @@ export function setupBotIntegrationRoutes(app: Express) {
     app.delete("/api/projects/:projectId/groups/:groupId", deleteGroupHandler);
 
     // Get bot information (getMe)
-    app.get("/api/projects/:id/bot/info", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.id);
-
-            // Добавляем заголовки для отключения кэширования при обновлении
-            res.set({
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-            });
-
-            // Get bot token for this project
-            const defaultToken = await storage.getDefaultBotToken(projectId);
-            if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found. Please add a token first." });
-            }
-
-            // Get bot information via Telegram Bot API with cache busting
-            const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getMe?_t=${Date.now()}`;
-            const response = await fetch(telegramApiUrl, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                }
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                return res.status(400).json({
-                    message: "Failed to get bot info",
-                    error: result.description || "Unknown error"
-                });
-            }
-
-            const botInfo = result.result;
-
-            // Логируем ответ от Telegram API для отладки
-            console.log('Telegram API response:', JSON.stringify({
-                first_name: botInfo.first_name,
-                username: botInfo.username,
-                description: botInfo.description,
-                short_description: botInfo.short_description
-            }, null, 2));
-
-            // If bot has photo, get the file URL
-            let photoUrl = null;
-            if (botInfo.photo && botInfo.photo.big_file_id) {
-                try {
-                    // Get file info
-                    const fileResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getFile`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            file_id: botInfo.photo.big_file_id
-                        })
-                    });
-
-                    const fileResult = await fileResponse.json();
-
-                    if (fileResponse.ok && fileResult.result && fileResult.result.file_path) {
-                        // Construct full photo URL
-                        photoUrl = `https://api.telegram.org/file/bot${defaultToken.token}/${fileResult.result.file_path}`;
-                    }
-                } catch (photoError) {
-                    console.warn("Failed to get bot photo URL:", photoError);
-                    // Continue without photo - not a critical error
-                }
-            }
-
-            // Add photo URL to response
-            const responseData = {
-                ...botInfo,
-                photoUrl: photoUrl
-            };
-
-            res.json(responseData);
-        } catch (error) {
-            const errorInfo = analyzeTelegramError(error);
-            console.error("Failed to get bot info:", errorInfo);
-            
-            const statusCode = getErrorStatusCode(errorInfo.type);
-            res.status(statusCode).json({
-                message: errorInfo.userFriendlyMessage,
-                errorType: errorInfo.type,
-                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
-            });
-        }
-    });
+    app.get("/api/projects/:id/bot/info", getBotInfoHandler);
 
     // Update bot name
-    app.put("/api/projects/:id/bot/name", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.id);
-            const { name, language_code = 'ru' } = req.body;
-
-            console.log('🔧 Обновление имени бота:', { projectId, name, language_code });
-
-            // Get bot token for this project
-            const defaultToken = await storage.getDefaultBotToken(projectId);
-            if (!defaultToken) {
-                console.error('❌ Токен бота не найден для проекта', projectId);
-                return res.status(400).json({ message: "Bot token not found. Please add a token first." });
-            }
-
-            console.log('✅ Токен найден, отправляем запрос к Telegram API...');
-
-            // Update bot name via Telegram Bot API
-            const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setMyName`;
-            const response = await fetch(telegramApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ name, language_code })
-            });
-
-            const result = await response.json();
-
-            console.log('📡 Ответ от Telegram API setMyName:', { status: response.status, result });
-
-            if (!response.ok) {
-                console.error('❌ Ошибка от Telegram API:', result);
-                return res.status(400).json({
-                    message: "Failed to update bot name",
-                    error: result.description || "Unknown error"
-                });
-            }
-
-            console.log('✅ Имя бота успешно обновлено через Telegram API');
-            res.json({ message: "Bot name updated successfully" });
-        } catch (error) {
-            const errorInfo = analyzeTelegramError(error);
-            console.error("Failed to update bot name:", errorInfo);
-            
-            const statusCode = getErrorStatusCode(errorInfo.type);
-            res.status(statusCode).json({
-                message: errorInfo.userFriendlyMessage,
-                errorType: errorInfo.type,
-                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
-            });
-        }
-    });
+    app.put("/api/projects/:id/bot/name", updateBotNameHandler);
 
     // Update bot description
-    app.put("/api/projects/:id/bot/description", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.id);
-            const { description, language_code = 'ru' } = req.body;
-
-            console.log('🔧 Обновление описания бота:', { projectId, description, language_code });
-
-            // Get bot token for this project
-            const defaultToken = await storage.getDefaultBotToken(projectId);
-            if (!defaultToken) {
-                console.error('❌ Токен бота не найден для проекта', projectId);
-                return res.status(400).json({ message: "Bot token not found. Please add a token first." });
-            }
-
-            console.log('✅ Токен найден, отправляем запрос к Telegram API...');
-
-            // Update bot description via Telegram Bot API
-            const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setMyDescription`;
-            const response = await fetch(telegramApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ description, language_code })
-            });
-
-            const result = await response.json();
-
-            console.log('📡 Ответ от Telegram API setMyDescription:', { status: response.status, result });
-
-            if (!response.ok) {
-                return res.status(400).json({
-                    message: "Failed to update bot description",
-                    error: result.description || "Unknown error"
-                });
-            }
-
-            res.json({ message: "Bot description updated successfully" });
-        } catch (error) {
-            const errorInfo = analyzeTelegramError(error);
-            console.error("Failed to update bot description:", errorInfo);
-            
-            const statusCode = getErrorStatusCode(errorInfo.type);
-            res.status(statusCode).json({
-                message: errorInfo.userFriendlyMessage,
-                errorType: errorInfo.type,
-                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
-            });
-        }
-    });
+    app.put("/api/projects/:id/bot/description", updateBotDescriptionHandler);
 
     // Update bot short description
-    app.put("/api/projects/:id/bot/short-description", async (req, res) => {
-        try {
-            const projectId = parseInt(req.params.id);
-            const { short_description, language_code = 'ru' } = req.body;
-
-            // Get bot token for this project
-            const defaultToken = await storage.getDefaultBotToken(projectId);
-            if (!defaultToken) {
-                return res.status(400).json({ message: "Bot token not found. Please add a token first." });
-            }
-
-            // Update bot short description via Telegram Bot API
-            const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setMyShortDescription`;
-            const response = await fetch(telegramApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ short_description, language_code })
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                return res.status(400).json({
-                    message: "Failed to update bot short description",
-                    error: result.description || "Unknown error"
-                });
-            }
-
-            res.json({ message: "Bot short description updated successfully" });
-        } catch (error) {
-            const errorInfo = analyzeTelegramError(error);
-            console.error("Failed to update bot short description:", errorInfo);
-            
-            const statusCode = getErrorStatusCode(errorInfo.type);
-            res.status(statusCode).json({
-                message: errorInfo.userFriendlyMessage,
-                errorType: errorInfo.type,
-                details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
-            });
-        }
-    });
+    app.put("/api/projects/:id/bot/short-description", updateBotShortDescriptionHandler);
 
     // Telegram Bot API integration for groups
     // Send message to group
@@ -1643,7 +1410,7 @@ export function setupBotIntegrationRoutes(app: Express) {
                 console.log("Client API не доступен, используем Bot API:", clientError);
             }
 
-            // Fallback: используем Bot API (ограниченная функциональность)
+            // Fallback: используем Bot API (ограниченная функциональ��ость)
             // Bot API не может изменять username, только создатель через Client API
             return res.status(400).json({
                 message: "Setting group username requires creator/admin privileges. Please use Telegram Client API authorization.",
