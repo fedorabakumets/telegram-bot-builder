@@ -24,6 +24,7 @@ import type { InlineRichEditorProps } from './types';
 import { formatOptions } from './format-options';
 import { valueToHtml, htmlToValue } from './html-converter';
 import { useTextStats } from './hooks/useTextStats';
+import { useUndoRedo } from './hooks/useUndoRedo';
 
 /**
  * Компонент встроенного редактора с поддержкой форматирования текста
@@ -49,10 +50,6 @@ export function InlineRichEditor({
   availableVariables = [],
   onMediaVariableSelect
 }: InlineRichEditorProps) {
-  /** Стек для отмены действий */
-  const [undoStack, setUndoStack] = useState<string[]>([]);
-  /** Стек для повтора действий */
-  const [redoStack, setRedoStack] = useState<string[]>([]);
   /** Флаг активного форматирования */
   const [isFormatting, setIsFormatting] = useState(false);
   /** Ссылка на DOM элемент редактора */
@@ -61,14 +58,8 @@ export function InlineRichEditor({
   const { toast } = useToast();
   /** Статистика текста */
   const { wordCount, charCount } = useTextStats(value);
-
-  /**
-   * Сохраняет текущее состояние в стек отмены
-   */
-  const saveToUndoStack = useCallback(() => {
-    setUndoStack(prev => [...prev.slice(-19), value]);
-    setRedoStack([]);
-  }, [value]);
+  /** Управление отменой/повтором */
+  const { undo, redo, saveToUndoStack } = useUndoRedo(value, onChange, toast);
 
   /**
    * Обновляет содержимое редактора при изменении значения
@@ -283,40 +274,6 @@ export function InlineRichEditor({
       }
     }
   }, [applyFormatting, formatOptions]);
-
-  /**
-   * Отменяет последнее действие
-   */
-  const undo = useCallback(() => {
-    if (undoStack.length > 0) {
-      const previousValue = undoStack[undoStack.length - 1];
-      setRedoStack(prev => [...prev, value]);
-      setUndoStack(prev => prev.slice(0, -1));
-      onChange(previousValue);
-      toast({
-        title: "Отменено",
-        description: "Последнее действие отменено",
-        variant: "default"
-      });
-    }
-  }, [undoStack, value, onChange, toast]);
-
-  /**
-   * Повторяет отмененное действие
-   */
-  const redo = useCallback(() => {
-    if (redoStack.length > 0) {
-      const nextValue = redoStack[redoStack.length - 1];
-      setUndoStack(prev => [...prev, value]);
-      setRedoStack(prev => prev.slice(0, -1));
-      onChange(nextValue);
-      toast({
-        title: "Повторено",
-        description: "Действие повторено",
-        variant: "default"
-      });
-    }
-  }, [redoStack, value, onChange, toast]);
 
   /**
    * Копирует форматированный текст в буфер обмена
