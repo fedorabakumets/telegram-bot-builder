@@ -28,6 +28,7 @@ import { useUndoRedo } from './hooks/useUndoRedo';
 import { useEditorSync } from './hooks/useEditorSync';
 import { useFormatting } from './hooks/useFormatting';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useVariableInsert } from './hooks/useVariableInsert';
 
 /**
  * Компонент встроенного редактора с поддержкой форматирования текста
@@ -112,84 +113,16 @@ export function InlineRichEditor({
     }
   }, [toast]);
 
-  /**
-   * Вставляет переменную в позицию курсора
-   * @param variableName - Имя переменной для вставки
-   */
-  const insertVariable = useCallback((variableName: string) => {
-    // Проверяем, является ли это медиапеременной
-    const variable = availableVariables.find(v => v.name === variableName);
-    const isMediaVariable = variable?.mediaType !== undefined;
-
-    if (isMediaVariable && onMediaVariableSelect && variable) {
-      // Для медиапеременных вызываем специальный callback
-      onMediaVariableSelect(variableName, variable.mediaType!);
-      toast({
-        title: "Медиа прикреплено",
-        description: `Медиафайл "${variableName}" добавлен в прикрепленные медиа`,
-        variant: "default"
-      });
-      return;
-    }
-
-    // Для обычных переменных - вставляем в текст
-    if (!editorRef.current) return;
-
-    saveToUndoStack();
-    setIsFormatting(true);
-
-    const selection = window.getSelection();
-    if (!selection) {
-      setIsFormatting(false);
-      return;
-    }
-
-    try {
-      let range: Range;
-
-      if (selection.rangeCount > 0) {
-        range = selection.getRangeAt(0);
-      } else {
-        // If no selection, create a range at the end of the content
-        range = document.createRange();
-        range.selectNodeContents(editorRef.current);
-        range.collapse(false);
-      }
-
-      // Create the variable placeholder text
-      const variableText = `{${variableName}}`;
-      const textNode = document.createTextNode(variableText);
-
-      // Insert the variable
-      range.deleteContents();
-      range.insertNode(textNode);
-
-      // Position cursor after the inserted variable
-      range.setStartAfter(textNode);
-      range.setEndAfter(textNode);
-      selection.removeAllRanges();
-      selection.addRange(range);
-
-      // Update the value
-      setTimeout(() => {
-        handleInput();
-        toast({
-          title: "Переменная добавлена",
-          description: `Переменная "${variableName}" вставлена в текст`,
-          variant: "default"
-        });
-      }, 0);
-
-    } catch (e) {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось вставить переменную",
-        variant: "destructive"
-      });
-    }
-
-    setTimeout(() => setIsFormatting(false), 100);
-  }, [availableVariables, onMediaVariableSelect, saveToUndoStack, handleInput, toast]);
+  /** Вставка переменных */
+  const { insertVariable } = useVariableInsert({
+    editorRef,
+    availableVariables,
+    saveToUndoStack,
+    handleInput,
+    toast,
+    onMediaVariableSelect,
+    setIsFormatting
+  });
 
   return (
     <div className="space-y-2 sm:space-y-3">
