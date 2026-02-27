@@ -22,7 +22,7 @@ async function fetchUserAvatars() {
     // Получаем токен бота по умолчанию
     const tokenResult = await pool.query(`
       SELECT token FROM bot_tokens 
-      WHERE is_default = true 
+      WHERE is_default = 1 
       LIMIT 1
     `);
 
