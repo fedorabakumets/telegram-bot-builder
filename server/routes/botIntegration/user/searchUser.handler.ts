@@ -5,7 +5,7 @@
  */
 
 import type { Request, Response } from "express";
-import { storage } from "../../storages/storage";
+import { storage } from "../../../storages/storage";
 import { resolveUserId } from "./utils/resolveUserId";
 import { getTelegramUser } from "./utils/getTelegramUser";
 import { searchLocalDatabase } from "./utils/searchLocalDatabase";
