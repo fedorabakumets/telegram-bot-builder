@@ -13,6 +13,8 @@ import {
     analyzeTelegramError,
     getErrorStatusCode
 } from "../../../../utils/telegram-error-handler";
+import { getFriendlyStatus } from "./utils/getFriendlyStatus";
+import { saveMemberToDb } from "./utils/saveMemberToDb";
 
 /**
  * Обрабатывает запрос на проверку статуса участника
@@ -72,84 +74,13 @@ export async function checkMemberHandler(req: Request, res: Response): Promise<v
         }
 
         const member = result.result;
-        const friendlyStatus: Record<string, string> = {
-            'creator': 'Создатель',
-            'administrator': 'Администратор',
-            'member': 'Участник',
-            'restricted': 'Ограничен',
-            'left': 'Покинул группу',
-            'kicked': 'Исключен'
-        };
 
-        try {
-            const group = await storage.getBotGroupByProjectAndGroupId(projectId, groupId);
-            if (group) {
-                const existingMembers = await storage.getGroupMembers(group.id);
-                const existingMember = existingMembers.find(m => m.userId.toString() === userId);
-
-                if (!existingMember) {
-                    const memberData = {
-                        groupId: group.id,
-                        userId: parseInt(userId),
-                        username: member.user?.username || null,
-                        firstName: member.user?.first_name || null,
-                        lastName: member.user?.last_name || null,
-                        status: member.status,
-                        isBot: member.user?.is_bot ? 1 : 0,
-                        isActive: 1,
-                        adminRights: member.status === 'administrator' ? {
-                            can_change_info: member.can_change_info || false,
-                            can_delete_messages: member.can_delete_messages || false,
-                            can_restrict_members: member.can_restrict_members || false,
-                            can_invite_users: member.can_invite_users || false,
-                            can_pin_messages: member.can_pin_messages || false,
-                            can_promote_members: member.can_promote_members || false,
-                            can_manage_video_chats: member.can_manage_video_chats || false,
-                            can_be_anonymous: member.is_anonymous || false
-                        } : {},
-                        customTitle: member.custom_title || null,
-                        restrictions: {},
-                        messageCount: 0,
-                        lastSeen: new Date()
-                    };
-
-                    await storage.createGroupMember(memberData);
-                    console.log(`✅ Участник ${member.user?.first_name || userId} сохранен в базу данных`);
-                } else {
-                    const updateData = {
-                        status: member.status,
-                        username: member.user?.username || existingMember.username,
-                        firstName: member.user?.first_name || existingMember.firstName,
-                        lastName: member.user?.last_name || existingMember.lastName,
-                        isActive: 1,
-                        adminRights: member.status === 'administrator' ? {
-                            can_change_info: member.can_change_info || false,
-                            can_delete_messages: member.can_delete_messages || false,
-                            can_restrict_members: member.can_restrict_members || false,
-                            can_invite_users: member.can_invite_users || false,
-                            can_pin_messages: member.can_pin_messages || false,
-                            can_promote_members: member.can_promote_members || false,
-                            can_manage_video_chats: member.can_manage_video_chats || false,
-                            can_be_anonymous: member.is_anonymous || false
-                        } : {},
-                        customTitle: member.custom_title || existingMember.customTitle,
-                        restrictions: existingMember.restrictions || {},
-                        messageCount: existingMember.messageCount || 0,
-                        lastSeen: new Date()
-                    };
-
-                    await storage.updateGroupMember(existingMember.id, updateData);
-                    console.log(`✅ Участник ${member.user?.first_name || userId} обновлен в базе данных`);
-                }
-            }
-        } catch (dbError) {
-            console.error("Ошибка сохранения участника в базу:", dbError);
-        }
+        await saveMemberToDb(projectId, groupId, userId, member);
 
         const responseData = {
             member: {
                 ...member,
-                friendlyStatus: friendlyStatus[member.status] || member.status
+                friendlyStatus: getFriendlyStatus(member.status)
             }
         };
 

@@ -18,3 +18,8 @@ export { banMemberHandler } from "./banMemberHandler";
 export { unbanMemberHandler } from "./unbanMemberHandler";
 export { promoteMemberHandler } from "./promoteMemberHandler";
 export { demoteMemberHandler } from "./demoteMemberHandler";
+
+// Утилиты
+export { getBotAdminRights } from "./utils/getBotAdminRights";
+export { getFriendlyStatus } from "./utils/getFriendlyStatus";
+export { saveMemberToDb } from "./utils/saveMemberToDb";

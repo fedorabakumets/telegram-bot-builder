@@ -13,6 +13,7 @@ import {
     analyzeTelegramError,
     getErrorStatusCode
 } from "../../../../utils/telegram-error-handler";
+import { getBotAdminRights } from "./utils/getBotAdminRights";
 
 /**
  * Обрабатывает запрос на получение списка администраторов
@@ -41,9 +42,7 @@ export async function getGroupAdminsHandler(req: Request, res: Response): Promis
         const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getChatAdministrators`;
         const response = await fetch(telegramApiUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: groupId })
         });
 
@@ -57,28 +56,12 @@ export async function getGroupAdminsHandler(req: Request, res: Response): Promis
             return;
         }
 
-        let botAdminRights = null;
         const botUser = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getMe`);
         const botInfo = await botUser.json();
 
-        if (botUser.ok && result.result) {
-            const botAdmin = result.result.find((admin: any) =>
-                admin.user && admin.user.id === botInfo.result.id
-            );
-
-            if (botAdmin && botAdmin.status === 'administrator') {
-                botAdminRights = {
-                    can_manage_chat: botAdmin.can_manage_chat || false,
-                    can_change_info: botAdmin.can_change_info || false,
-                    can_delete_messages: botAdmin.can_delete_messages || false,
-                    can_invite_users: botAdmin.can_invite_users || false,
-                    can_restrict_members: botAdmin.can_restrict_members || false,
-                    can_pin_messages: botAdmin.can_pin_messages || false,
-                    can_promote_members: botAdmin.can_promote_members || false,
-                    can_manage_video_chats: botAdmin.can_manage_video_chats || false
-                };
-            }
-        }
+        const botAdminRights = botUser.ok && result.result
+            ? getBotAdminRights(result.result, botInfo.result.id)
+            : null;
 
         res.json({
             administrators: result.result,
