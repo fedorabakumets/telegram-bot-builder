@@ -7,7 +7,7 @@
  * @module viteDev/middleware/viteMiddleware
  */
 
-import express, { type Express } from "express";
+import type { Express } from "express";
 import fs from "fs";
 import path from "path";
 import { createServer as createViteServer } from "vite";
