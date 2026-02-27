@@ -18,11 +18,6 @@ interface DesktopTableHeaderProps {
  */
 const COLUMNS_CONFIG = [
   { key: 'user', label: 'Пользователь', alwaysVisible: true },
-  { key: 'status', label: 'Статус', alwaysVisible: true },
-  { key: 'messages', label: 'Сообщения', alwaysVisible: false },
-  { key: 'responses', label: 'Ответы', alwaysVisible: false },
-  { key: 'activity', label: 'Активность', alwaysVisible: false },
-  { key: 'registration', label: 'Регистрация', alwaysVisible: false },
   { key: 'actions', label: 'Действия', alwaysVisible: true, align: 'right' as const },
 ];
 

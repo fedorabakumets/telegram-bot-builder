@@ -6,10 +6,6 @@
 import { TableRow } from '@/components/ui/table';
 import { UserBotData } from '@shared/schema';
 import { DesktopUserCell } from './desktop-user-cell';
-import { DesktopStatusCell } from './desktop-status-cell';
-import { DesktopMessagesCell } from './desktop-messages-cell';
-import { UserResponsesPreview } from '../../../responses-table/components/user-responses-preview';
-import { DesktopDateCell } from './desktop-date-cell';
 import { DesktopActionsCell } from './desktop-actions-cell';
 
 /**
@@ -38,40 +34,15 @@ interface DesktopTableRowProps {
  * Конфигурация ячеек строки
  */
 const CELL_RENDERERS = [
-  { 
-    key: 'user', 
+  {
+    key: 'user',
     render: (props: DesktopTableRowProps) => <DesktopUserCell user={props.user} formatUserName={props.formatUserName} />,
-    alwaysVisible: true 
+    alwaysVisible: true
   },
-  { 
-    key: 'status', 
-    render: (props: DesktopTableRowProps) => <DesktopStatusCell user={props.user} />,
-    alwaysVisible: true 
-  },
-  { 
-    key: 'messages', 
-    render: (props: DesktopTableRowProps) => <DesktopMessagesCell user={props.user} />,
-    alwaysVisible: false 
-  },
-  { 
-    key: 'responses', 
-    render: (props: DesktopTableRowProps) => <UserResponsesPreview user={props.user} />,
-    alwaysVisible: false 
-  },
-  { 
-    key: 'activity', 
-    render: (props: DesktopTableRowProps) => <DesktopDateCell date={props.user.lastInteraction} />,
-    alwaysVisible: false 
-  },
-  { 
-    key: 'registration', 
-    render: (props: DesktopTableRowProps) => <DesktopDateCell date={props.user.createdAt} />,
-    alwaysVisible: false 
-  },
-  { 
-    key: 'actions', 
+  {
+    key: 'actions',
     render: (props: DesktopTableRowProps) => <DesktopActionsCell {...props} />,
-    alwaysVisible: true 
+    alwaysVisible: true
   },
 ];
 
