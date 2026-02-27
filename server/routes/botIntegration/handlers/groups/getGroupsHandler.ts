@@ -27,13 +27,13 @@ export async function getGroupsHandler(req: Request, res: Response): Promise<voi
             return;
         }
 
-        console.log("Getting groups for project", projectId);
+        console.log("Получение групп для проекта", projectId);
 
         const groups = await storage.getBotGroupsByProject(projectId);
-        console.log("Groups found:", groups);
+        console.log("Найдены группы:", groups);
         res.json(groups);
     } catch (error) {
-        console.error("Failed to get groups:", error);
+        console.error("Ошибка получения групп:", error);
         res.status(500).json({ message: "Не удалось получить группы" });
     }
 }

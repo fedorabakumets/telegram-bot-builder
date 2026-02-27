@@ -35,7 +35,7 @@ export async function updateGroupHandler(req: Request, res: Response): Promise<v
 
         res.json(group);
     } catch (error) {
-        console.error("Failed to update group:", error);
+        console.error("Ошибка обновления группы:", error);
         res.status(500).json({ message: "Не удалось обновить группу" });
     }
 }

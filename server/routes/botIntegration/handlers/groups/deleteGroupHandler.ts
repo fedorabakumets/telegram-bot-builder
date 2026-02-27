@@ -35,7 +35,7 @@ export async function deleteGroupHandler(req: Request, res: Response): Promise<v
 
         res.json({ message: "Группа успешно удалена" });
     } catch (error) {
-        console.error("Failed to delete group:", error);
+        console.error("Ошибка удаления группы:", error);
         res.status(500).json({ message: "Не удалось удалить группу" });
     }
 }

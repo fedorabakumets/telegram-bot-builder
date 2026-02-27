@@ -30,7 +30,7 @@ export async function createGroupHandler(req: Request, res: Response): Promise<v
 
         const result = insertBotGroupSchema.safeParse({ ...req.body, projectId });
         if (!result.success) {
-            console.log("Validation errors:", JSON.stringify(result.error.errors, null, 2));
+            console.log("Ошибки валидации:", JSON.stringify(result.error.errors, null, 2));
             res.status(400).json({
                 message: "Неверные данные группы",
                 errors: result.error.errors
@@ -38,12 +38,12 @@ export async function createGroupHandler(req: Request, res: Response): Promise<v
             return;
         }
 
-        console.log("Validation successful, data:", JSON.stringify(result.data, null, 2));
+        console.log("Валидация успешна, данные:", JSON.stringify(result.data, null, 2));
 
         const group = await storage.createBotGroup(result.data);
         res.json(group);
     } catch (error) {
-        console.error("Failed to create group:", error);
+        console.error("Ошибка создания группы:", error);
         res.status(500).json({ message: "Не удалось создать группу" });
     }
 }
