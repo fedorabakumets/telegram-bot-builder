@@ -58,29 +58,24 @@ export function generateSkipFakeCallbackCreation(
 
 /**
  * Генерирует Python-код для навигации по skip_target
- * 
+ *
  * @param nodes - Массив узлов для генерации навигации
- * @param indent - Отступ для форматирования кода
+ * @param indent - Отступ для форматирования кода (базовый уровень)
  * @returns Код навигации
  */
 export function generateSkipNavigation(
   nodes: any[],
-  indent: string = '                            '
+  indent: string = '        '
 ): string {
   let code = '';
-  
+  const bodyIndent = indent + '    '; // Уровень внутри if skip_target:
+  const tryIndent = bodyIndent + '    '; // Уровень внутри try:
+
   if (nodes.length > 0) {
-    nodes.forEach((skipNode, skipIdx) => {
-      const skipCond = skipIdx === 0 ? 'if' : 'elif';
-      const skipFnName = skipNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-      
-      code += `${indent}${skipCond} skip_target == "${skipNode.id}":\n`;
-      code += `${indent}    await handle_callback_${skipFnName}(fake_callback)\n`;
-    });
-    
-    code += `${indent}else:\n`;
-    code += `${indent}    logging.warning(f"Неизвестный целевой узел skipDataCollection: {skip_target}")\n`;
+    code += `${bodyIndent}# Вызываем обработчик целевого узла\n`;
+    code += `${bodyIndent}await call_skip_target_handler(fake_callback, skip_target)\n`;
+    code += `${bodyIndent}logging.info(f"✅ Переход skipDataCollection выполнен: {skip_target}")\n`;
   }
-  
+
   return code;
 }

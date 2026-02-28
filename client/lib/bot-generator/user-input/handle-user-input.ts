@@ -10,7 +10,7 @@ import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } fr
 import { generateUniversalVariableReplacement } from '../utils';
 import { hasInputCollection } from '../utils/hasInputCollection';
 import { hasAutoTransitions } from '../utils/hasAutoTransitions';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet, generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipNavigation, generateButtonResponseSave, generateButtonResponseCleanup, generateInvalidChoiceHandler, generateMultiselectCheck, generateMinLengthValidation, generateMaxLengthValidation, generateEmailValidation, generateNumberValidation, generatePhoneValidation, generateResponseSave, generateUserIdSave, generateCsvSave, generateSuccessMessage, generateWaitingCleanup, generateAutoNavigationLoop, generateLegacyFormatHandler } from './index';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet, generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipNavigation, generateButtonResponseSave, generateButtonResponseCleanup, generateInvalidChoiceHandler, generateMultiselectCheck, generateMinLengthValidation, generateMaxLengthValidation, generateEmailValidation, generateNumberValidation, generatePhoneValidation, generateResponseSave, generateUserIdSave, generateCsvSave, generateSuccessMessage, generateWaitingCleanup, generateAutoNavigationLoop, generateLegacyFormatHandler, generateSkipTargetHandlerFunction } from './index';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -234,11 +234,16 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += generateSkipFakeCallbackCreation('            ');
 
     // Добавляем навигацию для кнопок skipDataCollection
-    code += generateSkipNavigation(nodes, '                            ');
+    code += generateSkipNavigation(nodes, '        ');
+    code += '        \n';
+    code += '            except Exception as e:\n';
+    code += '                logging.error(f"Ошибка при переходе skipDataCollection к узлу {skip_target}: {e}")\n';
+    code += '            return\n';
 
-    code += '                        except Exception as e:\n';
-    code += '                            logging.error(f"Ошибка при переходе к узлу skipDataCollection {skip_target}: {e}")\n';
-    code += '                    return\n';
+    // Добавляем функцию call_skip_target_handler
+    code += '\n';
+    code += generateSkipTargetHandlerFunction(nodes, '    ');
+    code += '\n';
     /**
      * Валидация входных данных
      * Проверяет формат email, номера телефона, числовых значений
