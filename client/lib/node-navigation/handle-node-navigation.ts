@@ -75,7 +75,7 @@ function generateNodeHandler(
   node: Node,
   context: NavigationContext
 ): string {
-  const { bodyIndent, allNodeIds, connections } = context;
+  const { bodyIndent, allNodeIds } = context;
 
   if (node.type === 'message') {
     return handleMessageNode(node, bodyIndent, allNodeIds);
@@ -150,6 +150,3 @@ function generateUnknownNodeHandler(node: Node, bodyIndent: string): string {
   code += `${bodyIndent}break  # Выходим из цикла для неизвестного типа узла\n`;
   return code;
 }
-
-// Импорт для форматирования
-import { formatTextForPython } from '../bot-generator/format';
