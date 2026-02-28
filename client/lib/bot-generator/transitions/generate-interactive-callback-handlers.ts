@@ -10,6 +10,7 @@
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
 import { generateMultiSelectDoneButton } from './multi-select';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
+import { generateMessageTextPreparation, generateDatabaseVarsGet } from './message-text';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateConditionalMessageLogic } from '../Conditional';
@@ -202,20 +203,16 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += generateSkipDataCollectionCheck(variableName, variableValue, '    ');
           }
 
-          code += `    # Обрабатываем узел ${nodeId}: ${nodeId}\n`;
-          const messageText = targetNode.data?.messageText || "Сообщение не задано";
-          const formattedText = formatTextForPython(messageText);
-          code += `    text = ${formattedText}\n`;
+          code += generateMessageTextPreparation({ nodeId, messageText: targetNode.data?.messageText }, '    ');
 
           // Получаем переменные из базы данных перед заменой
-          code += '    \n';
-          code += '    # Получаем переменные из базы данных (user_ids_list, user_ids_count)\n';
+          code += generateDatabaseVarsGet('    ');
           code += generateDatabaseVariablesCode('    ');
           code += '    \n';
 
-          const universalVarCodeLines1: string[] = [];
-          generateUniversalVariableReplacement(universalVarCodeLines1, '    ');
-          code += universalVarCodeLines1.join('\n');
+          const universalVarCodeLines: string[] = [];
+          generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+          code += universalVarCodeLines.join('\n');
 
           // ============================================================================
           // ОБРАБОТКА УСЛОВНЫХ СООБЩЕНИЙ
@@ -833,7 +830,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
             code += '        else:\n';
             // КРИТИЧЕ��КОЕ ИСПРА��ЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '            # Заменяем все переменные в тексте\n';
+            code += '            # Заменяем все переменные в ��ексте\n';
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text)\n';
             code += '    \n';
