@@ -13,7 +13,8 @@ import { generateMultiSelectDoneButton } from './multi-select';
 import { generateMultiSelectHandler, generateMultiSelectComplete } from './multi-select-handler';
 import { generateBroadcastNodeHandler, isBroadcastNode } from './broadcast-node-handler';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
-import { generateMessageTextPreparation, generateDatabaseVarsGet } from './message-text';
+import { generateMessageTextPreparation } from './message-text';
+import { generateDatabaseVarsGet } from './message-text';
 import { generateConditionalMessagesCheck } from './conditional-messages';
 import { generateMediaVariablesSetup } from './media-variables';
 import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
@@ -33,6 +34,7 @@ import { generateHandleNodeFunctions } from '../../generate/generateHandleNodeFu
 import { generateInlineKeyboardCode } from '../Keyboard';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
 import { generateUniversalVariableReplacement } from '../utils';
+import { generateFullMessagePreparation } from './message-preparation';
 
 /**
  * Генерирует интерактивные callback обработчики с поддержкой условных сообщений,
@@ -170,16 +172,14 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += generateSkipDataCollectionCheck(variableName, variableValue, '    ');
           }
 
-          code += generateMessageTextPreparation({ nodeId, messageText: targetNode.data?.messageText }, '    ');
-
-          // Получаем переменные из базы данных перед заменой
-          code += generateDatabaseVarsGet('    ');
-          code += generateDatabaseVariablesCode('    ');
-          code += '    \n';
-
-          const universalVarCodeLines: string[] = [];
-          generateUniversalVariableReplacement(universalVarCodeLines, '    ');
-          code += universalVarCodeLines.join('\n');
+          // Подготовка текста сообщения и переменных
+          code += generateFullMessagePreparation({
+            nodeId,
+            messageText: targetNode.data?.messageText,
+            hasInputVariable: !!targetNode.data?.inputVariable,
+            inputVariable: targetNode.data?.inputVariable
+          }, '    ');
+          code += '\n';
 
           // ============================================================================
           // ОБРАБОТКА УСЛОВНЫХ СООБЩЕНИЙ
