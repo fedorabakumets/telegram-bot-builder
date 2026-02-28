@@ -42,7 +42,7 @@ export * from './MediaHandler';
 export * from './MessageHandler';
 
 // Project scaffolding
-export * from './scaffolding';
+export * from './bot-generator/scaffolding';
 
 // Storage utilities
 export * from './storage';

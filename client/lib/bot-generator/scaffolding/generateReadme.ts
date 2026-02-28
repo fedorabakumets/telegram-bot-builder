@@ -1,5 +1,5 @@
 import { BotData } from '@shared/schema';
-import { generateBotFatherCommands } from "../commands";
+import { generateBotFatherCommands } from "../../commands";
 
 /**
  * Извлекает все узлы из структуры бота (поддерживает sheets и nodes)

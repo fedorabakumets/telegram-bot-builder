@@ -52,7 +52,7 @@ import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelec
 import { newgenerateStateTransitionAndRenderLogic } from './bot-generator/transitions';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './bot-generator/user-input';
 import { createProcessNodeButtonsFunction } from './bot-generator/node-handlers';
-import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';
+import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './bot-generator/scaffolding';
 import { generateSynonymHandlers } from './Synonyms';
 import { addAutoTransitionNodes } from './utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './utils/addInputTargetNodes';

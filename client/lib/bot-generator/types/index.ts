@@ -17,4 +17,4 @@ export {
   generateReadme,
   generateRequirementsTxt,
   generateEnvFile
-} from '../../scaffolding';
+} from '../scaffolding';
