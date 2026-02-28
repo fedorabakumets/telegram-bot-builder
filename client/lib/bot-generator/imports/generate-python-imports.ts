@@ -36,7 +36,8 @@ export const generatePythonImports = (
 
   // Базовые импорты - всегда генерируются
   imports += generateBaseImports({
-    userDatabaseEnabled: options.userDatabaseEnabled
+    userDatabaseEnabled: options.userDatabaseEnabled,
+    hasInlineButtons: options.hasInlineButtons
   });
 
   // Специфичные импорты на основе узлов
