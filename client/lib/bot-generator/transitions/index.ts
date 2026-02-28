@@ -8,3 +8,4 @@
 
 export { generateConditionalBranch } from './generate-conditional-branch';
 export { generateInlineKeyboardSend } from './generate-inline-keyboard-send';
+export { generateReplyKeyboardSend } from './generate-reply-keyboard-send';

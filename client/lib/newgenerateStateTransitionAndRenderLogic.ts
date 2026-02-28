@@ -2,7 +2,7 @@ import { Button, ResponseOption } from './bot-generator';
 import { generateConditionalMessageLogic } from './Conditional';
 import { formatTextForPython, generateButtonText, toPythonBoolean, generateWaitingStateCode, escapeForJsonString } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
-import { generateConditionalBranch, generateInlineKeyboardSend } from './bot-generator/transitions';
+import { generateConditionalBranch, generateInlineKeyboardSend, generateReplyKeyboardSend } from './bot-generator/transitions';
 
 export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: string, allNodeIds: any[], connections: any[]) {
   if (nodes.length > 0) {
@@ -12,24 +12,7 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
       if (targetNode.type === 'message' && targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
         code += generateInlineKeyboardSend(targetNode, '                ');
       } else if (targetNode.type === 'message' && targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
-
-        code += `                text = ${formattedText}\n`;
-        code += '                builder = ReplyKeyboardBuilder()\n';
-        targetNode.data.buttons.forEach((button: Button) => {
-          if (button.action === "contact" && button.requestContact) {
-            code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-          } else if (button.action === "location" && button.requestLocation) {
-            code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
-          } else {
-            code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
-          }
-        });
-        const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-        const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-        code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
+        code += generateReplyKeyboardSend(targetNode, '                ');
 
         // Проверяяяяям, нужно ли настроить ожядание текстового ввода
         // ИСПРАВЛЕНИЕ: Используем универяальную функцию для настройки ожидания ввода
