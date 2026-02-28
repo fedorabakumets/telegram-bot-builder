@@ -248,18 +248,24 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}keyboardHTML = locals().get('keyboardHTML', None) or globals().get('keyboardHTML', None) or None`);
 
   // Находим первую переменную из attachedMedia, которая также присутствует в mediaVariablesMap
+  // ИСПРАВЛЕНИЕ: Перебираем все переменные и пропускаем те, что равны "undefined"
   let mediaInfo = null;
   let mediaVariable = null;
   let mediaType = null;
 
   for (const mediaVar of attachedMedia) {
+    // Пропускаем переменные со значением "undefined"
+    if (mediaVar === 'undefined' || mediaVar.startsWith('undefined')) {
+      continue;
+    }
+    
     if (mediaVariablesMap.has(mediaVar)) {
       const info = mediaVariablesMap.get(mediaVar);
       if (info) {
         mediaInfo = info;
         mediaVariable = mediaVar;
         mediaType = info.type;
-        break; // Используем первую найденную переменную
+        break; // Используем первую найденную валидную переменную
       }
     }
   }
