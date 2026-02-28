@@ -16,3 +16,4 @@ export * from './user-input-params';
 export * from './button-response-config-params';
 export * from './button-response-config-types';
 export * from './conditional-branch-params';
+export * from './input-waiting-setup-params';

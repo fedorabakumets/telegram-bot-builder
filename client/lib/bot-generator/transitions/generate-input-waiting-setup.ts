@@ -1,32 +1,30 @@
 /**
  * @fileoverview Генерация кода для настройки ожидания ввода
- * 
+ *
  * Модуль создаёт Python-код для настройки waiting_for_input
  * с параметрами валидации, таймаутами и навигацией.
- * 
+ *
  * @module bot-generator/transitions/generate-input-waiting-setup
  */
 
 import { toPythonBoolean, escapeForJsonString } from '../format';
+import type { InputWaitingSetupParams } from './types/input-waiting-setup-params';
 
 /**
  * Генерирует Python-код для настройки ожидания ввода
- * 
- * @param node - Узел с данными ввода
- * @param connections - Массив соединений для навигации
- * @param indent - Отступ для форматирования кода
+ *
+ * @param params - Параметры для генерации
  * @returns Сгенерированный Python-код
  */
 export function generateInputWaitingSetup(
-  node: any,
-  connections: any[],
-  indent: string = '                '
+  params: InputWaitingSetupParams
 ): string {
+  const { node, connections, indent = '                ' } = params;
+
   let code = '';
-  
   const inputPrompt = node.data.messageText || node.data.inputPrompt || "Введите ваш ответ:";
   const inputVariable = node.data.inputVariable || `response_${node.id}`;
-  
+
   let inputType = 'text';
   if (node.data.enablePhotoInput) {
     inputType = 'photo';
@@ -39,7 +37,7 @@ export function generateInputWaitingSetup(
   } else {
     inputType = node.data.inputType || 'text';
   }
-  
+
   const minLength = node.data.minLength || 0;
   const maxLength = node.data.maxLength || 0;
   const inputTimeout = node.data.inputTimeout || 60;
