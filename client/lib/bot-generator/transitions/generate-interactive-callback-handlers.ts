@@ -531,16 +531,9 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             buttonsToTargetNode = sourceNode.data.buttons.filter((btn: { target: string; }) => btn.target === nodeId);
           }
 
-          // ИСПРАВЛЕНИЕ: Сохраняем button_click ТОЛЬКО если включен сбор данных
-          // Проверяем sourceNode и collectUserInput целевого узла
-          const targetNodeForSaveCheck = nodes.find(n => n.id === nodeId);
-          const shouldSaveButtonClick = sourceNode && (
-            targetNodeForSaveCheck?.data?.collectUserInput === true || 
-            targetNodeForSaveCheck?.data?.saveToDatabase === true
-          );
-          
-          if (shouldSaveButtonClick) {
-            code += '    # Сохраняем нажатие кнопки в базу данных\n';
+          // ИСПРАВЛЕНИЕ: Генерируем button_display_text всегда если есть sourceNode
+          // Но сохраняем в button_click ТОЛЬКО если включен сбор данных
+          if (sourceNode) {
             code += '    # Ищем текст кнопки по callback_data\n';
 
             code += generateButtonTextDetection({
@@ -549,15 +542,22 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             }, '    ');
 
             code += '    \n';
-            code += '    # Сохраняем ответ в базу данных\n';
-            code += '    timestamp = get_moscow_time()\n';
-            code += '    \n';
-            code += '    response_data = button_display_text  # Простое значение\n';
-            code += '    \n';
-            code += '    # Сохраняем в пользовательские данные\n';
-            code += '    if user_id not in user_data:\n';
-            code += '        user_data[user_id] = {}\n';
-            code += '    user_data[user_id]["button_click"] = button_display_text\n';
+            
+            // Сохраняем button_click ТОЛЬКО если включен сбор данных
+            const targetNodeForSaveCheck = nodes.find(n => n.id === nodeId);
+            const shouldSaveButtonClick = (
+              targetNodeForSaveCheck?.data?.collectUserInput === true || 
+              targetNodeForSaveCheck?.data?.saveToDatabase === true
+            );
+            
+            if (shouldSaveButtonClick) {
+              code += '    # Сохраняем нажатие кнопки в базу данных\n';
+              code += '    timestamp = get_moscow_time()\n';
+              code += '    response_data = button_display_text  # Простое значение\n';
+              code += '    if user_id not in user_data:\n';
+              code += '        user_data[user_id] = {}\n';
+              code += '    user_data[user_id]["button_click"] = button_display_text\n';
+            }
           }
 
           // Определяем переменную для сохранения на основе кнопки (ТОЛЬКО если есть sourceNode)
