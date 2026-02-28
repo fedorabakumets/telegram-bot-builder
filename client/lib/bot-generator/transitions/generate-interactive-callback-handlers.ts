@@ -20,7 +20,7 @@ import { generateMediaSendCode } from './media';
 import { generateButtonTextDetection } from './button';
 import { generateVariableSaveLogic } from './variable';
 import { generateRedirectLogic } from './redirect';
-import { generateNavigationToNode, generateNavigationErrorHandler, generateUnknownNodeWarning, generateNoNodesAvailableWarning } from './navigation';
+import { generateNavigationToNode, generateNavigationErrorHandler, generateUnknownNodeWarning, generateNoNodesAvailableWarning, generateMultiSelectFallbackNavigation, generateRegularFallbackNavigation } from './navigation';
 import { generateInputNodeHandling } from './input';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
@@ -954,103 +954,29 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                       }
                       code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${navTargetNode.id} выполнена")\n`;
                     } else {
-                      const formattedText = formatTextForPython(messageText);
-                      // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
-                      const fallbackInputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
-                      code += `                # Fallback сообщение\n`;
-                      code += `                nav_text = ${formattedText}\n`;
-                      // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
-                      if (navTargetNode.data.collectUserInput === true) {
-                        code += `                # ИСПРАВЛЕНИЕ: Проверяем, не была ли перемеяяная уже сохранена inline кнопкой\n`;
-                        code += `                if "${fallbackInputVariable}" not in user_data[user_id] or not user_data[user_id]["${fallbackInputVariable}"]:\n`;
-                        code += `                    # Настраиваем ожидание ввода\n`;
-                        code += `                    user_data[user_id]["waiting_for_input"] = {\n`;
-                        code += `                        "type": "text",\n`;
-                        code += `                        "variable": "${fallbackInputVariable}",\n`;
-                        code += `                        "save_to_database": True,\n`;
-                        code += `                        "node_id": "${navTargetNode.id}",\n`;
-                        code += `                        "next_node_id": "${inputTargetNodeId}"\n`;
-                        code += `                    }\n`;
-                        code += `                    logging.info(f"🔧 Настроено fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
-                        code += `                else:\n`;
-                        code += `                    logging.info(f"⏭️ Переменная ${fallbackInputVariable} уже сохранена, пропускаем fallback ожидание ввода")\n`;
-                      } else {
-                        code += `                logging.info(f"Fallback переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
-                      }
-                      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                      code += `                # Заменяем все переменные в тексте\n`;
-                      code += `                nav_text = replace_variables_in_text(nav_text, user_vars)\n`;
-                      code += `                await bot.send_message(user_id, nav_text)\n`;
+                      code += generateRegularFallbackNavigation({
+                        navTargetNode,
+                        userVars: 'user_vars',
+                        allNodeIds: [],
+                        inputTargetNodeId
+                      }, '                ');
                     }
                   } else {
                     // Обычный узел без условных сообщений
-                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имяяет ли узел множественный выбор
                     if (navTargetNode.data.allowMultipleSelection === true) {
-                      // Для узлов с множественным выбором создаем прямую навигацию
-                      const messageText = navTargetNode.data.messageText || 'Сообщение';
-                      const formattedText = formatTextForPython(messageText);
-                      code += `            # Прямая навигация к узлу с множественным выбором ${navTargetNode.id}\n`;
-                      code += `            logging.info(f"🔧 Переходим к узлу с множественным выбором: ${navTargetNode.id}")\n`;
-                      code += `            text = ${formattedText}\n`;
-
-                      // Замена переменных
-                      code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
-                      const universalVarCodeLines3: string[] = [];
-                      generateUniversalVariableReplacement(universalVarCodeLines3, '            ');
-                      code += universalVarCodeLines3.join('\n');
-
-                      // Инициализируем состояние множественного выбора
-                      code += `            # Инициализируем состояние множественного выбора\n`;
-                      code += `            user_data[callback_query.from_user.id]["multi_select_${navTargetNode.id}"] = []\n`;
-                      code += `            user_data[callback_query.from_user.id]["multi_select_node"] = "${navTargetNode.id}"\n`;
-                      code += `            user_data[callback_query.from_user.id]["multi_select_type"] = "selection"\n`;
-                      if (navTargetNode.data.multiSelectVariable) {
-                        code += `            user_data[callback_query.from_user.id]["multi_select_variable"] = "${navTargetNode.data.multiSelectVariable}"\n`;
-                      }
-
-                      // Создаем inline клавиатуру с кнопками выбора
-                      if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
-                        code += generateInlineKeyboardCode(navTargetNode.data.buttons, '            ', navTargetNode.id, navTargetNode.data, allNodeIds);
-                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                        code += `            # Заменяем все переменныяя в тексте\n`;
-                        code += `            text = replace_variables_in_text(text, user_vars)\n`;
-                        code += `            await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n`;
-                      } else {
-                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                        code += `            # Заменяем все переменные в тексте\n`;
-                        code += `            text = replace_variables_in_text(text, user_vars)\n`;
-                        code += `            await bot.send_message(callback_query.from_user.id, text)\n`;
-                      }
-                      code += `            logging.info(f"✅ яярямая навигация к узлу множественного выбора ${navTargetNode.id} вяяполяяена")\n`;
+                      code += generateMultiSelectFallbackNavigation({
+                        navTargetNode,
+                        userVars: 'callback_query.from_user.id',
+                        allNodeIds,
+                        inputTargetNodeId
+                      }, '            ');
                     } else {
-                      const formattedText = formatTextForPython(messageText);
-                      code += `            nav_text = ${formattedText}\n`;
-
-                      // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
-                      if (navTargetNode.data.collectUserInput === true) {
-                        // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
-                        const regularInputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
-                        code += '            # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n';
-                        code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
-                        code += `            if "${regularInputVariable}" not in user_data[callback_query.from_user.id] or not user_data[callback_query.from_user.id]["${regularInputVariable}"]:\n`;
-                        code += '                # Настраиваем ожидание ввода\n';
-                        code += '                user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
-                        code += '                    "type": "text",\n';
-                        code += `                    "variable": "${regularInputVariable}",\n`;
-                        code += '                    "save_to_database": True,\n';
-                        code += `                    "node_id": "${navTargetNode.id}",\n`;
-                        code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
-                        code += '                }\n';
-                        code += `                logging.info(f"🔧 Настроено ожидание ввода для переменной: ${regularInputVariable} (узел ${navTargetNode.id})")\n`;
-                        code += '            else:\n';
-                        code += `                logging.info(f"⏭️ Переменная ${regularInputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
-                      } else {
-                        code += `            logging.info(f"Переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
-                      }
-                      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                      code += '            # Заменяем все переменняяе в тексте\n';
-                      code += '            nav_text = replace_variables_in_text(nav_text, user_vars)\n';
-                      code += '            await bot.send_message(callback_query.from_user.id, nav_text)\n';
+                      code += generateRegularFallbackNavigation({
+                        navTargetNode,
+                        userVars: 'callback_query.from_user.id',
+                        allNodeIds: [],
+                        inputTargetNodeId
+                      }, '            ');
                     }
                   }
                 } else {
