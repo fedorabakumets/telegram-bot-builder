@@ -1,8 +1,34 @@
 import { Node } from '@shared/schema';
+
+/**
+ * @fileoverview Сбор медиапеременных из узлов проекта
+ * 
+ * Модуль предоставляет функцию для сбора всех медиапеременных (photo, video, audio, document)
+ * из узлов проекта. Поддерживает различные форматы именования переменных:
+ * - image_url_*, video_url_*, audio_url_*, document_url_*
+ * - imageUrlVar_*, videoUrlVar_*, audioUrlVar_*, documentUrlVar_*
+ * 
+ * @module collectMediaVariables
+ */
+
 // ============================================================================
 // УТИЛИТЫ ДЛЯ РАБОТЫ С ПЕРЕМЕННЫМИ И МЕДИА
 // ============================================================================
-// Функция для сбора всех медиапеременных из узлов
+
+/**
+ * Собирает все медиапеременные из узлов проекта в карту MediaVariablesMap
+ * 
+ * @param nodes - Массив узлов проекта для анализа
+ * @returns Карта медиапеременных, где ключ - имя переменной, значение - объект с типом медиа и именем переменной
+ * 
+ * @example
+ * const nodes = [
+ *   { id: 'start', data: { attachedMedia: ['imageUrlVar_start'], imageUrl: 'https://...' } },
+ *   { id: 'menu', data: { enablePhotoInput: true, photoInputVariable: 'user_photo' } }
+ * ];
+ * const mediaVars = collectMediaVariables(nodes);
+ * // Map { 'imageUrlVar_start' => { type: 'photo', variable: 'imageUrlVar_start' } }
+ */
 export function collectMediaVariables(nodes: Node[]): Map<string, { type: string; variable: string; }> {
   const mediaVars = new Map<string, { type: string; variable: string; }>();
 
@@ -46,47 +72,24 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
     // Собираем переменные из attachedMedia (включая imageUrl)
     if (node.data?.attachedMedia && Array.isArray(node.data.attachedMedia)) {
       node.data.attachedMedia.forEach((mediaVar: string) => {
+        /** Тип медиа: "photo", "video", "audio", "document", "sticker" */
+        let mediaType: string = '';
+
         // Проверяем, является ли переменная imageUrl (обычно имеет формат image_url_{nodeId})
-        if (mediaVar.startsWith('image_url_')) {
-          mediaVars.set(mediaVar, {
-            type: 'photo',
-            variable: mediaVar
-          });
-        } else if (mediaVar.startsWith('video_url_')) {
-          mediaVars.set(mediaVar, {
-            type: 'video',
-            variable: mediaVar
-          });
-        } else if (mediaVar.startsWith('audio_url_')) {
-          mediaVars.set(mediaVar, {
-            type: 'audio',
-            variable: mediaVar
-          });
-        } else if (mediaVar.startsWith('document_url_')) {
-          mediaVars.set(mediaVar, {
-            type: 'document',
-            variable: mediaVar
-          });
+        if (mediaVar.startsWith('image_url_') || mediaVar.startsWith('imageUrlVar')) {
+          mediaType = 'photo';
+        } else if (mediaVar.startsWith('video_url_') || mediaVar.startsWith('videoUrlVar')) {
+          mediaType = 'video';
+        } else if (mediaVar.startsWith('audio_url_') || mediaVar.startsWith('audioUrlVar')) {
+          mediaType = 'audio';
+        } else if (mediaVar.startsWith('document_url_') || mediaVar.startsWith('documentUrlVar')) {
+          mediaType = 'document';
         }
-        // ИСПРАВЛЕНИЕ: Также поддерживаем переменные типа audioUrlVar_*, videoUrlVar_* и т.д.
-        else if (mediaVar.startsWith('audioUrlVar')) {
+
+        // Если тип медиа определен, добавляем переменную в карту
+        if (mediaType) {
           mediaVars.set(mediaVar, {
-            type: 'audio',
-            variable: mediaVar
-          });
-        } else if (mediaVar.startsWith('videoUrlVar')) {
-          mediaVars.set(mediaVar, {
-            type: 'video',
-            variable: mediaVar
-          });
-        } else if (mediaVar.startsWith('imageUrlVar')) {
-          mediaVars.set(mediaVar, {
-            type: 'photo',
-            variable: mediaVar
-          });
-        } else if (mediaVar.startsWith('documentUrlVar')) {
-          mediaVars.set(mediaVar, {
-            type: 'document',
+            type: mediaType,
             variable: mediaVar
           });
         }

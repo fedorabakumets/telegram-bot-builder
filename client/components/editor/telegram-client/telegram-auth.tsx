@@ -397,16 +397,45 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
                     Назад
                   </Button>
                   <Button
-                    onClick={() => {
+                    onClick={async () => {
                       if (qrPassword.trim()) {
-                        // Проверяем QR с паролем
-                        checkQRStatus();
+                        // Сначала генерируем QR с паролем
+                        setIsLoading(true);
+                        try {
+                          const response = await apiRequest('POST', '/api/telegram-auth/qr-generate', {
+                            password: qrPassword
+                          });
+                          
+                          if (response.success && response.token) {
+                            setQrToken(response.token);
+                            setQrUrl(response.qrUrl);
+                            setStep('qr');
+                            toast({
+                              title: 'QR-код сгенерирован',
+                              description: 'Отсканируйте QR-код в приложении Telegram',
+                            });
+                          } else if (response.requiresPassword) {
+                            toast({
+                              title: 'Ошибка',
+                              description: 'Неверный пароль 2FA',
+                              variant: 'destructive',
+                            });
+                          }
+                        } catch (error: any) {
+                          toast({
+                            title: 'Ошибка',
+                            description: error.message || 'Не удалось сгенерировать QR-код',
+                            variant: 'destructive',
+                          });
+                        } finally {
+                          setIsLoading(false);
+                        }
                       }
                     }}
                     className="flex-1"
                     disabled={isLoading || !qrPassword.trim()}
                   >
-                    {isLoading ? 'Проверяем...' : 'Проверить'}
+                    {isLoading ? 'Генерация...' : 'Проверить'}
                   </Button>
                 </div>
               </div>

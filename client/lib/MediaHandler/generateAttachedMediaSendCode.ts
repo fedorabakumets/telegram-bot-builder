@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Генерация кода отправки медиа-сообщений
+ * 
+ * Модуль предоставляет функцию для генерации Python-кода отправки медиа-сообщений
+ * (photo, video, audio, document) с поддержкой статических изображений, автопереходов
+ * и обработки ошибок.
+ * 
+ * @module generateAttachedMediaSendCode
+ */
+
 import { isLoggingEnabled } from "../bot-generator";
 import { generateWaitingStateCode } from "../format/generateWaitingStateCode";
 import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
@@ -137,6 +147,7 @@ export function generateAttachedMediaSendCode(
       codeLines.push(`${indentLevel}image_url = FSInputFile(image_path)`);
     } else {
       codeLines.push(`${indentLevel}image_url = "${nodeData.imageUrl}"`);
+      codeLines.push(`${indentLevel}logging.info(f"🖼️ Отправка изображения: {image_url}")`);
     }
 
     // Устанавливаем состояние ожидания ввода если нужно
@@ -153,7 +164,8 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}# Отправляем статическое изображение`);
     codeLines.push(`${indentLevel}try:`);
     codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
-    codeLines.push(`${indentLevel}    processed_caption = replace_variables_in_text(text, user_vars)`);
+    codeLines.push(`${indentLevel}    # Используем all_user_vars вместо user_vars для корректной замены переменных`);
+    codeLines.push(`${indentLevel}    processed_caption = replace_variables_in_text(text, all_user_vars)`);
 
     // ИСПРАВЛЕНИЕ: Генерируем parse_mode только если parseMode не пустой и не равен "none"
     let parseModeParam = '';
@@ -329,7 +341,8 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа из переменной ${mediaVariable}: {attached_media}")`);
   codeLines.push(`${indentLevel}    try:`);
   codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
-  codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, user_vars)`);
+  codeLines.push(`${indentLevel}        # Используем all_user_vars вместо user_vars для корректной замены переменных`);
+  codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, all_user_vars)`);
   codeLines.push(`${indentLevel}        # Проверяем, является ли медиа относительным путем к локальному файлу`);
   codeLines.push(`${indentLevel}        if str(attached_media).startswith('/uploads/') or str(attached_media).startswith('/uploads\\\\') or '\\\\uploads\\\\' in str(attached_media):`);
   codeLines.push(`${indentLevel}            attached_media_path = get_upload_file_path(attached_media)`);
@@ -397,7 +410,8 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение`);
   codeLines.push(`${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")`);
   codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
-  codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, user_vars)`);
+  codeLines.push(`${indentLevel}    # Используем all_user_vars вместо user_vars для корректной замены переменных`);
+  codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, all_user_vars)`);
   codeLines.push(`${indentLevel}    # Убедимся, что переменная keyboardHTML определена`);
   codeLines.push(`${indentLevel}    if 'keyboardHTML' not in locals():`);
   codeLines.push(`${indentLevel}        keyboardHTML = None`);
