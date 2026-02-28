@@ -47,7 +47,7 @@ export function generateSelectedOptionSearch(
 
 /**
  * Генерирует Python-код для сохранения response_data
- * 
+ *
  * @param indent - Отступ для форматирования кода
  * @returns Код сохранения данных
  */
@@ -55,14 +55,14 @@ export function generateResponseDataStructure(
   indent: string = '    '
 ): string {
   let code = '';
-  code += `${indent}        # Создаем структурированный ответ\n`;
-  code += `${indent}        response_data = {\n`;
-  code += `${indent}            "value": selected_value,\n`;
-  code += `${indent}            "text": selected_text,\n`;
-  code += `${indent}            "type": "button_choice",\n`;
-  code += `${indent}            "timestamp": timestamp,\n`;
-  code += `${indent}            "nodeId": node_id,\n`;
-  code += `${indent}            "variable": variable_name\n`;
-  code += `${indent}        }\n`;
+  code += `${indent}# Создаем структурированный ответ\n`;
+  code += `${indent}response_data = {\n`;
+  code += `${indent}    "value": selected_value,\n`;
+  code += `${indent}    "text": selected_text,\n`;
+  code += `${indent}    "type": "button_choice",\n`;
+  code += `${indent}    "timestamp": timestamp,\n`;
+  code += `${indent}    "nodeId": node_id,\n`;
+  code += `${indent}    "variable": variable_name\n`;
+  code += `${indent}}\n`;
   return code;
 }
