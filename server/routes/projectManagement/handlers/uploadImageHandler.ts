@@ -8,7 +8,7 @@
  */
 
 import { Request, Response } from "express";
-import { downloadImageFromUrl } from "../../files/downloadImageFromUrl";
+import { downloadImageFromUrl } from "../../../files/downloadImageFromUrl";
 
 /**
  * Тип данных запроса загрузки изображения
@@ -20,20 +20,6 @@ interface UploadImageRequest {
   projectId: number;
   /** Имя узла для формирования имени файла */
   nodeName: string;
-}
-
-/**
- * Тип ответа API загрузки изображения
- */
-interface UploadImageResponse {
-  /** Успешность операции */
-  success: boolean;
-  /** Локальный путь к файлу (при успехе) */
-  localPath?: string;
-  /** Сообщение об успехе */
-  message?: string;
-  /** Сообщение об ошибке */
-  error?: string;
 }
 
 /**

@@ -22,11 +22,6 @@ interface UploadImageResult {
 }
 
 /**
- * Тип медиа: "photo", "video", "audio", "document", "sticker"
- */
-type MediaType = string;
-
-/**
  * Загружает изображение по URL на сервер
  * 
  * @param imageUrl - URL изображения для загрузки
