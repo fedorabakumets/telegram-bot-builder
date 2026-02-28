@@ -48,7 +48,7 @@ import { generateGroupHandlers } from './bot-generator/MediaHandler/generateGrou
 import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generateMediaFileFunctions';
 import { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
 import { hasUploadImageUrls } from './bot-generator/MediaHandler/hasUploadImageUrls';
-import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
+import { generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './bot-generator/transitions';
 import { newgenerateStateTransitionAndRenderLogic } from './bot-generator/transitions';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './bot-generator/user-input';
 import { createProcessNodeButtonsFunction } from './bot-generator/node-handlers';
@@ -287,7 +287,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    */
   function generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(): void {
     const processNodeButtonsAndGenerateHandlers = createProcessNodeButtonsFunction(inlineNodes, nodes, code, allNodeIds, [], mediaVariablesMap);
-    code = newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes, allReferencedNodeIds, allConditionalButtons, code, processNodeButtonsAndGenerateHandlers, nodes, allNodeIds, [], userDatabaseEnabled, mediaVariablesMap);
+    code = generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes, allReferencedNodeIds, allConditionalButtons, code, processNodeButtonsAndGenerateHandlers, nodes, allNodeIds, [], userDatabaseEnabled, mediaVariablesMap);
   }
 
   /**

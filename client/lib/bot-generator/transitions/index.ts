@@ -14,6 +14,7 @@ export { generateErrorHandler } from './generate-error-handler';
 export { generateFallbackNode } from './generate-fallback-node';
 export { generateInlineKeyboardSend } from './generate-inline-keyboard-send';
 export { generateInputWaitingSetup } from './generate-input-waiting-setup';
+export { generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './generate-interactive-callback-handlers';
 export { generateMediaPathResolve, type MediaType } from './generate-media-path-resolve';
 export { generateMediaSaveVars } from './generate-media-save-vars';
 export { generateMediaSend } from './generate-media-send';

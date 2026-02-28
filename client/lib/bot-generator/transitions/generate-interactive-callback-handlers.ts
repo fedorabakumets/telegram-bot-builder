@@ -1,17 +1,53 @@
-import { Button, isLoggingEnabled } from './bot-generator';
-import { generateBroadcastInline } from './bot-generator/Broadcast/BotApi/generateBroadcastHandler';
-import { generateConditionalMessageLogic } from './bot-generator/Conditional';
-import { generateCheckUserVariableFunction } from './bot-generator/database';
-import { formatTextForPython, generateButtonText, generateUniqueShortId, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './bot-generator/format';
-import { generateBroadcastClientInline } from './bot-generator/Broadcast/Client/generateBroadcastClientHandler';
-import { generateDatabaseVariablesCode } from './bot-generator/Broadcast/generateDatabaseVariables';
-import { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
-import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
-import { calculateOptimalColumns, generateInlineKeyboardCode } from './bot-generator/Keyboard';
-import { generateAttachedMediaSendCode } from './bot-generator/MediaHandler';
-import { generateUniversalVariableReplacement } from './bot-generator/utils';
+/**
+ * @fileoverview Генерация интерактивных callback обработчиков
+ * 
+ * Модуль создаёт Python-код для обработки callback-запросов от inline кнопок,
+ * включая условные сообщения, множественный выбор и автопереходы.
+ * 
+ * @module bot-generator/transitions/generate-interactive-callback-handlers
+ */
 
-export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes: any[], allReferencedNodeIds: Set<string>, allConditionalButtons: Set<string>, code: string, processNodeButtonsAndGenerateHandlers: (processedCallbacks: Set<string>) => void, nodes: any[], allNodeIds: any[], connections: any[], userDatabaseEnabled: boolean, mediaVariablesMap: Map<string, { type: string; variable: string; }>) {
+import { Button, isLoggingEnabled } from '../bot-generator';
+import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
+import { generateConditionalMessageLogic } from '../Conditional';
+import { generateCheckUserVariableFunction } from '../database';
+import { formatTextForPython, generateButtonText, generateUniqueShortId, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
+import { generateBroadcastClientInline } from '../Broadcast/Client/generateBroadcastClientHandler';
+import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
+import { generateHandleNodeFunctions } from '../generate/generateHandleNodeFunctions';
+import { generateHideAfterClickMiddleware } from '../generate/generateHideAfterClickHandler';
+import { calculateOptimalColumns, generateInlineKeyboardCode } from '../Keyboard';
+import { generateAttachedMediaSendCode } from '../MediaHandler';
+import { generateUniversalVariableReplacement } from '../utils';
+
+/**
+ * Генерирует интерактивные callback обработчики с поддержкой условных сообщений,
+ * множественного выбора и автопереходов
+ * 
+ * @param inlineNodes - Массив inline узлов
+ * @param allReferencedNodeIds - Set всех referenced ID узлов
+ * @param allConditionalButtons - Set всех условных кнопок
+ * @param code - Текущий код
+ * @param processNodeButtonsAndGenerateHandlers - Функция обработки кнопок
+ * @param nodes - Массив всех узлов
+ * @param allNodeIds - Массив всех ID узлов
+ * @param connections - Массив соединений
+ * @param userDatabaseEnabled - Включена ли БД пользователей
+ * @param mediaVariablesMap - Карта медиа-переменных
+ * @returns Сгенерированный Python-код
+ */
+export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(
+  inlineNodes: any[],
+  allReferencedNodeIds: Set<string>,
+  allConditionalButtons: Set<string>,
+  code: string,
+  processNodeButtonsAndGenerateHandlers: (processedCallbacks: Set<string>) => void,
+  nodes: any[],
+  allNodeIds: any[],
+  connections: any[],
+  userDatabaseEnabled: boolean,
+  mediaVariablesMap: Map<string, { type: string; variable: string; }>
+): string {
   if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
     // Комментарий "Обработчики inline кнопок" только если действительно есть inline кнопки
     if (inlineNodes.length > 0 || allConditionalButtons.size > 0) {
@@ -806,7 +842,7 @@ export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMul
               code += '    try:\n';
               code += '        if keyboard:\n';
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-              code += '            # Заменяем все переменны�� в текс��е\n';
+              code += '            # Заменяем все переменны�� в ��екс��е\n';
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
               code += '        else:\n';
