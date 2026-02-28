@@ -30,7 +30,7 @@ export function generateMediaSend(
   if (hasImage || hasVideo || hasAudio || hasDocument) {
     if (hasImage) {
       if (node.data.imageUrl.startsWith('/uploads/')) {
-        code += generateMediaPathResolve('image', node.data.imageUrl, indent);
+        code += generateMediaPathResolve('photo', node.data.imageUrl, indent);
         code += `${indent}await bot.send_photo(message.chat.id, image_url, caption=text, parse_mode=parse_mode)\n`;
       } else {
         code += `${indent}await bot.send_photo(message.chat.id, "${node.data.imageUrl}", caption=text, parse_mode=parse_mode)\n`;
