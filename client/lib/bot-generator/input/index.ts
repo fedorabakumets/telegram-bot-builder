@@ -10,6 +10,9 @@ export {
   generateAdHocInputHandler
 } from './generate-user-input-handlers';
 
+// Логика продолжения
+export { generateContinuationLogicForButtonBasedInput } from './generate-continuation-logic';
+
 // Валидация и продолжение
 export { generateUserInputValidationAndContinuationLogic } from './generate-validation-continuation';
 

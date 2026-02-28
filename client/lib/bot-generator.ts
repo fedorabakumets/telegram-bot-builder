@@ -16,7 +16,8 @@ import {
 import { generateMultiSelectCallbackHandler } from './bot-generator/multi-select';
 import {
   generateUserInputValidationAndContinuationLogic,
-  generateAdHocInputCollectionHandler
+  generateAdHocInputCollectionHandler,
+  generateContinuationLogicForButtonBasedInput
 } from './bot-generator/input';
 
 // Внутренние модули - использование экспорта бочек
@@ -460,147 +461,24 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    */
   function generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation() {
     const adHocHandlerCode = generateAdHocInputCollectionHandler();
-    code = newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes, code, allNodeIds, [], () => { code += adHocHandlerCode; }, generateContinuationLogicForButtonBasedInput, generateUserInputValidationAndContinuationLogic, generateStateTransitionAndRenderLogic);
-  }
-
-  /**
-   * Генерирует Python-код для логики продолжения обработки пользовательского ввода через кнопки
-   * 
-   * Эта функция создает Python-код, который обрабатывает различные сценарии продолжения
-   * после получения пользовательского ввода через кнопки в Telegram боте. Функция генерирует
-   * обработчики для разных типов узлов и их поведения.
-   * 
-   * Основные функции генерируемого кода:
-   * - Обработка переходов к целевым узлам на основе ID ввода
-   * - Поддержка узлов типа 'message' с отправкой текста и клавиатур
-   * - Обработка множественного выбора (allowMultipleSelection)
-   * - Генерация inline и reply клавиатур
-   * - Замена переменных в сообщениях
-   * - Сохранение пользовательских данных
-   * - Логирование операций
-   * - Обработка дополнительных комментариев
-   * 
-   * Алгоритм работы:
-   * 1. Перебирает все целевые узлы для обработки
-   * 2. Для каждого узла генерирует условную логику проверки соответствия input_target_node_id
-   * 3. Обрабатывает узлы типа 'message' - отправляет текст с возможными клавиатурами
-   * 4. Обрабатывает узлы с множественным выбором - инициализирует состояние выбора
-   * 5. Обрабатывает обычные узлы - отправляет простые сообщения
-   * 6. Генерирует fallback обработку для дополнительных комментариев
-   * 7. Возвращает код навигации между узлами
-   * 
-   * @returns {string} Сгенерированный Python-код для логики продолжения ввода через кнопки
-   * 
-   * @example
-   * // Генерирует код типа:
-   * // if input_target_node_id == "node123":
-   * //     text = "Сообщение"
-   * //     await message.answer(text, reply_markup=keyboard)
-   * //     logging.info("Переход к узлу node123 выполнен")
-   * 
-   * @remarks
-   * - Использует глобальные переменные: nodes, code, allNodeIds
-   * - Вызывает вспомогательные функции: formatTextForPython, generateUniversalVariableReplacement,
-   *   generateInlineKeyboardCode, generateNodeNavigation
-   * - Поддерживает различные типы клавиатур (inline/reply)
-   * - Включает обработку ошибок и логирование
-   * - Управляет состоянием пользовательских данных в user_data
-   */
-  function generateContinuationLogicForButtonBasedInput() {
-    nodes.forEach((targetNode) => {
-      code += `            if input_target_node_id == "${targetNode.id}":\n`;
-      if (targetNode.type === 'message') {
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
-        code += `                # Переход к узлу ${targetNode.id}\n`;
-        code += `                text = ${formattedText}\n`;
-
-        // Замена переменных
-        code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-        const universalVarCodeLines: string[] = [];
-        generateUniversalVariableReplacement(universalVarCodeLines, '                ');
-        code += universalVarCodeLines.join('\n');
-
-        // Отправляем сообщение с кнопками если есть
-        if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-          code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-          code += `                await message.answer(text, reply_markup=keyboard)\n`;
-        } else {
-          code += `                await message.answer(text)\n`;
-        }
-        code += `                logging.info(f"Переход к узлу ${targetNode.id} выполнен")\n`;
-      } else if (targetNode.data.allowMultipleSelection) {
-        // Для узлов с множественным выбором создаем прямую навигацию
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
-        code += `                # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
-        code += `                text = ${formattedText}\n`;
-
-        // Замена переменных
-        code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-        const universalVarCodeLines: string[] = [];
-        generateUniversalVariableReplacement(universalVarCodeLines, '                ');
-        code += universalVarCodeLines.join('\n');
-
-        // Инициализируем состояние множественного выбора
-        code += `                # Инициализируем состояние множественного выбора\n`;
-        code += `                user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
-        code += `                user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
-        code += `                user_data[user_id]["multi_select_type"] = "selection"\n`;
-        if (targetNode.data.multiSelectVariable) {
-          code += `                user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
-        }
-
-        // Создаем inline клавиятуря с кнопками выбора
-        if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-          code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-          code += `                await message.answer(text, reply_markup=keyboard)\n`;
-        } else {
-          code += `                await message.answer(text)\n`;
-        }
-        code += `                logging.info(f"? Прямая навигация к узлу множественного выбяра ${targetNode.id} выполнена")\n`;
-      } else {
-        // Для обычных узлов отправляем простое сообщение
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
-        code += `                # Обычный узел - отправляем сообщение ${targetNode.id}\n`;
-        code += `                text = ${formattedText}\n`;
-
-        // Замена переменных
-        code += '                user_data[user_id] = user_data.get(user_id, {})\n';
-        const universalVarCodeLines: string[] = [];
-        generateUniversalVariableReplacement(universalVarCodeLines, '                ');
-        code += universalVarCodeLines.join('\n');
-
-        if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-          code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-          code += `                await message.answer(text, reply_markup=keyboard)\n`;
-        } else {
-          code += `                await message.answer(text)\n`;
-        }
-        code += `                logging.info(f"? Навигация к обычному узлу ${targetNode.id} выполнена")\n`;
-      }
-    });
-    code += '            return\n';
-    code += '        else:\n';
-    code += '            # Это дополнительный комментарий (нет целевого узла)\n';
-    code += '            timestamp = get_moscow_time()\n';
-    code += '            response_data = user_text\n';
-    code += '            \n';
-    code += '            # Сохраняем в пользовательские данные\n';
-    code += '            user_data[user_id][f"{input_variable}_additional"] = response_data\n';
-    code += '            \n';
-    code += '            # Уведомляем пользователя\n';
-    code += '            await message.answer("? Дополнительный комментарий сохранен!")\n';
-    code += '            \n';
-    code += '            logging.info(f"Дополнительный текстовый ввод: {input_variable}_additional = {user_text} (пользователь {user_id})")\n';
-    code += '        return\n';
-    code += '    \n';
-    code += '    # Если нет активного ожидания ввода, игнорируем сообщение\n';
-    code += '    return\n';
-
-    const navigationCode = generateNodeNavigation(nodes || [], '            ', 'next_node_id', 'message', 'user_vars');
-    return navigationCode;
+    const continuationHandlerCode = generateContinuationLogicForButtonBasedInput(
+      nodes || [],
+      formatTextForPython,
+      generateUniversalVariableReplacement,
+      generateInlineKeyboardCode,
+      allNodeIds,
+      generateNodeNavigation
+    );
+    code = newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(
+      nodes,
+      code,
+      allNodeIds,
+      [],
+      () => { code += adHocHandlerCode; },
+      () => { code += continuationHandlerCode; },
+      generateUserInputValidationAndContinuationLogic,
+      generateStateTransitionAndRenderLogic
+    );
   }
 
   /**
