@@ -6,7 +6,6 @@
 // Обработчики ввода
 export {
   generateButtonResponseHandlersForInput,
-  generateUniversalUserInputHandler,
   generateAdHocInputHandler
 } from './generate-user-input-handlers';
 

@@ -32,29 +32,6 @@ export const generateButtonResponseHandlersForInput = (
 };
 
 /**
- * Генерирует универсальный обработчик пользовательского ввода
- * @param nodes - Массив узлов бота
- * @param allNodeIds - Все идентификаторы узлов
- * @param generateAdHocHandler - Функция генерации ad-hoc обработчика
- * @param generateContinuationHandler - Функция генерации логики продолжения
- * @param generateValidationHandler - Функция генерации валидации
- * @param generateTransitionHandler - Функция генерации переходов
- * @returns {string} Python код обработчика
- */
-export const generateUniversalUserInputHandler = (
-  nodes: any[],
-  allNodeIds: string[],
-  generateAdHocHandler: Function,
-  generateContinuationHandler: Function,
-  generateValidationHandler: Function,
-  generateTransitionHandler: Function
-): string => {
-  // Здесь будет генерация универсального обработчика
-  // с использованием переданных функций
-  return '';
-};
-
-/**
  * Генерирует ad-hoc обработчик для сбора пользовательского ввода
  * @returns {string} Python код обработчика
  */
