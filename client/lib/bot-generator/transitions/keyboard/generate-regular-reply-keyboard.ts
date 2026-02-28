@@ -8,7 +8,7 @@
  */
 
 import { Button } from '../../types';
-import { generateButtonText, toPythonBoolean } from '../format';
+import { generateButtonText, toPythonBoolean } from '../../format';
 import { calculateOptimalColumns } from '../../Keyboard';
 
 /**

@@ -8,7 +8,7 @@
  */
 
 import { Button } from '../../types';
-import { generateButtonText, generateUniqueShortId } from '../format';
+import { generateButtonText, generateUniqueShortId } from '../../format';
 
 /**
  * Параметры для генерации inline клавиатуры multi-select

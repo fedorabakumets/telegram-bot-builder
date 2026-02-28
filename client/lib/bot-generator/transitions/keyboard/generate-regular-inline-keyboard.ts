@@ -8,7 +8,7 @@
  */
 
 import { Button } from '../../types';
-import { generateButtonText } from '../format';
+import { generateButtonText } from '../../format';
 import { calculateOptimalColumns } from '../../Keyboard';
 
 /**
