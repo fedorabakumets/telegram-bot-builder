@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, Send } from 'lucide-react';
 import { NodeSelector } from './node-selector';
 import { useSendNode } from '../hooks/use-send-node';
-import { useProjectNodes } from '../hooks/use-project-nodes';
+import { useProjectData } from '../hooks/use-project-data';
+import { collectNodesFromProjectData } from '../utils/node-utils';
 import type { Node } from '@shared/schema';
 
 /**
@@ -28,8 +29,10 @@ export interface NodeSenderProps {
  */
 export function NodeSender({ projectId, userId, onSent }: NodeSenderProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string>();
-  const { nodes, isLoading } = useProjectNodes(projectId);
+  const { project, isLoading } = useProjectData(projectId);
   const sendNodeMutation = useSendNode(projectId, onSent);
+
+  const nodesWithSheets = collectNodesFromProjectData(project?.data as Record<string, unknown> | null);
 
   const handleSend = () => {
     if (selectedNodeId && userId) {
@@ -43,7 +46,7 @@ export function NodeSender({ projectId, userId, onSent }: NodeSenderProps) {
   return (
     <div className="space-y-2 p-3 border-t border-slate-200/50 dark:border-slate-800/50">
       <NodeSelector
-        nodes={nodes}
+        nodesWithSheets={nodesWithSheets}
         selectedNodeId={selectedNodeId}
         onSelectNode={setSelectedNodeId}
         isLoading={isLoading}

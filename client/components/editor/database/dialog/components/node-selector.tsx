@@ -11,13 +11,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Node } from '@shared/schema';
+import { formatNodeDisplay } from '../utils/node-utils';
 
 /**
  * Свойства компонента NodeSelector
  */
 export interface NodeSelectorProps {
-  /** Массив узлов для выбора */
-  nodes: Node[];
+  /** Массив узлов для выбора с информацией о листе */
+  nodesWithSheets: Array<{ node: Node; sheetName: string }>;
   /** Выбранный ID узла */
   selectedNodeId?: string;
   /** Функция выбора узла */
@@ -51,16 +52,14 @@ function getNodeIcon(type: Node['type']): string {
  * Компонент выпадающего списка для выбора узла
  */
 export function NodeSelector({
-  nodes,
+  nodesWithSheets,
   selectedNodeId,
   onSelectNode,
   isLoading = false,
 }: NodeSelectorProps) {
-  const sendableNodes = nodes.filter((node) =>
+  const sendableNodes = nodesWithSheets.filter(({ node }) =>
     SENDABLE_NODE_TYPES.includes(node.type as typeof SENDABLE_NODE_TYPES[number])
   );
-
-  const selectedNode = sendableNodes.find((n) => n.id === selectedNodeId);
 
   return (
     <Select
@@ -69,19 +68,17 @@ export function NodeSelector({
       disabled={isLoading || sendableNodes.length === 0}
     >
       <SelectTrigger className="w-full h-9 text-xs">
-        <SelectValue placeholder="Выберите узел для отправки..." />
+        <SelectValue placeholder="⊘ Выберите узел для отправки..." />
       </SelectTrigger>
-      <SelectContent>
-        {sendableNodes.map((node) => (
-          <SelectItem key={node.id} value={node.id} className="text-sm">
-            <span className="flex items-center gap-2">
+      <SelectContent className="max-h-48 overflow-y-auto">
+        {sendableNodes.map(({ node, sheetName }) => (
+          <SelectItem key={node.id} value={node.id}>
+            <div className="flex items-center gap-2">
               <span>{getNodeIcon(node.type)}</span>
               <span className="truncate max-w-[200px]">
-                {node.data.messageText?.slice(0, 30) ||
-                  node.data.command ||
-                  `Узел ${node.id.slice(0, 8)}`}
+                {formatNodeDisplay(node, sheetName)}
               </span>
-            </span>
+            </div>
           </SelectItem>
         ))}
       </SelectContent>
