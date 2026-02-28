@@ -9,6 +9,7 @@
 
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
 import { generateMultiSelectDoneButton } from './multi-select';
+import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateConditionalMessageLogic } from '../Conditional';
@@ -197,19 +198,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             const variableName = targetNode.data.inputVariable;
             const variableValue = 'callback_query.data';
 
-            // Проверяем, был ли переход через кнопку с skipDataCollection
-            // Если была установлена метка skipDataCollectionTransition, не сохраняем переменную
-            code += '    # Проверяем, был ли переход через кнопку с skipDataCollection\n';
-            code += '    skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)\n';
-            code += '    if not skip_transition_flag:\n';
-            code += `        await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
-            code += `        logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
-            code += '    else:\n';
-            code += '        # Сбрасываем флаг\n';
-            code += '        if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:\n';
-            code += '            del user_data[user_id]["skipDataCollectionTransition"]\n';
-            code += '        logging.info(f"Переход через skipDataCollection, переменная ' + variableName + ' не сохраняется (пользователь {user_id})")\n';
-            code += '    \n';
+            // Проверяем skipDataCollection
+            code += generateSkipDataCollectionCheck(variableName, variableValue, '    ');
           }
 
           code += `    # Обрабатываем узел ${nodeId}: ${nodeId}\n`;
@@ -842,7 +832,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
             code += '        else:\n';
-            // КРИТИЧЕСКОЕ ИСПРА��ЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            // КРИТИЧЕ��КОЕ ИСПРА��ЛЕНИЕ: Обязательно вызываем замену переменных в тексте
             code += '            # Заменяем все переменные в тексте\n';
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text)\n';
