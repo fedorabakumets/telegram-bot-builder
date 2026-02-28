@@ -16,9 +16,9 @@ import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateConditionalMessagesCheck } from './conditional-messages';
 import { hasConditionalMessages } from './conditional-messages-handler';
 import { generateMediaVariablesSetup } from './media-variables';
-import { generateAutoTransitionCheck } from './auto-transition';
 import { generateAutoTransitionCode } from './auto-transition-code';
 import { calculateAutoTransitionTarget } from './auto-transition-check';
+import { generateNavigationMediaSend } from './navigation-media-send';
 import { generateAllNodesDict, generateBroadcastConfirmationHandler, generateBroadcastDirectHandler } from './broadcast';
 import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
 import { generateMediaSendCode } from './media';
@@ -626,73 +626,12 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                       code += '                        var_value = var_name\n';
                       code += '                    nav_text = nav_text.replace(placeholder, var_value)\n';
 
-                      // Проверяем, есть ли прикрепленные медиа
-                      const hasAttachedMedia = navTargetNode.data.attachedMedia && navTargetNode.data.attachedMedia.length > 0;
-
-                      if (hasAttachedMedia) {
-                        // Генерируем код для отправки медиа
-                        const attachedMedia = navTargetNode.data.attachedMedia;
-                        code += '            # Проверяем наличие прикрепленного медиа\n';
-                        code += `            nav_attached_media = None\n`;
-                        code += `            if nav_user_vars and "${attachedMedia[0]}" in nav_user_vars:\n`;
-                        code += `                media_data = nav_user_vars["${attachedMedia[0]}"]\n`;
-                        code += `                if isinstance(media_data, dict) and "value" in media_data:\n`;
-                        code += `                    # ИСПРАВЛЕНИЕ: Проверяем правильные URL поля в зависимости от типа медиа\n`;
-                        code += `                    if "photoUrl" in media_data and media_data["photoUrl"]:\n`;
-                        code += `                        nav_attached_media = media_data["photoUrl"]\n`;
-                        code += `                    elif "videoUrl" in media_data and media_data["videoUrl"]:\n`;
-                        code += `                        nav_attached_media = media_data["videoUrl"]\n`;
-                        code += `                    elif "audioUrl" in media_data and media_data["audioUrl"]:\n`;
-                        code += `                        nav_attached_media = media_data["audioUrl"]\n`;
-                        code += `                    elif "documentUrl" in media_data and media_data["documentUrl"]:\n`;
-                        code += `                        nav_attached_media = media_data["documentUrl"]\n`;
-                        code += `                    else:\n`;
-                        code += `                        nav_attached_media = media_data["value"]\n`;
-                        code += `                elif isinstance(media_data, str):\n`;
-                        code += `                    nav_attached_media = media_data\n`;
-                        code += `            if nav_attached_media and str(nav_attached_media).strip():\n`;
-                        code += `                logging.info(f"📎 Отправка медиа из переменной ${attachedMedia[0]}: {nav_attached_media}")\n`;
-                        code += `                # Проверяем, является ли медиа относительным путем к локальному файлу\n`;
-                        code += `                if str(nav_attached_media).startswith('/uploads/'):\n`;
-                        code += `                    nav_attached_media_path = get_upload_file_path(nav_attached_media)\n`;
-                        code += `                    nav_attached_media_url = FSInputFile(nav_attached_media_path)\n`;
-                        code += `                    await bot.send_photo(callback_query.from_user.id, nav_attached_media_url, caption=nav_text)\n`;
-                        code += `                else:\n`;
-                        code += `                    await bot.send_photo(callback_query.from_user.id, nav_attached_media, caption=nav_text)\n`;
-                        code += `            else:\n`;
-                        code += `                logging.info("📝 Медиа не найдено, отправка текстового сообщения")\n`;
-                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в текс��е
-                        code += `                # Заменяем все переменные в тексте\n`;
-                        code += `                nav_text = replace_variables_in_text(nav_text, user_vars)\n`;
-                        code += `                await callback_query.message.edit_text(nav_text)\n`;
-                      } else {
-                        // Проверяем, есть ли reply кнопки
-                        if (navTargetNode.data.keyboardType === 'reply' && navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
-                          code += '            # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
-                          code += '            builder = ReplyKeyboardBuilder()\n';
-                          navTargetNode.data.buttons.forEach((button: Button) => {
-                            if (button.action === "contact" && button.requestContact) {
-                              code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-                            } else if (button.action === "location" && button.requestLocation) {
-                              code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
-                            } else {
-                              code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
-                            }
-                          });
-                          const resizeKeyboard = toPythonBoolean(navTargetNode.data.resizeKeyboard);
-                          const oneTimeKeyboard = toPythonBoolean(navTargetNode.data.oneTimeKeyboard);
-                          code += `            keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-                          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                          code += '            # Заменяем все переменные в тексте\n';
-                          code += '            nav_text = replace_variables_in_text(nav_text, user_vars)\n';
-                          code += '            await bot.send_message(callback_query.from_user.id, nav_text, reply_markup=keyboard)\n';
-                        } else {
-                          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                          code += '            # Заменяем все переменные в тексте\n';
-                          code += '            nav_text = replace_variables_in_text(nav_text, user_vars)\n';
-                          code += '            await callback_query.message.edit_text(nav_text)\n';
-                        }
-                      }
+                      // Отправка медиа или обычного сообщения
+                      code += generateNavigationMediaSend({
+                        navTargetNode,
+                        userVars: 'user_vars',
+                        userId: 'callback_query.from_user.id'
+                      }, '            ');
 
                       // Если узел message собирает ввод, настраиваем ожидание
                       if (navTargetNode.data.collectUserInput === true) {
@@ -732,7 +671,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                         code += '            else:\n';
                         code += `                # ⚡ Автопереход к узлу ${autoTargetId}\n`;
                         code += `                logging.info(f"⚡ Автопереход от узла ${navTargetNode.id} к узлу ${autoTargetId}")\n`;
-                        // Проверяем, существует ли целевой узел перед вызовом обработч��ка
+                        // Проверяем, существует ли целевой узел перед вызовом обработчика
                         const targetExists = nodes.some(n => n.id === autoTargetId);
                         if (targetExists) {
                           code += `                await handle_callback_${safeAutoTargetId}(callback_query)\n`;
