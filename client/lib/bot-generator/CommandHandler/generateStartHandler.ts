@@ -5,6 +5,7 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { generateConditionalMessageLogicAndKeyboard } from './generateConditionalMessageLogicAndKeyboard';
 import { generateKeyboardAndProcessAttachedMedia } from './generateKeyboardAndProcessAttachedMedia';
 import { initializeAndRestoreMultipleSelectionState } from './initializeAndRestoreMultipleSelectionState';
+import { generateStartHandlerImageSend } from './generateStartHandlerImageSend';
 
 // ============================================================================
 // ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ КОМАНД И СООБЩЕНИЙ
@@ -158,6 +159,9 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     if (userDatabaseEnabled) {
       codeLines.push(`    await update_user_data_in_db(user_id, "${imageVar}", "${node.data.imageUrl}")`);
     }
+    
+    // Отправляем изображение пользователю
+    generateStartHandlerImageSend(node, codeLines, userDatabaseEnabled);
   }
   if (node && node.data && node.data.documentUrl) {
     // Находим переменную для документа в attachedMedia или используем формат по умолчанию
