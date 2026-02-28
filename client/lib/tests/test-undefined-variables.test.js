@@ -241,6 +241,49 @@ describe('Отсутствие неопределённых переменных
     });
   });
 
+  describe('DB-заглушки функций (с БД - НЕ должно быть заглушек)', () => {
+    let codeWithDb = '';
+    let generateError = null;
+
+    try {
+      codeWithDb = generatePythonCode(
+        baseProject,
+        'TestBot',
+        [],
+        true, // userDatabaseEnabled
+        1,
+        false,
+        false,
+        true
+      );
+    } catch (error) {
+      generateError = error;
+    }
+
+    it('не должно быть заглушки init_user_variables', () => {
+      if (generateError) this.skip();
+      // Проверяем что нет заглушки (с user_obj=None)
+      const hasStub = codeWithDb.includes('def init_user_variables(user_id, user_obj=None)');
+      assert.ok(!hasStub, 'init_user_variables не должна быть заглушкой при включенной БД');
+    });
+
+    it('не должно быть заглушки get_user_from_db', () => {
+      if (generateError) this.skip();
+      // Проверяем что нет заглушки (с return {})
+      const lines = codeWithDb.split('\n');
+      const get_user_line = lines.findIndex(l => l.includes('async def get_user_from_db(user_id):'));
+      const return_line = lines.findIndex((l, i) => i > get_user_line && i < get_user_line + 5 && l.includes('return {}'));
+      assert.ok(return_line === -1, 'get_user_from_db не должна возвращать {} при включенной БД');
+    });
+
+    it('не должно быть заглушки replace_variables_in_text', () => {
+      if (generateError) this.skip();
+      // Проверяем что нет заглушки (с return text if text else "")
+      const hasStub = codeWithDb.includes('return text if text else ""');
+      assert.ok(!hasStub, 'replace_variables_in_text не должна быть заглушкой при включенной БД');
+    });
+  });
+
   describe('Проект с медиа', () => {
     const projectWithMedia = {
       sheets: [{

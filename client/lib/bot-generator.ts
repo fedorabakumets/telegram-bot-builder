@@ -126,7 +126,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += generateBasicBotSetupCode();
 
   // Добавляем конфигурацию API
-  code += generateApiConfig(projectId);
+  code += generateApiConfig(projectId, userDatabaseEnabled);
 
   // Генерируем логирование сообщений (только при включенной БД)
   if (userDatabaseEnabled) {
