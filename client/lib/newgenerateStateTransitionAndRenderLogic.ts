@@ -2,7 +2,7 @@ import { Button, ResponseOption } from './bot-generator';
 import { generateConditionalMessageLogic } from './Conditional';
 import { formatTextForPython, generateButtonText, toPythonBoolean, generateWaitingStateCode, escapeForJsonString } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
-import { generateAttachedMediaVars, generateConditionalBranch, generateConditionalMessages, generateInlineKeyboardSend, generateMediaSaveVars, generateParseMode, generateReplyKeyboardSend } from './bot-generator/transitions';
+import { generateAttachedMediaVars, generateConditionalBranch, generateConditionalMessages, generateInlineKeyboardSend, generateMediaPathResolve, generateMediaSaveVars, generateMediaSend, generateParseMode, generateReplyKeyboardSend, generateTextSend } from './bot-generator/transitions';
 
 export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: string, allNodeIds: any[], connections: any[]) {
   if (nodes.length > 0) {
@@ -33,70 +33,10 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
         code += generateParseMode(targetNode, '                ');
         code += generateMediaSaveVars(targetNode, '                ');
         code += generateAttachedMediaVars(targetNode, '                ');
-
-        // Проверяем наличие медиа-контента (imageUrl, videoUrl, audioUrl, documentUrl)
-        const hasImage = targetNode.data.imageUrl;
-        const hasVideo = targetNode.data.videoUrl;
-        const hasAudio = targetNode.data.audioUrl;
-        const hasDocument = targetNode.data.documentUrl;
-
-        if (hasImage || hasVideo || hasAudio || hasDocument) {
-          // Отправляем медиа с текстом в качестве подписи (caption)
-          if (hasImage) {
-            // Проверяем, является ли URL относительным путем к локальному файлу
-            if (targetNode.data.imageUrl.startsWith('/uploads/')) {
-              code += `                image_path = get_upload_file_path("${targetNode.data.imageUrl}")\n`;
-              code += `                image_url = FSInputFile(image_path)\n`;
-              code += `                await bot.send_photo(message.chat.id, image_url, caption=text, parse_mode=parse_mode)\n`;
-            } else {
-              code += `                await bot.send_photo(message.chat.id, "${targetNode.data.imageUrl}", caption=text, parse_mode=parse_mode)\n`;
-            }
-          } else if (hasVideo) {
-            // Проверяем, является ли URL относительным путем к локальному файлу
-            if (targetNode.data.videoUrl && targetNode.data.videoUrl.startsWith('/uploads/')) {
-              code += `                video_path = get_upload_file_path("${targetNode.data.videoUrl}")\n`;
-              code += `                video_url = FSInputFile(video_path)\n`;
-              code += `                await bot.send_video(message.chat.id, video_url, caption=text, parse_mode=parse_mode)\n`;
-            } else {
-              code += `                await bot.send_video(message.chat.id, "${targetNode.data.videoUrl}", caption=text, parse_mode=parse_mode)\n`;
-            }
-          } else if (hasAudio) {
-            // Проверяем, является ли URL относительным путем к локальному файлу
-            if (targetNode.data.audioUrl && targetNode.data.audioUrl.startsWith('/uploads/')) {
-              code += `                audio_path = get_upload_file_path("${targetNode.data.audioUrl}")\n`;
-              code += `                audio_url = FSInputFile(audio_path)\n`;
-              code += `                await bot.send_audio(message.chat.id, audio_url, caption=text, parse_mode=parse_mode)\n`;
-            } else {
-              code += `                await bot.send_audio(message.chat.id, "${targetNode.data.audioUrl}", caption=text, parse_mode=parse_mode)\n`;
-            }
-          } else if (hasDocument) {
-            // Проверяем, является ли URL относительным путем к локальному файлу
-            if (targetNode.data.documentUrl && targetNode.data.documentUrl.startsWith('/uploads/')) {
-              code += `                document_path = get_upload_file_path("${targetNode.data.documentUrl}")\n`;
-              code += `                document_url = FSInputFile(document_path)\n`;
-              code += `                await bot.send_document(message.chat.id, document_url, caption=text, parse_mode=parse_mode)\n`;
-            } else {
-              code += `                await bot.send_document(message.chat.id, "${targetNode.data.documentUrl}", caption=text, parse_mode=parse_mode)\n`;
-            }
-          }
-        } else {
-          // Добавляем кнопки если есть
-          if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-            // Используем универсальную функцию для создания inline клавиатуры
-            code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-            code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
-          } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
-            code += '                builder = ReplyKeyboardBuilder()\n';
-            targetNode.data.buttons.forEach((button: { text: string; }) => {
-              code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
-            });
-            const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-            const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-            code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-            code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
-          } else {
-            code += '                await message.answer(text, parse_mode=parse_mode)\n';
-          }
+        code += generateMediaSend(targetNode, '                ');
+        
+        if (!targetNode.data.imageUrl && !targetNode.data.videoUrl && !targetNode.data.audioUrl && !targetNode.data.documentUrl) {
+          code += generateTextSend(targetNode, allNodeIds, '                ');
         }
       } else if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
         const inputPrompt = formatTextForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
