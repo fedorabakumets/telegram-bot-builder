@@ -284,8 +284,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   );
 
   // Валидация сгенерированного кода перед возвратом
-  // TODO: временно отключено для отладки
-  // assertValidPython(finalCode);
+  assertValidPython(finalCode);
 
   return finalCode;
 
