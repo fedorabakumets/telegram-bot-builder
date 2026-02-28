@@ -8,6 +8,7 @@
  */
 
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
+import { generateCallbackHandlerInit } from './callback-handler-init';
 import { generateMultiSelectDoneButton, generateMultiSelectInit, generateMultiSelectReplyKeyboard, generateMultiSelectInlineKeyboard } from './multi-select';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateMessageTextPreparation, generateDatabaseVarsGet } from './message-text';
@@ -27,7 +28,6 @@ import { generateCheckUserVariableFunction } from '../database';
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
 import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
 import { generateHandleNodeFunctions } from '../../generate/generateHandleNodeFunctions';
-import { generateHideAfterClickMiddleware } from '../../generate/generateHideAfterClickHandler';
 import { generateInlineKeyboardCode } from '../Keyboard';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
 import { generateUniversalVariableReplacement } from '../utils';
@@ -111,17 +111,9 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           const shortNodeIdForDone = String(nodeId).slice(-10).replace(/^_+/, '');
           code += generateCallbackHandlerStart(nodeId, shortNodeIdForDone, '');
           code += '    \n';
-          code += '    # Проверяем флаг hideAfterClick для кнопок\n';
-          code += `    ${generateHideAfterClickMiddleware(targetNode)}\n`;
-          code += '    \n';
-          code += '    # Пытаемся ответить на callback (игнорируем ошибку если уже обработан)\n';
-          code += '    try:\n';
-          code += '        await callback_query.answer()\n';
-          code += '    except Exception:\n';
-          code += '        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)\n';
-          code += '    \n';
-          code += '    # Инициализируем базовые переменные пользователя\n';
-          code += '    user_name = init_user_variables(user_id, callback_query.from_user)\n';
+          
+          // Инициализация callback обработчика
+          code += generateCallbackHandlerInit(nodeId, shortNodeIdForDone, targetNode, '    ');
           code += '    \n';
 
           // Устанавливаем флаг collectUserInput для текущего узла
@@ -798,7 +790,6 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                   navTargetNode.data.enableAudioInput ||
                   navTargetNode.data.enableDocumentInput)) {
                   // Обрабатываем уялы ввода тттекста/медиа с поддержкой условных сообщений
-                  const messageText = navTargetNode.data.messageText || 'Введите ваш ответ:';
                   const inputTargetNodeId = navTargetNode.data.inputTargetNodeId || '';
 
                   // Проверяем, есть ли условные сообщения для этого узла
