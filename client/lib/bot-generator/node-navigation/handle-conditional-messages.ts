@@ -8,9 +8,9 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { Button } from '../bot-generator';
-import { generateButtonText } from '../bot-generator/format';
-import { toPythonBoolean } from '../bot-generator/format';
+import type { Button } from '../../bot-generator';
+import { generateButtonText } from '../format';
+import { toPythonBoolean } from '../format';
 
 /**
  * Интерфейс условного сообщения

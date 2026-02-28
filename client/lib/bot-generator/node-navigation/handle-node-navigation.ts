@@ -17,7 +17,7 @@ import { handleAutoTransition, canAutoTransition } from './handle-auto-transitio
 import { handleCommandNode } from './handle-command-node';
 
 // Импорт для форматирования
-import { formatTextForPython } from '../bot-generator/format';
+import { formatTextForPython } from '../format';
 
 /**
  * Соединение между узлами графа

@@ -8,7 +8,7 @@
  */
 
 import type { Node, Connection } from '@shared/schema';
-import { formatTextForPython } from '../bot-generator/format';
+import { formatTextForPython } from '../format';
 
 /**
  * Генерирует код для обработки сообщения с запросом ввода

@@ -8,9 +8,9 @@
  */
 
 import type { Node } from '@shared/schema';
-import { formatTextForPython } from '../bot-generator/format';
-import { generateInlineKeyboardCode } from '../bot-generator/Keyboard';
-import { generateUniversalVariableReplacement } from '../bot-generator/database';
+import { formatTextForPython } from '../format';
+import { generateInlineKeyboardCode } from '../Keyboard';
+import { generateUniversalVariableReplacement } from '../database';
 
 /**
  * Генерирует код для обработки узла с множественным выбором

@@ -8,11 +8,11 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { Button } from '../bot-generator';
-import { formatTextForPython, generateButtonText } from '../bot-generator/format';
-import { calculateOptimalColumns } from '../bot-generator/Keyboard';
-import { generateWaitingStateCode } from '../bot-generator/format';
-import { toPythonBoolean } from '../bot-generator/format';
+import type { Button } from '../../bot-generator';
+import { formatTextForPython, generateButtonText } from '../format';
+import { calculateOptimalColumns } from '../Keyboard';
+import { generateWaitingStateCode } from '../format';
+import { toPythonBoolean } from '../format';
 
 /**
  * Генерирует код для сбора ввода от пользователя

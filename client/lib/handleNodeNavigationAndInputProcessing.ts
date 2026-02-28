@@ -8,8 +8,8 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { Connection } from './node-navigation/handle-node-navigation';
-import { handleNodeNavigation } from './node-navigation/handle-node-navigation';
+import type { Connection } from './bot-generator/node-navigation/handle-node-navigation';
+import { handleNodeNavigation } from './bot-generator/node-navigation/handle-node-navigation';
 
 /**
  * Генерирует код для навигации по узлам графа бота
