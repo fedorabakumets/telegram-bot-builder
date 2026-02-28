@@ -10,7 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -124,32 +124,11 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Выполнение команды
      * Создает фиктивное сообщение и вызывает соответствующий обработчик команды
      */
-    code += '                # Выполнение команды\n';
-    code += '                command = option_target\n';
-    code += '                # Создаем фиктивное сообщение для выполнения команды\n';
-    code += '                import types as aiogram_types\n';
-    code += '                fake_message = aiogram_types.SimpleNamespace(\n';
-    code += '                    from_user=message.from_user,\n';
-    code += '                    chat=message.chat,\n';
-    code += '                    text=command,\n';
-    code += '                    message_id=message.message_id\n';
-    code += '                )\n';
-    code += '                \n';
+    code += generateFakeMessageCreation('                ');
 
     // Добавляем обработку различных команд для reply клавиатур
     const commandNodes = (nodes || []).filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
-    commandNodes.forEach((cmdNode, cmdIndex) => {
-      const condition = cmdIndex === 0 ? 'if' : 'elif';
-      code += `                ${condition} command == "${cmdNode.data.command}":\n`;
-      code += `                    try:\n`;
-      code += `                        await ${cmdNode.type === 'start' ? 'start_handler' : `${cmdNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`}(fake_message)\n`;
-      code += `                    except Exception as e:\n`;
-      code += `                        logging.error(f"Ошибка выполнения команды ${cmdNode.data.command}: {e}")\n`;
-    });
-    if (commandNodes.length > 0) {
-      code += `                else:\n`;
-      code += `                    logging.warning(f"Неизвестная команда: {command}")\n`;
-    }
+    code += generateCommandHandlers(commandNodes, '                ');
 
     code += '            elif option_action == "goto" and option_target:\n';
     code += '                # Переход к узлу\n';
