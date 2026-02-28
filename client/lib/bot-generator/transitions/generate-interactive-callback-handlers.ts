@@ -521,26 +521,33 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           code += '    user_id = callback_query.from_user.id\n';
           code += '    \n';
 
-          // Генерируем код для поиска яттекста кнопки
+          // Генерируем код для поиска текста кнопки
           const sourceNode = nodes.find(n => n && n.data?.buttons && n.data.buttons.some((btn: { target: string; }) => btn.target === nodeId)
           );
 
-          // Если к узлу ведут несколько кнопоя, нужно определить, какую именяо нажали
+          // Если к узлу ведут несколько кнопок, нужно определить, какую именно нажали
           let buttonsToTargetNode = [];
           if (sourceNode) {
             buttonsToTargetNode = sourceNode.data.buttons.filter((btn: { target: string; }) => btn.target === nodeId);
           }
 
-          // Сохраняем button_click ТОЛЬКО если есть sourceNode (реальная кнопка, а не автопереход)
-          if (sourceNode) {
+          // ИСПРАВЛЕНИЕ: Сохраняем button_click ТОЛЬКО если включен сбор данных
+          // Проверяем sourceNode и collectUserInput целевого узла
+          const targetNodeForSaveCheck = nodes.find(n => n.id === nodeId);
+          const shouldSaveButtonClick = sourceNode && (
+            targetNodeForSaveCheck?.data?.collectUserInput === true || 
+            targetNodeForSaveCheck?.data?.saveToDatabase === true
+          );
+          
+          if (shouldSaveButtonClick) {
             code += '    # Сохраняем нажатие кнопки в базу данных\n';
             code += '    # Ищем текст кнопки по callback_data\n';
-            
+
             code += generateButtonTextDetection({
               nodeId,
               buttonsToTargetNode
             }, '    ');
-            
+
             code += '    \n';
             code += '    # Сохраняем ответ в базу данных\n';
             code += '    timestamp = get_moscow_time()\n';
