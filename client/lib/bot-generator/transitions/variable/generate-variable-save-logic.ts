@@ -28,7 +28,18 @@ export function generateVariableSaveLogic(
   indent: string = '    '
 ): string {
   const { nodeId, sourceNode: _sourceNode, nodes } = params;
+
+  // ИСПРАВЛЕНИЕ: Не генерируем сохранение если collectUserInput не включен
+  const targetNode = nodes.find(n => n.id === nodeId);
+  const shouldSave = (
+    targetNode?.data?.collectUserInput === true || 
+    targetNode?.data?.saveToDatabase === true
+  );
   
+  if (!shouldSave) {
+    return ''; // Не генерируем код сохранения
+  }
+
   let code = '';
   code += `${indent}\n`;
   code += `${indent}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура\n`;
