@@ -7,8 +7,17 @@
  * @module bot-generator/transitions/generate-reply-keyboard-send
  */
 
-import { Button } from '../../types';
 import { generateButtonText, toPythonBoolean } from '../../format';
+
+/**
+ * Тип кнопки reply клавиатуры
+ */
+export interface Button {
+  text: string;
+  action?: string;
+  requestContact?: boolean;
+  requestLocation?: boolean;
+}
 
 /**
  * Генерирует Python-код для отправки сообщения с reply клавиатурой

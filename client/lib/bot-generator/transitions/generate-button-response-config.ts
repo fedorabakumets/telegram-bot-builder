@@ -1,15 +1,35 @@
 /**
  * @fileoverview Генерация кода для конфигурации кнопочного ответа
- * 
+ *
  * Модуль создаёт Python-код для настройки button_response_config
  * с вариантами ответов, кнопками и навигацией.
- * 
+ *
  * @module bot-generator/transitions/generate-button-response-config
  */
 
-import { ResponseOption } from '../../bot-generator';
 import { generateButtonText, toPythonBoolean, escapeForJsonString } from '../../format';
 import { generateInlineKeyboardCode } from '../../Keyboard';
+
+/**
+ * Тип варианта ответа для кнопочного ввода
+ */
+export interface ResponseOption {
+  text: string;
+  value?: string;
+  action?: string;
+  target?: string;
+  url?: string;
+}
+
+/**
+ * Тип кнопки для конфигурации ответа
+ */
+export interface Button {
+  text: string;
+  action: string;
+  target: string;
+  id: string;
+}
 
 /**
  * Генерирует Python-код для конфигурации кнопочного ответа

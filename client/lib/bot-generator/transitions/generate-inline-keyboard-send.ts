@@ -1,18 +1,28 @@
 /**
  * @fileoverview Генерация кода для отправки сообщений с inline клавиатурой
- * 
+ *
  * Модуль создаёт Python-код для отправки сообщений с inline кнопками
  * через aiogram. Поддерживает кнопки URL, goto и command.
- * 
+ *
  * @module bot-generator/transitions/generate-inline-keyboard-send
  */
 
-import { Button } from '../../types';
 import { generateButtonText } from '../../format';
 
 /**
+ * Тип кнопки inline клавиатуры
+ */
+export interface Button {
+  text: string;
+  action?: string;
+  target?: string;
+  url?: string;
+  id?: string;
+}
+
+/**
  * Генерирует Python-код для отправки сообщения с inline клавиатурой
- * 
+ *
  * @param node - Узел сообщения с данными кнопок
  * @param indent - Отступ для форматирования кода
  * @returns Сгенерированный Python-код
