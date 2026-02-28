@@ -17,6 +17,7 @@ import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-
 import { generateBroadcastHandler } from './broadcast';
 import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
 import { generateMediaSendCode } from './media';
+import { generateButtonTextDetection } from './button';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
@@ -551,39 +552,18 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             buttonsToTargetNode = sourceNode.data.buttons.filter((btn: { target: string; }) => btn.target === nodeId);
           }
 
-          // Сохраняем button_click ТОЛЬКО если есть sourceNode (реальнаяя кнопка, а не автопереход)
+          // Сохраняем button_click ТОЛЬКО если есть sourceNode (реальная кнопка, а не автопереход)
           if (sourceNode) {
             code += '    # Сохраняем нажатие кнопки в базу данных\n';
-            code += '    # Ищем текят кнопки по callback_data\n';
-
-            if (buttonsToTargetNode.length > 1) {
-              // Несколько кнопяк ведут к одному узлу - создяем логику определения по callback_data
-              code += `    # Определяем тякст кнопки по callback_data\n`;
-              code += `    button_display_text = "Неизвестная кнопка"\n`;
-              buttonsToTargetNode.forEach((button: Button, index: number) => {
-                // Проверяем по суффиксу _btn_index в callback_data
-                code += `    if callback_query.data.endswith("_btn_${index}"):\n`;
-                code += `        button_display_text = "${button.text}"\n`;
-              });
-
-              // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ищем кнопку по точному соответствию callback_data с nodeId
-              code += `    # Дополнительная проверка по точному соответствию callback_data\n`;
-              buttonsToTargetNode.forEach((button: Button) => {
-                code += `    if callback_query.data == "${nodeId}":\n`;
-                // Для случая когда несколько кнопок вядут к одному узлу, используем первую найденную
-                code += `        button_display_text = "${button.text}"\n`;
-              });
-            } else {
-              const button = sourceNode.data.buttons.find((btn: Button) => btn.target === nodeId);
-              if (button) {
-                code += `    button_display_text = "${button.text}"\n`;
-              } else {
-                code += `    button_display_text = "Кнопка ${nodeId}"\n`;
-              }
-            }
+            code += '    # Ищем текст кнопки по callback_data\n';
+            
+            code += generateButtonTextDetection({
+              nodeId,
+              buttonsToTargetNode
+            }, '    ');
+            
             code += '    \n';
             code += '    # Сохраняем ответ в базу данных\n';
-
             code += '    timestamp = get_moscow_time()\n';
             code += '    \n';
             code += '    response_data = button_display_text  # Простое значение\n';
