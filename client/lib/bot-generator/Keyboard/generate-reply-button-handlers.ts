@@ -165,7 +165,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               // Скрываем клавиатуру если установлен флаг hideAfterClick
               if (hideAfterClick) {
                 code += '    # Скрываем клавиатуру после нажатия кнопки\n';
-                code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                code += '    await message.answer(" ", reply_markup=ReplyKeyboardRemove())\n';
               }
             } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               // Проверяем, есть ли статическое изображение в целевом узле
@@ -252,7 +252,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 // Скрываем клавиатуру если установлен флаг hideAfterClick
                 if (hideAfterClick) {
                   code += '    # Скрываем клавиатуру после нажатия кнопки\n';
-                  code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                  code += '    await message.answer(" ", reply_markup=ReplyKeyboardRemove())\n';
                 }
               } else {
                 // Старая логика без изображения
@@ -329,7 +329,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 // Скрываем клавиатуру если установлен флаг hideAfterClick
                 if (hideAfterClick) {
                   code += '    # Скрываем клавиатуру после нажатия кнопки\n';
-                  code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                  code += '    await message.answer(" ", reply_markup=ReplyKeyboardRemove())\n';
                 }
               }
 
@@ -363,7 +363,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
                     code += '    # Скрываем клавиатуру после нажатия кнопки\n';
-                    code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '    await message.answer(" ", reply_markup=ReplyKeyboardRemove())\n';
                   }
                 } else {
                   code += `    logging.warning(f"⚠️ Целевой узел не найден: {targetNode.id}, завершаем переход")\n`;
@@ -451,7 +451,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
                     code += '    # Скрываем клавиатуру после нажатия кнопки\n';
-                    code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '    await message.answer(" ", reply_markup=ReplyKeyboardRemove())\n';
                   }
                 } else {
                   // Нет изображения, отправляем текст с клавиатурой
@@ -467,14 +467,14 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
                     code += '        # Скрываем клавиатуру после нажатия кнопки\n';
-                    code += '        await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '        await message.answer(" ", reply_markup=ReplyKeyboardRemove())\n';
                   }
                   code += '    else:\n';
                   code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
                     code += '        # Скрываем клавиатуру после нажатия кнопки\n';
-                    code += '        await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '        await message.answer(" ", reply_markup=ReplyKeyboardRemove())\n';
                   }
                 }
 
@@ -522,7 +522,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
                     code += '    # Скрываем клавиатуру после нажатия кнопки\n';
-                    code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '    await message.answer(" ", reply_markup=ReplyKeyboardRemove())\n';
                   }
                 } else {
                   code += `    logging.warning(f"⚠️ Целевой узел не найден: {targetNode.id}, завершаем переход")\n`;
@@ -588,14 +588,14 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
                     code += '        # Скрываем клавиатуру после нажатия кнопки\n';
-                    code += '        await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '        await message.answer(" ", reply_markup=ReplyKeyboardRemove())\n';
                   }
                   code += '    else:\n';
                   code += `        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="${targetNode.id}"${parseModeTarget})\n`;
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
                     code += '        # Скрываем клавиатуру после нажатия кнопки\n';
-                    code += '        await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '        await message.answer(" ", reply_markup=ReplyKeyboardRemove())\n';
                   }
                 } else {
                   if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
