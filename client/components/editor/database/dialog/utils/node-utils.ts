@@ -66,19 +66,22 @@ export function collectNodesFromProjectData(
  */
 export function formatNodeDisplay(node: Node, sheetName: string): string {
   const typeLabels: Record<string, string> = {
-    start: '🚀 Старт',
-    message: '💬 Сообщение',
-    command: '⚙️ Команда',
-    sticker: '🎭 Стикер',
-    voice: '🎤 Голосовое',
-    animation: '🎬 Анимация',
-    location: '📍 Геолокация',
-    contact: '📇 Контакт',
+    start: 'Старт',
+    message: 'Сообщение',
+    command: 'Команда',
+    sticker: 'Стикер',
+    voice: 'Голосовое',
+    animation: 'Анимация',
+    location: 'Геолокация',
+    contact: 'Контакт',
   };
 
-  const label = typeLabels[node.type] || '📦 Узел';
+  const label = typeLabels[node.type] || 'Узел';
   const text = node.data.messageText || node.data.command || '';
-  const truncatedText = text.length > 30 ? text.slice(0, 30) + '...' : text;
-
-  return truncatedText ? `${label}: ${truncatedText}` : `${label} (${sheetName})`;
+  
+  // Показываем текст сообщения и название листа
+  if (text) {
+    return `${label}: ${text} (${sheetName})`;
+  }
+  return `${label} (${sheetName})`;
 }

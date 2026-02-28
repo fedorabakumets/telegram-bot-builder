@@ -20,7 +20,7 @@ export interface NodeSelectorProps {
   /** Массив узлов для выбора с информацией о листе */
   nodesWithSheets: Array<{ node: Node; sheetName: string }>;
   /** Выбранный ID узла */
-  selectedNodeId?: string;
+  selectedNodeId?: string | null;
   /** Функция выбора узла */
   onSelectNode: (nodeId: string) => void;
   /** Флаг загрузки */
@@ -43,6 +43,16 @@ function getNodeIcon(type: Node['type']): string {
       return '💬';
     case 'command':
       return '⚙️';
+    case 'sticker':
+      return '🎭';
+    case 'voice':
+      return '🎤';
+    case 'animation':
+      return '🎬';
+    case 'location':
+      return '📍';
+    case 'contact':
+      return '📇';
     default:
       return '📦';
   }
@@ -61,26 +71,35 @@ export function NodeSelector({
     SENDABLE_NODE_TYPES.includes(node.type as typeof SENDABLE_NODE_TYPES[number])
   );
 
+  const handleValueChange = (value: string) => {
+    onSelectNode(value);
+  };
+
   return (
     <Select
-      value={selectedNodeId}
-      onValueChange={onSelectNode}
+      value={selectedNodeId || ''}
+      onValueChange={handleValueChange}
       disabled={isLoading || sendableNodes.length === 0}
     >
-      <SelectTrigger className="w-full h-9 text-xs">
-        <SelectValue placeholder="⊘ Выберите узел для отправки..." />
+      <SelectTrigger className="w-full h-8 text-xs bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 hover:border-blue-400/60 focus:border-blue-500 focus:ring-blue-400/30">
+        <SelectValue placeholder="⊘ Не выбрано" />
       </SelectTrigger>
-      <SelectContent className="max-h-48 overflow-y-auto">
-        {sendableNodes.map(({ node, sheetName }) => (
-          <SelectItem key={node.id} value={node.id}>
-            <div className="flex items-center gap-2">
-              <span>{getNodeIcon(node.type)}</span>
-              <span className="truncate max-w-[200px]">
-                {formatNodeDisplay(node, sheetName)}
-              </span>
-            </div>
-          </SelectItem>
-        ))}
+      <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
+        {sendableNodes.map(({ node, sheetName }) => {
+          const display = formatNodeDisplay(node, sheetName);
+          const icon = getNodeIcon(node.type);
+          
+          return (
+            <SelectItem key={node.id} value={node.id}>
+              <div className="flex items-center gap-2">
+                <span className="text-base">{icon}</span>
+                <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate max-w-[250px]">
+                  {display}
+                </span>
+              </div>
+            </SelectItem>
+          );
+        })}
       </SelectContent>
     </Select>
   );

@@ -28,7 +28,7 @@ export interface NodeSenderProps {
  * Компонент для выбора и отправки узла пользователю
  */
 export function NodeSender({ projectId, userId, onSent }: NodeSenderProps) {
-  const [selectedNodeId, setSelectedNodeId] = useState<string>();
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const { project, isLoading } = useProjectData(projectId);
   const sendNodeMutation = useSendNode(projectId, onSent);
 
