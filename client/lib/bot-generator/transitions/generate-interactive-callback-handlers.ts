@@ -9,7 +9,8 @@
 
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
 import { generateCallbackHandlerInit } from './callback-handler-init';
-import { generateMultiSelectDoneButton, generateMultiSelectInit, generateMultiSelectReplyKeyboard, generateMultiSelectInlineKeyboard } from './multi-select';
+import { generateMultiSelectDoneButton } from './multi-select';
+import { generateMultiSelectHandler, generateMultiSelectComplete } from './multi-select-handler';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateMessageTextPreparation, generateDatabaseVarsGet } from './message-text';
 import { generateConditionalMessagesCheck } from './conditional-messages';
@@ -131,27 +132,17 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               multiSelectVariable,
               continueButtonTarget: targetNode.data.continueButtonTarget
             }, '    ');
-            
-            // Переход к следующему узлу
+
+            // Обработка перехода после множественного выбора
             if (targetNode.data.continueButtonTarget) {
-              const nextNodeId = targetNode.data.continueButtonTarget;
-              // Проверяем, существует ли целевой узел перед вызовом обработчика
-              const targetExists = nodes.some(n => n.id === nextNodeId);
-              code += '        # Переход к следующему узлу\n';
-              code += `        next_node_id = "${nextNodeId}"\n`;
-              code += '        try:\n';
-              if (targetExists) {
-                code += `            await handle_callback_${nextNodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query)\n`;
-              } else {
-                code += `            logging.warning(f"⚠️ Целевой узел не найден: {next_node_id}, завершаем переход")\n`;
-                code += `            await callback_query.message.edit_text("Переход завершен")\n`;
-              }
-              code += '        except Exception as e:\n';
-              code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-              code += `            await callback_query.message.edit_text("Переход завершен")\n`;
+              code += generateMultiSelectHandler({
+                nodeId,
+                multiSelectVariable,
+                continueButtonTarget: targetNode.data.continueButtonTarget,
+                nodes
+              }, '        ');
             } else {
-              code += '        # Завершение множественного выбора\n';
-              code += `        await safe_edit_or_send(callback_query, "✅ Выбор завершен!", is_auto_transition=True)\n`;
+              code += generateMultiSelectComplete('        ');
             }
             code += '        return\n';
             code += '    \n';
