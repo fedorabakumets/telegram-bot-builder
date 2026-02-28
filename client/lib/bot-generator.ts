@@ -6,6 +6,13 @@ import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
 import { setGlobalLoggingEnabled } from './bot-generator/core';
 import { generatePythonImports } from './bot-generator/imports';
 import { collectAllCommandCallbacksFromNodes, addCommandCallbackHandlers } from './bot-generator/commands';
+import {
+  generateGroupBasedEventHandlers,
+  generateFallbackHandlers,
+  generateBotInitialization,
+  generateSignalHandler,
+  generatePollingLoop
+} from './bot-generator/handlers';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotCommandsSetup } from './bot-commands-setup';
@@ -304,20 +311,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   code = addCommandCallbackHandlers(commandButtons, code, nodes || []);
 
-  // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком тттекста
+  // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком текста
   if (enableGroupHandlers) {
-    generateGroupBasedEventHandlers();
+    code += generateGroupBasedEventHandlers(groups, generateGroupHandlers);
   }
 
   // Добавляем универсальный fallback-обработчик для всех текстовых сообщений
   // Этот обработчик ОБЯЗАТЕЛЬНО нужен, чтобы middleware сохранял ВСЕ сообщения
   // Middleware вызывается только для зарегистрированных обработчиков!
   // ВАЖНО: Добавляем только если база данных включена
-  generateFallbackHandlers();
+  code += generateFallbackHandlers(userDatabaseEnabled);
 
-  signal_handler();
-  generateBotInitializationAndMiddlewareSetup();
-  generateMainPollingLoopWithGracefulShutdown();
+  code += generateSignalHandler();
+  code += generateBotInitialization(userDatabaseEnabled, menuCommands.length, hasInlineButtons(nodes || []));
+  code += generatePollingLoop(userDatabaseEnabled);
 
   // Найдем узла с множественным выбором для использования в обработчиках
   const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes, isLoggingEnabled);
@@ -798,133 +805,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code = newgenerateStateTransitionAndRenderLogic(nodes, code, allNodeIds, []);
   }
 
-  function generateGroupBasedEventHandlers() {
-    code += '\n';
-
-    code += generateGroupHandlers(groups);
-  }
-
-  /**
-   * Генерирует fallback обработчики для необработанных сообщений
-   * Создает обработчики для текстовых сообщений и фотографий, которые не были обработаны основными обработчиками
-   */
-  function generateFallbackHandlers() {
-    if (userDatabaseEnabled) {
-      fallback_text_handler();
-
-      // Добавляем универсальный обработчик для фотографий
-      handle_unhandled_photo();
-    }
-  }
-
-  /**
-   * Генерирует fallback обработчик для необработанных текстовых сообщений
-   * Создает Python функцию для обработки всех текстовых сообщений, которые не были обработаны основными обработчиками
-   */
-  function fallback_text_handler() {
-    code += '\n# Универсальный fallback-обработчик для всех необработанных текстовых сообщений\n';
-    code += '@dp.message(F.text)\n';
-    code += 'async def fallback_text_handler(message: types.Message):\n';
-    code += '    """\n';
-    code += '    Fallback обработчик для всех текстовых сообщений без специфичного обработчика.\n';
-    code += '    Благодаря middleware, сообщение уже сохранено в БД.\n';
-    code += '    Этот обработчик просто логирует факт необработанного сообщения.\n';
-    code += '    """\n';
-    code += '    logging.info(f"?? Получено необработанное текстовое сообщение от {message.from_user.id}: {message.text}")\n';
-    code += '    # Можно отправить ответ пользователю (опционально)\n';
-    code += '    # await message.answer("Извините, я не понимаю эту команду. Используйте /start для начала.")\n\n';
-  }
-
-  /**
-   * Генерирует fallback обработчик для необработанных фотографий
-   * Создает Python функцию для обработки всех фотографий, которые не были обработаны основными обработчиками
-   */
-  function handle_unhandled_photo() {
-    code += '\n# Универсальный обработчик для необработанных фото\n';
-    code += '@dp.message(F.photo)\n';
-    code += 'async def handle_unhandled_photo(message: types.Message):\n';
-    code += '    """\n';
-    code += '    Обрабатывает фотографии, которые не были обработаны другими обработчиками.\n';
-    code += '    Благодаря middleware, фото уже будет сохранено в БД.\n';
-    code += '    """\n';
-    code += '    logging.info(f"?? Получено фото от пользователя {message.from_user.id}")\n';
-    code += '    # Middleware автоматически сохранит фото\n';
-    code += '\n';
-  }
-
-  /**
-   * Генерирует каркас основной функции с обработчиками сигналов
-   * Создает Python функцию main() с обработчиками сигналов для корректного завершения работы бота
-   */
-  function signal_handler() {
-    code += '\n\n# Запуск бота\n';
-    code += 'async def main():\n';
-    if (userDatabaseEnabled) {
-      code += '    global db_pool\n';
-    }
-    code += '    \n';
-    code += '    # Обработчик сигналов для корректного завершения\n';
-    code += '    def signal_handler(signum, frame):\n';
-    code += '        print(f"?? Получен сигнал {signum}, начинаем корректное завершение...")\n';
-    code += '        import sys\n';
-    code += '        sys.exit(0)\n';
-    code += '    \n';
-    code += '    # Регистрируем обработчики сигналов\n';
-    code += '    signal.signal(signal.SIGTERM, signal_handler)\n';
-    code += '    signal.signal(signal.SIGINT, signal_handler)\n';
-    code += '    \n';
-    code += '    try:\n';
-  }
-
-  /**
-   * Генерирует код инициализации бота и настройки middleware
-   * Создает Python код для инициализации базы данных, команд меню и middleware для логирования
-   */
-  function generateBotInitializationAndMiddlewareSetup() {
-    if (userDatabaseEnabled) {
-      code += '        # Инициализируем базу данных\n';
-      code += '        await init_database()\n';
-    }
-    if (menuCommands.length > 0) {
-      code += '        await set_bot_commands()\n';
-    }
-    code += '        \n';
-    if (userDatabaseEnabled) {
-      code += '        # Регистрация middleware для сохранения сообщений\n';
-      code += '        dp.message.middleware(message_logging_middleware)\n';
-      // Регистрируем callback_query middleware только если в боте есть inline кнопки
-      if (hasInlineButtons(nodes || [])) {
-        code += '        dp.callback_query.middleware(callback_query_logging_middleware)\n';
-      }
-      code += '        \n';
-    }
-  }
-
-  /**
-   * Генерирует основной цикл опроса с корректным завершением работы
-   * Создает Python код для запуска polling бота и корректного закрытия всех соединений при завершении
-   */
-  function generateMainPollingLoopWithGracefulShutdown() {
-    code += '        print("рџљЂ Р‘РѕС‚ Р·Р°РїСѓС‰РµРЅ Рё РіРѕС‚РѕРІ Рє СЂР°Р±РѕС‚Рµ!")\n';
-    code += '        await dp.start_polling(bot)\n';
-    code += '    except KeyboardInterrupt:\n';
-    code += '        print("вљ Рё РџРѕР»СѓС‡РµРЅ СЃРёРіРЅР°Р» РѕСЃС‚Р°РЅРѕРІРєРё, Р·Р°РІРµСЂС€Р°РµРј СЂР°Р±РѕС‚Сѓ...")\n';
-    code += '    except SystemExit:\n';
-    code += '        print("вљ Рё РЎРёСЃС‚РµРјРЅРѕРµ Р·Р°РІРµСЂС€РµРЅРёРµ, Р·Р°РІРµСЂС€Р°РµРј СЂР°Р±РѕС‚Сѓ...")\n';
-    code += '    except Exception as e:\n';
-    code += '        logging.error(f"РћС€РёР±РєР°: {e}")\n';
-    code += '    finally:\n';
-    code += '        # Р—Р°РєСЂС‹С‚РёРµ СЃРѕРµРґРёРЅРµРЅРёР№ РїСЂРё РІС‹С…РѕРґРµ\n';
-    if (userDatabaseEnabled) {
-      code += '        if db_pool:\n';
-      code += '            await db_pool.close()\n';
-    }
-    code += '        \n';
-    code += '        # Закрываем сессию бота\n';
-    code += '        await bot.session.close()\n';
-    code += '\n';
-  }
-
   /**
    * Идентифицирует узлы, требующие логику множественного выбора
    * Находит все узлы в графе с включенной опцией множественного выбора и возвращает их список
@@ -991,7 +871,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   /**
    * Генерирует код сохранения данных множественного выбора и очистки состояния
    * Создает Python код для сохранения выбранных опций множественного выбора в базу данных
-   * и очистки временных данных пользователя после завершения операции
+   * и очистки врем��нных данных пользователя после завершения операции
    */
   function generateMultiSelectDataPersistenceAndCleanupCode() {
     multiSelectNodes.forEach((node: Node) => {
