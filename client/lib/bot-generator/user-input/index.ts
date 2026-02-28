@@ -17,3 +17,4 @@ export { generateFakeCallbackCreation, generateSkipTargetNavigation } from './ge
 export { generateWaitingStateCheck, generateDatabaseVarsGet } from './generate-waiting-state-check';
 export { generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract } from './generate-waiting-config-extract';
 export { generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipNavigation } from './generate-skip-buttons-check';
+export { generateButtonResponseSave } from './generate-button-response-save';
