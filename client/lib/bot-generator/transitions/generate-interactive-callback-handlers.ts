@@ -13,6 +13,7 @@ import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateMessageTextPreparation, generateDatabaseVarsGet } from './message-text';
 import { generateConditionalMessagesCheck } from './conditional-messages';
 import { generateMediaVariablesSetup } from './media-variables';
+import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
@@ -718,12 +719,12 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               code += '    try:\n';
               code += '        if keyboard:\n';
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-              code += '            # Заменяем все переменны�� в ��екс��е\n';
+              code += '            # Заменяем все переменныяя в яяексяяе\n';
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
               code += '        else:\n';
-              code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликат���в при автопереходах)\n';
-              // К��ИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатяяяв при автопереходах)\n';
+              // КяяИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
               code += '            # Заменяем все переменные в тексте\n';
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await callback_query.message.answer(text)\n';
@@ -735,7 +736,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
               code += '        else:\n';
-              // КР��ТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              // КРяяТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
               code += '            # Заменяем все переменные в тексте\n';
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await callback_query.message.answer(text)\n';
@@ -752,8 +753,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
             code += '        else:\n';
-            code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при авто��ереходах)\n';
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязате���ьно вызываем замен�� переменных в тексте
+            code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автояяереходах)\n';
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязатеяяяьно вызываем заменяя переменных в тексте
             code += '            # Заменяем все переменные в тексте\n';
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text)\n';
@@ -765,69 +766,20 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
             code += '        else:\n';
-            // КРИТИЧЕ��КОЕ ИСПРА��ЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '            # Заменяем все переменные в ��ексте\n';
+            // КРИТИЧЕяяКОЕ ИСПРАяяЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+            code += '            # Заменяем все переменные в яяексте\n';
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await callback_query.message.answer(text)\n';
             code += '    \n';
           }
 
           // ============================================================================
-          // СИСТЕМА АВТО??ЕРЕХОДОВ
+          // СИСТЕМА АВТОПЕРЕХОДОВ
           // ============================================================================
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем автопереход сразу после отправки сообщения
-          const currentNodeForAutoTransition = nodes.find(n => n.id === nodeId);
-
-          // Для узлов без кнопок проверяем автопереход либо по флагу enableAutoTransition, либо по единственному соединению
-          let autoTransitionTarget: string | null = null;
-
-          // Сначаля проверяем явный автоп??реход через флаг
-          if (currentNodeForAutoTransition?.data?.enableAutoTransition && currentNodeForAutoTransition?.data?.autoTransitionTo) {
-            autoTransitionTarget = currentNodeForAutoTransition.data.autoTransitionTo;
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} имеет явный автопереход к ${autoTransitionTarget}`);
-          }
-
-
-
-          // Если узел не имеет кнопок и имеет ровно одно исходящее соединение, делаем автопереход
-          else if (currentNodeForAutoTransition && (!currentNodeForAutoTransition.data?.buttons || currentNodeForAutoTransition.data?.buttons.length === 0)) {
-            const outgoingConnections = connections.filter(conn => conn && conn.source === nodeId);
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Узел ${nodeId} без кнопок, про??ер??ем соединения: ${outgoingConnections.length}`);
-            if (outgoingConnections.length === 1) {
-              autoTransitionTarget = outgoingConnections[0].target;
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Узел ${nodeId} без кнопок имеет одно соединение к ${autoTransitionTarget}, делаем автопереход`);
-            }
-          }
+          code += generateAutoTransitionCheck({ nodeId, targetNode, nodes, connections }, '    ');
 
           if (autoTransitionTarget) {
-            const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР АВТОПЕРЕХОД: Добавляем кяд ??втоперехода для узла ${nodeId} -> ${autoTransitionTarget}`);
-            code += '    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла\n';
-            code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура\n';
-            code += '    user_id = callback_query.from_user.id\n';
-            code += '    has_conditional_keyboard = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)\n';
-            code += '    if has_conditional_keyboard:\n';
-            code += '        logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")\n';
-            code += '    elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
-            code += `        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${nodeId}")\n`;
-            code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=true (узел ожидает ввод)\n';
-            // ИСПРАВЛЕНИЕ: Используем фактическое значение collectUserInput из узла, а не значение по умолчанию
-            const collectUserInputValue = targetNode.data.collectUserInput === true;
-            code += `    elif user_id in user_data and user_data[user_id].get("collectUserInput_${nodeId}", ${toPythonBoolean(collectUserInputValue)}) == True:\n`;
-            code += `        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод (collectUserInput=true из user_data), автопереход пропущен")\n`;
-            // Добавляем статическую проверку collectUserInput как резервную
-            const staticCollectUserInput = targetNode.data.collectUserInput === true ||
-              targetNode.data.enableTextInput === true ||
-              targetNode.data.enablePhotoInput === true ||
-              targetNode.data.enableVideoInput === true ||
-              targetNode.data.enableAudioInput === true ||
-              targetNode.data.enableDocumentInput === true;
-            if (staticCollectUserInput) {
-              code += `    elif True:  # Узел ожидает ввод (статическая проверка)\n`;
-              code += `        logging.info(f"ℹ️ Узел ${nodeId} ожидает ввод (collectUserInput=true из статической проверки), автопереход пропущен")\n`;
-            }
-            code += '    else:\n';
-            code += `        # ⚡ Автопереход к узлу ${autoTransitionTarget}\n`;
+            code += generateAutoTransitionCode(autoTransitionTarget, nodeId, '    ');
             code += `        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTarget}")\n`;
             // Проверяем, существует ли целевой узел перед вызовом обработчика
             const targetExists = nodes.some(n => n.id === autoTransitionTarget);
@@ -1470,7 +1422,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                         code += `            logging.info(f"Переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
                       }
                       // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                      code += '            # Заменяем все переменн��е в тексте\n';
+                      code += '            # Заменяем все переменняяе в тексте\n';
                       code += '            nav_text = replace_variables_in_text(nav_text, user_vars)\n';
                       code += '            await bot.send_message(callback_query.from_user.id, nav_text)\n';
                     }
@@ -1488,7 +1440,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             }
 
             code += '    except Exception as e:\n';
-            code += '        logging.error(f"��шибка при пяяяяреходе к следующему узлу {next_node_id}: {e}")\n';
+            code += '        logging.error(f"яяшибка при пяяяяреходе к следующему узлу {next_node_id}: {e}")\n';
             code += '    \n';
             code += '    return  # Завершаем обработку после переадресации\n';
           }
