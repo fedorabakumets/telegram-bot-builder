@@ -17,7 +17,7 @@ export { generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingC
 export { generateFakeCallbackCreation, generateSkipTargetNavigation } from './generate-media-skip-navigation';
 export { generateWaitingStateCheck, generateDatabaseVarsGet } from './generate-waiting-state-check';
 export { generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract } from './generate-waiting-config-extract';
-export { generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipNavigation } from './generate-skip-buttons-check';
+export { generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipFakeCallbackCompletion, generateSkipNavigation } from './generate-skip-buttons-check';
 export { generateSkipTargetHandlerFunction } from './generate-skip-navigation';
 export { generateButtonResponseSave } from './generate-button-response-save';
 export { generateButtonResponseCleanup } from './generate-button-response-cleanup';

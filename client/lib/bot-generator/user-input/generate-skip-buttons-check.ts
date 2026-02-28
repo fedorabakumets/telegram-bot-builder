@@ -9,38 +9,41 @@
 
 /**
  * Генерирует Python-код для проверки кнопок skipDataCollection
- * 
- * @param indent - Отступ для форматирования кода
+ *
+ * @param indent - Отступ для форматирования кода (уровень внутри if isinstance)
  * @returns Код проверки кнопок
  */
 export function generateSkipButtonsCheck(
   indent: string = '        '
 ): string {
   let code = '';
-  code += `${indent}# ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n`;
-  code += `${indent}if isinstance(waiting_config, dict):\n`;
-  code += `${indent}    skip_buttons = waiting_config.get("skip_buttons", [])\n`;
-  code += `${indent}    for skip_btn in skip_buttons:\n`;
-  code += `${indent}        if skip_btn.get("text") == user_text:\n`;
-  code += `${indent}            skip_target = skip_btn.get("target")\n`;
-  code += `${indent}            logging.info(f"⏭️ Нажата кнопка skipDataCollection в waiting_for_input: {user_text} -> {skip_target}")\n`;
-  code += `${indent}            # Очищаем состояние ожидания\n`;
-  code += `${indent}            if "waiting_for_input" in user_data[user_id]:\n`;
-  code += `${indent}                del user_data[user_id]["waiting_for_input"]\n`;
+  const bodyIndent = indent + '    '; // Уровень внутри if isinstance
+  
+  code += `${bodyIndent}# ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n`;
+  code += `${bodyIndent}skip_buttons = waiting_config.get("skip_buttons", [])\n`;
+  code += `${bodyIndent}skip_target = None\n`;
+  code += `${bodyIndent}for skip_btn in skip_buttons:\n`;
+  code += `${bodyIndent}    if skip_btn.get("text") == user_text:\n`;
+  code += `${bodyIndent}        skip_target = skip_btn.get("target")\n`;
+  code += `${bodyIndent}        logging.info(f"⏭️ Нажата кнопка skipDataCollection в waiting_for_input: {user_text} -> {skip_target}")\n`;
+  code += `${bodyIndent}        # Очищаем состояние ожидания\n`;
+  code += `${bodyIndent}        if "waiting_for_input" in user_data[user_id]:\n`;
+  code += `${bodyIndent}            del user_data[user_id]["waiting_for_input"]\n`;
+  code += `${bodyIndent}        break\n`;
   return code;
 }
 
 /**
  * Генерирует Python-код для создания fake_callback при skip навигации
- * 
- * @param indent - Отступ для форматирования кода
+ *
+ * @param indent - Отступ для форматирования кода (уровень try/except)
  * @returns Код создания fake_callback
  */
 export function generateSkipFakeCallbackCreation(
-  indent: string = '            '
+  indent: string = '        '
 ): string {
   let code = '';
-  code += `${indent}# Переходим к целевому узлу\n`;
+  code += `${indent}# Переходим к целевому узлу если skip_target найден\n`;
   code += `${indent}if skip_target:\n`;
   code += `${indent}    try:\n`;
   code += `${indent}        logging.info(f"🚀 Переходим к узлу skipDataCollection: {skip_target}")\n`;
@@ -57,19 +60,37 @@ export function generateSkipFakeCallbackCreation(
 }
 
 /**
+ * Генерирует завершение блока try/except для skip навигации
+ *
+ * @param ifIndent - Отступ для if блока (8 пробелов)
+ * @returns Код завершения try/except
+ */
+export function generateSkipFakeCallbackCompletion(
+  ifIndent: string = '        '
+): string {
+  let code = '';
+  const tryIndent = ifIndent + '    '; // try/except на уровне try (ifIndent + 4)
+  
+  code += `${tryIndent}except Exception as e:\n`;
+  code += `${tryIndent}    logging.error(f"Ошибка при переходе skipDataCollection к узлу {skip_target}: {e}")\n`;
+  code += `${tryIndent}return\n`;
+  return code;
+}
+
+/**
  * Генерирует Python-код для навигации по skip_target
  *
  * @param nodes - Массив узлов для генерации навигации
- * @param indent - Отступ для форматирования кода (базовый уровень)
+ * @param ifIndent - Отступ для if блока (12 пробелов)
  * @returns Код навигации
  */
 export function generateSkipNavigation(
   nodes: any[],
-  indent: string = '        '
+  ifIndent: string = '            '
 ): string {
   let code = '';
-  const bodyIndent = indent + '    '; // Уровень внутри if skip_target:
-  const tryIndent = bodyIndent + '    '; // Уровень внутри try:
+  const tryIndent = ifIndent + '    '; // try на уровне if + 4
+  const bodyIndent = tryIndent + '    '; // код внутри try на уровне try + 4
 
   if (nodes.length > 0) {
     code += `${bodyIndent}# Вызываем обработчик целевого узла\n`;
