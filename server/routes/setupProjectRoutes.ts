@@ -21,6 +21,7 @@ import { exportProjectHandler } from "./projectRoutes/handlers/exportProjectHand
 import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tokenHandlers";
 import { updateCommentsSettingsHandler } from "./projectRoutes/handlers/settingsHandler";
 import { exportToGoogleSheetsHandler, exportStructureToGoogleSheetsHandler } from "./projectRoutes/handlers/googleSheetsHandlers";
+import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
 
 /**
  * Настраивает маршруты управления проектами
@@ -56,6 +57,9 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
     // Экспорт в Google Таблицы
     app.post("/api/projects/:id/export-to-google-sheets", requireDbReady, exportToGoogleSheetsHandler);
     app.post("/api/projects/:id/export-structure-to-google-sheets", requireDbReady, exportStructureToGoogleSheetsHandler);
+
+    // Загрузка изображений по URL
+    app.post("/api/media/upload-from-url", requireDbReady, uploadImageHandler);
 
     // Управление ботом
     setupBotManagementRoutes(app);

@@ -754,6 +754,7 @@ export function PropertiesPanel({
                                 );
                                 onNodeUpdate(selectedNode.id, updates);
                               }}
+                              nodeName={selectedNode.id}
                               label=""
                               placeholder="Выберите медиафайл или введите URL"
                             />
