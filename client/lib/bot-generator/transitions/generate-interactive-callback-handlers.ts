@@ -15,6 +15,7 @@ import { generateConditionalMessagesCheck } from './conditional-messages';
 import { generateMediaVariablesSetup } from './media-variables';
 import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
 import { generateBroadcastHandler } from './broadcast';
+import { generateRegularReplyKeyboard } from './keyboard';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
@@ -252,62 +253,16 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
 
           } else if (targetNode.data?.keyboardType !== 'none' && targetNode.data?.buttons && targetNode.data?.buttons.length > 0) {
             // Обычные кнопки без множественного выбора
-            // ИСПРАВЛЕНИЕ: Проверяем keyboardType узла и генерируем соответствующую клавиатуру
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: НЕ генерируем клавиатуру если keyboardType === 'none'
             if (targetNode.data.keyboardType === 'reply') {
               // Генерируем reply клавиатуру
-              code += '    # Create reply keyboard\n';
-
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли уже создана условная клавиатура
-              if (targetNode.data?.enableConditionalMessages && targetNode.data?.conditionalMessages && targetNode.data?.conditionalMessages.length > 0) {
-                // Инициализируем переменную conditional_keyboard, если она не была определена
-                code += '    if "conditional_keyboard" not in locals():\n';
-                code += '        conditional_keyboard = None\n';
-                code += '    # Проверяем, есть ли условная клавиатура\n';
-                code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
-                code += '        keyboard = conditional_keyboard\n';
-                code += '        logging.info("✅ Используем уяловную reply клавиатуру")\n';
-                code += '    else:\n';
-                code += '        # Условная клавиатура не создана, используем обычную\n';
-                code += '        builder = ReplyKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button) => {
-                  if (btn.action === "contact" && btn.requestContact) {
-                    code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-                  } else if (btn.action === "location" && btn.requestLocation) {
-                    code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-                  } else {
-                    code += `        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                  }
-                });
-                // Автоматическое распределение колонок для reply клавиатуры
-                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-                code += `        builder.adjust(${columns})\n`;
-                const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-                const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-                code += '        logging.info("✅ Используем обычную reply клавиатуру")\n';
-              } else {
-                // Нет условных сообщений, просто создаем обычную клавиатуру
-                code += '    # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
-                code += '    builder = ReplyKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn: Button) => {
-                  if (btn.action === "contact" && btn.requestContact) {
-                    code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-                  } else if (btn.action === "location" && btn.requestLocation) {
-                    code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-                  } else {
-                    code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-                  }
-                });
-                // Автоматическое распределение колонок для reply клавиатуры
-                const columns2 = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-                code += `    builder.adjust(${columns2})\n`;
-                const resizeKeyboard2 = toPythonBoolean(targetNode.data.resizeKeyboard);
-                const oneTimeKeyboard2 = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard2}, one_time_keyboard=${oneTimeKeyboard2})\n`;
-              }
-              code += '    # Для reply клавиатуры нужно отправить новое сообщение\n';
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              code += generateRegularReplyKeyboard({
+                buttons: targetNode.data.buttons,
+                resizeKeyboard: targetNode.data.resizeKeyboard,
+                oneTimeKeyboard: targetNode.data.oneTimeKeyboard,
+                hasConditionalMessages: targetNode.data?.enableConditionalMessages && targetNode.data?.conditionalMessages && targetNode.data?.conditionalMessages.length > 0
+              }, '    ');
+              
+              // Для reply клавиатуры нужно отправить новое сообщение
               code += '    # Заменяем все переменные в тексте\n';
               code += '    text = replace_variables_in_text(text, user_vars)\n';
               // NOTE: Отправка сообщения для reply клавиатуры обрабатывается в другом месте
@@ -744,7 +699,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += '    user_data[user_id]["button_click"] = button_display_text\n';
           }
 
-          // Определяем переменную для сохя��нения на основе кнопки (ТОЛЬКО есяи есть sourceNode)
+          // Определяем переменную для сохяяянения на основе кнопки (ТОЛЬКО есяи есть sourceNode)
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: НЕ сохраняем переменную если показана условная клавиатура
           // Нужно дождаться, пока пользователь нажмёт кнопку на условной клавиатуре
           if (sourceNode) {
