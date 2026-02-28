@@ -14,7 +14,10 @@ import {
   generatePollingLoop
 } from './bot-generator/handlers';
 import { generateMultiSelectCallbackHandler } from './bot-generator/multi-select';
-import { generateUserInputValidationAndContinuationLogic } from './bot-generator/input';
+import {
+  generateUserInputValidationAndContinuationLogic,
+  generateAdHocInputCollectionHandler
+} from './bot-generator/input';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotCommandsSetup } from './bot-commands-setup';
@@ -456,87 +459,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * @author Bot Generator Team
    */
   function generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation() {
-    code = newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes, code, allNodeIds, [], generateAdHocInputCollectionHandler, generateContinuationLogicForButtonBasedInput, generateUserInputValidationAndContinuationLogic, generateStateTransitionAndRenderLogic);
-  }
-
-  /**
-   * Генерирует Python код для обработки ad-hoc сбора пользовательского ввода в Telegram боте.
-   * 
-   * Эта функция создает обработчик для ситуаций, когда боту необходимо собрать дополнительную
-   * информацию от пользователя в процессе диалога. Функция поддерживает два основных сценария:
-   * 
-   * 1. **Основной ввод с переходом**: Когда пользователь вводит данные, которые должны быть
-   *    сохранены и использованны для перехода к следующему узлу бота
-   * 2. **Дополнительный комментарий**: Когда пользователь может оставить дополнительный
-   *    комментарий без перехода к следующему узлу
-   * 
-   * Основные возможности:
-   * - Проверка существования узла для сбора ввода
-   * - Поддержка дополнительного сбора ответов для обычных кнопок
-   * - Сохранение пользовательских данных в локальное хранилище и базу данных
-   * - Автоматическая очистка состояния сбора ввода после обработки
-   * - Логирование всех операций для отладки
-   * - Навигация к целевому узлу после успешного ввода
-   * 
-   * Генерируемый Python код включает:
-   * - Валидацию наличия узла в графе бота
-   * - Проверку флага input_collection_enabled для дополнительного сбора
-   * - Сохранение данных с временными метками
-   * - Обработку ошибок сохранения в базу данных
-   * - Навигационную логику для перехода к следующему узлу
-   * 
-   * @example
-   * // Генерирует код для обработки пользовательского ввода
-   * // когда бот ожидает ответ от пользователя после нажатия кнопки
-   * 
-   * @see generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation
-   * @see generateButtonResponseHandlersForUserInputCollectionWithReplyKeyboard
-   * 
-   * @returns {void} Функция добавляет сгенерированный Python код к глобальной переменной `code`
-   */
-  function generateAdHocInputCollectionHandler() {
-    code += '        \n';
-    code += '        # Если узел не найден\n';
-    code += '        logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")\n';
-    code += '        del user_data[user_id]["waiting_for_input"]\n';
-    code += '        return\n';
-    code += '    \n';
-    code += '    # НОВАЯ ЛОГИКА: Проверяем, включен ли дополнительный сбор ответов для обычных кнопок\n';
-    code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
-    code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
-    code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
-    code += '        input_target_node_id = user_data[user_id].get("input_target_node_id")\n';
-    code += '        user_text = message.text\n';
-    code += '        \n';
-    code += '        # Если есть целевой узел для перехода - это основной ввод, а не дополнительный\n';
-    code += '        if input_target_node_id:\n';
-    code += '            # Это основной ввод с переходом к следующему узлу\n';
-    code += '            timestamp = get_moscow_time()\n';
-    code += '            response_data = user_text\n';
-    code += '            \n';
-    code += '            # Сохраняем в пользовательские данные\n';
-    code += '            user_data[user_id][input_variable] = response_data\n';
-    code += '            \n';
-    code += '            # Сохраняем в базу данных\n';
-    code += '            saved_to_db = await update_user_data_in_db(user_id, input_variable, response_data)\n';
-    code += '            if saved_to_db:\n';
-    code += '                logging.info(f"? Данные сохранены в БД: {input_variable} = {user_text} (пользователь {user_id})")\n';
-    code += '            else:\n';
-    code += '                logging.warning(f"?? Не удалось сохранить в БД, данные сохранены локально")\n';
-    code += '            \n';
-    code += '            logging.info(f"Получен основной пользовательский ввод: {input_variable} = {user_text}")\n';
-    code += '            \n';
-    code += '            # Переходим к целевому узлу\n';
-    code += '            # Очищаем состояние сбора ввода\n';
-    code += '            del user_data[user_id]["input_collection_enabled"]\n';
-    code += '            if "input_node_id" in user_data[user_id]:\n';
-    code += '                del user_data[user_id]["input_node_id"]\n';
-    code += '            if "input_variable" in user_data[user_id]:\n';
-    code += '                del user_data[user_id]["input_variable"]\n';
-    code += '            if "input_target_node_id" in user_data[user_id]:\n';
-    code += '                del user_data[user_id]["input_target_node_id"]\n';
-    code += '            \n';
-    code += '            # Находим и вызываем обработчик целевого узла\n';
+    const adHocHandlerCode = generateAdHocInputCollectionHandler();
+    code = newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes, code, allNodeIds, [], () => { code += adHocHandlerCode; }, generateContinuationLogicForButtonBasedInput, generateUserInputValidationAndContinuationLogic, generateStateTransitionAndRenderLogic);
   }
 
   /**

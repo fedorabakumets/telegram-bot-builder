@@ -4,6 +4,7 @@
  */
 
 // Обработчики ввода
+export { generateAdHocInputCollectionHandler } from './generate-adhoc-handler';
 export {
   generateButtonResponseHandlersForInput,
   generateAdHocInputHandler
