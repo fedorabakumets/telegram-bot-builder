@@ -7,19 +7,32 @@
  * @module bot-generator/transitions/generate-conditional-message
  */
 
-import { Button } from '../../bot-generator';
+import type { Button } from '../../bot-generator';
 import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from '../format';
+import type { ConditionalMessageParams as BaseConditionalMessageParams } from './types/conditional-message-params';
+import type { TransitionNode } from './types/transition-node';
 
 /**
  * Параметры условного сообщения
  */
 export interface ConditionalMessageParams {
   /** Условие с сообщением */
-  condition: any;
+  condition: BaseConditionalMessageParams & {
+    /** Тип клавиатуры */
+    keyboardType?: 'inline' | 'reply' | 'none';
+    /** Одноразовая клавиатура */
+    oneTimeKeyboard?: boolean;
+    /** Кнопки условия */
+    buttons?: Button[];
+    /** Следующий узел после ввода */
+    nextNodeAfterInput?: string;
+    /** Переменная текстового ввода */
+    textInputVariable?: string;
+  };
   /** Индекс условия в массиве */
   index: number;
   /** Родительский узел */
-  navTargetNode: any;
+  navTargetNode: TransitionNode;
   /** ID узла для ввода */
   inputTargetNodeId: string;
 }
@@ -113,14 +126,14 @@ export function generateConditionalMessage(
  * @returns Сгенерированный Python-код
  */
 function generateConditionalKeyboard(
-  condition: any,
+  condition: ConditionalMessageParams['condition'],
   innerIndent: string
 ): string {
   let code = '';
 
   if (condition.keyboardType === 'inline') {
     code += `${innerIndent}builder = InlineKeyboardBuilder()\n`;
-    condition.buttons.forEach((button: Button) => {
+    condition.buttons?.forEach((button: Button) => {
       if (button.action === 'url') {
         code += `${innerIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
       } else if (button.action === 'goto') {
@@ -140,7 +153,7 @@ function generateConditionalKeyboard(
     code += `${innerIndent}await bot.send_message(user_id, text, reply_markup=conditional_keyboard)\n`;
   } else if (condition.keyboardType === 'reply') {
     code += `${innerIndent}builder = ReplyKeyboardBuilder()\n`;
-    condition.buttons.forEach((button: Button) => {
+    condition.buttons?.forEach((button: Button) => {
       if (button.action === 'contact' && button.requestContact) {
         code += `${innerIndent}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
       } else if (button.action === 'location' && button.requestLocation) {
@@ -159,10 +172,16 @@ function generateConditionalKeyboard(
 
 /**
  * Генерирует код ожидания ввода для условного сообщения
+ *
+ * @param condition - Условие с сообщением
+ * @param navTargetNode - Родительский узел
+ * @param inputTargetNodeId - ID узла для ввода
+ * @param indent - Отступ для кода
+ * @returns Сгенерированный Python-код
  */
 function generateConditionalInputWaiting(
-  condition: any,
-  navTargetNode: any,
+  condition: ConditionalMessageParams['condition'],
+  navTargetNode: TransitionNode,
   inputTargetNodeId: string,
   indent: string
 ): string {
