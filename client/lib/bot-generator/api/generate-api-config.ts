@@ -50,13 +50,11 @@ export function generateApiConfig(projectId: number | null): string {
   codeLines.push('logging.info(f"📡 API Base URL определён как: {API_BASE_URL}")');
   codeLines.push('');
 
-  // Определяем PROJECT_ID если указан
-  if (projectId !== null) {
-    codeLines.push('# ID проекта для API запросов');
-    codeLines.push(`PROJECT_ID = ${projectId}`);
-    codeLines.push('logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")');
-    codeLines.push('');
-  }
+  // Определяем PROJECT_ID (всегда, по умолчанию 0)
+  codeLines.push('# ID проекта для API запросов');
+  codeLines.push(`PROJECT_ID = ${projectId !== null ? projectId : 0}`);
+  codeLines.push('logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")');
+  codeLines.push('');
 
   // Применяем автоматическое добавление комментариев
   const commentedCodeLines = processCodeWithAutoComments(codeLines, 'generate-api-config.ts');

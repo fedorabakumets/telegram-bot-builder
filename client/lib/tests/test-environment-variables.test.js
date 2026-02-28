@@ -109,6 +109,42 @@ describe('Определения переменных окружения', () =>
       
       assert.ok(hasProjectId, 'PROJECT_ID должен быть определён');
     });
+
+    it('должен быть определён даже при null projectId', () => {
+      // Генерируем код с null projectId
+      const codeWithNullId = generatePythonCode(
+        baseProject,
+        'TestBot',
+        [],
+        false,
+        null, // projectId = null
+        false,
+        false,
+        true
+      );
+      
+      const hasProjectId = codeWithNullId.includes('PROJECT_ID =');
+      
+      assert.ok(hasProjectId, 'PROJECT_ID должен быть определён даже при null projectId');
+    });
+
+    it('должен иметь значение 0 при null projectId', () => {
+      // Генерируем код с null projectId
+      const codeWithNullId = generatePythonCode(
+        baseProject,
+        'TestBot',
+        [],
+        false,
+        null,
+        false,
+        false,
+        true
+      );
+      
+      const hasProjectIdZero = codeWithNullId.includes('PROJECT_ID = 0');
+      
+      assert.ok(hasProjectIdZero, 'PROJECT_ID должен быть равен 0 при null projectId');
+    });
   });
 
   describe('BOT_TOKEN', () => {
