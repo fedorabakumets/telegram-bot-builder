@@ -6,4 +6,4 @@
  * @module bot-generator/transitions
  */
 
-export { generateConditionalBranches } from './generate-conditional-branches';
+export { generateConditionalBranch } from './generate-conditional-branch';

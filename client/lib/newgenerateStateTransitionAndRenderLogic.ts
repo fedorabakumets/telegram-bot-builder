@@ -2,15 +2,14 @@ import { Button, ResponseOption } from './bot-generator';
 import { generateConditionalMessageLogic } from './Conditional';
 import { formatTextForPython, generateButtonText, toPythonBoolean, generateWaitingStateCode, escapeForJsonString } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
+import { generateConditionalBranch } from './bot-generator/transitions';
 
 export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: string, allNodeIds: any[], connections: any[]) {
   if (nodes.length > 0) {
     nodes.forEach((targetNode, index) => {
-      const condition = index === 0 ? 'if' : 'elif';
-      code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-
+      code += generateConditionalBranch(index, targetNode.id, '            ');
+      
       if (targetNode.type === 'message' && targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-        // Обработка узлов сообщений с inline клавиатурой
         const messageText = targetNode.data.messageText || 'Сообщение';
         const formattedText = formatTextForPython(messageText);
 
