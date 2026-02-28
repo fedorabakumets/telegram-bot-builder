@@ -7,7 +7,7 @@
  * @module bot-generator/user-input/generate-multiselect-check
  */
 
-import { multiselectcheck } from './multiselectcheck';
+import { multiselectcheck } from './multiselect-check';
 
 /**
  * Генерирует Python-код для проверки множественного выбора
