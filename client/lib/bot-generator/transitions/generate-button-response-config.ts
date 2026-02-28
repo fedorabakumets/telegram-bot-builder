@@ -9,45 +9,21 @@
 
 import { toPythonBoolean, escapeForJsonString } from '../format';
 import { generateInlineKeyboardCode } from '../Keyboard';
-
-/**
- * Тип варианта ответа для кнопочного ввода
- */
-export interface ResponseOption {
-  text: string;
-  value?: string;
-  action?: string;
-  target?: string;
-  url?: string;
-}
-
-/**
- * Тип кнопки для конфигурации ответа
- */
-export interface Button {
-  text: string;
-  action: string;
-  target: string;
-  id: string;
-}
+import type { ButtonResponseConfigParams } from './types/button-response-config-params';
+import type { ResponseOption, Button } from './types/button-response-config-types';
 
 /**
  * Генерирует Python-код для конфигурации кнопочного ответа
- * 
- * @param node - Узел с данными ответа
- * @param allNodeIds - Массив всех ID узлов
- * @param connections - Массив соединений для навигации
- * @param indent - Отступ для форматирования кода
+ *
+ * @param params - Параметры для генерации
  * @returns Сгенерированный Python-код
  */
 export function generateButtonResponseConfig(
-  node: any,
-  allNodeIds: any[],
-  connections: any[],
-  indent: string = '                '
+  params: ButtonResponseConfigParams
 ): string {
+  const { node, allNodeIds, connections, indent = '                ' } = params;
+
   let code = '';
-  
   const inputPrompt = node.data.messageText || node.data.inputPrompt || "Введите ваш ответ:";
   const inputVariable = node.data.inputVariable || `response_${node.id}`;
   const inputTimeout = node.data.inputTimeout || 60;
@@ -55,11 +31,11 @@ export function generateButtonResponseConfig(
   const allowMultipleSelection = node.data.allowMultipleSelection || false;
   const allowSkip = node.data.allowSkip || false;
   const responseOptions = node.data.responseOptions || [];
-  
+
   code += `${indent}\n`;
   code += `${indent}# Создаем кнопки для выбора ответа\n`;
   code += `${indent}builder = InlineKeyboardBuilder()\n`;
-  
+
   const responseButtons = responseOptions.map((option: ResponseOption | string, index: number) => {
     const normalizedOption: ResponseOption = typeof option === 'string'
       ? { text: option, value: option }
