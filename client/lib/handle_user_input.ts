@@ -10,7 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler, hasUrlButtons } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -49,23 +49,13 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Обработка кнопочных ответов через reply клавиатуру
      * Обрабатывает выбор пользователя из предложенных вариантов reply клавиатуры
      */
-    code += '    # Проверяем, ожидаем ли мы кнопочный ответ через reply клавиатуру\n';
-    code += '    if user_id in user_data and "button_response_config" in user_data[user_id]:\n';
-    code += '        config = user_data[user_id]["button_response_config"]\n';
-    code += '        user_text = message.text\n';
-    code += '        \n';
+    code += generateButtonResponseCheck('    ');
 
     /**
      * Поиск выбранного варианта
      * Ищет нажатую кнопку среди доступных опций в конфигурации
      */
-    code += '        # Ищем выбранный вариант среди доступных опций\n';
-    code += '        selected_option = None\n';
-    code += '        for option in config.get("options", []):\n';
-    code += '            if option["text"] == user_text:\n';
-    code += '                selected_option = option\n';
-    code += '                break\n';
-    code += '        \n';
+    code += generateSelectedOptionSearch('    ');
 
     /**
      * Обработка выбранного варианта
@@ -85,15 +75,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Создание структурированного ответа
      * Формирует объект с метаданными о выборе пользователя
      */
-    code += '            # Создаем структурированный ответ\n';
-    code += '            response_data = {\n';
-    code += '                "value": selected_value,\n';
-    code += '                "text": selected_text,\n';
-    code += '                "type": "button_choice",\n';
-    code += '                "timestamp": timestamp,\n';
-    code += '                "nodeId": node_id,\n';
-    code += '                "variable": variable_name\n';
-    code += '            }\n';
+    code += generateResponseDataStructure('        ');
     code += '            \n';
     code += '            # Сохраняем в пользовательские данные\n';
     code += '            user_data[user_id][variable_name] = response_data\n';

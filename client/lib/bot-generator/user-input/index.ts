@@ -8,3 +8,4 @@
 
 export { generateConditionalInputHandler, type ConditionalInputHandlerDeps } from './generate-conditional-input-handler';
 export { hasUrlButtons } from './has-url-buttons';
+export { generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure } from './generate-button-response-handler';
