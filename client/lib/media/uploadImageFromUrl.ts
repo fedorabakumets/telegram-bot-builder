@@ -45,8 +45,87 @@ export async function uploadImageFromUrl(
   nodeName: string
 ): Promise<UploadImageResult> {
   try {
-    // Загружаем изображение через браузер (blob)
-    // Это обходит блокировки, так как запрос идёт с IP пользователя
+    console.log('📥 Загрузка изображения через браузер:', imageUrl);
+    
+    // Используем CORS-прокси для обхода блокировок
+    // allorigins.dev - бесплатный прокси для CORS запросов
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`;
+    console.log('🔄 Используем прокси:', proxyUrl);
+    
+    // Загружаем изображение через прокси
+    const response = await fetch(proxyUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'image/*,*/*;q=0.8',
+      },
+    });
+
+    console.log('📡 Статус ответа:', response.status, response.statusText);
+
+    if (!response.ok) {
+      // Если прокси не сработал, пробуем напрямую
+      console.log('⚠️ Прокси не сработал, пробуем напрямую...');
+      return await uploadDirect(imageUrl, projectId, nodeName);
+    }
+
+    // Получаем изображение как blob
+    const blob = await response.blob();
+    console.log('📦 Получен blob:', blob.type, blob.size, 'bytes');
+
+    // Проверяем, что blob не пустой
+    if (blob.size === 0) {
+      throw new Error('Пустой blob - сервер не вернул изображение');
+    }
+
+    // Конвертируем blob в base64
+    const base64 = await blobToBase64(blob);
+    console.log('📝 Base64 длина:', base64.length, 'символов');
+    
+    // Отправляем base64 на сервер
+    console.log('📤 Отправка на сервер...');
+    const uploadResponse = await fetch('/api/media/upload-from-url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        imageUrl,
+        projectId,
+        nodeName,
+        imageBase64: base64,
+      }),
+    });
+
+    console.log('📥 Ответ сервера:', uploadResponse.status);
+    const data = await uploadResponse.json();
+    console.log('📋 Данные ответа:', data);
+
+    if (!uploadResponse.ok) {
+      return {
+        success: false,
+        error: data.error || 'Ошибка загрузки изображения',
+      };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('❌ Ошибка загрузки изображения:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Неизвестная ошибка',
+    };
+  }
+}
+
+/**
+ * Прямая загрузка изображения (fallback)
+ */
+async function uploadDirect(
+  imageUrl: string,
+  projectId: number,
+  nodeName: string
+): Promise<UploadImageResult> {
+  try {
     const response = await fetch(imageUrl, {
       method: 'GET',
       headers: {
@@ -58,11 +137,14 @@ export async function uploadImageFromUrl(
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    // Получаем изображение как blob и конвертируем в base64
     const blob = await response.blob();
+    
+    if (blob.size === 0) {
+      throw new Error('Пустой blob');
+    }
+
     const base64 = await blobToBase64(blob);
     
-    // Отправляем base64 на сервер
     const uploadResponse = await fetch('/api/media/upload-from-url', {
       method: 'POST',
       headers: {
@@ -72,7 +154,7 @@ export async function uploadImageFromUrl(
         imageUrl,
         projectId,
         nodeName,
-        imageBase64: base64, // Передаём изображение как base64
+        imageBase64: base64,
       }),
     });
 
@@ -87,7 +169,6 @@ export async function uploadImageFromUrl(
 
     return data;
   } catch (error) {
-    console.error('Ошибка загрузки изображения:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Неизвестная ошибка',
