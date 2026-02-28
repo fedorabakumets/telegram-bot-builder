@@ -10,7 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -202,27 +202,16 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Универсальная система ожидания ввода
      * Проверяет состояние ожидания ввода и обрабатывает различные типы входных данных
      */
-    code += '    # Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)\n';
-    code += '    has_waiting_state = user_id in user_data and "waiting_for_input" in user_data[user_id]\n';
-    code += '    logging.info(f"DEBUG: Получен текст {message.text}, состояние ожидания: {has_waiting_state}")\n';
-    code += '    if user_id in user_data and "waiting_for_input" in user_data[user_id]:\n';
-    code += '        # Обрабатываем ввод через универсальную систему\n';
-    code += '        waiting_config = user_data[user_id]["waiting_for_input"]\n';
-    code += '        \n';
-    code += '        # Проверяем, что пользователь все еще находится в состоянии ожидания ввода\n';
-    code += '        if not waiting_config:\n';
-    code += '            return  # Состояние ожидания пустое, игнорируем\n';
-    code += '        \n';
+    code += generateWaitingStateCheck('    ');
 
     // Добавляем получение переменных из БД перед обработкой
-    code += '        \n';
-    code += '        # Получаем переменные из базы данных (user_ids_list, user_ids_count)\n';
+    code += generateDatabaseVarsGet('        ');
     code += generateDatabaseVariablesCode('        ');
     code += '        \n';
 
     /**
      * Обработка различных форматов конфигурации
-     * Поддерживает новый формат (словарь) и старый формат (строка) для обzzатной совместимости
+     * Поддерживает новый формат (словарь) и старый формат (строка) для обратной совместимости
      */
     code += '        # Проверяем формат конфигурации - новый (словарь) или старый (строка)\n';
     code += '        if isinstance(waiting_config, dict):\n';
