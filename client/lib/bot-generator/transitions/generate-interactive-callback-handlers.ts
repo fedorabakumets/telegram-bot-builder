@@ -277,14 +277,16 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                 const safeFunctionName = replyAutoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
                 code += '    \n';
                 code += '    # АВТОПЕРЕХОД после reply клавиатуры\n';
-                code += `    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${replyAutoTransitionTarget}")\n`;
+                code += '    # Проверяем, что это не fake callback (для предотвращения дублирования)\n';
+                code += '    if not is_fake_callback:\n';
+                code += `        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${replyAutoTransitionTarget}")\n`;
                 if (targetExists) {
-                  code += `    await handle_callback_${safeFunctionName}(callback_query)\n`;
+                  code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
                 } else {
-                  code += `    logging.warning(f"⚠️ Узел автоперехода не найден: {replyAutoTransitionTarget}, завершаем переход")\n`;
-                  code += `    await callback_query.message.edit_text("Переход завершен")\n`;
+                  code += `        logging.warning(f"⚠️ Узел автоперехода не найден: {replyAutoTransitionTarget}, завершаем переход")\n`;
+                  code += `        await callback_query.message.edit_text("Переход завершен")\n`;
                 }
-                code += `    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${replyAutoTransitionTarget}")\n`;
+                code += `        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${replyAutoTransitionTarget}")\n`;
               }
 
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Настраиваем waiting_for_input яяля targetNode ТОЛЬКяя если collectUserInput=true

@@ -25,10 +25,10 @@ export function generateCallbackHandlerStart(
   let code = '';
   code += `\n${indent}@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startsWith("${nodeId}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
   code += `${indent}async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
-  code += `${indent}    # Проверяем что это не fake callback (для автопереходов)\n`;
-  code += `${indent}    if hasattr(callback_query, '_is_fake') and callback_query._is_fake:\n`;
-  code += `${indent}        logging.debug(f"⚡ Fake callback для узла ${nodeId}, пропускаем выполнение")\n`;
-  code += `${indent}        return  # Прерываем выполнение для fake callback\n`;
+  code += `${indent}    # Проверяем что это не fake callback (для оптимизации)\n`;
+  code += `${indent}    is_fake_callback = hasattr(callback_query, '_is_fake') and callback_query._is_fake\n`;
+  code += `${indent}    if is_fake_callback:\n`;
+  code += `${indent}        logging.debug(f"⚡ Fake callback для узла ${nodeId}")\n`;
   code += `${indent}    \n`;
   code += `${indent}    # Безопасное получение данных из callback_query\n`;
   code += `${indent}    callback_data = None  # Инициализируем переменную\n`;

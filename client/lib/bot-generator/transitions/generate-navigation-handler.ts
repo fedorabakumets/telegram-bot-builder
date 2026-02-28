@@ -153,11 +153,11 @@ export function generateAutoTransitionCall(
 
   let code = '';
   // ИСПРАВЛЕНИЕ: Проверяем, что это не fake callback (для предотвращения дублирования)
-  code += `${indent}    # Проверяем, что это не fake callback (для предотвращения дублирования сообщений)\n`;
-  code += `${indent}    if not (hasattr(callback_query, '_is_fake') and callback_query._is_fake):\n`;
-  code += `${indent}        await handle_callback_${safeAutoTargetId}(callback_query)\n`;
-  code += `${indent}        logging.info(f"✅ Автопереход выполнен: ${currentNodeId} -> ${autoTargetId}")\n`;
-  code += `${indent}        return\n`;
+  code += `${indent}# Проверяем, что это не fake callback (для предотвращения дублирования сообщений)\n`;
+  code += `${indent}if not is_fake_callback:\n`;
+  code += `${indent}    await handle_callback_${safeAutoTargetId}(callback_query)\n`;
+  code += `${indent}    logging.info(f"✅ Автопереход выполнен: ${currentNodeId} -> ${autoTargetId}")\n`;
+  code += `${indent}    return\n`;
 
   return code;
 }
