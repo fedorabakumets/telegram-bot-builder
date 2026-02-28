@@ -9,16 +9,14 @@
 
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
 import { generateCallbackHandlerInit } from './callback-handler-init';
-import { generateMultiSelectDoneButton } from './multi-select';
+import { generateMultiSelectDoneButton, generateMultiSelectInit, generateMultiSelectReplyKeyboard, generateMultiSelectInlineKeyboard } from './multi-select';
 import { generateMultiSelectHandler, generateMultiSelectComplete } from './multi-select-handler';
 import { generateBroadcastNodeHandler, isBroadcastNode } from './broadcast-node-handler';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
-import { generateMessageTextPreparation } from './message-text';
-import { generateDatabaseVarsGet } from './message-text';
 import { generateConditionalMessagesCheck } from './conditional-messages';
 import { generateMediaVariablesSetup } from './media-variables';
 import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
-import { generateBroadcastHandler, generateAllNodesDict, generateBroadcastConfirmationHandler, generateBroadcastDirectHandler } from './broadcast';
+import { generateAllNodesDict, generateBroadcastConfirmationHandler, generateBroadcastDirectHandler } from './broadcast';
 import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
 import { generateMediaSendCode } from './media';
 import { generateButtonTextDetection } from './button';
@@ -29,7 +27,6 @@ import { generateInputNodeHandling } from './input';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateCheckUserVariableFunction } from '../database';
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
-import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
 import { generateHandleNodeFunctions } from '../../generate/generateHandleNodeFunctions';
 import { generateInlineKeyboardCode } from '../Keyboard';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
