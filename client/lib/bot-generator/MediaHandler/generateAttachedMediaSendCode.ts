@@ -299,6 +299,7 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}user_id = ${userIdSource}`);
   codeLines.push(`${indentLevel}all_user_vars = {}`);
   codeLines.push(`${indentLevel}# Добавляем переменные из базы данных`);
+  codeLines.push(`${indentLevel}user_vars = await get_user_from_db(user_id)`);
   codeLines.push(`${indentLevel}if user_vars and isinstance(user_vars, dict):`);
   codeLines.push(`${indentLevel}    all_user_vars.update(user_vars)`);
   codeLines.push(`${indentLevel}# Добавляем переменные из локального хранилища`);
