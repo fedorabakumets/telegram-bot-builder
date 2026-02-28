@@ -50,22 +50,24 @@ export const generateCommandTrigger = (
     if (commandNode.type === 'start') {
       code += '    # Вызываем start handler через edit_text\n';
       code += '    # Создаем специальный объект для редактирования сообщения\n';
-      code += '    class FakeMessageEdit:\n';
+      code += '    class FakeCallbackQuery:\n';
       code += '        def __init__(self, callback_query):\n';
       code += '            self.from_user = callback_query.from_user\n';
       code += '            self.chat = callback_query.message.chat\n';
       code += '            self.date = callback_query.message.date\n';
       code += '            self.message_id = callback_query.message.message_id\n';
+      code += '            self.data = callback_query.data  # callback_data для навигации\n';
+      code += '            self.message = callback_query.message\n';
       code += '            self._callback_query = callback_query\n';
       code += '        \n';
-      code += '        async def answer(self, text, parse_mode=None, reply_markup=None):\n';
-      code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
+      code += '        async def answer(self, *args, **kwargs):\n';
+      code += '            pass  # Игнорируем answer для fake callback\n';
       code += '        \n';
       code += '        async def edit_text(self, text, parse_mode=None, reply_markup=None):\n';
       code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
       code += '    \n';
-      code += '    fake_edit_message = FakeMessageEdit(callback_query)\n';
-      code += '    await start_handler(fake_edit_message)\n';
+      code += '    fake_callback = FakeCallbackQuery(callback_query)\n';
+      code += '    await start_handler(fake_callback)\n';
     } else if (commandNode.type === 'command') {
       code += `    # Вызываем ${command} handler\n`;
       code += `    await ${command}_handler(fake_message)\n`;
@@ -73,9 +75,9 @@ export const generateCommandTrigger = (
   } else {
     code += `    await callback_query.message.edit_text("Команда /${command} выполнена")\n`;
   }
-  
+
   code += `    logging.info(f"Команда /${command} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")\n`;
-  
+
   return code;
 };
 
