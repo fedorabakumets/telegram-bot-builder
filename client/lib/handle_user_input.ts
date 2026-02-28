@@ -10,7 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet, generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -215,34 +215,10 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      */
     code += '        # Проверяем формат конфигурации - новый (словарь) или старый (строка)\n';
     code += '        if isinstance(waiting_config, dict):\n';
-    code += '            # Новый формат - извлекаем данные из словаря\n';
-    code += '            waiting_node_id = waiting_config.get("node_id")\n';
-    code += '            input_type = waiting_config.get("type", "text")\n';
-    code += '            variable_name = waiting_config.get("variable", "user_response")\n';
-    code += '            save_to_database = waiting_config.get("save_to_database", False)\n';
-    code += '            min_length = waiting_config.get("min_length", 0)\n';
-    code += '            max_length = waiting_config.get("max_length", 0)\n';
-    code += '            next_node_id = waiting_config.get("next_node_id")\n';
-    code += '            \n';
-
-    /**
-     * Проверка типа ввода медиа
-     * Если ожидается медиа-файл, текстовый обработчиzzzzzzzzzzzzzzzz должен проигнорировать сообщение
-     */
-    code += '            # ИСПРАВЛЕНИЕ: Проверяем, является ли тип ввода медиа (фото, видео, аудио, документ)\n';
-    code += '            # Если да, то текстовый обработчик не должен его обрабатывать\n';
-    code += '            if input_type in ["photo", "video", "audio", "document"]:\n';
-    code += '                logging.info(f"Текстовый ввод от пользователя {user_id} проигнорирован - ожидается медиа ({input_type})")\n';
-    code += '                return\n';
+    code += generateWaitingConfigExtract('            ');
+    code += generateMediaTypeCheck('            ');
     code += '        else:\n';
-    code += '            # Старый формат - waiting_config эzzо строка с node_id\n';
-    code += '            waiting_node_id = waiting_config\n';
-    code += '            input_type = user_data[user_id].get("input_type", "text")\n';
-    code += '            variable_name = user_data[user_id].get("input_variable", "user_response")\n';
-    code += '            save_to_database = user_data[user_id].get("save_to_database", False)\n';
-    code += '            min_length = 0\n';
-    code += '            max_length = 0\n';
-    code += '            next_node_id = user_data[user_id].get("waiting_input_target_node_id") or user_data[user_id].get("input_target_node_id")\n';
+    code += generateWaitingConfigLegacyExtract('            ');
     code += '        \n';
     code += '        user_text = message.text\n';
     code += '        \n';

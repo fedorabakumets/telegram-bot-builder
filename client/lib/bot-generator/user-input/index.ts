@@ -15,3 +15,4 @@ export { generateGotoNavigation } from './generate-goto-navigation';
 export { generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, type MediaType } from './generate-media-skip-check';
 export { generateFakeCallbackCreation, generateSkipTargetNavigation } from './generate-media-skip-navigation';
 export { generateWaitingStateCheck, generateDatabaseVarsGet } from './generate-waiting-state-check';
+export { generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract } from './generate-waiting-config-extract';
