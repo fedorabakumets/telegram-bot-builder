@@ -49,7 +49,7 @@ import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunc
 import { hasMediaNodes } from './MediaHandler/hasMediaNodes';
 import { hasUploadImageUrls } from './MediaHandler/hasUploadImageUrls';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
-import { newgenerateStateTransitionAndRenderLogic } from './newgenerateStateTransitionAndRenderLogic';
+import { newgenerateStateTransitionAndRenderLogic } from './bot-generator/transitions';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './handle_user_input';
 import { createProcessNodeButtonsFunction } from './newprocessNodeButtonsAndGenerateHandlers';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';

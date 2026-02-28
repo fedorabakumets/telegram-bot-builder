@@ -21,3 +21,4 @@ export { generateNoNodesAvailableWarning, generateUnknownNextNodeWarning, genera
 export { generateParseMode } from './generate-parse-mode';
 export { generateReplyKeyboardSend } from './generate-reply-keyboard-send';
 export { generateTextSend } from './generate-text-send';
+export { newgenerateStateTransitionAndRenderLogic } from './generate-state-transition-and-render-logic';
