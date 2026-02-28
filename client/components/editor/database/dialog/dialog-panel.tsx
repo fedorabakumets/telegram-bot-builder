@@ -19,6 +19,7 @@ import { EmptyDialog } from './components/empty-dialog';
 import { DialogInput } from './components/dialog-input';
 import { LoadingMessages } from './components/loading-messages';
 import { NoUserSelected } from './components/no-user-selected';
+import { NodeSender } from './components/node-sender';
 
 /**
  * Компонент панели диалога с пользователем бота
@@ -111,6 +112,12 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
         onSend={(text) => {
           sendMessageMutation.mutate({ messageText: text });
         }}
+      />
+
+      <NodeSender
+        projectId={projectId}
+        userId={user?.userId ? Number(user.userId) : undefined}
+        onSent={refetchMessages}
       />
     </div>
   );
