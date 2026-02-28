@@ -12,6 +12,7 @@ import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib
 import { useState, useMemo, useEffect } from 'react';
 
 import { InlineRichEditor } from '../inline-rich/inline-rich-editor';
+import type { Variable } from '../inline-rich/types';
 import { SYSTEM_VARIABLES } from './system-variables';
 import { VariableDropdown } from './system-variables-dropdown';
 import { SectionHeader } from './section-header';
@@ -685,7 +686,7 @@ export function PropertiesPanel({
                           placeholder="Введите текст сообщения..."
                           enableMarkdown={selectedNode.data.markdown}
                           onFormatModeChange={(formatMode) => onNodeUpdate(selectedNode.id, { formatMode })}
-                          availableVariables={[...textVariables, ...mediaVariables]}
+                          availableVariables={[...textVariables, ...mediaVariables] as Variable[]}
                           onMediaVariableSelect={handleMediaVariableSelect}
                         />
                         <MessageInfoBlock variant="blue" />
