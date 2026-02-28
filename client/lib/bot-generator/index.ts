@@ -6,6 +6,10 @@
 // Главная функция генерации
 export { generatePythonCode } from '../bot-generator';
 
+// Ядро: конфигурация и логирование
+export { isLoggingEnabled, logFlowAnalysis } from './core';
+export { setGlobalLoggingEnabled, getGlobalLoggingEnabled } from './core';
+
 // Типы
 export type { Button, ResponseOption } from './types';
 export type { CodeNodeRange, CodeWithMap } from './types';

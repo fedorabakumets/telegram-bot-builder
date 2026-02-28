@@ -3,6 +3,8 @@ import { BotData, BotGroup, Node } from '@shared/schema';
 
 // Типы
 import { Button } from './bot-generator/types';
+import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
+import { setGlobalLoggingEnabled } from './bot-generator/core';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotCommandsSetup } from './bot-commands-setup';
@@ -117,50 +119,6 @@ import { setCommentsEnabled } from './utils/generateGeneratedComment';
 ============================================================================
 */
 
-// Глобальная переменная для состояния логирования (может быть переопределена параметром)
-export let globalLoggingEnabled = false;
-
-/**
- * Утилитарная функция для проверки включения логирования отладки
- * @returns {boolean} Статус включения логирования
- */
-export const isLoggingEnabled = (): boolean => {
-  // Сначала проверяем, было ли явно установлено глобальное логирование (из параметра enableLogging)
-  if (globalLoggingEnabled) return true;
-
-  // В противном случае проверяем localStorage
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('botcraft-generator-logs') === 'true';
-  }
-  return false;
-};
-
-/**
- * Анализирует и логирует структуру узлов для отладки.
- * @param {any[]} nodes - Массив узлов.
- */
-const logFlowAnalysis = (nodes: any[]) => {
-  if (!isLoggingEnabled()) return;
-
-  console.log(`🔍 ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}`);
-
-  if (nodes && nodes.length > 0) {
-    console.log('?? ГЕНЕРАТОР: Анализируем все узла:');
-    nodes.forEach((node, index) => {
-      console.log(`?? ГЕНЕРАТОР: Узел ${index + 1}: "${node.id}" (тип: ${node.type})`);
-      console.log(`?? ГЕНЕРАТОР:   - allowMultipleSelection: ${node.data.allowMultipleSelection}`);
-      console.log(`?? ГЕНЕРАТОР:   - кнопок: ${node.data.buttons?.length || 0}`);
-      console.log(`?? ГЕНЕРАТОР:   - keyboardType: ${node.data.keyboardType || 'нет'}`);
-      console.log(`?? ГЕНЕРАТОР:   - continueButtonTarget: ${node.data.continueButtonTarget || 'нет'}`);
-
-      if (node.id === 'interests_result') {
-        console.log(`?? ГЕНЕРАТОР: НАЙДЕН interests_result!`);
-        console.log(`?? ГЕНЕРАТОР: interests_result полные данные:`, JSON.stringify(node.data, null, 2));
-      }
-    });
-  }
-};
-
 /**
  * Генерирует Python-код для Telegram бота на основе предоставленных данных
  * @param {BotData} botData - Данные бота для генерации
@@ -177,7 +135,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   resetGenerationState();
 
   // Устанавливаем флаг глобального логирования для этого запуска генерации
-  globalLoggingEnabled = enableLogging;
+  setGlobalLoggingEnabled(enableLogging);
   
   // Устанавливаем флаг генерации комментариев для этого запуска генерации
   setCommentsEnabled(enableComments);
@@ -984,7 +942,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - Message узлы с различными типами клавиатур
    * - User-input узлы для сбора данных
    * - Command узлы для выполнения команд
-   * - Start узлы для инициализации
+   * - Start узлы для ��нициализации
    * - Узлы с условн����й логикой
    * 
    * **Генерируемые обработчики включают:**
@@ -1019,8 +977,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * **Функциональность анализа узлов:**
    * - Перебор всех узлов бота для поиска командных кнопок
    * - Анализ обычных кнопок узлов
-   * - Анализ кнопок в условных сообщениях
-   * - Проверка различных типов действий кнопок
+   * - Анализ кнопок в у������овных сообщениях
+   * - Проверка раз��ичных типов действий кнопок
    * 
    * **Функциональность обработки кнопок:**
    * - Поиск кнопок с action === 'command'
@@ -1546,9 +1504,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
 }
 
-// Реэкспорт типов для обратной совместимости
+// Реэкспорт типов и функций для обратной совместимости
 export type { Button } from './bot-generator/types';
 export type { ResponseOption } from './bot-generator/types';
+export { isLoggingEnabled } from './bot-generator/core';
 
 // Повторный экспорт функций каркаса
 export { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile };
