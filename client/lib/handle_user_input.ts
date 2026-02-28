@@ -10,21 +10,9 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons } from './bot-generator/user-input';
 
-// Функция для проверки наличия кнопок с URL-ссылками
-function hasUrlButtons(nodes: any[]): boolean {
-  for (const node of nodes) {
-    if (node.data?.buttons && Array.isArray(node.data.buttons)) {
-      for (const button of node.data.buttons) {
-        if (button.action === 'url' && button.url) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
+// Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
 export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes: any[], code: string, allNodeIds: any[], connections: any[], generateAdHocInputCollectionHandler: () => void, generateContinuationLogicForButtonBasedInput: () => string, generateUserInputValidationAndContinuationLogic: () => void, generateStateTransitionAndRenderLogic: () => void) {
   // Проверяем, есть ли кнопки с URL-ссылками в проекте

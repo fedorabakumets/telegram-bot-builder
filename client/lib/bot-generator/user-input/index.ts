@@ -7,3 +7,4 @@
  */
 
 export { generateConditionalInputHandler, type ConditionalInputHandlerDeps } from './generate-conditional-input-handler';
+export { hasUrlButtons } from './has-url-buttons';
