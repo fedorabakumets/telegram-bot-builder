@@ -2,7 +2,7 @@ import { Button, ResponseOption } from './bot-generator';
 import { generateConditionalMessageLogic } from './Conditional';
 import { formatTextForPython, generateButtonText, toPythonBoolean, generateWaitingStateCode, escapeForJsonString } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
-import { generateConditionalBranch, generateConditionalMessages, generateInlineKeyboardSend, generateParseMode, generateReplyKeyboardSend } from './bot-generator/transitions';
+import { generateAttachedMediaVars, generateConditionalBranch, generateConditionalMessages, generateInlineKeyboardSend, generateMediaSaveVars, generateParseMode, generateReplyKeyboardSend } from './bot-generator/transitions';
 
 export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: string, allNodeIds: any[], connections: any[]) {
   if (nodes.length > 0) {
@@ -31,68 +31,8 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
         }
 
         code += generateParseMode(targetNode, '                ');
-
-        // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
-        if (targetNode.data.imageUrl && targetNode.data.imageUrl !== 'undefined') {
-          code += `                # Сохраняем imageUrl в переменную image_url_${targetNode.id}\n`;
-          code += `                user_id = message.from_user.id\n`;
-          code += `                user_data[user_id] = user_data.get(user_id, {})\n`;
-          code += `                user_data[user_id]["image_url_${targetNode.id}"] = "${targetNode.data.imageUrl}"\n`;
-          code += `                await update_user_data_in_db(user_id, "image_url_${targetNode.id}", "${targetNode.data.imageUrl}")\n`;
-        }
-        if (targetNode.data.documentUrl) {
-          code += `                # Сохраняем documentUrl в переменную document_url_${targetNode.id}\n`;
-          code += `                user_id = message.from_user.id\n`;
-          code += `                user_data[user_id] = user_data.get(user_id, {})\n`;
-          code += `                user_data[user_id]["document_url_${targetNode.id}"] = "${targetNode.data.documentUrl}"\n`;
-          code += `                await update_user_data_in_db(user_id, "document_url_${targetNode.id}", "${targetNode.data.documentUrl}")\n`;
-        }
-        if (targetNode.data.videoUrl) {
-          code += `                # Сохраняем videoUrl в переменную video_url_${targetNode.id}\n`;
-          code += `                user_id = message.from_user.id\n`;
-          code += `                user_data[user_id] = user_data.get(user_id, {})\n`;
-          code += `                user_data[user_id]["video_url_${targetNode.id}"] = "${targetNode.data.videoUrl}"\n`;
-          code += `                await update_user_data_in_db(user_id, "video_url_${targetNode.id}", "${targetNode.data.videoUrl}")\n`;
-        }
-        if (targetNode.data.audioUrl) {
-          code += `                # Сохраняем audioUrl в переменную audio_url_${targetNode.id}\n`;
-          code += `                user_id = message.from_user.id\n`;
-          code += `                user_data[user_id] = user_data.get(user_id, {})\n`;
-          code += `                user_data[user_id]["audio_url_${targetNode.id}"] = "${targetNode.data.audioUrl}"\n`;
-          code += `                await update_user_data_in_db(user_id, "audio_url_${targetNode.id}", "${targetNode.data.audioUrl}")\n`;
-        }
-
-        // Устанавливаем переменные из attachedMedia
-        if (targetNode.data.attachedMedia && Array.isArray(targetNode.data.attachedMedia)) {
-          code += `                # Устанавливаем переменные из attachedMedia\n`;
-          code += `                user_id = message.from_user.id\n`;
-          code += `                if user_id not in user_data:\n`;
-          code += `                    user_data[user_id] = {}\n`;
-
-          targetNode.data.attachedMedia.forEach((mediaVar: string) => {
-            if (mediaVar.startsWith('image_url_')) {
-              // Уже обрабатывается выше
-            } else if (mediaVar.startsWith('video_url_')) {
-              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
-            } else if (mediaVar.startsWith('audio_url_')) {
-              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
-            } else if (mediaVar.startsWith('document_url_')) {
-              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
-            }
-            // ИСПРАВЛЕНИЕ: Также поддерживаем переменные типа audioUrlVar_*, videoUrlVar_* и т.д.
-            else if (mediaVar.startsWith('audioUrlVar')) {
-              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.audioUrl}"\n`;
-            } else if (mediaVar.startsWith('videoUrlVar')) {
-              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.videoUrl}"\n`;
-            } else if (mediaVar.startsWith('imageUrlVar')) {
-              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.imageUrl}"\n`;
-            } else if (mediaVar.startsWith('documentUrlVar')) {
-              code += `                user_data[user_id]["${mediaVar}"] = "${targetNode.data.documentUrl}"\n`;
-            }
-          });
-
-          code += `                logging.info(f"✅ Переменные из attachedMedia установлены для узла ${targetNode.id}")\n`;
-        }
+        code += generateMediaSaveVars(targetNode, '                ');
+        code += generateAttachedMediaVars(targetNode, '                ');
 
         // Проверяем наличие медиа-контента (imageUrl, videoUrl, audioUrl, documentUrl)
         const hasImage = targetNode.data.imageUrl;
