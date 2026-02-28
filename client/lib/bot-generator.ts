@@ -212,7 +212,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   allReferencedNodeIds = filteredReferencedNodeIds;
 
   // Генерируем обработчики только если есть inline кнопки или условные кнопки
-  generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation();
+  generateInteractiveCallbackHandlers();
 
   // Генерируем обработчики для кнопок клавиатуры ответов
   code += generateReplyButtonHandlers(nodes);
@@ -285,7 +285,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   /**
    * Генерирует обработчики callback'ов для inline кнопок
    */
-  function generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(): void {
+  function generateInteractiveCallbackHandlers(): void {
     const processNodeButtonsAndGenerateHandlers = createProcessNodeButtonsFunction(inlineNodes, nodes, code, allNodeIds, [], mediaVariablesMap);
     code = generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes, allReferencedNodeIds, allConditionalButtons, code, processNodeButtonsAndGenerateHandlers, nodes, allNodeIds, [], userDatabaseEnabled, mediaVariablesMap);
   }
