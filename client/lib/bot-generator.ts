@@ -1,5 +1,5 @@
 // Внешние зависимости
-import { BotData, BotGroup, Node } from '@shared/schema';
+import { BotData, BotGroup } from '@shared/schema';
 
 // Типы
 import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
@@ -13,11 +13,7 @@ import {
   generateSignalHandler,
   generatePollingLoop
 } from './bot-generator/handlers';
-import {
-  generateMultiSelectCallbackHandler,
-  generateMultiSelectPersistence,
-  generateMultiSelectCleanup
-} from './bot-generator/multi-select';
+import { generateMultiSelectCallbackHandler } from './bot-generator/multi-select';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotCommandsSetup } from './bot-commands-setup';
@@ -339,7 +335,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     multiSelectNodes,
     nodes || [],
     allNodeIds,
-    isLoggingEnabled,
+    isLoggingEnabled(),
     generateTransitionLogicForMultiSelectCompletion,
     generateInlineKeyboardCode,
     formatTextForPython
@@ -349,7 +345,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code,
     multiSelectNodes,
     allNodeIds,
-    isLoggingEnabled,
+    isLoggingEnabled(),
     nodes,
     generateMultiSelectCallbackLogic,
     generateMultiSelectDoneHandler,
