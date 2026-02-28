@@ -7,17 +7,7 @@
  * @module bot-generator/transitions/auto-transition-code
  */
 
-/**
- * Параметры для генерации кода автоперехода
- */
-export interface AutoTransitionCodeParams {
-  /** Цель автоперехода */
-  autoTransitionTarget: string;
-  /** ID текущего узла */
-  nodeId: string;
-  /** Массив всех узлов для проверки существования */
-  nodes: any[];
-}
+import type { AutoTransitionCodeParams } from './types/auto-transition-code-params';
 
 /**
  * Генерирует код выполнения автоперехода

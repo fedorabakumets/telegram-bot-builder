@@ -7,19 +7,7 @@
  * @module bot-generator/transitions/auto-transition-check
  */
 
-/**
- * Параметры для проверки автоперехода
- */
-export interface AutoTransitionCheckParams {
-  /** ID текущего узла */
-  nodeId: string;
-  /** Данные текущего узла */
-  targetNode: any;
-  /** Массив всех узлов */
-  nodes: any[];
-  /** Массив соединений */
-  connections: any[];
-}
+import type { AutoTransitionCheckParams } from './types/auto-transition-check-params';
 
 /**
  * Генерирует код проверки автоперехода
