@@ -162,19 +162,21 @@ export function generateAttachedMediaSendCode(
     }
 
     codeLines.push(`${indentLevel}# Отправляем статическое изображение`);
-    codeLines.push(`${indentLevel}try:`);
-    codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
-    codeLines.push(`${indentLevel}    # Создаём all_user_vars если ещё не создан (для callback обработчиков)`);
-    codeLines.push(`${indentLevel}    if 'all_user_vars' not in locals():`);
-    codeLines.push(`${indentLevel}        all_user_vars = {}`);
-    codeLines.push(`${indentLevel}        db_vars = await get_user_from_db(${userIdSource})`);
-    codeLines.push(`${indentLevel}        if db_vars and isinstance(db_vars, dict):`);
-    codeLines.push(`${indentLevel}            all_user_vars.update(db_vars)`);
-    codeLines.push(`${indentLevel}        local_vars = user_data.get(${userIdSource}, {})`);
-    codeLines.push(`${indentLevel}        if isinstance(local_vars, dict):`);
-    codeLines.push(`${indentLevel}            all_user_vars.update(local_vars)`);
-    codeLines.push(`${indentLevel}    # Используем all_user_vars вместо user_vars для корректной замены переменных`);
-    codeLines.push(`${indentLevel}    processed_caption = replace_variables_in_text(text, all_user_vars)`);
+    codeLines.push(`${indentLevel}# Проверяем, что это не fake callback (изображение уже было отправлено в message handler)`);
+    codeLines.push(`${indentLevel}if not is_fake_callback:`);
+    codeLines.push(`${indentLevel}    try:`);
+    codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой`);
+    codeLines.push(`${indentLevel}        # Создаём all_user_vars если ещё не создан (для callback обработчиков)`);
+    codeLines.push(`${indentLevel}        if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}            all_user_vars = {}`);
+    codeLines.push(`${indentLevel}            db_vars = await get_user_from_db(${userIdSource})`);
+    codeLines.push(`${indentLevel}            if db_vars and isinstance(db_vars, dict):`);
+    codeLines.push(`${indentLevel}                all_user_vars.update(db_vars)`);
+    codeLines.push(`${indentLevel}            local_vars = user_data.get(${userIdSource}, {})`);
+    codeLines.push(`${indentLevel}            if isinstance(local_vars, dict):`);
+    codeLines.push(`${indentLevel}                all_user_vars.update(local_vars)`);
+    codeLines.push(`${indentLevel}        # Используем all_user_vars вместо user_vars для корректной замены переменных`);
+    codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, all_user_vars)`);
 
     // ИСПРАВЛЕНИЕ: Генерируем parse_mode только если parseMode не пустой и не равен "none"
     let parseModeParam = '';
@@ -183,35 +185,13 @@ export function generateAttachedMediaSendCode(
     }
 
     // ИСПРАВЛЕНИЕ: Добавляем клавиатуру если она определена
-    codeLines.push(`${indentLevel}    if keyboard is not None:`);
-    codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, reply_markup=keyboard, node_id="${nodeId}")`);
-    codeLines.push(`${indentLevel}    else:`);
-    codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, node_id="${nodeId}")`);
-
-    // Автопереход если нужен и collectUserInput=true
-    // ИСПРАВЛЕНИЕ: Генерируем FakeCallbackQuery ТОЛЬКО для message handler (не для callback)
-    // В callback handler автопереход обрабатывается отдельно в generateAutoTransitionCode
-    if (autoTransitionTo && collectUserInput && handlerContext === 'message') {
-      const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
-      codeLines.push(`${indentLevel}    `);
-      codeLines.push(`${indentLevel}    # ⚡ Автопереход к узлу ${autoTransitionTo}`);
-      codeLines.push(`${indentLevel}    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-      codeLines.push(`${indentLevel}    # Создаём FakeCallbackQuery для совместимости с callback обработчиком`);
-      codeLines.push(`${indentLevel}    class FakeCallbackQuery:`);
-      codeLines.push(`${indentLevel}        def __init__(self, message, target_node_id):`);
-      codeLines.push(`${indentLevel}            self.from_user = message.from_user`);
-      codeLines.push(`${indentLevel}            self.chat = message.chat`);
-      codeLines.push(`${indentLevel}            self.data = target_node_id`);
-      codeLines.push(`${indentLevel}            self.message = message`);
-      codeLines.push(`${indentLevel}    fake_callback = FakeCallbackQuery(${messageSource}, "${autoTransitionTo}")`);
-      codeLines.push(`${indentLevel}    await handle_callback_${safeAutoTargetId}(fake_callback)`);
-      codeLines.push(`${indentLevel}    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
-      codeLines.push(`${indentLevel}    return`);
-    }
-
-    codeLines.push(`${indentLevel}except Exception as e:`);
-    codeLines.push(`${indentLevel}    logging.error(f"Ошибка отправки статического изображения: {e}")`);
-    codeLines.push(`${indentLevel}    # Fallback на обычное сообщение при ошибке`);
+    codeLines.push(`${indentLevel}        if keyboard is not None:`);
+    codeLines.push(`${indentLevel}            await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, reply_markup=keyboard, node_id="${nodeId}")`);
+    codeLines.push(`${indentLevel}        else:`);
+    codeLines.push(`${indentLevel}            await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, node_id="${nodeId}")`);
+    codeLines.push(`${indentLevel}    except Exception as e:`);
+    codeLines.push(`${indentLevel}        logging.error(f"Ошибка отправки статического изображения: {e}")`);
+    codeLines.push(`${indentLevel}        # Fallback на обычное сообщение при ошибке`);
     const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
     // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
     let parseModeFallbackParam = '';
@@ -221,10 +201,10 @@ export function generateAttachedMediaSendCode(
       parseModeFallbackParam = ', parse_mode=None';
     }
     // ИСПРАВЛЕНИЕ: Добавляем клавиатуру если она определена
-    codeLines.push(`${indentLevel}    if keyboard is not None:`);
-    codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboard${autoTransitionFlag}${parseModeFallbackParam})`);
-    codeLines.push(`${indentLevel}    else:`);
-    codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}"${autoTransitionFlag}${parseModeFallbackParam})`);
+    codeLines.push(`${indentLevel}        if keyboard is not None:`);
+    codeLines.push(`${indentLevel}            await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboard${autoTransitionFlag}${parseModeFallbackParam})`);
+    codeLines.push(`${indentLevel}        else:`);
+    codeLines.push(`${indentLevel}            await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}"${autoTransitionFlag}${parseModeFallbackParam})`);
   } else {
     // Если статическое изображение не определено, проверяем есть ли динамические медиа
     // Если есть attachedMedia, не отправляем текст здесь - он отправится вместе с медиа ниже
