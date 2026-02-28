@@ -5,7 +5,7 @@ import { BotData, BotGroup, Node } from '@shared/schema';
 import { Button } from './bot-generator/types';
 import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
 import { setGlobalLoggingEnabled } from './bot-generator/core';
-import { generatePythonImports } from './bot-generator/imports';
+import { generatePythonImports, type ImportGeneratorOptions } from './bot-generator/imports';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotCommandsSetup } from './bot-commands-setup';
@@ -970,7 +970,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 
    * **Поддерживаемые типы команд:**
    * - Start команды (/start) - специальная обработка
-   * - Обычные команды (/command) - стандартная обработка
+   * - Обычные к��манды (/command) - стандартная обработка
    * - Команды без узлов - базовое уведомление
    * 
    * **Меха????изм работы:**

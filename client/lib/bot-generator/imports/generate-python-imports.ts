@@ -1,6 +1,6 @@
 /**
- * @fileoverview Генерация Python импортов для бота
- * Агрегирует функции генерации импортов
+ * @fileoverview Агрегатор функций генерации Python импортов
+ * Объединяет все функции генерации импортов в одну
  */
 
 import { generateCommandImports } from './generate-command-imports';

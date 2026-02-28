@@ -11,8 +11,13 @@ export { isLoggingEnabled, logFlowAnalysis } from './core';
 export { setGlobalLoggingEnabled, getGlobalLoggingEnabled } from './core';
 
 // Импорт: генерация Python импортов
-export { generatePythonImports } from './imports';
-export type { ImportGeneratorOptions } from './imports';
+export { generatePythonImports, type ImportGeneratorOptions } from './imports';
+
+// Генерация импортов по типам (для переиспользования)
+export { generateCommandImports } from './imports';
+export { generateUrlImageImports, generateDatetimeImports } from './imports';
+export { generateParseModeImports } from './imports';
+export { generateTelegramBadRequestImports } from './imports';
 
 // Типы
 export type { Button, ResponseOption } from './types';
