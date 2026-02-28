@@ -185,7 +185,15 @@ export function generateAttachedMediaSendCode(
       codeLines.push(`${indentLevel}    `);
       codeLines.push(`${indentLevel}    # ⚡ Автопереход к узлу ${autoTransitionTo}`);
       codeLines.push(`${indentLevel}    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-      codeLines.push(`${indentLevel}    await handle_callback_${safeAutoTargetId}(${messageSource})`);
+      codeLines.push(`${indentLevel}    # Создаём FakeCallbackQuery для совместимости с callback обработчиком`);
+      codeLines.push(`${indentLevel}    class FakeCallbackQuery:`);
+      codeLines.push(`${indentLevel}        def __init__(self, message, target_node_id):`);
+      codeLines.push(`${indentLevel}            self.from_user = message.from_user`);
+      codeLines.push(`${indentLevel}            self.chat = message.chat`);
+      codeLines.push(`${indentLevel}            self.data = target_node_id`);
+      codeLines.push(`${indentLevel}            self.message = message`);
+      codeLines.push(`${indentLevel}    fake_callback = FakeCallbackQuery(${messageSource}, "${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}    await handle_callback_${safeAutoTargetId}(fake_callback)`);
       codeLines.push(`${indentLevel}    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
       codeLines.push(`${indentLevel}    return`);
     }
@@ -229,7 +237,15 @@ export function generateAttachedMediaSendCode(
         const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
         codeLines.push(`${indentLevel}# ⚡ Автопереход к узлу ${autoTransitionTo}`);
         codeLines.push(`${indentLevel}logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-        codeLines.push(`${indentLevel}await handle_callback_${safeAutoTargetId}(${messageSource})`);
+        codeLines.push(`${indentLevel}# Создаём FakeCallbackQuery для совместимости с callback обработчиком`);
+        codeLines.push(`${indentLevel}class FakeCallbackQuery:`);
+        codeLines.push(`${indentLevel}    def __init__(self, message, target_node_id):`);
+        codeLines.push(`${indentLevel}        self.from_user = message.from_user`);
+        codeLines.push(`${indentLevel}        self.chat = message.chat`);
+        codeLines.push(`${indentLevel}        self.data = target_node_id`);
+        codeLines.push(`${indentLevel}        self.message = message`);
+        codeLines.push(`${indentLevel}fake_callback = FakeCallbackQuery(${messageSource}, "${autoTransitionTo}")`);
+        codeLines.push(`${indentLevel}await handle_callback_${safeAutoTargetId}(fake_callback)`);
         codeLines.push(`${indentLevel}logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
       }
     }
@@ -391,7 +407,15 @@ export function generateAttachedMediaSendCode(
     const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
     codeLines.push(`${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}`);
     codeLines.push(`${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-    codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(${messageSource})`);
+    codeLines.push(`${indentLevel}        # Создаём FakeCallbackQuery для совместимости с callback обработчиком`);
+    codeLines.push(`${indentLevel}        class FakeCallbackQuery:`);
+    codeLines.push(`${indentLevel}            def __init__(self, message, target_node_id):`);
+    codeLines.push(`${indentLevel}                self.from_user = message.from_user`);
+    codeLines.push(`${indentLevel}                self.chat = message.chat`);
+    codeLines.push(`${indentLevel}                self.data = target_node_id`);
+    codeLines.push(`${indentLevel}                self.message = message`);
+    codeLines.push(`${indentLevel}        fake_callback = FakeCallbackQuery(${messageSource}, "${autoTransitionTo}")`);
+    codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(fake_callback)`);
     codeLines.push(`${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
     codeLines.push(`${indentLevel}        return`);
   }
