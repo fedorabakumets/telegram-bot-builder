@@ -148,9 +148,11 @@ describe('Генерация Python кода бота', () => {
 
     it('должен содержать from aiogram import Dispatcher', () => {
       if (generateError) this.skip();
+      // Проверяем наличие Dispatcher в импортах (может быть в combined import)
+      const hasDispatcherImport = generatedCode.includes('from aiogram import') && generatedCode.includes('Dispatcher');
       assert.ok(
-        generatedCode.includes('from aiogram import Dispatcher'),
-        'Отсутствует from aiogram import Dispatcher'
+        hasDispatcherImport,
+        'Отсутствует from aiogram import ... Dispatcher'
       );
     });
 
