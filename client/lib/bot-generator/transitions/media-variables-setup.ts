@@ -38,7 +38,7 @@ export function generateMediaVariablesSetup(
   params: MediaVariablesParams,
   indent: string = '    '
 ): string {
-  const { nodeId, imageUrl, videoUrl, audioUrl, documentUrl, attachedMedia } = params;
+  const { imageUrl, videoUrl, audioUrl, documentUrl, attachedMedia } = params;
 
   let code = '';
   let hasMedia = false;

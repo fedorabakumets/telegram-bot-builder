@@ -18,7 +18,10 @@ import { hasConditionalMessages } from './conditional-messages-handler';
 import { generateMediaVariablesSetup } from './media-variables';
 import { generateAutoTransitionCode } from './auto-transition-code';
 import { calculateAutoTransitionTarget } from './auto-transition-check';
-import { generateNavigationMediaSend } from './navigation-media-send';
+import { generateNavigationMedia } from './generate-navigation-media';
+import { generateNavigationHandler, generateVariableReplacementInText, generateAutoTransitionCheck, generateAutoTransitionCall } from './generate-navigation-handler';
+import { generateCommandNavigation } from './generate-command-navigation';
+import { generateConditionalMessage } from './generate-conditional-message';
 import { generateAllNodesDict, generateBroadcastConfirmationHandler, generateBroadcastDirectHandler } from './broadcast';
 import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
 import { generateMediaSendCode } from './media';
@@ -27,9 +30,9 @@ import { generateVariableSaveLogic } from './variable';
 import { generateRedirectLogic } from './redirect';
 import { generateNavigationErrorHandler, generateUnknownNodeWarning, generateNoNodesAvailableWarning, generateMultiSelectFallbackNavigation, generateRegularFallbackNavigation } from './navigation';
 import { generateInputNodeHandling } from './input';
-import { Button, isLoggingEnabled } from '../../bot-generator';
+import { isLoggingEnabled } from '../../bot-generator';
 import { generateCheckUserVariableFunction } from '../database';
-import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
+import { formatTextForPython, generateWaitingStateCode } from '../format';
 import { generateHandleNodeFunctions } from '../../generate/generateHandleNodeFunctions';
 import { generateInlineKeyboardCode } from '../Keyboard';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
@@ -583,119 +586,61 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                 code += `        ${condition} next_node_id == "${navTargetNode.id}":\n`;
 
                 if (navTargetNode.type === 'message') {
-                  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
-                  if (navTargetNode.data.allowMultipleSelection === true) {
-                    // Для узлов с множественным выбором вызываем полноценный обработчик
-                    const safeFunctionName = navTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-                    code += `            # Узел с множественным выбором - вызываем полноценный обработчик\n`;
-                    code += `            logging.info(f"🔧 Callback навигация к узлу с множественным выбором: ${navTargetNode.id}")\n`;
-                    code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
-                  } else {
-                    // Проверяем, есть ли условные сообщения для этого узла
-                    const hasConditionalMessages = navTargetNode.data.enableConditionalMessages &&
-                      navTargetNode.data.conditionalMessages &&
-                      navTargetNode.data.conditionalMessages.length > 0;
+                  // Генерация обработки навигации к узлу
+                  const navResult = generateNavigationHandler({
+                    navTargetNode,
+                    nodes,
+                    indent: '            '
+                  });
+                  code += navResult.code;
 
-                    if (hasConditionalMessages && navTargetNode.data.collectUserInput === true) {
-                      // Для узлов с условными сообщениями вызываем полноценный обработчик
-                      const safeFunctionName = navTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-                      code += `            # Узел с условными сообщениями - вызываем полноценный обработчик\n`;
-                      code += `            logging.info(f"🔧 Callback навигация к узлу с условными сообщениями: ${navTargetNode.id}")\n`;
-                      code += `            await handle_node_${safeFunctionName}(callback_query.message)\n`;
-                    } else {
-                      const messageText = navTargetNode.data.messageText || 'Сообщение';
-                      const formattedText = formatTextForPython(messageText);
-                      code += `            nav_text = ${formattedText}\n`;
+                  // Стандартная обработка (не множественный выбор и не условные сообщения)
+                  if (!navResult.needsFullHandler) {
+                    // Замена переменных в тексте
+                    code += generateVariableReplacementInText('nav_text', 'nav_user_vars', '            ');
 
-                      // Добавляем замену переменных в nav_text
-                      code += '            # Подставляем переменные пользователя в текст\n';
-                      code += '            nav_user_vars = await get_user_from_db(callback_query.from_user.id)\n';
-                      code += '            if not nav_user_vars:\n';
-                      code += '                nav_user_vars = user_data.get(callback_query.from_user.id, {})\n';
-                      code += '            if not isinstance(nav_user_vars, dict):\n';
-                      code += '                nav_user_vars = {}\n';
-                      code += '            # Заменяем переменные в nav_text\n';
-                      code += '            for var_name, var_data in nav_user_vars.items():\n';
-                      code += '                placeholder = "{" + var_name + "}"\n';
-                      code += '                if placeholder in nav_text:\n';
-                      code += '                    if isinstance(var_data, dict) and "value" in var_data:\n';
-                      code += '                        var_value = str(var_data["value"]) if var_data["value"] is not None else var_name\n';
-                      code += '                    elif var_data is not None:\n';
-                      code += '                        var_value = str(var_data)\n';
-                      code += '                    else:\n';
-                      code += '                        var_value = var_name\n';
-                      code += '                    nav_text = nav_text.replace(placeholder, var_value)\n';
+                    // Отправка медиа или обычного сообщения
+                    code += generateNavigationMedia({
+                      navTargetNode,
+                      userVars: 'user_vars',
+                      userId: 'callback_query.from_user.id'
+                    }, '            ');
 
-                      // Отправка медиа или обычного сообщения
-                      code += generateNavigationMediaSend({
-                        navTargetNode,
-                        userVars: 'user_vars',
-                        userId: 'callback_query.from_user.id'
-                      }, '            ');
+                    // Настройка ожидания ввода если collectUserInput=true
+                    if (navTargetNode.data.collectUserInput === true) {
+                      const inputType = navTargetNode.data.inputType || 'text';
+                      const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
 
-                      // Если узел message собирает ввод, настраиваем ожидание
-                      if (navTargetNode.data.collectUserInput === true) {
-                        const inputType = navTargetNode.data.inputType || 'text';
-                        // ИСПРАВЛЕНИЕ: Берем inputVariable именно из целевого узла, а не из родительского
-                        const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
-
-                        code += '            # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n';
-                        code += '            user_id = callback_query.from_user.id\n';
-                        code += '            if user_id not in user_data:\n';
-                        code += '                user_data[user_id] = {}\n';
-                        code += `            # Проверяем, не была ли переменная ${inputVariable} уже сохранена\n`;
-                        code += `            if "${inputVariable}" not in user_data[user_id] or not user_data[user_id]["${inputVariable}"]:\n`;
-                        code += '                # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода\n';
-                        code += `                # Тип ввода: ${inputType}\n`;
-                        // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode с правильным контекстом callback_query
-                        if (navTargetNode && navTargetNode.data) {
-                          code += generateWaitingStateCode(navTargetNode, '                ', 'callback_query.from_user.id').split('\n').map(line => line ? '            ' + line : '').join('\n');
-                        }
-                        code += '            else:\n';
-                        code += `                logging.info(f"⏭️ Переменная ${inputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
+                      code += '            # Проверяем, не была ли переменная уже сохранена\n';
+                      code += '            user_id = callback_query.from_user.id\n';
+                      code += '            if user_id not in user_data:\n';
+                      code += '                user_data[user_id] = {}\n';
+                      code += `            if "${inputVariable}" not in user_data[user_id] || not user_data[user_id]["${inputVariable}"]:\n`;
+                      code += '                # Используем универсальную функцию для настройки ожидания ввода\n';
+                      if (navTargetNode && navTargetNode.data) {
+                        code += generateWaitingStateCode(navTargetNode, '                ', 'callback_query.from_user.id')
+                          .split('\n')
+                          .map(line => line ? '            ' + line : '')
+                          .join('\n');
                       }
+                      code += '            else:\n';
+                      code += `                logging.info(f"⏭️ Переменная ${inputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
+                    }
 
-                      // АВТОПЕРЕХОД: Если у узла есть enableAutoTransition, переходим к следующему узлу
-                      if (navTargetNode.data.enableAutoTransition && navTargetNode.data.autoTransitionTo) {
-                        const autoTargetId = navTargetNode.data.autoTransitionTo;
-                        const safeAutoTargetId = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
-                        code += '            \n';
-                        code += '            # Проверяем, не ждем ли мы ввод перед автопереходом\n';
-                        code += '            if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
-                        code += `                logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${navTargetNode.id}")\n`;
-                        code += '            # Проверяем, разрешён ли автопереход для этого узла (collectUserInput)\n';
-                        // ИСПРАВЛЕНИЕ: Используем фактическое значение collectUserInput из узла, а не значение по умолчанию
-                        const navCollectUserInputValue = navTargetNode.data.collectUserInput === true;
-                        code += `            elif user_id in user_data and user_data[user_id].get("collectUserInput_${navTargetNode.id}", ${toPythonBoolean(navCollectUserInputValue)}) == True:\n`;
-                        code += `                logging.info(f"ℹ️ Узел ${navTargetNode.id} ожидает ввод (collectUserInput=true), автопереход пропущен")\n`;
-                        code += '            else:\n';
-                        code += `                # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                        code += `                logging.info(f"⚡ Автопереход от узла ${navTargetNode.id} к узлу ${autoTargetId}")\n`;
-                        // Проверяем, существует ли целевой узел перед вызовом обработчика
-                        const targetExists = nodes.some(n => n.id === autoTargetId);
-                        if (targetExists) {
-                          code += `                await handle_callback_${safeAutoTargetId}(callback_query)\n`;
-                        } else {
-                          code += `                logging.warning(f"⚠️ Узел автоперехода не найден: {autoTargetId}, завершаем переход")\n`;
-                          code += `                await callback_query.message.edit_text("Переход завершен")\n`;
-                        }
-                        code += `                logging.info(f"✅ Автопереход выполнен: ${navTargetNode.id} -> ${autoTargetId}")\n`;
-                        code += '                return\n';
-                      }
+                    // Автопереход
+                    code += generateAutoTransitionCheck(navTargetNode, 'user_id', '            ');
+                    if (navTargetNode.data.enableAutoTransition && navTargetNode.data.autoTransitionTo) {
+                      code += generateAutoTransitionCall(
+                        navTargetNode.data.autoTransitionTo,
+                        navTargetNode.id,
+                        nodes,
+                        '            '
+                      );
                     }
                   }
                 } else if (navTargetNode.type === 'command') {
-                  // Для узлов команд вызываем соответствующий обработчик
-                  const commandName = navTargetNode.data.command?.replace('/', '') || 'unknown';
-                  const handlerName = `${commandName}_handler`;
-                  code += `            # Выполняем команду ${navTargetNode.data.command}\n`;
-                  code += '            from types import SimpleNamespace\n';
-                  code += '            fake_message = SimpleNamespace()\n';
-                  code += '            fake_message.from_user = callback_query.from_user\n';
-                  code += '            fake_message.chat = callback_query.message.chat\n';
-                  code += '            fake_message.date = callback_query.message.date\n';
-                  code += '            fake_message.answer = callback_query.message.answer\n';
-                  code += `            await ${handlerName}(fake_message)\n`;
+                  // Обработка навигации к узлу команды
+                  code += generateCommandNavigation({ navTargetNode }, '            ');
                 } else if (navTargetNode.type === 'message' && (navTargetNode.data.enableTextInput ||
                   navTargetNode.data.enablePhotoInput ||
                   navTargetNode.data.enableVideoInput ||
@@ -722,113 +667,21 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                     // Генерируем условную логику для этого узла
                     const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a: { priority: any; }, b: { priority: any; }) => (b.priority || 0) - (a.priority || 0));
 
+                    // Собираем значения переменных для всех условий
+                    code += '            variable_values = {}\n';
+                    code += '            user_data_dict = await get_user_from_db(user_id) or {}\n';
+                    code += '            user_data_dict.update(user_data.get(user_id, {}))\n\n';
+
                     // Создаем единую if/elif/else структуру для всех условий
                     for (let i = 0; i < conditionalMessages.length; i++) {
                       const condition = conditionalMessages[i];
-                      const cleanedConditionText = stripHtmlTags(condition.messageText);
-                      const conditionText = formatTextForPython(cleanedConditionText);
-                      const conditionKeyword = i === 0 ? 'if' : 'elif';
-
-                      // Получаем имена переменных - поддержка как нового формата массива, так и устаревшей единичной переменной
-                      const variableNames = condition.variableNames && condition.variableNames.length > 0
-                        ? condition.variableNames
-                        : (condition.variableName ? [condition.variableName] : []);
-
-                      const logicOperator = condition.logicOperator || 'AND';
-
-                      code += `            # Условие ${i + 1}: ${condition.condition} для переменных: ${variableNames.join(', ')}\n`;
-
-                      if (condition.condition === 'user_data_exists' && variableNames.length > 0) {
-                        // Создаем единый блок условия с проверками ВНУТРИ
-                        code += `            ${conditionKeyword} (\n`;
-                        for (let j = 0; j < variableNames.length; j++) {
-                          const varName = variableNames[j];
-                          const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
-                          code += `                check_user_variable_inline("${varName}", user_data_dict)[0]${operator}\n`;
-                        }
-                        code += `            ):\n`;
-
-                        // Внутри блока условия собираем значения переменных
-                        code += `                # Собираем значения переменных\n`;
-                        code += `                variable_values = {}\n`;
-                        for (const varName of variableNames) {
-                          code += `                _, variable_values["${varName}"] = check_user_variable_inline("${varName}", user_data_dict)\n`;
-                        }
-
-                        code += `                text = ${conditionText}\n`;
-
-                        // Заменяем переменные в тексте
-                        for (const varName of variableNames) {
-                          code += `                if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
-                          code += `                    text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
-                        }
-
-                        // Генерируем клавиатуру для условного сообщения если она есть
-                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, не установлено ли keyboardType="none" на РОДИТЕЛЬСКОМ узле
-                        const shouldGenerateKeyboard = navTargetNode.data.keyboardType !== 'none' && condition.keyboardType && condition.keyboardType !== 'none' && condition.buttons && condition.buttons.length > 0;
-                        if (shouldGenerateKeyboard) {
-                          code += '                # Создаем клавиатуру для уяяловного сообщения\n';
-
-                          if (condition.keyboardType === 'inline') {
-                            code += '                builder = InlineKeyboardBuilder()\n';
-                            condition.buttons.forEach((button: Button) => {
-                              if (button.action === "url") {
-                                code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-                              } else if (button.action === 'goto') {
-                                const callbackData = button.target || button.id || 'no_action';
-                                code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-                              } else if (button.action === 'command') {
-                                // Для кнопок команд создаем специальную callback_data
-                                const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-                                code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
-                              } else {
-                                const callbackData = button.target || button.id || 'no_action';
-                                code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-                              }
-                            });
-                            code += '                conditional_keyboard = builder.as_markup()\n';
-                            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                            code += '                # Заменяем все переменные в тексте\n';
-                            code += '                text = replace_variables_in_text(text, user_data_dict)\n';
-                            code += '                await bot.send_message(user_id, text, reply_markup=conditional_keyboard)\n';
-                          } else if (condition.keyboardType === 'reply') {
-                            code += '                builder = ReplyKeyboardBuilder()\n';
-                            condition.buttons.forEach((button: Button) => {
-                              if (button.action === "contact" && button.requestContact) {
-                                code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-                              } else if (button.action === "location" && button.requestLocation) {
-                                code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
-                              } else {
-                                code += `                builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
-                              }
-                            });
-                            // ИСПРАВЛЕНИЕ: Используем oneTimeKeyboard из настроек условного сообщения
-                            const conditionOneTimeKeyboard = toPythonBoolean(condition.oneTimeKeyboard === true);
-                            code += `                conditional_keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKeyboard})\n`;
-                            code += '                await bot.send_message(user_id, text, reply_markup=conditional_keyboard)\n';
-                          }
-                        } else {
-                          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                          code += '                # Заменяем все переменные в тексте\n';
-                          code += '                text = replace_variables_in_text(text, user_data_dict)\n';
-                          code += '                await bot.send_message(user_id, text)\n';
-                        }
-
-                        // Настраиваем ожидание текстового ввода для условного сообщения (если нужно)
-                        if (condition.waitForTextInput) {
-                          // ИСПРАВЛЕНИЕ: Используем переменную из условия или из целевого узла
-                          const conditionalInputVariable = condition.textInputVariable || navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
-                          code += `                # Настраиваем ожидание текстового ввода для условного сообщения\n`;
-                          code += `                user_data[user_id]["waiting_for_input"] = {\n`;
-                          code += `                    "type": "text",\n`;
-                          code += `                    "variable": "${conditionalInputVariable}",\n`;
-                          code += `                    "save_to_database": True,\n`;
-                          code += `                    "node_id": "${navTargetNode.id}",\n`;
-                          code += `                    "next_node_id": "${condition.nextNodeAfterInput || inputTargetNodeId}"\n`;
-                          code += `                }\n`;
-                          code += `                logging.info(f"🔧 Настроено условное ожидание ввода для переменной: ${conditionalInputVariable} (узел ${navTargetNode.id})")\n`;
-                        }
-                      }
+                      code += generateConditionalMessage({
+                        condition,
+                        index: i,
+                        conditionalMessages,
+                        navTargetNode,
+                        inputTargetNodeId
+                      }, '            ');
                     }
 
                     // Резервное сообщение
@@ -870,7 +723,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                         code += `                text = replace_variables_in_text(text, user_vars)\n`;
                         code += `                await bot.send_message(user_id, text)\n`;
                       }
-                      code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${navTargetNode.id} выполнена")\n`;
+                      code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${navTargetNode.id} выполн���на")\n`;
                     } else {
                       code += generateRegularFallbackNavigation({
                         navTargetNode,
