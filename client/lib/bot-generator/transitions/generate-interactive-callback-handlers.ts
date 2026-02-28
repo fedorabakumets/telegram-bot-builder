@@ -11,6 +11,7 @@ import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './ca
 import { generateCallbackHandlerInit } from './callback-handler-init';
 import { generateMultiSelectDoneButton } from './multi-select';
 import { generateMultiSelectHandler, generateMultiSelectComplete } from './multi-select-handler';
+import { generateBroadcastNodeHandler, isBroadcastNode } from './broadcast-node-handler';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateMessageTextPreparation, generateDatabaseVarsGet } from './message-text';
 import { generateConditionalMessagesCheck } from './conditional-messages';
@@ -151,8 +152,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           // ============================================================================
           // ОБРАБОТКА УЗЛОВ РАССЫЛКИ (broadcast)
           // ============================================================================
-          if (targetNode.type === 'broadcast') {
-            code += generateBroadcastHandler({
+          if (isBroadcastNode(targetNode.type)) {
+            code += generateBroadcastNodeHandler({
               nodeId,
               enableConfirmation: targetNode.data?.enableConfirmation,
               confirmationText: targetNode.data?.confirmationText
