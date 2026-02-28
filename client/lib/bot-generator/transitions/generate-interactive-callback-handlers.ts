@@ -15,7 +15,7 @@ import { generateConditionalMessagesCheck } from './conditional-messages';
 import { generateMediaVariablesSetup } from './media-variables';
 import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
 import { generateBroadcastHandler } from './broadcast';
-import { generateRegularReplyKeyboard, generateRegularInlineKeyboard } from './keyboard';
+import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
@@ -444,22 +444,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += '    keyboard = None\n';
           }
 
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем условную клавиатуру и используем её если есть
-          code += '    \n';
-          code += '    # Проверяем, есть ли условная клавиатура для использования\n';
-          code += '    # Инициализируем переменную conditional_keyboard, если она не была определена\n';
-          code += '    if "conditional_keyboard" not in locals():\n';
-          code += '        conditional_keyboard = None\n';
-          code += '    user_id = callback_query.from_user.id\n';
-          code += '    if user_id not in user_data:\n';
-          code += '        user_data[user_id] = {}\n';
-          code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
-          code += '        keyboard = conditional_keyboard\n';
-          code += '        user_data[user_id]["_has_conditional_keyboard"] = True\n';
-          code += '        logging.info("✅ Используем условную клавиатуру для навигации")\n';
-          code += '    else:\n';
-          code += '        user_data[user_id]["_has_conditional_keyboard"] = False\n';
-          code += '    \n';
+          // Проверяем условную клавиатуру и используем её если есть
+          code += generateConditionalKeyboardCheck('    ');
 
           // ============================================================================
           // ОБРАБОТКА МЕДИА-КОНТЕНТА
@@ -866,7 +852,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                         code += `                    await bot.send_photo(callback_query.from_user.id, nav_attached_media, caption=nav_text)\n`;
                         code += `            else:\n`;
                         code += `                logging.info("📝 Медиа не найдено, отправка текстового сообщения")\n`;
-                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в текс��е
                         code += `                # Заменяем все переменные в тексте\n`;
                         code += `                nav_text = replace_variables_in_text(nav_text, user_vars)\n`;
                         code += `                await callback_query.message.edit_text(nav_text)\n`;
