@@ -1,7 +1,7 @@
 import { Button } from '../bot-generator';
 import { formatTextForPython, generateButtonText, toPythonBoolean } from '../format';
-import { calculateOptimalColumns } from '../../Keyboard';
-import { generateInlineKeyboardCode } from '../../Keyboard';
+import { calculateOptimalColumns } from '../Keyboard';
+import { generateInlineKeyboardCode } from '../Keyboard';
 
 export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) {
     code += '    # Проверяем, находится ли пользователь в режиме множественного выбора\n';
