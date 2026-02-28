@@ -21,6 +21,7 @@ import { generateButtonTextDetection } from './button';
 import { generateVariableSaveLogic } from './variable';
 import { generateRedirectLogic } from './redirect';
 import { generateNavigationToNode } from './navigation';
+import { generateInputNodeHandling } from './input';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
@@ -1074,65 +1075,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           // ============================================================================
           // ОБРАБОТКА УЗЛОВ СБОРА ВВОДА
           // ============================================================================
-          // Генерируем ответ на основе типа узла
           if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
-            // Обрабатываем узла сбора ввода
-            const inputPrompt = targetNode.data.messageText || targetNode.data.inputPrompt || "Пяяяжалуйяяяа, введите ваш отяяяет:";
-            const responseType = targetNode.data.responseType || 'text';
-            // Определяем тип ввода - если включены медиа-типы, используем их, иначе текст
-            let inputType = 'text';
-            if (targetNode.data.enablePhotoInput) {
-              inputType = 'photo';
-            } else if (targetNode.data.enableVideoInput) {
-              inputType = 'video';
-            } else if (targetNode.data.enableAudioInput) {
-              inputType = 'audio';
-            } else if (targetNode.data.enableDocumentInput) {
-              inputType = 'document';
-            } else {
-              inputType = targetNode.data.inputType || 'text';
-            }
-            const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-            const saveToDatabase = targetNode.data.saveToDatabase || false;
-
-            code += '    # Удаляем старое сообщение\n';
-            code += '    \n';
-
-            const formattedPrompt = formatTextForPython(inputPrompt);
-            code += `    text = ${formattedPrompt}\n`;
-
-            if (responseType === 'text') {
-              code += '    # ИСПРАВЛЕНИЕ: Не отправляем сообщение второй раз, если оно уже было отправлено ранее в обработчике\n';
-              code += '    # Вместо этого, просто настраиваем ожидание ввода\n';
-
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем collectUserInput перед установкой waiting_for_input
-              const inlineTextCollect = targetNode.data.collectUserInput === true ||
-                targetNode.data.enableTextInput === true ||
-                targetNode.data.enablePhotoInput === true ||
-                targetNode.data.enableVideoInput === true ||
-                targetNode.data.enableAudioInput === true ||
-                targetNode.data.enableDocumentInput === true;
-
-              if (inlineTextCollect) {
-                // Находим следующий узел через соединения
-                const nextConnection = connections.find(conn => conn.source === targetNode.id);
-                const nextNodeId = nextConnection ? nextConnection.target : null;
-
-                // ИСПОЛЬЗУЕМ inputTargetNodeId из данных узла, если nextConnection не найден
-                const finalNextNodeId = nextNodeId || targetNode.data.inputTargetNodeId || '';
-
-                code += '    # Настраиваем ожидание ввода (collectUserInput=true)\n';
-                code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
-                code += `        "type": "${inputType}",\n`;
-                code += `        "variable": "${inputVariable}",\n`;
-                code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
-                code += `        "node_id": "${targetNode.id}",\n`;
-                code += `        "next_node_id": "${finalNextNodeId}"\n`;
-                code += '    }\n';
-              } else {
-                code += `    # Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
-              }
-            }
+            code += generateInputNodeHandling({ targetNode, connections }, '    ');
           }
 
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем обязательный return в конец функции
