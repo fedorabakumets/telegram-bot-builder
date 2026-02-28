@@ -62,8 +62,9 @@ export function generateUniversalVariableReplacement(
 
   // Добавляем универсальную замену переменных в тексте
   universalVarCodeLines.push(`${indentLevel}# Заменяем переменные в тексте, если text определена`);
-  universalVarCodeLines.push(`${indentLevel}if 'text' in locals():`);
-  universalVarCodeLines.push(`${indentLevel}    text = replace_variables_in_text(text, all_user_vars)`);
+  universalVarCodeLines.push(`${indentLevel}if 'text' not in locals():`);
+  universalVarCodeLines.push(`${indentLevel}    text = ""  # Инициализируем пустым текстом если не определена`);
+  universalVarCodeLines.push(`${indentLevel}text = replace_variables_in_text(text, all_user_vars)`);
   universalVarCodeLines.push('');
 
   // Применяем автоматическое добавление комментариев ко всему коду
