@@ -13,6 +13,11 @@ import {
   generateSignalHandler,
   generatePollingLoop
 } from './bot-generator/handlers';
+import {
+  generateMultiSelectCallbackHandler,
+  generateMultiSelectPersistence,
+  generateMultiSelectCleanup
+} from './bot-generator/multi-select';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotCommandsSetup } from './bot-commands-setup';
@@ -330,7 +335,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes, isLoggingEnabled);
 
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
-  handle_multi_select_callback();
+  code += generateMultiSelectCallbackHandler(
+    multiSelectNodes,
+    nodes || [],
+    allNodeIds,
+    isLoggingEnabled,
+    generateTransitionLogicForMultiSelectCompletion,
+    generateInlineKeyboardCode,
+    formatTextForPython
+  );
 
   return generateCompleteBotScriptFromNodeGraphWithDependencies(
     code,
@@ -804,95 +817,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   function generateStateTransitionAndRenderLogic() {
     code = newgenerateStateTransitionAndRenderLogic(nodes, code, allNodeIds, []);
   }
-
-  /**
-   * Идентифицирует узлы, требующие логику множественного выбора
-   * Находит все узлы в графе с включенной опцией множественного выбора и возвращает их список
-   * @returns {Array<Node>} Массив узлов с множественным выбором
-   */
-
-  /**
-   * Генерирует обработчик callback-запросов для множественного выбора
-   * Создает Python функцию для обработки inline кнопок множественного выбора, включая кнопки "Готово"
-   */
-  function handle_multi_select_callback() {
-    if (multiSelectNodes.length > 0) {
-      code += '\n# Обработчики для множественного выбора\n';
-
-      // Обработчик для inline кнопок множественного выбора
-      code += '@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))\n';
-      code += 'async def handle_multi_select_callback(callback_query: types.CallbackQuery):\n';
-      code += '    await callback_query.answer()\n';
-      code += '    user_id = callback_query.from_user.id\n';
-      code += '    # Инициализируем базовые переменные пользователя\n';
-      code += '    user_name = init_user_variables(user_id, callback_query.from_user)\n';
-      code += '    \n';
-      code += '    callback_data = callback_query.data  # Получаем данные callback\n';
-      code += '    \n';
-      code += '    # Обработка кнопки "Готово"\n';
-      code += '    if callback_data.startswith("done_"):\n';
-      code += '        # Завершение множественного выбора (новый формат)\n';
-      code += '        logging.info(f"?? Обработка кнопки Готово: {callback_data}")\n';
-      code += '        short_node_id = callback_data.replace("done_", "")\n';
-      code += '        # Находим полный node_id по короткому суффиксу\n';
-      code += '        node_id = None\n';
-      multiSelectNodes.forEach((node: Node) => {
-        const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
-        code += `        if short_node_id == "${shortNodeId}":\n`;
-        code += `            node_id = "${node.id}"\n`;
-        code += `            logging.info(f"? Найден узел: ${node.id}")\n`;
-      });
-      code += '    elif callback_data.startswith("multi_select_done_"):\n';
-      code += '        # Завершение множественного выбора (старый формат)\n';
-      code += '        node_id = callback_data.replace("multi_select_done_", "")\n';
-      code += '        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n';
-      code += '        \n';
-      code += '        # Сохраняем выбранные опции в базу данных\n';
-      code += '        if selected_options:\n';
-      code += '            selected_text = ", ".join(selected_options)\n';
-
-      // Генерируем сохранение для каждого узла с его переменной
-      generateMultiSelectDataPersistenceAndCleanupCode();
-
-      // Добавим переходы для узлов с множественным выбором
-      code = generateTransitionLogicForMultiSelectCompletion(
-        code,
-        multiSelectNodes,
-        nodes,
-        [],
-        allNodeIds,
-        isLoggingEnabled,
-        generateInlineKeyboardCode,
-        formatTextForPython
-      );
-    }
-  }
-
-  /**
-   * Генерирует код сохранения данных множественного выбора и очистки состояния
-   * Создает Python код для сохранения выбранных опций множественного выбора в базу данных
-   * и очистки врем��нных данных пользователя после завершения операции
-   */
-  function generateMultiSelectDataPersistenceAndCleanupCode() {
-    multiSelectNodes.forEach((node: Node) => {
-      const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
-      code += `            if node_id == "${node.id}":\n`;
-      code += `                await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
-    });
-
-    code += '            # Резервное сохранение если узел не найден\n';
-    code += '            if not any(node_id == node for node in [' + multiSelectNodes.map(n => `"${n.id}"`).join(', ') + ']):\n';
-    code += '                await save_user_data_to_db(user_id, f"multi_select_{node_id}", selected_text)\n';
-    code += '        \n';
-    code += '        # Очищаем состояние множественного выбора\n';
-    code += '        if user_id in user_data:\n';
-    code += '            user_data[user_id].pop(f"multi_select_{node_id}", None)\n';
-    code += '            user_data[user_id].pop("multi_select_node", None)\n';
-    code += '        \n';
-    code += '        # Переходим к следующему узлу, если указан\n';
-  }
-
-
 }
 
 // Реэкспорт типов и функций для обратной совместимости
