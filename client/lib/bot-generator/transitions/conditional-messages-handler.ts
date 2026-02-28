@@ -7,12 +7,14 @@
  * @module bot-generator/transitions/conditional-messages-handler
  */
 
+import type { ConditionalMessageParams } from './types/conditional-message-params';
+
 /**
  * Параметры для генерации проверки условных сообщений
  */
 export interface ConditionalMessagesParams {
   /** Массив условных сообщений */
-  conditionalMessages: any[];
+  conditionalMessages: ConditionalMessageParams[];
 }
 
 /**
@@ -45,7 +47,10 @@ export function generateConditionalMessagesCheck(
  * @param nodeData - Данные узла
  * @returns true если есть условные сообщения
  */
-export function hasConditionalMessages(nodeData: any): boolean {
+export function hasConditionalMessages(nodeData: {
+  enableConditionalMessages?: boolean;
+  conditionalMessages?: ConditionalMessageParams[];
+}): boolean {
   return nodeData?.enableConditionalMessages === true &&
     nodeData?.conditionalMessages &&
     nodeData.conditionalMessages.length > 0;
