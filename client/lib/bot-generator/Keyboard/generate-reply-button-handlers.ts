@@ -594,8 +594,8 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   code += `        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="${targetNode.id}"${parseModeTarget})\n`;
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
-                    code += '            # Скрываем клавиатуру после нажатия кнопки\n';
-                    code += '            await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '        # Скрываем клавиатуру после нажатия кнопки\n';
+                    code += '        await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
                   }
                 } else {
                   if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
