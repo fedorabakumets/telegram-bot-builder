@@ -156,6 +156,45 @@ describe('Определения переменных окружения', () =>
     });
   });
 
+  describe('save_message_to_api', () => {
+    it('должна быть определена как заглушка', () => {
+      if (generateError) this.skip();
+      
+      const hasStub = generatedCode.includes('async def save_message_to_api(');
+      
+      assert.ok(hasStub, 'save_message_to_api должна быть определена как заглушка');
+    });
+
+    it('должна возвращать None в заглушке', () => {
+      if (generateError) this.skip();
+      
+      const hasReturnNone = generatedCode.includes('return None') && 
+                           generatedCode.includes('async def save_message_to_api');
+      
+      assert.ok(hasReturnNone, 'save_message_to_api заглушка должна возвращать None');
+    });
+
+    it('должна быть переопределена при включенной БД', () => {
+      // Генерируем код с включенной БД
+      const codeWithDb = generatePythonCode(
+        baseProject,
+        'TestBot',
+        [],
+        true,
+        1,
+        false,
+        false,
+        true
+      );
+      
+      // Проверяем что есть настоящая реализация (с session.post)
+      const hasRealImplementation = codeWithDb.includes('session.post') && 
+                                   codeWithDb.includes('save_message_to_api');
+      
+      assert.ok(hasRealImplementation, 'save_message_to_api должна иметь реальную реализацию при включенной БД');
+    });
+  });
+
   describe('PROJECT_ID', () => {
     it('должен быть определён', () => {
       if (generateError) this.skip();

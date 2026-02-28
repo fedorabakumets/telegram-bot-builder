@@ -68,6 +68,13 @@ export function generateApiConfig(projectId: number | null): string {
   codeLines.push('logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")');
   codeLines.push('');
 
+  // Создаём функцию-заглушку save_message_to_api (всегда, чтобы избежать ошибок)
+  codeLines.push('# Функция сохранения сообщения (заглушка, переопределяется при включенной БД)');
+  codeLines.push('async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):');
+  codeLines.push('    """Заглушка - возвращает None если БД не включена"""');
+  codeLines.push('    return None');
+  codeLines.push('');
+
   // Применяем автоматическое добавление комментариев
   const commentedCodeLines = processCodeWithAutoComments(codeLines, 'generate-api-config.ts');
   return commentedCodeLines.join('\n');
