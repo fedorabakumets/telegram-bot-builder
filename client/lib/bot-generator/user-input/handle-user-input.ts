@@ -94,12 +94,12 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Формирует объект с метаданными о выборе пользователя
      */
     code += generateResponseDataStructure('        ');
-    code += '            \n';
-    code += '            # Сохраняем в пользовательские данные\n';
-    code += '            user_data[user_id][variable_name] = response_data\n';
-    code += '            \n';
-    code += generateButtonResponseSave('            ');
-    code += '            \n';
+    code += '        \n';
+    code += '        # Сохраняем в пользовательские данные\n';
+    code += '        user_data[user_id][variable_name] = response_data\n';
+    code += '        \n';
+    code += generateButtonResponseSave('        ');
+    code += '        \n';
 
     /**
      * Подтверждение выбора
