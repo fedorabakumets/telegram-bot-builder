@@ -1,15 +1,16 @@
 /**
  * @fileoverview Компонент панели выбора и отправки узла
- * @description Выпадающий список с узлами и кнопка отправки
+ * @description Использует TargetNodeSelector из панели свойств
  */
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Send } from 'lucide-react';
-import { NodeSelector } from './node-selector';
+import { TargetNodeSelector } from '@/components/editor/properties/target-node-selector';
 import { useSendNode } from '../hooks/use-send-node';
 import { useProjectData } from '../hooks/use-project-data';
 import { collectNodesFromProjectData } from '../utils/node-utils';
+import { formatNodeDisplay } from '@/components/editor/properties/node-formatters';
 import type { Node } from '@shared/schema';
 
 /**
@@ -24,6 +25,14 @@ export interface NodeSenderProps {
   onSent?: () => void;
 }
 
+/** Фиктивный узел для совместимости с TargetNodeSelector */
+const DUMMY_NODE: Node = {
+  id: '',
+  type: 'message',
+  position: { x: 0, y: 0 },
+  data: {},
+};
+
 /**
  * Компонент для выбора и отправки узла пользователю
  */
@@ -34,27 +43,33 @@ export function NodeSender({ projectId, userId, onSent }: NodeSenderProps) {
 
   const nodesWithSheets = collectNodesFromProjectData(project?.data as Record<string, unknown> | null);
 
-  const handleSend = () => {
-    if (selectedNodeId && userId) {
-      sendNodeMutation.mutate({
-        nodeId: selectedNodeId,
-        userId,
-      });
+  const handleOptionsUpdate = (updatedOptions: any[]) => {
+    if (updatedOptions[0]?.target) {
+      setSelectedNodeId(updatedOptions[0].target);
     }
+  };
+
+  const dummyOption = {
+    id: 'node-sender-option',
+    text: 'Выберите узел',
+    target: selectedNodeId || undefined,
+    action: 'goto' as const,
   };
 
   return (
     <div className="space-y-2 p-3 border-t border-slate-200/50 dark:border-slate-800/50">
-      <NodeSelector
-        nodesWithSheets={nodesWithSheets}
-        selectedNodeId={selectedNodeId}
-        onSelectNode={setSelectedNodeId}
-        isLoading={isLoading}
+      <TargetNodeSelector
+        option={dummyOption}
+        index={0}
+        getAllNodesFromAllSheets={nodesWithSheets}
+        selectedNode={DUMMY_NODE}
+        onOptionsUpdate={handleOptionsUpdate}
+        formatNodeDisplay={formatNodeDisplay}
       />
       <div className="flex justify-end">
         <Button
           size="sm"
-          onClick={handleSend}
+          onClick={() => selectedNodeId && userId && sendNodeMutation.mutate({ nodeId: selectedNodeId, userId })}
           disabled={!selectedNodeId || !userId || sendNodeMutation.isPending}
           className="h-8 text-xs"
         >

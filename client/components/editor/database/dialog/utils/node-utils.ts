@@ -1,6 +1,6 @@
 /**
  * @fileoverview Утилиты для работы с узлами проекта
- * @description Помощники для получения и форматирования узлов
+ * @description Помощники для получения узлов из данных проекта
  */
 
 import type { Node } from '@shared/schema';
@@ -56,32 +56,4 @@ export function collectNodesFromProjectData(
   }
 
   return result;
-}
-
-/**
- * Форматирует отображение узла
- * @param node - Узел для форматирования
- * @param sheetName - Название листа
- * @returns Строка отображения
- */
-export function formatNodeDisplay(node: Node, sheetName: string): string {
-  const typeLabels: Record<string, string> = {
-    start: 'Старт',
-    message: 'Сообщение',
-    command: 'Команда',
-    sticker: 'Стикер',
-    voice: 'Голосовое',
-    animation: 'Анимация',
-    location: 'Геолокация',
-    contact: 'Контакт',
-  };
-
-  const label = typeLabels[node.type] || 'Узел';
-  const text = node.data.messageText || node.data.command || '';
-  
-  // Показываем текст сообщения и название листа
-  if (text) {
-    return `${label}: ${text} (${sheetName})`;
-  }
-  return `${label} (${sheetName})`;
 }
