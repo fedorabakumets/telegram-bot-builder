@@ -1,3 +1,15 @@
+/**
+ * @fileoverview Генерация обработчика команды /start для Telegram бота
+ *
+ * Модуль создаёт Python-код для обработки команды /start с поддержкой:
+ * - Регистрации пользователей
+ * - Отправки медиа (фото, видео, аудио, документы)
+ * - Условных сообщений и клавиатур
+ * - Автопереходов к следующим узлам
+ *
+ * @module bot-generator/CommandHandler/generateStartHandler
+ */
+
 import { Node } from '@shared/schema';
 import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
@@ -6,6 +18,7 @@ import { generateConditionalMessageLogicAndKeyboard } from './generateConditiona
 import { generateKeyboardAndProcessAttachedMedia } from './generateKeyboardAndProcessAttachedMedia';
 import { initializeAndRestoreMultipleSelectionState } from './initializeAndRestoreMultipleSelectionState';
 import { generateStartHandlerImageSend } from './generateStartHandlerImageSend';
+import { generateMessageText } from '../utils/generate-message-text';
 
 // ============================================================================
 // ГЕНЕРАТОРЫ ОБРАБОТЧИКОВ КОМАНД И СООБЩЕНИЙ
@@ -149,7 +162,11 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
   // Используем имена переменных из attachedMedia для согласованности
   const attachedMedia = (node && node.data && node.data.attachedMedia) ? node.data.attachedMedia : [];
-  
+
+  // ВАЖНО: Определяем текст сообщения ПЕРЕД отправкой медиа для использования в caption
+  const messageTextLines = generateMessageText({ node, indent: '    ' });
+  codeLines.push(...messageTextLines);
+
   if (node && node.data && node.data.imageUrl && node.data.imageUrl !== 'undefined') {
     // Находим переменную для изображения в attachedMedia или используем формат по умолчанию
     const imageVar = attachedMedia.find(v => v.includes('image') && v.includes('Url')) || attachedMedia.find(v => v.startsWith('imageUrlVar')) || `image_url_${node.id || 'unknown'}`;
@@ -159,7 +176,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     if (userDatabaseEnabled) {
       codeLines.push(`    await update_user_data_in_db(user_id, "${imageVar}", "${node.data.imageUrl}")`);
     }
-    
+
     // Отправляем изображение пользователю
     generateStartHandlerImageSend(node, codeLines, userDatabaseEnabled);
   }

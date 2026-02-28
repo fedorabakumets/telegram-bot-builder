@@ -31,9 +31,9 @@ export function generateStartHandlerImageSend(
   // Проверяем, есть ли изображение для отправки
   if (imageUrl && imageUrl !== 'undefined' && attachedMedia.length > 0) {
     // Находим переменную для изображения
-    const imageVar = attachedMedia.find(v => 
+    const imageVar = attachedMedia.find(v =>
       v.includes('image') && v.includes('Url')
-    ) || attachedMedia.find(v => 
+    ) || attachedMedia.find(v =>
       v.startsWith('imageUrlVar')
     ) || `image_url_${node.id || 'unknown'}`;
 
@@ -42,7 +42,7 @@ export function generateStartHandlerImageSend(
     codeLines.push(`    image_url = "${imageUrl}"`);
     codeLines.push('    logging.info(f"🖼️ Отправка изображения: {image_url}")');
     codeLines.push('');
-    codeLines.push('    # Подставляем переменные в caption');
+    codeLines.push('    # Подставляем переменные в caption (text определён выше)');
     codeLines.push('    caption = replace_variables_in_text(text, all_user_vars)');
     codeLines.push('');
     codeLines.push('    # Отправляем изображение с URL');

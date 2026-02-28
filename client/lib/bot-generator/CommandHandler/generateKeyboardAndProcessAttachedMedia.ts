@@ -45,9 +45,9 @@ export function generateKeyboardAndProcessAttachedMedia(node: { id: string; type
     const formattedText = formatTextForPython(messageText);
 
     if (node && node.data && node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
-        // Инициализируем text основным сообщением ПЕРЕД проверкой условий
+        // Инициализируем text только если он ещё не определён
         codeLines.push('    # Проверяем условные сообщения');
-        codeLines.push(`    text = ${formattedText}  # Основной текст узла как fallback`);
+        codeLines.push('    # text уже определён выше, используем его как fallback');
         codeLines.push('    conditional_parse_mode = None');
         codeLines.push('    conditional_keyboard = None');
         codeLines.push('');
@@ -99,23 +99,11 @@ export function generateKeyboardAndProcessAttachedMedia(node: { id: string; type
         codeLines.push('    if not isinstance(user_vars, dict):');
         codeLines.push('        user_vars = user_data.get(user_id, {})');
         codeLines.push('');
-        codeLines.push('    # Заменяем все переменные в тексте');
+        codeLines.push('    # Заменяем все переменные в тексте (text уже определён выше)');
         codeLines.push('    text = replace_variables_in_text(text, all_user_vars)');
     } else {
-        codeLines.push(`    text = ${formattedText}`);
-
-        // Добавляем замену переменных в тексте ПОСЛЕ определения переменной text
-        codeLines.push('');
-        codeLines.push('    # Подставляем все доступные переменные пользователя в текст');
-        codeLines.push('    user_vars = await get_user_from_db(user_id)');
-        codeLines.push('    if not user_vars:');
-        codeLines.push('        user_vars = user_data.get(user_id, {})');
-        codeLines.push('');
-        codeLines.push('    # get_user_from_db теперь возвращает уже обработанные user_data');
-        codeLines.push('    if not isinstance(user_vars, dict):');
-        codeLines.push('        user_vars = user_data.get(user_id, {})');
-        codeLines.push('');
-        codeLines.push('    # Заменяем все переменные в тексте');
+        // text уже определён в generateStartHandler, не переопределяем
+        codeLines.push('    # text уже определён выше, заменяем переменные');
         codeLines.push('    text = replace_variables_in_text(text, all_user_vars)');
     }
 
