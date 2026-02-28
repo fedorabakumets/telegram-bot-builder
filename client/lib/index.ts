@@ -62,6 +62,9 @@ export { collectInputTargetNodes } from './bot-generator/utils/collectInputTarge
 // General utilities
 export * from './bot-generator/utils';
 
+// Node navigation
+export * from './bot-generator/node-navigation';
+
 // Handle node functions generator
 export { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
 
