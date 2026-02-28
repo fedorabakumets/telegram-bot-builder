@@ -77,6 +77,25 @@ export async function downloadImageFromUrl(
       return { success: true, localPath };
     } else {
       console.error(`❌ Ошибка загрузки: ${result.error}`);
+      
+      // Проверяем, является ли ошибка блокировкой со стороны сервера
+      const isBlockedByServer = 
+        result.error?.includes('ECONNRESET') ||
+        result.error?.includes('403') ||
+        result.error?.includes('401') ||
+        result.error?.includes('блокиров') ||
+        result.error?.includes('Forbidden');
+      
+      if (isBlockedByServer) {
+        return { 
+          success: false, 
+          error: 'Сервер блокирует автоматическую загрузку. Попробуйте:\n' +
+                 '1. Скачать изображение вручную и загрузить через "Выбрать файл"\n' +
+                 '2. Использовать другой источник (Unsplash, Picsum, Imgur)\n' +
+                 '3. Использовать прямую ссылку на изображение без защиты'
+        };
+      }
+      
       return { success: false, error: result.error };
     }
   } catch (error) {
