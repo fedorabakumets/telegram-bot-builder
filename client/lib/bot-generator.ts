@@ -51,7 +51,7 @@ import { hasUploadImageUrls } from './MediaHandler/hasUploadImageUrls';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
 import { newgenerateStateTransitionAndRenderLogic } from './bot-generator/transitions';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './handle_user_input';
-import { createProcessNodeButtonsFunction } from './newprocessNodeButtonsAndGenerateHandlers';
+import { createProcessNodeButtonsFunction } from './bot-generator/node-handlers';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';
 import { generateSynonymHandlers } from './Synonyms';
 import { addAutoTransitionNodes } from './utils/addAutoTransitionNodes';
