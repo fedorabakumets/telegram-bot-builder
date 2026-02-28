@@ -4,7 +4,7 @@
  * Модуль создаёт Python-код для начала функции обработчика
  * callback-запросов с безопасным получением данных.
  * 
- * @module bot-generator/transitions/generate-callback-handler-start
+ * @module bot-generator/transitions/callback-handler/generate-callback-handler-start
  */
 
 /**

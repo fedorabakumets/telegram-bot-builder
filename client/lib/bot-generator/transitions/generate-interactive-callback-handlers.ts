@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/generate-interactive-callback-handlers
  */
 
-import { generateCallbackHandlerStart } from './generate-callback-handler-start';
+import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateConditionalMessageLogic } from '../Conditional';
@@ -114,17 +114,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           code += '    \n';
 
           // Устанавливаем флаг collectUserInput для текущего узла
-          const collectUserInputFlag = targetNode.data?.collectUserInput === true ||
-            targetNode.data?.enableTextInput === true ||
-            targetNode.data?.enablePhotoInput === true ||
-            targetNode.data?.enableVideoInput === true ||
-            targetNode.data?.enableAudioInput === true ||
-            targetNode.data?.enableDocumentInput === true;
-          code += `    # Устанавливаем флаг collectUserInput для узла ${nodeId}\n`;
-          code += `    if user_id not in user_data:\n`;
-          code += '        user_data[user_id] = {}\n';
-          code += `    user_data[user_id]["collectUserInput_${nodeId}"] = ${toPythonBoolean(collectUserInputFlag)}\n`;
-          code += `    logging.info(f"ℹ️ Установлен флаг collectUserInput для узла ${nodeId}: ${collectUserInputFlag}")\n`;
+          code += generateCollectUserInputFlag(nodeId, targetNode.data, '    ');
           code += '    \n';
 
           // ============================================================================
@@ -836,8 +826,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
               code += '        else:\n';
-              code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)\n';
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
+              code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликат��в при автопереходах)\n';
+              // К��ИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
               code += '            # Заменяем все переменные в тексте\n';
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await callback_query.message.answer(text)\n';
