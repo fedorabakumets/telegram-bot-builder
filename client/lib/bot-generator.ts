@@ -474,8 +474,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code,
       allNodeIds,
       [],
-      () => { code += adHocHandlerCode; },
-      () => { code += continuationHandlerCode; },
+      () => adHocHandlerCode,
+      () => continuationHandlerCode,
       generateUserInputValidationAndContinuationLogic,
       generateStateTransitionAndRenderLogic
     );
