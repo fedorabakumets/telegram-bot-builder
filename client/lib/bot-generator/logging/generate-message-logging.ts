@@ -10,7 +10,6 @@
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { answer_with_logging } from './answer_with_logging';
 import { callback_query_logging_middleware } from './callback_query_logging_middleware';
-import { get_api_base_url } from './get_api_base_url';
 import { message_logging_middleware } from './message_logging_middleware';
 import { save_message_to_api } from './save_message_to_api';
 import { send_message_with_logging } from './send_message_with_logging';
@@ -31,11 +30,8 @@ export function generateMessageLoggingCode(userDatabaseEnabled: boolean, project
   // Собираем весь код в массив строк для автоматической обработки
   const codeLines: string[] = [];
 
-  // Конфигурация API
-  codeLines.push('# ┌─────────────────────────────────────────┐');
-  codeLines.push('# │        Конфигурация API                 │');
-  codeLines.push('# └─────────────────────────────────────────┘');
-  get_api_base_url(codeLines, projectId);
+  // Примечание: get_api_base_url уже сгенерирован в generateApiConfig
+  // Здесь генерируем только функции для работы с API
 
   // Сохранение сообщения в API
   codeLines.push('# ┌─────────────────────────────────────────┐');

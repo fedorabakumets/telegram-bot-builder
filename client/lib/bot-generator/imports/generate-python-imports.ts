@@ -50,5 +50,32 @@ export const generatePythonImports = (
   // Модуль re требуется для функции replace_variables_in_text
   imports += 'import re\n';
 
-  return imports;
+  // Удаляем дубликаты импортов
+  return removeDuplicateImports(imports);
 };
+
+/**
+ * Удаляет дублирующиеся импорты из сгенерированного кода
+ * @param {string} code - Код с импортами
+ * @returns {string} Код без дубликатов
+ */
+function removeDuplicateImports(code: string): string {
+  const lines = code.split('\n');
+  const seenImports = new Set<string>();
+  const uniqueLines: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Проверяем только строки с импортами
+    if (trimmed.startsWith('import ') || trimmed.startsWith('from ')) {
+      if (!seenImports.has(trimmed)) {
+        seenImports.add(trimmed);
+        uniqueLines.push(line);
+      }
+    } else {
+      uniqueLines.push(line);
+    }
+  }
+
+  return uniqueLines.join('\n');
+}
