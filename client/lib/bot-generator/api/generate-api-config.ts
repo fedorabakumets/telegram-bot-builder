@@ -62,6 +62,12 @@ export function generateApiConfig(projectId: number | null): string {
   codeLines.push('logging.info(f"⏱️ API_TIMEOUT: {API_TIMEOUT} сек")');
   codeLines.push('');
 
+  // Определяем PROJECT_DIR (всегда)
+  codeLines.push('# Директория проекта');
+  codeLines.push('PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))');
+  codeLines.push('logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")');
+  codeLines.push('');
+
   // Применяем автоматическое добавление комментариев
   const commentedCodeLines = processCodeWithAutoComments(codeLines, 'generate-api-config.ts');
   return commentedCodeLines.join('\n');

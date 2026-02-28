@@ -129,6 +129,33 @@ describe('Определения переменных окружения', () =>
     });
   });
 
+  describe('PROJECT_DIR', () => {
+    it('должен быть определён', () => {
+      if (generateError) this.skip();
+      
+      const hasProjectDir = generatedCode.includes('PROJECT_DIR');
+      
+      assert.ok(hasProjectDir, 'PROJECT_DIR должен быть определён');
+    });
+
+    it('должен определяться через os.path.dirname', () => {
+      if (generateError) this.skip();
+      
+      const hasDirname = generatedCode.includes('os.path.dirname(os.path.abspath(__file__))');
+      
+      assert.ok(hasDirname, 'PROJECT_DIR должен определяться через os.path.dirname');
+    });
+
+    it('должен логироваться после определения', () => {
+      if (generateError) this.skip();
+      
+      const hasLogging = generatedCode.includes('logging.info') && 
+                        generatedCode.includes('PROJECT_DIR');
+      
+      assert.ok(hasLogging, 'PROJECT_DIR должен логироваться после определения');
+    });
+  });
+
   describe('PROJECT_ID', () => {
     it('должен быть определён', () => {
       if (generateError) this.skip();
