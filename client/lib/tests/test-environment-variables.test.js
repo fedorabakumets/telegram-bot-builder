@@ -101,6 +101,34 @@ describe('Определения переменных окружения', () =>
     });
   });
 
+  describe('API_TIMEOUT', () => {
+    it('должен быть определён', () => {
+      if (generateError) this.skip();
+      
+      const hasApiTimeout = generatedCode.includes('API_TIMEOUT');
+      
+      assert.ok(hasApiTimeout, 'API_TIMEOUT должен быть определён');
+    });
+
+    it('должен определяться через os.getenv с fallback 10', () => {
+      if (generateError) this.skip();
+      
+      const hasGetEnv = generatedCode.includes('os.getenv("API_TIMEOUT"') ||
+                       generatedCode.includes("os.getenv('API_TIMEOUT'");
+      const hasFallback = generatedCode.includes('"10"') || generatedCode.includes("'10'");
+      
+      assert.ok(hasGetEnv && hasFallback, 'API_TIMEOUT должен определяться через os.getenv с fallback 10');
+    });
+
+    it('должен преобразовываться в int', () => {
+      if (generateError) this.skip();
+      
+      const hasInt = generatedCode.includes('int(os.getenv("API_TIMEOUT"');
+      
+      assert.ok(hasInt, 'API_TIMEOUT должен преобразовываться в int');
+    });
+  });
+
   describe('PROJECT_ID', () => {
     it('должен быть определён', () => {
       if (generateError) this.skip();

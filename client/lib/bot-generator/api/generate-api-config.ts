@@ -56,6 +56,12 @@ export function generateApiConfig(projectId: number | null): string {
   codeLines.push('logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")');
   codeLines.push('');
 
+  // Определяем API_TIMEOUT (всегда, по умолчанию 10)
+  codeLines.push('# Таймаут запросов к API (секунды)');
+  codeLines.push('API_TIMEOUT = int(os.getenv("API_TIMEOUT", "10"))');
+  codeLines.push('logging.info(f"⏱️ API_TIMEOUT: {API_TIMEOUT} сек")');
+  codeLines.push('');
+
   // Применяем автоматическое добавление комментариев
   const commentedCodeLines = processCodeWithAutoComments(codeLines, 'generate-api-config.ts');
   return commentedCodeLines.join('\n');
