@@ -15,3 +15,4 @@ export * from './conditional-message-params';
 export * from './user-input-params';
 export * from './button-response-config-params';
 export * from './button-response-config-types';
+export * from './conditional-branch-params';
