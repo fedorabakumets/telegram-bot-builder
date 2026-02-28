@@ -10,7 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet, generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet, generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipNavigation } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -227,41 +227,11 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Обработка кнопок skipDataCollection в универсальной системе
      * Проверяет нажатые кнопки и выполняет переход без сохранения данных
      */
-    code += '        # ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n';
-    code += '        if isinstance(waiting_config, dict):\n';
-    code += '            skip_buttons = waiting_config.get("skip_buttons", [])\n';
-    code += '            for skip_btn in skip_buttons:\n';
-    code += '                if skip_btn.get("text") == user_text:\n';
-    code += '                    skip_target = skip_btn.get("target")\n';
-    code += '                    logging.info(f"⏭️ Нажата кнопка skipDataCollection в waiting_for_input: {user_text} -> {skip_target}")\n';
-    code += '                    # Очищаем состояние ожидания\n';
-    code += '                    if "waiting_for_input" in user_data[user_id]:\n';
-    code += '                        del user_data[user_id]["waiting_for_input"]\n';
-    code += '                    # Переходим к целевому узлу\n';
-    code += '                    if skip_target:\n';
-    code += '                        try:\n';
-    code += '                            logging.info(f"🚀 Переходим к узлу skipDataCollection: {skip_target}")\n';
-    code += '                            import types as aiogram_types\n';
-    code += '                            fake_callback = aiogram_types.SimpleNamespace(\n';
-    code += '                                id="skip_button_nav",\n';
-    code += '                                from_user=message.from_user,\n';
-    code += '                                chat_instance="",\n';
-    code += '                                data=skip_target,\n';
-    code += '                                message=message,\n';
-    code += '                                answer=lambda *args, **kwargs: asyncio.sleep(0)\n';
-    code += '                            )\n';
+    code += generateSkipButtonsCheck('        ');
+    code += generateSkipFakeCallbackCreation('            ');
 
     // Добавляем навигацию для кнопок skipDataCollection
-    if (nodes.length > 0) {
-      nodes.forEach((skipNode, skipIdx) => {
-        const skipCond = skipIdx === 0 ? 'if' : 'elif';
-        const skipFnName = skipNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `                            ${skipCond} skip_target == "${skipNode.id}":\n`;
-        code += `                                await handle_callback_${skipFnName}(fake_callback)\n`;
-      });
-      code += '                            else:\n';
-      code += '                                logging.warning(f"Неизвестный целевой узел skipDataCollection: {skip_target}")\n';
-    }
+    code += generateSkipNavigation(nodes, '                            ');
 
     code += '                        except Exception as e:\n';
     code += '                            logging.error(f"Ошибка при переходе к узлу skipDataCollection {skip_target}: {e}")\n';
