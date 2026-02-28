@@ -11,6 +11,7 @@ import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './ca
 import { generateMultiSelectDoneButton } from './multi-select';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateMessageTextPreparation, generateDatabaseVarsGet } from './message-text';
+import { generateConditionalMessagesCheck } from './conditional-messages';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateConditionalMessageLogic } from '../Conditional';
@@ -217,18 +218,10 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           // ============================================================================
           // ОБРАБОТКА УСЛОВНЫХ СООБЩЕНИЙ
           // ============================================================================
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем поддержку условных сообщений
           if (targetNode.data?.enableConditionalMessages && targetNode.data?.conditionalMessages && targetNode.data?.conditionalMessages.length > 0) {
-            code += '    \n';
-            code += '    # Проверка условных сообщений дляя навигации\n';
-            code += '    conditional_parse_mode = None\n';
-            code += '    conditional_keyboard = None\n';
-            code += '    user_record = await get_user_from_db(user_id)\n';
-            code += '    if not user_record:\n';
-            code += '        user_record = user_data.get(user_id, {})\n';
-            code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
-            code += generateConditionalMessageLogic(targetNode.data?.conditionalMessages, '    ');
-            code += '    \n';
+            code += generateConditionalMessagesCheck({
+              conditionalMessages: targetNode.data.conditionalMessages
+            }, '    ');
           }
 
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, есть ли условная клавиатура
