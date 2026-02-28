@@ -196,6 +196,51 @@ describe('Отсутствие неопределённых переменных
     });
   });
 
+  describe('DB-заглушки функций (без БД)', () => {
+    let codeWithoutDb = '';
+    let generateError = null;
+
+    try {
+      codeWithoutDb = generatePythonCode(
+        baseProject,
+        'TestBot',
+        [],
+        false, // userDatabaseEnabled
+        null,
+        false,
+        false,
+        true
+      );
+    } catch (error) {
+      generateError = error;
+    }
+
+    it('должна быть определена init_user_variables', () => {
+      if (generateError) this.skip();
+      assert.ok(codeWithoutDb.includes('def init_user_variables('), 'init_user_variables должна быть определена');
+    });
+
+    it('должна быть определена get_user_from_db', () => {
+      if (generateError) this.skip();
+      assert.ok(codeWithoutDb.includes('async def get_user_from_db('), 'get_user_from_db должна быть определена');
+    });
+
+    it('должна быть определена replace_variables_in_text', () => {
+      if (generateError) this.skip();
+      assert.ok(codeWithoutDb.includes('def replace_variables_in_text('), 'replace_variables_in_text должна быть определена');
+    });
+
+    it('должна быть определена get_moscow_time', () => {
+      if (generateError) this.skip();
+      assert.ok(codeWithoutDb.includes('def get_moscow_time('), 'get_moscow_time должна быть определена');
+    });
+
+    it('должна быть определена update_user_data_in_db', () => {
+      if (generateError) this.skip();
+      assert.ok(codeWithoutDb.includes('async def update_user_data_in_db('), 'update_user_data_in_db должна быть определена');
+    });
+  });
+
   describe('Проект с медиа', () => {
     const projectWithMedia = {
       sheets: [{
