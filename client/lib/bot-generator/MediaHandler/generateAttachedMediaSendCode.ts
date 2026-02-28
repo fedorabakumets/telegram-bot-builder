@@ -247,6 +247,14 @@ export function generateAttachedMediaSendCode(
 
   // Если у нас дошли до сюда, значит статического изображения не было,
   // и мы обрабатываем динамические медиафайлы
+  // ИСПРАВЛЕНИЕ: Если статическое изображение уже отправлено, не отправляем attached media
+  // чтобы избежать дублирования
+  if (hasStaticImage) {
+    // Статическое изображение уже отправлено выше, не отправляем attached media
+    const processedCode = processCodeWithAutoComments(codeLines, 'generateAttachedMediaSendCode.ts');
+    return processedCode.join('\n');
+  }
+  
   if (!attachedMedia || attachedMedia.length === 0) {
     // Применяем автоматическое добавление комментариев ко всему коду
     const processedCode = processCodeWithAutoComments(codeLines, 'generateAttachedMediaSendCode.ts');
