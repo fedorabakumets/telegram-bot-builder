@@ -217,24 +217,18 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   // Добавляем обработку условных сообщений
   const formattedText = generateKeyboardAndProcessAttachedMedia(node as any, codeLines);
 
-  // Отправляем изображение ПОСЛЕ создания all_user_vars (если есть imageUrl)
+  // Генерируем клавиатуру ПЕРЕД отправкой изображения
+  // ПРИМЕЧАНИЕ: generateKeyboardOnly создаёт ТОЛЬКО код клавиатуры, без отправки сообщения
   const hasImageUrl = node && node.data && node.data.imageUrl && node.data.imageUrl !== 'undefined';
   if (hasImageUrl) {
-    generateStartHandlerImageSend(node, codeLines, userDatabaseEnabled);
-  }
-
-  // Генерируем клавиатуру для всех случаев
-  // ПРИМЕЧАНИЕ: generateKeyboard создаёт код клавиатуры и отправки сообщения
-  // Но для start узла с imageUrl мы уже отправили сообщение выше
-  // Поэтому нам нужно сгенерировать только клавиатуру без повторной отправки
-  if (hasImageUrl) {
     // Для узлов с imageUrl генерируем ТОЛЬКО код клавиатуры
-    // Отправка сообщения уже была в generateStartHandlerImageSend
     const keyboardOnlyCode = generateKeyboardOnly(node);
     if (keyboardOnlyCode) {
       const keyboardLines = keyboardOnlyCode.split('\n').filter(line => line.trim());
       codeLines.push(...keyboardLines);
     }
+    // Затем отправляем изображение с уже созданной клавиатурой
+    generateStartHandlerImageSend(node, codeLines, userDatabaseEnabled);
   } else if (attachedMedia.length > 0) {
     // Если есть прикрепленные медиа (но нет imageUrl), генерируем код отправки медиа с клавиатурой
     generateConditionalMessageLogicAndKeyboard(node as any, codeLines, mediaVariablesMap, attachedMedia, formattedText);
