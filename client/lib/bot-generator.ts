@@ -1,6 +1,8 @@
 // Внешние зависимости
-import { BotData, BotGroup, buttonSchema, Node } from '@shared/schema';
-import { z } from 'zod';
+import { BotData, BotGroup, Node } from '@shared/schema';
+
+// Типы
+import { Button } from './bot-generator/types';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotCommandsSetup } from './bot-commands-setup';
@@ -45,24 +47,6 @@ import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEd
 import { resetGenerationState } from './utils/generation-state';
 import { setCommentsEnabled } from './utils/generateGeneratedComment';
 
-
-export type Button = z.infer<typeof buttonSchema>;
-
-/**
- * Интерфейс для опций ответа (responseOptions)
- */
-export interface ResponseOption {
-  /** Текст опции ответа */
-  text: string;
-  /** Значение, связанное с опцией (необязательно) */
-  value?: string;
-  /** Действие, выполняемое при выборе опции (необязательно) */
-  action?: string;
-  /** Целевой узел или команда для перехода (необязательно) */
-  target?: string;
-  /** URL для внешней ссылки (необязательно) */
-  url?: string;
-}
 
 /*
 ============================================================================
@@ -992,7 +976,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 
    * **Функциональность обработки ввода:**
    * - Настройка состояний ожидания пользовательского ввода
-   * - Поддержка различных типов ввода (текст, фото, видео, аудио, документы)
+   * - Поддер����ка различных типов ввода (текст, фото, видео, аудио, документы)
    * - В���лидация входных данных с настраиваемыми параметрами
    * - Обработка узлов сбора данных через кнопки
    * 
@@ -1001,7 +985,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * - User-input узлы для сбора данных
    * - Command узлы для выполнения команд
    * - Start узлы для инициализации
-   * - Узлы с условной логикой
+   * - Узлы с условн����й логикой
    * 
    * **Генерируемые обработчики включают:**
    * - Создание inline и reply клавиатур
@@ -1562,50 +1546,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
 }
 
-
-// ============================================================================
-// ТИПЫ И ИНТЕРФЕЙСЫ
-// ============================================================================
-
-/**
- * Интерфейс для описания диапазона строк кода, связанного с определенным узлом
- */
-export interface CodeNodeRange {
-  /** Уникальный идентификатор узла */
-  nodeId: string;
-  /** Номер начальной строки кода */
-  startLine: number;
-  /** Номер конечной строки кода */
-  endLine: number;
-}
-
-/**
- * Интерфейс для представления кода вместе с картой узлов
- */
-export interface CodeWithMap {
-  /** Строковое представление кода */
-  code: string;
-  /** Массив диапазонов строк, связанных с узлами кода */
-  nodeMap: CodeNodeRange[];
-}
+// Реэкспорт типов для обратной совместимости
+export type { Button } from './bot-generator/types';
+export type { ResponseOption } from './bot-generator/types';
 
 // Повторный экспорт функций каркаса
 export { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile };
-// ============================================================================
-// ТИПЫ ДЛЯ УЗЛОВ БОТА
-// ============================================================================
-
-export interface BotNode {
-  type: string;
-  data: {
-    buttons?: Button[];
-    [key: string]: any;
-  };
-  [key: string]: any;
-}
-
-
-
-
-
-
