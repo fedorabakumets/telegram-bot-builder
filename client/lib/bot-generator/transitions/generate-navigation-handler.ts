@@ -13,8 +13,6 @@ import { toPythonBoolean } from '../format';
 interface NavigationHandlerParams {
   /** Целевой узел навигации */
   navTargetNode: any;
-  /** Массив всех узлов */
-  nodes: any[];
   /** Отступ для кода */
   indent: string;
 }
@@ -37,7 +35,7 @@ interface NavigationHandlerResult {
 export function generateNavigationHandler(
   params: NavigationHandlerParams
 ): NavigationHandlerResult {
-  const { navTargetNode, nodes, indent } = params;
+  const { navTargetNode, indent } = params;
   let code = '';
   let needsFullHandler = false;
   let handlerType = 'standard';
@@ -109,13 +107,11 @@ export function generateVariableReplacementInText(
  * Генерирует код проверки автоперехода
  *
  * @param navTargetNode - Целевой узел
- * @param userId - ID пользователя
  * @param indent - Отступ
  * @returns Сгенерированный Python-код
  */
 export function generateAutoTransitionCheck(
   navTargetNode: any,
-  userId: string,
   indent: string
 ): string {
   if (!navTargetNode.data.enableAutoTransition || !navTargetNode.data.autoTransitionTo) {
@@ -123,7 +119,6 @@ export function generateAutoTransitionCheck(
   }
 
   const autoTargetId = navTargetNode.data.autoTransitionTo;
-  const safeAutoTargetId = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
   const navCollectUserInputValue = navTargetNode.data.collectUserInput === true;
 
   let code = '';
@@ -146,26 +141,18 @@ export function generateAutoTransitionCheck(
  *
  * @param autoTargetId - ID целевого узла
  * @param currentNodeId - ID текущего узла
- * @param nodes - Массив всех узлов
  * @param indent - Отступ
  * @returns Сгенерированный Python-код
  */
 export function generateAutoTransitionCall(
   autoTargetId: string,
   currentNodeId: string,
-  nodes: any[],
   indent: string
 ): string {
   const safeAutoTargetId = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
-  const targetExists = nodes.some(n => n.id === autoTargetId);
 
   let code = '';
-  if (targetExists) {
-    code += `${indent}    await handle_callback_${safeAutoTargetId}(callback_query)\n`;
-  } else {
-    code += `${indent}    logging.warning(f"⚠️ Узел автоперехода не найден: {autoTargetId}, завершаем переход")\n`;
-    code += `${indent}    await callback_query.message.edit_text("Переход завершен")\n`;
-  }
+  code += `${indent}    await handle_callback_${safeAutoTargetId}(callback_query)\n`;
   code += `${indent}    logging.info(f"✅ Автопереход выполнен: ${currentNodeId} -> ${autoTargetId}")\n`;
   code += `${indent}    return\n`;
 

@@ -15,8 +15,6 @@ import { generateAttachedMediaSendCode } from '../MediaHandler';
 export interface NavigationMediaParams {
   /** Узел для навигации */
   navTargetNode: any;
-  /** Переменная с данными пользователя */
-  userVars: string;
   /** ID пользователя */
   userId: string;
 }

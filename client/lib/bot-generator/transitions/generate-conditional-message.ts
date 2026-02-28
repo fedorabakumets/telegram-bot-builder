@@ -18,8 +18,6 @@ export interface ConditionalMessageParams {
   condition: any;
   /** Индекс условия в массиве */
   index: number;
-  /** Массив всех условий */
-  conditionalMessages: any[];
   /** Родительский узел */
   navTargetNode: any;
   /** ID узла для ввода */
@@ -37,7 +35,7 @@ export function generateConditionalMessage(
   params: ConditionalMessageParams,
   indent: string
 ): string {
-  const { condition, index, conditionalMessages, navTargetNode, inputTargetNodeId } = params;
+  const { condition, index, navTargetNode, inputTargetNodeId } = params;
   const cleanedConditionText = stripHtmlTags(condition.messageText);
   const conditionText = formatTextForPython(cleanedConditionText);
   const conditionKeyword = index === 0 ? 'if' : 'elif';
@@ -86,7 +84,7 @@ export function generateConditionalMessage(
 
     if (shouldGenerateKeyboard) {
       code += `${indent}    # Создаем клавиатуру для условного сообщения\n`;
-      code += generateConditionalKeyboard(condition, indent, '    ');
+      code += generateConditionalKeyboard(condition, indent + '    ');
     } else {
       code += `${indent}    # Заменяем все переменные в тексте\n`;
       code += `${indent}    text = replace_variables_in_text(text, user_data_dict)\n`;
@@ -109,10 +107,13 @@ export function generateConditionalMessage(
 
 /**
  * Генерирует код клавиатуры для условного сообщения
+ *
+ * @param condition - Условие с сообщением
+ * @param innerIndent - Внутренний отступ
+ * @returns Сгенерированный Python-код
  */
 function generateConditionalKeyboard(
   condition: any,
-  indent: string,
   innerIndent: string
 ): string {
   let code = '';

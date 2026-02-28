@@ -589,7 +589,6 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                   // Генерация обработки навигации к узлу
                   const navResult = generateNavigationHandler({
                     navTargetNode,
-                    nodes,
                     indent: '            '
                   });
                   code += navResult.code;
@@ -602,13 +601,11 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                     // Отправка медиа или обычного сообщения
                     code += generateNavigationMedia({
                       navTargetNode,
-                      userVars: 'user_vars',
                       userId: 'callback_query.from_user.id'
                     }, '            ');
 
                     // Настройка ожидания ввода если collectUserInput=true
                     if (navTargetNode.data.collectUserInput === true) {
-                      const inputType = navTargetNode.data.inputType || 'text';
                       const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
 
                       code += '            # Проверяем, не была ли переменная уже сохранена\n';
@@ -628,12 +625,11 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                     }
 
                     // Автопереход
-                    code += generateAutoTransitionCheck(navTargetNode, 'user_id', '            ');
+                    code += generateAutoTransitionCheck(navTargetNode, '            ');
                     if (navTargetNode.data.enableAutoTransition && navTargetNode.data.autoTransitionTo) {
                       code += generateAutoTransitionCall(
                         navTargetNode.data.autoTransitionTo,
                         navTargetNode.id,
-                        nodes,
                         '            '
                       );
                     }
@@ -678,7 +674,6 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                       code += generateConditionalMessage({
                         condition,
                         index: i,
-                        conditionalMessages,
                         navTargetNode,
                         inputTargetNodeId
                       }, '            ');
