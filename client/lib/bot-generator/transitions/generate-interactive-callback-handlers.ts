@@ -16,6 +16,7 @@ import { generateMediaVariablesSetup } from './media-variables';
 import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
 import { generateBroadcastHandler } from './broadcast';
 import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
+import { generateMediaSendCode } from './media';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
@@ -464,95 +465,22 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           // ИСПРАВЛЕНИЕ: Проверяем наличие прикрепленных медиа ИЛИ статического изображения перед отправкой
           const attachedMedia = targetNode.data?.attachedMedia || [];
           const hasStaticImage = targetNode.data?.imageUrl && targetNode.data.imageUrl.trim() !== '';
+          const collectUserInputFlag = targetNode.data.collectUserInput === true ||
+            targetNode.data.enableTextInput === true ||
+            targetNode.data.enablePhotoInput === true ||
+            targetNode.data.enableVideoInput === true ||
+            targetNode.data.enableAudioInput === true ||
+            targetNode.data.enableDocumentInput === true;
 
-          if (attachedMedia.length > 0 || hasStaticImage) {
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} имеет attachedMedia:`, attachedMedia, 'или статическое изображение:', hasStaticImage);
-            // Генерируем код отправки с медиа
-            const parseModeStr = targetNode.data?.formatMode || '';
-            const keyboardStr = 'keyboard if keyboard is not None else None';
-            // Определяем, собирает ли узел ввод (учитываем все типы ввода)
-            const collectUserInputFlag = targetNode.data.collectUserInput === true ||
-              targetNode.data.enableTextInput === true ||
-              targetNode.data.enablePhotoInput === true ||
-              targetNode.data.enableVideoInput === true ||
-              targetNode.data.enableAudioInput === true ||
-              targetNode.data.enableDocumentInput === true;
-            const mediaCode = generateAttachedMediaSendCode(
-              attachedMedia,
-              mediaVariablesMap,
-              'text',
-              parseModeStr,
-              keyboardStr,
-              nodeId,
-              '    ',
-              undefined, // автопяяреход обрабатывается отдельно ниже
-              collectUserInputFlag,
-              targetNode.data // передаем данные узла для проверки статических изобраяяений
-            );
-
-            if (mediaCode) {
-              code += '    # Отправляем сообщение (с проверкой прикрепленного медиа)\n';
-              code += mediaCode;
-            } else {
-              // Резервный вариант если не удалось сгенерировать код медиа
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Не удалось сгенерировать код медиа для узла ${nodeId}, используем обычную отправку`);
-              code += '    # Отправляем сообщение\n';
-              code += '    try:\n';
-              code += '        if keyboard:\n';
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-              code += '            # Заменяем все переменныяя в яяексяяе\n';
-              code += '            text = replace_variables_in_text(text, user_vars)\n';
-              code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
-              code += '        else:\n';
-              code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатяяяв при автопереходах)\n';
-              // КяяИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-              code += '            # Заменяем все переменные в тексте\n';
-              code += '            text = replace_variables_in_text(text, user_vars)\n';
-              code += '            await callback_query.message.answer(text)\n';
-              code += '    except Exception as e:\n';
-              code += '        logging.debug(f"Ошибка отправки сообщения: {e}")\n';
-              code += '        if keyboard:\n';
-              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-              code += '            # Заменяем все переменные в тексте\n';
-              code += '            text = replace_variables_in_text(text, user_vars)\n';
-              code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
-              code += '        else:\n';
-              // КРяяТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-              code += '            # Заменяем все переменные в тексте\n';
-              code += '            text = replace_variables_in_text(text, user_vars)\n';
-              code += '            await callback_query.message.answer(text)\n';
-              code += '    \n';
-            }
-          } else {
-            // Обычное сообщение без медиа
-            // Отправляем сообщение с клавиатурой
-            code += '    # Отправляем сообщение\n';
-            code += '    try:\n';
-            code += '        if keyboard:\n';
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '            # Заменяем все переменные в тексте\n';
-            code += '            text = replace_variables_in_text(text, user_vars)\n';
-            code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
-            code += '        else:\n';
-            code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автояяереходах)\n';
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязатеяяяьно вызываем заменяя переменных в тексте
-            code += '            # Заменяем все переменные в тексте\n';
-            code += '            text = replace_variables_in_text(text, user_vars)\n';
-            code += '            await callback_query.message.answer(text)\n';
-            code += '    except Exception as e:\n';
-            code += '        logging.debug(f"Ошибка отправки сообщения: {e}")\n';
-            code += '        if keyboard:\n';
-            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '            # Заменяем все переменные в тексте\n';
-            code += '            text = replace_variables_in_text(text, user_vars)\n';
-            code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
-            code += '        else:\n';
-            // КРИТИЧЕяяКОЕ ИСПРАяяЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-            code += '            # Заменяем все переменные в яяексте\n';
-            code += '            text = replace_variables_in_text(text, user_vars)\n';
-            code += '            await callback_query.message.answer(text)\n';
-            code += '    \n';
-          }
+          code += generateMediaSendCode({
+            attachedMedia,
+            hasStaticImage,
+            mediaVariablesMap,
+            formatMode: targetNode.data?.formatMode,
+            nodeId,
+            collectUserInputFlag,
+            targetNodeData: targetNode.data
+          }, 'text', '    ');
 
           // ============================================================================
           // СИСТЕМА АВТОПЕРЕХОДОВ
@@ -923,7 +851,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                         code += '            else:\n';
                         code += `                # ⚡ Автопереход к узлу ${autoTargetId}\n`;
                         code += `                logging.info(f"⚡ Автопереход от узла ${navTargetNode.id} к узлу ${autoTargetId}")\n`;
-                        // Проверяем, существует ли целевой узел перед вызовом обработчика
+                        // Проверяем, существует ли целевой узел перед вызовом обработч��ка
                         const targetExists = nodes.some(n => n.id === autoTargetId);
                         if (targetExists) {
                           code += `                await handle_callback_${safeAutoTargetId}(callback_query)\n`;
