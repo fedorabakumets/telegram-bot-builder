@@ -2,7 +2,7 @@ import { Button, ResponseOption } from './bot-generator';
 import { generateConditionalMessageLogic } from './Conditional';
 import { formatTextForPython, generateButtonText, toPythonBoolean, generateWaitingStateCode, escapeForJsonString } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
-import { generateConditionalBranch, generateConditionalMessages, generateInlineKeyboardSend, generateReplyKeyboardSend } from './bot-generator/transitions';
+import { generateConditionalBranch, generateConditionalMessages, generateInlineKeyboardSend, generateParseMode, generateReplyKeyboardSend } from './bot-generator/transitions';
 
 export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: string, allNodeIds: any[], connections: any[]) {
   if (nodes.length > 0) {
@@ -30,18 +30,7 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
           code += `                text = ${formattedText}\n`;
         }
 
-        // Определяем режим форматирования (приоритет у условного сообщения)
-        code += '                # Используем parse_mode условного сообщения если он установлен\n';
-        code += '                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:\n';
-        code += '                    parse_mode = conditional_parse_mode\n';
-        code += '                else:\n';
-        if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-          code += '                    parse_mode = ParseMode.MARKDOWN\n';
-        } else if (targetNode.data.formatMode === 'html') {
-          code += '                    parse_mode = ParseMode.HTML\n';
-        } else {
-          code += '                    parse_mode = None\n';
-        }
+        code += generateParseMode(targetNode, '                ');
 
         // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
         if (targetNode.data.imageUrl && targetNode.data.imageUrl !== 'undefined') {

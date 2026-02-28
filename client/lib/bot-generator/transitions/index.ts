@@ -9,4 +9,5 @@
 export { generateConditionalBranch } from './generate-conditional-branch';
 export { generateConditionalMessages } from './generate-conditional-messages';
 export { generateInlineKeyboardSend } from './generate-inline-keyboard-send';
+export { generateParseMode } from './generate-parse-mode';
 export { generateReplyKeyboardSend } from './generate-reply-keyboard-send';
