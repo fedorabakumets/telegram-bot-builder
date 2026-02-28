@@ -19,6 +19,7 @@ import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateCo
 import { generateMediaSendCode } from './media';
 import { generateButtonTextDetection } from './button';
 import { generateVariableSaveLogic } from './variable';
+import { generateRedirectLogic } from './redirect';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
@@ -580,35 +581,9 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += generateVariableSaveLogic({ nodeId, sourceNode, nodes }, '    ');
           }
 
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Для узлов с множественным выбором НЕ делаем автоматической переадресации
+          // Определяем логику переадресации
           const currentNode = nodes.find(n => n.id === nodeId);
-
-          // Для узлов с множественным выбором - НЕ делаем автоматический переход при первичном заходе в узел
-          // ИСПРАВЛЕНИЕ: редирект только для узлов с кнопками, чтобы избежать дублирования сообщений при автопереходах
-          const hasButtons = currentNode && currentNode.data?.buttons && currentNode.data.buttons.length > 0;
-          const shouldRedirect = hasButtons && !(currentNode && currentNode.data.allowMultipleSelection);
-          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Узел ${nodeId} hasButtons: ${hasButtons}, allowMultipleSelection: ${currentNode?.data.allowMultipleSelection}, shouldRedirect: ${shouldRedirect}`);
-
-          let redirectTarget = nodeId; // По умолчанию остаемся в том же уяле
-
-          if (shouldRedirect) {
-            if (currentNode && currentNode.data.continueButtonTarget) {
-              // Для обычных узлов используем continueButtonTarget если есть
-              redirectTarget = currentNode.data.continueButtonTarget;
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит к continueButtonTarget ${redirectTarget}`);
-            } else {
-              // Для обычных узлов ищем следующий узел через соединения
-              const nodeConnections = connections.filter(conn => conn && conn.source === nodeId);
-              if (nodeConnections.length > 0) {
-                redirectTarget = nodeConnections[0].target;
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит через соединение к ${redirectTarget}`);
-              } else {
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} остается в том же узле (нет соединений)`);
-              }
-            }
-          } else {
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} без кнопок или с множественным выбором - НЕ делаем автоматическую переадресацию`);
-          }
+          code += generateRedirectLogic({ nodeId, currentNode, connections }, '    ');
 
           // ============================================================================
           // СИСТЕМА ПЕРЕАДРЕСАЦИИ
