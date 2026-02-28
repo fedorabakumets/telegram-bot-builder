@@ -10,7 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -136,26 +136,9 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '                try:\n';
     code += '                    # Вызываем обработчик для целевого узла\n';
 
-    // Генерируем логику навигации для ответов на кнопки ответов  
-    if (nodes.length > 0) {
-      nodes.forEach((btnNode, btnIndex) => {
-        const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        const condition = btnIndex === 0 ? 'if' : 'elif';
-        code += `                    ${condition} target_node_id == "${btnNode.id}":\n`;
-        // Проверяем, существует ли целевой узел перед вызовом обработчика
-        const targetExists = nodes.some(n => n.id === btnNode.id);
-        if (targetExists) {
-          code += `                        await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))\n`;
-        } else {
-          code += `                        logging.warning(f"⚠️ Целевой узел не найден: {btnNode.id}, завершаем переход")\n`;
-          code += `                        await message.answer("Переход завершен")\n`;
-        }
-      });
-      code += '                    else:\n';
-      code += '                        logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
-    } else {
-      code += '                    pass  # No nodes to handle\n';
-    }
+    // Генерируем логику навигации для ответов на кнопки ответов
+    code += generateGotoNavigation(nodes, '                    ', 'target_node_id');
+    
     code += '                except Exception as e:\n';
     code += '                    logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")\n';
     code += '            else:\n';
@@ -165,25 +148,8 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '                    try:\n';
     code += '                        # Вызываем обработчик для следующего узла\n';
 
-    if (nodes.length > 0) {
-      nodes.forEach((btnNode, btnIndex) => {
-        const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        const condition = btnIndex === 0 ? 'if' : 'elif';
-        code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
-        // Проверяем, существует ли целевой узел перед вызовом обработчика
-        const targetExists = nodes.some(n => n.id === btnNode.id);
-        if (targetExists) {
-          code += `                            await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
-        } else {
-          code += `                            logging.warning(f"⚠️ Целевой узел не найден: {btnNode.id}, завершаем переход")\n`;
-          code += `                            await message.answer("Переход завершен")\n`;
-        }
-      });
-      code += '                        else:\n';
-      code += '                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-    } else {
-      code += '                        pass  # No nodes to handle\n';
-    }
+    code += generateGotoNavigation(nodes, '                        ', 'next_node_id');
+    
     code += '                    except Exception as e:\n';
     code += '                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
     code += '            return\n';

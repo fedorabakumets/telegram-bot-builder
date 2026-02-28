@@ -11,3 +11,4 @@ export { hasUrlButtons } from './has-url-buttons';
 export { generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure } from './generate-button-response-handler';
 export { generateButtonActionExtract, generateUrlActionHandler } from './generate-button-navigation';
 export { generateFakeMessageCreation, generateCommandHandlers, type CommandHandlerType } from './generate-command-execution';
+export { generateGotoNavigation } from './generate-goto-navigation';
