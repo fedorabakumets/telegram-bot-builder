@@ -9,9 +9,9 @@
 
 import { generateConditionalMessageLogic } from '.';
 import { isLoggingEnabled } from '../bot-generator';
-import { formatTextForPython, generateWaitingStateCode, getParseMode, stripHtmlTags } from '../format';
+import { formatTextForPython, generateWaitingStateCode, getParseMode, stripHtmlTags } from '../bot-generator/format';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
-import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../Keyboard';
+import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../bot-generator/Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 

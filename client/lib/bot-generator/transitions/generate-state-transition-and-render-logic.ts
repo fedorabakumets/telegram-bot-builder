@@ -8,7 +8,7 @@
  * @module bot-generator/transitions/generate-state-transition-and-render-logic
  */
 
-import { formatTextForPython, generateWaitingStateCode, escapeForJsonString } from '../../format';
+import { formatTextForPython, generateWaitingStateCode, escapeForJsonString } from '../format';
 import {
   generateAttachedMediaVars,
   generateButtonResponseConfig,

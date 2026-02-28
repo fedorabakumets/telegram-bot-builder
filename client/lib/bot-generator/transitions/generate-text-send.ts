@@ -7,8 +7,8 @@
  * @module bot-generator/transitions/generate-text-send
  */
 
-import { generateButtonText, toPythonBoolean } from '../../format';
-import { generateInlineKeyboardCode } from '../../Keyboard';
+import { generateButtonText, toPythonBoolean } from '../format';
+import { generateInlineKeyboardCode } from '../Keyboard';
 
 /**
  * Генерирует Python-код для отправки текстового сообщения

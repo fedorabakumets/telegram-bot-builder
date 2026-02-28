@@ -1,8 +1,8 @@
 import { answersave } from '../../answersave';
-import { generateDatabaseVariablesCode } from '../../Broadcast/generateDatabaseVariables';
+import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
 import { handleConditionalNavigationAndInputCollection } from '../../handleConditionalNavigationAndInputCollection';
 import { handleNodeNavigationAndInputProcessing } from '../../handleNodeNavigationAndInputProcessing';
-import { generateReplyHideAfterClickHandler } from '../../Keyboard/generateReplyHideAfterClickHandler';
+import { generateReplyHideAfterClickHandler } from '../Keyboard/generateReplyHideAfterClickHandler';
 import { mediafiles } from '../../MediaHandler/mediafiles';
 import { navigateaftersave } from '../../navigateaftersave';
 import { processUserInputWithValidationAndSave } from './process-user-input-with-validation-and-save';

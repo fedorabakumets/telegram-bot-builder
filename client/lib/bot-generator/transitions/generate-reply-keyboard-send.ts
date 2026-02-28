@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/generate-reply-keyboard-send
  */
 
-import { generateButtonText, toPythonBoolean } from '../../format';
+import { generateButtonText, toPythonBoolean } from '../format';
 
 /**
  * Тип кнопки reply клавиатуры

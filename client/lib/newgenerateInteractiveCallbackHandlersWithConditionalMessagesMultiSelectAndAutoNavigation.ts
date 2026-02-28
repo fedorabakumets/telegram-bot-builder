@@ -1,13 +1,13 @@
 import { Button, isLoggingEnabled } from './bot-generator';
-import { generateBroadcastInline } from './Broadcast/BotApi/generateBroadcastHandler';
+import { generateBroadcastInline } from './bot-generator/Broadcast/BotApi/generateBroadcastHandler';
 import { generateConditionalMessageLogic } from './Conditional';
-import { generateCheckUserVariableFunction } from './database';
-import { formatTextForPython, generateButtonText, generateUniqueShortId, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './format';
-import { generateBroadcastClientInline } from './Broadcast/Client/generateBroadcastClientHandler';
-import { generateDatabaseVariablesCode } from './Broadcast/generateDatabaseVariables';
+import { generateCheckUserVariableFunction } from './bot-generator/database';
+import { formatTextForPython, generateButtonText, generateUniqueShortId, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './bot-generator/format';
+import { generateBroadcastClientInline } from './bot-generator/Broadcast/Client/generateBroadcastClientHandler';
+import { generateDatabaseVariablesCode } from './bot-generator/Broadcast/generateDatabaseVariables';
 import { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
 import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
-import { calculateOptimalColumns, generateInlineKeyboardCode } from './Keyboard';
+import { calculateOptimalColumns, generateInlineKeyboardCode } from './bot-generator/Keyboard';
 import { generateAttachedMediaSendCode } from './MediaHandler';
 import { generateUniversalVariableReplacement } from './utils';
 

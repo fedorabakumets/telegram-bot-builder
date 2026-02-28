@@ -10,7 +10,7 @@
  * @module generateConditionalMessageLogicAndKeyboard
  */
 
-import { generateButtonText, toPythonBoolean } from '../format';
+import { generateButtonText, toPythonBoolean } from '../bot-generator/format';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 

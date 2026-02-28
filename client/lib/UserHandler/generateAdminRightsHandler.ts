@@ -1,7 +1,7 @@
 import { Node } from '@shared/schema';
-import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
-import { createSafeFunctionName } from '../format/createSafeFunctionName';
-import { formatTextForPython } from '../format/formatTextForPython';
+import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
+import { createSafeFunctionName } from '../bot-generator/format/createSafeFunctionName';
+import { formatTextForPython } from '../bot-generator/format/formatTextForPython';
 import { generateAdminRightsToggleHandlers } from './generateAdminRightsToggleHandlers';
 
 export function generateAdminRightsHandler(node: Node): string {

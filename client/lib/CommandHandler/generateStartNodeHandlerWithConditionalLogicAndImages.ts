@@ -9,8 +9,8 @@
 
 import { Button } from '../bot-generator';
 import { generateConditionalMessageLogic } from '../Conditional';
-import { formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from '../format';
-import { calculateOptimalColumns } from '../Keyboard';
+import { formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from '../bot-generator/format';
+import { calculateOptimalColumns } from '../bot-generator/Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 

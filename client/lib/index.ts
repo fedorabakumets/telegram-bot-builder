@@ -2,8 +2,8 @@
 export * from './bot-commands-setup';
 export * from './bot-generator';
 export * from './commands';
-export * from './Keyboard/filterInlineNodes';
-export * from './Keyboard/generateButtonResponseHandlers';
+export * from './bot-generator/Keyboard/filterInlineNodes';
+export * from './bot-generator/Keyboard/generateButtonResponseHandlers';
 export * from './queryClient';
 export * from './Synonyms';
 export * from './utils/addAutoTransitionNodes';
@@ -16,24 +16,24 @@ export * from './CommandHandler';
 export * from './Conditional';
 
 // Formatting utilities
-export * from './format';
+export * from './bot-generator/format';
 
 // Feature detection
 export { hasCommandButtons } from './CommandHandler/hasCommandButtons';
 export { hasConditionalButtons } from './Conditional/hasConditionalButtons';
-export { hasInlineButtons } from './Keyboard/hasInlineButtons';
-export { hasMultiSelectNodes } from './Keyboard/hasMultiSelectNodes';
+export { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
+export { hasMultiSelectNodes } from './bot-generator/Keyboard/hasMultiSelectNodes';
 export { hasMediaNodes } from './MediaHandler/hasMediaNodes';
 export { hasAutoTransitions } from './utils/hasAutoTransitions';
 export { hasInputCollection } from './utils/hasInputCollection';
-export { hasLocationFeatures } from './map-utils/hasLocationFeatures';
+export { hasLocationFeatures } from './bot-generator/map-utils/hasLocationFeatures';
 export { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
 
 // Keyboard generators
-export * from './Keyboard';
+export * from './bot-generator/Keyboard';
 
 // Code mapping utilities
-export * from './map-utils';
+export * from './bot-generator/map-utils';
 
 // Media handlers
 export * from './MediaHandler';

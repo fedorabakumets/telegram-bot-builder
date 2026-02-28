@@ -11,7 +11,7 @@ import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { extractCoordinatesFromUrl, getLocationInfo, formatCoordinates } from '@/lib/map-utils';
+import { extractCoordinatesFromUrl, getLocationInfo, formatCoordinates } from '@/lib/bot-generator/map-utils';
 
 /**
  * Пропсы компонента секции Яндекс Карт

@@ -10,7 +10,7 @@
  * @module initializeAndRestoreMultipleSelectionState
  */
 
-import { generateButtonText } from '../format';
+import { generateButtonText } from '../bot-generator/format';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**

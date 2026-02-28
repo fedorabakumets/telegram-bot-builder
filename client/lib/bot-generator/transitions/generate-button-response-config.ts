@@ -7,8 +7,8 @@
  * @module bot-generator/transitions/generate-button-response-config
  */
 
-import { generateButtonText, toPythonBoolean, escapeForJsonString } from '../../format';
-import { generateInlineKeyboardCode } from '../../Keyboard';
+import { generateButtonText, toPythonBoolean, escapeForJsonString } from '../format';
+import { generateInlineKeyboardCode } from '../Keyboard';
 
 /**
  * Тип варианта ответа для кнопочного ввода

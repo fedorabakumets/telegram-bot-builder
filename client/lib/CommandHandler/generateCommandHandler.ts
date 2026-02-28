@@ -1,9 +1,9 @@
 import { Node } from '@shared/schema';
 import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
-import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
-import { formatTextForPython } from '../format/formatTextForPython';
-import { stripHtmlTags } from '../format/stripHtmlTags';
-import { generateKeyboard } from '../Keyboard/generateKeyboard';
+import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
+import { formatTextForPython } from '../bot-generator/format/formatTextForPython';
+import { stripHtmlTags } from '../bot-generator/format/stripHtmlTags';
+import { generateKeyboard } from '../bot-generator/Keyboard/generateKeyboard';
 import { generateAttachedMediaSendCode } from '../MediaHandler/generateAttachedMediaSendCode';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 

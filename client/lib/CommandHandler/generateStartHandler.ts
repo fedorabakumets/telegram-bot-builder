@@ -1,6 +1,6 @@
 import { Node } from '@shared/schema';
-import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
-import { generateKeyboard } from '../Keyboard/generateKeyboard';
+import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
+import { generateKeyboard } from '../bot-generator/Keyboard/generateKeyboard';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { generateConditionalMessageLogicAndKeyboard } from './generateConditionalMessageLogicAndKeyboard';
 import { generateKeyboardAndProcessAttachedMedia } from './generateKeyboardAndProcessAttachedMedia';

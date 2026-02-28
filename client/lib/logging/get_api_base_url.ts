@@ -8,7 +8,7 @@
  * @module get_api_base_url
  */
 
-import { escapePythonString } from '../format/escapePythonString';
+import { escapePythonString } from '../bot-generator/format/escapePythonString';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**

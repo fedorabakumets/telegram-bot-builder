@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/generate-input-waiting-setup
  */
 
-import { toPythonBoolean, escapeForJsonString } from '../../format';
+import { toPythonBoolean, escapeForJsonString } from '../format';
 
 /**
  * Генерирует Python-код для настройки ожидания ввода

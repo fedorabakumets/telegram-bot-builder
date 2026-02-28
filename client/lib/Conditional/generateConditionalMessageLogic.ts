@@ -1,4 +1,4 @@
-import { generateCheckUserVariableFunction } from "../database/generateCheckUserVariableFunction";
+import { generateCheckUserVariableFunction } from "../bot-generator/database/generateCheckUserVariableFunction";
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { processConditionalMessages } from './processConditionalMessages';
 import { hasComponentBeenGenerated, markComponentAsGenerated } from '../utils/generation-state';

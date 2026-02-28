@@ -11,7 +11,7 @@
  */
 
 import { generateConditionalMessageLogic } from '../Conditional';
-import { formatTextForPython } from '../format';
+import { formatTextForPython } from '../bot-generator/format';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**

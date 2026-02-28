@@ -9,7 +9,7 @@
  * @module processConditionalMessages
  */
 
-import { formatTextForPython, getParseMode, stripHtmlTags, toPythonBoolean } from '../format';
+import { formatTextForPython, getParseMode, stripHtmlTags, toPythonBoolean } from '../bot-generator/format';
 import { generateConditionalKeyboard } from './generateConditionalKeyboard';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 

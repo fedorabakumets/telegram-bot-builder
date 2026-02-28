@@ -9,7 +9,7 @@
  */
 
 import { isLoggingEnabled } from "../bot-generator";
-import { generateWaitingStateCode } from "../format/generateWaitingStateCode";
+import { generateWaitingStateCode } from "../bot-generator/format/generateWaitingStateCode";
 import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 
 // ============================================================================

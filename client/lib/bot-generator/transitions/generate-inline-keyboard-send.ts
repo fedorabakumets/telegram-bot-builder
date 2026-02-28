@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/generate-inline-keyboard-send
  */
 
-import { generateButtonText } from '../../format';
+import { generateButtonText } from '../format';
 
 /**
  * Тип кнопки inline клавиатуры

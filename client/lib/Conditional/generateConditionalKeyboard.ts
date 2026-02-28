@@ -1,7 +1,7 @@
 import { Button } from "../bot-generator";
-import { generateButtonText } from '../format/generateButtonText';
-import { calculateOptimalColumns } from '../Keyboard/calculateOptimalColumns';
-import { toPythonBoolean } from "../format/toPythonBoolean";
+import { generateButtonText } from '../bot-generator/format/generateButtonText';
+import { calculateOptimalColumns } from '../bot-generator/Keyboard/calculateOptimalColumns';
+import { toPythonBoolean } from "../bot-generator/format/toPythonBoolean";
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**

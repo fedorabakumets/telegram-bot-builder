@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/generate-fallback-node
  */
 
-import { formatTextForPython } from '../../format';
+import { formatTextForPython } from '../format';
 
 /**
  * Генерирует Python-код для обработки fallback узла

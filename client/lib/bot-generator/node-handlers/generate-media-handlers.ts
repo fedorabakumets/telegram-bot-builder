@@ -8,7 +8,7 @@
  */
 
 import { Button } from '../../bot-generator';
-import { generateButtonText } from '../../format';
+import { generateButtonText } from '../format';
 
 /**
  * Генерирует Python-код для отправки стикера

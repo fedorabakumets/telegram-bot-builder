@@ -9,9 +9,9 @@
 
 import { Button } from '../bot-generator';
 import { generateConditionalMessageLogic } from '../Conditional';
-import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
-import { calculateOptimalColumns } from '../Keyboard';
-import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../Keyboard';
+import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../bot-generator/format';
+import { calculateOptimalColumns } from '../bot-generator/Keyboard';
+import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../bot-generator/Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 
 /**

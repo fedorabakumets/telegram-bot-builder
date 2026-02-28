@@ -1,8 +1,8 @@
 import { isLoggingEnabled } from '../bot-generator';
-import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
+import { generateDatabaseVariablesCode } from '../bot-generator/Broadcast/generateDatabaseVariables';
 import { generateConditionalMessageLogic } from '../Conditional';
-import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
-import { formatTextForPython, getParseMode, stripHtmlTags } from '../format';
+import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
+import { formatTextForPython, getParseMode, stripHtmlTags } from '../bot-generator/format';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
 
 /**

@@ -1,8 +1,8 @@
 import { Button } from './bot-generator';
-import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from './format';
-import { generateInlineKeyboardCode } from './Keyboard';
+import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from './bot-generator/format';
+import { generateInlineKeyboardCode } from './bot-generator/Keyboard';
 import { generateUniversalVariableReplacement } from './utils';
-import { generateCheckUserVariableFunction } from './database';
+import { generateCheckUserVariableFunction } from './bot-generator/database';
 
 export function handleConditionalNavigationAndInputCollection(nodes: any[], code: string, allNodeIds: any[]) {
     if (nodes.length > 0) {

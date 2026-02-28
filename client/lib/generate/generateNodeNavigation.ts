@@ -1,5 +1,5 @@
-import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
-import { formatTextForPython } from '../format/formatTextForPython';
+import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
+import { formatTextForPython } from '../bot-generator/format/formatTextForPython';
 
 /**
  * Функция для генерации кода навигации по узлам

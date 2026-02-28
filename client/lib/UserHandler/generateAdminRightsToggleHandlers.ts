@@ -1,4 +1,4 @@
-import { createSafeFunctionName } from '../format/createSafeFunctionName';
+import { createSafeFunctionName } from '../bot-generator/format/createSafeFunctionName';
 
 
 

@@ -8,7 +8,7 @@
  */
 
 import { generateConditionalMessageLogic } from '../../Conditional';
-import { formatTextForPython } from '../../format';
+import { formatTextForPython } from '../format';
 
 /**
  * Генерирует Python-код для условных сообщений
