@@ -20,3 +20,4 @@ export { generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSki
 export { generateButtonResponseSave } from './generate-button-response-save';
 export { generateButtonResponseCleanup } from './generate-button-response-cleanup';
 export { generateInvalidChoiceHandler } from './generate-invalid-choice-handler';
+export { generateMultiselectCheck } from './generate-multiselect-check';
