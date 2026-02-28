@@ -30,7 +30,7 @@ export function generateBroadcastNodeHandler(
   params: BroadcastNodeParams,
   indent: string = '    '
 ): string {
-  const { nodeId, enableConfirmation, confirmationText } = params;
+  const { nodeId } = params;
 
   let code = '';
   code += `${indent}# Обработка узла рассылки\n`;

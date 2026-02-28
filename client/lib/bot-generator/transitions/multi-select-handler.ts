@@ -32,7 +32,7 @@ export function generateMultiSelectHandler(
   params: MultiSelectHandlerParams,
   indent: string = '    '
 ): string {
-  const { nodeId, multiSelectVariable, continueButtonTarget, nodes } = params;
+  const { nodeId: _nodeId, multiSelectVariable: _multiSelectVariable, continueButtonTarget, nodes } = params;
 
   // Проверяем, есть ли кнопка продолжения
   if (!continueButtonTarget) {

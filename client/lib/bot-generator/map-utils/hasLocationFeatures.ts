@@ -1,5 +1,4 @@
-import { Button } from "../../bot-generator";
-import { BotNode } from "../../bot-generator";
+import { Button, BotNode } from "../types";
 
 // ============================================================================
 // ФУНКЦИИ АНАЛИЗА ВОЗМОЖНОСТЕЙ БОТА

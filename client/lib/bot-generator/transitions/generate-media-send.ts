@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/generate-media-send
  */
 
-import { generateMediaPathResolve, MediaType } from './generate-media-path-resolve';
+import { generateMediaPathResolve } from './generate-media-path-resolve';
 
 /**
  * Генерирует Python-код для отправки медиафайлов

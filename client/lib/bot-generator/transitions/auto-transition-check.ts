@@ -32,7 +32,7 @@ export function generateAutoTransitionCheck(
   params: AutoTransitionCheckParams,
   indent: string = '    '
 ): string {
-  const { nodeId, targetNode, nodes, connections } = params;
+  const { nodeId, targetNode, connections } = params;
 
   let code = '';
   code += `${indent}# Проверка автоперехода\n`;

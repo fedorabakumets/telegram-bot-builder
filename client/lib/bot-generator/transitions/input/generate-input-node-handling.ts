@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/input/generate-input-node-handling
  */
 
-import { formatTextForPython, toPythonBoolean } from '../../../format';
+import { formatTextForPython, toPythonBoolean } from '../../format';
 
 /**
  * Параметры для генерации обработки узла ввода

@@ -1,4 +1,4 @@
-import { BotNode } from "../../bot-generator";
+import { BotNode } from "../types";
 
 // Функция для проверки наличия inline кнопок (callback)
 export function hasInlineButtons(nodes: BotNode[]): boolean {

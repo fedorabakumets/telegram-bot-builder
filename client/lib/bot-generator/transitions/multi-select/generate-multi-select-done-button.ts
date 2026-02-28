@@ -27,7 +27,7 @@ export function generateMultiSelectDoneButton(
   params: MultiSelectDoneParams,
   indent: string = '    '
 ): string {
-  const { nodeId, multiSelectVariable, continueButtonTarget } = params;
+  const { nodeId, multiSelectVariable, continueButtonTarget: _continueButtonTarget } = params;
   
   let code = '';
   code += `${indent}# Проверяем, является ли это кнопкой "Готово"\n`;

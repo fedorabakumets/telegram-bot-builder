@@ -7,9 +7,9 @@
  * @module bot-generator/transitions/keyboard/generate-regular-inline-keyboard
  */
 
-import { Button } from '../../../bot-generator';
-import { generateButtonText } from '../../../format';
-import { calculateOptimalColumns } from '../../../Keyboard';
+import { Button } from '../../types';
+import { generateButtonText } from '../format';
+import { calculateOptimalColumns } from '../Keyboard';
 
 /**
  * Параметры для генерации inline клавиатуры

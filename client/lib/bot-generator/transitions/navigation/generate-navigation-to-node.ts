@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/navigation/generate-navigation-to-node
  */
 
-import { formatTextForPython } from '../../../format';
+import { formatTextForPython } from '../../format';
 
 /**
  * Параметры для генерации навигации

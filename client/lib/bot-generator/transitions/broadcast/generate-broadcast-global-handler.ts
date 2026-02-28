@@ -7,10 +7,10 @@
  * @module bot-generator/transitions/broadcast/generate-broadcast-global-handler
  */
 
-import { generateBroadcastInline } from '../../../Broadcast/BotApi/generateBroadcastHandler';
-import { generateBroadcastClientInline } from '../../../Broadcast/Client/generateBroadcastClientHandler';
-import { generateDatabaseVariablesCode } from '../../../Broadcast/generateDatabaseVariables';
-import { formatTextForPython } from '../../../format';
+import { generateBroadcastInline } from '../../Broadcast/BotApi/generateBroadcastHandler';
+import { generateBroadcastClientInline } from '../../Broadcast/Client/generateBroadcastClientHandler';
+import { generateDatabaseVariablesCode } from '../../Broadcast/generateDatabaseVariables';
+import { formatTextForPython } from '../../format';
 
 /**
  * Параметры для генерации глобального обработчика рассылки

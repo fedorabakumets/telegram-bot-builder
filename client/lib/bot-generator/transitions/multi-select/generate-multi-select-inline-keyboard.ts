@@ -7,9 +7,8 @@
  * @module bot-generator/transitions/multi-select/generate-multi-select-inline-keyboard
  */
 
-import { Button } from '../../../bot-generator';
-import { generateButtonText } from '../../../format';
-import { generateUniqueShortId } from '../../../format';
+import { Button } from '../../types';
+import { generateButtonText, generateUniqueShortId } from '../format';
 
 /**
  * Параметры для генерации inline клавиатуры multi-select
@@ -43,7 +42,7 @@ export function generateMultiSelectInlineKeyboard(
   const regularButtons = buttons.filter((button: { action: string; }) => button.action !== 'selection');
   
   // Добавляем кнопки выбора с отметками о состоянии
-  selectionButtons.forEach((button: { target: any; id: any; text: any; }, index: number) => {
+  selectionButtons.forEach((button: Button, index: number) => {
     const shortNodeId = generateUniqueShortId(nodeId, allNodeIds || []);
     const shortTarget = (button.target || button.id || 'btn').slice(-8);
     const callbackData = `ms_${shortNodeId}_${shortTarget}`;

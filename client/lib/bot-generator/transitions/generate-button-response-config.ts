@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/generate-button-response-config
  */
 
-import { generateButtonText, toPythonBoolean, escapeForJsonString } from '../format';
+import { toPythonBoolean, escapeForJsonString } from '../format';
 import { generateInlineKeyboardCode } from '../Keyboard';
 
 /**

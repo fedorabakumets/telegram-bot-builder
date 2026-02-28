@@ -1,4 +1,4 @@
-import { BotNode } from "../../bot-generator";
+import { BotNode } from "../types";
 
 // Функция для проверки наличия автопереходов
 export function hasAutoTransitions(nodes: BotNode[]): boolean {

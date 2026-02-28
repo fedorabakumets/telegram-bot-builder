@@ -1,4 +1,4 @@
-import { BotNode } from "../../bot-generator";
+import { BotNode } from "../types";
 
 // Функция для проверки наличия узлов с imageUrl, начинающимся на '/uploads/'
 export function hasUploadImageUrls(nodes: BotNode[]): boolean {

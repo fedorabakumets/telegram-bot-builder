@@ -9,8 +9,7 @@
  * @module hasConditionalButtons
  */
 
-import { Button } from "../../bot-generator";
-import { BotNode } from "../../bot-generator";
+import { Button, BotNode } from "../types";
 
 // Функция для проверки наличия условных кнопок с callback_data формата "conditional_"
 export function hasConditionalButtons(nodes: BotNode[]): boolean {

@@ -1,4 +1,4 @@
-import { BotNode } from "../../bot-generator";
+import { BotNode } from "../types";
 
 // Функция для проверки наличия узлов со сбором пользовательского ввода
 export function hasInputCollection(nodes: BotNode[]): boolean {

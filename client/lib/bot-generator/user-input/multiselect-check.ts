@@ -1,4 +1,4 @@
-import { Button } from '../bot-generator';
+import { Button } from '../types';
 import { formatTextForPython, generateButtonText, toPythonBoolean } from '../format';
 import { calculateOptimalColumns } from '../Keyboard';
 import { generateInlineKeyboardCode } from '../Keyboard';

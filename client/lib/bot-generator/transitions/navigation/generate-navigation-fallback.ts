@@ -7,8 +7,8 @@
  * @module bot-generator/transitions/navigation/generate-navigation-fallback
  */
 
-import { formatTextForPython } from '../../../format';
-import { generateInlineKeyboardCode } from '../../../Keyboard';
+import { formatTextForPython } from '../../format';
+import { generateInlineKeyboardCode } from '../Keyboard';
 
 /**
  * Параметры для генерации fallback навигации
@@ -18,6 +18,7 @@ export interface NavigationFallbackParams {
   userVars: string;
   allNodeIds: any[];
   inputTargetNodeId?: string;
+  userId: string;
 }
 
 /**
@@ -113,7 +114,7 @@ export function generateRegularFallbackNavigation(
   
   code += `${indent}# Заменяем все переменные в тексте\n`;
   code += `${indent}nav_text = replace_variables_in_text(nav_text, ${userVars})\n`;
-  code += `${indent}await bot.send_message(${userPrefix}, nav_text)\n`;
-  
+  code += `${indent}await bot.send_message(${params.userId}, nav_text)\n`;
+
   return code;
 }

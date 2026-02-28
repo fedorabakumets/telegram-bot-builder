@@ -29,7 +29,7 @@ export function generateRedirectLogic(
   params: RedirectLogicParams,
   indent: string = '    '
 ): string {
-  const { nodeId, currentNode, shouldRedirect, redirectTarget } = params;
+  const { nodeId: _nodeId, currentNode: _currentNode, shouldRedirect, redirectTarget } = params;
   
   let code = '';
   

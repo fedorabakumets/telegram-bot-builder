@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/media/generate-media-send-code
  */
 
-import { generateAttachedMediaSendCode } from '../../../MediaHandler';
+import { generateAttachedMediaSendCode } from '../MediaHandler';
 
 /**
  * Параметры для генерации отправки медиа

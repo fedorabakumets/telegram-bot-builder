@@ -27,7 +27,7 @@ export function generateVariableSaveLogic(
   params: VariableSaveLogicParams,
   indent: string = '    '
 ): string {
-  const { nodeId, sourceNode, nodes } = params;
+  const { nodeId, sourceNode: _sourceNode, nodes } = params;
   
   let code = '';
   code += `${indent}\n`;

@@ -1,4 +1,4 @@
-import { BotNode } from "../../bot-generator";
+import { BotNode } from "../types";
 
 // Функция для проверки наличия узлов, требующих функцию safe_edit_or_send
 export function hasNodesRequiringSafeEditOrSend(nodes: BotNode[]): boolean {

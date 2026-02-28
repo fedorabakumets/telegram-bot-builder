@@ -7,9 +7,9 @@
  * @module bot-generator/transitions/keyboard/generate-regular-reply-keyboard
  */
 
-import { Button } from '../../../bot-generator';
-import { generateButtonText, toPythonBoolean } from '../../../format';
-import { calculateOptimalColumns } from '../../../Keyboard';
+import { Button } from '../../types';
+import { generateButtonText, toPythonBoolean } from '../format';
+import { calculateOptimalColumns } from '../Keyboard';
 
 /**
  * Параметры для генерации reply клавиатуры
