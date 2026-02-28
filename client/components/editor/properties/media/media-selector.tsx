@@ -135,13 +135,16 @@ export function MediaSelector({
     setIsUploading(true);
     try {
       const result = await uploadImageFromUrl(url, projectId, nodeName);
-      
-      if (result.success && result.localPath) {
+
+      if (result.success) {
+        // Используем localPath если есть, иначе imageUrl
+        const pathToUse = result.localPath || result.imageUrl || url;
+        
         toast({
-          title: 'Изображение загружено',
-          description: 'Изображение сохранено на сервере',
+          title: 'Изображение сохранено',
+          description: result.message || 'URL сохранён для использования в боте',
         });
-        onChange(result.localPath);
+        onChange(pathToUse);
       } else {
         toast({
           title: 'Ошибка загрузки',
