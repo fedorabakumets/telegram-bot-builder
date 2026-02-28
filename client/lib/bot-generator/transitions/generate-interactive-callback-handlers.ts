@@ -14,6 +14,7 @@ import { generateMessageTextPreparation, generateDatabaseVarsGet } from './messa
 import { generateConditionalMessagesCheck } from './conditional-messages';
 import { generateMediaVariablesSetup } from './media-variables';
 import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
+import { generateBroadcastHandler } from './broadcast';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
@@ -163,36 +164,11 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           // ОБРАБОТКА УЗЛОВ РАССЫЛКИ (broadcast)
           // ============================================================================
           if (targetNode.type === 'broadcast') {
-            const enableConfirmation = targetNode.data?.enableConfirmation;
-            const confirmationText = targetNode.data?.confirmationText || 'Отправить рассылку всем пользователям?';
-
-            code += '    # Обработка узла рассылки\n';
-            code += `    logging.info(f"📢 Запуск рассылки из узла ${nodeId}")\n`;
-            code += '    \n';
-
-            if (enableConfirmation) {
-              // С генерацией подтверждения - сохраняем ID текущей рассылки
-              code += '    # Сохраняем ID текущей рассылки для глобального обработчика\n';
-              code += `    user_data[user_id]["current_broadcast_node_id"] = "${nodeId}"\n`;
-              code += '    \n';
-              code += '    # Отправляем сообщение с подтверждением\n';
-              code += `    confirm_text = "${confirmationText}"\n`;
-              code += '    confirm_text = replace_variables_in_text(confirm_text, {**user_data.get(user_id, {}), "user_id": user_id})\n';
-              code += '    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton\n';
-              code += '    keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
-              code += '        [InlineKeyboardButton(text="✅ Подтвердить", callback_data="broadcast_confirm_yes")],\n';
-              code += '        [InlineKeyboardButton(text="❌ Отмена", callback_data="broadcast_confirm_no")]\n';
-              code += '    ])\n';
-              code += '    await callback_query.message.answer(confirm_text, reply_markup=keyboard)\n';
-              code += '    return\n';
-            } else {
-              // Без подтверждения - сразу выполняем рассылку
-              code += '    # Рассылка без подтверждения - вызываем прямой обработчик\n';
-              code += '    await handle_broadcast_direct(callback_query)\n';
-            }
-
-            code += '    return\n';
-            code += '    \n';
+            code += generateBroadcastHandler({
+              nodeId,
+              enableConfirmation: targetNode.data?.enableConfirmation,
+              confirmationText: targetNode.data?.confirmationText
+            }, '    ');
           }
 
           // Обычная обработка узлов без специальной логики
