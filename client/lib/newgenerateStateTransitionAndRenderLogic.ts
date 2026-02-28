@@ -2,7 +2,7 @@ import { Button, ResponseOption } from './bot-generator';
 import { generateConditionalMessageLogic } from './Conditional';
 import { formatTextForPython, generateButtonText, toPythonBoolean, generateWaitingStateCode, escapeForJsonString } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
-import { generateConditionalBranch, generateInlineKeyboardSend, generateReplyKeyboardSend } from './bot-generator/transitions';
+import { generateConditionalBranch, generateConditionalMessages, generateInlineKeyboardSend, generateReplyKeyboardSend } from './bot-generator/transitions';
 
 export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: string, allNodeIds: any[], connections: any[]) {
   if (nodes.length > 0) {
@@ -14,8 +14,6 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
       } else if (targetNode.type === 'message' && targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
         code += generateReplyKeyboardSend(targetNode, '                ');
 
-        // Проверяяяяям, нужно ли настроить ожядание текстового ввода
-        // ИСПРАВЛЕНИЕ: Используем универяальную функцию для настройки ожидания ввода
         if (targetNode.data.enableTextInput || targetNode.data.collectUserInput ||
           targetNode.data.enablePhotoInput || targetNode.data.enableVideoInput ||
           targetNode.data.enableAudioInput || targetNode.data.enableDocumentInput) {
@@ -24,46 +22,11 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
           }
         }
       } else if (targetNode.type === 'message') {
-        // Добавляем поддержку условных сообщений для узлов сообщений
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
-
         if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-          code += '                # Проверяем усяяяяовные сообщения\n';
-          code += '                text = None\n';
-          code += '                \n';
-          code += '                # Получаем данные пользователя для проверки условий\n';
-          code += '                user_record = await get_user_from_db(user_id)\n';
-          code += '                if not user_record:\n';
-          code += '                    user_record = user_data.get(user_id, {})\n';
-          code += '                \n';
-          code += '                # Безопасно извлекаем user_data\n';
-          code += '                if isinstance(user_record, dict):\n';
-          code += '                    if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n';
-          code += '                        user_data_dict = user_record["user_data"]\n';
-          code += '                    else:\n';
-          code += '                        user_data_dict = user_record\n';
-          code += '                else:\n';
-          code += '                    user_data_dict = {}\n';
-          code += '                \n';
-
-          // Генерируем условную логикяя с использованием вспомогательной функции
-          code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '                ');
-
-          // Добавляем резервный вариант
-          code += '                else:\n';
-
-          if (targetNode.data.fallbackMessage) {
-            const fallbackText = formatTextForPython(targetNode.data.fallbackMessage);
-            code += `                    text = ${fallbackText}\n`;
-            code += '                    logging.info("Используется запасное сообщение")\n';
-          } else {
-            code += `                    text = ${formattedText}\n`;
-            code += '                    logging.info("Используется основное сообщение узла")\n';
-          }
-
-          code += '                \n';
+          code += generateConditionalMessages(targetNode, '                ');
         } else {
+          const messageText = targetNode.data.messageText || 'Сообщение';
+          const formattedText = formatTextForPython(messageText);
           code += `                text = ${formattedText}\n`;
         }
 
