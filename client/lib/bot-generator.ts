@@ -5,6 +5,7 @@ import { BotData, BotGroup, Node } from '@shared/schema';
 import { Button } from './bot-generator/types';
 import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
 import { setGlobalLoggingEnabled } from './bot-generator/core';
+import { generatePythonImports } from './bot-generator/imports';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotCommandsSetup } from './bot-commands-setup';
@@ -159,133 +160,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   code += '"""\n\n';
 
-  // Добавляем UTF-8 кодировку и базовые импорты в начало файла
+  // Добавляем UTF-8 кодировку
   code += generateUtf8EncodingCode();
 
-  // Определяем, нужны ли специфичные импорты
-  const hasCommandNodes = (nodes || []).some(node => node.type === 'command' ||
-    (node.data.buttons && node.data.buttons.some((btn: Button) => btn.action === 'command')));
-  const hasStartNodes = (nodes || []).some(node => node.type === 'start');
-  const hasMediaNodesResult = hasMediaNodes(nodes || []);
-  const hasStickerNodes = (nodes || []).some(node => node.type === 'sticker');
-  const hasVoiceNodes = (nodes || []).some(node => node.type === 'voice');
-  const hasLocationNodes = (nodes || []).some(node => node.type === 'location');
-  const hasContactNodes = (nodes || []).some(node => node.type === 'contact');
-
-  if (hasCommandNodes || hasStartNodes) {
-    // Если есть команды или стартовые узлы, добавляем соответствующие импорты
-    if (hasStartNodes) {
-      code += 'from aiogram.filters import CommandStart\n';
-    }
-    if (hasCommandNodes) {
-      code += 'from aiogram.filters import Command\n';
-    }
-  }
-
-
-  // Проверяем, есть ли узлы с URL-изображениями, которые требуют URLInputFile
-  const hasUrlImageNodes = (nodes || []).some(node =>
-    node.data?.imageUrl && node.data.imageUrl.startsWith('http')
-  );
-
-  if (hasUrlImageNodes) {
-    code += 'from aiogram.types import URLInputFile\n';
-  }
-
-  // Проверяем, есть ли узлы, которые требуют импорт datetime
-  const hasNodesRequiringDatetime = (nodes || []).some(node =>
-    node.type === 'command' ||  // Команды могут использовать datetime для логирования времени вызова
-    node.type === 'mute_user' || // mute_user использует datetime для вычисления времени окончания
-    node.type === 'ban_user' || // ban_user может использовать datetime для временных банов
-    node.type === 'message' || // Сообщения могут использовать datetime для временных меток
-    node.type === 'sticker' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'voice' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'animation' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'photo' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'video' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'document' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'audio' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'location' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'contact' || // Медиа-контент может использовать datetime для временных меток
-    node.type === 'group_event' // Обработчики событий в группах могут использовать datetime для логирования
-  );
-
-  // Также проверяем, есть ли узлы, требующие timezone (например, для временных меток с UTC)
-  const hasNodesRequiringTimezone = (nodes || []).some(node =>
-    node.type === 'photo' || // Обработчик фото использует datetime.now(timezone.utc)
-    node.type === 'group_event' || // Обработчики групп могут использовать timezone для временных меток
-    (node.data && node.data.enablePhotoInput) // Узлы с включенным вводом фото также используют datetime.now(timezone.utc)
-  );
-
-  if (hasNodesRequiringDatetime || userDatabaseEnabled) {
-    if (hasNodesRequiringTimezone) {
-      code += 'from datetime import datetime, timezone\n'; // Добавляем timezone, если он нужен
-    } else {
-      code += 'from datetime import datetime\n';
-    }
-  }
-
-  // Проверяем, есть ли узлы, которые требуют импорт ParseMode
-  // ParseMode нужен для: форматирования текста (html/markdown), отправки медиа с caption, клавиатур с форматированием
-  const hasNodesRequiringParseMode = (nodes || []).some(node =>
-    // Узлы с явным formatMode (html/markdown)
-    (node.data?.formatMode &&
-      (node.data.formatMode.toLowerCase() === 'html' ||
-        node.data.formatMode.toLowerCase() === 'markdown')) ||
-    // Узлы с markdown флагом (старый формат)
-    node.data?.markdown === true ||
-    // Узлы с кнопками и форматированием
-    (node.data?.buttons && node.data.buttons.length > 0 &&
-      (node.data.formatMode === 'html' || node.data.formatMode === 'markdown' || node.data.markdown === true)) ||
-    // Узлы с медиа и caption (требуют parse_mode для форматирования подписи)
-    (node.data?.imageUrl && node.data.mediaCaption) ||
-    (node.data?.videoUrl && node.data.mediaCaption) ||
-    (node.data?.audioUrl && node.data.mediaCaption) ||
-    (node.data?.documentUrl && node.data.mediaCaption) ||
-    // Узлы с включенным сбором ввода и форматированием
-    (node.data?.collectUserInput === true &&
-      (node.data.formatMode === 'html' || node.data.formatMode === 'markdown' || node.data.markdown === true)) ||
-    // Узлы с conditional messages и форматированием
-    (node.data?.enableConditionalMessages === true &&
-      (node.data.formatMode === 'html' || node.data.formatMode === 'markdown' || node.data.markdown === true))
-  );
-
-  if (hasNodesRequiringParseMode) {
-    code += 'from aiogram.enums import ParseMode\n';
-  }
-
-  // Модуль re требуется для функции replace_variables_in_text
-  code += 'import re\n';
-
-  // TelegramBadRequest используется в обработчиках исключений при работе с медиа и другими действиями
-  // Проверяем, есть ли узлы, которые используют TelegramBadRequest в обработчиках исключений
-  const hasNodesRequiringTelegramBadRequest = (nodes || []).some(node =>
-    node.type === 'delete_message' ||
-    node.type === 'pin_message' ||
-    node.type === 'unpin_message' ||
-    node.type === 'ban_user' ||
-    node.type === 'unban_user' ||
-    node.type === 'mute_user' ||
-    node.type === 'unmute_user' ||
-    node.type === 'kick_user' ||
-    node.type === 'promote_user' ||
-    node.type === 'demote_user' ||
-    node.type === 'admin_rights' ||
-    node.type === 'sticker' ||
-    node.type === 'voice' ||
-    node.type === 'animation' ||
-    node.type === 'location' ||
-    node.type === 'contact' ||
-    hasMediaNodesResult ||
-    hasStickerNodes ||
-    hasVoiceNodes ||
-    hasLocationNodes ||
-    hasContactNodes
-  );
-
-  if (hasNodesRequiringTelegramBadRequest) {
-    code += 'from aiogram.exceptions import TelegramBadRequest\n';
-  }
+  // Генерируем Python импорты на основе типов узлов
+  code += generatePythonImports({ nodes: nodes || [], userDatabaseEnabled });
 
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
   const hasInlineButtonsResult = hasInlineButtons(nodes || []);
@@ -976,7 +855,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
    * 
    * **Функциональность анализа узлов:**
    * - Перебор всех узлов бота для поиска командных кнопок
-   * - Анализ обычных кнопок узлов
+   * - Анализ обычны�� кнопок узлов
    * - Анализ кнопок в у������овных сообщениях
    * - Проверка раз��ичных типов действий кнопок
    * 

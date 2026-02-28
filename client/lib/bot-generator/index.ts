@@ -10,6 +10,10 @@ export { generatePythonCode } from '../bot-generator';
 export { isLoggingEnabled, logFlowAnalysis } from './core';
 export { setGlobalLoggingEnabled, getGlobalLoggingEnabled } from './core';
 
+// Импорт: генерация Python импортов
+export { generatePythonImports } from './imports';
+export type { ImportGeneratorOptions } from './imports';
+
 // Типы
 export type { Button, ResponseOption } from './types';
 export type { CodeNodeRange, CodeWithMap } from './types';
