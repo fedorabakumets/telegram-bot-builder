@@ -248,7 +248,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     codeLines.push('    ');
     codeLines.push('    # ⚡ АВТОПЕРЕХОД к следующему узлу');
     codeLines.push(`    logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTargetId}")`);
-    codeLines.push('    # Вызываем обработчик следующего узла через fake_message');
+    codeLines.push('    # Вызываем обработчик следующего узла через fake_callback');
     codeLines.push('    class FakeCallbackQuery:');
     codeLines.push('        def __init__(self, message, target_node_id):');
     codeLines.push('            self.from_user = message.from_user');
@@ -257,6 +257,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     codeLines.push('            self.message_id = message.message_id');
     codeLines.push('            self.data = target_node_id  # callback_data для навигации');
     codeLines.push('            self.message = message  # ссылка на оригинальное сообщение');
+    codeLines.push('            self._is_fake = True  # Флаг что это fake callback');
     codeLines.push('        ');
     codeLines.push('        async def answer(self, *args, **kwargs):');
     codeLines.push('            pass  # Игнорируем answer для fake callback');
