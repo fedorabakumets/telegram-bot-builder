@@ -7,6 +7,7 @@
  * @module bot-generator/transitions/generate-interactive-callback-handlers
  */
 
+import { generateCallbackHandlerStart } from './generate-callback-handler-start';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateConditionalMessageLogic } from '../Conditional';
@@ -95,20 +96,9 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
 
           processedCallbacks.add(`cb_${nodeId}`);
 
-          // Создаем обработчик обратного вызова для этого узла, который может обрабатывать несколько кнопок И кнопку "готово" с мультивыбором
-          const safeFunctionName = String(nodeId).replace(/[^a-zA-Z0-9_]/g, '_');
-          const shortNodeIdForDone = String(nodeId).slice(-10).replace(/^_+/, ''); // Такой же как в генерации кнопки
-          code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startswith("${nodeId}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
-          code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
-          code += '    # Безопасное получение данных из callback_query\n';
-          code += '    callback_data = None  # Инициализируем переменную\n';
-          code += '    try:\n';
-          code += '        user_id = callback_query.from_user.id\n';
-          code += '        callback_data = callback_query.data\n';
-          code += `        logging.info(f"🔵 Вызван callback handler: handle_callback_${safeFunctionName} для пользователя {user_id}")\n`;
-          code += '    except Exception as e:\n';
-          code += `        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_${safeFunctionName}: {e}")\n`;
-          code += '        return\n';
+          // Создаем обработчик обратного вызова для этого узла
+          const shortNodeIdForDone = String(nodeId).slice(-10).replace(/^_+/, '');
+          code += generateCallbackHandlerStart(nodeId, shortNodeIdForDone, '');
           code += '    \n';
           code += '    # Проверяем флаг hideAfterClick для кнопок\n';
           code += `    ${generateHideAfterClickMiddleware(targetNode)}\n`;
