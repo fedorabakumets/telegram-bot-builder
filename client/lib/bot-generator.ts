@@ -2,7 +2,6 @@
 import { BotData, BotGroup, Node } from '@shared/schema';
 
 // Типы
-import { Button } from './bot-generator/types';
 import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
 import { setGlobalLoggingEnabled } from './bot-generator/core';
 import { generatePythonImports } from './bot-generator/imports';
