@@ -7,6 +7,8 @@
  * @module bot-generator/user-input/generate-multiselect-check
  */
 
+import { multiselectcheck } from './multiselectcheck';
+
 /**
  * Генерирует Python-код для проверки множественного выбора
  * 
@@ -20,7 +22,5 @@ export function generateMultiselectCheck(
   nodes: any[],
   allNodeIds: any[]
 ): string {
-  // Вызываем внешнюю функцию multiselectcheck
-  const { multiselectcheck } = require('../../multiselectcheck');
   return multiselectcheck(code, nodes, allNodeIds);
 }
