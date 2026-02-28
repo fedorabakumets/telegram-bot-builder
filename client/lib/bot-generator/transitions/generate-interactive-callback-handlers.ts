@@ -14,12 +14,13 @@ import { generateMessageTextPreparation, generateDatabaseVarsGet } from './messa
 import { generateConditionalMessagesCheck } from './conditional-messages';
 import { generateMediaVariablesSetup } from './media-variables';
 import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
-import { generateBroadcastHandler } from './broadcast';
+import { generateBroadcastHandler, generateAllNodesDict, generateBroadcastConfirmationHandler, generateBroadcastDirectHandler } from './broadcast';
 import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
 import { generateMediaSendCode } from './media';
 import { generateButtonTextDetection } from './button';
 import { generateVariableSaveLogic } from './variable';
 import { generateRedirectLogic } from './redirect';
+import { generateNavigationToNode } from './navigation';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
@@ -1144,58 +1145,12 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
   // ============================================================================
   // ГЛОБАЛЬНЫЙ ОБРАБОТЧИК ПОДТВЕРЖДЕНИЯ РАССЫЛКИ
   // ============================================================================
-  // Находим первый broadcast узел для генерации обработчиков
   const broadcastNode = nodes.find(n => n.type === 'broadcast');
 
   if (broadcastNode) {
-    // Создаём словарь всех узлов для автоперехода
-    code += '\n# Словарь всех узлов для автоперехода\n';
-    code += 'all_nodes_dict = {\n';
-    nodes.forEach(node => {
-      const messageText = node.data?.messageText || '';
-      const attachedMedia = node.data?.attachedMedia || [];
-      const imageUrl = node.data?.imageUrl || '';
-      const audioUrl = node.data?.audioUrl || '';
-      const videoUrl = node.data?.videoUrl || '';
-      const documentUrl = node.data?.documentUrl || '';
-      const autoTransitionTo = node.data?.autoTransitionTo || '';
-      const mediaStr = attachedMedia.length > 0 ? JSON.stringify(attachedMedia) : '[]';
-      const imageUrlStr = imageUrl ? `"${imageUrl}"` : '""';
-      const audioUrlStr = audioUrl ? `"${audioUrl}"` : '""';
-      const videoUrlStr = videoUrl ? `"${videoUrl}"` : '""';
-      const documentUrlStr = documentUrl ? `"${documentUrl}"` : '""';
-      const autoTransitionStr = autoTransitionTo ? `"${autoTransitionTo}"` : '""';
-      code += `    "${node.id}": {"id": "${node.id}", "text": ${formatTextForPython(messageText)}, "attachedMedia": ${mediaStr}, "imageUrl": ${imageUrlStr}, "audioUrl": ${audioUrlStr}, "videoUrl": ${videoUrlStr}, "documentUrl": ${documentUrlStr}, "autoTransitionTo": ${autoTransitionStr}},\n`;
-    });
-    code += '}\n';
-    code += '\n';
-
-    // Генерируем обработчик для кнопок подтверждения
-    code += '# Глобальный обработчик подтверждения рассылки\n';
-    code += '@dp.callback_query(lambda c: c.data == "broadcast_confirm_yes" or c.data == "broadcast_confirm_no")\n';
-    code += 'async def handle_broadcast_confirmation(callback_query: types.CallbackQuery):\n';
-    code += '    user_id = callback_query.from_user.id\n';
-    code += '    logging.info(f"📢 Подтверждение рассылки от пользователя {user_id}: {callback_query.data}")\n';
-    code += '    \n';
-    code += '    if callback_query.data == "broadcast_confirm_yes":\n';
-    const broadcastApiType1 = (broadcastNode.data as any)?.broadcastApiType || 'bot';
-    code += (broadcastApiType1 === 'client' ? generateBroadcastClientInline(broadcastNode, nodes, '        ') : generateBroadcastInline(broadcastNode, nodes, '        ')) + '\n';
-    code += '    else:\n';
-    code += '        await callback_query.message.edit_text("❌ Рассылка отменена")\n';
-    code += '    \n';
-
-    // Генерируем обработчик для прямой рассылки (без подтверждения)
-    code += '# Обработчик для прямой рассылки (без подтверждения)\n';
-    code += 'async def handle_broadcast_direct(callback_query: types.CallbackQuery):\n';
-    code += '    user_id = callback_query.from_user.id\n';
-    code += '    logging.info(f"📢 Прямая рассылка от пользователя {user_id}")\n';
-    code += '    \n';
-    code += '    # Получаем переменные из базы данных\n';
-    code += generateDatabaseVariablesCode('    ');
-    code += '    \n';
-    const broadcastApiType2 = (broadcastNode.data as any)?.broadcastApiType || 'bot';
-    code += (broadcastApiType2 === 'client' ? generateBroadcastClientInline(broadcastNode, nodes, '    ') : generateBroadcastInline(broadcastNode, nodes, '    ')) + '\n';
-    code += '    \n';
+    code += generateAllNodesDict(nodes, '\n');
+    code += generateBroadcastConfirmationHandler({ broadcastNode, nodes }, '    ');
+    code += generateBroadcastDirectHandler({ broadcastNode, nodes }, '    ');
   }
 
   // Генерируем функции handle_node_* для узлов с условными сообщениями

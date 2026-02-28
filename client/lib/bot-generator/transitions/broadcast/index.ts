@@ -7,3 +7,4 @@
  */
 
 export { generateBroadcastHandler, type BroadcastHandlerParams } from './generate-broadcast-handler';
+export { generateAllNodesDict, generateBroadcastConfirmationHandler, generateBroadcastDirectHandler, type BroadcastGlobalHandlerParams } from './generate-broadcast-global-handler';
