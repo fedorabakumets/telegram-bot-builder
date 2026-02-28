@@ -189,7 +189,9 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, node_id="${nodeId}")`);
 
     // Автопереход если нужен и collectUserInput=true
-    if (autoTransitionTo && collectUserInput) {
+    // ИСПРАВЛЕНИЕ: Генерируем FakeCallbackQuery ТОЛЬКО для message handler (не для callback)
+    // В callback handler автопереход обрабатывается отдельно в generateAutoTransitionCode
+    if (autoTransitionTo && collectUserInput && handlerContext === 'message') {
       const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
       codeLines.push(`${indentLevel}    `);
       codeLines.push(`${indentLevel}    # ⚡ Автопереход к узлу ${autoTransitionTo}`);
@@ -242,7 +244,9 @@ export function generateAttachedMediaSendCode(
       codeLines.push(`${indentLevel}await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=keyboard)`);
 
       // Автопереход если нужен и collectUserInput=true
-      if (autoTransitionTo && collectUserInput) {
+      // ИСПРАВЛЕНИЕ: Генерируем FakeCallbackQuery ТОЛЬКО для message handler (не для callback)
+      // В callback handler автопереход обрабатывается отдельно в generateAutoTransitionCode
+      if (autoTransitionTo && collectUserInput && handlerContext === 'message') {
         const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
         codeLines.push(`${indentLevel}# ⚡ Автопереход к узлу ${autoTransitionTo}`);
         codeLines.push(`${indentLevel}logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
