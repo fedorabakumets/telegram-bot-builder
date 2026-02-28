@@ -37,7 +37,18 @@ export function generateStartHandlerImageSend(
       v.startsWith('imageUrlVar')
     ) || `image_url_${node.id || 'unknown'}`;
 
+    // Добавляем определение all_user_vars перед использованием
     codeLines.push('');
+    codeLines.push('    # Создаём all_user_vars для замены переменных');
+    codeLines.push('    all_user_vars = {}');
+    codeLines.push('    db_user_vars = await get_user_from_db(user_id)');
+    codeLines.push('    if db_user_vars and isinstance(db_user_vars, dict):');
+    codeLines.push('        all_user_vars.update(db_user_vars)');
+    codeLines.push('    local_user_vars = user_data.get(user_id, {})');
+    codeLines.push('    if isinstance(local_user_vars, dict):');
+    codeLines.push('        all_user_vars.update(local_user_vars)');
+    codeLines.push('');
+
     codeLines.push('    # 🖼️ Отправляем изображение из attachedMedia');
     codeLines.push(`    image_url = "${imageUrl}"`);
     codeLines.push('    logging.info(f"🖼️ Отправка изображения: {image_url}")');
