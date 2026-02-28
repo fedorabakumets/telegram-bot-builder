@@ -2,7 +2,7 @@ import { Button, ResponseOption } from './bot-generator';
 import { generateConditionalMessageLogic } from './Conditional';
 import { formatTextForPython, generateButtonText, toPythonBoolean, generateWaitingStateCode, escapeForJsonString } from './format';
 import { generateInlineKeyboardCode } from './Keyboard';
-import { generateConditionalBranch } from './bot-generator/transitions';
+import { generateConditionalBranch, generateInlineKeyboardSend } from './bot-generator/transitions';
 
 export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: string, allNodeIds: any[], connections: any[]) {
   if (nodes.length > 0) {
@@ -10,27 +10,7 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
       code += generateConditionalBranch(index, targetNode.id, '            ');
       
       if (targetNode.type === 'message' && targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
-
-        code += `                text = ${formattedText}\n`;
-        code += '                builder = InlineKeyboardBuilder()\n';
-        targetNode.data.buttons.forEach((button: Button) => {
-          if (button.action === "url") {
-            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-          } else if (button.action === 'goto') {
-            const callbackData = button.target || button.id || 'no_action';
-            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-          } else if (button.action === 'command') {
-            const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
-          } else {
-            const callbackData = button.target || button.id || 'no_action';
-            code += `                builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-          }
-        });
-        code += '                keyboard = builder.as_markup()\n';
-        code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
+        code += generateInlineKeyboardSend(targetNode, '                ');
       } else if (targetNode.type === 'message' && targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
         const messageText = targetNode.data.messageText || 'Сообщение';
         const formattedText = formatTextForPython(messageText);

@@ -7,3 +7,4 @@
  */
 
 export { generateConditionalBranch } from './generate-conditional-branch';
+export { generateInlineKeyboardSend } from './generate-inline-keyboard-send';
