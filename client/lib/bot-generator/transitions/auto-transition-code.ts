@@ -29,7 +29,7 @@ export function generateAutoTransitionCode(
   // Автопереход уже был выполнен в start_handler через FakeCallbackQuery
   code += `${indent}# Проверяем, что это не fake callback (для предотвращения дублирования сообщений)\n`;
   code += `${indent}if hasattr(callback_query, '_is_fake') and callback_query._is_fake:\n`;
-  code += `${indent}    logging.debug(f"⚡ Fake callback: пропускаем повторный автопереход от {nodeId}")\n`;
+  code += `${indent}    logging.debug(f"⚡ Fake callback: пропускаем повторный автопереход от ${nodeId}")\n`;
   code += `${indent}else:\n`;
 
   // Логирование
