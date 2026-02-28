@@ -31,18 +31,21 @@ export function generateApiConfig(projectId: number | null, userDatabaseEnabled:
   codeLines.push('        str: Базовый URL API');
   codeLines.push('    """');
   codeLines.push('    # Пытаемся получить из переменных окружения');
-  codeLines.push('    env_url = os.getenv("API_BASE_URL", os.getenv("REPLIT_DEV_DOMAIN"))');
+  codeLines.push('    env_url = os.getenv("API_BASE_URL") or os.getenv("REPLIT_DEV_DOMAIN") or "localhost:5000"');
   codeLines.push('    ');
   codeLines.push('    if env_url:');
   codeLines.push('        # Проверяем, начинается ли URL с http:// или https://');
   codeLines.push('        if env_url.startswith("http://") or env_url.startswith("https://"):');
   codeLines.push('            return env_url');
   codeLines.push('        else:');
-  codeLines.push('            # Добавляем https:// префикс если нет');
-  codeLines.push('            return f"https://{env_url}"');
+  codeLines.push('            # Для localhost используем http://, для остальных https://');
+  codeLines.push('            if "localhost" in env_url or "127.0.0.1" in env_url:');
+  codeLines.push('                return f"http://{env_url}"');
+  codeLines.push('            else:');
+  codeLines.push('                return f"https://{env_url}"');
   codeLines.push('    ');
-  codeLines.push('    # Возвращаем пустую строку если URL не найден');
-  codeLines.push('    return ""');
+  codeLines.push('    # По умолчанию используем localhost с HTTP для локальной разработки');
+  codeLines.push('    return "http://localhost:5000"');
   codeLines.push('');
 
   // Определяем API_BASE_URL
