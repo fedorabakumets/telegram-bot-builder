@@ -30,6 +30,7 @@ export function useProjectNodes(projectId: number): UseProjectNodesResult {
     queryKey: [`/api/projects/${projectId}/nodes`],
     enabled: !!projectId,
     staleTime: 5 * 60 * 1000, // 5 минут
+    retry: 1,
   });
 
   return {

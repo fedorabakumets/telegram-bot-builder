@@ -13,6 +13,8 @@ import { setupDeleteProjectRoute } from "./setupDeleteProjectRoute";
 import { listProjectsHandler } from "./projectRoutes/handlers/listProjectsHandler";
 import { getAllProjectsHandler } from "./projectRoutes/handlers/getAllProjectsHandler";
 import { getProjectHandler } from "./projectRoutes/handlers/getProjectHandler";
+import { getProjectNodesHandler } from "./projectRoutes/handlers/getProjectNodesHandler";
+import { getProjectNodeHandler } from "./projectRoutes/handlers/getProjectNodeHandler";
 import { createProjectHandler } from "./projectRoutes/handlers/createProjectHandler";
 import { updateProjectHandler } from "./projectRoutes/handlers/updateProjectHandler";
 import { exportProjectHandler } from "./projectRoutes/handlers/exportProjectHandler";
@@ -33,6 +35,8 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
     app.get("/api/projects/list", requireDbReady, listProjectsHandler);
     app.get("/api/projects", requireDbReady, getAllProjectsHandler);
     app.get("/api/projects/:id", requireDbReady, getProjectHandler);
+    app.get("/api/projects/:projectId/nodes", requireDbReady, getProjectNodesHandler);
+    app.get("/api/projects/:projectId/nodes/:nodeId", requireDbReady, getProjectNodeHandler);
     app.post("/api/projects", requireDbReady, createProjectHandler);
     app.put("/api/projects/:id", requireDbReady, updateProjectHandler);
 
