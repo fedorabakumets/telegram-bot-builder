@@ -10,7 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet, generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipNavigation, generateButtonResponseSave, generateButtonResponseCleanup, generateInvalidChoiceHandler, generateMultiselectCheck } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet, generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipNavigation, generateButtonResponseSave, generateButtonResponseCleanup, generateInvalidChoiceHandler, generateMultiselectCheck, generateMinLengthValidation, generateMaxLengthValidation, generateEmailValidation, generateNumberValidation, generatePhoneValidation, generateResponseSave, generateUserIdSave, generateCsvSave, generateSuccessMessage, generateWaitingCleanup, generateAutoNavigationLoop, generateLegacyFormatHandler } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -234,140 +234,46 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Валидация длины текста
      * Проверяет минимальную и максимальную длину введенного текста
      */
-    code += '            # Валидация длины\n';
-    code += '            if min_length > 0 and len(user_text) < min_length:\n';
-    code += '                retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '                await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")\n';
-    code += '                return\n';
-    code += '            \n';
-    code += '            if max_length > 0 and len(user_text) > max_length:\n';
-    code += '                retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '                await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")\n';
-    code += '                return\n';
-    code += '            \n';
+    code += generateMinLengthValidation('            ');
+    code += generateMaxLengthValidation('            ');
 
     /**
      * Валидация типа ввода
      * Проверяет соответствие введенных данных указанному типу (email, phone, number)
      */
-    code += '            # Валидация типа ввода\n';
-    code += '            if input_type == "email":\n';
-    code += '                import re\n';
-    code += '                email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n';
-    code += '                if not re.match(email_pattern, user_text):\n';
-    code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '                    await message.answer(f"❌ Неверный формат email. {retry_message}")\n';
-    code += '                    return\n';
-    code += '            elif input_type == "number":\n';
-    code += '                try:\n';
-    code += '                    float(user_text)\n';
-    code += '                except ValueError:\n';
-    code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '                    await message.answer(f"❌ Введите корректное число. {retry_message}")\n';
-    code += '                    return\n';
-    code += '            elif input_type == "phone":\n';
-    code += '                import re\n';
-    code += '                phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n';
-    code += '                if not re.match(phone_pattern, user_text):\n';
-    code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
-    code += '                    await message.answer(f"❌ Неверный формат телефона. {retry_message}")\n';
-    code += '                    return\n';
+    code += generateEmailValidation('            ');
+    code += generateNumberValidation('            ');
+    code += generatePhoneValidation('            ');
 
     /**
      * Сохранение проверенных данных
      * Сохраняет валидированные данные в пользовательские данные и базу данных
      */
-    code += '            \n';
-    code += '            # Сохраняем ответ для нового формата\n';
-    code += '            timestamp = get_moscow_time()\n';
-    code += '            response_data = user_text\n';
-    code += '            \n';
-    code += '            # Сохраняем в пользовательские данные\n';
-    code += '            user_data[user_id][variable_name] = response_data\n';
-    code += '            \n';
-    code += '            # Сохраняем в базу данных если включено\n';
-    code += '            if save_to_database:\n';
-    code += '                saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
-    code += '                if saved_to_db:\n';
-    code += '                    logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
-    code += '                else:\n';
-    code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
-    code += '            \n';
+    code += generateResponseSave('            ');
 
     /**
      * Сохранение ID в таблицу user_ids для рассылки
      * Если узел имеет saveToUserIds=true, сохраняем ID в отдельную таблицу
      */
-    code += '            # Сохранение ID в таблицу user_ids для рассылки\n';
-    code += '            if waiting_node_id == "BMsBsZJr-pWxjMB_rl33z":  # Узел добавления ID\n';
-    code += '                try:\n';
-    code += '                    async with db_pool.acquire() as conn:\n';
-    code += '                        await conn.execute(\n';
-    code += '                            """\n';
-    code += '                            INSERT INTO user_ids (user_id, source)\n';
-    code += '                            VALUES ($1, $2)\n';
-    code += '                            ON CONFLICT (user_id) DO NOTHING\n';
-    code += '                            """,\n';
-    code += '                            int(user_text),\n';
-    code += "                            'bot'\n";
-    code += '                        )\n';
-    code += '                        logging.info(f"✅ ID {user_text} вставлен в таблицу user_ids")\n';
-    code += '                except ValueError:\n';
-    code += '                    logging.error(f"❌ Ошибка: введённое значение не является числом: {user_text}")\n';
-    code += '                except Exception as e:\n';
-    code += '                    logging.error(f"❌ Ошибка сохранения ID в базу: {e}")\n';
-    code += '            \n';
+    code += generateUserIdSave('            ');
 
     /**
      * Сохранение ID в CSV файл
      * Если узел имеет saveToCsv=true, записываем ID в CSV файл проекта
      */
-    code += '            # Сохранение ID в CSV файл для рассылки\n';
-    code += '            try:\n';
-    code += '                import os\n';
-    code += '                # Путь к файлу CSV в папке проекта\n';
-    code += '                # PROJECT_DIR уже определён как папка проекта (например, bots/импортированный_проект_0312_40_35)\n';
-    code += '                csv_file = os.path.join(PROJECT_DIR, \'user_ids.csv\')\n';
-    code += '                # Проверяем, есть ли уже такой ID в файле\n';
-    code += '                id_exists = False\n';
-    code += '                if os.path.exists(csv_file):\n';
-    code += '                    with open(csv_file, \'r\', encoding=\'utf-8\') as f:\n';
-    code += '                        existing_ids = [line.strip() for line in f if line.strip()]\n';
-    code += '                        if str(user_text).strip() in existing_ids:\n';
-    code += '                            id_exists = True\n';
-    code += '                            logging.info(f"⚠️ ID {user_text} уже есть в CSV, пропускаем")\n';
-    code += '                # Записываем ID в файл (один ID в строке)\n';
-    code += '                if not id_exists:\n';
-    code += '                    with open(csv_file, \'a\', encoding=\'utf-8\') as f:\n';
-    code += '                        f.write(f"{user_text}\\n")\n';
-    code += '                    logging.info(f"✅ ID {user_text} записан в CSV файл: {csv_file}")\n';
-    code += '            except Exception as e:\n';
-    code += '                logging.error(f"❌ Ошибка записи в CSV: {e}")\n';
-    code += '            \n';
+    code += generateCsvSave('            ');
 
     /**
      * Отправка подтверждающего сообщения
      * Отправляет пользователю сообщение об успешном сохранении данных
      */
-    code += '            # Отправляем подтверждающее сообщение только если оно задано\n';
-    code += '            success_message = waiting_config.get("success_message", "")\n';
-    code += '            if success_message:\n';
-    code += '                logging.info(f"DEBUG: Отправляем подтверждение с текстом: {success_message}")\n';
-    code += '                await message.answer(success_message)\n';
-    code += '                logging.info(f"✅ Отправлено подтверждение: {success_message}")\n';
-    code += '            \n';
+    code += generateSuccessMessage('            ');
 
     /**
      * Очистка состояния ожидания
      * Удаляет состояние ожидания ввода после успешной обработки
      */
-    code += '            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем старое состояние ожидания перед навигацией\n';
-    code += '            if "waiting_for_input" in user_data[user_id]:\n';
-    code += '                del user_data[user_id]["waiting_for_input"]\n';
-    code += '            \n';
-    code += '            logging.info(f"✅ Переход к следующему узлу выполнен успешно")\n';
-    code += '            logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")\n';
-    code += '            \n';
+    code += generateWaitingCleanup('            ');
 
     /**
      * Навигация к следующему узлу
@@ -381,12 +287,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Цикл автопереходов
      * Поддерживает последовательные переходы между узлами без участия пользователя
      */
-    code += '                    # Цикл для поддержки автопереходов\n';
-    code += '                    while next_node_id:\n';
-    code += '                        logging.info(f"🚀 Переходим к узлу: {next_node_id}")\n';
-    code += '                        current_node_id = next_node_id\n';
-    code += '                        next_node_id = None  # Сбрасываем, будет установлен при автопереходе\n';
-    code += '                        # Проверяем навигацию к узлам\n';
+    code += generateAutoNavigationLoop('                    ');
 
     // Функция для генерации отступов (решение архитектора)
     const getIndents = (baseLevel: number) => {
@@ -408,8 +309,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '            \n';
     code += '            return  # Завершаем обработку для нового формата\n';
     code += '        \n';
-    code += '        # Обработка старого формата (для совместимости)\n';
-    code += '        # Находим узел для получения настроек\n';
+    code += generateLegacyFormatHandler('        ');
 
     // Генерируем проверку для каждого узла с универсальным сбором ввода (старый формат)
     code = processUserInputWithValidationAndSave(nodes, code, allNodeIds);
