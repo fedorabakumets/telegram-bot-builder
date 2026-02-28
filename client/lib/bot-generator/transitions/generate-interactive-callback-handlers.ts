@@ -15,11 +15,11 @@ import { generateConditionalMessagesCheck } from './conditional-messages';
 import { generateMediaVariablesSetup } from './media-variables';
 import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
 import { generateBroadcastHandler } from './broadcast';
-import { generateRegularReplyKeyboard } from './keyboard';
+import { generateRegularReplyKeyboard, generateRegularInlineKeyboard } from './keyboard';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
-import { formatTextForPython, generateButtonText, generateUniqueShortId, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
+import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
 import { generateBroadcastClientInline } from '../Broadcast/Client/generateBroadcastClientHandler';
 import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
 import { generateHandleNodeFunctions } from '../../generate/generateHandleNodeFunctions';
@@ -435,29 +435,10 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               }
             } else {
               // Генерируем inline клавиатуру (по умолчанию)
-              code += '    # Create inline keyboard\n';
-              code += '    builder = InlineKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                if (btn.action === "goto" && btn.target) {
-                  const btnCallbackData = `${btn.target}_btn_${index}`;
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
-                } else if (btn.action === "url") {
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-                } else if (btn.action === "command" && btn.target) {
-                  // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд
-                  const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                  code += `    # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-                } else if (btn.action === "selection") {
-                  // Добавляем поддержку кнопок выбора для обычных узлов
-                  const callbackData = `multi_select_${nodeId}_${btn.target || btn.id}`;
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-                }
-              });
-              // Автоматическое распределение колонок для обычных кнопок
-              const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-              code += `    builder.adjust(${columns})\n`;
-              code += '    keyboard = builder.as_markup()\n';
+              code += generateRegularInlineKeyboard({
+                buttons: targetNode.data.buttons,
+                nodeData: targetNode.data
+              }, '    ');
             }
           } else {
             code += '    keyboard = None\n';

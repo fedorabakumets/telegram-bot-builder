@@ -7,3 +7,4 @@
  */
 
 export { generateRegularReplyKeyboard, type RegularReplyKeyboardParams } from './generate-regular-reply-keyboard';
+export { generateRegularInlineKeyboard, type RegularInlineKeyboardParams } from './generate-regular-inline-keyboard';
