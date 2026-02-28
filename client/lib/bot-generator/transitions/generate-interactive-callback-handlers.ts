@@ -8,7 +8,7 @@
  */
 
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
-import { generateMultiSelectDoneButton, generateMultiSelectInit } from './multi-select';
+import { generateMultiSelectDoneButton, generateMultiSelectInit, generateMultiSelectReplyKeyboard } from './multi-select';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateMessageTextPreparation, generateDatabaseVarsGet } from './message-text';
 import { generateConditionalMessagesCheck } from './conditional-messages';
@@ -234,41 +234,13 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             // ИСПРАВЛЕНИЕ: Проверяем тип клавиатуры и генерируем соответствующий код
             if (multiSelectKeyboardType === 'reply') {
               // Reply клавиатура для множественного выбора
-              code += '    # Создаем reply клавиатуру с поддержкой множественного выбора\n';
-              code += '    builder = ReplyKeyboardBuilder()\n';
-
-              // Разделяем кнопки на опции выбора и обычные кнопки
-              let buttonsToUse = targetNode.data.buttons || [];
-              const selectionButtons = buttonsToUse.filter((button: { action: string; }) => button.action === 'selection');
-              const regularButtons = buttonsToUse.filter((button: { action: string; }) => button.action !== 'selection');
-
-              // Добавляем кнопки выбора с отметками о состоянии
-              selectionButtons.forEach((button: { text: any; }, index: number) => {
-                code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
-                code += `    builder.add(KeyboardButton(text=f"{'✅ ' if '${button.text}' in user_data[user_id]['multi_select_${nodeId}'] else ''}${button.text}"))\n`;
-              });
-
-              // Добавляем кнопку "Готово"
-              if (selectionButtons.length > 0) {
-                const continueText = targetNode.data.continueButtonText || 'Готово';
-                code += `    builder.add(KeyboardButton(text="${continueText}"))\n`;
-              }
-
-              // Добавляем обычные кнопки
-              regularButtons.forEach((btn: Button) => {
-                code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-              });
-
-              // Вычисляем оптимальное количество колонок для reply клавиатуры
-              const totalButtons = selectionButtons.length + regularButtons.length + (selectionButtons.length > 0 ? 1 : 0); // +1 для кнопки "Готово" если есть кнопки выбора
-              const multiSelectNodeData = { ...targetNode.data, allowMultipleSelection: true };
-              const allButtonsForCalculation = Array(totalButtons).fill({});
-              const columns = calculateOptimalColumns(allButtonsForCalculation, multiSelectNodeData);
-              code += `    builder.adjust(${columns})\n`;
-
-              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard !== false);
-              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard === true);
-              code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              code += generateMultiSelectReplyKeyboard({
+                nodeId,
+                buttons: targetNode.data.buttons || [],
+                continueButtonText: targetNode.data.continueButtonText,
+                resizeKeyboard: targetNode.data.resizeKeyboard,
+                oneTimeKeyboard: targetNode.data.oneTimeKeyboard
+              }, '    ');
             } else {
               // Inline клавиатура для множественного выбора
               code += '    # Создаем inline клавиатуру с поддержкой множественного выбора\n';
