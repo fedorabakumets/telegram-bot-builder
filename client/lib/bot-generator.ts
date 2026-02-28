@@ -44,6 +44,7 @@ import { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
 import { identifyNodesRequiringMultiSelectLogic } from './bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic';
 import { processInlineButtonNodes } from './bot-generator/Keyboard/processInlineButtonNodes';
 import { generateMessageLoggingCode } from './bot-generator/logging/generate-message-logging';
+import { generateApiConfig } from './bot-generator/api';
 import { generateGroupHandlers } from './bot-generator/MediaHandler/generateGroupHandlers';
 import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generateMediaFileFunctions';
 import { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
@@ -125,10 +126,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += generateBasicBotSetupCode();
 
   // Добавляем конфигурацию API
-  code += generateApiConfig();
+  code += generateApiConfig(projectId);
 
-  // Импортируем и добавляем код логирования сообщений, если включена БД
-  code += generateMessageLoggingCode(userDatabaseEnabled, projectId, hasInlineButtons(nodes || []));
+  // Генерируем логирование сообщений (только при включенной БД)
+  if (userDatabaseEnabled) {
+    code += generateMessageLoggingCode(userDatabaseEnabled, projectId, hasInlineButtons(nodes || []));
+  }
 
   // Добавляем конфигурацию групп
   code += generateGroupsConfiguration(groups);

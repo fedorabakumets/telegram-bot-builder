@@ -162,7 +162,7 @@ describe('Определения переменных окружения', () =>
       assert.ok(hasFunction, 'Функция get_api_base_url должна быть определена при включенной БД');
     });
 
-    it('не должна быть определена при выключенной БД', () => {
+    it('должна быть определена при выключенной БД (для медиа хендлеров)', () => {
       // Генерируем код без БД
       const codeWithoutDb = generatePythonCode(
         baseProject,
@@ -177,7 +177,8 @@ describe('Определения переменных окружения', () =>
       
       const hasFunction = codeWithoutDb.includes('def get_api_base_url()');
       
-      assert.ok(!hasFunction, 'Функция get_api_base_url не должна быть определена при выключенной БД');
+      // Функция определяется всегда, т.к. используется в медиа хендлерах
+      assert.ok(hasFunction, 'Функция get_api_base_url должна быть определена (для медиа хендлеров)');
     });
 
     it('должна проверять REPLIT_DEV_DOMAIN', () => {
