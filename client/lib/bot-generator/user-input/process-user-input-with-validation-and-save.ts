@@ -1,6 +1,6 @@
 import { processInputTargetNavigation } from './process-input-target-navigation';
-import { generateSaveToUserIdsCode } from '../generate/generateSaveToUserIds';
-import { generateSaveToCsvCode } from '../generate/generateSaveToCsv';
+import { generateSaveToUserIdsCode } from '../../generate/generateSaveToUserIds';
+import { generateSaveToCsvCode } from '../../generate/generateSaveToCsv';
 
 export function processUserInputWithValidationAndSave(nodes: any[], code: string, allNodeIds: any[]) {
     const inputNodes = (nodes || []).filter(node => node.data.collectUserInput);
