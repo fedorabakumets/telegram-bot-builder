@@ -52,9 +52,23 @@ export async function getProjectNodeHandler(req: Request, res: Response): Promis
             return;
         }
 
-        // Извлекаем узлы из данных проекта и ищем нужный
-        const projectData = project.data as { nodes?: unknown[] } | null;
-        const nodes = projectData?.nodes || [];
+        // Извлекаем узлы из данных проекта (поддержка старого и нового формата)
+        const projectData = project.data as Record<string, unknown> | null;
+        let nodes: unknown[] = [];
+
+        // Новый формат с sheets
+        if (projectData?.sheets && Array.isArray(projectData.sheets)) {
+            const activeSheetId = projectData.activeSheetId as string | undefined;
+            const activeSheet = (projectData.sheets as Array<Record<string, unknown>>).find(
+                sheet => sheet.id === activeSheetId
+            );
+            nodes = activeSheet?.nodes || [];
+        }
+        // Старый формат с nodes
+        else if (projectData?.nodes && Array.isArray(projectData.nodes)) {
+            nodes = projectData.nodes;
+        }
+
         const node = nodes.find((n: Record<string, unknown>) => n.id === nodeId);
 
         if (!node) {
