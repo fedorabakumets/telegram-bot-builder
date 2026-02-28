@@ -144,27 +144,75 @@ describe('Определения переменных окружения', () =>
   });
 
   describe('Функция get_api_base_url', () => {
-    it('должна быть определена', () => {
-      if (generateError) this.skip();
+    it('должна быть определена при включенной БД', () => {
+      // Генерируем код с включенной БД
+      const codeWithDb = generatePythonCode(
+        baseProject,
+        'TestBot',
+        [],
+        true, // userDatabaseEnabled = true
+        1,
+        false,
+        false,
+        true
+      );
       
-      const hasFunction = generatedCode.includes('def get_api_base_url()');
+      const hasFunction = codeWithDb.includes('def get_api_base_url()');
       
-      assert.ok(hasFunction, 'Функция get_api_base_url должна быть определена');
+      assert.ok(hasFunction, 'Функция get_api_base_url должна быть определена при включенной БД');
+    });
+
+    it('не должна быть определена при выключенной БД', () => {
+      // Генерируем код без БД
+      const codeWithoutDb = generatePythonCode(
+        baseProject,
+        'TestBot',
+        [],
+        false, // userDatabaseEnabled = false
+        null,
+        false,
+        false,
+        true
+      );
+      
+      const hasFunction = codeWithoutDb.includes('def get_api_base_url()');
+      
+      assert.ok(!hasFunction, 'Функция get_api_base_url не должна быть определена при выключенной БД');
     });
 
     it('должна проверять REPLIT_DEV_DOMAIN', () => {
-      if (generateError) this.skip();
+      // Генерируем код с включенной БД
+      const codeWithDb = generatePythonCode(
+        baseProject,
+        'TestBot',
+        [],
+        true,
+        1,
+        false,
+        false,
+        true
+      );
       
-      const hasReplitCheck = generatedCode.includes('REPLIT_DEV_DOMAIN');
+      const hasReplitCheck = codeWithDb.includes('REPLIT_DEV_DOMAIN');
       
       assert.ok(hasReplitCheck, 'Функция должна проверять REPLIT_DEV_DOMAIN');
     });
 
     it('должна добавлять https:// префикс если нужно', () => {
-      if (generateError) this.skip();
+      // Генерируем код с включенной БД
+      const codeWithDb = generatePythonCode(
+        baseProject,
+        'TestBot',
+        [],
+        true,
+        1,
+        false,
+        false,
+        true
+      );
       
-      const hasHttpsCheck = generatedCode.includes('https://') ||
-                           generatedCode.includes('startswith("http")');
+      const hasHttpsCheck = codeWithDb.includes('https://') ||
+                           codeWithDb.includes('startswith("http")');
       
       assert.ok(hasHttpsCheck, 'Функция должна проверять наличие http/https префикса');
     });
