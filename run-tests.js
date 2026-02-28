@@ -9,7 +9,6 @@
 import { run } from 'node:test';
 import { spec } from 'node:test/reporters';
 import { glob } from 'node:fs/promises';
-import { pathToFileURL } from 'node:url';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,7 +22,8 @@ async function runTests() {
   
   try {
     for await (const file of glob('**/*.test.js', { cwd: testDir })) {
-      testFiles.push(pathToFileURL(join(testDir, file)).href);
+      const fullPath = join(testDir, file);
+      testFiles.push(fullPath);
     }
   } catch (error) {
     console.error('Ошибка поиска тестов:', error.message);

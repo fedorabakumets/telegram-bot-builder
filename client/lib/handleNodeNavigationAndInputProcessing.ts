@@ -14,28 +14,30 @@ import { handleNodeNavigation } from './bot-generator/node-navigation/handle-nod
 /**
  * Генерирует код для навигации по узлам графа бота
  * @param nodes - Массив узлов для навигации
- * @param code - Начальная строка кода (не используется, оставлен для совместимости)
+ * @param code - Начальная строка кода (добавляет навигацию к существующему коду)
  * @param conditionIndent - Отступ для условий (if/elif)
  * @param bodyIndent - Отступ для тела блока
  * @param allNodeIds - Массив всех ID узлов
  * @param connections - Массив соединений между узлами
- * @returns Строка с Python-кодом навигации
+ * @returns Строка с Python-кодом навигации, добавленная к существующему коду
  *
  * @deprecated Используйте `handleNodeNavigation` из `client/lib/node-navigation`
  */
 export function handleNodeNavigationAndInputProcessing(
   nodes: Node[],
-  _code: string,
+  code: string,
   conditionIndent: string,
   bodyIndent: string,
   allNodeIds: string[],
   connections: Connection[]
 ): string {
-  return handleNodeNavigation(
+  // Добавляем навигацию к существующему коду вместо замены
+  const navigationCode = handleNodeNavigation(
     nodes,
     conditionIndent,
     bodyIndent,
     allNodeIds,
     connections
   );
+  return code + navigationCode;
 }
