@@ -18,3 +18,4 @@ export { generateWaitingStateCheck, generateDatabaseVarsGet } from './generate-w
 export { generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract } from './generate-waiting-config-extract';
 export { generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipNavigation } from './generate-skip-buttons-check';
 export { generateButtonResponseSave } from './generate-button-response-save';
+export { generateButtonResponseCleanup } from './generate-button-response-cleanup';
