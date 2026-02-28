@@ -464,15 +464,22 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             targetNode.data.enableAudioInput === true ||
             targetNode.data.enableDocumentInput === true;
 
-          code += generateMediaSendCode({
-            attachedMedia,
-            hasStaticImage,
-            mediaVariablesMap,
-            formatMode: targetNode.data?.formatMode,
-            nodeId,
-            collectUserInputFlag,
-            targetNodeData: targetNode.data
-          }, 'text', '    ');
+          // ИСПРАВЛЕНИЕ: Для узлов типа start/command не отправляем сообщение в callback обработчике
+          // Сообщение уже отправлено в message handler (start_handler/command_handler)
+          // Отправляем сообщение только если это не start/command узел
+          const isCommandNode = targetNode.type === 'start' || targetNode.type === 'command';
+          
+          if (!isCommandNode) {
+            code += generateMediaSendCode({
+              attachedMedia,
+              hasStaticImage,
+              mediaVariablesMap,
+              formatMode: targetNode.data?.formatMode,
+              nodeId,
+              collectUserInputFlag,
+              targetNodeData: targetNode.data
+            }, 'text', '    ');
+          }
 
           // ============================================================================
           // СИСТЕМА АВТОПЕРЕХОДОВ
