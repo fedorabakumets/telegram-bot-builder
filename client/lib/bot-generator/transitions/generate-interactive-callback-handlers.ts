@@ -18,6 +18,7 @@ import { generateBroadcastHandler } from './broadcast';
 import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
 import { generateMediaSendCode } from './media';
 import { generateButtonTextDetection } from './button';
+import { generateVariableSaveLogic } from './variable';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
@@ -574,66 +575,9 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += '    user_data[user_id]["button_click"] = button_display_text\n';
           }
 
-          // Определяем переменную для сохяяянения на основе кнопки (ТОЛЬКО есяи есть sourceNode)
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: НЕ сохраняем переменную если показана условная клавиатура
-          // Нужно дождаться, пока пользователь нажмёт кнопку на условной клавиатуре
+          // Определяем переменную для сохранения на основе кнопки (ТОЛЬКО если есть sourceNode)
           if (sourceNode) {
-            code += '    \n';
-            code += '    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, была ли показана условная клавиатура\n';
-            code += '    # Если да - НЕ сохраняем переменную сейчас, ждём выбора пользователя\n';
-            code += '    has_conditional_keyboard_for_save = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)\n';
-            code += '    if not has_conditional_keyboard_for_save:\n';
-
-            const parentNode = nodes.find(n => n.data.buttons && n.data.buttons.some((btn: { target: string; }) => btn.target === nodeId)
-            );
-
-            let variableName = 'button_click';
-            let variableValue = 'button_display_text';
-
-            // КРИТИЧЕСКИ ВАЖНО: специальная логика для шаблона "Федя"
-            if (nodeId === 'source_search') {
-              variableName = 'источник';
-              variableValue = '"🔍 Поиск в интернете"';
-            } else if (nodeId === 'source_friends') {
-              variableName = 'источник';
-              variableValue = '"👥 Друзья"';
-            } else if (nodeId === 'source_ads') {
-              variableName = 'источник';
-              variableValue = '"📱 Реклама"';
-            } else if (parentNode && parentNode.data.inputVariable) {
-              variableName = parentNode.data.inputVariable;
-
-              // Ищем конкретную кнопку и её значение
-              const button = parentNode.data.buttons.find((btn: { target: string; }) => btn.target === nodeId);
-              if (button) {
-                // Определяем значение переменной в зависимости от кнопки
-                if (button.id === 'btn_search' || nodeId === 'source_search') {
-                  variableValue = '"из инетя"';
-                } else if (button.id === 'btn_friends' || nodeId === 'source_friends') {
-                  variableValue = '"friends"';
-                } else if (button.id === 'btn_ads' || nodeId === 'source_ads') {
-                  variableValue = '"ads"';
-                } else if (variableName === 'пол') {
-                  // Специальная логика для переменной "пол"
-                  if (button.text === 'Мужчина' || button.text === '👨 Мужчина') {
-                    variableValue = '"Мужчина"';
-                  } else if (button.text === 'Женщина' || button.text === '👩 Женщина') {
-                    variableValue = '"Женщина"';
-                  } else {
-                    variableValue = `"${button.text}"`;
-                  }
-                } else {
-                  variableValue = 'button_display_text';
-                }
-              }
-            }
-
-            code += '        # Сохраняем в базу данных с правильным именем переяенной\n';
-            code += `        await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
-            code += `        logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
-            code += '    else:\n';
-            code += '        logging.info("⏸️ Пропускаем сохранение переменной: показана условная клавиатура, ждём выбор пользователя")\n';
-            code += '    \n';
+            code += generateVariableSaveLogic({ nodeId, sourceNode, nodes }, '    ');
           }
 
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Для узлов с множественным выбором НЕ делаем автоматической переадресации
