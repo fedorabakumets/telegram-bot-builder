@@ -1,4 +1,4 @@
-import { processInputTargetNavigation } from '../processInputTargetNavigation';
+import { processInputTargetNavigation } from './process-input-target-navigation';
 import { generateSaveToUserIdsCode } from '../generate/generateSaveToUserIds';
 import { generateSaveToCsvCode } from '../generate/generateSaveToCsv';
 

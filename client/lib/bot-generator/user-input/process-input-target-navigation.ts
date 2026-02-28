@@ -1,6 +1,6 @@
-import { formatTextForPython } from './format';
-import { generateInlineKeyboardCode } from './Keyboard';
-import { generateUniversalVariableReplacement } from './utils';
+import { formatTextForPython } from '../format';
+import { generateInlineKeyboardCode } from '../Keyboard';
+import { generateUniversalVariableReplacement } from '../utils';
 
 export function processInputTargetNavigation(node: any, code: string, nodes: any[], allNodeIds: any[]) {
     if (node.data.inputTargetNodeId) {
