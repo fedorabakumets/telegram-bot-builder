@@ -16,7 +16,9 @@ import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateConditionalMessagesCheck } from './conditional-messages';
 import { hasConditionalMessages } from './conditional-messages-handler';
 import { generateMediaVariablesSetup } from './media-variables';
-import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
+import { generateAutoTransitionCheck } from './auto-transition';
+import { generateAutoTransitionCode } from './auto-transition-code';
+import { calculateAutoTransitionTarget } from './auto-transition-check';
 import { generateAllNodesDict, generateBroadcastConfirmationHandler, generateBroadcastDirectHandler } from './broadcast';
 import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
 import { generateMediaSendCode } from './media';
@@ -470,38 +472,19 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           // ============================================================================
           // СИСТЕМА АВТОПЕРЕХОДОВ
           // ============================================================================
-          const currentNodeForAutoTransition = nodes.find(n => n.id === nodeId);
-          let autoTransitionTarget: string | null = null;
-
-          // Проверяем явный автопереход через флаг
-          if (currentNodeForAutoTransition?.data?.enableAutoTransition && currentNodeForAutoTransition?.data?.autoTransitionTo) {
-            autoTransitionTarget = currentNodeForAutoTransition.data.autoTransitionTo;
-          }
-          // Если узел без кнопок и имеет одно соединение — делаем автопереход
-          else if (currentNodeForAutoTransition && (!currentNodeForAutoTransition.data?.buttons || currentNodeForAutoTransition.data?.buttons.length === 0)) {
-            const outgoingConnections = connections.filter(conn => conn && conn.source === nodeId);
-            if (outgoingConnections.length === 1) {
-              autoTransitionTarget = outgoingConnections[0].target;
-            }
-          }
-
-          code += generateAutoTransitionCheck({ nodeId, targetNode, nodes, connections }, '    ');
+          // Вычисляем цель автоперехода
+          const autoTransitionTarget = calculateAutoTransitionTarget(
+            nodeId,
+            targetNode.data,
+            connections
+          );
 
           if (autoTransitionTarget) {
-            const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
-            code += generateAutoTransitionCode(autoTransitionTarget, nodeId, targetNode, '    ');
-            code += `        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTarget}")\n`;
-            // Проверяем, существует ли целевой узел перед вызовом обработчика
-            const targetExists = nodes.some(n => n.id === autoTransitionTarget);
-            if (targetExists) {
-              code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
-            } else {
-              code += `        logging.warning(f"⚠️ Узел автоперехода не найден: {autoTransitionTarget}, завершаем переход")\n`;
-              code += `        await callback_query.message.edit_text("Переход завершен")\n`;
-            }
-            code += `        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTarget}")\n`;
-            code += `        return\n`;
-            code += '    \n';
+            code += generateAutoTransitionCode({
+              autoTransitionTarget,
+              nodeId,
+              nodes
+            }, '        ');
           }
 
           // ИСПРАВЛЕНИЕ: Если автопереход не произошел, устанавливаем состояние ожидания
