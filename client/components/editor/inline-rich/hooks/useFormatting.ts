@@ -102,11 +102,6 @@ export function useFormatting({
 
       setTimeout(() => {
         handleInput();
-        toast({
-          title: "Форматирование применено",
-          description: `${format.name} применен к выделенному тексту`,
-          variant: "default"
-        });
       }, 0);
     } catch (e) {
       toast({
