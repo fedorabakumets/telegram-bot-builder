@@ -585,8 +585,18 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
                   code += `        await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=conditional_keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                  // Скрываем клавиатуру если установлен флаг hideAfterClick
+                  if (hideAfterClick) {
+                    code += '        # Скрываем клавиатуру после нажатия кнопки\n';
+                    code += '        await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                  }
                   code += '    else:\n';
                   code += `        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                  // Скрываем клавиатуру если установлен флаг hideAfterClick
+                  if (hideAfterClick) {
+                    code += '            # Скрываем клавиатуру после нажатия кнопки\n';
+                    code += '            await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                  }
                 } else {
                   if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                     code += '    # Проверка условных сообщений для целевого узла\n';
