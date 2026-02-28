@@ -167,6 +167,8 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   const messageTextLines = generateMessageText({ node, indent: '    ' });
   codeLines.push(...messageTextLines);
 
+  // Сохраняем медиа-переменные из данных узла в user_data (для использования в других узлах)
+  // Но НЕ отправляем изображение здесь — это будет сделано после создания all_user_vars
   if (node && node.data && node.data.imageUrl && node.data.imageUrl !== 'undefined') {
     // Находим переменную для изображения в attachedMedia или используем формат по умолчанию
     const imageVar = attachedMedia.find(v => v.includes('image') && v.includes('Url')) || attachedMedia.find(v => v.startsWith('imageUrlVar')) || `image_url_${node.id || 'unknown'}`;
@@ -176,9 +178,6 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     if (userDatabaseEnabled) {
       codeLines.push(`    await update_user_data_in_db(user_id, "${imageVar}", "${node.data.imageUrl}")`);
     }
-
-    // Отправляем изображение пользователю
-    generateStartHandlerImageSend(node, codeLines, userDatabaseEnabled);
   }
   if (node && node.data && node.data.documentUrl) {
     // Находим переменную для документа в attachedMedia или используем формат по умолчанию
@@ -216,6 +215,11 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
 
   // Добавляем обработку условных сообщений
   const formattedText = generateKeyboardAndProcessAttachedMedia(node as any, codeLines);
+
+  // Отправляем изображение ПОСЛЕ создания all_user_vars (если есть imageUrl)
+  if (node && node.data && node.data.imageUrl && node.data.imageUrl !== 'undefined') {
+    generateStartHandlerImageSend(node, codeLines, userDatabaseEnabled);
+  }
 
   // Проверяем, есть ли прикрепленные медиафайлы
   if (attachedMedia.length > 0) {
