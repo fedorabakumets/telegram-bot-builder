@@ -68,3 +68,6 @@ export * from './bot-generator/node-navigation';
 // Handle node functions generator
 export { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
 
+// Validation utilities
+export { validateGeneratedPython, assertValidPython } from './bot-generator/validation';
+

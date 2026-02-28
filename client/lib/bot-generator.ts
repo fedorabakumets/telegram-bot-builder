@@ -62,6 +62,7 @@ import { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
 import { hasNodesRequiringSafeEditOrSend } from './bot-generator/utils/hasNodesRequiringSafeEditOrSend';
 import { resetGenerationState } from './bot-generator/utils/generation-state';
 import { setCommentsEnabled } from './bot-generator/utils/generateGeneratedComment';
+import { assertValidPython } from './bot-generator/validation';
 
 
 
@@ -110,10 +111,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += generateUtf8EncodingCode();
 
   // Генерируем Python импорты на основе типов узлов
-  code += generatePythonImports({ nodes: nodes || [], userDatabaseEnabled });
+  const hasInlineButtonsResult = hasInlineButtons(nodes || []);
+  code += generatePythonImports({ nodes: nodes || [], userDatabaseEnabled, hasInlineButtons: hasInlineButtonsResult });
 
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
-  const hasInlineButtonsResult = hasInlineButtons(nodes || []);
   const hasAutoTransitionsResult = hasAutoTransitions(nodes || []);
   const hasNodesRequiringSafeEditOrSendResult = hasNodesRequiringSafeEditOrSend(nodes || []);
 
@@ -271,7 +272,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     formatTextForPython
   );
 
-  return generateCompleteBotScriptFromNodeGraphWithDependencies(
+  const finalCode = generateCompleteBotScriptFromNodeGraphWithDependencies(
     code,
     multiSelectNodes,
     allNodeIds,
@@ -281,6 +282,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     generateMultiSelectDoneHandler,
     generateMultiSelectReplyHandler
   );
+
+  // Валидация сгенерированного кода перед возвратом
+  assertValidPython(finalCode);
+
+  return finalCode;
 
   /**
    * Генерирует обработчики callback'ов для inline кнопок

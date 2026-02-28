@@ -55,6 +55,8 @@ export function hasInputCollection(nodes: BotNode[]): InputCollectionCheckResult
     if (data.enableAudioInput) result.hasAudioInput = true;
     if (data.enableDocumentInput) result.hasDocumentInput = true;
     if (data.allowMultipleSelection === true) result.hasMultiSelect = true;
+    // Проверяем автопереходы - они тоже требуют генерации кода навигации
+    if (data.enableAutoTransition && data.autoTransitionTo) result.hasCollectInput = true;
 
     // Проверка условных сообщений
     const conditions = data.conditionalMessages;

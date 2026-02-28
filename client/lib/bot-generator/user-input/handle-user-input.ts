@@ -9,15 +9,34 @@ import { processUserInputWithValidationAndSave } from './process-user-input-with
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from '../utils';
 import { hasInputCollection } from '../utils/hasInputCollection';
+import { hasAutoTransitions } from '../utils/hasAutoTransitions';
 import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet, generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipNavigation, generateButtonResponseSave, generateButtonResponseCleanup, generateInvalidChoiceHandler, generateMultiselectCheck, generateMinLengthValidation, generateMaxLengthValidation, generateEmailValidation, generateNumberValidation, generatePhoneValidation, generateResponseSave, generateUserIdSave, generateCsvSave, generateSuccessMessage, generateWaitingCleanup, generateAutoNavigationLoop, generateLegacyFormatHandler } from './index';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
+/**
+ * Генерирует универсальный обработчик пользовательского ввода с поддержкой условных сообщений,
+ * кнопок пропуска, валидации и навигации
+ *
+ * @param nodes - Массив узлов для обработки
+ * @param code - Текущий код
+ * @param allNodeIds - Все ID узлов
+ * @param connections - Массив соединений
+ * @param generateAdHocInputCollectionHandler - Генерация обработчика сбора ввода
+ * @param generateContinuationLogicForButtonBasedInput - Генерация логики продолжения
+ * @param generateUserInputValidationAndContinuationLogic - Генерация валидации
+ * @param generateStateTransitionAndRenderLogic - Генерация навигации
+ * @returns Обновлённый код
+ */
 export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes: any[], code: string, allNodeIds: any[], connections: any[], generateAdHocInputCollectionHandler: () => void, generateContinuationLogicForButtonBasedInput: () => string, generateUserInputValidationAndContinuationLogic: () => void, generateStateTransitionAndRenderLogic: () => void) {
   // Проверяем, есть ли кнопки с URL-ссылками в проекте
   const hasUrlButtonsInProject = hasUrlButtons(nodes);
 
-  if (hasInputCollection(nodes || [])) {
+  // Генерируем код если есть сбор ввода ИЛИ автопереходы
+  const hasInput = hasInputCollection(nodes || []);
+  const hasAuto = hasAutoTransitions(nodes || []);
+
+  if (hasInput || hasAuto) {
     code += '\n\n# Универсальный обработчик пользовательского ввода\n';
     code += '@dp.message(F.text)\n';
     code += 'async def handle_user_input(message: types.Message):\n';
