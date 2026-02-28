@@ -9,7 +9,7 @@
  */
 
 // Главная функция навигации
-export { handleNodeNavigation } from './handle-node-navigation';
+export { handleNodeNavigation, type Connection } from './handle-node-navigation';
 
 // Обработчики различных типов узлов
 export { handleMultipleSelectionNode } from './handle-multiple-selection';

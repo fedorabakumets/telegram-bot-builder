@@ -7,7 +7,8 @@
  * @see client/lib/node-navigation/handle-node-navigation.ts
  */
 
-import type { Node, Connection } from '@shared/schema';
+import type { Node } from '@shared/schema';
+import type { Connection } from './node-navigation/handle-node-navigation';
 import { handleNodeNavigation } from './node-navigation/handle-node-navigation';
 
 /**
@@ -24,7 +25,7 @@ import { handleNodeNavigation } from './node-navigation/handle-node-navigation';
  */
 export function handleNodeNavigationAndInputProcessing(
   nodes: Node[],
-  code: string,
+  _code: string,
   conditionIndent: string,
   bodyIndent: string,
   allNodeIds: string[],

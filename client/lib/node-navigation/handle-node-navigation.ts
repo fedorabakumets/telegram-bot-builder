@@ -7,7 +7,7 @@
  * @module handle-node-navigation
  */
 
-import type { Node, Connection } from '@shared/schema';
+import type { Node } from '@shared/schema';
 import { getNodeCondition, generateNoNodesWarning, type NavigationContext } from './utils/navigation-helpers';
 import { handleMultipleSelectionNode } from './handle-multiple-selection';
 import { handleInputCollection } from './handle-input-collection';
@@ -15,7 +15,21 @@ import { handleConditionalMessages } from './handle-conditional-messages';
 import { handleKeyboardNavigation } from './handle-keyboard-navigation';
 import { handleAutoTransition, canAutoTransition } from './handle-auto-transition';
 import { handleCommandNode } from './handle-command-node';
-import { handleMessageWithInputType } from './handle-message-input';
+
+// Импорт для форматирования
+import { formatTextForPython } from '../bot-generator/format';
+
+/**
+ * Соединение между узлами графа
+ */
+export interface Connection {
+  /** Уникальный идентификатор соединения */
+  id: string;
+  /** ID исходного узла */
+  source: string;
+  /** ID целевого узла */
+  target: string;
+}
 
 /**
  * Генерирует код для навигации по узлам графа бота
@@ -64,7 +78,7 @@ function generateNodeHandler(
   const { bodyIndent, allNodeIds, connections } = context;
 
   if (node.type === 'message') {
-    return handleMessageNode(node, bodyIndent, allNodeIds, connections);
+    return handleMessageNode(node, bodyIndent, allNodeIds);
   }
 
   if (node.type === 'command') {
@@ -80,8 +94,7 @@ function generateNodeHandler(
 function handleMessageNode(
   node: Node,
   bodyIndent: string,
-  allNodeIds: string[],
-  connections: Connection[]
+  allNodeIds: string[]
 ): string {
   let code = '';
 
