@@ -164,6 +164,15 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}# Отправляем статическое изображение`);
     codeLines.push(`${indentLevel}try:`);
     codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
+    codeLines.push(`${indentLevel}    # Создаём all_user_vars если ещё не создан (для callback обработчиков)`);
+    codeLines.push(`${indentLevel}    if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}        all_user_vars = {}`);
+    codeLines.push(`${indentLevel}        db_vars = await get_user_from_db(${userIdSource})`);
+    codeLines.push(`${indentLevel}        if db_vars and isinstance(db_vars, dict):`);
+    codeLines.push(`${indentLevel}            all_user_vars.update(db_vars)`);
+    codeLines.push(`${indentLevel}        local_vars = user_data.get(${userIdSource}, {})`);
+    codeLines.push(`${indentLevel}        if isinstance(local_vars, dict):`);
+    codeLines.push(`${indentLevel}            all_user_vars.update(local_vars)`);
     codeLines.push(`${indentLevel}    # Используем all_user_vars вместо user_vars для корректной замены переменных`);
     codeLines.push(`${indentLevel}    processed_caption = replace_variables_in_text(text, all_user_vars)`);
 
@@ -364,6 +373,15 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа из переменной ${mediaVariable}: {attached_media}")`);
   codeLines.push(`${indentLevel}    try:`);
   codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
+  codeLines.push(`${indentLevel}        # Создаём all_user_vars если ещё не создан (для callback обработчиков)`);
+  codeLines.push(`${indentLevel}        if 'all_user_vars' not in locals():`);
+  codeLines.push(`${indentLevel}            all_user_vars = {}`);
+  codeLines.push(`${indentLevel}            db_vars = await get_user_from_db(${userIdSource})`);
+  codeLines.push(`${indentLevel}            if db_vars and isinstance(db_vars, dict):`);
+  codeLines.push(`${indentLevel}                all_user_vars.update(db_vars)`);
+  codeLines.push(`${indentLevel}            local_vars = user_data.get(${userIdSource}, {})`);
+  codeLines.push(`${indentLevel}            if isinstance(local_vars, dict):`);
+  codeLines.push(`${indentLevel}                all_user_vars.update(local_vars)`);
   codeLines.push(`${indentLevel}        # Используем all_user_vars вместо user_vars для корректной замены переменных`);
   codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, all_user_vars)`);
   codeLines.push(`${indentLevel}        # Проверяем, является ли медиа относительным путем к локальному файлу`);
@@ -441,6 +459,15 @@ export function generateAttachedMediaSendCode(
   codeLines.push(`${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение`);
   codeLines.push(`${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")`);
   codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
+  codeLines.push(`${indentLevel}    # Создаём all_user_vars если ещё не создан (для callback обработчиков)`);
+  codeLines.push(`${indentLevel}    if 'all_user_vars' not in locals():`);
+  codeLines.push(`${indentLevel}        all_user_vars = {}`);
+  codeLines.push(`${indentLevel}        db_vars = await get_user_from_db(${userIdSource})`);
+  codeLines.push(`${indentLevel}        if db_vars and isinstance(db_vars, dict):`);
+  codeLines.push(`${indentLevel}            all_user_vars.update(db_vars)`);
+  codeLines.push(`${indentLevel}        local_vars = user_data.get(${userIdSource}, {})`);
+  codeLines.push(`${indentLevel}        if isinstance(local_vars, dict):`);
+  codeLines.push(`${indentLevel}            all_user_vars.update(local_vars)`);
   codeLines.push(`${indentLevel}    # Используем all_user_vars вместо user_vars для корректной замены переменных`);
   codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, all_user_vars)`);
   codeLines.push(`${indentLevel}    # Убедимся, что переменная keyboardHTML определена`);
