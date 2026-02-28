@@ -1,8 +1,7 @@
 import { Button, ResponseOption } from './bot-generator';
 import { generateConditionalMessageLogic } from './Conditional';
-import { formatTextForPython, generateButtonText, toPythonBoolean, generateWaitingStateCode, escapeForJsonString } from './format';
-import { generateInlineKeyboardCode } from './Keyboard';
-import { generateAttachedMediaVars, generateButtonResponseConfig, generateConditionalBranch, generateConditionalMessages, generateInlineKeyboardSend, generateInputWaitingSetup, generateMediaPathResolve, generateMediaSaveVars, generateMediaSend, generateParseMode, generateReplyKeyboardSend, generateTextSend } from './bot-generator/transitions';
+import { formatTextForPython } from './format';
+import { generateAttachedMediaVars, generateButtonResponseConfig, generateConditionalBranch, generateConditionalMessages, generateErrorHandler, generateFallbackNode, generateInlineKeyboardSend, generateInputWaitingSetup, generateMediaSaveVars, generateMediaSend, generateNoNodesAvailableWarning, generateParseMode, generateReplyKeyboardSend, generateTextSend, generateUnknownNextNodeWarning, generateUnknownNodeHandler } from './bot-generator/transitions';
 
 export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: string, allNodeIds: any[], connections: any[]) {
   if (nodes.length > 0) {
@@ -55,25 +54,17 @@ export function newgenerateStateTransitionAndRenderLogic(nodes: any[], code: str
           code += generateInputWaitingSetup(targetNode, connections, '                ');
         }
       } else if (targetNode.type === 'message') {
-        // Обработка узлов сообщений
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
-        code += `                await fake_message.answer(${formattedText})\n`;
-        code += `                logging.info(f"Отправлено сообщение узла ${targetNode.id}")\n`;
+        code += generateFallbackNode(targetNode, '                ');
       } else {
-        // Для других типов узлов просто логируем
-        code += `                logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
+        code += generateUnknownNodeHandler(targetNode.id, targetNode.type, '                ');
       }
     });
 
-    code += '            else:\n';
-    code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    code += generateUnknownNextNodeWarning('            ');
   } else {
-    code += '            # No nodes available for navigation\n';
-    code += '            logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+    code += generateNoNodesAvailableWarning('            ');
   }
-  code += '        except Exception as e:\n';
-  code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-  code += '\n';
+  
+  code += generateErrorHandler('        ');
   return code;
 }
