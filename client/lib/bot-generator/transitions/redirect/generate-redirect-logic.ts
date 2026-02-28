@@ -14,6 +14,8 @@ export interface RedirectLogicParams {
   nodeId: string;
   currentNode: any;
   connections: any[];
+  shouldRedirect: boolean;
+  redirectTarget: string;
 }
 
 /**
@@ -27,32 +29,13 @@ export function generateRedirectLogic(
   params: RedirectLogicParams,
   indent: string = '    '
 ): string {
-  const { nodeId, currentNode, connections } = params;
+  const { nodeId, currentNode, shouldRedirect, redirectTarget } = params;
   
   let code = '';
   
-  // Определяем необходимость переадресации
-  const hasButtons = currentNode && currentNode.data?.buttons && currentNode.data.buttons.length > 0;
-  const shouldRedirect = hasButtons && !(currentNode && currentNode.data?.allowMultipleSelection);
-  
   code += `${indent}\n`;
   code += `${indent}# Определяем необходимость переадресации\n`;
-  code += `${indent}hasButtons = ${hasButtons}\n`;
-  code += `${indent}shouldRedirect = ${shouldRedirect}\n`;
-  
-  let redirectTarget = nodeId;
-  
-  if (shouldRedirect) {
-    if (currentNode && currentNode.data?.continueButtonTarget) {
-      redirectTarget = currentNode.data.continueButtonTarget;
-    } else {
-      const nodeConnections = connections.filter((conn: any) => conn && conn.source === nodeId);
-      if (nodeConnections.length > 0) {
-        redirectTarget = nodeConnections[0].target;
-      }
-    }
-  }
-  
+  code += `${indent}# hasButtons = ${shouldRedirect}\n`;
   code += `${indent}redirectTarget = "${redirectTarget}"\n`;
   
   return code;

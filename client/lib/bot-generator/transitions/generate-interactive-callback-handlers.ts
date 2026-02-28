@@ -20,17 +20,15 @@ import { generateMediaSendCode } from './media';
 import { generateButtonTextDetection } from './button';
 import { generateVariableSaveLogic } from './variable';
 import { generateRedirectLogic } from './redirect';
-import { generateNavigationToNode, generateNavigationErrorHandler, generateUnknownNodeWarning, generateNoNodesAvailableWarning, generateMultiSelectFallbackNavigation, generateRegularFallbackNavigation } from './navigation';
+import { generateNavigationErrorHandler, generateUnknownNodeWarning, generateNoNodesAvailableWarning, generateMultiSelectFallbackNavigation, generateRegularFallbackNavigation } from './navigation';
 import { generateInputNodeHandling } from './input';
 import { Button, isLoggingEnabled } from '../../bot-generator';
-import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateCheckUserVariableFunction } from '../database';
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
-import { generateBroadcastClientInline } from '../Broadcast/Client/generateBroadcastClientHandler';
 import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
 import { generateHandleNodeFunctions } from '../../generate/generateHandleNodeFunctions';
 import { generateHideAfterClickMiddleware } from '../../generate/generateHideAfterClickHandler';
-import { calculateOptimalColumns, generateInlineKeyboardCode } from '../Keyboard';
+import { generateInlineKeyboardCode } from '../Keyboard';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
 import { generateUniversalVariableReplacement } from '../utils';
 
@@ -585,7 +583,24 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
 
           // Определяем логику переадресации
           const currentNode = nodes.find(n => n.id === nodeId);
-          code += generateRedirectLogic({ nodeId, currentNode, connections }, '    ');
+          
+          // Вычисляем shouldRedirect и redirectTarget в TypeScript
+          const hasButtons = currentNode && currentNode.data?.buttons && currentNode.data.buttons.length > 0;
+          const shouldRedirect = hasButtons && !(currentNode && currentNode.data?.allowMultipleSelection);
+          
+          let redirectTarget = nodeId;
+          if (shouldRedirect) {
+            if (currentNode && currentNode.data?.continueButtonTarget) {
+              redirectTarget = currentNode.data.continueButtonTarget;
+            } else {
+              const nodeConnections = connections.filter((conn: any) => conn && conn.source === nodeId);
+              if (nodeConnections.length > 0) {
+                redirectTarget = nodeConnections[0].target;
+              }
+            }
+          }
+          
+          code += generateRedirectLogic({ nodeId, currentNode, connections, shouldRedirect, redirectTarget }, '    ');
 
           // ============================================================================
           // СИСТЕМА ПЕРЕАДРЕСАЦИИ
