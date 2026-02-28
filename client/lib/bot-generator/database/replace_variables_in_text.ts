@@ -7,7 +7,7 @@
  * @module replace_variables_in_text
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует код функции замены переменных в тексте

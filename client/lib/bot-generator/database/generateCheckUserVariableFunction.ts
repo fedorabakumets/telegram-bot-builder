@@ -8,7 +8,7 @@
  * @module generateCheckUserVariableFunction
  */
 
-import { processCodeWithAutoComments } from "../../utils/generateGeneratedComment";
+import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 
 /**
  * Генерирует код определения функции check_user_variable_inline для использования внутри других функций.

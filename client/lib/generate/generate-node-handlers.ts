@@ -12,9 +12,9 @@
 import { Node } from '@shared/schema';
 import { generateBroadcastHandler } from '../bot-generator/Broadcast/BotApi/generateBroadcastHandler';
 import { generateBroadcastClientHandler } from '../bot-generator/Broadcast/Client/generateBroadcastClientHandler';
-import { generateCommandHandler, generateStartHandler } from '../CommandHandler';
-import { generateAnimationHandler, generateContactHandler, generateLocationHandler, generateStickerHandler, generateVoiceHandler } from '../MediaHandler';
-import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../MessageHandler';
+import { generateCommandHandler, generateStartHandler } from '../bot-generator/CommandHandler';
+import { generateAnimationHandler, generateContactHandler, generateLocationHandler, generateStickerHandler, generateVoiceHandler } from '../bot-generator/MediaHandler';
+import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
 import {
   generateAdminRightsHandler,
   generateBanUserHandler,
@@ -24,9 +24,9 @@ import {
   generatePromoteUserHandler,
   generateUnbanUserHandler,
   generateUnmuteUserHandler
-} from '../UserHandler';
-import { collectMediaVariables } from '../utils/collectMediaVariables';
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+} from '../bot-generator/UserHandler';
+import { collectMediaVariables } from '../bot-generator/utils/collectMediaVariables';
+import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 
 /**
  * Генерирует обработчики для каждого узла

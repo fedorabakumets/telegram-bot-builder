@@ -7,7 +7,7 @@
  * @module generateBroadcastRecipients
  */
 
-import { processCodeWithAutoComments } from '../../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
 
 /**
  * Генерирует код для получения списка получателей рассылки

@@ -1,5 +1,5 @@
 import { BotGroup } from '@shared/schema';
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 
 /**
  * Функция для генерации конфигурации подключенных групп

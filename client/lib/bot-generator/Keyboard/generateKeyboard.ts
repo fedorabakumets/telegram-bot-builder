@@ -1,6 +1,6 @@
 import { Node } from '@shared/schema';
 import { Button } from "../../bot-generator";
-import { generateConditionalMessageLogic } from '../../Conditional/generateConditionalMessageLogic';
+import { generateConditionalMessageLogic } from '../Conditional/generateConditionalMessageLogic';
 import { generateButtonText } from '../format/generateButtonText';
 import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
 import { toPythonBoolean } from '../format/toPythonBoolean';

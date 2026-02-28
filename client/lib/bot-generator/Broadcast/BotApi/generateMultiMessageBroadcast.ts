@@ -10,7 +10,7 @@
 
 import { Node } from '@shared/schema';
 import { formatTextForPython } from '../../format';
-import { processCodeWithAutoComments } from '../../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
 
 /**
  * Генерирует код для рассылки нескольких message узлов с enableBroadcast=true

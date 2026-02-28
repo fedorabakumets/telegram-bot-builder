@@ -7,7 +7,7 @@
  * @module stripHtmlTags
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Удаляет HTML теги из текста

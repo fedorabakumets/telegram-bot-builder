@@ -8,7 +8,7 @@
  * @module generateDatabaseVariables
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует Python код для получения списка ID из базы user_ids

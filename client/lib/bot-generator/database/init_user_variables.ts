@@ -7,7 +7,7 @@
  * @module init_user_variables
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует код функции инициализации пользовательских переменных

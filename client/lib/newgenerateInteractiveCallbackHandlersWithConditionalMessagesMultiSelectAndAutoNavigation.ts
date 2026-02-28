@@ -1,6 +1,6 @@
 import { Button, isLoggingEnabled } from './bot-generator';
 import { generateBroadcastInline } from './bot-generator/Broadcast/BotApi/generateBroadcastHandler';
-import { generateConditionalMessageLogic } from './Conditional';
+import { generateConditionalMessageLogic } from './bot-generator/Conditional';
 import { generateCheckUserVariableFunction } from './bot-generator/database';
 import { formatTextForPython, generateButtonText, generateUniqueShortId, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './bot-generator/format';
 import { generateBroadcastClientInline } from './bot-generator/Broadcast/Client/generateBroadcastClientHandler';
@@ -8,8 +8,8 @@ import { generateDatabaseVariablesCode } from './bot-generator/Broadcast/generat
 import { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
 import { generateHideAfterClickMiddleware } from './generate/generateHideAfterClickHandler';
 import { calculateOptimalColumns, generateInlineKeyboardCode } from './bot-generator/Keyboard';
-import { generateAttachedMediaSendCode } from './MediaHandler';
-import { generateUniversalVariableReplacement } from './utils';
+import { generateAttachedMediaSendCode } from './bot-generator/MediaHandler';
+import { generateUniversalVariableReplacement } from './bot-generator/utils';
 
 export function newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes: any[], allReferencedNodeIds: Set<string>, allConditionalButtons: Set<string>, code: string, processNodeButtonsAndGenerateHandlers: (processedCallbacks: Set<string>) => void, nodes: any[], allNodeIds: any[], connections: any[], userDatabaseEnabled: boolean, mediaVariablesMap: Map<string, { type: string; variable: string; }>) {
   if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {

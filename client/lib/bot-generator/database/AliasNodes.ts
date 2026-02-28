@@ -7,7 +7,7 @@
  * @module AliasNodes
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Добавляет в код алиасы функций для callback обработчиков

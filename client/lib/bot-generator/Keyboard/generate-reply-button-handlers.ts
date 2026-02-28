@@ -1,9 +1,9 @@
 import { Button, Node } from '@shared/schema';
-import { generateConditionalMessageLogic } from "../../Conditional";
+import { generateConditionalMessageLogic } from "../Conditional";
 import { generateUniversalVariableReplacement } from "../database/generateUniversalVariableReplacement";
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, toPythonBoolean } from "../format";
 import { calculateOptimalColumns } from ".";
-import { checkAutoTransition } from "../../utils/checkAutoTransition";
+import { checkAutoTransition } from "../utils/checkAutoTransition";
 
 export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
   let code = '';

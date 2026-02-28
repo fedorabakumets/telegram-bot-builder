@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/generate-conditional-messages
  */
 
-import { generateConditionalMessageLogic } from '../../Conditional';
+import { generateConditionalMessageLogic } from '../Conditional';
 import { formatTextForPython } from '../format';
 
 /**

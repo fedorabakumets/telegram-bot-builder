@@ -13,7 +13,7 @@ import { generateMultiMessageBroadcast } from './generateMultiMessageBroadcast';
 import { generateBroadcastRecipients } from './generateBroadcastRecipients';
 import { generateBroadcastMediaSend } from './generateBroadcastMediaSend';
 import { generateBroadcastAutoTransition } from './generateBroadcastAutoTransition';
-import { processCodeWithAutoComments } from '../../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
 
 /**
  * Генерирует код рассылки для вставки внутрь callback handler

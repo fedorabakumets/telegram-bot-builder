@@ -2,8 +2,8 @@
 // Модуль для генерации различных частей кода Telegram ботов
 
 export * from '../bot-generator/database/generateDatabaseCode';
-export * from '../logging/generate-message-logging';
-export * from '../MediaHandler/generateMediaFileFunctionsold';
+export * from '../bot-generator/logging/generate-message-logging';
+export * from '../bot-generator/MediaHandler/generateMediaFileFunctionsold';
 export * from './generate-node-handlers';
 export * from './generateApiConfig';
 export * from './generateBasicBotSetupCode';

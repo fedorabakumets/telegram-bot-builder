@@ -7,7 +7,7 @@
  * @module save_user_to_db
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Добавляет в код функцию для сохранения пользователя в базу данных

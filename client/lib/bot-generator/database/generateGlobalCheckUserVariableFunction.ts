@@ -7,7 +7,7 @@
  * @module generateGlobalCheckUserVariableFunction
  */
 
-import { processCodeWithAutoComments } from "../../utils/generateGeneratedComment";
+import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 
 /**
  * Генерирует код определения глобальной функции check_user_variable_inline.

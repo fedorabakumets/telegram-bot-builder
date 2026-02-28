@@ -7,7 +7,7 @@
  * @module get_moscow_time
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Добавляет в код функцию для получения московского времени

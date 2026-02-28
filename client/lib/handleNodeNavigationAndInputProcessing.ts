@@ -2,7 +2,7 @@ import { Button } from './bot-generator';
 import { generateDatabaseVariablesCode } from './bot-generator/Broadcast/generateDatabaseVariables';
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from './bot-generator/format';
 import { calculateOptimalColumns, generateInlineKeyboardCode } from './bot-generator/Keyboard';
-import { generateUniversalVariableReplacement } from './utils';
+import { generateUniversalVariableReplacement } from './bot-generator/utils';
 
 export function handleNodeNavigationAndInputProcessing(nodes: any[], code: string, conditionIndent: string, bodyIndent: string, allNodeIds: any[], connections: any[]) {
     if (nodes.length > 0) {

@@ -7,9 +7,9 @@
  * @module generateUniversalVariableReplacement
  */
 
-import { processCodeWithAutoComments } from "../../utils/generateGeneratedComment";
+import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 import { replace_variables_in_text } from "./replace_variables_in_text";
-import { hasComponentBeenGenerated, markComponentAsGenerated } from "../../utils/generation-state";
+import { hasComponentBeenGenerated, markComponentAsGenerated } from "../utils/generation-state";
 
 /**
  * Генерирует код универсальной замены переменных с инициализацией.

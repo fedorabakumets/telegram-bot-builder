@@ -10,7 +10,7 @@
 
 import { Node } from '@shared/schema';
 import { generateBroadcastInline } from './generateBroadcastInline';
-import { addGeneratedComment } from '../../../utils/generateGeneratedComment';
+import { addGeneratedComment } from '../../utils/generateGeneratedComment';
 
 /**
  * Генерирует отдельную функцию обработчика рассылки

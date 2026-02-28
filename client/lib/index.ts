@@ -5,29 +5,29 @@ export * from './commands';
 export * from './bot-generator/Keyboard/filterInlineNodes';
 export * from './bot-generator/Keyboard/generateButtonResponseHandlers';
 export * from './queryClient';
-export * from './Synonyms';
-export * from './utils/addAutoTransitionNodes';
-export * from './utils/extractNodeData';
+export * from './bot-generator/Synonyms';
+export * from './bot-generator/utils/addAutoTransitionNodes';
+export * from './bot-generator/utils/extractNodeData';
 
 // Command handlers
-export * from './CommandHandler';
+export * from './bot-generator/CommandHandler';
 
 // Conditional logic
-export * from './Conditional';
+export * from './bot-generator/Conditional';
 
 // Formatting utilities
 export * from './bot-generator/format';
 
 // Feature detection
-export { hasCommandButtons } from './CommandHandler/hasCommandButtons';
-export { hasConditionalButtons } from './Conditional/hasConditionalButtons';
+export { hasCommandButtons } from './bot-generator/CommandHandler/hasCommandButtons';
+export { hasConditionalButtons } from './bot-generator/Conditional/hasConditionalButtons';
 export { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
 export { hasMultiSelectNodes } from './bot-generator/Keyboard/hasMultiSelectNodes';
-export { hasMediaNodes } from './MediaHandler/hasMediaNodes';
-export { hasAutoTransitions } from './utils/hasAutoTransitions';
-export { hasInputCollection } from './utils/hasInputCollection';
+export { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
+export { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
+export { hasInputCollection } from './bot-generator/utils/hasInputCollection';
 export { hasLocationFeatures } from './bot-generator/map-utils/hasLocationFeatures';
-export { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
+export { hasNodesRequiringSafeEditOrSend } from './bot-generator/utils/hasNodesRequiringSafeEditOrSend';
 
 // Keyboard generators
 export * from './bot-generator/Keyboard';
@@ -36,10 +36,10 @@ export * from './bot-generator/Keyboard';
 export * from './bot-generator/map-utils';
 
 // Media handlers
-export * from './MediaHandler';
+export * from './bot-generator/MediaHandler';
 
 // Message handlers
-export * from './MessageHandler';
+export * from './bot-generator/MessageHandler';
 
 // Project scaffolding
 export * from './bot-generator/scaffolding';
@@ -48,19 +48,19 @@ export * from './bot-generator/scaffolding';
 export * from './storage';
 
 // Synonym handlers
-export * from './Synonyms';
+export * from './bot-generator/Synonyms';
 
 // User management handlers
-export * from './UserHandler';
+export * from './bot-generator/UserHandler';
 
 // Additional utilities
-export { addInputTargetNodes } from './utils/addInputTargetNodes';
+export { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
 
 // Collection utilities
-export { collectInputTargetNodes } from './utils/collectInputTargetNodes';
+export { collectInputTargetNodes } from './bot-generator/utils/collectInputTargetNodes';
 
 // General utilities
-export * from './utils';
+export * from './bot-generator/utils';
 
 // Handle node functions generator
 export { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';

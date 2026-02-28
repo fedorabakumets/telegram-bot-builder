@@ -3,12 +3,12 @@ import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVari
 import { handleConditionalNavigationAndInputCollection } from '../../handleConditionalNavigationAndInputCollection';
 import { handleNodeNavigationAndInputProcessing } from '../../handleNodeNavigationAndInputProcessing';
 import { generateReplyHideAfterClickHandler } from '../Keyboard/generateReplyHideAfterClickHandler';
-import { mediafiles } from '../../MediaHandler/mediafiles';
+import { mediafiles } from '../MediaHandler/mediafiles';
 import { navigateaftersave } from '../../navigateaftersave';
 import { processUserInputWithValidationAndSave } from './process-user-input-with-validation-and-save';
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from '../../skipDataCollection';
-import { generateUniversalVariableReplacement } from '../../utils';
-import { hasInputCollection } from '../../utils/hasInputCollection';
+import { generateUniversalVariableReplacement } from '../utils';
+import { hasInputCollection } from '../utils/hasInputCollection';
 import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet, generateWaitingConfigExtract, generateMediaTypeCheck, generateWaitingConfigLegacyExtract, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipNavigation, generateButtonResponseSave, generateButtonResponseCleanup, generateInvalidChoiceHandler, generateMultiselectCheck, generateMinLengthValidation, generateMaxLengthValidation, generateEmailValidation, generateNumberValidation, generatePhoneValidation, generateResponseSave, generateUserIdSave, generateCsvSave, generateSuccessMessage, generateWaitingCleanup, generateAutoNavigationLoop, generateLegacyFormatHandler } from './index';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input

@@ -8,7 +8,7 @@
  * @module init_database
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Генерирует код для инициализации подключения к базе данных и создания таблиц

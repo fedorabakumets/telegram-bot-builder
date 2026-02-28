@@ -7,7 +7,7 @@
  * @module toPythonBoolean
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Конвертирует JavaScript boolean значение в строковое представление Python boolean

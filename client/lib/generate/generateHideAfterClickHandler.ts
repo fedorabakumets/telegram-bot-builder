@@ -1,5 +1,5 @@
 import { Node, Button } from '@shared/schema';
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 
 /**
  * Генерирует код для обработки флага hideAfterClick (скрытие сообщения после нажатия кнопки)

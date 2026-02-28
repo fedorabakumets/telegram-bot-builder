@@ -7,7 +7,7 @@
  * @module update_user_data_in_db
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Добавляет в код функцию для обновления пользовательских данных в базе данных

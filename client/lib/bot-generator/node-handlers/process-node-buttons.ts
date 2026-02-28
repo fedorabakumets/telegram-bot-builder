@@ -8,14 +8,14 @@
  */
 
 import { Button, isLoggingEnabled } from '../../bot-generator';
-import { generateCommandNodeHandlerWithKeyboardAndImageSupport } from '../../CommandHandler/generateCommandNodeHandlerWithKeyboardAndImageSupport';
-import { generateStartNodeHandlerWithConditionalLogicAndImages } from '../../CommandHandler/generateStartNodeHandlerWithConditionalLogicAndImages';
-import { generateMessageNodeHandlerWithConditionalLogicAndMediaSupport } from '../../Conditional/generateMessageNodeHandlerWithConditionalLogicAndMediaSupport';
+import { generateCommandNodeHandlerWithKeyboardAndImageSupport } from '../CommandHandler/generateCommandNodeHandlerWithKeyboardAndImageSupport';
+import { generateStartNodeHandlerWithConditionalLogicAndImages } from '../CommandHandler/generateStartNodeHandlerWithConditionalLogicAndImages';
+import { generateMessageNodeHandlerWithConditionalLogicAndMediaSupport } from '../Conditional/generateMessageNodeHandlerWithConditionalLogicAndMediaSupport';
 import { generateButtonText } from '../format';
 import { createFakeMessageEditForCallback } from '../Keyboard/createFakeMessageEditForCallback';
 import { generateCommandButtonCallbackHandler } from '../Keyboard/generateCommandButtonCallbackHandler';
 import { generateMultiSelectButtonHandlerWithVariableSaving } from '../Keyboard/generateMultiSelectButtonHandlerWithVariableSaving';
-import { generateMessageNodeHandlerWithKeyboardAndInputCollection } from '../../MessageHandlers/generateMessageNodeHandlerWithKeyboardAndInputCollection';
+import { generateMessageNodeHandlerWithKeyboardAndInputCollection } from '../MessageHandlers/generateMessageNodeHandlerWithKeyboardAndInputCollection';
 import { generateGotoHandler } from './generate-goto-handler';
 import { generateSaveVariableHandler } from './generate-save-variable';
 import { generateStickerHandler, generateVoiceHandler, generateAnimationHandler } from './generate-media-handlers';

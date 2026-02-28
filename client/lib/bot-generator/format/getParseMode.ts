@@ -8,7 +8,7 @@
  * @module getParseMode
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Получает строку с параметром parse_mode для Telegram бота на основе формата сообщения

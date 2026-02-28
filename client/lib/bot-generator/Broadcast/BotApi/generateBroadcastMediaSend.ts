@@ -8,7 +8,7 @@
  * @module generateBroadcastMediaSend
  */
 
-import { processCodeWithAutoComments } from '../../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
 
 /**
  * Генерирует код для отправки медиафайлов получателю

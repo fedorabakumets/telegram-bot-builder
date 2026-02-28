@@ -3,7 +3,7 @@
  * Функции для генерации импортов TelegramBadRequest
  */
 
-import { hasMediaNodes } from '../../MediaHandler/hasMediaNodes';
+import { hasMediaNodes } from '../MediaHandler/hasMediaNodes';
 
 /** Параметры для генерации импортов */
 export interface ImportGeneratorOptions {

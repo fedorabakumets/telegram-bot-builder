@@ -6,7 +6,7 @@
  */
 
 import { Node } from '@/types/bot';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/bot-generator/utils';
 import { CommandBadge } from './command-badge';
 import { ContentManagementHeader } from './content-management-header';
 import { UserManagementHeader } from './user-management-header';

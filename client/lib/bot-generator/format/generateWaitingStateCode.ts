@@ -8,7 +8,7 @@
  * @module generateWaitingStateCode
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 
 /**

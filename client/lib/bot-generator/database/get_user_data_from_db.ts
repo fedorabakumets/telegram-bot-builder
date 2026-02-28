@@ -7,7 +7,7 @@
  * @module get_user_data_from_db
  */
 
-import { processCodeWithAutoComments } from '../../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
  * Добавляет в код функцию для получения конкретного значения из поля user_data пользователя

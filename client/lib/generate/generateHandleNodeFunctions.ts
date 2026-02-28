@@ -1,9 +1,9 @@
 import { isLoggingEnabled } from '../bot-generator';
 import { generateDatabaseVariablesCode } from '../bot-generator/Broadcast/generateDatabaseVariables';
-import { generateConditionalMessageLogic } from '../Conditional';
+import { generateConditionalMessageLogic } from '../bot-generator/Conditional';
 import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython, getParseMode, stripHtmlTags } from '../bot-generator/format';
-import { generateAttachedMediaSendCode } from '../MediaHandler';
+import { generateAttachedMediaSendCode } from '../bot-generator/MediaHandler';
 
 /**
  * Генерирует функции handle_node_* для узлов с условными сообщениями

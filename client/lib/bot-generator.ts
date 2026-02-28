@@ -23,12 +23,12 @@ import {
 // Внутренние модули - использование экспорта бочек
 import { generateBotCommandsSetup } from './bot-commands-setup';
 import { generateBotFatherCommands } from './commands';
-import { collectConditionalMessageButtons } from './Conditional/collectConditionalMessageButtons';
-import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './Conditional/conditional-button-handler';
+import { collectConditionalMessageButtons } from './bot-generator/Conditional/collectConditionalMessageButtons';
+import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './bot-generator/Conditional/conditional-button-handler';
 import { generateGlobalCheckUserVariableFunction } from "./bot-generator/database/generateGlobalCheckUserVariableFunction";
 import { generateUniversalVariableReplacement } from './bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython } from './bot-generator/format';
-import { extractNodesAndConnections } from './MediaHandler';
+import { extractNodesAndConnections } from './bot-generator/MediaHandler';
 import { generateApiConfig, generateBasicBotSetupCode, generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtf8EncodingCode, generateUtilityFunctions } from './generate';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
@@ -43,25 +43,25 @@ import { generateMultiSelectReplyHandler } from './bot-generator/Keyboard/genera
 import { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
 import { identifyNodesRequiringMultiSelectLogic } from './bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic';
 import { processInlineButtonNodes } from './bot-generator/Keyboard/processInlineButtonNodes';
-import { generateMessageLoggingCode } from './logging/generate-message-logging';
-import { generateGroupHandlers } from './MediaHandler/generateGroupHandlers';
-import { generateMediaFileFunctions } from './MediaHandler/generateMediaFileFunctions';
-import { hasMediaNodes } from './MediaHandler/hasMediaNodes';
-import { hasUploadImageUrls } from './MediaHandler/hasUploadImageUrls';
+import { generateMessageLoggingCode } from './bot-generator/logging/generate-message-logging';
+import { generateGroupHandlers } from './bot-generator/MediaHandler/generateGroupHandlers';
+import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generateMediaFileFunctions';
+import { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
+import { hasUploadImageUrls } from './bot-generator/MediaHandler/hasUploadImageUrls';
 import { newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './newgenerateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation';
 import { newgenerateStateTransitionAndRenderLogic } from './bot-generator/transitions';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './bot-generator/user-input';
 import { createProcessNodeButtonsFunction } from './bot-generator/node-handlers';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './bot-generator/scaffolding';
-import { generateSynonymHandlers } from './Synonyms';
-import { addAutoTransitionNodes } from './utils/addAutoTransitionNodes';
-import { addInputTargetNodes } from './utils/addInputTargetNodes';
-import { collectInputTargetNodes } from './utils/collectInputTargetNodes';
-import { extractNodeData } from './utils/extractNodeData';
-import { hasAutoTransitions } from './utils/hasAutoTransitions';
-import { hasNodesRequiringSafeEditOrSend } from './utils/hasNodesRequiringSafeEditOrSend';
-import { resetGenerationState } from './utils/generation-state';
-import { setCommentsEnabled } from './utils/generateGeneratedComment';
+import { generateSynonymHandlers } from './bot-generator/Synonyms';
+import { addAutoTransitionNodes } from './bot-generator/utils/addAutoTransitionNodes';
+import { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
+import { collectInputTargetNodes } from './bot-generator/utils/collectInputTargetNodes';
+import { extractNodeData } from './bot-generator/utils/extractNodeData';
+import { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
+import { hasNodesRequiringSafeEditOrSend } from './bot-generator/utils/hasNodesRequiringSafeEditOrSend';
+import { resetGenerationState } from './bot-generator/utils/generation-state';
+import { setCommentsEnabled } from './bot-generator/utils/generateGeneratedComment';
 
 
 
