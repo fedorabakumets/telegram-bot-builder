@@ -8,7 +8,7 @@
  */
 
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
-import { generateMultiSelectDoneButton, generateMultiSelectInit, generateMultiSelectReplyKeyboard } from './multi-select';
+import { generateMultiSelectDoneButton, generateMultiSelectInit, generateMultiSelectReplyKeyboard, generateMultiSelectInlineKeyboard } from './multi-select';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateMessageTextPreparation, generateDatabaseVarsGet } from './message-text';
 import { generateConditionalMessagesCheck } from './conditional-messages';
@@ -243,78 +243,11 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               }, '    ');
             } else {
               // Inline клавиатура для множественного выбора
-              code += '    # Создаем inline клавиатуру с поддержкой множественного выбора\n';
-              code += '    builder = InlineKeyboardBuilder()\n';
-
-              // Разделяем кнопки на опции выбора и обычные кнопки
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: targetNode.data.buttons:`, targetNode.data.buttons);
-
-              let buttonsToUse = targetNode.data.buttons || [];
-
-              const selectionButtons = buttonsToUse.filter((button: { action: string; }) => button.action === 'selection');
-              const regularButtons = buttonsToUse.filter((button: { action: string; }) => button.action !== 'selection');
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Найдено ${selectionButtons.length} кнопок выбора и ${regularButtons.length} обычных кнопок`);
-
-              // Добавляем кнопки выбора с отметками о состоянии
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
-              selectionButtons.forEach((button: { target: any; id: any; text: any; }, index: number) => {
-                // Используем короткие callback_data
-                const shortNodeId = generateUniqueShortId(nodeId, allNodeIds || []); // Используем новую функцию
-                const shortTarget = (button.target || button.id || 'btn').slice(-8);
-                const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
-                code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
-                code += `    logging.info(f"🔘 Создаем кнопку: ${button.text} -> ${callbackData}")\n`;
-                code += `    builder.add(InlineKeyboardButton(text=f"{'✅ ' if '${button.text}' in user_data[user_id]['multi_select_${nodeId}'] else ''}${button.text}", callback_data="${callbackData}"))\n`;
-              });
-
-              // Добавляем кнопку "Готово" для множественного выбора
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: НАЧИНАЕМ создание кнопки "Готово" для узла ${nodeId}`);
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: allowMultipleSelection = ${targetNode.data.allowMultipleSelection}`);
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${targetNode.data.continueButtonTarget}`);
-              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: selectionButtons.length = ${selectionButtons.length}`);
-
-              // Кнопку "Готово" будем добавлять после обычных кнопок, чтобы она была справа от кнопки "Назад"
-
-              // Добавляем обычные кнопки (navigation и другие)
-              regularButtons.forEach((btn: Button, index: number) => {
-                if (btn.action === "goto" && btn.target) {
-                  const btnCallbackData = `${btn.target}_btn_${index}`;
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
-                } else if (btn.action === "url") {
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-                } else if (btn.action === "command" && btn.target) {
-                  const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-                }
-              });
-
-              // Добавляем кнопку "Готово" для множественного выбора после обычных кнопок, чтобы она была справа от кнопки "Назад"
-              if (selectionButtons.length > 0) {
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "Готово" (есть ${selectionButtons.length} кнопок выбора)`);
-                code += '    # Кнопка "Готово" для множественного выбора\n';
-                const shortNodeIdDone = nodeId.slice(-10).replace(/^_+/, ''); // Убираем ведущие underscores
-                const doneCallbackData = `done_${shortNodeIdDone}`;
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ГЕНЕРИРУЕМ код кнопки "Готово"!`);
-
-                code += `    logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
-                code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="${doneCallbackData}"))\n`;
-
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ УСПЕШНО добавили кнопку "Готово" в код генерации`);
-              } else {
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем кнопку "Готово" - нет кнопок выбора`);
-              }
-
-              // Пересчитываем общее количество кнопок, включая кнопку "Готово"
-              // Для множественного выбора всегда используем nodeData с включенным флагом
-              // Создаем массив с нужным количеством элементов для расчета колонок
-              // ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения
-              const columns = 2; // Всегда используем 2 колонки для узлов с множественным выбором
-              code += `    # ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для постоянного расположения кнопок\n`;
-              code += `    builder.adjust(${columns})\n`;
-
-              code += '    keyboard = builder.as_markup()\n';
+              code += generateMultiSelectInlineKeyboard({
+                nodeId,
+                buttons: targetNode.data.buttons || [],
+                allNodeIds
+              }, '    ');
             }
 
           } else if (targetNode.data?.keyboardType !== 'none' && targetNode.data?.buttons && targetNode.data?.buttons.length > 0) {
