@@ -14,6 +14,7 @@ import { generateMultiSelectHandler, generateMultiSelectComplete } from './multi
 import { generateBroadcastNodeHandler, isBroadcastNode } from './broadcast-node-handler';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateConditionalMessagesCheck } from './conditional-messages';
+import { hasConditionalMessages } from './conditional-messages-handler';
 import { generateMediaVariablesSetup } from './media-variables';
 import { generateAutoTransitionCheck, generateAutoTransitionCode } from './auto-transition';
 import { generateAllNodesDict, generateBroadcastConfirmationHandler, generateBroadcastDirectHandler } from './broadcast';
@@ -181,7 +182,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           // ============================================================================
           // ОБРАБОТКА УСЛОВНЫХ СООБЩЕНИЙ
           // ============================================================================
-          if (targetNode.data?.enableConditionalMessages && targetNode.data?.conditionalMessages && targetNode.data?.conditionalMessages.length > 0) {
+          if (hasConditionalMessages(targetNode.data)) {
             code += generateConditionalMessagesCheck({
               conditionalMessages: targetNode.data.conditionalMessages
             }, '    ');
