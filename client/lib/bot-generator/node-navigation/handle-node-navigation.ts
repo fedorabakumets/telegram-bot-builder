@@ -105,7 +105,7 @@ function handleMessageNode(
 
   // Сбор ввода
   if (node.data?.collectUserInput === true) {
-    return handleInputCollection(node, bodyIndent, allNodeIds);
+    return handleInputCollection(node, bodyIndent);
   }
 
   // Условные сообщения

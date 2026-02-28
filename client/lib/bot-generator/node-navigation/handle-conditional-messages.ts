@@ -8,7 +8,7 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { Button } from '../../types';
+import type { Button } from '../../types/button-types';
 import { generateButtonText } from '../format';
 import { toPythonBoolean } from '../format';
 

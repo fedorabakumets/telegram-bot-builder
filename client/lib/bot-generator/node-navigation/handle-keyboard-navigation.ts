@@ -8,7 +8,7 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { Button } from '../../types';
+import type { Button } from '../../types/button-types';
 import { generateButtonText } from '../format';
 import { calculateOptimalColumns } from '../Keyboard';
 import { toPythonBoolean } from '../format';
@@ -31,7 +31,7 @@ export function handleKeyboardNavigation(
   if (targetNode.data?.keyboardType === 'reply' && targetNode.data?.buttons?.length) {
     return generateReplyKeyboard(targetNode, bodyIndent, allUserVars);
   }
-  return generateNoKeyboard(targetNode, bodyIndent, allUserVars);
+  return generateNoKeyboard(bodyIndent, allUserVars);
 }
 
 /**
@@ -99,7 +99,6 @@ function generateReplyKeyboard(
  * Генерирует код для сообщения без клавиатуры
  */
 function generateNoKeyboard(
-  targetNode: Node,
   bodyIndent: string,
   allUserVars: string
 ): string {
