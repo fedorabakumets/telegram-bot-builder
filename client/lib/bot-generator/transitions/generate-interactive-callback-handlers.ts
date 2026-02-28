@@ -7,7 +7,7 @@
  * @module bot-generator/transitions/generate-interactive-callback-handlers
  */
 
-import { Button, isLoggingEnabled } from '../bot-generator';
+import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateConditionalMessageLogic } from '../Conditional';
 import { generateCheckUserVariableFunction } from '../database';
