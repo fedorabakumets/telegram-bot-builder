@@ -8,6 +8,7 @@
  */
 
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
+import { generateMultiSelectDoneButton } from './multi-select';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
 import { generateConditionalMessageLogic } from '../Conditional';
@@ -122,41 +123,13 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           // ============================================================================
           // Добавляем обработку кнопки "Готово" для множественного выбора
           if (targetNode.data?.allowMultipleSelection) {
-            code += '    # Проверяем, является ли это кнопкой "Готово"\n';
-            code += `    if callback_data == "done_${shortNodeIdForDone}":\n`;
-            code += '        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")\n';
-            code += '        \n';
-
-            // Сохраняем выбранные значения в базу данных
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
-            code += '        # Сохраняем выбранные значения в базу данных\n';
-            code += `        selected_options = user_data.get(user_id, {}).get("multi_select_${nodeId}", [])\n`;
-            code += '        if selected_options:\n';
-            code += '            selected_text = ", ".join(selected_options)\n';
-            code += `            \n`;
-            code += `            # Универсальная логика аккумуляции для всех множественных выборов\n`;
-            code += `            # Загружаем существующие значения\n`;
-            code += `            existing_data = await get_user_data_from_db(user_id, "${multiSelectVariable}")\n`;
-            code += `            existing_selections = []\n`;
-            code += `            if existing_data and existing_data.strip():\n`;
-            code += `                existing_selections = [s.strip() for s in existing_data.split(",") if s.strip()]\n`;
-            code += `            \n`;
-            code += `            # Объединяем существующие и новые выборы (убираем дубли)\n`;
-            code += `            all_selections = list(set(existing_selections + selected_options))\n`;
-            code += `            final_text = ", ".join(all_selections)\n`;
-            code += `            await update_user_data_in_db(user_id, "${multiSelectVariable}", final_text)\n`;
-            code += `            logging.info(f"✅ Аккумялировано в переменную ${multiSelectVariable}: {final_text}")\n`;
-            code += '        \n';
-
-            // Очищаем состояние множественного выбора
-            code += '        # Очищаем состояние множественного выбора\n';
-            code += '        if user_id in user_data:\n';
-            code += `            user_data[user_id].pop("multi_select_${nodeId}", None)\n`;
-            code += '            user_data[user_id].pop("multi_select_node", None)\n';
-            code += '            user_data[user_id].pop("multi_select_type", None)\n';
-            code += '            user_data[user_id].pop("multi_select_variable", None)\n';
-            code += '        \n';
-
+            code += generateMultiSelectDoneButton({
+              nodeId,
+              multiSelectVariable,
+              continueButtonTarget: targetNode.data.continueButtonTarget
+            }, '    ');
+            
             // Переход к следующему узлу
             if (targetNode.data.continueButtonTarget) {
               const nextNodeId = targetNode.data.continueButtonTarget;
@@ -826,7 +799,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               code += '            text = replace_variables_in_text(text, user_vars)\n';
               code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
               code += '        else:\n';
-              code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликат��в при автопереходах)\n';
+              code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликат���в при автопереходах)\n';
               // К��ИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
               code += '            # Заменяем все переменные в тексте\n';
               code += '            text = replace_variables_in_text(text, user_vars)\n';
@@ -856,7 +829,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += '            text = replace_variables_in_text(text, user_vars)\n';
             code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
             code += '        else:\n';
-            code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при автопереходах)\n';
+            code += '            # Для узлов без кнопок просто отправляем новое сообщение (избегаем дубликатов при авто��ереходах)\n';
             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязате���ьно вызываем замен�� переменных в тексте
             code += '            # Заменяем все переменные в тексте\n';
             code += '            text = replace_variables_in_text(text, user_vars)\n';
@@ -1574,7 +1547,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                         code += `            logging.info(f"Переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
                       }
                       // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
-                      code += '            # Заменяем все переменные в тексте\n';
+                      code += '            # Заменяем все переменн��е в тексте\n';
                       code += '            nav_text = replace_variables_in_text(nav_text, user_vars)\n';
                       code += '            await bot.send_message(callback_query.from_user.id, nav_text)\n';
                     }
