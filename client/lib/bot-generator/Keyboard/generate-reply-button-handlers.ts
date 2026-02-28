@@ -67,15 +67,9 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
             const skipDataCollection = button.skipDataCollection === true;
             code += `    skip_collection = ${toPythonBoolean(skipDataCollection)}\n`;
             code += '    \n';
-            
+
             // ИСПРАВЛЕНИЕ: Добавляем ReplyKeyboardRemove для кнопок с hideAfterClick
             const hideAfterClick = button.hideAfterClick === true;
-            if (hideAfterClick) {
-              code += '    # Скрываем клавиатуру после нажатия (hideAfterClick=true)\n';
-              code += '    hide_keyboard = True\n';
-            } else {
-              code += '    hide_keyboard = False\n';
-            }
             code += '    \n';
             code += '    if not skip_collection and user_id in user_data and "waiting_for_input" in user_data[user_id]:\n';
             code += '        waiting_config = user_data[user_id]["waiting_for_input"]\n';
@@ -158,14 +152,22 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               const targetExists = (nodes || []).some(n => n.id === targetNode.id);
               if (targetExists) {
                 code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
+                // Скрываем клавиатуру если установлен флаг hideAfterClick
+                if (hideAfterClick) {
+                  code += '    # Скрываем клавиатуру после нажатия кнопки\n';
+                  code += '    await message.answer(".", reply_markup=ReplyKeyboardRemove())\n';
+                }
               } else {
                 code += `    logging.warning(f"⚠️ Целевой узел не найден: {targetNode.id}, завершаем переход")\n`;
                 code += `    await message.answer("Переход завершен")\n`;
               }
               // Скрываем клавиатуру если установлен флаг hideAfterClick
               if (hideAfterClick) {
-                code += '    # Скрываем клавиатуру после нажатия кнопки (используем zero-width space)\n';
-                code += '    await message.answer("\\u200B", reply_markup=ReplyKeyboardRemove())\n';
+                code += '    # Скрываем клавиатуру после нажатия кнопки (отправляем пустое сообщение с ReplyKeyboardRemove)\n';
+                code += '    try:\n';
+                code += '        await bot.send_message(message.chat.id, ".", reply_markup=ReplyKeyboardRemove())\n';
+                code += '    except Exception:\n';
+                code += '        pass\n';
               }
             } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               // Проверяем, есть ли статическое изображение в целевом узле
@@ -362,8 +364,8 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
-                    code += '    # Скрываем клавиатуру после нажатия кнопки (используем zero-width space)\n';
-                    code += '    await message.answer("\\u200B", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '    # Скрываем клавиатуру после нажатия кнопки\n';
+                    code += '    await message.answer(".", reply_markup=ReplyKeyboardRemove())\n';
                   }
                 } else {
                   code += `    logging.warning(f"⚠️ Целевой узел не найден: {targetNode.id}, завершаем переход")\n`;
@@ -450,8 +452,8 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
-                    code += '    # Скрываем клавиатуру после нажатия кнопки (используем zero-width space)\n';
-                    code += '    await message.answer("\\u200B", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '    # Скрываем клавиатуру после нажатия кнопки\n';
+                    code += '    await message.answer(".", reply_markup=ReplyKeyboardRemove())\n';
                   }
                 } else {
                   // Нет изображения, отправляем текст с клавиатурой
@@ -521,8 +523,8 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
-                    code += '    # Скрываем клавиатуру после нажатия кнопки (используем zero-width space)\n';
-                    code += '    await message.answer("\\u200B", reply_markup=ReplyKeyboardRemove())\n';
+                    code += '    # Скрываем клавиатуру после нажатия кнопки\n';
+                    code += '    await message.answer(".", reply_markup=ReplyKeyboardRemove())\n';
                   }
                 } else {
                   code += `    logging.warning(f"⚠️ Целевой узел не найден: {targetNode.id}, завершаем переход")\n`;
