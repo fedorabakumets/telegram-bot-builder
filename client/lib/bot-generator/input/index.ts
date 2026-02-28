@@ -9,6 +9,9 @@ export {
   generateAdHocInputHandler
 } from './generate-user-input-handlers';
 
+// Валидация и продолжение
+export { generateUserInputValidationAndContinuationLogic } from './generate-validation-continuation';
+
 // Валидация - главная функция
 export { generateUserInputValidation } from './generate-validation';
 
