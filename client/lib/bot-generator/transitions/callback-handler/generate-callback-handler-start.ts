@@ -23,7 +23,7 @@ export function generateCallbackHandlerStart(
   const safeFunctionName = String(nodeId).replace(/[^a-zA-Z0-9_]/g, '_');
 
   let code = '';
-  code += `\n${indent}@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startsWith("${nodeId}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
+  code += `\n${indent}@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startswith("${nodeId}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
   code += `${indent}async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
   code += `${indent}    # Проверяем что это не fake callback (для оптимизации)\n`;
   code += `${indent}    is_fake_callback = hasattr(callback_query, '_is_fake') and callback_query._is_fake\n`;

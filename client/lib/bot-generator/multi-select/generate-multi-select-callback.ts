@@ -30,7 +30,7 @@ export const generateMultiSelectCallbackHandler = (
   }
 
   let code = '\n# Обработчики для множественного выбора\n';
-  code += '@dp.callback_query(lambda c: c.data.startsWith("ms_") or c.data.startsWith("multi_select_"))\n';
+  code += '@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))\n';
   code += 'async def handle_multi_select_callback(callback_query: types.CallbackQuery):\n';
   code += '    await callback_query.answer()\n';
   code += '    user_id = callback_query.from_user.id\n';
@@ -40,7 +40,7 @@ export const generateMultiSelectCallbackHandler = (
   code += '    callback_data = callback_query.data  # Получаем данные callback\n';
   code += '    \n';
   code += '    # Обработка кнопки "Готово"\n';
-  code += '    if callback_data.startsWith("done_"):\n';
+  code += '    if callback_data.startswith("done_"):\n';
   code += '        # Завершение множественного выбора (новый формат)\n';
   code += '        logging.info(f"✅ Обработка кнопки Готово: {callback_data}")\n';
   code += '        short_node_id = callback_data.replace("done_", "")\n';
