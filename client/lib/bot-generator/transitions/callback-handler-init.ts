@@ -17,8 +17,8 @@
  * @returns Сгенерированный Python-код
  */
 export function generateCallbackHandlerInit(
-  nodeId: string,
-  shortNodeId: string,
+  _nodeId: string,
+  _shortNodeId: string,
   targetNode: any,
   indent: string = '    '
 ): string {
