@@ -10,6 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
+import { generateConditionalInputHandler } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками
 function hasUrlButtons(nodes: any[]): boolean {
@@ -45,56 +46,17 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '    # Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick\n';
     code += `    ${generateReplyHideAfterClickHandler(nodes)}\n`;
     code += '    \n';
-    /**
-     * Обработчик условных сообщений
-     * Проверяет, ожидает ли пользователь ввод для условного сообщения,
-     * обрабатывает кнопки skipDataCollection и сохраняет ответы пользователя
-     */
-    code += '    # Проверяем, ожидаем ли мы ввод для условного сообщения\n';
-    code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
-    code += '        config = user_data[user_id]["waiting_for_conditional_input"]\n';
-    code += '        user_text = message.text\n';
-    code += '        \n';
-
-    /**
-     * Проверка кнопок skipDataCollection
-     * Ищет нажатую кнопку среди кнопок пропуска сбора данных
-     * и выполняет переход к указанному узлу без сохранения данных
-     */
-    code = skipDataCollection(code);
-
-    /**
-     * Навигация при нажатии кнопки пропуска
-     * Очищает состояние ожидания и переходит к целевому узлу кнопки
-     */
-    code = skip_button_target(code);
-
-    // Генерируем навигацию для кнопок skipDataCollection
-    code = skipDataCollectionnavigate(nodes, code);
-
-    code += '            except Exception as e:\n';
-    code += '                logging.error(f"Ошибка при переходе к узлу кнопки skipDataCollection {skip_button_target}: {e}")\n';
-    code += '            return\n';
-    /**
-     * Сохранение ответа пользователя
-     * Сохраняет введенный текст в пользовательские данные и базу данных
-     * с поддержкой автоматического именования переменных
-     */
-    code = answersave(code);
-
-    /**
-     * Навигация после сохранения ответа
-     * Переходит к следующему узлу если указан, с поддержкой команд
-     */
-    code = navigateaftersave(code);
-
-    code = handleConditionalNavigationAndInputCollection(nodes, code, allNodeIds);
-
-    code += '            except Exception as e:\n';
-    code += '                logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
-    code += '        \n';
-    code += '        return  # Завершаем обработку для условного сообщения\n';
-    code += '    \n';
+    
+    // Обработчик условных сообщений
+    code += generateConditionalInputHandler(nodes, allNodeIds, {
+      skipDataCollection,
+      skip_button_target,
+      skipDataCollectionnavigate,
+      answersave,
+      navigateaftersave,
+      handleConditionalNavigationAndInputCollection
+    }, '    ');
+    
     /**
      * Обработка кнопочных ответов через reply клавиатуру
      * Обрабатывает выбор пользователя из предложенных вариантов reply клавиатуры
