@@ -10,7 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -165,33 +165,19 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Специальная обработка для узлов, ожидающих медиа-файлы (фото/видео/аудио/документы)
      * когда пользователь нажимает reply-кнопку с skipDataCollection
      */
-    code += '    # ИСПРАВЛЕНИЕ: Проверяем pending_skip_buttons для медиа-узлов (фото/видео/аудио)\n';
-    code += '    # Эта проверка нужна когда узел ожидает медиа, но пользователь нажал reply-кнопку с skipDataCollection\n';
-    code += '    if user_id in user_data and "pending_skip_buttons" in user_data[user_id]:\n';
-    code += '        pending_buttons = user_data[user_id]["pending_skip_buttons"]\n';
-    code += '        user_text = message.text\n';
+    code += generateMediaSkipCheck('    ');
 
     /**
      * Поиск нажатой кнопки пропуска
      * Проверяет, была ли нажата одна из кнопок пропуска для медиа-узла
      */
-    code += '        for skip_btn in pending_buttons:\n';
-    code += '            if skip_btn.get("text") == user_text:\n';
-    code += '                skip_target = skip_btn.get("target")\n';
-    code += '                logging.info(f"⏭️ Нажата кнопка skipDataCollection для медиа-узла: {user_text} -> {skip_target}")\n';
+    code += generateSkipButtonSearch('        ');
 
     /**
      * Очистка состояний ожидания медиа
      * Удаляет все состояния, связанные с ожиданием медиа-файлов
      */
-    code += '                # Очищаем pending_skip_buttons и любые медиа-ожидания\n';
-    code += '                if "pending_skip_buttons" in user_data[user_id]:\n';
-    code += '                    del user_data[user_id]["pending_skip_buttons"]\n';
-    code += '                # Проверяем и очищаем waiting_for_input если тип соответствует медиа\n';
-    code += '                if "waiting_for_input" in user_data[user_id]:\n';
-    code += '                    waiting_config = user_data[user_id]["waiting_for_input"]\n';
-    code += '                    if isinstance(waiting_config, dict) and waiting_config.get("type") in ["photo", "video", "audio", "document"]:\n';
-    code += '                        del user_data[user_id]["waiting_for_input"]\n';
+    code += generateMediaWaitingCleanup('            ');
 
     /**
      * Навигация после пропуска медиа

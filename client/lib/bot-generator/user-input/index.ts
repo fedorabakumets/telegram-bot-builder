@@ -12,3 +12,4 @@ export { generateButtonResponseCheck, generateSelectedOptionSearch, generateResp
 export { generateButtonActionExtract, generateUrlActionHandler } from './generate-button-navigation';
 export { generateFakeMessageCreation, generateCommandHandlers, type CommandHandlerType } from './generate-command-execution';
 export { generateGotoNavigation } from './generate-goto-navigation';
+export { generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, type MediaType } from './generate-media-skip-check';
