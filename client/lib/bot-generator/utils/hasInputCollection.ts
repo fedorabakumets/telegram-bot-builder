@@ -1,52 +1,78 @@
-import { BotNode } from "../types";
+/**
+ * @fileoverview Проверка наличия сбора пользовательского ввода
+ * Модуль проверяет узлы на наличие различных типов ввода в ОДИН проход
+ */
 
-// Функция для проверки наличия узлов со сбором пользовательского ввода
-export function hasInputCollection(nodes: BotNode[]): boolean {
-  if (!nodes || nodes.length === 0) return false;
+import type { BotNode } from '../types';
+import type { InputCollectionCheckResult } from './types/input-collection-check-result';
 
-  // Проверяем узлы с collectUserInput
-  const hasCollectInput = nodes
-    .filter(node => node !== null && node !== undefined)
-    .some(node => node.data?.collectUserInput);
+/**
+ * Проверяет узлы на наличие сбора пользовательского ввода за ОДИН проход
+ * @param nodes - Массив узлов для проверки
+ * @returns Результат проверки с флагами по каждому типу ввода
+ *
+ * @example
+ * const result = hasInputCollection(nodes);
+ * if (result.hasPhotoInput) { /* ... */ }
+ */
+export function hasInputCollection(nodes: BotNode[]): InputCollectionCheckResult {
+  if (!nodes || nodes.length === 0) {
+    return {
+      hasCollectInput: false,
+      hasTextInput: false,
+      hasPhotoInput: false,
+      hasVideoInput: false,
+      hasAudioInput: false,
+      hasDocumentInput: false,
+      hasConditionalInput: false,
+      hasMultiSelect: false,
+      hasAnyInput: false,
+    };
+  }
 
-  // Проверяем узлы с enableTextInput
-  const hasTextInput = nodes
-    .filter(node => node !== null && node !== undefined)
-    .some(node => node.data?.enableTextInput);
+  const result: InputCollectionCheckResult = {
+    hasCollectInput: false,
+    hasTextInput: false,
+    hasPhotoInput: false,
+    hasVideoInput: false,
+    hasAudioInput: false,
+    hasDocumentInput: false,
+    hasConditionalInput: false,
+    hasMultiSelect: false,
+    hasAnyInput: false,
+  };
 
-  // Проверяем узлы с enablePhotoInput
-  const hasPhotoInput = nodes
-    .filter(node => node !== null && node !== undefined)
-    .some(node => node.data?.enablePhotoInput);
+  // ОДИН проход вместо 7 отдельных
+  for (const node of nodes) {
+    if (!node) continue;
 
-  // Проверяем узлы с enableVideoInput
-  const hasVideoInput = nodes
-    .filter(node => node !== null && node !== undefined)
-    .some(node => node.data?.enableVideoInput);
+    const data = node.data || {};
 
-  // Проверяем узлы с enableAudioInput
-  const hasAudioInput = nodes
-    .filter(node => node !== null && node !== undefined)
-    .some(node => node.data?.enableAudioInput);
+    if (data.collectUserInput) result.hasCollectInput = true;
+    if (data.enableTextInput) result.hasTextInput = true;
+    if (data.enablePhotoInput) result.hasPhotoInput = true;
+    if (data.enableVideoInput) result.hasVideoInput = true;
+    if (data.enableAudioInput) result.hasAudioInput = true;
+    if (data.enableDocumentInput) result.hasDocumentInput = true;
+    if (data.allowMultipleSelection === true) result.hasMultiSelect = true;
 
-  // Проверяем узлы с enableDocumentInput
-  const hasDocumentInput = nodes
-    .filter(node => node !== null && node !== undefined)
-    .some(node => node.data?.enableDocumentInput);
+    // Проверка условных сообщений
+    const conditions = data.conditionalMessages;
+    if (conditions?.some((cond: any) => cond.waitForTextInput)) {
+      result.hasConditionalInput = true;
+    }
+  }
 
-  // Проверяем условные сообщения с waitForTextInput
-  const hasConditionalInput = nodes
-    .filter(node => node !== null && node !== undefined)
-    .some(node => {
-    const conditions = node.data?.conditionalMessages;
-    if (!conditions || !Array.isArray(conditions)) return false;
-    return conditions.some((cond: any) => cond.waitForTextInput);
-  });
+  // Общий результат
+  result.hasAnyInput =
+    result.hasCollectInput ||
+    result.hasTextInput ||
+    result.hasPhotoInput ||
+    result.hasVideoInput ||
+    result.hasAudioInput ||
+    result.hasDocumentInput ||
+    result.hasConditionalInput ||
+    result.hasMultiSelect;
 
-  // Проверяем узлы с множественным выбором (multi-select)
-  const hasMultiSelect = nodes
-    .filter(node => node !== null && node !== undefined)
-    .some(node => node.data?.allowMultipleSelection === true);
-
-  return hasCollectInput || hasTextInput || hasPhotoInput || hasVideoInput || hasAudioInput || hasDocumentInput || hasConditionalInput || hasMultiSelect;
+  return result;
 }
