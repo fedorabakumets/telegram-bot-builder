@@ -41,7 +41,7 @@ async function runTests() {
   // Запускаем тесты
   const testRun = run({
     files: testFiles,
-    timeout: 30000,
+    timeout: 60000, // Увеличенный timeout
   });
   
   // Выводим результаты

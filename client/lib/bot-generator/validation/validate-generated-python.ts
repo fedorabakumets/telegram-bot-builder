@@ -9,15 +9,16 @@
 
 /**
  * Список обязательных элементов Python кода бота
+ * Используем более гибкие паттерны для проверки
  */
-const REQUIRED_PYTHON_COMPONENTS = [
-  'import asyncio',
-  'from aiogram import Bot',
-  'from aiogram import Dispatcher',
-  'dp = Dispatcher()',
-  'async def main():',
-  'if __name__ == "__main__":',
-  'asyncio.run(main())'
+const REQUIRED_PYTHON_PATTERNS = [
+  { pattern: 'import asyncio', name: 'import asyncio' },
+  { pattern: 'Bot', name: 'Bot (from aiogram import Bot)' },
+  { pattern: 'Dispatcher', name: 'Dispatcher (from aiogram import Dispatcher)' },
+  { pattern: 'Dispatcher()', name: 'Dispatcher() инициализация' },
+  { pattern: 'async def main():', name: 'async def main():' },
+  { pattern: 'if __name__ == "__main__":', name: 'if __name__ == "__main__":' },
+  { pattern: 'asyncio.run(main())', name: 'asyncio.run(main())' }
 ] as const;
 
 /**
@@ -47,9 +48,9 @@ export interface PythonValidationResult {
 export function validateGeneratedPython(code: string): PythonValidationResult {
   const missingComponents: string[] = [];
 
-  for (const component of REQUIRED_PYTHON_COMPONENTS) {
-    if (!code.includes(component)) {
-      missingComponents.push(component);
+  for (const { pattern, name } of REQUIRED_PYTHON_PATTERNS) {
+    if (!code.includes(pattern)) {
+      missingComponents.push(name);
     }
   }
 

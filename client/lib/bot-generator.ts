@@ -283,11 +283,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     generateMultiSelectReplyHandler
   );
 
-  // ОТЛАДКА: выводим первые 1000 символов кода
-  if (typeof window === 'undefined') {
-    console.log('DEBUG: Первые 1000 символов кода:', finalCode.substring(0, 1000));
-  }
-
   // Валидация сгенерированного кода перед возвратом
   assertValidPython(finalCode);
 

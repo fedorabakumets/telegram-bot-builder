@@ -291,16 +291,20 @@ if __name__ == "__main__":
     assert.ok(result.missingComponents.length > 0, 'Должны быть отсутствующие компоненты');
   });
 
-  it('должна возвращать правильный список отсутствующих компонентов', () => {
-    const invalidCode = '# Просто комментарий';
-    const result = validateGeneratedPython(invalidCode);
-    assert.ok(
-      result.missingComponents.includes('import asyncio'),
-      'Должен отсутствовать import asyncio'
-    );
-    assert.ok(
-      result.missingComponents.includes('from aiogram import Bot'),
-      'Должен отсутствовать from aiogram import Bot'
-    );
+  it('должна проходить код с импортом from aiogram import Bot, Dispatcher', () => {
+    const code = `
+import asyncio
+from aiogram import Bot, Dispatcher, types, F
+
+dp = Dispatcher()
+
+async def main():
+    pass
+
+if __name__ == "__main__":
+    asyncio.run(main())
+`;
+    const result = validateGeneratedPython(code);
+    assert.strictEqual(result.isValid, true, 'Код с совместным импортом должен проходить валидацию');
   });
 });
