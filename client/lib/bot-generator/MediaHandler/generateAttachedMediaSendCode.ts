@@ -181,7 +181,9 @@ export function generateAttachedMediaSendCode(
     // ИСПРАВЛЕНИЕ: Генерируем parse_mode только если parseMode не пустой и не равен "none"
     let parseModeParam = '';
     if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
-      parseModeParam = `, parse_mode=ParseMode.${parseMode.toUpperCase()}`;
+      // Используем строковое значение чтобы избежать необходимости импорта ParseMode
+      const modeValue = parseMode.trim().toLowerCase() === 'markdown' ? 'Markdown' : 'HTML';
+      parseModeParam = `, parse_mode="${modeValue}"`;
     }
 
     // ИСПРАВЛЕНИЕ: Добавляем клавиатуру если она определена
@@ -196,7 +198,9 @@ export function generateAttachedMediaSendCode(
     // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
     let parseModeFallbackParam = '';
     if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
-      parseModeFallbackParam = `, parse_mode=ParseMode.${parseMode.toUpperCase()}`;
+      // Используем строковое значение чтобы избежать необходимости импорта ParseMode
+      const modeValue = parseMode.trim().toLowerCase() === 'markdown' ? 'Markdown' : 'HTML';
+      parseModeFallbackParam = `, parse_mode="${modeValue}"`;
     } else {
       parseModeFallbackParam = ', parse_mode=None';
     }
@@ -390,7 +394,9 @@ export function generateAttachedMediaSendCode(
   // ИСПРАВЛЕНИЕ: Генерируем parse_mode только если parseMode не пустой и не равен "none"
   let parseModeParam = '';
   if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
-    parseModeParam = `, parse_mode=ParseMode.${parseMode.toUpperCase()}`;
+    // Используем строковое значение чтобы избежать необходимости импорта ParseMode
+    const modeValue = parseMode.trim().toLowerCase() === 'markdown' ? 'Markdown' : 'HTML';
+    parseModeParam = `, parse_mode="${modeValue}"`;
   }
 
   switch (mediaType) {
@@ -442,7 +448,9 @@ export function generateAttachedMediaSendCode(
   // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
   let parseModeFallbackParam = '';
   if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
-    parseModeFallbackParam = `, parse_mode=ParseMode.${parseMode.toUpperCase()}`;
+    // Используем строковое значение чтобы избежать необходимости импорта ParseMode
+    const modeValue = parseMode.trim().toLowerCase() === 'markdown' ? 'Markdown' : 'HTML';
+    parseModeFallbackParam = `, parse_mode="${modeValue}"`;
   } else {
     parseModeFallbackParam = ', parse_mode=None';
   }
@@ -470,7 +478,9 @@ export function generateAttachedMediaSendCode(
   // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
   let parseModeElseParam = '';
   if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
-    parseModeElseParam = `, parse_mode=ParseMode.${parseMode.toUpperCase()}`;
+    // Используем строковое значение чтобы избежать необходимости импорта ParseMode
+    const modeValue = parseMode.trim().toLowerCase() === 'markdown' ? 'Markdown' : 'HTML';
+    parseModeElseParam = `, parse_mode="${modeValue}"`;
   } else {
     parseModeElseParam = ', parse_mode=None';
   }
