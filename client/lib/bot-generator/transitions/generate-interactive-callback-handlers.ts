@@ -8,7 +8,7 @@
  */
 
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
-import { generateMultiSelectDoneButton } from './multi-select';
+import { generateMultiSelectDoneButton, generateMultiSelectInit } from './multi-select';
 import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateMessageTextPreparation, generateDatabaseVarsGet } from './message-text';
 import { generateConditionalMessagesCheck } from './conditional-messages';
@@ -221,37 +221,15 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons: ${hasSelectionButtons}`);
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: ========================================`);
 
-            // Добавляем логику инициализации множественного выбора
+            // Инициализация состояния множественного выбора
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_selection';
             const multiSelectKeyboardType = targetNode.data.keyboardType || 'reply';
 
-            code += '    # Инициализация состояния множественного выбора\n';
-            code += '    if user_id not in user_data:\n';
-            code += '        user_data[user_id] = {}\n';
-            code += '    \n';
-            code += '    # Загружаем ранее выбранные варианты\n';
-            code += '    saved_selections = []\n';
-            code += '    if user_vars:\n';
-            code += `        for var_name, var_data in user_vars.items():\n`;
-            code += `            if var_name == "${multiSelectVariable}":\n`;
-            code += '                if isinstance(var_data, dict) and "value" in var_data:\n';
-            code += '                    selections_str = var_data["value"]\n';
-            code += '                elif isinstance(var_data, str):\n';
-            code += '                    selections_str = var_data\n';
-            code += '                else:\n';
-            code += '                    continue\n';
-            code += '                if selections_str and selections_str.strip():\n';
-            code += '                    saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]\n';
-            code += '                    break\n';
-            code += '    \n';
-            code += '    # Инициализируем состояние если его нет\n';
-            code += `    if "multi_select_${nodeId}" not in user_data[user_id]:\n`;
-            code += `        user_data[user_id]["multi_select_${nodeId}"] = saved_selections.copy()\n`;
-            code += `    user_data[user_id]["multi_select_node"] = "${nodeId}"\n`;
-            code += `    user_data[user_id]["multi_select_type"] = "${multiSelectKeyboardType}"\n`;
-            code += `    user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
-            code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")\n';
-            code += '    \n';
+            code += generateMultiSelectInit({
+              nodeId,
+              multiSelectVariable,
+              multiSelectKeyboardType
+            }, '    ');
 
             // ИСПРАВЛЕНИЕ: Проверяем тип клавиатуры и генерируем соответствующий код
             if (multiSelectKeyboardType === 'reply') {
@@ -861,7 +839,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += '    user_data[user_id]["button_click"] = button_display_text\n';
           }
 
-          // Определяем переменную для сохяанения на основе кнопки (ТОЛЬКО есяи есть sourceNode)
+          // Определяем переменную для сохя��нения на основе кнопки (ТОЛЬКО есяи есть sourceNode)
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: НЕ сохраняем переменную если показана условная клавиатура
           // Нужно дождаться, пока пользователь нажмёт кнопку на условной клавиатуре
           if (sourceNode) {
