@@ -13,3 +13,4 @@ export { generateButtonActionExtract, generateUrlActionHandler } from './generat
 export { generateFakeMessageCreation, generateCommandHandlers, type CommandHandlerType } from './generate-command-execution';
 export { generateGotoNavigation } from './generate-goto-navigation';
 export { generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, type MediaType } from './generate-media-skip-check';
+export { generateFakeCallbackCreation, generateSkipTargetNavigation } from './generate-media-skip-navigation';

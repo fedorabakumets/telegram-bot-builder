@@ -10,7 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -183,31 +183,10 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Навигация после пропуска медиа
      * Переходит к целевому узлу после нажатия кнопки пропуска
      */
-    code += '                # Переходим к целевому узлу\n';
-    code += '                if skip_target:\n';
-    code += '                    try:\n';
-    code += '                        logging.info(f"🚀 Переходим к узлу skipDataCollection медиа: {skip_target}")\n';
-    code += '                        import types as aiogram_types\n';
-    code += '                        fake_callback = aiogram_types.SimpleNamespace(\n';
-    code += '                            id="skip_media_nav",\n';
-    code += '                            from_user=message.from_user,\n';
-    code += '                            chat_instance="",\n';
-    code += '                            data=skip_target,\n';
-    code += '                            message=message,\n';
-    code += '                            answer=lambda *args, **kwargs: asyncio.sleep(0)\n';
-    code += '                        )\n';
+    code += generateFakeCallbackCreation('                ');
 
     // Добавляем навигацию для skip_buttons медиа-узлов
-    if (nodes.length > 0) {
-      nodes.forEach((mediaSkipNode, mediaSkipIdx) => {
-        const mediaSkipCond = mediaSkipIdx === 0 ? 'if' : 'elif';
-        const mediaSkipFnName = mediaSkipNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `                        ${mediaSkipCond} skip_target == "${mediaSkipNode.id}":\n`;
-        code += `                            await handle_callback_${mediaSkipFnName}(fake_callback)\n`;
-      });
-      code += '                        else:\n';
-      code += '                            logging.warning(f"Неизвестный целевой узел skipDataCollection медиа: {skip_target}")\n';
-    }
+    code += generateSkipTargetNavigation(nodes, '                        ');
 
     code += '                    except Exception as e:\n';
     code += '                        logging.error(f"Ошибка при переходе к узлу skipDataCollection медиа {skip_target}: {e}")\n';
