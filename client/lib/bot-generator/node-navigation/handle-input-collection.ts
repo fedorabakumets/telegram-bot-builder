@@ -8,8 +8,8 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { Button } from '../../bot-generator';
-import { formatTextForPython, generateButtonText } from '../format';
+import type { Button } from '../../types';
+import { generateButtonText } from '../format';
 import { calculateOptimalColumns } from '../Keyboard';
 import { generateWaitingStateCode } from '../format';
 import { toPythonBoolean } from '../format';
@@ -18,17 +18,13 @@ import { toPythonBoolean } from '../format';
  * Генерирует код для сбора ввода от пользователя
  * @param targetNode - Узел с настройками сбора ввода
  * @param bodyIndent - Отступ для тела блока кода
- * @param allNodeIds - Массив всех ID узлов для валидации
  * @returns Строка с Python-кодом для сбора ввода
  */
 export function handleInputCollection(
   targetNode: Node,
-  bodyIndent: string,
-  allNodeIds: string[]
+  bodyIndent: string
 ): string {
   let code = '';
-
-  const inputVariable = targetNode.data?.inputVariable || `response_${targetNode.id}`;
 
   // Установка состояния ожидания ввода
   code += `${bodyIndent}# Устанавливаем состояние ожидания ввода для узла ${targetNode.id}\n`;
@@ -37,7 +33,7 @@ export function handleInputCollection(
 
   // Обработка inline клавиатуры с вводом
   if (targetNode.data?.keyboardType === 'inline' && targetNode.data?.buttons?.length) {
-    code += generateInlineKeyboardWithInput(targetNode, bodyIndent, allNodeIds);
+    code += generateInlineKeyboardWithInput(targetNode, bodyIndent);
   } else if (targetNode.data?.keyboardType === 'reply' && targetNode.data?.buttons?.length) {
     code += generateReplyKeyboardWithInput(targetNode, bodyIndent);
   }
@@ -50,8 +46,7 @@ export function handleInputCollection(
  */
 function generateInlineKeyboardWithInput(
   targetNode: Node,
-  bodyIndent: string,
-  allNodeIds: string[]
+  bodyIndent: string
 ): string {
   let code = '';
 

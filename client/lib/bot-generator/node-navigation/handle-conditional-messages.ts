@@ -8,7 +8,7 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { Button } from '../../bot-generator';
+import type { Button } from '../../types';
 import { generateButtonText } from '../format';
 import { toPythonBoolean } from '../format';
 
@@ -30,6 +30,10 @@ export interface ConditionalMessage {
   inputVariable?: string;
   /** Целевой узел после ввода */
   nextNodeAfterInput?: string;
+  /** Ждать ли текстовый ввод */
+  waitForTextInput?: boolean;
+  /** Включён ли текстовый ввод */
+  enableTextInput?: boolean;
 }
 
 /**
@@ -57,7 +61,7 @@ export function handleConditionalMessages(
   );
 
   sortedConditions.forEach((condition: ConditionalMessage, condIndex: number) => {
-    code += generateConditionCheck(condition, condIndex, bodyIndent);
+    code += generateConditionCheck(condition, condIndex, bodyIndent, targetNode.id);
   });
 
   return code;
@@ -69,7 +73,8 @@ export function handleConditionalMessages(
 function generateConditionCheck(
   condition: ConditionalMessage,
   condIndex: number,
-  bodyIndent: string
+  bodyIndent: string,
+  targetNodeId: string
 ): string {
   let code = '';
   const ifKeyword = condIndex === 0 ? 'if' : 'elif';
@@ -81,7 +86,7 @@ function generateConditionCheck(
     code += `${bodyIndent}    conditional_met = True\n`;
 
     if (condition.buttons && condition.buttons.length > 0) {
-      code += generateConditionalKeyboard(condition, bodyIndent);
+      code += generateConditionalKeyboard(condition, bodyIndent, targetNodeId);
     }
   }
 
@@ -93,12 +98,13 @@ function generateConditionCheck(
  */
 function generateConditionalKeyboard(
   condition: ConditionalMessage,
-  bodyIndent: string
+  bodyIndent: string,
+  targetNodeId: string
 ): string {
   let code = '';
 
   code += `${bodyIndent}    builder = ReplyKeyboardBuilder()\n`;
-  condition.buttons.forEach((btn: Button) => {
+  condition.buttons?.forEach((btn: Button) => {
     code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
   });
 
@@ -117,7 +123,7 @@ function generateConditionalKeyboard(
     condition.enableTextInput === true;
 
   if (condCollectInput) {
-    code += generateConditionalInputWait(condition, bodyIndent);
+    code += generateConditionalInputWait(condition, bodyIndent, targetNodeId);
   } else {
     code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура (сбор ответов НЕ настроен)")\n`;
   }
@@ -130,7 +136,8 @@ function generateConditionalKeyboard(
  */
 function generateConditionalInputWait(
   condition: ConditionalMessage,
-  bodyIndent: string
+  bodyIndent: string,
+  targetNodeId: string
 ): string {
   let code = '';
   const condInputVariable = condition.inputVariable || condition.variableName || 'response';
@@ -142,7 +149,7 @@ function generateConditionalInputWait(
   code += `${bodyIndent}        "type": "text",\n`;
   code += `${bodyIndent}        "variable": "${condInputVariable}",\n`;
   code += `${bodyIndent}        "save_to_database": True,\n`;
-  code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
+  code += `${bodyIndent}        "node_id": "${targetNodeId}",\n`;
   code += `${bodyIndent}        "next_node_id": "${nextNodeAfterCondition}",\n`;
   code += `${bodyIndent}    }\n`;
 

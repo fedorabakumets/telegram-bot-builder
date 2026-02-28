@@ -8,8 +8,8 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { Button } from '../../bot-generator';
-import { formatTextForPython, generateButtonText } from '../format';
+import type { Button } from '../../types';
+import { generateButtonText } from '../format';
 import { calculateOptimalColumns } from '../Keyboard';
 import { toPythonBoolean } from '../format';
 

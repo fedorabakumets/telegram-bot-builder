@@ -7,8 +7,20 @@
  * @module handle-message-input
  */
 
-import type { Node, Connection } from '@shared/schema';
+import type { Node } from '@shared/schema';
 import { formatTextForPython } from '../format';
+
+/**
+ * Соединение между узлами графа
+ */
+export interface Connection {
+  /** Уникальный идентификатор соединения */
+  id: string;
+  /** ID исходного узла */
+  source: string;
+  /** ID целевого узла */
+  target: string;
+}
 
 /**
  * Генерирует код для обработки сообщения с запросом ввода

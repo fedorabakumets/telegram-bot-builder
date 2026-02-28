@@ -7,7 +7,19 @@
  * @module navigation-helpers
  */
 
-import type { Node, Connection } from '@shared/schema';
+import type { Node } from '@shared/schema';
+
+/**
+ * Соединение между узлами графа
+ */
+export interface Connection {
+  /** Уникальный идентификатор соединения */
+  id: string;
+  /** ID исходного узла */
+  source: string;
+  /** ID целевого узла */
+  target: string;
+}
 
 /**
  * Контекст навигации, передаваемый в функции обработки
