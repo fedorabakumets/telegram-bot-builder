@@ -5,7 +5,7 @@ import { BotData, BotGroup, Node } from '@shared/schema';
 import { Button } from './bot-generator/types';
 import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
 import { setGlobalLoggingEnabled } from './bot-generator/core';
-import { generatePythonImports, type ImportGeneratorOptions } from './bot-generator/imports';
+import { generatePythonImports } from './bot-generator/imports';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotCommandsSetup } from './bot-commands-setup';
