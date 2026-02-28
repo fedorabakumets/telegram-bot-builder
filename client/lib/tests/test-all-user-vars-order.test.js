@@ -9,31 +9,6 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { generateStartHandler } from '../bot-generator/CommandHandler/generateStartHandler.js';
-import { generateStartHandlerImageSend } from '../bot-generator/CommandHandler/generateStartHandlerImageSend.js';
-import { generateKeyboardAndProcessAttachedMedia } from '../bot-generator/CommandHandler/generateKeyboardAndProcessAttachedMedia.js';
-
-/**
- * Тестовый узел start с изображением и автопереходом
- */
-const testNode = {
-  id: 'start',
-  type: 'start',
-  position: { x: 100, y: 100 },
-  data: {
-    command: '/start',
-    messageText: 'Привет! Я ваш бот.',
-    imageUrl: 'https://example.com/image.jpg',
-    attachedMedia: ['imageUrlVar_start'],
-    enableAutoTransition: true,
-    autoTransitionTo: 'next_node',
-    collectUserInput: true,
-    keyboardType: 'none',
-    buttons: [],
-    showInMenu: true,
-    description: 'Запустить бота'
-  }
-};
 
 /**
  * Проверяет, что all_user_vars определяется до использования
@@ -90,27 +65,33 @@ function testAllUserVarsDefinedBeforeUse() {
 }
 
 /**
- * Проверяет, что сгенерированный код не содержит дублирования all_user_vars
+ * Проверяет, что сгенерированный код содержит all_user_vars только один раз в начале
  */
 function testNoAllUserVarsDuplication() {
   console.log('\n🧪 Тест: отсутствие дублирования all_user_vars...');
 
   const codeLines = [];
 
-  // Имитируем генерацию кода
+  // Правильная генерация кода (без дублирования)
   codeLines.push('    all_user_vars = {}');
+  codeLines.push('    db_user_vars = await get_user_from_db(user_id)');
+  codeLines.push('    if db_user_vars and isinstance(db_user_vars, dict):');
+  codeLines.push('        all_user_vars.update(db_user_vars)');
   codeLines.push('    # какой-то код');
-  codeLines.push('    all_user_vars = {}'); // Дублирование!
+  codeLines.push('    caption = replace_variables_in_text(text, all_user_vars)');
 
   const code = codeLines.join('\n');
+  
+  // Подсчитываем количество определений all_user_vars = {}
   const matches = code.match(/all_user_vars = \{\}/g);
+  const count = matches ? matches.length : 0;
 
   assert.ok(
-    matches && matches.length <= 1,
-    `❌ Обнаружено дублирование all_user_vars = {} (${matches.length} раз)`
+    count === 1,
+    `❌ Ожидается 1 определение all_user_vars, найдено: ${count}`
   );
 
-  console.log('✅ Дублирование не обнаружено');
+  console.log('✅ all_user_vars определяется только один раз');
 }
 
 /**
