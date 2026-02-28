@@ -10,7 +10,7 @@ import { processUserInputWithValidationAndSave } from './processUserInputWithVal
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from './utils';
 import { hasInputCollection } from './utils/hasInputCollection';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure } from './bot-generator/user-input';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler } from './bot-generator/user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -107,24 +107,14 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Навигация на основе действия кнопки
      * Выполняет различные действия в зависимости от типа выбранной кнопки
      */
-    code += '            # Навигация на основе действия кнопки\n';
-    code += '            option_action = selected_option.get("action", "goto")\n';
-    code += '            option_target = selected_option.get("target", "")\n';
-    code += '            option_url = selected_option.get("url", "")\n';
-    code += '            \n';
+    code += generateButtonActionExtract('            ');
 
     /**
      * Обработка различных типов действий
      * Поддерживает переходы по URL, выполнение команд и навигацию к узлам
      */
     if (hasUrlButtonsInProject) {
-      code += '            if option_action == "url" and option_url:\n';
-      code += '                # Открытие ссылки\n';
-      code += '                url = option_url\n';
-      code += '                keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
-      code += '                    [InlineKeyboardButton(text="🔗 Открыть ссылку", url=url)]\n';
-      code += '                ])\n';
-      code += '                await message.answer("Нажмите кнопку ниже, чтобы открыть ссылку:", reply_markup=keyboard)\n';
+      code += generateUrlActionHandler('            ');
       code += '            elif option_action == "command" and option_target:\n';
     } else {
       code += '            if option_action == "command" and option_target:\n';
