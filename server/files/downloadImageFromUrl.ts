@@ -37,7 +37,7 @@ interface DownloadImageResult {
  *   47,
  *   'start'
  * );
- * // { success: true, localPath: '/uploads/project_47/start_image.jpg' }
+ * // { success: true, localPath: '/uploads/47/2026-02-28/start_image.jpg' }
  */
 export async function downloadImageFromUrl(
   imageUrl: string,
@@ -45,26 +45,32 @@ export async function downloadImageFromUrl(
   nodeName: string
 ): Promise<DownloadImageResult> {
   try {
-    // Создаём путь для сохранения
-    const timestamp = Date.now();
-    const fileName = `${nodeName}_image_${timestamp}.jpg`;
-    const projectDir = `./uploads/project_${projectId}`;
-    const localPath = `/uploads/project_${projectId}/${fileName}`;
-
-    // Создаём директорию проекта если не существует
+    // Создаём путь в формате uploads/{projectId}/{date}/
+    const date = new Date().toISOString().split('T')[0]; // ГГГГ-ММ-ДД
+    const uploadDir = path.join(process.cwd(), 'uploads', String(projectId), date);
+    
+    // Создаём директорию если не существует
     try {
-      mkdirSync(projectDir, { recursive: true });
-      console.log(`📁 Директория создана: ${projectDir}`);
+      mkdirSync(uploadDir, { recursive: true });
+      console.log(`📁 Директория создана: ${uploadDir}`);
     } catch (err) {
-      console.error(`Ошибка создания директории ${projectDir}:`, err);
+      console.error(`Ошибка создания директории ${uploadDir}:`, err);
     }
 
-    // Загружаем файл
-    const fullPath = path.join(process.cwd(), localPath);
-    console.log(`📥 Загрузка изображения: ${imageUrl}`);
-    console.log(`💾 Сохранение в: ${fullPath}`);
+    // Генерируем уникальное имя файла
+    const timestamp = Date.now();
+    const safeNodeName = nodeName.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 20);
+    const fileName = `${timestamp}-${safeNodeName}-image.jpg`;
+    const localFilePath = path.join(uploadDir, fileName);
     
-    const result = await downloadFileFromUrl(imageUrl, fullPath);
+    // Путь для сохранения в БД (относительный)
+    const localPath = `/uploads/${projectId}/${date}/${fileName}`;
+
+    // Загружаем файл с заголовками браузера
+    console.log(`📥 Загрузка изображения: ${imageUrl}`);
+    console.log(`💾 Сохранение в: ${localFilePath}`);
+    
+    const result = await downloadFileFromUrl(imageUrl, localFilePath);
 
     if (result.success) {
       console.log(`✅ Изображение загружено: ${localPath}`);
