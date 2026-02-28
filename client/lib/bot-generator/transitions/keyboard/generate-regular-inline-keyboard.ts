@@ -9,7 +9,7 @@
 
 import { Button } from '../../types';
 import { generateButtonText } from '../format';
-import { calculateOptimalColumns } from '../Keyboard';
+import { calculateOptimalColumns } from '../../Keyboard';
 
 /**
  * Параметры для генерации inline клавиатуры

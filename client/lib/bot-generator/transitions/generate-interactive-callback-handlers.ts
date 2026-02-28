@@ -724,7 +724,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                         navTargetNode,
                         userVars: 'user_vars',
                         allNodeIds: [],
-                        inputTargetNodeId
+                        inputTargetNodeId,
+                        userId: 'user_id'
                       }, '                ');
                     }
                   } else {
@@ -734,14 +735,16 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                         navTargetNode,
                         userVars: 'callback_query.from_user.id',
                         allNodeIds,
-                        inputTargetNodeId
+                        inputTargetNodeId,
+                        userId: 'callback_query.from_user.id'
                       }, '            ');
                     } else {
                       code += generateRegularFallbackNavigation({
                         navTargetNode,
                         userVars: 'callback_query.from_user.id',
                         allNodeIds: [],
-                        inputTargetNodeId
+                        inputTargetNodeId,
+                        userId: 'callback_query.from_user.id'
                       }, '            ');
                     }
                   }
