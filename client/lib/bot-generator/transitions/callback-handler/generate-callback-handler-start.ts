@@ -27,7 +27,8 @@ export function generateCallbackHandlerStart(
   code += `${indent}async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
   code += `${indent}    # Проверяем что это не fake callback (для автопереходов)\n`;
   code += `${indent}    if hasattr(callback_query, '_is_fake') and callback_query._is_fake:\n`;
-  code += `${indent}        logging.debug(f"⚡ Fake callback для узла ${nodeId}, пропускаем декоратор")\n`;
+  code += `${indent}        logging.debug(f"⚡ Fake callback для узла ${nodeId}, пропускаем выполнение")\n`;
+  code += `${indent}        return  # Прерываем выполнение для fake callback\n`;
   code += `${indent}    \n`;
   code += `${indent}    # Безопасное получение данных из callback_query\n`;
   code += `${indent}    callback_data = None  # Инициализируем переменную\n`;
