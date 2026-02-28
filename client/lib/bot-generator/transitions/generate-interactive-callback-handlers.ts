@@ -776,10 +776,26 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           // ============================================================================
           // СИСТЕМА АВТОПЕРЕХОДОВ
           // ============================================================================
+          const currentNodeForAutoTransition = nodes.find(n => n.id === nodeId);
+          let autoTransitionTarget: string | null = null;
+
+          // Проверяем явный автопереход через флаг
+          if (currentNodeForAutoTransition?.data?.enableAutoTransition && currentNodeForAutoTransition?.data?.autoTransitionTo) {
+            autoTransitionTarget = currentNodeForAutoTransition.data.autoTransitionTo;
+          }
+          // Если узел без кнопок и имеет одно соединение — делаем автопереход
+          else if (currentNodeForAutoTransition && (!currentNodeForAutoTransition.data?.buttons || currentNodeForAutoTransition.data?.buttons.length === 0)) {
+            const outgoingConnections = connections.filter(conn => conn && conn.source === nodeId);
+            if (outgoingConnections.length === 1) {
+              autoTransitionTarget = outgoingConnections[0].target;
+            }
+          }
+
           code += generateAutoTransitionCheck({ nodeId, targetNode, nodes, connections }, '    ');
 
           if (autoTransitionTarget) {
-            code += generateAutoTransitionCode(autoTransitionTarget, nodeId, '    ');
+            const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
+            code += generateAutoTransitionCode(autoTransitionTarget, nodeId, targetNode, '    ');
             code += `        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTarget}")\n`;
             // Проверяем, существует ли целевой узел перед вызовом обработчика
             const targetExists = nodes.some(n => n.id === autoTransitionTarget);
