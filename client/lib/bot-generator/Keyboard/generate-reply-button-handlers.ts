@@ -158,14 +158,14 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
               const targetExists = (nodes || []).some(n => n.id === targetNode.id);
               if (targetExists) {
                 code += `    await handle_callback_${targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_')}(mock_callback)\n`;
-                // Скрываем клавиатуру если установлен флаг hideAfterClick
-                if (hideAfterClick) {
-                  code += '    # Скрываем клавиатуру после нажатия кнопки\n';
-                  code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
-                }
               } else {
                 code += `    logging.warning(f"⚠️ Целевой узел не найден: {targetNode.id}, завершаем переход")\n`;
                 code += `    await message.answer("Переход завершен")\n`;
+              }
+              // Скрываем клавиатуру если установлен флаг hideAfterClick
+              if (hideAfterClick) {
+                code += '    # Скрываем клавиатуру после нажатия кнопки\n';
+                code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
               }
             } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               // Проверяем, есть ли статическое изображение в целевом узле
@@ -249,6 +249,11 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
                 code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                // Скрываем клавиатуру если установлен флаг hideAfterClick
+                if (hideAfterClick) {
+                  code += '    # Скрываем клавиатуру после нажатия кнопки\n';
+                  code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                }
               } else {
                 // Старая логика без изображения
                 code += '    builder = ReplyKeyboardBuilder()\n';
@@ -321,6 +326,11 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
                 code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+                // Скрываем клавиатуру если установлен флаг hideAfterClick
+                if (hideAfterClick) {
+                  code += '    # Скрываем клавиатуру после нажатия кнопки\n';
+                  code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                }
               }
 
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
@@ -438,6 +448,11 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   }
 
                   code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                  // Скрываем клавиатуру если установлен флаг hideAfterClick
+                  if (hideAfterClick) {
+                    code += '    # Скрываем клавиатуру после нажатия кнопки\n';
+                    code += '    await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                  }
                 } else {
                   // Нет изображения, отправляем текст с клавиатурой
                   let parseModeTarget = '';
@@ -449,8 +464,18 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
 
                   code += '    if use_conditional_keyboard:\n';
                   code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+                  // Скрываем клавиатуру если установлен флаг hideAfterClick
+                  if (hideAfterClick) {
+                    code += '        # Скрываем клавиатуру после нажатия кнопки\n';
+                    code += '        await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                  }
                   code += '    else:\n';
                   code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+                  // Скрываем клавиатуру если установлен флаг hideAfterClick
+                  if (hideAfterClick) {
+                    code += '        # Скрываем клавиатуру после нажатия кнопки\n';
+                    code += '        await message.answer("...", reply_markup=ReplyKeyboardRemove())\n';
+                  }
                 }
 
                 // Устанавливаем состояние ожидания ввода для inline клавиатуры
