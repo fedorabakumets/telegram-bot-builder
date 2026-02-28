@@ -145,7 +145,7 @@ describe('skipDataCollection навигация', () => {
       let fullCode = '';
       fullCode += generateSkipButtonsCheck('        ');
       fullCode += generateSkipFakeCallbackCreation('            ');
-      fullCode += generateSkipNavigation(nodes, '        ');
+      fullCode += generateSkipNavigation(nodes, '            ');
       fullCode += generateSkipTargetHandlerFunction(nodes, '    ');
       
       assert.ok(fullCode.includes('skip_buttons'), 'Должна быть проверка кнопок');
@@ -156,14 +156,15 @@ describe('skipDataCollection навигация', () => {
 
     it('должен иметь правильные отступы', () => {
       const nodes = [{ id: 'start', type: 'start', data: {} }];
-      
+
       const buttonsCheck = generateSkipButtonsCheck('        ');
       const fakeCallback = generateSkipFakeCallbackCreation('            ');
       const navigation = generateSkipNavigation(nodes, '        ');
-      
+
       // Проверяем что отступы увеличиваются корректно
-      assert.ok(buttonsCheck.startsWith('        #'), 'buttonsCheck должен иметь отступ 8 пробелов');
+      assert.ok(buttonsCheck.startsWith('            #'), 'buttonsCheck должен иметь отступ 12 пробелов');
       assert.ok(fakeCallback.startsWith('            #'), 'fakeCallback должен иметь отступ 12 пробелов');
+      assert.ok(navigation.startsWith('                #'), 'navigation должен иметь отступ 16 пробелов');
     });
   });
 });
