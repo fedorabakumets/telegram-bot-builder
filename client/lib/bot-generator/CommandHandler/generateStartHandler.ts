@@ -217,15 +217,18 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   const formattedText = generateKeyboardAndProcessAttachedMedia(node as any, codeLines);
 
   // Отправляем изображение ПОСЛЕ создания all_user_vars (если есть imageUrl)
-  if (node && node.data && node.data.imageUrl && node.data.imageUrl !== 'undefined') {
+  const hasImageUrl = node && node.data && node.data.imageUrl && node.data.imageUrl !== 'undefined';
+  if (hasImageUrl) {
     generateStartHandlerImageSend(node, codeLines, userDatabaseEnabled);
   }
 
   // Проверяем, есть ли прикрепленные медиафайлы
-  if (attachedMedia.length > 0) {
+  // ВАЖНО: Не вызываем generateConditionalMessageLogicAndKeyboard если imageUrl уже отправлен
+  // чтобы избежать дублирования отправки сообщения
+  if (attachedMedia.length > 0 && !hasImageUrl) {
     // Если есть прикрепленные медиа, генерируем только код клавиатуры без отправки сообщения
     generateConditionalMessageLogicAndKeyboard(node as any, codeLines, mediaVariablesMap, attachedMedia, formattedText);
-  } else {
+  } else if (attachedMedia.length === 0) {
     // Обычная логика без медиа - используем функцию generateKeyboard
     // Она генерирует полный код, включая отправку сообщения
     const keyboardCode = generateKeyboard(node);
@@ -234,6 +237,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
     codeLines.push(...keyboardLines);
   }
+  // Если attachedMedia.length > 0 и hasImageUrl = true, ничего не делаем (изображение уже отправлено)
 
   // ============================================================================
   // АВТОПЕРЕХОД: Если у узла есть enableAutoTransition и autoTransitionTo
