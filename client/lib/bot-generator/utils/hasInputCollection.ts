@@ -13,7 +13,7 @@ import type { InputCollectionCheckResult } from './types/input-collection-check-
  *
  * @example
  * const result = hasInputCollection(nodes);
- * if (result.hasPhotoInput) { /* ... */ }
+ * if (result.hasPhotoInput) { \/* do something *\/ }
  */
 export function hasInputCollection(nodes: BotNode[]): InputCollectionCheckResult {
   if (!nodes || nodes.length === 0) {

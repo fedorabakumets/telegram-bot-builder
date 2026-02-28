@@ -1,4 +1,4 @@
-import { answersave } from '../../answersave';
+import { answersave } from './answersave';
 import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
 import { handleConditionalNavigationAndInputCollection } from './handleConditionalNavigationAndInputCollection';
 import { handleNodeNavigationAndInputProcessing } from '../../handleNodeNavigationAndInputProcessing';
