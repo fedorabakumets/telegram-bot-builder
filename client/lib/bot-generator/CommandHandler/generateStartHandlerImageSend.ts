@@ -45,18 +45,29 @@ export function generateStartHandlerImageSend(
     codeLines.push('    # Подставляем переменные в caption (text и all_user_vars определены выше)');
     codeLines.push('    caption = replace_variables_in_text(text, all_user_vars)');
     codeLines.push('');
-    codeLines.push('    # Отправляем изображение с URL');
+    codeLines.push('    # Отправляем изображение с URL и клавиатурой');
     codeLines.push('    try:');
-    codeLines.push('        await bot.send_photo(');
-    codeLines.push('            chat_id=message.chat.id,');
-    codeLines.push('            photo=image_url,');
-    codeLines.push('            caption=caption');
-    codeLines.push('        )');
+    codeLines.push('        if keyboard is not None:');
+    codeLines.push('            await bot.send_photo(');
+    codeLines.push('                chat_id=message.chat.id,');
+    codeLines.push('                photo=image_url,');
+    codeLines.push('                caption=caption,');
+    codeLines.push('                reply_markup=keyboard');
+    codeLines.push('            )');
+    codeLines.push('        else:');
+    codeLines.push('            await bot.send_photo(');
+    codeLines.push('                chat_id=message.chat.id,');
+    codeLines.push('                photo=image_url,');
+    codeLines.push('                caption=caption');
+    codeLines.push('            )');
     codeLines.push('        logging.info(f"✅ Изображение отправлено: {image_url}")');
     codeLines.push('    except Exception as e:');
     codeLines.push('        logging.error(f"❌ Ошибка отправки изображения: {e}")');
     codeLines.push('        # Fallback: отправляем только текст');
-    codeLines.push('        await message.answer(caption)');
+    codeLines.push('        if keyboard is not None:');
+    codeLines.push('            await message.answer(caption, reply_markup=keyboard)');
+    codeLines.push('        else:');
+    codeLines.push('            await message.answer(caption)');
     codeLines.push('');
   }
 }

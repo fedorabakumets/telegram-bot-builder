@@ -3,6 +3,7 @@
 
 export * from './calculateOptimalColumns';
 export * from './generateKeyboard';
+export * from './generateKeyboardOnly';
 export * from './generateButtonResponseHandlers';
 export * from './filterInlineNodes';
 export * from './generate-reply-button-handlers';

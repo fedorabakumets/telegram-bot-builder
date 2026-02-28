@@ -13,6 +13,7 @@
 import { Node } from '@shared/schema';
 import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
 import { generateKeyboard } from '../Keyboard/generateKeyboard';
+import { generateKeyboardOnly } from '../Keyboard/generateKeyboardOnly';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { generateConditionalMessageLogicAndKeyboard } from './generateConditionalMessageLogicAndKeyboard';
 import { generateKeyboardAndProcessAttachedMedia } from './generateKeyboardAndProcessAttachedMedia';
@@ -222,22 +223,28 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
     generateStartHandlerImageSend(node, codeLines, userDatabaseEnabled);
   }
 
-  // Проверяем, есть ли прикрепленные медиафайлы
-  // ВАЖНО: Не вызываем generateConditionalMessageLogicAndKeyboard если imageUrl уже отправлен
-  // чтобы избежать дублирования отправки сообщения
-  if (attachedMedia.length > 0 && !hasImageUrl) {
-    // Если есть прикрепленные медиа, генерируем только код клавиатуры без отправки сообщения
+  // Генерируем клавиатуру для всех случаев
+  // ПРИМЕЧАНИЕ: generateKeyboard создаёт код клавиатуры и отправки сообщения
+  // Но для start узла с imageUrl мы уже отправили сообщение выше
+  // Поэтому нам нужно сгенерировать только клавиатуру без повторной отправки
+  if (hasImageUrl) {
+    // Для узлов с imageUrl генерируем ТОЛЬКО код клавиатуры
+    // Отправка сообщения уже была в generateStartHandlerImageSend
+    const keyboardOnlyCode = generateKeyboardOnly(node);
+    if (keyboardOnlyCode) {
+      const keyboardLines = keyboardOnlyCode.split('\n').filter(line => line.trim());
+      codeLines.push(...keyboardLines);
+    }
+  } else if (attachedMedia.length > 0) {
+    // Если есть прикрепленные медиа (но нет imageUrl), генерируем код отправки медиа с клавиатурой
     generateConditionalMessageLogicAndKeyboard(node as any, codeLines, mediaVariablesMap, attachedMedia, formattedText);
-  } else if (attachedMedia.length === 0) {
+  } else {
     // Обычная логика без медиа - используем функцию generateKeyboard
     // Она генерирует полный код, включая отправку сообщения
     const keyboardCode = generateKeyboard(node);
-
-    // Вставляем код клавиатуры в нужное место
     const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
     codeLines.push(...keyboardLines);
   }
-  // Если attachedMedia.length > 0 и hasImageUrl = true, ничего не делаем (изображение уже отправлено)
 
   // ============================================================================
   // АВТОПЕРЕХОД: Если у узла есть enableAutoTransition и autoTransitionTo
