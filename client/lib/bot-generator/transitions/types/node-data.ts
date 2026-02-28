@@ -7,6 +7,11 @@ import type { ButtonData } from './button-data';
 import type { MediaType } from './media-type';
 
 /**
+ * Тип клавиатуры: "inline", "reply", "none"
+ */
+export type KeyboardType = 'inline' | 'reply' | 'none';
+
+/**
  * Данные узла для переходов
  */
 export interface NodeData {
@@ -26,4 +31,8 @@ export interface NodeData {
   waitForInput?: boolean;
   /** Тип медиа для вложения */
   attachedMedia?: MediaType[];
+  /** Тип клавиатуры */
+  keyboardType?: KeyboardType;
+  /** Одноразовая клавиатура */
+  oneTimeKeyboard?: boolean;
 }

@@ -15,10 +15,14 @@ export interface ConditionalMessageParams {
   condition: 'user_data_exists' | 'user_data_equals' | 'user_data_not_equals' | 'user_data_contains';
   /** Имя переменной */
   variableName?: string;
+  /** Массив имён переменных */
+  variableNames?: string[];
   /** Значение для сравнения */
   variableValue?: string;
   /** Логический оператор */
   logicOperator?: 'AND' | 'OR';
   /** Приоритет выполнения */
   priority?: number;
+  /** Ожидать текстовый ввод */
+  waitForTextInput?: boolean;
 }
