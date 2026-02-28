@@ -7,3 +7,4 @@
  */
 
 export { generateNavigationToNode, type NavigationToNodeParams } from './generate-navigation-to-node';
+export { generateNavigationErrorHandler, generateUnknownNodeWarning, generateNoNodesAvailableWarning } from './generate-navigation-error-handler';

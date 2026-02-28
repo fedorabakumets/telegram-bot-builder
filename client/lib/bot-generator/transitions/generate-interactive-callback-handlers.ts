@@ -20,7 +20,7 @@ import { generateMediaSendCode } from './media';
 import { generateButtonTextDetection } from './button';
 import { generateVariableSaveLogic } from './variable';
 import { generateRedirectLogic } from './redirect';
-import { generateNavigationToNode } from './navigation';
+import { generateNavigationToNode, generateNavigationErrorHandler, generateUnknownNodeWarning, generateNoNodesAvailableWarning } from './navigation';
 import { generateInputNodeHandling } from './input';
 import { Button, isLoggingEnabled } from '../../bot-generator';
 import { generateBroadcastInline } from '../Broadcast/BotApi/generateBroadcastHandler';
@@ -1058,17 +1058,12 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                 }
               });
 
-              code += '        else:\n';
-              code += '            logging.warning(f"Неизяяестныяя следующий узел: {next_node_id}")\n';
+              code += generateUnknownNodeWarning('        ');
             } else {
-              code += '        # No nodes available for navigation\n';
-              code += '        logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+              code += generateNoNodesAvailableWarning('        ');
             }
 
-            code += '    except Exception as e:\n';
-            code += '        logging.error(f"яяшибка при пяяяяреходе к следующему узлу {next_node_id}: {e}")\n';
-            code += '    \n';
-            code += '    return  # Завершаем обработку после переадресации\n';
+            code += generateNavigationErrorHandler('    ');
           }
           code += '    \n';
 
