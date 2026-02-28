@@ -21,5 +21,5 @@ export function generateConditionalBranch(
   indent: string = '            '
 ): string {
   const condition = index === 0 ? 'if' : 'elif';
-  return `${condition} next_node_id == "${nodeId}":\n`;
+  return `${indent}${condition} next_node_id == "${nodeId}":\n`;
 }
