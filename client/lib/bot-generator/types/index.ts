@@ -16,11 +16,20 @@ export type { CodeWithMap } from './code-types';
 
 export type { BotNode } from './bot-node-types';
 export type { BotNodeArray } from './bot-node-types';
+export type { LegacyEnhancedNode } from './bot-node-types';
 
 export type { NodeData } from './node-data.types';
 export type { KeyboardType } from './node-data.types';
 export type { FormatMode } from './node-data.types';
 export type { InputType } from './node-data.types';
+
+export type { EnhancedNode } from './enhanced-node.types';
+export type { EnhancedNodeArray } from './enhanced-node.types';
+
+export type { ButtonActionOverride } from './node-data-override.types';
+export type { ButtonOverride } from './node-data-override.types';
+export type { KeyboardTypeOverride } from './node-data-override.types';
+export type { FormatModeOverride } from './node-data-override.types';
 
 export type { GenerationOptions } from './generation.types';
 export type { GenerationContext } from './generation.types';
