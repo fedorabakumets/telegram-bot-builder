@@ -85,6 +85,7 @@ export function moveButton(layout: KeyboardLayout, buttonId: string, toRow: numb
   } else {
     newRows.push({ buttonIds: [buttonId] });
   }
-  
-  return { rows: newRows, columns: layout.columns, autoLayout: layout.autoLayout };
+
+  // При ручном перемещении отключаем авто-раскладку
+  return { rows: newRows, columns: layout.columns, autoLayout: false };
 }
