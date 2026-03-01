@@ -84,6 +84,7 @@ export function KeyboardLayoutEditor({
           buttons={buttons}
           layout={layout}
           onMoveButton={moveButton}
+          disabled={layout.autoLayout}
         />
       </CardContent>
     </Card>
