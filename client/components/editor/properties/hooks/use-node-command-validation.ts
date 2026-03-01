@@ -6,7 +6,7 @@
 
 import { useMemo } from 'react';
 import { validateCommand } from '@/lib/commands';
-import { getNodeDefaults } from '../../utils/node-defaults';
+import { getNodeDefaults } from '../utils/node-defaults';
 import type { Node } from '@shared/schema';
 
 /** Пропсы хука */
