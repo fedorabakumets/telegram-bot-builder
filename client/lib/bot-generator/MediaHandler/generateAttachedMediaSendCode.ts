@@ -188,9 +188,9 @@ export function generateAttachedMediaSendCode(
 
     // ИСПРАВЛЕНИЕ: Добавляем клавиатуру если она определена
     codeLines.push(`${indentLevel}        if keyboard is not None:`);
-    codeLines.push(`${indentLevel}            await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, reply_markup=keyboard, node_id="${nodeId}")`);
+    codeLines.push(`${indentLevel}            await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, reply_markup=keyboard)`);
     codeLines.push(`${indentLevel}        else:`);
-    codeLines.push(`${indentLevel}            await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam}, node_id="${nodeId}")`);
+    codeLines.push(`${indentLevel}            await bot.send_photo(${userIdSource}, image_url, caption=processed_caption${parseModeParam})`);
     codeLines.push(`${indentLevel}    except Exception as e:`);
     codeLines.push(`${indentLevel}        logging.error(f"Ошибка отправки статического изображения: {e}")`);
     codeLines.push(`${indentLevel}        # Fallback на обычное сообщение при ошибке`);

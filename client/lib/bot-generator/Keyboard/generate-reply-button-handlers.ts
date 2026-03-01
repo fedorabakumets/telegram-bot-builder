@@ -250,7 +250,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 } else if (targetNode.data.formatMode === 'html') {
                   parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
-                code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseModeTarget})\n`;
                 // Скрываем клавиатуру если установлен флаг hideAfterClick
                 if (hideAfterClick) {
                   code += '    # Скрываем клавиатуру после нажатия кнопки (используем zero-width space)\n';
@@ -449,7 +449,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
 
-                  code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                  code += `    await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=keyboard${parseModeTarget})\n`;
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
                     code += '    # Скрываем клавиатуру после нажатия кнопки\n';
@@ -586,14 +586,14 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                   } else if (targetNode.data.formatMode === 'html') {
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
-                  code += `        await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=conditional_keyboard, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                  code += `        await bot.send_photo(message.chat.id, image_url, caption=text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
                     code += '        # Скрываем клавиатуру после нажатия кнопки (используем zero-width space)\n';
                     code += '        await message.answer("\\u200B", reply_markup=ReplyKeyboardRemove())\n';
                   }
                   code += '    else:\n';
-                  code += `        await bot.send_photo(message.chat.id, image_url, caption=text, node_id="${targetNode.id}"${parseModeTarget})\n`;
+                  code += `        await bot.send_photo(message.chat.id, image_url, caption=text${parseModeTarget})\n`;
                   // Скрываем клавиатуру если установлен флаг hideAfterClick
                   if (hideAfterClick) {
                     code += '        # Скрываем клавиатуру после нажатия кнопки (используем zero-width space)\n';

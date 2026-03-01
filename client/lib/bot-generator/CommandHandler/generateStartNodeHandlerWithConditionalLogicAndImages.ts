@@ -125,9 +125,9 @@ export function generateStartNodeHandlerWithConditionalLogicAndImages(targetNode
         }
         codeLines.push('    try:');
         codeLines.push('        if keyboard is not None:');
-        codeLines.push(`            await bot.send_photo(callback_query.from_user.id, image_url, caption=text, reply_markup=keyboard, node_id="${actualNodeId}"${parseMode})`);
+        codeLines.push(`            await bot.send_photo(callback_query.from_user.id, image_url, caption=text, reply_markup=keyboard${parseMode})`);
         codeLines.push('        else:');
-        codeLines.push(`            await bot.send_photo(callback_query.from_user.id, image_url, caption=text, node_id="${actualNodeId}"${parseMode})`);
+        codeLines.push(`            await bot.send_photo(callback_query.from_user.id, image_url, caption=text${parseMode})`);
         codeLines.push('    except Exception:');
         codeLines.push('        # Fallback на обычное сообщение при ошибке');
         codeLines.push('        if keyboard is not None:');
