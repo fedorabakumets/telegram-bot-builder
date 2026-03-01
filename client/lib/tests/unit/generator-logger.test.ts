@@ -95,7 +95,9 @@ describe('GeneratorLogger', () => {
     logger.error('Error message');
     logger.flow('Flow message');
     
-    assert.strictEqual(logs.length, 2, 'Только warn и error должны логироваться');
+    assert.strictEqual(logs.length, 3, 'warn, error и flow должны логироваться');
+    assert.ok(!logs.some(log => log.includes('Debug message')), 'debug не должен логироваться');
+    assert.ok(!logs.some(log => log.includes('Info message')), 'info не должен логироваться');
   });
 
   /**
@@ -110,7 +112,10 @@ describe('GeneratorLogger', () => {
     logger.error('Error message');
     logger.flow('Flow message');
     
-    assert.strictEqual(logs.length, 1, 'Только error должен логироваться');
+    assert.strictEqual(logs.length, 2, 'error и flow должны логироваться');
+    assert.ok(!logs.some(log => log.includes('Debug message')), 'debug не должен логироваться');
+    assert.ok(!logs.some(log => log.includes('Info message')), 'info не должен логироваться');
+    assert.ok(!logs.some(log => log.includes('Warn message')), 'warn не должен логироваться');
   });
 
   /**

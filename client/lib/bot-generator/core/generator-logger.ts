@@ -65,7 +65,7 @@ export interface LoggerOptions {
 export function createLogger(options: LoggerOptions = {}): GeneratorLogger {
   const { enabled = true, level = 'info' } = options;
 
-  const levels: LogLevel[] = ['debug', 'info', 'warn', 'error', 'flow'];
+  const levels: LogLevel[] = ['debug', 'info', 'warn', 'error'];
   const minLevelIndex = levels.indexOf(level);
 
   const shouldLog = (logLevel: LogLevel): boolean => {
@@ -95,7 +95,7 @@ export function createLogger(options: LoggerOptions = {}): GeneratorLogger {
       }
     },
     flow: (msg) => {
-      if (shouldLog('flow')) {
+      if (shouldLog('error')) {
         console.log(`🔄 [FLOW] ${msg}`);
       }
     },
