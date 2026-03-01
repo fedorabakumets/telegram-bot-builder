@@ -33,7 +33,7 @@ export function createBotFile(botCode: string, projectId: number, tokenId?: numb
   }
   
   const filePath = join(botsDir, fileName);
-  writeFileSync(filePath, botCode);
+  writeFileSync(filePath, botCode, 'utf8');
   return filePath;
 }
 
@@ -80,7 +80,7 @@ export async function createCompleteBotFiles(
   // Создаем основной файл бота в его папке
   const fileName = customFileName ? `${customFileName}.py` : `bot_${projectId}_${tokenId}.py`;
   const mainFile = join(botDir, fileName);
-  writeFileSync(mainFile, botCode);
+  writeFileSync(mainFile, botCode, 'utf8');
 
   // Динамический импорт генераторов
   const {
@@ -96,25 +96,25 @@ export async function createCompleteBotFiles(
   // 1. requirements.txt
   const requirementsContent = generateRequirementsTxt();
   const requirementsPath = join(botDir, 'requirements.txt');
-  writeFileSync(requirementsPath, requirementsContent);
+  writeFileSync(requirementsPath, requirementsContent, 'utf8');
   assets.push(requirementsPath);
 
   // 2. README.md
   const readmeContent = generateReadme(normalizedBotData, botName, projectId, tokenId, customFileName);
   const readmePath = join(botDir, 'README.md');
-  writeFileSync(readmePath, readmeContent);
+  writeFileSync(readmePath, readmeContent, 'utf8');
   assets.push(readmePath);
 
   // 3. Dockerfile
   const dockerfileContent = generateDockerfile();
   const dockerfilePath = join(botDir, 'Dockerfile');
-  writeFileSync(dockerfilePath, dockerfileContent);
+  writeFileSync(dockerfilePath, dockerfileContent, 'utf8');
   assets.push(dockerfilePath);
 
   // 4. JSON файл с данными проекта
   const jsonData = JSON.stringify(normalizedBotData, null, 2);
   const jsonPath = join(botDir, 'project.json');
-  writeFileSync(jsonPath, jsonData);
+  writeFileSync(jsonPath, jsonData, 'utf8');
   assets.push(jsonPath);
 
   // 6. .env файл с токеном бота и ADMIN_IDS
@@ -126,7 +126,7 @@ export async function createCompleteBotFiles(
     projectId // ID проекта
   );
   const envPath = join(botDir, '.env');
-  writeFileSync(envPath, envContent);
+  writeFileSync(envPath, envContent, 'utf8');
   assets.push(envPath);
 
   return { mainFile, assets };
