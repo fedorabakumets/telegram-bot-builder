@@ -46,13 +46,14 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
   const isMultiSelect = hasOptionButtons && (node.data as any).allowMultipleSelection;
   const keyboardType = node.data.keyboardType as 'inline' | 'reply';
 
-  // Находим кнопку завершения (complete или navigation)
-  const completeButton = node.data.buttons.find(
-    (button: any) => button.buttonType === 'complete' || button.buttonType === 'navigation'
-  );
+  // Находим кнопку завершения (для множественного выбора)
+  // Только кнопка с buttonType: 'complete' считается кнопкой завершения
+  const completeButton = isMultiSelect
+    ? node.data.buttons.find((button: any) => button.buttonType === 'complete')
+    : undefined;
 
-  // Фильтруем только option кнопки для KeyboardGrid
-  const optionButtons = node.data.buttons.filter((button: any) => button.buttonType === 'option');
+  // Все кнопки кроме complete для KeyboardGrid (option + navigation)
+  const gridButtons = node.data.buttons.filter((button: any) => button.buttonType !== 'complete');
 
   return (
     <div className="space-y-3">
@@ -63,10 +64,10 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
           {isMultiSelect ? (
             <>
               <KeyboardGrid
-                buttons={optionButtons}
+                buttons={gridButtons}
                 keyboardLayout={node.data.keyboardLayout}
                 buttonClassName=""
-                renderButton={(button) => <OptionButton button={button} />}
+                renderButton={(button) => button.buttonType === 'option' ? <OptionButton button={button} /> : <InlineButton button={button} allNodes={allNodes} />}
               />
               {/* Кнопка завершения: из шаблона или стандартная */}
               {completeButton ? (

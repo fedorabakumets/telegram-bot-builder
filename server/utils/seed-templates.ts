@@ -315,7 +315,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "red-avtovo", text: "🟥 Автово", action: "selection", target: "avtovo", buttonType: "option" },
                     { id: "red-leninsky", text: "🟥 Ленинский проспект", action: "selection", target: "leninsky", buttonType: "option" },
                     { id: "red-veteranov", text: "🟥 Проспект Ветеранов", action: "selection", target: "veteranov", buttonType: "option" },
-                    { id: "btn-back-metro", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+                    { id: "btn-back-metro", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -350,7 +350,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "blue-moskovskaya", text: "🟦 Московская", action: "selection", target: "moskovskaya", buttonType: "option" },
                     { id: "blue-zvezdnaya", text: "🟦 Звездная", action: "selection", target: "zvezdnaya", buttonType: "option" },
                     { id: "blue-kupchino", text: "🟦 Купчино", action: "selection", target: "kupchino", buttonType: "option" },
-                    { id: "btn-back-metro-blue", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+                    { id: "btn-back-metro-blue", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -379,7 +379,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "green-rybackoe", text: "🟩 Рыбацкое", action: "selection", target: "rybackoe", buttonType: "option" },
                     { id: "green-novokrestovsk", text: "🟩 Новокрестовская", action: "selection", target: "novokrestovsk", buttonType: "option" },
                     { id: "green-begovaya", text: "🟩 Беговая", action: "selection", target: "begovaya", buttonType: "option" },
-                    { id: "btn-back-metro-green", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+                    { id: "btn-back-metro-green", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -408,7 +408,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "purple-volkovskaya", text: "🟪 Волковская", action: "selection", target: "volkovskaya", buttonType: "option" },
                     { id: "purple-buharestskaya", text: "🟪 Бухарестская", action: "selection", target: "buharestskaya", buttonType: "option" },
                     { id: "purple-mezhdunar", text: "🟪 Международная", action: "selection", target: "mezhdunar", buttonType: "option" },
-                    { id: "btn-back-metro-purple", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+                    { id: "btn-back-metro-purple", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -515,7 +515,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "music-hiphop", text: "🎤 Хип-хоп", action: "selection", target: "hiphop", buttonType: "option" },
                     { id: "music-indie", text: "🎸 Инди", action: "selection", target: "indie", buttonType: "option" },
                     { id: "music-rnb", text: "🎵 R&B", action: "selection", target: "rnb", buttonType: "option" },
-                    { id: "btn-back-categories-music", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "btn-back-categories-music", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -540,7 +540,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "hobby-diy", text: "🔨 DIY", action: "selection", target: "diy", buttonType: "option" },
                     { id: "hobby-pets", text: "🐕 Животные", action: "selection", target: "pets", buttonType: "option" },
                     { id: "hobby-tech", text: "💻 Технологии", action: "selection", target: "tech", buttonType: "option" },
-                    { id: "btn-back-categories-hobby", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "btn-back-categories-hobby", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -563,7 +563,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "social-volunteering", text: "🤲 Волонтёрство", action: "selection", target: "volunteering", buttonType: "option" },
                     { id: "social-events", text: "🎪 Мероприятия", action: "selection", target: "events", buttonType: "option" },
                     { id: "social-community", text: "👥 Сообщества", action: "selection", target: "community", buttonType: "option" },
-                    { id: "btn-back-categories-social", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "btn-back-categories-social", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -587,7 +587,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "creativity-design", text: "🖌️ Дизайн", action: "selection", target: "design", buttonType: "option" },
                     { id: "creativity-handmade", text: "🧶 Рукоделие", action: "selection", target: "handmade", buttonType: "option" },
                     { id: "creativity-theater", text: "🎭 Театр", action: "selection", target: "theater", buttonType: "option" },
-                    { id: "btn-back-categories-creativity", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "btn-back-categories-creativity", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -611,7 +611,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "active-yoga", text: "🧘 Йога", action: "selection", target: "yoga", buttonType: "option" },
                     { id: "active-swimming", text: "🏊 Плавание", action: "selection", target: "swimming", buttonType: "option" },
                     { id: "active-dancing", text: "💃 Танцы", action: "selection", target: "dancing", buttonType: "option" },
-                    { id: "btn-back-categories-active", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "btn-back-categories-active", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -635,7 +635,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "food-baking", text: "🧁 Выпечка", action: "selection", target: "baking", buttonType: "option" },
                     { id: "food-street", text: "🌮 Стрит-фуд", action: "selection", target: "street_food", buttonType: "option" },
                     { id: "food-healthy", text: "🥗 Здоровое питание", action: "selection", target: "healthy_food", buttonType: "option" },
-                    { id: "btn-back-categories-food", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "btn-back-categories-food", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -659,7 +659,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "sport-volleyball", text: "🏐 Волейбол", action: "selection", target: "volleyball", buttonType: "option" },
                     { id: "sport-mma", text: "🥊 Единоборства", action: "selection", target: "mma", buttonType: "option" },
                     { id: "sport-esports", text: "🎮 Киберспорт", action: "selection", target: "esports", buttonType: "option" },
-                    { id: "btn-back-categories-sport", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "btn-back-categories-sport", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
                   ],
                   markdown: false
                 }
@@ -949,7 +949,7 @@ async function seedDefaultTemplates(force = false) {
                       text: "🔄 Начать заново",
                       action: "command",
                       target: "/start",
-                      buttonType: "navigation"
+                      buttonType: "normal"
                     }
                   ],
                   markdown: false
@@ -979,7 +979,7 @@ async function seedDefaultTemplates(force = false) {
                   commandName: "/help",
                   description: "Полная справка по всем командам бота и модерации",
                   synonyms: ["помощь", "справка", "команды", "что писать", "как пользоваться", "админ справка", "админ помощь", "админ команды"],
-                  messageText: "🤖 **Добро пожаловать в справочный центр!**\n\n🌟 **ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot**\n*Твой помощник в знакомствах*\n\n🎯 **ОСНОВНЫЕ КОМАНДЫ:**\n\n🚀 `/start` — *Начать заново*\n   📝 Синонимы: `старт`, `начать`, `привет`, `начало`, `начинаем`\n\n👤 `/profile` — *Мой профиль*\n   📝 Синонимы: `профиль`, `анкета`, `мой профиль`, `посмотреть профиль`, `редактировать профиль`\n\n🔗 `/link` — *Ссылка на чат*\n   📝 Синонимы: `ссылка`, `чат`, `сообщество`, `впрогулке`, `линк`\n\n🆘 `/help` — *Эта справка*\n   📝 Синонимы: `помощь`, `справка`, `команды`, `что писать`, `как пользоваться`\n\n📋 **РАЗДЕЛЫ АНКЕТЫ И ИХ СИНОНИМЫ:**\n\n👫 **Пол:** мужской, женский\n   📝 Синонимы: `пол`, `gender`\n\n🏷️ **Имя:** любое имя\n   📝 Синонимы: `имя`, `как зовут`, `назовись`\n\n🎂 **Возраст:** число от 18 до 99\n   📝 Синонимы: `возраст`, `лет`, `сколько лет`\n\n🚇 **Метро:** выбор линии и станции\n   📝 Синонимы: `метро`, `станция`\n   🟥 Красная линия: `красная линия`, `кировско-выборгская`, `красная ветка`\n   🟦 Синяя линия: `синяя линия`, `московско-петроградская`, `синяя ветка`\n   🟩 Зеленая линия: `зеленая линия`, `невско-василеостровская`, `зеленая ветка`\n   🟧 Оранжевая линия: `оранжевая линия`, `правобережная`, `оранжевая ветка`\n   🟪 Фиолетовая линия: `фиолетовая линия`, `фрунзенско-приморская`, `фиолетовая ветка`\n\n🎨 **Интересы и их синонимы:**\n   🎮 Хобби: `хобби`, `увлечения`, `занятия`, `игры`\n   🤝 Социальная жизнь: `общение`, `социальное`, `люди`, `тусовки`\n   🎭 Творчество: `творчество`, `искусство`, `рисование`, `музыка`\n   💪 Активный образ жизни: `активность`, `активный`, `движение`, `здоровье`\n   🍕 Еда и напитки: `еда`, `напитки`, `кухня`, `рестораны`\n   ⚽ Спорт: `спорт`, `фитнес`, `тренировки`, `футбол`\n\n💑 **Семейное положение:** поиск, отношения, женат/замужем, сложно\n   📝 Синонимы: `семейное положение`, `статус`, `отношения`, `семья`\n\n🌈 **Ориентация:** гетеро, гей, лесби, би, другое\n   📝 Синонимы: `ориентация`, `предпочтения`\n\n📺 **Телеграм-канал:** опционально\n   📝 Синонимы: `тгк`, `телеграм`, `канал`, `тг канал`\n\n📖 **О себе:** дополнительная информация\n   📝 Синонимы: `о себе`, `описание`, `расскажи`, `инфо`\n\n👮‍♂️ **КОМАНДЫ МОДЕРАЦИИ:**\n\n**Управление контентом:**\n📌 `/pin_message` - Закрепить сообщение\n   📝 Синонимы: `закрепить`, `прикрепить`, `зафиксировать`\n\n📌❌ `/unpin_message` - Открепить сообщение\n   📝 Синонимы: `открепить`, `отцепить`, `убрать закрепление`\n\n🗑️ `/delete_message` - Удалить сообщение\n   📝 Синонимы: `удалить`, `стереть`, `убрать сообщение`\n\n**Управление пользователями:**\n🚫 `/ban_user` - Заблокировать пользователя\n   📝 Синонимы: `забанить`, `заблокировать`, `бан`\n\n✅ `/unban_user` - Разблокировать пользователя\n   📝 Синонимы: `разбанить`, `разблокировать`, `unbán`\n\n🔇 `/mute_user` - Ограничить пользователя\n   📝 Синонимы: `замутить`, `заглушить`, `мут`\n\n🔊 `/unmute_user` - Снять ограничения\n   📝 Синонимы: `размутить`, `разглушить`, `анмут`\n\n👢 `/kick_user` - Исключить пользователя\n   📝 Синонимы: `кикнуть`, `исключить`, `выгнать`\n\n👑 `/promote_user` - Назначить администратором\n   📝 Синонимы: `повысить`, `назначить админом`, `промоут`\n\n👤 `/demote_user` - Снять с администратора\n   📝 Синонимы: `понизить`, `снять с админа`, `демоут`\n\n⚙️ `/admin_rights` - Настроить права администратора\n   📝 Синонимы: `права админа`, `настроить права`, `тг права`\n   ⚠️ Только для администраторов группы!\n   💡 Ответьте на сообщение пользователя командой\n\n**Примеры использования:**\n• Ответьте на сообщение командой для его обработки\n• Используйте команды в ответ на сообщения нарушителей\n• Команды с правами работают только в группах/су??ерг??уппах\n• ������се действия логируют???? для отчетности\n\n💡 **ПОЛЕЗНЫЕ СОВЕТЫ:**\n\n✨ Можешь писать команды или синонимы в любом месте разговора\n✨ Бот поймет твои сообщения даже без команд\n✨ В любой момент можешь написать /start для начала заново\n✨ Используй /profile для изменения любых данных\n✨ Нажми на любое выделенное слово чтобы скопировать его!\n\n🎉 **Удачных знакомств в Питере!** 🎉",
+                  messageText: "🤖 **Добро пожаловать в справочный центр!**\n\n🌟 **ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot**\n*Твой помощник в знакомствах*\n\n🎯 **ОСНОВНЫЕ КОМАНДЫ:**\n\n🚀 `/start` — *Начать заново*\n   📝 Синонимы: `старт`, `начать`, `привет`, `начало`, `начинаем`\n\n👤 `/profile` — *Мой профиль*\n   📝 Синонимы: `профиль`, `анкета`, `мой профиль`, `посмотреть профиль`, `редактировать профиль`\n\n🔗 `/link` — *Ссылка на чат*\n   📝 Синонимы: `ссылка`, `чат`, `сообщество`, `впрогулке`, `линк`\n\n🆘 `/help` — *Эта справка*\n   📝 Синонимы: `помощь`, `справка`, `команды`, `что писать`, `как пользоваться`\n\n📋 **РАЗДЕЛЫ АНКЕТЫ И ИХ СИНОНИМЫ:**\n\n👫 **Пол:** мужской, женский\n   📝 Синонимы: `пол`, `gender`\n\n🏷️ **Имя:** любое имя\n   📝 Синонимы: `имя`, `как зовут`, `назовись`\n\n🎂 **Возраст:** число от 18 до 99\n   📝 Синонимы: `возраст`, `лет`, `сколько лет`\n\n🚇 **Метро:** выбор линии и станции\n   📝 Синонимы: `метро`, `станция`\n   🟥 Красная линия: `красная линия`, `кировско-выборгская`, `красная ветка`\n   🟦 Синяя линия: `синяя линия`, `московско-петроградская`, `синяя ветка`\n   🟩 Зеленая линия: `зеленая линия`, `невско-василеостровская`, `зеленая ветка`\n   🟧 Оранжевая линия: `оранжевая линия`, `правобережная`, `оранжевая ветка`\n   🟪 Фиолетовая линия: `фиолетовая линия`, `фрунзенско-приморская`, `фиолетовая ветка`\n\n🎨 **Интересы и их синонимы:**\n   🎮 Хобби: `хобби`, `увлечения`, `занятия`, `игры`\n   🤝 Социальная жизнь: `общение`, `социальное`, `люди`, `тусовки`\n   🎭 Творчество: `творчество`, `искусство`, `рисование`, `музыка`\n   💪 Активный образ жизни: `активность`, `активный`, `движение`, `здоровье`\n   🍕 Еда и напитки: `еда`, `напитки`, `кухня`, `рестораны`\n   ⚽ Спорт: `спорт`, `фитнес`, `тренировки`, `футбол`\n\n💑 **Семейное положение:** поиск, отношения, женат/замужем, сложно\n   📝 Синонимы: `семейное положение`, `статус`, `отношения`, `семья`\n\n🌈 **Ориентация:** гетеро, гей, лесби, би, другое\n   📝 Синонимы: `ориентация`, `предпочтения`\n\n📺 **Телеграм-канал:** опционально\n   📝 Синонимы: `тгк`, `телеграм`, `канал`, `тг канал`\n\n📖 **О себе:** дополнительная информация\n   📝 Синонимы: `о себе`, `описание`, `расскажи`, `инфо`\n\n👮‍♂️ **КОМАНДЫ МОДЕРАЦИИ:**\n\n**Управление контентом:**\n📌 `/pin_message` - Закрепить сообщение\n   📝 Синонимы: `закрепить`, `прикрепить`, `зафиксировать`\n\n📌❌ `/unpin_message` - Открепить сообщение\n   📝 Синонимы: `открепить`, `отцепить`, `убрать закрепление`\n\n🗑️ `/delete_message` - Удалить сообщение\n   📝 Синонимы: `удалить`, `стереть`, `убрать сообщение`\n\n**Управление пользователями:**\n🚫 `/ban_user` - Заблокировать пользователя\n   📝 Синонимы: `забанить`, `заблокировать`, `бан`\n\n✅ `/unban_user` - Разблокировать пользователя\n   📝 Синонимы: `разбанить`, `разблокировать`, `unbán`\n\n🔇 `/mute_user` - Ограничить пользователя\n   📝 Синонимы: `замутить`, `заглушить`, `мут`\n\n🔊 `/unmute_user` - Снять ограничения\n   📝 Синонимы: `размутить`, `разглушить`, `анмут`\n\n👢 `/kick_user` - Исключить пользователя\n   📝 Синонимы: `кикнуть`, `исключить`, `выгнать`\n\n👑 `/promote_user` - Назначить администратором\n   📝 Синонимы: `повысить`, `назначить админом`, `промоут`\n\n👤 `/demote_user` - Снять с администратора\n   📝 Синонимы: `понизить`, `снять с админа`, `демоут`\n\n⚙️ `/admin_rights` - Настроить права администратора\n   📝 Синонимы: `права админа`, `настроить права`, `тг права`\n   ⚠️ Только для администраторов группы!\n   💡 Ответьте на сообщение пользователя командой\n\n**Примеры использования:**\n• Ответьте на сообщение командой для его обработки\n• Используйте команды в ответ на сообщения нарушителей\n• Команды с правами работают только в группах/су??ерг??уппах\n• ������се действия логи��уют???? для отчетности\n\n💡 **ПОЛЕЗНЫЕ СОВЕТЫ:**\n\n✨ Можешь писать команды или синонимы в любом месте разговора\n✨ Бот поймет твои сообщения даже без команд\n✨ В любой момент можешь написать /start для начала заново\n✨ Используй /profile для изменения любых данных\n✨ Нажми на любое выделенное слово чтобы скопировать его!\n\n🎉 **Удачных знакомств в Питере!** 🎉",
                   keyboardType: "inline",
                   buttons: [
                     {
@@ -987,21 +987,21 @@ async function seedDefaultTemplates(force = false) {
                       text: "🚀 Начать заполнение",
                       action: "command",
                       target: "/start",
-                      buttonType: "navigation"
+                      buttonType: "normal"
                     },
                     {
                       id: "btn-help-profile",
                       text: "👤 Мой профиль",
                       action: "command",
                       target: "/profile",
-                      buttonType: "navigation"
+                      buttonType: "normal"
                     },
                     {
                       id: "btn-help-link",
                       text: "🔗 Ссылка на чат",
                       action: "command",
                       target: "/link",
-                      buttonType: "navigation"
+                      buttonType: "normal"
                     }
                   ],
                   markdown: true,
