@@ -1,6 +1,13 @@
+/**
+ * @fileoverview Хуки для работы с медиафайлами
+ * @module hooks/use-media
+ */
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { MediaFile, InsertMediaFile } from "@shared/schema";
+import { validateMediaFilesArray } from "../utils/api-validation";
+import type { MediaUploadParams, MultipleMediaUploadParams, MultipleUploadResult } from "../types/media.types";
 
 /**
  * Хук для получения списка медиафайлов проекта
@@ -26,7 +33,12 @@ export function useMediaFiles(projectId: number, fileType?: string) {
       if (!response.ok) {
         throw new Error("Ошибка при загрузке медиафайлов");
       }
-      return response.json();
+      const data = await response.json();
+      const validation = validateMediaFilesArray(data);
+      if (!validation.isValid) {
+        throw new Error(`Неверный формат ответа: ${validation.errors.map(e => e.message).join(', ')}`);
+      }
+      return validation.data as MediaFile[];
     },
   });
 }
@@ -67,13 +79,7 @@ export function useUploadMedia(projectId: number) {
       tags,
       isPublic,
       onProgress
-    }: {
-      file: File;
-      description?: string;
-      tags?: string[];
-      isPublic?: boolean;
-      onProgress?: (progress: number) => void;
-    }): Promise<MediaFile> => {
+    }: MediaUploadParams): Promise<MediaFile> => {
       const formData = new FormData();
       formData.append('file', file);
       if (description) formData.append('description', description);
@@ -165,19 +171,9 @@ export function useUploadMultipleMedia(projectId: number) {
       files,
       defaultDescription,
       isPublic,
-      onProgress    }: {
-      files: File[];
-      defaultDescription?: string;
-      isPublic?: boolean;
-      onProgress?: (progress: number) => void;
-      onFileProgress?: (fileIndex: number, progress: number) => void;
-    }): Promise<{
-      success: number;
-      errors: number;
-      uploadedFiles: MediaFile[];
-      errorDetails: any[];
-      statistics: any;
-    }> => {
+      onProgress,
+      onFileProgress
+    }: MultipleMediaUploadParams): Promise<MultipleUploadResult> => {
       const formData = new FormData();
 
       files.forEach(file => {

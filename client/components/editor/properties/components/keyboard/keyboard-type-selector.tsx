@@ -1,16 +1,17 @@
 /**
  * @fileoverview Компонент выбора типа клавиатуры
- * 
+ *
  * Отображает переключатели между типами клавиатур:
  * - Inline (кнопки под сообщением)
  * - Reply (кнопки в поле ввода)
  * - None (без клавиатуры)
- * 
+ *
  * @module KeyboardTypeSelector
  */
 
 import { Node } from '@shared/schema';
 import { Switch } from '@/components/ui/switch';
+import { KEYBOARD_TYPES } from '../../constants/keyboard.types';
 
 /**
  * Пропсы компонента KeyboardTypeSelector
@@ -24,13 +25,13 @@ interface KeyboardTypeSelectorProps {
 
 /**
  * Компонент выбора типа клавиатуры
- * 
+ *
  * Предоставляет два переключателя:
  * - Inline — кнопки отображаются под сообщением
  * - Reply — кнопки отображаются в поле ввода сообщения
- * 
+ *
  * При включении одного типа, другой автоматически выключается.
- * 
+ *
  * @param {KeyboardTypeSelectorProps} props - Пропсы компонента
  * @returns {JSX.Element} Селектор типа клавиатуры
  */
@@ -48,9 +49,9 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTyp
             Inline
           </label>
           <Switch
-            checked={selectedNode.data.keyboardType === 'inline'}
+            checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE}
             onCheckedChange={(checked) => {
-              onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'inline' : 'none' });
+              onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.INLINE : KEYBOARD_TYPES.NONE });
             }}
           />
         </div>
@@ -60,9 +61,9 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTyp
             Reply
           </label>
           <Switch
-            checked={selectedNode.data.keyboardType === 'reply'}
+            checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
             onCheckedChange={(checked) => {
-              onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'reply' : 'none' });
+              onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.REPLY : KEYBOARD_TYPES.NONE });
             }}
           />
         </div>
