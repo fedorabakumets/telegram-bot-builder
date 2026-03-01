@@ -77,21 +77,21 @@ export function ConditionalMessageCard({
         hasWarnings={hasWarnings}
         onIncreasePriority={() => {
           const currentConditions = selectedNode.data.conditionalMessages || [];
-          const updatedConditions = currentConditions.map((c: ConditionalMessage) =>
+          const updatedConditions = currentConditions.map((c: any) =>
             c.id === condition.id ? { ...c, priority: (c.priority || 0) + 10 } : c
           );
           onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
         }}
         onDecreasePriority={() => {
           const currentConditions = selectedNode.data.conditionalMessages || [];
-          const updatedConditions = currentConditions.map((c: ConditionalMessage) =>
+          const updatedConditions = currentConditions.map((c: any) =>
             c.id === condition.id ? { ...c, priority: Math.max(0, (c.priority || 0) - 10) } : c
           );
           onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
         }}
         onDelete={() => {
           const currentConditions = selectedNode.data.conditionalMessages || [];
-          const newConditions = currentConditions.filter((c: ConditionalMessage) => c.id !== condition.id);
+          const newConditions = currentConditions.filter((c: any) => c.id !== condition.id);
           onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions });
         }}
       />
