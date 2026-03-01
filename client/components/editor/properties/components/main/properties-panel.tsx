@@ -1,5 +1,4 @@
 import { Node, Button } from '@shared/schema';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Button as UIButton } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -7,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { MediaVariablesList } from '../media/media-variables-list';
 import { nanoid } from 'nanoid';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
+import { useState } from 'react';
 
-import { SYSTEM_VARIABLES } from '../variables/system-variables';
 import { SectionHeader } from '../layout/section-header';
 import { SynonymEditor } from '../synonyms/synonym-editor';
 import { EmptyState } from '../layout/empty-state';
@@ -40,6 +39,7 @@ import { getNodeDefaults } from '../../utils/node-defaults';
 import { collectAllNodesFromSheets } from '../../utils/node-utils';
 import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from '../../utils/conditional-utils';
 import { collectAvailableQuestions, extractVariables } from '../../utils/variables-utils';
+import { useMediaVariables } from '../../hooks/use-media-variables';
 import { usePropertiesPanelState, usePropertiesPanelMemo, useCommandValidation, useHandleAddButton } from '../../hooks';
 import { MediaInputToggles } from '../media/media-input-toggles';
 import { VariableInputGrid } from '../variables/variable-input-grid';
