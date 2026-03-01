@@ -4,10 +4,10 @@
  * Компонент с редактором текста и информационным блоком.
  */
 
-import { InlineRichEditor } from '../../inline-rich/inline-rich-editor';
+import { InlineRichEditor } from '../../../inline-rich/inline-rich-editor';
 import { MessageInfoBlock } from '../common/message-info-block';
-import type { Variable } from '../../inline-rich/types';
-import type { FormatMode } from '../../inline-rich/types';
+import type { ProjectVariable } from '../../utils/variables-utils';
+import type { FormatMode, Variable } from '../../../inline-rich/types';
 
 /** Пропсы содержимого секции текста */
 interface MessageTextSectionContentProps {
@@ -17,10 +17,10 @@ interface MessageTextSectionContentProps {
   messageText: string;
   /** Флаг включения Markdown */
   markdown?: boolean;
-  /** Режим форматирования */
-  formatMode?: FormatMode;
+  /** Режим форматирования (не используется) */
+  _formatMode?: FormatMode;
   /** Доступные переменные */
-  availableVariables: Variable[];
+  availableVariables: ProjectVariable[];
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
   /** Функция выбора медиа-переменной */
@@ -37,7 +37,6 @@ export function MessageTextSectionContent({
   nodeId,
   messageText,
   markdown,
-  formatMode,
   availableVariables,
   onNodeUpdate,
   onMediaVariableSelect
@@ -47,11 +46,11 @@ export function MessageTextSectionContent({
       <div className="space-y-2 sm:space-y-2.5">
         <InlineRichEditor
           value={messageText}
-          onChange={(value) => onNodeUpdate(nodeId, { messageText: value })}
+          onChange={(value: string) => onNodeUpdate(nodeId, { messageText: value })}
           placeholder="Введите текст сообщения..."
           enableMarkdown={markdown}
-          onFormatModeChange={(newFormatMode) => onNodeUpdate(nodeId, { formatMode: newFormatMode })}
-          availableVariables={availableVariables}
+          onFormatModeChange={(newFormatMode: FormatMode) => onNodeUpdate(nodeId, { formatMode: newFormatMode })}
+          availableVariables={availableVariables as Variable[]}
           onMediaVariableSelect={onMediaVariableSelect}
         />
         <MessageInfoBlock variant="blue" />

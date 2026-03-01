@@ -3,7 +3,6 @@
  * @module components/editor/properties/hooks
  */
 
-export * from './use-properties-panel';
 export * from './use-media-variables';
 export * from './use-media';
 export * from './use-media-query';

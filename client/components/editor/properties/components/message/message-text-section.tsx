@@ -7,7 +7,7 @@
 import { MessageTextSectionHeader } from './message-text-section-header';
 import { MessageTextSectionContent } from './message-text-section-content';
 import { BroadcastToggle } from '../broadcast/broadcast-toggle';
-import type { Variable } from '../../inline-rich/types';
+import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Node } from '@shared/schema';
 
 /** Пропсы секции текста сообщения */
@@ -17,9 +17,9 @@ interface MessageTextSectionProps {
   /** Все узлы проекта */
   allNodes: Node[];
   /** Текстовые переменные */
-  textVariables: Variable[];
+  textVariables: ProjectVariable[];
   /** Медиа-переменные */
-  mediaVariables: Variable[];
+  mediaVariables: ProjectVariable[];
   /** Флаг открытости секции */
   isOpen: boolean;
   /** Функция переключения открытости */
@@ -55,8 +55,8 @@ export function MessageTextSection({
           nodeId={selectedNode.id}
           messageText={selectedNode.data.messageText || ''}
           markdown={selectedNode.data.markdown}
-          formatMode={selectedNode.data.formatMode}
-          availableVariables={[...textVariables, ...mediaVariables] as Variable[]}
+          _formatMode={selectedNode.data.formatMode}
+          availableVariables={[...textVariables, ...mediaVariables] as ProjectVariable[]}
           onNodeUpdate={onNodeUpdate}
           onMediaVariableSelect={onMediaVariableSelect}
         />

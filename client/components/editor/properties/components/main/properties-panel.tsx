@@ -5,30 +5,24 @@ import { Switch } from '@/components/ui/switch';
 import { Button as UIButton } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { MediaSelector } from '@/components/editor/properties/media/media-selector';
 import { MediaVariablesList } from '../media/media-variables-list';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { useState, useMemo, useEffect } from 'react';
 
-import { InlineRichEditor } from '../../../inline-rich/inline-rich-editor';
-import type { Variable } from '../../../inline-rich/types';
 import { SYSTEM_VARIABLES } from '../variables/system-variables';
-import { VariableDropdown } from '../variables/system-variables-dropdown';
 import { SectionHeader } from '../layout/section-header';
 import { SynonymEditor } from '../synonyms/synonym-editor';
-import { MessageInfoBlock } from '../common/message-info-block';
-import { DevelopmentNoticeBlock } from '../layout/development-notice-block';
 import { EmptyState } from '../layout/empty-state';
 import { MessageTextSection } from '../message/message-text-section';
 import { MediaFileSection } from '../media-file/media-file-section';
-import { getMediaUrlUpdates } from '../../utils/media-utils';
 import { isManagementNode } from '../../utils/node-constants';
 import { AdminRightsInfo } from '../configuration/admin-rights-info';
 import { CommandAdvancedSettings } from '../commands/command-advanced-settings';
 import { CommandSectionComplete } from '../commands/command-section-complete';
 import { ManagementCommandSection } from '../commands/management-command-section';
+import { ButtonCard } from '../button-card/button-card';
 import { AutoTransitionSection } from '../navigation/auto-transition-section';
 import { PropertiesFooter } from '../layout/properties-footer';
 import { PropertiesHeader } from '../layout/properties-header';
@@ -43,7 +37,6 @@ import { LocationDetailsSection } from '../configuration/location-details-sectio
 import { FoursquareIntegrationSection } from '../configuration/foursquare-integration-section';
 import { MapServicesSection } from '../configuration/map-services-section';
 import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
-import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import { formatNodeDisplay } from '../../utils/node-formatters';
 import { getNodeDefaults } from '../../utils/node-defaults';
 import { collectAllNodesFromSheets } from '../../utils/node-utils';
@@ -52,18 +45,13 @@ import { collectAvailableQuestions, extractVariables } from '../../utils/variabl
 import { useMediaVariables } from '../../hooks/use-media-variables';
 import { MediaInputToggles } from '../media/media-input-toggles';
 import { VariableInputGrid } from '../variables/variable-input-grid';
-import { ButtonTypeSelector } from '../keyboard/button-type-selector';
 import { InputNavigationGrid } from '../navigation/input-navigation-grid';
 import { ResponseOptionsList } from '../common/response-options-list';
 import { EmptyConditionalState } from '../conditional/empty-conditional-state';
 import { ConditionContent } from '../conditional/condition-content';
-import { GotoTargetSection } from '../navigation/goto-target-section';
-import { CommandTargetSection } from '../commands/command-target-section';
-import { OptionButtonInfo } from '../common/option-button-info';
-import { CompleteButtonInfo } from '../common/complete-button-info';
-import { NormalButtonInfo } from '../common/normal-button-info';
+import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
+import { ButtonTypeSelector } from '../keyboard/button-type-selector';
 import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
-import { BroadcastToggle } from '../broadcast/broadcast-toggle';
 import { SaveToUserIdsSwitch } from '../csv/save-to-user-ids-switch';
 import { SaveToCsvSwitch } from '../csv/save-to-csv-switch';
 
@@ -690,306 +678,20 @@ export function PropertiesPanel({
                           )}
 
                           {(selectedNode.data.buttons || []).map((button) => (
-                            <div key={button.id} className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30 hover:border-blue-300/60 dark:hover:border-blue-700/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition-all duration-200 group">
-                              {/* Header with icon, title and delete button */}
-                              <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 justify-between">
-                                <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                                  <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-200/50 dark:bg-blue-900/40 group-hover:bg-blue-300/50 dark:group-hover:bg-blue-800/50 transition-all">
-                                    <i className="fas fa-rectangle-ad text-xs sm:text-sm text-blue-600 dark:text-blue-400"></i>
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">
-                                      Кнопка
-                                    </div>
-                                    {selectedNode.data.allowMultipleSelection && button.buttonType && (
-                                      <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-xs sm:text-xs font-medium transition-all duration-200
-                                {button.buttonType === 'option' && 'bg-gradient-to-r from-green-100/60 to-emerald-100/50 dark:from-green-900/30 dark:to-emerald-900/20 text-green-700 dark:text-green-300 border border-green-300/50 dark:border-green-700/40'}
-                                {button.buttonType === 'complete' && 'bg-gradient-to-r from-purple-100/60 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/20 text-purple-700 dark:text-purple-300 border border-purple-300/50 dark:border-purple-700/40'}
-                                {button.buttonType === 'normal' && 'bg-gradient-to-r from-blue-100/60 to-cyan-100/50 dark:from-blue-900/30 dark:to-cyan-900/20 text-blue-700 dark:text-blue-300 border border-blue-300/50 dark:border-blue-700/40'}
-                              ">
-                                        {button.buttonType === 'option' && (
-                                          <>
-                                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                                            <span>Опция</span>
-                                          </>
-                                        )}
-                                        {button.buttonType === 'complete' && (
-                                          <>
-                                            <div className="w-1.5 h-1.5 bg-purple-500" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
-                                            <span>Завершение</span>
-                                          </>
-                                        )}
-                                        {button.buttonType === 'normal' && (
-                                          <>
-                                            <div className="w-1.5 h-1.5 bg-blue-500" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
-                                            <span>Обычная</span>
-                                          </>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <UIButton
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => onButtonDelete(selectedNode.id, button.id)}
-                                  className="text-blue-600 hover:text-red-600 dark:text-blue-400 dark:hover:text-red-400 h-auto p-1.5 transition-colors duration-200 flex-shrink-0"
-                                  title="Удалить кнопку"
-                                >
-                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                  </svg>
-                                </UIButton>
-                              </div>
-
-                              {/* Text input and variables button */}
-                              <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-purple-50/40 to-pink-50/30 dark:from-purple-950/20 dark:to-pink-950/10 border border-purple-200/40 dark:border-purple-800/30 hover:border-purple-300/60 dark:hover:border-purple-700/60 hover:bg-purple-50/60 dark:hover:bg-purple-950/30 transition-all duration-200 group">
-                                <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-                                  <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-200/50 dark:bg-purple-900/40 group-hover:bg-purple-300/50 dark:group-hover:bg-purple-800/50 transition-all">
-                                    <i className="fas fa-keyboard text-xs sm:text-sm text-purple-600 dark:text-purple-400"></i>
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <Label className="text-xs sm:text-sm font-semibold text-purple-900 dark:text-purple-100 cursor-pointer block">
-                                      Текст кнопки
-                                    </Label>
-                                    <div className="text-xs text-purple-700/70 dark:text-purple-300/70 mt-0.5 leading-snug hidden sm:block">
-                                      Введите текст или вставьте переменную
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2 mt-2.5 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg bg-white/60 dark:bg-slate-950/60 border border-purple-300/40 dark:border-purple-700/40 hover:border-purple-400/60 dark:hover:border-purple-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus-within:border-purple-500 dark:focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-400/30 dark:focus-within:ring-purple-600/30 transition-all duration-200">
-                                  <Input
-                                    value={button.text}
-                                    onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { text: e.target.value })}
-                                    className="flex-1 text-xs sm:text-sm bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-purple-900 dark:text-purple-50 placeholder:text-purple-500/50 dark:placeholder:text-purple-400/50 p-0"
-                                    placeholder="Введите текст кнопки"
-                                  />
-                                  <VariableDropdown
-                                    nodeId={selectedNode.id}
-                                    button={button}
-                                    onButtonUpdate={onButtonUpdate}
-                                    textVariables={textVariables}
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Divider */}
-                              <div className="border-t border-border/20 my-3"></div>
-
-                              {/* Button Type Selection - Show for Multiple Selection Mode */}
-                              {selectedNode.data.allowMultipleSelection && (
-                                <div className="mb-3">
-                                  <Label className="text-xs font-medium text-muted-foreground mb-2 block">Тип кнопки</Label>
-                                  <Select
-                                    value={button.buttonType || 'normal'}
-                                    onValueChange={(value: 'normal' | 'option' | 'complete') => {
-                                      if (value === 'option') {
-                                        onButtonUpdate(selectedNode.id, button.id, {
-                                          buttonType: 'option',
-                                          action: 'selection',
-                                          target: ''
-                                        });
-                                      } else if (value === 'complete') {
-                                        onButtonUpdate(selectedNode.id, button.id, {
-                                          buttonType: 'complete',
-                                          action: 'goto',
-                                          target: selectedNode.data.continueButtonTarget || ''
-                                        });
-                                      } else {
-                                        onButtonUpdate(selectedNode.id, button.id, {
-                                          buttonType: 'normal',
-                                          action: 'goto',
-                                          target: ''
-                                        });
-                                      }
-                                    }}
-                                  >
-                                    <SelectTrigger className="w-full text-xs bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 hover:border-blue-400/60 dark:hover:border-blue-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 dark:focus:ring-blue-600/30 transition-all duration-200 rounded-lg text-blue-900 dark:text-blue-50">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
-                                      <SelectItem value="normal">
-                                        <div className="flex items-center gap-2">
-                                          <div className="w-2 h-2 bg-blue-500" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
-                                          <span>Обычная кнопка</span>
-                                        </div>
-                                      </SelectItem>
-                                      <SelectItem value="option">
-                                        <div className="flex items-center gap-2">
-                                          <div className="w-2 h-2 bg-green-500" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
-                                          <span>Опция для выбора</span>
-                                        </div>
-                                      </SelectItem>
-                                      <SelectItem value="complete">
-                                        <div className="flex items-center gap-2">
-                                          <div className="w-2 h-2 bg-purple-500" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
-                                          <span>Кнопка завершения</span>
-                                        </div>
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              )}
-                              {/* Action Selection - Show for normal buttons or non-multiple-selection modes */}
-                              {(!selectedNode.data.allowMultipleSelection || (button.buttonType !== 'option' && button.buttonType !== 'complete')) && (
-                                <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-teal-50/40 to-cyan-50/30 dark:from-teal-950/20 dark:to-cyan-950/10 border border-teal-200/40 dark:border-teal-800/30 hover:border-teal-300/60 dark:hover:border-teal-700/60 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-all duration-200 group">
-                                  <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-                                    <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-teal-200/50 dark:bg-teal-900/40 group-hover:bg-teal-300/50 dark:group-hover:bg-teal-800/50 transition-all">
-                                      <i className="fas fa-arrow-right text-xs sm:text-sm text-teal-600 dark:text-teal-400"></i>
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <Label className="text-xs sm:text-sm font-semibold text-teal-900 dark:text-teal-100 cursor-pointer block">
-                                        Действие
-                                      </Label>
-                                      <div className="text-xs text-teal-700/70 dark:text-teal-300/70 mt-0.5 leading-snug hidden sm:block">
-                                        Что должна сделать кнопка при нажатии
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <Select
-                                    value={button.action}
-                                    onValueChange={(value: 'goto' | 'command' | 'url' | 'selection') =>
-                                      onButtonUpdate(selectedNode.id, button.id, { action: value })
-                                    }
-                                  >
-                                    <SelectTrigger className="w-full text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-teal-300/40 dark:border-teal-700/40 hover:border-teal-400/60 dark:hover:border-teal-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-teal-500 dark:focus:border-teal-500 focus:ring-2 focus:ring-teal-400/30 dark:focus:ring-teal-600/30 transition-all duration-200 rounded-lg text-teal-900 dark:text-teal-50">
-                                      <SelectValue placeholder="Выберите действие" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-gradient-to-br from-teal-50/95 to-cyan-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-teal-200/50 dark:border-teal-800/50 shadow-xl">
-                                      <SelectItem value="goto">
-                                        <div className="flex items-center gap-2">
-                                          <i className="fas fa-right-long text-teal-600 dark:text-teal-400 text-xs"></i>
-                                          <span>Перейти к экрану</span>
-                                        </div>
-                                      </SelectItem>
-                                      <SelectItem value="command">
-                                        <div className="flex items-center gap-2">
-                                          <i className="fas fa-terminal text-orange-600 dark:text-orange-400 text-xs"></i>
-                                          <span>Выполнить команду</span>
-                                        </div>
-                                      </SelectItem>
-                                      <SelectItem value="url">
-                                        <div className="flex items-center gap-2">
-                                          <i className="fas fa-link text-blue-600 dark:text-blue-400 text-xs"></i>
-                                          <span>Открыть ссылку</span>
-                                        </div>
-                                      </SelectItem>
-                                      <SelectItem value="selection">
-                                        <div className="flex items-center gap-2">
-                                          <i className="fas fa-check-square text-green-600 dark:text-green-400 text-xs"></i>
-                                          <span>Выбор опции</span>
-                                        </div>
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              )}
-
-                              {/* Skip Data Collection Toggle - Only show when collectUserInput is enabled */}
-                              {selectedNode.data.collectUserInput && (
-                                <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-cyan-50/40 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 border border-cyan-200/40 dark:border-cyan-800/30 hover:border-cyan-300/60 dark:hover:border-cyan-700/60 hover:bg-cyan-50/60 dark:hover:bg-cyan-950/30 transition-all duration-200 group">
-                                  <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 justify-between">
-                                    <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                                      <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-cyan-200/50 dark:bg-cyan-900/40 group-hover:bg-cyan-300/50 dark:group-hover:bg-cyan-800/50 transition-all">
-                                        <i className="fas fa-ban text-xs sm:text-sm text-cyan-600 dark:text-cyan-400"></i>
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <Label className="text-xs sm:text-sm font-semibold text-cyan-900 dark:text-cyan-100 cursor-pointer block">
-                                          Не сохранять ответы
-                                        </Label>
-                                        <div className="text-xs text-cyan-700/70 dark:text-cyan-300/70 mt-0.5 leading-snug hidden sm:block">
-                                          Кнопка работает только для навигации, без сбора данных
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex-shrink-0">
-                                      <Switch
-                                        checked={button.skipDataCollection ?? false}
-                                        onCheckedChange={(checked) =>
-                                          onButtonUpdate(selectedNode.id, button.id, { skipDataCollection: checked })
-                                        }
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Hide After Click Toggle - For reply buttons */}
-                              {selectedNode.data.keyboardType === 'reply' && (
-                                <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-red-50/40 to-rose-50/30 dark:from-red-950/20 dark:to-rose-950/10 border border-red-200/40 dark:border-red-800/30 hover:border-red-300/60 dark:hover:border-red-700/60 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-all duration-200 group">
-                                  <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 justify-between">
-                                    <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                                      <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-200/50 dark:bg-red-900/40 group-hover:bg-red-300/50 dark:group-hover:bg-red-800/50 transition-all">
-                                        <i className="fas fa-eye-slash text-xs sm:text-sm text-red-600 dark:text-red-400"></i>
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <Label className="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-100 cursor-pointer block">
-                                          Скрыть после использования
-                                        </Label>
-                                        <div className="text-xs text-red-700/70 dark:text-red-300/70 mt-0.5 leading-snug hidden sm:block">
-                                          Сообщение будет удалено после нажатия кнопки
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex-shrink-0">
-                                      <Switch
-                                        checked={button.hideAfterClick ?? false}
-                                        onCheckedChange={(checked) =>
-                                          onButtonUpdate(selectedNode.id, button.id, { hideAfterClick: checked })
-                                        }
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Button Type Info Blocks */}
-                              {selectedNode.data.allowMultipleSelection && (
-                                <>
-                                  {button.buttonType === 'option' && (
-                                    <OptionButtonInfo
-                                      selectedNode={selectedNode}
-                                      onNodeUpdate={onNodeUpdate}
-                                    />
-                                  )}
-
-                                  {button.buttonType === 'complete' && (
-                                    <CompleteButtonInfo />
-                                  )}
-
-                                  {button.buttonType === 'normal' && (
-                                    <NormalButtonInfo />
-                                  )}
-                                </>
-                              )}
-
-                              {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'url' && (
-                                <Input
-                                  value={button.url || ''}
-                                  onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { url: e.target.value })}
-                                  className="mt-2 text-xs"
-                                  placeholder="https://example.com"
-                                />
-                              )}
-
-                              {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'command' && (
-                                <CommandTargetSection
-                                  selectedNode={selectedNode}
-                                  button={button}
-                                  allNodes={allNodes}
-                                  onButtonUpdate={onButtonUpdate}
-                                />
-                              )}
-
-                              {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'goto' && (
-                                <GotoTargetSection
-                                  selectedNode={selectedNode}
-                                  button={button}
-                                  getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-                                  onButtonUpdate={onButtonUpdate}
-                                />
-                              )}
-                            </div>
+                            <ButtonCard
+                              key={button.id}
+                              nodeId={selectedNode.id}
+                              button={button}
+                              textVariables={textVariables}
+                              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+                              onButtonUpdate={onButtonUpdate}
+                              onButtonDelete={onButtonDelete}
+                              keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply' | 'none'}
+                              allowMultipleSelection={selectedNode.data.allowMultipleSelection}
+                              collectUserInput={selectedNode.data.collectUserInput}
+                              selectedNode={selectedNode}
+                              allNodes={allNodes}
+                            />
                           ))}
                         </div>
                       </div>
