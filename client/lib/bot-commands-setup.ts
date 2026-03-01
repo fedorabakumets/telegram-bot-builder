@@ -7,8 +7,6 @@
  * @module bot-commands-setup
  */
 
-import type { BotNode } from './bot-generator/types';
-
 /**
  * Команда меню для BotFather
  * 
