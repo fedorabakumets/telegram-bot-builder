@@ -118,3 +118,15 @@ export { toEnhancedNode, toEnhancedNodes } from './bot-generator/utils/to-enhanc
 export { validateEnhancedNode, validateEnhancedNodes } from './bot-generator/validation/validate-enhanced-node';
 export type { ValidationResult } from './bot-generator/validation/validate-enhanced-node';
 
+// Ядро: контекст и состояние генерации
+export { createGenerationState, withLogging, withComments } from './bot-generator/core/generation-state';
+export { markComponentGenerated, isComponentGenerated } from './bot-generator/core/generation-state';
+export type { GenerationState } from './bot-generator/core/generation-state';
+
+export { createGenerationContext, createGenerationContextFromNodes } from './bot-generator/core/create-generation-context';
+export type { GenerationContext, SectionContext } from './bot-generator/core/generation-context';
+export { createSectionContext } from './bot-generator/core/generation-context';
+
+export type { GenerationOptions } from './bot-generator/core/generation-options.types';
+export { DEFAULT_GENERATION_OPTIONS, normalizeGenerationOptions } from './bot-generator/core/generation-options.types';
+
