@@ -5,6 +5,9 @@ import { BotData, BotGroup } from '@shared/schema';
 import { createGenerationContext } from './bot-generator/core/create-generation-context';
 import type { GenerationOptions } from './bot-generator/core/generation-options.types';
 
+// Ядро: логирование
+import { generatorLogger } from './bot-generator/core/generator-logger';
+
 // Типы
 import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
 import { generatePythonImports } from './bot-generator/imports';
@@ -242,7 +245,7 @@ export function generatePythonCode(
     if (existingNodeIds.has(nodeId)) {
       filteredReferencedNodeIds.add(nodeId);
     } else {
-      if (isLoggingEnabled()) console.log(`??? УДАЛЕН узел из allReferencedNodeIds: ${nodeId} (не найден в текущих узлах)`);
+      generatorLogger.debug(`Удалён узел из allReferencedNodeIds: ${nodeId} (не найден в текущих узлах)`);
     }
   });
   allReferencedNodeIds = filteredReferencedNodeIds;
@@ -271,10 +274,8 @@ export function generatePythonCode(
   // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логированием
   const commandButtons = collectAllCommandCallbacksFromNodes(context.nodes || []);
 
-  if (isLoggingEnabled()) {
-    console.log(`🎯 ИТОГО найдено кнопок команд: ${commandButtons.size}`);
-    console.log('📋 Список найденных кнопок команд:', Array.from(commandButtons));
-  }
+  generatorLogger.info(`Найдено кнопок команд: ${commandButtons.size}`);
+  generatorLogger.debug('Список кнопок команд', Array.from(commandButtons));
 
   code = addCommandCallbackHandlers(commandButtons, code, context.nodes || []);
 
