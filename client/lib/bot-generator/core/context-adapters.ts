@@ -7,8 +7,8 @@
  * @module bot-generator/core/context-adapters
  */
 
-import type { GenerationContext, GenerationParams } from './generation-context';
-import { createContextParams } from './context-helpers';
+import type { GenerationContext } from './generation-context';
+import { createContextParams, type GenerationParams } from './context-helpers';
 
 /**
  * Создаёт обёртку для generateNodeNavigation
