@@ -147,7 +147,7 @@ export function generatePythonCode(
 
   // Генерируем Python импорты на основе типов узлов
   const hasInlineButtonsResult = hasInlineButtons(context.nodes || []);
-  code += generatePythonImports({ nodes: context.nodes || [], userDatabaseEnabled: context.options.userDatabaseEnabled, hasInlineButtons: hasInlineButtonsResult });
+  code += generatePythonImports({ nodes: context.nodes || [], userDatabaseEnabled: !!context.options.userDatabaseEnabled, hasInlineButtons: hasInlineButtonsResult });
 
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
   const hasAutoTransitionsResult = hasAutoTransitions(context.nodes || []);
@@ -335,7 +335,7 @@ export function generatePythonCode(
    */
   function generateInteractiveCallbackHandlers(): void {
     const processNodeButtonsAndGenerateHandlers = createProcessNodeButtonsFunction(inlineNodes, context.nodes, code, context.allNodeIds, [], context.mediaVariablesMap);
-    code = generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes, allReferencedNodeIds, allConditionalButtons, code, processNodeButtonsAndGenerateHandlers, context.nodes, context.allNodeIds, [], context.options.userDatabaseEnabled, context.mediaVariablesMap);
+    code = generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes, allReferencedNodeIds, allConditionalButtons, code, processNodeButtonsAndGenerateHandlers, context.nodes, context.allNodeIds, [], !!context.options.userDatabaseEnabled, context.mediaVariablesMap);
   }
 
   /**
