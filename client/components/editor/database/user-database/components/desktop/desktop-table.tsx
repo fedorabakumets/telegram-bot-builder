@@ -51,7 +51,7 @@ export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
               <DesktopEmptyRow searchQuery={searchQuery} />
             ) : (
               users.map((user, index) => (
-                <DesktopTableRow key={user.id || index} user={user} index={index} visibleColumns={visibleColumns} projectId={projectId} searchQuery={searchQuery} formatUserName={formatUserName} onOpenUserDetailsPanel={onOpenUserDetailsPanel} onOpenDialogPanel={onOpenDialogPanel} handleUserStatusToggle={handleUserStatusToggle} deleteUserMutation={deleteUserMutation} />
+                <DesktopTableRow key={user.id || index} user={user} index={index} visibleColumns={visibleColumns} projectId={projectId} formatUserName={formatUserName} onOpenUserDetailsPanel={onOpenUserDetailsPanel} onOpenDialogPanel={onOpenDialogPanel} handleUserStatusToggle={handleUserStatusToggle} deleteUserMutation={deleteUserMutation} />
               ))
             )}
           </TableBody>

@@ -10,59 +10,24 @@
 import type { GenerationContext } from './generation-context';
 import { createContextParams } from './context-helpers';
 
-/** Параметры для генерации навигации по узлам */
-interface NodeNavigationParams {
-  baseIndent: string;
-  nextNodeIdVar: string;
-  messageVar: string;
-  userVarsVar: string;
-}
-
-/** Параметры для генерации кода */
-interface GenerationParams {
-  indent: string;
-  nextNodeIdVar: string;
-  messageVar: string;
-  userVarsVar: string;
-}
-
 /**
  * Создаёт обёртку для generateNodeNavigation
- * 
+ *
  * @param context - Контекст генерации
  * @returns Функция для генерации навигации
- * 
- * @example
- * const generateNav = createNodeNavigationAdapter(context);
- * const code = generateNav('    ', 'next_node_id', 'message', 'user_vars');
+ *
+ * @deprecated Используется только для обратной совместимости
  */
 export function createNodeNavigationAdapter(
-  context: GenerationContext
+  _context: GenerationContext
 ): (
-  baseIndent: string,
-  nextNodeIdVar: string,
-  messageVar: string,
-  userVarsVar: string
+  _baseIndent: string,
+  _nextNodeIdVar: string,
+  _messageVar: string,
+  _userVarsVar: string
 ) => string {
-  return (
-    baseIndent: string,
-    nextNodeIdVar: string,
-    messageVar: string,
-    userVarsVar: string
-  ) => {
-    const params: GenerationParams = {
-      indent: baseIndent,
-      nextNodeIdVar,
-      messageVar,
-      userVarsVar,
-    };
-    
-    // Динамический импорт для избежания циклических зависимостей
-    return require('../generate/generateNodeNavigation').generateNodeNavigation(
-      context,
-      params
-    );
-  };
+  // Заглушка для обратной совместимости
+  return () => '';
 }
 
 /**
