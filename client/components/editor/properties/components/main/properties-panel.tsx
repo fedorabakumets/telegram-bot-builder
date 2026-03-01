@@ -3,7 +3,6 @@ import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib
 import { useState, useMemo, useEffect } from 'react';
 
 import { EmptyState } from '../layout/empty-state';
-import { useHandleAddButton } from '../../hooks/use-handle-add-button-wrapper';
 import { getNodeDefaults } from '../../utils/node-defaults';
 import { collectAllNodesFromSheets } from '../../utils/node-utils';
 import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from '../../utils/conditional-utils';
@@ -210,8 +209,6 @@ export function PropertiesPanel({
   if (!selectedNode) {
     return <EmptyState onClose={onClose} />;
   }
-
-  const handleAddButton = useHandleAddButton({ selectedNode, onButtonAdd });
 
   return (
     <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
