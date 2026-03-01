@@ -2,6 +2,7 @@ import { Node, Button } from '@shared/schema';
 import { generateUniqueShortId, generateButtonText } from '../format';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { generatorLogger } from '../core/generator-logger';
+import { generateAdjustCode } from './generateKeyboardLayoutCode';
 
 export function generateMultiSelectCallbackLogic(
   multiSelectNodes: Node[],
@@ -290,23 +291,37 @@ export function generateMultiSelectCallbackLogic(
         code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))
 `;
 
-        // Добавляем временную кнопку "Готово" к общему списку для правильного расчета
-        const allButtonsWithDone = [...node.data.buttons, {id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'}];
-        const optimalColumnsWithDone = calculateOptimalColumns(allButtonsWithDone, node.data);
+        // Используем keyboardLayout если есть, иначе calculateOptimalColumns
+        if (node.data.keyboardLayout && !node.data.keyboardLayout.autoLayout) {
+          // Создаём временный layout с кнопкой "Готово"
+          const layoutWithDone = {
+            ...node.data.keyboardLayout,
+            rows: [...node.data.keyboardLayout.rows, { buttonIds: ['done_button'] }]
+          };
+          const allButtonsWithDone = [...node.data.buttons, {id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'}];
+          code += `            # Вычисляем раскладку с кнопкой "Готово" для узла ${node.id}
+`;
+          code += `            ${generateAdjustCode(layoutWithDone, allButtonsWithDone.length).trim()}
+`;
+        } else {
+          // Добавляем временную кнопку "Готово" к общему списку для правильного расчета
+          const allButtonsWithDone = [...node.data.buttons, {id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'}];
+          const optimalColumnsWithDone = calculateOptimalColumns(allButtonsWithDone, node.data);
 
-        // Теперь применяем adjust() ко всем кнопкам, включая "Готово"
-        code += `            # Вычисляем оптимальное количество колонок для узла ${node.id} (включая кнопку "Готово": ${allButtonsWithDone.length} кнопок)
+          // Теперь применяем adjust() ко всем кнопкам, включая "Готово"
+          code += `            # Вычисляем оптимальное количество колонок для узла ${node.id} (включая кнопку "Готово": ${allButtonsWithDone.length} кнопок)
 `;
-        code += `            total_buttons_with_done = ${allButtonsWithDone.length}
+          code += `            total_buttons_with_done = ${allButtonsWithDone.length}
 `;
-        code += `            # ИСПРАВЛЕНИЕ: Используем согласованное количество колонок для постоянного расположения кнопок
+          code += `            # ИСПРАВЛЕНИЕ: Используем согласованное количество колонок для постоянного расположения кнопок
 `;
-        code += `            optimal_columns_with_done = ${optimalColumnsWithDone}
+          code += `            optimal_columns_with_done = ${optimalColumnsWithDone}
 `;
-        code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({optimal_columns_with_done}) для узла ${node.id} (multi-select с кнопкой Готово, всего кнопок: {total_buttons_with_done})")
+          code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({optimal_columns_with_done}) для узла ${node.id} (multi-select с кнопкой Готово, всего кнопок: {total_buttons_with_done})")
 `;
-        code += `            builder.adjust(optimal_columns_with_done)
+          code += `            builder.adjust(optimal_columns_with_done)
 `;
+        }
       }
     });
 
