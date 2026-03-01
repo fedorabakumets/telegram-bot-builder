@@ -1,21 +1,26 @@
 /**
- * @fileoverview Индекс логгеров действий с узлами, кнопками и листами
+ * @fileoverview Баррель-экспорт модуля панели свойств
  *
- * Централизованный экспорт всех утилит для логирования
- * изменений узлов, кнопок и листов в историю действий.
+ * Централизованный экспорт всех компонентов, утилит, хуков
+ * и конфигураций для работы с панелью свойств редактора ботов.
  *
- * @module node-action-loggers
+ * @module components/editor/properties
  */
 
-export { handleNodeReset, type NodeResetOptions } from './action-loggers/node-reset';
-export { logNodeUpdate, type NodeUpdateLogOptions } from './action-loggers/node-update-logger';
-export { logNodeTypeChange, type NodeTypeChangeLogOptions } from './action-loggers/node-type-change-logger';
-export { logNodeIdChange, type NodeIdChangeLogOptions } from './action-loggers/node-id-change-logger';
-export { logButtonAdd, type ButtonAddLogOptions } from './action-loggers/button-add-logger';
-export { logButtonUpdate, type ButtonUpdateLogOptions } from './action-loggers/button-update-logger';
-export { logButtonDelete, type ButtonDeleteLogOptions } from './action-loggers/button-delete-logger';
-export { logSheetAdd, type SheetAddLogOptions } from './action-loggers/sheet-add-logger';
-export { logSheetDelete, type SheetDeleteLogOptions } from './action-loggers/sheet-delete-logger';
-export { logSheetRename, type SheetRenameLogOptions } from './action-loggers/sheet-rename-logger';
-export { logSheetDuplicate, type SheetDuplicateLogOptions } from './action-loggers/sheet-duplicate-logger';
-export { logSheetSwitch, type SheetSwitchLogOptions } from './action-loggers/sheet-switch-logger';
+// Компоненты
+export * from './components';
+
+// Логгеры действий
+export * from './action-loggers';
+
+// Конфигурации типов узлов
+export * from './configuration';
+
+// React хуки
+export * from './hooks';
+
+// Утилиты
+export * from './utils';
+
+// Медиа утилиты
+export * from './media';
