@@ -2,12 +2,12 @@ import { Node, Button } from '@shared/schema';
 import { formatTextForPython, generateUniqueShortId, toPythonBoolean } from '../format';
 import { generateInlineKeyboardCode } from '.';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
+import { generatorLogger } from '../core/generator-logger';
 
 export function generateMultiSelectDoneHandler(
     nodes: Node[],
     multiSelectNodes: Node[],
     allNodeIds: string[],
-    isLoggingEnabled: () => boolean,
 ): string {
     let code = '';
     if (multiSelectNodes.length > 0) {
@@ -158,7 +158,7 @@ export function generateMultiSelectDoneHandler(
                             code += `        return\n`;
                         } else {
                             if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                                if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
+                                generatorLogger.debug(`КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
                                 code += `        # Добавляем клавиатуру для целевого узла\n`;
                                 code += `        # Загружаем пользовательские данные для клавиатуры\n`;
                                 code += `        user_vars = await get_user_from_db(user_id)\n`;
