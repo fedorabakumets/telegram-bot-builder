@@ -14,7 +14,7 @@ export * from './components';
 export * from './action-loggers';
 
 // Конфигурации типов узлов
-export * from './configuration';
+export * from './components/configuration';
 
 // React хуки
 export * from './hooks';
