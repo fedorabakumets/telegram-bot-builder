@@ -38,7 +38,7 @@ import { FoursquareIntegrationSection } from './configuration/foursquare-integra
 import { MapServicesSection } from './configuration/map-services-section';
 import { KeyboardTypeSelector } from './keyboard-type-selector';
 import { MultipleSelectionSettings } from './multiple-selection-settings';
-import { formatNodeDisplay } from './node-formatters';
+import { formatNodeDisplay } from './utils/node-formatters';
 import { getNodeDefaults } from './node-defaults';
 import { collectAllNodesFromSheets } from './utils/node-utils';
 import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from './utils/conditional-utils';
