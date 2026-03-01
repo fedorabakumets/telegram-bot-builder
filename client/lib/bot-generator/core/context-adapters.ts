@@ -47,7 +47,7 @@ export function createNodeNavigationAdapter(
       nextNodeIdVar,
       messageVar,
       userVarsVar,
-    };
+    } as const;
     
     // Динамический импорт для избежания циклических зависимостей
     return require('../generate/generateNodeNavigation').generateNodeNavigation(

@@ -22,6 +22,7 @@ type DatabaseTabsProps = Pick<
   | 'handleUserStatusToggle'
   | 'deleteUserMutation'
   | 'visibleColumns'
+  | 'projectId'
 >;
 
 /**
