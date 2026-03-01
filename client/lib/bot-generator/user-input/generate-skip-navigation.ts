@@ -13,8 +13,6 @@
 export interface SkipNavigationParams {
   /** Целевой ID узла для перехода */
   skipTarget: string;
-  /** Массив всех ID узлов для проверки существования */
-  allNodeIds: string[];
   /** Отступ для форматирования кода */
   indent: string;
 }
@@ -28,14 +26,13 @@ export interface SkipNavigationParams {
  * @example
  * const code = generateSkipDataCollectionNavigation({
  *   skipTarget: 'next_node',
- *   allNodeIds: ['start', 'next_node'],
  *   indent: '        '
  * });
  */
 export function generateSkipDataCollectionNavigation(
   params: SkipNavigationParams
 ): string {
-  const { skipTarget, allNodeIds, indent } = params;
+  const { skipTarget, indent } = params;
   let code = '';
 
   code += `${indent}# Переходим к целевому узлу\n`;
