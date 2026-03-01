@@ -15,6 +15,7 @@ import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { logNodeUpdate, logNodeTypeChange, logNodeIdChange, logButtonAdd, logButtonUpdate, logButtonDelete, logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
+import { migrateKeyboardLayout } from '@/components/editor/properties/utils/migrate-keyboard-layout';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -839,7 +840,14 @@ export default function Editor() {
     // Находим узел для логирования
     const node = nodes.find(n => n.id === nodeId);
     const updatedFields = Object.keys(updates);
-    
+
+    // Миграция keyboardLayout если нужно
+    if (updates.keyboardLayout || updates.buttons) {
+      const currentLayout = updates.keyboardLayout || node?.data.keyboardLayout;
+      const buttons = updates.buttons || node?.data.buttons || [];
+      updates.keyboardLayout = migrateKeyboardLayout(buttons, currentLayout);
+    }
+
     // Логируем обновление
     if (node && handleActionLog) {
       logNodeUpdate({
@@ -848,10 +856,10 @@ export default function Editor() {
         updatedFields
       });
     }
-    
+
     // Сохраняем в историю ДО изменений
     saveToHistory();
-    
+
     // Обновляем в старой системе
     updateNodeData(nodeId, updates);
 
