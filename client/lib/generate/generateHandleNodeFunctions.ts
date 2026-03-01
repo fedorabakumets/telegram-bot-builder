@@ -7,7 +7,7 @@
  * @module generate/generateHandleNodeFunctions
  */
 
-import type { BotNode } from '../bot-generator/types';
+import type { Node } from '@shared/schema';
 import { isLoggingEnabled } from '../bot-generator';
 import { generateDatabaseVariablesCode } from '../bot-generator/Broadcast/generateDatabaseVariables';
 import { generateConditionalMessageLogic } from '../bot-generator/Conditional';
@@ -26,7 +26,7 @@ import { generateAttachedMediaSendCode } from '../bot-generator/MediaHandler';
  * const code = generateHandleNodeFunctions(nodes, mediaVariablesMap);
  */
 export function generateHandleNodeFunctions(
-  nodes: BotNode[],
+  nodes: Node[],
   mediaVariablesMap: Map<string, { type: string; variable: string }>
 ): string {
   let code = '';
@@ -53,7 +53,7 @@ export function generateHandleNodeFunctions(
     const messageText = node.data.messageText || "Сообщение";
     const cleanedMessageText = stripHtmlTags(messageText);
     const formattedText = formatTextForPython(cleanedMessageText);
-    const parseMode = getParseMode(node.data.formatMode);
+    const parseMode = getParseMode(node.data.formatMode || undefined);
 
     code += `\nasync def handle_node_${safeFunctionName}(message: types.Message):\n`;
     code += '    # Обработчик узла с условными сообщениями\n';

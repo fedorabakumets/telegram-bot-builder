@@ -7,7 +7,7 @@
  * @module bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic
  */
 
-import type { BotNode } from '../types';
+import type { Node } from '@shared/schema';
 import { isLoggingEnabled } from '../../bot-generator';
 
 /**
@@ -21,9 +21,9 @@ import { isLoggingEnabled } from '../../bot-generator';
  * const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes, () => true);
  */
 export function identifyNodesRequiringMultiSelectLogic(
-  nodes: BotNode[],
+  nodes: Node[],
   isLoggingEnabledFn: () => boolean
-): BotNode[] {
+): Node[] {
   const multiSelectNodes = nodes
     .filter(node => node !== null && node !== undefined)
     .filter((node) => node.data?.allowMultipleSelection);

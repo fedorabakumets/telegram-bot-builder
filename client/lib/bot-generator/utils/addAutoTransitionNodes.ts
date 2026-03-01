@@ -7,7 +7,7 @@
  * @module bot-generator/utils/addAutoTransitionNodes
  */
 
-import type { BotNode } from '../types';
+import type { Node } from '@shared/schema';
 import { isLoggingEnabled } from '../../bot-generator';
 
 /**
@@ -20,7 +20,7 @@ import { isLoggingEnabled } from '../../bot-generator';
  * addAutoTransitionNodes(nodes, allReferencedNodeIds);
  */
 export function addAutoTransitionNodes(
-  nodes: BotNode[],
+  nodes: Node[],
   allReferencedNodeIds: Set<string>
 ): void {
   const loggingEnabled = isLoggingEnabled();

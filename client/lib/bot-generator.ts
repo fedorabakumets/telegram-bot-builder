@@ -29,7 +29,8 @@ import { generateGlobalCheckUserVariableFunction } from "./bot-generator/databas
 import { generateUniversalVariableReplacement } from './bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython } from './bot-generator/format';
 import { extractNodesAndConnections } from './bot-generator/MediaHandler';
-import { generateApiConfig, generateBasicBotSetupCode, generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtf8EncodingCode, generateUtilityFunctions } from './generate';
+import { generateBasicBotSetupCode, generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtf8EncodingCode, generateUtilityFunctions } from './generate';
+import { generateApiConfig } from './bot-generator/api';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateInlineKeyboardCode } from './bot-generator/Keyboard';
@@ -44,7 +45,6 @@ import { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
 import { identifyNodesRequiringMultiSelectLogic } from './bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic';
 import { processInlineButtonNodes } from './bot-generator/Keyboard/processInlineButtonNodes';
 import { generateMessageLoggingCode } from './bot-generator/logging/generate-message-logging';
-import { generateApiConfig } from './bot-generator/api';
 import { generateGroupHandlers } from './bot-generator/MediaHandler/generateGroupHandlers';
 import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generateMediaFileFunctions';
 import { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';

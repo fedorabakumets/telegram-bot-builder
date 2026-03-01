@@ -10,11 +10,11 @@
 /**
  * Проверяет наличие определения функции в коде
  *
- * @param {string} code - Сгенерированный код
- * @param {string} functionName - Имя функции
- * @returns {boolean} true если функция уже определена
+ * @param code - Сгенерированный код
+ * @param functionName - Имя функции
+ * @returns true если функция уже определена
  */
-export function isFunctionDefined(code, functionName) {
+export function isFunctionDefined(code: string, functionName: string): boolean {
   const regex = new RegExp(`^(async\\s+)?def\\s+${functionName}\\s*\\(`, 'm');
   return regex.test(code);
 }
@@ -22,11 +22,11 @@ export function isFunctionDefined(code, functionName) {
 /**
  * Проверяет наличие импорта в коде
  *
- * @param {string} code - Сгенерированный код
- * @param {string} importPattern - Паттерн импорта (например, 'import asyncio')
- * @returns {boolean} true если импорт уже есть
+ * @param code - Сгенерированный код
+ * @param importPattern - Паттерн импорта
+ * @returns true если импорт уже есть
  */
-export function isImportDefined(code, importPattern) {
+export function isImportDefined(code: string, importPattern: string): boolean {
   const lines = code.split('\n').slice(0, 100);
   return lines.some(line => line.trim() === importPattern);
 }
@@ -34,11 +34,11 @@ export function isImportDefined(code, importPattern) {
 /**
  * Подсчитывает количество определений функции в коде
  *
- * @param {string} code - Сгенерированный код
- * @param {string} functionName - Имя функции
- * @returns {number} Количество определений
+ * @param code - Сгенерированный код
+ * @param functionName - Имя функции
+ * @returns Количество определений
  */
-export function countFunctionDefinitions(code, functionName) {
+export function countFunctionDefinitions(code: string, functionName: string): number {
   const regex = new RegExp(`^(async\\s+)?def\\s+${functionName}\\s*\\(`, 'gm');
   const matches = code.match(regex);
   return matches ? matches.length : 0;

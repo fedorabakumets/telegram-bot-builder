@@ -98,12 +98,7 @@ export type {
   InputCollectionCheckResult,
   PythonValidationResult,
   ImportGeneratorOptions,
-  CallbackHandler,
-  MenuCommand,
-  StandardCommand,
-  CommandCategory,
-  CompleteBotScriptOptions,
-  ExtractNodeDataResult
+  CallbackHandler
 } from './bot-generator/types';
 
 export type { MenuCommand } from './bot-commands-setup';

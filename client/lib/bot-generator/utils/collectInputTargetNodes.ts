@@ -7,7 +7,7 @@
  * @module bot-generator/utils/collectInputTargetNodes
  */
 
-import type { BotNode } from '../types';
+import type { Node } from '@shared/schema';
 
 /**
  * Собирает целевые узлы ввода в множество
@@ -18,7 +18,7 @@ import type { BotNode } from '../types';
  * @example
  * const inputTargets = collectInputTargetNodes(nodes);
  */
-export function collectInputTargetNodes(nodes: BotNode[]): Set<string> {
+export function collectInputTargetNodes(nodes: Node[]): Set<string> {
   const inputTargetNodeIds = new Set<string>();
   
   nodes

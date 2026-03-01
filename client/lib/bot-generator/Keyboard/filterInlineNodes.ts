@@ -7,7 +7,7 @@
  * @module bot-generator/Keyboard/filterInlineNodes
  */
 
-import type { BotNode } from '../types';
+import type { Node } from '@shared/schema';
 
 /**
  * Фильтрует узлы с inline callback кнопками
@@ -18,7 +18,7 @@ import type { BotNode } from '../types';
  * @example
  * const inlineNodes = filterInlineNodes(nodes);
  */
-export function filterInlineNodes(nodes: BotNode[]): BotNode[] {
+export function filterInlineNodes(nodes: Node[]): Node[] {
   return nodes
     .filter(node => node !== null && node !== undefined)
     .filter(node => {

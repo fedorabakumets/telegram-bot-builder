@@ -7,7 +7,7 @@
  * @module generate/generateNodeNavigation
  */
 
-import type { BotNode } from '../bot-generator/types';
+import type { Node } from '@shared/schema';
 import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython } from '../bot-generator/format/formatTextForPython';
 
@@ -25,7 +25,7 @@ import { formatTextForPython } from '../bot-generator/format/formatTextForPython
  * const navigationCode = generateNodeNavigation(nodes, '    ', 'next_node_id', 'message', 'user_vars');
  */
 export function generateNodeNavigation(
-  nodes: BotNode[],
+  nodes: Node[],
   baseIndent: string,
   nextNodeIdVar: string,
   messageVar: string,

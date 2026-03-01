@@ -7,7 +7,7 @@
  * @module bot-generator/utils/extractNodeData
  */
 
-import type { BotNode } from '../types';
+import type { Node } from '@shared/schema';
 import { isLoggingEnabled } from '../../bot-generator';
 import { collectMediaVariables } from './collectMediaVariables';
 
@@ -24,7 +24,7 @@ export interface ExtractNodeDataResult {
   /** Массив всех ID узлов */
   allNodeIds: string[];
   /** Карта медиапеременных */
-  mediaVariablesMap: Map<string, string>;
+  mediaVariablesMap: Map<string, { type: string; variable: string }>;
 }
 
 /**
@@ -36,7 +36,7 @@ export interface ExtractNodeDataResult {
  * @example
  * const { allNodeIds, mediaVariablesMap } = extractNodeData(nodes);
  */
-export function extractNodeData(nodes: BotNode[]): ExtractNodeDataResult {
+export function extractNodeData(nodes: Node[]): ExtractNodeDataResult {
   const allNodeIds = nodes ? nodes.map(node => node.id) : [];
   const mediaVariablesMap = collectMediaVariables(nodes || []);
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Собрано медиапеременных: ${mediaVariablesMap.size}`);

@@ -230,7 +230,7 @@ export function generateBotFatherCommands(nodes: BotNode[]): string {
   let botFatherCommands = '';
 
   commandNodes.forEach(node => {
-    const command = node.data.command.replace('/', '');
+    const command = (node.data.command || '').replace('/', '');
     const description = node.data.description || 'Команда бота';
     botFatherCommands += `${command} - ${description}\n`;
   });
