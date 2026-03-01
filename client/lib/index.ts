@@ -128,3 +128,10 @@ export { createSectionContext } from './bot-generator/core/generation-context';
 
 export { DEFAULT_GENERATION_OPTIONS, normalizeGenerationOptions } from './bot-generator/core/generation-options.types';
 
+// Ядро: централизованное логирование
+export { createLogger, generatorLogger } from './bot-generator/core/generator-logger';
+export type { GeneratorLogger, LogLevel, LoggerOptions } from './bot-generator/core/generator-logger';
+
+// Константы
+export * from './bot-generator/constants';
+
