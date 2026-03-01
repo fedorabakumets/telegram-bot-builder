@@ -1,13 +1,12 @@
 /**
  * @fileoverview Типы для узлов бота
- * 
+ *
  * Модуль определяет базовую структуру узла графа бота и связанные типы.
  * Используется для типизации данных узлов при генерации Python-кода.
- * 
+ *
  * @module bot-generator/types/bot-node-types
  */
 
-import type { Button } from './button-types';
 import type { NodeData } from './node-data.types';
 
 /**
