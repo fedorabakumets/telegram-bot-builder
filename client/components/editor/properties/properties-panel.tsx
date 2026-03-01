@@ -40,7 +40,7 @@ import { KeyboardTypeSelector } from './keyboard-type-selector';
 import { MultipleSelectionSettings } from './multiple-selection-settings';
 import { formatNodeDisplay } from './node-formatters';
 import { getNodeDefaults } from './node-defaults';
-import { collectAllNodesFromSheets } from './node-utils';
+import { collectAllNodesFromSheets } from './utils/node-utils';
 import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from './conditional-utils';
 import { collectAvailableQuestions, extractVariables } from './variables-utils';
 import { useMediaVariables } from './use-media-variables';
