@@ -19,6 +19,7 @@ import { SectionHeader } from '../layout/section-header';
 import { SynonymEditor } from '../synonyms/synonym-editor';
 import { MessageInfoBlock } from '../common/message-info-block';
 import { DevelopmentNoticeBlock } from '../layout/development-notice-block';
+import { EmptyState } from '../layout/empty-state';
 import { getMediaUrlUpdates } from '../../utils/media-utils';
 import { isManagementNode } from '../../utils/node-constants';
 import { AdminRightsInfo } from '../configuration/admin-rights-info';
@@ -60,7 +61,7 @@ import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
 import { BroadcastToggle } from '../broadcast/broadcast-toggle';
 import { SaveToUserIdsSwitch } from '../csv/save-to-user-ids-switch';
 import { SaveToCsvSwitch } from '../csv/save-to-csv-switch';
-import { Image, Video, Music, FileText, X } from 'lucide-react';
+import { Image, Video, Music, FileText } from 'lucide-react';
 
 /**
  * Интерфейс пропсов для панели свойств узлов
@@ -229,80 +230,7 @@ export function PropertiesPanel({
     return STANDARD_COMMANDS.slice(0, 5);
   }, [commandInput]);
   if (!selectedNode) {
-    return (
-      <aside className="w-full h-full bg-background border-l border-border flex flex-col">
-        {/* Empty State Header */}
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-muted/50 rounded-lg flex items-center justify-center">
-                <i className="fas fa-sliders-h text-muted-foreground text-sm"></i>
-              </div>
-              <div>
-                <h2 className="text-sm font-semibold text-foreground">Свойства</h2>
-                <p className="text-xs text-muted-foreground">Выберите элемент для настройки</p>
-              </div>
-            </div>
-            {onClose && (
-              <UIButton
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 flex-shrink-0"
-                onClick={onClose}
-                title="Закрыть панель свойств"
-                data-testid="button-close-properties-empty"
-              >
-                <X className="w-4 h-4" />
-              </UIButton>
-            )}
-          </div>
-        </div>
-
-        {/* Empty State Content */}
-        <div className="flex flex-col items-center px-8 pt-12 empty-state-container">
-          <div className="text-center max-w-xs">
-            {/* Animated Icon */}
-            <div className="relative mx-auto mb-6 empty-state-icon">
-              <div className="w-16 h-16 empty-state-icon-bg rounded-2xl flex items-center justify-center mx-auto">
-                <i className="fas fa-mouse-pointer text-muted-foreground text-xl transition-all duration-300 hover:text-primary hover:scale-110"></i>
-              </div>
-              {/* Enhanced pulse effect */}
-              <div className="absolute inset-0 w-16 h-16 bg-primary/10 rounded-2xl pulse-primary"></div>
-            </div>
-
-            {/* Content */}
-            <div className="space-y-3 mb-6">
-              <h3 className="text-sm font-medium text-foreground gradient-text">Выберите элемент</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Нажмите на любой элемент в редакторе, чтобы увидеть его настройки здесь
-              </p>
-            </div>
-
-            {/* Enhanced Help Tips */}
-            <div className="space-y-3">
-              <div className="flex items-center text-xs text-muted-foreground empty-state-tip floating-tip">
-                <div className="w-5 h-5 bg-gradient-to-br from-primary/20 to-primary/30 rounded-md flex items-center justify-center mr-3 flex-shrink-0 shadow-sm">
-                  <i className="fas fa-lightbulb text-primary text-xs"></i>
-                </div>
-                <span>Перетащите компоненты из левой панели</span>
-              </div>
-              <div className="flex items-center text-xs text-muted-foreground empty-state-tip floating-tip">
-                <div className="w-5 h-5 bg-gradient-to-br from-primary/20 to-primary/30 rounded-md flex items-center justify-center mr-3 flex-shrink-0 shadow-sm">
-                  <i className="fas fa-hand-pointer text-primary text-xs"></i>
-                </div>
-                <span>Кликните по элементу для настройки</span>
-              </div>
-              <div className="flex items-center text-xs text-muted-foreground empty-state-tip floating-tip">
-                <div className="w-5 h-5 bg-gradient-to-br from-primary/20 to-primary/30 rounded-md flex items-center justify-center mr-3 flex-shrink-0 shadow-sm">
-                  <i className="fas fa-sliders-h text-primary text-xs"></i>
-                </div>
-                <span>Свойства элемента появятся здесь</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </aside>
-    );
+    return <EmptyState onClose={onClose} />;
   }
 
   const handleAddButton = () => {
@@ -317,16 +245,6 @@ export function PropertiesPanel({
     };
     onButtonAdd(selectedNode.id, newButton);
   };
-
-  if (!selectedNode) {
-    return (
-      <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-        <div className="text-center">
-          <p className="text-sm">Выберите элемент для редактирования</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
