@@ -8,7 +8,7 @@
  */
 
 import type { EnhancedNode } from '../bot-generator/types';
-import { isLoggingEnabled } from '../bot-generator';
+import { generatorLogger } from '../bot-generator/core/generator-logger';
 import { generateDatabaseVariablesCode } from '../bot-generator/Broadcast/generateDatabaseVariables';
 import { generateConditionalMessageLogic } from '../bot-generator/Conditional';
 import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
@@ -40,14 +40,14 @@ export function generateHandleNodeFunctions(
   );
 
   if (conditionalNodes.length === 0) {
-    if (isLoggingEnabled()) console.log('🔍 Нет узлов, требующих функций handle_node_*');
+    generatorLogger.debug('Нет узлов, требующих функций handle_node_*');
     return code;
   }
 
-  if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: Создаем функции handle_node_* для ${conditionalNodes.length} узлов`);
+  generatorLogger.info(`Создаем функции handle_node_* для ${conditionalNodes.length} узлов`);
 
   conditionalNodes.forEach(node => {
-    if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: Создаем handle_node_${node.id} для узла с условными сообщениями`);
+    generatorLogger.debug(`Создаем handle_node_${node.id} для узла с условными сообщениями`);
 
     const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
     const messageText = node.data.messageText || "Сообщение";
@@ -157,7 +157,7 @@ export function generateHandleNodeFunctions(
     // Отправляем сообщение с учетом прикрепленных медиа
     const attachedMedia = node.data.attachedMedia || [];
     if (attachedMedia.length > 0) {
-      if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: Узел ${node.id} имеет attachedMedia:`, attachedMedia);
+      generatorLogger.debug(`Узел ${node.id} имеет attachedMedia`, attachedMedia);
 
       const mediaCode = generateAttachedMediaSendCode(
         attachedMedia,
