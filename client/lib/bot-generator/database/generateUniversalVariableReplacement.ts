@@ -9,7 +9,7 @@
 
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { replace_variables_in_text } from './replace_variables_in_text';
-import { hasComponentBeenGenerated, markComponentAsGenerated } from '../core/generation-state';
+import { isComponentGenerated, markComponentGenerated } from '../core/generation-state';
 
 /**
  * Генерирует код для универсальной замены переменных
