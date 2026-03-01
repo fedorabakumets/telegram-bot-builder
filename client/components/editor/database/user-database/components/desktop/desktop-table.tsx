@@ -39,7 +39,7 @@ interface DesktopTableProps {
  * @returns JSX компонент таблицы
  */
 export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
-  const { users, searchQuery, visibleColumns, projectId } = props;
+  const { users, searchQuery, visibleColumns, projectId, formatUserName, onOpenUserDetailsPanel, onOpenDialogPanel, handleUserStatusToggle, deleteUserMutation } = props;
 
   return (
     <div className="rounded-lg border border-border bg-card/40 overflow-hidden w-full">

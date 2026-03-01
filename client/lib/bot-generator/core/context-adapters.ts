@@ -18,6 +18,14 @@ interface NodeNavigationParams {
   userVarsVar: string;
 }
 
+/** Параметры для генерации кода */
+interface GenerationParams {
+  indent: string;
+  nextNodeIdVar: string;
+  messageVar: string;
+  userVarsVar: string;
+}
+
 /**
  * Создаёт обёртку для generateNodeNavigation
  * 
@@ -42,12 +50,12 @@ export function createNodeNavigationAdapter(
     messageVar: string,
     userVarsVar: string
   ) => {
-    const params: NodeNavigationParams = {
-      baseIndent,
+    const params: GenerationParams = {
+      indent: baseIndent,
       nextNodeIdVar,
       messageVar,
       userVarsVar,
-    } as const;
+    };
     
     // Динамический импорт для избежания циклических зависимостей
     return require('../generate/generateNodeNavigation').generateNodeNavigation(
