@@ -1,32 +1,34 @@
 import { Node, Button } from '@shared/schema';
-import { Button as UIButton } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { useState, useMemo, useEffect } from 'react';
 
-import { SectionHeader } from '../layout/section-header';
-import { SynonymEditor } from '../synonyms/synonym-editor';
 import { EmptyState } from '../layout/empty-state';
-import { MessageTextSection } from '../message/message-text-section';
-import { MediaFileSection } from '../media-file/media-file-section';
+import { useHandleAddButton } from '../../hooks/use-handle-add-button-wrapper';
+import { getNodeDefaults } from '../../utils/node-defaults';
+import { collectAllNodesFromSheets } from '../../utils/node-utils';
+import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from '../../utils/conditional-utils';
+import { collectAvailableQuestions, extractVariables } from '../../utils/variables-utils';
+import { useMediaVariables } from '../../hooks/use-media-variables';
+import { formatNodeDisplay } from '../../utils/node-formatters';
 import { isManagementNode } from '../../utils/node-constants';
 import { AdminRightsInfo } from '../configuration/admin-rights-info';
 import { CommandAdvancedSettingsWrapper } from './command-advanced-settings-wrapper';
-import { CommandSectionComplete } from '../commands/command-section-complete';
-import { ManagementCommandSection } from '../commands/management-command-section';
-import { ButtonCard } from '../button-card/button-card';
-import { ContinueButtonSection } from '../continue-button/continue-button-section';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
-import { NodeTypeConfigurations } from './node-type-configurations';
-import { ConditionalMessagesToggle } from './conditional-messages-toggle';
-import { ConditionalMessagesHeader } from './conditional-messages-header';
-import { ConditionalMessagesInfoBlock } from './conditional-messages-info-block';
+import { BasicSettingsSection } from './basic-settings-section';
+import { MessageContentSection } from './message-content-section';
 import { KeyboardSectionHeader } from './keyboard-section-header';
-import { UserInputToggle } from './user-input-toggle';
-import { MediaVariablesSection } from './media-variables-section';
+import { KeyboardButtonsSection } from './keyboard-buttons-section';
+import { ConditionalMessagesHeader } from './conditional-messages-header';
+import { ConditionalMessagesToggle } from './conditional-messages-toggle';
+import { ConditionalMessagesInfoBlock } from './conditional-messages-info-block';
+import { ConditionalMessagesActions } from './conditional-messages-actions';
+import { UserInputSettingsSection } from './user-input-settings-section';
 import { AutoTransitionWrapper } from './auto-transition-wrapper';
-import { useHandleAddButton } from '../../hooks/use-handle-add-button-wrapper';
+import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
+import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
+import { EmptyConditionalState } from '../conditional/empty-conditional-state';
+import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
 import { VoiceConfiguration } from '../configuration/voice-configuration';
 import { AnimationConfiguration } from '../configuration/animation-configuration';
@@ -37,24 +39,7 @@ import { LocationCoordinatesSection } from '../configuration/location-coordinate
 import { LocationDetailsSection } from '../configuration/location-details-section';
 import { FoursquareIntegrationSection } from '../configuration/foursquare-integration-section';
 import { MapServicesSection } from '../configuration/map-services-section';
-import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
-import { formatNodeDisplay } from '../../utils/node-formatters';
-import { getNodeDefaults } from '../../utils/node-defaults';
-import { collectAllNodesFromSheets } from '../../utils/node-utils';
-import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from '../../utils/conditional-utils';
-import { collectAvailableQuestions, extractVariables } from '../../utils/variables-utils';
-import { useMediaVariables } from '../../hooks/use-media-variables';
-import { MediaInputToggles } from '../media/media-input-toggles';
-import { VariableInputGrid } from '../variables/variable-input-grid';
-import { InputNavigationGrid } from '../navigation/input-navigation-grid';
-import { ResponseOptionsList } from '../common/response-options-list';
-import { EmptyConditionalState } from '../conditional/empty-conditional-state';
-import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
-import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
-import { ButtonTypeSelector } from '../keyboard/button-type-selector';
 import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
-import { SaveToUserIdsSwitch } from '../csv/save-to-user-ids-switch';
-import { SaveToCsvSwitch } from '../csv/save-to-csv-switch';
 
 /**
  * Интерфейс пропсов для панели свойств узлов
@@ -221,15 +206,12 @@ export function PropertiesPanel({
     }
     return STANDARD_COMMANDS.slice(0, 5);
   }, [commandInput]);
+
   if (!selectedNode) {
     return <EmptyState onClose={onClose} />;
   }
 
   const handleAddButton = useHandleAddButton({ selectedNode, onButtonAdd });
-
-  if (!selectedNode) {
-    return <EmptyState onClose={onClose} />;
-  }
 
   return (
     <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
@@ -250,466 +232,175 @@ export function PropertiesPanel({
       <div className="flex-1 overflow-y-auto">
         <div className="p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5 md:space-y-6">
 
-          {/* Basic Settings */}
-          <div className="space-y-3 sm:space-y-4">
-            <SectionHeader
-              title="Основные настройки"
-              isOpen={isBasicSettingsOpen}
-              onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-              icon="sliders-h"
-              iconGradient="from-slate-100 to-slate-200 dark:from-slate-900/50 dark:to-slate-800/50"
-              iconColor="text-slate-600 dark:text-slate-400"
-            />
-            {isBasicSettingsOpen && (
-              <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
-
-                {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
-                  <CommandSectionComplete
-                    selectedNodeId={selectedNode.id}
-                    commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
-                    descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
-                    isValid={commandValidation.isValid}
-                    errors={commandValidation.errors}
-                    suggestions={commandSuggestions}
-                    showSuggestions={showCommandSuggestions}
-                    onNodeUpdate={onNodeUpdate}
-                    onNodeIdChange={onNodeIdChange}
-                    onCommandInput={setCommandInput}
-                    onShowSuggestions={setShowCommandSuggestions}
-                  />
-                )}
-
-                {/* Synonyms for all nodes */}
-                <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-green-50/20 dark:from-emerald-950/30 dark:to-green-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm">
-                  <SynonymEditor
-                    synonyms={selectedNode.data.synonyms || []}
-                    onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
-                    title="Синонимы"
-                    description="Дополнительные текстовые варианты для вызова этого экрана. Например: старт, привет, начать"
-                    placeholder="Например: старт, привет, начать"
-                  />
-                </div>
-
-                {/* Command for Content Management and User Management */}
-                {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message' ||
-                  selectedNode.type === 'ban_user' || selectedNode.type === 'unban_user' || selectedNode.type === 'mute_user' ||
-                  selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' ||
-                  selectedNode.type === 'demote_user' || selectedNode.type === 'admin_rights') && (
-                  <ManagementCommandSection
-                    selectedNode={selectedNode}
-                    onNodeUpdate={onNodeUpdate}
-                  />
-                )}
-
-
-              </div>
-            )}
-
-            {/* Node Type Configurations */}
-            <NodeTypeConfigurations
-              selectedNode={selectedNode}
-              projectId={projectId}
-              onNodeUpdate={onNodeUpdate}
-              StickerConfiguration={StickerConfiguration}
-              VoiceConfiguration={VoiceConfiguration}
-              AnimationConfiguration={AnimationConfiguration}
-              LocationCoordinatesSection={LocationCoordinatesSection}
-              LocationDetailsSection={LocationDetailsSection}
-              FoursquareIntegrationSection={FoursquareIntegrationSection}
-              MapServicesSection={MapServicesSection}
-              ContactConfiguration={ContactConfiguration}
-              BroadcastNodeProperties={BroadcastNodeProperties}
-              ContentManagementConfiguration={ContentManagementConfiguration}
-              UserManagementConfiguration={UserManagementConfiguration}
-              AdminRightsInfo={AdminRightsInfo}
-            />
-
-          </div>
+          <BasicSettingsSection
+            selectedNode={selectedNode}
+            projectId={projectId}
+            isOpen={isBasicSettingsOpen}
+            onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
+            commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
+            descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
+            isValid={commandValidation.isValid}
+            errors={commandValidation.errors}
+            suggestions={commandSuggestions}
+            showSuggestions={showCommandSuggestions}
+            onNodeUpdate={onNodeUpdate}
+            onNodeIdChange={onNodeIdChange}
+            onCommandInput={setCommandInput}
+            onShowSuggestions={setShowCommandSuggestions}
+            StickerConfiguration={StickerConfiguration}
+            VoiceConfiguration={VoiceConfiguration}
+            AnimationConfiguration={AnimationConfiguration}
+            LocationCoordinatesSection={LocationCoordinatesSection}
+            LocationDetailsSection={LocationDetailsSection}
+            FoursquareIntegrationSection={FoursquareIntegrationSection}
+            MapServicesSection={MapServicesSection}
+            ContactConfiguration={ContactConfiguration}
+            BroadcastNodeProperties={BroadcastNodeProperties}
+            ContentManagementConfiguration={ContentManagementConfiguration}
+            UserManagementConfiguration={UserManagementConfiguration}
+            AdminRightsInfo={AdminRightsInfo}
+          />
         </div>
 
         {/* Message Content - скрыто для узлов управления */}
+        <MessageContentSection
+          selectedNode={selectedNode}
+          allNodes={allNodes}
+          textVariables={textVariables}
+          mediaVariables={mediaVariables}
+          attachedMediaVariables={attachedMediaVariables}
+          isMessageTextOpen={isMessageTextOpen}
+          isMediaSectionOpen={isMediaSectionOpen}
+          onMessageTextToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
+          onMediaSectionToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
+          onNodeUpdate={onNodeUpdate}
+          onMediaVariableRemove={handleMediaVariableRemove}
+          onMediaVariableSelect={handleMediaVariableSelect}
+          projectId={projectId}
+        />
+
+
         {!isManagementNode(selectedNode.type) && (
-            <div>
-              <div className="space-y-4">
-                {/* Media Variables Section */}
-                <MediaVariablesSection
-                  variables={attachedMediaVariables}
-                  onRemove={handleMediaVariableRemove}
-                />
+          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-amber-50/40 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-xl p-3 sm:p-4 md:p-5 backdrop-blur-sm">
+            <KeyboardSectionHeader
+              selectedNode={selectedNode}
+              isOpen={isKeyboardSectionOpen}
+              onToggle={() => setIsKeyboardSectionOpen(!isKeyboardSectionOpen)}
+            />
 
-                {/* Message Text Section */}
-                <MessageTextSection
-                  selectedNode={selectedNode}
-                  allNodes={allNodes}
-                  textVariables={textVariables}
-                  mediaVariables={mediaVariables}
-                  isOpen={isMessageTextOpen}
-                  onToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
-                  onNodeUpdate={onNodeUpdate}
-                  onMediaVariableSelect={handleMediaVariableSelect}
-                />
+            {isKeyboardSectionOpen && (
+              <>
+                <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
 
-                {/* File Attachment Section */}
-                {!isManagementNode(selectedNode.type) && (
-                  <MediaFileSection
-                    projectId={projectId}
-                    selectedNode={selectedNode}
-                    isOpen={isMediaSectionOpen}
-                    onToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
-                    onNodeUpdate={onNodeUpdate}
-                  />
-                )}
-              </div>
-            </div>
-          )}
+                <div className="space-y-2">
+                  {selectedNode.data.keyboardType !== 'none' && (
+                    <MultipleSelectionSettings
+                      selectedNode={selectedNode}
+                      keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply'}
+                      onNodeUpdate={onNodeUpdate}
+                    />
+                  )}
 
-
-        {/* Keyboard Settings - скрыто для узлов управления */}
-        {!isManagementNode(selectedNode.type) && (
-            <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-amber-50/40 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-xl p-3 sm:p-4 md:p-5 backdrop-blur-sm">
-              {/* Header with Spoiler */}
-              <KeyboardSectionHeader
-                selectedNode={selectedNode}
-                isOpen={isKeyboardSectionOpen}
-                onToggle={() => setIsKeyboardSectionOpen(!isKeyboardSectionOpen)}
-              />
-
-              {/* Content - Toggleable with Spoiler */}
-              {isKeyboardSectionOpen && (
-                <>
-                  {/* Keyboard Type Selection */}
-                  <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
-
-                  <div className="space-y-2">
-
-                    {/* Multiple Selection Setting */}
-                    {selectedNode.data.keyboardType !== 'none' && (
-                      <MultipleSelectionSettings
-                        selectedNode={selectedNode}
-                        keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply'}
-                        onNodeUpdate={onNodeUpdate}
-                      />
-                    )}
-
-                    {/* Buttons List */}
-                    {selectedNode.data.keyboardType !== 'none' && (
-                      <div className="space-y-3">
-                        <div className="border-t border-border/20 pt-4"></div>
-                        <div className="flex flex-col gap-2.5 sm:gap-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-50/40 to-amber-50/30 dark:from-orange-950/20 dark:to-amber-950/10 border border-orange-200/40 dark:border-orange-800/30 hover:border-orange-300/60 dark:hover:border-orange-700/60 hover:bg-orange-50/60 dark:hover:bg-orange-950/30 transition-all duration-200 group">
-                          <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                            <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-orange-200/50 dark:bg-orange-900/40 group-hover:bg-orange-300/50 dark:group-hover:bg-orange-800/50 transition-all">
-                              <i className="fas fa-square-plus text-xs sm:text-sm text-orange-600 dark:text-orange-400"></i>
-                            </div>
-                            <div className="min-w-0">
-                              <Label className="text-xs sm:text-sm font-semibold text-orange-900 dark:text-orange-100 cursor-pointer block">
-                                Кнопки
-                              </Label>
-                              <div className="text-xs text-orange-700/70 dark:text-orange-300/70 mt-0.5 leading-snug">
-                                Добавляйте и управляйте кнопками
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex gap-1.5 flex-wrap">
-                            <UIButton
-                              size="sm"
-                              variant="outline"
-                              onClick={handleAddButton}
-                              className="text-xs font-medium h-8 px-2 border-orange-300/50 dark:border-orange-700/50 text-orange-700 dark:text-orange-300 hover:bg-orange-100/50 dark:hover:bg-orange-900/30 transition-all"
-                            >
-                              <i className="fas fa-plus text-xs mr-1.5"></i>
-                              <span className="hidden sm:inline">Кнопка</span>
-                            </UIButton>
-                            {selectedNode.data.allowMultipleSelection && (
-                              <>
-                                <UIButton
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    const newButton = {
-                                      id: Date.now().toString(),
-                                      text: 'Новая опция',
-                                      action: 'selection' as const,
-                                      target: '',
-                                      buttonType: 'option' as const,
-                                      skipDataCollection: false,
-                                      hideAfterClick: false
-                                    };
-
-                                    const currentButtons = selectedNode.data.buttons || [];
-                                    const updatedButtons = [...currentButtons, newButton];
-                                    onNodeUpdate(selectedNode.id, { buttons: updatedButtons });
-                                  }}
-                                  className="text-xs font-medium h-8 px-2 border-green-300/50 dark:border-green-700/50 text-green-700 dark:text-green-300 hover:bg-green-100/50 dark:hover:bg-green-900/30 transition-all"
-                                >
-                                  <i className="fas fa-check text-xs mr-1.5"></i>
-                                  <span className="hidden sm:inline">Опция</span>
-                                </UIButton>
-                                <UIButton
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    const newButton = {
-                                      id: Date.now().toString(),
-                                      text: 'Готово',
-                                      action: 'goto' as const,
-                                      target: '',
-                                      buttonType: 'complete' as const,
-                                      skipDataCollection: false,
-                                      hideAfterClick: false
-                                    };
-
-                                    const currentButtons = selectedNode.data.buttons || [];
-                                    const updatedButtons = [...currentButtons, newButton];
-                                    onNodeUpdate(selectedNode.id, { buttons: updatedButtons });
-                                  }}
-                                  className="text-xs font-medium h-8 px-2 border-purple-300/50 dark:border-purple-700/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100/50 dark:hover:bg-purple-900/30 transition-all"
-                                >
-                                  <i className="fas fa-flag-checkered text-xs mr-1.5"></i>
-                                  <span className="hidden sm:inline">Завершение</span>
-                                </UIButton>
-                              </>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          {/* Show Continue Button for Multiple Selection */}
-                          {selectedNode.data.allowMultipleSelection && (
-                            <ContinueButtonSection
-                              selectedNode={selectedNode}
-                              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-                              onNodeUpdate={onNodeUpdate}
-                              formatNodeDisplay={formatNodeDisplay}
-                            />
-                          )}
-
-                          {(selectedNode.data.buttons || []).map((button) => (
-                            <ButtonCard
-                              key={button.id}
-                              nodeId={selectedNode.id}
-                              button={button}
-                              textVariables={textVariables}
-                              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-                              onButtonUpdate={onButtonUpdate}
-                              onButtonDelete={onButtonDelete}
-                              keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply' | 'none'}
-                              allowMultipleSelection={selectedNode.data.allowMultipleSelection}
-                              collectUserInput={selectedNode.data.collectUserInput}
-                              selectedNode={selectedNode}
-                              allNodes={allNodes}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-        {/* Conditional Messages - скрыто для узлов управления */}
-        {/* Conditional Messages - скрыто для узлов управления */}
-        {!isManagementNode(selectedNode.type) && (
-            <div className="w-full">
-              {/* Header with Collapse Toggle */}
-              <ConditionalMessagesHeader
-                selectedNode={selectedNode}
-                isOpen={isConditionalMessagesSectionOpen}
-                onToggle={() => setIsConditionalMessagesSectionOpen(!isConditionalMessagesSectionOpen)}
-              />
-
-              <ConditionalMessagesToggle
-                selectedNode={selectedNode}
-                onNodeUpdate={onNodeUpdate}
-              />
-
-              {isConditionalMessagesSectionOpen && (
-                <div className="space-y-3 sm:space-y-4">
-
-                  {/* Conditional Messages Settings */}
-                  {selectedNode.data.enableConditionalMessages && (
-                    <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-purple-50/40 to-indigo-50/20 dark:from-purple-950/15 dark:to-indigo-950/10 border border-purple-200/40 dark:border-purple-800/30 rounded-lg sm:rounded-xl p-3 sm:p-4 transition-all duration-200 hover:border-purple-300/60 dark:hover:border-purple-700/60">
-
-                      <ConditionalMessagesInfoBlock />
-
-                      {/* Conditional Messages List */}
-                      <div className="space-y-2 sm:space-y-3">
-                        <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
-                          <Label className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-300">
-                            📋 Условия
-                          </Label>
-                          <div className="flex gap-1.5 w-full sm:w-auto">
-                            <UIButton
-                              size="sm"
-                              variant="outline"
-                              onClick={autoFixPriorities}
-                              className="flex-1 sm:flex-none text-xs border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200"
-                              title="Автоматически расставить приоритеты для избежания конфликтов"
-                            >
-                              <i className="fas fa-sort-amount-down text-xs"></i>
-                              <span className="hidden sm:inline ml-1.5">Приоритеты</span>
-                            </UIButton>
-                            <UIButton
-                              size="sm"
-                              variant="default"
-                              onClick={() => {
-                                const currentConditions = selectedNode.data.conditionalMessages || [];
-                                const nextPriority = Math.max(0, ...currentConditions.map(c => c.priority || 0)) + 10;
-
-                                const newCondition = {
-                                  id: `condition-${Date.now()}`,
-                                  condition: 'user_data_exists' as const,
-                                  variableName: '',
-                                  variableNames: [],
-                                  logicOperator: 'AND' as const,
-                                  messageText: 'Добро пожаловать обратно!',
-                                  formatMode: 'text' as const,
-                                  keyboardType: 'none' as const,
-                                  buttons: [],
-                                  collectUserInput: false,
-                                  enableTextInput: false,
-                                  enablePhotoInput: false,
-                                  enableVideoInput: false,
-                                  enableAudioInput: false,
-                                  enableDocumentInput: false,
-                                  waitForTextInput: false,
-                                  priority: nextPriority
-                                };
-                                onNodeUpdate(selectedNode.id, {
-                                  conditionalMessages: [...currentConditions, newCondition]
-                                });
-                              }}
-                              className="flex-1 sm:flex-none text-xs bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 transition-all duration-200"
-                            >
-                              <i className="fas fa-plus text-xs"></i>
-                              <span className="hidden sm:inline ml-1.5">Новое</span>
-                            </UIButton>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2 sm:space-y-3">
-                          {(selectedNode.data.conditionalMessages || [])
-                            .sort((a, b) => (b.priority || 0) - (a.priority || 0))
-                            .map((condition, index) => {
-                              const ruleConflicts = detectRuleConflicts.filter((c: RuleConflict) => c.ruleIndex === index);
-                              const hasErrors = ruleConflicts.some((c: RuleConflict) => c.severity === 'error');
-                              const hasWarnings = ruleConflicts.some((c: RuleConflict) => c.severity === 'warning');
-
-                              return (
-                                <ConditionalMessageCard
-                                  key={condition.id}
-                                  index={index}
-                                  condition={condition}
-                                  selectedNode={selectedNode}
-                                  availableQuestions={availableQuestions}
-                                  textVariables={textVariables}
-                                  getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-                                  formatNodeDisplay={formatNodeDisplay}
-                                  onNodeUpdate={onNodeUpdate}
-                                  ruleConflicts={ruleConflicts}
-                                  hasErrors={hasErrors}
-                                  hasWarnings={hasWarnings}
-                                />
-                              );
-                            })}
-
-                          {(selectedNode.data.conditionalMessages || []).length === 0 && (
-                            <EmptyConditionalState
-                              selectedNode={selectedNode}
-                              onNodeUpdate={onNodeUpdate}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                  {selectedNode.data.keyboardType !== 'none' && (
+                    <KeyboardButtonsSection
+                      selectedNode={selectedNode}
+                      getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+                      textVariables={textVariables}
+                      onNodeUpdate={onNodeUpdate}
+                      onButtonAdd={onButtonAdd}
+                      onButtonUpdate={onButtonUpdate}
+                      onButtonDelete={onButtonDelete}
+                      formatNodeDisplay={formatNodeDisplay}
+                    />
                   )}
                 </div>
-              )}
-            </div>
-          )}
+              </>
+            )}
+          </div>
+        )}
+
+        {!isManagementNode(selectedNode.type) && (
+          <div className="w-full">
+            <ConditionalMessagesHeader
+              selectedNode={selectedNode}
+              isOpen={isConditionalMessagesSectionOpen}
+              onToggle={() => setIsConditionalMessagesSectionOpen(!isConditionalMessagesSectionOpen)}
+            />
+
+            <ConditionalMessagesToggle
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+            />
+
+            {isConditionalMessagesSectionOpen && (
+              <div className="space-y-3 sm:space-y-4">
+                {selectedNode.data.enableConditionalMessages && (
+                  <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-purple-50/40 to-indigo-50/20 dark:from-purple-950/15 dark:to-indigo-950/10 border border-purple-200/40 dark:border-purple-800/30 rounded-lg sm:rounded-xl p-3 sm:p-4 transition-all duration-200 hover:border-purple-300/60 dark:hover:border-purple-700/60">
+
+                    <ConditionalMessagesInfoBlock />
+
+                    <div className="space-y-2 sm:space-y-3">
+                      <ConditionalMessagesActions
+                        autoFixPriorities={autoFixPriorities}
+                        onAddCondition={(newCondition) => {
+                          const currentConditions = selectedNode.data.conditionalMessages || [];
+                          onNodeUpdate(selectedNode.id, {
+                            conditionalMessages: [...currentConditions, newCondition]
+                          });
+                        }}
+                      />
+
+                      <div className="space-y-2 sm:space-y-3">
+                        {(selectedNode.data.conditionalMessages || [])
+                          .sort((a, b) => (b.priority || 0) - (a.priority || 0))
+                          .map((condition, index) => {
+                            const ruleConflicts = detectRuleConflicts.filter((c: RuleConflict) => c.ruleIndex === index);
+                            const hasErrors = ruleConflicts.some((c: RuleConflict) => c.severity === 'error');
+                            const hasWarnings = ruleConflicts.some((c: RuleConflict) => c.severity === 'warning');
+
+                            return (
+                              <ConditionalMessageCard
+                                key={condition.id}
+                                index={index}
+                                condition={condition}
+                                selectedNode={selectedNode}
+                                availableQuestions={availableQuestions}
+                                textVariables={textVariables}
+                                getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+                                formatNodeDisplay={formatNodeDisplay}
+                                onNodeUpdate={onNodeUpdate}
+                                ruleConflicts={ruleConflicts}
+                                hasErrors={hasErrors}
+                                hasWarnings={hasWarnings}
+                              />
+                            );
+                          })}
+
+                        {(selectedNode.data.conditionalMessages || []).length === 0 && (
+                          <EmptyConditionalState
+                            selectedNode={selectedNode}
+                            onNodeUpdate={onNodeUpdate}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Universal User Input Collection - скрыто для узлов управления */}
         {/* Conditional Messages - скрыто для узлов управления */}
-        {!isManagementNode(selectedNode.type) && (
-            <div className="w-full">
-              <SectionHeader
-                title="Сбор ответов"
-                description="Собирать ввод пользователя в переменные"
-                isOpen={isUserInputSectionOpen}
-                onToggle={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}
-                icon="inbox"
-                iconGradient="from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50"
-                iconColor="text-blue-600 dark:text-blue-400"
-              />
-
-              <UserInputToggle
-                selectedNode={selectedNode}
-                onNodeUpdate={onNodeUpdate}
-              />
-              {isUserInputSectionOpen && (
-                <div className="space-y-4">
-
-                  {/* Input Collection Settings */}
-                  {selectedNode.data.collectUserInput && (
-                    <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-indigo-50/20 dark:from-blue-950/15 dark:to-indigo-950/5 border border-blue-200/25 dark:border-blue-800/25 rounded-xl p-3 sm:p-4">
-
-                      {/* Save to User IDs Database Switch */}
-                      <SaveToUserIdsSwitch
-                        selectedNode={selectedNode}
-                        onNodeUpdate={onNodeUpdate}
-                      />
-
-                      {/* Save to CSV File Switch */}
-                      <SaveToCsvSwitch
-                        selectedNode={selectedNode}
-                        onNodeUpdate={onNodeUpdate}
-                      />
-
-                      {/* Media Input Toggles Grid */}
-                      <MediaInputToggles
-                        selectedNode={selectedNode}
-                        onNodeUpdate={onNodeUpdate}
-                      />
-
-                      {/* Variable Inputs Grid */}
-                      <VariableInputGrid
-                        selectedNode={selectedNode}
-                        onNodeUpdate={onNodeUpdate}
-                      />
-
-                      {/* Button Type for button responses */}
-                      {selectedNode.data.responseType === 'buttons' && (
-                        <ButtonTypeSelector
-                          selectedNode={selectedNode}
-                          onNodeUpdate={onNodeUpdate}
-                        />
-                      )}
-
-                      {/* Response Options for buttons */}
-                      {selectedNode.data.responseType === 'buttons' && (
-                        <ResponseOptionsList
-                          selectedNode={selectedNode}
-                          getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-                          onNodeUpdate={onNodeUpdate}
-                          formatNodeDisplay={formatNodeDisplay}
-                        />
-                      )}
-
-                      {/* Variable Name & Navigation Grid */}
-                      <InputNavigationGrid
-                        selectedNode={selectedNode}
-                        getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-                        onNodeUpdate={onNodeUpdate}
-                        formatNodeDisplay={formatNodeDisplay}
-                      />
-
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+        <UserInputSettingsSection
+          selectedNode={selectedNode}
+          getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+          isOpen={isUserInputSectionOpen}
+          onToggle={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}
+          onNodeUpdate={onNodeUpdate}
+          formatNodeDisplay={formatNodeDisplay}
+        />
 
         {/* Auto Transition Section - скрыто для узлов управления */}
         <AutoTransitionWrapper
