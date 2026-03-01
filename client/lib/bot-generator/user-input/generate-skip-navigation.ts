@@ -32,7 +32,7 @@ export interface SkipNavigationParams {
 export function generateSkipDataCollectionNavigation(
   params: SkipNavigationParams
 ): string {
-  const { skipTarget, indent } = params;
+  const { skipTarget: _skipTarget, indent } = params;
   let code = '';
 
   code += `${indent}# Переходим к целевому узлу\n`;
@@ -70,7 +70,7 @@ export function generateSkipDataCollectionNavigation(
  * const code = generateSkipTargetHandlerFunction(['start', 'node1'], '    ');
  */
 export function generateSkipTargetHandlerFunction(
-  allNodeIds: string[],
+  _allNodeIds: string[],
   indent: string = '    '
 ): string {
   let code = '';
