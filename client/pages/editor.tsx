@@ -15,7 +15,7 @@ import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { logNodeUpdate, logNodeTypeChange, logNodeIdChange, logButtonAdd, logButtonUpdate, logButtonDelete, logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
-import { migrateKeyboardLayout } from '@/components/editor/properties/utils/migrate-keyboard-layout';
+import { migrateKeyboardLayout, fixAutoLayout } from '@/components/editor/properties/utils';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -845,7 +845,12 @@ export default function Editor() {
     if (updates.keyboardLayout || updates.buttons) {
       const currentLayout = updates.keyboardLayout || node?.data.keyboardLayout;
       const buttons = updates.buttons || node?.data.buttons || [];
+      
+      // 1. Создаём/получаем keyboardLayout
       updates.keyboardLayout = migrateKeyboardLayout(buttons, currentLayout);
+      
+      // 2. Исправляем autoLayout если он не соответствует раскладке
+      updates.keyboardLayout = fixAutoLayout(updates.keyboardLayout, buttons.length);
     }
 
     // Логируем обновление
