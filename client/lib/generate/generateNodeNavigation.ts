@@ -1,31 +1,31 @@
 /**
  * @fileoverview Генерация навигации по узлам бота
- * 
+ *
  * Модуль предоставляет функцию для генерации Python-кода навигации
  * между узлами графа бота.
- * 
+ *
  * @module generate/generateNodeNavigation
  */
 
-import type { Node } from '@shared/schema';
+import type { EnhancedNode } from '../bot-generator/types';
 import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython } from '../bot-generator/format/formatTextForPython';
 
 /**
  * Генерирует код навигации по узлам бота
- * 
+ *
  * @param nodes - Массив узлов для генерации навигации
  * @param baseIndent - Базовый отступ для форматирования
  * @param nextNodeIdVar - Имя переменной, содержащей ID следующего узла
  * @param messageVar - Имя переменной сообщения
  * @param userVarsVar - Имя переменной с пользовательскими данными
  * @returns Сгенерированный код навигации
- * 
+ *
  * @example
  * const navigationCode = generateNodeNavigation(nodes, '    ', 'next_node_id', 'message', 'user_vars');
  */
 export function generateNodeNavigation(
-  nodes: Node[],
+  nodes: EnhancedNode[],
   baseIndent: string,
   nextNodeIdVar: string,
   messageVar: string,
