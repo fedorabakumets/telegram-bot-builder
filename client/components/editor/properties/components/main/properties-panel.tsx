@@ -1,5 +1,4 @@
 import { Node, Button } from '@shared/schema';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Button as UIButton } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { MediaVariablesList } from '../media/media-variables-list';
 import { nanoid } from 'nanoid';
-import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { useState, useMemo, useEffect } from 'react';
 
@@ -49,7 +47,6 @@ import { VariableInputGrid } from '../variables/variable-input-grid';
 import { InputNavigationGrid } from '../navigation/input-navigation-grid';
 import { ResponseOptionsList } from '../common/response-options-list';
 import { EmptyConditionalState } from '../conditional/empty-conditional-state';
-import { ConditionContent } from '../conditional/condition-content';
 import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import { ButtonTypeSelector } from '../keyboard/button-type-selector';
@@ -130,7 +127,6 @@ export function PropertiesPanel({
   onActionLog,
   onSaveProject
 }: PropertiesPanelProps) {
-  const { toast } = useToast();
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
   const [] = useState<{ [key: string]: { isValid: boolean; message?: string } }>({});

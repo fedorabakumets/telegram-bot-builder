@@ -39,5 +39,3 @@ export function ContinueButtonTypeInfo() {
     </div>
   );
 }
-
-import { Label } from '@/components/ui/label';

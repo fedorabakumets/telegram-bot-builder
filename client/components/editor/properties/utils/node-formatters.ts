@@ -13,7 +13,7 @@ import { Node } from '@shared/schema';
  * @param {string} sheetName - Название листа
  * @returns {string} Отформатированная строка
  */
-export function formatNodeDisplay(node: Node, sheetName: string): string {
+export function formatNodeDisplay(node: Node, sheetName?: string): string {
   const typeLabel = getNodeTypeLabel(node.type);
   const content = getNodeContent(node);
   return `${node.id} | ${content} | ${typeLabel} | ${sheetName}`;
