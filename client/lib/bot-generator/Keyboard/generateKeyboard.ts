@@ -466,8 +466,7 @@ export function generateKeyboard(node: Node): string {
             hideAfterClick: false
           });
         }
-        const columns = calculateOptimalColumns(allButtons, node.data);
-        code += `${indent3}builder.adjust(${columns})\n`;
+        code += `${indent3}${getAdjustCode(allButtons, node.data)}\n`;
         code += `${indent3}keyboard = builder.as_markup()\n`;
 
         // Проверяем наличие изображения
@@ -498,8 +497,7 @@ export function generateKeyboard(node: Node): string {
         });
 
         // Автоматическое распределение колонок
-        const columns = calculateOptimalColumns(node.data.buttons, node.data);
-        code += `${indent3}builder.adjust(${columns})\n`;
+        code += `${indent3}${getAdjustCode(node.data.buttons, node.data)}\n`;
         code += `${indent3}keyboard = builder.as_markup()\n`;
 
         // Проверяем наличие изображения

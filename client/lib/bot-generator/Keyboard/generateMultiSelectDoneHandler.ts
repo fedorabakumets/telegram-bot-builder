@@ -1,7 +1,7 @@
 import { Node, Button } from '@shared/schema';
 import { formatTextForPython, generateUniqueShortId, toPythonBoolean } from '../format';
 import { generateInlineKeyboardCode } from '.';
-import { calculateOptimalColumns } from './calculateOptimalColumns';
+import { getAdjustCode } from './getAdjustCode';
 import { generatorLogger } from '../core/generator-logger';
 
 export function generateMultiSelectDoneHandler(
@@ -148,8 +148,7 @@ export function generateMultiSelectDoneHandler(
 
                                 // Вычисляем оптимальное количество колонок для всех кнопок (включая кнопку "Готово")
                                 const allButtons = [...targetNode.data.buttons, {id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'}];
-                                const columns = calculateOptimalColumns(allButtons, targetNode.data);
-                                code += `        builder.adjust(${columns})\n`;
+                                code += `        ${getAdjustCode(allButtons, targetNode.data)}\n`;
                                 code += `        keyboard = builder.as_markup()\n`;
                                 code += `        \n`;
                                 code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;

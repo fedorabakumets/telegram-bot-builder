@@ -10,7 +10,7 @@
 import type { Node } from '@shared/schema';
 import type { Button } from '../types/button-types';
 import { generateButtonText } from '../format';
-import { calculateOptimalColumns } from '../Keyboard';
+import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { toPythonBoolean } from '../format';
 
 /**
@@ -54,8 +54,7 @@ function generateInlineKeyboard(targetNode: Node, bodyIndent: string): string {
     }
   });
 
-  const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-  code += `${bodyIndent}builder.adjust(${columns})\n`;
+  code += `${bodyIndent}${getAdjustCode(targetNode.data.buttons, targetNode.data)}\n`;
   code += `${bodyIndent}keyboard = builder.as_markup()\n`;
   code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
 

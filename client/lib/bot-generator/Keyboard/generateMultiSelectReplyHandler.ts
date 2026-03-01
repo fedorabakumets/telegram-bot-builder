@@ -1,7 +1,7 @@
 import { Node } from '@shared/schema';
 import { formatTextForPython, toPythonBoolean } from '../format';
 import { generateInlineKeyboardCode } from '.';
-import { calculateOptimalColumns } from './calculateOptimalColumns';
+import { getAdjustCode } from './getAdjustCode';
 import { generatorLogger } from '../core/generator-logger';
 
 /**
@@ -143,8 +143,7 @@ export function generateMultiSelectReplyHandler(
 
                 // Вычисляем оптимальное количество колонок для клавиатуры
                 const allButtons = [...node.data.buttons];
-                const columns = calculateOptimalColumns(allButtons, node.data);
-                code += `                builder.adjust(${columns})\n`;
+                code += `                ${getAdjustCode(allButtons, node.data)}\n`;
                 code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})  # builder variable is used here\n`;
                 // Отправляем сообщение с обновленной клавиатурой
                 code += `                text = """${node.data.messageText || "Выберите опции:"}"""\n`;

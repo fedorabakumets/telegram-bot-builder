@@ -10,7 +10,7 @@
 import { Button } from '../../bot-generator';
 import { generateConditionalMessageLogic } from '../Conditional';
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
-import { calculateOptimalColumns } from '../Keyboard';
+import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 
@@ -116,8 +116,7 @@ export function generateMessageNodeHandlerWithKeyboardAndInputCollection(code: s
                 }
             });
             // Добавляем настройку колонок для консистентности
-            const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-            code += `        builder.adjust(${columns})\n`;
+            code += `        ${getAdjustCode(targetNode.data.buttons, targetNode.data)}\n`;
             code += '        keyboard = builder.as_markup()\n';
             // Определяем режим форматирования для целевого узла
             let parseModeTarget = '';

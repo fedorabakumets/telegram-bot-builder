@@ -13,7 +13,7 @@
 
 import { Button } from '../../bot-generator';
 import { formatTextForPython, generateButtonText, getParseMode, stripHtmlTags } from '../format';
-import { calculateOptimalColumns } from '../Keyboard';
+import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { generateUniversalVariableReplacement } from '../utils';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
@@ -84,8 +84,7 @@ export function generateCommandNodeHandlerWithKeyboardAndImageSupport(targetNode
           }
       });
       // Добавляем настройку колонок для консистентности
-      const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-      codeLines.push(`    builder.adjust(${columns})`);
+      codeLines.push(`    ${getAdjustCode(targetNode.data.buttons, targetNode.data)}`);
       codeLines.push('    keyboard = builder.as_markup()');
 
       // ИСПРАВЛЕНИЕ: Проверяем наличие изображения в command узле

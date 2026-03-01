@@ -1,6 +1,6 @@
 import { Button } from '../types';
 import { formatTextForPython, generateButtonText, toPythonBoolean } from '../format';
-import { calculateOptimalColumns } from '../Keyboard';
+import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { generateInlineKeyboardCode } from '../Keyboard';
 
 export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) {
@@ -130,8 +130,7 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
 
                     // Вычисляем оптимальное количество колонок для клавиатуры
                     const allButtons = [...node.data.buttons];
-                    const columns = calculateOptimalColumns(allButtons, node.data);
-                    code += `                builder.adjust(${columns})\n`;
+                    code += `                ${getAdjustCode(allButtons, node.data)}\n`;
                     code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})  # builder variable is used here\n`;
 
                     // Отправляем сообщение с обновленной клавиатурой

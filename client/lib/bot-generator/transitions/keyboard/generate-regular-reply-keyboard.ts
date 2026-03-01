@@ -9,7 +9,7 @@
 
 import { Button } from '../../types';
 import { generateButtonText, toPythonBoolean } from '../../format';
-import { calculateOptimalColumns } from '../../Keyboard';
+import { getAdjustCode } from '../../Keyboard/getAdjustCode';
 
 /**
  * Параметры для генерации reply клавиатуры
@@ -56,8 +56,7 @@ export function generateRegularReplyKeyboard(
         code += `${indent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
       }
     });
-    const columns = calculateOptimalColumns(buttons, { resizeKeyboard, oneTimeKeyboard });
-    code += `${indent}    builder.adjust(${columns})\n`;
+    code += `${indent}    ${getAdjustCode(buttons, { resizeKeyboard, oneTimeKeyboard })}\n`;
     const resize = toPythonBoolean(resizeKeyboard);
     const oneTime = toPythonBoolean(oneTimeKeyboard);
     code += `${indent}    keyboard = builder.as_markup(resize_keyboard=${resize}, one_time_keyboard=${oneTime})\n`;
@@ -74,12 +73,11 @@ export function generateRegularReplyKeyboard(
         code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
       }
     });
-    const columns = calculateOptimalColumns(buttons, { resizeKeyboard, oneTimeKeyboard });
-    code += `${indent}builder.adjust(${columns})\n`;
+    code += `${indent}${getAdjustCode(buttons, { resizeKeyboard, oneTimeKeyboard })}\n`;
     const resize = toPythonBoolean(resizeKeyboard);
     const oneTime = toPythonBoolean(oneTimeKeyboard);
     code += `${indent}keyboard = builder.as_markup(resize_keyboard=${resize}, one_time_keyboard=${oneTime})\n`;
   }
-  
+
   return code;
 }

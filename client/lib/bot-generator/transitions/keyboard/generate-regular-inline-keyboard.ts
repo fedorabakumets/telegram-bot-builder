@@ -9,7 +9,7 @@
 
 import { Button } from '../../types';
 import { generateButtonText } from '../../format';
-import { calculateOptimalColumns } from '../../Keyboard';
+import { getAdjustCode } from '../../Keyboard/getAdjustCode';
 
 /**
  * Параметры для генерации inline клавиатуры
@@ -52,11 +52,10 @@ export function generateRegularInlineKeyboard(
       code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
     }
   });
-  
+
   // Автоматическое распределение колонок для обычных кнопок
-  const columns = calculateOptimalColumns(buttons, nodeData || {});
-  code += `${indent}builder.adjust(${columns})\n`;
+  code += `${indent}${getAdjustCode(buttons, nodeData || {})}\n`;
   code += `${indent}keyboard = builder.as_markup()\n`;
-  
+
   return code;
 }
