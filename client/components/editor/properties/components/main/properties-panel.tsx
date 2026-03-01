@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { MediaVariablesList } from '../media/media-variables-list';
 import { nanoid } from 'nanoid';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 import { SectionHeader } from '../layout/section-header';
 import { SynonymEditor } from '../synonyms/synonym-editor';
@@ -40,7 +40,6 @@ import { collectAllNodesFromSheets } from '../../utils/node-utils';
 import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from '../../utils/conditional-utils';
 import { collectAvailableQuestions, extractVariables } from '../../utils/variables-utils';
 import { useMediaVariables } from '../../hooks/use-media-variables';
-import { usePropertiesPanelState, usePropertiesPanelMemo, useCommandValidation, useHandleAddButton } from '../../hooks';
 import { MediaInputToggles } from '../media/media-input-toggles';
 import { VariableInputGrid } from '../variables/variable-input-grid';
 import { InputNavigationGrid } from '../navigation/input-navigation-grid';
@@ -720,9 +719,9 @@ export function PropertiesPanel({
                           {(selectedNode.data.conditionalMessages || [])
                             .sort((a, b) => (b.priority || 0) - (a.priority || 0))
                             .map((condition, index) => {
-                              const ruleConflicts = detectRuleConflicts.filter(c => c.ruleIndex === index);
-                              const hasErrors = ruleConflicts.some(c => c.severity === 'error');
-                              const hasWarnings = ruleConflicts.some(c => c.severity === 'warning');
+                              const ruleConflicts = detectRuleConflicts.filter((c: RuleConflict) => c.ruleIndex === index);
+                              const hasErrors = ruleConflicts.some((c: RuleConflict) => c.severity === 'error');
+                              const hasWarnings = ruleConflicts.some((c: RuleConflict) => c.severity === 'warning');
 
                               return (
                                 <ConditionalMessageCard
