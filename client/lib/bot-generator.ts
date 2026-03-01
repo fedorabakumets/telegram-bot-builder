@@ -3,8 +3,6 @@ import { BotData, BotGroup } from '@shared/schema';
 
 // Ядро: контекст и состояние
 import { createGenerationContext } from './bot-generator/core/create-generation-context';
-import { createGenerationState, withLogging, withComments } from './bot-generator/core/generation-state';
-import type { GenerationContext } from './bot-generator/core/generation-context';
 import type { GenerationOptions } from './bot-generator/core/generation-options.types';
 
 // Типы
@@ -33,7 +31,6 @@ import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from
 import { generateGlobalCheckUserVariableFunction } from "./bot-generator/database/generateGlobalCheckUserVariableFunction";
 import { generateUniversalVariableReplacement } from './bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython } from './bot-generator/format';
-import { extractNodesAndConnections } from './bot-generator/MediaHandler';
 import { generateBasicBotSetupCode, generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtf8EncodingCode, generateUtilityFunctions } from './generate';
 import { generateApiConfig } from './bot-generator/api';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
@@ -63,10 +60,8 @@ import { generateSynonymHandlers } from './bot-generator/Synonyms';
 import { addAutoTransitionNodes } from './bot-generator/utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
 import { collectInputTargetNodes } from './bot-generator/utils/collectInputTargetNodes';
-import { extractNodeData } from './bot-generator/utils/extractNodeData';
 import { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
 import { hasNodesRequiringSafeEditOrSend } from './bot-generator/utils/hasNodesRequiringSafeEditOrSend';
-import { setCommentsEnabled } from './bot-generator/utils/generateGeneratedComment';
 import { assertValidPython } from './bot-generator/validation';
 
 
