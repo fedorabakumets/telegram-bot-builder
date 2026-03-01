@@ -46,7 +46,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '    user_name = init_user_variables(user_id, message.from_user)\n';
     code += '    \n';
     const universalVarCodeLines: string[] = [];
-    generateUniversalVariableReplacement(universalVarCodeLines, '    ', true);
+    generateUniversalVariableReplacement(universalVarCodeLines, '    ');
     code += universalVarCodeLines.join('\n');
     code += '    \n';
     code += '    # Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick\n';
