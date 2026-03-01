@@ -4,7 +4,8 @@ import { BotData, BotGroup } from '@shared/schema';
 // Ядро: контекст и состояние
 import { createGenerationContext } from './bot-generator/core/create-generation-context';
 import { createGenerationState, withLogging, withComments } from './bot-generator/core/generation-state';
-import type { GenerationContext, GenerationOptions } from './bot-generator/core/generation-context';
+import type { GenerationContext } from './bot-generator/core/generation-context';
+import type { GenerationOptions } from './bot-generator/core/generation-options.types';
 
 // Типы
 import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
@@ -130,10 +131,10 @@ export function generatePythonCode(
   logFlowAnalysis(context.nodes);
 
   let code = '"""\n';
-  code += `${botName} - Telegram Bot\n`;
+  code += `${context.botName} - Telegram Bot\n`;
   code += 'Сгенерировано с помощью TelegramBot Builder\n';
 
-  const botFatherCommands = generateBotFatherCommands(nodes);
+  const botFatherCommands = generateBotFatherCommands(context.nodes);
   if (botFatherCommands) {
     code += '\nКоманды для @BotFather:\n';
     code += botFatherCommands;
@@ -145,12 +146,12 @@ export function generatePythonCode(
   code += generateUtf8EncodingCode();
 
   // Генерируем Python импорты на основе типов узлов
-  const hasInlineButtonsResult = hasInlineButtons(nodes || []);
-  code += generatePythonImports({ nodes: nodes || [], userDatabaseEnabled, hasInlineButtons: hasInlineButtonsResult });
+  const hasInlineButtonsResult = hasInlineButtons(context.nodes || []);
+  code += generatePythonImports({ nodes: context.nodes || [], userDatabaseEnabled: context.options.userDatabaseEnabled, hasInlineButtons: hasInlineButtonsResult });
 
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
-  const hasAutoTransitionsResult = hasAutoTransitions(nodes || []);
-  const hasNodesRequiringSafeEditOrSendResult = hasNodesRequiringSafeEditOrSend(nodes || []);
+  const hasAutoTransitionsResult = hasAutoTransitions(context.nodes || []);
+  const hasNodesRequiringSafeEditOrSendResult = hasNodesRequiringSafeEditOrSend(context.nodes || []);
 
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
   // ИЛИ если включена база данных пользователей (т.к. callback-обработчики могут использовать эту функцию)
@@ -159,15 +160,15 @@ export function generatePythonCode(
   code += generateBasicBotSetupCode();
 
   // Добавляем конфигурацию API
-  code += generateApiConfig(projectId, userDatabaseEnabled);
+  code += generateApiConfig(context.projectId, context.options.userDatabaseEnabled);
 
   // Генерируем логирование сообщений (только при включенной БД)
-  if (userDatabaseEnabled) {
-    code += generateMessageLoggingCode(userDatabaseEnabled, hasInlineButtons(nodes || []));
+  if (context.options.userDatabaseEnabled) {
+    code += generateMessageLoggingCode(context.options.userDatabaseEnabled, hasInlineButtons(context.nodes || []));
   }
 
   // Добавляем конфигурацию групп
-  code += generateGroupsConfiguration(groups);
+  code += generateGroupsConfiguration(context.groups);
 
   // user_data всегда нужен для временного хранения состояний даже при включенной БД
   // ИСПРАВЛЕНИЕ: Создаем user_data всегда, так как он используется в callback handlers
@@ -175,7 +176,7 @@ export function generatePythonCode(
   code += 'user_data = {}\n\n';
 
   // Добавляем функции для работы с базой данных
-  code += generateDatabaseCode(userDatabaseEnabled, nodes || []);
+  code += generateDatabaseCode(context.options.userDatabaseEnabled, context.nodes || []);
 
 
 
@@ -183,16 +184,16 @@ export function generatePythonCode(
 
   // Добавляем глобальные утилитарные функции
   code += generateGlobalCheckUserVariableFunction(); // Добавляем глобальное определение функции
-  code += generateUtilityFunctions(userDatabaseEnabled);
+  code += generateUtilityFunctions(context.options.userDatabaseEnabled);
 
   // Функции для работы с файлами - если есть медиа или узлы с изображениями из папки uploads
   // ИЛИ если включена база данных пользователей (для функции send_photo_with_logging)
-  if (hasMediaNodes(nodes || []) || hasUploadImageUrls(nodes || []) || userDatabaseEnabled) {
+  if (hasMediaNodes(context.nodes || []) || hasUploadImageUrls(context.nodes || []) || context.options.userDatabaseEnabled) {
     code += generateMediaFileFunctions();
   }
 
   // Определяем команды для меню BotFather
-  const menuCommands = (nodes || []).filter(node =>
+  const menuCommands = context.nodes.filter(node =>
     (node.type === 'start' || node.type === 'command') &&
     node.data.showInMenu &&
     node.data.command
@@ -202,16 +203,16 @@ export function generatePythonCode(
   code += generateBotCommandsSetup(menuCommands);
 
   // Генерируем обработчики для каждого узла
-  code += generateNodeHandlers(nodes || [], userDatabaseEnabled, enableComments);
+  code += generateNodeHandlers(context.nodes || [], context.options.userDatabaseEnabled, context.options.enableComments);
 
   // Генерируем обработчики синонимов для всех узлов
-  code += generateSynonymHandlers(nodes || []);
+  code += generateSynonymHandlers(context.nodes || []);
 
   // Генерируем обработчики обратного вызова для inline кнопок И целевых узлов ввода
-  const inlineNodes = filterInlineNodes(nodes || []);
+  const inlineNodes = filterInlineNodes(context.nodes || []);
 
   // Также собираем все целевые узла из коллекций пользовательского ввода
-  const inputTargetNodeIds = collectInputTargetNodes(nodes || []);
+  const inputTargetNodeIds = collectInputTargetNodes(context.nodes || []);
 
   // Собираем все идентификаторы ссылочных узлов и кнопки условных сообщений
   let allReferencedNodeIds = new Set<string>();
@@ -221,23 +222,23 @@ export function generatePythonCode(
   processInlineButtonNodes(inlineNodes, allReferencedNodeIds);
 
   // Собираем кнопки из условных сообщений
-  collectConditionalMessageButtons(nodes || [], allConditionalButtons);
+  collectConditionalMessageButtons(context.nodes || [], allConditionalButtons);
 
   // Добавляем целевые узла ввода
   addInputTargetNodes(inputTargetNodeIds, allReferencedNodeIds);
 
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем узла, которые являются целями автопереходов
-  addAutoTransitionNodes(nodes || [], allReferencedNodeIds);
+  addAutoTransitionNodes(context.nodes || [], allReferencedNodeIds);
 
   // Добавляем все узлы в allReferencedNodeIds, чтобы для каждого узла создавался обработчик
   // Это необходимо, потому что в разных местах кода генерируются вызовы handle_callback_... для всех узлов
-  (nodes || []).forEach(node => {
+  context.nodes.forEach(node => {
     allReferencedNodeIds.add(node.id);
   });
 
   // ФИЛЬТРАЦИЯ: Убедимся, что allReferencedNodeIds содержит только реально существующие узлы
   // Это предотвращает генерацию обработчиков для удаленных или несуществующих узлов
-  const existingNodeIds = new Set((nodes || []).map(node => node.id));
+  const existingNodeIds = new Set(context.nodes.map(node => node.id));
   const filteredReferencedNodeIds = new Set<string>();
   allReferencedNodeIds.forEach(nodeId => {
     if (existingNodeIds.has(nodeId)) {
@@ -252,7 +253,7 @@ export function generatePythonCode(
   generateInteractiveCallbackHandlers();
 
   // Генерируем обработчики для кнопок клавиатуры ответов
-  code += generateReplyButtonHandlers(nodes);
+  code += generateReplyButtonHandlers(context.nodes);
 
   // Добавляем обработчики кнопочных ответов для узлов сбора ввода
   generateButtonResponseHandlersForUserInputCollectionWithReplyKeyboard();
@@ -265,43 +266,43 @@ export function generatePythonCode(
   generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation();
 
   // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
-  if (hasConditionalValueButtons(nodes)) {
+  if (hasConditionalValueButtons(context.nodes)) {
     code += generateConditionalButtonHandlerCode();
   }
 
   // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логированием
-  const commandButtons = collectAllCommandCallbacksFromNodes(nodes || []);
+  const commandButtons = collectAllCommandCallbacksFromNodes(context.nodes || []);
 
   if (isLoggingEnabled()) {
     console.log(`🎯 ИТОГО найдено кнопок команд: ${commandButtons.size}`);
     console.log('📋 Список найденных кнопок команд:', Array.from(commandButtons));
   }
 
-  code = addCommandCallbackHandlers(commandButtons, code, nodes || []);
+  code = addCommandCallbackHandlers(commandButtons, code, context.nodes || []);
 
   // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком текста
-  if (enableGroupHandlers) {
-    code += generateGroupBasedEventHandlers(groups, generateGroupHandlers);
+  if (context.options.enableGroupHandlers) {
+    code += generateGroupBasedEventHandlers(context.groups, generateGroupHandlers);
   }
 
   // Добавляем универсальный fallback-обработчик для всех текстовых сообщений
   // Этот обработчик ОБЯЗАТЕЛЬНО нужен, чтобы middleware сохранял ВСЕ сообщения
   // Middleware вызывается только для зарегистрированных обработчиков!
   // ВАЖНО: Добавляем только если база данных включена
-  code += generateFallbackHandlers(userDatabaseEnabled);
+  code += generateFallbackHandlers(context.options.userDatabaseEnabled);
 
   code += generateSignalHandler();
-  code += generateBotInitialization(userDatabaseEnabled, menuCommands.length, hasInlineButtons(nodes || []));
-  code += generatePollingLoop(userDatabaseEnabled);
+  code += generateBotInitialization(context.options.userDatabaseEnabled, menuCommands.length, hasInlineButtons(context.nodes || []));
+  code += generatePollingLoop(context.options.userDatabaseEnabled);
 
   // Найдем узла с множественным выбором для использования в обработчиках
-  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes as any[], isLoggingEnabled);
+  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(context.nodes as any[], isLoggingEnabled);
 
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
   code += generateMultiSelectCallbackHandler(
     multiSelectNodes as any[],
-    nodes as any[] || [],
-    allNodeIds,
+    context.nodes as any[] || [],
+    context.allNodeIds,
     isLoggingEnabled(),
     generateTransitionLogicForMultiSelectCompletion,
     generateInlineKeyboardCode,
@@ -312,9 +313,9 @@ export function generatePythonCode(
     code,
     {
       multiSelectNodes: multiSelectNodes as any[],
-      allNodeIds,
+      allNodeIds: context.allNodeIds,
       isLoggingEnabled,
-      nodes: (nodes || []) as any[],
+      nodes: context.nodes as any[],
       generateMultiSelectCallbackLogic: generateMultiSelectCallbackLogic as any,
       generateMultiSelectDoneHandler: generateMultiSelectDoneHandler as any,
       generateMultiSelectReplyHandler: generateMultiSelectReplyHandler as any

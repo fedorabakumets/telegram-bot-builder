@@ -93,7 +93,6 @@ export type {
   InputType,
   CodeNodeRange,
   CodeWithMap,
-  GenerationOptions,
   GenerationContext,
   InputCollectionCheckResult,
   PythonValidationResult,
@@ -124,9 +123,8 @@ export { markComponentGenerated, isComponentGenerated } from './bot-generator/co
 export type { GenerationState } from './bot-generator/core/generation-state';
 
 export { createGenerationContext, createGenerationContextFromNodes } from './bot-generator/core/create-generation-context';
-export type { GenerationContext, SectionContext } from './bot-generator/core/generation-context';
+export type { SectionContext } from './bot-generator/core/generation-context';
 export { createSectionContext } from './bot-generator/core/generation-context';
 
-export type { GenerationOptions } from './bot-generator/core/generation-options.types';
 export { DEFAULT_GENERATION_OPTIONS, normalizeGenerationOptions } from './bot-generator/core/generation-options.types';
 
