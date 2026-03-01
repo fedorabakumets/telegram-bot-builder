@@ -1,13 +1,13 @@
 import { Node, Button } from '@shared/schema';
-import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
+import { getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { useState, useMemo, useEffect } from 'react';
 
 import { EmptyState } from '../layout/empty-state';
-import { getNodeDefaults } from '../../utils/node-defaults';
 import { collectAllNodesFromSheets } from '../../utils/node-utils';
 import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from '../../utils/conditional-utils';
 import { collectAvailableQuestions, extractVariables } from '../../utils/variables-utils';
 import { useMediaVariables } from '../../hooks/use-media-variables';
+import { useNodeCommandValidation } from '../../hooks/use-node-command-validation';
 import { formatNodeDisplay } from '../../utils/node-formatters';
 import { isManagementNode } from '../../utils/node-constants';
 import { AdminRightsInfo } from '../configuration/admin-rights-info';
@@ -176,27 +176,7 @@ export function PropertiesPanel({
     onNodeUpdate(selectedNode.id, { conditionalMessages: fixedRules });
   };
 
-  // Валидация команды
-  const commandValidation = useMemo(() => {
-    if (selectedNode && (
-      selectedNode.type === 'start' ||
-      selectedNode.type === 'command' ||
-      selectedNode.type === 'pin_message' ||
-      selectedNode.type === 'unpin_message' ||
-      selectedNode.type === 'delete_message' ||
-      selectedNode.type === 'ban_user' ||
-      selectedNode.type === 'unban_user' ||
-      selectedNode.type === 'mute_user' ||
-      selectedNode.type === 'unmute_user' ||
-      selectedNode.type === 'kick_user' ||
-      selectedNode.type === 'promote_user' ||
-      selectedNode.type === 'demote_user'
-    )) {
-      const commandValue = selectedNode.data.command || getNodeDefaults(selectedNode.type).command || '';
-      return validateCommand(commandValue);
-    }
-    return { isValid: true, errors: [] };
-  }, [selectedNode?.data.command, selectedNode?.type]);
+  const commandValidation = useNodeCommandValidation({ selectedNode });
 
   // Автодополнение команд
   const commandSuggestions = useMemo(() => {
