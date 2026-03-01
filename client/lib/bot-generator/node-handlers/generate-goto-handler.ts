@@ -1,13 +1,13 @@
 /**
  * @fileoverview Обработка кнопок goto и навигация между узлами
- * 
+ *
  * Модуль создаёт Python-код для обработки кнопок с действием 'goto',
  * поиска целевых узлов и предотвращения дублирования обработчиков.
- * 
+ *
  * @module bot-generator/node-handlers/generate-goto-handler
  */
 
-import { isLoggingEnabled } from '../../bot-generator';
+import { generatorLogger } from '../../core/generator-logger';
 
 /**
  * Генерирует Python-код для обработки кнопки goto
@@ -41,9 +41,7 @@ export function generateGotoHandler(
 
   // Проверяем дублирование для target узлов
   if (button.target && processedCallbacks.has(`cb_${button.target}`)) {
-    if (isLoggingEnabled()) {
-      console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
-    }
+    generatorLogger.debug(`Пропущен дублирующий обработчик для target: ${button.target}`);
     return { shouldSkip: true, callbackData, targetNode: null, actualCallbackData: '', actualNodeId: null };
   }
 
@@ -52,8 +50,8 @@ export function generateGotoHandler(
 
   if (!targetNode && button.target) {
     targetNode = nodes.find(n => n.data.command === `/${button.target}` || n.data.command === button.target);
-    if (targetNode && isLoggingEnabled()) {
-      console.log(`🔧 ГЕНЕРАТОР: Узел найден по команде ${button.target} -> ${targetNode.id}`);
+    if (targetNode) {
+      generatorLogger.debug(`Узел найден по команде ${button.target}: ${targetNode.id}`);
     }
   }
 
@@ -65,9 +63,7 @@ export function generateGotoHandler(
   processedCallbacks.add(`cb_${callbackData}`);
   if (button.target) {
     processedCallbacks.add(`cb_${button.target}`);
-    if (isLoggingEnabled()) {
-      console.log(`🔧 ГЕНЕРАТОР: Узел ${button.target} добавлен в processedCallbacks ДО создания обработчика`);
-    }
+    generatorLogger.debug(`Узел ${button.target} добавлен в processedCallbacks`);
   }
 
   return {
