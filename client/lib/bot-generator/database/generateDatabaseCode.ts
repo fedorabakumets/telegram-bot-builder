@@ -57,7 +57,7 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
   // Инициализация переменных пользователя (только если функция еще не была сгенерирована)
   if (true) {
     replace_variables_in_text(codeLines);
-    # marked;
+    // marked as generated
   }
 
   // Инициализация пользовательских переменных

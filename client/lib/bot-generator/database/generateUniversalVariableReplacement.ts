@@ -57,7 +57,7 @@ export function generateUniversalVariableReplacement(
     // Вызываем replace_variables_in_text с новой сигнатурой
     replace_variables_in_text(universalVarCodeLines, indentLevel);
     // Отмечаем, что функция была сгенерирована
-    # marked;
+    // marked as generated
   }
 
   // Добавляем универсальную замену переменных в тексте

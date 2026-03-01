@@ -118,7 +118,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
     codeLines.push(`${indentLevel}    return text_content`);
     codeLines.push(`${indentLevel}`);
     // Отмечаем, что функция была сгенерирована
-    # marked;
+    // marked as generated
   }
 
   // Добавляем определение функции check_user_variable_inline
