@@ -7,18 +7,17 @@
 import { ConditionalMessageCardHeader } from './conditional-message-card-header';
 import { ConditionalMessageConflictsList } from './conditional-message-conflicts-list';
 import { ConditionContent } from '../conditional/condition-content';
-import type { ConditionalMessage } from '@shared/schema';
 import type { Node } from '@shared/schema';
 import type { RuleConflict } from '../../utils/conditional-utils';
 import type { ProjectVariable } from '../../utils/variables-utils';
-import type { SYSTEM_VARIABLES } from '../variables/system-variables';
+import { SYSTEM_VARIABLES } from '../variables/system-variables';
 
 /** Пропсы карточки условного сообщения */
 interface ConditionalMessageCardProps {
   /** Индекс условия */
   index: number;
   /** Объект условия */
-  condition: ConditionalMessage;
+  condition: any;
   /** Выбранный узел */
   selectedNode: Node;
   /** Доступные вопросы */

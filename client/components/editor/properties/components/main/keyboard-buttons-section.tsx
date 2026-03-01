@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ButtonCard } from '../button-card/button-card';
 import { ContinueButtonSection } from '../continue-button/continue-button-section';
-import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
-import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
 import type { Node, Button as ButtonType } from '@shared/schema';
 import type { ProjectVariable } from '../../utils/variables-utils';
 
@@ -162,7 +160,7 @@ export function KeyboardButtonsSection({
             allowMultipleSelection={selectedNode.data.allowMultipleSelection}
             collectUserInput={selectedNode.data.collectUserInput}
             selectedNode={selectedNode}
-            allNodes={selectedNode.data.buttons || []}
+            allNodes={[]}
           />
         ))}
       </div>
