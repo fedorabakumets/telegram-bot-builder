@@ -45,7 +45,7 @@ export function newgenerateStateTransitionAndRenderLogic(
 ): string {
   if (nodes.length > 0) {
     nodes.forEach((targetNode, index) => {
-      code += generateConditionalBranch(index, targetNode.id, '            ');
+      code += generateConditionalBranch({ index, nodeId: targetNode.id, indent: '            ' });
 
       if (targetNode.type === 'message' && targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
         code += generateInlineKeyboardSend(targetNode, '                ');
@@ -88,9 +88,18 @@ export function newgenerateStateTransitionAndRenderLogic(
         }
 
         if (responseType === 'buttons' && targetNode.data.responseOptions && targetNode.data.responseOptions.length > 0) {
-          code += generateButtonResponseConfig(targetNode, allNodeIds, connections, '                ');
+          code += generateButtonResponseConfig({
+            node: targetNode,
+            allNodeIds,
+            connections,
+            indent: '                '
+          });
         } else {
-          code += generateInputWaitingSetup(targetNode, connections, '                ');
+          code += generateInputWaitingSetup({
+            node: targetNode,
+            connections,
+            indent: '                '
+          });
         }
       } else if (targetNode.type === 'message') {
         code += generateFallbackNode(targetNode, '                ');
