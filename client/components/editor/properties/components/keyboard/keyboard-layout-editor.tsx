@@ -3,14 +3,16 @@
  * @module components/editor/properties/components/keyboard/keyboard-layout-editor
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/lib/bot-generator';
 import { KeyboardLayout } from '../../types/keyboard-layout';
 import { useKeyboardLayout } from '../../hooks/useKeyboardLayout';
 import { KeyboardGridPreview } from './keyboard-grid-preview';
 import { KeyboardPresetSelector } from './keyboard-preset-selector';
 import { KeyboardLayoutActions } from './keyboard-layout-actions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { cn } from '@/lib/bot-generator/utils';
 
 /** Свойства компонента KeyboardLayoutEditor */
 export interface KeyboardLayoutEditorProps {
@@ -31,6 +33,8 @@ export function KeyboardLayoutEditor({
   initialLayout,
   onLayoutChange,
 }: KeyboardLayoutEditorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
   const {
     layout,
     setColumns,
@@ -46,47 +50,66 @@ export function KeyboardLayoutEditor({
   }, [layout, onLayoutChange]);
 
   if (buttons.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>🎹 Расположение кнопок</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-sm">
-            Добавьте кнопки в узле, чтобы настроить их расположение
-          </p>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>🎹 Расположение кнопок</CardTitle>
+    <Card className="transition-all">
+      <CardHeader 
+        className="cursor-pointer py-4"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              "p-2 rounded-lg transition-colors",
+              isOpen ? "bg-primary/10" : "bg-muted"
+            )}>
+              <span className="text-lg">🎹</span>
+            </div>
+            <div>
+              <CardTitle className="text-base">Расположение кнопок</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                {layout.autoLayout 
+                  ? `Авто: ${layout.columns} кол.${layout.columns === 1 ? 'онка' : layout.columns < 5 ? 'онки' : 'онок'}`
+                  : `Ручная: ${layout.rows.length} ряд.${layout.rows.length < 5 ? 'а' : 'ов'}`
+                }
+              </CardDescription>
+            </div>
+          </div>
+          <div className={cn(
+            "p-2 rounded-md transition-colors",
+            isOpen ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+          )}>
+            {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <KeyboardPresetSelector
-          columns={layout.columns}
-          onColumnsChange={setColumns}
-          disabled={layout.autoLayout}
-        />
 
-        <KeyboardLayoutActions
-          autoLayout={layout.autoLayout}
-          onToggleAutoLayout={toggleAutoLayout}
-          onAddRow={addRow}
-          onRemoveRow={removeRow}
-          rowsCount={layout.rows.length}
-        />
+      {isOpen && (
+        <CardContent className="space-y-4">
+          <KeyboardPresetSelector
+            columns={layout.columns}
+            onColumnsChange={setColumns}
+            disabled={layout.autoLayout}
+          />
 
-        <KeyboardGridPreview
-          buttons={buttons}
-          layout={layout}
-          onMoveButton={moveButton}
-          disabled={layout.autoLayout}
-        />
-      </CardContent>
+          <KeyboardLayoutActions
+            autoLayout={layout.autoLayout}
+            onToggleAutoLayout={toggleAutoLayout}
+            onAddRow={addRow}
+            onRemoveRow={removeRow}
+            rowsCount={layout.rows.length}
+          />
+
+          <KeyboardGridPreview
+            buttons={buttons}
+            layout={layout}
+            onMoveButton={moveButton}
+            disabled={layout.autoLayout}
+          />
+        </CardContent>
+      )}
     </Card>
   );
 }

@@ -51,8 +51,15 @@ export function useKeyboardLayout(buttons: Button[], initialLayout?: KeyboardLay
   }, [buttons]);
 
   const toggleAutoLayout = useCallback(() => {
-    setLayout(prev => ({ ...prev, autoLayout: !prev.autoLayout }));
-  }, []);
+    setLayout(prev => {
+      const newAutoLayout = !prev.autoLayout;
+      // При включении авто-раскладки сбрасываем до 2 колонок
+      if (newAutoLayout) {
+        return createLayoutFromButtons(buttons, 2);
+      }
+      return { ...prev, autoLayout: newAutoLayout };
+    });
+  }, [buttons]);
 
   const moveButtonCallback = useCallback((buttonId: string, toRow: number, toIndex: number) => {
     setLayout(prev => moveButton(prev, buttonId, toRow, toIndex));
