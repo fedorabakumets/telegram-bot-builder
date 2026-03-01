@@ -7,19 +7,19 @@
  * @module generateMultiSelectButtonHandlerWithVariableSaving
  */
 
-import { isLoggingEnabled } from '../../bot-generator';
+import { generatorLogger } from '../../core/generator-logger';
 import { generateBaseCallbackHandlerStructure } from './generateBaseCallbackHandlerStructure';
 
 /**
  * Генерирует обработчик для кнопок множественного выбора с сохранением переменных
  *
- * @param {any} targetNode - Узел, для которого генерируется обработчик
- * @param {any} actualCallbackData - Данные обратного вызова для идентификации кнопки
- * @param {string} code - Исходный код, в который будет добавлен новый функционал
- * @param {any[]} nodes - Массив всех узлов для проверки существования целевого узла
- * @param {{action: string; id: any; target: string; text: any; skipDataCollection: boolean}} button - Объект кнопки с информацией о действии
- * @param {any} node - Текущий узел, содержащий кнопку
- * @returns {string} Обновленный код с добавленной логикой обработки кнопок множественного выбора
+ * @param targetNode - Узел, для которого генерируется обработчик
+ * @param actualCallbackData - Данные обратного вызова для идентификации кнопки
+ * @param code - Исходный код, в который будет добавлен новый функционал
+ * @param nodes - Массив всех узлов для проверки существования целевого узла
+ * @param button - Объект кнопки с информацией о действии
+ * @param node - Текущий узел, содержащий кнопку
+ * @returns Обновленный код с добавленной логикой обработки кнопок множественного выбора
  */
 export function generateMultiSelectButtonHandlerWithVariableSaving(targetNode: any, actualCallbackData: any, code: string, nodes: any[], button: { action: string; id: any; target: string; text: any; skipDataCollection: boolean; }, node: any) {
     const isDoneHandlerNeeded = targetNode && targetNode.data.allowMultipleSelection && targetNode.data.continueButtonTarget;
@@ -32,7 +32,7 @@ export function generateMultiSelectButtonHandlerWithVariableSaving(targetNode: a
      */
     if (isDoneHandlerNeeded) {
         code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_") or c.data == "multi_select_done_${shortNodeIdForDone}")\n`;
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавлен обработчик кнопки "multi_select_done_${shortNodeIdForDone}" для узла ${actualCallbackData}`);
+        generatorLogger.debug(`КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавлен обработчик кнопки "multi_select_done_${shortNodeIdForDone}" для узла ${actualCallbackData}`);
     } else {
         code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_"))\n`;
     }
@@ -92,20 +92,20 @@ export function generateMultiSelectButtonHandlerWithVariableSaving(targetNode: a
             const nextNodeId = targetNode.data.continueButtonTarget;
 
             // КРИТИЧЕСКАЯ ОТЛАДКА
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР CONTINUEBUTTON DEBUG:`);
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: targetNode.id = "${targetNode.id}"`);
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: targetNode.data.continueButtonTarget = "${targetNode.data.continueButtonTarget}"`);
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: nextNodeId = "${nextNodeId}"`);
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: actualCallbackData = "${actualCallbackData}"`);
+            generatorLogger.debug(`CONTINUEBUTTON DEBUG:`);
+            generatorLogger.debug(`targetNode.id: ${targetNode.id}`);
+            generatorLogger.debug(`targetNode.data.continueButtonTarget: ${targetNode.data.continueButtonTarget}`);
+            generatorLogger.debug(`nextNodeId: ${nextNodeId}`);
+            generatorLogger.debug(`actualCallbackData: ${actualCallbackData}`);
 
             code += '        # Переход к следующему узлу\n';
             code += `        next_node_id = "${nextNodeId}"\n`;
             code += `        logging.info(f"🚀 DEBUG: targetNode.id=${targetNode.id}, continueButtonTarget=${targetNode.data.continueButtonTarget}, nextNodeId=${nextNodeId}")\n`;
 
             // ИСПРАВЛЕНИЕ: Специальная логика для metro_selection -> interests_result
-            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Проверяем metro_selection -> interests_result: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
+            generatorLogger.debug(`Проверяем metro_selection -> interests_result: targetNode.id=${targetNode.id}, nextNodeId=${nextNodeId}`);
             if (targetNode.id.includes('metro_selection') && nextNodeId === 'interests_result') {
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ Применяем специальную логику metro_selection -> interests_result`);
+                generatorLogger.debug(`Применяем специальную логику metro_selection -> interests_result`);
                 code += '        # ИСПРАВЛЕНИЕ: Сохраняем метро выбор и устанавливаем флаг для показа клавиатуры\n';
                 code += `        selected_metro = user_data.get(user_id, {}).get("multi_select_${actualCallbackData}", [])\n`;
                 code += '        if user_id not in user_data:\n';
@@ -116,7 +116,7 @@ export function generateMultiSelectButtonHandlerWithVariableSaving(targetNode: a
                 code += '        logging.info(f"🚇 Сохранили метро выбор: {selected_metro}, установлен флаг show_metro_keyboard=True")\n';
                 code += '        \n';
             } else {
-                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ Не применяем специальную логику: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
+                generatorLogger.debug(`Не применяем специальную логику: targetNode.id=${targetNode.id}, nextNodeId=${nextNodeId}`);
             }
 
             // Проверяем, существует ли целевой узел перед вызовом обработчика
