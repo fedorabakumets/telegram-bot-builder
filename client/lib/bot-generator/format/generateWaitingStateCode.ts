@@ -1,14 +1,15 @@
 /**
  * @fileoverview Утилита для генерации кода установки состояния ожидания ввода
- * 
+ *
  * Этот модуль предоставляет функции для генерации Python-кода,
  * устанавливающего состояние ожидания ввода от пользователя
  * с автоматическим определением типа ввода.
- * 
+ *
  * @module generateWaitingStateCode
  */
 
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+import { generatorLogger } from '../core/generator-logger';
 
 
 /**
@@ -37,7 +38,7 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function generateWaitingStateCode(node: any, indentLevel: string = '    ', userIdSource: string = 'message.from_user.id'): string {
   // Проверяем, что node и node.data существуют
   if (!node || !node.data) {
-    console.warn('⚠️ generateWaitingStateCode: node или node.data не определены, возвращаем пустой код');
+    generatorLogger.warn('generateWaitingStateCode: node или node.data не определены');
     return '';
   }
 
