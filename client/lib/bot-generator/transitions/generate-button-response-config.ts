@@ -10,7 +10,7 @@
 import { toPythonBoolean, escapeForJsonString } from '../format';
 import { generateInlineKeyboardCode } from '../Keyboard';
 import type { ButtonResponseConfigParams } from './types/button-response-config-params';
-import type { ResponseOption, Button } from './types/button-response-config-types';
+import type { ResponseOption } from './types/button-response-config-types';
 
 /**
  * Генерирует Python-код для конфигурации кнопочного ответа
