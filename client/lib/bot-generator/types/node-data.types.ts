@@ -15,7 +15,7 @@ import type { Button } from './button-types';
  * @example
  * const keyboardType: KeyboardType = 'inline';
  */
-export type KeyboardType = 'inline' | 'reply' | 'remove' | 'default';
+export type KeyboardType = 'inline' | 'reply' | 'none' | 'remove' | 'default';
 
 /**
  * Режим форматирования текста
