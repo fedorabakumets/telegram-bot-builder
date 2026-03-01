@@ -85,9 +85,9 @@ export function generateCompleteBotScriptFromNodeGraphWithDependencies(
     code += '        return\n';
     code += '    \n';
 
-    code += generateMultiSelectCallbackLogic(multiSelectNodes, allNodeIds, isLoggingEnabled);
-    code += generateMultiSelectDoneHandler(nodes, multiSelectNodes, allNodeIds, isLoggingEnabled);
-    code += generateMultiSelectReplyHandler(nodes, allNodeIds, isLoggingEnabled);
+    code += generateMultiSelectCallbackLogic(multiSelectNodes, allNodeIds);
+    code += generateMultiSelectDoneHandler(nodes, multiSelectNodes, allNodeIds);
+    code += generateMultiSelectReplyHandler(nodes, allNodeIds);
   }
 
   code += '\n# Точка входа для запуска бота\n';
