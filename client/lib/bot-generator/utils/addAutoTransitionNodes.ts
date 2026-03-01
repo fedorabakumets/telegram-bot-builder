@@ -8,7 +8,7 @@
  */
 
 import type { EnhancedNode } from '../types/enhanced-node.types';
-import { isLoggingEnabled } from '../../bot-generator';
+import { generatorLogger } from '../core/generator-logger';
 
 /**
  * Добавляет целевые узлы автопереходов в множество ссылочных узлов
@@ -23,16 +23,12 @@ export function addAutoTransitionNodes(
   nodes: EnhancedNode[],
   allReferencedNodeIds: Set<string>
 ): void {
-  const loggingEnabled = isLoggingEnabled();
-
   nodes
     .filter(node => node !== null && node !== undefined)
     .forEach(node => {
       if (node.data?.enableAutoTransition && node.data?.autoTransitionTo) {
         allReferencedNodeIds.add(node.data.autoTransitionTo);
-        if (loggingEnabled) {
-          console.log(`✅ ГЕНЕРАТОР: Добавлен autoTransitionTo ${node.data.autoTransitionTo} в allReferencedNodeIds`);
-        }
+        generatorLogger.debug(`Добавлен autoTransitionTo: ${node.data.autoTransitionTo}`);
       }
     });
 }
