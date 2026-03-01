@@ -3,7 +3,7 @@
  * @module components/editor/properties/hooks/useKeyboardLayout
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/lib/bot-generator';
 import { KeyboardLayout } from '../types/keyboard-layout';
 import { createLayoutFromButtons, updateLayoutColumns, moveButton } from '../utils/keyboard-layout-utils';
@@ -35,6 +35,16 @@ export function useKeyboardLayout(buttons: Button[], initialLayout?: KeyboardLay
     if (initialLayout) return initialLayout;
     return createLayoutFromButtons(buttons, 2);
   });
+
+  // Синхронизируем раскладку при изменении количества кнопок
+  useEffect(() => {
+    if (layout.autoLayout) {
+      setLayout(createLayoutFromButtons(buttons, layout.columns));
+    } else if (layout.rows.flatMap(r => r.buttonIds).length !== buttons.length) {
+      // Если кнопки добавлены/удалены в ручном режиме, пересоздаём раскладку
+      setLayout(createLayoutFromButtons(buttons, layout.columns));
+    }
+  }, [buttons, layout.autoLayout, layout.columns, layout.rows]);
 
   const setColumns = useCallback((columns: number) => {
     setLayout(prev => updateLayoutColumns(prev, buttons, columns));
