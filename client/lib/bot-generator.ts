@@ -277,13 +277,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   const finalCode = generateCompleteBotScriptFromNodeGraphWithDependencies(
     code,
-    multiSelectNodes,
-    allNodeIds,
-    isLoggingEnabled,
-    nodes,
-    generateMultiSelectCallbackLogic,
-    generateMultiSelectDoneHandler,
-    generateMultiSelectReplyHandler
+    {
+      multiSelectNodes,
+      allNodeIds,
+      isLoggingEnabled,
+      nodes: nodes || [],
+      generateMultiSelectCallbackLogic,
+      generateMultiSelectDoneHandler,
+      generateMultiSelectReplyHandler
+    }
   );
 
   // Валидация сгенерированного кода перед возвратом
