@@ -14,29 +14,20 @@ import type { Node } from '@shared/schema';
  *
  * @param node - Узел start с данными изображения
  * @param codeLines - Массив строк кода для добавления
- * @param userDatabaseEnabled - Включена ли база данных пользователей
  *
  * @example
  * const codeLines: string[] = [];
- * generateStartHandlerImageSend(node, codeLines, false);
+ * generateStartHandlerImageSend(node, codeLines);
  */
 export function generateStartHandlerImageSend(
   node: Node,
-  codeLines: string[],
-  userDatabaseEnabled: boolean
+  codeLines: string[]
 ): void {
   const attachedMedia = node.data?.attachedMedia || [];
   const imageUrl = node.data?.imageUrl;
 
   // Проверяем, есть ли изображение для отправки
   if (imageUrl && imageUrl !== 'undefined' && attachedMedia.length > 0) {
-    // Находим переменную для изображения
-    const imageVar = attachedMedia.find(v =>
-      v.includes('image') && v.includes('Url')
-    ) || attachedMedia.find(v =>
-      v.startsWith('imageUrlVar')
-    ) || `image_url_${node.id || 'unknown'}`;
-
     codeLines.push('');
     codeLines.push('    # 🖼️ Отправляем изображение из attachedMedia');
     codeLines.push(`    image_url = "${imageUrl}"`);

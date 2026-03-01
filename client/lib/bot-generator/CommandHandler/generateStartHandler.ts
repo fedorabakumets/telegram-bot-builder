@@ -228,7 +228,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
       codeLines.push(...keyboardLines);
     }
     // Затем отправляем изображение с уже созданной клавиатурой
-    generateStartHandlerImageSend(node, codeLines, userDatabaseEnabled);
+    generateStartHandlerImageSend(node, codeLines);
   } else if (attachedMedia.length > 0) {
     // Если есть прикрепленные медиа (но нет imageUrl), генерируем код отправки медиа с клавиатурой
     generateConditionalMessageLogicAndKeyboard(node as any, codeLines, mediaVariablesMap, attachedMedia, formattedText);
