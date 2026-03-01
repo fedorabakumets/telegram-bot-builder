@@ -11,3 +11,4 @@ export * from './use-properties-panel-memo';
 export * from './use-properties-panel';
 export * from './use-command-validation';
 export * from './use-handle-add-button';
+export * from './useKeyboardLayout';

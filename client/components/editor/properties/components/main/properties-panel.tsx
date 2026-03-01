@@ -26,6 +26,7 @@ import { ConditionalMessagesActions } from './conditional-messages-actions';
 import { UserInputSettingsSection } from './user-input-settings-section';
 import { AutoTransitionWrapper } from './auto-transition-wrapper';
 import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
+import { KeyboardLayoutEditor } from '../keyboard/keyboard-layout-editor';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import { EmptyConditionalState } from '../conditional/empty-conditional-state';
 import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
@@ -287,6 +288,15 @@ export function PropertiesPanel({
                       onButtonUpdate={onButtonUpdate}
                       onButtonDelete={onButtonDelete}
                       formatNodeDisplay={formatNodeDisplay}
+                    />
+                  )}
+
+                  {selectedNode.data.keyboardType !== 'none' && selectedNode.data.buttons && selectedNode.data.buttons.length > 0 && (
+                    <KeyboardLayoutEditor
+                      buttons={selectedNode.data.buttons}
+                      onLayoutChange={(layout) => {
+                        onNodeUpdate(selectedNode.id, { keyboardLayout: layout });
+                      }}
                     />
                   )}
                 </div>

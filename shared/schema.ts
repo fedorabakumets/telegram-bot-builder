@@ -968,6 +968,13 @@ export const nodeSchema = z.object({
     mediaCaption: z.string().optional(),
     keyboardType: z.enum(['reply', 'inline', 'none']).default('none'),
     buttons: z.array(buttonSchema).default([]),
+    keyboardLayout: z.object({
+      rows: z.array(z.object({
+        buttonIds: z.array(z.string()),
+      })).default([]),
+      columns: z.number().min(1).max(6).default(2),
+      autoLayout: z.boolean().default(true),
+    }).optional(),
     oneTimeKeyboard: z.boolean().default(false),
     resizeKeyboard: z.boolean().default(true),
     markdown: z.boolean().default(false),
