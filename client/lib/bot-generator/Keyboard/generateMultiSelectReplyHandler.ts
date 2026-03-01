@@ -2,6 +2,7 @@ import { Node } from '@shared/schema';
 import { formatTextForPython, toPythonBoolean } from '../format';
 import { generateInlineKeyboardCode } from '.';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
+import { generatorLogger } from '../core/generator-logger';
 
 /**
  * Checks if there are any nodes with multi-select reply buttons.
@@ -16,13 +17,11 @@ const hasMultiSelectReplyNodes = (nodes: Node[]): boolean => {
  * Generates the Python code for a handler that manages multi-select reply buttons.
  * @param nodes - All nodes in the bot flow.
  * @param allNodeIds - An array of all node IDs.
- * @param isLoggingEnabled - A function to check if logging is enabled.
  * @returns A string containing the generated Python code for the handler.
  */
 export function generateMultiSelectReplyHandler(
     nodes: Node[],
     allNodeIds: string[],
-    isLoggingEnabled: () => boolean,
 ): string {
     let code = '';
 
@@ -68,14 +67,14 @@ export function generateMultiSelectReplyHandler(
             if (targetNode) {
                 code += `            # Переход к следующему узлу\n`;
                 if (targetNode.type === 'message') {
-                    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик в reply mode`);
+                    generatorLogger.debug(`ИСПРАВЛЕНО - НЕ вызываем обработчик в reply mode`);
                     const messageText = targetNode.data.messageText || "Продолжение...";
                     const formattedText = formatTextForPython(messageText);
                     code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
                     code += `            text = ${formattedText}\n`;
 
                     if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для reply mode ${targetNode.id}`);
+                        generatorLogger.debug(`КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для reply mode ${targetNode.id}`);
                         code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для reply mode\n`;
                         code += `            # Загружаем пользовательские данные для клавиатуры\n`;
                         code += `            user_vars = await get_user_from_db(user_id)\n`;
