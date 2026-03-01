@@ -7,7 +7,7 @@
  * @module bot-generator/node-handlers/generate-goto-handler
  */
 
-import { generatorLogger } from '../../core/generator-logger';
+import { generatorLogger } from '../core/generator-logger';
 
 /**
  * Генерирует Python-код для обработки кнопки goto

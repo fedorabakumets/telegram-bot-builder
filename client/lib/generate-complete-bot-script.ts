@@ -12,7 +12,7 @@ import type { BotNode } from './bot-generator/types';
 
 /**
  * Опции для завершения генерации скрипта
- * 
+ *
  * @example
  * const options: CompleteBotScriptOptions = {
  *   multiSelectNodes: [...],
@@ -24,28 +24,23 @@ export interface CompleteBotScriptOptions {
   multiSelectNodes: BotNode[];
   /** Все ID узлов */
   allNodeIds: string[];
-  /** Функция проверки логирования */
-  isLoggingEnabled: () => boolean;
   /** Все узлы бота */
   nodes: BotNode[];
   /** Генерация логики callback */
   generateMultiSelectCallbackLogic: (
     nodes: BotNode[],
-    allNodeIds: string[],
-    isLoggingEnabled: () => boolean
+    allNodeIds: string[]
   ) => string;
   /** Генерация обработчика завершения */
   generateMultiSelectDoneHandler: (
     nodes: BotNode[],
     multiSelectNodes: BotNode[],
-    allNodeIds: string[],
-    isLoggingEnabled: () => boolean
+    allNodeIds: string[]
   ) => string;
   /** Генерация обработчика ответов */
   generateMultiSelectReplyHandler: (
     nodes: BotNode[],
-    allNodeIds: string[],
-    isLoggingEnabled: () => boolean
+    allNodeIds: string[]
   ) => string;
 }
 
@@ -60,7 +55,6 @@ export interface CompleteBotScriptOptions {
  * const finalCode = generateCompleteBotScriptFromNodeGraphWithDependencies(code, {
  *   multiSelectNodes: [...],
  *   allNodeIds: ['start_1'],
- *   isLoggingEnabled: () => true,
  *   nodes: [...],
  *   generateMultiSelectCallbackLogic: (...),
  *   generateMultiSelectDoneHandler: (...),
@@ -74,7 +68,6 @@ export function generateCompleteBotScriptFromNodeGraphWithDependencies(
   const {
     multiSelectNodes,
     allNodeIds,
-    isLoggingEnabled,
     nodes,
     generateMultiSelectCallbackLogic,
     generateMultiSelectDoneHandler,

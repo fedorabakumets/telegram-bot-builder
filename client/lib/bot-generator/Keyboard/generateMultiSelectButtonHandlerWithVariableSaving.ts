@@ -7,7 +7,7 @@
  * @module generateMultiSelectButtonHandlerWithVariableSaving
  */
 
-import { generatorLogger } from '../../core/generator-logger';
+import { generatorLogger } from '../core/generator-logger';
 import { generateBaseCallbackHandlerStructure } from './generateBaseCallbackHandlerStructure';
 
 /**
