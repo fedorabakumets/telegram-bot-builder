@@ -9,3 +9,4 @@ export * from './generate-reply-button-handlers';
 export * from './generateInlineKeyboardCode';
 export * from './generateReplyKeyboardCode';
 export * from './generateKeyboardLayoutCode';
+export * from './getAdjustCode';

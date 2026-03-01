@@ -5,6 +5,7 @@ import { generateButtonText } from '../format/generateButtonText';
 import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
 import { toPythonBoolean } from '../format/toPythonBoolean';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
+import { getAdjustCode } from './getAdjustCode';
 import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
 
 
@@ -140,8 +141,7 @@ export function generateKeyboard(node: Node): string {
         }
       });
 
-      const columns = calculateOptimalColumns(node.data.buttons, node.data);
-      code += `${indent4}builder.adjust(${columns})\n`;
+      code += `${indent4}${getAdjustCode(node.data.buttons, node.data)}\n`;
       const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
       const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
       code += `${indent4}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -209,8 +209,7 @@ export function generateKeyboard(node: Node): string {
         node.data.responseOptions.forEach(option => {
           code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
         });
-        const columns = calculateOptimalColumns(node.data.responseOptions, node.data);
-        code += `    builder.adjust(${columns})\n`;
+        code += `    ${getAdjustCode(node.data.responseOptions, node.data)}\n`;
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -233,8 +232,7 @@ export function generateKeyboard(node: Node): string {
         });
 
         // Автоматическое распределение колонок
-        const columns = calculateOptimalColumns(node.data.responseOptions, node.data);
-        code += `    builder.adjust(${columns})\n`;
+        code += `    ${getAdjustCode(node.data.responseOptions, node.data)}\n`;
         code += '    keyboard = builder.as_markup()\n';
 
         // Проверяем наличие изображения
@@ -330,8 +328,7 @@ export function generateKeyboard(node: Node): string {
           code += `${indent3}builder.add(KeyboardButton(text="${continueText}"))\n`;
         }
 
-        const columns = calculateOptimalColumns(node.data.buttons, node.data);
-        code += `${indent3}builder.adjust(${columns})\n`;
+        code += `${indent3}${getAdjustCode(node.data.buttons, node.data)}\n`;
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -365,8 +362,7 @@ export function generateKeyboard(node: Node): string {
           }
         });
 
-        const columns = calculateOptimalColumns(node.data.buttons, node.data);
-        code += `${indent3}builder.adjust(${columns})\n`;
+        code += `${indent3}${getAdjustCode(node.data.buttons, node.data)}\n`;
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
