@@ -24,6 +24,8 @@ import { getMediaUrlUpdates } from '../../utils/media-utils';
 import { isManagementNode } from '../../utils/node-constants';
 import { AdminRightsInfo } from '../configuration/admin-rights-info';
 import { CommandAdvancedSettings } from '../commands/command-advanced-settings';
+import { CommandSectionComplete } from '../commands/command-section-complete';
+import { ManagementCommandSection } from '../commands/management-command-section';
 import { AutoTransitionSection } from '../navigation/auto-transition-section';
 import { PropertiesFooter } from '../layout/properties-footer';
 import { PropertiesHeader } from '../layout/properties-header';
@@ -279,99 +281,19 @@ export function PropertiesPanel({
               <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
 
                 {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
-                  <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
-                    <div className="space-y-3 sm:space-y-4">
-                      <div className="relative">
-                        <Label className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">Команда</Label>
-                        <div className="relative mt-2">
-                          <Input
-                            value={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
-                            onChange={(e) => {
-                              const newCommand = e.target.value;
-                              onNodeUpdate(selectedNode.id, { command: newCommand });
-                              setCommandInput(newCommand);
-                              setShowCommandSuggestions(newCommand.length > 0);
-
-                              // Обновляем ID узла на основе команды
-                              const newId = newCommand.replace(/^\//, '').toLowerCase() || selectedNode.id;
-                              if (onNodeIdChange && newId !== selectedNode.id) {
-                                setDisplayNodeId(newId);
-                                onNodeIdChange(selectedNode.id, newId);
-                              }
-                            }}
-                            onFocus={() => setShowCommandSuggestions(true)}
-                            onBlur={() => setTimeout(() => setShowCommandSuggestions(false), 200)}
-                            className={`text-sm ${!commandValidation.isValid ? 'border-red-500 dark:border-red-500' : 'border-blue-200 dark:border-blue-700'}`}
-                            placeholder="/start"
-                            data-testid="input-command"
-                          />
-
-                          {/* Автодополнение команд */}
-                          {showCommandSuggestions && commandSuggestions.length > 0 && (
-                            <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-blue-200 dark:border-blue-800 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                              {commandSuggestions.map((suggestion, index) => (
-                                <button
-                                  key={index}
-                                  className="w-full text-left px-3 sm:px-4 py-2 sm:py-2.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-xs sm:text-sm border-b border-blue-100 dark:border-blue-900 last:border-b-0 transition-colors"
-                                  onClick={() => {
-                                    onNodeUpdate(selectedNode.id, {
-                                      command: suggestion.command,
-                                      description: suggestion.description
-                                    });
-
-                                    // Обновляем ID узла на основе команды
-                                    const newId = suggestion.command.replace(/^\//, '').toLowerCase() || selectedNode.id;
-                                    if (onNodeIdChange && newId !== selectedNode.id) {
-                                      setDisplayNodeId(newId);
-                                      onNodeIdChange(selectedNode.id, newId);
-                                    }
-
-                                    setShowCommandSuggestions(false);
-                                  }}
-                                  data-testid={`button-suggestion-${suggestion.command}`}
-                                >
-                                  <div className="font-semibold text-foreground">{suggestion.command}</div>
-                                  <div className="text-xs text-muted-foreground">{suggestion.description}</div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Ошибки валидации */}
-                        {!commandValidation.isValid && commandValidation.errors.length > 0 && (
-                          <div className="mt-2 space-y-1 bg-red-50/60 dark:bg-red-950/20 rounded-lg p-2.5 sm:p-3 border border-red-200/50 dark:border-red-800/50">
-                            {commandValidation.errors.map((error, index) => (
-                              <div key={index} className="flex items-center text-xs sm:text-sm text-red-700 dark:text-red-400 gap-2">
-                                <i className="fas fa-exclamation-circle flex-shrink-0"></i>
-                                <span>{error}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2 sm:space-y-2.5">
-                        <Label className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                          <i className="fas fa-align-left text-blue-600 dark:text-blue-400 text-xs sm:text-sm"></i>
-                          Описание
-                        </Label>
-                        <Input
-                          value={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { description: e.target.value })}
-                          placeholder="Например: Начать работу с ботом"
-                          className="mt-1.5 sm:mt-2 text-xs sm:text-sm border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200/50"
-                          data-testid="input-description"
-                        />
-                        <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/40">
-                          <i className="fas fa-lightbulb text-blue-600 dark:text-blue-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
-                          <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
-                            Используется для меню команд в @BotFather
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <CommandSectionComplete
+                    selectedNodeId={selectedNode.id}
+                    commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
+                    descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
+                    isValid={commandValidation.isValid}
+                    errors={commandValidation.errors}
+                    suggestions={commandSuggestions}
+                    showSuggestions={showCommandSuggestions}
+                    onNodeUpdate={onNodeUpdate}
+                    onNodeIdChange={onNodeIdChange}
+                    onCommandInput={setCommandInput}
+                    onShowSuggestions={setShowCommandSuggestions}
+                  />
                 )}
 
                 {/* Synonyms for all nodes */}
@@ -390,40 +312,11 @@ export function PropertiesPanel({
                   selectedNode.type === 'ban_user' || selectedNode.type === 'unban_user' || selectedNode.type === 'mute_user' ||
                   selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' ||
                   selectedNode.type === 'demote_user' || selectedNode.type === 'admin_rights') && (
-                    <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-red-50/40 to-orange-50/20 dark:from-red-950/30 dark:to-orange-900/20 rounded-xl p-3 sm:p-4 border border-red-200/40 dark:border-red-800/40 backdrop-blur-sm">
-                      <div className="space-y-2 sm:space-y-2.5">
-                        <Label className="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-100 flex items-center gap-2">
-                          <i className="fas fa-terminal text-red-600 dark:text-red-400 text-xs sm:text-sm"></i>
-                          Команда действия
-                        </Label>
-                        <Input
-                          value={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { command: e.target.value })}
-                          className="text-xs sm:text-sm border-red-200 dark:border-red-700 focus:border-red-500 focus:ring-red-200/50"
-                          placeholder={
-                            selectedNode.type === 'pin_message' ? '/pin_message' :
-                              selectedNode.type === 'unpin_message' ? '/unpin_message' :
-                                selectedNode.type === 'delete_message' ? '/delete_message' :
-                                  selectedNode.type === 'ban_user' ? '/ban_user' :
-                                    selectedNode.type === 'unban_user' ? '/unban_user' :
-                                      selectedNode.type === 'mute_user' ? '/mute_user' :
-                                        selectedNode.type === 'unmute_user' ? '/unmute_user' :
-                                          selectedNode.type === 'kick_user' ? '/kick_user' :
-                                            selectedNode.type === 'promote_user' ? '/promote_user' :
-                                              selectedNode.type === 'demote_user' ? '/demote_user' :
-                                                selectedNode.type === 'admin_rights' ? '/admin_rights' : '/command'
-                          }
-                          data-testid="input-action-command"
-                        />
-                        <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-red-50/50 dark:bg-red-950/30 border border-red-200/50 dark:border-red-800/40">
-                          <i className="fas fa-cog text-red-600 dark:text-red-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
-                          <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 leading-relaxed">
-                            Основная команда для вызова этого действия
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <ManagementCommandSection
+                    selectedNode={selectedNode}
+                    onNodeUpdate={onNodeUpdate}
+                  />
+                )}
 
 
               </div>
