@@ -53,10 +53,10 @@ export function toEnhancedNode(node: Node): EnhancedNode {
     ...node,
     data: {
       ...node.data,
-      buttons: normalizeButtons(node.data.buttons as any[]),
-      attachedMedia: node.data.attachedMedia ?? [],
+      buttons: normalizeButtons(node.data.buttons as any[]) || [],
+      attachedMedia: (node.data as any).attachedMedia ?? [],
     },
-  };
+  } as EnhancedNode;
 }
 
 /**
