@@ -98,7 +98,14 @@ export type {
   InputCollectionCheckResult,
   PythonValidationResult,
   ImportGeneratorOptions,
-  CallbackHandler
+  CallbackHandler,
+  EnhancedNode,
+  EnhancedNodeArray,
+  LegacyEnhancedNode,
+  ButtonActionOverride,
+  ButtonOverride,
+  KeyboardTypeOverride,
+  FormatModeOverride
 } from './bot-generator/types';
 
 export type { MenuCommand } from './bot-commands-setup';
