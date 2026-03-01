@@ -1,6 +1,6 @@
 /**
  * @fileoverview Компонент превью кнопок
- * 
+ *
  * Отображает превью кнопок узла с поддержкой inline/reply клавиатур,
  * множественного выбора и различных типов действий.
  */
@@ -11,6 +11,7 @@ import { InlineButton } from './inline-button';
 import { ReplyButton } from './reply-button';
 import { OptionButton } from './option-button';
 import { DoneButton } from './done-button';
+import { KeyboardGrid } from '../keyboard-grid';
 
 /**
  * Интерфейс свойств компонента ButtonsPreview
@@ -53,29 +54,30 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
         <div className="space-y-3">
           {isMultiSelect ? (
             <>
-              <div className="grid grid-cols-2 gap-2">
-                {node.data.buttons
-                  .filter((button: any) => button.buttonType === 'option')
-                  .map((button: any) => (
-                    <OptionButton key={button.id} button={button} />
-                  ))}
-              </div>
+              <KeyboardGrid
+                buttons={node.data.buttons.filter((button: any) => button.buttonType === 'option')}
+                keyboardLayout={node.data.keyboardLayout}
+                buttonClassName=""
+                renderButton={(button) => <OptionButton button={button} />}
+              />
               <DoneButton />
             </>
           ) : (
-            <div className="grid grid-cols-2 gap-2">
-              {node.data.buttons.map((button: any) => (
-                <InlineButton key={button.id} button={button} allNodes={allNodes} />
-              ))}
-            </div>
+            <KeyboardGrid
+              buttons={node.data.buttons}
+              keyboardLayout={node.data.keyboardLayout}
+              buttonClassName=""
+              renderButton={(button) => <InlineButton button={button} allNodes={allNodes} />}
+            />
           )}
         </div>
       ) : (
-        <div className="space-y-2">
-          {node.data.buttons.map((button: any) => (
-            <ReplyButton key={button.id} button={button} allNodes={allNodes} />
-          ))}
-        </div>
+        <KeyboardGrid
+          buttons={node.data.buttons}
+          keyboardLayout={node.data.keyboardLayout}
+          buttonClassName=""
+          renderButton={(button) => <ReplyButton button={button} allNodes={allNodes} />}
+        />
       )}
     </div>
   );
