@@ -5,23 +5,12 @@
  */
 
 import { Image, Video, Music, FileText } from 'lucide-react';
-
-/** Тип медиа-переменной */
-interface MediaVariable {
-  /** Имя переменной */
-  name: string;
-  /** Тип медиа */
-  mediaType: 'photo' | 'video' | 'audio' | 'document';
-  /** Описание переменной */
-  description: string;
-  /** ID узла */
-  nodeId: string;
-}
+import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы компонента бейджа */
 interface MediaVariableBadgeProps {
   /** Медиа-переменная */
-  variable: MediaVariable;
+  variable: Variable;
   /** Функция удаления переменной */
   onRemove: (name: string) => void;
 }

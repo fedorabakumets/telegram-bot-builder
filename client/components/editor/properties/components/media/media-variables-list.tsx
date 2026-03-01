@@ -6,23 +6,12 @@
 
 import { Label } from '@/components/ui/label';
 import { MediaVariableBadge } from './media-variable-badge';
-
-/** Тип медиа-переменной */
-interface MediaVariable {
-  /** Имя переменной */
-  name: string;
-  /** Тип медиа */
-  mediaType: 'photo' | 'video' | 'audio' | 'document';
-  /** Описание переменной */
-  description: string;
-  /** ID узла */
-  nodeId: string;
-}
+import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы компонента списка */
 interface MediaVariablesListProps {
   /** Список медиа-переменных */
-  variables: MediaVariable[];
+  variables: Variable[];
   /** Функция удаления переменной */
   onRemove: (name: string) => void;
 }
