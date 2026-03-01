@@ -113,3 +113,8 @@ export type { StandardCommand, CommandCategory } from './commands';
 export type { CompleteBotScriptOptions } from './generate-complete-bot-script';
 export type { ExtractNodeDataResult } from './bot-generator/utils/extractNodeData';
 
+// Утилиты конвертации и валидации
+export { toEnhancedNode, toEnhancedNodes } from './bot-generator/utils/to-enhanced-node';
+export { validateEnhancedNode, validateEnhancedNodes } from './bot-generator/validation/validate-enhanced-node';
+export type { ValidationResult } from './bot-generator/validation/validate-enhanced-node';
+
