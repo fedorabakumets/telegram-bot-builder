@@ -262,12 +262,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += generatePollingLoop(userDatabaseEnabled);
 
   // Найдем узла с множественным выбором для использования в обработчиках
-  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes, isLoggingEnabled);
+  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes as any[], isLoggingEnabled);
 
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
   code += generateMultiSelectCallbackHandler(
-    multiSelectNodes,
-    nodes || [],
+    multiSelectNodes as any[],
+    nodes as any[] || [],
     allNodeIds,
     isLoggingEnabled(),
     generateTransitionLogicForMultiSelectCompletion,
@@ -278,13 +278,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   const finalCode = generateCompleteBotScriptFromNodeGraphWithDependencies(
     code,
     {
-      multiSelectNodes,
+      multiSelectNodes: multiSelectNodes as any[],
       allNodeIds,
       isLoggingEnabled,
-      nodes: nodes || [],
-      generateMultiSelectCallbackLogic,
-      generateMultiSelectDoneHandler,
-      generateMultiSelectReplyHandler
+      nodes: (nodes || []) as any[],
+      generateMultiSelectCallbackLogic: generateMultiSelectCallbackLogic as any,
+      generateMultiSelectDoneHandler: generateMultiSelectDoneHandler as any,
+      generateMultiSelectReplyHandler: generateMultiSelectReplyHandler as any
     }
   );
 
