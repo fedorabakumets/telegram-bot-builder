@@ -55,9 +55,9 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
   get_moscow_time(codeLines);
 
   // Инициализация переменных пользователя (только если функция еще не была сгенерирована)
-  if (!hasComponentBeenGenerated('replace_variables_in_text')) {
+  if (!isComponentGenerated('replace_variables_in_text')) {
     replace_variables_in_text(codeLines);
-    markComponentAsGenerated('replace_variables_in_text');
+    markComponentGenerated('replace_variables_in_text');
   }
 
   // Инициализация пользовательских переменных

@@ -53,11 +53,11 @@ export function generateUniversalVariableReplacement(
   universalVarCodeLines.push(`${indentLevel}# Заменяем все переменные в тексте`);
 
   // Проверяем, была ли уже сгенерирована функция replace_variables_in_text
-  if (!hasComponentBeenGenerated('replace_variables_in_text')) {
+  if (!isComponentGenerated('replace_variables_in_text')) {
     // Вызываем replace_variables_in_text с новой сигнатурой
     replace_variables_in_text(universalVarCodeLines, indentLevel);
     // Отмечаем, что функция была сгенерирована
-    markComponentAsGenerated('replace_variables_in_text');
+    markComponentGenerated('replace_variables_in_text');
   }
 
   // Добавляем универсальную замену переменных в тексте

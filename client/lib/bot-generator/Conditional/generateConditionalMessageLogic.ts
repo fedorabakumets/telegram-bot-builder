@@ -98,7 +98,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
   codeLines.push(`${indentLevel}    user_vars = {}`);
   codeLines.push(`${indentLevel}`);
   // Проверяем, была ли уже сгенерирована функция replace_variables_in_text
-  if (!hasComponentBeenGenerated('replace_variables_in_text')) {
+  if (!isComponentGenerated('replace_variables_in_text')) {
     codeLines.push(`${indentLevel}# Заменяем все переменные в тексте`);
     codeLines.push(`${indentLevel}import re`);
     codeLines.push(`${indentLevel}def replace_variables_in_text(text_content, variables_dict):`);
@@ -118,7 +118,7 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
     codeLines.push(`${indentLevel}    return text_content`);
     codeLines.push(`${indentLevel}`);
     // Отмечаем, что функция была сгенерирована
-    markComponentAsGenerated('replace_variables_in_text');
+    markComponentGenerated('replace_variables_in_text');
   }
 
   // Добавляем определение функции check_user_variable_inline
