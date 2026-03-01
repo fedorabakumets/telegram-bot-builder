@@ -1,26 +1,26 @@
 /**
  * @fileoverview Утилита для добавления целевых узлов автопереходов
- * 
+ *
  * Модуль предоставляет функцию для добавления ID узлов автоперехода
  * в множество ссылочных узлов при генерации кода.
- * 
+ *
  * @module bot-generator/utils/addAutoTransitionNodes
  */
 
-import type { Node } from '@shared/schema';
+import type { EnhancedNode } from '../types/enhanced-node.types';
 import { isLoggingEnabled } from '../../bot-generator';
 
 /**
  * Добавляет целевые узлы автопереходов в множество ссылочных узлов
- * 
+ *
  * @param nodes - Массив узлов для обработки
  * @param allReferencedNodeIds - Множество идентификаторов узлов для обновления
- * 
+ *
  * @example
  * addAutoTransitionNodes(nodes, allReferencedNodeIds);
  */
 export function addAutoTransitionNodes(
-  nodes: Node[],
+  nodes: EnhancedNode[],
   allReferencedNodeIds: Set<string>
 ): void {
   const loggingEnabled = isLoggingEnabled();
