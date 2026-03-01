@@ -51,7 +51,7 @@ export function hasConditionalMessages(nodeData: {
   enableConditionalMessages?: boolean;
   conditionalMessages?: ConditionalMessageParams[];
 }): boolean {
-  return nodeData?.enableConditionalMessages === true &&
-    nodeData?.conditionalMessages &&
+  return (nodeData?.enableConditionalMessages ?? false) &&
+    !!nodeData?.conditionalMessages &&
     nodeData.conditionalMessages.length > 0;
 }
