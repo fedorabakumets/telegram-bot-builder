@@ -1,7 +1,6 @@
 import { generateCheckUserVariableFunction } from "../database/generateCheckUserVariableFunction";
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { processConditionalMessages } from './processConditionalMessages';
-import { isComponentGenerated, markComponentGenerated } from '../core/generation-state';
 
 /**
  * Генерирует Python код логики условных сообщений для Telegram бота.

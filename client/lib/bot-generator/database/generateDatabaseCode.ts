@@ -8,7 +8,6 @@
 import { AliasNodes } from './AliasNodes';
 import { init_user_variables } from '../utils';
 import { replace_variables_in_text } from './replace_variables_in_text';
-import { isComponentGenerated, markComponentGenerated } from '../core/generation-state';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { get_moscow_time } from './get_moscow_time';
 import { get_user_data_from_db } from './get_user_data_from_db';
