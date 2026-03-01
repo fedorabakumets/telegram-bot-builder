@@ -54,3 +54,8 @@ export {
   generateRequirementsTxt,
   generateEnvFile
 } from './scaffolding';
+
+// Утилиты конвертации и валидации
+export { toEnhancedNode, toEnhancedNodes } from './utils/to-enhanced-node';
+export { validateEnhancedNode, validateEnhancedNodes } from './validation/validate-enhanced-node';
+export type { ValidationResult } from './validation/validate-enhanced-node';
