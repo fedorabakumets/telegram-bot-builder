@@ -42,7 +42,7 @@ import { formatNodeDisplay } from './node-formatters';
 import { getNodeDefaults } from './node-defaults';
 import { collectAllNodesFromSheets } from './utils/node-utils';
 import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from './conditional-utils';
-import { collectAvailableQuestions, extractVariables } from './variables-utils';
+import { collectAvailableQuestions, extractVariables } from './utils/variables-utils';
 import { useMediaVariables } from './use-media-variables';
 import { MediaInputToggles } from './media-input-toggles';
 import { VariableInputGrid } from './variable-input-grid';
