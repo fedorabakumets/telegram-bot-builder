@@ -295,7 +295,7 @@ export function generatePythonCode(
   code += generatePollingLoop(!!context.options.userDatabaseEnabled);
 
   // Найдем узла с множественным выбором для использования в обработчиках
-  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(context.nodes as any[], isLoggingEnabled);
+  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(context.nodes as any[]);
 
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
   code += generateMultiSelectCallbackHandler(
