@@ -19,7 +19,7 @@ import { SectionHeader } from './section-header';
 import { SynonymEditor } from './synonym-editor';
 import { MessageInfoBlock } from './message-info-block';
 import { DevelopmentNoticeBlock } from './development-notice-block';
-import { getMediaUrlUpdates } from './media-utils';
+import { getMediaUrlUpdates } from './utils/media-utils';
 import { isManagementNode } from './node-constants';
 import { AdminRightsInfo } from './configuration/admin-rights-info';
 import { CommandAdvancedSettings } from './command-advanced-settings';
