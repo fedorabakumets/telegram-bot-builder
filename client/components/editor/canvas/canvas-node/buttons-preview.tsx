@@ -51,6 +51,9 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
     (button: any) => button.buttonType === 'complete' || button.buttonType === 'navigation'
   );
 
+  // Фильтруем только option кнопки для KeyboardGrid
+  const optionButtons = node.data.buttons.filter((button: any) => button.buttonType === 'option');
+
   return (
     <div className="space-y-3">
       <ButtonsPreviewHeader isMultiSelect={isMultiSelect} keyboardType={keyboardType} />
@@ -60,10 +63,10 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
           {isMultiSelect ? (
             <>
               <KeyboardGrid
-                buttons={node.data.buttons}
+                buttons={optionButtons}
                 keyboardLayout={node.data.keyboardLayout}
                 buttonClassName=""
-                renderButton={(button) => button.buttonType === 'option' ? <OptionButton button={button} /> : <InlineButton button={button} allNodes={allNodes} />}
+                renderButton={(button) => <OptionButton button={button} />}
               />
               {/* Кнопка завершения: из шаблона или стандартная */}
               {completeButton ? (
