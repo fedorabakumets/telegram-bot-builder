@@ -8,7 +8,7 @@
  */
 
 import { Node } from '@shared/schema';
-import { getNodeDefaults } from '../node-defaults';
+import { getNodeDefaults } from '../utils/node-defaults';
 
 /**
  * Параметры для сброса узла
