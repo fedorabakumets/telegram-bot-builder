@@ -2,6 +2,8 @@
  * Утилиты для работы с картографическими сервисами
  */
 
+import { generatorLogger } from '../core/generator-logger';
+
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -44,7 +46,7 @@ export function extractCoordinatesFromYandex(url: string): Coordinates | null {
           };
         }
       }
-      
+
       // Попробуем найти координаты в базовой части URL
       const fullUrl = url.includes('?') ? url : url + '?ll=37.6176,55.7558'; // Fallback для Москвы
       if (fullUrl.includes('ll=')) {
@@ -60,9 +62,9 @@ export function extractCoordinatesFromYandex(url: string): Coordinates | null {
           }
         }
       }
-      
+
       // Если параметров нет, возвращаем координаты по умолчанию для Москвы
-      console.log('Короткая ссылка Яндекс.Карт обнаружена, используем координаты Москвы по умолчанию');
+      generatorLogger.debug('Короткая ссылка Яндекс.Карт обнаружена, используем координаты Москвы по умолчанию');
       return {
         latitude: 55.7558,
         longitude: 37.6176
@@ -71,7 +73,7 @@ export function extractCoordinatesFromYandex(url: string): Coordinates | null {
 
     return null;
   } catch (error) {
-    console.error('Ошибка извлечения координат из Яндекс.Карт:', error);
+    generatorLogger.error('Ошибка извлечения координат из Яндекс.Карт', error as Error);
     return null;
   }
 }
@@ -110,7 +112,7 @@ export function extractCoordinatesFromGoogle(url: string): Coordinates | null {
 
     return null;
   } catch (error) {
-    console.error('Ошибка извлечения координат из Google Maps:', error);
+    generatorLogger.error('Ошибка извлечения координат из Google Maps', error as Error);
     return null;
   }
 }
@@ -149,7 +151,7 @@ export function extractCoordinatesFrom2GIS(url: string): Coordinates | null {
 
     return null;
   } catch (error) {
-    console.error('Ошибка извлечения координат из 2ГИС:', error);
+    generatorLogger.error('Ошибка извлечения координат из 2ГИС', error as Error);
     return null;
   }
 }
@@ -287,7 +289,7 @@ export async function getLocationInfo(latitude: number, longitude: number): Prom
     
     return null;
   } catch (error) {
-    console.error('Ошибка получения информации о местоположении:', error);
+    generatorLogger.error('Ошибка получения информации о местоположении', error as Error);
     return null;
   }
 }
