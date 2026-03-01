@@ -116,7 +116,6 @@ export function PropertiesPanel({
 }: PropertiesPanelProps) {
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
-  const [] = useState<{ [key: string]: { isValid: boolean; message?: string } }>({});
   const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
@@ -137,7 +136,6 @@ export function PropertiesPanel({
   const getAllNodesFromAllSheets = useMemo(() =>
     collectAllNodesFromSheets(allSheets, allNodes, currentSheetId),
   [allSheets, allNodes, currentSheetId]);
-  const [] = useState(false);
   const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(true);
   const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(true);
 

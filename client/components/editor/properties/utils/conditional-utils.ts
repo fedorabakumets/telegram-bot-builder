@@ -4,24 +4,40 @@
  * @module conditional-utils
  */
 
+import { getConditionPriority } from '../constants/conditional.constants';
+
 /** Конфликт правил условных сообщений */
 export interface RuleConflict {
+  /** Индекс правила в массиве */
   ruleIndex: number;
+  /** Тип конфликта */
   conflictType: 'duplicate' | 'contradiction' | 'unreachable' | 'missing_variables' | 'missing_value';
+  /** Описание проблемы */
   description: string;
+  /** Серьёзность: warning или error */
   severity: 'warning' | 'error';
+  /** Рекомендация по исправлению */
   suggestion: string;
 }
 
 /** Правило условного сообщения */
 export interface ConditionalRule {
+  /** Тип условия */
   condition?: string;
+  /** Имя переменной (устаревшее) */
   variableName?: string;
+  /** Массив имён переменных */
   variableNames?: string[];
+  /** Ожидаемое значение */
   expectedValue?: string;
+  /** Логический оператор */
   logicOperator?: string;
+  /** Приоритет правила */
   priority?: number;
-  [key: string]: any;
+  /** ID условия */
+  id?: string;
+  /** Дополнительные данные */
+  [key: string]: unknown;
 }
 
 /**
@@ -75,11 +91,7 @@ export function detectRuleConflicts(rules: ConditionalRule[]): RuleConflict[] {
  */
 export function autoFixRulePriorities(rules: ConditionalRule[]): ConditionalRule[] {
   return rules.map((rule) => {
-    let priority = 0;
-    if (rule.condition === 'first_time' || rule.condition === 'returning_user') priority = 100;
-    else if (rule.condition === 'user_data_exists' || rule.condition === 'user_data_not_exists') priority = 50;
-    else if (rule.condition === 'user_data_equals' || rule.condition === 'user_data_contains') priority = 30;
-    else priority = 10;
+    const priority = rule.condition ? getConditionPriority(rule.condition) : 10;
     return { ...rule, priority };
   });
 }
