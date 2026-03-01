@@ -3,6 +3,7 @@ import { getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { useState, useMemo, useEffect } from 'react';
 
 import { EmptyState } from '../layout/empty-state';
+import { getNodeDefaults } from '../../utils/node-defaults';
 import { collectAllNodesFromSheets } from '../../utils/node-utils';
 import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from '../../utils/conditional-utils';
 import { collectAvailableQuestions, extractVariables } from '../../utils/variables-utils';
