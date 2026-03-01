@@ -1,7 +1,7 @@
 import { answersave } from './answersave';
 import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
 import { handleConditionalNavigationAndInputCollection } from './handleConditionalNavigationAndInputCollection';
-import { handleNodeNavigationAndInputProcessing } from '../../handleNodeNavigationAndInputProcessing';
+import { handleNodeNavigation } from '../node-navigation/handle-node-navigation';
 import { generateReplyHideAfterClickHandler } from '../Keyboard/generateReplyHideAfterClickHandler';
 import { mediafiles } from '../MediaHandler/mediafiles';
 import { navigateaftersave } from './navigateaftersave';
@@ -323,7 +323,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     const { conditionIndent, bodyIndent } = getIndents(6);
 
     // Добавляем навигацию для каждого узла
-    code = handleNodeNavigationAndInputProcessing(nodes, code, conditionIndent, bodyIndent, allNodeIds, connections);
+    code = handleNodeNavigation(nodes, code, conditionIndent, bodyIndent, allNodeIds, connections);
 
     code += '                except Exception as e:\n';
     code += '                    logging.error(f"Ошибка при переходе к узлу: {e}")\n';
