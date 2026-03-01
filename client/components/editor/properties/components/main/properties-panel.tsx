@@ -1,10 +1,6 @@
 import { Node, Button } from '@shared/schema';
-import { Switch } from '@/components/ui/switch';
 import { Button as UIButton } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { MediaVariablesList } from '../media/media-variables-list';
-import { nanoid } from 'nanoid';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { useState, useMemo, useEffect } from 'react';
 
@@ -15,15 +11,23 @@ import { MessageTextSection } from '../message/message-text-section';
 import { MediaFileSection } from '../media-file/media-file-section';
 import { isManagementNode } from '../../utils/node-constants';
 import { AdminRightsInfo } from '../configuration/admin-rights-info';
-import { CommandAdvancedSettings } from '../commands/command-advanced-settings';
+import { CommandAdvancedSettingsWrapper } from './command-advanced-settings-wrapper';
 import { CommandSectionComplete } from '../commands/command-section-complete';
 import { ManagementCommandSection } from '../commands/management-command-section';
 import { ButtonCard } from '../button-card/button-card';
 import { ContinueButtonSection } from '../continue-button/continue-button-section';
-import { AutoTransitionSection } from '../navigation/auto-transition-section';
-import { PropertiesFooter } from '../layout/properties-footer';
-import { PropertiesHeader } from '../layout/properties-header';
+import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { NodeTypeConfigurations } from './node-type-configurations';
+import { ConditionalMessagesToggle } from './conditional-messages-toggle';
+import { ConditionalMessagesHeader } from './conditional-messages-header';
+import { ConditionalMessagesInfoBlock } from './conditional-messages-info-block';
+import { KeyboardSectionHeader } from './keyboard-section-header';
+import { UserInputToggle } from './user-input-toggle';
+import { MediaVariablesSection } from './media-variables-section';
+import { AutoTransitionWrapper } from './auto-transition-wrapper';
+import { CommandAdvancedSettingsWrapper } from './command-advanced-settings-wrapper';
+import { PropertiesFooterWrapper } from './properties-footer-wrapper';
+import { useHandleAddButton } from '../../hooks/use-handle-add-button-wrapper';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
 import { VoiceConfiguration } from '../configuration/voice-configuration';
 import { AnimationConfiguration } from '../configuration/animation-configuration';
@@ -222,18 +226,11 @@ export function PropertiesPanel({
     return <EmptyState onClose={onClose} />;
   }
 
-  const handleAddButton = () => {
-    const newButton: Button = {
-      id: nanoid(),
-      text: 'Новая кнопка',
-      action: 'goto',
-      target: '',
-      buttonType: 'normal',
-      skipDataCollection: false,
-      hideAfterClick: false
-    };
-    onButtonAdd(selectedNode.id, newButton);
-  };
+  const handleAddButton = useHandleAddButton({ selectedNode, onButtonAdd });
+
+  if (!selectedNode) {
+    return <EmptyState onClose={onClose} />;
+  }
 
   return (
     <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
@@ -336,7 +333,7 @@ export function PropertiesPanel({
             <div>
               <div className="space-y-4">
                 {/* Media Variables Section */}
-                <MediaVariablesList
+                <MediaVariablesSection
                   variables={attachedMediaVariables}
                   onRemove={handleMediaVariableRemove}
                 />
@@ -372,27 +369,11 @@ export function PropertiesPanel({
         {!isManagementNode(selectedNode.type) && (
             <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-amber-50/40 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-xl p-3 sm:p-4 md:p-5 backdrop-blur-sm">
               {/* Header with Spoiler */}
-              <button
-                onClick={() => setIsKeyboardSectionOpen(!isKeyboardSectionOpen)}
-                className="w-full flex items-start justify-between gap-2 sm:gap-3 hover:opacity-80 transition-opacity"
-              >
-                <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
-                  <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 flex items-center justify-center flex-shrink-0 pt-0.5">
-                    <i className="fas fa-keyboard text-amber-600 dark:text-amber-400 text-sm sm:text-base"></i>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-100 text-left">Клавиатура</h3>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {selectedNode.data.keyboardType !== 'none' && (
-                    <Badge variant="secondary" className="text-xs font-medium">
-                      {selectedNode.data.keyboardType === 'inline' ? '📍 Inline' : '💬 Reply'}
-                    </Badge>
-                  )}
-                  <i className={`fas fa-chevron-down text-amber-600 dark:text-amber-400 text-sm transition-transform duration-300 ${isKeyboardSectionOpen ? 'rotate-0' : '-rotate-90'}`}></i>
-                </div>
-              </button>
+              <KeyboardSectionHeader
+                selectedNode={selectedNode}
+                isOpen={isKeyboardSectionOpen}
+                onToggle={() => setIsKeyboardSectionOpen(!isKeyboardSectionOpen)}
+              />
 
               {/* Content - Toggleable with Spoiler */}
               {isKeyboardSectionOpen && (
@@ -533,36 +514,16 @@ export function PropertiesPanel({
         {!isManagementNode(selectedNode.type) && (
             <div className="w-full">
               {/* Header with Collapse Toggle */}
-              <div className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group" onClick={() => setIsConditionalMessagesSectionOpen(!isConditionalMessagesSectionOpen)}>
-                <button
-                  className="flex items-start gap-2.5 sm:gap-3 w-full"
-                  title={isConditionalMessagesSectionOpen ? 'Свернуть' : 'Развернуть'}
-                >
-                  <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/50 dark:to-indigo-900/50 flex items-center justify-center flex-shrink-0 pt-0.5">
-                    <i className="fas fa-code-branch text-purple-600 dark:text-purple-400 text-sm sm:text-base"></i>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm sm:text-base font-bold text-purple-900 dark:text-purple-100 text-left">Условные сообщения</h3>
-                    <p className="text-xs sm:text-sm text-purple-700/70 dark:text-purple-300/70 mt-0.5 text-left">Разные ответы на основе условий</p>
-                  </div>
-                </button>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
-                    {(selectedNode.data.conditionalMessages || []).length}
-                  </span>
-                  <i className={`fas fa-chevron-down text-xs sm:text-sm text-purple-600 dark:text-purple-400 transition-transform duration-300 ${isConditionalMessagesSectionOpen ? 'rotate-0' : '-rotate-90'}`}></i>
-                </div>
-              </div>
+              <ConditionalMessagesHeader
+                selectedNode={selectedNode}
+                isOpen={isConditionalMessagesSectionOpen}
+                onToggle={() => setIsConditionalMessagesSectionOpen(!isConditionalMessagesSectionOpen)}
+              />
 
-              <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200/40 dark:border-purple-800/40">
-                <span className="text-xs sm:text-sm font-medium text-purple-900 dark:text-purple-100">Включить</span>
-                <Switch
-                  checked={selectedNode.data.enableConditionalMessages ?? false}
-                  onCheckedChange={(checked) => {
-                    onNodeUpdate(selectedNode.id, { enableConditionalMessages: checked });
-                  }}
-                />
-              </div>
+              <ConditionalMessagesToggle
+                selectedNode={selectedNode}
+                onNodeUpdate={onNodeUpdate}
+              />
 
               {isConditionalMessagesSectionOpen && (
                 <div className="space-y-3 sm:space-y-4">
@@ -571,20 +532,7 @@ export function PropertiesPanel({
                   {selectedNode.data.enableConditionalMessages && (
                     <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-purple-50/40 to-indigo-50/20 dark:from-purple-950/15 dark:to-indigo-950/10 border border-purple-200/40 dark:border-purple-800/30 rounded-lg sm:rounded-xl p-3 sm:p-4 transition-all duration-200 hover:border-purple-300/60 dark:hover:border-purple-700/60">
 
-                      {/* Information Block - Collapsible on mobile */}
-                      <details className="group cursor-pointer">
-                        <summary className="flex items-center gap-2 text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 select-none hover:text-blue-800 dark:hover:text-blue-200 transition-colors">
-                          <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-blue-500/10 transition-transform duration-300" style={{ transform: 'rotate(-90deg)' }}>
-                            <i className="fas fa-chevron-down text-xs"></i>
-                          </span>
-                          <span>ℹ️ Как это работает?</span>
-                        </summary>
-                        <div className="mt-2 ml-6 space-y-1 text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
-                          <div className="flex gap-2"><span className="flex-shrink-0">📝</span> <span>Бот запомнит ответы пользователей</span></div>
-                          <div className="flex gap-2"><span className="flex-shrink-0">🎯</span> <span>Покажет разные сообщения</span></div>
-                          <div className="flex gap-2"><span className="flex-shrink-0">⚡</span> <span>Например: новым - "Добро пожаловать!", старым - "С возвращением!"</span></div>
-                        </div>
-                      </details>
+                      <ConditionalMessagesInfoBlock />
 
                       {/* Conditional Messages List */}
                       <div className="space-y-2 sm:space-y-3">
@@ -696,15 +644,10 @@ export function PropertiesPanel({
                 iconColor="text-blue-600 dark:text-blue-400"
               />
 
-              <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/40">
-                <span className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">Включить</span>
-                <Switch
-                  checked={selectedNode.data.collectUserInput ?? false}
-                  onCheckedChange={(checked) => {
-                    onNodeUpdate(selectedNode.id, { collectUserInput: checked });
-                  }}
-                />
-              </div>
+              <UserInputToggle
+                selectedNode={selectedNode}
+                onNodeUpdate={onNodeUpdate}
+              />
               {isUserInputSectionOpen && (
                 <div className="space-y-4">
 
@@ -770,20 +713,17 @@ export function PropertiesPanel({
           )}
 
         {/* Auto Transition Section - скрыто для узлов управления */}
-        {!isManagementNode(selectedNode.type) &&
-          (selectedNode.data.keyboardType === 'none') &&
-          (selectedNode.data.collectUserInput !== true) && (
-            <AutoTransitionSection
-              selectedNode={selectedNode}
-              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-              onNodeUpdate={onNodeUpdate}
-              isOpen={isAutoTransitionOpen}
-              onToggle={() => setIsAutoTransitionOpen(!isAutoTransitionOpen)}
-            />
-          )}
+        <AutoTransitionWrapper
+          selectedNode={selectedNode}
+          getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+          onNodeUpdate={onNodeUpdate}
+          isOpen={isAutoTransitionOpen}
+          onToggle={() => setIsAutoTransitionOpen(!isAutoTransitionOpen)}
+          keyboardType={selectedNode.data.keyboardType}
+          collectUserInput={selectedNode.data.collectUserInput}
+        />
 
-        {/* Command Advanced Settings */}
-        <CommandAdvancedSettings
+        <CommandAdvancedSettingsWrapper
           selectedNode={selectedNode}
           onNodeUpdate={onNodeUpdate}
           isOpen={isBasicSettingsOpen}
@@ -791,8 +731,12 @@ export function PropertiesPanel({
         />
       </div>
 
-      {/* Properties Footer */}
-      <PropertiesFooter selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} onActionLog={onActionLog} onSaveProject={onSaveProject} />
+      <PropertiesFooterWrapper
+        selectedNode={selectedNode}
+        onNodeUpdate={onNodeUpdate}
+        onActionLog={onActionLog}
+        onSaveProject={onSaveProject}
+      />
     </aside>
   );
 }
