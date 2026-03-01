@@ -1,6 +1,6 @@
 import { Button } from "../../bot-generator";
 import { generateButtonText } from '../format/generateButtonText';
-import { calculateOptimalColumns } from '../Keyboard/calculateOptimalColumns';
+import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { toPythonBoolean } from "../format/toPythonBoolean";
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
@@ -78,8 +78,8 @@ export function generateConditionalKeyboard(condition: any, indentLevel: string,
     });
 
     // Автоматическое распределение колонок для inline клавиатуры
-    const columns = calculateOptimalColumns(condition.buttons, nodeData);
-    codeLines.push(`${indentLevel}builder.adjust(${columns})`);
+    const nodeData = { keyboardType: condition.keyboardType };
+    codeLines.push(`${indentLevel}${getAdjustCode(condition.buttons, nodeData)}`);
     codeLines.push(`${indentLevel}keyboard = builder.as_markup()`);
     codeLines.push(`${indentLevel}conditional_keyboard = keyboard`);
 

@@ -2,7 +2,7 @@ import { Button, Node } from '@shared/schema';
 import { generateConditionalMessageLogic } from "../Conditional";
 import { generateUniversalVariableReplacement } from "../database/generateUniversalVariableReplacement";
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, toPythonBoolean } from "../format";
-import { calculateOptimalColumns } from ".";
+import { getAdjustCode } from './getAdjustCode';
 import { checkAutoTransition } from "../utils/checkAutoTransition";
 
 export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
@@ -185,8 +185,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 targetNode.data.buttons.forEach((btn: Button) => {
                   code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
                 });
-                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-                code += `    builder.adjust(${columns})\n`;
+                code += `    ${getAdjustCode(targetNode.data.buttons, targetNode.data)}\n`;
                 const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
                 const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                 code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -262,8 +261,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                 targetNode.data.buttons.forEach((btn: Button) => {
                   code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
                 });
-                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-                code += `    builder.adjust(${columns})\n`;
+                code += `    ${getAdjustCode(targetNode.data.buttons, targetNode.data)}\n`;
                 const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
                 const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                 code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -427,8 +425,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
                     code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
                   }
                 });
-                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
-                code += `    builder.adjust(${columns})\n`;
+                code += `    ${getAdjustCode(targetNode.data.buttons, targetNode.data)}\n`;
                 code += '    keyboard = builder.as_markup()\n';
 
                 // Если есть статическое изображение, отправляем его с клавиатурой

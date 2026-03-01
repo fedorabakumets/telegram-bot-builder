@@ -9,7 +9,7 @@
 
 import { Node } from '@shared/schema';
 import { generateButtonText } from '../format/generateButtonText';
-import { calculateOptimalColumns } from './calculateOptimalColumns';
+import { getAdjustCode } from './getAdjustCode';
 import { toPythonBoolean } from '../format/toPythonBoolean';
 
 /**
@@ -43,8 +43,7 @@ export function generateKeyboardOnly(node: Node): string {
       }
     });
 
-    const columns = calculateOptimalColumns(node.data.buttons, node.data);
-    code += `    builder.adjust(${columns})\n`;
+    code += `    ${getAdjustCode(node.data.buttons, node.data)}\n`;
 
     const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
     const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
