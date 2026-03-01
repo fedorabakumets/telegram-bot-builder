@@ -1,4 +1,4 @@
-import { isLoggingEnabled } from "../../bot-generator";
+import { generatorLogger } from '../core/generator-logger';
 import { generateButtonText } from '../format/generateButtonText';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { generateUniqueShortId } from '../format/generateUniqueShortId';
@@ -30,7 +30,7 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
 
   // Если есть множественный выбор, добавляем инициализацию состояния
   if (hasSelectionButtons && isMultipleSelection) {
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИНИЦИАЛИЗИРУЕМ состояние множественного выбора для узла ${nodeId}`);
+    generatorLogger.debug(`Инициализация множественного выбора для узла: ${nodeId}`);
     const multiSelectVariable = nodeData?.multiSelectVariable || 'user_interests';
     const multiSelectKeyboardType = nodeData?.keyboardType || 'reply';
 
@@ -65,13 +65,11 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
 
   code += `${indentLevel}builder = InlineKeyboardBuilder()\n`;
 
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: generateInlineKeyboardCode для узла ${nodeId}`);
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: nodeData.allowMultipleSelection = ${nodeData?.allowMultipleSelection}`);
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons = ${hasSelectionButtons}, isMultipleSelection = ${isMultipleSelection}`);
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${nodeData?.continueButtonTarget}`);
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Полный объект nodeData:`, JSON.stringify(nodeData, null, 2));
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Проверяем условие инициализации: hasSelectionButtons=${hasSelectionButtons} && isMultipleSelection=${isMultipleSelection}`);
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Результат проверки: ${hasSelectionButtons && isMultipleSelection}`);
+  generatorLogger.debug(`generateInlineKeyboardCode для узла: ${nodeId}`);
+  generatorLogger.debug(`nodeData.allowMultipleSelection: ${nodeData?.allowMultipleSelection}`);
+  generatorLogger.debug(`hasSelectionButtons: ${hasSelectionButtons}, isMultipleSelection: ${isMultipleSelection}`);
+  generatorLogger.debug(`continueButtonTarget: ${nodeData?.continueButtonTarget}`);
+  generatorLogger.debug(`nodeData:`, JSON.stringify(nodeData, null, 2));
 
   buttons.forEach((button, _index) => {
     if (button.action === "url") {
@@ -89,19 +87,15 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
       const shortNodeId = nodeId ? generateUniqueShortId(nodeId, allNodeIds || []) : 'sel';
       const shortTarget = (button.target || button.id || 'btn').slice(-8); // Обрезаем до 8 последних символов для совместимости с обработчиком
       const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Создана кнопка selection: ${button.text} -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
+      generatorLogger.debug(`ИСПРАВЛЕНО! Создана кнопка selection: ${button.text} -> ${callbackData} (длина: ${callbackData.length})`);
 
       // Добавляем галочки для множественного выбора
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: 🔍 ПРОВЕРЯЕМ галочки для ${button.text}: isMultipleSelection=${isMultipleSelection}`);
       if (isMultipleSelection) {
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ ГАЛОЧКИ для кнопки selection: ${button.text} (узел: ${nodeId})`);
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: 📋 ДАННЫЕ КНОПКИ: text="${button.text}", target="${button.target}", id="${button.id}"`);
+        generatorLogger.debug(`ДОБАВЛЯЕМ ГАЛОЧКИ для кнопки selection: ${button.text} (узел: ${nodeId})`);
         code += `${indentLevel}# Кнопка выбора с галочками: ${button.text}\n`;
         code += `${indentLevel}logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '${button.text}' в списке: {{user_data[user_id]['multi_select_${nodeId}']}}")\n`;
         code += `${indentLevel}builder.add(InlineKeyboardButton(text=f"{'✅ ' if '${button.text}' in user_data[user_id]['multi_select_${nodeId}'] else ''}${button.text}", callback_data="${callbackData}"))\n`;
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ СГЕНЕРИРОВАН КОД ГАЛОЧЕК для ${button.text} с детальным логированием`);
       } else {
-        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем галочки для ${button.text} (isMultipleSelection=${isMultipleSelection})`);
         code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
       }
     } else {
@@ -114,7 +108,7 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
   if (hasSelectionButtons && isMultipleSelection) {
     const continueText = nodeData?.continueButtonText || 'Готово';
     const callbackData = `multi_select_done_${nodeId}`;
-    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "${continueText}" для узла ${nodeId} с callback_data: ${callbackData}`);
+    generatorLogger.debug(`ДОБАВЛЯЕМ кнопку "${continueText}" для узла ${nodeId} с callback_data: ${callbackData}`);
     code += `${indentLevel}# Добавляем кнопку "Готово" для множественного выбора\n`;
     code += `${indentLevel}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${callbackData}"))\n`;
   }
