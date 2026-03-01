@@ -10,7 +10,7 @@
 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ACTION_OPTIONS, ResponseAction } from './response-action-config';
+import { ACTION_OPTIONS, ResponseAction } from '../common/response-action-config';
 
 /** Пропсы компонента ActionSelector */
 interface ActionSelectorProps {

@@ -7,8 +7,8 @@
  */
 
 import { Node } from '@shared/schema';
-import { handleNodeReset } from './action-loggers/node-reset';
-import { ApplyButton } from './apply-button';
+import { handleNodeReset } from '../action-loggers/node-reset';
+import { ApplyButton } from '../common/apply-button';
 
 /**
  * Пропсы компонента футера панели свойств

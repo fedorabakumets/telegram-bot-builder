@@ -9,7 +9,7 @@
 import { Node } from '@shared/schema';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { SynonymEditor } from '../synonym-editor';
+import { SynonymEditor } from '../synonyms/synonym-editor';
 
 /**
  * Пропсы компонента настройки управления контентом

@@ -4,9 +4,9 @@
  */
 
 import { ConditionTypeSelector } from './condition-type-selector';
-import { VariableNamesSection } from './variable-names-section';
-import { ExpectedValueInput } from './expected-value-input';
-import { CustomMessageSection } from './custom-message-section';
+import { VariableNamesSection } from '../variables/variable-names-section';
+import { ExpectedValueInput } from '../variables/expected-value-input';
+import { CustomMessageSection } from '../main/custom-message-section';
 import { ConditionalCollectionSection } from './conditional-collection-section';
 import { ConditionalKeyboardConfig } from './conditional-keyboard-config';
 

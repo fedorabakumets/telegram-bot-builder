@@ -5,7 +5,7 @@
  */
 
 import { Node } from '@shared/schema';
-import { SYSTEM_VARIABLES } from '../system-variables';
+import { SYSTEM_VARIABLES } from '../components/variables/system-variables';
 
 /** Переменная проекта */
 export interface ProjectVariable {

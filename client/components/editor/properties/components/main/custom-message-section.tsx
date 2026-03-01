@@ -4,7 +4,7 @@
 
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { InlineRichEditor } from '../inline-rich/inline-rich-editor';
+import { InlineRichEditor } from '../../../inline-rich/inline-rich-editor';
 
 interface CustomMessageSectionProps {
   condition: any;

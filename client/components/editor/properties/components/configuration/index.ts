@@ -1,18 +1,19 @@
 /**
  * @fileoverview Экспорты конфигураций типов узлов
- * @module components/editor/properties/configuration
+ * @module components/editor/properties/components/configuration
  */
 
 export * from './admin-rights-info';
 export * from './animation-configuration';
-export * from './audio-configuration';
 export * from './contact-configuration';
-export * from './document-configuration';
-export * from './location-configuration';
-export * from './photo-configuration';
 export * from './sticker-configuration';
-export * from './text-configuration';
-export * from './video-configuration';
 export * from './voice-configuration';
-export * from './poll-configuration';
-export * from './dice-configuration';
+export * from './content-management-configuration';
+export * from './user-management-configuration';
+export * from './location-coordinates-section';
+export * from './location-details-section';
+export * from './foursquare-integration-section';
+export * from './gis-map-section';
+export * from './google-map-section';
+export * from './map-services-section';
+export * from './yandex-map-section';

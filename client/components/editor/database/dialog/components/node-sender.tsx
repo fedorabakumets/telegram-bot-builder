@@ -6,11 +6,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Send } from 'lucide-react';
-import { TargetNodeSelector } from '@/components/editor/properties/target-node-selector';
+import { TargetNodeSelector } from '@/components/editor/properties/components/keyboard/target-node-selector';
 import { useSendNode } from '../hooks/use-send-node';
 import { useProjectData } from '../hooks/use-project-data';
 import { collectNodesFromProjectData } from '../utils/node-utils';
-import { formatNodeDisplay } from '@/components/editor/properties/node-formatters';
+import { formatNodeDisplay } from '@/components/editor/properties/utils/node-formatters';
 import type { Node } from '@shared/schema';
 
 /**

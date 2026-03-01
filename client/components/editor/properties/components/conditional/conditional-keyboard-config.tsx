@@ -5,8 +5,8 @@
 import { Label } from '@/components/ui/label';
 import { Button as UIButton } from '@/components/ui/button';
 import { ConditionalButtonsList } from './conditional-buttons-list';
-import { KeyboardTypeToggles } from './keyboard-type-toggles';
-import { ReplyKeyboardSettings } from './reply-keyboard-settings';
+import { KeyboardTypeToggles } from '../keyboard/keyboard-type-toggles';
+import { ReplyKeyboardSettings } from '../keyboard/reply-keyboard-settings';
 
 interface ConditionalKeyboardConfigProps {
   condition: any;

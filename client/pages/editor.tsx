@@ -13,7 +13,7 @@ import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
 import { CodePanel } from '@/components/editor/code/code-panel';
 import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
-import { PropertiesPanel } from '@/components/editor/properties/properties-panel';
+import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { logNodeUpdate, logNodeTypeChange, logNodeIdChange, logButtonAdd, logButtonUpdate, logButtonDelete, logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';

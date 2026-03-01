@@ -10,10 +10,10 @@
 // Компоненты
 export * from './components';
 
-// Логгеры действий
-export * from './action-loggers';
+// Логгеры действий (в components)
+export * from './components/action-loggers';
 
-// Конфигурации типов узлов
+// Конфигурации типов узлов (в components)
 export * from './components/configuration';
 
 // React хуки
@@ -22,5 +22,10 @@ export * from './hooks';
 // Утилиты
 export * from './utils';
 
-// Медиа утилиты
-export * from './media';
+// Медиа компоненты
+export * from './media/media-manager';
+export * from './media/media-selector';
+export * from './media/enhanced-media-uploader';
+export * from './media/camera-capture';
+export * from './media/file-optimizer';
+export * from './media/url-downloader';

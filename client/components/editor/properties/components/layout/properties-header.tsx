@@ -12,7 +12,7 @@ import { Button as UIButton } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getNodeDefaults } from './utils/node-defaults';
+import { getNodeDefaults } from '../../utils/node-defaults';
 
 /**
  * Пропсы компонента заголовка панели свойств

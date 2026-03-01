@@ -10,8 +10,8 @@ import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { SynonymEditor } from '../synonym-editor';
-import { AdminRightsEditor } from '../admin-rights-editor';
+import { SynonymEditor } from '../synonyms/synonym-editor';
+import { AdminRightsEditor } from '../admin/admin-rights-editor';
 
 /**
  * Пропсы компонента настройки управления пользователями

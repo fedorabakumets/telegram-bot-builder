@@ -154,23 +154,26 @@ import { Helper } from 'components/editor/properties/utils/helper';
 **Было:**
 ```typescript
 import { PropertiesPanel } from './properties/properties-panel';
+import { TargetNodeSelector } from './properties/target-node-selector';
+import { formatNodeDisplay } from './properties/node-formatters';
 ```
 
 **Стало:**
 ```typescript
+// Импорт из баррель-экспорта
 import { PropertiesPanel } from './properties/components/main';
-// или
-import { PropertiesPanel } from './properties';
+// или из главного барреля
+import { PropertiesPanel, TargetNodeSelector } from './properties';
 ```
 
 ## 📊 Метрики
 
 | Метрика | Значение |
 |---------|----------|
-| Всего папок | 18 |
-| Компонентов | ~50 |
+| Всего папок | 16 (components + hooks + media + utils) |
+| Компонентов | ~80 |
 | Утилит | ~7 |
-| Хуков | ~3 |
+| Хуков | ~9 |
 | Конфигураций | ~13 |
 | Логгеров | ~11 |
 

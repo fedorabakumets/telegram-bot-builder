@@ -7,8 +7,8 @@ import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button as UIButton } from '@/components/ui/button';
-import { ActionSelector } from './action-selector';
-import { ActionInput } from './action-input';
+import { ActionSelector } from '../keyboard/action-selector';
+import { ActionInput } from '../keyboard/action-input';
 import { ResponseAction } from './response-action-config';
 
 interface ResponseOptionsListProps {

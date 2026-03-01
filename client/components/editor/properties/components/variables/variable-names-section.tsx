@@ -5,9 +5,9 @@
 import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { QuestionCheckboxList } from './question-checkbox-list';
-import { LogicOperatorSelector } from './logic-operator-selector';
-import { SelectedQuestions } from './selected-questions';
+import { QuestionCheckboxList } from '../questions/question-checkbox-list';
+import { LogicOperatorSelector } from '../conditional/logic-operator-selector';
+import { SelectedQuestions } from '../questions/selected-questions';
 
 interface Question { name: string; nodeId: string; nodeType?: string; mediaType?: string; }
 interface VariableNamesSectionProps {

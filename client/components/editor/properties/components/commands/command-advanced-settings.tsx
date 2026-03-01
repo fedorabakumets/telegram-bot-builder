@@ -8,10 +8,10 @@
  */
 
 import { Node } from '@shared/schema';
-import { SectionHeader } from './section-header';
-import { ShowInMenuSetting } from './show-in-menu-setting';
-import { PrivateOnlySetting } from './private-only-setting';
-import { AdminOnlySetting } from './admin-only-setting';
+import { SectionHeader } from '../layout/section-header';
+import { ShowInMenuSetting } from '../admin/show-in-menu-setting';
+import { PrivateOnlySetting } from '../admin/private-only-setting';
+import { AdminOnlySetting } from '../admin/admin-only-setting';
 
 /**
  * Пропсы компонента расширенных настроек команд

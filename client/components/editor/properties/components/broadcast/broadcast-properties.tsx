@@ -7,8 +7,8 @@ import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { IdSourceSelector } from './id-source-selector';
-import { ApiTypeSelector } from './api-type-selector';
+import { IdSourceSelector } from '../navigation/id-source-selector';
+import { ApiTypeSelector } from '../common/api-type-selector';
 
 /**
  * Свойства компонента панели настроек рассылки

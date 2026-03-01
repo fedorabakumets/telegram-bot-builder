@@ -6,7 +6,7 @@
 
 import { useMemo, useCallback } from 'react';
 import { Node } from '@shared/schema';
-import { ProjectVariable } from './utils/variables-utils';
+import { ProjectVariable } from '../utils/variables-utils';
 
 /** Результат хука useMediaVariables */
 export interface UseMediaVariablesResult {

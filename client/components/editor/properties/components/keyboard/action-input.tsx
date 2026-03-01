@@ -7,7 +7,7 @@ import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TargetNodeSelector } from './target-node-selector';
-import { ResponseAction } from './response-action-config';
+import { ResponseAction } from '../common/response-action-config';
 
 interface ActionInputProps {
   action: ResponseAction;
