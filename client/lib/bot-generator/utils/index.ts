@@ -16,7 +16,6 @@ export { generateMessageText, type GenerateMessageTextOptions } from './generate
 
 // Other utilities
 export * from './generateGeneratedComment';
-export * from './generation-state';
 
 // Re-export cn utility for UI components
 export { cn } from './utils';

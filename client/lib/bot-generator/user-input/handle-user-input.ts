@@ -323,7 +323,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     const { conditionIndent, bodyIndent } = getIndents(6);
 
     // Добавляем навигацию для каждого узла
-    code = handleNodeNavigation(nodes, code, conditionIndent, bodyIndent, allNodeIds, connections);
+    code += handleNodeNavigation(nodes, conditionIndent, bodyIndent, allNodeIds, connections);
 
     code += '                except Exception as e:\n';
     code += '                    logging.error(f"Ошибка при переходе к узлу: {e}")\n';
