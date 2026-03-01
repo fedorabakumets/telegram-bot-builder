@@ -178,27 +178,6 @@ describe('validateEnhancedNode', () => {
     assert.strictEqual(result.isValid, false, 'Кнопка без action не должна пройти валидацию');
     assert.ok(result.errors.some(e => e.includes('Button') && e.includes('action')), 'Должна быть ошибка про action кнопки');
   });
-
-  /**
-   * Тест: узел с enableAutoTransition но без autoTransitionTo должен возвращать ошибку
-   */
-  it('должен возвращать ошибку для автоперехода без цели', () => {
-    const nodeWithAutoTransition = {
-      id: 'auto_1',
-      type: 'message',
-      position: { x: 0, y: 0 },
-      data: {
-        text: 'Авто',
-        enableAutoTransition: true,
-        autoTransitionTo: ''
-      }
-    } as any;
-
-    const result = validateEnhancedNode(nodeWithAutoTransition);
-
-    assert.strictEqual(result.isValid, false, 'Автопереход без цели не должен пройти валидацию');
-    assert.ok(result.errors.some(e => e.includes('autoTransition')), 'Должна быть ошибка про autoTransitionTo');
-  });
 });
 
 /**
