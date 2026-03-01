@@ -8,5 +8,6 @@ export * from './use-media';
 export * from './use-media-query';
 export * from './use-properties-panel-state';
 export * from './use-properties-panel-memo';
+export * from './use-properties-panel';
 export * from './use-command-validation';
 export * from './use-handle-add-button';
