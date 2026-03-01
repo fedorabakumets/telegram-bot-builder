@@ -28,7 +28,6 @@ interface UseHandleAddButtonProps {
  * @returns {UseHandleAddButtonReturn} Объект с функцией добавления
  */
 export function useHandleAddButton({
-  selectedNode,
   onButtonAdd
 }: UseHandleAddButtonProps): UseHandleAddButtonReturn {
   const handleAddButton = (nodeId: string) => {

@@ -23,6 +23,7 @@ import { ContinueButtonSection } from '../continue-button/continue-button-sectio
 import { AutoTransitionSection } from '../navigation/auto-transition-section';
 import { PropertiesFooter } from '../layout/properties-footer';
 import { PropertiesHeader } from '../layout/properties-header';
+import { NodeTypeConfigurations } from './node-type-configurations';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
 import { VoiceConfiguration } from '../configuration/voice-configuration';
 import { AnimationConfiguration } from '../configuration/animation-configuration';
@@ -308,99 +309,24 @@ export function PropertiesPanel({
               </div>
             )}
 
-            {/* Sticker Configuration */}
-            {selectedNode.type === 'sticker' && (
-              <StickerConfiguration
-                selectedNode={selectedNode}
-                onNodeUpdate={onNodeUpdate}
-              />
-            )}
-
-            {/* Voice Message Configuration */}
-            {selectedNode.type === 'voice' && (
-              <VoiceConfiguration
-                projectId={projectId}
-                selectedNode={selectedNode}
-                onNodeUpdate={onNodeUpdate}
-              />
-            )}
-
-            {/* Animation (GIF) Configuration */}
-            {selectedNode.type === 'animation' && (
-              <AnimationConfiguration
-                projectId={projectId}
-                selectedNode={selectedNode}
-                onNodeUpdate={onNodeUpdate}
-              />
-            )}
-
-            {/* Location Configuration */}
-            {selectedNode.type === 'location' && (
-              <div className="space-y-6">
-                {/* Coordinates Section */}
-                <LocationCoordinatesSection
-                  selectedNode={selectedNode}
-                  onNodeUpdate={onNodeUpdate}
-                />
-
-                {/* Location Details Section */}
-                <LocationDetailsSection
-                  selectedNode={selectedNode}
-                  onNodeUpdate={onNodeUpdate}
-                />
-
-                {/* Foursquare Integration Section */}
-                <FoursquareIntegrationSection
-                  selectedNode={selectedNode}
-                  onNodeUpdate={onNodeUpdate}
-                />
-
-                {/* Map Services Section */}
-                <MapServicesSection
-                  selectedNode={selectedNode}
-                  onNodeUpdate={onNodeUpdate}
-                />
-              </div>
-            )}
-
-            {/* Contact Configuration */}
-            {selectedNode.type === 'contact' && (
-              <ContactConfiguration
-                selectedNode={selectedNode}
-                onNodeUpdate={onNodeUpdate}
-              />
-            )}
-
-            {/* Broadcast Configuration */}
-            {selectedNode.type === 'broadcast' && (
-              <BroadcastNodeProperties
-                node={selectedNode}
-                onUpdate={onNodeUpdate}
-              />
-            )}
-
-            {/* Content Management Configuration */}
-            {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message') && (
-              <ContentManagementConfiguration
-                selectedNode={selectedNode}
-                onNodeUpdate={onNodeUpdate}
-              />
-            )}
-
-            {/* User Management Configuration */}
-            {(selectedNode.type === 'ban_user' || selectedNode.type === 'unban_user' || selectedNode.type === 'mute_user' ||
-              selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' ||
-              selectedNode.type === 'demote_user' || selectedNode.type === 'admin_rights') && (
-              <UserManagementConfiguration
-                selectedNode={selectedNode}
-                onNodeUpdate={onNodeUpdate}
-              />
-            )}
-
-            {/* Admin Rights Configuration */}
-            {selectedNode.type === 'admin_rights' && (
-              <AdminRightsInfo />
-            )}
+            {/* Node Type Configurations */}
+            <NodeTypeConfigurations
+              selectedNode={selectedNode}
+              projectId={projectId}
+              onNodeUpdate={onNodeUpdate}
+              StickerConfiguration={StickerConfiguration}
+              VoiceConfiguration={VoiceConfiguration}
+              AnimationConfiguration={AnimationConfiguration}
+              LocationCoordinatesSection={LocationCoordinatesSection}
+              LocationDetailsSection={LocationDetailsSection}
+              FoursquareIntegrationSection={FoursquareIntegrationSection}
+              MapServicesSection={MapServicesSection}
+              ContactConfiguration={ContactConfiguration}
+              BroadcastNodeProperties={BroadcastNodeProperties}
+              ContentManagementConfiguration={ContentManagementConfiguration}
+              UserManagementConfiguration={UserManagementConfiguration}
+              AdminRightsInfo={AdminRightsInfo}
+            />
 
           </div>
         </div>
