@@ -1,13 +1,14 @@
 /**
  * @fileoverview Типы данных узлов бота
- * 
+ *
  * Модуль определяет структуру данных для различных типов узлов графа бота.
  * Включает типы для сообщений, команд, медиа, переходов и других элементов.
- * 
+ *
  * @module bot-generator/types/node-data.types
  */
 
 import type { Button } from './button-types';
+import type { ButtonOverride } from './node-data-override.types';
 
 /**
  * Тип клавиатуры для узла
@@ -47,7 +48,7 @@ export type InputType =
 
 /**
  * Данные узла бота
- * 
+ *
  * @example
  * const data: NodeData = {
  *   text: 'Привет!',
@@ -57,7 +58,7 @@ export type InputType =
  */
 export interface NodeData {
   /** Кнопки узла */
-  buttons?: Button[];
+  buttons?: Button[] | ButtonOverride[];
   /** Тип клавиатуры */
   keyboardType?: KeyboardType;
   /** Текст сообщения */
@@ -66,7 +67,7 @@ export interface NodeData {
   formatMode?: FormatMode;
   /** Использовать Markdown */
   markdown?: boolean;
-  
+
   /** URL изображения */
   imageUrl?: string;
   /** Переменная URL изображения */
@@ -77,17 +78,17 @@ export interface NodeData {
   audioUrl?: string;
   /** URL документа */
   documentUrl?: string;
-  
+
   /** Разрешить множественный выбор */
   allowMultipleSelection?: boolean;
   /** Цель для кнопки продолжения */
   continueButtonTarget?: string;
-  
+
   /** Включить автопереход */
   enableAutoTransition?: boolean;
   /** Цель автоперехода */
   autoTransitionTo?: string;
-  
+
   /** Собирать ввод пользователя */
   collectUserInput?: boolean;
   /** Тип ввода */
@@ -96,19 +97,22 @@ export interface NodeData {
   inputTargetNodeId?: string;
   /** Пропускать сбор данных */
   skipDataCollection?: boolean;
-  
+
   /** Команда узла */
   command?: string;
   /** Описание команды */
   description?: string;
-  
+
   /** Переменные условия */
   conditionalVariables?: Array<{
     variableName: string;
     condition: string;
     value: string;
   }>;
-  
+
+  /** Прикреплённые медиа */
+  attachedMedia?: string[];
+
   /** Дополнительные поля */
   [key: string]: any;
 }
