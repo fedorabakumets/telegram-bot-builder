@@ -130,7 +130,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   // Генерируем логирование сообщений (только при включенной БД)
   if (userDatabaseEnabled) {
-    code += generateMessageLoggingCode(userDatabaseEnabled, projectId, hasInlineButtons(nodes || []));
+    code += generateMessageLoggingCode(userDatabaseEnabled, hasInlineButtons(nodes || []));
   }
 
   // Добавляем конфигурацию групп

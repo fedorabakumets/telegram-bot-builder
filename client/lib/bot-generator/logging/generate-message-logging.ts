@@ -17,12 +17,14 @@ import { send_photo_with_logging } from './send_photo_with_logging';
 
 /**
  * Генерирует код для логирования сообщений в базу данных
- * @param {boolean} userDatabaseEnabled - Флаг включения пользовательской базы данных
- * @param {number | null} projectId - ID проекта
- * @param {boolean} hasInlineButtonsValue - Результат вызова hasInlineButtons
- * @returns {string} Сгенерированный код для логирования сообщений
+ * @param userDatabaseEnabled - Флаг включения пользовательской базы данных
+ * @param hasInlineButtonsValue - Результат вызова hasInlineButtons
+ * @returns Сгенерированный код для логирования сообщений
  */
-export function generateMessageLoggingCode(userDatabaseEnabled: boolean, projectId: number | null, hasInlineButtonsValue: boolean): string {
+export function generateMessageLoggingCode(
+  userDatabaseEnabled: boolean,
+  hasInlineButtonsValue: boolean
+): string {
   if (!userDatabaseEnabled) {
     return '';
   }
