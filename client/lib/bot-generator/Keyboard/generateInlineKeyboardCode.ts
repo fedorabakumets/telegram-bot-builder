@@ -3,6 +3,7 @@ import { generateButtonText } from '../format/generateButtonText';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { generateUniqueShortId } from '../format/generateUniqueShortId';
 import { generateReplyKeyboardCode } from './generateReplyKeyboardCode';
+import { generateAdjustCode } from './generateKeyboardLayoutCode';
 
 // Функция для генерации inline клавиатуры с автоматической настройкой колонок
 export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any, allNodeIds?: string[]): string {
@@ -113,20 +114,23 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
     code += `${indentLevel}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${callbackData}"))\n`;
   }
 
-  // Автоматическое распределение колонок с учетом данных узла и кнопки "Готово"
-  let allButtons = [...buttons];
-  if (hasSelectionButtons && isMultipleSelection) {
-    // Добавляем виртуальную кнопку "Готово" для правильного подсчета колонок
-    allButtons.push({ text: nodeData?.continueButtonText || 'Готово' });
-  }
-  // ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок для узлов с множественным выбором
-  let columns;
-  if (isMultipleSelection) {
-    columns = 2; // Всегда используем 2 колонки для узлов с множественным выбором
+  // ИСПРАВЛЕНИЕ: Используем keyboardLayout если есть, иначе calculateOptimalColumns
+  let adjustCode: string;
+  if (nodeData?.keyboardLayout && !nodeData.keyboardLayout.autoLayout) {
+    // Используем keyboardLayout для генерации adjust()
+    adjustCode = generateAdjustCode(nodeData.keyboardLayout, buttons.length);
   } else {
-    columns = calculateOptimalColumns(allButtons, nodeData);
+    // Старая логика с calculateOptimalColumns
+    let allButtons = [...buttons];
+    if (hasSelectionButtons && isMultipleSelection) {
+      allButtons.push({ text: nodeData?.continueButtonText || 'Готово' });
+    }
+    const columns = isMultipleSelection 
+      ? 2 
+      : calculateOptimalColumns(allButtons, nodeData);
+    adjustCode = `builder.adjust(${columns})\n`;
   }
-  code += `${indentLevel}builder.adjust(${columns})\n`;
+  code += `${indentLevel}${adjustCode}`;
   code += `${indentLevel}keyboard = builder.as_markup()\n`;
 
   // Добавляем переменную keyboardHTML как альтернативу (пустая строка по умолчанию)

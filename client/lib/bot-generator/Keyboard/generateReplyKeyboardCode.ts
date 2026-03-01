@@ -1,11 +1,18 @@
 import { generateButtonText } from '../format/generateButtonText';
 import { toPythonBoolean } from "../format/toPythonBoolean";
+import { generateAdjustCode } from './generateKeyboardLayoutCode';
 
-// Функция для генерации reply клавиатуры
-
+/**
+ * Генерирует код для reply клавиатуры
+ *
+ * @param buttons - Массив кнопок
+ * @param indentLevel - Уровень отступа
+ * @param nodeId - ID узла
+ * @param nodeData - Данные узла (включая keyboardLayout)
+ * @returns Python-код для reply клавиатуры
+ */
 export function generateReplyKeyboardCode(buttons: any[], indentLevel: string, _nodeId?: string, nodeData?: any): string {
   if (!buttons || buttons.length === 0) {
-    // Даже если нет кнопок, нужно определить переменные клавиатуры для предотвращения ошибок
     let code = '';
     code += `${indentLevel}keyboard = None  # Нет кнопок, клавиатура не нужна\n`;
     code += `${indentLevel}keyboardHTML = ''  # Заглушка для совместимости\n`;
@@ -25,11 +32,22 @@ export function generateReplyKeyboardCode(buttons: any[], indentLevel: string, _
     }
   });
 
+  // Используем keyboardLayout если есть
+  if (nodeData?.keyboardLayout && !nodeData.keyboardLayout.autoLayout) {
+    code += `${indentLevel}${generateAdjustCode(nodeData.keyboardLayout, buttons.length)}`;
+  } else {
+    // Старая логика: resizeKeyboard по умолчанию true
+    const resizeKeyboard = toPythonBoolean(nodeData?.resizeKeyboard !== false);
+    const oneTimeKeyboard = toPythonBoolean(nodeData?.oneTimeKeyboard === true);
+    code += `${indentLevel}builder.adjust(${nodeData?.keyboardLayout?.columns || 2})\n`;
+    code += `${indentLevel}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+    return code;
+  }
+
   const resizeKeyboard = toPythonBoolean(nodeData?.resizeKeyboard !== false);
   const oneTimeKeyboard = toPythonBoolean(nodeData?.oneTimeKeyboard === true);
   code += `${indentLevel}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
 
-  // Добавляем переменную keyboardHTML как альтернативу (пустая строка по умолчанию)
   code += `${indentLevel}keyboardHTML = ''  # Заглушка для совместимости\n`;
 
   return code;
