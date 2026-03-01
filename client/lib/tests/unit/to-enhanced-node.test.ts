@@ -24,7 +24,7 @@ describe('toEnhancedNode', () => {
       type: 'start',
       position: { x: 0, y: 0 },
       data: { text: 'Привет!' }
-    };
+    } as any;
 
     const enhanced = toEnhancedNode(node);
 
@@ -49,7 +49,7 @@ describe('toEnhancedNode', () => {
           { id: 'btn2', text: 'Кнопка 2', action: 'callback' }
         ]
       }
-    };
+    } as any;
 
     const enhanced = toEnhancedNode(node);
 
@@ -68,7 +68,7 @@ describe('toEnhancedNode', () => {
       type: 'message',
       position: { x: 200, y: 200 },
       data: { text: 'Инфо' }
-    };
+    } as any;
 
     const enhanced = toEnhancedNode(node);
 
@@ -84,7 +84,7 @@ describe('toEnhancedNode', () => {
       type: 'message',
       position: { x: 300, y: 300 },
       data: { text: 'Медиа', attachedMedia: ['photo_url_1'] }
-    };
+    } as any;
 
     const enhanced = toEnhancedNode(node);
 
@@ -101,7 +101,7 @@ describe('toEnhancedNode', () => {
       type: 'message',
       position: { x: 400, y: 400 },
       data: { text: 'Текст' }
-    };
+    } as any;
 
     const enhanced = toEnhancedNode(node);
 
@@ -117,7 +117,7 @@ describe('toEnhancedNode', () => {
       type: 'message',
       position: { x: 500, y: 500 },
       data: { text: 'Null', buttons: null }
-    };
+    } as any;
 
     const enhancedNull = toEnhancedNode(nodeWithNull as any);
     assert.deepStrictEqual(enhancedNull.data.buttons, [], 'null кнопки должны стать пустым массивом');
@@ -127,7 +127,7 @@ describe('toEnhancedNode', () => {
       type: 'message',
       position: { x: 600, y: 600 },
       data: { text: 'Undefined' }
-    };
+    } as any;
 
     const enhancedUndef = toEnhancedNode(nodeWithUndefined);
     assert.deepStrictEqual(enhancedUndef.data.buttons, [], 'undefined кнопки должны стать пустым массивом');
@@ -145,7 +145,7 @@ describe('toEnhancedNodes', () => {
     const nodes = [
       { id: 'start_1', type: 'start', position: { x: 0, y: 0 }, data: { text: 'Старт' } },
       { id: 'menu_1', type: 'message', position: { x: 100, y: 100 }, data: { text: 'Меню' } }
-    ];
+    ] as any[];
 
     const enhanced = toEnhancedNodes(nodes);
 

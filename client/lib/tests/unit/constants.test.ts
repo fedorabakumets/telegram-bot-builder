@@ -177,8 +177,8 @@ describe('BUTTON_ACTIONS', () => {
    * Тест: действия кнопок не должны пересекаться с типами узлов
    */
   it('не должен иметь пересечений с NODE_TYPES', () => {
-    const nodeTypeValues = Object.values(NODE_TYPES);
-    const buttonActionValues = Object.values(BUTTON_ACTIONS);
+    const nodeTypeValues = Object.values(NODE_TYPES) as string[];
+    const buttonActionValues = Object.values(BUTTON_ACTIONS) as string[];
 
     const intersections = nodeTypeValues.filter(value => buttonActionValues.includes(value));
     assert.strictEqual(intersections.length, 0, 'Не должно быть пересечений между типами узлов и действиями кнопок');

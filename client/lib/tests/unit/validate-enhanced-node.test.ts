@@ -27,7 +27,7 @@ describe('validateEnhancedNode', () => {
       type: 'start',
       position: { x: 0, y: 0 },
       data: { text: 'Привет!' }
-    };
+    } as any;
 
     const result = validateEnhancedNode(validNode);
 
@@ -45,7 +45,7 @@ describe('validateEnhancedNode', () => {
       type: 'start',
       position: { x: 0, y: 0 },
       data: { text: 'Привет!' }
-    };
+    } as any;
 
     const result = validateEnhancedNode(invalidNode);
 
@@ -62,7 +62,7 @@ describe('validateEnhancedNode', () => {
       type: '',
       position: { x: 0, y: 0 },
       data: { text: 'Привет!' }
-    };
+    } as any;
 
     const result = validateEnhancedNode(invalidNode);
 
@@ -78,7 +78,7 @@ describe('validateEnhancedNode', () => {
       id: 'start_1',
       type: 'start',
       data: { text: 'Привет!' }
-    };
+    } as any;
 
     const result = validateEnhancedNode(nodeWithoutPosition as any);
 
@@ -95,7 +95,7 @@ describe('validateEnhancedNode', () => {
       type: 'start',
       position: { x: 'invalid', y: 'invalid' },
       data: { text: 'Привет!' }
-    };
+    } as any;
 
     const result = validateEnhancedNode(invalidPosition as any);
 
@@ -131,7 +131,7 @@ describe('validateEnhancedNode', () => {
         text: 'Меню',
         buttons: [{ id: '', text: 'Кнопка', action: 'goto' }]
       }
-    };
+    } as any;
 
     const result = validateEnhancedNode(nodeWithInvalidButton);
 
@@ -151,7 +151,7 @@ describe('validateEnhancedNode', () => {
         text: 'Меню',
         buttons: [{ id: 'btn1', text: '', action: 'goto' }]
       }
-    };
+    } as any;
 
     const result = validateEnhancedNode(nodeWithInvalidButton);
 
@@ -171,7 +171,7 @@ describe('validateEnhancedNode', () => {
         text: 'Меню',
         buttons: [{ id: 'btn1', text: 'Кнопка', action: '' }]
       }
-    };
+    } as any;
 
     const result = validateEnhancedNode(nodeWithInvalidButton);
 
@@ -192,7 +192,7 @@ describe('validateEnhancedNode', () => {
         enableAutoTransition: true,
         autoTransitionTo: ''
       }
-    };
+    } as any;
 
     const result = validateEnhancedNode(nodeWithAutoTransition);
 
@@ -212,7 +212,7 @@ describe('validateEnhancedNodes', () => {
     const validNodes = [
       { id: 'start_1', type: 'start', position: { x: 0, y: 0 }, data: { text: 'Старт' } },
       { id: 'menu_1', type: 'message', position: { x: 100, y: 100 }, data: { text: 'Меню' } }
-    ];
+    ] as any;
 
     const result = validateEnhancedNodes(validNodes);
 
@@ -227,7 +227,7 @@ describe('validateEnhancedNodes', () => {
     const nodesWithInvalid = [
       { id: 'start_1', type: 'start', position: { x: 0, y: 0 }, data: { text: 'Старт' } },
       { id: '', type: 'message', position: { x: 100, y: 100 }, data: { text: 'Меню' } }
-    ];
+    ] as any;
 
     const result = validateEnhancedNodes(nodesWithInvalid);
 
@@ -252,7 +252,7 @@ describe('validateEnhancedNodes', () => {
     const nodesWithInvalid = [
       { id: 'start_1', type: 'start', position: { x: 0, y: 0 }, data: { text: 'Старт' } },
       { id: '', type: '', position: { x: 100, y: 100 }, data: { text: 'Меню' } }
-    ];
+    ] as any;
 
     const result = validateEnhancedNodes(nodesWithInvalid);
 
