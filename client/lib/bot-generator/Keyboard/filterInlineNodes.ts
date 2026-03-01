@@ -22,9 +22,12 @@ export function filterInlineNodes(nodes: Node[]): Node[] {
   return nodes
     .filter(node => node !== null && node !== undefined)
     .filter(node => {
+      // Кнопки с действием 'selection' используются для inline callback кнопок
       const hasCallbackButtons = node.data?.buttons &&
         Array.isArray(node.data.buttons) &&
-        node.data.buttons.some((button) => button.action === 'callback');
+        node.data.buttons.some((button) => 
+          button.action === 'selection' || button.buttonType === 'normal'
+        );
 
       return hasCallbackButtons;
     });
