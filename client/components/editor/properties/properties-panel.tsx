@@ -43,7 +43,7 @@ import { getNodeDefaults } from './utils/node-defaults';
 import { collectAllNodesFromSheets } from './utils/node-utils';
 import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from './utils/conditional-utils';
 import { collectAvailableQuestions, extractVariables } from './utils/variables-utils';
-import { useMediaVariables } from './use-media-variables';
+import { useMediaVariables } from './hooks/use-media-variables';
 import { MediaInputToggles } from './media-input-toggles';
 import { VariableInputGrid } from './variable-input-grid';
 import { ButtonTypeSelector } from './button-type-selector';
