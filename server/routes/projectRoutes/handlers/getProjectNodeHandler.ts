@@ -62,14 +62,17 @@ export async function getProjectNodeHandler(req: Request, res: Response): Promis
             const activeSheet = (projectData.sheets as Array<Record<string, unknown>>).find(
                 sheet => sheet.id === activeSheetId
             );
-            nodes = activeSheet?.nodes || [];
+            nodes = (activeSheet?.nodes as unknown[]) || [];
         }
         // Старый формат с nodes
         else if (projectData?.nodes && Array.isArray(projectData.nodes)) {
-            nodes = projectData.nodes;
+            nodes = projectData.nodes as unknown[];
         }
 
-        const node = nodes.find((n: Record<string, unknown>) => n.id === nodeId);
+        const node = nodes.find((n: unknown) => {
+            const record = n as Record<string, unknown>;
+            return record.id === nodeId;
+        });
 
         if (!node) {
             res.status(404).json({ message: "Узел не найден" });

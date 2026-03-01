@@ -30,7 +30,12 @@ const DUMMY_NODE: Node = {
   id: '',
   type: 'message',
   position: { x: 0, y: 0 },
-  data: {},
+  data: {
+    messageText: '',
+    buttons: [],
+    keyboardType: 'none',
+    options: [],
+  } as any,
 };
 
 /**

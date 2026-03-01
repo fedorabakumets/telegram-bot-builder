@@ -53,11 +53,11 @@ export async function getProjectNodesHandler(req: Request, res: Response): Promi
             const activeSheet = (projectData.sheets as Array<Record<string, unknown>>).find(
                 sheet => sheet.id === activeSheetId
             );
-            nodes = activeSheet?.nodes || [];
+            nodes = (activeSheet?.nodes as unknown[]) || [];
         }
         // Старый формат с nodes
         else if (projectData?.nodes && Array.isArray(projectData.nodes)) {
-            nodes = projectData.nodes;
+            nodes = projectData.nodes as unknown[];
         }
 
         res.json(nodes);
