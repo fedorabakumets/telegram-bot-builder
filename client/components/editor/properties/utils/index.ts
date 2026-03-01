@@ -13,3 +13,4 @@ export * from './media-utils';
 export * from './api-validation';
 export * from './keyboard-layout-utils';
 export * from './keyboard-presets';
+export * from './migrate-keyboard-layout';
