@@ -1,9 +1,13 @@
 // Внешние зависимости
 import { BotData, BotGroup } from '@shared/schema';
 
+// Ядро: контекст и состояние
+import { createGenerationContext } from './bot-generator/core/create-generation-context';
+import { createGenerationState, withLogging, withComments } from './bot-generator/core/generation-state';
+import type { GenerationContext, GenerationOptions } from './bot-generator/core/generation-context';
+
 // Типы
 import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
-import { setGlobalLoggingEnabled } from './bot-generator/core';
 import { generatePythonImports } from './bot-generator/imports';
 import { collectAllCommandCallbacksFromNodes, addCommandCallbackHandlers } from './bot-generator/commands';
 import {
@@ -61,40 +65,69 @@ import { collectInputTargetNodes } from './bot-generator/utils/collectInputTarge
 import { extractNodeData } from './bot-generator/utils/extractNodeData';
 import { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
 import { hasNodesRequiringSafeEditOrSend } from './bot-generator/utils/hasNodesRequiringSafeEditOrSend';
-import { resetGenerationState } from './bot-generator/utils/generation-state';
 import { setCommentsEnabled } from './bot-generator/utils/generateGeneratedComment';
 import { assertValidPython } from './bot-generator/validation';
 
 
 
 /**
- * Генерирует Python-код для Telegram бота
- * @param {BotData} botData - Данные бота
- * @param {string} botName - Имя бота
- * @param {BotGroup[]} groups - Группы бота
- * @param {boolean} userDatabaseEnabled - Включена ли БД пользователей
- * @param {number | null} projectId - ID проекта
- * @param {boolean} enableLogging - Включить логирование
- * @param {boolean} enableGroupHandlers - Включить обработчики групп
- * @param {boolean} enableComments - Включить комментарии
- * @returns {string} Python код бота
+ * Опции для генерации Python-кода бота
  */
-export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null, enableLogging: boolean = false, enableGroupHandlers: boolean = false, enableComments: boolean = true): string {
-  // Сбрасываем состояние генерации перед началом
-  resetGenerationState();
+export interface GeneratePythonCodeOptions {
+  /** Имя бота */
+  botName?: string;
+  /** Группы бота */
+  groups?: BotGroup[];
+  /** Включить базу данных пользователей */
+  userDatabaseEnabled?: boolean;
+  /** ID проекта */
+  projectId?: number | null;
+  /** Включить логирование */
+  enableLogging?: boolean;
+  /** Включить обработчики групп */
+  enableGroupHandlers?: boolean;
+  /** Включить комментарии */
+  enableComments?: boolean;
+}
 
-  // Устанавливаем флаг глобального логирования для этого запуска генерации
-  setGlobalLoggingEnabled(enableLogging);
-  
-  // Устанавливаем флаг генерации комментариев для этого запуска генерации
-  setCommentsEnabled(enableComments);
+/**
+ * Генерирует Python-код для Telegram бота
+ * 
+ * @param botData - Данные бота
+ * @param options - Опции генерации
+ * @returns Python код бота
+ * 
+ * @example
+ * const code = generatePythonCode(botData, { botName: 'MyBot', enableLogging: true });
+ */
+export function generatePythonCode(
+  botData: BotData,
+  options: GeneratePythonCodeOptions = {}
+): string {
+  const {
+    botName = 'MyBot',
+    groups = [],
+    userDatabaseEnabled = false,
+    projectId = null,
+    enableLogging = false,
+    enableGroupHandlers = false,
+    enableComments = true,
+  } = options;
 
-  const { nodes } = extractNodesAndConnections(botData);
+  // Создаём опции генерации
+  const genOptions: GenerationOptions = {
+    enableLogging,
+    enableComments,
+    userDatabaseEnabled,
+    enableGroupHandlers,
+    projectId,
+  };
 
-  const { allNodeIds, mediaVariablesMap } = extractNodeData(nodes || []);
+  // Создаём контекст генерации
+  const context = createGenerationContext(botData, botName, groups, genOptions);
 
   // Анализируем и логируем поток
-  logFlowAnalysis(nodes);
+  logFlowAnalysis(context.nodes);
 
   let code = '"""\n';
   code += `${botName} - Telegram Bot\n`;
