@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { useUploadMedia, useUploadMultipleMedia } from "@/components/editor/properties/media/use-media";
+import { useUploadMedia, useUploadMultipleMedia } from "@/components/editor/properties/hooks/use-media";
 import { FileOptimizer } from "./file-optimizer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
