@@ -21,6 +21,8 @@ import { SynonymEditor } from '../synonyms/synonym-editor';
 import { MessageInfoBlock } from '../common/message-info-block';
 import { DevelopmentNoticeBlock } from '../layout/development-notice-block';
 import { EmptyState } from '../layout/empty-state';
+import { MessageTextSection } from '../message/message-text-section';
+import { MediaFileSection } from '../media-file/media-file-section';
 import { getMediaUrlUpdates } from '../../utils/media-utils';
 import { isManagementNode } from '../../utils/node-constants';
 import { AdminRightsInfo } from '../configuration/admin-rights-info';
@@ -430,106 +432,27 @@ export function PropertiesPanel({
                 />
 
                 {/* Message Text Section */}
-                <div className="space-y-3 sm:space-y-4">
-                  <SectionHeader
-                    title="Текст сообщения"
-                    description="Основное содержание для отправки пользователю"
-                    isOpen={isMessageTextOpen}
-                    onToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
-                    icon="message"
-                    iconGradient="from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50"
-                    iconColor="text-blue-600 dark:text-blue-400"
-                    titleGradient="bg-gradient-to-r from-blue-900 to-cyan-800 dark:from-blue-100 dark:to-cyan-200 bg-clip-text text-transparent"
+                <MessageTextSection
+                  selectedNode={selectedNode}
+                  allNodes={allNodes}
+                  textVariables={textVariables}
+                  mediaVariables={mediaVariables}
+                  isOpen={isMessageTextOpen}
+                  onToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
+                  onNodeUpdate={onNodeUpdate}
+                  onMediaVariableSelect={handleMediaVariableSelect}
+                />
+
+                {/* File Attachment Section */}
+                {!isManagementNode(selectedNode.type) && (
+                  <MediaFileSection
+                    projectId={projectId}
+                    selectedNode={selectedNode}
+                    isOpen={isMediaSectionOpen}
+                    onToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
+                    onNodeUpdate={onNodeUpdate}
                   />
-
-                  {isMessageTextOpen && (
-                    <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
-                      {/* Text Editor */}
-                      <div className="space-y-2 sm:space-y-2.5">
-                        <InlineRichEditor
-                          value={selectedNode.data.messageText || ''}
-                          onChange={(value) => onNodeUpdate(selectedNode.id, { messageText: value })}
-                          placeholder="Введите текст сообщения..."
-                          enableMarkdown={selectedNode.data.markdown}
-                          onFormatModeChange={(formatMode) => onNodeUpdate(selectedNode.id, { formatMode })}
-                          availableVariables={[...textVariables, ...mediaVariables] as Variable[]}
-                          onMediaVariableSelect={handleMediaVariableSelect}
-                        />
-                        <MessageInfoBlock variant="blue" />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Переключатель рассылки для message узлов */}
-                  {selectedNode.type === 'message' && (
-                    <div className="space-y-3 sm:space-y-4">
-                      <BroadcastToggle
-                        selectedNode={selectedNode}
-                        onNodeUpdate={onNodeUpdate}
-                        allNodes={allNodes}
-                      />
-                    </div>
-                  )}
-
-                  {/* File Attachment Section - скрыто для узлов управления */}
-                  {(() => {
-                    const managementNodeTypes = [
-                      'pin_message', 'unpin_message', 'delete_message',
-                      'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user',
-                      'promote_user', 'demote_user', 'admin_rights'
-                    ] as const;
-                    return !managementNodeTypes.includes(selectedNode.type as any);
-                  })() && (
-                      <div className="space-y-3 sm:space-y-4">
-                        <SectionHeader
-                          title="Прикрепленный медиафайл"
-                          description="Картинка, видео, аудио или документ"
-                          isOpen={isMediaSectionOpen}
-                          onToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
-                          icon="paperclip"
-                          iconGradient="from-rose-100 to-pink-100 dark:from-rose-900/50 dark:to-pink-900/50"
-                          iconColor="text-rose-600 dark:text-rose-400"
-                          titleGradient="bg-gradient-to-r from-rose-900 to-pink-800 dark:from-rose-100 dark:to-pink-200 bg-clip-text text-transparent"
-                        />
-
-                        {isMediaSectionOpen && (
-                          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-rose-50/40 to-pink-50/20 dark:from-rose-950/30 dark:to-pink-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-rose-200/40 dark:border-rose-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
-                            {/* Информационное сообщение */}
-                            <DevelopmentNoticeBlock />
-
-                            {/* Media Selector */}
-                            <MediaSelector
-                              projectId={projectId}
-                              value={selectedNode.data.imageUrl || selectedNode.data.videoUrl || selectedNode.data.audioUrl || selectedNode.data.documentUrl || ''}
-                              onChange={(url: string, fileName?: string) => {
-                                if (!url) {
-                                  onNodeUpdate(selectedNode.id, {
-                                    imageUrl: undefined,
-                                    videoUrl: undefined,
-                                    audioUrl: undefined,
-                                    documentUrl: undefined,
-                                    documentName: undefined
-                                  });
-                                  return;
-                                }
-
-                                const updates = getMediaUrlUpdates(
-                                  url,
-                                  selectedNode.id,
-                                  fileName,
-                                  selectedNode.data.attachedMedia as string[] | undefined
-                                );
-                                onNodeUpdate(selectedNode.id, updates);
-                              }}
-                              nodeName={selectedNode.id}
-                              label=""
-                              placeholder="Выберите медиафайл или введите URL"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                </div>
+                )}
               </div>
             </div>
           )}
