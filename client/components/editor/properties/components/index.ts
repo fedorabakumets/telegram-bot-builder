@@ -15,4 +15,5 @@ export * from './admin';
 export * from './navigation';
 export * from './csv';
 export * from './synonyms';
+export * from './media';
 export * from './main';
