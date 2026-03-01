@@ -17,6 +17,7 @@ import { ManagementCommandSection } from '../commands/management-command-section
 import { ButtonCard } from '../button-card/button-card';
 import { ContinueButtonSection } from '../continue-button/continue-button-section';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
+import { PropertiesHeader } from '../layout/properties-header';
 import { NodeTypeConfigurations } from './node-type-configurations';
 import { ConditionalMessagesToggle } from './conditional-messages-toggle';
 import { ConditionalMessagesHeader } from './conditional-messages-header';
@@ -25,8 +26,6 @@ import { KeyboardSectionHeader } from './keyboard-section-header';
 import { UserInputToggle } from './user-input-toggle';
 import { MediaVariablesSection } from './media-variables-section';
 import { AutoTransitionWrapper } from './auto-transition-wrapper';
-import { CommandAdvancedSettingsWrapper } from './command-advanced-settings-wrapper';
-import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { useHandleAddButton } from '../../hooks/use-handle-add-button-wrapper';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
 import { VoiceConfiguration } from '../configuration/voice-configuration';
