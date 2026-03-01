@@ -50,6 +50,7 @@ import { InputNavigationGrid } from '../navigation/input-navigation-grid';
 import { ResponseOptionsList } from '../common/response-options-list';
 import { EmptyConditionalState } from '../conditional/empty-conditional-state';
 import { ConditionContent } from '../conditional/condition-content';
+import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import { ButtonTypeSelector } from '../keyboard/button-type-selector';
 import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
@@ -729,95 +730,22 @@ export function PropertiesPanel({
                               const hasWarnings = ruleConflicts.some(c => c.severity === 'warning');
 
                               return (
-                                <div key={condition.id} className={`border rounded-lg sm:rounded-xl transition-all duration-300 overflow-hidden ${hasErrors
-                                  ? 'border-red-400/60 dark:border-red-600/60 bg-red-50/30 dark:bg-red-950/20 shadow-sm shadow-red-200/40 dark:shadow-red-900/20'
-                                  : hasWarnings
-                                    ? 'border-yellow-400/50 dark:border-yellow-600/50 bg-yellow-50/30 dark:bg-yellow-950/20 shadow-sm shadow-yellow-200/40 dark:shadow-yellow-900/20'
-                                    : 'border-purple-300/40 dark:border-purple-700/40 bg-purple-50/20 dark:bg-purple-950/10 hover:border-purple-400/60 dark:hover:border-purple-700/60 shadow-sm hover:shadow-md shadow-transparent dark:shadow-transparent hover:shadow-purple-200/30 dark:hover:shadow-purple-900/20 transition-all hover:scale-[1.01]'
-                                  }`}>
-                                  {/* Compact Header - Responsive */}
-                                  <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/50 dark:border-slate-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-purple-300/60 to-purple-400/60 dark:from-purple-800/50 dark:to-purple-700/50 text-xs font-bold text-purple-900 dark:text-purple-100 flex-shrink-0 shadow-sm">
-                                        {index + 1}
-                                      </span>
-                                      <span className="text-xs sm:text-sm font-medium text-foreground truncate">
-                                        {condition.variableNames?.join(', ')?.slice(0, 30) || 'Условие'}
-                                      </span>
-                                      {hasErrors && (
-                                        <div className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex-shrink-0 animate-pulse shadow-lg shadow-red-500/30" title="Ошибка"></div>
-                                      )}
-                                      {hasWarnings && !hasErrors && (
-                                        <div className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 flex-shrink-0 shadow-lg shadow-yellow-500/20" title="Предупреждение"></div>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-1 justify-end">
-                                      <div className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100/60 to-blue-100/60 dark:from-purple-900/40 dark:to-blue-900/40 px-2 py-1 rounded-md border border-purple-300/40 dark:border-purple-700/40 text-xs font-medium text-purple-700 dark:text-purple-300 flex-shrink-0 shadow-sm">
-                                        <i className="fas fa-fire text-xs"></i>
-                                        <span className="hidden sm:inline">{condition.priority || 0}</span>
-                                        <span className="inline sm:hidden text-xs font-bold">{Math.floor((condition.priority || 0) / 10)}</span>
-                                      </div>
-                                      <div className="h-5 w-px bg-border/40"></div>
-                                      <UIButton size="sm" variant="ghost" onClick={() => { const currentConditions = selectedNode.data.conditionalMessages || []; const updatedConditions = currentConditions.map(c => c.id === condition.id ? { ...c, priority: (c.priority || 0) + 10 } : c); onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions }); }} className="h-6 w-6 p-0 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/40 dark:hover:bg-blue-900/30 rounded transition-all hover:scale-110" title="Повысить приоритет"><i className="fas fa-chevron-up text-xs"></i></UIButton>
-                                      <UIButton size="sm" variant="ghost" onClick={() => { const currentConditions = selectedNode.data.conditionalMessages || []; const updatedConditions = currentConditions.map(c => c.id === condition.id ? { ...c, priority: Math.max(0, (c.priority || 0) - 10) } : c); onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions }); }} className="h-6 w-6 p-0 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-100/40 dark:hover:bg-blue-900/30 rounded transition-all hover:scale-110" title="Понизить приоритет"><i className="fas fa-chevron-down text-xs"></i></UIButton>
-                                      <UIButton size="sm" variant="ghost" onClick={() => { const currentConditions = selectedNode.data.conditionalMessages || []; const newConditions = currentConditions.filter(c => c.id !== condition.id); onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions }); }} className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100/40 dark:hover:bg-red-900/30 rounded transition-all hover:scale-110" title="Удалить"><i className="fas fa-xmark text-xs"></i></UIButton>
-                                    </div>
-                                  </div>
-
-                                  {/* Show conflicts for this rule */}
-                                  {ruleConflicts.length > 0 && (
-                                    <div className="bg-gradient-to-br from-red-50/70 to-rose-50/40 dark:from-red-950/40 dark:to-rose-950/20 border-b border-red-200/50 dark:border-red-800/50 px-3 sm:px-4 py-3 sm:py-4">
-                                      <div className="space-y-2 sm:space-y-2.5">
-                                        {/* Conflicts Header */}
-                                        <div className="flex items-center gap-2 mb-2.5">
-                                          <i className="fas fa-shield-exclamation text-red-600 dark:text-red-400 text-sm"></i>
-                                          <span className="text-xs sm:text-sm font-semibold text-red-700 dark:text-red-300">
-                                            {ruleConflicts.length} {ruleConflicts.length === 1 ? 'оши????????ка' : 'ошибок'} в условиях
-                                          </span>
-                                        </div>
-
-                                        {/* Conflicts List */}
-                                        {ruleConflicts.map((conflict, idx) => (
-                                          <div key={idx} className="bg-white/40 dark:bg-slate-900/40 border border-red-200/50 dark:border-red-800/40 rounded-lg p-2.5 sm:p-3 flex items-start gap-2 sm:gap-3 hover:bg-white/60 dark:hover:bg-slate-900/60 transition-all">
-                                            <div className="flex-shrink-0 mt-0.5">
-                                              {conflict.severity === 'error' ? (
-                                                <i className="fas fa-circle-xmark text-red-600 dark:text-red-400 text-sm"></i>
-                                              ) : (
-                                                <i className="fas fa-triangle-exclamation text-amber-500 dark:text-amber-400 text-sm"></i>
-                                              )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                              <span className={`text-xs sm:text-sm leading-relaxed block ${conflict.severity === 'error'
-                                                ? 'text-red-700 dark:text-red-300'
-                                                : 'text-amber-700 dark:text-amber-300'
-                                                }`}>
-                                                {conflict.description}
-                                              </span>
-                                              {conflict.severity === 'error' && (
-                                                <span className="text-xs text-red-600 dark:text-red-400 mt-1 block">Требует исправления</span>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Main Content */}
-                                  <ConditionContent
-                                    condition={condition}
-                                    selectedNode={selectedNode}
-                                    availableQuestions={availableQuestions}
-                                    textVariables={textVariables}
-                                    SYSTEM_VARIABLES={SYSTEM_VARIABLES}
-                                    getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-                                    formatNodeDisplay={formatNodeDisplay}
-                                    onNodeUpdate={onNodeUpdate}
-                                  />
-                                </div>
+                                <ConditionalMessageCard
+                                  key={condition.id}
+                                  index={index}
+                                  condition={condition}
+                                  selectedNode={selectedNode}
+                                  availableQuestions={availableQuestions}
+                                  textVariables={textVariables}
+                                  getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+                                  formatNodeDisplay={formatNodeDisplay}
+                                  onNodeUpdate={onNodeUpdate}
+                                  ruleConflicts={ruleConflicts}
+                                  hasErrors={hasErrors}
+                                  hasWarnings={hasWarnings}
+                                />
                               );
-                            }
-                            )}
+                            })}
 
                           {(selectedNode.data.conditionalMessages || []).length === 0 && (
                             <EmptyConditionalState
