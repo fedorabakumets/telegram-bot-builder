@@ -1,16 +1,43 @@
+/**
+ * @fileoverview Утилита для извлечения данных узлов
+ * 
+ * Модуль предоставляет функцию для извлечения ID узлов и карты медиапеременных
+ * из массива узлов бота.
+ * 
+ * @module bot-generator/utils/extractNodeData
+ */
+
+import type { BotNode } from '../types';
 import { isLoggingEnabled } from '../../bot-generator';
 import { collectMediaVariables } from './collectMediaVariables';
 
 /**
- * Вспомогательная функция для извлечения идентификаторов узлов и карты медиапеременных
- * @param {any[]} nodes - Массив узлов для извлечения данных
- * @returns {{allNodeIds: string[], mediaVariablesMap: Map<string, string>}} Объект с идентификаторами узлов и картой медиапеременных
+ * Результат извлечения данных узлов
+ * 
+ * @example
+ * const result: ExtractNodeDataResult = {
+ *   allNodeIds: ['start_1', 'menu_2'],
+ *   mediaVariablesMap: new Map()
+ * };
  */
-export function extractNodeData(nodes: any[]) {
-  // Собираем все ID узлов для генерации уникальных коротких ID
-  const allNodeIds = nodes ? nodes.map(node => node.id) : [];
+export interface ExtractNodeDataResult {
+  /** Массив всех ID узлов */
+  allNodeIds: string[];
+  /** Карта медиапеременных */
+  mediaVariablesMap: Map<string, string>;
+}
 
-  // Собираем все медиапеременные из узлов для поддержки attachedMedia
+/**
+ * Извлекает идентификаторы узлов и карту медиапеременных
+ * 
+ * @param nodes - Массив узлов для извлечения данных
+ * @returns Объект с идентификаторами узлов и картой медиапеременных
+ * 
+ * @example
+ * const { allNodeIds, mediaVariablesMap } = extractNodeData(nodes);
+ */
+export function extractNodeData(nodes: BotNode[]): ExtractNodeDataResult {
+  const allNodeIds = nodes ? nodes.map(node => node.id) : [];
   const mediaVariablesMap = collectMediaVariables(nodes || []);
   if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Собрано медиапеременных: ${mediaVariablesMap.size}`);
   if (mediaVariablesMap.size > 0) {

@@ -1,10 +1,14 @@
 /**
  * @fileoverview Главный экспорт генератора ботов
- * Агрегирует и переэкспортирует все модули генератора
+ * 
+ * Модуль агрегирует и переэкспортирует все модули генератора.
+ * Используется для централизованного импорта функций и типов.
+ * 
+ * @module bot-generator/index
  */
 
 // Главная функция генерации
-export { generatePythonCode } from '../bot-generator';
+export { generatePythonCode } from './bot-generator';
 
 // Ядро: конфигурация и логирование
 export { isLoggingEnabled, logFlowAnalysis } from './core';
@@ -19,10 +23,22 @@ export { generateUrlImageImports, generateDatetimeImports } from './imports';
 export { generateParseModeImports } from './imports';
 export { generateTelegramBadRequestImports } from './imports';
 
-// Типы
-export type { Button, ResponseOption } from './types';
+// Типы из types/
+export type {
+  Button,
+  ResponseOption,
+  ButtonAction
+} from './types';
 export type { CodeNodeRange, CodeWithMap } from './types';
-export type { BotNode } from './types';
+export type { BotNode, BotNodeArray } from './types';
+export type { NodeData, KeyboardType, FormatMode, InputType } from './types';
+export type {
+  GenerationOptions,
+  GenerationContext,
+  InputCollectionCheckResult,
+  PythonValidationResult,
+  CallbackHandler
+} from './types';
 
 // Функции каркаса
 export {
@@ -30,4 +46,4 @@ export {
   generateReadme,
   generateRequirementsTxt,
   generateEnvFile
-} from './types';
+} from './scaffolding';

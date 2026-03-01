@@ -1,17 +1,30 @@
 /**
- * Вспомогательная функция для фильтрации inline узлов
- * @param {any[]} nodes - Массив узлов для фильтрации
- * @returns {any[]} Отфильтрованный массив inline узлов
+ * @fileoverview Утилита для фильтрации inline узлов
+ * 
+ * Модуль предоставляет функцию для фильтрации узлов с callback кнопками,
+ * которые требуют обработчиков callback-запросов.
+ * 
+ * @module bot-generator/Keyboard/filterInlineNodes
  */
-export function filterInlineNodes(nodes: any[]): any[] {
-  // Генерируем обработчики обратного вызова для inline кнопок И целевых узлов ввода
-  return (nodes || [])
-    .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined узлы
+
+import type { BotNode } from '../types';
+
+/**
+ * Фильтрует узлы с inline callback кнопками
+ * 
+ * @param nodes - Массив узлов для фильтрации
+ * @returns Отфильтрованный массив inline узлов
+ * 
+ * @example
+ * const inlineNodes = filterInlineNodes(nodes);
+ */
+export function filterInlineNodes(nodes: BotNode[]): BotNode[] {
+  return nodes
+    .filter(node => node !== null && node !== undefined)
     .filter(node => {
-      // Проверяем, есть ли callback кнопки (которые требуют обработчиков)
       const hasCallbackButtons = node.data?.buttons &&
         Array.isArray(node.data.buttons) &&
-        node.data.buttons.some((button: any) => button.action === 'callback');
+        node.data.buttons.some((button) => button.action === 'callback');
 
       return hasCallbackButtons;
     });

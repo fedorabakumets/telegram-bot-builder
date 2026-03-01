@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Главный экспорт библиотеки bot-generator
+ * 
+ * Модуль агрегирует и переэкспортирует все функции и типы библиотеки.
+ * Используется для централизованного импорта в других модулях проекта.
+ * 
+ * @module lib/index
+ */
+
 // Main bot generator
 export * from './bot-commands-setup';
 export * from './bot-generator';
@@ -70,4 +79,35 @@ export { generateHandleNodeFunctions } from './generate/generateHandleNodeFuncti
 
 // Validation utilities
 export { validateGeneratedPython, assertValidPython } from './bot-generator/validation';
+
+// Types re-export
+export type {
+  BotNode,
+  BotNodeArray,
+  Button,
+  ButtonAction,
+  ResponseOption,
+  NodeData,
+  KeyboardType,
+  FormatMode,
+  InputType,
+  CodeNodeRange,
+  CodeWithMap,
+  GenerationOptions,
+  GenerationContext,
+  InputCollectionCheckResult,
+  PythonValidationResult,
+  ImportGeneratorOptions,
+  CallbackHandler,
+  MenuCommand,
+  StandardCommand,
+  CommandCategory,
+  CompleteBotScriptOptions,
+  ExtractNodeDataResult
+} from './bot-generator/types';
+
+export type { MenuCommand } from './bot-commands-setup';
+export type { StandardCommand, CommandCategory } from './commands';
+export type { CompleteBotScriptOptions } from './generate-complete-bot-script';
+export type { ExtractNodeDataResult } from './bot-generator/utils/extractNodeData';
 

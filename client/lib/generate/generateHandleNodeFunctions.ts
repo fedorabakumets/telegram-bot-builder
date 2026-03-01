@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Генерация функций handle_node_* для узлов
+ * 
+ * Модуль предоставляет функцию для генерации Python-функций обработчиков
+ * для узлов с условными сообщениями.
+ * 
+ * @module generate/generateHandleNodeFunctions
+ */
+
+import type { BotNode } from '../bot-generator/types';
 import { isLoggingEnabled } from '../bot-generator';
 import { generateDatabaseVariablesCode } from '../bot-generator/Broadcast/generateDatabaseVariables';
 import { generateConditionalMessageLogic } from '../bot-generator/Conditional';
@@ -7,14 +17,20 @@ import { generateAttachedMediaSendCode } from '../bot-generator/MediaHandler';
 
 /**
  * Генерирует функции handle_node_* для узлов с условными сообщениями
- * @param nodes - массив всех узлов
- * @param mediaVariablesMap - карта переменных медиа
- * @returns сгенерированный код для функций handle_node_*
+ * 
+ * @param nodes - Массив всех узлов
+ * @param mediaVariablesMap - Карта переменных медиа
+ * @returns Сгенерированный код для функций handle_node_*
+ * 
+ * @example
+ * const code = generateHandleNodeFunctions(nodes, mediaVariablesMap);
  */
-export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map<string, { type: string; variable: string; }>): string {
+export function generateHandleNodeFunctions(
+  nodes: BotNode[],
+  mediaVariablesMap: Map<string, { type: string; variable: string }>
+): string {
   let code = '';
 
-  // Находим узлы, которые имеют условные сообщения и collectUserInput = true
   const conditionalNodes = nodes.filter(node =>
     node &&
     node.data?.enableConditionalMessages &&

@@ -1,13 +1,39 @@
 /**
- * Идентифицирует узлы, требующие логики множественного выбора
- * @param nodes - массив узлов
- * @param isLoggingEnabled - функция проверки включения логирования
- * @returns массив узлов с включенным множественным выбором
+ * @fileoverview Утилита для идентификации узлов с множественным выбором
+ * 
+ * Модуль предоставляет функцию для фильтрации узлов, требующих
+ * логики обработки множественного выбора.
+ * 
+ * @module bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic
  */
-export function identifyNodesRequiringMultiSelectLogic(nodes: any[], isLoggingEnabled: () => boolean) {
-  const multiSelectNodes = (nodes || [])
-    .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined узлы
-    .filter((node: any) => node.data?.allowMultipleSelection);
-  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map((n: any) => n.id));
+
+import type { BotNode } from '../types';
+import { isLoggingEnabled } from '../../bot-generator';
+
+/**
+ * Идентифицирует узлы, требующие логики множественного выбора
+ * 
+ * @param nodes - Массив узлов для проверки
+ * @param isLoggingEnabledFn - Функция проверки включения логирования
+ * @returns Массив узлов с включенным множественным выбором
+ * 
+ * @example
+ * const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes, () => true);
+ */
+export function identifyNodesRequiringMultiSelectLogic(
+  nodes: BotNode[],
+  isLoggingEnabledFn: () => boolean
+): BotNode[] {
+  const multiSelectNodes = nodes
+    .filter(node => node !== null && node !== undefined)
+    .filter((node) => node.data?.allowMultipleSelection);
+    
+  if (isLoggingEnabledFn()) {
+    console.log(
+      `🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`,
+      multiSelectNodes.map((n) => n.id)
+    );
+  }
+  
   return multiSelectNodes;
 }

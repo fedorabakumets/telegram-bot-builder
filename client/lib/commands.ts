@@ -1,5 +1,44 @@
+/**
+ * @fileoverview Стандартные команды Telegram и утилиты для работы с ними
+ * 
+ * Модуль предоставляет константы стандартных команд, функции валидации,
+ * генерации предложений и парсинга команд из текста пользователя.
+ * 
+ * @module commands
+ */
+
+import type { BotNode } from './bot-generator/types';
+
+/**
+ * Категория команды
+ * 
+ * @example
+ * const category: CommandCategory = 'system';
+ */
+export type CommandCategory = 'system' | 'user' | 'navigation' | 'admin';
+
+/**
+ * Стандартная команда Telegram
+ * 
+ * @example
+ * const cmd: StandardCommand = {
+ *   command: '/start',
+ *   description: 'Начать работу с ботом'
+ * };
+ */
+export interface StandardCommand {
+  /** Текст команды */
+  command: string;
+  /** Описание команды */
+  description: string;
+  /** Категория команды */
+  category: CommandCategory;
+  /** Показывать в меню */
+  showInMenu: boolean;
+}
+
 // Стандартные команды Telegram и их описания
-export const STANDARD_COMMANDS = [
+export const STANDARD_COMMANDS: StandardCommand[] = [
   {
     command: '/start',
     description: 'Начать работу с ботом',
@@ -161,30 +200,40 @@ export function parseCommandFromText(text: string): string | null {
   return match ? `/${match[1]}` : null;
 }
 
-// Генерация BotFather команд для настройки меню
-export function generateBotFatherCommands(nodes: any[]): string {
+/**
+ * Генерирует строку команд для настройки меню BotFather
+ * 
+ * @param nodes - Массив узлов бота
+ * @returns Строка команд в формате "command - description"
+ * 
+ * @example
+ * const commands = generateBotFatherCommands([
+ *   { type: 'start', data: { command: '/start', description: 'Запуск' } }
+ * ]);
+ */
+export function generateBotFatherCommands(nodes: BotNode[]): string {
   if (!nodes || !Array.isArray(nodes)) {
     return '';
   }
-  
+
   const commandNodes = nodes.filter(node =>
     node &&
     (node.type === 'start' || node.type === 'command') &&
     node.data?.command &&
-    (node.data?.showInMenu !== false) // Включаем команды где showInMenu = true, undefined или не установлено
+    (node.data?.showInMenu !== false)
   );
-  
+
   if (commandNodes.length === 0) {
     return '';
   }
-  
+
   let botFatherCommands = '';
-  
+
   commandNodes.forEach(node => {
     const command = node.data.command.replace('/', '');
     const description = node.data.description || 'Команда бота';
     botFatherCommands += `${command} - ${description}\n`;
   });
-  
+
   return botFatherCommands.trim();
 }

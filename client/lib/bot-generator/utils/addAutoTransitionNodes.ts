@@ -1,21 +1,38 @@
+/**
+ * @fileoverview Утилита для добавления целевых узлов автопереходов
+ * 
+ * Модуль предоставляет функцию для добавления ID узлов автоперехода
+ * в множество ссылочных узлов при генерации кода.
+ * 
+ * @module bot-generator/utils/addAutoTransitionNodes
+ */
+
+import type { BotNode } from '../types';
 import { isLoggingEnabled } from '../../bot-generator';
 
 /**
-   * Вспомогательная функция для добавления целевых узлов автоперехдов
-   * @param {any[]} nodes - Массив узлов для обработки
-   * @param {Set<string>} allReferencedNodeIds - Множество идентификаторов узлов для обновления
-   */
-export function addAutoTransitionNodes(nodes: any[], allReferencedNodeIds: Set<string>): void {
+ * Добавляет целевые узлы автопереходов в множество ссылочных узлов
+ * 
+ * @param nodes - Массив узлов для обработки
+ * @param allReferencedNodeIds - Множество идентификаторов узлов для обновления
+ * 
+ * @example
+ * addAutoTransitionNodes(nodes, allReferencedNodeIds);
+ */
+export function addAutoTransitionNodes(
+  nodes: BotNode[],
+  allReferencedNodeIds: Set<string>
+): void {
   const loggingEnabled = isLoggingEnabled();
 
-  (nodes || [])
-    .filter(node => node !== null && node !== undefined) // Фильтруем null/undefined узлы
+  nodes
+    .filter(node => node !== null && node !== undefined)
     .forEach(node => {
-    if (node.data?.enableAutoTransition && node.data?.autoTransitionTo) {
-      allReferencedNodeIds.add(node.data.autoTransitionTo);
-      if (loggingEnabled) {
-        console.log(`✅ ГЕНЕРАТОР: Добавлен autoTransitionTo ${node.data.autoTransitionTo} в allReferencedNodeIds`);
+      if (node.data?.enableAutoTransition && node.data?.autoTransitionTo) {
+        allReferencedNodeIds.add(node.data.autoTransitionTo);
+        if (loggingEnabled) {
+          console.log(`✅ ГЕНЕРАТОР: Добавлен autoTransitionTo ${node.data.autoTransitionTo} в allReferencedNodeIds`);
+        }
       }
-    }
-  });
+    });
 }
