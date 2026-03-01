@@ -14,6 +14,18 @@ export { generatePythonCode } from '../bot-generator';
 export { isLoggingEnabled, logFlowAnalysis } from './core';
 export { setGlobalLoggingEnabled, getGlobalLoggingEnabled } from './core';
 
+// Ядро: контекст и состояние генерации
+export { createGenerationState, withLogging, withComments } from './core/generation-state';
+export { markComponentGenerated, isComponentGenerated } from './core/generation-state';
+export type { GenerationState } from './core/generation-state';
+
+export { createGenerationContext, createGenerationContextFromNodes } from './core/create-generation-context';
+export type { GenerationContext, SectionContext } from './core/generation-context';
+export { createSectionContext } from './core/generation-context';
+
+export type { GenerationOptions } from './core/generation-options.types';
+export { DEFAULT_GENERATION_OPTIONS, normalizeGenerationOptions } from './core/generation-options.types';
+
 // Импорт: генерация Python импортов
 export { generatePythonImports, type ImportGeneratorOptions } from './imports';
 
