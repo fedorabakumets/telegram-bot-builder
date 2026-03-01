@@ -313,7 +313,6 @@ export function generatePythonCode(
     {
       multiSelectNodes: multiSelectNodes as any[],
       allNodeIds: context.allNodeIds,
-      isLoggingEnabled,
       nodes: context.nodes as any[],
       generateMultiSelectCallbackLogic: generateMultiSelectCallbackLogic as any,
       generateMultiSelectDoneHandler: generateMultiSelectDoneHandler as any,
