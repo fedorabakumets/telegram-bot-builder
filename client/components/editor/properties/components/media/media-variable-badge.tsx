@@ -5,12 +5,12 @@
  */
 
 import { Image, Video, Music, FileText } from 'lucide-react';
-import type { Variable } from '../../../inline-rich/types';
+import type { ProjectVariable } from '../../utils/variables-utils';
 
 /** Пропсы компонента бейджа */
 interface MediaVariableBadgeProps {
   /** Медиа-переменная */
-  variable: Variable;
+  variable: ProjectVariable;
   /** Функция удаления переменной */
   onRemove: (name: string) => void;
 }
