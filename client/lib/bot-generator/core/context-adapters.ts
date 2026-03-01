@@ -8,8 +8,15 @@
  */
 
 import type { GenerationContext } from './generation-context';
-import type { NodeNavigationParams } from '../generate/generateNodeNavigation';
 import { createContextParams } from './context-helpers';
+
+/** Параметры для генерации навигации по узлам */
+interface NodeNavigationParams {
+  baseIndent: string;
+  nextNodeIdVar: string;
+  messageVar: string;
+  userVarsVar: string;
+}
 
 /**
  * Создаёт обёртку для generateNodeNavigation

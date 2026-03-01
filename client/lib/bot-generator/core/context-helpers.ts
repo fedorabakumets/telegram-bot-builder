@@ -37,7 +37,7 @@ export interface GenerationParams {
  * const params = createContextParams(context, '        ');
  */
 export function createContextParams(
-  context: GenerationContext,
+  _context: GenerationContext,
   indent: string = '    '
 ): GenerationParams {
   return {

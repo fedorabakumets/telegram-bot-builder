@@ -138,7 +138,15 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
             localStorage.getItem('botcraft-comments-generation') : null;
           const enableComments = storedComments !== null ? storedComments === 'true' : true;
           // Используем пустой массив групп и false для enableGroupHandlers для консистентности с сервером
-          return botGenerator.generatePythonCode(simpleBotData as any, projectName, [], userDatabaseEnabled, projectId, false, false, enableComments);
+          return botGenerator.generatePythonCode(simpleBotData as any, {
+            botName: projectName,
+            groups: [],
+            userDatabaseEnabled: userDatabaseEnabled,
+            projectId: projectId,
+            enableGroupHandlers: false,
+            enableLogging: false,
+            enableComments: enableComments,
+          });
         case 'json':
           return JSON.stringify(botData, null, 2);
         case 'requirements':

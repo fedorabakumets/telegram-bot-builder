@@ -22,7 +22,7 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
  * @param {any} actualNodeId - Идентификатор текущего узла
  * @returns {string} Обновленный код с добавленной логикой обработки стартового узла
  */
-export function generateStartNodeHandlerWithConditionalLogicAndImages(targetNode: any, code: string, actualNodeId: any) {
+export function generateStartNodeHandlerWithConditionalLogicAndImages(targetNode: any, code: string, _actualNodeId: any) {
     const codeLines: string[] = code.split('\n');
     const messageText = targetNode.data.messageText || "Добро пожаловать!";
     const cleanedMessageText = stripHtmlTags(messageText);

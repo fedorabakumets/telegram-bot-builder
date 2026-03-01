@@ -44,7 +44,8 @@ function UserAvatar({ user, projectId, formatUserName }: { user: UserBotData; pr
         className="w-7 xs:w-7 sm:w-8 h-7 xs:h-7 sm:h-8 rounded-full object-cover flex-shrink-0"
         onError={(e) => {
           (e.target as HTMLImageElement).style.display = 'none';
-          const fallback = e.target.parentElement?.querySelector('.fallback-avatar');
+          const imgElement = e.target as HTMLImageElement;
+          const fallback = imgElement.parentElement?.querySelector('.fallback-avatar') as HTMLElement | null;
           if (fallback) fallback.style.display = 'flex';
         }}
       />
