@@ -8,10 +8,11 @@
  */
 
 import type { NodeData } from './node-data.types';
+import type { EnhancedNode } from './enhanced-node.types';
 
 /**
  * Узел бота в графе
- * 
+ *
  * @example
  * const node: BotNode = {
  *   id: 'start_1',
@@ -34,8 +35,18 @@ export interface BotNode {
 
 /**
  * Массив узлов бота
- * 
+ *
  * @example
  * const nodes: BotNode[] = [...];
  */
 export type BotNodeArray = BotNode[];
+
+/**
+ * Улучшенный узел бота с полной совместимостью
+ * 
+ * @deprecated Используйте EnhancedNode напрямую
+ * 
+ * @example
+ * const node: LegacyEnhancedNode = { ... };
+ */
+export type LegacyEnhancedNode = EnhancedNode;
