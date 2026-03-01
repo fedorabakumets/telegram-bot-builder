@@ -293,7 +293,25 @@ export function PropertiesPanel({
 
                   {selectedNode.data.keyboardType !== 'none' && selectedNode.data.buttons && selectedNode.data.buttons.length > 0 && (
                     <KeyboardLayoutEditor
-                      buttons={selectedNode.data.buttons}
+                      buttons={(() => {
+                        // Добавляем виртуальную кнопку "Готово" для множественного выбора
+                        const allButtons = [...selectedNode.data.buttons];
+                        if (selectedNode.data.allowMultipleSelection) {
+                          const hasCompleteButton = allButtons.some((b: any) => b.buttonType === 'complete');
+                          if (!hasCompleteButton) {
+                            allButtons.push({
+                              id: 'done-button',
+                              text: '✅ Готово',
+                              action: 'goto',
+                              target: selectedNode.data.continueButtonTarget || '',
+                              buttonType: 'complete' as const,
+                              skipDataCollection: false,
+                              hideAfterClick: false
+                            });
+                          }
+                        }
+                        return allButtons;
+                      })()}
                       onLayoutChange={(layout) => {
                         onNodeUpdate(selectedNode.id, { keyboardLayout: layout });
                       }}
