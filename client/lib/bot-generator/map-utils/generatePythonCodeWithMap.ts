@@ -7,7 +7,7 @@
  * @module bot-generator/map-utils/generatePythonCodeWithMap
  */
 
-import type { BotData, BotGroup } from '@shared/schema';
+import type { BotData } from '@shared/schema';
 import type { CodeWithMap } from "../types";
 import { generatePythonCode, type GeneratePythonCodeOptions } from '../index';
 import { parseCodeMap } from './parseCodeMap';

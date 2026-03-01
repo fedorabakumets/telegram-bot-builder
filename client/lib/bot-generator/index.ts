@@ -8,7 +8,7 @@
  */
 
 // Главная функция генерации
-export { generatePythonCode } from '../bot-generator';
+export { generatePythonCode, type GeneratePythonCodeOptions } from '../bot-generator';
 
 // Ядро: конфигурация и логирование
 export { isLoggingEnabled, logFlowAnalysis } from './core';
