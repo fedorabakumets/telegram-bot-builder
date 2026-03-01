@@ -38,7 +38,7 @@ const DUMMY_NODE: Node = {
  */
 export function NodeSender({ projectId, userId, onSent }: NodeSenderProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const { project, isLoading } = useProjectData(projectId);
+  const { project } = useProjectData(projectId);
   const sendNodeMutation = useSendNode(projectId, onSent);
 
   const nodesWithSheets = collectNodesFromProjectData(project?.data as Record<string, unknown> | null);
