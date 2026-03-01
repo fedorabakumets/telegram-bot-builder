@@ -36,12 +36,23 @@ export interface GenerateMessageTextOptions {
 export function generateMessageText(options: GenerateMessageTextOptions): string[] {
   const { node, indent, variableName = 'text' } = options;
   const lines: string[] = [];
-  
+
   const messageText = node.data?.messageText || '';
-  
+
   lines.push(`${indent}# Текст сообщения из узла`);
-  lines.push(`${indent}${variableName} = "${messageText.replace(/"/g, '\\"')}"`);
-  lines.push('');
   
+  // Используем triple-quoted strings для многострочного текста
+  if (messageText.includes('\n')) {
+    // Экранируем triple quotes если они есть в тексте
+    const escapedText = messageText.replace(/"""/g, '\\"\\"\\"');
+    lines.push(`${indent}${variableName} = """${escapedText}"""`);
+  } else {
+    // Обычный однострочный текст
+    const escapedText = messageText.replace(/"/g, '\\"');
+    lines.push(`${indent}${variableName} = "${escapedText}"`);
+  }
+  
+  lines.push('');
+
   return lines;
 }
