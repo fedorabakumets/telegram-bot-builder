@@ -7,7 +7,7 @@
  * @module bot-generator/core/context-adapters
  */
 
-import type { GenerationContext } from './generation-context';
+import type { GenerationContext, GenerationParams } from './generation-context';
 import { createContextParams } from './context-helpers';
 
 /**
@@ -43,6 +43,6 @@ export function createNodeNavigationAdapter(
 export function createNavigationParams(
   context: GenerationContext,
   baseIndent: string = '    '
-): NodeNavigationParams {
+): GenerationParams {
   return createContextParams(context, baseIndent);
 }
