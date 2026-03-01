@@ -1,20 +1,31 @@
-import { BotData, BotGroup } from '@shared/schema';
-import { CodeWithMap } from "../types";
-import { generatePythonCode } from '../index';
+/**
+ * @fileoverview Генерация Python-кода с картой узлов
+ * 
+ * Модуль предоставляет функцию для генерации кода бота
+ * с картой соответствия строк кода узлам.
+ * 
+ * @module bot-generator/map-utils/generatePythonCodeWithMap
+ */
+
+import type { BotData, BotGroup } from '@shared/schema';
+import type { CodeWithMap } from "../types";
+import { generatePythonCode, type GeneratePythonCodeOptions } from '../index';
 import { parseCodeMap } from './parseCodeMap';
 
-// Обновленная функция генерации с картой
-
+/**
+ * Генерирует Python-код с картой узлов
+ * 
+ * @param botData - Данные бота
+ * @param options - Опции генерации
+ * @returns Код с картой узлов
+ * 
+ * @example
+ * const result = generatePythonCodeWithMap(botData, { botName: 'MyBot' });
+ */
 export function generatePythonCodeWithMap(
   botData: BotData,
-  botName: string = "MyBot",
-  groups: BotGroup[] = [],
-  userDatabaseEnabled: boolean = false,
-  projectId: number | null = null,
-  enableLogging: boolean = false
+  options: GeneratePythonCodeOptions = {}
 ): CodeWithMap {
-  // Получаем настройки проекта для определения, включать ли обработчики групп
-  const enableGroupHandlers = botData?.settings?.enableGroupHandlers ?? false;
-  const code = generatePythonCode(botData, botName, groups, userDatabaseEnabled, projectId, enableLogging, enableGroupHandlers);
+  const code = generatePythonCode(botData, options);
   return parseCodeMap(code);
 }
