@@ -10,16 +10,10 @@
 export type KeyboardType = 'inline' | 'reply' | 'none';
 
 /**
- * Тип кнопки
- * @description Определяет поведение кнопки
- */
-export type ButtonType = 'normal' | 'option' | 'continue';
-
-/**
  * Действие кнопки
  * @description Определяет, что происходит при нажатии
  */
-export type ButtonAction = 'goto' | 'command' | 'url';
+export type ButtonAction = 'goto' | 'command' | 'url' | 'selection' | 'complete';
 
 /**
  * Константы типов клавиатуры
@@ -35,18 +29,6 @@ export const KEYBOARD_TYPES = {
 } as const;
 
 /**
- * Константы типов кнопок
- */
-export const BUTTON_TYPES = {
-  /** Обычная кнопка */
-  NORMAL: 'normal' as ButtonType,
-  /** Кнопка опции */
-  OPTION: 'option' as ButtonType,
-  /** Кнопка продолжения */
-  CONTINUE: 'continue' as ButtonType
-} as const;
-
-/**
  * Константы действий кнопок
  */
 export const BUTTON_ACTIONS = {
@@ -55,5 +37,9 @@ export const BUTTON_ACTIONS = {
   /** Выполнение команды */
   COMMAND: 'command' as ButtonAction,
   /** Открытие URL */
-  URL: 'url' as ButtonAction
+  URL: 'url' as ButtonAction,
+  /** Выбор опции */
+  SELECTION: 'selection' as ButtonAction,
+  /** Завершение */
+  COMPLETE: 'complete' as ButtonAction
 } as const;

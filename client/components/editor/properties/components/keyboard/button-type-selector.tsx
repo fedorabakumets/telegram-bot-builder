@@ -9,7 +9,11 @@
 import { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BUTTON_TYPE_OPTIONS } from './button-type-config';
+
+const INPUT_BUTTON_TYPE_OPTIONS = [
+  { value: 'inline', label: 'Inline кнопки (в сообщении)' },
+  { value: 'reply', label: 'Reply кнопки (виртуальная клавиатура)' }
+];
 
 /** Пропсы компонента ButtonTypeSelector */
 interface ButtonTypeSelectorProps {
@@ -42,7 +46,7 @@ export function ButtonTypeSelector({ selectedNode, onNodeUpdate }: ButtonTypeSel
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {BUTTON_TYPE_OPTIONS.map((option) => (
+          {INPUT_BUTTON_TYPE_OPTIONS.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
