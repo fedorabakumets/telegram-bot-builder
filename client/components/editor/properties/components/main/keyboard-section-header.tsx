@@ -37,6 +37,7 @@ export function KeyboardSectionHeader({
       icon="keyboard"
       iconGradient="from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50"
       iconColor="text-amber-600 dark:text-amber-400"
+      titleGradient="bg-gradient-to-r from-amber-900 to-yellow-800 dark:from-amber-100 dark:to-yellow-200 bg-clip-text text-transparent"
       descriptionColor="text-amber-700/70 dark:text-amber-300/70"
     />
   );
