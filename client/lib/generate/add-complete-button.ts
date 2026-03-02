@@ -37,7 +37,7 @@ export function addCompleteButtonOnMultiSelect(
   nodeId: string
 ): void {
   const hasCompleteButton = (nodeData.buttons || []).some(
-    (btn: Button) => btn.buttonType === 'complete'
+    (btn: Button) => btn.action === 'complete'
   );
 
   if (nodeData.allowMultipleSelection && !hasCompleteButton) {
