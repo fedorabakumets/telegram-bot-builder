@@ -48,14 +48,17 @@ export function SynonymEditor({
         <label className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
           <i className="fas fa-signature text-slate-600 dark:text-slate-400 text-xs sm:text-sm"></i>
           {title}
+          {description && (
+            <div className="relative group">
+              <i className="fas fa-info-circle text-slate-500 dark:text-slate-400 text-xs sm:text-sm cursor-help"></i>
+              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 text-xs bg-slate-900 dark:bg-slate-800 text-slate-100 dark:text-slate-200 rounded-lg shadow-lg z-50">
+                {description}
+                <div className="absolute left-3 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900 dark:border-t-slate-800"></div>
+              </div>
+            </div>
+          )}
         </label>
       </div>
-      {description && (
-        <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200/50 dark:border-purple-800/40">
-          <i className="fas fa-circle-info text-purple-600 dark:text-purple-400 text-xs sm:text-sm mt-0.5 flex-shrink-0"></i>
-          <p className="text-xs sm:text-sm text-purple-700 dark:text-purple-300 leading-relaxed">{description}</p>
-        </div>
-      )}
       <div className="space-y-2 sm:space-y-2.5">
         {synonyms.map((synonym, index) => {
           const isDuplicate = checkDuplicate(synonym, index);
