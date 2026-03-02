@@ -308,10 +308,10 @@ export function generateMultiSelectCallbackLogic(
               ...node.data.keyboardLayout,
               rows: [...node.data.keyboardLayout.rows, { buttonIds: ['done_button'] }]
             };
-            allButtonsForCount.push({id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'});
+            allButtonsForCount.push({id: 'done_button', text: continueText, action: 'complete'});
           } else {
             // Если done-button уже есть, используем layout как есть
-            allButtonsForCount.push({id: 'done-button', text: continueText, action: 'goto', buttonType: 'complete'});
+            allButtonsForCount.push({id: 'done-button', text: continueText, action: 'complete'});
           }
           
           code += `            # Вычисляем раскладку с кнопкой "Готово" для узла ${node.id}
@@ -320,7 +320,7 @@ export function generateMultiSelectCallbackLogic(
 `;
         } else {
           // Добавляем временную кнопку "Готово" к общему списку для правильного расчета
-          const allButtonsWithDone = [...node.data.buttons, {id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'}];
+          const allButtonsWithDone = [...node.data.buttons, {id: 'done_button', text: continueText, action: 'complete'}];
           const optimalColumnsWithDone = calculateOptimalColumns(allButtonsWithDone, node.data);
 
           // Теперь применяем adjust() ко всем кнопкам, включая "Готово"

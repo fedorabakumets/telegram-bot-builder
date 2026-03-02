@@ -148,7 +148,7 @@ export function generateMultiSelectDoneHandler(
                                 code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_${shortNodeIdForDone}"))\n`;
 
                                 // Вычисляем оптимальное количество колонок для всех кнопок (включая кнопку "Готово")
-                                const allButtons = [...targetNode.data.buttons, {id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'}];
+                                const allButtons = [...targetNode.data.buttons, {id: 'done_button', text: continueText, action: 'complete'}];
                                 code += `        ${getAdjustCode(allButtons, targetNode.data)}\n`;
                                 code += `        keyboard = builder.as_markup()\n`;
                                 code += `        \n`;
