@@ -7,7 +7,7 @@ export function hasCommandButtons(nodes: Node[]): boolean {
   // Проверяем обычные кнопки
   const hasRegularCommandButtons = nodes.some(node => {
     if (!node.data.buttons || !Array.isArray(node.data.buttons)) return false;
-    return node.data.buttons.some((button: Button) => button.action === 'command');
+    return node.data.buttons.some((button: Button) => button.action === 'goto' && button.target && button.target.startsWith('/'));
   });
 
   // Проверяем кнопки в условных сообщениях (но не те, что создают conditional_ callbacks)
@@ -18,7 +18,7 @@ export function hasCommandButtons(nodes: Node[]): boolean {
     return conditions.some((cond: any) => {
       if (!cond.buttons || !Array.isArray(cond.buttons)) return false;
       // Только кнопки команд БЕЗ переменных (они не создают conditional_ callbacks)
-      return cond.buttons.some((button: Button) => button.action === 'command' && !cond.variableName && !cond.variableNames
+      return cond.buttons.some((button: Button) => button.action === 'goto' && !cond.variableName && !cond.variableNames && button.target && button.target.startsWith('/')
       );
     });
   });

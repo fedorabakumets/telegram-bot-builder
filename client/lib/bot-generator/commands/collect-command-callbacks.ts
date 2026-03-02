@@ -34,7 +34,7 @@ export const collectAllCommandCallbacksFromNodes = (nodes: any[]): Set<string> =
           console.log(`  🔘 Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
         }
         
-        if (button.action === 'command' && button.target) {
+        if (button.action === 'goto' && button.target) {
           const commandCallback = `cmd_${button.target.replace('/', '')}`;
           if (isLoggingEnabled()) {
             console.log(`✅ НАЙДЕНА кнопка команды: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
@@ -61,7 +61,7 @@ export const collectAllCommandCallbacksFromNodes = (nodes: any[]): Set<string> =
               console.log(`  🔘 Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
             }
             
-            if (button.action === 'command' && button.target) {
+            if (button.action === 'goto' && button.target) {
               const commandCallback = `cmd_${button.target.replace('/', '')}`;
               if (isLoggingEnabled()) {
                 console.log(`✅ НАЙДЕНА кнопка команды в условном сообщении: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);

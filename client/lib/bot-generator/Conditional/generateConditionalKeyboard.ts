@@ -58,19 +58,9 @@ export function generateConditionalKeyboard(condition: any, indentLevel: string,
     condition.buttons.forEach((button: Button) => {
       if (button.action === "url") {
         codeLines.push(`${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))`);
-      } else if (button.action === 'goto') {
+      } else if (button.action === 'goto' || button.action === 'selection' || button.action === 'complete') {
         const callbackData = button.target || button.id || 'no_action';
         codeLines.push(`${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))`);
-      } else if (button.action === 'command') {
-        // Для кнопок команд в условных сообщениях создаем специальную callback_data
-        const conditionalVariableName = condition.variableName || condition.variableNames?.[0] || (nodeData && nodeData.inputVariable);
-        if (conditionalVariableName) {
-          const conditionalCallback = `conditional_${conditionalVariableName}_${button.text}`;
-          codeLines.push(`${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${conditionalCallback}"))`);
-        } else {
-          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-          codeLines.push(`${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))`);
-        }
       } else {
         const callbackData = button.target || button.id || 'no_action';
         codeLines.push(`${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))`);

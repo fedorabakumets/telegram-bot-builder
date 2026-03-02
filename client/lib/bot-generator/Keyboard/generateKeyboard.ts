@@ -161,12 +161,9 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
       node.data.buttons.forEach(button => {
         if (button.action === "url") {
           code += `${indent4}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-        } else if (button.action === 'goto') {
+        } else if (button.action === 'goto' || button.action === 'selection' || button.action === 'complete') {
           const callbackData = button.target || button.id || 'no_action';
           code += `${indent4}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-        } else if (button.action === 'command') {
-          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-          code += `${indent4}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
         }
       });
 
@@ -479,9 +476,6 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
               } else if (button.action === 'goto') {
                 const callbackData = button.target || button.id || 'no_action';
                 code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-              } else if (button.action === 'command') {
-                const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-                code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
               }
             });
           });
@@ -504,12 +498,9 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
           regularButtons.forEach((button: Button) => {
             if (button.action === "url") {
               code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-            } else if (button.action === 'goto') {
+            } else if (button.action === 'goto' || button.action === 'selection' || button.action === 'complete') {
               const callbackData = button.target || button.id || 'no_action';
               code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-            } else if (button.action === 'command') {
-              const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-              code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
             }
           });
           code += `${indent3}\n`;

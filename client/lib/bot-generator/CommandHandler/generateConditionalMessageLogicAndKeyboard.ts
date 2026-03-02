@@ -68,12 +68,9 @@ export function generateConditionalMessageLogicAndKeyboard(node: NodeWithKeyboar
             node.data.buttons.forEach(button => {
                 if (button.action === "url") {
                     keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-                } else if (button.action === 'goto') {
+                } else if (button.action === 'goto' || button.action === 'selection' || button.action === 'complete') {
                     const callbackData = button.target || button.id || 'no_action';
                     keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-                } else if (button.action === 'command') {
-                    const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-                    keyboardCode += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
                 }
             });
         }

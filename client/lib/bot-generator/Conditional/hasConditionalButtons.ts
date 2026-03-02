@@ -22,7 +22,7 @@ export function hasConditionalButtons(nodes: BotNode[]): boolean {
     return conditions.some((cond: any) => {
       if (!cond.buttons || !Array.isArray(cond.buttons)) return false;
       // Проверяем, есть ли кнопки команд в условных сообщениях с переменными
-      return cond.buttons.some((button: Button) => button.action === 'command' && (cond.variableName || cond.variableNames)
+      return cond.buttons.some((button: Button) => button.action === 'goto' && (cond.variableName || cond.variableNames)
       );
     });
   });

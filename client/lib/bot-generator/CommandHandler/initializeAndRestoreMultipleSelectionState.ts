@@ -146,7 +146,7 @@ export function initializeAndRestoreMultipleSelectionState(node: NodeWithButtons
         const nonSelectionButtons = allButtons.filter(btn => btn.action !== 'selection');
 
         nonSelectionButtons.forEach(button => {
-            if (button.action === 'command') {
+            if (button.action === 'goto' && button.target && button.target.startsWith('/')) {
                 const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
                 codeLines.push(`    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))`);
             } else if (button.action === 'goto') {

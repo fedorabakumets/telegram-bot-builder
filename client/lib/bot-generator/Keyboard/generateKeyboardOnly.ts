@@ -56,14 +56,7 @@ export function generateKeyboardOnly(node: Node): string {
     node.data.buttons.forEach(button => {
       if (button.action === 'url') {
         code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-      } else if (button.action === 'goto') {
-        const callbackData = button.target || button.id || 'no_action';
-        code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-      } else if (button.action === 'command') {
-        const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-        code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
-      } else {
-        // Кнопки по умолчанию
+      } else if (button.action === 'goto' || button.action === 'selection' || button.action === 'complete') {
         const callbackData = button.target || button.id || 'no_action';
         code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
       }

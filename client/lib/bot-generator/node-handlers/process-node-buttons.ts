@@ -128,8 +128,8 @@ export function newprocessNodeButtonsAndGenerateHandlers(
           code += '    await callback_query.answer("⚠️ Эта кнопка яока не настроена", show_alert=True)\n';
         }
       }
-      // Обработка кнопок с действием 'command'
-      else if (button.action === 'command' && button.id) {
+      // Обработка кнопок с действием 'goto' и target начинается с /
+      else if (button.action === 'goto' && button.target && button.target.startsWith('/') && button.id) {
         const callbackData = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
 
         if (processedCallbacks.has(callbackData)) {

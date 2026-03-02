@@ -75,14 +75,9 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
   buttons.forEach((button, _index) => {
     if (button.action === "url") {
       code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-    } else if (button.action === 'goto') {
+    } else if (button.action === 'goto' || button.action === 'complete') {
       const baseCallbackData = button.target || button.id || 'no_action';
-      // Для кнопок goto всегда используем target как callback_data без суффиксов
       code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${baseCallbackData}"))\n`;
-    } else if (button.action === 'command') {
-      const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-      code += `${indentLevel}logging.info(f"Создана кнопка команды: ${button.text} -> ${commandCallback}")\n`;
-      code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
     } else if (button.action === 'selection') {
       // Укорачиваем callback_data для соблюдения лимита Telegram в 64 байта
       const shortNodeId = nodeId ? generateUniqueShortId(nodeId, allNodeIds || []) : 'sel';
@@ -99,9 +94,6 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
       } else {
         code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
       }
-    } else {
-      const callbackData = button.target || button.id || 'no_action';
-      code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
     }
   });
 

@@ -276,10 +276,6 @@ export function generateMultiSelectCallbackLogic(
           } else if (button.action === 'url') {
             code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))
 `;
-          } else if (button.action === 'command') {
-            const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-            code += `            builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))
-`;
           }
         });
 

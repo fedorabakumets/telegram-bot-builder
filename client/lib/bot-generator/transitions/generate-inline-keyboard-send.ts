@@ -40,12 +40,9 @@ export function generateInlineKeyboardSend(
   node.data.buttons.forEach((button: Button) => {
     if (button.action === "url") {
       code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-    } else if (button.action === 'goto') {
+    } else if (button.action === 'goto' || button.action === 'selection' || button.action === 'complete') {
       const callbackData = button.target || button.id || 'no_action';
       code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-    } else if (button.action === 'command') {
-      const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-      code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
     } else {
       const callbackData = button.target || button.id || 'no_action';
       code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
