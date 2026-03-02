@@ -4,6 +4,7 @@
  * Компонент заголовка с кнопкой сворачивания.
  */
 
+import { SectionHeader } from '../layout/section-header';
 import type { Node } from '@shared/schema';
 
 /** Пропсы компонента */
@@ -28,22 +29,15 @@ export function KeyboardSectionHeader({
   onToggle
 }: KeyboardSectionHeaderProps) {
   return (
-    <div className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group" onClick={onToggle}>
-      <button
-        className="flex items-start gap-2.5 sm:gap-3 w-full"
-        title={isOpen ? 'Свернуть' : 'Развернуть'}
-      >
-        <div className="w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50 flex items-center justify-center flex-shrink-0 pt-0.5">
-          <i className="fas fa-keyboard text-amber-600 dark:text-amber-400 text-sm sm:text-base"></i>
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-100 text-left">Клавиатура</h3>
-          <p className="text-xs sm:text-sm text-amber-700/70 dark:text-amber-300/70 mt-0.5 text-left">Кнопки для взаимодействия с пользователем</p>
-        </div>
-      </button>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <i className={`fas fa-chevron-down text-xs sm:text-sm text-amber-600 dark:text-amber-400 transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}></i>
-      </div>
-    </div>
+    <SectionHeader
+      title="Клавиатура"
+      description="Кнопки для взаимодействия с пользователем"
+      isOpen={isOpen}
+      onToggle={onToggle}
+      icon="keyboard"
+      iconGradient="from-amber-100 to-yellow-100 dark:from-amber-900/50 dark:to-yellow-900/50"
+      iconColor="text-amber-600 dark:text-amber-400"
+      descriptionColor="text-amber-700/70 dark:text-amber-300/70"
+    />
   );
 }
