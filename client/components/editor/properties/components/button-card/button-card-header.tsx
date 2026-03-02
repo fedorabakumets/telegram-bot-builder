@@ -1,7 +1,7 @@
 /**
  * @fileoverview Заголовок карточки кнопки
  *
- * Отображает иконку, название и кнопку удаления.
+ * Отображает кнопку удаления.
  */
 
 import { Button as UiButton } from '@/components/ui/button';
@@ -9,8 +9,6 @@ import type { Button as ButtonType } from '@shared/schema';
 
 /** Пропсы заголовка карточки кнопки */
 interface ButtonCardHeaderProps {
-  /** Объект кнопки */
-  button: ButtonType;
   /** Флаг множественного выбора */
   allowMultipleSelection?: boolean;
   /** Функция удаления кнопки */
@@ -28,24 +26,13 @@ interface ButtonCardHeaderProps {
  * @returns {JSX.Element} Заголовок карточки
  */
 export function ButtonCardHeader({
-  button,
   allowMultipleSelection,
   onDelete,
   nodeId,
   onButtonUpdate
 }: ButtonCardHeaderProps) {
   return (
-    <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 justify-between">
-      <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-        <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-200/50 dark:bg-blue-900/40 group-hover:bg-blue-300/50 dark:group-hover:bg-blue-800/50 transition-all">
-          <i className="fas fa-rectangle-ad text-xs sm:text-sm text-blue-600 dark:text-blue-400"></i>
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">
-            Кнопка
-          </div>
-        </div>
-      </div>
+    <div className="flex items-center justify-end gap-2">
       <UiButton
         size="sm"
         variant="ghost"
