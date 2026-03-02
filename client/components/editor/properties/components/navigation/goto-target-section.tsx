@@ -9,7 +9,6 @@
 import { Node, Button } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { formatNodeDisplay } from '../../utils/node-formatters';
 
 /**
@@ -42,17 +41,6 @@ export function GotoTargetSection({
 
   return (
     <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-sky-50/40 to-blue-50/30 dark:from-sky-950/20 dark:to-blue-950/10 border border-sky-200/40 dark:border-sky-800/30 hover:border-sky-300/60 dark:hover:border-sky-700/60 hover:bg-sky-50/60 dark:hover:bg-sky-950/30 transition-all duration-200 group">
-      <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-        <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-sky-200/50 dark:bg-sky-900/40 group-hover:bg-sky-300/50 dark:group-hover:bg-sky-800/50 transition-all">
-          <i className="fas fa-location-arrow text-xs sm:text-sm text-sky-600 dark:text-sky-400"></i>
-        </div>
-        <div className="min-w-0 flex-1">
-          <Label className="text-xs sm:text-sm font-semibold text-sky-900 dark:text-sky-100 cursor-pointer block">
-            🎯 Целевой экран
-          </Label>
-        </div>
-      </div>
-
       <Select
         value={button.target || ''}
         onValueChange={(value) => onButtonUpdate(selectedNode.id, button.id, { target: value })}
