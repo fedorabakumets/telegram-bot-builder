@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { ButtonCardHeader } from './button-card-header';
 import { ButtonTextField } from './button-text-field';
 import { ButtonTypeSelectorCard } from './button-type-selector-card';
-import { ButtonActionSelector } from './button-action-selector';
 import { ButtonSkipDataToggle } from './button-skip-data-toggle';
 import { ButtonHideAfterClickToggle } from './button-hide-after-click-toggle';
 import { GotoTargetSection } from '../navigation/goto-target-section';
@@ -83,21 +82,11 @@ export function ButtonCard({
 
       <div className="border-t border-border/20 my-3"></div>
 
-      {allowMultipleSelection && (
-        <ButtonTypeSelectorCard
-          nodeId={nodeId}
-          button={button}
-          onButtonUpdate={onButtonUpdate}
-        />
-      )}
-
-      {(!allowMultipleSelection || (button.buttonType !== 'option' && button.buttonType !== 'complete')) && (
-        <ButtonActionSelector
-          nodeId={nodeId}
-          button={button}
-          onButtonUpdate={onButtonUpdate}
-        />
-      )}
+      <ButtonTypeSelectorCard
+        nodeId={nodeId}
+        button={button}
+        onButtonUpdate={onButtonUpdate}
+      />
 
       <ButtonSkipDataToggle
         nodeId={nodeId}
