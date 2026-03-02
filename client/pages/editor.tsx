@@ -18,7 +18,7 @@ import { logNodeUpdate, logNodeTypeChange, logNodeIdChange, logButtonAdd, logBut
 import { migrateKeyboardLayout, fixAutoLayout } from '@/components/editor/properties/utils';
 import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
 import { createActionHistoryItem } from './editor/utils/action-logger';
-import type { ActionType, ActionHistoryItem } from './editor/types';
+import type { ActionType, ActionHistoryItem, EditorTab, PreviousEditorTab, NodeSizeMap } from './editor/types';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -70,10 +70,10 @@ export default function Editor() {
 
   /**
    * Текущая выбранная вкладка в интерфейсе редактора
-   * @type {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'}
+   * @type {EditorTab}
    */
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'>('editor');
-  const [previousTab, setPreviousTab] = useState<'editor' | 'preview' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'>('editor');
+  const [currentTab, setCurrentTab] = useState<EditorTab>('editor');
+  const [previousTab, setPreviousTab] = useState<PreviousEditorTab>('editor');
 
   /**
    * Флаг отображения модального окна сохранения шаблона
@@ -141,9 +141,9 @@ export default function Editor() {
 
   /**
    * Реальные размеры узлов (для иерархического layout)
-   * @type {Map<string, { width: number; height: number }>}
+   * @type {NodeSizeMap}
    */
-  const [currentNodeSizes, setCurrentNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
+  const [currentNodeSizes, setCurrentNodeSizes] = useState<NodeSizeMap>(new Map());
 
   /**
    * Флаг загрузки шаблона
@@ -172,9 +172,9 @@ export default function Editor() {
   /**
    * Callback для получения размеров узлов из Canvas
    *
-   * @param {Map<string, { width: number; height: number }>} nodeSizes - Размеры узлов
+   * @param {NodeSizeMap} nodeSizes - Размеры узлов
    */
-  const handleNodeSizesChange = useCallback((nodeSizes: Map<string, { width: number; height: number }>) => {
+  const handleNodeSizesChange = useCallback((nodeSizes: NodeSizeMap) => {
     setCurrentNodeSizes(nodeSizes);
   }, []);
 
@@ -1029,9 +1029,9 @@ export default function Editor() {
   /**
    * Обработчик изменения вкладки
    *
-   * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'} tab - Выбранная вкладка
+   * @param {EditorTab} tab - Выбранная вкладка
    */
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api') => {
+  const handleTabChange = useCallback((tab: EditorTab) => {
     // Если нажали на ту же вкладку "Код" - ничего не делаем (чтобы панель не закрывалась)
     if (tab === 'export' && currentTab === 'export') {
       return;
@@ -1039,7 +1039,7 @@ export default function Editor() {
 
     // Сохраняем предыдущую вкладку (если не переключались на 'export')
     if (currentTab !== 'export' && tab !== 'export') {
-      setPreviousTab(currentTab as 'editor' | 'preview' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api');
+      setPreviousTab(currentTab as PreviousEditorTab);
     }
 
     setCurrentTab(tab);
@@ -1590,7 +1590,7 @@ export default function Editor() {
         onActionLog: handleActionLog
       });
     }
-    // Сохран��ем в историю ДО изменений
+    // Сохраняем в историю ДО изменений
     saveToHistory();
     deleteButton(nodeId, buttonId);
   }, [deleteButton, nodes, handleActionLog, saveToHistory]);
@@ -1608,7 +1608,7 @@ export default function Editor() {
     // Set local changes flag first to prevent useEffect from running
     setHasLocalChanges(true);
 
-    // Создаем н��вый узел из компонента
+    // Создаем новый узел из компонента
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
@@ -1616,14 +1616,14 @@ export default function Editor() {
       data: component.defaultData || {}
     };
 
-    // Логируем добавление в историю ����ействий
+    // Логируем добавление в историю действий
     console.log('📝 Добавление узла:', component.type);
     handleActionLog('add', `Добавлен узел "${component.type}"`);
 
     // Сохраняем в историю ДО изменений
     saveToHistory();
 
-    // Добавляем узел на холст
+    // Добавляем у��ел на холст
     addNode(newNode);
 
     // Auto-save after a short delay to persist the new node
@@ -1789,7 +1789,7 @@ export default function Editor() {
             markdownContent={displayContent}
             theme={theme}
             onContentChange={(content) => {
-              // Обновляем контент README в состоянии генер��тора
+              // Обновляем контент README в состоянии генератора
               setCodeContent(prev => ({ ...prev, readme: content }));
             }}
           />
@@ -1819,7 +1819,7 @@ export default function Editor() {
             // Новая система листов
             botData={botDataWithSheets || undefined}
             onBotDataUpdate={handleBotDataUpdate}
-            // Существующие пр��псы для совместимости
+            // Существующие пропсы для совместимости
             nodes={nodes}
             selectedNodeId={selectedNodeId}
             onNodeSelect={setSelectedNodeId}
