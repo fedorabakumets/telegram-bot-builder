@@ -228,11 +228,6 @@ export function PropertiesHeader({
             </Select>
           </div>
         </div>
-
-        {/* Description */}
-        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-          Настройте параметры выбранного элемента ниже
-        </p>
       </div>
     </div>
   );
