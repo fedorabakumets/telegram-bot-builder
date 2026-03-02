@@ -7,7 +7,6 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ButtonCard } from '../button-card/button-card';
-import { ContinueButtonSection } from '../continue-button/continue-button-section';
 import type { Node, Button as ButtonType } from '@shared/schema';
 import type { ProjectVariable } from '../../utils/variables-utils';
 
@@ -27,8 +26,6 @@ interface KeyboardButtonsSectionProps {
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<ButtonType>) => void;
   /** Функция удаления кнопки */
   onButtonDelete: (nodeId: string, buttonId: string) => void;
-  /** Функция форматирования отображения узла */
-  formatNodeDisplay: (node: any, sheetName?: string) => string;
 }
 
 /**
@@ -44,8 +41,7 @@ export function KeyboardButtonsSection({
   onNodeUpdate,
   onButtonAdd,
   onButtonUpdate,
-  onButtonDelete,
-  formatNodeDisplay
+  onButtonDelete
 }: KeyboardButtonsSectionProps) {
   const handleAddOptionButton = () => {
     const newButton: ButtonType = {
@@ -138,15 +134,6 @@ export function KeyboardButtonsSection({
       </div>
 
       <div className="space-y-3">
-        {selectedNode.data.allowMultipleSelection && (
-          <ContinueButtonSection
-            selectedNode={selectedNode}
-            getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-            onNodeUpdate={onNodeUpdate}
-            formatNodeDisplay={formatNodeDisplay}
-          />
-        )}
-
         {(selectedNode.data.buttons || []).map((button) => (
           <ButtonCard
             key={button.id}
