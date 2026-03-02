@@ -42,7 +42,7 @@ import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { FlexibleLayout } from '@/components/layout/flexible/flexible-layout';
 import { LayoutCustomizer } from '@/components/layout/layout-customizer';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
-import { SimpleLayoutConfig, SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
+import { SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { CodeFormat, useCodeGenerator } from '@/components/editor/code/use-code-generator';
@@ -196,62 +196,6 @@ export default function Editor() {
   }, []);
 
   /**
-   * Функция переключения видимости шапки
-   */
-  const handleToggleHeader = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'header'
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    }));
-  }, []);
-
-  /**
-   * Функция переключения видимости сайдбара
-   */
-  const handleToggleSidebar = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'sidebar'
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    }));
-  }, []);
-
-  /**
-   * Функция переключения видимости панели свойств
-   */
-  const handleToggleProperties = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'properties'
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    }));
-  }, []);
-
-  /**
-   * Функция переключения видимости холста
-   */
-  const handleToggleCanvas = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'canvas'
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    }));
-  }, []);
-
-  /**
    * Обработчик переключения видимости CodePanel
    * Управляет видимостью только CodePanel (левая панель с проектами)
    */
@@ -399,108 +343,15 @@ export default function Editor() {
     setShowMobileProperties(true);
   }, []);
 
-  /**
-   * Создает динамическую конфигурацию макета
-   *
-   * @returns {SimpleLayoutConfig} Конфигурация макета
-   */
-  const getFlexibleLayoutConfig = useCallback((): SimpleLayoutConfig => {
-    // Используем компактный заголовок для всех устройств
-    const headerSize = isMobile ? 2.5 : 3;
-    // Скрываем боковую панель и свойства на вкладке "Бот" и "Пользователи"
-    const isBotTab = currentTab === 'bot';
-    const isUsersTab = currentTab === 'users';
-    const hidePanels = isBotTab || isUsersTab;
-
-    return {
-      elements: [
-        {
-          id: 'header',
-          type: 'header',
-          name: 'Шапка',
-          position: 'top',
-          size: headerSize,
-          visible: true
-        },
-        {
-          id: 'sidebar',
-          type: 'sidebar',
-          name: 'Боковая панель',
-          position: 'left',
-          size: 20,
-          visible: !hidePanels
-        },
-        {
-          id: 'canvas',
-          type: 'canvas',
-          name: 'Холст',
-          position: 'center',
-          size: 35,
-          visible: true
-        },
-        {
-          id: 'properties',
-          type: 'properties',
-          name: 'Свойства',
-          position: 'right',
-          size: 20,
-          visible: !hidePanels
-        },
-        {
-          id: 'code',
-          type: 'code',
-          name: 'Код',
-          position: 'left',
-          size: 25,
-          visible: false
-        },
-        {
-          id: 'codeEditor',
-          type: 'codeEditor',
-          name: 'Редактор кода',
-          position: 'center',
-          size: 40,
-          visible: false
-        },
-        {
-          id: 'dialog',
-          type: 'dialog',
-          name: 'Диалог',
-          position: 'right',
-          size: 25,
-          visible: isUsersTab
-        },
-        {
-          id: 'userDetails',
-          type: 'userDetails',
-          name: 'Детали пользователя',
-          position: 'left',
-          size: 25,
-          visible: isUsersTab
-        },
-        {
-          id: 'fileExplorer',
-          type: 'fileExplorer',
-          name: 'Проводник файлов',
-          position: 'left',
-          size: 25,
-          visible: false
-        },
-      ],
-      compactMode: false,
-      showGrid: true
-    };
-  }, [currentTab, isMobile]);
-
-  const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>(getFlexibleLayoutConfig());
-
-  /**
-   * Эффект для обновления конфигурации макета при изменении вкладки
-   * Сбрасывает видимость элементов к значениям по умолчанию для новой вкладки
-   */
-  useEffect(() => {
-    setFlexibleLayoutConfig(getFlexibleLayoutConfig());
-  }, [currentTab, isMobile]);
+  // Управление макетом через хук
+  const {
+    flexibleLayoutConfig,
+    setFlexibleLayoutConfig,
+    handleToggleHeader,
+    handleToggleSidebar,
+    handleToggleProperties,
+    handleToggleCanvas
+  } = useFlexibleLayoutManager(isMobile, currentTab);
 
   const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
   const { toast } = useToast();
