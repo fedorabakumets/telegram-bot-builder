@@ -117,7 +117,7 @@ export function PropertiesPanel({
 }: PropertiesPanelProps) {
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
-  const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
+  const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(false);
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
   const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(true);
