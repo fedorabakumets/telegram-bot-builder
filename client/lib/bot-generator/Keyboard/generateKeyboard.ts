@@ -327,10 +327,10 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
           }
         });
 
-        // Добавляем кнопку завершения, если есть опции выбора
-        if (selectionButtons.length > 0) {
-          const continueText = node.data.continueButtonText || 'Готово';
-          code += `${indent3}builder.add(KeyboardButton(text="${continueText}"))\n`;
+        // Добавляем кнопку завершения, если она есть в данных узла
+        const completeButton = node.data.buttons?.find((btn: any) => btn.action === 'complete');
+        if (completeButton) {
+          code += `${indent3}builder.add(KeyboardButton(text="${completeButton.text}"))\n`;
         }
 
         code += `${indent3}${getAdjustCode(node.data.buttons, node.data)}\n`;
@@ -423,32 +423,26 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
 
         // Разделяем кнопки на опции выбора и обычные кнопки
         const selectionButtons = node.data.buttons.filter(button => button.action === 'selection');
-        const regularButtons = node.data.buttons.filter(button => button.action !== 'selection');
+        const completeButton = node.data.buttons.find(button => button.action === 'complete');
+        const otherButtons = node.data.buttons.filter(button => button.action !== 'selection' && button.action !== 'complete');
 
         // Проверяем, есть ли keyboardLayout с ручной раскладкой
         const hasManualLayout = node.data.keyboardLayout && !node.data.keyboardLayout.autoLayout;
-        const hasDoneButtonInLayout = hasManualLayout && node.data.keyboardLayout.rows.some((row: any) => 
-          row.buttonIds.includes('done-button')
-        );
 
-        if (hasManualLayout && hasDoneButtonInLayout) {
-          // Если есть ручная раскладка с done-button, добавляем кнопки в порядке из layout
-          const continueText = node.data.continueButtonText || 'Готово';
+        if (hasManualLayout) {
+          // Если есть ручная раскладка, добавляем кнопки в порядке из layout
+          const continueText = completeButton?.text || node.data.continueButtonText || 'Готово';
           const allButtonsMap = new Map<string, any>();
-          
+
           // Создаём карту всех кнопок
-          [...selectionButtons, ...regularButtons].forEach(button => {
+          [...selectionButtons, ...otherButtons].forEach(button => {
             allButtonsMap.set(button.id, button);
           });
 
-          // Добавляем виртуальную кнопку "Готово"
-          allButtonsMap.set('done-button', {
-            id: 'done-button',
-            text: continueText,
-            action: 'complete' as const,
-            skipDataCollection: false,
-            hideAfterClick: false
-          });
+          // Добавляем кнопку "Готово" если она есть
+          if (completeButton) {
+            allButtonsMap.set(completeButton.id, completeButton);
+          }
 
           // Добавляем кнопки в порядке из keyboardLayout
           node.data.keyboardLayout.rows.forEach((row: any) => {
@@ -456,10 +450,10 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
               const button = allButtonsMap.get(buttonId);
               if (!button) return;
 
-              if (button.action === 'complete' || buttonId === 'done-button') {
+              if (button.action === 'complete') {
                 // Кнопка "Готово"
                 const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
-                code += `${indent3}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_${shortNodeIdForDone}"))\n`;
+                code += `${indent3}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="done_${shortNodeIdForDone}"))\n`;
               } else if (button.action === 'selection') {
                 // Кнопка выбора с галочкой
                 const buttonValue = button.target || button.id || button.text;
@@ -495,37 +489,24 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
           });
 
           // Добавляем обычные кнопки
-          regularButtons.forEach((button: Button) => {
+          otherButtons.forEach((button: Button) => {
             if (button.action === "url") {
               code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-            } else if (button.action === 'goto' || button.action === 'selection' || button.action === 'complete') {
+            } else if (button.action === 'goto') {
               const callbackData = button.target || button.id || 'no_action';
               code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+            } else if (button.action === 'complete') {
+              // Кнопка завершения из данных узла
+              const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
+              code += `${indent3}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="done_${shortNodeIdForDone}"))\n`;
             }
           });
           code += `${indent3}\n`;
-
-          // Добавляем кнопку завершения, если есть опции выбора
-          if (selectionButtons.length > 0) {
-            const continueText = node.data.continueButtonText || 'Готово';
-            const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
-            code += `${indent3}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_${shortNodeIdForDone}"))\n`;
-          }
         }
 
         // Автоматическое распределение колонок
-        // Для множественного выбора учитываем все кнопки: селекции + регулярные + "Готово"
-        const allButtons: Button[] = [...selectionButtons, ...regularButtons];
-        if (selectionButtons.length > 0) {
-          allButtons.push({
-            id: `continue_${node.id}`,
-            text: node.data.continueButtonText || 'Готово',
-            action: 'complete',
-            skipDataCollection: false,
-            hideAfterClick: false
-          });
-        }
-        code += `${indent3}${getAdjustCode(allButtons, node.data)}\n`;
+        // Для множественного выбора учитываем все кнопки: селекции + другие + завершение
+        const allButtons: Button[] = [...selectionButtons, ...otherButtons];
         code += `${indent3}keyboard = builder.as_markup()\n`;
 
         // Проверяем наличие изображения
