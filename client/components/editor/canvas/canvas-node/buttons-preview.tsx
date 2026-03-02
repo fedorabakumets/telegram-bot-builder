@@ -48,81 +48,33 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
   const keyboardType = node.data.keyboardType as 'inline' | 'reply';
 
   // Находим кнопку завершения (для множественного выбора)
-  // Только кнопка с buttonType: 'complete' считается кнопкой завершения
-  const completeButton = useMemo(() => 
+  const completeButton = useMemo(() =>
     isMultiSelect
-      ? node.data.buttons.find((button: any) => button.buttonType === 'complete')
+      ? node.data.buttons.find((button: any) => button.action === 'complete')
       : undefined,
     [isMultiSelect, node.data.buttons]
   );
 
-  // Проверяем, есть ли done-button в keyboardLayout
-  const hasDoneButtonInLayout = useMemo(() => {
-    const rows = node.data.keyboardLayout?.rows;
-    if (!rows) return false;
-    return rows.some((row: any) => row.buttonIds.includes('done-button'));
-  }, [node.data.keyboardLayout?.rows]);
-
-  // Если done-button есть в layout, добавляем виртуальную кнопку в массив для отображения
+  // Все кнопки включая кнопку завершения для отображения в сетке
   const allButtonsForGrid = useMemo(() => {
-    const buttons = [...node.data.buttons];
-    if (isMultiSelect && !completeButton && hasDoneButtonInLayout) {
-      buttons.push({
-        id: 'done-button',
-        text: '✅ Готово',
-        action: 'goto',
-        target: node.data.continueButtonTarget || '',
-        buttonType: 'complete' as const,
-        skipDataCollection: false,
-        hideAfterClick: false
-      } as any);
-    }
-    return buttons;
-  }, [node.data.buttons, node.data.keyboardLayout, isMultiSelect, completeButton, hasDoneButtonInLayout, node.data.continueButtonTarget]);
+    return node.data.buttons || [];
+  }, [node.data.buttons]);
 
   return (
     <div className="space-y-3">
       <ButtonsPreviewHeader isMultiSelect={isMultiSelect} keyboardType={keyboardType} />
 
       {keyboardType === 'inline' ? (
-        <div className="space-y-3">
-          {isMultiSelect ? (
-            <>
-              {hasDoneButtonInLayout ? (
-                // Если done-button в layout, показываем все кнопки в сетке
-                <KeyboardGrid
-                  buttons={allButtonsForGrid}
-                  keyboardLayout={node.data.keyboardLayout}
-                  buttonClassName=""
-                  renderButton={(button) => button.buttonType === 'option' ? <OptionButton button={button} /> : <InlineButton button={button} allNodes={allNodes} />}
-                />
-              ) : (
-                // Старая логика: кнопка завершения отдельно
-                <>
-                  <KeyboardGrid
-                    buttons={allButtonsForGrid.filter((button: any) => button.buttonType !== 'complete')}
-                    keyboardLayout={node.data.keyboardLayout}
-                    buttonClassName=""
-                    renderButton={(button) => button.buttonType === 'option' ? <OptionButton button={button} /> : <InlineButton button={button} allNodes={allNodes} />}
-                  />
-                  {/* Кнопка завершения: из шаблона или стандартная */}
-                  {completeButton ? (
-                    <InlineButton button={completeButton} allNodes={allNodes} />
-                  ) : (
-                    <DoneButton />
-                  )}
-                </>
-              )}
-            </>
-          ) : (
-            <KeyboardGrid
-              buttons={node.data.buttons}
-              keyboardLayout={node.data.keyboardLayout}
-              buttonClassName=""
-              renderButton={(button) => <InlineButton button={button} allNodes={allNodes} />}
-            />
-          )}
-        </div>
+        <KeyboardGrid
+          buttons={allButtonsForGrid}
+          keyboardLayout={node.data.keyboardLayout}
+          buttonClassName=""
+          renderButton={(button) => {
+            if (button.action === 'complete') return <DoneButton button={button} />;
+            if (button.buttonType === 'option') return <OptionButton button={button} />;
+            return <InlineButton button={button} allNodes={allNodes} />;
+          }}
+        />
       ) : (
         <KeyboardGrid
           buttons={node.data.buttons}
