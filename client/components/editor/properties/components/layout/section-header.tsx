@@ -59,7 +59,7 @@ export function SectionHeader({
         <i className={`fas fa-${icon} ${iconColor} text-sm sm:text-base`}></i>
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className={`text-sm sm:text-base font-bold ${titleGradient || 'text-slate-900 dark:text-slate-100'} text-left`}>
+        <h3 className={`text-sm sm:text-base font-bold ${titleGradient || 'text-slate-900 dark:text-slate-100'} text-left whitespace-normal`}>
           {title}
         </h3>
         {description && (
