@@ -1,12 +1,13 @@
 /**
  * @fileoverview Селектор действия кнопки
- * 
+ *
  * Компонент выбора действия (goto/command/url/selection).
  */
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import type { Button } from '@shared/schema';
+import { ButtonActionOption } from './button-action-options';
 
 /** Пропсы селектора действия */
 interface ButtonActionSelectorProps {
@@ -20,7 +21,7 @@ interface ButtonActionSelectorProps {
 
 /**
  * Компонент селектора действия кнопки
- * 
+ *
  * @param {ButtonActionSelectorProps} props - Пропсы компонента
  * @returns {JSX.Element} Селектор действия
  */
@@ -52,28 +53,16 @@ export function ButtonActionSelector({
         </SelectTrigger>
         <SelectContent className="bg-gradient-to-br from-teal-50/95 to-cyan-50/95 dark:from-slate-900/95 dark:to-slate-800/95 border border-teal-200/50 dark:border-teal-800/50 shadow-xl">
           <SelectItem value="goto">
-            <div className="flex items-center gap-2">
-              <i className="fas fa-right-long text-teal-600 dark:text-teal-400 text-xs"></i>
-              <span>Перейти к экрану</span>
-            </div>
+            <ButtonActionOption action="goto" />
           </SelectItem>
           <SelectItem value="command">
-            <div className="flex items-center gap-2">
-              <i className="fas fa-terminal text-orange-600 dark:text-orange-400 text-xs"></i>
-              <span>Выполнить команду</span>
-            </div>
+            <ButtonActionOption action="command" />
           </SelectItem>
           <SelectItem value="url">
-            <div className="flex items-center gap-2">
-              <i className="fas fa-link text-blue-600 dark:text-blue-400 text-xs"></i>
-              <span>Открыть ссылку</span>
-            </div>
+            <ButtonActionOption action="url" />
           </SelectItem>
           <SelectItem value="selection">
-            <div className="flex items-center gap-2">
-              <i className="fas fa-check-square text-green-600 dark:text-green-400 text-xs"></i>
-              <span>Выбор опции</span>
-            </div>
+            <ButtonActionOption action="selection" />
           </SelectItem>
         </SelectContent>
       </Select>
