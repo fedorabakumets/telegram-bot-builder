@@ -98,13 +98,13 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
   });
 
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: ДОБАВЛЯЕМ кнопку "Готово" для множественного выбора
-  if (hasSelectionButtons && isMultipleSelection) {
-    const continueText = nodeData?.continueButtonText || 'Готово';
+  const completeButton = buttons.find((btn: any) => btn.action === 'complete');
+  if (hasSelectionButtons && isMultipleSelection && completeButton) {
     const shortNodeIdForDone = generateUniqueShortId(nodeId, allNodeIds || []);
     const callbackData = `done_${shortNodeIdForDone}`;
-    generatorLogger.debug(`ДОБАВЛЯЕМ кнопку "${continueText}" для узла ${nodeId} с callback_data: ${callbackData}`);
+    generatorLogger.debug(`ДОБАВЛЯЕМ кнопку "${completeButton.text}" для узла ${nodeId} с callback_data: ${callbackData}`);
     code += `${indentLevel}# Добавляем кнопку "Готово" для множественного выбора\n`;
-    code += `${indentLevel}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${callbackData}"))\n`;
+    code += `${indentLevel}builder.add(InlineKeyboardButton(text="${completeButton.text}", callback_data="${callbackData}"))\n`;
   }
 
   // ИСПРАВЛЕНИЕ: Используем keyboardLayout если есть, иначе calculateOptimalColumns
@@ -114,13 +114,7 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
     adjustCode = generateAdjustCode(nodeData.keyboardLayout, buttons.length);
   } else {
     // Старая логика с calculateOptimalColumns
-    let allButtons = [...buttons];
-    if (hasSelectionButtons && isMultipleSelection) {
-      allButtons.push({ text: nodeData?.continueButtonText || 'Готово' });
-    }
-    const columns = isMultipleSelection 
-      ? 2 
-      : calculateOptimalColumns(allButtons, nodeData);
+    const columns = isMultipleSelection ? 2 : calculateOptimalColumns(buttons, nodeData);
     adjustCode = `builder.adjust(${columns})\n`;
   }
   code += `${indentLevel}${adjustCode}`;
