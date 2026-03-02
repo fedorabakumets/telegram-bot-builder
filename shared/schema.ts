@@ -937,7 +937,7 @@ export type InsertUserId = z.infer<typeof insertUserIdSchema>;
 export const buttonSchema = z.object({
   id: z.string(),
   text: z.string(),
-  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'default', 'complete']),
+  action: z.enum(['goto', 'url', 'selection', 'complete']),
   target: z.string().optional(),
   url: z.string().optional(),
   requestContact: z.boolean().optional(),
@@ -1170,7 +1170,7 @@ export const nodeSchema = z.object({
     adminUserIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'), // Источник ID пользователя
     adminUserVariableName: z.string().optional(), // Имя переменной с ID пользователя
     // Права администратора согласно Telegram Bot API (promoteChatMember)
-    can_manage_chat: z.boolean().default(false), // Может управлять чатом
+    can_manage_chat: z.boolean().default(false), // Может упр��влять чатом
     can_post_messages: z.boolean().default(false), // Может публиковать сообщения (только каналы)
     can_edit_messages: z.boolean().default(false), // Может редакт��ровать сообщения (только каналы)
     can_delete_messages: z.boolean().default(false), // Может удалять сообщения

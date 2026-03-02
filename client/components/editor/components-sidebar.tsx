@@ -241,8 +241,8 @@ const components: ComponentDefinition[] = [
       messageText: '⚙️ Настройки бота:',
       keyboardType: 'inline',
       buttons: [
-        { id: 'btn-1', text: '📋 Язык', action: 'command', target: '/language' },
-        { id: 'btn-2', text: '🔔 Уведомления', action: 'command', target: '/notifications' }
+        { id: 'btn-1', text: '📋 Язык', action: 'goto', target: '/language' },
+        { id: 'btn-2', text: '🔔 Уведомления', action: 'goto', target: '/notifications' }
       ],
       markdown: true,
       oneTimeKeyboard: false,
@@ -266,10 +266,10 @@ const components: ComponentDefinition[] = [
       messageText: '📋 Главное меню:',
       keyboardType: 'reply',
       buttons: [
-        { id: 'btn-1', text: '📖 Информация', action: 'command', target: '/info' },
-        { id: 'btn-2', text: '⚙️ Настройки', action: 'command', target: '/settings' },
-        { id: 'btn-3', text: '❓ Помощь', action: 'command', target: '/help' },
-        { id: 'btn-4', text: '📞 Поддержка', action: 'command', target: '/support' }
+        { id: 'btn-1', text: '📖 Информация', action: 'goto', target: '/info' },
+        { id: 'btn-2', text: '⚙️ Настройки', action: 'goto', target: '/settings' },
+        { id: 'btn-3', text: '❓ Помощь', action: 'goto', target: '/help' },
+        { id: 'btn-4', text: '📞 Поддержка', action: 'goto', target: '/support' }
       ],
       markdown: true,
       oneTimeKeyboard: false,

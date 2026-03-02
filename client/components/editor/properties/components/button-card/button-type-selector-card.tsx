@@ -66,15 +66,11 @@ export function ButtonTypeSelectorCard({
           <SelectTrigger className="w-full text-xs bg-white/60 dark:bg-slate-950/60 border border-teal-300/40 dark:border-teal-700/40 hover:border-teal-400/60 dark:hover:border-teal-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-teal-500 dark:focus:border-teal-500 focus:ring-2 focus:ring-teal-400/30 dark:focus:ring-teal-600/30 transition-all duration-200 rounded-lg text-teal-900 dark:text-teal-50">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-gradient-to-br from-teal-50/95 to-cyan-50/95 dark:from-slate-900/95 dark:to-slate-800/95 border border-teal-200/50 dark:border-teal-800/50 shadow-xl max-h-64 overflow-y-auto">
+          <SelectContent className="bg-gradient-to-br from-teal-50/95 to-cyan-50/95 dark:from-slate-900/95 dark:to-slate-800/95 border border-teal-200/50 dark:border-teal-800/50 shadow-xl">
             <SelectItem value="goto"><ButtonActionOption action="goto" /></SelectItem>
-            <SelectItem value="command"><ButtonActionOption action="command" /></SelectItem>
             <SelectItem value="url"><ButtonActionOption action="url" /></SelectItem>
             <SelectItem value="selection"><ButtonActionOption action="selection" /></SelectItem>
             <SelectItem value="complete"><ButtonActionOption action="complete" /></SelectItem>
-            <SelectItem value="contact"><ButtonActionOption action="contact" /></SelectItem>
-            <SelectItem value="location"><ButtonActionOption action="location" /></SelectItem>
-            <SelectItem value="default"><ButtonActionOption action="default" /></SelectItem>
           </SelectContent>
         </Select>
       </div>

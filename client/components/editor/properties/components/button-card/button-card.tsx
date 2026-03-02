@@ -11,7 +11,6 @@ import { ButtonTypeSelectorCard } from './button-type-selector-card';
 import { ButtonSkipDataToggle } from './button-skip-data-toggle';
 import { ButtonHideAfterClickToggle } from './button-hide-after-click-toggle';
 import { GotoTargetSection } from '../navigation/goto-target-section';
-import { CommandTargetSection } from '../commands/command-target-section';
 import type { Button } from '@shared/schema';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Node } from '@shared/schema';
@@ -108,15 +107,6 @@ export function ButtonCard({
           onChange={(e) => onButtonUpdate(nodeId, button.id, { url: e.target.value })}
           className="mt-2 text-xs"
           placeholder="https://example.com"
-        />
-      )}
-
-      {(!allowMultipleSelection || button.action !== 'selection') && button.action === 'command' && (
-        <CommandTargetSection
-          selectedNode={selectedNode}
-          button={button}
-          allNodes={allNodes}
-          onButtonUpdate={onButtonUpdate}
         />
       )}
 

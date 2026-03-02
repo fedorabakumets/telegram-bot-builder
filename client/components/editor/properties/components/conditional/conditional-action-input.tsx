@@ -40,9 +40,5 @@ export function ConditionalActionInput({
     return <Input value={button.url || ''} onChange={(e) => onUpdate({ url: e.target.value })} className="h-9 text-sm" placeholder="https://example.com" />;
   }
 
-  if (action === 'command') {
-    return <Input value={button.target || ''} onChange={(e) => onUpdate({ target: e.target.value })} className="h-9 text-sm" placeholder="/help" />;
-  }
-
   return null;
 }

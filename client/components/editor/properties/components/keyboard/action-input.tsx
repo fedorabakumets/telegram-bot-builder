@@ -1,6 +1,6 @@
 /**
  * @fileoverview Компонент полей ввода для действий кнопки ответа
- * @description Отображает поле в зависимости от действия (goto/command/url).
+ * @description Отображает поле в зависимости от действия (goto/url).
  */
 
 import { Node } from '@shared/schema';
@@ -35,17 +35,6 @@ export function ActionInput({
     return (
       <TargetNodeSelector option={option} index={index} getAllNodesFromAllSheets={getAllNodesFromAllSheets}
         selectedNode={selectedNode} onOptionsUpdate={onOptionsUpdate} formatNodeDisplay={formatNodeDisplay} />
-    );
-  }
-
-  if (action === 'command') {
-    return (
-      <div>
-        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1 block">Команда для выполнения</Label>
-        <Input value={option.target || ''} onChange={(e) => update({ target: e.target.value })}
-          className="text-xs border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
-          placeholder="например: /start, /help, /menu" />
-      </div>
     );
   }
 
