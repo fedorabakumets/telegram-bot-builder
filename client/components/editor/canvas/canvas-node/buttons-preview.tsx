@@ -57,12 +57,11 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
   );
 
   // Проверяем, есть ли done-button в keyboardLayout
-  const hasDoneButtonInLayout = useMemo(() => 
-    node.data.keyboardLayout?.rows.some((row: any) => 
-      row.buttonIds.includes('done-button')
-    ),
-    [node.data.keyboardLayout]
-  );
+  const hasDoneButtonInLayout = useMemo(() => {
+    const rows = node.data.keyboardLayout?.rows;
+    if (!rows) return false;
+    return rows.some((row: any) => row.buttonIds.includes('done-button'));
+  }, [node.data.keyboardLayout?.rows]);
 
   // Если done-button есть в layout, добавляем виртуальную кнопку в массив для отображения
   const allButtonsForGrid = useMemo(() => {
@@ -79,7 +78,7 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
       } as any);
     }
     return buttons;
-  }, [node.data.buttons, isMultiSelect, completeButton, hasDoneButtonInLayout, node.data.continueButtonTarget]);
+  }, [node.data.buttons, node.data.keyboardLayout, isMultiSelect, completeButton, hasDoneButtonInLayout, node.data.continueButtonTarget]);
 
   return (
     <div className="space-y-3">

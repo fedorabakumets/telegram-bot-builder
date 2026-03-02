@@ -49,14 +49,18 @@ export function KeyboardLayoutEditor({
   React.useEffect(() => {
     // Проверяем, действительно ли layout изменился
     const prevLayout = prevLayoutRef.current;
-    if (prevLayout && 
-        prevLayout.autoLayout === layout.autoLayout &&
-        prevLayout.columns === layout.columns &&
-        JSON.stringify(prevLayout.rows) === JSON.stringify(layout.rows)) {
-      return; // Layout не изменился, не вызываем onLayoutChange
+    
+    if (prevLayout) {
+      const rowsChanged = JSON.stringify(prevLayout.rows) !== JSON.stringify(layout.rows);
+      const autoLayoutChanged = prevLayout.autoLayout !== layout.autoLayout;
+      const columnsChanged = prevLayout.columns !== layout.columns;
+      
+      if (!rowsChanged && !autoLayoutChanged && !columnsChanged) {
+        return; // Layout не изменился, не вызываем onLayoutChange
+      }
     }
 
-    prevLayoutRef.current = layout;
+    prevLayoutRef.current = { ...layout, rows: layout.rows.map(r => ({ ...r, buttonIds: [...r.buttonIds] })) };
     onLayoutChange?.(layout);
   }, [layout, onLayoutChange]);
 
