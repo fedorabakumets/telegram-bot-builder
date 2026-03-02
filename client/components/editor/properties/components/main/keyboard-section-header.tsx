@@ -1,10 +1,9 @@
 /**
  * @fileoverview Заголовок секции клавиатуры
- * 
- * Компонент заголовка с кнопкой сворачивания и индикатором типа клавиатуры.
+ *
+ * Компонент заголовка с кнопкой сворачивания.
  */
 
-import { Badge } from '@/components/ui/badge';
 import type { Node } from '@shared/schema';
 
 /** Пропсы компонента */
@@ -43,11 +42,6 @@ export function KeyboardSectionHeader({
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        {selectedNode.data.keyboardType !== 'none' && (
-          <Badge variant="secondary" className="text-xs font-medium">
-            {selectedNode.data.keyboardType === 'inline' ? '📍 Inline' : '💬 Reply'}
-          </Badge>
-        )}
         <i className={`fas fa-chevron-down text-amber-600 dark:text-amber-400 text-sm transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}></i>
       </div>
     </button>
