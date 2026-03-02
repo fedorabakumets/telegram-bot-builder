@@ -14,12 +14,11 @@ import { CodePanel } from '@/components/editor/code/code-panel';
 import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
-import { logNodeUpdate, logNodeTypeChange, logNodeIdChange, logButtonAdd, logButtonUpdate, logButtonDelete, logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
+import { logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
 import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
 import { createActionHistoryItem } from './editor/utils/action-logger';
 import type { ActionType, ActionHistoryItem, EditorTab, PreviousEditorTab, NodeSizeMap } from './editor/types';
 import { useProjectLoader } from './editor/hooks/use-project-loader';
-import { useProjectSave } from './editor/hooks/use-project-save';
 import { useTabNavigation } from './editor/hooks/use-tab-navigation';
 import { useLayoutManager as useFlexibleLayoutManager } from './editor/hooks/use-layout-management';
 import { useNodeHandlers } from './editor/hooks/use-node-handlers';
@@ -49,7 +48,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { SheetsManager } from '@/utils/sheets-manager';
-import { BotData, BotDataWithSheets, BotProject, Button, ComponentDefinition, Node, UserBotData } from '@shared/schema';
+import { BotData, BotDataWithSheets, BotProject, ComponentDefinition, Node, UserBotData } from '@shared/schema';
 import { nanoid } from 'nanoid';
 
 /**
@@ -78,7 +77,6 @@ export default function Editor() {
    * @type {EditorTab}
    */
   const [currentTab, setCurrentTab] = useState<EditorTab>('editor');
-  const [previousTab, setPreviousTab] = useState<PreviousEditorTab>('editor');
 
   /**
    * Флаг отображения модального окна сохранения шаблона
@@ -749,6 +747,9 @@ export default function Editor() {
       )
     }));
   }, [setFlexibleLayoutConfig]);
+
+  // Локальное состояние для предыдущей вкладки
+  const [, setPreviousTab] = useState<PreviousEditorTab>('editor');
 
   // Навигация по вкладкам через хук
   const { handleTabChange } = useTabNavigation({
