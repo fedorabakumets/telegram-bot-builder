@@ -80,7 +80,8 @@ export function useNodeHandlers({
       const currentLayout = updates.keyboardLayout || node?.data.keyboardLayout;
       const buttons = updates.buttons || node?.data.buttons || [];
       updates.keyboardLayout = migrateKeyboardLayout(buttons, currentLayout);
-      updates.keyboardLayout = fixAutoLayout(updates.keyboardLayout, buttons.length);
+      // НЕ вызываем fixAutoLayout, чтобы не перезаписывать ручные изменения пользователя
+      // updates.keyboardLayout = fixAutoLayout(updates.keyboardLayout, buttons.length);
     }
 
     if (node) {
