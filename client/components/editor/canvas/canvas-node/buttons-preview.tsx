@@ -52,8 +52,24 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
     ? node.data.buttons.find((button: any) => button.buttonType === 'complete')
     : undefined;
 
-  // Все кнопки кроме complete для KeyboardGrid (option + navigation)
-  const gridButtons = node.data.buttons.filter((button: any) => button.buttonType !== 'complete');
+  // Проверяем, есть ли done-button в keyboardLayout
+  const hasDoneButtonInLayout = node.data.keyboardLayout?.rows.some((row: any) => 
+    row.buttonIds.includes('done-button')
+  );
+
+  // Если done-button есть в layout, добавляем виртуальную кнопку в массив для отображения
+  let allButtonsForGrid = [...node.data.buttons];
+  if (isMultiSelect && !completeButton && hasDoneButtonInLayout) {
+    allButtonsForGrid.push({
+      id: 'done-button',
+      text: '✅ Готово',
+      action: 'goto',
+      target: node.data.continueButtonTarget || '',
+      buttonType: 'complete' as const,
+      skipDataCollection: false,
+      hideAfterClick: false
+    } as any);
+  }
 
   return (
     <div className="space-y-3">
@@ -63,17 +79,30 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
         <div className="space-y-3">
           {isMultiSelect ? (
             <>
-              <KeyboardGrid
-                buttons={gridButtons}
-                keyboardLayout={node.data.keyboardLayout}
-                buttonClassName=""
-                renderButton={(button) => button.buttonType === 'option' ? <OptionButton button={button} /> : <InlineButton button={button} allNodes={allNodes} />}
-              />
-              {/* Кнопка завершения: из шаблона или стандартная */}
-              {completeButton ? (
-                <InlineButton button={completeButton} allNodes={allNodes} />
+              {hasDoneButtonInLayout ? (
+                // Если done-button в layout, показываем все кнопки в сетке
+                <KeyboardGrid
+                  buttons={allButtonsForGrid}
+                  keyboardLayout={node.data.keyboardLayout}
+                  buttonClassName=""
+                  renderButton={(button) => button.buttonType === 'option' ? <OptionButton button={button} /> : <InlineButton button={button} allNodes={allNodes} />}
+                />
               ) : (
-                <DoneButton />
+                // Старая логика: кнопка завершения отдельно
+                <>
+                  <KeyboardGrid
+                    buttons={allButtonsForGrid.filter((button: any) => button.buttonType !== 'complete')}
+                    keyboardLayout={node.data.keyboardLayout}
+                    buttonClassName=""
+                    renderButton={(button) => button.buttonType === 'option' ? <OptionButton button={button} /> : <InlineButton button={button} allNodes={allNodes} />}
+                  />
+                  {/* Кнопка завершения: из шаблона или стандартная */}
+                  {completeButton ? (
+                    <InlineButton button={completeButton} allNodes={allNodes} />
+                  ) : (
+                    <DoneButton />
+                  )}
+                </>
               )}
             </>
           ) : (
