@@ -16,48 +16,9 @@ import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { logNodeUpdate, logNodeTypeChange, logNodeIdChange, logButtonAdd, logButtonUpdate, logButtonDelete, logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
 import { migrateKeyboardLayout, fixAutoLayout } from '@/components/editor/properties/utils';
-
-/**
- * Миграция keyboardLayout для всех узлов проекта
- * Исправляет autoLayout и фильтрует done-button из рядов
- */
-function migrateAllKeyboardLayouts(sheets: any[]): any[] {
-  return sheets.map(sheet => ({
-    ...sheet,
-    nodes: sheet.nodes?.map((node: any) => {
-      const buttons = node.data?.buttons || [];
-      let keyboardLayout = node.data?.keyboardLayout;
-
-      if (keyboardLayout) {
-        // 1. Фильтруем done-button из рядов
-        keyboardLayout = {
-          ...keyboardLayout,
-          rows: keyboardLayout.rows
-            .map((row: any) => ({
-              ...row,
-              buttonIds: row.buttonIds.filter((id: string) => id !== 'done-button')
-            }))
-            .filter((row: any) => row.buttonIds.length > 0)
-        };
-
-        // 2. Исправляем autoLayout
-        keyboardLayout = fixAutoLayout(keyboardLayout, buttons.length);
-      }
-
-      if (keyboardLayout !== node.data?.keyboardLayout) {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            keyboardLayout
-          }
-        };
-      }
-
-      return node;
-    }) || []
-  }));
-}
+import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
+import { createActionHistoryItem } from './editor/utils/action-logger';
+import type { ActionType, ActionHistoryItem } from './editor/types';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -203,23 +164,6 @@ export default function Editor() {
   const [lastLoadedProjectId, setLastLoadedProjectId] = useState<number | null>(null);
 
   /**
-   * Тип действия в истории
-   * @typedef {'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate' | 'reset' | 'type_change' | 'id_change' | 'button_add' | 'button_update' | 'button_delete' | 'move_end' | 'sheet_add' | 'sheet_delete' | 'sheet_rename' | 'sheet_duplicate' | 'sheet_switch'} ActionType
-   */
-  type ActionType = 'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate' | 'reset' | 'type_change' | 'id_change' | 'button_add' | 'button_update' | 'button_delete' | 'move_end' | 'sheet_add' | 'sheet_delete' | 'sheet_rename' | 'sheet_duplicate' | 'sheet_switch';
-
-  /**
-   * Интерфейс элемента истории действий
-   * @interface ActionHistoryItem
-   */
-  interface ActionHistoryItem {
-    id: string;
-    type: ActionType;
-    description: string;
-    timestamp: number;
-  }
-
-  /**
    * История действий пользователя
    * @type {ActionHistoryItem[]}
    */
@@ -242,13 +186,7 @@ export default function Editor() {
    */
   const handleActionLog = useCallback((type: string, description: string) => {
     console.log('📋 История действий:', type, '-', description);
-    const newAction: ActionHistoryItem = {
-      id: `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type: type as ActionType,
-      description,
-      timestamp: Date.now()
-    };
-    setActionHistory(prev => [newAction, ...prev].slice(0, 50)); // Храним последние 50
+    setActionHistory(prev => [createActionHistoryItem(type as ActionType, description), ...prev].slice(0, 50));
   }, []);
 
   /**
@@ -1652,7 +1590,7 @@ export default function Editor() {
         onActionLog: handleActionLog
       });
     }
-    // Сохраняем в историю ДО изменений
+    // Сохран��ем в историю ДО изменений
     saveToHistory();
     deleteButton(nodeId, buttonId);
   }, [deleteButton, nodes, handleActionLog, saveToHistory]);
