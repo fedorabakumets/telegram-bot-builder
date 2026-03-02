@@ -44,7 +44,6 @@ export function ConditionalKeyboardConfig({
       action: 'goto',
       target: '',
       url: '',
-      buttonType: 'normal',
       skipDataCollection: false,
       hideAfterClick: false
     };

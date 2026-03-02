@@ -43,7 +43,7 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
     return null;
   }
 
-  const hasOptionButtons = node.data.buttons.some((button: any) => button.buttonType === 'option');
+  const hasOptionButtons = node.data.buttons.some((button: any) => button.action === 'selection');
   const isMultiSelect = hasOptionButtons && (node.data as any).allowMultipleSelection;
   const keyboardType = node.data.keyboardType as 'inline' | 'reply';
 
@@ -71,7 +71,7 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
           buttonClassName=""
           renderButton={(button) => {
             if (button.action === 'complete') return <DoneButton button={button} />;
-            if (button.buttonType === 'option') return <OptionButton button={button} />;
+            if (button.action === 'selection') return <OptionButton button={button} />;
             return <InlineButton button={button} allNodes={allNodes} />;
           }}
         />
