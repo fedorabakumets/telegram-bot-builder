@@ -157,37 +157,23 @@ export function initializeAndRestoreMultipleSelectionState(node: NodeWithButtons
             }
         });
 
-        // Добавляем кнопку "Готово"
-        const continueText = (node && node.data && node.data.continueButtonText) ? node.data.continueButtonText : 'Готово';
-        const shortNodeIdForDone = generateUniqueShortId(node.id || 'unknown', allNodeIds || []);
-        codeLines.push(`    builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_${shortNodeIdForDone}"))`);
-        
-        // Используем keyboardLayout если есть, иначе 2 колонки
-        if (node && node.data && node.data.keyboardLayout && !node.data.keyboardLayout.autoLayout) {
-            // Проверяем, есть ли уже done-button в layout
-            const hasDoneButton = node.data.keyboardLayout.rows.some((row: any) => 
-                row.buttonIds.includes('done-button')
-            );
-            
-            let layoutForAdjust = node.data.keyboardLayout;
-            let totalButtons = node.data.buttons.length + 1; // +1 для кнопки "Готово"
-            
-            if (!hasDoneButton) {
-                // Если done-button нет в layout, добавляем его в конец
-                layoutForAdjust = {
-                    ...node.data.keyboardLayout,
-                    rows: [...node.data.keyboardLayout.rows, { buttonIds: ['done_button'] }]
-                };
+        // Добавляем кнопку "Готово" из данных узла
+        const completeButton = node?.data?.buttons?.find((btn: any) => btn.action === 'complete');
+        if (completeButton) {
+            const shortNodeIdForDone = generateUniqueShortId(node.id || 'unknown', allNodeIds || []);
+            codeLines.push(`    builder.add(InlineKeyboardButton(text="${completeButton.text}", callback_data="done_${shortNodeIdForDone}"))`);
+
+            // Используем keyboardLayout если есть, иначе 2 колонки
+            if (node && node.data && node.data.keyboardLayout && !node.data.keyboardLayout.autoLayout) {
+                const adjustCode = generateAdjustCode(node.data.keyboardLayout, node.data.buttons.length);
+                codeLines.push(`    ${adjustCode.trim()}`);
+            } else {
+                codeLines.push('    builder.adjust(2)  # Используем 2 колонки для консистентности');
             }
-            
-            const adjustCode = generateAdjustCode(layoutForAdjust, totalButtons);
-            codeLines.push(`    ${adjustCode.trim()}`);
-        } else {
-            codeLines.push('    builder.adjust(2)  # Используем 2 колонки для консистентности');
+
+            codeLines.push('    keyboard = builder.as_markup()');
+            codeLines.push('');
         }
-        
-        codeLines.push('    keyboard = builder.as_markup()');
-        codeLines.push('');
     }
 
     // Применяем автоматическое добавление комментариев ко всему коду
