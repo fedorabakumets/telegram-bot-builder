@@ -347,14 +347,8 @@ export function PropertiesPanel({
                         return layout;
                       })()}
                       onLayoutChange={(layout) => {
-                        // Фильтруем done-button из keyboardLayout перед сохранением
-                        const filteredLayout = {
-                          ...layout,
-                          rows: layout.rows.map(row => ({
-                            buttonIds: row.buttonIds.filter(id => id !== 'done-button')
-                          })).filter(row => row.buttonIds.length > 0)
-                        };
-                        onNodeUpdate(selectedNode.id, { keyboardLayout: filteredLayout });
+                        // Сохраняем layout с done-button, чтобы он отображался на канвасе
+                        onNodeUpdate(selectedNode.id, { keyboardLayout: layout });
                       }}
                     />
                   )}
