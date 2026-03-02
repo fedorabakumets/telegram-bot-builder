@@ -64,6 +64,7 @@ export function CommandAdvancedSettings({
         icon="gear"
         iconGradient="from-cyan-100 to-blue-100 dark:from-cyan-900/50 dark:to-blue-900/50"
         iconColor="text-cyan-600 dark:text-cyan-400"
+        descriptionColor="text-cyan-700/70 dark:text-cyan-300/70"
       />
 
       {isOpen && (

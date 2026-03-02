@@ -61,6 +61,7 @@ export function UserInputSettingsSection({
         icon="inbox"
         iconGradient="from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50"
         iconColor="text-blue-600 dark:text-blue-400"
+        descriptionColor="text-blue-700/70 dark:text-blue-300/70"
       />
 
       <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/40">

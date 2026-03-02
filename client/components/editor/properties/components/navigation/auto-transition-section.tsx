@@ -63,6 +63,7 @@ export function AutoTransitionSection({
         icon="bolt"
         iconGradient="from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50"
         iconColor="text-emerald-600 dark:text-emerald-400"
+        descriptionColor="text-emerald-700/70 dark:text-emerald-300/70"
       />
 
       {isOpen && (

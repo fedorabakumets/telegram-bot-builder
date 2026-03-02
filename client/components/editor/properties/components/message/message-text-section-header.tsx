@@ -37,6 +37,7 @@ export function MessageTextSectionHeader({ isOpen, onToggle }: MessageTextSectio
       iconGradient="from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50"
       iconColor="text-blue-600 dark:text-blue-400"
       titleGradient="bg-gradient-to-r from-blue-900 to-cyan-800 dark:from-blue-100 dark:to-cyan-200 bg-clip-text text-transparent"
+      descriptionColor="text-blue-700/70 dark:text-blue-300/70"
     />
   );
 }

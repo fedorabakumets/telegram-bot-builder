@@ -11,7 +11,7 @@ interface SectionHeaderProps {
   /** Заголовок секции */
   title: string;
   /** Описание секции (опционально) */
-  description?: string;
+  description?: React.ReactNode;
   /** Состояние: открыта ли секция */
   isOpen: boolean;
   /** Обработчик переключения состояния */
@@ -24,6 +24,8 @@ interface SectionHeaderProps {
   iconColor: string;
   /** Цвет текста заголовка (gradient classes) */
   titleGradient?: string;
+  /** Цвет текста описания (например, 'text-blue-700/70 dark:text-blue-300/70') */
+  descriptionColor?: string;
   /** Дополнительные классы для контейнера */
   className?: string;
 }
@@ -43,6 +45,7 @@ export function SectionHeader({
   iconGradient,
   iconColor,
   titleGradient,
+  descriptionColor = 'text-slate-600/70 dark:text-slate-400/70',
   className = ''
 }: SectionHeaderProps): JSX.Element {
   return (
@@ -60,7 +63,7 @@ export function SectionHeader({
           {title}
         </h3>
         {description && (
-          <p className="text-xs sm:text-sm text-slate-600/70 dark:text-slate-400/70 mt-0.5 text-left">
+          <p className={`text-xs sm:text-sm mt-0.5 text-left ${descriptionColor}`}>
             {description}
           </p>
         )}

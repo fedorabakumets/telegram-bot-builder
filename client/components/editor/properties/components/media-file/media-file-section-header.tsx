@@ -37,6 +37,7 @@ export function MediaFileSectionHeader({ isOpen, onToggle }: MediaFileSectionHea
       iconGradient="from-rose-100 to-pink-100 dark:from-rose-900/50 dark:to-pink-900/50"
       iconColor="text-rose-600 dark:text-rose-400"
       titleGradient="bg-gradient-to-r from-rose-900 to-pink-800 dark:from-rose-100 dark:to-pink-200 bg-clip-text text-transparent"
+      descriptionColor="text-rose-700/70 dark:text-rose-300/70"
     />
   );
 }
