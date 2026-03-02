@@ -13,7 +13,7 @@ import { useSheetRename } from './use-sheet-rename';
 import { useSheetDuplicate } from './use-sheet-duplicate';
 import { useSheetSelect } from './use-sheet-select';
 import type { BotDataWithSheets } from '@shared/schema';
-import type { Toast, ToasterToast } from '@/hooks/use-toast';
+import type { ToasterToast } from '@/hooks/use-toast';
 import type { QueryClient } from '@tanstack/react-query';
 
 /** Параметры хука useSheetHandlers */

@@ -312,6 +312,7 @@ export function PropertiesPanel({
                         }
                         return allButtons;
                       })()}
+                      initialLayout={selectedNode.data.keyboardLayout}
                       onLayoutChange={(layout) => {
                         // Фильтруем done-button из keyboardLayout перед сохранением
                         const filteredLayout = {

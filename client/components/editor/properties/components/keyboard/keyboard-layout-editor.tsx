@@ -71,8 +71,8 @@ export function KeyboardLayoutEditor({
               <CardTitle className="text-base">Расположение кнопок</CardTitle>
               <CardDescription className="text-xs mt-0.5">
                 {layout.autoLayout 
-                  ? `Авто: ${layout.columns} кол.${layout.columns === 1 ? 'онка' : layout.columns < 5 ? 'онки' : 'онок'}`
-                  : `Ручная: ${layout.rows.length} ряд.${layout.rows.length < 5 ? 'а' : 'ов'}`
+                  ? `Авто: ${layout.columns} ${layout.columns === 1 ? 'колонка' : layout.columns < 5 ? 'колонки' : 'колонок'}`
+                  : `Ручная: ${layout.rows.length} ${layout.rows.length === 1 ? 'ряд' : layout.rows.length < 5 ? 'ряда' : 'рядов'}`
                 }
               </CardDescription>
             </div>

@@ -11,7 +11,7 @@ import { useCallback } from 'react';
 import type { BotDataWithSheets } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { logSheetSwitch } from '@/components/editor/properties';
-import type { Toast, ToasterToast } from '@/hooks/use-toast';
+import type { ToasterToast } from '@/hooks/use-toast';
 import type { QueryClient } from '@tanstack/react-query';
 
 /** Параметры хука useSheetSelect */

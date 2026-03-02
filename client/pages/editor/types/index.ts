@@ -1,11 +1,14 @@
 /**
- * @fileoverview Экспорт всех типов редактора
+ * @fileoverview Экспорт типов редактора
  *
- * Централизованный экспорт для удобного импорта.
+ * Централизованный экспорт всех типов для компонента Editor.
+ *
+ * @module EditorTypes
  */
 
-export type { ActionType } from './action-type';
-export type { ActionHistoryItem } from './action-history-item';
-export type { EditorTab } from './editor-tab';
-export type { PreviousEditorTab } from './previous-editor-tab';
-export type { NodeSize, NodeSizeMap } from './node-size';
+export * from './editor-common-types';
+
+export * from './editor-states';
+export * from './editor-code-states';
+export * from './action-type';
+export * from './action-history-item';
