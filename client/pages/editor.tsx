@@ -1344,52 +1344,15 @@ export default function Editor() {
     _duplicateNode(nodeId);
   }, [_duplicateNode, nodes, handleActionLog, saveToHistory]);
 
-  // Обёртки для кнопок с логированием
-  const handleButtonAdd = useCallback((nodeId: string, button: Button) => {
-    const node = nodes.find(n => n.id === nodeId);
-    if (node && handleActionLog) {
-      logButtonAdd({
-        node,
-        buttonText: button.text,
-        onActionLog: handleActionLog
-      });
-    }
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    addButton(nodeId, button);
-  }, [addButton, nodes, handleActionLog, saveToHistory]);
-
-  const handleButtonUpdate = useCallback((nodeId: string, buttonId: string, updates: Partial<Button>) => {
-    const node = nodes.find(n => n.id === nodeId);
-    const updatedFields = Object.keys(updates);
-    if (node && handleActionLog) {
-      logButtonUpdate({
-        node,
-        buttonId,
-        updatedFields,
-        onActionLog: handleActionLog
-      });
-    }
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    updateButton(nodeId, buttonId, updates);
-  }, [updateButton, nodes, handleActionLog, saveToHistory]);
-
-  const handleButtonDelete = useCallback((nodeId: string, buttonId: string) => {
-    const node = nodes.find(n => n.id === nodeId);
-    const button = node?.data.buttons?.find(b => b.id === buttonId);
-    if (node && handleActionLog) {
-      logButtonDelete({
-        node,
-        buttonId,
-        buttonText: button?.text,
-        onActionLog: handleActionLog
-      });
-    }
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    deleteButton(nodeId, buttonId);
-  }, [deleteButton, nodes, handleActionLog, saveToHistory]);
+  // Обработчики кнопок через хук
+  const { handleButtonAdd, handleButtonUpdate, handleButtonDelete } = useButtonHandlers({
+    nodes,
+    addButton,
+    updateButton,
+    deleteButton,
+    onActionLog: handleActionLog,
+    saveToHistory
+  });
 
   const handleComponentDrag = useCallback((_component: ComponentDefinition) => {
     // Handle component drag start if needed
