@@ -76,7 +76,7 @@ export function SynonymEditor({
           <span className="hidden sm:inline">Добавить синоним</span>
           <span className="sm:hidden">Добавить</span>
           {description && (
-            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 text-xs bg-slate-900 dark:bg-slate-800 text-slate-100 dark:text-slate-200 rounded-lg shadow-lg z-50">
+            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-full sm:w-64 max-w-xs sm:max-w-none p-2 text-xs bg-slate-900 dark:bg-slate-800 text-slate-100 dark:text-slate-200 rounded-lg shadow-lg z-50">
               {description}
               <div className="absolute left-3 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900 dark:border-t-slate-800"></div>
             </div>
