@@ -16,7 +16,7 @@ interface ButtonActionOptionProps {
 /**
  * Конфигурация иконок и стилей для каждого типа действия
  */
-const ACTION_CONFIG: Record<ButtonActionType, { icon: string; color: string; label: string }> = {
+export const ACTION_CONFIG: Record<ButtonActionType, { icon: string; color: string; label: string }> = {
   goto: { icon: 'fa-right-long', color: 'text-teal-600 dark:text-teal-400', label: 'Перейти к экрану' },
   url: { icon: 'fa-link', color: 'text-blue-600 dark:text-blue-400', label: 'Открыть ссылку' },
   selection: { icon: 'fa-check-square', color: 'text-green-600 dark:text-green-400', label: 'Выбор опции' },

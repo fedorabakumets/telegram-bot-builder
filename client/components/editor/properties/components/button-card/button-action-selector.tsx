@@ -4,9 +4,9 @@
  * Компонент выбора действия (goto/url/selection/complete).
  */
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import type { Button } from '@shared/schema';
-import { ButtonActionOption } from './button-action-options';
+import { ButtonActionOption, ButtonActionType, ACTION_CONFIG } from './button-action-options';
 
 /** Пропсы селектора действия */
 interface ButtonActionSelectorProps {
@@ -29,6 +29,8 @@ export function ButtonActionSelector({
   onButtonUpdate,
   nodeId
 }: ButtonActionSelectorProps) {
+  const config = ACTION_CONFIG[button.action as ButtonActionType];
+
   return (
     <div className="space-y-2">
       <Select
@@ -38,7 +40,10 @@ export function ButtonActionSelector({
         }
       >
         <SelectTrigger className="w-full text-xs bg-white/60 dark:bg-slate-950/60 border border-teal-300/40 dark:border-teal-700/40 hover:border-teal-400/60 dark:hover:border-teal-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-teal-500 dark:focus:border-teal-500 focus:ring-2 focus:ring-teal-400/30 dark:focus:ring-teal-600/30 transition-all duration-200 rounded-lg text-teal-900 dark:text-teal-50">
-          <SelectValue />
+          <div className="flex items-center gap-2">
+            <i className={`fas ${config.icon} ${config.color} text-xs`}></i>
+            <span>{config.label}</span>
+          </div>
         </SelectTrigger>
         <SelectContent className="bg-gradient-to-br from-teal-50/95 to-cyan-50/95 dark:from-slate-900/95 dark:to-slate-800/95 border border-teal-200/50 dark:border-teal-800/50 shadow-xl">
           <SelectItem value="goto"><ButtonActionOption action="goto" /></SelectItem>
