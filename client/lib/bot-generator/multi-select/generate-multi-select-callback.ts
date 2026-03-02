@@ -54,7 +54,7 @@ export const generateMultiSelectCallbackHandler = (
     code += `            logging.info(f"🎯 Найден узел: ${node.id}")\n`;
   });
   
-  code += '    elif callback_data.startsWith("multi_select_done_"):\n';
+  code += '    elif callback_data.startswith("multi_select_done_"):\n';
   code += '        # Завершение множественного выбора (старый формат)\n';
   code += '        node_id = callback_data.replace("multi_select_done_", "")\n';
   code += '        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n';
