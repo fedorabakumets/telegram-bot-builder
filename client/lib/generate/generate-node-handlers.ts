@@ -54,10 +54,13 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   // Создаем mediaVariablesMap для всех узлов
   const mediaVariablesMap = collectMediaVariables(nodes);
+  
+  // Создаем массив всех ID узлов для генерации коротких ID
+  const allNodeIds = nodes.map(n => n.id);
 
   const nodeHandlers: Record<string, (node: Node) => string> = {
-    start: (node) => generateStartHandler(node, userDatabaseEnabled, mediaVariablesMap),
-    command: (node) => generateCommandHandler(node, userDatabaseEnabled, mediaVariablesMap),
+    start: (node) => generateStartHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
+    command: (node) => generateCommandHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,
     animation: generateAnimationHandler,

@@ -66,7 +66,7 @@ import { generateMessageText } from '../utils/generate-message-text';
  * };
  * const code = generateStartHandler(node, true);
  */
-export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, mediaVariablesMap?: Map<string, { type: string; variable: string; }>): string {
+export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, mediaVariablesMap?: Map<string, { type: string; variable: string; }>, allNodeIds: string[] = []): string {
   // Собираем весь код в массив строк для автоматической обработки
   const codeLines: string[] = [];
 
@@ -235,7 +235,7 @@ export function generateStartHandler(node: Node, userDatabaseEnabled: boolean, m
   } else {
     // Обычная логика без медиа - используем функцию generateKeyboard
     // Она генерирует полный код, включая отправку сообщения
-    const keyboardCode = generateKeyboard(node);
+    const keyboardCode = generateKeyboard(node, allNodeIds);
     const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
     codeLines.push(...keyboardLines);
   }

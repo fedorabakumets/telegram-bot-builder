@@ -36,7 +36,7 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
  * };
  * const code = generateCommandHandler(node, true);
  */
-export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean, mediaVariablesMap?: Map<string, { type: string; variable: string; }>): string {
+export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean, mediaVariablesMap?: Map<string, { type: string; variable: string; }>, allNodeIds: string[] = []): string {
   // Извлекаем команду из узла или используем значение по умолчанию
   const command = node.data.command || "/help";
 
@@ -268,17 +268,17 @@ export function generateCommandHandler(node: Node, userDatabaseEnabled: boolean,
         codeLines.push(...mediaLines);
       } else {
         // Если код медиа не сгенерирован, используем обычную логику
-        const keyboardCode = generateKeyboard(node);
+        const keyboardCode = generateKeyboard(node, allNodeIds);
         codeLines.push(...keyboardCode.split('\n').filter(line => line.trim()));
       }
     } else {
       // Если mediaVariablesMap не передан, но есть статическое изображение, используем обычную логику
-      const keyboardCode = generateKeyboard(node);
+      const keyboardCode = generateKeyboard(node, allNodeIds);
       codeLines.push(...keyboardCode.split('\n').filter(line => line.trim()));
     }
   } else {
     // Обычная логика без медиа
-    const keyboardCode = generateKeyboard(node);
+    const keyboardCode = generateKeyboard(node, allNodeIds);
     codeLines.push(...keyboardCode.split('\n').filter(line => line.trim()));
   }
 

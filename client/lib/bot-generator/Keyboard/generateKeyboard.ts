@@ -14,9 +14,10 @@ import { generateUniversalVariableReplacement } from '../database/generateUniver
  * Генерирует код клавиатуры для узла
  * Примечание: generateUniversalVariableReplacement должен вызываться в месте вызова generateKeyboard
  * @param node - Узел для генерации клавиатуры
+ * @param allNodeIds - Массив всех ID узлов для генерации коротких ID
  * @returns Сгенерированный код клавиатуры
  */
-export function generateKeyboard(node: Node): string {
+export function generateKeyboard(node: Node, allNodeIds: string[] = []): string {
   let code = '';
 
   // Определяем режим форматирования в начале
