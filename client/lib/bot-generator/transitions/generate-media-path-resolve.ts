@@ -27,7 +27,7 @@ export function generateMediaPathResolve(
 ): string {
   let code = '';
   
-  code += `${indent}if ${urlVar}.startsWith('/uploads/'):\n`;
+  code += `${indent}if ${urlVar}.startswith('/uploads/'):\n`;
   code += `${indent}    ${mediaType}_path = get_upload_file_path("${urlVar}")\n`;
   code += `${indent}    ${mediaType}_url = FSInputFile(${mediaType}_path)\n`;
   
