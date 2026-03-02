@@ -47,7 +47,8 @@ export function generateMultiSelectReplyHandler(
 
     // Проверяем, является ли это кнопкой завершения
     multiSelectNodes.forEach((node: Node) => {
-        const continueText = node.data.continueButtonText || 'Готово';
+        const completeButton = node.data.buttons?.find((btn: any) => btn.action === 'complete');
+        const continueText = completeButton?.text || node.data.continueButtonText || 'Готово';
         const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
         code += `        if node_id == "${node.id}" and user_input == "${continueText}":\n`;
         code += `            # Завершение множественного выбора для узла ${node.id}\n`;
@@ -128,13 +129,13 @@ export function generateMultiSelectReplyHandler(
                 node.data.buttons?.filter((btn: { action: string; }) => btn.action === 'selection').forEach((selBtn: { text: string; }) => {
                     code += `                builder.add(KeyboardButton(text=f"{'✅ ' if '${selBtn.text}' in selected_list else ''}${selBtn.text}"))\n`;
                 });
-                // Добавляем кнопку "Готово" если есть кнопки выбора
-                if (node.data.buttons?.some((btn: { action: string; }) => btn.action === 'selection')) {
-                    const continueText = node.data.continueButtonText || 'Готово';
-                    code += `                builder.add(KeyboardButton(text="${continueText}"))  # используем builder\n`;
+                // Добавляем кнопку "Готово" из данных узла
+                const completeButton = node.data.buttons?.find((btn: any) => btn.action === 'complete');
+                if (completeButton) {
+                    code += `                builder.add(KeyboardButton(text="${completeButton.text}"))  # используем builder\n`;
                 }
                 // Добавляем обычные кнопки
-                node.data.buttons?.filter((btn: { action: string; }) => btn.action !== 'selection').forEach((regBtn: { text: string; }) => {
+                node.data.buttons?.filter((btn: { action: string; }) => btn.action !== 'selection' && btn.action !== 'complete').forEach((regBtn: { text: string; }) => {
                     code += `                builder.add(KeyboardButton(text="${regBtn.text}"))  # используем builder\n`;
                 });
                 // Применяем настройки клавиатуры
