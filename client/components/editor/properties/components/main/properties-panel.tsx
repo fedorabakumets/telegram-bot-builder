@@ -240,7 +240,7 @@ export function PropertiesPanel({
         </div>
 
         {/* Message Content - скрыто для узлов управления */}
-        <div className="pb-3 sm:pb-4 border-b border-border/20 mb-3 sm:mb-4">
+        <div className="pb-2 sm:pb-2.5 border-b border-border/20 mb-2 sm:mb-2.5">
           <MessageContentSection
             selectedNode={selectedNode}
             allNodes={allNodes}
@@ -361,7 +361,7 @@ export function PropertiesPanel({
 
         {/* Разделитель между секциями */}
         {!isManagementNode(selectedNode.type) && (
-          <div className="py-3 sm:py-4 border-b border-border/20 my-3 sm:my-4"></div>
+          <div className="py-2 sm:py-2.5 border-b border-border/20 my-2 sm:my-2.5"></div>
         )}
 
         {!isManagementNode(selectedNode.type) && (
@@ -438,7 +438,7 @@ export function PropertiesPanel({
 
         {/* Разделитель после условных сообщений */}
         {!isManagementNode(selectedNode.type) && (
-          <div className="py-3 sm:py-4 border-b border-border/20 my-3 sm:my-4"></div>
+          <div className="py-2 sm:py-2.5 border-b border-border/20 my-2 sm:my-2.5"></div>
         )}
 
         {/* Universal User Input Collection - скрыто для узлов управления */}
