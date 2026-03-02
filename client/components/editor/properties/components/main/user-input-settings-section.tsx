@@ -49,13 +49,7 @@ export function UserInputSettingsSection({
     <div className="w-full">
       <SectionHeader
         title="Сбор ответов"
-        description={
-          <>
-            <span className="text-xs sm:text-sm">Собирать ввод пользователя</span>
-            <br />
-            <span className="text-xs sm:text-sm">в переменные</span>
-          </>
-        }
+        description="Собирать ввод пользователя в переменные"
         isOpen={isOpen}
         onToggle={onToggle}
         icon="inbox"

@@ -51,13 +51,7 @@ export function AutoTransitionSection({
     <div className="space-y-3 sm:space-y-4">
       <SectionHeader
         title="Автопереход"
-        description={
-          <>
-            <span className="text-xs sm:text-sm">Переход к следующему узлу</span>
-            <br />
-            <span className="text-xs sm:text-sm">без ожидания ответа</span>
-          </>
-        }
+        description="Переход к следующему узлу без ожидания ответа"
         isOpen={isOpen}
         onToggle={onToggle}
         icon="bolt"

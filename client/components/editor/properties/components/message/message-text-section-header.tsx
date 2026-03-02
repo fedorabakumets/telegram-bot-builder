@@ -24,13 +24,7 @@ export function MessageTextSectionHeader({ isOpen, onToggle }: MessageTextSectio
   return (
     <SectionHeader
       title="Текст сообщения"
-      description={
-        <>
-          <span className="text-xs sm:text-sm">Основное содержание</span>
-          <br />
-          <span className="text-xs sm:text-sm">для отправки пользователю</span>
-        </>
-      }
+      description="Основное содержание для отправки пользователю"
       isOpen={isOpen}
       onToggle={onToggle}
       icon="message"

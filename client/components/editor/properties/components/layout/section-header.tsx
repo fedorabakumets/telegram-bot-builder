@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 /** Пропсы компонента SectionHeader */
 interface SectionHeaderProps {
   /** Заголовок секции */
-  title: string;
+  title: string | React.ReactNode;
   /** Описание секции (опционально) */
   description?: React.ReactNode;
   /** Состояние: открыта ли секция */
