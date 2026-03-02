@@ -4,6 +4,7 @@ import { generateConditionalMessageLogic } from '../Conditional/generateConditio
 import { generateButtonText } from '../format/generateButtonText';
 import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
 import { toPythonBoolean } from '../format/toPythonBoolean';
+import { generateUniqueShortId } from '../format/generateUniqueShortId';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { getAdjustCode } from './getAdjustCode';
 import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
@@ -458,7 +459,8 @@ export function generateKeyboard(node: Node): string {
 
               if (button.buttonType === 'complete' || buttonId === 'done-button') {
                 // Кнопка "Готово"
-                code += `${indent3}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
+                const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
+                code += `${indent3}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_${shortNodeIdForDone}"))\n`;
               } else if (button.action === 'selection') {
                 // Кнопка выбора с галочкой
                 const buttonValue = button.target || button.id || button.text;
@@ -513,7 +515,8 @@ export function generateKeyboard(node: Node): string {
           // Добавляем кнопку завершения, если есть опции выбора
           if (selectionButtons.length > 0) {
             const continueText = node.data.continueButtonText || 'Готово';
-            code += `${indent3}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
+            const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
+            code += `${indent3}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_${shortNodeIdForDone}"))\n`;
           }
         }
 

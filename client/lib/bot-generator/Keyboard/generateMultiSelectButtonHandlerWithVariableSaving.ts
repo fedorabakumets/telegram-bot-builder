@@ -31,8 +31,8 @@ export function generateMultiSelectButtonHandlerWithVariableSaving(targetNode: a
      * добавляем обработчик для кнопки завершения выбора
      */
     if (isDoneHandlerNeeded) {
-        code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_") or c.data == "multi_select_done_${shortNodeIdForDone}")\n`;
-        generatorLogger.debug(`КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавлен обработчик кнопки "multi_select_done_${shortNodeIdForDone}" для узла ${actualCallbackData}`);
+        code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
+        generatorLogger.debug(`КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавлен обработчик кнопки "done_${shortNodeIdForDone}" для узла ${actualCallbackData}`);
     } else {
         code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_"))\n`;
     }
@@ -50,7 +50,7 @@ export function generateMultiSelectButtonHandlerWithVariableSaving(targetNode: a
      */
     if (isDoneHandlerNeeded) {
         code += '    # Проверяем, является ли это кнопкой "Готово" для множественного выбора\n';
-        code += `    if callback_data == "multi_select_done_${shortNodeIdForDone}":\n`;
+        code += `    if callback_data == "done_${shortNodeIdForDone}":\n`;
         code += '        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")\n';
         code += '        \n';
 

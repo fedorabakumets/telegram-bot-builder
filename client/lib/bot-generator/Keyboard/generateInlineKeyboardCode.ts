@@ -108,7 +108,8 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: ДОБАВЛЯЕМ кнопку "Готово" для множественного выбора
   if (hasSelectionButtons && isMultipleSelection) {
     const continueText = nodeData?.continueButtonText || 'Готово';
-    const callbackData = `multi_select_done_${nodeId}`;
+    const shortNodeIdForDone = generateUniqueShortId(nodeId, allNodeIds || []);
+    const callbackData = `done_${shortNodeIdForDone}`;
     generatorLogger.debug(`ДОБАВЛЯЕМ кнопку "${continueText}" для узла ${nodeId} с callback_data: ${callbackData}`);
     code += `${indentLevel}# Добавляем кнопку "Готово" для множественного выбора\n`;
     code += `${indentLevel}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${callbackData}"))\n`;

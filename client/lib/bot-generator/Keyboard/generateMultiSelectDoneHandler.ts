@@ -144,7 +144,8 @@ export function generateMultiSelectDoneHandler(
                                 });
                                 // Добавляем кнопку "Готово" и вычисляем оптимальное количество колонок
                                 const continueText = targetNode.data.continueButtonText || 'Готово';
-                                code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${targetNode.id}"))\n`;
+                                const shortNodeIdForDone = generateUniqueShortId(targetNode.id, allNodeIds || []);
+                                code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_${shortNodeIdForDone}"))\n`;
 
                                 // Вычисляем оптимальное количество колонок для всех кнопок (включая кнопку "Готово")
                                 const allButtons = [...targetNode.data.buttons, {id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'}];
