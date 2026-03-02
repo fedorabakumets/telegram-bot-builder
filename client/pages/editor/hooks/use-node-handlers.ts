@@ -12,7 +12,7 @@ import {
   logNodeTypeChange,
   logNodeIdChange
 } from '@/components/editor/properties';
-import { migrateKeyboardLayout, fixAutoLayout } from '@/components/editor/properties/utils';
+import { migrateKeyboardLayout } from '@/components/editor/properties/utils';
 
 /** Параметры для логирования действий */
 interface ActionLogger {

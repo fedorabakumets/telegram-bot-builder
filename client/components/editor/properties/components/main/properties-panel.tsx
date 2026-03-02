@@ -312,7 +312,40 @@ export function PropertiesPanel({
                         }
                         return allButtons;
                       })()}
-                      initialLayout={selectedNode.data.keyboardLayout}
+                      initialLayout={(() => {
+                        // Если есть множественный выбор и нет кнопки complete, добавляем done-button в layout
+                        const layout = selectedNode.data.keyboardLayout;
+                        if (!layout) return undefined;
+                        
+                        if (selectedNode.data.allowMultipleSelection) {
+                          const hasCompleteButton = selectedNode.data.buttons.some((b: any) => b.buttonType === 'complete');
+                          if (!hasCompleteButton) {
+                            // Добавляем done-button в последний ряд или создаём новый
+                            const layoutWithDone = { ...layout };
+                            const allButtonIds = layoutWithDone.rows.flatMap(r => r.buttonIds);
+                            
+                            // Если done-button уже есть в layout, не добавляем
+                            if (!allButtonIds.includes('done-button')) {
+                              if (layout.autoLayout) {
+                                // В авто-режиме просто добавляем в конец
+                                const lastRow = layoutWithDone.rows[layoutWithDone.rows.length - 1];
+                                if (lastRow && lastRow.buttonIds.length < layout.columns) {
+                                  lastRow.buttonIds.push('done-button');
+                                } else {
+                                  layoutWithDone.rows.push({ buttonIds: ['done-button'] });
+                                }
+                              } else {
+                                // В ручном режиме добавляем в отдельный ряд
+                                layoutWithDone.rows.push({ buttonIds: ['done-button'] });
+                              }
+                            }
+                            
+                            return layoutWithDone;
+                          }
+                        }
+                        
+                        return layout;
+                      })()}
                       onLayoutChange={(layout) => {
                         // Фильтруем done-button из keyboardLayout перед сохранением
                         const filteredLayout = {
