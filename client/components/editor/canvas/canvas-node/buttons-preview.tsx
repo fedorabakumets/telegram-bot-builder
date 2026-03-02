@@ -12,6 +12,7 @@ import { ReplyButton } from './reply-button';
 import { OptionButton } from './option-button';
 import { DoneButton } from './done-button';
 import { KeyboardGrid } from '../keyboard-grid';
+import { useMemo } from 'react';
 
 /**
  * Интерфейс свойств компонента ButtonsPreview
@@ -48,28 +49,37 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
 
   // Находим кнопку завершения (для множественного выбора)
   // Только кнопка с buttonType: 'complete' считается кнопкой завершения
-  const completeButton = isMultiSelect
-    ? node.data.buttons.find((button: any) => button.buttonType === 'complete')
-    : undefined;
+  const completeButton = useMemo(() => 
+    isMultiSelect
+      ? node.data.buttons.find((button: any) => button.buttonType === 'complete')
+      : undefined,
+    [isMultiSelect, node.data.buttons]
+  );
 
   // Проверяем, есть ли done-button в keyboardLayout
-  const hasDoneButtonInLayout = node.data.keyboardLayout?.rows.some((row: any) => 
-    row.buttonIds.includes('done-button')
+  const hasDoneButtonInLayout = useMemo(() => 
+    node.data.keyboardLayout?.rows.some((row: any) => 
+      row.buttonIds.includes('done-button')
+    ),
+    [node.data.keyboardLayout]
   );
 
   // Если done-button есть в layout, добавляем виртуальную кнопку в массив для отображения
-  let allButtonsForGrid = [...node.data.buttons];
-  if (isMultiSelect && !completeButton && hasDoneButtonInLayout) {
-    allButtonsForGrid.push({
-      id: 'done-button',
-      text: '✅ Готово',
-      action: 'goto',
-      target: node.data.continueButtonTarget || '',
-      buttonType: 'complete' as const,
-      skipDataCollection: false,
-      hideAfterClick: false
-    } as any);
-  }
+  const allButtonsForGrid = useMemo(() => {
+    const buttons = [...node.data.buttons];
+    if (isMultiSelect && !completeButton && hasDoneButtonInLayout) {
+      buttons.push({
+        id: 'done-button',
+        text: '✅ Готово',
+        action: 'goto',
+        target: node.data.continueButtonTarget || '',
+        buttonType: 'complete' as const,
+        skipDataCollection: false,
+        hideAfterClick: false
+      } as any);
+    }
+    return buttons;
+  }, [node.data.buttons, isMultiSelect, completeButton, hasDoneButtonInLayout, node.data.continueButtonTarget]);
 
   return (
     <div className="space-y-3">

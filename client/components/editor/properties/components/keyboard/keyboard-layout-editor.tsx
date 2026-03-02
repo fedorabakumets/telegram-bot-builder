@@ -34,6 +34,7 @@ export function KeyboardLayoutEditor({
   onLayoutChange,
 }: KeyboardLayoutEditorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const prevLayoutRef = React.useRef<KeyboardLayout | null>(null);
 
   const {
     layout,
@@ -46,8 +47,18 @@ export function KeyboardLayoutEditor({
 
   // Вызываем onLayoutChange при изменении раскладки
   React.useEffect(() => {
+    // Проверяем, действительно ли layout изменился
+    const prevLayout = prevLayoutRef.current;
+    if (prevLayout && 
+        prevLayout.autoLayout === layout.autoLayout &&
+        prevLayout.columns === layout.columns &&
+        JSON.stringify(prevLayout.rows) === JSON.stringify(layout.rows)) {
+      return; // Layout не изменился, не вызываем onLayoutChange
+    }
+
+    prevLayoutRef.current = layout;
     onLayoutChange?.(layout);
-  }, [layout]);
+  }, [layout, onLayoutChange]);
 
   if (buttons.length === 0) {
     return null;
