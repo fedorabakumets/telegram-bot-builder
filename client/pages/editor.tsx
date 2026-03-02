@@ -16,6 +16,48 @@ import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { logNodeUpdate, logNodeTypeChange, logNodeIdChange, logButtonAdd, logButtonUpdate, logButtonDelete, logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
 import { migrateKeyboardLayout, fixAutoLayout } from '@/components/editor/properties/utils';
+
+/**
+ * Миграция keyboardLayout для всех узлов проекта
+ * Исправляет autoLayout и фильтрует done-button из рядов
+ */
+function migrateAllKeyboardLayouts(sheets: any[]): any[] {
+  return sheets.map(sheet => ({
+    ...sheet,
+    nodes: sheet.nodes?.map((node: any) => {
+      const buttons = node.data?.buttons || [];
+      let keyboardLayout = node.data?.keyboardLayout;
+
+      if (keyboardLayout) {
+        // 1. Фильтруем done-button из рядов
+        keyboardLayout = {
+          ...keyboardLayout,
+          rows: keyboardLayout.rows
+            .map((row: any) => ({
+              ...row,
+              buttonIds: row.buttonIds.filter((id: string) => id !== 'done-button')
+            }))
+            .filter((row: any) => row.buttonIds.length > 0)
+        };
+
+        // 2. Исправляем autoLayout
+        keyboardLayout = fixAutoLayout(keyboardLayout, buttons.length);
+      }
+
+      if (keyboardLayout !== node.data?.keyboardLayout) {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            keyboardLayout
+          }
+        };
+      }
+
+      return node;
+    }) || []
+  }));
+}
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -1022,6 +1064,12 @@ export default function Editor() {
         // Сохраняем мигрированные данные
         updateProjectMutation.mutate({});
       }
+
+      // Миграция keyboardLayout для всех узлов
+      sheetsData = {
+        ...sheetsData,
+        sheets: migrateAllKeyboardLayouts(sheetsData.sheets)
+      };
 
       // Устанавливаем данные листов для отображения панели
       setBotDataWithSheets(sheetsData);
