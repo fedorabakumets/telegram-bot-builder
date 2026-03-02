@@ -103,7 +103,6 @@ export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWit
               action: button.action || 'goto',
               target: button.target || '',
               url: button.url || '',
-              buttonType: button.buttonType || 'normal',
               skipDataCollection: button.skipDataCollection !== undefined ? button.skipDataCollection : false,
               hideAfterClick: button.hideAfterClick !== undefined ? button.hideAfterClick : false,
               // Копируем все остальные поля

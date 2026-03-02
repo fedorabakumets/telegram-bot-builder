@@ -214,14 +214,14 @@ export function getNodeDefaults(type: Node['type']): any {
       adminChatIdSource: 'current_chat',
       keyboardType: 'inline',
       buttons: [
-        { id: 'perm_change_info', text: '🏷️ Изменение профиля', action: 'command', target: 'toggle_change_info', buttonType: 'option', skipDataCollection: false, hideAfterClick: false },
-        { id: 'perm_delete_messages', text: '🗑️ Удаление сообщений', action: 'command', target: 'toggle_delete_messages', buttonType: 'option', skipDataCollection: false, hideAfterClick: false },
-        { id: 'perm_restrict_members', text: '🚫 Блокировка участников', action: 'command', target: 'toggle_restrict_members', buttonType: 'option', skipDataCollection: false, hideAfterClick: false },
-        { id: 'perm_invite_users', text: '📨 Приглашение участников', action: 'command', target: 'toggle_invite_users', buttonType: 'option', skipDataCollection: false, hideAfterClick: false },
-        { id: 'perm_pin_messages', text: '📌 Закрепление сообщений', action: 'command', target: 'toggle_pin_messages', buttonType: 'option', skipDataCollection: false, hideAfterClick: false },
-        { id: 'perm_manage_video_chats', text: '🎥 Управление видеочатами', action: 'command', target: 'toggle_manage_video_chats', buttonType: 'option', skipDataCollection: false, hideAfterClick: false },
-        { id: 'perm_anonymous', text: '🔒 Анонимность', action: 'command', target: 'toggle_anonymous', buttonType: 'option', skipDataCollection: false, hideAfterClick: false },
-        { id: 'perm_promote_members', text: '👑 Назначение администраторов', action: 'command', target: 'toggle_promote_members', buttonType: 'option', skipDataCollection: false, hideAfterClick: false }
+        { id: 'perm_change_info', text: '🏷️ Изменение профиля', action: 'command', target: 'toggle_change_info', skipDataCollection: false, hideAfterClick: false },
+        { id: 'perm_delete_messages', text: '🗑️ Удаление сообщений', action: 'command', target: 'toggle_delete_messages', skipDataCollection: false, hideAfterClick: false },
+        { id: 'perm_restrict_members', text: '🚫 Блокировка участников', action: 'command', target: 'toggle_restrict_members', skipDataCollection: false, hideAfterClick: false },
+        { id: 'perm_invite_users', text: '📨 Приглашение участников', action: 'command', target: 'toggle_invite_users', skipDataCollection: false, hideAfterClick: false },
+        { id: 'perm_pin_messages', text: '📌 Закрепление сообщений', action: 'command', target: 'toggle_pin_messages', skipDataCollection: false, hideAfterClick: false },
+        { id: 'perm_manage_video_chats', text: '🎥 Управление видеочатами', action: 'command', target: 'toggle_manage_video_chats', skipDataCollection: false, hideAfterClick: false },
+        { id: 'perm_anonymous', text: '🔒 Анонимность', action: 'command', target: 'toggle_anonymous', skipDataCollection: false, hideAfterClick: false },
+        { id: 'perm_promote_members', text: '👑 Назначение администраторов', action: 'command', target: 'toggle_promote_members', skipDataCollection: false, hideAfterClick: false }
       ],
       can_manage_chat: false,
       can_post_messages: false,

@@ -33,7 +33,6 @@ export function useHandleAddButton({
       text: 'Новая кнопка',
       action: 'goto',
       target: '',
-      buttonType: 'normal',
       skipDataCollection: false,
       hideAfterClick: false
     };
