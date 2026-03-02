@@ -133,15 +133,34 @@ export function PropertiesHeader({
         <div className="space-y-3 sm:space-y-3.5">
           {/* Header with Icon and Title */}
           <div className="flex items-center gap-3 sm:gap-3.5 justify-between">
-            <div className="flex items-center gap-3 sm:gap-3.5 flex-1">
+            <div className="flex items-center gap-3 sm:gap-3.5 flex-1 min-w-0">
               <div className={`w-10 sm:w-11 h-10 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm transition-all ${nodeColors[selectedNode.type]}`}>
                 <i className={`${nodeIcons[selectedNode.type]} text-base sm:text-lg`}></i>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Текущий элемент</p>
-                <h2 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight truncate">
-                  {getNodeTitle()}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight truncate flex-1">
+                    {getNodeTitle()}
+                  </h2>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(displayNodeId);
+                      toast({
+                        title: "✅ ID скопирован!",
+                        description: `"${displayNodeId}" в буфер обмена`,
+                      });
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500/15 to-cyan-500/15 dark:from-blue-600/20 dark:to-cyan-600/20 hover:from-blue-500/25 hover:to-cyan-500/25 dark:hover:from-blue-600/30 dark:hover:to-cyan-600/30 border border-blue-300/40 dark:border-blue-600/40 hover:border-blue-400/60 dark:hover:border-blue-500/60 rounded-lg transition-all duration-200 group shadow-sm hover:shadow-md flex-shrink-0"
+                    title="Нажмите, чтобы скопировать ID"
+                    data-testid="button-copy-node-id"
+                  >
+                    <code className="text-xs sm:text-sm font-mono font-semibold text-blue-700 dark:text-blue-300 truncate group-hover:text-blue-800 dark:group-hover:text-blue-200 transition-colors max-w-[80px] sm:max-w-[120px]">
+                      {displayNodeId}
+                    </code>
+                    <i className="fas fa-copy text-blue-600 dark:text-blue-400 text-xs opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
+                  </button>
+                </div>
               </div>
             </div>
             {onClose && (
@@ -208,28 +227,6 @@ export function PropertiesHeader({
               </SelectContent>
             </Select>
           </div>
-        </div>
-
-        {/* ID Badge */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded-md bg-muted/40">ID:</span>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(displayNodeId);
-              toast({
-                title: "✅ ID скопирован!",
-                description: `"${displayNodeId}" в буфер обмена`,
-              });
-            }}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500/15 to-cyan-500/10 dark:from-blue-600/20 dark:to-cyan-600/15 hover:from-blue-500/25 hover:to-cyan-500/20 dark:hover:from-blue-600/30 dark:hover:to-cyan-600/25 border border-blue-300/40 dark:border-blue-600/40 hover:border-blue-400/60 dark:hover:border-blue-500/60 rounded-lg transition-all duration-200 cursor-pointer group shadow-sm hover:shadow-md"
-            title="Нажмите, чтобы скопировать ID"
-            data-testid="button-copy-node-id"
-          >
-            <code className="text-xs sm:text-sm font-mono font-semibold text-blue-700 dark:text-blue-300 truncate group-hover:text-blue-800 dark:group-hover:text-blue-200 transition-colors">
-              {displayNodeId}
-            </code>
-            <i className="fas fa-copy text-blue-600 dark:text-blue-400 text-xs opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
-          </button>
         </div>
 
         {/* Description */}
