@@ -14,7 +14,6 @@ import { CodePanel } from '@/components/editor/code/code-panel';
 import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
-import { logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
 import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
 import { createActionHistoryItem } from './editor/utils/action-logger';
 import type { ActionType, ActionHistoryItem, EditorTab, PreviousEditorTab, NodeSizeMap } from './editor/types';
@@ -23,6 +22,7 @@ import { useTabNavigation } from './editor/hooks/use-tab-navigation';
 import { useLayoutManager as useFlexibleLayoutManager } from './editor/hooks/use-layout-management';
 import { useNodeHandlers } from './editor/hooks/use-node-handlers';
 import { useButtonHandlers } from './editor/hooks/use-button-handlers';
+import { useSheetHandlers } from '@/pages/editor/hooks';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -42,6 +42,7 @@ import { LayoutCustomizer } from '@/components/layout/layout-customizer';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
 import { SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { CodeFormat, useCodeGenerator } from '@/components/editor/code/use-code-generator';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -764,309 +765,27 @@ export default function Editor() {
     projectId: activeProject?.id || null
   });
 
-  // Функции управления листами
-  /**
-   * Обработчик добавления нового листа
-   *
-   * @param {string} name - Название нового листа
-   */
-  const handleSheetAdd = useCallback((name: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Логируем ДО изменений
-      if (handleActionLog) {
-        logSheetAdd({
-          sheetName: name,
-          onActionLog: handleActionLog
-        });
-      }
-      
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      const updatedData = SheetsManager.addSheet(botDataWithSheets, name);
-      setBotDataWithSheets(updatedData);
-
-      // Переключаемся на новый лист
-      const newSheet = SheetsManager.getActiveSheet(updatedData);
-      if (newSheet) {
-        // При добавлении нового листа всегда применяем автоиерархию
-        const shouldSkipLayout = false; // Автоиерархия нужна для правильного расположения новых листов
-        setBotData({ nodes: newSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
-      }
-
-      // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-
-      toast({
-        title: "Лист создан",
-        description: `Лист "${name}" успешно создан`,
-      });
-    } catch (error) {
-      toast({
-        title: "Ошибка создания",
-        description: "Не удалось создать лист",
-        variant: "destructive",
-      });
-    }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject, handleActionLog, saveToHistory]);
-
-  /**
-   * Обработчик удаления листа
-   *
-   * @param {string} sheetId - ID удаляемого листа
-   */
-  const handleSheetDelete = useCallback((sheetId: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Находим лист для логирования
-      const sheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
-      
-      // Логируем ДО изменений
-      if (sheet && handleActionLog) {
-        logSheetDelete({
-          sheetName: sheet.name,
-          sheetId,
-          onActionLog: handleActionLog
-        });
-      }
-      
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      const updatedData = SheetsManager.deleteSheet(botDataWithSheets, sheetId);
-      setBotDataWithSheets(updatedData);
-
-      // Переключаемся на активный лист
-      const activeSheet = SheetsManager.getActiveSheet(updatedData);
-      if (activeSheet) {
-        setBotData({ nodes: activeSheet.nodes }); // автоиерархия должна работать при переключении листов
-      }
-
-      // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-
-      toast({
-        title: "Лист удален",
-        description: "Лист успешно удален",
-      });
-    } catch (error) {
-      toast({
-        title: "Ошибка удаления",
-        description: "Не удалось удалить лист",
-        variant: "destructive",
-      });
-    }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, activeProject, handleActionLog, saveToHistory, nodes]);
-
-  /**
-   * Обработчик переименования листа
-   *
-   * @param {string} sheetId - ID листа
-   * @param {string} newName - Новое название листа
-   */
-  const handleSheetRename = useCallback((sheetId: string, newName: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Находим лист для логирования
-      const sheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
-      
-      // Логируем ДО изменений
-      if (sheet && handleActionLog) {
-        logSheetRename({
-          sheetId,
-          oldName: sheet.name,
-          newName,
-          onActionLog: handleActionLog
-        });
-      }
-      
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      const updatedData = SheetsManager.renameSheet(botDataWithSheets, sheetId, newName);
-      setBotDataWithSheets(updatedData);
-
-      // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-
-      toast({
-        title: "Лист переименован",
-        description: `Лист переименован в "${newName}"`,
-      });
-    } catch (error) {
-      toast({
-        title: "Ошибка переименования",
-        description: "Не удалось переименовать лист",
-        variant: "destructive",
-      });
-    }
-  }, [botDataWithSheets, updateProjectMutation, toast, activeProject, handleActionLog, saveToHistory, nodes]);
-
-  /**
-   * Обработчик дублирования листа
-   *
-   * @param {string} sheetId - ID листа для дублирования
-   */
-  const handleSheetDuplicate = useCallback((sheetId: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Находим оригинальный лист для логирования
-      const originalSheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
-      
-      // Логируем ДО изменений
-      if (originalSheet && handleActionLog) {
-        // Имя нового листа будет сгенерировано функцией duplicateSheetInProject
-        // Поэтому логируем с placeholder
-        logSheetDuplicate({
-          originalName: originalSheet.name,
-          newName: `${originalSheet.name} (копия)`,
-          onActionLog: handleActionLog
-        });
-      }
-      
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      const updatedData = SheetsManager.duplicateSheetInProject(botDataWithSheets, sheetId);
-      setBotDataWithSheets(updatedData);
-
-      // Переключаемся на дублированный лист
-      const newSheet = SheetsManager.getActiveSheet(updatedData);
-      if (newSheet) {
-        // При дублировании листа всегда применяем автоиерархию
-        const shouldSkipLayout = false; // Автоиерархия нужна для правильного расположения дублированных листов
-        setBotData({ nodes: newSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
-      }
-
-      // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-
-      toast({
-        title: "Лист дублирован",
-        description: "Лист успешно дублирован",
-      });
-    } catch (error) {
-      toast({
-        title: "Ошибка дублирования",
-        description: "Не удалось дублировать лист",
-        variant: "destructive",
-      });
-    }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, activeProject, handleActionLog, saveToHistory, nodes, currentNodeSizes]);
-
-  /**
-   * Обработчик выбора листа
-   *
-   * @param {string} sheetId - ID выбираемого листа
-   */
-  const handleSheetSelect = useCallback((sheetId: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Находим текущий и новый листы для логирования
-      const currentSheet = botDataWithSheets.sheets.find(s => s.id === botDataWithSheets.activeSheetId);
-      const newSheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
-      
-      // Логируем ДО изменений
-      if (newSheet && handleActionLog) {
-        logSheetSwitch({
-          fromSheet: currentSheet?.name,
-          toSheet: newSheet.name,
-          onActionLog: handleActionLog
-        });
-      }
-      
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      // Проверяем, существует ли лист с таким ID
-      const sheetExists = botDataWithSheets.sheets.some(sheet => sheet.id === sheetId);
-      if (!sheetExists) {
-        console.warn(`Лист ${sheetId} не найден в проекте`);
-
-        // Переключаемся на первый доступный лист
-        if (botDataWithSheets.sheets.length > 0) {
-          const firstAvailableSheet = botDataWithSheets.sheets[0];
-          const updatedData = SheetsManager.setActiveSheet(botDataWithSheets, firstAvailableSheet.id);
-          setBotDataWithSheets(updatedData);
-
-          // Загружаем данные первого доступного листа
-          const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
-          if (newActiveSheet) {
-            const shouldSkipLayout = false;
-            setBotData({ nodes: newActiveSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
-          }
-
-          // Сохраняем и принудительно перезагружаем проект
-          if (activeProject?.id) {
-            updateProjectMutation.mutate({});
-            // Принудительно перезагружаем данные проекта
-            setTimeout(() => {
-              queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
-              queryClient.refetchQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
-              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-              queryClient.refetchQueries({ queryKey: ['/api/projects'] });
-            }, 100);
-          }
-        }
-
-        toast({
-          title: "Лист был удален",
-          description: "Переключились на другой лист",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Сначала сохраняем текущие данные холста в активном листе
-      const currentCanvasData = getBotData();
-      const activeSheetId = botDataWithSheets.activeSheetId;
-      const updatedSheets = botDataWithSheets.sheets.map(sheet =>
-        sheet.id === activeSheetId
-          ? { ...sheet, nodes: currentCanvasData.nodes, updatedAt: new Date() }
-          : sheet
-      );
-
-      // Затем переключаемся на новый лист
-      const updatedData = SheetsManager.setActiveSheet(
-        { ...botDataWithSheets, sheets: updatedSheets },
-        sheetId
-      );
-      setBotDataWithSheets(updatedData);
-
-      // Загружаем данные нового активного листа на холст
-      const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
-      if (newActiveSheet) {
-        // При переключении листов применяем автоиерархию для лучшего отображения
-        const shouldSkipLayout = false; // Автоиерархия нужна для правильного отображения
-        setBotData({ nodes: newActiveSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
-      }
-
-      // Сохраняем изменения
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    } catch (error) {
-      toast({
-        title: "Ошибка переключения",
-        description: "Не удалось переключиться на лист",
-        variant: "destructive",
-      });
-    }
-  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject, queryClient, handleActionLog, saveToHistory]);
+  // Хук для управления операциями с листами
+  const {
+    handleSheetAdd,
+    handleSheetDelete,
+    handleSheetRename,
+    handleSheetDuplicate,
+    handleSheetSelect,
+  } = useSheetHandlers({
+    botDataWithSheets,
+    setBotDataWithSheets,
+    setBotData,
+    getBotData,
+    handleActionLog,
+    saveToHistory,
+    updateProjectMutation,
+    toast,
+    queryClient,
+    currentNodeSizes,
+    nodes,
+    activeProjectId: activeProject?.id || null,
+  });
 
   // Проверяем, есть ли выбранный шаблон при загрузке страницы
   useEffect(() => {
@@ -1997,19 +1716,12 @@ export default function Editor() {
       </Sheet>
 
       {/* Мобильная панель свойств - полноэкранная на мобильных */}
-      <Sheet open={showMobileProperties} onOpenChange={setShowMobileProperties}>
-        <SheetContent
-          side="right"
-          className="p-0 w-full max-w-full sm:w-96 sm:max-w-md"
-        >
-          <SheetHeader className="px-4 py-3 border-b bg-background/95 backdrop-blur-sm sticky top-0 z-10">
-            <SheetTitle className="text-lg font-semibold">Свойства элемента</SheetTitle>
-          </SheetHeader>
-          <div className="h-[calc(100vh-60px)] overflow-auto pb-safe">
-            {propertiesContent}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <MobilePropertiesSheet
+        open={showMobileProperties}
+        onOpenChange={setShowMobileProperties}
+      >
+        {propertiesContent}
+      </MobilePropertiesSheet>
 
     </>
   );
