@@ -258,7 +258,7 @@ export function PropertiesPanel({
 
 
         {!isManagementNode(selectedNode.type) && (
-          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-amber-50/40 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-xl p-3 sm:p-4 md:p-5 backdrop-blur-sm">
+          <div className="space-y-3 sm:space-y-4">
             <KeyboardSectionHeader
               selectedNode={selectedNode}
               isOpen={isKeyboardSectionOpen}
