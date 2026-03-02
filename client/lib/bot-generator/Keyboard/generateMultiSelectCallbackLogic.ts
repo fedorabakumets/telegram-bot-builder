@@ -285,7 +285,8 @@ export function generateMultiSelectCallbackLogic(
 
         // Добавляем кнопку "Готово" к кнопкам перед расчетом количества колонок
         const continueText = node.data.continueButtonText || 'Готово';
-        const doneCallbackData = `multi_select_done_${node.id}`;
+        const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
+        const doneCallbackData = `done_${shortNodeIdForDone}`;
 
         // Добавляем кнопку "Готово" ПЕРЕД вызовом adjust(), чтобы она учитывалась в распределении
         code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))
