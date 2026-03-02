@@ -19,6 +19,12 @@ import { migrateKeyboardLayout, fixAutoLayout } from '@/components/editor/proper
 import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
 import { createActionHistoryItem } from './editor/utils/action-logger';
 import type { ActionType, ActionHistoryItem, EditorTab, PreviousEditorTab, NodeSizeMap } from './editor/types';
+import { useProjectLoader } from './editor/hooks/use-project-loader';
+import { useProjectSave } from './editor/hooks/use-project-save';
+import { useTabNavigation } from './editor/hooks/use-tab-navigation';
+import { useLayoutManager as useFlexibleLayoutManager } from './editor/hooks/use-layout-management';
+import { useNodeHandlers } from './editor/hooks/use-node-handlers';
+import { useButtonHandlers } from './editor/hooks/use-button-handlers';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -620,32 +626,14 @@ export default function Editor() {
     }
   });
 
-  // Load current project directly by ID (much faster than loading all projects)
-  const { data: currentProject, isError: projectNotFound } = useQuery<BotProject>({
-    queryKey: [`/api/projects/${projectId}`],
-    enabled: !!projectId, // Всегда загружаем если есть ID в URL
-    staleTime: 30000, // Кешируем на 30 секунд
-  });
+  // Загрузка проекта через хук
+  const {
+    currentProject,
+    firstProject,
+    isProjectNotFound: projectNotFound
+  } = useProjectLoader({ projectId });
 
-  // If no projectId in URL, load project list to get first project ID
-  const { data: projectsList } = useQuery<Array<Omit<BotProject, 'data'>>>({
-    queryKey: ['/api/projects/list'],
-    enabled: !projectId, // Загружаем список только если нет ID в URL
-    staleTime: 30000,
-  });
-
-  // Get effective project ID (from URL or first in list)
-  const effectiveProjectId = projectId || projectsList?.[0]?.id;
-
-  // Load first project if no projectId in URL and we have the ID from list
-  const { data: firstProject } = useQuery<BotProject>({
-    queryKey: [`/api/projects/${effectiveProjectId}`],
-    enabled: !projectId && !!effectiveProjectId && typeof effectiveProjectId === 'number', // Добавить проверку типа
-    staleTime: 30000,
-  });
-
-
-  // Use the appropriate project
+  // Активный проект
   const activeProject = projectId ? currentProject : firstProject;
 
   // Загрузка пользователей для вкладки "Пользователи"
@@ -1612,7 +1600,7 @@ export default function Editor() {
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
-      position: { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 }, // Случайная позиция с небольшим смещением
+      position: { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 }, // Случайная позици�� с небольшим смещением
       data: component.defaultData || {}
     };
 
