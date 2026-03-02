@@ -15,7 +15,6 @@ import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { logNodeUpdate, logNodeTypeChange, logNodeIdChange, logButtonAdd, logButtonUpdate, logButtonDelete, logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
-import { migrateKeyboardLayout, fixAutoLayout } from '@/components/editor/properties/utils';
 import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
 import { createActionHistoryItem } from './editor/utils/action-logger';
 import type { ActionType, ActionHistoryItem, EditorTab, PreviousEditorTab, NodeSizeMap } from './editor/types';
@@ -654,150 +653,24 @@ export default function Editor() {
     }
   }, [setBotData, currentNodeSizes, isMobile, nodes.length]);
 
-  // Обертка для обновления узлов, которая синхронизирует изменения с системой листов
-  const handleNodeUpdateWithSheets = useCallback((nodeId: string, updates: any) => {
-    // Находим узел для логирования
-    const node = nodes.find(n => n.id === nodeId);
-    const updatedFields = Object.keys(updates);
-
-    // Миграция keyboardLayout если нужно
-    if (updates.keyboardLayout || updates.buttons) {
-      const currentLayout = updates.keyboardLayout || node?.data.keyboardLayout;
-      const buttons = updates.buttons || node?.data.buttons || [];
-      
-      // 1. Создаём/получаем keyboardLayout
-      updates.keyboardLayout = migrateKeyboardLayout(buttons, currentLayout);
-      
-      // 2. Исправляем autoLayout если он не соответствует раскладке
-      updates.keyboardLayout = fixAutoLayout(updates.keyboardLayout, buttons.length);
-    }
-
-    // Логируем обновление
-    if (node && handleActionLog) {
-      logNodeUpdate({
-        node,
-        onActionLog: handleActionLog,
-        updatedFields
-      });
-    }
-
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-
-    // Обновляем в старой системе
-    updateNodeData(nodeId, updates);
-
-    // Также обновляем в новой системе листов
-    if (botDataWithSheets && botDataWithSheets.activeSheetId) {
-      const updatedSheets = botDataWithSheets.sheets.map(sheet => {
-        if (sheet.id === botDataWithSheets.activeSheetId) {
-          return {
-            ...sheet,
-            nodes: sheet.nodes.map(node =>
-              node.id === nodeId
-                ? { ...node, data: { ...node.data, ...updates } }
-                : node
-            )
-          };
-        }
-        return sheet;
-      });
-
-      setBotDataWithSheets({
-        ...botDataWithSheets,
-        sheets: updatedSheets
-      });
-    }
-  }, [updateNodeData, botDataWithSheets, nodes, handleActionLog, saveToHistory]);
-
-  // Обработчик смены типа узла
-  const handleNodeTypeChange = useCallback((nodeId: string, newType: any, newData: any) => {
-    // Находим узел для логирования
-    const node = nodes.find(n => n.id === nodeId);
-    const oldType = node?.type;
-    
-    // Логируем изменение типа
-    if (node && oldType && handleActionLog) {
-      logNodeTypeChange({
-        node,
-        oldType,
-        newType,
-        onActionLog: handleActionLog
-      });
-    }
-    
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    
-    // Обновляем в старой системе
-    updateNode(nodeId, { type: newType, data: newData });
-
-    // Также обновляем в новой системе листов
-    if (botDataWithSheets && botDataWithSheets.activeSheetId) {
-      const updatedSheets = botDataWithSheets.sheets.map(sheet => {
-        if (sheet.id === botDataWithSheets.activeSheetId) {
-          return {
-            ...sheet,
-            nodes: sheet.nodes.map(node =>
-              node.id === nodeId
-                ? { ...node, type: newType, data: newData }
-                : node
-            )
-          };
-        }
-        return sheet;
-      });
-
-      setBotDataWithSheets({
-        ...botDataWithSheets,
-        sheets: updatedSheets
-      });
-    }
-  }, [updateNode, botDataWithSheets, nodes, handleActionLog, saveToHistory]);
-
-  // Обработчик смены ID узла
-  const handleNodeIdChange = useCallback((oldId: string, newId: string) => {
-    // Находим узел для логирования
-    const node = nodes.find(n => n.id === oldId);
-    
-    // Логируем изменение ID
-    if (node && handleActionLog) {
-      logNodeIdChange({
-        node,
-        oldId,
-        newId,
-        onActionLog: handleActionLog
-      });
-    }
-    
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    
-    if (!botDataWithSheets || !botDataWithSheets.activeSheetId) return;
-
-    const updatedSheets = botDataWithSheets.sheets.map(sheet => {
-      if (sheet.id === botDataWithSheets.activeSheetId) {
-        return {
-          ...sheet,
-          nodes: sheet.nodes.map(node =>
-            node.id === oldId
-              ? { ...node, id: newId }
-              : node
-          )
-        };
-      }
-      return sheet;
-    });
-
-    setBotDataWithSheets({
-      ...botDataWithSheets,
-      sheets: updatedSheets
-    });
-
-    if (selectedNodeId === oldId) {
-      setSelectedNodeId(newId);
-    }
-  }, [botDataWithSheets, selectedNodeId, nodes, handleActionLog, saveToHistory]);
+  // Обработчики узлов через хук
+  const {
+    handleNodeUpdateWithSheets,
+    handleNodeTypeChange,
+    handleNodeIdChange,
+    handleNodeMove,
+    handleNodeMoveEnd
+  } = useNodeHandlers({
+    nodes,
+    updateNode,
+    updateNodeData,
+    onActionLog: handleActionLog,
+    saveToHistory,
+    botDataWithSheets,
+    setBotDataWithSheets,
+    selectedNodeId,
+    setSelectedNodeId
+  });
 
   // Синхронизация nodes → botDataWithSheets для undo/redo
   useEffect(() => {
@@ -1308,24 +1181,6 @@ export default function Editor() {
       }
     }
   }, [activeProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast, queryClient]);
-
-  // Enhanced onNodeUpdate that auto-saves changes
-
-  const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
-    updateNode(nodeId, { position });
-    // Не сохраняем каждое перемещение - это будет слишком часто
-    // Сохранение происходит только в конце перетаскивания
-  }, [updateNode]);
-
-  // Вызываем один раз в конце перетаскивания узла
-  const handleNodeMoveEnd = useCallback((nodeId: string) => {
-    const node = nodes.find(n => n.id === nodeId);
-    if (node && handleActionLog) {
-      handleActionLog('move_end', `Перемещён узел "${node.type}" (${node.id})`);
-    }
-    saveToHistory();
-    console.log('🏁 Конец перемещения, сохранено в историю');
-  }, [nodes, handleActionLog, saveToHistory]);
 
   // Обёртки для deleteNode и duplicateNode с логированием в историю
   const handleNodeDelete = useCallback((nodeId: string) => {
