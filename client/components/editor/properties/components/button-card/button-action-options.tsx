@@ -7,7 +7,7 @@
 import type { Button } from '@shared/schema';
 
 /** Тип действия кнопки */
-export type ButtonActionType = Button['action'];
+export type ButtonActionType = Button['action'] | 'complete_button';
 
 /** Пропсы для рендеринга опции действия */
 interface ButtonActionOptionProps {
@@ -23,21 +23,7 @@ const ACTION_CONFIG: Record<ButtonActionType, { icon: string; color: string; lab
   command: { icon: 'fa-terminal', color: 'text-orange-600 dark:text-orange-400', label: 'Выполнить команду' },
   url: { icon: 'fa-link', color: 'text-blue-600 dark:text-blue-400', label: 'Открыть ссылку' },
   selection: { icon: 'fa-check-square', color: 'text-green-600 dark:text-green-400', label: 'Выбор опции' },
-  contact: {
-    icon: '',
-    color: '',
-    label: ''
-  },
-  location: {
-    icon: '',
-    color: '',
-    label: ''
-  },
-  default: {
-    icon: '',
-    color: '',
-    label: ''
-  }
+  complete_button: { icon: 'fa-flag-checkered', color: 'text-purple-600 dark:text-purple-400', label: 'Кнопка завершения' }
 };
 
 /**

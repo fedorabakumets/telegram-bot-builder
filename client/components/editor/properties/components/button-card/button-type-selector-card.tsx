@@ -58,8 +58,8 @@ export function ButtonTypeSelectorCard({
       <div>
         <Label className="text-xs font-semibold text-teal-900 dark:text-teal-100 mb-2 block">Действие</Label>
         <Select
-          value={button.action || 'goto'}
-          onValueChange={(value: 'goto' | 'command' | 'url' | 'selection') =>
+          value={button.action === 'complete_button' ? 'complete_button' : (button.action || 'goto')}
+          onValueChange={(value: 'goto' | 'command' | 'url' | 'selection' | 'complete_button') =>
             onButtonUpdate(nodeId, button.id, { action: value })
           }
         >
@@ -71,6 +71,7 @@ export function ButtonTypeSelectorCard({
             <SelectItem value="command"><ButtonActionOption action="command" /></SelectItem>
             <SelectItem value="url"><ButtonActionOption action="url" /></SelectItem>
             <SelectItem value="selection"><ButtonActionOption action="selection" /></SelectItem>
+            <SelectItem value="complete_button"><ButtonActionOption action="complete_button" /></SelectItem>
           </SelectContent>
         </Select>
       </div>
