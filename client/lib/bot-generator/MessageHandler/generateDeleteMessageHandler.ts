@@ -23,7 +23,7 @@ export function generateDeleteMessageHandler(node: Node): string {
   code += `        return\n`;
   code += `    \n`;
   code += `    # Определяем целевое сообщение из callback_data\n`;
-  code += `    target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None\n`;
+  code += `    target_message_id = int(callback_query.data.split('_')[-1]) if len(callback_query.data.split('_')) > 3 else None\n`;
   code += `    \n`;
   code += `    if not target_message_id:\n`;
   code += `        await callback_query.message.answer("❌ Не удалось определить ID сообщения для удаления")\n`;

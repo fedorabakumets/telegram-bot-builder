@@ -40,7 +40,7 @@ export function generatePinMessageHandler(node: Node): string {
 `;
   code += `    # Определяем целевое сообщение из callback_data
 `;
-  code += `    target_message_id = int(callback_query.data.split('_')[-1]) if callback_query.data.split('_').length > 3 else None
+  code += `    target_message_id = int(callback_query.data.split('_')[-1]) if len(callback_query.data.split('_')) > 3 else None
 `;
   code += `    
 `;
