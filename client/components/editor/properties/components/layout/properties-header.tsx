@@ -140,9 +140,50 @@ export function PropertiesHeader({
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Текущий элемент</p>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent leading-tight truncate flex-1">
-                    {getNodeTitle()}
-                  </h2>
+                  <Select
+                    value={selectedNode.type}
+                    onValueChange={(value) => {
+                      if (onNodeTypeChange) {
+                        const newData = getNodeDefaults(value as Node['type']);
+                        const preservedData = {
+                          messageText: selectedNode.data.messageText,
+                          keyboardType: selectedNode.data.keyboardType,
+                          buttons: selectedNode.data.buttons,
+                          markdown: selectedNode.data.markdown,
+                          oneTimeKeyboard: selectedNode.data.oneTimeKeyboard,
+                          resizeKeyboard: selectedNode.data.resizeKeyboard
+                        };
+                        const finalData = { ...newData, ...preservedData };
+                        onNodeTypeChange(selectedNode.id, value as Node['type'], finalData);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="max-w-[200px] sm:max-w-xs h-8 text-xs sm:text-sm bg-transparent border-none shadow-none focus:ring-0 p-0 text-slate-900 dark:text-slate-100 font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+                      {getNodeTitle()}
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-gradient-to-br from-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-60 overflow-y-auto">
+                      <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
+                      <SelectItem value="sticker">😀 Стикер</SelectItem>
+                      <SelectItem value="voice">🎤 Голосовое сообщение</SelectItem>
+                      <SelectItem value="animation">🎞️ GIF анимация</SelectItem>
+                      <SelectItem value="location">📍 Геолокация</SelectItem>
+                      <SelectItem value="contact">📞 Контакт</SelectItem>
+                      <SelectItem value="start">▶️ /start команда</SelectItem>
+                      <SelectItem value="command">🔧 Пользовательская команда</SelectItem>
+                      <SelectItem value="pin_message">📌 Закрепить сообщение</SelectItem>
+                      <SelectItem value="unpin_message">📌❌ Открепить сообщение</SelectItem>
+                      <SelectItem value="delete_message">🗑️ Удалить сообщение</SelectItem>
+                      <SelectItem value="ban_user">🚫 Заблокировать пользователя</SelectItem>
+                      <SelectItem value="unban_user">✅ Разблокировать пользователя</SelectItem>
+                      <SelectItem value="mute_user">🔇 Ограничить пользователя</SelectItem>
+                      <SelectItem value="unmute_user">🔊 Снять ограничения</SelectItem>
+                      <SelectItem value="kick_user">👢 Исключить пользователя</SelectItem>
+                      <SelectItem value="promote_user">👑 Назначить администратором</SelectItem>
+                      <SelectItem value="demote_user">👤 Снять с администратора</SelectItem>
+                      <SelectItem value="admin_rights">⚡ Права администратора</SelectItem>
+                      <SelectItem value="broadcast">📢 Рассылка</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(displayNodeId);
@@ -175,57 +216,6 @@ export function PropertiesHeader({
                 <X className="w-4 h-4" />
               </UIButton>
             )}
-          </div>
-
-          {/* Type Selector */}
-          <div className="space-y-2">
-            <label className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-              <i className="fas fa-exchange-alt text-slate-600 dark:text-slate-400 text-xs sm:text-sm"></i>
-              Изменить тип
-            </label>
-            <Select
-              value={selectedNode.type}
-              onValueChange={(value) => {
-                if (onNodeTypeChange) {
-                  const newData = getNodeDefaults(value as Node['type']);
-                  const preservedData = {
-                    messageText: selectedNode.data.messageText,
-                    keyboardType: selectedNode.data.keyboardType,
-                    buttons: selectedNode.data.buttons,
-                    markdown: selectedNode.data.markdown,
-                    oneTimeKeyboard: selectedNode.data.oneTimeKeyboard,
-                    resizeKeyboard: selectedNode.data.resizeKeyboard
-                  };
-                  const finalData = { ...newData, ...preservedData };
-                  onNodeTypeChange(selectedNode.id, value as Node['type'], finalData);
-                }
-              }}
-            >
-              <SelectTrigger className="w-full text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-slate-300/40 dark:border-slate-700/40 hover:border-slate-400/60 dark:hover:border-slate-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-slate-500 dark:focus:border-slate-500 focus:ring-2 focus:ring-slate-400/30 dark:focus:ring-slate-600/30 transition-all duration-200 rounded-lg text-slate-900 dark:text-slate-50">
-                {getNodeTitle()}
-              </SelectTrigger>
-              <SelectContent className="z-50 bg-gradient-to-br from-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-60 overflow-y-auto">
-                <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
-                <SelectItem value="sticker">😀 Стикер</SelectItem>
-                <SelectItem value="voice">🎤 Голосовое сообщение</SelectItem>
-                <SelectItem value="animation">🎞️ GIF анимация</SelectItem>
-                <SelectItem value="location">📍 Геолокация</SelectItem>
-                <SelectItem value="contact">📞 Контакт</SelectItem>
-                <SelectItem value="start">▶️ /start команда</SelectItem>
-                <SelectItem value="command">🔧 Пользовательская команда</SelectItem>
-                <SelectItem value="pin_message">📌 Закрепить сообщение</SelectItem>
-                <SelectItem value="unpin_message">📌❌ Открепить сообщение</SelectItem>
-                <SelectItem value="delete_message">🗑️ Удалить сообщение</SelectItem>
-                <SelectItem value="ban_user">🚫 Заблокировать пользователя</SelectItem>
-                <SelectItem value="unban_user">✅ Разблокировать пользователя</SelectItem>
-                <SelectItem value="mute_user">🔇 Ограничить пользователя</SelectItem>
-                <SelectItem value="unmute_user">🔊 Снять ограничения</SelectItem>
-                <SelectItem value="kick_user">👢 Исключить пользователя</SelectItem>
-                <SelectItem value="promote_user">👑 Назначить администратором</SelectItem>
-                <SelectItem value="demote_user">👤 Снять с администратора</SelectItem>
-                <SelectItem value="admin_rights">⚡ Права администратора</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
       </div>
