@@ -26,9 +26,9 @@ export function MessageTextSectionHeader({ isOpen, onToggle }: MessageTextSectio
       title="Текст сообщения"
       description={
         <>
-          <span>Основное содержание</span>
+          <span className="text-xs sm:text-sm">Основное содержание</span>
           <br />
-          <span>для отправки пользователю</span>
+          <span className="text-xs sm:text-sm">для отправки пользователю</span>
         </>
       }
       isOpen={isOpen}
