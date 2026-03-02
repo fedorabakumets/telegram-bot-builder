@@ -5,7 +5,6 @@
  */
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import type { Button } from '@shared/schema';
 import { ButtonActionOption } from './button-action-options';
 
@@ -32,7 +31,6 @@ export function ButtonActionSelector({
 }: ButtonActionSelectorProps) {
   return (
     <div className="space-y-2">
-      <Label className="text-xs font-semibold text-teal-900 dark:text-teal-100 block">Действие</Label>
       <Select
         value={button.action}
         onValueChange={(value: Button['action']) =>
