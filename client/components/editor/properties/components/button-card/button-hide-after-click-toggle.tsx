@@ -47,9 +47,6 @@ export function ButtonHideAfterClickToggle({
             <Label className="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-100 cursor-pointer block">
               Скрыть после использования
             </Label>
-            <div className="text-xs text-red-700/70 dark:text-red-300/70 mt-0.5 leading-snug hidden sm:block">
-              Сообщение будет удалено после нажатия кнопки
-            </div>
           </div>
         </div>
         <div className="flex-shrink-0">

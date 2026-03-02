@@ -39,9 +39,6 @@ export function ButtonActionSelector({
           <Label className="text-xs sm:text-sm font-semibold text-teal-900 dark:text-teal-100 cursor-pointer block">
             Действие
           </Label>
-          <div className="text-xs text-teal-700/70 dark:text-teal-300/70 mt-0.5 leading-snug hidden sm:block">
-            Что должна сделать кнопка при нажатии
-          </div>
         </div>
       </div>
       <Select

@@ -31,7 +31,7 @@ export function ButtonTypeSelectorCard({
 }: ButtonTypeSelectorProps) {
   return (
     <div className="mb-3">
-      <Label className="text-xs font-medium text-muted-foreground mb-2 block">Тип кнопки</Label>
+      <Label className="text-xs font-semibold text-teal-900 dark:text-teal-100 mb-2 block">Тип кнопки</Label>
       <Select
         value={button.buttonType || 'normal'}
         onValueChange={(value: 'normal' | 'option' | 'complete') => {

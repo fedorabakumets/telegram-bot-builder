@@ -78,7 +78,7 @@ export function CommandTargetSection({
         value={button.target || ''}
         onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { target: e.target.value })}
         className="text-xs"
-        placeholder="Или введите команду вручную (например: /help)"
+        placeholder="Введите команду (например: /help)"
       />
 
       {isInvalidCommand && (

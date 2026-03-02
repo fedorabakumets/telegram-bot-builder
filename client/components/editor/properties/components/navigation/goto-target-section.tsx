@@ -50,9 +50,6 @@ export function GotoTargetSection({
           <Label className="text-xs sm:text-sm font-semibold text-sky-900 dark:text-sky-100 cursor-pointer block">
             🎯 Целевой экран
           </Label>
-          <div className="text-xs text-sky-700/70 dark:text-sky-300/70 mt-0.5 leading-snug hidden sm:block">
-            Выберите или введите ID экрана
-          </div>
         </div>
       </div>
 

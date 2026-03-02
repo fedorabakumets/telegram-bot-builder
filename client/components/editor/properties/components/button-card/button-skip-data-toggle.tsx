@@ -47,9 +47,6 @@ export function ButtonSkipDataToggle({
             <Label className="text-xs sm:text-sm font-semibold text-cyan-900 dark:text-cyan-100 cursor-pointer block">
               Не сохранять ответы
             </Label>
-            <div className="text-xs text-cyan-700/70 dark:text-cyan-300/70 mt-0.5 leading-snug hidden sm:block">
-              Кнопка работает только для навигации, без сбора данных
-            </div>
           </div>
         </div>
         <div className="flex-shrink-0">
