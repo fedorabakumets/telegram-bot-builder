@@ -52,41 +52,40 @@ export function CommandSection({
   onShowSuggestions
 }: CommandSectionProps) {
   return (
-    <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
-      <div className="space-y-3 sm:space-y-4">
-        <div className="relative">
-          <Label className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">Команда</Label>
-          <div className="relative mt-2">
-            <Input
-              value={commandValue}
-              onChange={(e) => {
-                const newCommand = e.target.value;
-                onNodeUpdate(selectedNodeId, { command: newCommand });
-                onCommandInput(newCommand);
-                onShowSuggestions(newCommand.length > 0);
-              }}
-              onFocus={() => onShowSuggestions(true)}
-              onBlur={() => setTimeout(() => onShowSuggestions(false), 200)}
-              className={`text-sm ${!isValid ? 'border-red-500 dark:border-red-500' : 'border-blue-200 dark:border-blue-700'}`}
-              placeholder="/start"
-              data-testid="input-command"
-            />
+    <div className="space-y-2 sm:space-y-2.5">
+      <Label className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+        <i className="fas fa-terminal text-blue-600 dark:text-blue-400 text-xs sm:text-sm"></i>
+        Команда
+      </Label>
+      <div className="relative">
+        <Input
+          value={commandValue}
+          onChange={(e) => {
+            const newCommand = e.target.value;
+            onNodeUpdate(selectedNodeId, { command: newCommand });
+            onCommandInput(newCommand);
+            onShowSuggestions(newCommand.length > 0);
+          }}
+          onFocus={() => onShowSuggestions(true)}
+          onBlur={() => setTimeout(() => onShowSuggestions(false), 200)}
+          className={`text-sm ${!isValid ? 'border-red-500 dark:border-red-500' : 'border-blue-200 dark:border-blue-700'}`}
+          placeholder="/start"
+          data-testid="input-command"
+        />
 
-            {showSuggestions && suggestions.length > 0 && (
-              <CommandAutocompleteDropdown
-                suggestions={suggestions}
-                selectedNodeId={selectedNodeId}
-                onNodeUpdate={onNodeUpdate}
-                onNodeIdChange={onNodeIdChange}
-                onClose={() => onShowSuggestions(false)}
-              />
-            )}
-          </div>
+        {showSuggestions && suggestions.length > 0 && (
+          <CommandAutocompleteDropdown
+            suggestions={suggestions}
+            selectedNodeId={selectedNodeId}
+            onNodeUpdate={onNodeUpdate}
+            onNodeIdChange={onNodeIdChange}
+            onClose={() => onShowSuggestions(false)}
+          />
+        )}
 
-          {!isValid && errors.length > 0 && (
-            <CommandValidationErrors errors={errors} />
-          )}
-        </div>
+        {!isValid && errors.length > 0 && (
+          <CommandValidationErrors errors={errors} />
+        )}
       </div>
     </div>
   );

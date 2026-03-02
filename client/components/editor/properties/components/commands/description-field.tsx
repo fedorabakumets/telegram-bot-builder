@@ -45,7 +45,7 @@ export function DescriptionField({
         value={descriptionValue}
         onChange={(e) => onNodeUpdate(selectedNodeId, { description: e.target.value })}
         placeholder="Например: Начать работу с ботом"
-        className="mt-1.5 sm:mt-2 text-xs sm:text-sm border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200/50"
+        className="text-sm border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200/50"
         data-testid="input-description"
       />
     </div>
