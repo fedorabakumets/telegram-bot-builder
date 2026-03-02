@@ -79,7 +79,6 @@ export function MultipleSelectionSettings({
                     text: 'Готово',
                     action: 'complete' as const,
                     target: '',
-                    buttonType: 'complete' as const,
                     skipDataCollection: false,
                     hideAfterClick: false
                   };

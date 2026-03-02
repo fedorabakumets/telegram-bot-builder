@@ -297,14 +297,13 @@ export function PropertiesPanel({
                         // Добавляем виртуальную кнопку "Готово" для отображения
                         const allButtons = [...selectedNode.data.buttons];
                         if (selectedNode.data.allowMultipleSelection) {
-                          const hasCompleteButton = allButtons.some((b: any) => b.buttonType === 'complete');
+                          const hasCompleteButton = allButtons.some((b: any) => b.action === 'complete');
                           if (!hasCompleteButton) {
                             allButtons.push({
                               id: 'done-button',
                               text: '✅ Готово',
-                              action: 'goto',
-                              target: selectedNode.data.continueButtonTarget || '',
-                              buttonType: 'complete' as const,
+                              action: 'complete' as const,
+                              target: '',
                               skipDataCollection: false,
                               hideAfterClick: false
                             });
@@ -318,7 +317,7 @@ export function PropertiesPanel({
                         if (!layout) return undefined;
                         
                         if (selectedNode.data.allowMultipleSelection) {
-                          const hasCompleteButton = selectedNode.data.buttons.some((b: any) => b.buttonType === 'complete');
+                          const hasCompleteButton = selectedNode.data.buttons.some((b: any) => b.action === 'complete');
                           if (!hasCompleteButton) {
                             // Добавляем done-button в последний ряд или создаём новый
                             const layoutWithDone = { ...layout };
