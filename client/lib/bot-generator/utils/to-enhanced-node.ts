@@ -13,10 +13,10 @@ import type { ButtonOverride } from '../types/node-data-override.types';
 
 /**
  * Нормализует кнопки узла для совместимости
- * 
+ *
  * @param buttons - Кнопки из схемы
  * @returns Нормализованные кнопки
- * 
+ *
  * @example
  * const normalized = normalizeButtons(node.data.buttons);
  */
@@ -28,10 +28,9 @@ function normalizeButtons(buttons: any[]): ButtonOverride[] {
   return buttons.map((btn) => ({
     id: btn.id || `btn_${Date.now()}`,
     text: btn.text || 'Button',
-    action: btn.action || 'default',
+    action: btn.action || 'goto',
     target: btn.target,
     url: btn.url,
-    buttonType: btn.buttonType || 'normal',
     skipDataCollection: btn.skipDataCollection ?? false,
     hideAfterClick: btn.hideAfterClick ?? false,
     requestContact: btn.requestContact ?? false,

@@ -25,8 +25,8 @@ export function filterInlineNodes(nodes: EnhancedNode[]): EnhancedNode[] {
       // Кнопки с действием 'selection' используются для inline callback кнопок
       const hasCallbackButtons = node.data?.buttons &&
         Array.isArray(node.data.buttons) &&
-        node.data.buttons.some((button) => 
-          button.action === 'selection' || button.buttonType === 'normal'
+        node.data.buttons.some((button) =>
+          button.action === 'selection' || button.action === 'complete'
         );
 
       return hasCallbackButtons;

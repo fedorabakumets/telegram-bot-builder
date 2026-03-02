@@ -121,6 +121,6 @@ export interface CallbackHandler {
   pattern: string;
   /** Имя функции обработчика */
   handlerName: string;
-  /** Тип кнопки */
-  buttonType?: Button['action'];
+  /** Действие кнопки */
+  action?: Button['action'];
 }

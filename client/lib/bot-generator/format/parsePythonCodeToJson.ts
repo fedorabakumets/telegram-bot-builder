@@ -117,7 +117,6 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
         text: btnText,
         action: 'goto',
         target: callbackData,
-        buttonType: 'normal'
       } as Button);
     }
 
@@ -136,8 +135,7 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
         buttons.push({
           id: `btn_${nodeId}_${buttons.length}`,
           text: btnText,
-          action: 'default',
-          buttonType: 'normal',
+          action: 'goto',
           skipDataCollection: false,
           hideAfterClick: false
         } as Button);
