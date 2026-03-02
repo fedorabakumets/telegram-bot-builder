@@ -11,6 +11,7 @@ import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { addCompleteButtonOnMultiSelect } from '@/lib/generate/add-complete-button';
 
 /**
  * Пропсы компонента MultipleSelectionSettings
@@ -68,7 +69,12 @@ export function MultipleSelectionSettings({
         <div className="flex-shrink-0 self-start sm:self-center">
           <Switch
             checked={selectedNode.data.allowMultipleSelection ?? false}
-            onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { allowMultipleSelection: checked })}
+            onCheckedChange={(checked) => {
+              onNodeUpdate(selectedNode.id, { allowMultipleSelection: checked });
+              if (checked) {
+                addCompleteButtonOnMultiSelect(selectedNode.data, onNodeUpdate, selectedNode.id);
+              }
+            }}
           />
         </div>
       </div>
