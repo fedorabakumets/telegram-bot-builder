@@ -13,7 +13,6 @@ export interface SynonymEditorProps {
   synonyms: string[];
   onUpdate: (synonyms: string[]) => void;
   placeholder?: string;
-  title?: string;
   description?: string;
   allNodesFromAllSheets?: Array<{ node: Node; sheetName: string }>;
   currentNodeId?: string;
@@ -28,11 +27,10 @@ export interface SynonymEditorProps {
 export function SynonymEditor({
   synonyms, onUpdate,
   placeholder = 'Например: старт, привет, начать',
-  title = 'Синонимы',
   description,
   allNodesFromAllSheets = [],
   currentNodeId
-}: SynonymEditorProps): JSX.Element {
+}: Omit<SynonymEditorProps, 'title'>): JSX.Element {
   const checkDuplicate = (value: string, currentIndex: number): boolean => {
     if (!value.trim()) return false;
     const normalizedValue = value.trim().toLowerCase();
@@ -70,21 +68,20 @@ export function SynonymEditor({
             </div>
           );
         })}
+        <UIButton
+          onClick={() => { const newSynonyms = [...synonyms, '']; onUpdate(newSynonyms); }}
+          className="w-full h-9 sm:h-10 text-xs sm:text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 hover:from-purple-600 hover:to-pink-600 dark:hover:from-purple-700 dark:hover:to-pink-700 shadow-md hover:shadow-lg transition-all text-white relative group"
+        >
+          <i className="fas fa-plus mr-2"></i>
+          <span className="hidden sm:inline">Добавить синоним</span>
+          <span className="sm:hidden">Добавить</span>
+          {description && (
+            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 text-xs bg-slate-900 dark:bg-slate-800 text-slate-100 dark:text-slate-200 rounded-lg shadow-lg z-50">
+              {description}
+              <div className="absolute left-3 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900 dark:border-t-slate-800"></div>
+            </div>
+          )}
+        </UIButton>
       </div>
-      <UIButton
-        onClick={() => { const newSynonyms = [...synonyms, '']; onUpdate(newSynonyms); }}
-        className="w-full h-9 sm:h-10 text-xs sm:text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 hover:from-purple-600 hover:to-pink-600 dark:hover:from-purple-700 dark:hover:to-pink-700 shadow-md hover:shadow-lg transition-all text-white relative group"
-      >
-        <i className="fas fa-plus mr-2"></i>
-        <span className="hidden sm:inline">Добавить синоним</span>
-        <span className="sm:hidden">Добавить</span>
-        {description && (
-          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 text-xs bg-slate-900 dark:bg-slate-800 text-slate-100 dark:text-slate-200 rounded-lg shadow-lg z-50">
-            {description}
-            <div className="absolute left-3 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900 dark:border-t-slate-800"></div>
-          </div>
-        )}
-      </UIButton>
-    </div>
   );
 }
