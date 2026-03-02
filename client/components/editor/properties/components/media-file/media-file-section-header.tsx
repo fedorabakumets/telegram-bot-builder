@@ -24,7 +24,13 @@ export function MediaFileSectionHeader({ isOpen, onToggle }: MediaFileSectionHea
   return (
     <SectionHeader
       title="Прикрепленный медиафайл"
-      description="Картинка, видео, аудио или документ"
+      description={
+        <>
+          <span className="text-xs sm:text-sm">Картинка, видео</span>
+          <br />
+          <span className="text-xs sm:text-sm">аудио или документ</span>
+        </>
+      }
       isOpen={isOpen}
       onToggle={onToggle}
       icon="paperclip"

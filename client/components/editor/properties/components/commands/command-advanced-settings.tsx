@@ -52,7 +52,13 @@ export function CommandAdvancedSettings({
     <div className="space-y-3 sm:space-y-4">
       <SectionHeader
         title="Расширенные настройки"
-        description="Меню, приватность и права администратора"
+        description={
+          <>
+            <span className="text-xs sm:text-sm">Меню, приватность</span>
+            <br />
+            <span className="text-xs sm:text-sm">и права администратора</span>
+          </>
+        }
         isOpen={isOpen}
         onToggle={onToggle}
         icon="gear"
