@@ -391,9 +391,9 @@ export function generateKeyboard(node: Node): string {
         code += `${indent3}\n`;
         code += `${indent3}# Получаем сохраненные интересы из базы данных\n`;
         code += `${indent3}saved_interests = []\n`;
-        code += `${indent3}if user_vars:\n`;
+        code += `${indent3}if all_user_vars:\n`;
         code += `${indent3}    # Ищем интересы в любой переменной, которая может их содержать\n`;
-        code += `${indent3}    for var_name, var_data in user_vars.items():\n`;
+        code += `${indent3}    for var_name, var_data in all_user_vars.items():\n`;
         code += `${indent3}        if "интерес" in var_name.lower() or var_name == "interests" or var_name == "${multiSelectVariable}":\n`;
         code += `${indent3}            if isinstance(var_data, dict) and "value" in var_data:\n`;
         code += `${indent3}                interests_str = var_data["value"]\n`;
