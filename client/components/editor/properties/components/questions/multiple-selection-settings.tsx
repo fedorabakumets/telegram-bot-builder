@@ -11,7 +11,6 @@ import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { addCompleteButtonOnMultiSelect } from '@/lib/generate/add-complete-button';
 
 /**
  * Пропсы компонента MultipleSelectionSettings
@@ -70,10 +69,30 @@ export function MultipleSelectionSettings({
           <Switch
             checked={selectedNode.data.allowMultipleSelection ?? false}
             onCheckedChange={(checked) => {
-              onNodeUpdate(selectedNode.id, { allowMultipleSelection: checked });
               if (checked) {
-                addCompleteButtonOnMultiSelect(selectedNode.data, onNodeUpdate, selectedNode.id);
+                const hasCompleteButton = (selectedNode.data.buttons || []).some(
+                  (btn: any) => btn.action === 'complete'
+                );
+                if (!hasCompleteButton) {
+                  const completeButton = {
+                    id: Date.now().toString(),
+                    text: 'Готово',
+                    action: 'complete' as const,
+                    target: '',
+                    buttonType: 'complete' as const,
+                    skipDataCollection: false,
+                    hideAfterClick: false
+                  };
+                  const currentButtons = selectedNode.data.buttons || [];
+                  const updatedButtons = [...currentButtons, completeButton];
+                  onNodeUpdate(selectedNode.id, { 
+                    allowMultipleSelection: checked,
+                    buttons: updatedButtons
+                  });
+                  return;
+                }
               }
+              onNodeUpdate(selectedNode.id, { allowMultipleSelection: checked });
             }}
           />
         </div>
