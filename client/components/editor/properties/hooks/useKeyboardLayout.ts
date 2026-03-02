@@ -3,7 +3,7 @@
  * @module components/editor/properties/hooks/useKeyboardLayout
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/lib/bot-generator';
 import { KeyboardLayout } from '../types/keyboard-layout';
 import { createLayoutFromButtons, updateLayoutColumns, moveButton } from '../utils/keyboard-layout-utils';
@@ -36,15 +36,33 @@ export function useKeyboardLayout(buttons: Button[], initialLayout?: KeyboardLay
     return createLayoutFromButtons(buttons, 2);
   });
 
+  const prevButtonsLengthRef = useRef(buttons.length);
+  const prevInitialLayoutRef = useRef(initialLayout);
+
+  // Синхронизируем с initialLayout когда он меняется извне
+  useEffect(() => {
+    if (initialLayout && initialLayout !== prevInitialLayoutRef.current) {
+      setLayout(initialLayout);
+      prevInitialLayoutRef.current = initialLayout;
+    }
+  }, [initialLayout]);
+
   // Синхронизируем раскладку при изменении количества кнопок
   useEffect(() => {
-    if (layout.autoLayout) {
-      setLayout(createLayoutFromButtons(buttons, layout.columns));
-    } else if (layout.rows.flatMap(r => r.buttonIds).length !== buttons.length) {
-      // Если кнопки добавлены/удалены в ручном режиме, пересоздаём раскладку
-      setLayout(createLayoutFromButtons(buttons, layout.columns));
+    const currentButtonsLength = buttons.length;
+    const prevButtonsLength = prevButtonsLengthRef.current;
+
+    // Обновляем только если количество кнопок изменилось
+    if (currentButtonsLength !== prevButtonsLength) {
+      if (layout.autoLayout) {
+        setLayout(createLayoutFromButtons(buttons, layout.columns));
+      } else {
+        // В ручном режиме тоже пересоздаём, если количество изменилось
+        setLayout(createLayoutFromButtons(buttons, layout.columns));
+      }
+      prevButtonsLengthRef.current = currentButtonsLength;
     }
-  }, [buttons, layout.autoLayout, layout.columns, layout.rows]);
+  }, [buttons.length, layout.autoLayout, layout.columns]);
 
   const setColumns = useCallback((columns: number) => {
     setLayout(prev => updateLayoutColumns(prev, buttons, columns));
