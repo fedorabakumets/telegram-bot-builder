@@ -229,7 +229,6 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               code += generateMultiSelectReplyKeyboard({
                 nodeId,
                 buttons: targetNode.data.buttons || [],
-                continueButtonText: targetNode.data.continueButtonText,
                 resizeKeyboard: targetNode.data.resizeKeyboard,
                 oneTimeKeyboard: targetNode.data.oneTimeKeyboard
               }, '    ');
