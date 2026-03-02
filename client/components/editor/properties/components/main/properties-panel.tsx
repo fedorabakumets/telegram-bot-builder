@@ -240,25 +240,27 @@ export function PropertiesPanel({
         </div>
 
         {/* Message Content - скрыто для узлов управления */}
-        <MessageContentSection
-          selectedNode={selectedNode}
-          allNodes={allNodes}
-          textVariables={textVariables}
-          mediaVariables={mediaVariables}
-          attachedMediaVariables={attachedMediaVariables}
-          isMessageTextOpen={isMessageTextOpen}
-          isMediaSectionOpen={isMediaSectionOpen}
-          onMessageTextToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
-          onMediaSectionToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
-          onNodeUpdate={onNodeUpdate}
-          onMediaVariableRemove={handleMediaVariableRemove}
-          onMediaVariableSelect={handleMediaVariableSelect}
-          projectId={projectId}
-        />
+        <div className="pb-3 sm:pb-4 border-b border-border/20 mb-3 sm:mb-4">
+          <MessageContentSection
+            selectedNode={selectedNode}
+            allNodes={allNodes}
+            textVariables={textVariables}
+            mediaVariables={mediaVariables}
+            attachedMediaVariables={attachedMediaVariables}
+            isMessageTextOpen={isMessageTextOpen}
+            isMediaSectionOpen={isMediaSectionOpen}
+            onMessageTextToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
+            onMediaSectionToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
+            onNodeUpdate={onNodeUpdate}
+            onMediaVariableRemove={handleMediaVariableRemove}
+            onMediaVariableSelect={handleMediaVariableSelect}
+            projectId={projectId}
+          />
+        </div>
 
 
         {!isManagementNode(selectedNode.type) && (
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-3 sm:space-y-4 pb-3 sm:pb-4 border-b border-border/20 mb-3 sm:mb-4">
             <KeyboardSectionHeader
               selectedNode={selectedNode}
               isOpen={isKeyboardSectionOpen}
@@ -357,6 +359,11 @@ export function PropertiesPanel({
           </div>
         )}
 
+        {/* Разделитель между секциями */}
+        {!isManagementNode(selectedNode.type) && (
+          <div className="py-3 sm:py-4 border-b border-border/20 my-3 sm:my-4"></div>
+        )}
+
         {!isManagementNode(selectedNode.type) && (
           <div className="w-full">
             <ConditionalMessagesHeader
@@ -427,6 +434,11 @@ export function PropertiesPanel({
               </div>
             )}
           </div>
+        )}
+
+        {/* Разделитель после условных сообщений */}
+        {!isManagementNode(selectedNode.type) && (
+          <div className="py-3 sm:py-4 border-b border-border/20 my-3 sm:my-4"></div>
         )}
 
         {/* Universal User Input Collection - скрыто для узлов управления */}
