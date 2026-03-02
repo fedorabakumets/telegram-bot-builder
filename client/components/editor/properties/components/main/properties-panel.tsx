@@ -294,7 +294,7 @@ export function PropertiesPanel({
                   {selectedNode.data.keyboardType !== 'none' && selectedNode.data.buttons && selectedNode.data.buttons.length > 0 && (
                     <KeyboardLayoutEditor
                       buttons={(() => {
-                        // Добавляем виртуальную кнопку "Готово" для множественного выбора
+                        // Добавляем виртуальную кнопку "Готово" для отображения
                         const allButtons = [...selectedNode.data.buttons];
                         if (selectedNode.data.allowMultipleSelection) {
                           const hasCompleteButton = allButtons.some((b: any) => b.buttonType === 'complete');
@@ -313,7 +313,14 @@ export function PropertiesPanel({
                         return allButtons;
                       })()}
                       onLayoutChange={(layout) => {
-                        onNodeUpdate(selectedNode.id, { keyboardLayout: layout });
+                        // Фильтруем done-button из keyboardLayout перед сохранением
+                        const filteredLayout = {
+                          ...layout,
+                          rows: layout.rows.map(row => ({
+                            buttonIds: row.buttonIds.filter(id => id !== 'done-button')
+                          })).filter(row => row.buttonIds.length > 0)
+                        };
+                        onNodeUpdate(selectedNode.id, { keyboardLayout: filteredLayout });
                       }}
                     />
                   )}
