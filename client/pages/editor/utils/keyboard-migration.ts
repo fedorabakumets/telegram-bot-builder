@@ -1,10 +1,8 @@
 /**
  * @fileoverview Утилиты миграции keyboardLayout
  *
- * Исправляет autoLayout и фильтрует done-button из рядов клавиатуры.
+ * Фильтрует done-button из рядов клавиатуры.
  */
-
-import { fixAutoLayout } from '@/components/editor/properties/utils';
 
 /**
  * Мигрирует keyboardLayout для всех узлов проекта
@@ -16,7 +14,6 @@ export function migrateAllKeyboardLayouts(sheets: any[]): any[] {
   return sheets.map(sheet => ({
     ...sheet,
     nodes: sheet.nodes?.map((node: any) => {
-      const buttons = node.data?.buttons || [];
       let keyboardLayout = node.data?.keyboardLayout;
 
       if (keyboardLayout) {
@@ -31,8 +28,8 @@ export function migrateAllKeyboardLayouts(sheets: any[]): any[] {
             .filter((row: any) => row.buttonIds.length > 0)
         };
 
-        // Исправляем autoLayout
-        keyboardLayout = fixAutoLayout(keyboardLayout, buttons.length);
+        // НЕ вызываем fixAutoLayout, чтобы не перезаписывать ручные изменения пользователя
+        // keyboardLayout = fixAutoLayout(keyboardLayout, buttons.length);
       }
 
       if (keyboardLayout !== node.data?.keyboardLayout) {
