@@ -17,6 +17,9 @@ export function hasNodesRequiringSafeEditOrSend(nodes: BotNode[]): boolean {
       'demote_user'
     ];
 
-    return nodeTypesRequiringSafeEditOrSend.includes(node.type);
+    // Проверяем узлы с множественным выбором (они используют safe_edit_or_send)
+    const hasMultipleSelection = node.data && node.data.allowMultipleSelection === true;
+
+    return nodeTypesRequiringSafeEditOrSend.includes(node.type) || hasMultipleSelection;
   });
 }
