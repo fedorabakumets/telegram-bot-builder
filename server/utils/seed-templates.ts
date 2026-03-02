@@ -305,7 +305,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "red-avtovo", text: "🟥 Автово", action: "selection", target: "avtovo" },
                     { id: "red-leninsky", text: "🟥 Ленинский проспект", action: "selection", target: "leninsky" },
                     { id: "red-veteranov", text: "🟥 Проспект Ветеранов", action: "selection", target: "veteranov" },
-                    { id: "btn-back-metro", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "normal" }
+                    { id: "btn-back-metro", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection" }
                   ],
                   markdown: false
                 }
@@ -340,7 +340,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "blue-moskovskaya", text: "🟦 Московская", action: "selection", target: "moskovskaya" },
                     { id: "blue-zvezdnaya", text: "🟦 Звездная", action: "selection", target: "zvezdnaya" },
                     { id: "blue-kupchino", text: "🟦 Купчино", action: "selection", target: "kupchino" },
-                    { id: "btn-back-metro-blue", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "normal" }
+                    { id: "btn-back-metro-blue", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection" }
                   ],
                   markdown: false
                 }
@@ -369,7 +369,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "green-rybackoe", text: "🟩 Рыбацкое", action: "selection", target: "rybackoe" },
                     { id: "green-novokrestovsk", text: "🟩 Новокрестовская", action: "selection", target: "novokrestovsk" },
                     { id: "green-begovaya", text: "🟩 Беговая", action: "selection", target: "begovaya" },
-                    { id: "btn-back-metro-green", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "normal" }
+                    { id: "btn-back-metro-green", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection" }
                   ],
                   markdown: false
                 }
@@ -398,7 +398,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "purple-volkovskaya", text: "🟪 Волковская", action: "selection", target: "volkovskaya" },
                     { id: "purple-buharestskaya", text: "🟪 Бухарестская", action: "selection", target: "buharestskaya" },
                     { id: "purple-mezhdunar", text: "🟪 Международная", action: "selection", target: "mezhdunar" },
-                    { id: "btn-back-metro-purple", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "normal" }
+                    { id: "btn-back-metro-purple", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection" }
                   ],
                   markdown: false
                 }
@@ -428,7 +428,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "🎵 Музыка",
                       action: "goto",
                       target: "music_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -436,7 +435,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "🎨 Хобби",
                       action: "goto",
                       target: "hobby_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -444,7 +442,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "👥 Общение",
                       action: "goto",
                       target: "social_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -452,7 +449,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "🎭 Творчество",
                       action: "goto",
                       target: "creativity_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -460,7 +456,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "⚽ Активности",
                       action: "goto",
                       target: "active_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -468,7 +463,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "🍔 Еда",
                       action: "goto",
                       target: "food_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -476,7 +470,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "🏋️ Спорт",
                       action: "goto",
                       target: "sport_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     }
                   ],
@@ -505,7 +498,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "music-hiphop", text: "🎤 Хип-хоп", action: "selection", target: "hiphop" },
                     { id: "music-indie", text: "🎸 Инди", action: "selection", target: "indie" },
                     { id: "music-rnb", text: "🎵 R&B", action: "selection", target: "rnb" },
-                    { id: "btn-back-categories-music", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
+                    { id: "btn-back-categories-music", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -530,7 +523,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "hobby-diy", text: "🔨 DIY", action: "selection", target: "diy" },
                     { id: "hobby-pets", text: "🐕 Животные", action: "selection", target: "pets" },
                     { id: "hobby-tech", text: "💻 Технологии", action: "selection", target: "tech" },
-                    { id: "btn-back-categories-hobby", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
+                    { id: "btn-back-categories-hobby", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -553,7 +546,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "social-volunteering", text: "🤲 Волонтёрство", action: "selection", target: "volunteering" },
                     { id: "social-events", text: "🎪 Мероприятия", action: "selection", target: "events" },
                     { id: "social-community", text: "👥 Сообщества", action: "selection", target: "community" },
-                    { id: "btn-back-categories-social", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
+                    { id: "btn-back-categories-social", text: "⬅️ К категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -577,7 +570,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "creativity-design", text: "🖌️ Дизайн", action: "selection", target: "design" },
                     { id: "creativity-handmade", text: "🧶 Рукоделие", action: "selection", target: "handmade" },
                     { id: "creativity-theater", text: "🎭 Театр", action: "selection", target: "theater" },
-                    { id: "btn-back-categories-creativity", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
+                    { id: "btn-back-categories-creativity", text: "⬅️ К категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -601,7 +594,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "active-yoga", text: "🧘 Йога", action: "selection", target: "yoga" },
                     { id: "active-swimming", text: "🏊 Плавание", action: "selection", target: "swimming" },
                     { id: "active-dancing", text: "💃 Танцы", action: "selection", target: "dancing" },
-                    { id: "btn-back-categories-active", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
+                    { id: "btn-back-categories-active", text: "⬅️ К категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -625,7 +618,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "food-baking", text: "🧁 Выпечка", action: "selection", target: "baking" },
                     { id: "food-street", text: "🌮 Стрит-фуд", action: "selection", target: "street_food" },
                     { id: "food-healthy", text: "🥗 Здоровое питание", action: "selection", target: "healthy_food" },
-                    { id: "btn-back-categories-food", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
+                    { id: "btn-back-categories-food", text: "⬅️ К категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -649,7 +642,7 @@ async function seedDefaultTemplates(force = false) {
                     { id: "sport-volleyball", text: "🏐 Волейбол", action: "selection", target: "volleyball" },
                     { id: "sport-mma", text: "🥊 Единоборства", action: "selection", target: "mma" },
                     { id: "sport-esports", text: "🎮 Киберспорт", action: "selection", target: "esports" },
-                    { id: "btn-back-categories-sport", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "normal" }
+                    { id: "btn-back-categories-sport", text: "⬅️ К категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -777,7 +770,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "Пропустить ⏭️",
                       action: "goto",
                       target: "extra_info",
-                      buttonType: "normal",
                       skipDataCollection: true
                     }
                   ],
@@ -804,7 +796,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "Пропустить ⏭️",
                       action: "goto",
                       target: "profile_complete",
-                      buttonType: "normal",
                       skipDataCollection: true
                     }
                   ],
@@ -834,15 +825,13 @@ async function seedDefaultTemplates(force = false) {
                       id: "btn-chat-link",
                       text: "Ссылка на чат 🔗",
                       action: "command",
-                      target: "/link",
-                      buttonType: "normal"
+                      target: "/link"
                     },
                     {
                       id: "btn-show-profile-edit",
                       text: "Редактировать профиль ✏️",
                       action: "command",
-                      target: "/profile",
-                      buttonType: "normal"
+                      target: "/profile"
                     }
                   ],
                   markdown: false,
@@ -920,8 +909,7 @@ async function seedDefaultTemplates(force = false) {
                       id: "btn-restart-from-profile",
                       text: "🔄 Начать заново",
                       action: "command",
-                      target: "/start",
-                      buttonType: "normal"
+                      target: "/start"
                     }
                   ],
                   markdown: false
@@ -958,22 +946,19 @@ async function seedDefaultTemplates(force = false) {
                       id: "btn-help-start",
                       text: "🚀 Начать заполнение",
                       action: "command",
-                      target: "/start",
-                      buttonType: "normal"
+                      target: "/start"
                     },
                     {
                       id: "btn-help-profile",
                       text: "👤 Мой профиль",
                       action: "command",
-                      target: "/profile",
-                      buttonType: "normal"
+                      target: "/profile"
                     },
                     {
                       id: "btn-help-link",
                       text: "🔗 Ссылка на чат",
                       action: "command",
-                      target: "/link",
-                      buttonType: "normal"
+                      target: "/link"
                     }
                   ],
                   markdown: true,
@@ -1210,5 +1195,6 @@ async function seedDefaultTemplates(force = false) {
 }
 
 export { seedDefaultTemplates };
+
 
 
