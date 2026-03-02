@@ -361,7 +361,7 @@ export function PropertiesPanel({
 
         {/* Разделитель между секциями */}
         {!isManagementNode(selectedNode.type) && (
-          <div className="py-2 sm:py-2.5 border-b border-border/20 my-2 sm:my-2.5"></div>
+          <div className="py-0.5 sm:py-1 border-b border-border/20 my-0.5 sm:my-1"></div>
         )}
 
         {!isManagementNode(selectedNode.type) && (
@@ -438,7 +438,7 @@ export function PropertiesPanel({
 
         {/* Разделитель после условных сообщений */}
         {!isManagementNode(selectedNode.type) && (
-          <div className="py-2 sm:py-2.5 border-b border-border/20 my-2 sm:my-2.5"></div>
+          <div className="py-0.5 sm:py-1 border-b border-border/20 my-0.5 sm:my-1"></div>
         )}
 
         {/* Universal User Input Collection - скрыто для узлов управления */}
