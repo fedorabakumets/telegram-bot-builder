@@ -125,8 +125,11 @@ export function generateMultiSelectDoneHandler(
                                         code += `        builder.add(KeyboardButton(text=f"{'✅ ' if cleanText in user_data[user_id]['multi_select_' + targetNode.id] else ''}{cleanText}"))\n`;
                                     }
                                 });
-                                const continueText = targetNode.data.continueButtonText || 'Готово';
-                                code += `        builder.add(KeyboardButton(text="${continueText}"))\n`;
+                                const completeButton = targetNode.data.buttons?.find((btn: any) => btn.action === 'complete');
+                                const continueText = completeButton?.text || targetNode.data.continueButtonText || 'Готово';
+                                if (completeButton) {
+                                    code += `        builder.add(KeyboardButton(text="${continueText}"))\n`;
+                                }
                                 const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard !== false);
                                 const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard === true);
                                 code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
@@ -142,13 +145,16 @@ export function generateMultiSelectDoneHandler(
                                         code += `        builder.add(InlineKeyboardButton(text=f"{'✅ ' if cleanText in user_data[user_id]['multi_select_' + targetNode.id] else ''}{cleanText}", callback_data="${callbackData}"))\n`;
                                     }
                                 });
-                                // Добавляем кнопку "Готово" и вычисляем оптимальное количество колонок
-                                const continueText = targetNode.data.continueButtonText || 'Готово';
-                                const shortNodeIdForDone = generateUniqueShortId(targetNode.id, allNodeIds || []);
-                                code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_${shortNodeIdForDone}"))\n`;
+                                // Добавляем кнопку "Готово" из данных узла
+                                const completeButton = targetNode.data.buttons?.find((btn: any) => btn.action === 'complete');
+                                const continueText = completeButton?.text || targetNode.data.continueButtonText || 'Готово';
+                                if (completeButton) {
+                                    const shortNodeIdForDone = generateUniqueShortId(targetNode.id, allNodeIds || []);
+                                    code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_${shortNodeIdForDone}"))\n`;
+                                }
 
-                                // Вычисляем оптимальное количество колонок для всех кнопок (включая кнопку "Готово")
-                                const allButtons = [...targetNode.data.buttons, {id: 'done_button', text: continueText, action: 'complete'}];
+                                // Вычисляем оптимальное количество колонок для всех кнопок
+                                const allButtons = targetNode.data.buttons || [];
                                 code += `        ${getAdjustCode(allButtons, targetNode.data)}\n`;
                                 code += `        keyboard = builder.as_markup()\n`;
                                 code += `        \n`;
