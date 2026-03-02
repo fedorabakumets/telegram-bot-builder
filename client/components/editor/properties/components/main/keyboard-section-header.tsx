@@ -38,7 +38,8 @@ export function KeyboardSectionHeader({
           <i className="fas fa-keyboard text-amber-600 dark:text-amber-400 text-sm sm:text-base"></i>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-100 text-left">Клавиатура</h3>
+          <h3 className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-100 text-left whitespace-normal">Клавиатура</h3>
+          <p className="text-xs sm:text-sm text-amber-700/70 dark:text-amber-300/70 mt-0.5 text-left whitespace-normal">Кнопки для взаимодействия с пользователем</p>
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
