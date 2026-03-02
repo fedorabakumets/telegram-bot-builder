@@ -937,7 +937,7 @@ export type InsertUserId = z.infer<typeof insertUserIdSchema>;
 export const buttonSchema = z.object({
   id: z.string(),
   text: z.string(),
-  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'default']),
+  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'default', 'complete']),
   target: z.string().optional(),
   url: z.string().optional(),
   requestContact: z.boolean().optional(),

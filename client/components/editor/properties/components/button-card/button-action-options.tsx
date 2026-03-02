@@ -5,7 +5,7 @@
  */
 
 /** Тип действия кнопки */
-export type ButtonActionType = 'goto' | 'command' | 'url' | 'contact' | 'location' | 'selection' | 'default' | 'complete_button';
+export type ButtonActionType = 'goto' | 'command' | 'url' | 'contact' | 'location' | 'selection' | 'default' | 'complete';
 
 /** Пропсы для рендеринга опции действия */
 interface ButtonActionOptionProps {
@@ -21,7 +21,7 @@ const ACTION_CONFIG: Record<ButtonActionType, { icon: string; color: string; lab
   command: { icon: 'fa-terminal', color: 'text-orange-600 dark:text-orange-400', label: 'Выполнить команду' },
   url: { icon: 'fa-link', color: 'text-blue-600 dark:text-blue-400', label: 'Открыть ссылку' },
   selection: { icon: 'fa-check-square', color: 'text-green-600 dark:text-green-400', label: 'Выбор опции' },
-  complete_button: { icon: 'fa-flag-checkered', color: 'text-purple-600 dark:text-purple-400', label: 'Кнопка завершения' },
+  complete: { icon: 'fa-flag-checkered', color: 'text-purple-600 dark:text-purple-400', label: 'Кнопка завершения' },
   contact: { icon: 'fa-address-card', color: 'text-pink-600 dark:text-pink-400', label: 'Контакт' },
   location: { icon: 'fa-map-marker-alt', color: 'text-red-600 dark:text-red-400', label: 'Геолокация' },
   default: { icon: 'fa-circle', color: 'text-gray-600 dark:text-gray-400', label: 'По умолчанию' }

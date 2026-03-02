@@ -58,14 +58,10 @@ export function ButtonTypeSelectorCard({
       <div>
         <Label className="text-xs font-semibold text-teal-900 dark:text-teal-100 mb-2 block">Действие</Label>
         <Select
-          value={button.buttonType === 'complete' ? 'complete_button' : (button.action || 'goto')}
-          onValueChange={(value: ButtonActionType) => {
-            if (value === 'complete_button') {
-              onButtonUpdate(nodeId, button.id, { action: 'goto', buttonType: 'complete' });
-            } else {
-              onButtonUpdate(nodeId, button.id, { action: value, buttonType: button.buttonType === 'complete' ? 'normal' : undefined });
-            }
-          }}
+          value={button.action || 'goto'}
+          onValueChange={(value: ButtonActionType) =>
+            onButtonUpdate(nodeId, button.id, { action: value })
+          }
         >
           <SelectTrigger className="w-full text-xs bg-white/60 dark:bg-slate-950/60 border border-teal-300/40 dark:border-teal-700/40 hover:border-teal-400/60 dark:hover:border-teal-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-teal-500 dark:focus:border-teal-500 focus:ring-2 focus:ring-teal-400/30 dark:focus:ring-teal-600/30 transition-all duration-200 rounded-lg text-teal-900 dark:text-teal-50">
             <SelectValue />
@@ -75,7 +71,7 @@ export function ButtonTypeSelectorCard({
             <SelectItem value="command"><ButtonActionOption action="command" /></SelectItem>
             <SelectItem value="url"><ButtonActionOption action="url" /></SelectItem>
             <SelectItem value="selection"><ButtonActionOption action="selection" /></SelectItem>
-            <SelectItem value="complete_button"><ButtonActionOption action="complete_button" /></SelectItem>
+            <SelectItem value="complete"><ButtonActionOption action="complete" /></SelectItem>
             <SelectItem value="contact"><ButtonActionOption action="contact" /></SelectItem>
             <SelectItem value="location"><ButtonActionOption action="location" /></SelectItem>
             <SelectItem value="default"><ButtonActionOption action="default" /></SelectItem>
