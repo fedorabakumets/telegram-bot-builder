@@ -42,7 +42,7 @@ export function KeyboardSectionHeader({
         </div>
       </button>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <i className={`fas fa-chevron-down text-amber-600 dark:text-amber-400 text-sm transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}></i>
+        <i className={`fas fa-chevron-down text-xs sm:text-sm text-amber-600 dark:text-amber-400 transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}></i>
       </div>
     </div>
   );
