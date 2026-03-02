@@ -293,15 +293,29 @@ export function generateMultiSelectCallbackLogic(
 
         // Используем keyboardLayout если есть, иначе calculateOptimalColumns
         if (node.data.keyboardLayout && !node.data.keyboardLayout.autoLayout) {
-          // Создаём временный layout с кнопкой "Готово"
-          const layoutWithDone = {
-            ...node.data.keyboardLayout,
-            rows: [...node.data.keyboardLayout.rows, { buttonIds: ['done_button'] }]
-          };
-          const allButtonsWithDone = [...node.data.buttons, {id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'}];
+          // Проверяем, есть ли уже done-button в layout
+          const hasDoneButton = node.data.keyboardLayout.rows.some((row: any) => 
+            row.buttonIds.includes('done-button')
+          );
+          
+          let layoutForAdjust = node.data.keyboardLayout;
+          let allButtonsForCount = [...node.data.buttons];
+          
+          if (!hasDoneButton) {
+            // Если done-button нет в layout, добавляем его в конец
+            layoutForAdjust = {
+              ...node.data.keyboardLayout,
+              rows: [...node.data.keyboardLayout.rows, { buttonIds: ['done_button'] }]
+            };
+            allButtonsForCount.push({id: 'done_button', text: continueText, action: 'goto', buttonType: 'complete'});
+          } else {
+            // Если done-button уже есть, используем layout как есть
+            allButtonsForCount.push({id: 'done-button', text: continueText, action: 'goto', buttonType: 'complete'});
+          }
+          
           code += `            # Вычисляем раскладку с кнопкой "Готово" для узла ${node.id}
 `;
-          code += `            ${generateAdjustCode(layoutWithDone, allButtonsWithDone.length).trim()}
+          code += `            ${generateAdjustCode(layoutForAdjust, allButtonsForCount.length).trim()}
 `;
         } else {
           // Добавляем временную кнопку "Готово" к общему списку для правильного расчета
