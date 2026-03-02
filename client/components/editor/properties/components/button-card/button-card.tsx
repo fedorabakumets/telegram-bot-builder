@@ -65,9 +65,11 @@ export function ButtonCard({
   return (
     <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30 hover:border-blue-300/60 dark:hover:border-blue-700/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition-all duration-200 group">
       <ButtonCardHeader
-        buttonType={button.buttonType}
+        button={button}
         allowMultipleSelection={allowMultipleSelection}
         onDelete={() => onButtonDelete(nodeId, button.id)}
+        nodeId={nodeId}
+        onButtonUpdate={onButtonUpdate}
       />
 
       <div className="border-t border-border/20 my-3"></div>
