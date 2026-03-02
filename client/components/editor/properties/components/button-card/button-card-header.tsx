@@ -1,12 +1,11 @@
 /**
  * @fileoverview Заголовок карточки кнопки
- * 
+ *
  * Отображает иконку, название и кнопку удаления.
  */
 
 import { Button as UiButton } from '@/components/ui/button';
 import type { Button as ButtonType } from '@shared/schema';
-import { ButtonTypeBadge } from './button-type-badge';
 
 /** Пропсы заголовка карточки кнопки */
 interface ButtonCardHeaderProps {
@@ -45,13 +44,6 @@ export function ButtonCardHeader({
           <div className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-100">
             Кнопка
           </div>
-          {allowMultipleSelection && (
-            <ButtonTypeBadge 
-              nodeId={nodeId}
-              button={button}
-              onButtonUpdate={onButtonUpdate}
-            />
-          )}
         </div>
       </div>
       <UiButton
