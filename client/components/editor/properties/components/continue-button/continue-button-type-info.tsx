@@ -1,15 +1,15 @@
 /**
- * @fileoverview Индикатор типа кнопки завершения
- * 
- * Отображает информацию о типе кнопки завершения.
+ * @fileoverview Индикатор действия кнопки завершения
+ *
+ * Отображает информацию о действии кнопки завершения (action: complete).
  */
 
 import { Label } from '@/components/ui/label';
 
 /**
- * Компонент индикатора типа кнопки завершения
- * 
- * @returns {JSX.Element} Индикатор типа кнопки
+ * Компонент индикатора действия кнопки завершения
+ *
+ * @returns {JSX.Element} Индикатор действия кнопки
  */
 export function ContinueButtonTypeInfo() {
   return (
@@ -20,21 +20,18 @@ export function ContinueButtonTypeInfo() {
         </div>
         <div className="min-w-0 flex-1">
           <Label className="text-xs sm:text-sm font-semibold text-purple-900 dark:text-purple-100 cursor-pointer block">
-            Тип кнопки
+            Действие
           </Label>
-          <div className="text-xs text-purple-700/70 dark:text-purple-300/70 mt-0.5 leading-snug hidden sm:block">
-            Автоматическая кнопка завершения
-          </div>
         </div>
       </div>
       <div className="px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg bg-gradient-to-br from-purple-100/50 to-pink-100/40 dark:from-purple-900/30 dark:to-pink-900/20 border border-purple-300/40 dark:border-purple-700/40">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-purple-500" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
+          <i className="fas fa-flag-checkered text-purple-600 dark:text-purple-400 text-xs"></i>
           <span className="text-xs sm:text-sm font-medium text-purple-900 dark:text-purple-100">Кнопка завершения</span>
         </div>
       </div>
       <div className="text-xs text-purple-700/80 dark:text-purple-300/80 leading-relaxed">
-        Сохраняет выбранные опции и переходит к следующему экрану
+        Завершает множественный выбор и переходит к следующему экрану
       </div>
     </div>
   );
