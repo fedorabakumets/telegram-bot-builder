@@ -238,7 +238,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               code += generateMultiSelectInlineKeyboard({
                 nodeId,
                 buttons: targetNode.data.buttons || [],
-                allNodeIds
+                allNodeIds,
+                nodeData: targetNode.data
               }, '    ');
             }
 

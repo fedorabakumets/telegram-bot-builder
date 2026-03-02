@@ -68,7 +68,13 @@ export function generateConditionalMessageLogicAndKeyboard(node: { id: string; t
             });
         }
 
-        keyboardCode += '    builder.adjust(2)  # Используем 2 колонки для консистентности\n';
+        // Используем keyboardLayout если есть
+        if (node.data.keyboardLayout && !node.data.keyboardLayout.autoLayout && node.data.keyboardLayout.rows.length > 0) {
+            const rowSizes = node.data.keyboardLayout.rows.map((row: any) => row.buttonIds.length);
+            keyboardCode += `    builder.adjust(${rowSizes.join(', ')})  # Используем раскладку из keyboardLayout\n`;
+        } else {
+            keyboardCode += '    builder.adjust(2)  # Используем 2 колонки для консистентности\n';
+        }
         keyboardCode += '    keyboard = builder.as_markup()\n';
     } else if (node && node.data && node.data.keyboardType === "reply" && node.data.buttons && node.data.buttons.length > 0) {
         keyboardCode += '    # Создаем reply клавиатуру\n';

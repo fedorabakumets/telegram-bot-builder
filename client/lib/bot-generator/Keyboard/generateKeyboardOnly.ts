@@ -69,7 +69,7 @@ export function generateKeyboardOnly(node: Node): string {
       }
     });
 
-    code += '    builder.adjust(2)\n';
+    code += `    ${getAdjustCode(node.data.buttons, node.data)}\n`;
     code += '    keyboard = builder.as_markup()\n';
   }
 

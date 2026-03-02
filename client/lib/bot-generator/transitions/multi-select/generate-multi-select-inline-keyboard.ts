@@ -17,6 +17,7 @@ export interface MultiSelectInlineKeyboardParams {
   nodeId: string;
   buttons: Button[];
   allNodeIds: any[];
+  nodeData?: any;
 }
 
 /**
@@ -30,7 +31,7 @@ export function generateMultiSelectInlineKeyboard(
   params: MultiSelectInlineKeyboardParams,
   indent: string = '    '
 ): string {
-  const { nodeId, buttons, allNodeIds } = params;
+  const { nodeId, buttons, allNodeIds, nodeData } = params;
   
   let code = '';
   code += `${indent}# Создаем inline клавиатуру с поддержкой множественного выбора\n`;
@@ -75,9 +76,14 @@ export function generateMultiSelectInlineKeyboard(
     code += `${indent}builder.add(InlineKeyboardButton(text="Готово", callback_data="${doneCallbackData}"))\n`;
   }
   
-  // Используем фиксированное количество колонок для постоянного расположения
-  code += `${indent}# ИСПРАВЛЕНИЕ: Используем фиксированное количество колонок\n`;
-  code += `${indent}builder.adjust(2)\n`;
+  // Используем keyboardLayout если есть, иначе фиксированное количество колонок
+  code += `${indent}# Применяем раскладку клавиатуры\n`;
+  if (nodeData?.keyboardLayout && !nodeData.keyboardLayout.autoLayout && nodeData.keyboardLayout.rows.length > 0) {
+    const rowSizes = nodeData.keyboardLayout.rows.map((row: any) => row.buttonIds.length);
+    code += `${indent}builder.adjust(${rowSizes.join(', ')})\n`;
+  } else {
+    code += `${indent}builder.adjust(2)\n`;
+  }
   code += `${indent}keyboard = builder.as_markup()\n`;
   
   return code;

@@ -168,7 +168,13 @@ export function generateKeyboard(node: Node): string {
         }
       });
 
-      code += `${indent4}builder.adjust(2)  # Используем 2 колонки для консистентности\n`;
+      // Используем keyboardLayout если есть
+      if (node.data.keyboardLayout && !node.data.keyboardLayout.autoLayout && node.data.keyboardLayout.rows.length > 0) {
+        const rowSizes = node.data.keyboardLayout.rows.map((row: any) => row.buttonIds.length);
+        code += `${indent4}builder.adjust(${rowSizes.join(', ')})  # Используем раскладку из keyboardLayout\n`;
+      } else {
+        code += `${indent4}builder.adjust(2)  # Используем 2 колонки для консистентности\n`;
+      }
       code += `${indent4}keyboard = builder.as_markup()\n`;
 
       // Проверяем наличие изображения
