@@ -12,9 +12,7 @@ export interface ButtonData {
   /** Текст кнопки */
   text: string;
   /** Действие кнопки */
-  action: 'command' | 'location' | 'contact' | 'goto' | 'url' | 'selection' | 'default';
-  /** Тип кнопки */
-  buttonType: 'normal' | 'option' | 'complete';
+  action: 'goto' | 'url' | 'selection' | 'complete';
   /** Пропускать сбор данных */
   skipDataCollection?: boolean;
   /** Скрыть после нажатия */

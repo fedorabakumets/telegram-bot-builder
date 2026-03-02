@@ -443,13 +443,14 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
           [...selectionButtons, ...regularButtons].forEach(button => {
             allButtonsMap.set(button.id, button);
           });
-          
+
           // Добавляем виртуальную кнопку "Готово"
           allButtonsMap.set('done-button', {
             id: 'done-button',
             text: continueText,
-            action: 'goto',
-            buttonType: 'complete'
+            action: 'complete' as const,
+            skipDataCollection: false,
+            hideAfterClick: false
           });
 
           // Добавляем кнопки в порядке из keyboardLayout
@@ -458,7 +459,7 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
               const button = allButtonsMap.get(buttonId);
               if (!button) return;
 
-              if (button.buttonType === 'complete' || buttonId === 'done-button') {
+              if (button.action === 'complete' || buttonId === 'done-button') {
                 // Кнопка "Готово"
                 const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
                 code += `${indent3}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_${shortNodeIdForDone}"))\n`;
@@ -528,8 +529,7 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
           allButtons.push({
             id: `continue_${node.id}`,
             text: node.data.continueButtonText || 'Готово',
-            action: 'goto',
-            buttonType: 'complete',
+            action: 'complete',
             skipDataCollection: false,
             hideAfterClick: false
           });

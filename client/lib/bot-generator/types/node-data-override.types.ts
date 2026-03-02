@@ -9,23 +9,19 @@
 
 /**
  * Тип действия кнопки для совместимости
- * 
+ *
  * @example
  * const action: ButtonActionOverride = 'goto';
  */
-export type ButtonActionOverride = 
+export type ButtonActionOverride =
   | 'goto'
-  | 'callback'
-  | 'command'
   | 'url'
-  | 'contact'
-  | 'location'
   | 'selection'
-  | 'default';
+  | 'complete';
 
 /**
  * Тип кнопки для совместимости со схемой
- * 
+ *
  * @example
  * const button: ButtonOverride = { id: '1', text: 'Меню', action: 'goto' };
  */
@@ -40,8 +36,6 @@ export interface ButtonOverride {
   target?: string;
   /** URL для внешних ссылок */
   url?: string;
-  /** Тип кнопки: normal, option, complete */
-  buttonType?: 'normal' | 'option' | 'complete';
   /** Пропускать сбор данных */
   skipDataCollection?: boolean;
   /** Скрыть после нажатия */
