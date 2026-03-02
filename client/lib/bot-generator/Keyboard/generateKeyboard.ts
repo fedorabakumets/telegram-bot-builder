@@ -544,14 +544,10 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
         node.data.buttons.forEach((button: Button) => {
           if (button.action === "url") {
             code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-          } else if (button.action === 'goto') {
+          } else if (button.action === 'goto' || button.action === 'selection' || button.action === 'complete') {
             // Если есть target, используем его, иначе используем ID кнопки как callback_data
             const callbackData = button.target || button.id || 'no_action';
             code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-          } else if (button.action === 'command') {
-            // Для кнопок команд создаем специальную callback_data
-            const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-            code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
           }
         });
 
