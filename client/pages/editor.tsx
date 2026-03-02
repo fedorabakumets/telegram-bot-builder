@@ -866,72 +866,29 @@ export default function Editor() {
 
 
   /**
-   * Обработчик изменения вкладки
-   *
-   * @param {EditorTab} tab - Выбранная вкладка
+   * Обработчик восстановления видимости canvas
    */
-  const handleTabChange = useCallback((tab: EditorTab) => {
-    // Если нажали на ту же вкладку "Код" - ничего не делаем (чтобы панель не закрывалась)
-    if (tab === 'export' && currentTab === 'export') {
-      return;
-    }
+  const handleRestoreCanvas = useCallback(() => {
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el =>
+        el.type === 'canvas' ? { ...el, visible: true } : el
+      )
+    }));
+  }, [setFlexibleLayoutConfig]);
 
-    // Сохраняем предыдущую вкладку (если не переключались на 'export')
-    if (currentTab !== 'export' && tab !== 'export') {
-      setPreviousTab(currentTab as PreviousEditorTab);
-    }
-
-    setCurrentTab(tab);
-    if (tab === 'preview') {
-      // Auto-save before showing preview
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-      // Navigate to preview page instead of showing modal
-      setLocation(`/preview/${activeProject?.id}`);
-      return;
-    } else if (tab === 'export') {
-      // Auto-save before showing export page и открываем панель кода
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({}, {
-          onSuccess: () => {
-            // Открываем панель кода после успешного сохранения
-            handleOpenCodePanel();
-          }
-        });
-      } else {
-        handleOpenCodePanel();
-      }
-    } else if ((currentTab as string) === 'export') {
-      // Закрываем панель кода при переключении с вкладки экспорт
-      handleCloseCodePanel();
-      // Восстанавливаем видимость canvas
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(el =>
-          el.type === 'canvas' ? { ...el, visible: true } : el
-        )
-      }));
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    } else if (tab === 'bot') {
-      // Auto-save before showing bot controls
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    } else if (tab === 'users') {
-      // Auto-save before showing users panel
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    } else if (tab === 'user-ids') {
-      // Auto-save before showing user IDs panel
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    }
-  }, [updateProjectMutation, activeProject, setLocation, handleOpenCodePanel, handleCloseCodePanel, currentTab, previousTab, setPreviousTab]);
+  // Навигация по вкладкам через хук
+  const { handleTabChange } = useTabNavigation({
+    currentTab,
+    setCurrentTab,
+    setPreviousTab,
+    onSaveProject: () => activeProject?.id && updateProjectMutation.mutate({}),
+    onOpenCodePanel: handleOpenCodePanel,
+    onCloseCodePanel: handleCloseCodePanel,
+    onRestoreCanvas: handleRestoreCanvas,
+    setLocation,
+    projectId: activeProject?.id || null
+  });
 
   // Функции управления листами
   /**
