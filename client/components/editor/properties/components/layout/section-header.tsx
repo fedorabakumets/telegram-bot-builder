@@ -63,7 +63,7 @@ export function SectionHeader({
           {title}
         </h3>
         {description && (
-          <p className={`text-xs sm:text-sm mt-0.5 text-left ${descriptionColor}`}>
+          <p className={`text-xs sm:text-sm mt-0.5 text-left ${descriptionColor} whitespace-normal`}>
             {description}
           </p>
         )}
