@@ -15,7 +15,8 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
     // Добавляем обработку кнопок "Готово" для разных узлов
     nodes.forEach((node, _idx) => {
         if (node.data && node.data.allowMultipleSelection) {
-            const continueText = node.data.continueButtonText || 'Готово';
+            const completeButton = node.data.buttons?.find((btn: any) => btn.action === 'complete');
+            const continueText = completeButton?.text || node.data.continueButtonText || 'Готово';
             code += `        if node_id == "${node.id}" and user_input == "${continueText}":\n`;
             code += `            # Завершение множественного выбора для узла ${node.id}\n`;
             code += `            selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n`;
@@ -113,14 +114,14 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                         code += `                builder.add(KeyboardButton(text=f"{'✅ ' if '${selBtn.text}' in selected_list else ''}${selBtn.text}"))\n`;
                     });
 
-                    // Добавляем кнопку "Готово" если есть кнопки выбора
-                    if (node.data.buttons.some((btn: any) => btn.action === 'selection')) {
-                        const continueText = node.data.continueButtonText || 'Готово';
-                        code += `                builder.add(KeyboardButton(text="${continueText}"))  # используем builder\n`;
+                    // Добавляем кнопку "Готово" из данных узла
+                    const completeButton = node.data.buttons?.find((btn: any) => btn.action === 'complete');
+                    if (completeButton) {
+                        code += `                builder.add(KeyboardButton(text="${completeButton.text}"))  # используем builder\n`;
                     }
 
                     // Добавляем обычные кнопки
-                    node.data.buttons.filter((btn: any) => btn.action !== 'selection').forEach((regBtn: any) => {
+                    node.data.buttons.filter((btn: any) => btn.action !== 'selection' && btn.action !== 'complete').forEach((regBtn: any) => {
                         code += `                builder.add(KeyboardButton(text="${regBtn.text}"))  # используем builder\n`;
                     });
 
