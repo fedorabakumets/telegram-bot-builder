@@ -143,11 +143,7 @@ export function KeyboardButtonsSection({
             getAllNodesFromAllSheets={getAllNodesFromAllSheets}
             onButtonUpdate={onButtonUpdate}
             onButtonDelete={onButtonDelete}
-            keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply' | 'none'}
-            allowMultipleSelection={selectedNode.data.allowMultipleSelection}
-            collectUserInput={selectedNode.data.collectUserInput}
             selectedNode={selectedNode}
-            allNodes={[]}
           />
         ))}
       </div>
