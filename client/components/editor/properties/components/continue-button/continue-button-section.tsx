@@ -1,11 +1,10 @@
 /**
  * @fileoverview Секция кнопки завершения выбора
- * 
+ *
  * Компонент для настройки кнопки завершения при множественном выборе.
  */
 
 import { Input } from '@/components/ui/input';
-import { ContinueButtonTypeInfo } from './continue-button-type-info';
 import { ContinueButtonTargetSelector } from './continue-button-target-selector';
 import type { Node } from '@shared/schema';
 
@@ -56,8 +55,6 @@ export function ContinueButtonSection({
           </button>
         </div>
       </div>
-
-      <ContinueButtonTypeInfo />
 
       <ContinueButtonTargetSelector
         nodeId={selectedNode.id}
