@@ -17,7 +17,6 @@ import { getAdjustCode } from '../../Keyboard/getAdjustCode';
 export interface MultiSelectReplyKeyboardParams {
   nodeId: string;
   buttons: Button[];
-  continueButtonText?: string;
   resizeKeyboard?: boolean;
   oneTimeKeyboard?: boolean;
 }
@@ -33,7 +32,7 @@ export function generateMultiSelectReplyKeyboard(
   params: MultiSelectReplyKeyboardParams,
   indent: string = '    '
 ): string {
-  const { nodeId, buttons, continueButtonText, resizeKeyboard, oneTimeKeyboard } = params;
+  const { nodeId, buttons, resizeKeyboard, oneTimeKeyboard } = params;
   
   let code = '';
   code += `${indent}# Создаем reply клавиатуру с поддержкой множественного выбора\n`;
@@ -42,27 +41,27 @@ export function generateMultiSelectReplyKeyboard(
   
   // Разделяем кнопки на опции выбора и обычные кнопки
   const selectionButtons = buttons.filter((button: { action: string; }) => button.action === 'selection');
-  const regularButtons = buttons.filter((button: { action: string; }) => button.action !== 'selection');
-  
+  const completeButton = buttons.find((button: { action: string; }) => button.action === 'complete');
+  const otherButtons = buttons.filter((button: { action: string; }) => button.action !== 'selection' && button.action !== 'complete');
+
   // Добавляем кнопки выбора с отметками о состоянии
   selectionButtons.forEach((button: { text: any; }, index: number) => {
     code += `${indent}# Кнопка выбора ${index + 1}: ${button.text}\n`;
     code += `${indent}builder.add(KeyboardButton(text=f"{'✅ ' if '${button.text}' in user_data[user_id]['multi_select_${nodeId}'] else ''}${button.text}"))\n`;
   });
-  
-  // Добавляем кнопку "Готово"
-  if (selectionButtons.length > 0) {
-    const text = continueButtonText || 'Готово';
-    code += `${indent}builder.add(KeyboardButton(text="${text}"))\n`;
+
+  // Добавляем кнопку "Готово" из данных узла
+  if (completeButton) {
+    code += `${indent}builder.add(KeyboardButton(text="${completeButton.text}"))\n`;
   }
-  
+
   // Добавляем обычные кнопки
-  regularButtons.forEach((btn: Button) => {
+  otherButtons.forEach((btn: Button) => {
     code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
   });
-  
+
   // Вычисляем оптимальное количество колонок
-  const totalButtons = selectionButtons.length + regularButtons.length + (selectionButtons.length > 0 ? 1 : 0);
+  const totalButtons = selectionButtons.length + otherButtons.length + (completeButton ? 1 : 0);
   const multiSelectNodeData = { allowMultipleSelection: true };
   const allButtonsForCalculation = Array(totalButtons).fill({});
   code += `${indent}${getAdjustCode(allButtonsForCalculation, multiSelectNodeData)}\n`;
