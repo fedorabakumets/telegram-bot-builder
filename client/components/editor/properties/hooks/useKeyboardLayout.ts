@@ -37,15 +37,15 @@ export function useKeyboardLayout(buttons: Button[], initialLayout?: KeyboardLay
   });
 
   const prevButtonsLengthRef = useRef(buttons.length);
-  const prevInitialLayoutRef = useRef(initialLayout);
+  const isFirstRenderRef = useRef(true);
 
-  // Синхронизируем с initialLayout когда он меняется извне
+  // Синхронизируем с initialLayout только при первом рендере
   useEffect(() => {
-    if (initialLayout && initialLayout !== prevInitialLayoutRef.current) {
+    if (isFirstRenderRef.current && initialLayout) {
       setLayout(initialLayout);
-      prevInitialLayoutRef.current = initialLayout;
+      isFirstRenderRef.current = false;
     }
-  }, [initialLayout]);
+  }, []);
 
   // Синхронизируем раскладку при изменении количества кнопок
   useEffect(() => {

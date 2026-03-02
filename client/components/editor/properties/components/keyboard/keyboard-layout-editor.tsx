@@ -47,7 +47,7 @@ export function KeyboardLayoutEditor({
   // Вызываем onLayoutChange при изменении раскладки
   React.useEffect(() => {
     onLayoutChange?.(layout);
-  }, [layout, onLayoutChange]);
+  }, [layout]);
 
   if (buttons.length === 0) {
     return null;
