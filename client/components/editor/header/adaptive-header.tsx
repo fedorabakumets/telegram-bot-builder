@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/editor/header/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FolderOpen, Bookmark, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Menu, Code, Github, LogOut, MessageCircle } from 'lucide-react';
+import { LogOut, MessageCircle, Menu, Bookmark, Code, FolderOpen, Github, Monitor, NavigationIcon, Sidebar, Sliders } from 'lucide-react';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
@@ -10,6 +8,23 @@ import type { AdaptiveHeaderProps } from './types';
 import { BrandSection } from './components/brand-section';
 import { Navigation } from './components/navigation';
 import { MobileNavigation } from './components/mobile-navigation';
+import { MobileActions } from './components/mobile-actions';
+import { DesktopActions } from './components/desktop-actions';
+import { Separator } from './components/separator';
+import { TelegramChatInvite } from './components/telegram-chat-invite';
+import { GithubButton } from './components/github-button';
+import { ThemeToggle } from './components/theme-toggle';
+import { ToggleHeaderButton } from './components/toggle-header-button';
+import { ToggleSidebarButton } from './components/toggle-sidebar-button';
+import { ToggleCanvasButton } from './components/toggle-canvas-button';
+import { TogglePropertiesButton } from './components/toggle-properties-button';
+import { ToggleCodeButton } from './components/toggle-code-button';
+import { ToggleCodeEditorButton } from './components/toggle-code-editor-button';
+import { OpenFileExplorerButton } from './components/open-file-explorer-button';
+import { LoadTemplateButton } from './components/load-template-button';
+import { SaveTemplateButton } from './components/save-template-button';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/bot-generator/utils';
 
 export function AdaptiveHeader({
   config,
@@ -61,214 +76,102 @@ export function AdaptiveHeader({
   const MobileActions = () => (
     <div className="flex flex-col gap-3 sm:gap-4">
       {/* Приглашение в Telegram-чат */}
-      <div className="px-3 py-2.5 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm text-center">
-        <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-          Присоединяйтесь к нашему чату в Telegram:
-        </p>
-        <a
-          href="https://t.me/bot_builder_chat"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 dark:text-blue-300 hover:underline font-semibold text-sm"
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          @bot_builder_chat
-        </a>
-      </div>
+      <TelegramChatInvite onClick={() => setIsMobileMenuOpen(false)} />
 
       {/* Кнопки управления макетом */}
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
         <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:gap-2.5">
           {onToggleHeader && (
-            <Button
-              size="sm"
+            <ToggleHeaderButton
+              headerVisible={headerVisible}
               onClick={() => {
                 onToggleHeader();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                headerVisible
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-              title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
-              data-testid="button-mobile-toggle-header"
-            >
-              <NavigationIcon className="sm:w-4 sm:h-4 w-0 sm:flex-shrink-0" />
-              <span className="sm:hidden">{headerVisible ? 'Скрыть' : 'Показать'} шапку</span>
-            </Button>
+            />
           )}
 
           {onToggleSidebar && (
-            <Button
-              size="sm"
+            <ToggleSidebarButton
+              sidebarVisible={sidebarVisible}
               onClick={() => {
                 onToggleSidebar();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                sidebarVisible
-                  ? 'bg-purple-600 text-white shadow-md shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/40'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-              title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
-              data-testid="button-mobile-toggle-sidebar"
-            >
-              <Sidebar className="sm:w-4 sm:h-4 w-0 sm:flex-shrink-0" />
-              <span className="sm:hidden">{sidebarVisible ? 'Скрыть' : 'Показать'} панель</span>
-            </Button>
+            />
           )}
 
           {onToggleCanvas && (
-            <Button
-              size="sm"
+            <ToggleCanvasButton
+              canvasVisible={canvasVisible}
               onClick={() => {
                 onToggleCanvas();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                canvasVisible
-                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/40'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-              title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
-              data-testid="button-mobile-toggle-canvas"
-            >
-              <Monitor className="sm:w-4 sm:h-4 w-0 sm:flex-shrink-0" />
-              <span className="sm:hidden">{canvasVisible ? 'Скрыть' : 'Показать'} холст</span>
-            </Button>
+            />
           )}
 
           {onToggleProperties && (
-            <Button
-              size="sm"
+            <TogglePropertiesButton
+              propertiesVisible={propertiesVisible}
               onClick={() => {
                 onToggleProperties();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                propertiesVisible
-                  ? 'bg-pink-600 text-white shadow-md shadow-pink-500/30 hover:shadow-lg hover:shadow-pink-500/40'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-              title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
-              data-testid="button-mobile-toggle-properties"
-            >
-              <Sliders className="sm:w-4 sm:h-4 w-0 sm:flex-shrink-0" />
-              <span className="sm:hidden">{propertiesVisible ? 'Скрыть' : 'Показать'} свойства</span>
-            </Button>
+            />
           )}
 
           {onToggleCode && (
-            <Button
-              size="sm"
+            <ToggleCodeButton
+              codeVisible={codeVisible}
               onClick={() => {
                 onToggleCode();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                codeVisible
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-              title={`${codeVisible ? 'Скрыть' : 'Показать'} панель кода`}
-              data-testid="button-mobile-toggle-code"
-            >
-              <Code className="sm:w-4 sm:h-4 w-0 sm:flex-shrink-0" />
-              <span className="sm:hidden">{codeVisible ? 'Скрыть' : 'Показать'} код</span>
-            </Button>
+            />
           )}
 
           {onToggleCodeEditor && (
-            <Button
-              size="sm"
+            <ToggleCodeEditorButton
+              codeEditorVisible={codeEditorVisible}
               onClick={() => {
                 onToggleCodeEditor();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                codeEditorVisible
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-              title={`${codeEditorVisible ? 'Скрыть' : 'Показать'} редактор кода`}
-              data-testid="button-mobile-toggle-code-editor"
-            >
-              <i className="fas fa-file-code sm:w-4 sm:h-4 w-0 sm:flex-shrink-0"></i>
-              <span className="sm:hidden">{codeEditorVisible ? 'Скрыть' : 'Показать'} редактор</span>
-            </Button>
+            />
           )}
           
           {onOpenFileExplorer && (
-            <Button
-              size="sm"
+            <OpenFileExplorerButton
               onClick={() => {
                 onOpenFileExplorer();
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex items-center justify-center sm:justify-center gap-2 sm:gap-0 py-2 px-3 sm:py-2.5 sm:px-2 rounded-lg transition-all font-medium text-sm sm:text-xs ${
-                'bg-blue-600 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40'
-              }`}
-              title="Открыть проводник файлов"
-              data-testid="button-mobile-open-file-explorer"
-            >
-              <i className="fas fa-folder sm:w-4 sm:h-4 w-0 sm:flex-shrink-0"></i>
-              <span className="sm:hidden">Файлы</span>
-            </Button>
+            />
           )}
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
         {onLoadTemplate && (
-          <Button
-            size="sm"
+          <LoadTemplateButton
             onClick={() => {
               onLoadTemplate();
               setIsMobileMenuOpen(false);
             }}
-            className="flex items-center justify-center gap-2 px-3 py-2 sm:py-2.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800/50 rounded-lg font-medium text-xs sm:text-sm transition-all"
-            data-testid="button-mobile-load-template"
-          >
-            <FolderOpen className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-            <span>Шаблоны</span>
-          </Button>
+          />
         )}
 
         {onSaveAsTemplate && (
-          <Button
-            size="sm"
+          <SaveTemplateButton
             onClick={() => {
               onSaveAsTemplate();
               setIsMobileMenuOpen(false);
             }}
-            className="flex items-center justify-center gap-2 px-3 py-2 sm:py-2.5 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50 rounded-lg font-medium text-xs sm:text-sm transition-all"
-            data-testid="button-mobile-save-template"
-          >
-            <Bookmark className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-            <span>Сохранить шаблон</span>
-          </Button>
+          />
         )}
 
-
-
-        <Button
-          size="sm"
-          asChild
-          className={`flex items-center justify-center gap-2 px-3 py-2 sm:py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg font-medium text-xs sm:text-sm transition-all ${onSaveAsTemplate ? '' : 'sm:col-span-2'}`}
-          data-testid="button-mobile-github"
-        >
-          <a
-            href="https://github.com/fedorabakumets/telegram-bot-builder"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center justify-center gap-2 w-full"
-          >
-            <Github className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-            <span>GitHub</span>
-          </a>
-        </Button>
+        <GithubButton className={onSaveAsTemplate ? '' : 'sm:col-span-2'} />
 
         <div className="flex justify-center sm:col-span-2 pt-2">
           <ThemeToggle />
@@ -449,17 +352,7 @@ export function AdaptiveHeader({
       )}
 
       <div className={`${isVertical ? 'w-full px-3 py-1.5' : 'hidden md:flex items-center px-3 py-1.5'} text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm`}>
-        <span className="hidden sm:inline-block text-slate-700 dark:text-slate-300">
-          Мы в Telegram:
-        </span>
-        <a
-          href="https://t.me/bot_builder_chat"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ml-1 text-blue-600 dark:text-blue-300 hover:underline font-semibold"
-        >
-          @bot_builder_chat
-        </a>
+        <TelegramChatInvite variant="desktop" />
       </div>
 
       <Button
