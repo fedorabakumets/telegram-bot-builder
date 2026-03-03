@@ -3,7 +3,7 @@
  * @description Компонент верхнего уровня, объединяющий все подкомпоненты
  */
 
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { UserDatabasePanelProps } from './types';
 import { RefreshCw } from 'lucide-react';

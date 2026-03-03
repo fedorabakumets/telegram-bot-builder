@@ -5,7 +5,7 @@
 
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { UserBotData } from '@shared/schema';
 import { BotMessageWithMedia } from '../../types';
 import { MessageDialogHeader } from './dialog-header';

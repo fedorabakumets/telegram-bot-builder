@@ -6,7 +6,7 @@
  * @module HeaderContent
  */
 
-import { AdaptiveHeader } from '@/components/layout/adaptive-header';
+import { AdaptiveHeader } from '@/components/editor/header/adaptive-header';
 import type { EditorTab } from '../types';
 import type { SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 

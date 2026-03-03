@@ -1,92 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { ThemeToggle } from '@/components/editor/header/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { FolderOpen, Bookmark, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Menu, Code, Github, LogOut, MessageCircle } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useTelegramAuth } from '@/hooks/use-telegram-auth';
-import { LayoutConfig } from './layout-manager';
+import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import type { AdaptiveHeaderProps } from './types';
 
-/**
- * @interface BotInfo
- * @description Информация о боте
- * @property {string} first_name - Имя бота
- * @property {string} [username] - Имя пользователя бота
- * @property {string} [description] - Описание бота
- * @property {string} [short_description] - Краткое описание бота
- */
-
-interface BotInfo {
-  first_name: string;
-  username?: string;
-  description?: string;
-  short_description?: string;
-}
-
-/**
- * @interface AdaptiveHeaderProps
- * @description Свойства адаптивного заголовка
- * @property {LayoutConfig} config - Конфигурация макета
- * @property {string} projectName - Название проекта
- * @property {BotInfo | null} [botInfo] - Информация о боте
- * @property {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'} currentTab - Текущая вкладка
- * @property {(tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api') => void} onTabChange - Функция изменения вкладки
- * @property {() => void} onExport - Функция экспорта
- * @property {() => void} [onSaveAsTemplate] - Функция сохранения как шаблон
- * @property {() => void} [onLoadTemplate] - Функция загрузки шаблона
- * @property {() => void} [onLayoutSettings] - Функция настройки макета
- * @property {() => void} [onToggleHeader] - Функция переключения видимости заголовка
- * @property {() => void} [onToggleSidebar] - Функция переключения видимости боковой панели
- * @property {() => void} [onToggleProperties] - Функция переключения видимости панели свойств
- * @property {() => void} [onToggleCanvas] - Функция переключения видимости холста
- * @property {() => void} [onToggleCode] - Функция переключения видимости панели кода
- * @property {() => void} [onToggleCodeEditor] - Функция переключения видимости редактора кода
- * @property {boolean} [headerVisible] - Видимость заголовка
- * @property {boolean} [sidebarVisible] - Видимость боковой панели
- * @property {boolean} [propertiesVisible] - Видимость панели свойств
- * @property {boolean} [canvasVisible] - Видимость холста
- * @property {boolean} [codeVisible] - Видимость панели кода
- * @property {boolean} [codeEditorVisible] - Видимость редактора кода
- * @property {() => void} [onOpenMobileSidebar] - Функция открытия мобильной боковой панели
- * @property {() => void} [onOpenMobileProperties] - Функция открытия мобильной панели свойств
- */
-
-interface AdaptiveHeaderProps {
-  config: LayoutConfig;
-  projectName: string;
-  botInfo?: BotInfo | null;
-  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api';
-  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api') => void;
-  onExport: () => void;
-  onSaveAsTemplate?: () => void;
-  onLoadTemplate?: () => void;
-  onLayoutSettings?: () => void;
-  // Кнопки управления макетом
-  onToggleHeader?: () => void;
-  onToggleSidebar?: () => void;
-  onToggleProperties?: () => void;
-  onToggleCanvas?: () => void;
-  onToggleCode?: () => void;
-  onToggleCodeEditor?: () => void;
-  onOpenFileExplorer?: () => void;
-  headerVisible?: boolean;
-  sidebarVisible?: boolean;
-  propertiesVisible?: boolean;
-  canvasVisible?: boolean;
-  codeVisible?: boolean;
-  codeEditorVisible?: boolean;
-  // Мобильные функции
-  onOpenMobileSidebar?: () => void;
-  onOpenMobileProperties?: () => void;
-}
-
-/**
- * @function AdaptiveHeader
- * @description Адаптивный компонент заголовка, который изменяет свое поведение в зависимости от конфигурации макета
- * Поддерживает различные позиции заголовка и режимы отображения
- * @param props - Свойства компонента
- * @returns Адаптивный компонент заголовка
- */
 export function AdaptiveHeader({
   config,
   projectName,

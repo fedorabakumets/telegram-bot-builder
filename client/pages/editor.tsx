@@ -43,7 +43,7 @@ import { UserDatabasePanel } from '@/components/editor/database/user-database/us
 import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
 import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
-import { AdaptiveHeader } from '@/components/layout/adaptive-header';
+import { AdaptiveHeader } from '@/components/editor/header/adaptive-header';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { FlexibleLayout } from '@/components/layout/flexible/flexible-layout';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
@@ -52,7 +52,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useCodeGenerator } from '@/components/editor/code/use-code-generator';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { SheetsManager } from '@/utils/sheets-manager';

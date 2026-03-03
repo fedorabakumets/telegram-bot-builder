@@ -10,7 +10,7 @@ import { Loader2, Search, ArrowLeft, Star, Trash2, Filter, SortAsc, Layers, Spar
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
-import { useTelegramAuth } from '@/hooks/use-telegram-auth';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import type { BotTemplate } from '@shared/schema';
 
 /**

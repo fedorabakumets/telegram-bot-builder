@@ -4,7 +4,7 @@
  */
 
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { UserBotData } from '@shared/schema';
 import { VariableToQuestionMap } from '../../types';
 import { UserDetailsHeader } from './user-details-header';
