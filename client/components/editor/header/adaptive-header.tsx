@@ -118,7 +118,7 @@ export function AdaptiveHeader({
         )}
       </div>
 
-      <div className="flex items-center flex-wrap gap-1 lg:gap-2">
+      <div className="flex items-center gap-1 lg:gap-2">
         <Navigation
           currentTab={currentTab}
           onTabChange={onTabChange}
