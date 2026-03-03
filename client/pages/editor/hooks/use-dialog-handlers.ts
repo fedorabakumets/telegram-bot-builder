@@ -6,7 +6,7 @@
  * @module UseDialogHandlers
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import type { UserBotData } from '@shared/schema';
 import type { SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 
@@ -43,6 +43,11 @@ export function useDialogHandlers(params: UseDialogHandlersParams): UseDialogHan
   const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
   const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
 
+  // Отладка: отслеживаем изменения selectedUserDetails
+  useEffect(() => {
+    console.log('[useDialogHandlers] selectedUserDetails changed:', selectedUserDetails ? { userId: selectedUserDetails.userId } : 'null');
+  }, [selectedUserDetails]);
+
   const handleOpenDialogPanel = useCallback((user: UserBotData) => {
     const isAlreadyOpen = selectedDialogUser?.id === user.id;
     if (isAlreadyOpen) {
@@ -77,29 +82,21 @@ export function useDialogHandlers(params: UseDialogHandlersParams): UseDialogHan
   }, [setFlexibleLayoutConfig]);
 
   const handleOpenUserDetailsPanel = useCallback((user: UserBotData) => {
-    const isAlreadyOpen = selectedUserDetails?.id === user.id;
-    if (isAlreadyOpen) {
-      setSelectedUserDetails(null);
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(el =>
-          el.id === 'userDetails' ? { ...el, visible: false } : el
-        )
-      }));
-    } else {
-      setSelectedUserDetails(user);
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(el => {
-          if (el.id === 'userDetails') return { ...el, visible: true };
-          if (el.id === 'sidebar') return { ...el, visible: false };
-          return el;
-        })
-      }));
-    }
-  }, [selectedUserDetails, setFlexibleLayoutConfig]);
+    console.log('[handleOpenUserDetailsPanel] Called with:', { userId: user.userId, id: user.id, name: `${user.firstName} ${user.lastName} @${user.userName}` });
+    // Обновляем выбранного пользователя и показываем панель
+    setSelectedUserDetails(user);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el => {
+        if (el.id === 'userDetails') return { ...el, visible: true };
+        if (el.id === 'sidebar') return { ...el, visible: false };
+        return el;
+      })
+    }));
+  }, [setFlexibleLayoutConfig]);
 
   const handleCloseUserDetailsPanel = useCallback(() => {
+    console.log('[handleCloseUserDetailsPanel] Called');
     setSelectedUserDetails(null);
     setFlexibleLayoutConfig(prev => ({
       ...prev,

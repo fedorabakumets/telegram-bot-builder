@@ -30,6 +30,11 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   hideOnMobile = false,
 }) => {
   const isMobile = useMediaQuery('(max-width: 1200px)');
+  
+  // Отладка: проверяем, меняется ли userDetailsContent
+  React.useEffect(() => {
+    console.log('[FlexibleLayout] userDetailsContent changed:', userDetailsContent ? 'has content' : 'null');
+  }, [userDetailsContent]);
 
   const { getElementContent } = useElementContent({
     headerContent,

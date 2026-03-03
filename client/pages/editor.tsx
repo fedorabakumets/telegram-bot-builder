@@ -199,6 +199,11 @@ export default function Editor() {
     setSelectedDialogUser(user);
   }, [setSelectedDialogUser]);
 
+  // Обработчик выбора пользователя в деталях
+  const handleSelectUserDetails = useCallback((user: UserBotData) => {
+    setSelectedUserDetails(user);
+  }, [setSelectedUserDetails]);
+
   // Хук состояний вкладок
   const [, setPreviousTab] = useState<PreviousEditorTab>('editor');
 
@@ -1140,7 +1145,7 @@ export default function Editor() {
                   user={selectedUserDetails}
                   onClose={handleCloseUserDetailsPanel}
                   onOpenDialog={handleOpenDialogPanel}
-                  onSelectUser={handleOpenUserDetailsPanel}
+                  onSelectUser={handleSelectUserDetails}
                 />
               )
             }
