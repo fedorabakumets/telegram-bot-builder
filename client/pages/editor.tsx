@@ -223,9 +223,24 @@ export default function Editor() {
     });
   }, [setFlexibleLayoutConfig]);
 
-  // Обработчики для передачи в UserDatabasePanel (те же самые функции)
-  const handleOpenDialogPanel = handleSelectDialogUser;
-  const handleOpenUserDetailsPanel = handleSelectUserDetails;
+  // Обработчики для передачи в UserDatabasePanel (с toggle-логикой для кнопок)
+  const handleOpenDialogPanel = useCallback((user: UserBotData) => {
+    // Если панель уже открыта для этого пользователя, закрываем её
+    if (selectedDialogUser?.userId === user.userId) {
+      handleCloseDialogPanel();
+    } else {
+      handleSelectDialogUser(user);
+    }
+  }, [selectedDialogUser, handleSelectDialogUser, handleCloseDialogPanel]);
+
+  const handleOpenUserDetailsPanel = useCallback((user: UserBotData) => {
+    // Если панель уже открыта для этого пользователя, закрываем её
+    if (selectedUserDetails?.userId === user.userId) {
+      handleCloseUserDetailsPanel();
+    } else {
+      handleSelectUserDetails(user);
+    }
+  }, [selectedUserDetails, handleSelectUserDetails, handleCloseUserDetailsPanel]);
 
   // Обработчики закрытия панелей
   const handleCloseDialogPanel = useCallback(() => {
