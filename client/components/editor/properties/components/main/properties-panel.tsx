@@ -17,12 +17,12 @@ import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
 import { BasicSettingsSection } from './basic-settings-section';
 import { MessageContentSection } from './message-content-section';
-import { KeyboardSectionHeader } from './keyboard-section-header';
-import { KeyboardButtonsSection } from './keyboard-buttons-section';
-import { ConditionalMessagesHeader } from './conditional-messages-header';
-import { ConditionalMessagesToggle } from './conditional-messages-toggle';
-import { ConditionalMessagesInfoBlock } from './conditional-messages-info-block';
-import { ConditionalMessagesActions } from './conditional-messages-actions';
+import { KeyboardSectionHeader } from '../keyboard/keyboard-section-header';
+import { KeyboardButtonsSection } from '../keyboard/keyboard-buttons-section';
+import { ConditionalMessagesHeader } from '../conditional-message-card/conditional-messages-header';
+import { ConditionalMessagesToggle } from '../conditional-message-card/conditional-messages-toggle';
+import { ConditionalMessagesInfoBlock } from '../conditional-message-card/conditional-messages-info-block';
+import { ConditionalMessagesActions } from '../conditional-message-card/conditional-messages-actions';
 import { UserInputSettingsSection } from './user-input-settings-section';
 import { AutoTransitionWrapper } from './auto-transition-wrapper';
 import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
@@ -258,9 +258,8 @@ export function PropertiesPanel({
           />
         </div>
 
-
         {!isManagementNode(selectedNode.type) && (
-          <div className="space-y-3 sm:space-y-4 pb-3 sm:pb-4 border-b border-border/20 mb-3 sm:mb-4">
+          <div className="space-y-3 sm:space-y-4 pb-3 sm:pb-4 mb-3 sm:mb-4">
             <KeyboardSectionHeader
               selectedNode={selectedNode}
               isOpen={isKeyboardSectionOpen}
@@ -289,7 +288,6 @@ export function PropertiesPanel({
                       onButtonAdd={onButtonAdd}
                       onButtonUpdate={onButtonUpdate}
                       onButtonDelete={onButtonDelete}
-                      formatNodeDisplay={formatNodeDisplay}
                     />
                   )}
 
@@ -357,11 +355,6 @@ export function PropertiesPanel({
               </>
             )}
           </div>
-        )}
-
-        {/* Разделитель между секциями */}
-        {!isManagementNode(selectedNode.type) && (
-          <div className="py-0.5 sm:py-1 border-b border-border/20 my-0.5 sm:my-1"></div>
         )}
 
         {!isManagementNode(selectedNode.type) && (
@@ -434,11 +427,6 @@ export function PropertiesPanel({
               </div>
             )}
           </div>
-        )}
-
-        {/* Разделитель после условных сообщений */}
-        {!isManagementNode(selectedNode.type) && (
-          <div className="py-0.5 sm:py-1 border-b border-border/20 my-0.5 sm:my-1"></div>
         )}
 
         {/* Universal User Input Collection - скрыто для узлов управления */}
