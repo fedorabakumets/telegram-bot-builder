@@ -12,7 +12,6 @@ import { DesktopToggleCodeEditorButton } from './desktop-toggle-code-editor-butt
 import { DesktopOpenFileExplorerButton } from './desktop-open-file-explorer-button';
 import { DesktopLoadTemplateButton } from './desktop-load-template-button';
 import { DesktopSaveTemplateButton } from './desktop-save-template-button';
-import { ThemeToggle } from './theme-toggle';
 import { cn } from '@/lib/bot-generator/utils';
 
 /**

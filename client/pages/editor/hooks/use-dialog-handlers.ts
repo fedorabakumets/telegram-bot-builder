@@ -30,6 +30,8 @@ export interface UseDialogHandlersResult {
   handleOpenUserDetailsPanel: (user: UserBotData) => void;
   /** Закрыть панель деталей */
   handleCloseUserDetailsPanel: () => void;
+  /** Установить выбранного пользователя для деталей */
+  setSelectedUserDetails: (user: UserBotData | null) => void;
 }
 
 /**
@@ -42,11 +44,6 @@ export function useDialogHandlers(params: UseDialogHandlersParams): UseDialogHan
   const { setFlexibleLayoutConfig } = params;
   const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
   const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
-
-  // Отладка: отслеживаем изменения selectedUserDetails
-  useEffect(() => {
-    console.log('[useDialogHandlers] selectedUserDetails changed:', selectedUserDetails ? { userId: selectedUserDetails.userId } : 'null');
-  }, [selectedUserDetails]);
 
   const handleOpenDialogPanel = useCallback((user: UserBotData) => {
     const isAlreadyOpen = selectedDialogUser?.id === user.id;
@@ -82,7 +79,6 @@ export function useDialogHandlers(params: UseDialogHandlersParams): UseDialogHan
   }, [setFlexibleLayoutConfig]);
 
   const handleOpenUserDetailsPanel = useCallback((user: UserBotData) => {
-    console.log('[handleOpenUserDetailsPanel] Called with:', { userId: user.userId, id: user.id, name: `${user.firstName} ${user.lastName} @${user.userName}` });
     // Обновляем выбранного пользователя и показываем панель
     setSelectedUserDetails(user);
     setFlexibleLayoutConfig(prev => ({
@@ -96,7 +92,6 @@ export function useDialogHandlers(params: UseDialogHandlersParams): UseDialogHan
   }, [setFlexibleLayoutConfig]);
 
   const handleCloseUserDetailsPanel = useCallback(() => {
-    console.log('[handleCloseUserDetailsPanel] Called');
     setSelectedUserDetails(null);
     setFlexibleLayoutConfig(prev => ({
       ...prev,
@@ -115,5 +110,6 @@ export function useDialogHandlers(params: UseDialogHandlersParams): UseDialogHan
     handleCloseDialogPanel,
     handleOpenUserDetailsPanel,
     handleCloseUserDetailsPanel,
+    setSelectedUserDetails,
   };
 }

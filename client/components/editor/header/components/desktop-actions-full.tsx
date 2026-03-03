@@ -6,7 +6,6 @@
 import { DesktopActions } from './desktop-actions';
 import { TelegramChatInvite } from './telegram-chat-invite';
 import { GithubButton } from './github-button';
-import { ThemeToggle } from './theme-toggle';
 import { UserAuth } from './user-auth';
 import { Separator } from './separator';
 import { cn } from '@/lib/bot-generator/utils';
