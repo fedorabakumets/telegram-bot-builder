@@ -118,35 +118,37 @@ export function AdaptiveHeader({
         )}
       </div>
 
-      <Navigation
-        currentTab={currentTab}
-        onTabChange={onTabChange}
-        isVertical={isVertical}
-        isCompact={isCompact}
-      />
+      <div className="flex items-center flex-wrap gap-1 lg:gap-2">
+        <Navigation
+          currentTab={currentTab}
+          onTabChange={onTabChange}
+          isVertical={isVertical}
+          isCompact={isCompact}
+        />
 
-      {/* Десктопные/Планшетные действия */}
-      <DesktopActionsFull
-        onToggleHeader={onToggleHeader}
-        onToggleSidebar={onToggleSidebar}
-        onToggleCanvas={onToggleCanvas}
-        onToggleProperties={onToggleProperties}
-        onToggleCode={onToggleCode}
-        onToggleCodeEditor={onToggleCodeEditor}
-        onOpenFileExplorer={onOpenFileExplorer}
-        onLoadTemplate={onLoadTemplate}
-        onSaveAsTemplate={onSaveAsTemplate}
-        headerVisible={headerVisible}
-        sidebarVisible={sidebarVisible}
-        canvasVisible={canvasVisible}
-        propertiesVisible={propertiesVisible}
-        codeVisible={codeVisible}
-        codeEditorVisible={codeEditorVisible}
-        user={user}
-        onLogout={logout}
-        onLogin={handleTelegramLogin}
-        isVertical={isVertical}
-      />
+        {/* Десктопные/Планшетные действия */}
+        <DesktopActionsFull
+          onToggleHeader={onToggleHeader}
+          onToggleSidebar={onToggleSidebar}
+          onToggleCanvas={onToggleCanvas}
+          onToggleProperties={onToggleProperties}
+          onToggleCode={onToggleCode}
+          onToggleCodeEditor={onToggleCodeEditor}
+          onOpenFileExplorer={onOpenFileExplorer}
+          onLoadTemplate={onLoadTemplate}
+          onSaveAsTemplate={onSaveAsTemplate}
+          headerVisible={headerVisible}
+          sidebarVisible={sidebarVisible}
+          canvasVisible={canvasVisible}
+          propertiesVisible={propertiesVisible}
+          codeVisible={codeVisible}
+          codeEditorVisible={codeEditorVisible}
+          user={user}
+          onLogout={logout}
+          onLogin={handleTelegramLogin}
+          isVertical={isVertical}
+        />
+      </div>
       
       {/* Мобильная кнопка меню */}
       <div className="lg:hidden">
