@@ -84,12 +84,19 @@ export function useTabNavigation({
       if (projectId) {
         onSaveProject?.();
       }
+    } else if (tab === 'editor') {
+      // При переключении на редактор закрываем панель кода и восстанавливаем canvas
+      onCloseCodePanel?.();
+      onRestoreCanvas?.();
+      if (projectId) {
+        onSaveProject?.();
+      }
     } else if (tab === 'bot' || tab === 'users' || tab === 'user-ids') {
       if (projectId) {
         onSaveProject?.();
       }
     }
-  }, [currentTab, setCurrentTab, setPreviousTab, onSaveProject, onOpenCodePanel, onCloseCodePanel, onRestoreCanvas, setLocation, projectId]);
+  }, [currentTab, setCurrentTab, setPreviousTab, onSaveProject, onOpenCodePanel, onCloseCodePanel, onRestoreCanvas, setLocation, projectId, tab]);
 
   return { handleTabChange };
 }

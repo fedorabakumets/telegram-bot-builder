@@ -636,9 +636,13 @@ export default function Editor() {
   const handleRestoreCanvas = useCallback(() => {
     setFlexibleLayoutConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(el =>
-        el.type === 'canvas' ? { ...el, visible: true } : el
-      )
+      elements: prev.elements.map(el => {
+        // Восстанавливаем все основные элементы интерфейса
+        if (el.type === 'canvas') return { ...el, visible: true };
+        if (el.id === 'sidebar') return { ...el, visible: true };
+        if (el.id === 'properties') return { ...el, visible: true };
+        return el;
+      })
     }));
   }, [setFlexibleLayoutConfig]);
 
