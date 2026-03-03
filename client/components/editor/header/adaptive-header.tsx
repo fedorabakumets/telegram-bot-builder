@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/co
 import { FolderOpen, Bookmark, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Menu, Code, Github, LogOut, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import type { AdaptiveHeaderProps } from './types';
 
 export function AdaptiveHeader({
@@ -37,22 +38,7 @@ export function AdaptiveHeader({
 
   // Проверка авторизации пользователя
   const { user, logout } = useTelegramAuth();
-
-  /**
-   * @function handleTelegramLogin
-   * @description Обработчик входа через Telegram
-   * Открывает окно авторизации Telegram
-   * @returns
-   */
-  // Функция для открытия окна авторизации Telegram
-  const handleTelegramLogin = () => {
-    const width = 500;
-    const height = 600;
-    const left = window.innerWidth / 2 - width / 2;
-    const top = window.innerHeight / 2 - height / 2;
-
-    window.open('/api/auth/login', 'telegram_login', `width=${width},height=${height},left=${left},top=${top}`);
-  };
+  const { handleTelegramLogin } = useTelegramLogin();
 
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
