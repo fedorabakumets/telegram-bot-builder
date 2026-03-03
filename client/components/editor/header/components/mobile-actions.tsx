@@ -142,9 +142,9 @@ export function MobileActions({
           <SaveTemplateButton onClick={() => handleAction(onSaveAsTemplate)} />
         )}
         <GithubButton className={onSaveAsTemplate ? '' : 'sm:col-span-2'} />
-        <div className="flex justify-center sm:col-span-2 pt-2">
+        {/* <div className="flex justify-center sm:col-span-2 pt-2">
           <ThemeToggle />
-        </div>
+        </div> */}
       </div>
     </div>
   );

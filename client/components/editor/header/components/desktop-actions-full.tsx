@@ -115,7 +115,7 @@ export function DesktopActionsFull({
         isVertical ? 'flex-col w-full' : ''
       )}>
         <GithubButton />
-        <ThemeToggle />
+        {/* <ThemeToggle /> */}
       </div>
     </div>
   );
