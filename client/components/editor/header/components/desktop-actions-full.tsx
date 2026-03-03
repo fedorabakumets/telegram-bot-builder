@@ -71,7 +71,7 @@ export function DesktopActionsFull({
   return (
     <div className={cn(
       'flex',
-      isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-1 lg:w-auto lg:order-none'
+      isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-1 lg:w-auto lg:order-none lg:ml-auto'
     )}>
       <DesktopActions
         onToggleHeader={onToggleHeader}

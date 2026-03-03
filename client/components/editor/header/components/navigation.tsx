@@ -39,7 +39,7 @@ export function Navigation({ currentTab, onTabChange, isVertical, isCompact, cla
   return (
     <nav
       className={cn(
-        isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden md:flex flex-wrap items-center gap-0.5 lg:gap-1 flex-1 justify-center',
+        isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden md:flex flex-wrap items-center gap-0.5 lg:gap-1',
         className
       )}
     >

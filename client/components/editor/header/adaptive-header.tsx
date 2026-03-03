@@ -118,13 +118,12 @@ export function AdaptiveHeader({
         )}
       </div>
 
-      <div className="flex items-center gap-1 lg:gap-2">
+      <div className="flex items-center gap-1 lg:gap-2 flex-1">
         <Navigation
           currentTab={currentTab}
           onTabChange={onTabChange}
           isVertical={isVertical}
           isCompact={isCompact}
-          className="flex-1"
         />
 
         {/* Десктопные/Планшетные действия */}
