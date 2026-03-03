@@ -110,9 +110,11 @@ export function DesktopActionsFull({
         <TelegramChatInvite variant="desktop" />
       </div>
 
-      <GithubButton />
-
-      <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
+      <div className={cn(
+        'flex items-center gap-1',
+        isVertical ? 'flex-col w-full' : ''
+      )}>
+        <GithubButton />
         <ThemeToggle />
       </div>
     </div>
