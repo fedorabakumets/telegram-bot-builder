@@ -408,6 +408,14 @@ export default function Editor() {
   /**
    * Эффект для автоматического выбора первого пользователя при переключении на вкладку "Пользователи"
    */
+  useEffect(() => {
+    if (currentTab === 'users' && users.length > 0) {
+      const firstUser = users[0];
+      // Открываем обе панели с первым пользователем
+      handleSelectUserDetails(firstUser);
+      handleSelectDialogUser(firstUser);
+    }
+  }, [currentTab, users, handleSelectUserDetails, handleSelectDialogUser]);
 
   // Использование хука генератора кода
   const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent, setCodeContent } = useCodeGenerator(
