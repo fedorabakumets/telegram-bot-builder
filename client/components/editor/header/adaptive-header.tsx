@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { LogOut, MessageCircle, Menu, Bookmark, Code, FolderOpen, Github, Monitor, NavigationIcon, Sidebar, Sliders } from 'lucide-react';
+import { LogOut, MessageCircle, Menu, Github, Sliders } from 'lucide-react';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
@@ -14,17 +14,26 @@ import { Separator } from './components/separator';
 import { TelegramChatInvite } from './components/telegram-chat-invite';
 import { GithubButton } from './components/github-button';
 import { ThemeToggle } from './components/theme-toggle';
-import { ToggleHeaderButton } from './components/toggle-header-button';
-import { ToggleSidebarButton } from './components/toggle-sidebar-button';
-import { ToggleCanvasButton } from './components/toggle-canvas-button';
-import { TogglePropertiesButton } from './components/toggle-properties-button';
-import { ToggleCodeButton } from './components/toggle-code-button';
-import { ToggleCodeEditorButton } from './components/toggle-code-editor-button';
-import { OpenFileExplorerButton } from './components/open-file-explorer-button';
-import { LoadTemplateButton } from './components/load-template-button';
-import { SaveTemplateButton } from './components/save-template-button';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/bot-generator/utils';
+import { DesktopLoadTemplateButton } from './components/desktop-load-template-button';
+import { DesktopOpenFileExplorerButton } from './components/desktop-open-file-explorer-button';
+import { DesktopSaveTemplateButton } from './components/desktop-save-template-button';
+import { DesktopToggleCanvasButton } from './components/desktop-toggle-canvas-button';
+import { DesktopToggleCodeButton } from './components/desktop-toggle-code-button';
+import { DesktopToggleCodeEditorButton } from './components/desktop-toggle-code-editor-button';
+import { DesktopToggleHeaderButton } from './components/desktop-toggle-header-button';
+import { DesktopTogglePropertiesButton } from './components/desktop-toggle-properties-button';
+import { DesktopToggleSidebarButton } from './components/desktop-toggle-sidebar-button';
+import { LoadTemplateButton } from './components/load-template-button';
+import { OpenFileExplorerButton } from './components/open-file-explorer-button';
+import { SaveTemplateButton } from './components/save-template-button';
+import { ToggleCanvasButton } from './components/toggle-canvas-button';
+import { ToggleCodeButton } from './components/toggle-code-button';
+import { ToggleCodeEditorButton } from './components/toggle-code-editor-button';
+import { ToggleHeaderButton } from './components/toggle-header-button';
+import { TogglePropertiesButton } from './components/toggle-properties-button';
+import { ToggleSidebarButton } from './components/toggle-sidebar-button';
 
 export function AdaptiveHeader({
   config,
@@ -72,249 +81,45 @@ export function AdaptiveHeader({
     isCompact ? 'text-sm' : ''
   ].join(' ');
 
-  // Мобильная версия действий
-  const MobileActions = () => (
-    <div className="flex flex-col gap-3 sm:gap-4">
-      {/* Приглашение в Telegram-чат */}
-      <TelegramChatInvite onClick={() => setIsMobileMenuOpen(false)} />
-
-      {/* Кнопки управления макетом */}
-      {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
-        <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:gap-2.5">
-          {onToggleHeader && (
-            <ToggleHeaderButton
-              headerVisible={headerVisible}
-              onClick={() => {
-                onToggleHeader();
-                setIsMobileMenuOpen(false);
-              }}
-            />
-          )}
-
-          {onToggleSidebar && (
-            <ToggleSidebarButton
-              sidebarVisible={sidebarVisible}
-              onClick={() => {
-                onToggleSidebar();
-                setIsMobileMenuOpen(false);
-              }}
-            />
-          )}
-
-          {onToggleCanvas && (
-            <ToggleCanvasButton
-              canvasVisible={canvasVisible}
-              onClick={() => {
-                onToggleCanvas();
-                setIsMobileMenuOpen(false);
-              }}
-            />
-          )}
-
-          {onToggleProperties && (
-            <TogglePropertiesButton
-              propertiesVisible={propertiesVisible}
-              onClick={() => {
-                onToggleProperties();
-                setIsMobileMenuOpen(false);
-              }}
-            />
-          )}
-
-          {onToggleCode && (
-            <ToggleCodeButton
-              codeVisible={codeVisible}
-              onClick={() => {
-                onToggleCode();
-                setIsMobileMenuOpen(false);
-              }}
-            />
-          )}
-
-          {onToggleCodeEditor && (
-            <ToggleCodeEditorButton
-              codeEditorVisible={codeEditorVisible}
-              onClick={() => {
-                onToggleCodeEditor();
-                setIsMobileMenuOpen(false);
-              }}
-            />
-          )}
-          
-          {onOpenFileExplorer && (
-            <OpenFileExplorerButton
-              onClick={() => {
-                onOpenFileExplorer();
-                setIsMobileMenuOpen(false);
-              }}
-            />
-          )}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-        {onLoadTemplate && (
-          <LoadTemplateButton
-            onClick={() => {
-              onLoadTemplate();
-              setIsMobileMenuOpen(false);
-            }}
-          />
-        )}
-
-        {onSaveAsTemplate && (
-          <SaveTemplateButton
-            onClick={() => {
-              onSaveAsTemplate();
-              setIsMobileMenuOpen(false);
-            }}
-          />
-        )}
-
-        <GithubButton className={onSaveAsTemplate ? '' : 'sm:col-span-2'} />
-
-        <div className="flex justify-center sm:col-span-2 pt-2">
-          <ThemeToggle />
-        </div>
-      </div>
-    </div>
-  );
-
   // Компонент действий
   const Actions = () => (
-    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-1 lg:w-auto lg:order-none lg:ml-auto'}`}>
-      
-      {/* Кнопки управления макетом */}
-      {onToggleHeader && (
-        <Button
-          variant={headerVisible ? "default" : "outline"}
-          size="sm"
-          onClick={onToggleHeader}
-          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${headerVisible ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
-          title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
-          data-testid="button-toggle-header"
-        >
-          <NavigationIcon className="w-3.5 h-3.5" />
-        </Button>
-      )}
-      
-      {onToggleSidebar && (
-        <Button
-          variant={sidebarVisible ? "default" : "outline"}
-          size="sm"
-          onClick={onToggleSidebar}
-          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${sidebarVisible ? 'bg-gradient-to-br from-purple-600 to-purple-500 text-white shadow-md shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
-          title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
-          data-testid="button-toggle-sidebar"
-        >
-          <Sidebar className="w-3.5 h-3.5" />
-        </Button>
-      )}
-      
-      {onToggleCanvas && (
-        <Button
-          variant={canvasVisible ? "default" : "outline"}
-          size="sm"
-          onClick={onToggleCanvas}
-          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${canvasVisible ? 'bg-gradient-to-br from-cyan-600 to-cyan-500 text-white shadow-md shadow-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
-          title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
-          data-testid="button-toggle-canvas"
-        >
-          <Monitor className="w-3.5 h-3.5" />
-        </Button>
-      )}
-      
-      {onToggleProperties && (
-        <Button
-          variant={propertiesVisible ? "default" : "outline"}
-          size="sm"
-          onClick={onToggleProperties}
-          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${propertiesVisible ? 'bg-gradient-to-br from-pink-600 to-pink-500 text-white shadow-md shadow-pink-500/30 hover:shadow-lg hover:shadow-pink-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
-          title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
-          data-testid="button-toggle-properties"
-        >
-          <Sliders className="w-3.5 h-3.5" />
-        </Button>
-      )}
-      
-      {onToggleCode && (
-        <Button
-          variant={codeVisible ? "default" : "outline"}
-          size="sm"
-          onClick={onToggleCode}
-          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${codeVisible ? 'bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
-          title={`${codeVisible ? 'Скрыть' : 'Показать'} панель кода`}
-          data-testid="button-toggle-code"
-        >
-          <Code className="w-3.5 h-3.5" />
-        </Button>
-      )}
+    <div className={cn(
+      'flex',
+      isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-1 lg:w-auto lg:order-none lg:ml-auto'
+    )}>
+      <DesktopActions
+        onToggleHeader={onToggleHeader}
+        onToggleSidebar={onToggleSidebar}
+        onToggleCanvas={onToggleCanvas}
+        onToggleProperties={onToggleProperties}
+        onToggleCode={onToggleCode}
+        onToggleCodeEditor={onToggleCodeEditor}
+        onOpenFileExplorer={onOpenFileExplorer}
+        onLoadTemplate={onLoadTemplate}
+        onSaveAsTemplate={onSaveAsTemplate}
+        headerVisible={headerVisible}
+        sidebarVisible={sidebarVisible}
+        canvasVisible={canvasVisible}
+        propertiesVisible={propertiesVisible}
+        codeVisible={codeVisible}
+        codeEditorVisible={codeEditorVisible}
+        isVertical={isVertical}
+      />
 
-      {onToggleCodeEditor && (
-        <Button
-          variant={codeEditorVisible ? "default" : "outline"}
-          size="sm"
-          onClick={onToggleCodeEditor}
-          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${codeEditorVisible ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40' : 'bg-slate-500/5 dark:bg-slate-700/15 hover:bg-slate-300/40 dark:hover:bg-slate-600/50 text-slate-600 dark:text-slate-400'}`}
-          title={`${codeEditorVisible ? 'Скрыть' : 'Показать'} редактор кода`}
-          data-testid="button-toggle-code-editor"
-        >
-          <i className="fas fa-file-code w-3.5 h-3.5"></i>
-        </Button>
-      )}
-
-      {onOpenFileExplorer && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onOpenFileExplorer}
-          className={`h-8 w-8 p-0 transition-all duration-200 rounded-lg border-0 ${'bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40'}`}
-          title="Открыть проводник файлов"
-          data-testid="button-open-file-explorer"
-        >
-          <i className="fas fa-folder w-3.5 h-3.5" />
-        </Button>
-      )}
-      
-      {onLoadTemplate && (
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={onLoadTemplate}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-indigo-500/10 to-indigo-400/5 hover:from-indigo-600/20 hover:to-indigo-500/15 border border-indigo-400/30 dark:border-indigo-500/30 hover:border-indigo-500/50 dark:hover:border-indigo-400/50 text-indigo-700 dark:text-indigo-300 rounded-lg transition-all shadow-sm hover:shadow-md hover:shadow-indigo-500/20 max-sm:px-2 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
-        >
-          <FolderOpen className="h-3.5 w-3.5 max-sm:mx-auto" />
-          <span className="max-sm:hidden ml-1">Шаблоны</span>
-        </Button>
-      )}
-      
-      {onSaveAsTemplate && (
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={onSaveAsTemplate}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-amber-500/10 to-amber-400/5 hover:from-amber-600/20 hover:to-amber-500/15 border border-amber-400/30 dark:border-amber-500/30 hover:border-amber-500/50 dark:hover:border-amber-400/50 text-amber-700 dark:text-amber-300 rounded-lg transition-all shadow-sm hover:shadow-md hover:shadow-amber-500/20 max-sm:px-2 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
-        >
-          <Bookmark className="h-3.5 w-3.5 max-sm:mx-auto" />
-          <span className="max-sm:hidden ml-1">Сохранить шаблон</span>
-        </Button>
-      )}
-      
-
-      
-  
-      
       {isVertical && (
         <div className="h-px w-full bg-border my-2"></div>
       )}
-      
+
       {/* Информация о пользователе и выход */}
       {user ? (
         <>
-          <div className={`flex items-center space-x-2.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/10 dark:from-blue-700/25 dark:to-cyan-600/20 px-3 py-1.5 rounded-lg backdrop-blur-md border border-blue-400/20 dark:border-blue-500/30 shadow-md shadow-blue-500/10 ${isVertical ? 'w-full' : ''}`}>
+          <div className={cn(
+            'flex items-center space-x-2.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/10 dark:from-blue-700/25 dark:to-cyan-600/20 px-3 py-1.5 rounded-lg backdrop-blur-md border border-blue-400/20 dark:border-blue-500/30 shadow-md shadow-blue-500/10',
+            isVertical ? 'w-full' : ''
+          )}>
             {user.photoUrl && (
-              <img 
-                src={user.photoUrl} 
+              <img
+                src={user.photoUrl}
                 alt={user.firstName}
                 className="w-7 h-7 rounded-full ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20"
               />
@@ -328,12 +133,15 @@ export function AdaptiveHeader({
               </div>
             )}
           </div>
-          
+
           <Button
             variant="ghost"
             size="sm"
             onClick={logout}
-            className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2.5 py-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-500/10 dark:hover:bg-red-500/20 rounded-lg transition-all font-semibold`}
+            className={cn(
+              'px-2.5 py-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-500/10 dark:hover:bg-red-500/20 rounded-lg transition-all font-semibold',
+              isVertical ? 'w-full justify-center' : 'flex items-center justify-center'
+            )}
             title="Выход"
           >
             <LogOut className="h-3.5 w-3.5" />
@@ -351,35 +159,19 @@ export function AdaptiveHeader({
         </Button>
       )}
 
-      <div className={`${isVertical ? 'w-full px-3 py-1.5' : 'hidden md:flex items-center px-3 py-1.5'} text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm`}>
+      <div className={cn(
+        'text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm',
+        isVertical ? 'w-full px-3 py-1.5' : 'hidden md:flex items-center px-3 py-1.5'
+      )}>
         <TelegramChatInvite variant="desktop" />
       </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        asChild
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-500/50 rounded-lg transition-all`}
-        title="Открыть проект на GitHub"
-      >
-        <a
-          href="https://github.com/fedorabakumets/telegram-bot-builder"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Github className="h-3.5 w-3.5" />
-        </a>
-      </Button>
+      <GithubButton />
 
       <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
         <ThemeToggle />
       </div>
     </div>
-  );
-
-  // Разделитель
-  const Separator = () => (
-    <div className={`${isVertical ? 'h-px w-full' : 'h-4 sm:h-5 md:h-6 w-px'} bg-border/50 hidden sm:block`}></div>
   );
 
   if (isVertical) {
@@ -491,7 +283,24 @@ export function AdaptiveHeader({
                   {/* Действия */}
                   <div className="border-t border-border/50 pt-4">
                     <h3 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">Действия</h3>
-                    <MobileActions />
+                    <MobileActions
+                      onToggleHeader={onToggleHeader}
+                      onToggleSidebar={onToggleSidebar}
+                      onToggleCanvas={onToggleCanvas}
+                      onToggleProperties={onToggleProperties}
+                      onToggleCode={onToggleCode}
+                      onToggleCodeEditor={onToggleCodeEditor}
+                      onOpenFileExplorer={onOpenFileExplorer}
+                      onLoadTemplate={onLoadTemplate}
+                      onSaveAsTemplate={onSaveAsTemplate}
+                      headerVisible={headerVisible}
+                      sidebarVisible={sidebarVisible}
+                      canvasVisible={canvasVisible}
+                      propertiesVisible={propertiesVisible}
+                      codeVisible={codeVisible}
+                      codeEditorVisible={codeEditorVisible}
+                      onCloseMenu={() => setIsMobileMenuOpen(false)}
+                    />
                   </div>
 
                   {/* Аккаунт */}
