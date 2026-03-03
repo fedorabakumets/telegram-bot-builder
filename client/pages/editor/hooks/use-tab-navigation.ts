@@ -71,7 +71,7 @@ export function useTabNavigation({
         onSaveProject?.();
       }
       // Открываем обе панели кода (редактор и боковую панель)
-      onOpenCodePanel?.();
+      onOpenCodePanel?.(true);
     } else if (currentTab === 'export') {
       onCloseCodePanel?.();
       onRestoreCanvas?.();
