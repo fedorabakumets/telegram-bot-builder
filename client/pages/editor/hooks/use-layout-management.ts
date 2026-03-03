@@ -4,7 +4,7 @@
  * Управляет видимостью элементов гибкого макета.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import type { SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 
 /** Результат работы хука управления макетом */
@@ -66,6 +66,29 @@ export function useLayoutManager(
   const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>(
     createBaseConfig(isMobile, currentTab)
   );
+
+  // Обновляем конфигурацию при изменении вкладки
+  useEffect(() => {
+    setFlexibleLayoutConfig(prev => {
+      const newConfig = createBaseConfig(isMobile, currentTab);
+      // Сохраняем текущее состояние видимости для ручных изменений
+      return {
+        ...newConfig,
+        elements: newConfig.elements.map(newEl => {
+          const prevEl = prev.elements.find(el => el.id === newEl.id);
+          // Для dialog и userDetails используем новую видимость из вкладки
+          if (newEl.id === 'dialog' || newEl.id === 'userDetails') {
+            return newEl;
+          }
+          // Для sidebar и properties сохраняем ручные изменения только на вкладке editor
+          if ((newEl.id === 'sidebar' || newEl.id === 'properties') && currentTab !== 'editor') {
+            return { ...newEl, visible: false };
+          }
+          return prevEl ? { ...newEl, visible: prevEl.visible } : newEl;
+        })
+      };
+    });
+  }, [currentTab, isMobile]);
 
   const toggleElementVisibility = useCallback((elementId: 'header' | 'sidebar' | 'canvas' | 'properties' | 'code' | 'codeEditor' | 'dialog' | 'userDetails' | 'fileExplorer') => {
     setFlexibleLayoutConfig(prev => ({

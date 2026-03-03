@@ -47,6 +47,8 @@ export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.El
           data-testid={`button-view-user-${index}`}
           onClick={(e) => {
             e.stopPropagation();
+            console.log('[DesktopActionsCell] Eye button clicked for user:', user);
+            console.log('[DesktopActionsCell] Calling onOpenUserDetailsPanel with:', user);
             onOpenUserDetailsPanel?.(user);
           }}
           title="Подробно"
@@ -60,6 +62,8 @@ export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.El
           data-testid={`button-show-dialog-${index}`}
           onClick={(e) => {
             e.stopPropagation();
+            console.log('[DesktopActionsCell] Chat button clicked for user:', user);
+            console.log('[DesktopActionsCell] Calling onOpenDialogPanel with:', user);
             onOpenDialogPanel?.(user);
           }}
           title="Чат"

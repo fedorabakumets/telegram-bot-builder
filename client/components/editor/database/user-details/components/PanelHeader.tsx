@@ -65,6 +65,8 @@ function UserAvatar({ user, projectId, formatUserName }: { user: UserBotData; pr
  * @returns {JSX.Element} Элемент заголовка
  */
 export function PanelHeader({ user, users, onClose, formatUserName, onSelectUser, projectId }: PanelHeaderProps): React.JSX.Element {
+  console.log('[PanelHeader] Current user:', user, 'onSelectUser:', !!onSelectUser);
+  
   return (
     <div className="flex items-center justify-between gap-2 p-2 xs:p-2.5 sm:p-3 border-b">
       <div className="flex items-center gap-2 min-w-0">
@@ -74,8 +76,11 @@ export function PanelHeader({ user, users, onClose, formatUserName, onSelectUser
           <Select
             value={user.userId.toString()}
             onValueChange={(value) => {
+              console.log('[PanelHeader] Select value changed to:', value);
               const selectedUser = users.find((u) => u.userId.toString() === value);
+              console.log('[PanelHeader] Found selectedUser:', selectedUser);
               if (selectedUser && onSelectUser) {
+                console.log('[PanelHeader] Calling onSelectUser with:', selectedUser);
                 onSelectUser(selectedUser);
               }
             }}

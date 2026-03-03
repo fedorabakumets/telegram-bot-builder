@@ -1685,8 +1685,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const result = await pool.query(`
         SELECT
-          bu.user_id AS id,
-          bu.user_id AS "userId",
+          ROW_NUMBER() OVER (ORDER BY bu.last_interaction DESC) AS id,
+          bu.user_id::text AS "userId",
           bu.username AS "userName",
           bu.first_name AS "firstName",
           bu.last_name AS "lastName",

@@ -30,6 +30,8 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog, onSel
   const { messages, total, userSent, botSent } = useUserMessages(projectId, user?.userId);
   const updateUserMutation = useUpdateUser(projectId, user);
 
+  console.log('[UserDetailsPanel] Render with user:', user);
+
   const handleUserStatusToggle = (field: 'isActive') => {
     if (!user) return;
     const currentValue = Boolean(user[field as keyof UserBotData]);
@@ -40,7 +42,11 @@ export function UserDetailsPanel({ projectId, user, onClose, onOpenDialog, onSel
     return <EmptyState />;
   }
 
-  const handleSelectUser = onSelectUser || onOpenDialog;
+  // Используем onSelectUser для выбора пользователя из выпадающего списка
+  // Если onSelectUser не передан, используем onOpenDialog как fallback
+  const handleSelectUser = onSelectUser 
+    ? onSelectUser 
+    : (onOpenDialog ? (u: UserBotData) => onOpenDialog(u) : undefined);
 
   return (
     <div className="h-full bg-background overflow-auto">

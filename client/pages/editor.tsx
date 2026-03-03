@@ -27,7 +27,6 @@ import {
   useEditorUIStates,
   useSheetStates,
   useCodeStates,
-  useDialogHandlers,
   useMobileHandlers,
   useCodePanelHandlers,
 } from '@/pages/editor/hooks';
@@ -110,14 +109,10 @@ export default function Editor() {
 
   // Хуки состояний
   const {
-    selectedDialogUser,
-    selectedUserDetails,
     isLoadingTemplate,
     showLayoutManager,
     showMobileProperties,
     showMobileSidebar,
-    setSelectedDialogUser,
-    setSelectedUserDetails,
     setIsLoadingTemplate,
     setShowLayoutManager,
     setShowMobileProperties,
@@ -186,23 +181,74 @@ export default function Editor() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Хук обработчиков диалогов (после объявления setFlexibleLayoutConfig)
-  const {
-    handleOpenDialogPanel,
-    handleCloseDialogPanel,
-    handleOpenUserDetailsPanel,
-    handleCloseUserDetailsPanel,
-  } = useDialogHandlers({ setFlexibleLayoutConfig });
+  // Хук обработчиков диалогов
+  const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
+  const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
 
   // Обработчик выбора пользователя в диалоге
   const handleSelectDialogUser = useCallback((user: UserBotData) => {
+    console.log('[handleSelectDialogUser] Selecting user:', user);
+    // Обновляем выбранного пользователя и открываем панель
     setSelectedDialogUser(user);
-  }, [setSelectedDialogUser]);
+    setFlexibleLayoutConfig(prev => {
+      const newConfig = {
+        ...prev,
+        elements: prev.elements.map(el => {
+          if (el.id === 'dialog') return { ...el, visible: true };
+          if (el.id === 'properties') return { ...el, visible: false };
+          return el;
+        })
+      };
+      console.log('[handleSelectDialogUser] New config:', newConfig);
+      return newConfig;
+    });
+  }, [setFlexibleLayoutConfig]);
 
   // Обработчик выбора пользователя в деталях
   const handleSelectUserDetails = useCallback((user: UserBotData) => {
+    console.log('[handleSelectUserDetails] Selecting user:', user);
+    // Обновляем выбранного пользователя и открываем панель
     setSelectedUserDetails(user);
-  }, [setSelectedUserDetails]);
+    setFlexibleLayoutConfig(prev => {
+      const newConfig = {
+        ...prev,
+        elements: prev.elements.map(el => {
+          if (el.id === 'userDetails') return { ...el, visible: true };
+          if (el.id === 'sidebar') return { ...el, visible: false };
+          return el;
+        })
+      };
+      console.log('[handleSelectUserDetails] New config:', newConfig);
+      return newConfig;
+    });
+  }, [setFlexibleLayoutConfig]);
+
+  // Обработчики для передачи в UserDatabasePanel (те же самые функции)
+  const handleOpenDialogPanel = handleSelectDialogUser;
+  const handleOpenUserDetailsPanel = handleSelectUserDetails;
+
+  // Обработчики закрытия панелей
+  const handleCloseDialogPanel = useCallback(() => {
+    setSelectedDialogUser(null);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el =>
+        el.id === 'dialog' ? { ...el, visible: false } : el
+      )
+    }));
+  }, [setFlexibleLayoutConfig]);
+
+  const handleCloseUserDetailsPanel = useCallback(() => {
+    setSelectedUserDetails(null);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el => {
+        if (el.id === 'userDetails') return { ...el, visible: false };
+        if (el.id === 'sidebar') return { ...el, visible: true };
+        return el;
+      })
+    }));
+  }, [setFlexibleLayoutConfig]);
 
   // Хук состояний вкладок
   const [, setPreviousTab] = useState<PreviousEditorTab>('editor');
@@ -362,14 +408,6 @@ export default function Editor() {
   /**
    * Эффект для автоматического выбора первого пользователя при переключении на вкладку "Пользователи"
    */
-  useEffect(() => {
-    if (currentTab === 'users' && users.length > 0) {
-      const firstUser = users[0];
-      // Устанавливаем первого пользователя как выбранного для обеих панелей
-      setSelectedUserDetails(firstUser);
-      setSelectedDialogUser(firstUser);
-    }
-  }, [currentTab, users]);
 
   // Использование хука генератора кода
   const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent, setCodeContent } = useCodeGenerator(
@@ -1131,6 +1169,7 @@ export default function Editor() {
             dialogContent={
               selectedDialogUser && activeProject && (
                 <DialogPanel
+                  key={`dialog-${selectedDialogUser?.userId || 'none'}`}
                   projectId={activeProject.id}
                   user={selectedDialogUser}
                   onClose={handleCloseDialogPanel}
@@ -1141,6 +1180,7 @@ export default function Editor() {
             userDetailsContent={
               selectedUserDetails && activeProject && (
                 <UserDetailsPanel
+                  key={`userdetails-${selectedUserDetails?.userId || 'none'}`}
                   projectId={activeProject.id}
                   user={selectedUserDetails}
                   onClose={handleCloseUserDetailsPanel}

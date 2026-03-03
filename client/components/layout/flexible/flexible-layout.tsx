@@ -85,9 +85,10 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 
     // Если есть боковые панели и основной контент
     if ((leftEl || rightElements.length > 0) && centerEl && !topEl && !bottomEl) {
-      const isUsersTab = isUsersTabLayout(leftEl, rightElements);
-
-      // Фильтруем правые элементы с null контентом
+      // Фильтруем левый элемент по контенту
+      const validLeftContent = leftEl ? getElementContent(leftEl.type) : null;
+      
+      // Фильтруем правые элементы с null/undefined/false контентом
       const validRightElements = rightElements
         .map(el => ({
           id: el.id,
@@ -95,11 +96,26 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           content: getElementContent(el.type),
           size: el.size,
         }))
-        .filter(el => el.content !== null);
+        .filter(el => el.content);
+
+      // Проверяем, есть ли фактически показываемые боковые панели
+      const hasLeftPanel = validLeftContent !== null;
+      const hasRightPanels = validRightElements.length > 0;
+      
+      // Если нет ни левой, ни правой панели, показываем только центр
+      if (!hasLeftPanel && !hasRightPanels) {
+        return (
+          <SingleElementLayout>
+            {getElementContent(centerEl.type)}
+          </SingleElementLayout>
+        );
+      }
+
+      const isUsersTab = hasLeftPanel || hasRightPanels;
 
       return (
         <SidePanelsLayout
-          leftContent={leftEl ? getElementContent(leftEl.type) : null}
+          leftContent={validLeftContent}
           leftType={leftEl?.type}
           centerContent={getElementContent(centerEl.type)}
           centerSize={centerEl.size || 50}
@@ -123,7 +139,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             content: getElementContent(el.type),
             size: el.size,
           }))
-          .filter(el => el.content !== null)}
+          .filter(el => el.content)}
         bottomContent={bottomEl ? getElementContent(bottomEl.type) : null}
         bottomSize={bottomEl?.size}
       />
