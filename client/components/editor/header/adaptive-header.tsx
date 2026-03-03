@@ -4,15 +4,10 @@ import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-
 import type { AdaptiveHeaderProps } from './types';
 import { BrandSection } from './components/brand-section';
 import { Navigation } from './components/navigation';
-import { DesktopActions } from './components/desktop-actions';
+import { DesktopActionsFull } from './components/desktop-actions-full';
 import { Separator } from './components/separator';
-import { TelegramChatInvite } from './components/telegram-chat-invite';
-import { GithubButton } from './components/github-button';
-import { ThemeToggle } from './components/theme-toggle';
-import { UserAuth } from './components/user-auth';
 import { MobileHeaderControls } from './components/mobile-header-controls';
 import { MobileMenu } from './components/mobile-menu';
-import { cn } from '@/lib/bot-generator/utils';
 
 export function AdaptiveHeader({
   config,
@@ -57,57 +52,6 @@ export function AdaptiveHeader({
     isCompact ? 'text-sm' : ''
   ].join(' ');
 
-  // Компонент действий
-  const Actions = () => (
-    <div className={cn(
-      'flex',
-      isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-1 lg:w-auto lg:order-none lg:ml-auto'
-    )}>
-      <DesktopActions
-        onToggleHeader={onToggleHeader}
-        onToggleSidebar={onToggleSidebar}
-        onToggleCanvas={onToggleCanvas}
-        onToggleProperties={onToggleProperties}
-        onToggleCode={onToggleCode}
-        onToggleCodeEditor={onToggleCodeEditor}
-        onOpenFileExplorer={onOpenFileExplorer}
-        onLoadTemplate={onLoadTemplate}
-        onSaveAsTemplate={onSaveAsTemplate}
-        headerVisible={headerVisible}
-        sidebarVisible={sidebarVisible}
-        canvasVisible={canvasVisible}
-        propertiesVisible={propertiesVisible}
-        codeVisible={codeVisible}
-        codeEditorVisible={codeEditorVisible}
-        isVertical={isVertical}
-      />
-
-      {isVertical && (
-        <div className="h-px w-full bg-border my-2"></div>
-      )}
-
-      <UserAuth
-        user={user}
-        onLogout={logout}
-        onLogin={handleTelegramLogin}
-        isVertical={isVertical}
-      />
-
-      <div className={cn(
-        'text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm',
-        isVertical ? 'w-full px-3 py-1.5' : 'hidden md:flex items-center px-3 py-1.5'
-      )}>
-        <TelegramChatInvite variant="desktop" />
-      </div>
-
-      <GithubButton />
-
-      <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
-        <ThemeToggle />
-      </div>
-    </div>
-  );
-
   if (isVertical) {
     return (
       <header className={containerClasses}>
@@ -128,7 +72,27 @@ export function AdaptiveHeader({
           />
         </div>
         <Separator />
-        <Actions />
+        <DesktopActionsFull
+          onToggleHeader={onToggleHeader}
+          onToggleSidebar={onToggleSidebar}
+          onToggleCanvas={onToggleCanvas}
+          onToggleProperties={onToggleProperties}
+          onToggleCode={onToggleCode}
+          onToggleCodeEditor={onToggleCodeEditor}
+          onOpenFileExplorer={onOpenFileExplorer}
+          onLoadTemplate={onLoadTemplate}
+          onSaveAsTemplate={onSaveAsTemplate}
+          headerVisible={headerVisible}
+          sidebarVisible={sidebarVisible}
+          canvasVisible={canvasVisible}
+          propertiesVisible={propertiesVisible}
+          codeVisible={codeVisible}
+          codeEditorVisible={codeEditorVisible}
+          user={user}
+          onLogout={logout}
+          onLogin={handleTelegramLogin}
+          isVertical={isVertical}
+        />
       </header>
     );
   }
@@ -162,7 +126,27 @@ export function AdaptiveHeader({
       />
 
       {/* Десктопные/Планшетные действия */}
-      <Actions />
+      <DesktopActionsFull
+        onToggleHeader={onToggleHeader}
+        onToggleSidebar={onToggleSidebar}
+        onToggleCanvas={onToggleCanvas}
+        onToggleProperties={onToggleProperties}
+        onToggleCode={onToggleCode}
+        onToggleCodeEditor={onToggleCodeEditor}
+        onOpenFileExplorer={onOpenFileExplorer}
+        onLoadTemplate={onLoadTemplate}
+        onSaveAsTemplate={onSaveAsTemplate}
+        headerVisible={headerVisible}
+        sidebarVisible={sidebarVisible}
+        canvasVisible={canvasVisible}
+        propertiesVisible={propertiesVisible}
+        codeVisible={codeVisible}
+        codeEditorVisible={codeEditorVisible}
+        user={user}
+        onLogout={logout}
+        onLogin={handleTelegramLogin}
+        isVertical={isVertical}
+      />
       
       {/* Мобильная кнопка меню */}
       <div className="lg:hidden">
