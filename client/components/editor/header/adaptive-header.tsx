@@ -7,6 +7,9 @@ import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import type { AdaptiveHeaderProps } from './types';
+import { BrandSection } from './components/brand-section';
+import { Navigation } from './components/navigation';
+import { MobileNavigation } from './components/mobile-navigation';
 
 export function AdaptiveHeader({
   config,
@@ -46,98 +49,13 @@ export function AdaptiveHeader({
   // Определяем ориентацию заголовка
   const isVertical = config.headerPosition === 'left' || config.headerPosition === 'right';
   const isCompact = config.compactMode;
-  
+
   // Классы для контейнера с адаптивной высотой для мобильных устройств
   const containerClasses = [
     'bg-gradient-to-r from-background via-background/95 to-background/90 dark:from-slate-950 dark:via-slate-950/95 dark:to-slate-900/90 backdrop-blur-sm relative z-50',
     isVertical ? 'h-full w-full border-r flex flex-col' : `h-12 sm:h-14 md:h-16 lg:h-20 flex items-center justify-between md:flex-wrap md:justify-start md:gap-1.5 lg:gap-2 lg:flex-nowrap lg:justify-between px-2 sm:px-3 md:px-4 lg:px-6`,
     isCompact ? 'text-sm' : ''
   ].join(' ');
-
-  // Компонент логотипа и названия
-  const BrandSection = () => (
-    <div className={`flex items-center ${isVertical ? 'flex-col space-y-2 p-4' : 'gap-2 sm:gap-2.5'} flex-shrink-0 min-w-0`}>
-      <div className={`bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 w-8 h-8 sm:w-8 sm:h-8 md:w-9 md:h-9 flex-shrink-0`}>
-        <i className={`fab fa-telegram-plane text-white text-sm sm:text-sm md:text-base`}></i>
-      </div>
-      <div className={`${isVertical ? 'text-center' : ''} min-w-0`}>
-        <h1 className={`font-bold bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent leading-tight truncate ${
-          isMobile ? 'text-sm' : 'text-sm md:text-base lg:text-lg'
-        }`}>
-          {isVertical && !isCompact ? 'BotCraft' : (isMobile ? 'BotCraft' : 'BotCraft Studio')}
-        </h1>
-        <div className={`flex items-center gap-1.5 ${isMobile ? 'hidden' : ''} ${isVertical ? 'justify-center' : ''}`}>
-          <div className="px-2 py-0.5 bg-gradient-to-r from-blue-50/60 to-cyan-50/40 dark:from-blue-950/40 dark:to-cyan-950/30 rounded-md border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm">
-            <p className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100 truncate max-w-xs">
-              {(() => {
-                const displayName = botInfo?.first_name || projectName;
-                return isVertical ? (displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName) : displayName;
-              })()}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Компонент навигации
-  const Navigation = () => (
-    <nav className={`${isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden md:flex flex-wrap items-center gap-0.5 lg:gap-1'}`}>
-      {[
-        { key: 'editor', label: 'Редактор' },
-        { key: 'export', label: 'Код' },
-        { key: 'bot', label: 'Бот' },
-        { key: 'users', label: 'Пользователи' },
-        { key: 'user-ids', label: 'База ID' },
-        { key: 'client-api', label: 'Client API' },
-        // { key: 'groups', label: 'Группы' } // Временно скрыто
-      ].map((tab) => (
-        <button
-          key={tab.key}
-          onClick={() => onTabChange(tab.key as any)}
-          className={`px-2 md:px-2.5 lg:px-3 py-1 text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
-            currentTab === tab.key
-              ? 'text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-md shadow-blue-500/20'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted/60 dark:hover:bg-slate-800/50'
-          } ${isVertical ? 'w-full text-left' : ''}`}
-        >
-          {isVertical && isCompact ? tab.label.substring(0, 3) : tab.label}
-        </button>
-      ))}
-    </nav>
-  );
-
-  // Мобильная версия навигации
-  const MobileNavigation = () => (
-    <div className="flex flex-col space-y-4">
-      <div className="grid grid-cols-2 gap-2">
-        {[
-          { key: 'editor', label: 'Редактор' },
-          { key: 'export', label: 'Код' },
-          { key: 'bot', label: 'Бот' },
-          { key: 'users', label: 'Пользователи' },
-          { key: 'user-ids', label: 'База ID' },
-          { key: 'client-api', label: 'Client API' },
-          // { key: 'groups', label: 'Группы' } // Временно скрыто
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => {
-              onTabChange(tab.key as any);
-              setIsMobileMenuOpen(false);
-            }}
-            className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-              currentTab === tab.key
-                ? 'text-primary bg-primary/10'
-                : 'text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 
   // Мобильная версия действий
   const MobileActions = () => (
@@ -574,10 +492,21 @@ export function AdaptiveHeader({
   if (isVertical) {
     return (
       <header className={containerClasses}>
-        <BrandSection />
+        <BrandSection
+          projectName={projectName}
+          botInfo={botInfo}
+          isVertical={isVertical}
+          isCompact={isCompact}
+          isMobile={isMobile}
+        />
         <Separator />
         <div className="flex-1 overflow-y-auto">
-          <Navigation />
+          <Navigation
+            currentTab={currentTab}
+            onTabChange={onTabChange}
+            isVertical={isVertical}
+            isCompact={isCompact}
+          />
         </div>
         <Separator />
         <Actions />
@@ -589,7 +518,13 @@ export function AdaptiveHeader({
     <>
       <header className={containerClasses}>
       <div className="flex items-center gap-1 sm:gap-2 md:gap-1.5 md:order-first flex-shrink-0">
-        <BrandSection />
+        <BrandSection
+          projectName={projectName}
+          botInfo={botInfo}
+          isVertical={isVertical}
+          isCompact={isCompact}
+          isMobile={isMobile}
+        />
         <Separator />
         {/* Мобильные кнопки компонентов и свойств после разделителя */}
         {isMobile && !isVertical && (
@@ -617,9 +552,14 @@ export function AdaptiveHeader({
           </div>
         )}
       </div>
-      
-      <Navigation />
-      
+
+      <Navigation
+        currentTab={currentTab}
+        onTabChange={onTabChange}
+        isVertical={isVertical}
+        isCompact={isCompact}
+      />
+
       {/* Десктопные/Планшетные действия */}
       <Actions />
       
@@ -648,7 +588,11 @@ export function AdaptiveHeader({
                   {/* Навигация */}
                   <div>
                     <h3 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">Навигация</h3>
-                    <MobileNavigation />
+                    <MobileNavigation
+                      currentTab={currentTab}
+                      onTabChange={onTabChange}
+                      onClose={() => setIsMobileMenuOpen(false)}
+                    />
                   </div>
 
                   {/* Действия */}
