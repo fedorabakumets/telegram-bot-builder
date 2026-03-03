@@ -15,6 +15,8 @@ import { LoadTemplateButton } from './load-template-button';
 import { SaveTemplateButton } from './save-template-button';
 import { GithubButton } from './github-button';
 import { ThemeToggle } from './theme-toggle';
+import { UserAuth } from './user-auth';
+import type { TelegramUser } from './user-section';
 
 /**
  * Свойства компонента мобильных действий
@@ -40,6 +42,12 @@ export interface MobileActionsProps {
   codeEditorVisible?: boolean;
   /** Обработчик закрытия меню */
   onCloseMenu?: () => void;
+  /** Данные пользователя */
+  user?: TelegramUser | null;
+  /** Обработчик выхода */
+  onLogout?: () => void;
+  /** Обработчик входа */
+  onLogin?: () => void;
 }
 
 /**
@@ -62,6 +70,9 @@ export function MobileActions({
   codeVisible,
   codeEditorVisible,
   onCloseMenu,
+  user,
+  onLogout,
+  onLogin,
 }: MobileActionsProps) {
   const handleAction = (callback?: () => void) => {
     callback?.();
@@ -71,6 +82,12 @@ export function MobileActions({
   return (
     <div className="flex flex-col gap-3 sm:gap-4">
       <TelegramChatInvite onClick={onCloseMenu} />
+
+      <UserAuth
+        user={user || null}
+        onLogout={onLogout}
+        onLogin={onLogin}
+      />
 
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
         <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:gap-2.5">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { LogOut, MessageCircle, Menu, Github, Sliders } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
@@ -14,26 +14,9 @@ import { Separator } from './components/separator';
 import { TelegramChatInvite } from './components/telegram-chat-invite';
 import { GithubButton } from './components/github-button';
 import { ThemeToggle } from './components/theme-toggle';
+import { UserAuth } from './components/user-auth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/bot-generator/utils';
-import { DesktopLoadTemplateButton } from './components/desktop-load-template-button';
-import { DesktopOpenFileExplorerButton } from './components/desktop-open-file-explorer-button';
-import { DesktopSaveTemplateButton } from './components/desktop-save-template-button';
-import { DesktopToggleCanvasButton } from './components/desktop-toggle-canvas-button';
-import { DesktopToggleCodeButton } from './components/desktop-toggle-code-button';
-import { DesktopToggleCodeEditorButton } from './components/desktop-toggle-code-editor-button';
-import { DesktopToggleHeaderButton } from './components/desktop-toggle-header-button';
-import { DesktopTogglePropertiesButton } from './components/desktop-toggle-properties-button';
-import { DesktopToggleSidebarButton } from './components/desktop-toggle-sidebar-button';
-import { LoadTemplateButton } from './components/load-template-button';
-import { OpenFileExplorerButton } from './components/open-file-explorer-button';
-import { SaveTemplateButton } from './components/save-template-button';
-import { ToggleCanvasButton } from './components/toggle-canvas-button';
-import { ToggleCodeButton } from './components/toggle-code-button';
-import { ToggleCodeEditorButton } from './components/toggle-code-editor-button';
-import { ToggleHeaderButton } from './components/toggle-header-button';
-import { TogglePropertiesButton } from './components/toggle-properties-button';
-import { ToggleSidebarButton } from './components/toggle-sidebar-button';
 
 export function AdaptiveHeader({
   config,
@@ -110,54 +93,12 @@ export function AdaptiveHeader({
         <div className="h-px w-full bg-border my-2"></div>
       )}
 
-      {/* Информация о пользователе и выход */}
-      {user ? (
-        <>
-          <div className={cn(
-            'flex items-center space-x-2.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/10 dark:from-blue-700/25 dark:to-cyan-600/20 px-3 py-1.5 rounded-lg backdrop-blur-md border border-blue-400/20 dark:border-blue-500/30 shadow-md shadow-blue-500/10',
-            isVertical ? 'w-full' : ''
-          )}>
-            {user.photoUrl && (
-              <img
-                src={user.photoUrl}
-                alt={user.firstName}
-                className="w-7 h-7 rounded-full ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20"
-              />
-            )}
-            {!isVertical && (
-              <div className="text-right hidden sm:block">
-                <p className="text-xs font-bold text-foreground">{user.firstName}</p>
-                {user.username && (
-                  <p className="text-xs text-blue-600 dark:text-blue-300">@{user.username}</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={logout}
-            className={cn(
-              'px-2.5 py-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-500/10 dark:hover:bg-red-500/20 rounded-lg transition-all font-semibold',
-              isVertical ? 'w-full justify-center' : 'flex items-center justify-center'
-            )}
-            title="Выход"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-          </Button>
-        </>
-      ) : (
-        <Button
-          onClick={handleTelegramLogin}
-          size="sm"
-          className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200"
-          title="Войти через Telegram"
-        >
-          <MessageCircle className="h-3.5 w-3.5" />
-          <span>Вход</span>
-        </Button>
-      )}
+      <UserAuth
+        user={user}
+        onLogout={logout}
+        onLogin={handleTelegramLogin}
+        isVertical={isVertical}
+      />
 
       <div className={cn(
         'text-xs font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-700/20 dark:to-cyan-600/20 rounded-lg border border-blue-400/20 dark:border-blue-500/30 backdrop-blur-sm',
@@ -300,54 +241,13 @@ export function AdaptiveHeader({
                       codeVisible={codeVisible}
                       codeEditorVisible={codeEditorVisible}
                       onCloseMenu={() => setIsMobileMenuOpen(false)}
+                      user={user}
+                      onLogout={logout}
+                      onLogin={handleTelegramLogin}
                     />
                   </div>
 
-                  {/* Аккаунт */}
-                  <div className="border-t border-border/50 pt-4">
-                    <h3 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">Аккаунт</h3>
-                    <div className="flex flex-col gap-3">
-                      {user ? (
-                        <>
-                          <div className="px-4 py-3 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 dark:from-blue-700/20 dark:to-cyan-600/15 rounded-lg border border-blue-400/20 dark:border-blue-500/20">
-                            {user.photoUrl && (
-                              <img 
-                                src={user.photoUrl} 
-                                alt={user.firstName}
-                                className="w-10 h-10 rounded-full ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20 mb-2"
-                              />
-                            )}
-                            <p className="text-sm font-bold text-foreground">{user.firstName}</p>
-                            {user.username && (
-                              <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">@{user.username}</p>
-                            )}
-                          </div>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => {
-                              logout();
-                              setIsMobileMenuOpen(false);
-                            }}
-                            className="w-full font-medium"
-                          >
-                            <LogOut className="w-4 h-4 mr-2" />
-                            Выход из аккаунта
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          onClick={handleTelegramLogin}
-                          size="sm"
-                          className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-medium shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40"
-                          title="Войти через Telegram"
-                        >
-                          <MessageCircle className="w-4 h-4 mr-2" />
-                          Вход в Telegram
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                  {/* Аккаунт удален - перенесен в MobileActions */}
                 </div>
               </div>
             </div>
