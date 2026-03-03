@@ -840,7 +840,7 @@ export default function Editor() {
 
 
   // Определяем содержимое панели свойств для переиспользования
-  const propertiesContent = activeProject ? (
+  const propertiesContent = activeProject && currentTab === 'editor' ? (
     <PropertiesPanel
       projectId={activeProject.id}
       selectedNode={selectedNode}
