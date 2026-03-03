@@ -87,18 +87,23 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     if ((leftEl || rightElements.length > 0) && centerEl && !topEl && !bottomEl) {
       const isUsersTab = isUsersTabLayout(leftEl, rightElements);
 
+      // Фильтруем правые элементы с null контентом
+      const validRightElements = rightElements
+        .map(el => ({
+          id: el.id,
+          type: el.type,
+          content: getElementContent(el.type),
+          size: el.size,
+        }))
+        .filter(el => el.content !== null);
+
       return (
         <SidePanelsLayout
           leftContent={leftEl ? getElementContent(leftEl.type) : null}
           leftType={leftEl?.type}
           centerContent={getElementContent(centerEl.type)}
           centerSize={centerEl.size || 50}
-          rightElements={rightElements.map(el => ({
-            id: el.id,
-            type: el.type,
-            content: getElementContent(el.type),
-            size: el.size,
-          }))}
+          rightElements={validRightElements}
           isUsersTab={isUsersTab}
         />
       );
@@ -111,12 +116,14 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         leftContent={leftEl ? getElementContent(leftEl.type) : null}
         leftType={leftEl?.type}
         centerContent={centerEl ? getElementContent(centerEl.type) : null}
-        rightElements={rightElements.map(el => ({
-          id: el.id,
-          type: el.type,
-          content: getElementContent(el.type),
-          size: el.size,
-        }))}
+        rightElements={rightElements
+          .map(el => ({
+            id: el.id,
+            type: el.type,
+            content: getElementContent(el.type),
+            size: el.size,
+          }))
+          .filter(el => el.content !== null)}
         bottomContent={bottomEl ? getElementContent(bottomEl.type) : null}
         bottomSize={bottomEl?.size}
       />

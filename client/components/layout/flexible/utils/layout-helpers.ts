@@ -36,7 +36,7 @@ export function getElementsByPosition(elements: SimpleLayoutConfig['elements']) 
     topEl: elements.find(el => el.position === 'top'),
     bottomEl: elements.find(el => el.position === 'bottom'),
     leftEl: elements.find(el => el.position === 'left'),
-    rightElements: elements.filter(el => el.position === 'right'),
+    rightElements: elements.filter(el => el.position === 'right' && el.visible),
     centerEl: elements.find(el => el.position === 'center'),
   };
 }
