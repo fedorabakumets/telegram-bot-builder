@@ -1,14 +1,9 @@
-import { useState } from 'react';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Menu } from 'lucide-react';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import type { AdaptiveHeaderProps } from './types';
 import { BrandSection } from './components/brand-section';
 import { Navigation } from './components/navigation';
-import { MobileNavigation } from './components/mobile-navigation';
-import { MobileActions } from './components/mobile-actions';
 import { DesktopActions } from './components/desktop-actions';
 import { Separator } from './components/separator';
 import { TelegramChatInvite } from './components/telegram-chat-invite';
@@ -16,7 +11,7 @@ import { GithubButton } from './components/github-button';
 import { ThemeToggle } from './components/theme-toggle';
 import { UserAuth } from './components/user-auth';
 import { MobileHeaderControls } from './components/mobile-header-controls';
-import { Button } from '@/components/ui/button';
+import { MobileMenu } from './components/mobile-menu';
 import { cn } from '@/lib/bot-generator/utils';
 
 export function AdaptiveHeader({
@@ -43,9 +38,6 @@ export function AdaptiveHeader({
   onOpenMobileSidebar,
   onOpenMobileProperties
 }: AdaptiveHeaderProps) {
-
-  // Состояние для мобильного меню
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Проверка авторизации пользователя
   const { user, logout } = useTelegramAuth();
@@ -174,68 +166,28 @@ export function AdaptiveHeader({
       
       {/* Мобильная кнопка меню */}
       <div className="lg:hidden">
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="p-1.5 sm:p-2 h-8 sm:h-9">
-              <Menu className="h-4 w-4" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-full sm:w-96 md:w-[420px] p-0 overflow-y-auto">
-            <div className="bg-gradient-to-b from-background via-background/95 to-background/90 dark:from-slate-950 dark:via-slate-950/95 dark:to-slate-900/90 min-h-full flex flex-col">
-              {/* Заголовок меню */}
-              <SheetHeader className="px-4 sm:px-6 py-4 border-b border-border/50 sticky top-0 bg-background/80 backdrop-blur-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-lg flex items-center justify-center">
-                    <i className="fab fa-telegram-plane text-white text-sm"></i>
-                  </div>
-                  <SheetTitle className="text-left text-lg font-bold">Меню</SheetTitle>
-                </div>
-              </SheetHeader>
-
-              <div className="flex-1 overflow-y-auto">
-                <div className="px-4 sm:px-6 py-4 space-y-4 sm:space-y-6">
-                  {/* Навигация */}
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">Навигация</h3>
-                    <MobileNavigation
-                      currentTab={currentTab}
-                      onTabChange={onTabChange}
-                      onClose={() => setIsMobileMenuOpen(false)}
-                    />
-                  </div>
-
-                  {/* Действия */}
-                  <div className="border-t border-border/50 pt-4">
-                    <h3 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">Действия</h3>
-                    <MobileActions
-                      onToggleHeader={onToggleHeader}
-                      onToggleSidebar={onToggleSidebar}
-                      onToggleCanvas={onToggleCanvas}
-                      onToggleProperties={onToggleProperties}
-                      onToggleCode={onToggleCode}
-                      onToggleCodeEditor={onToggleCodeEditor}
-                      onOpenFileExplorer={onOpenFileExplorer}
-                      onLoadTemplate={onLoadTemplate}
-                      onSaveAsTemplate={onSaveAsTemplate}
-                      headerVisible={headerVisible}
-                      sidebarVisible={sidebarVisible}
-                      canvasVisible={canvasVisible}
-                      propertiesVisible={propertiesVisible}
-                      codeVisible={codeVisible}
-                      codeEditorVisible={codeEditorVisible}
-                      onCloseMenu={() => setIsMobileMenuOpen(false)}
-                      user={user}
-                      onLogout={logout}
-                      onLogin={handleTelegramLogin}
-                    />
-                  </div>
-
-                  {/* Аккаунт удален - перенесен в MobileActions */}
-                </div>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+        <MobileMenu
+          currentTab={currentTab}
+          onTabChange={onTabChange}
+          onToggleHeader={onToggleHeader}
+          onToggleSidebar={onToggleSidebar}
+          onToggleCanvas={onToggleCanvas}
+          onToggleProperties={onToggleProperties}
+          onToggleCode={onToggleCode}
+          onToggleCodeEditor={onToggleCodeEditor}
+          onOpenFileExplorer={onOpenFileExplorer}
+          onLoadTemplate={onLoadTemplate}
+          onSaveAsTemplate={onSaveAsTemplate}
+          headerVisible={headerVisible}
+          sidebarVisible={sidebarVisible}
+          canvasVisible={canvasVisible}
+          propertiesVisible={propertiesVisible}
+          codeVisible={codeVisible}
+          codeEditorVisible={codeEditorVisible}
+          user={user}
+          onLogout={logout}
+          onLogin={handleTelegramLogin}
+        />
       </div>
 
     </header>
