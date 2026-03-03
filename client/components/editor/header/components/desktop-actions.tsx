@@ -67,7 +67,8 @@ export function DesktopActions({
       'flex',
       isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-1 lg:w-auto lg:order-none lg:ml-auto'
     )}>
-      {onToggleHeader && (
+      {/* Кнопки управления состоянием панелей - временно скрыты */}
+      {/* {onToggleHeader && (
         <DesktopToggleHeaderButton
           headerVisible={headerVisible}
           onClick={onToggleHeader}
@@ -105,7 +106,9 @@ export function DesktopActions({
       )}
       {onOpenFileExplorer && (
         <DesktopOpenFileExplorerButton onClick={onOpenFileExplorer} />
-      )}
+      )} */}
+
+      {/* Кнопки шаблонов - активны */}
       {onLoadTemplate && (
         <DesktopLoadTemplateButton
           onClick={onLoadTemplate}

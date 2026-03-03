@@ -25,12 +25,13 @@ export function MobileHeaderControls({
 }: MobileHeaderControlsProps) {
   return (
     <div className="flex items-center gap-2 sm:gap-2">
-      {onOpenMobileSidebar && (
+      {/* Кнопки управления панелями - временно скрыты */}
+      {/* {onOpenMobileSidebar && (
         <MobileSidebarButton onClick={onOpenMobileSidebar} />
       )}
       {onOpenMobileProperties && (
         <MobilePropertiesButton onClick={onOpenMobileProperties} />
-      )}
+      )} */}
     </div>
   );
 }

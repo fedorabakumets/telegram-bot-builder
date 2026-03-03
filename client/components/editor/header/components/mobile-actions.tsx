@@ -89,7 +89,8 @@ export function MobileActions({
         onLogin={onLogin}
       />
 
-      {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
+      {/* Кнопки управления состоянием панелей - временно скрыты */}
+      {/* {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
         <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:gap-2.5">
           {onToggleHeader && (
             <ToggleHeaderButton
@@ -131,7 +132,7 @@ export function MobileActions({
             <OpenFileExplorerButton onClick={() => handleAction(onOpenFileExplorer)} />
           )}
         </div>
-      )}
+      )} */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
         {onLoadTemplate && (
