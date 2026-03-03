@@ -1057,7 +1057,7 @@ export default function Editor() {
           onShowFullCodeChange={setShowFullCode}
         />
       </div>
-    ) : (
+    ) : currentTab === 'editor' ? (
       <ComponentsSidebar
         onComponentDrag={handleComponentDrag}
         onComponentAdd={handleComponentAdd}
@@ -1091,7 +1091,7 @@ export default function Editor() {
         isMobile={isMobile}
         onClose={handleToggleSidebar}
       />
-    );
+    ) : null;
 
     if (useFlexibleLayout) {
       return (
@@ -1189,35 +1189,37 @@ export default function Editor() {
             />
           }
           sidebar={
-            <ComponentsSidebar
-              onComponentDrag={handleComponentDrag}
-              onComponentAdd={handleComponentAdd}
-              onLayoutChange={updateLayoutConfig}
-              onGoToProjects={handleGoToProjects}
-              onProjectSelect={handleProjectSelect}
-              currentProjectId={activeProject?.id}
-              activeSheetId={botDataWithSheets?.activeSheetId}
-              onToggleCanvas={handleToggleCanvas}
-              onToggleHeader={handleToggleHeader}
-              onToggleProperties={handleToggleProperties}
-              onShowFullLayout={() => {
-                setFlexibleLayoutConfig(prev => ({
-                  ...prev,
-                  elements: prev.elements.map(element => ({ ...element, visible: true }))
-                }))
-              }}
-              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
-              headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-              propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
-              showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
-              onSheetAdd={handleSheetAdd}
-              onSheetDelete={handleSheetDelete}
-              onSheetRename={handleSheetRename}
-              onSheetDuplicate={handleSheetDuplicate}
-              onSheetSelect={handleSheetSelect}
-              isMobile={isMobile}
-              onClose={handleToggleSidebar}
-            />
+            currentTab === 'editor' ? (
+              <ComponentsSidebar
+                onComponentDrag={handleComponentDrag}
+                onComponentAdd={handleComponentAdd}
+                onLayoutChange={updateLayoutConfig}
+                onGoToProjects={handleGoToProjects}
+                onProjectSelect={handleProjectSelect}
+                currentProjectId={activeProject?.id}
+                activeSheetId={botDataWithSheets?.activeSheetId}
+                onToggleCanvas={handleToggleCanvas}
+                onToggleHeader={handleToggleHeader}
+                onToggleProperties={handleToggleProperties}
+                onShowFullLayout={() => {
+                  setFlexibleLayoutConfig(prev => ({
+                    ...prev,
+                    elements: prev.elements.map(element => ({ ...element, visible: true }))
+                  }))
+                }}
+                canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+                headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+                propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+                showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+                onSheetAdd={handleSheetAdd}
+                onSheetDelete={handleSheetDelete}
+                onSheetRename={handleSheetRename}
+                onSheetDuplicate={handleSheetDuplicate}
+                onSheetSelect={handleSheetSelect}
+                isMobile={isMobile}
+                onClose={handleToggleSidebar}
+              />
+            ) : null
           }
           canvas={
             <div className="h-full">
@@ -1285,20 +1287,22 @@ export default function Editor() {
             </div>
           }
           properties={
-            <PropertiesPanel
-              projectId={activeProject.id}
-              selectedNode={selectedNode}
-              allNodes={nodes}
-              allSheets={botDataWithSheets?.sheets || []}
-              currentSheetId={botDataWithSheets?.activeSheetId || undefined}
-              onNodeUpdate={handleNodeUpdateWithSheets}
-              onNodeTypeChange={handleNodeTypeChange}
-              onNodeIdChange={handleNodeIdChange}
-              onButtonAdd={handleButtonAdd}
-              onButtonUpdate={handleButtonUpdate}
-              onButtonDelete={handleButtonDelete}
-              onActionLog={handleActionLog}
-            />
+            currentTab === 'editor' ? (
+              <PropertiesPanel
+                projectId={activeProject.id}
+                selectedNode={selectedNode}
+                allNodes={nodes}
+                allSheets={botDataWithSheets?.sheets || []}
+                currentSheetId={botDataWithSheets?.activeSheetId || undefined}
+                onNodeUpdate={handleNodeUpdateWithSheets}
+                onNodeTypeChange={handleNodeTypeChange}
+                onNodeIdChange={handleNodeIdChange}
+                onButtonAdd={handleButtonAdd}
+                onButtonUpdate={handleButtonUpdate}
+                onButtonDelete={handleButtonDelete}
+                onActionLog={handleActionLog}
+              />
+            ) : null
           }
         />
       )}
@@ -1321,7 +1325,7 @@ export default function Editor() {
 
 
       {/* Мобильный sidebar */}
-      <Sheet open={showMobileSidebar} onOpenChange={setShowMobileSidebar}>
+      <Sheet open={showMobileSidebar && currentTab === 'editor'} onOpenChange={setShowMobileSidebar}>
         <SheetContent side="left" className="p-0 w-80">
           <SheetHeader className="px-4 py-3 border-b">
             <SheetTitle>Компоненты</SheetTitle>
@@ -1362,7 +1366,7 @@ export default function Editor() {
 
       {/* Мобильная панель свойств - полноэкранная на мобильных */}
       <MobilePropertiesSheet
-        open={showMobileProperties}
+        open={showMobileProperties && currentTab === 'editor'}
         onOpenChange={setShowMobileProperties}
       >
         {propertiesContent}

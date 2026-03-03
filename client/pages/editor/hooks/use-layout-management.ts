@@ -32,14 +32,15 @@ interface UseLayoutManagerResult {
  */
 function createBaseConfig(isMobile: boolean, currentTab: string): SimpleLayoutConfig {
   const headerSize = isMobile ? 2.5 : 3;
-  const hidePanels = currentTab === 'bot' || currentTab === 'users';
+  // Показываем sidebar и properties только на вкладке editor
+  const showPanels = currentTab === 'editor';
 
   return {
     elements: [
       { id: 'header', type: 'header', name: 'Шапка', position: 'top', size: headerSize, visible: true },
-      { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', position: 'left', size: 20, visible: !hidePanels },
+      { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', position: 'left', size: 20, visible: showPanels },
       { id: 'canvas', type: 'canvas', name: 'Холст', position: 'center', size: 35, visible: true },
-      { id: 'properties', type: 'properties', name: 'Свойства', position: 'right', size: 20, visible: !hidePanels },
+      { id: 'properties', type: 'properties', name: 'Свойства', position: 'right', size: 20, visible: showPanels },
       { id: 'code', type: 'code', name: 'Код', position: 'left', size: 25, visible: false },
       { id: 'codeEditor', type: 'codeEditor', name: 'Редактор кода', position: 'center', size: 40, visible: false },
       { id: 'dialog', type: 'dialog', name: 'Диалог', position: 'right', size: 25, visible: currentTab === 'users' },
