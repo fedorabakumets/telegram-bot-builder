@@ -96,7 +96,7 @@ export function useTabNavigation({
         onSaveProject?.();
       }
     }
-  }, [currentTab, setCurrentTab, setPreviousTab, onSaveProject, onOpenCodePanel, onCloseCodePanel, onRestoreCanvas, setLocation, projectId, tab]);
+  }, [currentTab, setCurrentTab, setPreviousTab, onSaveProject, onOpenCodePanel, onCloseCodePanel, onRestoreCanvas, setLocation, projectId, onOpenCodeSidebar]);
 
   return { handleTabChange };
 }
