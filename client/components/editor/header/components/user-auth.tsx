@@ -28,5 +28,7 @@ export function UserAuth({ user, onLogout, onLogin, isVertical }: UserAuthProps)
     return <UserSection user={user} onLogout={onLogout || (() => {})} isVertical={isVertical} />;
   }
 
-  return <LoginButton onClick={onLogin} />;
+  // Временно скрыта кнопка входа
+  // return <LoginButton onClick={onLogin} />;
+  return null;
 }
