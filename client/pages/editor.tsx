@@ -274,7 +274,6 @@ export default function Editor() {
     handleOpenCodePanel,
     handleCloseCodePanel,
     handleToggleCodeEditor,
-    handleOpenCodeSidebar,
   } = useCodePanelHandlers({
     setCodePanelVisible,
     setCodeEditorVisible,
@@ -656,8 +655,7 @@ export default function Editor() {
     onCloseCodePanel: handleCloseCodePanel,
     onRestoreCanvas: handleRestoreCanvas,
     setLocation,
-    projectId: activeProject?.id || null,
-    onOpenCodeSidebar: handleOpenCodeSidebar
+    projectId: activeProject?.id || null
   });
 
   // Хук для управления операциями с листами

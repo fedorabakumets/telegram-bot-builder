@@ -27,8 +27,6 @@ interface UseTabNavigationOptions {
   setLocation?: (path: string) => void;
   /** ID проекта */
   projectId?: number | null;
-  /** Функция открытия боковой панели с кодом */
-  onOpenCodeSidebar?: () => void;
 }
 
 /**
@@ -46,8 +44,7 @@ export function useTabNavigation({
   onCloseCodePanel,
   onRestoreCanvas,
   setLocation,
-  projectId,
-  onOpenCodeSidebar
+  projectId
 }: UseTabNavigationOptions) {
   const handleTabChange = useCallback((tab: EditorTab) => {
     // Если нажали на ту же вкладку "Код" - ничего не делаем
@@ -72,12 +69,9 @@ export function useTabNavigation({
     if (tab === 'export') {
       if (projectId) {
         onSaveProject?.();
-        onOpenCodePanel?.();
-      } else {
-        onOpenCodePanel?.();
       }
-      // Открываем боковую панель с кодом проекта
-      onOpenCodeSidebar?.();
+      // Открываем обе панели кода (редактор и боковую панель)
+      onOpenCodePanel?.();
     } else if (currentTab === 'export') {
       onCloseCodePanel?.();
       onRestoreCanvas?.();
@@ -96,7 +90,7 @@ export function useTabNavigation({
         onSaveProject?.();
       }
     }
-  }, [currentTab, setCurrentTab, setPreviousTab, onSaveProject, onOpenCodePanel, onCloseCodePanel, onRestoreCanvas, setLocation, projectId, onOpenCodeSidebar]);
+  }, [currentTab, setCurrentTab, setPreviousTab, onSaveProject, onOpenCodePanel, onCloseCodePanel, onRestoreCanvas, setLocation, projectId]);
 
   return { handleTabChange };
 }

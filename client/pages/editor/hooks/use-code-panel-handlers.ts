@@ -33,8 +33,6 @@ export interface UseCodePanelHandlersResult {
   handleCloseCodePanel: () => void;
   /** Переключить видимость редактора кода */
   handleToggleCodeEditor: () => void;
-  /** Открыть боковую панель с кодом проекта */
-  handleOpenCodeSidebar: () => void;
 }
 
 /**
@@ -88,15 +86,10 @@ export function useCodePanelHandlers(params: UseCodePanelHandlersParams): UseCod
     }));
   }, [codeEditorVisible, setCodeEditorVisible, setFlexibleLayoutConfig]);
 
-  const handleOpenCodeSidebar = useCallback(() => {
-    setCodePanelVisible(true);
-  }, [setCodePanelVisible]);
-
   return {
     handleToggleCodePanel,
     handleOpenCodePanel,
     handleCloseCodePanel,
     handleToggleCodeEditor,
-    handleOpenCodeSidebar,
   };
 }
