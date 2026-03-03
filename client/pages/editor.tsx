@@ -185,6 +185,29 @@ export default function Editor() {
   const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
   const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
 
+  // Обработчики закрытия панелей (объявляем первыми для использования в других функциях)
+  const handleCloseDialogPanel = useCallback(() => {
+    setSelectedDialogUser(null);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el =>
+        el.id === 'dialog' ? { ...el, visible: false } : el
+      )
+    }));
+  }, [setFlexibleLayoutConfig]);
+
+  const handleCloseUserDetailsPanel = useCallback(() => {
+    setSelectedUserDetails(null);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el => {
+        if (el.id === 'userDetails') return { ...el, visible: false };
+        if (el.id === 'sidebar') return { ...el, visible: true };
+        return el;
+      })
+    }));
+  }, [setFlexibleLayoutConfig]);
+
   // Обработчик выбора пользователя в диалоге
   const handleSelectDialogUser = useCallback((user: UserBotData) => {
     console.log('[handleSelectDialogUser] Selecting user:', user);
@@ -241,29 +264,6 @@ export default function Editor() {
       handleSelectUserDetails(user);
     }
   }, [selectedUserDetails, handleSelectUserDetails, handleCloseUserDetailsPanel]);
-
-  // Обработчики закрытия панелей
-  const handleCloseDialogPanel = useCallback(() => {
-    setSelectedDialogUser(null);
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(el =>
-        el.id === 'dialog' ? { ...el, visible: false } : el
-      )
-    }));
-  }, [setFlexibleLayoutConfig]);
-
-  const handleCloseUserDetailsPanel = useCallback(() => {
-    setSelectedUserDetails(null);
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(el => {
-        if (el.id === 'userDetails') return { ...el, visible: false };
-        if (el.id === 'sidebar') return { ...el, visible: true };
-        return el;
-      })
-    }));
-  }, [setFlexibleLayoutConfig]);
 
   // Хук состояний вкладок
   const [, setPreviousTab] = useState<PreviousEditorTab>('editor');
