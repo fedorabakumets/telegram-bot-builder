@@ -166,6 +166,10 @@ export async function startBot(projectId: number, token: string, tokenId: number
       return { success: false, error: "Проект не найден" };
     }
 
+    console.log(`📊 Проект ${projectId} загружен из БД:`);
+    console.log(`   project.userDatabaseEnabled:`, project.userDatabaseEnabled);
+    console.log(`   typeof project.userDatabaseEnabled:`, typeof project.userDatabaseEnabled);
+
     // Преобразуем многолистовую структуру в простую для генератора
     const convertSheetsToSimpleBotData = (data: any) => {
       // Если уже простая структура - возвращаем как есть
