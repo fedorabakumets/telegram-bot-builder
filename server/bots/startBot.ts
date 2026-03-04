@@ -204,7 +204,18 @@ export async function startBot(projectId: number, token: string, tokenId: number
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
     // Получаем настройки генерации комментариев из переменной окружения (по умолчанию выключено)
     const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION === 'true';
+    
+    console.log(`🔧 Генерация кода бота:`);
+    console.log(`   userDatabaseEnabled:`, userDatabaseEnabled);
+    
     const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false, false, enableComments);
+    
+    // Проверяем, содержит ли код функции БД
+    const hasDbInit = botCode.includes('async def init_database()');
+    const hasDbPool = botCode.includes('db_pool');
+    console.log(`📝 Проверка сгенерированного кода:`);
+    console.log(`   init_database присутствует:`, hasDbInit);
+    console.log(`   db_pool присутствует:`, hasDbPool);
 
     // Нормализуем имя проекта для использования в качестве имени файла
     const customFileName = normalizeProjectNameToFile(project.name);
