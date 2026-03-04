@@ -36,11 +36,11 @@ export function generateBroadcastMediaSend(indent: string = '            '): str
   codeLines.push(`${indent}                    # Проверяем правильные URL поля в зависимости от типа медиа`);
   codeLines.push(`${indent}                    media_url_to_use = None`);
   codeLines.push(`${indent}                    if isinstance(media_value, dict):`);
-  codeLines.push(`${indent}                        if "audio" in media_var.lower() && "audioUrl" in media_value:`);
+  codeLines.push(`${indent}                        if "audio" in media_var.lower() and "audioUrl" in media_value:`);
   codeLines.push(`${indent}                            media_url_to_use = media_value.get("audioUrl")`);
-  codeLines.push(`${indent}                        elif "video" in media_var.lower() && "videoUrl" in media_value:`);
+  codeLines.push(`${indent}                        elif "video" in media_var.lower() and "videoUrl" in media_value:`);
   codeLines.push(`${indent}                            media_url_to_use = media_value.get("videoUrl")`);
-  codeLines.push(`${indent}                        elif "document" in media_var.lower() && "documentUrl" in media_value:`);
+  codeLines.push(`${indent}                        elif "document" in media_var.lower() and "documentUrl" in media_value:`);
   codeLines.push(`${indent}                            media_url_to_use = media_value.get("documentUrl")`);
   codeLines.push(`${indent}                        elif "photoUrl" in media_value:`);
   codeLines.push(`${indent}                            media_url_to_use = media_value.get("photoUrl")`);

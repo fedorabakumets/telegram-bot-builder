@@ -27,11 +27,11 @@ function generateAutoTransitionMediaSend(indent: string): string {
   codeLines.push(`${indent}            # Проверяем правильные URL поля в зависимости от типа медиа`);
   codeLines.push(`${indent}            m_url = None`);
   codeLines.push(`${indent}            if isinstance(m_val, dict):`);
-  codeLines.push(`${indent}                if "audio" in m_var.lower() && "audioUrl" in m_val:`);
+  codeLines.push(`${indent}                if "audio" in m_var.lower() and "audioUrl" in m_val:`);
   codeLines.push(`${indent}                    m_url = m_val.get("audioUrl")`);
-  codeLines.push(`${indent}                elif "video" in m_var.lower() && "videoUrl" in m_val:`);
+  codeLines.push(`${indent}                elif "video" in m_var.lower() and "videoUrl" in m_val:`);
   codeLines.push(`${indent}                    m_url = m_val.get("videoUrl")`);
-  codeLines.push(`${indent}                elif "document" in m_var.lower() && "documentUrl" in m_val:`);
+  codeLines.push(`${indent}                elif "document" in m_var.lower() and "documentUrl" in m_val:`);
   codeLines.push(`${indent}                    m_url = m_val.get("documentUrl")`);
   codeLines.push(`${indent}                elif "photoUrl" in m_val:`);
   codeLines.push(`${indent}                    m_url = m_val.get("photoUrl")`);
@@ -125,7 +125,7 @@ export function generateBroadcastAutoTransition(indent: string = '              
   codeLines.push(`${indent}    else:`);
   codeLines.push(`${indent}        logging.warning(f"⚠️ Узел {auto_target} не найден в all_nodes_dict")`);
   codeLines.push(`${indent}except Exception as auto_error:`);
-  codeLines.push(`${indent}    if "not mounted to a any bot instance" not in str(auto_error) && "This method is not mounted" not in str(auto_error):`);
+  codeLines.push(`${indent}    if "not mounted to a any bot instance" not in str(auto_error) and "This method is not mounted" not in str(auto_error):`);
   codeLines.push(`${indent}        logging.error(f"❌ Ошибка автоперехода к {auto_target}: {auto_error}")`);
 
   // Применяем автоматическое добавление комментариев
