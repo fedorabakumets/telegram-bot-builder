@@ -14,7 +14,7 @@ export const generateCommandCallbackHandler = (
   code: string
 ): string => {
   const command = commandCallback.replace('cmd_', '');
-  
+
   code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
   code += `async def handle_${commandCallback}(callback_query: types.CallbackQuery):\n`;
   code += '    await callback_query.answer()\n';
@@ -30,7 +30,7 @@ export const generateCommandCallbackHandler = (
   code += '    fake_message.answer = callback_query.message.answer\n';
   code += '    fake_message.edit_text = callback_query.message.edit_text\n';
   code += '    \n';
-  
+
   return command;
 };
 
@@ -77,6 +77,7 @@ export const generateCommandTrigger = (
   }
 
   code += `    logging.info(f"Команда /${command} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")\n`;
+  code += '\n';
 
   return code;
 };
