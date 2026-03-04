@@ -91,8 +91,7 @@ export function DesktopActions({
           onClick={onToggleProperties}
         />
       )}
-      {/* Кнопки управления кодом - закомментированы */}
-      {/* {onToggleCode && (
+      {onToggleCode && (
         <DesktopToggleCodeButton
           codeVisible={codeVisible}
           onClick={onToggleCode}
@@ -103,7 +102,7 @@ export function DesktopActions({
           codeEditorVisible={codeEditorVisible}
           onClick={onToggleCodeEditor}
         />
-      )} */}
+      )}
       {onOpenFileExplorer && (
         <DesktopOpenFileExplorerButton onClick={onOpenFileExplorer} />
       )}
