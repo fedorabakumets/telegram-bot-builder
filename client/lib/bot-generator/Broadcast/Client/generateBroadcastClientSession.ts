@@ -23,6 +23,12 @@ export function generateBroadcastClientSession(
 
   codeLines.push(`${indent}# Проверка авторизации Client API`);
   codeLines.push(`${indent}try:`);
+  codeLines.push(`${indent}    # Проверка инициализации базы данных`);
+  codeLines.push(`${indent}    if db_pool is None:`);
+  codeLines.push(`${indent}        logging.error("❌ База данных не инициализирована. Включите 'База данных пользователей' в настройках проекта.")`);
+  codeLines.push(`${indent}        await callback_query.message.answer("⚠️ Для рассылки через Client API требуется включенная база данных")`);
+  codeLines.push(`${indent}        return`);
+  codeLines.push(`${indent}    `);
   codeLines.push(`${indent}    async with db_pool.acquire() as conn:`);
   codeLines.push(`${indent}        client_session = await conn.fetchrow(`);
   codeLines.push(`${indent}            "SELECT session_string, user_id, api_id, api_hash FROM user_telegram_settings WHERE is_active = 1 LIMIT 1"`);

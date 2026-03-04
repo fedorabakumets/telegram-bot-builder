@@ -27,6 +27,12 @@ export function generateBroadcastClientRecipients(
   codeLines.push(`${indent}recipients = []`);
   codeLines.push(`${indent}`);
   codeLines.push(`${indent}try:`);
+  codeLines.push(`${indent}    # Проверка инициализации базы данных`);
+  codeLines.push(`${indent}    if db_pool is None:`);
+  codeLines.push(`${indent}        logging.error("❌ База данных не инициализирована")`);
+  codeLines.push(`${indent}        await callback_query.message.answer("⚠️ Для рассылки через Client API требуется включенная база данных")`);
+  codeLines.push(`${indent}        return`);
+  codeLines.push(`${indent}    `);
   codeLines.push(`${indent}    async with db_pool.acquire() as conn:`);
 
   if (idSource === 'user_ids' || idSource === 'both') {
