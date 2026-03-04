@@ -45,23 +45,16 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
         }
 
         # Определяем, использовать ли SSL для медиа-запросов
-        use_ssl_media = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)
+        is_localhost_media = "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url
+        is_https_media = media_api_url.startswith("https://")
+        use_ssl_media = is_https_media and not is_localhost_media  # SSL только для внешних https://
         logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media}")
-        # ИСПРАВЛЕНИЕ: Для localhost и http:// всегда используем ssl=False
-        is_http_media = media_api_url.startswith("http://")
-        if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url or is_http_media:
-            use_ssl_media = False
-            logging.debug(f"🔓 SSL принудительно отключен для локального медиа-запроса: {media_api_url}")
 
-        if use_ssl_media:
-            # Для внешних соединений используем SSL-контекст
-            connector = TCPConnector(ssl=True)
-        else:
-            # Для локальных соединений не используем SSL-контекст
-            connector = TCPConnector(ssl=False)
+        # Создаём connector с правильным SSL
+        connector = TCPConnector(ssl=use_ssl_media)
 
         async with aiohttp.ClientSession(connector=connector) as session:
-            async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT), ssl=False if not use_ssl_media else None) as response:
+            async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT), ssl=use_ssl_media) as response:
                 if response.status == 200:
                     logging.info(f"✅ Медиа зарегистрировано для сообщения {message_id}")
                     return await response.json()
