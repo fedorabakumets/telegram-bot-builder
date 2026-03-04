@@ -54,8 +54,7 @@ export function generateAllNodesDict(
   });
   
   code += `${indent}}\n`;
-  code += `${indent}\n`;
-  
+
   return code;
 }
 

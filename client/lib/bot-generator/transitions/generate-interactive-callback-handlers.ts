@@ -798,9 +798,9 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
   const broadcastNode = nodes.find(n => n.type === 'broadcast');
 
   if (broadcastNode) {
-    code += generateAllNodesDict(nodes, '\n');
-    code += generateBroadcastConfirmationHandler({ broadcastNode, nodes }, '    ');
-    code += generateBroadcastDirectHandler({ broadcastNode, nodes }, '    ');
+    code += generateAllNodesDict(nodes, '');
+    code += generateBroadcastConfirmationHandler({ broadcastNode, nodes }, '');
+    code += generateBroadcastDirectHandler({ broadcastNode, nodes }, '');
   }
 
   // Генерируем функции handle_node_* для узлов с условными сообщениями
