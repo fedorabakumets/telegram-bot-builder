@@ -23,7 +23,7 @@ export function save_message_to_api(codeLines: string[], projectId: number | nul
     dbFunctionCodeLines.push('    """Сохраняет сообщение в базу данных напрямую через asyncpg"""');
     dbFunctionCodeLines.push('    try:');
     dbFunctionCodeLines.push('        # Получаем соединение из пула');
-    dbFunctionCodeLines.push('        async with pool.acquire() as conn:');
+    dbFunctionCodeLines.push('        async with db_pool.acquire() as conn:');
     dbFunctionCodeLines.push('            # Формируем данные для сохранения');
     dbFunctionCodeLines.push('            message_data_json = json.dumps(message_data or {}, ensure_ascii=False)');
     dbFunctionCodeLines.push('            ');
@@ -41,8 +41,8 @@ export function save_message_to_api(codeLines: string[], projectId: number | nul
     dbFunctionCodeLines.push('                message_data_json');
     dbFunctionCodeLines.push('            )');
     dbFunctionCodeLines.push('            ');
-    dbFunctionCodeLines.push('            logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result[\"id\"]})")');
-    dbFunctionCodeLines.push('            return {"id": result["id"], "user_id": result["user_id"], "message_type": result["message_type"], "created_at": result["created_at"]}');
+    dbFunctionCodeLines.push('            logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result[\'id\']})")');
+    dbFunctionCodeLines.push('            return {"id": result[\'id\'], "user_id": result[\'user_id\'], "message_type": result[\'message_type\'], "created_at": result[\'created_at\']}');
     dbFunctionCodeLines.push('    except Exception as e:');
     dbFunctionCodeLines.push('        logging.error(f"❌ Ошибка сохранения сообщения в БД: {e}")');
     dbFunctionCodeLines.push('    return None');
