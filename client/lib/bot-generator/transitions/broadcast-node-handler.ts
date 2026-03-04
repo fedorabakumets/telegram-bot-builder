@@ -17,6 +17,8 @@ export interface BroadcastNodeParams {
   enableConfirmation?: boolean;
   /** Текст подтверждения */
   confirmationText?: string;
+  /** Тип API для рассылки (bot или client) */
+  broadcastApiType?: string;
 }
 
 /**
@@ -30,13 +32,19 @@ export function generateBroadcastNodeHandler(
   params: BroadcastNodeParams,
   indent: string = '    '
 ): string {
-  const { nodeId } = params;
+  const { nodeId, broadcastApiType = 'bot' } = params;
+  const safeNodeId = nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
+  
+  // Для Client API добавляем префикс 'client_' к имени функции
+  const functionName = broadcastApiType === 'client' 
+    ? `handle_broadcast_client_${safeNodeId}`
+    : `handle_broadcast_${safeNodeId}`;
 
   let code = '';
   code += `${indent}# Обработка узла рассылки\n`;
 
   // Генерируем вызов обработчика рассылки
-  code += `${indent}await handle_broadcast_${nodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query)\n`;
+  code += `${indent}await ${functionName}(callback_query)\n`;
 
   return code;
 }

@@ -161,7 +161,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             code += generateBroadcastNodeHandler({
               nodeId,
               enableConfirmation: targetNode.data?.enableConfirmation,
-              confirmationText: targetNode.data?.confirmationText
+              confirmationText: targetNode.data?.confirmationText,
+              broadcastApiType: targetNode.data?.broadcastApiType || 'bot'
             }, '    ');
           }
 
