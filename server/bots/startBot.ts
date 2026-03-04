@@ -208,7 +208,15 @@ export async function startBot(projectId: number, token: string, tokenId: number
     console.log(`🔧 Генерация кода бота:`);
     console.log(`   userDatabaseEnabled:`, userDatabaseEnabled);
     
-    const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false, false, enableComments);
+    const botCode = generatePythonCode(simpleBotData as any, {
+      botName: project.name,
+      userDatabaseEnabled,
+      projectId,
+      enableComments,
+      enableLogging: false,
+      enableGroupHandlers: false,
+      groups: [],
+    });
     
     // Проверяем, содержит ли код функции БД
     const hasDbInit = botCode.includes('async def init_database()');
