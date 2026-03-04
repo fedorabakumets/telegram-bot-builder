@@ -3,6 +3,7 @@ import { generateUniqueShortId, generateButtonText } from '../format';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { generatorLogger } from '../core/generator-logger';
 import { generateAdjustCode } from './generateKeyboardLayoutCode';
+import { escapePythonString } from '../format/escapePythonString';
 
 export function generateMultiSelectCallbackLogic(
   multiSelectNodes: Node[],
@@ -212,7 +213,7 @@ export function generateMultiSelectCallbackLogic(
           const buttonValueTruncated = buttonValue.slice(-8);
           code += `        if button_id == "${buttonValue}" or button_id == "${buttonValueTruncated}":
 `;
-          code += `            button_text = "${button.text}"
+          code += `            button_text = ${escapePythonString(button.text)}
 `;
         });
       }
@@ -263,7 +264,8 @@ export function generateMultiSelectCallbackLogic(
           const shortTarget = button.target || button.id || 'btn';
           const callbackData = `ms_${shortNodeId}_${shortTarget}`;
           generatorLogger.debug(`ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> callback_data: ${callbackData}`);
-          code += `            builder.add(InlineKeyboardButton(text=f"{'✅ ' if '${button.text}' in selected_list else ''}${button.text}", callback_data="${callbackData}"))
+          const escapedText = button.text.replace(/'/g, "\\'");
+          code += `            builder.add(InlineKeyboardButton(text=f"{'✅ ' if '${escapedText}' in selected_list else ''}${escapedText}", callback_data="${callbackData}"))
 `;
         });
 

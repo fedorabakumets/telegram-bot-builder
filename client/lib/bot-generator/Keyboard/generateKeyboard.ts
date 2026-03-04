@@ -8,6 +8,7 @@ import { generateUniqueShortId } from '../format/generateUniqueShortId';
 import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { getAdjustCode } from './getAdjustCode';
 import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
+import { escapePythonString } from '../format/escapePythonString';
 
 
 /**
@@ -453,16 +454,17 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
               if (button.action === 'complete') {
                 // Кнопка "Готово"
                 const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
-                code += `${indent3}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="done_${shortNodeIdForDone}"))\n`;
+                code += `${indent3}builder.add(InlineKeyboardButton(text=${escapePythonString(button.text)}, callback_data="done_${shortNodeIdForDone}"))\n`;
               } else if (button.action === 'selection') {
                 // Кнопка выбора с галочкой
                 const buttonValue = button.target || button.id || button.text;
                 const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                const escapedButtonText = button.text.replace(/'/g, "\\'");
                 code += `${indent3}# Проверяем каждый интерес и добавляем галочку если он выбран\n`;
-                code += `${indent3}logging.info(f"🔧 /START: Проверяем галочку для кнопки '${button.text}' в списке: {saved_interests}")\n`;
-                code += `${indent3}${safeVarName}_selected = "${button.text}" in saved_interests\n`;
-                code += `${indent3}logging.info(f"🔍 /START: РЕЗУЛЬТАТ для '${button.text}': selected={${safeVarName}_selected}")\n`;
-                code += `${indent3}${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
+                code += `${indent3}logging.info(f"🔧 /START: Проверяем галочку для кнопки '${escapedButtonText}' в списке: {saved_interests}")\n`;
+                code += `${indent3}${safeVarName}_selected = ${escapePythonString(button.text)} in saved_interests\n`;
+                code += `${indent3}logging.info(f"🔍 /START: РЕЗУЛЬТАТ для '${escapedButtonText}': selected={${safeVarName}_selected}")\n`;
+                code += `${indent3}${safeVarName}_text = "✅ ${escapedButtonText}" if ${safeVarName}_selected else "${escapedButtonText}"\n`;
                 code += `${indent3}logging.info(f"📱 /START: СОЗДАЕМ КНОПКУ: text='{${safeVarName}_text}'")\n`;
                 code += `${indent3}builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
               } else if (button.action === "url") {
@@ -479,11 +481,12 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
           selectionButtons.forEach(button => {
             const buttonValue = button.target || button.id || button.text;
             const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const escapedButtonText = button.text.replace(/'/g, "\\'");
             code += `${indent3}# Проверяем каждый интерес и добавляем галочку если он выбран\n`;
-            code += `${indent3}logging.info(f"🔧 /START: Проверяем галочку для кнопки '${button.text}' в списке: {saved_interests}")\n`;
-            code += `${indent3}${safeVarName}_selected = "${button.text}" in saved_interests\n`;
-            code += `${indent3}logging.info(f"🔍 /START: РЕЗУЛЬТАТ для '${button.text}': selected={${safeVarName}_selected}")\n`;
-            code += `${indent3}${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
+            code += `${indent3}logging.info(f"🔧 /START: Проверяем галочку для кнопки '${escapedButtonText}' в списке: {saved_interests}")\n`;
+            code += `${indent3}${safeVarName}_selected = ${escapePythonString(button.text)} in saved_interests\n`;
+            code += `${indent3}logging.info(f"🔍 /START: РЕЗУЛЬТАТ для '${escapedButtonText}': selected={${safeVarName}_selected}")\n`;
+            code += `${indent3}${safeVarName}_text = "✅ ${escapedButtonText}" if ${safeVarName}_selected else "${escapedButtonText}"\n`;
             code += `${indent3}logging.info(f"📱 /START: СОЗДАЕМ КНОПКУ: text='{${safeVarName}_text}'")\n`;
             code += `${indent3}builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
           });
@@ -498,7 +501,7 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
             } else if (button.action === 'complete') {
               // Кнопка завершения из данных узла
               const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
-              code += `${indent3}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="done_${shortNodeIdForDone}"))\n`;
+              code += `${indent3}builder.add(InlineKeyboardButton(text=${escapePythonString(button.text)}, callback_data="done_${shortNodeIdForDone}"))\n`;
             }
           });
           code += `${indent3}\n`;

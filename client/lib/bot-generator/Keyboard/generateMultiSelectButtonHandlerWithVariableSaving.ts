@@ -9,6 +9,7 @@
 
 import { generatorLogger } from '../core/generator-logger';
 import { generateBaseCallbackHandlerStructure } from './generateBaseCallbackHandlerStructure';
+import { escapePythonString } from '../format/escapePythonString';
 
 /**
  * Генерирует обработчик для кнопок множественного выбора с сохранением переменных
@@ -144,7 +145,7 @@ export function generateMultiSelectButtonHandlerWithVariableSaving(targetNode: a
      * Эти кнопки должны обрабатываться как обычные goto кнопки к start узлу
      * Реализуем правильную логику сохранения переменной на основе кнопки
      */
-    code += `    button_text = "${button.text}"\n`;
+    code += `    button_text = ${escapePythonString(button.text)}\n`;
     code += '    \n';
 
     // Определяем переменную для сохранения на основе родительского узла

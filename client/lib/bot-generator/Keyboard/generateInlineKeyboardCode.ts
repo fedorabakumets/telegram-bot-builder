@@ -4,6 +4,7 @@ import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { generateUniqueShortId } from '../format/generateUniqueShortId';
 import { generateReplyKeyboardCode } from './generateReplyKeyboardCode';
 import { generateAdjustCode } from './generateKeyboardLayoutCode';
+import { escapePythonString } from '../format/escapePythonString';
 
 // Функция для генерации inline клавиатуры с автоматической настройкой колонок
 export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any, allNodeIds?: string[]): string {
@@ -89,8 +90,9 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
       if (isMultipleSelection) {
         generatorLogger.debug(`ДОБАВЛЯЕМ ГАЛОЧКИ для кнопки selection: ${button.text} (узел: ${nodeId})`);
         code += `${indentLevel}# Кнопка выбора с галочками: ${button.text}\n`;
-        code += `${indentLevel}logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '${button.text}' в списке: {{user_data[user_id]['multi_select_${nodeId}']}}")\n`;
-        code += `${indentLevel}builder.add(InlineKeyboardButton(text=f"{'✅ ' if '${button.text}' in user_data[user_id]['multi_select_${nodeId}'] else ''}${button.text}", callback_data="${callbackData}"))\n`;
+        const escapedText = button.text.replace(/'/g, "\\'");
+        code += `${indentLevel}logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '${escapedText}' в списке: {{user_data[user_id]['multi_select_${nodeId}']}}")\n`;
+        code += `${indentLevel}builder.add(InlineKeyboardButton(text=f"{'✅ ' if '${escapedText}' in user_data[user_id]['multi_select_${nodeId}'] else ''}${escapedText}", callback_data="${callbackData}"))\n`;
       } else {
         code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
       }
@@ -104,7 +106,7 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
     const callbackData = `done_${shortNodeIdForDone}`;
     generatorLogger.debug(`ДОБАВЛЯЕМ кнопку "${completeButton.text}" для узла ${nodeId} с callback_data: ${callbackData}`);
     code += `${indentLevel}# Добавляем кнопку "Готово" для множественного выбора\n`;
-    code += `${indentLevel}builder.add(InlineKeyboardButton(text="${completeButton.text}", callback_data="${callbackData}"))\n`;
+    code += `${indentLevel}builder.add(InlineKeyboardButton(text=${escapePythonString(completeButton.text)}, callback_data="${callbackData}"))\n`;
   }
 
   // ИСПРАВЛЕНИЕ: Используем keyboardLayout если есть, иначе calculateOptimalColumns

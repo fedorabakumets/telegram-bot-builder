@@ -1,14 +1,15 @@
 /**
  * @fileoverview Генерация inline клавиатуры для множественного выбора
- * 
+ *
  * Модуль создаёт Python-код для генерации inline клавиатуры
  * с поддержкой множественного выбора и кнопкой "Готово".
- * 
+ *
  * @module bot-generator/transitions/multi-select/generate-multi-select-inline-keyboard
  */
 
 import { Button } from '../../types';
 import { generateButtonText, generateUniqueShortId } from '../../format';
+import { escapePythonString } from '../../format/escapePythonString';
 
 /**
  * Параметры для генерации inline клавиатуры multi-select
@@ -47,10 +48,11 @@ export function generateMultiSelectInlineKeyboard(
     const shortNodeId = generateUniqueShortId(nodeId, allNodeIds || []);
     const shortTarget = (button.target || button.id || 'btn').slice(-8);
     const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-    
+
+    const escapedText = button.text.replace(/'/g, "\\'");
     code += `${indent}# Кнопка выбора ${index + 1}: ${button.text}\n`;
     code += `${indent}logging.info(f"🔘 Создаем кнопку: ${button.text} -> ${callbackData}")\n`;
-    code += `${indent}builder.add(InlineKeyboardButton(text=f"{'✅ ' if '${button.text}' in user_data[user_id]['multi_select_${nodeId}'] else ''}${button.text}", callback_data="${callbackData}"))\n`;
+    code += `${indent}builder.add(InlineKeyboardButton(text=f"{'✅ ' if '${escapedText}' in user_data[user_id]['multi_select_${nodeId}'] else ''}${escapedText}", callback_data="${callbackData}"))\n`;
   });
   
   // Добавляем обычные кнопки (navigation и другие)

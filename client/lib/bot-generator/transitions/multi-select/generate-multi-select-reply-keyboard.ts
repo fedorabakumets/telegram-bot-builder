@@ -1,15 +1,16 @@
 /**
  * @fileoverview Генерация reply клавиатуры для множественного выбора
- * 
+ *
  * Модуль создаёт Python-код для генерации reply клавиатуры
  * с поддержкой множественного выбора и кнопкой "Готово".
- * 
+ *
  * @module bot-generator/transitions/multi-select/generate-multi-select-reply-keyboard
  */
 
 import { Button } from '../../types';
 import { generateButtonText, toPythonBoolean } from '../../format';
 import { getAdjustCode } from '../../Keyboard/getAdjustCode';
+import { escapePythonString } from '../../format/escapePythonString';
 
 /**
  * Параметры для генерации reply клавиатуры multi-select
@@ -46,13 +47,14 @@ export function generateMultiSelectReplyKeyboard(
 
   // Добавляем кнопки выбора с отметками о состоянии
   selectionButtons.forEach((button: { text: any; }, index: number) => {
+    const escapedText = button.text.replace(/'/g, "\\'");
     code += `${indent}# Кнопка выбора ${index + 1}: ${button.text}\n`;
-    code += `${indent}builder.add(KeyboardButton(text=f"{'✅ ' if '${button.text}' in user_data[user_id]['multi_select_${nodeId}'] else ''}${button.text}"))\n`;
+    code += `${indent}builder.add(KeyboardButton(text=f"{'✅ ' if '${escapedText}' in user_data[user_id]['multi_select_${nodeId}'] else ''}${escapedText}"))\n`;
   });
 
   // Добавляем кнопку "Готово" из данных узла
   if (completeButton) {
-    code += `${indent}builder.add(KeyboardButton(text="${completeButton.text}"))\n`;
+    code += `${indent}builder.add(KeyboardButton(text=${escapePythonString(completeButton.text)}))\n`;
   }
 
   // Добавляем обычные кнопки

@@ -82,7 +82,7 @@ export function generateVariableSaveLogic(
         } else if (button.text === 'Женщина' || button.text === '👩 Женщина') {
           variableValue = '"Женщина"';
         } else {
-          variableValue = `"${button.text}"`;
+          variableValue = `f'{button.text!r}'`;
         }
       } else {
         variableValue = 'button_display_text';

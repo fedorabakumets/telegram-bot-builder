@@ -2,6 +2,7 @@ import { Button } from '../types';
 import { formatTextForPython, generateButtonText, toPythonBoolean } from '../format';
 import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { generateInlineKeyboardCode } from '../Keyboard';
+import { escapePythonString } from '../format/escapePythonString';
 
 export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) {
     code += '    # Проверяем, находится ли пользователь в режиме множественного выбора\n';
@@ -17,7 +18,7 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
         if (node.data && node.data.allowMultipleSelection) {
             const completeButton = node.data.buttons?.find((btn: any) => btn.action === 'complete');
             const continueText = completeButton?.text || node.data.continueButtonText || 'Готово';
-            code += `        if node_id == "${node.id}" and user_input == "${continueText}":\n`;
+            code += `        if node_id == "${node.id}" and user_input == ${escapePythonString(continueText)}:\n`;
             code += `            # Завершение множественного выбора для узла ${node.id}\n`;
             code += `            selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n`;
             code += `            if selected_options:\n`;
@@ -93,17 +94,17 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                 selectionButtons.forEach((button: any) => {
                     code += `            # Проверяем текст кнопки, убирая галочку при необходимости\n`;
                     code += `            clean_user_input = user_input.replace("✅ ", "").strip()\n`;
-                    code += `            if clean_user_input == "${button.text}":\n`;
+                    code += `            if clean_user_input == ${escapePythonString(button.text)}:\n`;
                     code += `                if f"multi_select_{node_id}" not in user_data[user_id]:\n`;
                     code += `                    user_data[user_id][f"multi_select_{node_id}"] = []\n`;
                     code += `                \n`;
                     code += `                selected_list = user_data[user_id][f"multi_select_{node_id}"]  # Variable used below to manage selections\n`;
-                    code += `                if "${button.text}" in selected_list:\n`;
-                    code += `                    selected_list.remove("${button.text}")\n`;
-                    code += `                    await message.answer("❌ Убрано: ${button.text}")\n`;
+                    code += `                if ${escapePythonString(button.text)} in selected_list:\n`;
+                    code += `                    selected_list.remove(${escapePythonString(button.text)})\n`;
+                    code += `                    await message.answer(f"❌ Убрано: {${escapePythonString(button.text)}}")\n`;
                     code += `                else:\n`;
-                    code += `                    selected_list.append("${button.text}")\n`;
-                    code += `                    await message.answer("✅ Выбрано: ${button.text}")\n`;
+                    code += `                    selected_list.append(${escapePythonString(button.text)})\n`;
+                    code += `                    await message.answer(f"✅ Выбрано: {${escapePythonString(button.text)}}")\n`;
                     code += `                \n`;
                     code += `                # Обновляем клавиатуру с галочками\n`;
                     code += `                builder = ReplyKeyboardBuilder()  # Variable used for building keyboard\n`;
@@ -111,18 +112,19 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
 
                     // Добавляем кнопки выбора с галочками
                     node.data.buttons.filter((btn: any) => btn.action === 'selection').forEach((selBtn: any) => {
-                        code += `                builder.add(KeyboardButton(text=f"{'✅ ' if '${selBtn.text}' in selected_list else ''}${selBtn.text}"))\n`;
+                        const escapedText = selBtn.text.replace(/'/g, "\\'");
+                        code += `                builder.add(KeyboardButton(text=f"{'✅ ' if '${escapedText}' in selected_list else ''}${escapedText}"))\n`;
                     });
 
                     // Добавляем кнопку "Готово" из данных узла
                     const completeButton = node.data.buttons?.find((btn: any) => btn.action === 'complete');
                     if (completeButton) {
-                        code += `                builder.add(KeyboardButton(text="${completeButton.text}"))  # используем builder\n`;
+                        code += `                builder.add(KeyboardButton(text=${escapePythonString(completeButton.text)}))  # используем builder\n`;
                     }
 
                     // Добавляем обычные кнопки
                     node.data.buttons.filter((btn: any) => btn.action !== 'selection' && btn.action !== 'complete').forEach((regBtn: any) => {
-                        code += `                builder.add(KeyboardButton(text="${regBtn.text}"))  # используем builder\n`;
+                        code += `                builder.add(KeyboardButton(text=${escapePythonString(regBtn.text)}))  # используем builder\n`;
                     });
 
                     // Применяем настройки клавиатуры
@@ -181,7 +183,7 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                 gotoButtons.forEach((button: any) => {
                     const targetNode = nodes.find((n: any) => n.id === button.target);
                     if (targetNode) {
-                        code += `            if user_input == "${button.text}":\n`;
+                        code += `            if user_input == ${escapePythonString(button.text)}:\n`;
                         code += `                # Сохраняем текущее состояние выбора перед переходом\n`;
                         code += `                selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n`;
                         code += `                if selected_options:\n`;

@@ -1,3 +1,5 @@
+import { escapePythonString } from '../format/escapePythonString';
+
 export function generateCommandButtonCallbackHandler(code: string, callbackData: string, button: { action: string; id: any; target: string; text: any; skipDataCollection: boolean; }) {
     code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
     const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -9,7 +11,7 @@ export function generateCommandButtonCallbackHandler(code: string, callbackData:
     code += '    # Инициализируем базовыя переменные пользователя\n';
     code += '    user_name = init_user_variables(user_id, callback_query.from_user)\n';
     code += '    \n';
-    code += `    button_text = "${button.text}"\n`;
+    code += `    button_text = ${escapePythonString(button.text)}\n`;
     code += '    \n';
     code += '    # Сохраняем кяопку в базу данных\n';
     code += '    timestamp = get_moscow_time()\n';
