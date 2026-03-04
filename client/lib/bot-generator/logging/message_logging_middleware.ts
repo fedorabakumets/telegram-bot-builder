@@ -58,7 +58,7 @@ export function message_logging_middleware(codeLines: string[]) {
     middlewareCodeLines.push('                    file_id=photo_file_id,');
     middlewareCodeLines.push('                    file_type="photo",');
     middlewareCodeLines.push('                    file_name=f"photo_{photo_file_id}",');
-    middlewareCodeLines.push('                    file_size=message.photo[-1].file_size if message.photo and message.photo[-1].file_size else 0,');
+    middlewareCodeLines.push('                    file_size=event.photo[-1].file_size if event.photo and event.photo[-1].file_size else 0,');
     middlewareCodeLines.push('                    mime_type="image/jpeg"');
     middlewareCodeLines.push('                )');
     middlewareCodeLines.push('                ');
