@@ -22,13 +22,13 @@ export const addCommandCallbackHandlers = (
     code += `# Найдено ${commandButtons.size} кнопок команд: ${Array.from(commandButtons).join(', ')}\n`;
 
     commandButtons.forEach(commandCallback => {
-      const command = generateCommandCallbackHandler(commandCallback, code);
-      
+      code = generateCommandCallbackHandler(commandCallback, code);
+
       // Найти соответствующий обработчик команды
-      const commandNode = findCommandNode(command, nodes);
-      code = generateCommandTrigger(command, code, commandNode);
+      const commandNode = findCommandNode(commandCallback, nodes);
+      code = generateCommandTrigger(commandCallback, code, commandNode);
     });
   }
-  
+
   return code;
 };

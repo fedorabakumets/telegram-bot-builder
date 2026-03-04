@@ -7,7 +7,7 @@
  * Генерирует обработчик callback-запроса для команды с симуляцией сообщения
  * @param commandCallback - Уникальный идентификатор callback для команды
  * @param code - Текущий Python код
- * @returns {string} Имя команды без префикса "cmd_"
+ * @returns {string} Обновлённый Python код
  */
 export const generateCommandCallbackHandler = (
   commandCallback: string,
@@ -31,21 +31,23 @@ export const generateCommandCallbackHandler = (
   code += '    fake_message.edit_text = callback_query.message.edit_text\n';
   code += '    \n';
 
-  return command;
+  return code;
 };
 
 /**
  * Генерирует код триггера выполнения команды с оберткой
- * @param command - Имя команды для выполнения
+ * @param commandCallback - Уникальный идентификатор callback для команды
  * @param code - Текущий Python код
  * @param commandNode - Узел команды
  * @returns {string} Обновлённый Python код
  */
 export const generateCommandTrigger = (
-  command: string,
+  commandCallback: string,
   code: string,
   commandNode: any
 ): string => {
+  const command = commandCallback.replace('cmd_', '');
+  
   if (commandNode) {
     if (commandNode.type === 'start') {
       code += '    # Вызываем start handler через edit_text\n';
