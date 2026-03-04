@@ -54,19 +54,10 @@ export function useCodePanelHandlers(params: UseCodePanelHandlersParams): UseCod
     setCodePanelVisible(prev => !prev);
   }, [setCodePanelVisible]);
 
-  const handleOpenCodePanel = useCallback((forExportTab?: boolean) => {
+  const handleOpenCodePanel = useCallback(() => {
     setCodePanelVisible(true);
     setCodeEditorVisible(true);
-    // Скрываем canvas, чтобы показать редактор кода
-    if (forExportTab) {
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(el =>
-          el.type === 'canvas' || el.type === 'sidebar' || el.type === 'properties' ? { ...el, visible: false } : el
-        )
-      }));
-    }
-  }, [setCodePanelVisible, setCodeEditorVisible, setFlexibleLayoutConfig]);
+  }, [setCodePanelVisible, setCodeEditorVisible]);
 
   const handleCloseCodePanel = useCallback(() => {
     setCodePanelVisible(false);

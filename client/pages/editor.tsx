@@ -1107,7 +1107,10 @@ export default function Editor() {
               <TelegramClientConfig />
             </div>
           </div>
-        ) : currentTab === 'export' ? null : null}
+        ) : currentTab === 'export' ? (
+          // Для вкладки Код показываем пустой контейнер (код показывается в CodeEditorArea и CodePanel)
+          <div className="h-full bg-background" />
+        ) : null}
       </div>
     );
 
