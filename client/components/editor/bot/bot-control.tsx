@@ -379,13 +379,13 @@ export function BotControl({ projectId }: BotControlProps) {
 
   // Toggle user database enabled mutation
   const toggleDatabaseMutation = useMutation({
-    mutationFn: ({ projectId, enabled }: { projectId: number; enabled: boolean }) =>
+    mutationFn: (enabled: boolean) =>
       apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}`] });
+    onSuccess: (_, enabled) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
       toast({
-        title: variables.enabled ? "База данных включена" : "База данных выключена",
-        description: variables.enabled
+        title: enabled ? "База данных включена" : "База данных выключена",
+        description: enabled
           ? "Функции работы с базой данных пользователей будут генерироваться в коде бота."
           : "Функции работы с базой данных НЕ будут генерироваться в коде бота.",
       });

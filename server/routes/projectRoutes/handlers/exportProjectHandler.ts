@@ -54,7 +54,7 @@ export async function exportProjectHandler(req: Request, res: Response): Promise
 
         const simpleBotData = convertSheetsToSimpleBotData(project.data);
         const userDatabaseEnabled = project.userDatabaseEnabled === 1;
-        const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION !== 'false';
+        const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION === 'true';
 
         const pythonCode = generatePythonCode(
             simpleBotData as any,

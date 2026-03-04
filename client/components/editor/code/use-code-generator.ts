@@ -133,10 +133,10 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
       switch (format) {
         case 'python':
           // Получаем настройки генерации комментариев из localStorage
-          // По умолчанию включено (консистентность с сервером)
+          // По умолчанию выключено (консистентность с сервером)
           const storedComments = typeof window !== 'undefined' ?
             localStorage.getItem('botcraft-comments-generation') : null;
-          const enableComments = storedComments !== null ? storedComments === 'true' : true;
+          const enableComments = storedComments === 'true';
           // Используем пустой массив групп и false для enableGroupHandlers для консистентности с сервером
           return botGenerator.generatePythonCode(simpleBotData as any, {
             botName: projectName,
