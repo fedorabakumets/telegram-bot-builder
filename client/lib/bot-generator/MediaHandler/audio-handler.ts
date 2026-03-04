@@ -38,57 +38,41 @@ async def handle_audio_input(message: types.Message):
         return
     logging.info(f"🎵 Получен file_id аудио: {audio_file_id}")
 
-    # Регистрируем аудио через API для получения URL
-    audio_url = None
-    try:
-        if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):
-            media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-audio"
-        else:
-            media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-audio"
+    # Сохраняем сообщение в БД
+    saved_msg = await save_message_to_api(
+        user_id=str(user_id),
+        message_type="user",
+        message_text="[Аудио ответ]",
+        node_id=node_id,
+        message_data={"audio": {"file_id": audio_file_id}, "is_audio_answer": True}
+    )
 
-        # Сначала сохраняем сообщение чтобы получить message_id
-        saved_msg = await save_message_to_api(
-            user_id=str(user_id),
-            message_type="user",
-            message_text="[Аудио ответ]",
-            node_id=node_id,
-            message_data={"audio": {"file_id": audio_file_id}, "is_audio_answer": True}
+    # Сохраняем медиа в БД напрямую
+    media_result = None
+    if saved_msg and "id" in saved_msg:
+        file_type = "voice" if message.voice else "audio"
+        media_result = await save_media_to_db(
+            file_id=audio_file_id,
+            file_type=file_type,
+            file_name=f"{file_type}_{audio_file_id}",
+            file_size=(message.audio.file_size if message.audio else message.voice.file_size) or 0,
+            mime_type=(message.audio.mime_type if message.audio else "audio/ogg") or "audio/ogg"
         )
-
-        if saved_msg and "id" in saved_msg:
-            media_payload = {
-                "messageId": saved_msg["id"],
-                "fileId": audio_file_id,
-                "botToken": BOT_TOKEN,
-                "mediaType": "audio"
-            }
-
-            # Определяем, использовать ли SSL для медиа-запросов
-            is_localhost_media = "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url
-            is_https_media = media_api_url.startswith("https://")
-            use_ssl_media = is_https_media and not is_localhost_media  # SSL только для внешних https://
-            logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media}")
-
-            # Создаём connector с правильным SSL
-            connector = TCPConnector(ssl=use_ssl_media)
-
-            async with aiohttp.ClientSession(connector=connector) as session:
-                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:
-                    if response.status == 200:
-                        result = await response.json()
-                        audio_url = result.get("url")
-                        logging.info(f"Аудио зарегистрировано, URL: {audio_url}")
-                    else:
-                        error_text = await response.text()
-                        logging.warning(f"Не удалось зарегистрировать аудио: {response.status} - {error_text}")
-    except Exception as reg_error:
-        logging.warning(f"Ошибка при регистрации аудио: {reg_error}")
+        
+        # Связываем медиа с сообщением
+        if media_result:
+            await link_media_to_message(
+                message_id=saved_msg["id"],
+                media_id=media_result["id"],
+                media_kind=file_type,
+                order_index=0
+            )
 
     # Сохраняем в пользовательские данные как объект с URL
     audio_data = {
         "value": audio_file_id,
         "type": "audio",
-        "audioUrl": audio_url,
+        "audioUrl": media_result["url"] if media_result else None,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
     user_data[user_id][audio_variable] = audio_data
@@ -96,14 +80,14 @@ async def handle_audio_input(message: types.Message):
     # Сохраняем в базу данных
     saved_to_db = await update_user_data_in_db(user_id, audio_variable, audio_data)
     if saved_to_db:
-        logging.info(f"✅ Аудио сохранено в БД: {audio_variable} = {audio_file_id}, URL = {audio_url} (пользователь {user_id})")
+        logging.info(f"✅ Аудио сохранено в БД: {audio_variable} = {audio_file_id} (пользователь {user_id})")
     else:
         logging.warning(f"⚠️ Не удалось сохранить аудио в БД, данные сохранены локально")
 
     # Очищаем состояние ожидания
     del user_data[user_id]["waiting_for_input"]
 
-    logging.info(f"🎵 Аудио сохранено: {audio_variable} = {audio_file_id}, URL = {audio_url}")
+    logging.info(f"🎵 Аудио сохранено: {audio_variable} = {audio_file_id}")
     
     # Переходим к следующему узлу если указан
     if next_node_id:

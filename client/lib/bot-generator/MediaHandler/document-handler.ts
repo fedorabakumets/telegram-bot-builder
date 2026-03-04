@@ -32,57 +32,40 @@ async def handle_document_input(message: types.Message):
     document_file_id = message.document.file_id
     logging.info(f"📄 Получен file_id документа: {document_file_id}")
 
-    # Регистрируем документ через API для получения URL
-    document_url = None
-    try:
-        if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):
-            media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-document"
-        else:
-            media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-document"
+    # Сохраняем сообщение в БД
+    saved_msg = await save_message_to_api(
+        user_id=str(user_id),
+        message_type="user",
+        message_text="[Документ ответ]",
+        node_id=node_id,
+        message_data={"document": {"file_id": document_file_id}, "is_document_answer": True}
+    )
 
-        # Сначала сохраняем сообщение чтобы получить message_id
-        saved_msg = await save_message_to_api(
-            user_id=str(user_id),
-            message_type="user",
-            message_text="[Документ ответ]",
-            node_id=node_id,
-            message_data={"document": {"file_id": document_file_id}, "is_document_answer": True}
+    # Сохраняем медиа в БД напрямую
+    media_result = None
+    if saved_msg and "id" in saved_msg:
+        media_result = await save_media_to_db(
+            file_id=document_file_id,
+            file_type="document",
+            file_name=f"document_{document_file_id}",
+            file_size=message.document.file_size if message.document.file_size else 0,
+            mime_type=message.document.mime_type or "application/octet-stream"
         )
-
-        if saved_msg and "id" in saved_msg:
-            media_payload = {
-                "messageId": saved_msg["id"],
-                "fileId": document_file_id,
-                "botToken": BOT_TOKEN,
-                "mediaType": "document"
-            }
-
-            # Определяем, использовать ли SSL для медиа-запросов
-            is_localhost_media = "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url
-            is_https_media = media_api_url.startswith("https://")
-            use_ssl_media = is_https_media and not is_localhost_media  # SSL только для внешних https://
-            logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media}")
-
-            # Создаём connector с правильным SSL
-            connector = TCPConnector(ssl=use_ssl_media)
-
-            async with aiohttp.ClientSession(connector=connector) as session:
-                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:
-                    if response.status == 200:
-                        result = await response.json()
-                        document_url = result.get("url")
-                        logging.info(f"Документ зарегистрирован, URL: {document_url}")
-                    else:
-                        error_text = await response.text()
-                        logging.warning(f"Не удалось зарегистрировать документ: {response.status} - {error_text}")
-    except Exception as reg_error:
-        logging.warning(f"Ошибка при регистрации документа: {reg_error}")
+        
+        # Связываем медиа с сообщением
+        if media_result:
+            await link_media_to_message(
+                message_id=saved_msg["id"],
+                media_id=media_result["id"],
+                media_kind="document",
+                order_index=0
+            )
 
     # Сохраняем в пользовательские данные как объект с URL
     document_data = {
         "value": document_file_id,
         "type": "document",
-        "documentUrl": document_url,
+        "documentUrl": media_result["url"] if media_result else None,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
     user_data[user_id][document_variable] = document_data
@@ -90,14 +73,14 @@ async def handle_document_input(message: types.Message):
     # Сохраняем в базу данных
     saved_to_db = await update_user_data_in_db(user_id, document_variable, document_data)
     if saved_to_db:
-        logging.info(f"✅ Документ сохранен в БД: {document_variable} = {document_file_id}, URL = {document_url} (пользователь {user_id})")
+        logging.info(f"✅ Документ сохранен в БД: {document_variable} = {document_file_id} (пользователь {user_id})")
     else:
         logging.warning(f"⚠️ Не удалось сохранить документ в БД, данные сохранены локально")
 
     # Очищаем состояние ожидания
     del user_data[user_id]["waiting_for_input"]
 
-    logging.info(f"📄 Документ сохранен: {document_variable} = {document_file_id}, URL = {document_url}")
+    logging.info(f"📄 Документ сохранен: {document_variable} = {document_file_id}")
     
     # Переходим к следующему узлу если указан
     if next_node_id:
