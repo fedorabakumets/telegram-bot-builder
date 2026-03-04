@@ -44,7 +44,7 @@ export function generateBroadcastNodeHandler(
   code += `${indent}# Обработка узла рассылки\n`;
 
   // Генерируем вызов обработчика рассылки
-  code += `${indent}await ${functionName}(callback_query)\n`;
+  code += `${indent}await ${functionName}(callback_query, user_id)\n`;
 
   return code;
 }
