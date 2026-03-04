@@ -17,13 +17,13 @@ def get_upload_file_path(file_path):
     # Получаем директорию файла бота
     bot_dir = os.path.dirname(os.path.abspath(__file__))
     # Поднимаемся на два уровня выше к корню проекта
-    project_root = os.path.dirname(os.path.dirname(bot_dir))  # поднимаемся из bots/bot_17_24 в bots, затем в корень
+    project_root = os.path.dirname(os.path.dirname(bot_dir))
     # Формируем путь к файлу, убирая начальный символ '/' и используя правильные разделители
     relative_path = file_path[1:]  # убираем начальный '/'
     return os.path.join(project_root, relative_path)
 
 async def register_telegram_photo(message_id: int, file_id: str, bot_token: str, media_type: str = "photo"):
-    """Регистр??рует фото из Telegram в системе
+    """Регистрирует фото из Telegram в системе и сохраняет в БД
 
     Args:
         message_id: ID сообщения в базе данных
@@ -32,36 +32,28 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
         media_type: Тип медиа ('photo', 'document', etc.)
     """
     try:
-        if API_BASE_URL.startswith("http://") or API_BASE_URL.startswith("https://"):
-            media_api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"
+        # Сохраняем медиа в БД
+        media_result = await save_media_to_db(
+            file_id=file_id,
+            file_type=media_type,
+            file_name=f"{media_type}_{file_id}",
+            file_size=0,
+            mime_type=f"image/{media_type}" if media_type == "photo" else "application/octet-stream"
+        )
+        
+        if media_result:
+            # Связываем медиа с сообщением
+            await link_media_to_message(
+                message_id=message_id,
+                media_id=media_result["id"],
+                media_kind=media_type,
+                order_index=0
+            )
+            logging.info(f"✅ Медиа зарегистрировано для сообщения {message_id}")
+            return media_result
         else:
-            media_api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/media/register-telegram-photo"
-
-        media_payload = {
-            "messageId": message_id,
-            "fileId": file_id,
-            "botToken": bot_token,
-            "mediaType": media_type
-        }
-
-        # Определяем, использовать ли SSL для медиа-запросов
-        is_localhost_media = "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url
-        is_https_media = media_api_url.startswith("https://")
-        use_ssl_media = is_https_media and not is_localhost_media  # SSL только для внешних https://
-        logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media}")
-
-        # Создаём connector с правильным SSL
-        connector = TCPConnector(ssl=use_ssl_media)
-
-        async with aiohttp.ClientSession(connector=connector) as session:
-            async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT)) as response:
-                if response.status == 200:
-                    logging.info(f"✅ Медиа зарегистрировано для сообщения {message_id}")
-                    return await response.json()
-                else:
-                    error_text = await response.text()
-                    logging.warning(f"⚠️ Не удалось зарегистрировать медиа: {response.status} - {error_text}")
-                    return None
+            logging.warning(f"⚠️ Не удалось сохранить медиа для сообщения {message_id}")
+            return None
     except Exception as e:
         logging.error(f"Ошибка при регистрации медиа: {e}")
         return None

@@ -55,6 +55,7 @@ import { processInlineButtonNodes } from './bot-generator/Keyboard/processInline
 import { generateMessageLoggingCode } from './bot-generator/logging/generate-message-logging';
 import { generateGroupHandlers } from './bot-generator/MediaHandler/generateGroupHandlers';
 import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generateMediaFileFunctions';
+import { generateSaveMediaToDb } from './bot-generator/MediaHandler/save-media-to-db';
 import { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
 import { hasUploadImageUrls } from './bot-generator/MediaHandler/hasUploadImageUrls';
 import { generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './bot-generator/transitions';
@@ -198,6 +199,7 @@ export function generatePythonCode(
   // Функции для работы с файлами - если есть медиа или узлы с изображениями из папки uploads
   // ИЛИ если включена база данных пользователей (для функции send_photo_with_logging)
   if (hasMediaNodes(context.nodes || []) || hasUploadImageUrls(context.nodes || []) || !!context.options.userDatabaseEnabled) {
+    code += generateSaveMediaToDb();
     code += generateMediaFileFunctions();
   }
 
