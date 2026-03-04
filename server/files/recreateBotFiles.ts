@@ -74,6 +74,11 @@ export async function recreateBotFiles(projectId: number): Promise<boolean> {
       const userDatabaseEnabled = project.userDatabaseEnabled === 1;
       // Получаем настройки генерации комментариев из переменной окружения (по умолчанию выключено)
       const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION === 'true';
+      
+      console.log(`📝 Генерация кода для проекта ${projectId}:`);
+      console.log(`   project.userDatabaseEnabled:`, project.userDatabaseEnabled);
+      console.log(`   userDatabaseEnabled (boolean):`, userDatabaseEnabled);
+      
       const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled, projectId, false, false, enableComments);
 
       // TODO: В будущем можно добавить поддержку кастомных имен файлов
