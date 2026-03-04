@@ -7,6 +7,8 @@
  * @module bot-generator/transitions/message-preparation
  */
 
+import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
+
 /**
  * Параметры для подготовки сообщения
  */
@@ -42,9 +44,8 @@ export function generateMessageText(messageText?: string, indent: string = '    
  */
 export function generateDatabaseVarsGet(indent: string = '    '): string {
   let code = '';
-  code += `${indent}# Получаем переменные из базы данных\n`;
-  code += `${indent}user_data_dict = await get_user_from_db(user_id) or {}\n`;
-  code += `${indent}user_data_dict.update(user_data.get(user_id, {}))\n`;
+  code += `${indent}# Получаем переменные из базы данных (user_ids_list, user_ids_count)\n`;
+  code += generateDatabaseVariablesCode(indent);
   return code;
 }
 
