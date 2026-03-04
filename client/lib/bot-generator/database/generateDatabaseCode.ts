@@ -26,9 +26,14 @@ import { update_user_variable_in_db } from './update_user_variable_in_db';
  * @returns {string} Сгенерированный код для работы с базой данных
  */
 export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[]): string {
+  console.log('[generateDatabaseCode] userDatabaseEnabled:', userDatabaseEnabled);
+  
   if (!userDatabaseEnabled) {
+    console.log('[generateDatabaseCode] userDatabaseEnabled=false, возвращаем пустую строку');
     return '';
   }
+  
+  console.log('[generateDatabaseCode] Генерация кода БД...');
 
   // Собираем весь код в массив строк для автоматической обработки
   const codeLines: string[] = [];
