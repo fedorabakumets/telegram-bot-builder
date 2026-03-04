@@ -58,7 +58,6 @@ export function generateDatabaseVarsGet(indent: string = '    '): string {
 export function generateVariableReplacement(indent: string = '    '): string {
   let code = '';
   code += `${indent}# Заменяем переменные в тексте\n`;
-  code += `${indent}user_vars = user_data_dict\n`;
   code += `${indent}text = replace_variables_in_text(text, user_vars)\n`;
   return code;
 }
