@@ -100,7 +100,7 @@ export function generateBroadcastAutoTransition(indent: string = '              
   codeLines.push(`${indent}            logging.info(f"✅ Handler {handler_name} выполнен")`);
   codeLines.push(`${indent}        except Exception as handler_error:`);
   codeLines.push(`${indent}            # Игнорируем ошибки методов bot (answer, edit_text) - они не нужны при автопереходе в рассылке`);
-  codeLines.push(`${indent}            if "not mounted to a any bot instance" in str(handler_error) || "This method is not mounted" in str(handler_error):`);
+  codeLines.push(`${indent}            if "not mounted to a any bot instance" in str(handler_error) or "This method is not mounted" in str(handler_error):`);
   codeLines.push(`${indent}                logging.info(f"⚠️ Handler {handler_name} выполнен (методы редактирования сообщений пропущены)")`);
   codeLines.push(`${indent}            else:`);
   codeLines.push(`${indent}                logging.error(f"❌ Ошибка handler при автопереходе к {auto_target}: {handler_error}")`);
