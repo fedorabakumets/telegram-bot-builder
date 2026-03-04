@@ -1,6 +1,6 @@
 /**
  * @fileoverview Компонент ячейки пользователя в таблице
- * @description Отображает аватар, имя и ID пользователя
+ * @description Отображает аватар, имя и Telegram ID пользователя
  */
 
 import { TableCell } from '@/components/ui/table';
@@ -31,7 +31,7 @@ export function DesktopUserCell({ user, formatUserName, projectId }: DesktopUser
         <UserAvatar messageType="user" user={user} projectId={projectId} />
         <div className="flex-1 min-w-0">
           <div className="font-medium text-sm truncate">{formatUserName(user)}</div>
-          <div className="text-xs text-muted-foreground truncate">ID: {user.id}</div>
+          <div className="text-xs text-muted-foreground truncate">ID: {user.userId}</div>
         </div>
       </div>
     </TableCell>
