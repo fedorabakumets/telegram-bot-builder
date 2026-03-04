@@ -19,11 +19,13 @@ import { send_photo_with_logging } from './send_photo_with_logging';
  * Генерирует код для логирования сообщений в базу данных
  * @param userDatabaseEnabled - Флаг включения пользовательской базы данных
  * @param hasInlineButtonsValue - Результат вызова hasInlineButtons
+ * @param projectId - ID проекта для сохранения в базу данных
  * @returns Сгенерированный код для логирования сообщений
  */
 export function generateMessageLoggingCode(
   userDatabaseEnabled: boolean,
-  hasInlineButtonsValue: boolean
+  hasInlineButtonsValue: boolean,
+  projectId: number | null
 ): string {
   if (!userDatabaseEnabled) {
     return '';
@@ -33,13 +35,13 @@ export function generateMessageLoggingCode(
   const codeLines: string[] = [];
 
   // Примечание: get_api_base_url уже сгенерирован в generateApiConfig
-  // Здесь генерируем только функции для работы с API
+  // Здесь генерируем только функции для работы с БД
 
-  // Сохранение сообщения в API
+  // Сохранение сообщения в БД (напрямую, без API)
   codeLines.push('# ┌─────────────────────────────────────────┐');
-  codeLines.push('# │      Сохранение сообщения в API         │');
+  codeLines.push('# │      Сохранение сообщения в БД          │');
   codeLines.push('# └─────────────────────────────────────────┘');
-  save_message_to_api(codeLines);
+  save_message_to_api(codeLines, projectId);
 
   // Middleware для логирования сообщений
   codeLines.push('# ┌─────────────────────────────────────────┐');

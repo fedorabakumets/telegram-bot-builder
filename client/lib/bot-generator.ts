@@ -171,7 +171,7 @@ export function generatePythonCode(
 
   // Генерируем логирование сообщений (только при включенной БД)
   if (context.options.userDatabaseEnabled) {
-    code += generateMessageLoggingCode(context.options.userDatabaseEnabled, hasInlineButtons(context.nodes || []));
+    code += generateMessageLoggingCode(context.options.userDatabaseEnabled, hasInlineButtons(context.nodes || []), context.projectId);
   }
 
   // Добавляем конфигурацию групп

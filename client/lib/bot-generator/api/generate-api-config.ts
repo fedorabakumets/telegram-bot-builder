@@ -1,8 +1,8 @@
 /**
  * @fileoverview Генерация конфигурации API
  *
- * Модуль создаёт Python-код для определения базового URL API
- * и PROJECT_ID, которые используются в медиа хендлерах.
+ * Модуль создаёт Python-код для определения PROJECT_ID и PROJECT_DIR,
+ * которые используются для сохранения данных в базу данных.
  *
  * @module bot-generator/api/generate-api-config
  */
@@ -20,50 +20,13 @@ export function generateApiConfig(projectId: number | null, userDatabaseEnabled:
   const codeLines: string[] = [];
 
   codeLines.push('# ┌─────────────────────────────────────────┐');
-  codeLines.push('# │        Конфигурация API                 │');
+  codeLines.push('# │        Конфигурация проекта             │');
   codeLines.push('# └─────────────────────────────────────────┘');
 
-  // Функция для получения базового URL API
-  codeLines.push('def get_api_base_url():');
-  codeLines.push('    """Получает базовый URL API из переменных окружения');
-  codeLines.push('    ');
-  codeLines.push('    Returns:');
-  codeLines.push('        str: Базовый URL API (всегда с http:// или https://)');
-  codeLines.push('    """');
-  codeLines.push('    # Пытаемся получить из переменных окружения');
-  codeLines.push('    env_url = os.getenv("API_BASE_URL") or os.getenv("REPLIT_DEV_DOMAIN")');
-  codeLines.push('    ');
-  codeLines.push('    if env_url:');
-  codeLines.push('        # Проверяем, начинается ли URL с http:// или https://');
-  codeLines.push('        if env_url.startswith("http://") or env_url.startswith("https://"):');
-  codeLines.push('            return env_url');
-  codeLines.push('        else:');
-  codeLines.push('            # Для localhost используем http://, для остальных https://');
-  codeLines.push('            if "localhost" in env_url or "127.0.0.1" in env_url:');
-  codeLines.push('                return f"http://{env_url}"');
-  codeLines.push('            else:');
-  codeLines.push('                return f"https://{env_url}"');
-  codeLines.push('    ');
-  codeLines.push('    # По умолчанию используем localhost с HTTP для локальной разработки');
-  codeLines.push('    return "http://localhost:5000"');
-  codeLines.push('');
-
-  // Определяем API_BASE_URL
-  codeLines.push('# Получаем базовый URL API');
-  codeLines.push('API_BASE_URL = get_api_base_url()');
-  codeLines.push('logging.info(f"📡 API Base URL определён как: {API_BASE_URL}")');
-  codeLines.push('');
-
   // Определяем PROJECT_ID (всегда, по умолчанию 0)
-  codeLines.push('# ID проекта для API запросов');
+  codeLines.push('# ID проекта для сохранения в базу данных');
   codeLines.push(`PROJECT_ID = ${projectId !== null ? projectId : 0}`);
   codeLines.push('logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")');
-  codeLines.push('');
-
-  // Определяем API_TIMEOUT (всегда, по умолчанию 10)
-  codeLines.push('# Таймаут запросов к API (секунды)');
-  codeLines.push('API_TIMEOUT = int(os.getenv("API_TIMEOUT", "10"))');
-  codeLines.push('logging.info(f"⏱️ API_TIMEOUT: {API_TIMEOUT} сек")');
   codeLines.push('');
 
   // Определяем PROJECT_DIR (всегда)
@@ -71,15 +34,6 @@ export function generateApiConfig(projectId: number | null, userDatabaseEnabled:
   codeLines.push('PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))');
   codeLines.push('logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")');
   codeLines.push('');
-
-  // Создаём функцию-заглушку save_message_to_api (ТОЛЬКО если БД выключена)
-  if (!userDatabaseEnabled) {
-    codeLines.push('# Функция сохранения сообщения (заглушка, переопределяется при включенной БД)');
-    codeLines.push('async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):');
-    codeLines.push('    """Заглушка - возвращает None если БД не включена"""');
-    codeLines.push('    return None');
-    codeLines.push('');
-  }
 
   // Создаём заглушки для DB-функций (ТОЛЬКО если БД выключена)
   if (!userDatabaseEnabled) {
@@ -108,6 +62,10 @@ export function generateApiConfig(projectId: number | null, userDatabaseEnabled:
     codeLines.push('async def update_user_data_in_db(user_id, key, value):');
     codeLines.push('    """Заглушка - ничего не делает"""');
     codeLines.push('    pass');
+    codeLines.push('');
+    codeLines.push('async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):');
+    codeLines.push('    """Заглушка - ничего не делает"""');
+    codeLines.push('    return None');
     codeLines.push('');
   }
 
