@@ -54,7 +54,7 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
         connector = TCPConnector(ssl=use_ssl_media)
 
         async with aiohttp.ClientSession(connector=connector) as session:
-            async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT), ssl=use_ssl_media) as response:
+            async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT)) as response:
                 if response.status == 200:
                     logging.info(f"✅ Медиа зарегистрировано для сообщения {message_id}")
                     return await response.json()

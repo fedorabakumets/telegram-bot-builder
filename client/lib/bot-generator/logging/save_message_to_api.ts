@@ -44,7 +44,7 @@ export function save_message_to_api(codeLines: string[]) {
     apiFunctionCodeLines.push('        connector = TCPConnector(ssl=use_ssl)');
     apiFunctionCodeLines.push('        ');
     apiFunctionCodeLines.push('        async with aiohttp.ClientSession(connector=connector) as session:');
-    apiFunctionCodeLines.push('            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT), ssl=use_ssl) as response:');
+    apiFunctionCodeLines.push('            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT)) as response:');
     apiFunctionCodeLines.push('                if response.status == 200:');
     apiFunctionCodeLines.push('                    logging.info(f"✅ Сообщение сохранено: {message_type} от {user_id}")');
     apiFunctionCodeLines.push('                    response_data = await response.json()');

@@ -67,7 +67,7 @@ async def handle_photo_input(message: types.Message):
             connector = TCPConnector(ssl=use_ssl_media3)
 
             async with aiohttp.ClientSession(connector=connector) as session:
-                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15), ssl=use_ssl_media3) as response:
+                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:
                     if response.status == 200:
                         result = await response.json()
                         photo_url = result.get("url")
