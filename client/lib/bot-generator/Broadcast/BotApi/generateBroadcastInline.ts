@@ -57,16 +57,16 @@ export function generateBroadcastInline(node: Node, allNodes: Node[] | null, ind
     codeLines.push(`${indent}            message_text = replace_variables_in_text(node_data["text"], {**user_data.get(recipient_id, {}), "user_id": recipient_id})`);
     codeLines.push(`${indent}            all_user_vars = {**user_data.get(recipient_id, {}), "user_id": recipient_id}`);
 
-    // Генерируем код отправки медиа
-    codeLines.push(generateBroadcastMediaSend(indent));
+    // Генерируем код отправки медиа (используем отступ indent + 12 пробелов для вложенности в try внутри for)
+    codeLines.push(generateBroadcastMediaSend(indent + '            '));
 
     codeLines.push(`${indent}            success_count += 1`);
     codeLines.push(`${indent}            # Автопереход если указан`);
     codeLines.push(`${indent}            auto_target = node_data.get("autoTransitionTo")`);
     codeLines.push(`${indent}            if auto_target:`);
 
-    // Генерируем код автоперехода
-    codeLines.push(generateBroadcastAutoTransition(indent));
+    // Генерируем код автоперехода (используем отступ indent + 16 пробелов для вложенности в if внутри try внутри for)
+    codeLines.push(generateBroadcastAutoTransition(indent + '                '));
 
     codeLines.push(`${indent}        except Exception as send_error:`);
     codeLines.push(`${indent}            error_count += 1`);
