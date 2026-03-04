@@ -62,7 +62,7 @@ export function generateStartNodeHandlerWithConditionalLogicAndImages(targetNode
         codeLines.push('    if "text" not in locals():');
         codeLines.push(`        text = ${formattedText}`);
         codeLines.push('        # Заменяем переменные в основном тексте, если условие не сработало');
-        codeLines.push('        text = replace_variables_in_text(text, user_vars)');
+        codeLines.push('        text = replace_variables_in_text(text, all_user_vars)');
         codeLines.push('    ');
         codeLines.push('    # Используем условную клавиатуру если есть');
         codeLines.push('    # Инициализируем переменную conditional_keyboard, если она не была определена');

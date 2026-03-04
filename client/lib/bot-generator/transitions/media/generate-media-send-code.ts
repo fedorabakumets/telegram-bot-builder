@@ -94,7 +94,7 @@ export function generateTextSendCode(
 ): string {
   let code = '';
   code += `${indent}# Заменяем все переменные в тексте\n`;
-  code += `${indent}${textVar} = replace_variables_in_text(${textVar}, user_vars)\n`;
+  code += `${indent}${textVar} = replace_variables_in_text(${textVar}, all_user_vars)\n`;
   code += `${indent}try:\n`;
   code += `${indent}    if keyboard:\n`;
   code += `${indent}        await safe_edit_or_send(callback_query, ${textVar}, reply_markup=keyboard)\n`;

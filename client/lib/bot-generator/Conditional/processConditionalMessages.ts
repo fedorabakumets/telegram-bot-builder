@@ -114,7 +114,7 @@ export function processConditionalMessages(sortedConditions: any[], nodeData: an
 
                 // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также заменяем все остальные переменные из user_vars
                 codeLines.push(`${indentLevel}    # Заменяем все остальные переменные в тексте`);
-                codeLines.push(`${indentLevel}    text = replace_variables_in_text(text, user_vars)`);
+                codeLines.push(`${indentLevel}    text = replace_variables_in_text(text, all_user_vars)`);
 
                 // Добавляем генерацию клавиатуры для условного сообщения
                 const keyboardCode = generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
@@ -280,7 +280,7 @@ export function processConditionalMessages(sortedConditions: any[], nodeData: an
 
                 // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также заменяем все остальные переменные из user_vars
                 codeLines.push(`${indentLevel}    # Заменяем все остальные переменные в тексте`);
-                codeLines.push(`${indentLevel}    text = replace_variables_in_text(text, user_vars)`);
+                codeLines.push(`${indentLevel}    text = replace_variables_in_text(text, all_user_vars)`);
 
                 // Добавляем генерацию клавиатуры для условного сообщения
                 const keyboardCode3 = generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
@@ -367,7 +367,7 @@ export function processConditionalMessages(sortedConditions: any[], nodeData: an
 
                 // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также заменяем все остальные переменные из user_vars
                 codeLines.push(`${indentLevel}    # Заменяем все остальные переменные в тексте`);
-                codeLines.push(`${indentLevel}    text = replace_variables_in_text(text, user_vars)`);
+                codeLines.push(`${indentLevel}    text = replace_variables_in_text(text, all_user_vars)`);
 
                 // Добавляем генерацию клавиатуры для условного сообщения
                 const keyboardCode4 = generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);

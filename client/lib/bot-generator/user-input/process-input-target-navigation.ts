@@ -43,12 +43,12 @@ export function processInputTargetNavigation(node: any, code: string, nodes: any
                     code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
                     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
                     code += `                # Заменяем все переменные в тексте\n`;
-                    code += `                text = replace_variables_in_text(text, user_vars)\n`;
+                    code += `                text = replace_variables_in_text(text, all_user_vars)\n`;
                     code += `                await message.answer(text, reply_markup=keyboard)\n`;
                 } else {
                     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
                     code += `                # Заменяем все переменные в тексте\n`;
-                    code += `                text = replace_variables_in_text(text, user_vars)\n`;
+                    code += `                text = replace_variables_in_text(text, all_user_vars)\n`;
                     code += `                await message.answer(text)\n`;
                 }
 
@@ -93,12 +93,12 @@ export function processInputTargetNavigation(node: any, code: string, nodes: any
                         code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
                         code += `                # Заменяем все переменные в тексте\n`;
-                        code += `                text = replace_variables_in_text(text, user_vars)\n`;
+                        code += `                text = replace_variables_in_text(text, all_user_vars)\n`;
                         code += `                await message.answer(text, reply_markup=keyboard)\n`;
                     } else {
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
                         code += `                # Заменяем все переменные в тексте\n`;
-                        code += `                text = replace_variables_in_text(text, user_vars)\n`;
+                        code += `                text = replace_variables_in_text(text, all_user_vars)\n`;
                         code += `                await message.answer(text)\n`;
                     }
                     code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;

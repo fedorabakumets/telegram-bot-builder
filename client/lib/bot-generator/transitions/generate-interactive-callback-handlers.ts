@@ -256,7 +256,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               
               // Для reply клавиатуры нужно отправить новое сообщение
               code += '    # Заменяем все переменные в тексте\n';
-              code += '    text = replace_variables_in_text(text, user_vars)\n';
+              code += '    text = replace_variables_in_text(text, all_user_vars)\n';
               // NOTE: Отправка сообщения для reply клавиатуры обрабатывается в другом месте
               // await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)
 
@@ -727,12 +727,12 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                         code += generateInlineKeyboardCode(navTargetNode.data.buttons, '                ', navTargetNode.id, navTargetNode.data, allNodeIds);
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
                         code += `                # Заменяем все переменные в тексте\n`;
-                        code += `                text = replace_variables_in_text(text, user_vars)\n`;
+                        code += `                text = replace_variables_in_text(text, all_user_vars)\n`;
                         code += `                await bot.send_message(user_id, text, reply_markup=keyboard)\n`;
                       } else {
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обяяяательно вызываем замену переменных в тексте
                         code += `                # Заменяем все переменные в тексте\n`;
-                        code += `                text = replace_variables_in_text(text, user_vars)\n`;
+                        code += `                text = replace_variables_in_text(text, all_user_vars)\n`;
                         code += `                await bot.send_message(user_id, text)\n`;
                       }
                       code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${navTargetNode.id} выполн���на")\n`;

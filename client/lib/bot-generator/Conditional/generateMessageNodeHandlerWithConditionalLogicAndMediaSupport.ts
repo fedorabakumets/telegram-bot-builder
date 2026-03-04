@@ -52,7 +52,7 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
 
     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
     codeLines.push('    # Заменяем все переменные в тексте');
-    codeLines.push('    text = replace_variables_in_text(text, user_vars)');
+    codeLines.push('    text = replace_variables_in_text(text, all_user_vars)');
 
     /**
      * БЛОК 4: Поддержка условных сообщений

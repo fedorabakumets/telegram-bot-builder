@@ -64,7 +64,7 @@ export function generateMessageNodeHandlerWithKeyboardAndInputCollection(code: s
             code += '    \n';
             code += '    # Заменяем переменные в тексте, если текст определен\n';
             code += '    if "text" in locals():\n';
-            code += '        text = replace_variables_in_text(text, user_vars)\n';
+            code += '        text = replace_variables_in_text(text, all_user_vars)\n';
             code += '    \n';
             code += '    # Используем условную клавиатуру если есть\n';
             code += '    if conditional_keyboard is not None:\n';

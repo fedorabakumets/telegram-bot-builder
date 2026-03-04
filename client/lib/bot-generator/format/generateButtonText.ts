@@ -35,7 +35,7 @@ export function generateButtonText(buttonText: string): string {
   if (buttonText.includes('{') && buttonText.includes('}')) {
     // Экранируем текст для Python и оборачиваем в replace_variables_in_text
     const escapedText = escapeForPython(buttonText);
-    return `replace_variables_in_text("${escapedText}", user_vars)`;
+    return `replace_variables_in_text("${escapedText}", all_user_vars)`;
   } else {
     // Обычный текст без переменных
     return `"${escapeForPython(buttonText)}"`;
