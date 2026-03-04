@@ -64,7 +64,7 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
             }
         }
 
-        if (validatedData.name || req.body.recreateFiles) {
+        if (validatedData.name || req.body.recreateFiles || validatedData.userDatabaseEnabled !== undefined) {
             console.log(`Проект ${projectId} обновлен, пересоздаем файлы бота...`);
             const recreateResult = await recreateBotFiles(projectId);
             if (!recreateResult) {
