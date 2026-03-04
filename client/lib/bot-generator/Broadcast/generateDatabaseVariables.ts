@@ -22,9 +22,6 @@ export function generateDatabaseVariablesCode(indent: string = '        '): stri
   codeLines.push(`${indent}# ┌─────────────────────────────────────────┐`);
   codeLines.push(`${indent}# │    Переменные из базы данных (user_ids) │`);
   codeLines.push(`${indent}# └─────────────────────────────────────────┘`);
-  codeLines.push(`${indent}# Инициализируем user_vars если не определён`);
-  codeLines.push(`${indent}if "user_vars" not in locals():`);
-  codeLines.push(`${indent}    user_vars = {}`);
   codeLines.push(`${indent}# Получаем список всех ID из базы user_ids`);
   codeLines.push(`${indent}try:`);
   codeLines.push(`${indent}    async with db_pool.acquire() as conn:`);
@@ -41,10 +38,10 @@ export function generateDatabaseVariablesCode(indent: string = '        '): stri
   codeLines.push(`${indent}    user_ids_list = "нет ID"`);
   codeLines.push(`${indent}    user_ids_count = 0`);
   codeLines.push(`${indent}    `);
-  codeLines.push(`${indent}# Добавляем переменные базы данных в user_vars`);
-  codeLines.push(`${indent}user_vars["user_ids_list"] = user_ids_list`);
-  codeLines.push(`${indent}user_vars["user_ids_count"] = user_ids_count`);
-  codeLines.push(`${indent}logging.info(f"🔧 Переменные базы данных добавлены в user_vars: user_ids_list={user_ids_list[:100] if len(user_ids_list) > 100 else user_ids_list}, user_ids_count={user_ids_count}")`);
+  codeLines.push(`${indent}# Добавляем переменные базы данных в all_user_vars`);
+  codeLines.push(`${indent}all_user_vars["user_ids_list"] = user_ids_list`);
+  codeLines.push(`${indent}all_user_vars["user_ids_count"] = user_ids_count`);
+  codeLines.push(`${indent}logging.info(f"🔧 Переменные базы данных добавлены в all_user_vars: user_ids_list={user_ids_list[:100] if len(user_ids_list) > 100 else user_ids_list}, user_ids_count={user_ids_count}")`);
 
   // Применяем автоматическое добавление комментариев
   const processedCode = processCodeWithAutoComments(codeLines, 'generateDatabaseVariables.ts');
