@@ -3,6 +3,9 @@ import { BotData, BotGroup } from '@shared/schema';
 
 // Ядро: контекст и состояние
 import { createGenerationContext } from './bot-generator/core/create-generation-context';
+
+// Утилиты: комментарии
+import { setCommentsEnabled } from './bot-generator/utils/generateGeneratedComment';
 import type { GenerationOptions } from './bot-generator/core/generation-options.types';
 
 // Ядро: логирование
@@ -112,6 +115,9 @@ export function generatePythonCode(
     enableGroupHandlers = false,
     enableComments = true,
   } = options;
+
+  // Синхронизируем глобальное состояние комментариев с опциями генерации
+  setCommentsEnabled(enableComments);
 
   // Создаём опции генерации
   const genOptions: GenerationOptions = {
