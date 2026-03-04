@@ -13,7 +13,6 @@ import { z } from "zod";
 import { storage } from "../../../storages/storage";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { restartBotIfRunning } from "../../../bots/restartBotIfRunning";
-import { recreateBotFiles } from "../../../files/recreateBotFiles";
 
 /**
  * Обрабатывает запрос на обновление проекта
@@ -49,12 +48,6 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
         }
 
         const validatedData = insertBotProjectSchema.partial().parse(req.body);
-        
-        // Логирование для отладки userDatabaseEnabled
-        console.log(`🔍 Обновление проекта ${projectId}:`);
-        console.log(`   req.body.userDatabaseEnabled:`, req.body.userDatabaseEnabled);
-        console.log(`   validatedData.userDatabaseEnabled:`, validatedData.userDatabaseEnabled);
-        
         const project = await storage.updateBotProject(projectId, validatedData);
 
         if (!project) {
@@ -67,14 +60,6 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
             const restartResult = await restartBotIfRunning(projectId);
             if (!restartResult.success) {
                 console.error(`Ошибка перезапуска бота ${projectId}:`, restartResult.error);
-            }
-        }
-
-        if (validatedData.name || req.body.recreateFiles || validatedData.userDatabaseEnabled !== undefined) {
-            console.log(`Проект ${projectId} обновлен, пересоздаем файлы бота...`);
-            const recreateResult = await recreateBotFiles(projectId);
-            if (!recreateResult) {
-                console.error(`Ошибка пересоздания файлов бота ${projectId}`);
             }
         }
 
