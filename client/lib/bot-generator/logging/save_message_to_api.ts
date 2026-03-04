@@ -30,10 +30,11 @@ export function save_message_to_api(codeLines: string[], projectId: number | nul
     dbFunctionCodeLines.push('            # Вставляем сообщение в базу данных');
     dbFunctionCodeLines.push('            result = await conn.fetchrow(');
     dbFunctionCodeLines.push('                """');
-    dbFunctionCodeLines.push('                INSERT INTO messages (user_id, message_type, message_text, node_id, message_data, created_at)');
-    dbFunctionCodeLines.push('                VALUES ($1, $2, $3, $4, $5, NOW())');
+    dbFunctionCodeLines.push('                INSERT INTO bot_messages (project_id, user_id, message_type, message_text, node_id, message_data, created_at)');
+    dbFunctionCodeLines.push('                VALUES ($1, $2, $3, $4, $5, $6, NOW())');
     dbFunctionCodeLines.push('                RETURNING id, user_id, message_type, created_at');
     dbFunctionCodeLines.push('                """,');
+    dbFunctionCodeLines.push('                PROJECT_ID,');
     dbFunctionCodeLines.push('                str(user_id),');
     dbFunctionCodeLines.push('                message_type,');
     dbFunctionCodeLines.push('                message_text,');
