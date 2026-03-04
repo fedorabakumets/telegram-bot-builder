@@ -14,9 +14,11 @@ export const generateCommandCallbackHandler = (
   code: string
 ): string => {
   const command = commandCallback.replace('cmd_', '');
+  // Заменяем все недопустимые символы в имени функции на подчёркивания
+  const safeCommandCallback = commandCallback.replace(/[^a-zA-Z0-9_]/g, '_');
 
   code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
-  code += `async def handle_${commandCallback}(callback_query: types.CallbackQuery):\n`;
+  code += `async def handle_${safeCommandCallback}(callback_query: types.CallbackQuery):\n`;
   code += '    await callback_query.answer()\n';
   code += `    logging.info(f"Обработка кнопки команды: ${commandCallback} -> /${command} (пользователь {callback_query.from_user.id})")\n`;
   code += `    # Симулируем выполнение команды /${command}\n`;
