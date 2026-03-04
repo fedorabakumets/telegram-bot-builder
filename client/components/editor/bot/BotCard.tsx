@@ -71,7 +71,6 @@ export function BotCard({
 }: BotCardProps) {
   return (
     <Card className="group/card overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md dark:hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card via-card to-card/95 hover:border-border/50">
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover/card:opacity-100 transition-opacity" />
       <CardContent className="p-4 sm:p-5 space-y-4">
         <BotCardHeader
           token={token}
