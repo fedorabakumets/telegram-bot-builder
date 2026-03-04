@@ -37,10 +37,12 @@ export function save_message_to_api(codeLines: string[]) {
     apiFunctionCodeLines.push('        ');
     apiFunctionCodeLines.push('        # Для localhost используем SSL=False, иначе SSL=True');
     apiFunctionCodeLines.push('        is_localhost = "localhost" in api_url or "127.0.0.1" in api_url or "0.0.0.0" in api_url');
-    apiFunctionCodeLines.push('        connector = TCPConnector(ssl=False) if is_localhost else TCPConnector(ssl=True)');
+    apiFunctionCodeLines.push('        is_http = api_url.startswith("http://")');
+    apiFunctionCodeLines.push('        # ИСПРАВЛЕНИЕ: Явно указываем ssl в методе post, а не только в connector');
+    apiFunctionCodeLines.push('        connector = TCPConnector(ssl=False) if (is_localhost or is_http) else TCPConnector(ssl=True)');
     apiFunctionCodeLines.push('        ');
     apiFunctionCodeLines.push('        async with aiohttp.ClientSession(connector=connector) as session:');
-    apiFunctionCodeLines.push('            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT)) as response:');
+    apiFunctionCodeLines.push('            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT), ssl=False if (is_localhost or is_http) else None) as response:');
     apiFunctionCodeLines.push('                if response.status == 200:');
     apiFunctionCodeLines.push('                    logging.info(f"✅ Сообщение сохранено: {message_type} от {user_id}")');
     apiFunctionCodeLines.push('                    response_data = await response.json()');

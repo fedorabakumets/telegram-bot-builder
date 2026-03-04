@@ -47,8 +47,9 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
         # Определяем, использовать ли SSL для медиа-запросов
         use_ssl_media = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)
         logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media}")
-        # ИСПРАВЛЕНИЕ: Для localhost всегда используем ssl=False, чтобы избежать ошибки SSL WRONG_VERSION_NUMBER
-        if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url:
+        # ИСПРАВЛЕНИЕ: Для localhost и http:// всегда используем ssl=False
+        is_http_media = media_api_url.startswith("http://")
+        if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url or is_http_media:
             use_ssl_media = False
             logging.debug(f"🔓 SSL принудительно отключен для локального медиа-запроса: {media_api_url}")
 
@@ -57,15 +58,10 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
             connector = TCPConnector(ssl=True)
         else:
             # Для локальных соединений не используем SSL-контекст
-            # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения
-            import ssl
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            connector = TCPConnector(ssl=ssl_context)
+            connector = TCPConnector(ssl=False)
 
         async with aiohttp.ClientSession(connector=connector) as session:
-            async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT)) as response:
+            async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT), ssl=False if not use_ssl_media else None) as response:
                 if response.status == 200:
                     logging.info(f"✅ Медиа зарегистрировано для сообщения {message_id}")
                     return await response.json()

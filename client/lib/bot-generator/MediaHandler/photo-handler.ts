@@ -60,25 +60,21 @@ async def handle_photo_input(message: types.Message):
             # Определяем, использовать ли SSL для медиа-запросов
             use_ssl_media3 = not (media_api_url.startswith("http://") or "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url)
             logging.debug(f"🔒 SSL требуется для медиа-запроса {media_api_url}: {use_ssl_media3}")
-            # ИСПРАВЛЕНИЕ: Для localhost всегда используем ssl=False, чтобы избежать ошибки SSL WRONG_VERSION_NUMBER
-            if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url:
+            # ИСПРАВЛЕНИЕ: Для localhost и http:// всегда используем ssl=False
+            is_http_media3 = media_api_url.startswith("http://")
+            if "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url or is_http_media3:
                 use_ssl_media3 = False
                 logging.debug(f"🔓 SSL принудительно отключен для локального медиа-запроса: {media_api_url}")
-            
+
             if use_ssl_media3:
                 # Для внешних соединений используем SSL-контекст
                 connector = TCPConnector(ssl=True)
             else:
                 # Для локальных соединений не используем SSL-контекст
-                # Явно отключаем SSL и устанавливаем настройки для небезопасного соединения
-                import ssl
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
-                connector = TCPConnector(ssl=ssl_context)
-            
+                connector = TCPConnector(ssl=False)
+
             async with aiohttp.ClientSession(connector=connector) as session:
-                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15)) as response:
+                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=15), ssl=False if not use_ssl_media3 else None) as response:
                     if response.status == 200:
                         result = await response.json()
                         photo_url = result.get("url")

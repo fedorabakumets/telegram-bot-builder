@@ -88,10 +88,12 @@ export function send_photo_with_logging(codeLines: string[]) {
     photoWrapperCodeLines.push('            ');
     photoWrapperCodeLines.push('            # Для localhost используем SSL=False, иначе SSL=True');
     photoWrapperCodeLines.push('            is_localhost = "localhost" in media_api_url or "127.0.0.1" in media_api_url or "0.0.0.0" in media_api_url');
-    photoWrapperCodeLines.push('            connector = TCPConnector(ssl=False) if is_localhost else TCPConnector(ssl=True)');
+    photoWrapperCodeLines.push('            is_http_media = media_api_url.startswith("http://")');
+    photoWrapperCodeLines.push('            # ИСПРАВЛЕНИЕ: Явно указываем ssl в методе post');
+    photoWrapperCodeLines.push('            connector = TCPConnector(ssl=False) if (is_localhost or is_http_media) else TCPConnector(ssl=True)');
     photoWrapperCodeLines.push('            ');
     photoWrapperCodeLines.push('            async with aiohttp.ClientSession(connector=connector) as session:');
-    photoWrapperCodeLines.push('                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT)) as response:');
+    photoWrapperCodeLines.push('                async with session.post(media_api_url, json=media_payload, timeout=aiohttp.ClientTimeout(total=API_TIMEOUT), ssl=False if (is_localhost or is_http_media) else None) as response:');
     photoWrapperCodeLines.push('                    if response.status == 200:');
     photoWrapperCodeLines.push('                        bot_message_id = saved_message.get("id")');
     photoWrapperCodeLines.push('                        logging.info(f"✅ Медиа бота зарегистрировано для сообщения {bot_message_id}")');
