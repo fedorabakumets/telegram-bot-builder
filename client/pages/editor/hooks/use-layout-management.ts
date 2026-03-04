@@ -4,7 +4,7 @@
  * Управляет видимостью элементов гибкого макета.
  */
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import type { SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 
 /** Результат работы хука управления макетом */
@@ -67,43 +67,71 @@ export function useLayoutManager(
   isMobile: boolean,
   currentTab: string
 ): UseLayoutManagerResult {
-  const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>(
-    createBaseConfig(isMobile, currentTab)
-  );
+  // Храним только ручные изменения видимости
+  const [manualVisibility, setManualVisibility] = useState<Map<string, boolean>>(new Map());
 
-  // Обновляем конфигурацию при изменении вкладки
-  useEffect(() => {
-    setFlexibleLayoutConfig(prev => {
-      const newConfig = createBaseConfig(isMobile, currentTab);
-      // Сохраняем текущее состояние видимости для ручных изменений
-      return {
-        ...newConfig,
-        elements: newConfig.elements.map(newEl => {
-          const prevEl = prev.elements.find(el => el.id === newEl.id);
-          // Для dialog и userDetails используем новую видимость из вкладки
-          if (newEl.id === 'dialog' || newEl.id === 'userDetails') {
-            return newEl;
+  // Вычисляем конфигурацию на основе вкладки и ручных изменений
+  const flexibleLayoutConfig = useMemo(() => {
+    const baseConfig = createBaseConfig(isMobile, currentTab);
+    
+    // Применяем ручные изменения только для элементов, которые могут быть изменены вручную
+    return {
+      ...baseConfig,
+      elements: baseConfig.elements.map(el => {
+        // Для dialog и userDetails всегда используем базовую видимость из вкладки
+        if (el.id === 'dialog' || el.id === 'userDetails') {
+          return el;
+        }
+        
+        // Для sidebar и properties применяем ручные изменения только на вкладке editor
+        if ((el.id === 'sidebar' || el.id === 'properties') && currentTab === 'editor') {
+          const manual = manualVisibility.get(el.id);
+          if (manual !== undefined) {
+            return { ...el, visible: manual };
           }
-          // Для sidebar, properties, code и codeEditor сохраняем ручные изменения
-          if ((newEl.id === 'sidebar' || newEl.id === 'properties' || newEl.id === 'code' || newEl.id === 'codeEditor') && currentTab !== 'editor' && currentTab !== 'export') {
-            return { ...newEl, visible: false };
+        }
+        
+        // Для code и codeEditor применяем ручные изменения только на вкладке export
+        if ((el.id === 'code' || el.id === 'codeEditor') && currentTab === 'export') {
+          const manual = manualVisibility.get(el.id);
+          if (manual !== undefined) {
+            return { ...el, visible: manual };
           }
-          return prevEl ? { ...newEl, visible: prevEl.visible } : newEl;
-        })
-      };
+        }
+        
+        return el;
+      })
+    };
+  }, [isMobile, currentTab, manualVisibility]);
+
+  const setFlexibleLayoutConfig = useCallback((updater: React.SetStateAction<SimpleLayoutConfig>) => {
+    setManualVisibility(prev => {
+      const newMap = new Map(prev);
+      const config = typeof updater === 'function' ? updater({
+        elements: [],
+        compactMode: false,
+        showGrid: true
+      }) : updater;
+      
+      config.elements.forEach(el => {
+        // Сохраняем только ручные изменения видимости
+        if (el.id !== 'dialog' && el.id !== 'userDetails') {
+          newMap.set(el.id, el.visible);
+        }
+      });
+      
+      return newMap;
     });
-  }, [currentTab, isMobile]);
+  }, []);
 
   const toggleElementVisibility = useCallback((elementId: 'header' | 'sidebar' | 'canvas' | 'properties' | 'code' | 'codeEditor' | 'dialog' | 'userDetails' | 'fileExplorer') => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element =>
-        element.id === elementId
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    }));
-  }, []);
+    setManualVisibility(prev => {
+      const newMap = new Map(prev);
+      const current = newMap.get(elementId);
+      newMap.set(elementId, current === undefined ? !createBaseConfig(isMobile, currentTab).elements.find(e => e.id === elementId)?.visible : !current);
+      return newMap;
+    });
+  }, [isMobile, currentTab]);
 
   const handleToggleHeader = useCallback(() => toggleElementVisibility('header'), [toggleElementVisibility]);
   const handleToggleSidebar = useCallback(() => toggleElementVisibility('sidebar'), [toggleElementVisibility]);
