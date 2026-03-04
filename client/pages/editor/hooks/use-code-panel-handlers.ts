@@ -57,12 +57,32 @@ export function useCodePanelHandlers(params: UseCodePanelHandlersParams): UseCod
   const handleOpenCodePanel = useCallback(() => {
     setCodePanelVisible(true);
     setCodeEditorVisible(true);
-  }, [setCodePanelVisible, setCodeEditorVisible]);
+    // Обновляем конфигурацию макета для видимости элементов code и codeEditor
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element => {
+        if (element.id === 'code' || element.id === 'codeEditor') {
+          return { ...element, visible: true };
+        }
+        return element;
+      })
+    }));
+  }, [setCodePanelVisible, setCodeEditorVisible, setFlexibleLayoutConfig]);
 
   const handleCloseCodePanel = useCallback(() => {
     setCodePanelVisible(false);
     setCodeEditorVisible(false);
-  }, [setCodePanelVisible, setCodeEditorVisible]);
+    // Обновляем конфигурацию макета для скрытия элементов code и codeEditor
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element => {
+        if (element.id === 'code' || element.id === 'codeEditor') {
+          return { ...element, visible: false };
+        }
+        return element;
+      })
+    }));
+  }, [setCodePanelVisible, setCodeEditorVisible, setFlexibleLayoutConfig]);
 
   const handleToggleCodeEditor = useCallback(() => {
     const isVisible = !codeEditorVisible;

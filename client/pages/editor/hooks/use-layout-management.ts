@@ -34,15 +34,19 @@ function createBaseConfig(isMobile: boolean, currentTab: string): SimpleLayoutCo
   const headerSize = isMobile ? 2.5 : 3;
   // Показываем sidebar и properties только на вкладке editor
   const showPanels = currentTab === 'editor';
+  // Скрываем canvas на вкладке export (Код)
+  const showCanvas = currentTab !== 'export';
+  // Показываем code и codeEditor только на вкладке export
+  const showCodePanels = currentTab === 'export';
 
   return {
     elements: [
       { id: 'header', type: 'header', name: 'Шапка', position: 'top', size: headerSize, visible: true },
       { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', position: 'left', size: 20, visible: showPanels },
-      { id: 'canvas', type: 'canvas', name: 'Холст', position: 'center', size: 35, visible: true },
+      { id: 'canvas', type: 'canvas', name: 'Холст', position: 'center', size: 35, visible: showCanvas },
       { id: 'properties', type: 'properties', name: 'Свойства', position: 'right', size: 20, visible: showPanels },
-      { id: 'code', type: 'code', name: 'Код', position: 'left', size: 25, visible: false },
-      { id: 'codeEditor', type: 'codeEditor', name: 'Редактор кода', position: 'center', size: 40, visible: false },
+      { id: 'code', type: 'code', name: 'Код', position: 'left', size: 25, visible: showCodePanels },
+      { id: 'codeEditor', type: 'codeEditor', name: 'Редактор кода', position: 'center', size: 40, visible: showCodePanels },
       { id: 'dialog', type: 'dialog', name: 'Диалог', position: 'right', size: 25, visible: currentTab === 'users' },
       { id: 'userDetails', type: 'userDetails', name: 'Детали пользователя', position: 'left', size: 25, visible: currentTab === 'users' },
       { id: 'fileExplorer', type: 'fileExplorer', name: 'Проводник файлов', position: 'left', size: 25, visible: false },
@@ -80,8 +84,8 @@ export function useLayoutManager(
           if (newEl.id === 'dialog' || newEl.id === 'userDetails') {
             return newEl;
           }
-          // Для sidebar и properties сохраняем ручные изменения только на вкладке editor
-          if ((newEl.id === 'sidebar' || newEl.id === 'properties') && currentTab !== 'editor') {
+          // Для sidebar, properties, code и codeEditor сохраняем ручные изменения
+          if ((newEl.id === 'sidebar' || newEl.id === 'properties' || newEl.id === 'code' || newEl.id === 'codeEditor') && currentTab !== 'editor' && currentTab !== 'export') {
             return { ...newEl, visible: false };
           }
           return prevEl ? { ...newEl, visible: prevEl.visible } : newEl;
