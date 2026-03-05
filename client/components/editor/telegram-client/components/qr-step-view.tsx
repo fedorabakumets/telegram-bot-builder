@@ -10,7 +10,6 @@ import { QrStatusHeader } from './qr-status-header';
 import { QrCodeDisplay } from './qr-code-display';
 import { QrInfoText } from './qr-info-text';
 import { QrStatusButton } from './qr-status-button';
-import { QrLink } from './qr-link';
 import { QrActionButtons } from './qr-action-buttons';
 import type { QrStepViewProps } from '../types';
 
@@ -32,8 +31,6 @@ export function QrStepView({ qrState, isLoading, onCheckStatus, onRefreshQr, onB
       </div>
 
       <QrStatusButton onClick={onCheckStatus} isLoading={isLoading} />
-
-      <QrLink url={url} />
 
       <QrActionButtons onBack={onBack} onRefresh={onRefreshQr} isLoading={isLoading} />
     </div>
