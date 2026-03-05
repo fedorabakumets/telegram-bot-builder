@@ -16,6 +16,24 @@
  */
 
 // ============================================================================
+// HttpClient
+// ============================================================================
+
+/**
+ * HTTP клиент для выполнения API запросов.
+ * Предоставляет абстракцию над fetch с обработкой ошибок и таймаутов.
+ */
+export {
+  HttpClient,
+  createHttpClient,
+} from './http-client';
+
+/** HTTP метод */
+export type { HttpMethod } from './http-client';
+/** Опции HTTP запроса */
+export type { HttpOptions } from './http-client';
+
+// ============================================================================
 // TelegramAuthService
 // ============================================================================
 
@@ -73,13 +91,16 @@ export type { ValidationErrors } from './validation-service';
 /**
  * Сервис логирования с уровнями (debug, info, warn, error).
  * Добавляет timestamp и префикс для консистентности логов.
+ * Поддерживает транспорты для отправки логов в external services.
  */
 export {
   LoggerService,
   createLogger,
 } from './logger-service';
 
-/** Опции логгера (префикс и минимальный уровень) */
+/** Опции логгера (префикс, минимальный уровень, транспорты) */
 export type { LoggerOptions } from './logger-service';
 /** Уровень логирования для фильтрации сообщений */
 export type { LogLevel } from './logger-service';
+/** Транспорт для отправки логов */
+export type { LoggerTransport } from './logger-service';

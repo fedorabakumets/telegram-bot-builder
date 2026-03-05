@@ -35,11 +35,16 @@ export function useQrPolling({ step, token, refreshQrToken }: UseQrPollingParams
     if (step !== 'qr' && step !== 'qr-password') return;
     if (!token) return;
 
+    let isMounted = true;
+
     const refreshInterval = setInterval(async () => {
-      await refreshQrToken();
+      if (isMounted) {
+        await refreshQrToken();
+      }
     }, QR_POLL_INTERVAL);
 
     return () => {
+      isMounted = false;
       clearInterval(refreshInterval);
     };
   }, [step, token, refreshQrToken]);

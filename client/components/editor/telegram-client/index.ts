@@ -35,14 +35,23 @@ export type {
 
 // Сервисы
 export {
+  HttpClient,
+  createHttpClient,
   TelegramAuthService,
   createNotificationService,
   validateApiCredentials,
   isValidCredentials,
+  LoggerService,
+  createLogger,
 } from './services';
 export type {
+  HttpMethod,
+  HttpOptions,
   NotificationService,
   ValidationErrors,
+  LoggerOptions,
+  LogLevel,
+  LoggerTransport,
 } from './services';
 
 // Константы

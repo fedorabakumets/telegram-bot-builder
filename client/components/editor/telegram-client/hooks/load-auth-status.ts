@@ -5,11 +5,10 @@
  */
 
 import type { AuthStatus } from '../types';
-import { createTelegramAuthService } from '../services/telegram-auth-service';
 import { REQUEST_TIMEOUT, MAX_RETRY_ATTEMPTS } from '../constants';
 
 /**
- * Загружает статус авторизации с сервера
+ * Загружает статус авторизации с сервера с повторными попытками
  *
  * @returns {Promise<AuthStatus>} Статус авторизации
  *
@@ -20,34 +19,32 @@ import { REQUEST_TIMEOUT, MAX_RETRY_ATTEMPTS } from '../constants';
  * ```
  */
 export async function loadAuthStatus(): Promise<AuthStatus> {
-  const authService = createTelegramAuthService();
-  
   let lastError: Error | null = null;
-  
+
   for (let i = 0; i < MAX_RETRY_ATTEMPTS; i++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
-      
       const response = await fetch('/api/telegram-auth/status', {
         signal: controller.signal,
       });
-      
-      clearTimeout(timeoutId);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-      
+
       return await response.json();
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Неизвестная ошибка');
-      
+
       if (i < MAX_RETRY_ATTEMPTS - 1) {
         await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
       }
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
-  
+
   throw lastError ?? new Error('Не удалось загрузить статус');
 }
