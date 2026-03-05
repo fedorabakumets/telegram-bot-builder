@@ -28,6 +28,8 @@ interface UserIdListProps {
   onDelete: (ids: number[]) => void;
   /** Обработчик экспорта */
   onExport: (ids: number[]) => void;
+  /** Обработчик удаления одного ID */
+  onDeleteOne?: (id: number) => void;
 }
 
 /**
@@ -38,6 +40,7 @@ export function UserIdList({
   isLoading = false,
   onDelete,
   onExport,
+  onDeleteOne,
 }: UserIdListProps) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -130,6 +133,7 @@ export function UserIdList({
               <th className="p-3 text-left font-semibold">ID пользователя</th>
               <th className="p-3 text-left font-semibold">Дата добавления</th>
               <th className="p-3 text-left font-semibold">Источник</th>
+              <th className="p-3 text-left font-semibold"></th>
             </tr>
           </thead>
           <tbody>
@@ -152,6 +156,19 @@ export function UserIdList({
                 </td>
                 <td className="p-3">
                   <SourceBadge source={item.source} />
+                </td>
+                <td className="p-3 text-right">
+                  {onDeleteOne && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => onDeleteOne(item.id)}
+                      aria-label={`Удалить ID ${item.userId}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}

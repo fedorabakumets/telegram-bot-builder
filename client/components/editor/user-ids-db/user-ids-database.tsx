@@ -256,6 +256,7 @@ export function UserIdsDatabase() {
         isLoading={isLoading}
         onDelete={handleDelete}
         onExport={handleExport}
+        onDeleteOne={(id) => handleDelete([id])}
       />
 
       {/* Диалог добавления */}
