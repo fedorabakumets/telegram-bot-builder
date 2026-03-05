@@ -6,7 +6,7 @@
 import type { TelegramClient } from 'telegram';
 import type { CheckQRStatusResult } from '../../types/auth/check-qr-status-result.js';
 import { getOrCreateQRClient } from './qr-client-manager.js';
-import { importQRToken, formatQRStatusResult } from './qr-token-importer.js';
+import { importQRToken } from './qr-token-importer.js';
 import { handleQRPasswordError } from './qr-2fa-processor.js';
 
 /**
@@ -31,25 +31,15 @@ export async function checkQRStatus(
 
   try {
     // Импортируем токен и проверяем статус
-    const importResult = await importQRToken(client, token);
+    const result = await importQRToken(client, token);
 
-    // Если статус определён — возвращаем результат
-    if (!importResult.isPending && !importResult.isSuccess) {
-      return {
-        success: false,
-        error: 'Неизвестный статус QR',
-      };
+    // result уже содержит готовый CheckQRStatusResult
+    // Добавляем client только если его нет (для pending случая)
+    if (!result.client && result.success && !result.isAuthenticated) {
+      result.client = client;
     }
 
-    // Если не отсканирован или отсканирован без 2FA
-    if (importResult.isPending || importResult.isSuccess) {
-      return formatQRStatusResult(importResult, client);
-    }
-
-    return {
-      success: false,
-      error: 'Неизвестный статус QR',
-    };
+    return result;
   } catch (error: any) {
     // Обрабатываем ошибку (возможно 2FA)
     return handleQRPasswordError(error, client, apiId, apiHash, password);
