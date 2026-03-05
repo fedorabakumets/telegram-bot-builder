@@ -38,6 +38,8 @@ export function TelegramClientConfig() {
     logout,
     resetCredentials,
     setShowAuthDialog,
+    setApiId,
+    setApiHash,
   } = useTelegramAuth();
 
   /**

@@ -39,6 +39,10 @@ export interface UseTelegramAuthReturn {
   resetCredentials: () => Promise<void>;
   /** Установить состояние диалога авторизации */
   setShowAuthDialog: (show: boolean) => void;
+  /** Установить значение API ID */
+  setApiId: (value: string) => void;
+  /** Установить значение API Hash */
+  setApiHash: (value: string) => void;
 }
 
 /**
@@ -178,5 +182,7 @@ export function useTelegramAuth(): UseTelegramAuthReturn {
     logout,
     resetCredentials,
     setShowAuthDialog,
+    setApiId,
+    setApiHash,
   };
 }
