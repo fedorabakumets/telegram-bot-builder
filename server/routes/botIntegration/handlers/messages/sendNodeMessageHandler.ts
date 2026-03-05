@@ -70,7 +70,7 @@ export async function sendNodeMessageHandler(req: Request, res: Response): Promi
 
     // Заменяем переменные в тексте
     const messageText = String(node.data.messageText || node.data.description || "");
-    const textWithVariables = replaceVariablesInText({ text: messageText, userData, telegramUser });
+    const textWithVariables = await replaceVariablesInText({ text: messageText, userData, telegramUser, projectId });
 
     // Извлекаем медиа и кнопки
     const [mediaFiles, buttons] = await Promise.all([

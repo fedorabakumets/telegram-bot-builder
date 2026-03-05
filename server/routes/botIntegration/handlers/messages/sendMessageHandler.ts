@@ -57,10 +57,11 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
 
         // Заменяем переменные в тексте
         const userData = user?.userData as Record<string, unknown> || {};
-        const textWithVariables = replaceVariablesInText({
+        const textWithVariables = await replaceVariablesInText({
           text: messageText,
           userData,
           telegramUser,
+          projectId,
         });
 
         const defaultToken = await storage.getDefaultBotToken(projectId);

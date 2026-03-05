@@ -40,16 +40,20 @@ function extractVariableValue(varData: unknown): string {
  * Заменяет переменные в тексте на значения
  *
  * @param params - Параметры замены
+ * @param params.projectId - ID проекта (для получения данных бота)
  * @returns Текст с замененными переменными
  */
-export function replaceVariablesInText(params: ReplaceVariablesParams): string {
-  const { text, userData = {}, telegramUser = {} } = params;
+export async function replaceVariablesInText(
+  params: ReplaceVariablesParams & { projectId?: number }
+): Promise<string> {
+  const { text, userData = {}, telegramUser = {}, projectId } = params;
 
   if (!text) return text;
 
   // Создаём полный словарь переменных с приоритетом userData > telegramUser
   const variables: Record<string, string> = {
     user_id: String(telegramUser.id || ""),
+    chat_id: String(telegramUser.id || ""), // chat_id = user_id для личных сообщений
     first_name: telegramUser.firstName || "",
     last_name: telegramUser.lastName || "",
     username: telegramUser.userName || "",
@@ -67,12 +71,41 @@ export function replaceVariablesInText(params: ReplaceVariablesParams): string {
     variables.user_name = firstName || userName || `user_${telegramUser.id}`;
   }
 
-  // Добавляем все переменные из userData
+  // Добавляем все переменные из userData (пользовательские переменные)
   for (const [key, value] of Object.entries(userData)) {
     if (!variables[key]) {
       variables[key] = extractVariableValue(value);
     }
   }
+
+  // Получаем имя бота из проекта (если есть projectId)
+  if (projectId) {
+    const { storage } = await import("../../../../storages/storage");
+    const botToken = await storage.getDefaultBotToken(projectId);
+    if (botToken) {
+      try {
+        // Получаем информацию о боте
+        const response = await fetch(
+          `https://api.telegram.org/bot${botToken.token}/getMe`
+        );
+        const result = await response.json();
+        if (result.ok) {
+          variables.bot_name = result.result.username || result.result.first_name || "Бот";
+        }
+      } catch (e) {
+        console.warn("Не удалось получить имя бота:", e);
+        variables.bot_name = "Бот";
+      }
+    } else {
+      variables.bot_name = "Бот";
+    }
+  } else {
+    variables.bot_name = "Бот";
+  }
+
+  // Переменные для рассылок (заглушки, так как это админская отправка)
+  variables.user_ids_list = "";
+  variables.user_ids_count = "0";
 
   // Заменяем все переменные в формате {variable_name}
   return text.replace(/\{(\w+)\}/g, (match, varName) => {
