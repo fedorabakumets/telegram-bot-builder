@@ -26,6 +26,18 @@ export function generateStartHandlerImageSend(
 ): void {
   const attachedMedia = node.data?.attachedMedia || [];
   const imageUrl = node.data?.imageUrl;
+  const formatMode = node.data?.formatMode;
+  const markdown = node.data?.markdown;
+
+  // Определяем parse_mode
+  let parseModeValue: string | null = null;
+  if (markdown) {
+    parseModeValue = 'Markdown';
+  } else if (formatMode === 'html') {
+    parseModeValue = 'HTML';
+  } else if (formatMode === 'markdown') {
+    parseModeValue = 'Markdown';
+  }
 
   // Проверяем, есть ли изображение для отправки
   if (imageUrl && imageUrl !== 'undefined' && attachedMedia.length > 0) {
@@ -43,19 +55,38 @@ export function generateStartHandlerImageSend(
     codeLines.push('');
     codeLines.push('    # Отправляем изображение с URL и клавиатурой');
     codeLines.push('    try:');
-    codeLines.push('        if keyboard is not None:');
-    codeLines.push('            await bot.send_photo(');
-    codeLines.push('                chat_id=message.chat.id,');
-    codeLines.push('                photo=image_url,');
-    codeLines.push('                caption=caption,');
-    codeLines.push('                reply_markup=keyboard');
-    codeLines.push('            )');
-    codeLines.push('        else:');
-    codeLines.push('            await bot.send_photo(');
-    codeLines.push('                chat_id=message.chat.id,');
-    codeLines.push('                photo=image_url,');
-    codeLines.push('                caption=caption');
-    codeLines.push('            )');
+    if (parseModeValue) {
+      codeLines.push(`        # Режим форматирования: ${parseModeValue}`);
+      codeLines.push('        if keyboard is not None:');
+      codeLines.push('            await bot.send_photo(');
+      codeLines.push('                chat_id=message.chat.id,');
+      codeLines.push('                photo=image_url,');
+      codeLines.push('                caption=caption,');
+      codeLines.push(`                parse_mode="${parseModeValue}",`);
+      codeLines.push('                reply_markup=keyboard');
+      codeLines.push('            )');
+      codeLines.push('        else:');
+      codeLines.push('            await bot.send_photo(');
+      codeLines.push('                chat_id=message.chat.id,');
+      codeLines.push('                photo=image_url,');
+      codeLines.push('                caption=caption,');
+      codeLines.push(`                parse_mode="${parseModeValue}"`);
+      codeLines.push('            )');
+    } else {
+      codeLines.push('        if keyboard is not None:');
+      codeLines.push('            await bot.send_photo(');
+      codeLines.push('                chat_id=message.chat.id,');
+      codeLines.push('                photo=image_url,');
+      codeLines.push('                caption=caption,');
+      codeLines.push('                reply_markup=keyboard');
+      codeLines.push('            )');
+      codeLines.push('        else:');
+      codeLines.push('            await bot.send_photo(');
+      codeLines.push('                chat_id=message.chat.id,');
+      codeLines.push('                photo=image_url,');
+      codeLines.push('                caption=caption');
+      codeLines.push('            )');
+    }
     codeLines.push('        logging.info(f"✅ Изображение отправлено: {image_url}")');
     codeLines.push('    except Exception as e:');
     codeLines.push('        logging.error(f"❌ Ошибка отправки изображения: {e}")');
