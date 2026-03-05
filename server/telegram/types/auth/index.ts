@@ -3,11 +3,11 @@
  * @module server/telegram/types/auth/index
  */
 
-export { SendCodeResult } from './send-code-result.js';
-export { VerifyCodeResult } from './verify-code-result.js';
-export { VerifyPasswordResult } from './verify-password-result.js';
-export { GenerateQRResult } from './generate-qr-result.js';
-export { GenerateQRTokenResult } from './generate-qr-token-result.js';
-export { CheckQRStatusResult } from './check-qr-status-result.js';
-export { CredentialsResult } from './credentials-result.js';
-export { UserCredentials } from './user-credentials.js';
+export type { SendCodeResult } from './send-code-result.js';
+export type { VerifyCodeResult } from './verify-code-result.js';
+export type { VerifyPasswordResult } from './verify-password-result.js';
+export type { GenerateQRResult } from './generate-qr-result.js';
+export type { GenerateQRTokenResult } from './generate-qr-token-result.js';
+export type { CheckQRStatusResult } from './check-qr-status-result.js';
+export type { CredentialsResult } from './credentials-result.js';
+export type { UserCredentials } from './user-credentials.js';
