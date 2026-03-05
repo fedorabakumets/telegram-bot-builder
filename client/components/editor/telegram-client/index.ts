@@ -1,5 +1,5 @@
 /**
- * @fileoverview Экспорт компонентов, хуков и типов модуля telegram-client
+ * @fileoverview Экспорт компонентов, хуков, типов и сервисов модуля telegram-client
  *
  * @module telegram-client
  */
@@ -32,3 +32,25 @@ export type {
   ApiCredentials,
   TelegramAuthProps,
 } from './types';
+
+// Сервисы
+export {
+  TelegramAuthService,
+  createNotificationService,
+  validateApiCredentials,
+  isValidCredentials,
+} from './services';
+export type {
+  NotificationService,
+  ValidationErrors,
+} from './services';
+
+// Константы
+export {
+  QR_POLL_INTERVAL,
+  QR_TOKEN_EXPIRY,
+  QR_ERROR_CORRECTION,
+  QR_DEFAULT_SIZE,
+  REQUEST_TIMEOUT,
+  MAX_RETRY_ATTEMPTS,
+} from './constants';

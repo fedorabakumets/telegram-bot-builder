@@ -10,6 +10,7 @@
 import { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import type { QrCodeGeneratorProps } from '../types';
+import { QR_DEFAULT_SIZE, QR_ERROR_CORRECTION } from '../constants';
 
 /**
  * Компонент генерации QR-кода
@@ -24,13 +25,10 @@ import type { QrCodeGeneratorProps } from '../types';
  * <QrCodeGenerator value="tg://login?token=abc123" size={200} />
  * ```
  */
-export function QrCodeGenerator({ value, size = 200 }: QrCodeGeneratorProps) {
+export function QrCodeGenerator({ value, size = QR_DEFAULT_SIZE }: QrCodeGeneratorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    /**
-     * Генерирует QR-код на canvas
-     */
     const generateQR = async () => {
       if (!canvasRef.current || !value) return;
 
@@ -38,7 +36,7 @@ export function QrCodeGenerator({ value, size = 200 }: QrCodeGeneratorProps) {
         await QRCode.toCanvas(canvasRef.current, value, {
           width: size,
           margin: 2,
-          errorCorrectionLevel: 'H'
+          errorCorrectionLevel: QR_ERROR_CORRECTION,
         });
       } catch (error) {
         console.error('Ошибка генерации QR-кода:', error);

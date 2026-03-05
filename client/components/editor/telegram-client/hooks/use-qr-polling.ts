@@ -6,6 +6,7 @@
 
 import { useEffect } from 'react';
 import type { AuthStep } from '../types';
+import { QR_POLL_INTERVAL } from '../constants';
 
 /**
  * Параметры для useQrPolling
@@ -34,10 +35,9 @@ export function useQrPolling({ step, token, refreshQrToken }: UseQrPollingParams
     if (step !== 'qr' && step !== 'qr-password') return;
     if (!token) return;
 
-    // Интервал для обновления QR-токена через API (каждые 25 секунд)
     const refreshInterval = setInterval(async () => {
       await refreshQrToken();
-    }, 25000);
+    }, QR_POLL_INTERVAL);
 
     return () => {
       clearInterval(refreshInterval);

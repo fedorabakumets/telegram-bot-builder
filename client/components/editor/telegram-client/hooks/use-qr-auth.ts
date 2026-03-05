@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { QrState } from '../types';
 import { generateQrCode, checkQrStatus, refreshQrToken } from './qr-actions';
+import { QR_TOKEN_EXPIRY } from '../constants';
 
 /**
  * Результат работы хука useQrAuth
@@ -46,7 +47,7 @@ export function useQrAuth(
     token: '',
     url: '',
     password: '',
-    countdown: 30,
+    countdown: QR_TOKEN_EXPIRY,
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -72,7 +73,7 @@ export function useQrAuth(
   };
 
   const resetQrState = () => {
-    setQrState({ token: '', url: '', password: '', countdown: 30 });
+    setQrState({ token: '', url: '', password: '', countdown: QR_TOKEN_EXPIRY });
   };
 
   return {

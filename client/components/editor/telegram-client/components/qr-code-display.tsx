@@ -7,6 +7,7 @@
 import { QrCode } from 'lucide-react';
 import { QrCodeGenerator } from './qr-code-generator';
 import { QrCountdownBadge } from './qr-countdown-badge';
+import { QR_DEFAULT_SIZE } from '../constants';
 
 /**
  * Пропсы компонента отображения QR-кода
@@ -34,7 +35,7 @@ export function QrCodeDisplay({ url, countdown }: QrCodeDisplayProps) {
     <div className="bg-white p-4 rounded-lg inline-block mb-3 relative">
       {url ? (
         <>
-          <QrCodeGenerator value={url} size={200} />
+          <QrCodeGenerator value={url} size={QR_DEFAULT_SIZE} />
           <QrCountdownBadge countdown={countdown} />
         </>
       ) : (
