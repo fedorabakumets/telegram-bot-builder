@@ -3,6 +3,7 @@
  *
  * Модуль создаёт Python-код для отправки изображения из start узла
  * с использованием attachedMedia переменных.
+ * Гарантирует что переменная keyboard определена (None если нет кнопок).
  *
  * @module bot-generator/CommandHandler/generateStartHandlerImageSend
  */
@@ -35,6 +36,10 @@ export function generateStartHandlerImageSend(
     codeLines.push('');
     codeLines.push('    # Подставляем переменные в caption (text и all_user_vars определены выше)');
     codeLines.push('    caption = replace_variables_in_text(text, all_user_vars)');
+    codeLines.push('');
+    codeLines.push('    # Гарантируем что keyboard определена (None если нет кнопок)');
+    codeLines.push('    if \'keyboard\' not in locals():');
+    codeLines.push('        keyboard = None');
     codeLines.push('');
     codeLines.push('    # Отправляем изображение с URL и клавиатурой');
     codeLines.push('    try:');
