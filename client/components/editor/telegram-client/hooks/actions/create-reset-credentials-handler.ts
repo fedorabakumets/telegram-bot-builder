@@ -5,7 +5,10 @@
  */
 
 import type { NotificationService } from '../../services';
+import { createLogger } from '../../services/logger-service';
 import { resetCredentials as resetCredentialsFn } from '../reset-credentials';
+
+const logger = createLogger({ prefix: '[TelegramAuth]' });
 
 /**
  * Параметры для создания обработчика сброса
@@ -55,7 +58,7 @@ export function createResetCredentialsHandler(
       notifications.info('Сброшено', 'API credentials удалены. Введите новые данные');
       loadStatus();
     } catch (error) {
-      console.error('Ошибка сброса credentials:', error);
+      logger.error('Ошибка сброса credentials', error);
       notifications.error('Ошибка', 'Не удалось сбросить credentials');
     } finally {
       setIsLoading(false);

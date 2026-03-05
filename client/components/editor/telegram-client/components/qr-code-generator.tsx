@@ -11,6 +11,9 @@ import { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import type { QrCodeGeneratorProps } from '../types';
 import { QR_DEFAULT_SIZE, QR_ERROR_CORRECTION } from '../constants';
+import { createLogger } from '../services/logger-service';
+
+const logger = createLogger({ prefix: '[QrCodeGenerator]' });
 
 /**
  * Компонент генерации QR-кода
@@ -39,7 +42,7 @@ export function QrCodeGenerator({ value, size = QR_DEFAULT_SIZE }: QrCodeGenerat
           errorCorrectionLevel: QR_ERROR_CORRECTION,
         });
       } catch (error) {
-        console.error('Ошибка генерации QR-кода:', error);
+        logger.error('Ошибка генерации QR-кода', error);
       }
     };
 

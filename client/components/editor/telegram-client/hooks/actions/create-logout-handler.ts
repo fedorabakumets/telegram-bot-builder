@@ -5,7 +5,10 @@
  */
 
 import type { NotificationService } from '../../services';
+import { createLogger } from '../../services/logger-service';
 import { logout as logoutFn } from '../logout';
+
+const logger = createLogger({ prefix: '[TelegramAuth]' });
 
 /**
  * Параметры для создания обработчика выхода
@@ -43,7 +46,7 @@ export function createLogoutHandler(
       notifications.success('Выполнен выход', 'Вы успешно вышли из аккаунта');
       loadStatus();
     } catch (error) {
-      console.error('Ошибка выхода:', error);
+      logger.error('Ошибка выхода', error);
       notifications.error('Ошибка', 'Не удалось выполнить выход');
     } finally {
       setIsLoading(false);

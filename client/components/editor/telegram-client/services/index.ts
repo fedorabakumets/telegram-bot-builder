@@ -22,3 +22,9 @@ export {
   isValidCredentials,
 } from './validation-service';
 export type { ValidationErrors } from './validation-service';
+
+export {
+  LoggerService,
+  createLogger,
+} from './logger-service';
+export type { LoggerOptions, LogLevel } from './logger-service';

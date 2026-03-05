@@ -6,7 +6,10 @@
 
 import type { QrState } from '../../types';
 import { createTelegramAuthService } from '../../services/telegram-auth-service';
+import { createLogger } from '../../services/logger-service';
 import { QR_TOKEN_EXPIRY } from '../../constants';
+
+const logger = createLogger({ prefix: '[TelegramAuth]' });
 
 /**
  * Параметры для обновления QR-токена
@@ -68,7 +71,7 @@ export async function refreshQrToken(
 
     return { success: false };
   } catch (error) {
-    console.error('Ошибка обновления QR:', error);
+    logger.error('Ошибка обновления QR', error);
     return { success: false };
   }
 }

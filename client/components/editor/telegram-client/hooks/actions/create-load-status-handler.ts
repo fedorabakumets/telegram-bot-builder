@@ -6,7 +6,10 @@
 
 import type { AuthStatus } from '../../types';
 import type { NotificationService } from '../../services';
+import { createLogger } from '../../services/logger-service';
 import { loadAuthStatus } from '../load-auth-status';
+
+const logger = createLogger({ prefix: '[TelegramAuth]' });
 
 /**
  * Параметры для создания обработчика загрузки
@@ -40,7 +43,7 @@ export function createLoadStatusHandler(
       const status = await loadAuthStatus();
       setAuthStatus(status);
     } catch (error) {
-      console.error('Ошибка загрузки статуса:', error);
+      logger.error('Ошибка загрузки статуса', error);
       notifications.error('Ошибка', 'Не удалось загрузить статус авторизации');
     }
   };
