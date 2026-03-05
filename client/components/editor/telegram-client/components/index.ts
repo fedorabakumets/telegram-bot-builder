@@ -12,3 +12,5 @@ export { ApiCredentialsSaved } from './api-credentials-saved';
 export type { ApiCredentialsSavedProps } from './api-credentials-saved';
 export { AuthStatusPanel } from './auth-status-panel';
 export type { AuthStatusPanelProps } from './auth-status-panel';
+export { QrCodeGenerator } from './qr-code-generator';
+export type { QrCodeGeneratorProps } from './qr-code-generator';
