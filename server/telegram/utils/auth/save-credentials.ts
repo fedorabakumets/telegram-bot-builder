@@ -5,8 +5,8 @@
 
 import { userTelegramSettings } from '@shared/schema';
 import { eq } from 'drizzle-orm';
-import { db } from '../../database/db.js';
-import type { CredentialsResult } from '../../types/auth/credentials-result.js';
+import { db } from '../../../database/db.js';
+import type { CredentialsResult } from '../../../types/auth/credentials-result.js';
 
 /**
  * Сохраняет API credentials пользователя в базу данных
