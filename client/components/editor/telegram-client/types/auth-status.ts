@@ -14,8 +14,6 @@ export interface AuthStatus {
   isAuthenticated: boolean;
   /** Наличие API credentials (API ID и API Hash) */
   hasCredentials: boolean;
-  /** Номер телефона пользователя */
-  phoneNumber?: string;
   /** Уникальный ID пользователя Telegram */
   userId?: number | string;
   /** Имя пользователя (username) */

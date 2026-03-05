@@ -9,7 +9,7 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Phone, LogOut, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { LogOut, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import type { AuthStatus } from '../types';
 
 /**
@@ -67,8 +67,8 @@ export function AuthStatusPanel({
 
       {authStatus.isAuthenticated && (
         <div className="p-3 bg-muted rounded-lg space-y-1 text-sm">
-          <p><strong>Пользователь:</strong> {authStatus.username || authStatus.phoneNumber}</p>
-          {authStatus.userId && authStatus.userId !== 'default' && (
+          <p><strong>Пользователь:</strong> {authStatus.username || authStatus.userId}</p>
+          {authStatus.userId && (
             <p><strong>ID:</strong> {authStatus.userId}</p>
           )}
         </div>
@@ -77,7 +77,6 @@ export function AuthStatusPanel({
       <div className="flex gap-2">
         {!authStatus.isAuthenticated && (
           <Button onClick={onLogin} className="flex-1" size="sm">
-            <Phone className="h-4 w-4 mr-2" />
             Войти
           </Button>
         )}
