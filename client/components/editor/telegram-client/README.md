@@ -60,7 +60,6 @@ telegram-client/
 │
 ├── TelegramClientConfig.tsx        # Главный компонент настройки
 ├── telegram-auth.tsx               # Диалог авторизации
-├── test-config.ts                  # Тестовые данные
 ├── index.ts                        # Главный экспорт модуля
 └── README.md                       # Этот файл
 ```
