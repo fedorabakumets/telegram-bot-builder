@@ -40,7 +40,6 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
   // Сброс шага и состояния при открытии/закрытии
   useEffect(() => {
     if (!open) {
-      // Сбрасываем только когда диалог полностью закрывается
       resetQrState();
       setStep('start');
     }
@@ -50,15 +49,15 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
   useQrPolling({ step, token: qrState.token, refreshQrToken });
 
   // Переключение на шаг QR только когда URL действительно получен
+  // Добавлен step в зависимости для предотвращения гонки состояний
   useEffect(() => {
     if (qrState.url && step === 'start') {
       setStep('qr');
     }
-  }, [qrState.url]);
+  }, [qrState.url, step]);
 
   const handleGenerateQr = async () => {
     await generateQrCode();
-    // Шаг переключится автоматически через useEffect когда появится url
   };
 
   const handleBack = () => {

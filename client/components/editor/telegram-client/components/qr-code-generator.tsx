@@ -7,7 +7,7 @@
  * @module QrCodeGenerator
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import QRCode from 'qrcode';
 import type { QrCodeGeneratorProps } from '../types';
 import { QR_DEFAULT_SIZE, QR_ERROR_CORRECTION } from '../constants';
@@ -28,7 +28,7 @@ const logger = createLogger({ prefix: '[QrCodeGenerator]' });
  * <QrCodeGenerator value="tg://login?token=abc123" size={200} />
  * ```
  */
-export function QrCodeGenerator({ value, size = QR_DEFAULT_SIZE }: QrCodeGeneratorProps) {
+export const QrCodeGenerator = memo(function QrCodeGenerator({ value, size = QR_DEFAULT_SIZE }: QrCodeGeneratorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -61,4 +61,4 @@ export function QrCodeGenerator({ value, size = QR_DEFAULT_SIZE }: QrCodeGenerat
   }
 
   return <canvas ref={canvasRef} width={size} height={size} className="rounded" />;
-}
+}, (prev, next) => prev.value === next.value && prev.size === next.size);
