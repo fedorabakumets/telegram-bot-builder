@@ -39,6 +39,13 @@ telegram-client/
 │   ├── save-credentials.ts         # Сохранение credentials
 │   └── index.ts                    # Экспорт всех хуков
 │
+├── services/                       # Сервисы (бизнес-логика)
+│   ├── telegram-auth-service.ts    # API вызовы
+│   ├── notification-service.ts     # Уведомления
+│   ├── validation-service.ts       # Валидация данных
+│   ├── logger-service.ts           # Логирование
+│   └── index.ts                    # Экспорт сервисов
+│
 ├── components/                     # React компоненты
 │   ├── client-api-card-header.tsx  # Заголовок карточки
 │   ├── warning-alert.tsx           # Предупреждение о рисках
@@ -58,9 +65,11 @@ telegram-client/
 │   ├── qr-action-buttons.tsx       # Кнопки действий QR
 │   └── index.ts                    # Экспорт компонентов
 │
+├── constants.ts                    # Константы модуля
 ├── TelegramClientConfig.tsx        # Главный компонент настройки
 ├── telegram-auth.tsx               # Диалог авторизации
 ├── index.ts                        # Главный экспорт модуля
+├── EXAMPLES.md                     # Примеры использования
 └── README.md                       # Этот файл
 ```
 
@@ -92,6 +101,80 @@ import { TelegramAuth } from '@/components/editor/telegram-client';
   onSuccess={handleSuccess}
 />
 ```
+
+## 🧰 Сервисы
+
+Модуль предоставляет сервисы для переиспользования бизнес-логики.
+
+### TelegramAuthService
+
+Сервис для работы с Telegram Auth API.
+
+```typescript
+import { createTelegramAuthService } from '@/components/editor/telegram-client';
+
+const authService = createTelegramAuthService();
+
+// Получить статус авторизации
+const status = await authService.getStatus();
+
+// Сохранить API credentials
+await authService.saveCredentials({ apiId: '123', apiHash: 'abc...' });
+
+// Сгенерировать QR-код
+const qr = await authService.generateQr();
+
+// Проверить статус QR
+const result = await authService.checkQr(token);
+
+// Выйти из аккаунта
+await authService.logout();
+```
+
+### NotificationService
+
+Сервис уведомлений (абстракция над toast).
+
+```typescript
+import { createNotificationService } from '@/components/editor/telegram-client';
+
+const notifications = createNotificationService(toast);
+
+notifications.success('Успешно', 'Данные сохранены');
+notifications.error('Ошибка', 'Не удалось подключиться');
+notifications.info('Инфо', 'Обновление доступно');
+```
+
+### ValidationService
+
+Сервис валидации данных.
+
+```typescript
+import { validateApiCredentials, isValidCredentials } from '@/components/editor/telegram-client';
+
+const errors = validateApiCredentials({ apiId: '123', apiHash: 'invalid' });
+// { apiHash: 'API Hash должен быть 32-символьной hex строкой' }
+
+const isValid = isValidCredentials({ apiId: '12345678', apiHash: 'abc...' });
+// true
+```
+
+### LoggerService
+
+Сервис логирования с уровнями.
+
+```typescript
+import { createLogger } from '@/components/editor/telegram-client';
+
+const logger = createLogger({ prefix: '[MyComponent]' });
+
+logger.debug('Отладка', { data: 123 });
+logger.info('Информация');
+logger.warn('Предупреждение');
+logger.error('Ошибка', error);
+```
+
+📚 **Полные примеры** смотрите в файле [EXAMPLES.md](./EXAMPLES.md).
 
 ## 🔗 API Endpoints
 
