@@ -148,18 +148,6 @@ export function UserIdsDatabase() {
     }
   };
 
-  const handleExport = (ids: number[]) => {
-    const idsToExport = items
-      .filter(item => ids.includes(item.id))
-      .map(item => item.userId);
-    
-    downloadCSV(idsToExport, 'user-ids.csv');
-    toast({
-      title: 'Экспорт',
-      description: `Скачано ${idsToExport.length} ID`
-    });
-  };
-
   const handleExportAll = () => {
     const allIds = items.map(item => item.userId);
     downloadCSV(allIds, 'user-ids.csv');
@@ -255,7 +243,6 @@ export function UserIdsDatabase() {
         items={items}
         isLoading={isLoading}
         onDelete={handleDelete}
-        onExport={handleExport}
         onDeleteOne={(id) => handleDelete([id])}
       />
 

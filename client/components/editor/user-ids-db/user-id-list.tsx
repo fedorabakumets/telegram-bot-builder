@@ -1,12 +1,11 @@
 /**
  * @fileoverview Список ID пользователей с таблицей
- * Отображает список ID с возможностью выбора и удаления
+ * Отображает список ID с возможностью удаления
  */
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Trash2, Search } from 'lucide-react';
 
 /**
@@ -26,8 +25,6 @@ interface UserIdListProps {
   isLoading?: boolean;
   /** Обработчик удаления */
   onDelete: (ids: number[]) => void;
-  /** Обработчик экспорта */
-  onExport: (ids: number[]) => void;
   /** Обработчик удаления одного ID */
   onDeleteOne?: (id: number) => void;
 }
@@ -39,44 +36,13 @@ export function UserIdList({
   items,
   isLoading = false,
   onDelete,
-  onExport,
   onDeleteOne,
 }: UserIdListProps) {
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredItems = items.filter((item) =>
     item.userId.includes(searchQuery)
   );
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(filteredItems.map((item) => item.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelectItem = (id: number, checked: boolean) => {
-    if (checked) {
-      setSelectedIds([...selectedIds, id]);
-    } else {
-      setSelectedIds(selectedIds.filter((sid) => sid !== id));
-    }
-  };
-
-  const handleDeleteSelected = () => {
-    if (selectedIds.length > 0) {
-      onDelete(selectedIds);
-      setSelectedIds([]);
-    }
-  };
-
-  const handleExportSelected = () => {
-    if (selectedIds.length > 0) {
-      onExport(selectedIds);
-    }
-  };
 
   if (isLoading) {
     return <div className="text-center py-8">Загрузка...</div>;
@@ -84,7 +50,7 @@ export function UserIdList({
 
   return (
     <div className="space-y-4">
-      {/* Поиск и действия */}
+      {/* Поиск */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -95,25 +61,6 @@ export function UserIdList({
             className="pl-10"
           />
         </div>
-        {selectedIds.length > 0 && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportSelected}
-            >
-              Экспорт ({selectedIds})
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeleteSelected}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Удалить ({selectedIds})
-            </Button>
-          </div>
-        )}
       </div>
 
       {/* Таблица */}
@@ -121,15 +68,6 @@ export function UserIdList({
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
-              <th className="p-3 text-left w-10">
-                <Checkbox
-                  checked={
-                    selectedIds.length === filteredItems.length &&
-                    filteredItems.length > 0
-                  }
-                  onCheckedChange={handleSelectAll}
-                />
-              </th>
               <th className="p-3 text-left font-semibold">ID пользователя</th>
               <th className="p-3 text-left font-semibold">Дата добавления</th>
               <th className="p-3 text-left font-semibold">Источник</th>
@@ -142,14 +80,6 @@ export function UserIdList({
                 key={item.id}
                 className="border-t hover:bg-muted/30 transition-colors"
               >
-                <td className="p-3 w-10">
-                  <Checkbox
-                    checked={selectedIds.includes(item.id)}
-                    onCheckedChange={(checked) =>
-                      handleSelectItem(item.id, !!checked)
-                    }
-                  />
-                </td>
                 <td className="p-3 font-mono text-sm">{item.userId}</td>
                 <td className="p-3 text-sm text-muted-foreground">
                   {new Date(item.createdAt).toLocaleString('ru-RU')}
