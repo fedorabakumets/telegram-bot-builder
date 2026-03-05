@@ -35,6 +35,7 @@ export function useCountdown({ initialValue, isActive }: UseCountdownParams): nu
   useEffect(() => {
     if (!isActive) return;
 
+    // Сбрасываем countdown только при запуске
     setCountdown(initialValue);
 
     const interval = setInterval(() => {
@@ -45,7 +46,7 @@ export function useCountdown({ initialValue, isActive }: UseCountdownParams): nu
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [initialValue, isActive]);
+  }, [isActive, initialValue]);
 
   return countdown;
 }

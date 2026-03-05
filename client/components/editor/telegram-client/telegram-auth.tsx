@@ -39,19 +39,27 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
 
   // Сброс шага и состояния при открытии/закрытии
   useEffect(() => {
-    if (open) {
-      setStep('start');
-    } else {
+    if (!open) {
+      // Сбрасываем только когда диалог полностью закрывается
       resetQrState();
+      setStep('start');
     }
   }, [open, resetQrState]);
 
   // Автообновление QR-токена
   useQrPolling({ step, token: qrState.token, refreshQrToken });
 
+  // Переключение на шаг QR только когда URL действительно получен
+  useEffect(() => {
+    if (qrState.url && step === 'start') {
+      console.log('🔄 Переключение на шаг QR, url:', qrState.url);
+      setStep('qr');
+    }
+  }, [qrState.url]);
+
   const handleGenerateQr = async () => {
     await generateQrCode();
-    setStep('qr');
+    // Шаг переключится автоматически через useEffect когда появится url
   };
 
   const handleBack = () => {
