@@ -41,7 +41,7 @@ export async function importQRToken(
 
   // QR отсканирован успешно
   if (validation.isSuccess) {
-    const sessionString = client.session.save();
+    const sessionString = client.session.save() || '';
     console.log(formatScanSuccessMessage(sessionString));
 
     return {

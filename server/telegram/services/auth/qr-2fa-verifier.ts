@@ -4,7 +4,6 @@
  */
 
 import { TelegramClient } from 'telegram';
-import type { VerifyPasswordResult } from '../../types/auth/verify-password-result.js';
 import { verifyPassword } from './2fa-service.js';
 import {
   QR_CHECKING_2FA,

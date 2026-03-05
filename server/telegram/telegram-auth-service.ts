@@ -13,8 +13,6 @@ import type { TelegramClient } from 'telegram';
 import type { VerifyPasswordResult } from './types/auth/verify-password-result.js';
 import type { CredentialsResult } from './types/auth/credentials-result.js';
 import type { UserCredentials } from './types/auth/user-credentials.js';
-import type { GenerateQRTokenResult } from './types/auth/generate-qr-token-result.js';
-import type { CheckQRStatusResult } from './types/auth/check-qr-status-result.js';
 import { saveCredentials, loadCredentials } from './utils/auth/index.js';
 import { verifyPassword, generateQRToken, checkQRStatus, generateQR } from './services/auth/index.js';
 
