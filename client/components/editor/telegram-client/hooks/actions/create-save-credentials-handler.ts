@@ -5,8 +5,8 @@
  */
 
 import { useToast } from '@/hooks/use-toast';
-import type { ApiCredentials } from '../types';
-import { saveCredentials as saveCredentialsFn } from './save-credentials';
+import type { ApiCredentials } from '../../types';
+import { saveCredentials as saveCredentialsFn } from '../save-credentials';
 
 /**
  * Параметры для создания обработчика сохранения

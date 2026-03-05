@@ -5,7 +5,7 @@
  */
 
 import { useToast } from '@/hooks/use-toast';
-import { logout as logoutFn } from './logout';
+import { logout as logoutFn } from '../logout';
 
 /**
  * Параметры для создания обработчика выхода

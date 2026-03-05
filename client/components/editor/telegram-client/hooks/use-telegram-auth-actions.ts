@@ -59,7 +59,7 @@ export function useTelegramAuthActions(
   params: UseTelegramAuthActionsParams
 ): UseTelegramAuthActionsReturn {
   const { setAuthStatus, setApiId, setApiHash, setIsLoading } = params;
-  const { toast } = useToast();
+  useToast();
 
   const loadStatus = createLoadStatusHandler({ setAuthStatus });
   const loadStatusWithToast = async () => {

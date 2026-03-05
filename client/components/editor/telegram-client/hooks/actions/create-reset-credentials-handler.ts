@@ -5,7 +5,7 @@
  */
 
 import { useToast } from '@/hooks/use-toast';
-import { resetCredentials as resetCredentialsFn } from './reset-credentials';
+import { resetCredentials as resetCredentialsFn } from '../reset-credentials';
 
 /**
  * Параметры для создания обработчика сброса

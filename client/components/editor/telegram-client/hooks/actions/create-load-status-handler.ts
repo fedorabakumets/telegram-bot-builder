@@ -4,8 +4,8 @@
  * @module createLoadStatusHandler
  */
 
-import type { AuthStatus } from '../types';
-import { loadAuthStatus } from './load-auth-status';
+import type { AuthStatus } from '../../types';
+import { loadAuthStatus } from '../load-auth-status';
 
 /**
  * Параметры для создания обработчика загрузки
