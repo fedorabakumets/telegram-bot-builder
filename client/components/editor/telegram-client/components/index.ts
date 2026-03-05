@@ -4,6 +4,7 @@
  * @module components
  */
 
+export { ClientApiCardHeader } from './client-api-card-header';
 export { WarningAlert } from './warning-alert';
 export { ApiCredentialsForm } from './api-credentials-form';
 export type { ApiCredentialsFormProps } from './api-credentials-form';

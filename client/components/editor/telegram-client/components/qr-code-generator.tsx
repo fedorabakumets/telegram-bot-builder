@@ -9,7 +9,7 @@
 
 import { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
-import type { QrCodeGeneratorProps } from './types';
+import type { QrCodeGeneratorProps } from '../types';
 
 /**
  * Компонент генерации QR-кода

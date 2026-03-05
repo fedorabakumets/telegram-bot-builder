@@ -4,9 +4,7 @@
  * @module telegram-client
  */
 
-export { TelegramClientConfig } from './TelegramClientConfig';
-export { GroupMembersClientPanel } from './GroupMembersClientPanel'
-
+export { TelegramClientConfig } from './TelegramClientConfig'
 // Хуки
 export { useTelegramAuth } from './hooks';
 export type { UseTelegramAuthReturn } from './hooks';

@@ -6,11 +6,11 @@
  * @module TelegramClientConfig
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { TelegramAuth } from './telegram-auth';
 import { useTelegramAuth } from './hooks';
 import {
+  ClientApiCardHeader,
   ApiCredentialsForm,
   ApiCredentialsSaved,
   AuthStatusPanel,
@@ -46,15 +46,7 @@ export function TelegramClientConfig() {
   return (
     <>
       <Card className="border-purple-200 dark:border-purple-800">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-purple-600" />
-            <CardTitle className="text-lg">Telegram Client API (Userbot)</CardTitle>
-          </div>
-          <CardDescription>
-            Используйте личный аккаунт Telegram для расширенных возможностей
-          </CardDescription>
-        </CardHeader>
+        <ClientApiCardHeader />
 
         <CardContent className="space-y-6">
           {!authStatus.hasCredentials && (

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { CheckCircle2, Loader2, QrCode, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { QrCodeGenerator } from './qr-code-generator';
+import { QrCodeGenerator } from './components/qr-code-generator';
 import type { TelegramAuthProps } from './types';
 
 /**
