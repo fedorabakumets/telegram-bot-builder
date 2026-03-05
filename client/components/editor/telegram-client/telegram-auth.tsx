@@ -47,6 +47,13 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
     setCountdown(qrState.countdown);
   }, [qrState.countdown]);
 
+  // Переключение на шаг QR при получении URL
+  useEffect(() => {
+    if (qrState.url && step === 'phone') {
+      setStep('qr');
+    }
+  }, [qrState.url, step]);
+
   const handleBack = () => {
     setStep('phone');
   };
