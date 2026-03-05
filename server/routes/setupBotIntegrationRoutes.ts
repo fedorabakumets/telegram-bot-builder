@@ -10,7 +10,7 @@
 
 import type { Express } from "express";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
-import { getMessagesHandler, sendMessageHandler, saveMessageHandler, deleteMessagesHandler } from "./botIntegration/handlers/messages";
+import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler } from "./botIntegration/handlers/messages";
 import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler } from "./botIntegration/handlers/groups";
 import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, updateBotShortDescriptionHandler } from "./botIntegration/handlers/botInfo";
@@ -78,6 +78,15 @@ export function setupBotIntegrationRoutes(app: Express) {
      * @route POST /api/projects/:projectId/users/:userId/send-message
      */
     app.post("/api/projects/:projectId/users/:userId/send-message", sendMessageHandler);
+
+    /**
+     * Обработчик маршрута POST /api/projects/:projectId/users/:userId/send-node-message
+     *
+     * Отправляет сообщение от узла проекта с поддержкой медиа, кнопок и переменных
+     *
+     * @route POST /api/projects/:projectId/users/:userId/send-node-message
+     */
+    app.post("/api/projects/:projectId/users/:userId/send-node-message", sendNodeMessageHandler);
 
     /**
      * Обработчик маршрута POST /api/projects/:projectId/messages

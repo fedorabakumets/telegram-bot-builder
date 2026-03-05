@@ -3,6 +3,7 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на отправку сообщения пользователю через Telegram Bot API.
+ * Поддерживает замену переменных {user_name}, {user_id} и др.
  *
  * @module botIntegration/handlers/messages/sendMessageHandler
  */
@@ -14,6 +15,7 @@ import {
     analyzeTelegramError,
     getErrorStatusCode
 } from "../../../../utils/telegram-error-handler";
+import { replaceVariablesInText } from "./replace-variables";
 
 /**
  * Обрабатывает запрос на отправку сообщения
@@ -44,6 +46,23 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
 
         const { messageText } = validationResult.data;
 
+        // Получаем данные пользователя для замены переменных
+        const user = await storage.getUserBotDataByProjectAndUser(projectId, userId);
+        const telegramUser = {
+            id: Number(userId),
+            firstName: user?.firstName || undefined,
+            lastName: user?.lastName || undefined,
+            username: user?.userName || undefined,
+        };
+
+        // Заменяем переменные в тексте
+        const userData = user?.userData as Record<string, unknown> || {};
+        const textWithVariables = replaceVariablesInText({
+          text: messageText,
+          userData,
+          telegramUser,
+        });
+
         const defaultToken = await storage.getDefaultBotToken(projectId);
         if (!defaultToken) {
             res.status(400).json({ message: "Токен бота не найден для этого проекта" });
@@ -58,7 +77,7 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
             },
             body: JSON.stringify({
                 chat_id: userId,
-                text: messageText.trim(),
+                text: textWithVariables.trim(),
                 parse_mode: 'HTML'
             })
         });
@@ -77,7 +96,7 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
             projectId,
             userId,
             messageType: "bot",
-            messageText: messageText.trim(),
+            messageText: textWithVariables.trim(),
             messageData: { sentFromAdmin: true }
         });
 

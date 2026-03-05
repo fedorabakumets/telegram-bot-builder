@@ -1,12 +1,11 @@
 /**
  * @fileoverview Хук для отправки данных узла пользователю
- * @description Извлекает контент из узла и отправляет через Telegram API
+ * @description Отправляет сообщение от узла с поддержкой медиа, кнопок, замены переменных и форматирования
  */
 
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import type { Node } from '@shared/schema';
 
 /**
  * Данные для отправки узла
@@ -16,6 +15,8 @@ export interface SendNodeData {
   nodeId: string;
   /** ID пользователя */
   userId: number;
+  /** Дополнительные данные пользователя для замены переменных */
+  userData?: Record<string, unknown>;
 }
 
 /**
@@ -31,23 +32,11 @@ export function useSendNode(
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ nodeId, userId }: SendNodeData) => {
-      // Получаем данные узла
-      const nodeResponse = await fetch(`/api/projects/${projectId}/nodes/${nodeId}`);
-      if (!nodeResponse.ok) {
-        throw new Error('Не удалось получить данные узла');
-      }
-      const node: Node = await nodeResponse.json();
-
-      // Извлекаем текст сообщения из данных узла
-      const messageText = node.data.messageText || node.data.command || '';
-      if (!messageText) {
-        throw new Error('Узел не содержит текста для отправки');
-      }
-
-      // Отправляем сообщение пользователю
-      return apiRequest('POST', `/api/projects/${projectId}/users/${userId}/send-message`, {
-        messageText,
+    mutationFn: async ({ nodeId, userId, userData }: SendNodeData) => {
+      // Отправляем запрос на отправку узла с поддержкой медиа и кнопок
+      return apiRequest('POST', `/api/projects/${projectId}/users/${userId}/send-node-message`, {
+        nodeId,
+        userData,
       });
     },
     onSuccess: () => {

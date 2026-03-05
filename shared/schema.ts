@@ -1272,6 +1272,10 @@ export interface ComponentDefinition {
 // Schema for sending message to user from admin panel
 export const sendMessageSchema = z.object({
   messageText: z.string().min(1, "Message text is required").max(4096, "Message text is too long"),
+  /** ID узла для отправки (если нужно отправить сообщение от узла с медиа/кнопками) */
+  nodeId: z.string().optional(),
+  /** Данные пользователя для замены переменных */
+  userData: z.record(z.unknown()).optional(),
 });
 
 export type SendMessage = z.infer<typeof sendMessageSchema>;
