@@ -6,7 +6,7 @@
 
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import type { QrState } from '../types';
+import type { QrState } from '../../types';
 
 /**
  * Параметры для генерации QR-кода
