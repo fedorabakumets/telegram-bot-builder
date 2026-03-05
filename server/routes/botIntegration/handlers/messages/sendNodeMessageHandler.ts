@@ -51,15 +51,22 @@ export async function sendNodeMessageHandler(req: Request, res: Response): Promi
 
     // Получаем данные пользователя
     const user = await storage.getUserBotDataByProjectAndUser(projectId, userId);
+    
+    // user_name может быть в userData (из вопросов) или в userName (из Telegram)
+    const userDataFromDb = user?.userData as Record<string, unknown> || {};
+    const userNameFromData = userDataFromDb.user_name;
+    
     const telegramUser = {
       id: Number(userId),
       firstName: user?.firstName || undefined,
       lastName: user?.lastName || undefined,
       username: user?.userName || undefined,
+      // Передаём user_name отдельно для приоритета
+      user_name_from_db: userNameFromData ? String(userNameFromData) : undefined,
     };
 
     // Объединяем userData
-    const userData = { ...(user?.userData as Record<string, unknown> || {}), ...(customUserData || {}) };
+    const userData = { ...userDataFromDb, ...(customUserData || {}) };
 
     // Получаем токен
     const defaultToken = await storage.getDefaultBotToken(projectId);

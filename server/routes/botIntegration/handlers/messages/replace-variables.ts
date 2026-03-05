@@ -17,7 +17,7 @@ export interface ReplaceVariablesParams {
   /** Данные пользователя из БД */
   userData?: Record<string, unknown>;
   /** Данные Telegram пользователя */
-  telegramUser?: Partial<UserBotData>;
+  telegramUser?: Partial<UserBotData> & { user_name_from_db?: string };
 }
 
 /**
@@ -59,15 +59,17 @@ export async function replaceVariablesInText(
     username: telegramUser.userName || "",
   };
 
-  // Базовое имя: firstName из Telegram
+  // Базовое имя: приоритет user_name из БД (из вопросов/форм) > firstName из Telegram > username из Telegram
   const firstName = telegramUser.firstName;
   const userName = telegramUser.userName;
+  const userNameFromDb = (telegramUser as Partial<UserBotData> & { user_name_from_db?: string }).user_name_from_db;
   
-  // Проверяем userData на наличие user_name (из БД)
-  if (userData.user_name) {
+  // Определяем user_name с приоритетом
+  if (userNameFromDb) {
+    variables.user_name = userNameFromDb;
+  } else if (userData.user_name) {
     variables.user_name = extractVariableValue(userData.user_name);
   } else {
-    // Fallback на firstName или username из Telegram
     variables.user_name = firstName || userName || `user_${telegramUser.id}`;
   }
 
