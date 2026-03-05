@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { QrState } from '../types';
 import { generateQrCode, checkQrStatus, refreshQrToken } from './qr-actions';
 import { QR_TOKEN_EXPIRY } from '../constants';
+import { createNotificationService } from '../services';
 
 /**
  * Результат работы хука useQrAuth
@@ -51,9 +52,10 @@ export function useQrAuth(
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const notifications = createNotificationService(toast);
 
   const handleGenerateQrCode = async (password?: string) => {
-    await generateQrCode({ setQrState, setIsLoading, toast, password });
+    await generateQrCode({ setQrState, setIsLoading, notifications, password });
   };
 
   const handleCheckQrStatus = async () => {
@@ -61,7 +63,7 @@ export function useQrAuth(
       token: qrState.token,
       password: qrState.password,
       setIsLoading,
-      toast,
+      notifications,
       onSuccess,
       onOpenChange,
       resetQrState,

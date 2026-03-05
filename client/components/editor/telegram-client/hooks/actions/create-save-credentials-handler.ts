@@ -4,8 +4,9 @@
  * @module createSaveCredentialsHandler
  */
 
-import { useToast } from '@/hooks/use-toast';
 import type { ApiCredentials } from '../../types';
+import type { NotificationService } from '../../services';
+import { validateApiCredentials } from '../../services/validation-service';
 import { saveCredentials as saveCredentialsFn } from '../save-credentials';
 
 /**
@@ -16,6 +17,8 @@ export interface CreateSaveCredentialsHandlerParams {
   setIsLoading: (value: boolean) => void;
   /** Функция загрузки статуса (для обновления) */
   loadStatus: () => Promise<void>;
+  /** Сервис уведомлений */
+  notifications: NotificationService;
 }
 
 /**
@@ -28,7 +31,8 @@ export interface CreateSaveCredentialsHandlerParams {
  * ```tsx
  * const saveCredentials = createSaveCredentialsHandler({
  *   setIsLoading,
- *   loadStatus
+ *   loadStatus,
+ *   notifications
  * });
  * await saveCredentials({ apiId, apiHash });
  * ```
@@ -36,30 +40,24 @@ export interface CreateSaveCredentialsHandlerParams {
 export function createSaveCredentialsHandler(
   params: CreateSaveCredentialsHandlerParams
 ): (credentials: ApiCredentials) => Promise<void> {
-  const { setIsLoading, loadStatus } = params;
-  const { toast } = useToast();
+  const { setIsLoading, loadStatus, notifications } = params;
 
   return async (credentials: ApiCredentials) => {
-    if (!credentials.apiId.trim() || !credentials.apiHash.trim()) {
-      toast({
-        title: 'Ошибка',
-        description: 'Заполните API ID и API Hash',
-        variant: 'destructive',
-      });
+    const errors = validateApiCredentials(credentials);
+    if (Object.keys(errors).length > 0) {
+      const message = Object.values(errors).join(', ');
+      notifications.error('Ошибка валидации', message);
       return;
     }
 
     setIsLoading(true);
     try {
-      const result = await saveCredentialsFn(credentials);
-      toast({ title: 'Успешно', description: result.message });
+      await saveCredentialsFn(credentials);
+      notifications.success('Успешно', 'API credentials сохранены');
       loadStatus();
     } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить credentials',
-        variant: 'destructive',
-      });
+      console.error('Ошибка сохранения credentials:', error);
+      notifications.error('Ошибка', 'Не удалось сохранить credentials');
     } finally {
       setIsLoading(false);
     }

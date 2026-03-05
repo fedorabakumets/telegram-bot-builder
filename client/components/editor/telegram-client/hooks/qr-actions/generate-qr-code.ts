@@ -4,8 +4,10 @@
  * @module generateQrCode
  */
 
-import { apiRequest } from '@/lib/queryClient';
 import type { QrState } from '../../types';
+import type { NotificationService } from '../../services';
+import { createTelegramAuthService } from '../../services/telegram-auth-service';
+import { QR_TOKEN_EXPIRY } from '../../constants';
 
 /**
  * Параметры для генерации QR-кода
@@ -15,8 +17,8 @@ export interface GenerateQrCodeParams {
   setQrState: (state: QrState) => void;
   /** Установить статус загрузки */
   setIsLoading: (value: boolean) => void;
-  /** Функция toast для уведомлений */
-  toast: (options: { title: string; description?: string; variant?: 'default' | 'destructive' }) => void;
+  /** Сервис уведомлений */
+  notifications: NotificationService;
   /** Пароль 2FA (опционально) */
   password?: string;
 }
@@ -40,20 +42,16 @@ export interface GenerateQrCodeResult {
 export async function generateQrCode(
   params: GenerateQrCodeParams
 ): Promise<GenerateQrCodeResult> {
-  const { setQrState, setIsLoading, toast, password } = params;
+  const { setQrState, setIsLoading, notifications, password } = params;
+  const authService = createTelegramAuthService();
 
   setIsLoading(true);
   try {
-    const response = await apiRequest('POST', '/api/telegram-auth/qr-generate', {
-      password: password || '',
-    });
+    const response = await authService.generateQr(password);
 
     if (response.success) {
       if (response.requiresPassword) {
-        toast({
-          title: 'Требуется 2FA',
-          description: 'Введите пароль двухфакторной аутентификации',
-        });
+        notifications.info('Требуется 2FA', 'Введите пароль двухфакторной аутентификации');
         return { success: true, requiresPassword: true };
       }
 
@@ -62,28 +60,18 @@ export async function generateQrCode(
           token: response.token,
           url: response.qrUrl,
           password: password || '',
-          countdown: response.expires || 30,
+          countdown: response.expires ?? QR_TOKEN_EXPIRY,
         });
-        toast({
-          title: 'QR-код сгенерирован',
-          description: 'Отсканируйте QR-код в приложении Telegram',
-        });
+        notifications.success('QR-код сгенерирован', 'Отсканируйте QR-код в приложении Telegram');
       }
     } else {
-      toast({
-        title: 'Ошибка',
-        description: response.error || 'Не удалось сгенерировать QR-код',
-        variant: 'destructive',
-      });
+      notifications.error('Ошибка', response.error ?? 'Не удалось сгенерировать QR-код');
     }
 
     return { success: response.success, requiresPassword: false };
-  } catch (error: any) {
-    toast({
-      title: 'Ошибка',
-      description: error.message || 'Не удалось сгенерировать QR-код',
-      variant: 'destructive',
-    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Не удалось сгенерировать QR-код';
+    notifications.error('Ошибка', message);
     return { success: false };
   } finally {
     setIsLoading(false);

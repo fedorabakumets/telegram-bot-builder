@@ -4,7 +4,7 @@
  * @module createLogoutHandler
  */
 
-import { useToast } from '@/hooks/use-toast';
+import type { NotificationService } from '../../services';
 import { logout as logoutFn } from '../logout';
 
 /**
@@ -15,6 +15,8 @@ export interface CreateLogoutHandlerParams {
   setIsLoading: (value: boolean) => void;
   /** Функция загрузки статуса (для обновления) */
   loadStatus: () => Promise<void>;
+  /** Сервис уведомлений */
+  notifications: NotificationService;
 }
 
 /**
@@ -25,28 +27,24 @@ export interface CreateLogoutHandlerParams {
  *
  * @example
  * ```tsx
- * const logout = createLogoutHandler({ setIsLoading, loadStatus });
+ * const logout = createLogoutHandler({ setIsLoading, loadStatus, notifications });
  * await logout();
  * ```
  */
 export function createLogoutHandler(
   params: CreateLogoutHandlerParams
 ): () => Promise<void> {
-  const { setIsLoading, loadStatus } = params;
-  const { toast } = useToast();
+  const { setIsLoading, loadStatus, notifications } = params;
 
   return async () => {
     setIsLoading(true);
     try {
-      const result = await logoutFn();
-      toast({ title: 'Выполнен выход', description: result.message });
+      await logoutFn();
+      notifications.success('Выполнен выход', 'Вы успешно вышли из аккаунта');
       loadStatus();
     } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось выполнить выход',
-        variant: 'destructive',
-      });
+      console.error('Ошибка выхода:', error);
+      notifications.error('Ошибка', 'Не удалось выполнить выход');
     } finally {
       setIsLoading(false);
     }

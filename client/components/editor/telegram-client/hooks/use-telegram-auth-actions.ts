@@ -14,6 +14,7 @@ import {
   createLogoutHandler,
   createResetCredentialsHandler,
 } from './actions';
+import { createNotificationService } from '../services';
 
 /**
  * Параметры для создания действий авторизации
@@ -59,9 +60,10 @@ export function useTelegramAuthActions(
   params: UseTelegramAuthActionsParams
 ): UseTelegramAuthActionsReturn {
   const { setAuthStatus, setApiId, setApiHash, setIsLoading } = params;
-  useToast();
+  const { toast } = useToast();
+  const notifications = createNotificationService(toast);
 
-  const loadStatus = createLoadStatusHandler({ setAuthStatus });
+  const loadStatus = createLoadStatusHandler({ setAuthStatus, notifications });
   const loadStatusWithToast = async () => {
     await loadStatus();
   };
@@ -69,11 +71,13 @@ export function useTelegramAuthActions(
   const saveCredentials = createSaveCredentialsHandler({
     setIsLoading,
     loadStatus: loadStatusWithToast,
+    notifications,
   });
 
   const logout = createLogoutHandler({
     setIsLoading,
     loadStatus: loadStatusWithToast,
+    notifications,
   });
 
   const resetCredentials = createResetCredentialsHandler({
@@ -81,6 +85,7 @@ export function useTelegramAuthActions(
     setApiId,
     setApiHash,
     loadStatus: loadStatusWithToast,
+    notifications,
   });
 
   return {

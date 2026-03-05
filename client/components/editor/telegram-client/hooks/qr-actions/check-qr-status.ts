@@ -4,7 +4,8 @@
  * @module checkQrStatus
  */
 
-import { apiRequest } from '@/lib/queryClient';
+import type { NotificationService } from '../../services';
+import { createTelegramAuthService } from '../../services/telegram-auth-service';
 
 /**
  * Параметры для проверки статуса QR
@@ -16,8 +17,8 @@ export interface CheckQrStatusParams {
   password?: string;
   /** Установить статус загрузки */
   setIsLoading: (value: boolean) => void;
-  /** Функция toast для уведомлений */
-  toast: (options: { title: string; description?: string; variant?: 'default' | 'destructive' }) => void;
+  /** Сервис уведомлений */
+  notifications: NotificationService;
   /** Коллбэк успешной авторизации */
   onSuccess: () => void;
   /** Управление состоянием диалога */
@@ -49,26 +50,21 @@ export async function checkQrStatus(
     token,
     password,
     setIsLoading,
-    toast,
+    notifications,
     onSuccess,
     onOpenChange,
     resetQrState,
   } = params;
+  const authService = createTelegramAuthService();
 
   if (!token) return { success: false };
 
   setIsLoading(true);
   try {
-    const response = await apiRequest('POST', '/api/telegram-auth/qr-check', {
-      token,
-      password: password || undefined,
-    });
+    const response = await authService.checkQr(token, password);
 
     if (response.success && response.isAuthenticated) {
-      toast({
-        title: 'Авторизация успешна',
-        description: 'Telegram Client API подключён',
-      });
+      notifications.success('Авторизация успешна', 'Telegram Client API подключён');
       resetQrState();
       onSuccess();
       onOpenChange(false);
@@ -76,12 +72,9 @@ export async function checkQrStatus(
     }
 
     return { success: response.success };
-  } catch (error: any) {
-    toast({
-      title: 'Ошибка',
-      description: error.message || 'Не удалось проверить QR',
-      variant: 'destructive',
-    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Не удалось проверить QR';
+    notifications.error('Ошибка', message);
     return { success: false };
   } finally {
     setIsLoading(false);

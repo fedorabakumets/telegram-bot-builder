@@ -4,7 +4,7 @@
  * @module createResetCredentialsHandler
  */
 
-import { useToast } from '@/hooks/use-toast';
+import type { NotificationService } from '../../services';
 import { resetCredentials as resetCredentialsFn } from '../reset-credentials';
 
 /**
@@ -19,6 +19,8 @@ export interface CreateResetCredentialsHandlerParams {
   setApiHash: (value: string) => void;
   /** Функция загрузки статуса (для обновления) */
   loadStatus: () => Promise<void>;
+  /** Сервис уведомлений */
+  notifications: NotificationService;
 }
 
 /**
@@ -33,7 +35,8 @@ export interface CreateResetCredentialsHandlerParams {
  *   setIsLoading,
  *   setApiId,
  *   setApiHash,
- *   loadStatus
+ *   loadStatus,
+ *   notifications
  * });
  * await resetCredentials();
  * ```
@@ -41,23 +44,19 @@ export interface CreateResetCredentialsHandlerParams {
 export function createResetCredentialsHandler(
   params: CreateResetCredentialsHandlerParams
 ): () => Promise<void> {
-  const { setIsLoading, setApiId, setApiHash, loadStatus } = params;
-  const { toast } = useToast();
+  const { setIsLoading, setApiId, setApiHash, loadStatus, notifications } = params;
 
   return async () => {
     setIsLoading(true);
     try {
-      const result = await resetCredentialsFn();
-      toast({ title: 'Сброшено', description: result.message });
+      await resetCredentialsFn();
       setApiId('');
       setApiHash('');
+      notifications.info('Сброшено', 'API credentials удалены. Введите новые данные');
       loadStatus();
     } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось сбросить credentials',
-        variant: 'destructive',
-      });
+      console.error('Ошибка сброса credentials:', error);
+      notifications.error('Ошибка', 'Не удалось сбросить credentials');
     } finally {
       setIsLoading(false);
     }

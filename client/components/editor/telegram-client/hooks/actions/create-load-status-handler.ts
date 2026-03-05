@@ -5,6 +5,7 @@
  */
 
 import type { AuthStatus } from '../../types';
+import type { NotificationService } from '../../services';
 import { loadAuthStatus } from '../load-auth-status';
 
 /**
@@ -13,6 +14,8 @@ import { loadAuthStatus } from '../load-auth-status';
 export interface CreateLoadStatusHandlerParams {
   /** Установить статус авторизации */
   setAuthStatus: (status: AuthStatus) => void;
+  /** Сервис уведомлений */
+  notifications: NotificationService;
 }
 
 /**
@@ -23,14 +26,14 @@ export interface CreateLoadStatusHandlerParams {
  *
  * @example
  * ```tsx
- * const loadStatus = createLoadStatusHandler({ setAuthStatus });
+ * const loadStatus = createLoadStatusHandler({ setAuthStatus, notifications });
  * await loadStatus();
  * ```
  */
 export function createLoadStatusHandler(
   params: CreateLoadStatusHandlerParams
 ): () => Promise<void> {
-  const { setAuthStatus } = params;
+  const { setAuthStatus, notifications } = params;
 
   return async () => {
     try {
@@ -38,6 +41,7 @@ export function createLoadStatusHandler(
       setAuthStatus(status);
     } catch (error) {
       console.error('Ошибка загрузки статуса:', error);
+      notifications.error('Ошибка', 'Не удалось загрузить статус авторизации');
     }
   };
 }

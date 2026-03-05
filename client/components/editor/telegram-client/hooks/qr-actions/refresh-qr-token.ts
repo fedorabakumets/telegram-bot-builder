@@ -4,8 +4,9 @@
  * @module refreshQrToken
  */
 
-import { apiRequest } from '@/lib/queryClient';
-import type { QrState } from '../types';
+import type { QrState } from '../../types';
+import { createTelegramAuthService } from '../../services/telegram-auth-service';
+import { QR_TOKEN_EXPIRY } from '../../constants';
 
 /**
  * Параметры для обновления QR-токена
@@ -44,16 +45,17 @@ export async function refreshQrToken(
   params: RefreshQrTokenParams
 ): Promise<RefreshQrTokenResult> {
   const { setQrState } = params;
+  const authService = createTelegramAuthService();
 
   try {
-    const response = await apiRequest('POST', '/api/telegram-auth/qr-refresh', {});
+    const response = await authService.refreshQr();
 
     if (response.success && response.token && response.qrUrl) {
       setQrState((prev) => ({
         ...prev,
         token: response.token,
         url: response.qrUrl,
-        countdown: response.expires || 30,
+        countdown: response.expires ?? QR_TOKEN_EXPIRY,
       }));
 
       return {
