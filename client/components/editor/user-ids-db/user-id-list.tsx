@@ -121,7 +121,7 @@ export function UserIdList({
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
-              <th className="p-3 text-left">
+              <th className="p-3 text-left w-10">
                 <Checkbox
                   checked={
                     selectedIds.length === filteredItems.length &&
@@ -142,7 +142,7 @@ export function UserIdList({
                 key={item.id}
                 className="border-t hover:bg-muted/30 transition-colors"
               >
-                <td className="p-3">
+                <td className="p-3 w-10">
                   <Checkbox
                     checked={selectedIds.includes(item.id)}
                     onCheckedChange={(checked) =>
