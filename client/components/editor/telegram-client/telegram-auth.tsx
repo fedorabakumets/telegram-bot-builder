@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useQrAuth } from './hooks/use-qr-auth';
 import { useQrPolling } from './hooks/use-qr-polling';
-import { PhoneStepView, QrStepView, QrPasswordStepView, TelegramAuthHeader } from './components';
+import { StartStepView, QrStepView, QrPasswordStepView, TelegramAuthHeader } from './components';
 import type { TelegramAuthProps, AuthStep } from './types';
 
 /**
@@ -29,14 +29,14 @@ import type { TelegramAuthProps, AuthStep } from './types';
  * ```
  */
 export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProps) {
-  const [step, setStep] = useState<AuthStep>('phone');
+  const [step, setStep] = useState<AuthStep>('start');
   const [countdown, setCountdown] = useState(30);
   const { qrState, isLoading, generateQrCode, checkQrStatus, refreshQrToken, setQrPassword } =
     useQrAuth(onSuccess, onOpenChange);
 
   // Сброс шага при открытии
   useEffect(() => {
-    if (open) setStep('phone');
+    if (open) setStep('start');
   }, [open]);
 
   // Автообновление QR-токена
@@ -49,13 +49,13 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
 
   // Переключение на шаг QR при получении URL
   useEffect(() => {
-    if (qrState.url && step === 'phone') {
+    if (qrState.url && step === 'start') {
       setStep('qr');
     }
   }, [qrState.url, step]);
 
   const handleBack = () => {
-    setStep('phone');
+    setStep('start');
   };
 
   const handleSubmitPassword = async () => {
@@ -71,7 +71,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
         <TelegramAuthHeader />
 
         <div className="space-y-4">
-          {step === 'phone' && (
+          {step === 'start' && (
             <PhoneStepView onGenerateQr={() => generateQrCode()} isLoading={isLoading} />
           )}
 

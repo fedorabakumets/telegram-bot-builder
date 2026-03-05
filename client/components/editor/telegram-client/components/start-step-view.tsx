@@ -1,27 +1,27 @@
 /**
- * @fileoverview Компонент шага авторизации с телефоном
+ * @fileoverview Компонент начального шага авторизации
  *
  * Отображает кнопку для генерации QR-кода.
  *
- * @module PhoneStepView
+ * @module StartStepView
  */
 
 import { Button } from '@/components/ui/button';
 import { QrCode } from 'lucide-react';
-import type { PhoneStepViewProps } from '../types';
+import type { StartStepViewProps } from '../types/telegram-auth-view-props';
 
 /**
- * Компонент шага с телефоном
+ * Компонент начального шага
  *
- * @param {PhoneStepViewProps} props - Пропсы компонента
+ * @param {StartStepViewProps} props - Пропсы компонента
  * @returns {JSX.Element} Шаг с кнопкой QR
  *
  * @example
  * ```tsx
- * <PhoneStepView onGenerateQr={handleGenerate} isLoading={false} />
+ * <StartStepView onGenerateQr={handleGenerate} isLoading={false} />
  * ```
  */
-export function PhoneStepView({ onGenerateQr, isLoading }: PhoneStepViewProps) {
+export function StartStepView({ onGenerateQr, isLoading }: StartStepViewProps) {
   return (
     <>
       <div className="text-center space-y-2">

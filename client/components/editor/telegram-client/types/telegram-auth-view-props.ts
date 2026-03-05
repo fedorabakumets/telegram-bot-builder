@@ -7,9 +7,9 @@
 import type { AuthStep, QrState } from './telegram-auth-state';
 
 /**
- * Пропсы компонента шага с телефоном
+ * Пропсы компонента начального шага
  */
-export interface PhoneStepViewProps {
+export interface StartStepViewProps {
   /** Обработчик генерации QR-кода */
   onGenerateQr: () => void;
   /** Статус загрузки */

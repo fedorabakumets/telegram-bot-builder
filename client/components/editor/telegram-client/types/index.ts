@@ -13,7 +13,7 @@ export type { GroupMembersClientPanelProps } from './group-members-panel-props';
 export type { QrCodeGeneratorProps } from './qr-code-generator-props';
 export type { AuthStep, QrState } from './telegram-auth-state';
 export type {
-  PhoneStepViewProps,
+  StartStepViewProps,
   QrStepViewProps,
   QrPasswordStepViewProps,
 } from './telegram-auth-view-props';

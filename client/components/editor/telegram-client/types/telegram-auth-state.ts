@@ -6,8 +6,8 @@
  * @module TelegramAuthState
  */
 
-/** Шаг авторизации: phone, qr, qr-password */
-export type AuthStep = 'phone' | 'qr' | 'qr-password';
+/** Шаг авторизации: start, qr, qr-password */
+export type AuthStep = 'start' | 'qr' | 'qr-password';
 
 /**
  * Состояние QR-кода
