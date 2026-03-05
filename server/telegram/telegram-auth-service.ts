@@ -19,10 +19,10 @@
 import { TelegramClient } from 'telegram';
 import { Api } from 'telegram';
 import { StringSession } from 'telegram/sessions';
-import { userTelegramSettings } from '@shared/schema';
-import { eq } from 'drizzle-orm';
-import { db } from '../database/db';
 import type { VerifyPasswordResult } from './types/auth/verify-password-result.js';
+import type { CredentialsResult } from './types/auth/credentials-result.js';
+import type { UserCredentials } from './types/auth/user-credentials.js';
+import { saveCredentials, loadCredentials } from './utils/auth/index.js';
 
 /**
  * Сервис авторизации Telegram
@@ -157,33 +157,8 @@ class TelegramAuthService {
     userId: string,
     apiId: string,
     apiHash: string
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      const existing = await db
-        .select()
-        .from(userTelegramSettings)
-        .where(eq(userTelegramSettings.userId, userId))
-        .limit(1);
-
-      if (existing.length > 0) {
-        await db
-          .update(userTelegramSettings)
-          .set({ apiId, apiHash, updatedAt: new Date() })
-          .where(eq(userTelegramSettings.userId, userId));
-      } else {
-        await db.insert(userTelegramSettings).values({
-          userId,
-          apiId,
-          apiHash,
-        });
-      }
-
-      console.log(`💾 API credentials сохранены для пользователя ${userId}`);
-      return { success: true };
-    } catch (error: any) {
-      console.error('❌ Ошибка сохранения credentials:', error.message);
-      return { success: false, error: error.message };
-    }
+  ): Promise<CredentialsResult> {
+    return saveCredentials(userId, apiId, apiHash);
   }
 
   /**
@@ -194,23 +169,8 @@ class TelegramAuthService {
    */
   async loadCredentials(
     userId: string
-  ): Promise<{ apiId?: string; apiHash?: string } | null> {
-    try {
-      const result = await db
-        .select()
-        .from(userTelegramSettings)
-        .where(eq(userTelegramSettings.userId, userId))
-        .limit(1);
-
-      if (result.length > 0 && result[0].apiId && result[0].apiHash) {
-        return { apiId: result[0].apiId, apiHash: result[0].apiHash };
-      }
-
-      return null;
-    } catch (error: any) {
-      console.error('❌ Ошибка загрузки credentials:', error.message);
-      return null;
-    }
+  ): Promise<UserCredentials | null> {
+    return loadCredentials(userId);
   }
 
   /**

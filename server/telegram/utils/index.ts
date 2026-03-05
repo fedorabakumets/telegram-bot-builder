@@ -10,3 +10,5 @@ export { createUploadDir, validateFilePath } from './path-utils.js';
 export { httpsGet, getTelegramFileInfo } from './http-utils.js';
 export { downloadFile } from './download-utils.js';
 export { isApiCredentialsError, getFormattedQrError } from './qr-auth-error-handler.js';
+
+export * from './auth/index.js';
