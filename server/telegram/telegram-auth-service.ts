@@ -22,16 +22,7 @@ import { StringSession } from 'telegram/sessions';
 import { userTelegramSettings } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { db } from '../database/db';
-
-
-
-/**
- * Результат проверки 2FA пароля
- */
-interface VerifyPasswordResult {
-  success: boolean;
-  error?: string;
-}
+import type { VerifyPasswordResult } from './types/auth/verify-password-result.js';
 
 /**
  * Сервис авторизации Telegram

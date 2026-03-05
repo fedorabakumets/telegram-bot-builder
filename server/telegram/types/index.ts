@@ -13,3 +13,5 @@ export { ExtensionMimeMap } from './extension-mime-map.js';
 export { PathValidationResult } from './path-validation.js';
 export { HttpTimeoutOptions } from './http-request.js';
 export { TelegramFileInfo } from './telegram-file-info.js';
+
+export * from './auth/index.js';
