@@ -12,8 +12,11 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import type { AuthStatus, ApiCredentials } from '../types';
+import { loadAuthStatus } from './load-auth-status';
+import { saveCredentials as saveCredentialsFn } from './save-credentials';
+import { logout as logoutFn } from './logout';
+import { resetCredentials as resetCredentialsFn } from './reset-credentials';
 
 /**
  * Результат работы хука useTelegramAuth
@@ -79,8 +82,7 @@ export function useTelegramAuth(): UseTelegramAuthReturn {
    */
   const loadStatus = async () => {
     try {
-      const response = await fetch('/api/telegram-auth/status');
-      const status = await response.json();
+      const status = await loadAuthStatus();
       setAuthStatus(status);
     } catch (error) {
       console.error('Ошибка загрузки статуса:', error);
@@ -107,11 +109,9 @@ export function useTelegramAuth(): UseTelegramAuthReturn {
 
     setIsLoading(true);
     try {
-      const result = await apiRequest('POST', '/api/telegram-auth/save-credentials', credentials);
-      if (result.success) {
-        toast({ title: 'Успешно', description: 'API credentials сохранены' });
-        loadStatus();
-      }
+      const result = await saveCredentialsFn(credentials);
+      toast({ title: 'Успешно', description: result.message });
+      loadStatus();
     } catch (error) {
       toast({
         title: 'Ошибка',
@@ -129,11 +129,8 @@ export function useTelegramAuth(): UseTelegramAuthReturn {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await apiRequest('POST', '/api/telegram-auth/logout');
-      toast({
-        title: 'Выполнен выход',
-        description: 'Вы успешно вышли из аккаунта',
-      });
+      const result = await logoutFn();
+      toast({ title: 'Выполнен выход', description: result.message });
       loadStatus();
     } catch (error) {
       toast({
@@ -152,11 +149,8 @@ export function useTelegramAuth(): UseTelegramAuthReturn {
   const resetCredentials = async () => {
     setIsLoading(true);
     try {
-      await apiRequest('POST', '/api/telegram-auth/reset-credentials');
-      toast({
-        title: 'Сброшено',
-        description: 'API credentials удалены. Введите новые данные',
-      });
+      const result = await resetCredentialsFn();
+      toast({ title: 'Сброшено', description: result.message });
       setApiId('');
       setApiHash('');
       loadStatus();
