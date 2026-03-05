@@ -9,3 +9,4 @@ export { getMimeType } from './mime-utils.js';
 export { createUploadDir, validateFilePath } from './path-utils.js';
 export { httpsGet, getTelegramFileInfo } from './http-utils.js';
 export { downloadFile } from './download-utils.js';
+export { isApiCredentialsError, getFormattedQrError } from './qr-auth-error-handler.js';
