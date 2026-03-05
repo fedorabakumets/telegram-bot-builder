@@ -1,28 +1,25 @@
 /**
  * @fileoverview Компонент конфигурации Telegram Client API
- * Общая настройка для всех проектов
  *
- * Предоставляет интерфейс для настройки и управления Telegram Client API (Userbot):
- * - Настройка режима работы (Bot API / Hybrid / Client API Only)
- * - Ввод API ID и API Hash от my.telegram.org
- * - Авторизация через номер телефона
- * - Просмотр статуса сессии и информации о пользователе
+ * Композиция компонентов для настройки Client API.
  *
  * @module TelegramClientConfig
  */
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Shield, Phone, CheckCircle2, AlertTriangle, LogOut, Settings, Loader2 } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { TelegramAuth } from './telegram-auth';
 import { useTelegramAuth } from './hooks';
+import {
+  ApiCredentialsForm,
+  ApiCredentialsSaved,
+  AuthStatusPanel,
+  WarningAlert,
+} from './components';
 import type { ApiCredentials } from './types';
 
 /**
- * Компонент настройки Telegram Client API (общая база)
+ * Компонент настройки Telegram Client API
  *
  * @returns {JSX.Element} Панель конфигурации Client API
  */
@@ -42,9 +39,6 @@ export function TelegramClientConfig() {
     setApiHash,
   } = useTelegramAuth();
 
-  /**
-   * Обработчик сохранения credentials
-   */
   const handleSaveCredentials = () => {
     saveCredentials({ apiId, apiHash } as ApiCredentials);
   };
@@ -63,121 +57,32 @@ export function TelegramClientConfig() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* API Credentials */}
           {!authStatus.hasCredentials && (
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Telegram API Credentials</Label>
-              <div className="space-y-2">
-                <div>
-                  <Label htmlFor="api-id" className="text-xs">API ID</Label>
-                  <Input
-                    id="api-id"
-                    placeholder="12345678"
-                    value={apiId}
-                    onChange={(e) => setApiId(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="api-hash" className="text-xs">API Hash</Label>
-                  <Input
-                    id="api-hash"
-                    placeholder="abcdef1234567890"
-                    value={apiHash}
-                    onChange={(e) => setApiHash(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <Button onClick={handleSaveCredentials} disabled={isLoading} className="w-full" size="sm">
-                  {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Settings className="h-4 w-4 mr-2" />}
-                  Сохранить
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Получите на <a href="https://my.telegram.org" target="_blank" className="underline">my.telegram.org</a>
-                </p>
-              </div>
-            </div>
+            <ApiCredentialsForm
+              apiId={apiId}
+              apiHash={apiHash}
+              isLoading={isLoading}
+              onChangeApiId={setApiId}
+              onChangeApiHash={setApiHash}
+              onSave={handleSaveCredentials}
+            />
           )}
 
-          {/* API Credentials сохранены */}
           {authStatus.hasCredentials && (
-            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <Label className="text-sm font-medium text-green-800 dark:text-green-200">API Credentials сохранены</Label>
-                </div>
-                <Button
-                  onClick={resetCredentials}
-                  disabled={isLoading}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-8"
-                >
-                  <LogOut className="h-3 w-3 mr-1" />
-                  Сбросить
-                </Button>
-              </div>
-              <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
-                <p>• API ID и API Hash успешно сохранены в базе данных</p>
-                <p>• Теперь вы можете авторизоваться через Telegram Client API</p>
-                <p>• После авторизации будет доступен полный функционал</p>
-              </div>
-            </div>
+            <ApiCredentialsSaved
+              isLoading={isLoading}
+              onReset={resetCredentials}
+            />
           )}
 
-          {/* Статус авторизации */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Статус сессии</Label>
-              {authStatus.isAuthenticated ? (
-                <Badge variant="default" className="bg-green-600">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Авторизован
-                </Badge>
-              ) : (
-                <Badge variant="secondary">
-                  <AlertTriangle className="h-3 w-3 mr-1" />
-                  Не авторизован
-                </Badge>
-              )}
-            </div>
+          <AuthStatusPanel
+            authStatus={authStatus}
+            isLoading={isLoading}
+            onLogin={() => setShowAuthDialog(true)}
+            onLogout={logout}
+          />
 
-            {authStatus.isAuthenticated && (
-              <div className="p-3 bg-muted rounded-lg space-y-1 text-sm">
-                <p><strong>Пользователь:</strong> {authStatus.username || authStatus.phoneNumber}</p>
-                {authStatus.userId && authStatus.userId !== 'default' && (
-                  <p><strong>ID:</strong> {authStatus.userId}</p>
-                )}
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              {!authStatus.isAuthenticated && (
-                <Button onClick={() => setShowAuthDialog(true)} className="flex-1" size="sm">
-                  <Phone className="h-4 w-4 mr-2" />
-                  Войти
-                </Button>
-              )}
-              {authStatus.isAuthenticated && (
-                <Button onClick={logout} disabled={isLoading} variant="outline" className="flex-1" size="sm">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Выйти
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Предупреждение */}
-          <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
-              <div className="text-xs text-amber-800 dark:text-amber-200 space-y-1">
-                <p className="font-medium">Внимание!</p>
-                <p>Массовые рассылки могут привести к блокировке аккаунта. Используйте с осторожностью.</p>
-              </div>
-            </div>
-          </div>
+          <WarningAlert />
         </CardContent>
       </Card>
 

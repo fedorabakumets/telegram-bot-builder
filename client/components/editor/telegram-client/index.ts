@@ -1,5 +1,5 @@
 /**
- * @fileoverview Экспорт компонентов и типов модуля telegram-client
+ * @fileoverview Экспорт компонентов, хуков и типов модуля telegram-client
  *
  * @module telegram-client
  */
@@ -10,6 +10,19 @@ export { GroupMembersClientPanel } from './GroupMembersClientPanel'
 // Хуки
 export { useTelegramAuth } from './hooks';
 export type { UseTelegramAuthReturn } from './hooks';
+
+// Компоненты
+export {
+  WarningAlert,
+  ApiCredentialsForm,
+  ApiCredentialsSaved,
+  AuthStatusPanel,
+} from './components';
+export type {
+  ApiCredentialsFormProps,
+  ApiCredentialsSavedProps,
+  AuthStatusPanelProps,
+} from './components';
 
 // Типы
 export type {
