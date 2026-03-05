@@ -31,13 +31,17 @@ import type { TelegramAuthProps, AuthStep } from './types';
 export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProps) {
   const [step, setStep] = useState<AuthStep>('start');
   const [countdown, setCountdown] = useState(30);
-  const { qrState, isLoading, generateQrCode, checkQrStatus, refreshQrToken, setQrPassword } =
+  const { qrState, isLoading, generateQrCode, checkQrStatus, refreshQrToken, setQrPassword, resetQrState } =
     useQrAuth(onSuccess, onOpenChange);
 
-  // Сброс шага при открытии
+  // Сброс шага и состояния при открытии/закрытии
   useEffect(() => {
-    if (open) setStep('start');
-  }, [open]);
+    if (open) {
+      setStep('start');
+    } else {
+      resetQrState();
+    }
+  }, [open, resetQrState]);
 
   // Автообновление QR-токена
   useQrPolling({ step, token: qrState.token, refreshQrToken });
@@ -55,6 +59,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
   }, [qrState.url, step]);
 
   const handleBack = () => {
+    resetQrState();
     setStep('start');
   };
 
