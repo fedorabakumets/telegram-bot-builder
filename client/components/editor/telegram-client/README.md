@@ -33,30 +33,33 @@ telegram-client/
 │   │   ├── check-qr-status.ts
 │   │   ├── refresh-qr-token.ts
 │   │   └── index.ts
+│   ├── load-auth-status.ts         # Загрузка статуса
+│   ├── logout.ts                   # Выход из аккаунта
+│   ├── reset-credentials.ts        # Сброс credentials
+│   ├── save-credentials.ts         # Сохранение credentials
 │   └── index.ts                    # Экспорт всех хуков
 │
 ├── components/                     # React компоненты
 │   ├── client-api-card-header.tsx  # Заголовок карточки
 │   ├── warning-alert.tsx           # Предупреждение о рисках
+│   ├── telegram-auth-header.tsx    # Заголовок диалога
 │   ├── api-credentials-form.tsx    # Форма ввода credentials
 │   ├── api-credentials-saved.tsx   # Сообщение о сохранении
 │   ├── auth-status-panel.tsx       # Панель статуса
-│   ├── qr-code-generator.tsx       # Генератор QR-кода
-│   ├── qr-code-display.tsx         # Отображение QR-кода
-│   ├── qr-status-button.tsx        # Кнопка проверки статуса
-│   ├── qr-action-buttons.tsx       # Кнопки действий QR
-│   ├── qr-status-header.tsx        # Заголовок статуса QR
-│   ├── qr-info-text.tsx            # Информационные тексты
-│   ├── qr-countdown-badge.tsx      # Индикатор таймера
+│   ├── start-step-view.tsx         # Начальный шаг
 │   ├── qr-step-view.tsx            # Шаг с QR-кодом
 │   ├── qr-password-step-view.tsx   # Шаг с 2FA паролем
-│   ├── start-step-view.tsx         # Начальный шаг
-│   ├── telegram-auth-header.tsx    # Заголовок диалога
+│   ├── qr-code-generator.tsx       # Генератор QR-кода
+│   ├── qr-code-display.tsx         # Отображение QR-кода
+│   ├── qr-countdown-badge.tsx      # Индикатор таймера
+│   ├── qr-status-header.tsx        # Заголовок статуса QR
+│   ├── qr-info-text.tsx            # Информационные тексты
+│   ├── qr-status-button.tsx        # Кнопка проверки статуса
+│   ├── qr-action-buttons.tsx       # Кнопки действий QR
 │   └── index.ts                    # Экспорт компонентов
 │
 ├── TelegramClientConfig.tsx        # Главный компонент настройки
 ├── telegram-auth.tsx               # Диалог авторизации
-├── GroupMembersClientPanel.tsx     # Панель участников группы
 ├── test-config.ts                  # Тестовые данные
 ├── index.ts                        # Главный экспорт модуля
 └── README.md                       # Этот файл
@@ -101,6 +104,7 @@ import { TelegramAuth } from '@/components/editor/telegram-client';
 | `/api/telegram-auth/qr-check` | POST | Проверить статус QR |
 | `/api/telegram-auth/qr-refresh` | POST | Обновить QR-токен |
 | `/api/telegram-auth/logout` | POST | Выход из аккаунта |
+| `/api/telegram-auth/reset-credentials` | POST | Сбросить credentials |
 
 ## 🚀 Использование
 
@@ -153,4 +157,15 @@ interface ApiCredentials {
 
 ```typescript
 type AuthStep = 'start' | 'qr' | 'qr-password';
+```
+
+### QrState
+
+```typescript
+interface QrState {
+  token: string;
+  url: string;
+  password: string;
+  countdown: number;
+}
 ```
