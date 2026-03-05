@@ -52,7 +52,6 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
   // Переключение на шаг QR только когда URL действительно получен
   useEffect(() => {
     if (qrState.url && step === 'start') {
-      console.log('🔄 Переключение на шаг QR, url:', qrState.url);
       setStep('qr');
     }
   }, [qrState.url]);
