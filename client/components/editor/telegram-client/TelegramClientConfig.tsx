@@ -11,17 +11,15 @@
  * @module TelegramClientConfig
  */
 
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Phone, CheckCircle2, AlertTriangle, LogOut, Settings, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import { TelegramAuth } from './telegram-auth';
-import type { AuthStatus } from './types';
+import { useTelegramAuth } from './hooks';
+import type { ApiCredentials } from './types';
 
 /**
  * Компонент настройки Telegram Client API (общая база)
@@ -29,86 +27,24 @@ import type { AuthStatus } from './types';
  * @returns {JSX.Element} Панель конфигурации Client API
  */
 export function TelegramClientConfig() {
-  const [authStatus, setAuthStatus] = useState<AuthStatus>({ isAuthenticated: false, hasCredentials: false });
-  const [apiId, setApiId] = useState('');
-  const [apiHash, setApiHash] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const { toast } = useToast();
+  const {
+    authStatus,
+    apiId,
+    apiHash,
+    isLoading,
+    showAuthDialog,
+    loadStatus,
+    saveCredentials,
+    logout,
+    resetCredentials,
+    setShowAuthDialog,
+  } = useTelegramAuth();
 
   /**
-   * Загрузка статуса авторизации и настроек
+   * Обработчик сохранения credentials
    */
-  const loadStatus = async () => {
-    try {
-      const response = await fetch('/api/telegram-auth/status');
-      const status = await response.json();
-      setAuthStatus(status);
-    } catch (error) {
-      console.error('Ошибка загрузки статуса:', error);
-    }
-  };
-
-  useEffect(() => {
-    loadStatus();
-  }, []);
-
-
-  /**
-   * Сохранение API credentials
-   */
-  const saveCredentials = async () => {
-    if (!apiId.trim() || !apiHash.trim()) {
-      toast({ title: 'Ошибка', description: 'Заполните API ID и API Hash', variant: 'destructive' });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await apiRequest('POST', '/api/telegram-auth/save-credentials', { apiId, apiHash });
-      if (result.success) {
-        toast({ title: 'Успешно', description: 'API credentials сохранены' });
-        loadStatus();
-      }
-    } catch (error) {
-      toast({ title: 'Ошибка', description: 'Не удалось сохранить credentials', variant: 'destructive' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Выход из аккаунта Client API
-   */
-  const logout = async () => {
-    setIsLoading(true);
-    try {
-      await apiRequest('POST', '/api/telegram-auth/logout');
-      toast({ title: 'Выполнен выход', description: 'Вы успешно вышли из аккаунта' });
-      loadStatus();
-    } catch (error) {
-      toast({ title: 'Ошибка', description: 'Не удалось выполнить выход', variant: 'destructive' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Сброс API credentials для повторной настройки
-   */
-  const resetCredentials = async () => {
-    setIsLoading(true);
-    try {
-      await apiRequest('POST', '/api/telegram-auth/reset-credentials');
-      toast({ title: 'Сброшено', description: 'API credentials удалены. Введите новые данные' });
-      setApiId('');
-      setApiHash('');
-      loadStatus();
-    } catch (error) {
-      toast({ title: 'Ошибка', description: 'Не удалось сбросить credentials', variant: 'destructive' });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSaveCredentials = () => {
+    saveCredentials({ apiId, apiHash } as ApiCredentials);
   };
 
   return (
@@ -150,7 +86,7 @@ export function TelegramClientConfig() {
                     disabled={isLoading}
                   />
                 </div>
-                <Button onClick={saveCredentials} disabled={isLoading} className="w-full" size="sm">
+                <Button onClick={handleSaveCredentials} disabled={isLoading} className="w-full" size="sm">
                   {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Settings className="h-4 w-4 mr-2" />}
                   Сохранить
                 </Button>
