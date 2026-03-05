@@ -2,13 +2,7 @@ import https from 'https';
 import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import { join, normalize, relative, isAbsolute } from 'path';
 import { pipeline } from 'stream/promises';
-
-interface DownloadedPhoto {
-  filePath: string;
-  fileSize: number;
-  mimeType: string;
-  fileName: string;
-}
+import type { DownloadedMedia } from './types/index.js';
 
 /**
  * Скачивает фото из Telegram через Bot API
@@ -21,7 +15,7 @@ export async function downloadTelegramPhoto(
   botToken: string,
   fileId: string,
   projectId: number
-): Promise<DownloadedPhoto> {
+): Promise<DownloadedMedia> {
   try {
     // Шаг 1: Получаем file_path через getFile API
     const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
@@ -143,7 +137,7 @@ export async function downloadTelegramVideo(
   botToken: string,
   fileId: string,
   projectId: number
-): Promise<DownloadedPhoto> {
+): Promise<DownloadedMedia> {
   try {
     const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
     
@@ -258,7 +252,7 @@ export async function downloadTelegramAudio(
   botToken: string,
   fileId: string,
   projectId: number
-): Promise<DownloadedPhoto> {
+): Promise<DownloadedMedia> {
   try {
     const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
     
@@ -375,7 +369,7 @@ export async function downloadTelegramDocument(
   fileId: string,
   projectId: number,
   originalFileName?: string
-): Promise<DownloadedPhoto> {
+): Promise<DownloadedMedia> {
   try {
     const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
     
