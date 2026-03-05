@@ -40,14 +40,14 @@ export async function importQRToken(
   }
 
   // QR отсканирован успешно
-  if (validation.isSuccess) {
-    const sessionString = client.session.save() || '';
+  if (validation.isSuccess === true) {
+    const sessionString = String(client.session.save() ?? '');
     console.log(formatScanSuccessMessage(sessionString));
 
     return {
       success: true,
       isAuthenticated: true,
-      sessionString: String(sessionString),
+      sessionString,
     };
   }
 

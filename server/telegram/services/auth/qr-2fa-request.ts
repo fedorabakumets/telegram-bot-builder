@@ -3,6 +3,7 @@
  * @module server/telegram/services/auth/qr-2fa-request
  */
 
+import type { TelegramClient } from 'telegram';
 import type { CheckQRStatusResult } from '../../types/auth/check-qr-status-result.js';
 import { QR_REQUIRES_2FA } from './qr-error-messages.js';
 

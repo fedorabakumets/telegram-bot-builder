@@ -6,7 +6,6 @@
 import https from 'https';
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
-import type { HttpTimeoutOptions } from '../types/http-request.js';
 
 /**
  * Скачивает файл по URL и сохраняет в указанное место

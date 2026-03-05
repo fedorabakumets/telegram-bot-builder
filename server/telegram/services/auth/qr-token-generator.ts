@@ -8,8 +8,7 @@ import { Api } from 'telegram';
 import type { GenerateQRTokenResult } from '../../types/auth/generate-qr-token-result.js';
 import {
   QR_GENERATED_SUCCESS,
-  QR_GENERATION_ERROR,
-  QR_REEXPORTING_TOKEN
+  QR_GENERATION_ERROR
 } from './qr-error-messages.js';
 import { checkMigrationNeeded, handleQRMigration } from './qr-migration-handler.js';
 

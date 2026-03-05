@@ -5,7 +5,6 @@
 
 import { TelegramClient } from 'telegram';
 import type { CheckQRStatusResult } from '../../types/auth/check-qr-status-result.js';
-import type { GenerateQRTokenResult } from '../../types/auth/generate-qr-token-result.js';
 import { generateQRTokenWithExpiry } from './qr-token-generator.js';
 import {
   QR_SCANNED_WITH_2FA,
