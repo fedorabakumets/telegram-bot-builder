@@ -1,8 +1,19 @@
-import https from 'https';
-import { createWriteStream, existsSync, mkdirSync } from 'fs';
-import { join, normalize, relative, isAbsolute } from 'path';
-import { pipeline } from 'stream/promises';
+/**
+ * @fileoverview Сервис для скачивания медиафайлов из Telegram
+ * @module server/telegram/telegram-media
+ */
+
+import { join } from 'path';
 import type { DownloadedMedia } from './types/index.js';
+import {
+  sanitizeFileId,
+  generateFileName,
+} from './utils/file-utils.js';
+import { validateExtension } from './utils/extension-validator.js';
+import { getMimeType } from './utils/mime-utils.js';
+import { createUploadDir, validateFilePath } from './utils/path-utils.js';
+import { getTelegramFileInfo } from './utils/http-utils.js';
+import { downloadFile } from './utils/download-utils.js';
 
 /**
  * Скачивает фото из Telegram через Bot API
@@ -17,109 +28,38 @@ export async function downloadTelegramPhoto(
   projectId: number
 ): Promise<DownloadedMedia> {
   try {
-    // Шаг 1: Получаем file_path через getFile API
-    const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
-    
-    const fileInfo = await new Promise<any>((resolve, reject) => {
-      const request = https.get(getFileUrl, { timeout: 30000 }, (res) => {
-        let data = '';
-        res.on('data', (chunk) => data += chunk);
-        res.on('end', () => {
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.ok) {
-              resolve(parsed.result);
-            } else {
-              reject(new Error(`Ошибка Telegram API: ${parsed.description || 'Неизвестная ошибка'}`));
-            }
-          } catch (err) {
-            reject(err);
-          }
-        });
-      }).on('error', reject);
-
-      request.on('timeout', () => {
-        request.destroy();
-        reject(new Error('Таймаут запроса'));
-      });
-    });
-
+    // Шаг 1: Получаем информацию о файле
+    const fileInfo = await getTelegramFileInfo(botToken, fileId);
     const filePath = fileInfo.file_path;
     const fileSize = fileInfo.file_size || 0;
-    
-    // Санитизировать fileId (оставить только безопасные символы)
-    const safeFileId = fileId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 20);
-    
-    // Определяем MIME тип на основе расширения файла
+
+    // Шаг 2: Определяем расширение и валидируем
     const extension = filePath.split('.').pop()?.toLowerCase() || '';
-    
-    // Валидировать расширение (только безопасные форматы изображений)
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    if (!allowedExtensions.includes(extension)) {
+    if (!validateExtension(extension, 'photo')) {
       throw new Error('Некорректный тип файла');
     }
-    
-    const mimeTypeMap: { [key: string]: string } = {
-      'jpg': 'image/jpeg',
-      'jpeg': 'image/jpeg',
-      'png': 'image/png',
-      'gif': 'image/gif',
-      'webp': 'image/webp',
-    };
-    const mimeType = mimeTypeMap[extension] || 'image/jpeg';
 
-    // Шаг 2: Создаем директорию для сохранения
-    const date = new Date().toISOString().split('T')[0]; // ГГГГ-ММ-ДД
-    const uploadDir = join(process.cwd(), 'uploads', String(projectId), date);
-    
-    if (!existsSync(uploadDir)) {
-      mkdirSync(uploadDir, { recursive: true });
-    }
+    // Шаг 3: Получаем MIME-тип
+    const mimeType = getMimeType(extension, 'photo');
 
-    // Шаг 3: Генерируем уникальное имя файла
-    const timestamp = Date.now();
-    const randomSuffix = Math.round(Math.random() * 1E9);
-    const fileName = `${timestamp}-${randomSuffix}-${safeFileId}.${extension}`;
+    // Шаг 4: Создаём директорию и генерируем имя файла
+    const date = new Date().toISOString().split('T')[0];
+    const uploadDir = createUploadDir(projectId, date);
+    const safeFileId = sanitizeFileId(fileId);
+    const fileName = generateFileName(safeFileId, extension);
     const localFilePath = join(uploadDir, fileName);
-    
-    // Валидировать путь (защита от directory traversal)
-    const normalizedPath = normalize(localFilePath);
-    const rel = relative(uploadDir, normalizedPath);
-    if (rel.startsWith('..') || isAbsolute(rel)) {
-      throw new Error('Некорректный путь к файлу - возможна попытка обхода каталогов');
-    }
 
-    // Шаг 4: Скачиваем файл
+    // Шаг 5: Валидируем путь
+    validateFilePath(uploadDir, localFilePath);
+
+    // Шаг 6: Скачиваем файл
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
-    
-    await new Promise<void>((resolve, reject) => {
-      const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
-        if (res.statusCode !== 200) {
-          reject(new Error(`Не удалось скачать файл: HTTP ${res.statusCode}`));
-          return;
-        }
-        
-        const fileStream = createWriteStream(localFilePath);
-        pipeline(res, fileStream)
-          .then(() => resolve())
-          .catch(reject);
-      }).on('error', reject);
+    await downloadFile(downloadUrl, localFilePath);
 
-      request.on('timeout', () => {
-        request.destroy();
-        reject(new Error('Таймаут запроса'));
-      });
-    });
-
-    // Возвращаем относительный путь от корня проекта
+    // Шаг 7: Возвращаем относительный путь
     const relativeFilePath = join('uploads', String(projectId), date, fileName);
 
-    return {
-      filePath: relativeFilePath,
-      fileSize,
-      mimeType,
-      fileName,
-    };
+    return { filePath: relativeFilePath, fileSize, mimeType, fileName };
   } catch (error) {
     console.error('Ошибка при скачивании фото из Telegram:', error);
     throw new Error(`Не удалось скачать фото: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
@@ -139,102 +79,31 @@ export async function downloadTelegramVideo(
   projectId: number
 ): Promise<DownloadedMedia> {
   try {
-    const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
-    
-    const fileInfo = await new Promise<any>((resolve, reject) => {
-      const request = https.get(getFileUrl, { timeout: 30000 }, (res) => {
-        let data = '';
-        res.on('data', (chunk) => data += chunk);
-        res.on('end', () => {
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.ok) {
-              resolve(parsed.result);
-            } else {
-              reject(new Error(`Ошибка Telegram API: ${parsed.description || 'Неизвестная ошибка'}`));
-            }
-          } catch (err) {
-            reject(err);
-          }
-        });
-      }).on('error', reject);
-
-      request.on('timeout', () => {
-        request.destroy();
-        reject(new Error('Таймаут запроса'));
-      });
-    });
-
+    const fileInfo = await getTelegramFileInfo(botToken, fileId);
     const filePath = fileInfo.file_path;
     const fileSize = fileInfo.file_size || 0;
-    
-    // Санитизировать fileId (оставить только безопасные символы)
-    const safeFileId = fileId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 20);
-    
+
     const extension = filePath.split('.').pop()?.toLowerCase() || '';
-    
-    // Валидировать расширение (только безопасные форматы видео)
-    const allowedExtensions = ['mp4', 'webm', 'avi', 'mov'];
-    if (!allowedExtensions.includes(extension)) {
+    if (!validateExtension(extension, 'video')) {
       throw new Error('Некорректный тип файла');
     }
-    
-    const mimeTypeMap: { [key: string]: string } = {
-      'mp4': 'video/mp4',
-      'webm': 'video/webm',
-      'avi': 'video/avi',
-      'mov': 'video/quicktime',
-    };
-    const mimeType = mimeTypeMap[extension] || 'video/mp4';
+
+    const mimeType = getMimeType(extension, 'video');
 
     const date = new Date().toISOString().split('T')[0];
-    const uploadDir = join(process.cwd(), 'uploads', String(projectId), date);
-    
-    if (!existsSync(uploadDir)) {
-      mkdirSync(uploadDir, { recursive: true });
-    }
-
-    const timestamp = Date.now();
-    const randomSuffix = Math.round(Math.random() * 1E9);
-    const fileName = `${timestamp}-${randomSuffix}-${safeFileId}.${extension}`;
+    const uploadDir = createUploadDir(projectId, date);
+    const safeFileId = sanitizeFileId(fileId);
+    const fileName = generateFileName(safeFileId, extension);
     const localFilePath = join(uploadDir, fileName);
-    
-    // Валидировать путь (защита от directory traversal)
-    const normalizedPath = normalize(localFilePath);
-    const rel = relative(uploadDir, normalizedPath);
-    if (rel.startsWith('..') || isAbsolute(rel)) {
-      throw new Error('Некорректный путь к файлу - возможна попытка обхода каталогов');
-    }
+
+    validateFilePath(uploadDir, localFilePath);
 
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
-    
-    await new Promise<void>((resolve, reject) => {
-      const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
-        if (res.statusCode !== 200) {
-          reject(new Error(`Не удалось скачать файл: HTTP ${res.statusCode}`));
-          return;
-        }
-        
-        const fileStream = createWriteStream(localFilePath);
-        pipeline(res, fileStream)
-          .then(() => resolve())
-          .catch(reject);
-      }).on('error', reject);
-
-      request.on('timeout', () => {
-        request.destroy();
-        reject(new Error('Таймаут запроса'));
-      });
-    });
+    await downloadFile(downloadUrl, localFilePath);
 
     const relativeFilePath = join('uploads', String(projectId), date, fileName);
 
-    return {
-      filePath: relativeFilePath,
-      fileSize,
-      mimeType,
-      fileName,
-    };
+    return { filePath: relativeFilePath, fileSize, mimeType, fileName };
   } catch (error) {
     console.error('Ошибка при скачивании видео из Telegram:', error);
     throw new Error(`Не удалось скачать видео: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
@@ -254,102 +123,31 @@ export async function downloadTelegramAudio(
   projectId: number
 ): Promise<DownloadedMedia> {
   try {
-    const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
-    
-    const fileInfo = await new Promise<any>((resolve, reject) => {
-      const request = https.get(getFileUrl, { timeout: 30000 }, (res) => {
-        let data = '';
-        res.on('data', (chunk) => data += chunk);
-        res.on('end', () => {
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.ok) {
-              resolve(parsed.result);
-            } else {
-              reject(new Error(`Ошибка Telegram API: ${parsed.description || 'Неизвестная ошибка'}`));
-            }
-          } catch (err) {
-            reject(err);
-          }
-        });
-      }).on('error', reject);
-
-      request.on('timeout', () => {
-        request.destroy();
-        reject(new Error('Таймаут запроса'));
-      });
-    });
-
+    const fileInfo = await getTelegramFileInfo(botToken, fileId);
     const filePath = fileInfo.file_path;
     const fileSize = fileInfo.file_size || 0;
-    
-    // Санитизировать fileId (оставить только безопасные символы)
-    const safeFileId = fileId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 20);
-    
+
     const extension = filePath.split('.').pop()?.toLowerCase() || '';
-    
-    // Валидировать расширение (только безопасные форматы аудио)
-    const allowedExtensions = ['mp3', 'ogg', 'wav', 'aac'];
-    if (!allowedExtensions.includes(extension)) {
+    if (!validateExtension(extension, 'audio')) {
       throw new Error('Некорректный тип файла');
     }
-    
-    const mimeTypeMap: { [key: string]: string } = {
-      'mp3': 'audio/mpeg',
-      'ogg': 'audio/ogg',
-      'wav': 'audio/wav',
-      'aac': 'audio/aac',
-    };
-    const mimeType = mimeTypeMap[extension] || 'audio/mpeg';
+
+    const mimeType = getMimeType(extension, 'audio');
 
     const date = new Date().toISOString().split('T')[0];
-    const uploadDir = join(process.cwd(), 'uploads', String(projectId), date);
-    
-    if (!existsSync(uploadDir)) {
-      mkdirSync(uploadDir, { recursive: true });
-    }
-
-    const timestamp = Date.now();
-    const randomSuffix = Math.round(Math.random() * 1E9);
-    const fileName = `${timestamp}-${randomSuffix}-${safeFileId}.${extension}`;
+    const uploadDir = createUploadDir(projectId, date);
+    const safeFileId = sanitizeFileId(fileId);
+    const fileName = generateFileName(safeFileId, extension);
     const localFilePath = join(uploadDir, fileName);
-    
-    // Валидировать путь (защита от directory traversal)
-    const normalizedPath = normalize(localFilePath);
-    const rel = relative(uploadDir, normalizedPath);
-    if (rel.startsWith('..') || isAbsolute(rel)) {
-      throw new Error('Некорректный путь к файлу - возможна попытка обхода каталогов');
-    }
+
+    validateFilePath(uploadDir, localFilePath);
 
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
-    
-    await new Promise<void>((resolve, reject) => {
-      const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
-        if (res.statusCode !== 200) {
-          reject(new Error(`Не удалось скачать файл: HTTP ${res.statusCode}`));
-          return;
-        }
-        
-        const fileStream = createWriteStream(localFilePath);
-        pipeline(res, fileStream)
-          .then(() => resolve())
-          .catch(reject);
-      }).on('error', reject);
-
-      request.on('timeout', () => {
-        request.destroy();
-        reject(new Error('Таймаут запроса'));
-      });
-    });
+    await downloadFile(downloadUrl, localFilePath);
 
     const relativeFilePath = join('uploads', String(projectId), date, fileName);
 
-    return {
-      filePath: relativeFilePath,
-      fileSize,
-      mimeType,
-      fileName,
-    };
+    return { filePath: relativeFilePath, fileSize, mimeType, fileName };
   } catch (error) {
     console.error('Ошибка при скачивании аудио из Telegram:', error);
     throw new Error(`Не удалось скачать аудио: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
@@ -371,99 +169,34 @@ export async function downloadTelegramDocument(
   originalFileName?: string
 ): Promise<DownloadedMedia> {
   try {
-    const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
-    
-    const fileInfo = await new Promise<any>((resolve, reject) => {
-      const request = https.get(getFileUrl, { timeout: 30000 }, (res) => {
-        let data = '';
-        res.on('data', (chunk) => data += chunk);
-        res.on('end', () => {
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.ok) {
-              resolve(parsed.result);
-            } else {
-              reject(new Error(`Ошибка Telegram API: ${parsed.description || 'Неизвестная ошибка'}`));
-            }
-          } catch (err) {
-            reject(err);
-          }
-        });
-      }).on('error', reject);
-
-      request.on('timeout', () => {
-        request.destroy();
-        reject(new Error('Таймаут запроса'));
-      });
-    });
-
+    const fileInfo = await getTelegramFileInfo(botToken, fileId);
     const filePath = fileInfo.file_path;
     const fileSize = fileInfo.file_size || 0;
-    
-    // Санитизировать fileId (оставить только безопасные символы)
-    const safeFileId = fileId.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 20);
-    
+
     const extension = filePath.split('.').pop()?.toLowerCase() || '';
-    
-    // Валидировать расширение (только безопасные форматы документов)
-    const allowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'zip', 'rar'];
-    if (!allowedExtensions.includes(extension)) {
+    if (!validateExtension(extension, 'document')) {
       throw new Error('Некорректный тип файла');
     }
-    
-    const mimeType = 'application/octet-stream'; // Общий MIME-тип для документов
+
+    const mimeType = getMimeType(extension, 'document');
 
     const date = new Date().toISOString().split('T')[0];
-    const uploadDir = join(process.cwd(), 'uploads', String(projectId), date);
-    
-    if (!existsSync(uploadDir)) {
-      mkdirSync(uploadDir, { recursive: true });
-    }
+    const uploadDir = createUploadDir(projectId, date);
+    const safeFileId = sanitizeFileId(fileId);
 
-    const timestamp = Date.now();
-    const randomSuffix = Math.round(Math.random() * 1E9);
-    
     // Санитизация originalFileName
     const sanitizedFileName = originalFileName?.replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 255);
-    const fileName = sanitizedFileName || `${timestamp}-${randomSuffix}-${safeFileId}.${extension}`;
+    const fileName = sanitizedFileName || generateFileName(safeFileId, extension);
     const localFilePath = join(uploadDir, fileName);
-    
-    // Валидировать путь (защита от directory traversal)
-    const normalizedPath = normalize(localFilePath);
-    const rel = relative(uploadDir, normalizedPath);
-    if (rel.startsWith('..') || isAbsolute(rel)) {
-      throw new Error('Некорректный путь к файлу - возможна попытка обхода каталогов');
-    }
+
+    validateFilePath(uploadDir, localFilePath);
 
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
-    
-    await new Promise<void>((resolve, reject) => {
-      const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
-        if (res.statusCode !== 200) {
-          reject(new Error(`Не удалось скачать файл: HTTP ${res.statusCode}`));
-          return;
-        }
-        
-        const fileStream = createWriteStream(localFilePath);
-        pipeline(res, fileStream)
-          .then(() => resolve())
-          .catch(reject);
-      }).on('error', reject);
-
-      request.on('timeout', () => {
-        request.destroy();
-        reject(new Error('Таймаут запроса'));
-      });
-    });
+    await downloadFile(downloadUrl, localFilePath);
 
     const relativeFilePath = join('uploads', String(projectId), date, fileName);
 
-    return {
-      filePath: relativeFilePath,
-      fileSize,
-      mimeType,
-      fileName,
-    };
+    return { filePath: relativeFilePath, fileSize, mimeType, fileName };
   } catch (error) {
     console.error('Ошибка при скачивании документа из Telegram:', error);
     throw new Error(`Не удалось скачать документ: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
