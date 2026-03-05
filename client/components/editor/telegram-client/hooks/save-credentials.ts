@@ -4,8 +4,8 @@
  * @module saveCredentials
  */
 
-import { apiRequest } from '@/lib/queryClient';
 import type { ApiCredentials } from '../types';
+import { createTelegramAuthService } from '../services/telegram-auth-service';
 
 /**
  * Результат операции сохранения
@@ -34,16 +34,18 @@ export interface SaveCredentialsResult {
 export async function saveCredentials(
   credentials: ApiCredentials
 ): Promise<SaveCredentialsResult> {
-  const result = await apiRequest(
-    'POST',
-    '/api/telegram-auth/save-credentials',
-    credentials
-  );
-
-  return {
-    success: result.success,
-    message: result.success
-      ? 'API credentials сохранены'
-      : 'Не удалось сохранить credentials',
-  };
+  const authService = createTelegramAuthService();
+  
+  try {
+    await authService.saveCredentials(credentials);
+    return {
+      success: true,
+      message: 'API credentials сохранены',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Не удалось сохранить credentials',
+    };
+  }
 }

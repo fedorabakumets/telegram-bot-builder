@@ -4,7 +4,7 @@
  * @module resetCredentials
  */
 
-import { apiRequest } from '@/lib/queryClient';
+import { createTelegramAuthService } from '../services/telegram-auth-service';
 
 /**
  * Результат операции сброса
@@ -31,10 +31,18 @@ export interface ResetCredentialsResult {
  * ```
  */
 export async function resetCredentials(): Promise<ResetCredentialsResult> {
-  await apiRequest('POST', '/api/telegram-auth/reset-credentials');
-
-  return {
-    success: true,
-    message: 'API credentials удалены. Введите новые данные',
-  };
+  const authService = createTelegramAuthService();
+  
+  try {
+    await authService.resetCredentials();
+    return {
+      success: true,
+      message: 'API credentials удалены. Введите новые данные',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Не удалось сбросить credentials',
+    };
+  }
 }

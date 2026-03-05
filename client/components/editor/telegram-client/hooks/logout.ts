@@ -4,7 +4,7 @@
  * @module logout
  */
 
-import { apiRequest } from '@/lib/queryClient';
+import { createTelegramAuthService } from '../services/telegram-auth-service';
 
 /**
  * Результат операции выхода
@@ -30,10 +30,18 @@ export interface LogoutResult {
  * ```
  */
 export async function logout(): Promise<LogoutResult> {
-  await apiRequest('POST', '/api/telegram-auth/logout');
-
-  return {
-    success: true,
-    message: 'Вы успешно вышли из аккаунта',
-  };
+  const authService = createTelegramAuthService();
+  
+  try {
+    await authService.logout();
+    return {
+      success: true,
+      message: 'Вы успешно вышли из аккаунта',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Не удалось выполнить выход',
+    };
+  }
 }
