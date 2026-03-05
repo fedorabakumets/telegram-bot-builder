@@ -72,7 +72,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
 
         <div className="space-y-4">
           {step === 'start' && (
-            <PhoneStepView onGenerateQr={() => generateQrCode()} isLoading={isLoading} />
+            <StartStepView onGenerateQr={() => generateQrCode()} isLoading={isLoading} />
           )}
 
           {step === 'qr' && (
