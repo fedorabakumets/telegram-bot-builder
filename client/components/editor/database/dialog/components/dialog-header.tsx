@@ -1,12 +1,13 @@
 /**
  * @fileoverview Компонент заголовка панели диалога
- * Отображает иконку, селектор пользователей и кнопку закрытия
+ * Отображает иконку, селектор пользователей, кнопку закрытия и подсказку с предупреждением
  */
 
 import { X, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserBotData } from '@shared/schema';
+import { WarningTooltip } from './warning-tooltip';
 
 /**
  * Свойства заголовка
@@ -41,7 +42,10 @@ export function DialogHeader({
           <MessageSquare className="w-3.5 xs:w-3.5 sm:w-4 h-3.5 xs:h-3.5 sm:h-4 text-white" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="font-medium text-xs xs:text-xs sm:text-sm truncate leading-none">Диалог</h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-medium text-xs xs:text-xs sm:text-sm truncate leading-none">Диалог</h3>
+            <WarningTooltip />
+          </div>
           <Select
             value={user.userId.toString()}
             onValueChange={(value) => {
