@@ -7,10 +7,10 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Shield } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useQrAuth } from './hooks/use-qr-auth';
-import { PhoneStepView, QrStepView, QrPasswordStepView } from './components';
+import { useQrPolling } from './hooks/use-qr-polling';
+import { PhoneStepView, QrStepView, QrPasswordStepView, TelegramAuthHeader } from './components';
 import type { TelegramAuthProps, AuthStep } from './types';
 
 /**
@@ -40,29 +40,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
   }, [open]);
 
   // Автообновление QR-токена
-  useEffect(() => {
-    if (step !== 'qr' && step !== 'qr-password') return;
-    if (!qrState.token) return;
-
-    const countdownInterval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          refreshQrToken();
-          return 30;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    const refreshInterval = setInterval(async () => {
-      await refreshQrToken();
-    }, 25000);
-
-    return () => {
-      clearInterval(countdownInterval);
-      clearInterval(refreshInterval);
-    };
-  }, [step, qrState.token, refreshQrToken]);
+  useQrPolling({ step, token: qrState.token, refreshQrToken });
 
   // Синхронизация countdown из хука
   useEffect(() => {
@@ -83,15 +61,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-600" />
-            Авторизация Telegram Client API
-          </DialogTitle>
-          <DialogDescription>
-            Используйте личный аккаунт Telegram для расширенных возможностей бота
-          </DialogDescription>
-        </DialogHeader>
+        <TelegramAuthHeader />
 
         <div className="space-y-4">
           {step === 'phone' && (

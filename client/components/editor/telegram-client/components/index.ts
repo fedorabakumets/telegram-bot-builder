@@ -34,3 +34,4 @@ export { QrInfoText } from './qr-info-text';
 export type { QrInfoTextProps } from './qr-info-text';
 export { QrLink } from './qr-link';
 export type { QrLinkProps } from './qr-link';
+export { TelegramAuthHeader } from './telegram-auth-header';
