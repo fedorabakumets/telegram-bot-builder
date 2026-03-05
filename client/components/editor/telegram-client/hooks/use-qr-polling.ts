@@ -34,16 +34,12 @@ export function useQrPolling({ step, token, refreshQrToken }: UseQrPollingParams
     if (step !== 'qr' && step !== 'qr-password') return;
     if (!token) return;
 
-    const countdownInterval = setInterval(() => {
-      refreshQrToken();
-    }, 1000);
-
+    // Интервал для обновления QR-токена через API (каждые 25 секунд)
     const refreshInterval = setInterval(async () => {
       await refreshQrToken();
     }, 25000);
 
     return () => {
-      clearInterval(countdownInterval);
       clearInterval(refreshInterval);
     };
   }, [step, token, refreshQrToken]);

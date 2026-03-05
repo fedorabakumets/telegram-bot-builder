@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useQrAuth } from './hooks/use-qr-auth';
 import { useQrPolling } from './hooks/use-qr-polling';
+import { useCountdown } from './hooks/use-countdown';
 import { StartStepView, QrStepView, QrPasswordStepView, TelegramAuthHeader } from './components';
 import type { TelegramAuthProps, AuthStep } from './types';
 
@@ -30,9 +31,11 @@ import type { TelegramAuthProps, AuthStep } from './types';
  */
 export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProps) {
   const [step, setStep] = useState<AuthStep>('start');
-  const [countdown, setCountdown] = useState(30);
   const { qrState, isLoading, generateQrCode, checkQrStatus, refreshQrToken, setQrPassword, resetQrState } =
     useQrAuth(onSuccess, onOpenChange);
+
+  // Локальный countdown для UI (без лишних ре-рендеров)
+  const countdown = useCountdown({ initialValue: 30, isActive: step === 'qr' || step === 'qr-password' });
 
   // Сброс шага и состояния при открытии/закрытии
   useEffect(() => {
@@ -45,11 +48,6 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
 
   // Автообновление QR-токена
   useQrPolling({ step, token: qrState.token, refreshQrToken });
-
-  // Синхронизация countdown из хука
-  useEffect(() => {
-    setCountdown(qrState.countdown);
-  }, [qrState.countdown]);
 
   // Переключение на шаг QR при получении URL
   useEffect(() => {
@@ -77,11 +75,12 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
 
         <div className="space-y-4">
           {step === 'start' && (
-            <StartStepView onGenerateQr={() => generateQrCode()} isLoading={isLoading} />
+            <StartStepView key="start" onGenerateQr={() => generateQrCode()} isLoading={isLoading} />
           )}
 
           {step === 'qr' && (
             <QrStepView
+              key="qr"
               qrState={{ ...qrState, countdown }}
               isLoading={isLoading}
               onCheckStatus={checkQrStatus}
@@ -92,6 +91,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
 
           {step === 'qr-password' && (
             <QrPasswordStepView
+              key="qr-password"
               password={qrState.password}
               isLoading={isLoading}
               onPasswordChange={setQrPassword}

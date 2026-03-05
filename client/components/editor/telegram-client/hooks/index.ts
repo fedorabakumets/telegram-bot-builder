@@ -20,6 +20,9 @@ export type { UseQrAuthReturn } from './use-qr-auth';
 export { useQrPolling } from './use-qr-polling';
 export type { UseQrPollingParams } from './use-qr-polling';
 
+export { useCountdown } from './use-countdown';
+export type { UseCountdownParams } from './use-countdown';
+
 // QR действия
 export * from './qr-actions';
 
