@@ -7,25 +7,13 @@ import { CheckCircle2, Loader2, QrCode, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { QrCodeGenerator } from './qr-code-generator';
-
-/**
- * Свойства компонента TelegramAuth
- * @interface TelegramAuthProps
- * @property {boolean} open - Состояние открытия диалога
- * @property {Function} onOpenChange - Коллбэк для изменения состояния открытия
- * @property {Function} onSuccess - Коллбэк, вызываемый при успешной авторизации
- */
-interface TelegramAuthProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
-}
+import type { TelegramAuthProps } from './types';
 
 /**
  * Компонент авторизации через Telegram
  *
  * Предоставляет интерфейс для авторизации через Telegram Client API
- * с использованием номера телефона и кода подтверждения.
+ * с использованием QR-кода для подключения устройства.
  *
  * @param {TelegramAuthProps} props - Свойства компонента
  * @returns {JSX.Element} Диалог авторизации через Telegram

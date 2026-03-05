@@ -9,25 +9,15 @@
 
 import { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
-
-/**
- * Свойства компонента QR-кода
- * @interface QrCodeGeneratorProps
- * @property {string} value - Данные для кодирования в QR-коде
- * @property {number} [size=200] - Размер QR-кода в пикселях
- */
-interface QrCodeGeneratorProps {
-  value: string;
-  size?: number;
-}
+import type { QrCodeGeneratorProps } from './types';
 
 /**
  * Компонент генерации QR-кода
  *
- * Генерирует QR-код как SVG изображение с высоким уровнем коррекции ошибок.
+ * Генерирует QR-код как Canvas изображение с высоким уровнем коррекции ошибок.
  *
  * @param {QrCodeGeneratorProps} props - Свойства компонента
- * @returns {JSX.Element} SVG элемент с QR-кодом
+ * @returns {JSX.Element} Canvas элемент с QR-кодом
  *
  * @example
  * ```tsx

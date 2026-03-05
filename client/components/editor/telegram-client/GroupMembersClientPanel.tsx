@@ -14,15 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Users, Loader2, Crown, Bot, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { TelegramAuth } from '@/components/editor/telegram-client/telegram-auth';
-
-/**
- * Свойства компонента управления участниками
- */
-interface GroupMembersClientPanelProps {
-  groupId: string;
-  groupName: string;
-}
+import { TelegramAuth } from './telegram-auth';
+import type { GroupMembersClientPanelProps } from './types';
 
 /**
  * Компонент управления участниками группы через Client API

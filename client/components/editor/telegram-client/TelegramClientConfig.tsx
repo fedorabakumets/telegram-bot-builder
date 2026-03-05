@@ -20,18 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, Phone, CheckCircle2, AlertTriangle, LogOut, Settings, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { TelegramAuth } from '@/components/editor/telegram-client/telegram-auth';
-
-/**
- * Статус авторизации Client API
- */
-interface AuthStatus {
-  isAuthenticated: boolean;
-  hasCredentials: boolean;
-  phoneNumber?: string;
-  userId?: number | string;
-  username?: string;
-}
+import { TelegramAuth } from './telegram-auth';
+import type { AuthStatus } from './types';
 
 /**
  * Компонент настройки Telegram Client API (общая база)
