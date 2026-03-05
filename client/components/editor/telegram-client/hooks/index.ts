@@ -4,9 +4,15 @@
  * @module hooks
  */
 
-// Главный хук
+// Главные хуки
 export { useTelegramAuth } from './use-telegram-auth';
 export type { UseTelegramAuthReturn } from './use-telegram-auth';
+
+export { useTelegramAuthState } from './use-telegram-auth-state';
+export type { UseTelegramAuthStateReturn } from './use-telegram-auth-state';
+
+export { useTelegramAuthActions } from './use-telegram-auth-actions';
+export type { UseTelegramAuthActionsReturn, UseTelegramAuthActionsParams } from './use-telegram-auth-actions';
 
 // Отдельные функции
 export { loadAuthStatus } from './load-auth-status';
