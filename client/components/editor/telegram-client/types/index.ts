@@ -11,3 +11,9 @@ export type { ApiCredentials } from './api-credentials';
 export type { TelegramAuthProps } from './telegram-auth-props';
 export type { GroupMembersClientPanelProps } from './group-members-panel-props';
 export type { QrCodeGeneratorProps } from './qr-code-generator-props';
+export type { AuthStep, QrState } from './telegram-auth-state';
+export type {
+  PhoneStepViewProps,
+  QrStepViewProps,
+  QrPasswordStepViewProps,
+} from './telegram-auth-view-props';

@@ -14,6 +14,9 @@ export type { UseTelegramAuthStateReturn } from './use-telegram-auth-state';
 export { useTelegramAuthActions } from './use-telegram-auth-actions';
 export type { UseTelegramAuthActionsReturn, UseTelegramAuthActionsParams } from './use-telegram-auth-actions';
 
+export { useQrAuth } from './use-qr-auth';
+export type { UseQrAuthReturn } from './use-qr-auth';
+
 // Фабрики действий
 export * from './actions';
 
