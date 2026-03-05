@@ -49,12 +49,10 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
   // Автообновление QR-токена
   useQrPolling({ step, token: qrState.token, refreshQrToken });
 
-  // Переключение на шаг QR при получении URL
-  useEffect(() => {
-    if (qrState.url && step === 'start') {
-      setStep('qr');
-    }
-  }, [qrState.url, step]);
+  const handleGenerateQr = async () => {
+    await generateQrCode();
+    setStep('qr');
+  };
 
   const handleBack = () => {
     resetQrState();
@@ -75,7 +73,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
 
         <div className="space-y-4">
           {step === 'start' && (
-            <StartStepView key="start" onGenerateQr={() => generateQrCode()} isLoading={isLoading} />
+            <StartStepView key="start" onGenerateQr={handleGenerateQr} isLoading={isLoading} />
           )}
 
           {step === 'qr' && (
