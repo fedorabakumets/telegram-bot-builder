@@ -7,6 +7,7 @@
  */
 
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import type { QrState } from '../types';
 import { generateQrCode, checkQrStatus, refreshQrToken } from './qr-actions';
 
@@ -48,9 +49,10 @@ export function useQrAuth(
     countdown: 30,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleGenerateQrCode = async (password?: string) => {
-    await generateQrCode({ setQrState, setIsLoading, password });
+    await generateQrCode({ setQrState, setIsLoading, toast, password });
   };
 
   const handleCheckQrStatus = async () => {
@@ -58,6 +60,7 @@ export function useQrAuth(
       token: qrState.token,
       password: qrState.password,
       setIsLoading,
+      toast,
       onSuccess,
       onOpenChange,
       resetQrState,

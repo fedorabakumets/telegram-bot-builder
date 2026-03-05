@@ -4,7 +4,6 @@
  * @module checkQrStatus
  */
 
-import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
 /**
@@ -17,6 +16,8 @@ export interface CheckQrStatusParams {
   password?: string;
   /** Установить статус загрузки */
   setIsLoading: (value: boolean) => void;
+  /** Функция toast для уведомлений */
+  toast: (options: { title: string; description?: string; variant?: 'default' | 'destructive' }) => void;
   /** Коллбэк успешной авторизации */
   onSuccess: () => void;
   /** Управление состоянием диалога */
@@ -40,18 +41,6 @@ export interface CheckQrStatusResult {
  *
  * @param params - Параметры проверки
  * @returns {Promise<CheckQrStatusResult>} Результат операции
- *
- * @example
- * ```tsx
- * const result = await checkQrStatus({
- *   token: qrState.token,
- *   password: qrState.password,
- *   setIsLoading,
- *   onSuccess,
- *   onOpenChange,
- *   resetQrState
- * });
- * ```
  */
 export async function checkQrStatus(
   params: CheckQrStatusParams
@@ -60,11 +49,11 @@ export async function checkQrStatus(
     token,
     password,
     setIsLoading,
+    toast,
     onSuccess,
     onOpenChange,
     resetQrState,
   } = params;
-  const { toast } = useToast();
 
   if (!token) return { success: false };
 

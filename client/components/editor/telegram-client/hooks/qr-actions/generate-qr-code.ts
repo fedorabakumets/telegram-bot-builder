@@ -4,7 +4,6 @@
  * @module generateQrCode
  */
 
-import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import type { QrState } from '../../types';
 
@@ -16,6 +15,8 @@ export interface GenerateQrCodeParams {
   setQrState: (state: QrState) => void;
   /** Установить статус загрузки */
   setIsLoading: (value: boolean) => void;
+  /** Функция toast для уведомлений */
+  toast: (options: { title: string; description?: string; variant?: 'default' | 'destructive' }) => void;
   /** Пароль 2FA (опционально) */
   password?: string;
 }
@@ -35,20 +36,11 @@ export interface GenerateQrCodeResult {
  *
  * @param params - Параметры генерации
  * @returns {Promise<GenerateQrCodeResult>} Результат операции
- *
- * @example
- * ```tsx
- * const result = await generateQrCode({ setQrState, setIsLoading, password });
- * if (result.requiresPassword) {
- *   setStep('qr-password');
- * }
- * ```
  */
 export async function generateQrCode(
   params: GenerateQrCodeParams
 ): Promise<GenerateQrCodeResult> {
-  const { setQrState, setIsLoading, password } = params;
-  const { toast } = useToast();
+  const { setQrState, setIsLoading, toast, password } = params;
 
   setIsLoading(true);
   try {
