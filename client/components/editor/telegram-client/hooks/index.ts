@@ -14,6 +14,9 @@ export type { UseTelegramAuthStateReturn } from './use-telegram-auth-state';
 export { useTelegramAuthActions } from './use-telegram-auth-actions';
 export type { UseTelegramAuthActionsReturn, UseTelegramAuthActionsParams } from './use-telegram-auth-actions';
 
+// Фабрики действий
+export * from './actions';
+
 // Отдельные функции
 export { loadAuthStatus } from './load-auth-status';
 export { saveCredentials } from './save-credentials';

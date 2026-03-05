@@ -1,17 +1,19 @@
 /**
  * @fileoverview Хук действий авторизации Telegram Client API
  *
- * Предоставляет функции: loadStatus, saveCredentials, logout, resetCredentials
+ * Использует фабрики для создания функций действий.
  *
  * @module useTelegramAuthActions
  */
 
 import { useToast } from '@/hooks/use-toast';
 import type { AuthStatus, ApiCredentials } from '../types';
-import { loadAuthStatus } from './load-auth-status';
-import { saveCredentials as saveCredentialsFn } from './save-credentials';
-import { logout as logoutFn } from './logout';
-import { resetCredentials as resetCredentialsFn } from './reset-credentials';
+import {
+  createLoadStatusHandler,
+  createSaveCredentialsHandler,
+  createLogoutHandler,
+  createResetCredentialsHandler,
+} from './actions';
 
 /**
  * Параметры для создания действий авторизации
@@ -59,91 +61,30 @@ export function useTelegramAuthActions(
   const { setAuthStatus, setApiId, setApiHash, setIsLoading } = params;
   const { toast } = useToast();
 
-  /**
-   * Загрузка статуса авторизации
-   */
-  const loadStatus = async () => {
-    try {
-      const status = await loadAuthStatus();
-      setAuthStatus(status);
-    } catch (error) {
-      console.error('Ошибка загрузки статуса:', error);
-    }
+  const loadStatus = createLoadStatusHandler({ setAuthStatus });
+  const loadStatusWithToast = async () => {
+    await loadStatus();
   };
 
-  /**
-   * Сохранение API credentials
-   */
-  const saveCredentials = async (credentials: ApiCredentials) => {
-    if (!credentials.apiId.trim() || !credentials.apiHash.trim()) {
-      toast({
-        title: 'Ошибка',
-        description: 'Заполните API ID и API Hash',
-        variant: 'destructive',
-      });
-      return;
-    }
+  const saveCredentials = createSaveCredentialsHandler({
+    setIsLoading,
+    loadStatus: loadStatusWithToast,
+  });
 
-    setIsLoading(true);
-    try {
-      const result = await saveCredentialsFn(credentials);
-      toast({ title: 'Успешно', description: result.message });
-      loadStatus();
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить credentials',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const logout = createLogoutHandler({
+    setIsLoading,
+    loadStatus: loadStatusWithToast,
+  });
 
-  /**
-   * Выход из аккаунта
-   */
-  const logout = async () => {
-    setIsLoading(true);
-    try {
-      const result = await logoutFn();
-      toast({ title: 'Выполнен выход', description: result.message });
-      loadStatus();
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось выполнить выход',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Сброс API credentials
-   */
-  const resetCredentials = async () => {
-    setIsLoading(true);
-    try {
-      const result = await resetCredentialsFn();
-      toast({ title: 'Сброшено', description: result.message });
-      setApiId('');
-      setApiHash('');
-      loadStatus();
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось сбросить credentials',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const resetCredentials = createResetCredentialsHandler({
+    setIsLoading,
+    setApiId,
+    setApiHash,
+    loadStatus: loadStatusWithToast,
+  });
 
   return {
-    loadStatus,
+    loadStatus: loadStatusWithToast,
     saveCredentials,
     logout,
     resetCredentials,
