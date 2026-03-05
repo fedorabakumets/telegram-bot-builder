@@ -17,6 +17,9 @@ export type { UseTelegramAuthActionsReturn, UseTelegramAuthActionsParams } from 
 export { useQrAuth } from './use-qr-auth';
 export type { UseQrAuthReturn } from './use-qr-auth';
 
+// QR действия
+export * from './qr-actions';
+
 // Фабрики действий
 export * from './actions';
 

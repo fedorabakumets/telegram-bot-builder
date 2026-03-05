@@ -1,15 +1,14 @@
 /**
  * @fileoverview Хук управления QR авторизацией Telegram
  *
- * Предоставляет состояние и методы для генерации и проверки QR-кода.
+ * Композиция функций для генерации и проверки QR-кода.
  *
  * @module useQrAuth
  */
 
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
 import type { QrState } from '../types';
+import { generateQrCode, checkQrStatus, refreshQrToken } from './qr-actions';
 
 /**
  * Результат работы хука useQrAuth
@@ -49,109 +48,26 @@ export function useQrAuth(
     countdown: 30,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
-  /**
-   * Генерация QR-кода
-   */
-  const generateQrCode = async (password?: string) => {
-    setIsLoading(true);
-    try {
-      const response = await apiRequest('POST', '/api/telegram-auth/qr-generate', {
-        password: password || '',
-      });
-
-      if (response.success) {
-        if (response.requiresPassword) {
-          toast({
-            title: 'Требуется 2FA',
-            description: 'Введите пароль двухфакторной аутентификации',
-          });
-        } else if (response.token && response.qrUrl) {
-          setQrState({
-            token: response.token,
-            url: response.qrUrl,
-            password: password || '',
-            countdown: response.expires || 30,
-          });
-          toast({
-            title: 'QR-код сгенерирован',
-            description: 'Отсканируйте QR-код в приложении Telegram',
-          });
-        }
-      } else {
-        toast({
-          title: 'Ошибка',
-          description: response.error || 'Не удалось сгенерировать QR-код',
-          variant: 'destructive',
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось сгенерировать QR-код',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleGenerateQrCode = async (password?: string) => {
+    await generateQrCode({ setQrState, setIsLoading, password });
   };
 
-  /**
-   * Проверка статуса QR
-   */
-  const checkQrStatus = async () => {
-    if (!qrState.token) return;
-
-    setIsLoading(true);
-    try {
-      const response = await apiRequest('POST', '/api/telegram-auth/qr-check', {
-        token: qrState.token,
-        password: qrState.password || undefined,
-      });
-
-      if (response.success && response.isAuthenticated) {
-        toast({
-          title: 'Авторизация успешна',
-          description: 'Telegram Client API подключён',
-        });
-        resetQrState();
-        onSuccess();
-        onOpenChange(false);
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось проверить QR',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCheckQrStatus = async () => {
+    await checkQrStatus({
+      token: qrState.token,
+      password: qrState.password,
+      setIsLoading,
+      onSuccess,
+      onOpenChange,
+      resetQrState,
+    });
   };
 
-  /**
-   * Обновление QR-токена
-   */
-  const refreshQrToken = async () => {
-    try {
-      const response = await apiRequest('POST', '/api/telegram-auth/qr-refresh', {});
-      if (response.success && response.token && response.qrUrl) {
-        setQrState((prev) => ({
-          ...prev,
-          token: response.token,
-          url: response.qrUrl,
-          countdown: response.expires || 30,
-        }));
-      }
-    } catch (error) {
-      console.error('Ошибка обновления QR:', error);
-    }
+  const handleRefreshQrToken = async () => {
+    await refreshQrToken({ setQrState });
   };
 
-  /**
-   * Сброс состояния QR
-   */
   const resetQrState = () => {
     setQrState({ token: '', url: '', password: '', countdown: 30 });
   };
@@ -159,9 +75,9 @@ export function useQrAuth(
   return {
     qrState,
     isLoading,
-    generateQrCode,
-    checkQrStatus,
-    refreshQrToken,
+    generateQrCode: handleGenerateQrCode,
+    checkQrStatus: handleCheckQrStatus,
+    refreshQrToken: handleRefreshQrToken,
     setQrPassword: (value: string) =>
       setQrState((prev) => ({ ...prev, password: value })),
     resetQrState,
