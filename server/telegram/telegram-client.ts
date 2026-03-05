@@ -7,6 +7,12 @@ import { Api } from 'telegram/tl';
 import { db } from '../database/db';
 import type { TelegramClientConfig } from './types/client/telegram-client-config.js';
 import type { AuthStatus } from './types/client/auth-status.js';
+import { resolveChatEntity } from './utils/client/chat-entity-resolver.js';
+import { resolveUserEntity } from './utils/client/user-entity-resolver.js';
+import { createBannedRights } from './utils/client/banned-rights-builder.js';
+import { createAdminRights } from './utils/client/admin-rights-builder.js';
+import { resolveMemberStatus } from './utils/client/member-status-resolver.js';
+import { extractParticipantId } from './utils/client/participant-id-extractor.js';
 
 /**
  * Класс для управления клиентами Telegram
@@ -450,23 +456,8 @@ class TelegramClientManager {
     }
 
     try {
-      // Сначала попробуем получить сущность чата
-      let chatEntity: any;
-
-      try {
-        // Попробуем получить чат по его ID или username
-        chatEntity = await client.getEntity(chatId);
-      } catch (entityError) {
-        console.log('Не удалось получить сущность чата напрямую, пробуем другие методы');
-
-        // Если ID начинается с -100, это супергруппа
-        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = chatId.slice(4);
-          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
-        } else {
-          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
-        }
-      }
+      // Получаем сущность чата через утилиту
+      const chatEntity = await resolveChatEntity(client, chatId);
 
       const result = await client.invoke(
         new Api.channels.GetParticipants({
@@ -480,26 +471,16 @@ class TelegramClientManager {
 
       if ('participants' in result) {
         return result.participants.map((participant: any) => {
-          // Отладочная информация для понимания структуры данных
-          console.log('Participant structure:', {
-            participant: participant,
-            userId: participant.userId,
-            user_id: participant.user_id,
-            peer: participant.peer,
-            availableKeys: Object.keys(participant)
-          });
-
-          // Попробуем разные способы извлечения user ID
-          const userId = participant.userId || participant.user_id || participant.peer?.user_id || participant.peer?.userId;
-          const user = result.users.find((u: any) => u.id?.toString() === userId?.toString());
+          const participantId = extractParticipantId(participant);
+          const user = result.users.find((u: any) => u.id?.toString() === participantId?.toString());
 
           return {
-            id: userId?.toString(),
+            id: participantId || '',
             username: (user as any)?.username || null,
             firstName: (user as any)?.firstName || null,
             lastName: (user as any)?.lastName || null,
             isBot: (user as any)?.bot || false,
-            status: this.getParticipantStatus(participant),
+            status: resolveMemberStatus(participant),
             joinedAt: participant.date ? new Date(participant.date * 1000) : null,
           };
         });
@@ -510,18 +491,6 @@ class TelegramClientManager {
       console.error('Detailed error:', error?.message, error?.stack);
       throw new Error(`Failed to get group members: ${error?.message || 'Unknown error'}`);
     }
-  }
-
-  /**
-   * Получить статус участника
-   * @param participant - Участник
-   * @returns Статус участника
-   */
-  private getParticipantStatus(participant: any): string {
-    if (participant.className === 'ChannelParticipantCreator') return 'creator';
-    if (participant.className === 'ChannelParticipantAdmin') return 'administrator';
-    if (participant.className === 'ChannelParticipantBanned') return 'kicked';
-    return 'member';
   }
 
   /**
@@ -537,17 +506,12 @@ class TelegramClientManager {
     }
 
     try {
-      let chat: any;
-      if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-        const channelId = parseInt(chatId.slice(4));
-        chat = channelId;
-      } else {
-        chat = chatId;
-      }
+      // Получаем сущность чата через утилиту
+      const chatEntity = await resolveChatEntity(client, chatId);
 
       const result = await client.invoke(
         new Api.channels.GetFullChannel({
-          channel: chat,
+          channel: chatEntity,
         })
       );
 
@@ -713,43 +677,33 @@ class TelegramClientManager {
     }
 
     try {
-      // Получаем сущность чата
-      let chatEntity: any;
-      try {
-        chatEntity = await client.getEntity(chatId);
-      } catch (entityError) {
-        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = chatId.slice(4);
-          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
-        } else {
-          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
-        }
-      }
+      // Получаем сущности через утилиты
+      const chatEntity = await resolveChatEntity(client, chatId);
+      const userEntity = await resolveUserEntity(client, parseInt(memberId));
 
-      // Получаем сущность пользователя
-      const userEntity = await client.getEntity(parseInt(memberId));
+      // Создаём права блокировки через утилиту
+      const bannedRights = createBannedRights({
+        viewMessages: true,
+        sendMessages: true,
+        sendMedia: true,
+        sendStickers: true,
+        sendGifs: true,
+        sendGames: true,
+        sendInline: true,
+        embedLinks: true,
+        sendPolls: true,
+        changeInfo: true,
+        inviteUsers: true,
+        pinMessages: true,
+        manageTopics: true,
+      }, Math.floor(Date.now() / 1000) + 60);
 
       // Исключаем участника
       const result = await client.invoke(
         new Api.channels.EditBanned({
           channel: chatEntity,
           participant: userEntity,
-          bannedRights: new Api.ChatBannedRights({
-            untilDate: Math.floor(Date.now() / 1000) + 60, // Бан на 60 секунд (фактически исключение)
-            viewMessages: true,
-            sendMessages: true,
-            sendMedia: true,
-            sendStickers: true,
-            sendGifs: true,
-            sendGames: true,
-            sendInline: true,
-            embedLinks: true,
-            sendPolls: true,
-            changeInfo: true,
-            inviteUsers: true,
-            pinMessages: true,
-            manageTopics: true,
-          }),
+          bannedRights,
         })
       );
 
@@ -768,43 +722,33 @@ class TelegramClientManager {
     }
 
     try {
-      // Получаем сущность чата
-      let chatEntity: any;
-      try {
-        chatEntity = await client.getEntity(chatId);
-      } catch (entityError) {
-        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = chatId.slice(4);
-          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
-        } else {
-          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
-        }
-      }
+      // Получаем сущности через утилиты
+      const chatEntity = await resolveChatEntity(client, chatId);
+      const userEntity = await resolveUserEntity(client, parseInt(memberId));
 
-      // Получаем сущность пользователя
-      const userEntity = await client.getEntity(parseInt(memberId));
+      // Создаём права блокировки через утилиту
+      const bannedRights = createBannedRights({
+        viewMessages: true,
+        sendMessages: true,
+        sendMedia: true,
+        sendStickers: true,
+        sendGifs: true,
+        sendGames: true,
+        sendInline: true,
+        embedLinks: true,
+        sendPolls: true,
+        changeInfo: true,
+        inviteUsers: true,
+        pinMessages: true,
+        manageTopics: true,
+      }, untilDate || 0);
 
       // Блокируем участника
       const result = await client.invoke(
         new Api.channels.EditBanned({
           channel: chatEntity,
           participant: userEntity,
-          bannedRights: new Api.ChatBannedRights({
-            untilDate: untilDate || 0, // 0 = навсегда
-            viewMessages: true,
-            sendMessages: true,
-            sendMedia: true,
-            sendStickers: true,
-            sendGifs: true,
-            sendGames: true,
-            sendInline: true,
-            embedLinks: true,
-            sendPolls: true,
-            changeInfo: true,
-            inviteUsers: true,
-            pinMessages: true,
-            manageTopics: true,
-          }),
+          bannedRights,
         })
       );
 
@@ -823,43 +767,33 @@ class TelegramClientManager {
     }
 
     try {
-      // Получаем сущность чата
-      let chatEntity: any;
-      try {
-        chatEntity = await client.getEntity(chatId);
-      } catch (entityError) {
-        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = chatId.slice(4);
-          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
-        } else {
-          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
-        }
-      }
+      // Получаем сущности через утилиты
+      const chatEntity = await resolveChatEntity(client, chatId);
+      const userEntity = await resolveUserEntity(client, parseInt(memberId));
 
-      // Получаем сущность пользователя
-      const userEntity = await client.getEntity(parseInt(memberId));
+      // Создаём права ограничения через утилиту
+      const bannedRights = createBannedRights({
+        viewMessages: false, // Может видеть сообщения
+        sendMessages: true,  // Не может писать
+        sendMedia: true,
+        sendStickers: true,
+        sendGifs: true,
+        sendGames: true,
+        sendInline: true,
+        embedLinks: true,
+        sendPolls: true,
+        changeInfo: true,
+        inviteUsers: true,
+        pinMessages: true,
+        manageTopics: true,
+      }, untilDate || Math.floor(Date.now() / 1000) + 3600);
 
       // Ограничиваем участника
       const result = await client.invoke(
         new Api.channels.EditBanned({
           channel: chatEntity,
           participant: userEntity,
-          bannedRights: new Api.ChatBannedRights({
-            untilDate: untilDate || Math.floor(Date.now() / 1000) + 3600, // По умолчанию на 1 час
-            viewMessages: false, // Может видеть сообщения
-            sendMessages: true,  // Не может писать
-            sendMedia: true,
-            sendStickers: true,
-            sendGifs: true,
-            sendGames: true,
-            sendInline: true,
-            embedLinks: true,
-            sendPolls: true,
-            changeInfo: true,
-            inviteUsers: true,
-            pinMessages: true,
-            manageTopics: true,
-          }),
+          bannedRights,
         })
       );
 
@@ -870,7 +804,7 @@ class TelegramClientManager {
     }
   }
 
-  // Назначить участника администратором через Client API  
+  // Назначить участника администратором через Client API
   async promoteMember(userId: string, chatId: string | number, memberId: string, adminRights: any): Promise<any> {
     const client = await this.getClient(userId);
     if (!client) {
@@ -878,44 +812,35 @@ class TelegramClientManager {
     }
 
     try {
-      // Получаем сущность чата
-      let chatEntity: any;
-      try {
-        chatEntity = await client.getEntity(chatId);
-      } catch (entityError) {
-        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = chatId.slice(4);
-          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
-        } else {
-          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
-        }
-      }
+      // Получаем сущности через утилиты
+      const chatEntity = await resolveChatEntity(client, chatId);
+      const userEntity = await resolveUserEntity(client, parseInt(memberId));
 
-      // Получаем сущность пользователя
-      const userEntity = await client.getEntity(parseInt(memberId));
+      // Создаём права администратора через утилиту
+      const rights = createAdminRights({
+        can_change_info: adminRights.can_change_info,
+        can_post_messages: adminRights.can_post_messages,
+        can_edit_messages: adminRights.can_edit_messages,
+        can_delete_messages: adminRights.can_delete_messages,
+        can_restrict_members: adminRights.can_restrict_members,
+        can_invite_users: adminRights.can_invite_users,
+        can_pin_messages: adminRights.can_pin_messages,
+        can_promote_members: adminRights.can_promote_members,
+        can_manage_video_chats: adminRights.can_manage_video_chats,
+        can_be_anonymous: adminRights.can_be_anonymous,
+        can_manage_topics: adminRights.can_manage_topics,
+        can_post_stories: adminRights.can_post_stories,
+        can_edit_stories: adminRights.can_edit_stories,
+        can_delete_stories: adminRights.can_delete_stories,
+      });
 
       // Назначаем администратором
       const result = await client.invoke(
         new Api.channels.EditAdmin({
           channel: chatEntity,
           userId: userEntity,
-          adminRights: new Api.ChatAdminRights({
-            changeInfo: adminRights.can_change_info || false,
-            postMessages: adminRights.can_post_messages || false,
-            editMessages: adminRights.can_edit_messages || false,
-            deleteMessages: adminRights.can_delete_messages || false,
-            banUsers: adminRights.can_restrict_members || false,
-            inviteUsers: adminRights.can_invite_users || false,
-            pinMessages: adminRights.can_pin_messages || false,
-            addAdmins: adminRights.can_promote_members || false,
-            manageCall: adminRights.can_manage_video_chats || false,
-            anonymous: adminRights.can_be_anonymous || false,
-            manageTopics: adminRights.can_manage_topics || false,
-            postStories: adminRights.can_post_stories || false,
-            editStories: adminRights.can_edit_stories || false,
-            deleteStories: adminRights.can_delete_stories || false,
-          }),
-          rank: adminRights.custom_title || ''
+          adminRights: rights,
+          rank: adminRights.custom_title || '',
         })
       );
 
@@ -940,44 +865,35 @@ class TelegramClientManager {
     }
 
     try {
-      // Получаем сущность чата
-      let chatEntity: any;
-      try {
-        chatEntity = await client.getEntity(chatId);
-      } catch (entityError) {
-        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = chatId.slice(4);
-          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
-        } else {
-          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
-        }
-      }
+      // Получаем сущности через утилиты
+      const chatEntity = await resolveChatEntity(client, chatId);
+      const userEntity = await resolveUserEntity(client, parseInt(memberId));
 
-      // Получаем сущность пользователя
-      const userEntity = await client.getEntity(parseInt(memberId));
+      // Создаём пустые права администратора через утилиту
+      const rights = createAdminRights({
+        can_change_info: false,
+        can_post_messages: false,
+        can_edit_messages: false,
+        can_delete_messages: false,
+        can_restrict_members: false,
+        can_invite_users: false,
+        can_pin_messages: false,
+        can_promote_members: false,
+        can_manage_video_chats: false,
+        can_be_anonymous: false,
+        can_manage_topics: false,
+        can_post_stories: false,
+        can_edit_stories: false,
+        can_delete_stories: false,
+      });
 
-      // Снимаем администраторские права (устанавливаем пустые права)
+      // Снимаем администраторские права
       const result = await client.invoke(
         new Api.channels.EditAdmin({
           channel: chatEntity,
           userId: userEntity,
-          adminRights: new Api.ChatAdminRights({
-            changeInfo: false,
-            postMessages: false,
-            editMessages: false,
-            deleteMessages: false,
-            banUsers: false,
-            inviteUsers: false,
-            pinMessages: false,
-            addAdmins: false,
-            manageCall: false,
-            anonymous: false,
-            manageTopics: false,
-            postStories: false,
-            editStories: false,
-            deleteStories: false,
-          }),
-          rank: ''
+          adminRights: rights,
+          rank: '',
         })
       );
 
