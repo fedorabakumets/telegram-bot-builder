@@ -3,7 +3,6 @@
  * @module server/telegram/utils/extension-validator
  */
 
-import type { FileExtension } from '../types/file-extension.js';
 import type { AllowedExtensionsMap } from '../types/allowed-extensions.js';
 
 /**
