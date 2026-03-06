@@ -1646,7 +1646,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const mediaFiles = await storage.searchMediaFiles(projectId, query);
       res.json(mediaFiles);
     } catch (error) {
-      console.error("Ошибка при поиске ��������йлов:", error);
+      console.error("Ошибка при поиске ����������йлов:", error);
       res.status(500).json({ message: "Ошибка при поиске файлов" });
     }
   });
@@ -2472,19 +2472,29 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       );
 
       if (result.success && result.token) {
-        // Костыль: сразу вызываем refresh для обновления параметров устройства
-        // Это заставляет gramJS переиспользовать клиента с правильными параметрами
-        console.log('🔄 Вызов refresh для обновления параметров устройства...');
+        // Сразу вызываем refresh для обновления параметров устройства
+        // Это аналогично нажатию кнопки "Обновить QR"
+        console.log('🔄 Автоматический вызов refresh после generate...');
         try {
-          await telegramAuthService.generateQRToken(
+          const refreshResult = await telegramAuthService.generateQRToken(
             client,
             credentials.apiId,
             credentials.apiHash
           );
-          console.log('✅ Refresh выполнен успешно');
+          if (refreshResult.success && refreshResult.token) {
+            // Возвращаем обновлённый токен
+            res.json({
+              success: true,
+              qrUrl: refreshResult.qrUrl,
+              token: refreshResult.token,
+              expires: refreshResult.expires,
+            });
+            console.log('✅ Refresh выполнен успешно, возвращаем обновлённый токен');
+            return;
+          }
         } catch (refreshError: any) {
           console.error('⚠️ Ошибка refresh:', refreshError.message);
-          // Не прерываем, если refresh не удался
+          // Не прерываем, если refresh не удался — возвращаем оригинальный токен
         }
 
         res.json({
