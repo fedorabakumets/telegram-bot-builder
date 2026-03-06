@@ -78,6 +78,9 @@ export class ChatModule implements IChatModule {
     }
 
     const client = getClient(userId, this.store.clients);
+    if (!client) {
+      throw new Error(`Клиент для пользователя ${userId} не найден`);
+    }
     return getChatInfo(client, chatId);
   }
 }

@@ -12,8 +12,6 @@ import { TelegramOperationsManager } from './telegram-operations-manager.js';
  */
 export class SessionManager {
   private readonly clients: Map<string, TelegramClient>;
-  private readonly sessions: Map<string, string>;
-  private readonly authStatus: Map<string, AuthStatus>;
   private readonly ops: TelegramOperationsManager;
 
   constructor(
@@ -22,8 +20,6 @@ export class SessionManager {
     authStatus: Map<string, AuthStatus>
   ) {
     this.clients = clients;
-    this.sessions = sessions;
-    this.authStatus = authStatus;
     this.ops = new TelegramOperationsManager(clients, sessions, authStatus);
   }
 

@@ -5,6 +5,7 @@
  */
 
 import type { ValidationResult } from '../../types/validation-result.js';
+import type { ValidationError } from '../../types/validation-error.js';
 
 /**
  * Комбинирует несколько результатов валидации
@@ -14,7 +15,7 @@ import type { ValidationResult } from '../../types/validation-result.js';
 export function combineValidationResults(
   ...results: ValidationResult[]
 ): ValidationResult {
-  const allErrors: Array<{ code: string; message: string; field?: string }> = [];
+  const allErrors: ValidationError[] = [];
 
   for (const result of results) {
     if (!result.isValid) {

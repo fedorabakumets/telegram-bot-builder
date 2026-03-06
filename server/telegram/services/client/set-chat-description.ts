@@ -23,7 +23,7 @@ export async function setChatDescription(
     const chatEntity = await resolveChatEntity(client, chatId);
 
     const result = await client.invoke(
-      new Api.channels.EditAbout({
+      new Api['channels']['EditAbout']({
         channel: chatEntity,
         about: description,
       })

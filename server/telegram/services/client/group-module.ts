@@ -17,7 +17,6 @@ import { demoteMember } from './demote-member.js';
 import {
   validateRequired,
   validateChatId,
-  validateUserId,
   combineValidationResults,
 } from '../../utils/validation/index.js';
 

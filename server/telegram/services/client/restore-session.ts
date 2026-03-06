@@ -4,7 +4,6 @@
  */
 
 import { TelegramClient } from 'telegram';
-import { Api } from 'telegram/tl';
 import { createTelegramClient } from './create-telegram-client.js';
 import { disableUpdateLoop } from './disable-update-loop.js';
 import { validateSession } from './validate-session.js';
