@@ -44,6 +44,8 @@ export async function createQRClient(apiId: string, apiHash: string): Promise<Te
       appVersion: DEVICE_CONFIG.appVersion,
       deviceModel: DEVICE_CONFIG.deviceModel,
       systemVersion: DEVICE_CONFIG.systemVersion,
+      langCode: 'ru',
+      systemLangCode: 'ru',
     }
   );
 
