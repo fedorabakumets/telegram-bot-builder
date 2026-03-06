@@ -1,6 +1,4 @@
 import { TelegramClient } from 'telegram';
-import { CustomFile } from 'telegram/client/uploads';
-import { Api } from 'telegram/tl';
 import type { TelegramClientConfig } from './types/client/telegram-client-config.js';
 import type { AuthStatus } from './types/client/auth-status.js';
 import {
@@ -23,8 +21,9 @@ import {
   saveSession,
   setChatUsername,
   setChatPhoto,
-  setChatDescription,
-  setChatTitle,
+  verifyPasswordWithSession,
+  logoutUser,
+  executeMemberOperation,
 } from './services/client/index.js';
 
 /**
@@ -90,24 +89,7 @@ class TelegramClientManager {
       return { success: false, error: 'Проверка пароля не требуется.' };
     }
 
-    const result = await verifyPassword(client, password);
-
-    if (result.success && result.sessionString) {
-      this.sessions.set(userId, result.sessionString);
-      await this.saveSessionToDatabase(userId, result.sessionString, authStatus.phoneNumber || '');
-
-      this.authStatus.set(userId, {
-        isAuthenticated: true,
-        phoneNumber: authStatus.phoneNumber,
-        userId,
-        needsCode: false,
-        needsPassword: false,
-      });
-
-      console.log(`✅ Пользователь ${authStatus.phoneNumber} успешно авторизован с 2FA`);
-    }
-
-    return result;
+    return verifyPasswordWithSession(userId, client, authStatus, password, this.sessions, this.authStatus);
   }
 
   /**
@@ -119,14 +101,7 @@ class TelegramClientManager {
     const client = this.clients.get(userId);
 
     if (client) {
-      const result = await logout(client);
-      if (result.success) {
-        this.clients.delete(userId);
-        this.sessions.delete(userId);
-        this.authStatus.delete(userId);
-        console.log(`✅ Пользователь ${userId} вышел из Client API`);
-      }
-      return result;
+      return logoutUser(userId, client, this.clients, this.sessions, this.authStatus);
     }
 
     return { success: false, error: 'Клиент не найден' };
@@ -181,16 +156,8 @@ class TelegramClientManager {
    */
   async getGroupMembers(userId: string, chatId: string | number): Promise<any[]> {
     const client = await this.getClient(userId);
-    if (!client) {
-      throw new Error('Telegram client not found. Please authenticate first.');
-    }
-
     const authStatus = await this.getAuthStatus(userId);
-    if (!authStatus.isAuthenticated) {
-      throw new Error('User not authenticated. Please complete phone verification first.');
-    }
-
-    return getGroupMembers(client, chatId);
+    return executeMemberOperation(client, authStatus, (c) => getGroupMembers(c, chatId));
   }
 
   /**
@@ -201,11 +168,7 @@ class TelegramClientManager {
    */
   async getChatInfo(userId: string, chatId: string | number): Promise<any> {
     const client = await this.getClient(userId);
-    if (!client) {
-      throw new Error('Telegram client not found. Please authenticate first.');
-    }
-
-    return getChatInfo(client, chatId);
+    return executeMemberOperation(client, undefined, (c) => getChatInfo(c, chatId));
   }
 
   /**
@@ -267,41 +230,25 @@ class TelegramClientManager {
   // Исключить участника из группы через Client API
   async kickMember(userId: string, chatId: string | number, memberId: string): Promise<any> {
     const client = await this.getClient(userId);
-    if (!client) {
-      throw new Error('Telegram client not found. Please authenticate first.');
-    }
-
-    return kickMember(client, chatId, memberId);
+    return executeMemberOperation(client, undefined, (c) => kickMember(c, chatId, memberId));
   }
 
   // Заблокировать участника через Client API
   async banMember(userId: string, chatId: string | number, memberId: string, untilDate?: number): Promise<any> {
     const client = await this.getClient(userId);
-    if (!client) {
-      throw new Error('Telegram client not found. Please authenticate first.');
-    }
-
-    return banMember(client, chatId, memberId, untilDate);
+    return executeMemberOperation(client, undefined, (c) => banMember(c, chatId, memberId, untilDate));
   }
 
   // Ограничить участника (мут) через Client API
   async restrictMember(userId: string, chatId: string | number, memberId: string, untilDate?: number): Promise<any> {
     const client = await this.getClient(userId);
-    if (!client) {
-      throw new Error('Telegram client not found. Please authenticate first.');
-    }
-
-    return restrictMember(client, chatId, memberId, untilDate);
+    return executeMemberOperation(client, undefined, (c) => restrictMember(c, chatId, memberId, untilDate));
   }
 
   // Назначить участника администратором через Client API
   async promoteMember(userId: string, chatId: string | number, memberId: string, adminRights: any): Promise<any> {
     const client = await this.getClient(userId);
-    if (!client) {
-      throw new Error('Telegram client not found. Please authenticate first.');
-    }
-
-    return promoteMember(client, chatId, memberId, adminRights);
+    return executeMemberOperation(client, undefined, (c) => promoteMember(c, chatId, memberId, adminRights));
   }
 
   /**
@@ -313,11 +260,7 @@ class TelegramClientManager {
    */
   async demoteMember(userId: string, chatId: string | number, memberId: string): Promise<any> {
     const client = await this.getClient(userId);
-    if (!client) {
-      throw new Error('Telegram client not found. Please authenticate first.');
-    }
-
-    return demoteMember(client, chatId, memberId);
+    return executeMemberOperation(client, undefined, (c) => demoteMember(c, chatId, memberId));
   }
 }
 

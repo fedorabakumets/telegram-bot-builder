@@ -30,6 +30,8 @@ export { resendCode } from './resend-code.js';
 export { verifyCode } from './verify-code.js';
 export { verifyPassword } from './verify-password.js';
 export { logout } from './logout.js';
+export { verifyPasswordWithSession } from './verify-password-with-session.js';
+export { logoutUser } from './logout-user.js';
 
 // Статус
 export { getAuthStatus } from './get-auth-status.js';
@@ -48,3 +50,7 @@ export { setChatUsername } from './set-chat-username.js';
 export { setChatPhoto } from './set-chat-photo.js';
 export { setChatDescription } from './set-chat-description.js';
 export { setChatTitle } from './set-chat-title.js';
+
+// Утилиты операций
+export { checkAuthForOperation } from './check-auth-for-operation.js';
+export { executeMemberOperation } from './execute-member-operation.js';
