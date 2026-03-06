@@ -7,11 +7,6 @@ import { Api } from 'telegram/tl';
 import { db } from '../database/db';
 import type { TelegramClientConfig } from './types/client/telegram-client-config.js';
 import type { AuthStatus } from './types/client/auth-status.js';
-import type { AuthStatusExtended } from './types/client/auth-status-extended.js';
-import type { AdminRights } from './types/client/admin-rights.js';
-import type { BannedRights } from './types/client/banned-rights.js';
-import type { GroupMember } from './types/client/group-member.js';
-import type { ChatInfo } from './types/client/chat-info.js';
 import { resolveChatEntity } from './utils/client/chat-entity-resolver.js';
 import { resolveUserEntity } from './utils/client/user-entity-resolver.js';
 import { createBannedRights } from './utils/client/banned-rights-builder.js';
@@ -19,22 +14,14 @@ import { createAdminRights } from './utils/client/admin-rights-builder.js';
 import { resolveMemberStatus } from './utils/client/member-status-resolver.js';
 import { extractParticipantId } from './utils/client/participant-id-extractor.js';
 import {
-  loadSessionFromDb,
   saveSessionToDb,
   restoreSession,
   initializeManager,
-  loadApiCredentials,
-  saveApiCredentials,
-  getEnvCredentials,
-  createTelegramClient,
-  disconnectTelegramClient,
-  disableUpdateLoop,
-  validateSession,
-  sendCode,
-  resendCode,
-  verifyCode,
   verifyPassword,
   logout,
+  getAuthStatus,
+  setCredentials,
+  startClientWithPhone,
 } from './services/client/index.js';
 
 /**
@@ -69,14 +56,6 @@ class TelegramClientManager {
     return saveSessionToDb(userId, sessionString, phoneNumber);
   }
 
-  /**
-   * Загрузить сессию из базы данных
-   * @param userId - ID пользователя
-   * @returns Строка сессии или null, если не найдена
-   */
-  private async loadSessionFromDatabase(userId: string): Promise<string | null> {
-    return loadSessionFromDb(userId);
-  }
 
   /**
    * Восстановить клиент из сохраненной сессии
@@ -156,86 +135,7 @@ class TelegramClientManager {
    * @returns Статус аутентификации
    */
   async getAuthStatus(userId: string): Promise<AuthStatus & { hasCredentials?: boolean; isAuthenticated?: boolean; username?: string; phoneNumber?: string }> {
-    // Проверяем наличие credentials в базе данных
-    try {
-      const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
-      
-      if (result.length === 0) {
-        return { 
-          isAuthenticated: false, 
-          needsCode: false, 
-          needsPassword: false,
-          hasCredentials: false 
-        };
-      }
-
-      const row = result[0];
-      const hasCredentials = !!(row.apiId && row.apiHash);
-      const hasSession = !!row.sessionString;
-
-      // Если есть сессия — считаем пользователя авторизованным и получаем информацию
-      if (hasSession && row.apiId && row.apiHash) {
-        try {
-          const client = new TelegramClient(
-            new StringSession(row.sessionString ?? undefined),
-            parseInt(row.apiId),
-            row.apiHash ?? undefined,
-            {
-              connectionRetries: 5,
-              useWSS: false,
-            }
-          );
-
-          await client.connect();
-          const me = await client.getMe();
-
-          console.log('📊 getMe() результат:', JSON.stringify({
-            id: me?.id,
-            userId: (me as any).userId,
-            username: me?.username,
-            phone: (me as any).phone,
-            firstName: me?.firstName
-          }, null, 2));
-
-          // Не отключаем клиента — он может использоваться в других местах
-
-          return {
-            isAuthenticated: true,
-            needsCode: false,
-            needsPassword: false,
-            hasCredentials: true,
-            username: me?.username || undefined,
-            phoneNumber: (me as any).phone || undefined,
-            userId: (me as any).userId?.toString() || me?.id?.toString()
-          };
-        } catch (error) {
-          console.error('Ошибка получения информации о пользователе:', error);
-          // Возвращаем статус без username/phoneNumber если не удалось получить
-          return {
-            isAuthenticated: true,
-            needsCode: false,
-            needsPassword: false,
-            hasCredentials: true
-          };
-        }
-      }
-
-      // Если credentials есть, но сессии нет — ждём код
-      return { 
-        isAuthenticated: false, 
-        needsCode: hasCredentials, 
-        needsPassword: false,
-        hasCredentials
-      };
-    } catch (error) {
-      console.error('Ошибка проверки credentials:', error);
-      return { 
-        isAuthenticated: false, 
-        needsCode: false, 
-        needsPassword: false, 
-        hasCredentials: false 
-      };
-    }
+    return getAuthStatus(userId);
   }
 
   /**
@@ -246,35 +146,7 @@ class TelegramClientManager {
    * @returns Результат установки
    */
   async setCredentials(userId: string, apiId: string, apiHash: string): Promise<{ success: boolean; error?: string }> {
-    try {
-
-      const existing = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
-
-      if (existing.length > 0) {
-        await db.update(userTelegramSettings)
-          .set({
-            apiId,
-            apiHash,
-            updatedAt: new Date()
-          })
-          .where(eq(userTelegramSettings.userId, userId));
-      } else {
-        await db.insert(userTelegramSettings).values({
-          userId,
-          apiId,
-          apiHash
-        });
-      }
-
-      console.log(`💾 API credentials сохранены для пользователя ${userId}`);
-      return { success: true };
-    } catch (error: any) {
-      console.error('Ошибка сохранения credentials:', error);
-      return {
-        success: false,
-        error: error.message || 'Ошибка сохранения credentials'
-      };
-    }
+    return setCredentials(userId, apiId, apiHash);
   }
 
   /**
@@ -284,33 +156,9 @@ class TelegramClientManager {
    * @returns Клиент Telegram
    */
   async createClient(userId: string, config: TelegramClientConfig): Promise<TelegramClient> {
-    const { apiId, apiHash, session } = config;
-
-    const stringSession = new StringSession(session || '');
-    const client = new TelegramClient(stringSession, parseInt(apiId!), apiHash!, {
-      connectionRetries: 5,
-      useWSS: false,
-      autoReconnect: true,
-    });
-
-    try {
-      await client.start({
-        phoneNumber: config.phoneNumber || '',
-        password: async () => {
-          throw new Error('2FA not supported in this implementation');
-        },
-        phoneCode: async () => {
-          throw new Error('Phone code verification not implemented');
-        },
-        onError: (err) => console.error('Telegram client error:', err),
-      });
-
-      this.clients.set(userId, client);
-      return client;
-    } catch (error) {
-      console.error('Failed to start Telegram client:', error);
-      throw error;
-    }
+    const client = await startClientWithPhone(config);
+    this.clients.set(userId, client);
+    return client;
   }
 
   /**

@@ -13,12 +13,14 @@ export { initializeManager } from './initialize-manager.js';
 export { loadApiCredentials } from './load-api-credentials.js';
 export { saveApiCredentials } from './save-api-credentials.js';
 export { getEnvCredentials } from './get-env-credentials.js';
+export { setCredentials } from './set-credentials.js';
 
 // Клиент
 export { createTelegramClient } from './create-telegram-client.js';
 export { disconnectTelegramClient } from './disconnect-telegram-client.js';
 export { disableUpdateLoop } from './disable-update-loop.js';
 export { validateSession } from './validate-session.js';
+export { startClientWithPhone } from './start-client-with-phone.js';
 
 // Авторизация (phone code)
 export { sendCode } from './send-code.js';
@@ -26,3 +28,6 @@ export { resendCode } from './resend-code.js';
 export { verifyCode } from './verify-code.js';
 export { verifyPassword } from './verify-password.js';
 export { logout } from './logout.js';
+
+// Статус
+export { getAuthStatus } from './get-auth-status.js';
