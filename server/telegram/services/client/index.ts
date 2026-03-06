@@ -1,7 +1,26 @@
 /**
  * @fileoverview Баррер-файл для экспорта всех сервисов клиента Telegram
  * @module server/telegram/services/client/index
+ * @description Экспортирует сервисы, модули и утилиты для работы с Telegram Client
  */
+
+// === Новая модульная архитектура (рекомендуется) ===
+export { TelegramClientManagerV2 } from './telegram-client-manager-v2.js';
+export { ChatMethods } from './telegram-client-manager-v2-chats.js';
+export { GroupMethods } from './telegram-client-manager-v2-groups.js';
+export { TelegramStore } from './telegram-store.js';
+export { AuthModule } from './auth-module.js';
+export { SessionModule } from './session-module.js';
+export { ChatModule } from './chat-module.js';
+export { GroupModule } from './group-module.js';
+
+// === Устаревшая архитектура (для обратной совместимости) ===
+// Фасады
+export { TelegramOperationsManager } from './telegram-operations-manager.js';
+export { TelegramClientManager } from './telegram-client-manager.js';
+export { SessionManager } from './session-manager.js';
+export { UserManager } from './user-manager.js';
+export { ChatManager } from './chat-manager.js';
 
 // Работа с сессиями
 export { loadSessionFromDb } from './load-session-from-db.js';
@@ -66,10 +85,3 @@ export { ChatOperations } from './chat-operations.js';
 // Утилиты операций
 export { checkAuthForOperation } from './check-auth-for-operation.js';
 export { executeMemberOperation } from './execute-member-operation.js';
-
-// Фасады
-export { TelegramOperationsManager } from './telegram-operations-manager.js';
-export { TelegramClientManager } from './telegram-client-manager.js';
-export { SessionManager } from './session-manager.js';
-export { UserManager } from './user-manager.js';
-export { ChatManager } from './chat-manager.js';

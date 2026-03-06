@@ -1,6 +1,7 @@
 /**
- * @fileoverview Баррер-файл для экспорта всех типов модуля media
+ * @fileoverview Баррер-файл для экспорта всех типов модуля Telegram
  * @module server/telegram/types/index
+ * @description Экспортирует типы для работы с медиа, авторизацией, клиентами и валидацией
  */
 
 export type { DownloadedMedia } from './media/downloaded-media.js';
@@ -15,3 +16,7 @@ export type { HttpTimeoutOptions } from './media/http-request.js';
 export type { TelegramFileInfo } from './media/telegram-file-info.js';
 
 export * from './auth/index.js';
+export * from './client/index.js';
+
+// Валидация (новое)
+export * from './validation-error.js';
