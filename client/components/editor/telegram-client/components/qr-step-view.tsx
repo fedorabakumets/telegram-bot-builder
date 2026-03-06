@@ -31,11 +31,11 @@ export function QrStepView({ qrState, isLoading, onCheckStatus, onRefreshQr, onB
         <QrInfoText countdown={countdown} />
       </div>
 
-      <QrAuthWarning />
-
       <QrStatusButton onClick={onCheckStatus} isLoading={isLoading} />
 
       <QrActionButtons onBack={onBack} onRefresh={onRefreshQr} isLoading={isLoading} />
+
+      <QrAuthWarning />
     </div>
   );
 }
