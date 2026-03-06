@@ -1646,7 +1646,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const mediaFiles = await storage.searchMediaFiles(projectId, query);
       res.json(mediaFiles);
     } catch (error) {
-      console.error("Ошибка при поиске ������йлов:", error);
+      console.error("Ошибка при поиске ��������йлов:", error);
       res.status(500).json({ message: "Ошибка при поиске файлов" });
     }
   });
@@ -2472,6 +2472,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       );
 
       if (result.success && result.token) {
+        // Костыль: сразу вызываем refresh для обновления параметров устройства
+        // Это заставляет gramJS переиспользовать клиента с правильными параметрами
+        console.log('🔄 Вызов refresh для обновления параметров устройства...');
+        try {
+          await telegramAuthService.generateQRToken(
+            client,
+            credentials.apiId,
+            credentials.apiHash
+          );
+          console.log('✅ Refresh выполнен успешно');
+        } catch (refreshError: any) {
+          console.error('⚠️ Ошибка refresh:', refreshError.message);
+          // Не прерываем, если refresh не удался
+        }
+
         res.json({
           success: true,
           qrUrl: result.qrUrl,
