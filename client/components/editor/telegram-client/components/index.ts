@@ -21,7 +21,6 @@ export type { AuthStatusPanelProps } from './auth-status-panel';
 
 // QR компоненты
 export { QrCodeGenerator } from './qr-code-generator';
-export type { QrCodeGeneratorProps } from './qr-code-generator';
 export { QrCodeDisplay } from './qr-code-display';
 export type { QrCodeDisplayProps } from './qr-code-display';
 export { QrCountdownBadge } from './qr-countdown-badge';
@@ -37,8 +36,5 @@ export type { QrActionButtonsProps } from './qr-action-buttons';
 
 // View компоненты шагов
 export { StartStepView } from './start-step-view';
-export type { StartStepViewProps } from './start-step-view';
 export { QrStepView } from './qr-step-view';
-export type { QrStepViewProps } from './qr-step-view';
 export { QrPasswordStepView } from './qr-password-step-view';
-export type { QrPasswordStepViewProps } from './qr-password-step-view';

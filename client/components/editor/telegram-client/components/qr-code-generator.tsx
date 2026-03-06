@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, memo } from 'react';
 import QRCode from 'qrcode';
-import type { QrCodeGeneratorProps } from '../types';
+import type { QrCodeGeneratorProps } from '../types/qr-code-generator-props';
 import { QR_DEFAULT_SIZE, QR_ERROR_CORRECTION } from '../constants';
 import { createLogger } from '../services/logger-service';
 

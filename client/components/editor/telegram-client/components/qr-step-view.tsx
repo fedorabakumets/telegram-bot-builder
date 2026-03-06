@@ -11,7 +11,7 @@ import { QrCodeDisplay } from './qr-code-display';
 import { QrInfoText } from './qr-info-text';
 import { QrStatusButton } from './qr-status-button';
 import { QrActionButtons } from './qr-action-buttons';
-import type { QrStepViewProps } from '../types';
+import type { QrStepViewProps } from '../types/telegram-auth-view-props';
 
 /**
  * Компонент шага с QR-кодом

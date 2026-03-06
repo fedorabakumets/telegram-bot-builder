@@ -17,3 +17,13 @@ export type {
   QrStepViewProps,
   QrPasswordStepViewProps,
 } from './telegram-auth-view-props';
+
+// Типы пропсов компонентов
+export type {
+  QrCodeDisplayProps,
+  QrCountdownBadgeProps,
+  QrStatusHeaderProps,
+  QrInfoTextProps,
+  QrStatusButtonProps,
+  QrActionButtonsProps,
+} from './components-props';

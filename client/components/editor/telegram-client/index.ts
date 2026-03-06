@@ -23,7 +23,6 @@ export type {
   ApiCredentialsFormProps,
   ApiCredentialsSavedProps,
   AuthStatusPanelProps,
-  QrCodeGeneratorProps,
 } from './components';
 
 // Типы
@@ -31,6 +30,7 @@ export type {
   AuthStatus,
   ApiCredentials,
   TelegramAuthProps,
+  QrCodeGeneratorProps,
 } from './types';
 
 // Сервисы

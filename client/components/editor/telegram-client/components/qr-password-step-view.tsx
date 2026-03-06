@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Shield } from 'lucide-react';
-import type { QrPasswordStepViewProps } from '../types';
+import type { QrPasswordStepViewProps } from '../types/telegram-auth-view-props';
 
 /**
  * Компонент шага с 2FA паролем
