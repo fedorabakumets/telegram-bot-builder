@@ -59,9 +59,15 @@ export async function generateQrCode(
       }
 
       if (response.token && response.qrUrl) {
+        // Сначала переключаемся на шаг QR
+        setStep?.('qr');
+        notifications.success('QR-код сгенерирован', 'Отсканируйте QR-код в приложении Telegram');
+
         // Сразу вызываем refresh для обновления параметров устройства
         // Это аналогично нажатию кнопки "Обновить QR" после генерации
+        // Вызываем ПОСЛЕ setStep, чтобы анимация была видна
         console.log('🔄 Автоматический вызов refresh после генерации QR...');
+        setIsLoading(true); // Показываем индикатор загрузки
         try {
           const refreshResponse = await authService.refreshQr();
           if (refreshResponse.success && refreshResponse.token && refreshResponse.qrUrl) {
@@ -75,6 +81,7 @@ export async function generateQrCode(
             });
           } else {
             // Если refresh не удался, используем оригинальный токен
+            console.log('⚠️ Refresh не вернул токен, используем оригинальный');
             setQrState({
               token: response.token,
               url: response.qrUrl,
@@ -91,10 +98,9 @@ export async function generateQrCode(
             password: password || '',
             countdown: response.expires ?? QR_TOKEN_EXPIRY,
           });
+        } finally {
+          setIsLoading(false); // Скрываем индикатор загрузки
         }
-
-        setStep?.('qr'); // Переключаемся на шаг QR
-        notifications.success('QR-код сгенерирован', 'Отсканируйте QR-код в приложении Telegram');
       }
     } else {
       notifications.error('Ошибка', response.error ?? 'Не удалось сгенерировать QR-код');
