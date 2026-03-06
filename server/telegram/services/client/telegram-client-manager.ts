@@ -7,101 +7,105 @@ import type { TelegramClient } from 'telegram';
 import type { TelegramClientConfig } from '../../types/client/telegram-client-config.js';
 import type { AuthStatus } from '../../types/client/auth-status.js';
 import type { ITelegramClientManager } from './telegram-client-manager-interface.js';
-import { TelegramOperationsManager } from './telegram-operations-manager.js';
+import { SessionManager } from './session-manager.js';
+import { UserManager } from './user-manager.js';
+import { ChatManager } from './chat-manager.js';
 
 /**
  * Менеджер клиентов Telegram
  */
 export class TelegramClientManager implements ITelegramClientManager {
-  private readonly clients: Map<string, TelegramClient>;
-  private readonly sessions: Map<string, string>;
-  private readonly authStatus: Map<string, AuthStatus>;
-  private readonly ops: TelegramOperationsManager;
+  private readonly session: SessionManager;
+  private readonly user: UserManager;
+  private readonly chat: ChatManager;
 
   constructor() {
-    this.clients = new Map();
-    this.sessions = new Map();
-    this.authStatus = new Map();
-    this.ops = new TelegramOperationsManager(this.clients, this.sessions, this.authStatus);
+    const clients = new Map<string, TelegramClient>();
+    const sessions = new Map<string, string>();
+    const authStatus = new Map<string, AuthStatus>();
+
+    this.session = new SessionManager(clients, sessions, authStatus);
+    this.user = new UserManager(clients, sessions, authStatus);
+    this.chat = new ChatManager(clients, sessions, authStatus);
   }
 
   getClients(): Map<string, TelegramClient> {
-    return this.clients;
+    return this.session.getClients();
   }
 
   initialize(): Promise<void> {
-    return this.ops.initialize();
+    return this.session.initialize();
   }
 
   restoreSession(userId: string): Promise<boolean> {
-    return this.ops.restoreSession(userId);
+    return this.session.restoreSession(userId);
   }
 
   verifyPassword(userId: string, password: string): Promise<{ success: boolean; error?: string }> {
-    return this.ops.auth.verifyPassword(userId, password);
+    return this.user.verifyPassword(userId, password);
   }
 
   logout(userId: string): Promise<{ success: boolean; error?: string }> {
-    return this.ops.auth.logout(userId);
+    return this.user.logout(userId);
   }
 
   getAuthStatus(userId: string): Promise<AuthStatus & Record<string, unknown>> {
-    return this.ops.auth.getStatus(userId);
+    return this.user.getAuthStatus(userId);
   }
 
   setCredentials(userId: string, apiId: string, apiHash: string): Promise<{ success: boolean; error?: string }> {
-    return this.ops.auth.setCredentials(userId, apiId, apiHash);
+    return this.user.setCredentials(userId, apiId, apiHash);
   }
 
   createClient(userId: string, config: TelegramClientConfig): Promise<TelegramClient> {
-    return this.ops.auth.createClient(userId, config);
+    return this.user.createClient(userId, config);
   }
 
   getClient(userId: string): Promise<TelegramClient | null> {
-    return this.ops.auth.getClient(userId);
+    return this.user.getClient(userId);
   }
 
   getGroupMembers(userId: string, chatId: string | number): Promise<any[]> {
-    return this.ops.group.getMembers(userId, chatId);
+    return this.chat.getGroupMembers(userId, chatId);
   }
 
   getChatInfo(userId: string, chatId: string | number): Promise<any> {
-    return this.ops.group.getChatInfo(userId, chatId);
+    return this.chat.getChatInfo(userId, chatId);
   }
 
   disconnect(userId: string): Promise<void> {
-    return this.ops.disconnect(userId);
+    return this.session.disconnect(userId);
   }
 
   saveSession(userId: string): Promise<string | null> {
-    return this.ops.saveSession(userId);
+    return this.session.saveSession(userId);
   }
 
   setChatUsername(userId: string, chatId: string | number, username: string): Promise<any> {
-    return this.ops.chat.setUsername(userId, chatId, username);
+    return this.chat.setChatUsername(userId, chatId, username);
   }
 
   setChatPhoto(userId: string, chatId: string | number, photoPath: string): Promise<any> {
-    return this.ops.chat.setPhoto(userId, chatId, photoPath);
+    return this.chat.setChatPhoto(userId, chatId, photoPath);
   }
 
   kickMember(userId: string, chatId: string | number, memberId: string): Promise<any> {
-    return this.ops.group.kick(userId, chatId, memberId);
+    return this.chat.kickMember(userId, chatId, memberId);
   }
 
   banMember(userId: string, chatId: string | number, memberId: string, untilDate?: number): Promise<any> {
-    return this.ops.group.ban(userId, chatId, memberId, untilDate);
+    return this.chat.banMember(userId, chatId, memberId, untilDate);
   }
 
   restrictMember(userId: string, chatId: string | number, memberId: string, untilDate?: number): Promise<any> {
-    return this.ops.group.restrict(userId, chatId, memberId, untilDate);
+    return this.chat.restrictMember(userId, chatId, memberId, untilDate);
   }
 
   promoteMember(userId: string, chatId: string | number, memberId: string, adminRights: any): Promise<any> {
-    return this.ops.group.promote(userId, chatId, memberId, adminRights);
+    return this.chat.promoteMember(userId, chatId, memberId, adminRights);
   }
 
   demoteMember(userId: string, chatId: string | number, memberId: string): Promise<any> {
-    return this.ops.group.demote(userId, chatId, memberId);
+    return this.chat.demoteMember(userId, chatId, memberId);
   }
 }

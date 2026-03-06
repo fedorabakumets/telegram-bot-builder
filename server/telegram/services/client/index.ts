@@ -69,3 +69,7 @@ export { executeMemberOperation } from './execute-member-operation.js';
 
 // Фасады
 export { TelegramOperationsManager } from './telegram-operations-manager.js';
+export { TelegramClientManager } from './telegram-client-manager.js';
+export { SessionManager } from './session-manager.js';
+export { UserManager } from './user-manager.js';
+export { ChatManager } from './chat-manager.js';
