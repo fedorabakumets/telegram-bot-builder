@@ -2464,9 +2464,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       let client = telegramClientManager.getClients().get(`${userId}_qr`);
 
       if (!client) {
-        // Создаём новый клиент для QR-авторизации БЕЗ updateLoop (чтобы не было TIMEOUT)
-        client = createQRClient(credentials.apiId, credentials.apiHash);
-        await client.connect();
+        // Создаём новый клиент для QR-авторизации с параметрами устройства
+        client = await createQRClient(credentials.apiId, credentials.apiHash);
 
         // Отключаем updateLoop чтобы не было TIMEOUT ошибок
         (client as any)._updateLoop = () => {};

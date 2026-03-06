@@ -22,8 +22,7 @@ export async function createAndStoreClient(
 ): Promise<TelegramClient> {
   const { apiId, apiHash } = config;
 
-  const client = createQRClient(apiId, apiHash);
-  await client.connect();
+  const client = await createQRClient(apiId, apiHash);
   clients.set(userId, client);
 
   return client;

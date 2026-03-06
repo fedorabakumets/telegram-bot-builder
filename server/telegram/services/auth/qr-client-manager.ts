@@ -39,7 +39,6 @@ export async function getOrCreateQRClient(
 
   console.log(QR_CREATING_CLIENT);
 
-  const client = createQRClient(config.apiId, config.apiHash);
-  await client.connect();
+  const client = await createQRClient(config.apiId, config.apiHash);
   return client;
 }

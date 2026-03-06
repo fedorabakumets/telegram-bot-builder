@@ -19,8 +19,7 @@ export async function generateBasicQR(
   apiHash: string
 ): Promise<GenerateQRResult> {
   try {
-    const client = createQRClient(apiId, apiHash);
-    await client.connect();
+    const client = await createQRClient(apiId, apiHash);
 
     const result = await client.invoke(
       new Api.auth.ExportLoginToken({
