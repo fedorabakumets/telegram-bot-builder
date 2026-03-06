@@ -1,6 +1,7 @@
 /**
  * @fileoverview Проверка 2FA пароля с валидацией
  * @module server/telegram/services/client/verify-password-with-validation
+ * @description Проверяет 2FA пароль после QR авторизации
  */
 
 import { TelegramClient } from 'telegram';
@@ -25,11 +26,11 @@ export async function verifyPasswordWithValidation(
   authStatusMap: Map<string, any>
 ): Promise<{ success: boolean; error?: string }> {
   if (!client) {
-    return { success: false, error: 'Клиент не найден. Сначала отправьте код.' };
+    return { success: false, error: 'Клиент не найден. Сначала отсканируйте QR-код.' };
   }
 
   if (!authStatus || !authStatus.needsPassword) {
-    return { success: false, error: 'Проверка пароля не требуется.' };
+    return { success: false, error: 'Проверка пароля не требуется. Отсканируйте QR-код.' };
   }
 
   return verifyPasswordWithSession(userId, client, authStatus, password, sessions, authStatusMap);

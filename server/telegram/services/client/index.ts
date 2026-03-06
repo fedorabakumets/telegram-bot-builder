@@ -42,16 +42,12 @@ export { createTelegramClient } from './create-telegram-client.js';
 export { disconnectTelegramClient } from './disconnect-telegram-client.js';
 export { disableUpdateLoop } from './disable-update-loop.js';
 export { validateSession } from './validate-session.js';
-export { startClientWithPhone } from './start-client-with-phone.js';
 export { disconnectClient } from './disconnect-client.js';
 export { getClient } from './get-client.js';
 export { createAndStoreClient } from './create-and-store-client.js';
 export { disconnectWithCheck } from './disconnect-with-check.js';
 
-// Авторизация (phone code)
-export { sendCode } from './send-code.js';
-export { resendCode } from './resend-code.js';
-export { verifyCode } from './verify-code.js';
+// Авторизация (QR и 2FA)
 export { verifyPassword } from './verify-password.js';
 export { logout } from './logout.js';
 export { verifyPasswordWithSession } from './verify-password-with-session.js';
