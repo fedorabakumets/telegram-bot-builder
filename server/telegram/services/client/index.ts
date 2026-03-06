@@ -31,3 +31,12 @@ export { logout } from './logout.js';
 
 // Статус
 export { getAuthStatus } from './get-auth-status.js';
+
+// Группы и участники
+export { getGroupMembers } from './get-group-members.js';
+export { getChatInfo } from './get-chat-info.js';
+export { kickMember } from './kick-member.js';
+export { banMember } from './ban-member.js';
+export { restrictMember } from './restrict-member.js';
+export { promoteMember } from './promote-member.js';
+export { demoteMember } from './demote-member.js';

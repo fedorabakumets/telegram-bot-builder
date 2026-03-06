@@ -1,18 +1,8 @@
-import { userTelegramSettings } from '@shared/schema';
-import { eq } from 'drizzle-orm';
 import { TelegramClient } from 'telegram';
 import { CustomFile } from 'telegram/client/uploads';
-import { StringSession } from 'telegram/sessions';
 import { Api } from 'telegram/tl';
-import { db } from '../database/db';
 import type { TelegramClientConfig } from './types/client/telegram-client-config.js';
 import type { AuthStatus } from './types/client/auth-status.js';
-import { resolveChatEntity } from './utils/client/chat-entity-resolver.js';
-import { resolveUserEntity } from './utils/client/user-entity-resolver.js';
-import { createBannedRights } from './utils/client/banned-rights-builder.js';
-import { createAdminRights } from './utils/client/admin-rights-builder.js';
-import { resolveMemberStatus } from './utils/client/member-status-resolver.js';
-import { extractParticipantId } from './utils/client/participant-id-extractor.js';
 import {
   saveSessionToDb,
   restoreSession,
@@ -22,6 +12,13 @@ import {
   getAuthStatus,
   setCredentials,
   startClientWithPhone,
+  getGroupMembers,
+  getChatInfo,
+  kickMember,
+  banMember,
+  restrictMember,
+  promoteMember,
+  demoteMember,
 } from './services/client/index.js';
 
 /**
@@ -187,42 +184,7 @@ class TelegramClientManager {
       throw new Error('User not authenticated. Please complete phone verification first.');
     }
 
-    try {
-      // Получаем сущность чата через утилиту
-      const chatEntity = await resolveChatEntity(client, chatId);
-
-      const result = await client.invoke(
-        new Api.channels.GetParticipants({
-          channel: chatEntity,
-          filter: new Api.ChannelParticipantsRecent(),
-          offset: 0,
-          limit: 200,
-          hash: 0 as any,
-        })
-      );
-
-      if ('participants' in result) {
-        return result.participants.map((participant: any) => {
-          const participantId = extractParticipantId(participant);
-          const user = result.users.find((u: any) => u.id?.toString() === participantId?.toString());
-
-          return {
-            id: participantId || '',
-            username: (user as any)?.username || null,
-            firstName: (user as any)?.firstName || null,
-            lastName: (user as any)?.lastName || null,
-            isBot: (user as any)?.bot || false,
-            status: resolveMemberStatus(participant),
-            joinedAt: participant.date ? new Date(participant.date * 1000) : null,
-          };
-        });
-      }
-
-      return [];
-    } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      throw new Error(`Failed to get group members: ${error?.message || 'Unknown error'}`);
-    }
+    return getGroupMembers(client, chatId);
   }
 
   /**
@@ -237,27 +199,7 @@ class TelegramClientManager {
       throw new Error('Telegram client not found. Please authenticate first.');
     }
 
-    try {
-      // Получаем сущность чата через утилиту
-      const chatEntity = await resolveChatEntity(client, chatId);
-
-      const result = await client.invoke(
-        new Api.channels.GetFullChannel({
-          channel: chatEntity,
-        })
-      );
-
-      return {
-        id: result.fullChat.id.toString(),
-        title: (result.chats[0] as any)?.title || 'Unknown',
-        participantsCount: (result.fullChat as any)?.participantsCount,
-        about: (result.fullChat as any)?.about || '',
-        chatPhoto: (result.chats[0] as any)?.photo || null,
-      };
-    } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      throw new Error(`Failed to get chat info: ${error?.message || 'Unknown error'}`);
-    }
+    return getChatInfo(client, chatId);
   }
 
   /**
@@ -408,42 +350,7 @@ class TelegramClientManager {
       throw new Error('Telegram client not found. Please authenticate first.');
     }
 
-    try {
-      // Получаем сущности через утилиты
-      const chatEntity = await resolveChatEntity(client, chatId);
-      const userEntity = await resolveUserEntity(client, parseInt(memberId));
-
-      // Создаём права блокировки через утилиту
-      const bannedRights = createBannedRights({
-        viewMessages: true,
-        sendMessages: true,
-        sendMedia: true,
-        sendStickers: true,
-        sendGifs: true,
-        sendGames: true,
-        sendInline: true,
-        embedLinks: true,
-        sendPolls: true,
-        changeInfo: true,
-        inviteUsers: true,
-        pinMessages: true,
-        manageTopics: true,
-      }, Math.floor(Date.now() / 1000) + 60);
-
-      // Исключаем участника
-      const result = await client.invoke(
-        new Api.channels.EditBanned({
-          channel: chatEntity,
-          participant: userEntity,
-          bannedRights,
-        })
-      );
-
-      return result;
-    } catch (error: any) {
-      console.error('Failed to kick member:', error);
-      throw new Error(`Failed to kick member: ${error.message || 'Unknown error'}`);
-    }
+    return kickMember(client, chatId, memberId);
   }
 
   // Заблокировать участника через Client API
@@ -453,42 +360,7 @@ class TelegramClientManager {
       throw new Error('Telegram client not found. Please authenticate first.');
     }
 
-    try {
-      // Получаем сущности через утилиты
-      const chatEntity = await resolveChatEntity(client, chatId);
-      const userEntity = await resolveUserEntity(client, parseInt(memberId));
-
-      // Создаём права блокировки через утилиту
-      const bannedRights = createBannedRights({
-        viewMessages: true,
-        sendMessages: true,
-        sendMedia: true,
-        sendStickers: true,
-        sendGifs: true,
-        sendGames: true,
-        sendInline: true,
-        embedLinks: true,
-        sendPolls: true,
-        changeInfo: true,
-        inviteUsers: true,
-        pinMessages: true,
-        manageTopics: true,
-      }, untilDate || 0);
-
-      // Блокируем участника
-      const result = await client.invoke(
-        new Api.channels.EditBanned({
-          channel: chatEntity,
-          participant: userEntity,
-          bannedRights,
-        })
-      );
-
-      return result;
-    } catch (error: any) {
-      console.error('Failed to ban member:', error);
-      throw new Error(`Failed to ban member: ${error.message || 'Unknown error'}`);
-    }
+    return banMember(client, chatId, memberId, untilDate);
   }
 
   // Ограничить участника (мут) через Client API
@@ -498,42 +370,7 @@ class TelegramClientManager {
       throw new Error('Telegram client not found. Please authenticate first.');
     }
 
-    try {
-      // Получаем сущности через утилиты
-      const chatEntity = await resolveChatEntity(client, chatId);
-      const userEntity = await resolveUserEntity(client, parseInt(memberId));
-
-      // Создаём права ограничения через утилиту
-      const bannedRights = createBannedRights({
-        viewMessages: false, // Может видеть сообщения
-        sendMessages: true,  // Не может писать
-        sendMedia: true,
-        sendStickers: true,
-        sendGifs: true,
-        sendGames: true,
-        sendInline: true,
-        embedLinks: true,
-        sendPolls: true,
-        changeInfo: true,
-        inviteUsers: true,
-        pinMessages: true,
-        manageTopics: true,
-      }, untilDate || Math.floor(Date.now() / 1000) + 3600);
-
-      // Ограничиваем участника
-      const result = await client.invoke(
-        new Api.channels.EditBanned({
-          channel: chatEntity,
-          participant: userEntity,
-          bannedRights,
-        })
-      );
-
-      return result;
-    } catch (error: any) {
-      console.error('Failed to restrict member:', error);
-      throw new Error(`Failed to restrict member: ${error.message || 'Unknown error'}`);
-    }
+    return restrictMember(client, chatId, memberId, untilDate);
   }
 
   // Назначить участника администратором через Client API
@@ -543,44 +380,7 @@ class TelegramClientManager {
       throw new Error('Telegram client not found. Please authenticate first.');
     }
 
-    try {
-      // Получаем сущности через утилиты
-      const chatEntity = await resolveChatEntity(client, chatId);
-      const userEntity = await resolveUserEntity(client, parseInt(memberId));
-
-      // Создаём права администратора через утилиту
-      const rights = createAdminRights({
-        can_change_info: adminRights.can_change_info,
-        can_post_messages: adminRights.can_post_messages,
-        can_edit_messages: adminRights.can_edit_messages,
-        can_delete_messages: adminRights.can_delete_messages,
-        can_restrict_members: adminRights.can_restrict_members,
-        can_invite_users: adminRights.can_invite_users,
-        can_pin_messages: adminRights.can_pin_messages,
-        can_promote_members: adminRights.can_promote_members,
-        can_manage_video_chats: adminRights.can_manage_video_chats,
-        can_be_anonymous: adminRights.can_be_anonymous,
-        can_manage_topics: adminRights.can_manage_topics,
-        can_post_stories: adminRights.can_post_stories,
-        can_edit_stories: adminRights.can_edit_stories,
-        can_delete_stories: adminRights.can_delete_stories,
-      });
-
-      // Назначаем администратором
-      const result = await client.invoke(
-        new Api.channels.EditAdmin({
-          channel: chatEntity,
-          userId: userEntity,
-          adminRights: rights,
-          rank: adminRights.custom_title || '',
-        })
-      );
-
-      return result;
-    } catch (error: any) {
-      console.error('Failed to promote member:', error);
-      throw new Error(`Failed to promote member: ${error.message || 'Unknown error'}`);
-    }
+    return promoteMember(client, chatId, memberId, adminRights);
   }
 
   /**
@@ -596,44 +396,7 @@ class TelegramClientManager {
       throw new Error('Telegram client not found. Please authenticate first.');
     }
 
-    try {
-      // Получаем сущности через утилиты
-      const chatEntity = await resolveChatEntity(client, chatId);
-      const userEntity = await resolveUserEntity(client, parseInt(memberId));
-
-      // Создаём пустые права администратора через утилиту
-      const rights = createAdminRights({
-        can_change_info: false,
-        can_post_messages: false,
-        can_edit_messages: false,
-        can_delete_messages: false,
-        can_restrict_members: false,
-        can_invite_users: false,
-        can_pin_messages: false,
-        can_promote_members: false,
-        can_manage_video_chats: false,
-        can_be_anonymous: false,
-        can_manage_topics: false,
-        can_post_stories: false,
-        can_edit_stories: false,
-        can_delete_stories: false,
-      });
-
-      // Снимаем администраторские права
-      const result = await client.invoke(
-        new Api.channels.EditAdmin({
-          channel: chatEntity,
-          userId: userEntity,
-          adminRights: rights,
-          rank: '',
-        })
-      );
-
-      return result;
-    } catch (error: any) {
-      console.error('Failed to demote member:', error);
-      throw new Error(`Failed to demote member: ${error.message || 'Unknown error'}`);
-    }
+    return demoteMember(client, chatId, memberId);
   }
 }
 
