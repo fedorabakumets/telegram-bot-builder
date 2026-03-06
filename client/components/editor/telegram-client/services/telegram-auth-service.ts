@@ -23,6 +23,7 @@ export interface QrGenerateResponse {
 export interface QrCheckResponse {
   success: boolean;
   isAuthenticated?: boolean;
+  needsPassword?: boolean;
 }
 
 /**

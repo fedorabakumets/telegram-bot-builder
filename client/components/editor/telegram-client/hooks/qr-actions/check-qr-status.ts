@@ -25,6 +25,8 @@ export interface CheckQrStatusParams {
   onOpenChange: (open: boolean) => void;
   /** Сброс состояния QR */
   resetQrState: () => void;
+  /** Коллбэк для переключения на ввод 2FA пароля */
+  onNeedsPassword: () => void;
 }
 
 /**
@@ -54,6 +56,7 @@ export async function checkQrStatus(
     onSuccess,
     onOpenChange,
     resetQrState,
+    onNeedsPassword,
   } = params;
   const authService = createTelegramAuthService();
 
@@ -63,12 +66,22 @@ export async function checkQrStatus(
   try {
     const response = await authService.checkQr(token, password);
 
-    if (response.success && response.isAuthenticated) {
-      notifications.success('Авторизация успешна', 'Telegram Client API подключён');
-      resetQrState();
-      onSuccess();
-      onOpenChange(false);
-      return { success: true, isAuthenticated: true };
+    if (response.success) {
+      // Если требуется 2FA пароль и пароль ещё не введён
+      if (response.needsPassword && !password) {
+        notifications.info('Требуется пароль 2FA', 'Введите пароль двухфакторной аутентификации');
+        onNeedsPassword();
+        return { success: true, isAuthenticated: false };
+      }
+
+      // Если авторизация успешна
+      if (response.isAuthenticated) {
+        notifications.success('Авторизация успешна', 'Telegram Client API подключён');
+        resetQrState();
+        onSuccess();
+        onOpenChange(false);
+        return { success: true, isAuthenticated: true };
+      }
     }
 
     return { success: response.success };

@@ -23,8 +23,10 @@ export interface UseQrAuthReturn {
   isLoading: boolean;
   /** Статус обновления QR */
   isRefreshing: boolean;
+  /** Текущий шаг авторизации */
+  step: 'start' | 'qr' | 'qr-password';
   /** Генерация QR-кода */
-  generateQrCode: (password?: string) => Promise<void>;
+  generateQrCode: (password?: string) => Promise<{ success: boolean; requiresPassword?: boolean } | void>;
   /** Проверка статуса QR */
   checkQrStatus: () => Promise<void>;
   /** Обновление QR-токена */
@@ -33,6 +35,10 @@ export interface UseQrAuthReturn {
   setQrPassword: (value: string) => void;
   /** Сброс состояния QR */
   resetQrState: () => void;
+  /** Переключение на шаг ввода 2FA пароля */
+  goToPasswordStep: () => void;
+  /** Переключение на начальный шаг */
+  goToStartStep: () => void;
 }
 
 /**
@@ -54,11 +60,20 @@ export function useQrAuth(
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [step, setStep] = useState<'start' | 'qr' | 'qr-password'>('start');
   const { toast } = useToast();
   const notifications = createNotificationService(toast);
 
-  const handleGenerateQrCode = async (password?: string) => {
-    await generateQrCode({ setQrState, setIsLoading, notifications, password });
+  const handleGenerateQrCode = async (password?: string): Promise<{ success: boolean; requiresPassword?: boolean } | void> => {
+    return await generateQrCode({ setQrState, setIsLoading, notifications, password, setStep });
+  };
+
+  const handleGoToPasswordStep = () => {
+    setStep('qr-password');
+  };
+
+  const handleGoToStartStep = () => {
+    setStep('start');
   };
 
   const handleCheckQrStatus = async () => {
@@ -70,6 +85,7 @@ export function useQrAuth(
       onSuccess,
       onOpenChange,
       resetQrState,
+      onNeedsPassword: handleGoToPasswordStep,
     });
   };
 
@@ -91,11 +107,14 @@ export function useQrAuth(
     qrState,
     isLoading,
     isRefreshing,
+    step,
     generateQrCode: handleGenerateQrCode,
     checkQrStatus: handleCheckQrStatus,
     refreshQrToken: handleRefreshQrToken,
     setQrPassword: (value: string) =>
       setQrState((prev) => ({ ...prev, password: value })),
     resetQrState,
+    goToPasswordStep: handleGoToPasswordStep,
+    goToStartStep: handleGoToStartStep,
   };
 }

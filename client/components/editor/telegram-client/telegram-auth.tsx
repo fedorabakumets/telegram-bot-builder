@@ -6,13 +6,13 @@
  * @module TelegramAuth
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useQrAuth } from './hooks/use-qr-auth';
 import { useQrPolling } from './hooks/use-qr-polling';
 import { useCountdown } from './hooks/use-countdown';
 import { StartStepView, QrStepView, QrPasswordStepView, TelegramAuthHeader } from './components';
-import type { TelegramAuthProps, AuthStep } from './types';
+import type { TelegramAuthProps } from './types';
 
 /**
  * Компонент авторизации через Telegram Client API
@@ -30,8 +30,7 @@ import type { TelegramAuthProps, AuthStep } from './types';
  * ```
  */
 export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProps) {
-  const [step, setStep] = useState<AuthStep>('start');
-  const { qrState, isLoading, isRefreshing, generateQrCode, checkQrStatus, refreshQrToken, setQrPassword, resetQrState } =
+  const { step, qrState, isLoading, isRefreshing, generateQrCode, checkQrStatus, refreshQrToken, setQrPassword, resetQrState, goToStartStep } =
     useQrAuth(onSuccess, onOpenChange);
 
   // Локальный countdown для UI (без лишних ре-рендеров)
@@ -41,34 +40,29 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
   useEffect(() => {
     if (!open) {
       resetQrState();
-      setStep('start');
+      goToStartStep();
     }
-  }, [open, resetQrState]);
+  }, [open, resetQrState, goToStartStep]);
 
   // Автообновление QR-токена
   useQrPolling({ step, token: qrState.token, refreshQrToken });
 
-  // Переключение на шаг QR только когда URL действительно получен
-  // Используем функциональное обновление для предотвращения гонки состояний
-  useEffect(() => {
-    if (qrState.url) {
-      setStep(prev => prev === 'start' ? 'qr' : prev);
-    }
-  }, [qrState.url]);
-
   const handleGenerateQr = async () => {
-    await generateQrCode();
+    const result = await generateQrCode();
+    if (result && result.requiresPassword) {
+      // step переключается внутри generateQrCode через setStep
+    }
   };
 
   const handleBack = () => {
     resetQrState();
-    setStep('start');
+    goToStartStep();
   };
 
   const handleSubmitPassword = async () => {
     if (qrState.password.trim()) {
       await generateQrCode(qrState.password);
-      setStep('qr');
+      // После генерации QR с паролем step переключается внутри generateQrCode
     }
   };
 

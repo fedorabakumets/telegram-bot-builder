@@ -21,6 +21,8 @@ export interface GenerateQrCodeParams {
   notifications: NotificationService;
   /** Пароль 2FA (опционально) */
   password?: string;
+  /** Переключить на шаг ввода пароля */
+  setStep?: (step: 'start' | 'qr' | 'qr-password') => void;
 }
 
 /**
@@ -42,7 +44,7 @@ export interface GenerateQrCodeResult {
 export async function generateQrCode(
   params: GenerateQrCodeParams
 ): Promise<GenerateQrCodeResult> {
-  const { setQrState, setIsLoading, notifications, password } = params;
+  const { setQrState, setIsLoading, notifications, password, setStep } = params;
   const authService = createTelegramAuthService();
 
   setIsLoading(true);
@@ -52,6 +54,7 @@ export async function generateQrCode(
     if (response.success) {
       if (response.requiresPassword) {
         notifications.info('Требуется 2FA', 'Введите пароль двухфакторной аутентификации');
+        setStep?.('qr-password');
         return { success: true, requiresPassword: true };
       }
 
@@ -62,6 +65,7 @@ export async function generateQrCode(
           password: password || '',
           countdown: response.expires ?? QR_TOKEN_EXPIRY,
         });
+        setStep?.('qr'); // Переключаемся на шаг QR
         notifications.success('QR-код сгенерирован', 'Отсканируйте QR-код в приложении Telegram');
       }
     } else {
