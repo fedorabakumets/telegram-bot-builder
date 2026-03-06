@@ -30,7 +30,7 @@ export class UserManager {
     return this.ops.auth.logout(userId);
   }
 
-  getAuthStatus(userId: string): Promise<AuthStatus & Record<string, unknown>> {
+  getAuthStatus(userId: string): Promise<any> {
     return this.ops.auth.getStatus(userId);
   }
 
@@ -42,7 +42,7 @@ export class UserManager {
     return this.ops.auth.createClient(userId, config);
   }
 
-  getClient(userId: string): Promise<TelegramClient | null> {
-    return this.ops.auth.getClient(userId);
+  async getClient(userId: string): Promise<TelegramClient | null> {
+    return await this.ops.auth.getClient(userId);
   }
 }
