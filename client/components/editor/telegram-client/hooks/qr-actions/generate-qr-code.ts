@@ -36,7 +36,7 @@ export interface GenerateQrCodeResult {
 }
 
 /**
- * Генерирует QR-код для авторизации
+ * Генерирует QR-код для авторизации и сразу вызывает refresh для обновления параметров устройства
  *
  * @param params - Параметры генерации
  * @returns {Promise<GenerateQrCodeResult>} Результат операции
@@ -59,12 +59,40 @@ export async function generateQrCode(
       }
 
       if (response.token && response.qrUrl) {
-        setQrState({
-          token: response.token,
-          url: response.qrUrl,
-          password: password || '',
-          countdown: response.expires ?? QR_TOKEN_EXPIRY,
-        });
+        // Сразу вызываем refresh для обновления параметров устройства
+        // Это аналогично нажатию кнопки "Обновить QR" после генерации
+        console.log('🔄 Автоматический вызов refresh после генерации QR...');
+        try {
+          const refreshResponse = await authService.refreshQr();
+          if (refreshResponse.success && refreshResponse.token && refreshResponse.qrUrl) {
+            console.log('✅ Refresh выполнен успешно');
+            // Используем обновлённый токен от refresh
+            setQrState({
+              token: refreshResponse.token,
+              url: refreshResponse.qrUrl,
+              password: password || '',
+              countdown: refreshResponse.expires ?? QR_TOKEN_EXPIRY,
+            });
+          } else {
+            // Если refresh не удался, используем оригинальный токен
+            setQrState({
+              token: response.token,
+              url: response.qrUrl,
+              password: password || '',
+              countdown: response.expires ?? QR_TOKEN_EXPIRY,
+            });
+          }
+        } catch (refreshError) {
+          console.error('⚠️ Ошибка refresh:', refreshError);
+          // Если refresh не удался, используем оригинальный токен
+          setQrState({
+            token: response.token,
+            url: response.qrUrl,
+            password: password || '',
+            countdown: response.expires ?? QR_TOKEN_EXPIRY,
+          });
+        }
+
         setStep?.('qr'); // Переключаемся на шаг QR
         notifications.success('QR-код сгенерирован', 'Отсканируйте QR-код в приложении Telegram');
       }
