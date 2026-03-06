@@ -3,10 +3,9 @@
  * @module server/telegram/services/auth/qr-basic-generator
  */
 
-import { TelegramClient } from 'telegram';
 import { Api } from 'telegram';
-import { StringSession } from 'telegram/sessions';
 import type { GenerateQRResult } from '../../types/auth/generate-qr-result.js';
+import { createQRClient } from './create-qr-client.js';
 
 /**
  * Генерирует QR-код для авторизации в Telegram
@@ -20,20 +19,7 @@ export async function generateBasicQR(
   apiHash: string
 ): Promise<GenerateQRResult> {
   try {
-    const client = new TelegramClient(
-      new StringSession(''),
-      parseInt(apiId),
-      apiHash,
-      {
-        connectionRetries: 5,
-        timeout: 30000,
-        // Указываем информацию об устройстве для корректного отображения в Telegram
-        appVersion: '1.0.0',
-        deviceModel: 'Server Bot Builder',
-        systemVersion: typeof process !== 'undefined' && process.platform ? (process.platform === 'win32' ? 'Windows_NT' : process.platform) : 'Unknown',
-      }
-    );
-
+    const client = createQRClient(apiId, apiHash);
     await client.connect();
 
     const result = await client.invoke(

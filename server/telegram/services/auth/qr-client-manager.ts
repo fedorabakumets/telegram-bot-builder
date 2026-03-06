@@ -9,6 +9,7 @@ import {
   QR_CREATING_CLIENT,
   QR_REUSING_CLIENT
 } from './qr-error-messages.js';
+import { createQRClient } from './create-qr-client.js';
 
 /**
  * Параметры для создания QR клиента
@@ -38,22 +39,7 @@ export async function getOrCreateQRClient(
 
   console.log(QR_CREATING_CLIENT);
 
-  const client = new TelegramClient(
-    new StringSession(''),
-    parseInt(config.apiId),
-    config.apiHash,
-    {
-      connectionRetries: 5,
-      timeout: 30000,
-      useWSS: false,
-      autoReconnect: false,
-      // Указываем информацию об устройстве для корректного отображения в Telegram
-      appVersion: '1.0.0',
-      deviceModel: 'Server Bot Builder',
-      systemVersion: process.platform === 'win32' ? 'Windows_NT' : process.platform,
-    }
-  );
-
+  const client = createQRClient(config.apiId, config.apiHash);
   await client.connect();
   return client;
 }

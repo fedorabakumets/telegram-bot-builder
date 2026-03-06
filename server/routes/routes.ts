@@ -22,8 +22,7 @@ import { seedDefaultTemplates } from "../utils/seed-templates";
 import { storage } from "../storages/storage";
 import { initializeTelegramManager, telegramClientManager } from "../telegram/telegram-client";
 import { telegramAuthService } from "../telegram/telegram-auth-service";
-import { StringSession } from "telegram/sessions";
-import { TelegramClient } from "telegram";
+import { createQRClient } from "../telegram/services/auth/create-qr-client";
 import { userTelegramSettings } from "@shared/schema";
 import { authMiddleware, getOwnerIdFromRequest } from "../telegram/auth-middleware";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
@@ -2466,21 +2465,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       if (!client) {
         // Создаём новый клиент для QR-авторизации БЕЗ updateLoop (чтобы не было TIMEOUT)
-        client = new TelegramClient(
-          new StringSession(''),
-          parseInt(credentials.apiId),
-          credentials.apiHash,
-          {
-            connectionRetries: 5,
-            timeout: 30000,
-            useWSS: false,
-            autoReconnect: false,
-            // Указываем информацию об устройстве для корректного отображения в Telegram
-            appVersion: '1.0.0',
-            deviceModel: 'Server Bot Builder',
-            systemVersion: process.platform === 'win32' ? 'Windows_NT' : process.platform,
-          }
-        );
+        client = createQRClient(credentials.apiId, credentials.apiHash);
         await client.connect();
 
         // Отключаем updateLoop чтобы не было TIMEOUT ошибок
@@ -2488,9 +2473,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         // Сохраняем клиента для последующего обновления токена
         telegramClientManager.getClients().set(`${userId}_qr`, client);
-        console.log('💾 QR-клиент сохранён для пользователя', userId, '- Система:', process.platform);
+        console.log('💾 QR-клиент создан для пользователя', userId, '- Система:', process.platform, '- Устройство: Server Bot Builder');
       } else {
-        console.log('♻️ QR-клиент найден для пользователя', userId);
+        console.log('♻️ QR-клиент найден для пользователя', userId, '- Система:', process.platform);
       }
 
       // Генерируем QR-токен через современный метод

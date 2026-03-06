@@ -5,8 +5,8 @@
  */
 
 import { TelegramClient } from 'telegram';
-import { StringSession } from 'telegram/sessions';
 import type { TelegramClientConfig } from '../../types/client/telegram-client-config.js';
+import { createQRClient } from '../auth/create-qr-client.js';
 
 /**
  * Создаёт клиента Telegram и сохраняет его в Map
@@ -22,22 +22,7 @@ export async function createAndStoreClient(
 ): Promise<TelegramClient> {
   const { apiId, apiHash } = config;
 
-  const client = new TelegramClient(
-    new StringSession(''),
-    parseInt(apiId),
-    apiHash,
-    {
-      connectionRetries: 5,
-      timeout: 30000,
-      useWSS: false,
-      autoReconnect: false,
-      // Указываем информацию об устройстве для корректного отображения в Telegram
-      appVersion: '1.0.0',
-      deviceModel: 'Server Bot Builder',
-      systemVersion: typeof process !== 'undefined' && process.platform ? (process.platform === 'win32' ? 'Windows_NT' : process.platform) : 'Unknown',
-    }
-  );
-
+  const client = createQRClient(apiId, apiHash);
   await client.connect();
   clients.set(userId, client);
 
