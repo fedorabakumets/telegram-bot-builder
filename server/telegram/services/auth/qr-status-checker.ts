@@ -8,6 +8,8 @@ import type { CheckQRStatusResult } from '../../types/auth/check-qr-status-resul
 import { getOrCreateQRClient } from './qr-client-manager.js';
 import { importQRToken } from './qr-token-importer.js';
 import { handleQRPasswordError } from './qr-2fa-processor.js';
+import { verifyQR2FAPassword } from './qr-2fa-verifier.js';
+import { extractQRSessionAfter2FA } from './qr-session-extractor.js';
 
 /**
  * Проверяет статус QR-токена (отсканирован ли он пользователем)
@@ -31,15 +33,32 @@ export async function checkQRStatus(
 
   try {
     // Импортируем токен и проверяем статус
-    const result = await importQRToken(client, token);
+    const importResult = await importQRToken(client, token);
+
+    // Если токен импортирован успешно и требуется 2FA пароль
+    if (importResult.success && !importResult.isAuthenticated && password) {
+      // Проверяем пароль 2FA
+      const verification = await verifyQR2FAPassword(client, password);
+      if (!verification.isSuccess) {
+        return {
+          success: false,
+          error: verification.error,
+          needsPassword: verification.needsPassword,
+          client,
+        };
+      }
+
+      // Извлекаем сессию после успешной проверки
+      return extractQRSessionAfter2FA(client, apiId, apiHash);
+    }
 
     // result уже содержит готовый CheckQRStatusResult
     // Добавляем client только если его нет (для pending случая)
-    if (!result.client && result.success && !result.isAuthenticated) {
-      result.client = client;
+    if (!importResult.client && importResult.success && !importResult.isAuthenticated) {
+      importResult.client = client;
     }
 
-    return result;
+    return importResult;
   } catch (error: any) {
     // Обрабатываем ошибку (возможно 2FA)
     return handleQRPasswordError(error, client, apiId, apiHash, password);
