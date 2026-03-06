@@ -24,7 +24,7 @@ import { initializeTelegramManager, telegramClientManager } from "../telegram/te
 import { telegramAuthService } from "../telegram/telegram-auth-service";
 import { createQRClient } from "../telegram/services/auth/create-qr-client";
 import { userTelegramSettings } from "@shared/schema";
-import { authMiddleware, getOwnerIdFromRequest } from "../telegram/auth-middleware";
+import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { setupAuthRoutes } from "./setupAuthRoutes";
@@ -1646,7 +1646,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const mediaFiles = await storage.searchMediaFiles(projectId, query);
       res.json(mediaFiles);
     } catch (error) {
-      console.error("Ошибка при поиске ��айлов:", error);
+      console.error("Ошибка при поиске ������йлов:", error);
       res.status(500).json({ message: "Ошибка при поиске файлов" });
     }
   });
@@ -2216,20 +2216,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       if (result.success) {
         // Сохраняем клиент для последующей проверки кода
-        const client = new TelegramClient(
-          new StringSession(''),
-          parseInt(credentials.apiId),
-          credentials.apiHash,
-          {
-            connectionRetries: 5,
-            timeout: 30000,
-            // Указываем информацию об устройстве для корректного отображения в Telegram
-            appVersion: '1.0.0',
-            deviceModel: 'Server Bot Builder',
-            systemVersion: process.platform === 'win32' ? 'Windows_NT' : process.platform,
-          }
-        );
-        await client.connect();
+        const client = await createQRClient(credentials.apiId, credentials.apiHash);
         telegramClientManager.getClients().set(userId, client);
 
         res.json({

@@ -31,6 +31,14 @@ const DEVICE_CONFIG = {
  * ```
  */
 export async function createQRClient(apiId: string, apiHash: string): Promise<TelegramClient> {
+  console.log('🔧 Создание QR-клиента с параметрами:', {
+    apiId,
+    apiHash: apiHash.substring(0, 10) + '...',
+    deviceModel: DEVICE_CONFIG.deviceModel,
+    systemVersion: DEVICE_CONFIG.systemVersion,
+    appVersion: DEVICE_CONFIG.appVersion,
+  });
+
   const client = new TelegramClient(
     new StringSession(''),
     parseInt(apiId),
@@ -49,9 +57,10 @@ export async function createQRClient(apiId: string, apiHash: string): Promise<Te
     }
   );
 
+  console.log('📡 Подключение к Telegram...');
   await client.connect();
 
-  console.log('✅ QR-клиент создан с параметрами:', {
+  console.log('✅ QR-клиент подключён с параметрами:', {
     deviceModel: DEVICE_CONFIG.deviceModel,
     systemVersion: DEVICE_CONFIG.systemVersion,
     appVersion: DEVICE_CONFIG.appVersion,
