@@ -61,8 +61,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
 
   const handleSubmitPassword = async () => {
     if (qrState.password.trim()) {
-      await generateQrCode(qrState.password);
-      // После генерации QR с паролем step переключается внутри generateQrCode
+      await checkQrStatus();  // Проверяем текущий QR с паролем
     }
   };
 
