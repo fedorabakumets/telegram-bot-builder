@@ -4,15 +4,14 @@
  * @description Экспортирует утилиты для работы с медиа, авторизацией и валидацией
  */
 
-export { sanitizeFileId, generateFileName } from './media/file-utils.js';
-export { validateExtension, getAllowedExtensions } from './media/extension-validator.js';
-export { getMimeType } from './media/mime-utils.js';
-export { createUploadDir, validateFilePath } from './media/path-utils.js';
-export { httpsGet, getTelegramFileInfo } from './media/http-utils.js';
-export { downloadFile } from './media/download-utils.js';
-export { isApiCredentialsError, getFormattedQrError } from './qr-auth-error-handler.js';
+// Медиа утилиты
+export * from './media/index.js';
 
+// Авторизация
 export * from './auth/index.js';
 
-// Валидация (новое)
+// Валидация
 export * from './validation/index.js';
+
+// QR утилиты
+export { isApiCredentialsError, getFormattedQrError } from './qr-auth-error-handler.js';

@@ -1,9 +1,8 @@
 /**
- * @fileoverview Баррер-файл для экспорта всех сервисов модуля media
+ * @fileoverview Баррер-файл для экспорта всех сервисов модуля Telegram
  * @module server/telegram/services/index
+ * @description Экспортирует сервисы для работы с медиа и другими компонентами
  */
 
-export { downloadPhoto } from './media/photo-service.js';
-export { downloadVideo } from './media/video-service.js';
-export { downloadAudio } from './media/audio-service.js';
-export { downloadDocument } from './media/document-service.js';
+// Медиа сервисы
+export * from './media/index.js';
