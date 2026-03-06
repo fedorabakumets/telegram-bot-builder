@@ -2589,6 +2589,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const { projectId, token, password } = req.body;
       const userId = projectId ? String(projectId) : 'default';
 
+      console.log('📥 /api/telegram-auth/qr-check:', {
+        projectId,
+        token: token ? token.substring(0, 20) + '...' : 'нет',
+        password: password ? '***' + password.slice(-3) : 'нет',
+      });
+
       if (!token) {
         return res.status(400).json({
           success: false,

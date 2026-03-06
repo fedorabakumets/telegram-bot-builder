@@ -36,8 +36,11 @@ export async function verifyQR2FAPassword(
 ): Promise<TwoFAVerificationResult> {
   try {
     console.log(QR_CHECKING_2FA);
+    console.log('🔑 Пароль для проверки:', password ? '***' + password.slice(-3) : '(пустой)');
 
     const result = await verifyPassword(client, password);
+
+    console.log('📋 Результат verifyPassword:', result);
 
     if (!result.success) {
       return {
@@ -53,6 +56,7 @@ export async function verifyQR2FAPassword(
       isSuccess: true,
     };
   } catch (error: any) {
+    console.log('⚠️ Ошибка в verifyQR2FAPassword:', error.message);
     return handle2FAVerificationError(error);
   }
 }

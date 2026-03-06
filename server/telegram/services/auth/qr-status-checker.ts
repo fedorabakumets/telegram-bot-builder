@@ -35,11 +35,20 @@ export async function checkQRStatus(
     // Импортируем токен и проверяем статус
     const importResult = await importQRToken(client, token);
 
+    console.log('📋 importResult:', {
+      success: importResult.success,
+      isAuthenticated: importResult.isAuthenticated,
+      hasPassword: !!password,
+    });
+
     // Если токен импортирован успешно и требуется 2FA пароль
     if (importResult.success && !importResult.isAuthenticated && password) {
+      console.log('🔐 Проверка 2FA пароля после успешного импорта токена...');
+      
       // Проверяем пароль 2FA
       const verification = await verifyQR2FAPassword(client, password);
       if (!verification.isSuccess) {
+        console.log('❌ 2FA проверка не удалась:', verification.error);
         return {
           success: false,
           error: verification.error,
@@ -48,6 +57,7 @@ export async function checkQRStatus(
         };
       }
 
+      console.log('✅ 2FA проверка успешна, извлекаем сессию...');
       // Извлекаем сессию после успешной проверки
       return extractQRSessionAfter2FA(client, apiId, apiHash);
     }
@@ -61,6 +71,7 @@ export async function checkQRStatus(
     return importResult;
   } catch (error: any) {
     // Обрабатываем ошибку (возможно 2FA)
+    console.log('⚠️ Ошибка при импорте токена:', error.message);
     return handleQRPasswordError(error, client, apiId, apiHash, password);
   }
 }
