@@ -47,6 +47,10 @@ export async function getOrCreateQRClient(
       timeout: 30000,
       useWSS: false,
       autoReconnect: false,
+      // Указываем информацию об устройстве для корректного отображения в Telegram
+      appVersion: '1.0.0',
+      deviceModel: 'Server Bot Builder',
+      systemVersion: process.platform === 'win32' ? 'Windows_NT' : process.platform,
     }
   );
 

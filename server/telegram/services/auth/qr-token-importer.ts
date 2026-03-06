@@ -41,6 +41,17 @@ export async function importQRToken(
 
   // QR отсканирован успешно
   if (validation.isSuccess === true) {
+    // Вызываем getMe() для активации сессии в Telegram
+    // Это необходимо для того, чтобы устройство появилось в списке сессий
+    try {
+      console.log('🔍 Активация сессии через getMe...');
+      const user = await client.getMe();
+      console.log('✅ Сессия активирована, пользователь:', user.firstName || user.username || `ID:${user.id}`);
+    } catch (error: any) {
+      console.error('⚠️ Ошибка при getMe после импорта токена:', error.message);
+      // Не прерываем процесс, если getMe не удался
+    }
+
     const sessionString = String(client.session.save() ?? '');
     console.log(formatScanSuccessMessage(sessionString));
 

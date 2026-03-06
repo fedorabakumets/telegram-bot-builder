@@ -1647,7 +1647,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const mediaFiles = await storage.searchMediaFiles(projectId, query);
       res.json(mediaFiles);
     } catch (error) {
-      console.error("Ошибка при поиске файлов:", error);
+      console.error("Ошибка при поиске ��айлов:", error);
       res.status(500).json({ message: "Ошибка при поиске файлов" });
     }
   });
@@ -2221,7 +2221,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           new StringSession(''),
           parseInt(credentials.apiId),
           credentials.apiHash,
-          { connectionRetries: 5, timeout: 30000 }
+          {
+            connectionRetries: 5,
+            timeout: 30000,
+            // Указываем информацию об устройстве для корректного отображения в Telegram
+            appVersion: '1.0.0',
+            deviceModel: 'Server Bot Builder',
+            systemVersion: process.platform === 'win32' ? 'Windows_NT' : process.platform,
+          }
         );
         await client.connect();
         telegramClientManager.getClients().set(userId, client);
@@ -2468,6 +2475,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             timeout: 30000,
             useWSS: false,
             autoReconnect: false,
+            // Указываем информацию об устройстве для корректного отображения в Telegram
+            appVersion: '1.0.0',
+            deviceModel: 'Server Bot Builder',
+            systemVersion: process.platform === 'win32' ? 'Windows_NT' : process.platform,
           }
         );
         await client.connect();
@@ -2477,7 +2488,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         // Сохраняем клиента для последующего обновления токена
         telegramClientManager.getClients().set(`${userId}_qr`, client);
-        console.log('💾 QR-клиент сохранён для пользователя', userId);
+        console.log('💾 QR-клиент сохранён для пользователя', userId, '- Система:', process.platform);
       } else {
         console.log('♻️ QR-клиент найден для пользователя', userId);
       }

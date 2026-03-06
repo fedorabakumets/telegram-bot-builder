@@ -45,6 +45,10 @@ export async function getAuthStatus(userId: string): Promise<AuthStatusExtended>
           {
             connectionRetries: 5,
             useWSS: false,
+            // Указываем информацию об устройстве для корректного отображения в Telegram
+            appVersion: '1.0.0',
+            deviceModel: 'Server Bot Builder',
+            systemVersion: typeof process !== 'undefined' && process.platform ? (process.platform === 'win32' ? 'Windows_NT' : process.platform) : 'Unknown',
           }
         );
 

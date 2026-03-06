@@ -27,6 +27,10 @@ export async function generateBasicQR(
       {
         connectionRetries: 5,
         timeout: 30000,
+        // Указываем информацию об устройстве для корректного отображения в Telegram
+        appVersion: '1.0.0',
+        deviceModel: 'Server Bot Builder',
+        systemVersion: typeof process !== 'undefined' && process.platform ? (process.platform === 'win32' ? 'Windows_NT' : process.platform) : 'Unknown',
       }
     );
 
