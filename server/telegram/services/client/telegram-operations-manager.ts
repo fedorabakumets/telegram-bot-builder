@@ -64,6 +64,6 @@ export class TelegramOperationsManager {
    */
   async saveSession(userId: string): Promise<string | null> {
     const client = this.clients.get(userId) ?? null;
-    return saveSessionWithCheck(userId, client);
+    return saveSessionWithCheck(client);
   }
 }

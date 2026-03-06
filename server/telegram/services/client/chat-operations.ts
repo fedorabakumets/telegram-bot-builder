@@ -23,7 +23,7 @@ export class ChatOperations {
    */
   async setUsername(userId: string, chatId: string | number, username: string): Promise<any> {
     const client = getClient(userId, this.clients);
-    return setChatUsernameWithCheck(userId, client, chatId, username);
+    return setChatUsernameWithCheck(client, chatId, username);
   }
 
   /**
@@ -31,6 +31,6 @@ export class ChatOperations {
    */
   async setPhoto(userId: string, chatId: string | number, photoPath: string): Promise<any> {
     const client = getClient(userId, this.clients);
-    return setChatPhotoWithCheck(userId, client, chatId, photoPath);
+    return setChatPhotoWithCheck(client, chatId, photoPath);
   }
 }
