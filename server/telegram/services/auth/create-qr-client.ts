@@ -5,6 +5,7 @@
 
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
+import { Api } from 'telegram';
 
 /**
  * Параметры устройства по умолчанию
@@ -60,11 +61,19 @@ export async function createQRClient(apiId: string, apiHash: string): Promise<Te
   console.log('📡 Подключение к Telegram...');
   await client.connect();
 
-  console.log('✅ QR-клиент подключён с параметрами:', {
-    deviceModel: DEVICE_CONFIG.deviceModel,
-    systemVersion: DEVICE_CONFIG.systemVersion,
-    appVersion: DEVICE_CONFIG.appVersion,
-  });
+  // Вызываем invoke сразу после подключения, чтобы gramJS отправил InitConnection
+  // с нашими параметрами устройства (appVersion, deviceModel, systemVersion)
+  console.log('🔑 Инициализация соединения через invoke (GetConfig)...');
+  try {
+    await client.invoke(new Api.help.GetConfig());
+    console.log('✅ Соединение инициализировано с параметрами:', {
+      deviceModel: DEVICE_CONFIG.deviceModel,
+      systemVersion: DEVICE_CONFIG.systemVersion,
+      appVersion: DEVICE_CONFIG.appVersion,
+    });
+  } catch (error: any) {
+    console.error('⚠️ Ошибка инициализации:', error.message);
+  }
 
   return client;
 }

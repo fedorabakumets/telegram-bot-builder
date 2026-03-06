@@ -59,48 +59,17 @@ export async function generateQrCode(
       }
 
       if (response.token && response.qrUrl) {
-        // Сначала переключаемся на шаг QR
+        // Переключаемся на шаг QR
         setStep?.('qr');
         notifications.success('QR-код сгенерирован', 'Отсканируйте QR-код в приложении Telegram');
-
-        // Сразу вызываем refresh для обновления параметров устройства
-        // Это аналогично нажатию кнопки "Обновить QR" после генерации
-        // Вызываем ПОСЛЕ setStep, чтобы анимация была видна
-        console.log('🔄 Автоматический вызов refresh после генерации QR...');
-        setIsLoading(true); // Показываем индикатор загрузки
-        try {
-          const refreshResponse = await authService.refreshQr();
-          if (refreshResponse.success && refreshResponse.token && refreshResponse.qrUrl) {
-            console.log('✅ Refresh выполнен успешно');
-            // Используем обновлённый токен от refresh
-            setQrState({
-              token: refreshResponse.token,
-              url: refreshResponse.qrUrl,
-              password: password || '',
-              countdown: refreshResponse.expires ?? QR_TOKEN_EXPIRY,
-            });
-          } else {
-            // Если refresh не удался, используем оригинальный токен
-            console.log('⚠️ Refresh не вернул токен, используем оригинальный');
-            setQrState({
-              token: response.token,
-              url: response.qrUrl,
-              password: password || '',
-              countdown: response.expires ?? QR_TOKEN_EXPIRY,
-            });
-          }
-        } catch (refreshError) {
-          console.error('⚠️ Ошибка refresh:', refreshError);
-          // Если refresh не удался, используем оригинальный токен
-          setQrState({
-            token: response.token,
-            url: response.qrUrl,
-            password: password || '',
-            countdown: response.expires ?? QR_TOKEN_EXPIRY,
-          });
-        } finally {
-          setIsLoading(false); // Скрываем индикатор загрузки
-        }
+        
+        // Устанавливаем состояние с полученным токеном
+        setQrState({
+          token: response.token,
+          url: response.qrUrl,
+          password: password || '',
+          countdown: response.expires ?? QR_TOKEN_EXPIRY,
+        });
       }
     } else {
       notifications.error('Ошибка', response.error ?? 'Не удалось сгенерировать QR-код');
