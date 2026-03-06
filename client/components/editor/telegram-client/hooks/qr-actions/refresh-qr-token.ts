@@ -5,6 +5,7 @@
  */
 
 import type { QrState } from '../../types';
+import type { NotificationService } from '../../services';
 import { createTelegramAuthService } from '../../services/telegram-auth-service';
 import { createLogger } from '../../services/logger-service';
 import { QR_TOKEN_EXPIRY } from '../../constants';
@@ -17,6 +18,10 @@ const logger = createLogger({ prefix: '[TelegramAuth]' });
 export interface RefreshQrTokenParams {
   /** Установить состояние QR */
   setQrState: (updater: (prev: QrState) => QrState) => void;
+  /** Установить статус загрузки */
+  setIsLoading?: (value: boolean) => void;
+  /** Сервис уведомлений */
+  notifications?: NotificationService;
 }
 
 /**
@@ -25,12 +30,8 @@ export interface RefreshQrTokenParams {
 export interface RefreshQrTokenResult {
   /** Успешно ли выполнение */
   success: boolean;
-  /** Новый токен */
-  token?: string;
-  /** Новый URL */
-  url?: string;
-  /** Время действия */
-  expires?: number;
+  /** Сообщение о результате */
+  message?: string;
 }
 
 /**
@@ -41,15 +42,16 @@ export interface RefreshQrTokenResult {
  *
  * @example
  * ```tsx
- * const result = await refreshQrToken({ setQrState });
+ * const result = await refreshQrToken({ setQrState, setIsLoading, notifications });
  * ```
  */
 export async function refreshQrToken(
   params: RefreshQrTokenParams
 ): Promise<RefreshQrTokenResult> {
-  const { setQrState } = params;
+  const { setQrState, setIsLoading, notifications } = params;
   const authService = createTelegramAuthService();
 
+  setIsLoading?.(true);
   try {
     const response = await authService.refreshQr();
 
@@ -61,17 +63,20 @@ export async function refreshQrToken(
         countdown: response.expires ?? QR_TOKEN_EXPIRY,
       }));
 
-      return {
-        success: true,
-        token: response.token,
-        url: response.qrUrl,
-        expires: response.expires,
-      };
+      notifications?.success('QR-код обновлён', 'Токен действителен 30 секунд');
+      return { success: true, message: 'QR-код обновлён' };
     }
 
-    return { success: false };
+    const errorMessage = response.error || 'Не удалось обновить QR-код';
+    notifications?.error('Ошибка', errorMessage);
+    logger.warn('Обновление QR не удалось', response);
+    return { success: false, message: errorMessage };
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Ошибка сети';
+    notifications?.error('Ошибка', message);
     logger.error('Ошибка обновления QR', error);
-    return { success: false };
+    return { success: false, message };
+  } finally {
+    setIsLoading?.(false);
   }
 }

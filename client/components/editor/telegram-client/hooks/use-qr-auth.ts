@@ -71,7 +71,7 @@ export function useQrAuth(
   };
 
   const handleRefreshQrToken = async () => {
-    await refreshQrToken({ setQrState });
+    await refreshQrToken({ setQrState, setIsLoading, notifications });
   };
 
   const resetQrState = () => {
