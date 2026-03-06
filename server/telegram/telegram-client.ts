@@ -18,6 +18,7 @@ import {
   demoteMember,
   disconnectWithCheck,
   saveSessionWithCheck,
+  restoreSessionWithCheck,
   setChatUsernameWithCheck,
   setChatPhotoWithCheck,
   executeMemberOperation,
@@ -153,7 +154,7 @@ class TelegramClientManager {
    * @returns Строка сессии или null
    */
   async saveSession(userId: string): Promise<string | null> {
-    const client = this.clients.get(userId);
+    const client = this.clients.get(userId) ?? null;
     return saveSessionWithCheck(userId, client);
   }
 
