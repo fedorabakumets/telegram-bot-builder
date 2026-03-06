@@ -9,6 +9,8 @@ export { saveSessionToDb } from './save-session-to-db.js';
 export { restoreSession } from './restore-session.js';
 export { initializeManager } from './initialize-manager.js';
 export { saveSession } from './save-session.js';
+export { saveSessionWithCheck } from './save-session-with-check.js';
+export { restoreSessionWithCheck } from './restore-session-with-check.js';
 
 // Credentials
 export { loadApiCredentials } from './load-api-credentials.js';
@@ -25,6 +27,7 @@ export { startClientWithPhone } from './start-client-with-phone.js';
 export { disconnectClient } from './disconnect-client.js';
 export { getClient } from './get-client.js';
 export { createAndStoreClient } from './create-and-store-client.js';
+export { disconnectWithCheck } from './disconnect-with-check.js';
 
 // Авторизация (phone code)
 export { sendCode } from './send-code.js';
@@ -34,6 +37,8 @@ export { verifyPassword } from './verify-password.js';
 export { logout } from './logout.js';
 export { verifyPasswordWithSession } from './verify-password-with-session.js';
 export { logoutUser } from './logout-user.js';
+export { verifyPasswordWithValidation } from './verify-password-with-validation.js';
+export { logoutWithCheck } from './logout-with-check.js';
 
 // Статус
 export { getAuthStatus } from './get-auth-status.js';

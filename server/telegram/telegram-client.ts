@@ -2,11 +2,9 @@ import { TelegramClient } from 'telegram';
 import type { TelegramClientConfig } from './types/client/telegram-client-config.js';
 import type { AuthStatus } from './types/client/auth-status.js';
 import {
-  saveSessionToDb,
-  restoreSession,
   initializeManager,
-  verifyPasswordWithSession,
-  logoutUser,
+  verifyPasswordWithValidation,
+  logoutWithCheck,
   getAuthStatus,
   setCredentials,
   createAndStoreClient,
@@ -18,8 +16,8 @@ import {
   restrictMember,
   promoteMember,
   demoteMember,
-  disconnectClient,
-  saveSession,
+  disconnectWithCheck,
+  saveSessionWithCheck,
   setChatUsernameWithCheck,
   setChatPhotoWithCheck,
   executeMemberOperation,
@@ -48,28 +46,13 @@ class TelegramClientManager {
   }
 
   /**
-   * Сохранить сессию в базу данных
-   * @param userId - ID пользователя
-   * @param sessionString - Строка сессии
-   * @param phoneNumber - Номер телефона пользователя
-   */
-  private async saveSessionToDatabase(userId: string, sessionString: string, phoneNumber: string): Promise<void> {
-    return saveSessionToDb(userId, sessionString, phoneNumber);
-  }
-
-
-  /**
    * Восстановить клиент из сохраненной сессии
    * @param userId - ID пользователя
    * @returns Успешность восстановления сессии
    */
   async restoreSession(userId: string): Promise<boolean> {
-    return restoreSession(userId, this.clients, this.sessions, this.authStatus);
+    return restoreSessionWithCheck(userId, this.clients, this.sessions, this.authStatus);
   }
-
-
-
-
 
   /**
    * Проверить пароль двухфакторной аутентификации
@@ -79,16 +62,8 @@ class TelegramClientManager {
    */
   async verifyPassword(userId: string, password: string): Promise<{ success: boolean; error?: string }> {
     const client = this.clients.get(userId);
-    if (!client) {
-      return { success: false, error: 'Клиент не найден. Сначала отправьте код.' };
-    }
-
     const authStatus = this.authStatus.get(userId);
-    if (!authStatus || !authStatus.needsPassword) {
-      return { success: false, error: 'Проверка пароля не требуется.' };
-    }
-
-    return verifyPasswordWithSession(userId, client, authStatus, password, this.sessions, this.authStatus);
+    return verifyPasswordWithValidation(userId, client, authStatus, password, this.sessions, this.authStatus);
   }
 
   /**
@@ -98,12 +73,7 @@ class TelegramClientManager {
    */
   async logout(userId: string): Promise<{ success: boolean; error?: string }> {
     const client = this.clients.get(userId);
-
-    if (client) {
-      return logoutUser(userId, client, this.clients, this.sessions, this.authStatus);
-    }
-
-    return { success: false, error: 'Клиент не найден' };
+    return logoutWithCheck(userId, client, this.clients, this.sessions, this.authStatus);
   }
 
   /**
@@ -174,9 +144,7 @@ class TelegramClientManager {
    */
   async disconnect(userId: string): Promise<void> {
     const client = this.clients.get(userId);
-    if (client) {
-      await disconnectClient(userId, client, this.clients, this.sessions, this.authStatus);
-    }
+    return disconnectWithCheck(userId, client, this.clients, this.sessions, this.authStatus);
   }
 
   /**
@@ -186,10 +154,7 @@ class TelegramClientManager {
    */
   async saveSession(userId: string): Promise<string | null> {
     const client = this.clients.get(userId);
-    if (client) {
-      return saveSession(client);
-    }
-    return null;
+    return saveSessionWithCheck(userId, client);
   }
 
   /**
