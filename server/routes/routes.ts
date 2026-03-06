@@ -1646,7 +1646,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const mediaFiles = await storage.searchMediaFiles(projectId, query);
       res.json(mediaFiles);
     } catch (error) {
-      console.error("Оши������ка при п��иске ������������йлов:", error);
+      console.error("Оши������ка при п����иске ������������йлов:", error);
       res.status(500).json({ message: "Ошибка при поиске файлов" });
     }
   });
@@ -2513,10 +2513,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Refresh QR token (обновление токена каждые 30 сек)
   app.post("/api/telegram-auth/qr-refresh", async (req, res) => {
+    console.log('📥 /api/telegram-auth/qr-refresh вызван');
     try {
       const { projectId } = req.body;
       const userId = projectId ? String(projectId) : 'default';
 
+      console.log('🔍 Загрузка credentials для пользователя:', userId);
       const credentials = await telegramAuthService.loadCredentials(userId);
       if (!credentials || !credentials.apiId || !credentials.apiHash) {
         return res.status(400).json({
@@ -2527,7 +2529,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Получаем существующего клиента
       const client = telegramClientManager.getClients().get(`${userId}_qr`);
-      
+      console.log('🔍 Поиск клиента:', `${userId}_qr`, '- найден:', !!client);
+
       if (!client) {
         return res.status(400).json({
           success: false,
@@ -2536,6 +2539,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Обновляем токен
+      console.log('🔄 Генерация нового QR-токена...');
       const result = await telegramAuthService.generateQRToken(
         client,
         credentials.apiId,
