@@ -3,8 +3,7 @@
  * @module server/telegram/services/client/telegram-operations-manager
  */
 
-import { TelegramClient } from 'telegram';
-import type { TelegramClientConfig } from '../../types/client/telegram-client-config.js';
+import type { TelegramClient } from 'telegram';
 import { GroupMemberOperations } from './group-member-operations.js';
 import { ChatOperations } from './chat-operations.js';
 import { AuthOperations } from './auth-operations.js';
