@@ -66,3 +66,6 @@ export { ChatOperations } from './chat-operations.js';
 // Утилиты операций
 export { checkAuthForOperation } from './check-auth-for-operation.js';
 export { executeMemberOperation } from './execute-member-operation.js';
+
+// Фасады
+export { TelegramOperationsManager } from './telegram-operations-manager.js';
