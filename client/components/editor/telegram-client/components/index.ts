@@ -33,6 +33,9 @@ export { QrStatusButton } from './qr-status-button';
 export type { QrStatusButtonProps } from './qr-status-button';
 export { QrActionButtons } from './qr-action-buttons';
 export type { QrActionButtonsProps } from './qr-action-buttons';
+export { QrAuthWarning } from './qr-auth-warning';
+export { QrAuthVideo } from './qr-auth-video';
+export type { QrAuthVideoProps } from './qr-auth-video';
 
 // View компоненты шагов
 export { StartStepView } from './start-step-view';

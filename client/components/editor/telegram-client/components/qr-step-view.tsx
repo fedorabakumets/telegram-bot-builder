@@ -11,6 +11,7 @@ import { QrCodeDisplay } from './qr-code-display';
 import { QrInfoText } from './qr-info-text';
 import { QrStatusButton } from './qr-status-button';
 import { QrActionButtons } from './qr-action-buttons';
+import { QrAuthWarning } from './qr-auth-warning';
 import type { QrStepViewProps } from '../types/telegram-auth-view-props';
 
 /**
@@ -29,6 +30,8 @@ export function QrStepView({ qrState, isLoading, onCheckStatus, onRefreshQr, onB
         <QrCodeDisplay url={url} countdown={countdown} isRefreshing={isRefreshing} />
         <QrInfoText countdown={countdown} />
       </div>
+
+      <QrAuthWarning />
 
       <QrStatusButton onClick={onCheckStatus} isLoading={isLoading} />
 
