@@ -19,6 +19,12 @@ import {
   restrictMember,
   promoteMember,
   demoteMember,
+  disconnectClient,
+  saveSession,
+  setChatUsername,
+  setChatPhoto,
+  setChatDescription,
+  setChatTitle,
 } from './services/client/index.js';
 
 /**
@@ -209,14 +215,7 @@ class TelegramClientManager {
   async disconnect(userId: string): Promise<void> {
     const client = this.clients.get(userId);
     if (client) {
-      try {
-        await client.disconnect();
-        this.clients.delete(userId);
-        this.authStatus.delete(userId);
-        this.sessions.delete(userId);
-      } catch (error) {
-        console.error('Error disconnecting client:', error);
-      }
+      await disconnectClient(userId, client, this.clients, this.sessions, this.authStatus);
     }
   }
 
@@ -227,9 +226,8 @@ class TelegramClientManager {
    */
   async saveSession(userId: string): Promise<string | null> {
     const client = this.clients.get(userId);
-    if (client && client.session) {
-      const sessionData = client.session.save();
-      return typeof sessionData === 'string' ? sessionData : String(sessionData);
+    if (client) {
+      return saveSession(client);
     }
     return null;
   }
@@ -247,38 +245,7 @@ class TelegramClientManager {
       throw new Error('Telegram client not found. Please authenticate first.');
     }
 
-    const authStatus = await this.getAuthStatus(userId);
-    if (!authStatus.isAuthenticated) {
-      throw new Error('User not authenticated. Please complete phone verification first.');
-    }
-
-    try {
-      // Получаем сущность чата
-      let chatEntity: any;
-      try {
-        chatEntity = await client.getEntity(chatId);
-      } catch (entityError) {
-        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = chatId.slice(4);
-          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
-        } else {
-          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
-        }
-      }
-
-      // Устанавливаем username чата (делаем публичным или приватным)
-      const result = await client.invoke(
-        new Api.channels.UpdateUsername({
-          channel: chatEntity,
-          username: username || '', // Пустая строка делает группу приватной
-        })
-      );
-
-      return result;
-    } catch (error: any) {
-      console.error('Failed to set chat username:', error);
-      throw new Error(`Failed to set chat username: ${error.message || 'Unknown error'}`);
-    }
+    return setChatUsername(client, chatId, username);
   }
 
   /**
@@ -294,53 +261,7 @@ class TelegramClientManager {
       throw new Error('Telegram client not found. Please authenticate first.');
     }
 
-    const authStatus = await this.getAuthStatus(userId);
-    if (!authStatus.isAuthenticated) {
-      throw new Error('User not authenticated. Please complete phone verification first.');
-    }
-
-    try {
-      // Читаем файл
-      const fs = await import('fs');
-      const path = await import('path');
-      const photoBuffer = fs.readFileSync(photoPath);
-      const fileName = path.basename(photoPath);
-
-      // Создаем CustomFile из Buffer
-      const customFile = new CustomFile(fileName, photoBuffer.length, '', photoBuffer);
-
-      // Загружаем файл в Telegram
-      const file = await client.uploadFile({
-        file: customFile,
-        workers: 1,
-      });
-
-      // Получаем сущность чата
-      let chatEntity: any;
-      try {
-        chatEntity = await client.getEntity(chatId);
-      } catch (entityError) {
-        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = chatId.slice(4);
-          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
-        } else {
-          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
-        }
-      }
-
-      // Устанавливаем фото чата
-      const result = await client.invoke(
-        new Api.channels.EditPhoto({
-          channel: chatEntity,
-          photo: new Api.InputChatUploadedPhoto({ file }),
-        })
-      );
-
-      return result;
-    } catch (error: any) {
-      console.error('Failed to set chat photo:', error);
-      throw new Error(`Failed to set chat photo: ${error.message || 'Unknown error'}`);
-    }
+    return setChatPhoto(client, chatId, photoPath);
   }
 
   // Исключить участника из группы через Client API

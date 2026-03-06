@@ -8,6 +8,7 @@ export { loadSessionFromDb } from './load-session-from-db.js';
 export { saveSessionToDb } from './save-session-to-db.js';
 export { restoreSession } from './restore-session.js';
 export { initializeManager } from './initialize-manager.js';
+export { saveSession } from './save-session.js';
 
 // Credentials
 export { loadApiCredentials } from './load-api-credentials.js';
@@ -21,6 +22,7 @@ export { disconnectTelegramClient } from './disconnect-telegram-client.js';
 export { disableUpdateLoop } from './disable-update-loop.js';
 export { validateSession } from './validate-session.js';
 export { startClientWithPhone } from './start-client-with-phone.js';
+export { disconnectClient } from './disconnect-client.js';
 
 // Авторизация (phone code)
 export { sendCode } from './send-code.js';
@@ -40,3 +42,9 @@ export { banMember } from './ban-member.js';
 export { restrictMember } from './restrict-member.js';
 export { promoteMember } from './promote-member.js';
 export { demoteMember } from './demote-member.js';
+
+// Управление чатами
+export { setChatUsername } from './set-chat-username.js';
+export { setChatPhoto } from './set-chat-photo.js';
+export { setChatDescription } from './set-chat-description.js';
+export { setChatTitle } from './set-chat-title.js';
