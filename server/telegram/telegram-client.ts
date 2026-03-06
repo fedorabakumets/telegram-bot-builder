@@ -3,17 +3,12 @@ import type { TelegramClientConfig } from './types/client/telegram-client-config
 import type { AuthStatus } from './types/client/auth-status.js';
 import {
   initializeManager,
-  verifyPasswordWithValidation,
-  logoutWithCheck,
-  getAuthStatus,
-  setCredentials,
-  createAndStoreClient,
-  getClient,
-  disconnectWithCheck,
-  saveSessionWithCheck,
   restoreSessionWithCheck,
   GroupMemberOperations,
   ChatOperations,
+  AuthOperations,
+  disconnectWithCheck,
+  saveSessionWithCheck,
 } from './services/client/index.js';
 
 /**
@@ -25,10 +20,12 @@ class TelegramClientManager {
   private authStatus: Map<string, AuthStatus> = new Map();
   private groupOps: GroupMemberOperations;
   private chatOps: ChatOperations;
+  private authOps: AuthOperations;
 
   constructor() {
     this.groupOps = new GroupMemberOperations(this.clients);
     this.chatOps = new ChatOperations(this.clients);
+    this.authOps = new AuthOperations(this.clients, this.sessions, this.authStatus);
   }
 
   /**
@@ -61,9 +58,7 @@ class TelegramClientManager {
    * @returns Результат проверки
    */
   async verifyPassword(userId: string, password: string): Promise<{ success: boolean; error?: string }> {
-    const client = this.clients.get(userId);
-    const authStatus = this.authStatus.get(userId);
-    return verifyPasswordWithValidation(userId, client, authStatus, password, this.sessions, this.authStatus);
+    return this.authOps.verifyPassword(userId, password);
   }
 
   /**
@@ -72,8 +67,7 @@ class TelegramClientManager {
    * @returns Результат выхода
    */
   async logout(userId: string): Promise<{ success: boolean; error?: string }> {
-    const client = this.clients.get(userId);
-    return logoutWithCheck(userId, client, this.clients, this.sessions, this.authStatus);
+    return this.authOps.logout(userId);
   }
 
   /**
@@ -82,7 +76,7 @@ class TelegramClientManager {
    * @returns Статус аутентификации
    */
   async getAuthStatus(userId: string): Promise<AuthStatus & { hasCredentials?: boolean; isAuthenticated?: boolean; username?: string; phoneNumber?: string }> {
-    return getAuthStatus(userId);
+    return this.authOps.getStatus(userId);
   }
 
   /**
@@ -93,7 +87,7 @@ class TelegramClientManager {
    * @returns Результат установки
    */
   async setCredentials(userId: string, apiId: string, apiHash: string): Promise<{ success: boolean; error?: string }> {
-    return setCredentials(userId, apiId, apiHash);
+    return this.authOps.setCredentials(userId, apiId, apiHash);
   }
 
   /**
@@ -103,7 +97,7 @@ class TelegramClientManager {
    * @returns Клиент Telegram
    */
   async createClient(userId: string, config: TelegramClientConfig): Promise<TelegramClient> {
-    return createAndStoreClient(userId, config, this.clients);
+    return this.authOps.createClient(userId, config);
   }
 
   /**
@@ -112,7 +106,7 @@ class TelegramClientManager {
    * @returns Клиент Telegram или null
    */
   async getClient(userId: string): Promise<TelegramClient | null> {
-    return getClient(userId, this.clients);
+    return this.authOps.getClient(userId);
   }
 
   /**

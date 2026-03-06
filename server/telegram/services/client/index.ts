@@ -39,6 +39,7 @@ export { verifyPasswordWithSession } from './verify-password-with-session.js';
 export { logoutUser } from './logout-user.js';
 export { verifyPasswordWithValidation } from './verify-password-with-validation.js';
 export { logoutWithCheck } from './logout-with-check.js';
+export { AuthOperations } from './auth-operations.js';
 
 // Статус
 export { getAuthStatus } from './get-auth-status.js';
