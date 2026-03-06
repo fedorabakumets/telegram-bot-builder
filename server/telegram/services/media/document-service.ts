@@ -4,13 +4,13 @@
  */
 
 import { join } from 'path';
-import type { DownloadedMedia } from '../types/index.js';
-import { sanitizeFileId, generateFileName } from '../utils/file-utils.js';
-import { validateExtension } from '../utils/extension-validator.js';
-import { getMimeType } from '../utils/mime-utils.js';
-import { createUploadDir, validateFilePath } from '../utils/path-utils.js';
-import { getTelegramFileInfo } from '../utils/http-utils.js';
-import { downloadFile } from '../utils/download-utils.js';
+import type { DownloadedMedia } from '../../types/index.js';
+import { sanitizeFileId, generateFileName } from '../../utils/media/file-utils.js';
+import { validateExtension } from '../../utils/media/extension-validator.js';
+import { getMimeType } from '../../utils/media/mime-utils.js';
+import { createUploadDir, validateFilePath } from '../../utils/media/path-utils.js';
+import { getTelegramFileInfo } from '../../utils/media/http-utils.js';
+import { downloadFile } from '../../utils/media/download-utils.js';
 
 /**
  * Скачивает документ из Telegram через Bot API

@@ -3,7 +3,7 @@
  * @module server/telegram/utils/file-utils
  */
 
-import type { FileExtension } from '../types/file-extension.js';
+import type { FileExtension } from '../../types/media/file-extension.js';
 
 /**
  * Санитизирует file_id из Telegram, оставляя только безопасные символы

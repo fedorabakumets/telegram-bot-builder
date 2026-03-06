@@ -5,7 +5,7 @@
 
 import { existsSync, mkdirSync } from 'fs';
 import { join, normalize, relative, isAbsolute } from 'path';
-import type { PathValidationResult } from '../types/path-validation.js';
+import type { PathValidationResult } from '../../types/media/path-validation.js';
 
 /**
  * Создаёт директорию для загрузки файлов проекта

@@ -3,7 +3,7 @@
  * @module server/telegram/utils/extension-validator
  */
 
-import type { AllowedExtensionsMap } from '../types/allowed-extensions.js';
+import type { AllowedExtensionsMap } from '../../types/media/allowed-extensions.js';
 
 /**
  * Карта разрешённых расширений по категориям медиа

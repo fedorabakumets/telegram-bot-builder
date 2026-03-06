@@ -3,12 +3,12 @@
  * @module server/telegram/utils/index
  */
 
-export { sanitizeFileId, generateFileName } from './file-utils.js';
-export { validateExtension, getAllowedExtensions } from './extension-validator.js';
-export { getMimeType } from './mime-utils.js';
-export { createUploadDir, validateFilePath } from './path-utils.js';
-export { httpsGet, getTelegramFileInfo } from './http-utils.js';
-export { downloadFile } from './download-utils.js';
+export { sanitizeFileId, generateFileName } from './media/file-utils.js';
+export { validateExtension, getAllowedExtensions } from './media/extension-validator.js';
+export { getMimeType } from './media/mime-utils.js';
+export { createUploadDir, validateFilePath } from './media/path-utils.js';
+export { httpsGet, getTelegramFileInfo } from './media/http-utils.js';
+export { downloadFile } from './media/download-utils.js';
 export { isApiCredentialsError, getFormattedQrError } from './qr-auth-error-handler.js';
 
 export * from './auth/index.js';

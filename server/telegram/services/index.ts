@@ -3,7 +3,7 @@
  * @module server/telegram/services/index
  */
 
-export { downloadPhoto } from './photo-service.js';
-export { downloadVideo } from './video-service.js';
-export { downloadAudio } from './audio-service.js';
-export { downloadDocument } from './document-service.js';
+export { downloadPhoto } from './media/photo-service.js';
+export { downloadVideo } from './media/video-service.js';
+export { downloadAudio } from './media/audio-service.js';
+export { downloadDocument } from './media/document-service.js';

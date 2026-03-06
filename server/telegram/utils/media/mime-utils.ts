@@ -3,8 +3,8 @@
  * @module server/telegram/utils/mime-utils
  */
 
-import type { MimeType } from '../types/mime-type.js';
-import type { ExtensionMimeMap } from '../types/extension-mime-map.js';
+import type { MimeType } from '../../types/media/mime-type.js';
+import type { ExtensionMimeMap } from '../../types/media/extension-mime-map.js';
 
 /**
  * Карта соответствия расширений и MIME-типов для фото

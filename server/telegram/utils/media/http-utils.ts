@@ -4,8 +4,8 @@
  */
 
 import https from 'https';
-import type { TelegramFileInfo } from '../types/telegram-file-info.js';
-import type { HttpTimeoutOptions } from '../types/http-request.js';
+import type { TelegramFileInfo } from '../../types/media/telegram-file-info.js';
+import type { HttpTimeoutOptions } from '../../types/media/http-request.js';
 
 /**
  * Выполняет HTTPS GET-запрос с таймаутом
