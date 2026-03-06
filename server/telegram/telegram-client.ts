@@ -5,11 +5,12 @@ import {
   saveSessionToDb,
   restoreSession,
   initializeManager,
-  verifyPassword,
-  logout,
+  verifyPasswordWithSession,
+  logoutUser,
   getAuthStatus,
   setCredentials,
-  startClientWithPhone,
+  createAndStoreClient,
+  getClient,
   getGroupMembers,
   getChatInfo,
   kickMember,
@@ -19,10 +20,8 @@ import {
   demoteMember,
   disconnectClient,
   saveSession,
-  setChatUsername,
-  setChatPhoto,
-  verifyPasswordWithSession,
-  logoutUser,
+  setChatUsernameWithCheck,
+  setChatPhotoWithCheck,
   executeMemberOperation,
 } from './services/client/index.js';
 
@@ -134,9 +133,7 @@ class TelegramClientManager {
    * @returns Клиент Telegram
    */
   async createClient(userId: string, config: TelegramClientConfig): Promise<TelegramClient> {
-    const client = await startClientWithPhone(config);
-    this.clients.set(userId, client);
-    return client;
+    return createAndStoreClient(userId, config, this.clients);
   }
 
   /**
@@ -145,7 +142,7 @@ class TelegramClientManager {
    * @returns Клиент Telegram или null
    */
   async getClient(userId: string): Promise<TelegramClient | null> {
-    return this.clients.get(userId) || null;
+    return getClient(userId, this.clients);
   }
 
   /**
@@ -204,11 +201,7 @@ class TelegramClientManager {
    */
   async setChatUsername(userId: string, chatId: string | number, username: string): Promise<any> {
     const client = await this.getClient(userId);
-    if (!client) {
-      throw new Error('Telegram client not found. Please authenticate first.');
-    }
-
-    return setChatUsername(client, chatId, username);
+    return setChatUsernameWithCheck(userId, client, chatId, username);
   }
 
   /**
@@ -220,11 +213,7 @@ class TelegramClientManager {
    */
   async setChatPhoto(userId: string, chatId: string | number, photoPath: string): Promise<any> {
     const client = await this.getClient(userId);
-    if (!client) {
-      throw new Error('Telegram client not found. Please authenticate first.');
-    }
-
-    return setChatPhoto(client, chatId, photoPath);
+    return setChatPhotoWithCheck(userId, client, chatId, photoPath);
   }
 
   // Исключить участника из группы через Client API

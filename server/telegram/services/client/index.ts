@@ -23,6 +23,8 @@ export { disableUpdateLoop } from './disable-update-loop.js';
 export { validateSession } from './validate-session.js';
 export { startClientWithPhone } from './start-client-with-phone.js';
 export { disconnectClient } from './disconnect-client.js';
+export { getClient } from './get-client.js';
+export { createAndStoreClient } from './create-and-store-client.js';
 
 // Авторизация (phone code)
 export { sendCode } from './send-code.js';
@@ -50,6 +52,8 @@ export { setChatUsername } from './set-chat-username.js';
 export { setChatPhoto } from './set-chat-photo.js';
 export { setChatDescription } from './set-chat-description.js';
 export { setChatTitle } from './set-chat-title.js';
+export { setChatUsernameWithCheck } from './set-chat-username-with-check.js';
+export { setChatPhotoWithCheck } from './set-chat-photo-with-check.js';
 
 // Утилиты операций
 export { checkAuthForOperation } from './check-auth-for-operation.js';
