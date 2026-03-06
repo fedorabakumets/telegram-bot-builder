@@ -27,15 +27,19 @@ export async function extractQRSessionAfter2FA(
   apiHash: string
 ): Promise<CheckQRStatusResult> {
   try {
-    // Проверяем, авторизован ли клиент (получаем информацию о пользователе)
-    const user = await client.invoke(new Api.users.GetUsers({ id: [] }));
+    console.log('🔍 Проверка авторизации через getMe...');
     
-    if (user && user.length > 0) {
+    // Проверяем, авторизован ли клиент (получаем информацию о текущем пользователе)
+    const user = await client.getMe();
+    
+    console.log('📋 Результат getMe:', user);
+    
+    if (user && user.id) {
       // Клиент авторизован, извлекаем сессию
       const sessionString = client.session.save();
       console.log(`${QR_SCANNED_WITH_2FA}`);
       console.log(`${QR_SESSION_STRING} ${sessionString}`);
-      console.log(`${QR_2FA_VERIFIED} для пользователя ${user[0].firstName || 'unknown'}`);
+      console.log(`${QR_2FA_VERIFIED} для пользователя ${user.firstName || user.username || 'ID:' + user.id}`);
 
       return {
         success: true,
@@ -53,6 +57,7 @@ export async function extractQRSessionAfter2FA(
     };
   } catch (error: any) {
     console.error('❌ Ошибка извлечения сессии после 2FA:', error.message);
+    console.error('Stack:', error.stack);
     return {
       success: false,
       error: error.message || 'Ошибка извлечения сессии',
