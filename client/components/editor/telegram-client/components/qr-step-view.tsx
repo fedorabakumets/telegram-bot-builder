@@ -19,14 +19,14 @@ import type { QrStepViewProps } from '../types/telegram-auth-view-props';
  * @param {QrStepViewProps} props - Пропсы компонента
  * @returns {JSX.Element} Шаг с QR-кодом
  */
-export function QrStepView({ qrState, isLoading, onCheckStatus, onRefreshQr, onBack }: QrStepViewProps) {
+export function QrStepView({ qrState, isLoading, onCheckStatus, onRefreshQr, onBack, isRefreshing = false }: QrStepViewProps) {
   const { url, countdown } = qrState;
 
   return (
     <div className="space-y-4">
       <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
         <QrStatusHeader />
-        <QrCodeDisplay url={url} countdown={countdown} />
+        <QrCodeDisplay url={url} countdown={countdown} isRefreshing={isRefreshing} />
         <QrInfoText countdown={countdown} />
       </div>
 

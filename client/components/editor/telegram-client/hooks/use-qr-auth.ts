@@ -21,6 +21,8 @@ export interface UseQrAuthReturn {
   qrState: QrState;
   /** Статус загрузки */
   isLoading: boolean;
+  /** Статус обновления QR */
+  isRefreshing: boolean;
   /** Генерация QR-кода */
   generateQrCode: (password?: string) => Promise<void>;
   /** Проверка статуса QR */
@@ -51,6 +53,7 @@ export function useQrAuth(
     countdown: QR_TOKEN_EXPIRY,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   const notifications = createNotificationService(toast);
 
@@ -71,16 +74,23 @@ export function useQrAuth(
   };
 
   const handleRefreshQrToken = async () => {
-    await refreshQrToken({ setQrState, setIsLoading, notifications });
+    setIsRefreshing(true);
+    try {
+      await refreshQrToken({ setQrState, setIsLoading, notifications });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const resetQrState = () => {
     setQrState({ token: '', url: '', password: '', countdown: QR_TOKEN_EXPIRY });
+    setIsRefreshing(false);
   };
 
   return {
     qrState,
     isLoading,
+    isRefreshing,
     generateQrCode: handleGenerateQrCode,
     checkQrStatus: handleCheckQrStatus,
     refreshQrToken: handleRefreshQrToken,

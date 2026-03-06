@@ -31,7 +31,7 @@ import type { TelegramAuthProps, AuthStep } from './types';
  */
 export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProps) {
   const [step, setStep] = useState<AuthStep>('start');
-  const { qrState, isLoading, generateQrCode, checkQrStatus, refreshQrToken, setQrPassword, resetQrState } =
+  const { qrState, isLoading, isRefreshing, generateQrCode, checkQrStatus, refreshQrToken, setQrPassword, resetQrState } =
     useQrAuth(onSuccess, onOpenChange);
 
   // Локальный countdown для UI (без лишних ре-рендеров)
@@ -87,6 +87,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
               key="qr"
               qrState={{ ...qrState, countdown }}
               isLoading={isLoading}
+              isRefreshing={isRefreshing}
               onCheckStatus={checkQrStatus}
               onRefreshQr={refreshQrToken}
               onBack={handleBack}

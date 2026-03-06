@@ -4,7 +4,7 @@
  * @module QrCodeDisplay
  */
 
-import { QrCode } from 'lucide-react';
+import { QrCode, RefreshCw } from 'lucide-react';
 import { QrCodeGenerator } from './qr-code-generator';
 import { QrCountdownBadge } from './qr-countdown-badge';
 import { QR_DEFAULT_SIZE } from '../constants';
@@ -17,6 +17,8 @@ export interface QrCodeDisplayProps {
   url?: string;
   /** Обратный отсчёт до обновления */
   countdown: number;
+  /** Статус обновления (для анимации) */
+  isRefreshing?: boolean;
 }
 
 /**
@@ -27,16 +29,23 @@ export interface QrCodeDisplayProps {
  *
  * @example
  * ```tsx
- * <QrCodeDisplay url={qrUrl} countdown={30} />
+ * <QrCodeDisplay url={qrUrl} countdown={30} isRefreshing={false} />
  * ```
  */
-export function QrCodeDisplay({ url, countdown }: QrCodeDisplayProps) {
+export function QrCodeDisplay({ url, countdown, isRefreshing = false }: QrCodeDisplayProps) {
   return (
     <div className="bg-white p-4 rounded-lg inline-block mb-3 relative">
       {url ? (
         <>
-          <QrCodeGenerator value={url} size={QR_DEFAULT_SIZE} />
+          <div className={`transition-opacity duration-300 ${isRefreshing ? 'opacity-50' : 'opacity-100'}`}>
+            <QrCodeGenerator value={url} size={QR_DEFAULT_SIZE} />
+          </div>
           <QrCountdownBadge countdown={countdown} />
+          {isRefreshing && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
+              <RefreshCw className="h-8 w-8 text-green-600 animate-spin" />
+            </div>
+          )}
         </>
       ) : (
         <div className="w-[200px] h-[200px] flex items-center justify-center bg-gray-100 rounded">

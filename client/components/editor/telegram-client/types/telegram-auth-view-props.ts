@@ -30,6 +30,8 @@ export interface QrStepViewProps {
   onRefreshQr: () => void;
   /** Обработчик возврата назад */
   onBack: () => void;
+  /** Статус обновления QR (для анимации) */
+  isRefreshing?: boolean;
 }
 
 /**
