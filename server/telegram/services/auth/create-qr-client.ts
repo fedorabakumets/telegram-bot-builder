@@ -5,7 +5,6 @@
 
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
-import { Api } from 'telegram';
 
 /**
  * Параметры устройства по умолчанию
@@ -45,33 +44,19 @@ export async function createQRClient(apiId: string, apiHash: string): Promise<Te
       appVersion: DEVICE_CONFIG.appVersion,
       deviceModel: DEVICE_CONFIG.deviceModel,
       systemVersion: DEVICE_CONFIG.systemVersion,
+      // Добавляем langPack для корректной инициализации соединения
+      langPack: 'tdesktop',
+      langCode: 'ru',
     }
   );
 
   await client.connect();
 
-  // Устанавливаем параметры устройства явно через API
-  try {
-    await client.invoke(
-      new Api.InvokeWithLayer({
-        layer: 198,
-        query: {
-          _: 'initConnection',
-          apiId: parseInt(apiId),
-          deviceModel: DEVICE_CONFIG.deviceModel,
-          systemVersion: DEVICE_CONFIG.systemVersion,
-          appVersion: DEVICE_CONFIG.appVersion,
-          langCode: 'ru',
-          query: {
-            _: 'help.getConfig',
-          },
-        },
-      })
-    );
-    console.log('✅ Параметры устройства установлены:', DEVICE_CONFIG);
-  } catch (error: any) {
-    console.error('⚠️ Не удалось установить параметры устройства:', error.message);
-  }
+  console.log('✅ QR-клиент создан с параметрами:', {
+    deviceModel: DEVICE_CONFIG.deviceModel,
+    systemVersion: DEVICE_CONFIG.systemVersion,
+    appVersion: DEVICE_CONFIG.appVersion,
+  });
 
   return client;
 }
