@@ -9,19 +9,11 @@ import {
   setCredentials,
   createAndStoreClient,
   getClient,
-  getGroupMembers,
-  getChatInfo,
-  kickMember,
-  banMember,
-  restrictMember,
-  promoteMember,
-  demoteMember,
   disconnectWithCheck,
   saveSessionWithCheck,
   restoreSessionWithCheck,
-  setChatUsernameWithCheck,
-  setChatPhotoWithCheck,
-  executeMemberOperation,
+  GroupMemberOperations,
+  ChatOperations,
 } from './services/client/index.js';
 
 /**
@@ -31,6 +23,13 @@ class TelegramClientManager {
   private clients: Map<string, TelegramClient> = new Map();
   private sessions: Map<string, string> = new Map();
   private authStatus: Map<string, AuthStatus> = new Map();
+  private groupOps: GroupMemberOperations;
+  private chatOps: ChatOperations;
+
+  constructor() {
+    this.groupOps = new GroupMemberOperations(this.clients);
+    this.chatOps = new ChatOperations(this.clients);
+  }
 
   /**
    * Геттер для доступа к клиентам из routes
@@ -123,9 +122,7 @@ class TelegramClientManager {
    * @returns Массив участников группы
    */
   async getGroupMembers(userId: string, chatId: string | number): Promise<any[]> {
-    const client = await this.getClient(userId);
-    const authStatus = await this.getAuthStatus(userId);
-    return executeMemberOperation(client, authStatus, (c) => getGroupMembers(c, chatId));
+    return this.groupOps.getMembers(userId, chatId);
   }
 
   /**
@@ -135,8 +132,7 @@ class TelegramClientManager {
    * @returns Информация о чате
    */
   async getChatInfo(userId: string, chatId: string | number): Promise<any> {
-    const client = await this.getClient(userId);
-    return executeMemberOperation(client, undefined, (c) => getChatInfo(c, chatId));
+    return this.groupOps.getChatInfo(userId, chatId);
   }
 
   /**
@@ -166,8 +162,7 @@ class TelegramClientManager {
    * @returns Результат операции
    */
   async setChatUsername(userId: string, chatId: string | number, username: string): Promise<any> {
-    const client = await this.getClient(userId);
-    return setChatUsernameWithCheck(userId, client, chatId, username);
+    return this.chatOps.setUsername(userId, chatId, username);
   }
 
   /**
@@ -178,32 +173,27 @@ class TelegramClientManager {
    * @returns Результат операции
    */
   async setChatPhoto(userId: string, chatId: string | number, photoPath: string): Promise<any> {
-    const client = await this.getClient(userId);
-    return setChatPhotoWithCheck(userId, client, chatId, photoPath);
+    return this.chatOps.setPhoto(userId, chatId, photoPath);
   }
 
   // Исключить участника из группы через Client API
   async kickMember(userId: string, chatId: string | number, memberId: string): Promise<any> {
-    const client = await this.getClient(userId);
-    return executeMemberOperation(client, undefined, (c) => kickMember(c, chatId, memberId));
+    return this.groupOps.kick(userId, chatId, memberId);
   }
 
   // Заблокировать участника через Client API
   async banMember(userId: string, chatId: string | number, memberId: string, untilDate?: number): Promise<any> {
-    const client = await this.getClient(userId);
-    return executeMemberOperation(client, undefined, (c) => banMember(c, chatId, memberId, untilDate));
+    return this.groupOps.ban(userId, chatId, memberId, untilDate);
   }
 
   // Ограничить участника (мут) через Client API
   async restrictMember(userId: string, chatId: string | number, memberId: string, untilDate?: number): Promise<any> {
-    const client = await this.getClient(userId);
-    return executeMemberOperation(client, undefined, (c) => restrictMember(c, chatId, memberId, untilDate));
+    return this.groupOps.restrict(userId, chatId, memberId, untilDate);
   }
 
   // Назначить участника администратором через Client API
   async promoteMember(userId: string, chatId: string | number, memberId: string, adminRights: any): Promise<any> {
-    const client = await this.getClient(userId);
-    return executeMemberOperation(client, undefined, (c) => promoteMember(c, chatId, memberId, adminRights));
+    return this.groupOps.promote(userId, chatId, memberId, adminRights);
   }
 
   /**
@@ -214,8 +204,7 @@ class TelegramClientManager {
    * @returns Результат операции
    */
   async demoteMember(userId: string, chatId: string | number, memberId: string): Promise<any> {
-    const client = await this.getClient(userId);
-    return executeMemberOperation(client, undefined, (c) => demoteMember(c, chatId, memberId));
+    return this.groupOps.demote(userId, chatId, memberId);
   }
 }
 

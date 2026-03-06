@@ -51,6 +51,7 @@ export { banMember } from './ban-member.js';
 export { restrictMember } from './restrict-member.js';
 export { promoteMember } from './promote-member.js';
 export { demoteMember } from './demote-member.js';
+export { GroupMemberOperations } from './group-member-operations.js';
 
 // Управление чатами
 export { setChatUsername } from './set-chat-username.js';
@@ -59,6 +60,7 @@ export { setChatDescription } from './set-chat-description.js';
 export { setChatTitle } from './set-chat-title.js';
 export { setChatUsernameWithCheck } from './set-chat-username-with-check.js';
 export { setChatPhotoWithCheck } from './set-chat-photo-with-check.js';
+export { ChatOperations } from './chat-operations.js';
 
 // Утилиты операций
 export { checkAuthForOperation } from './check-auth-for-operation.js';
