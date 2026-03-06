@@ -9,7 +9,6 @@ import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import { db } from '../../../database/db.js';
 import type { AuthStatusExtended } from '../../types/client/auth-status-extended.js';
-import { createQRClient } from '../auth/create-qr-client.js';
 
 /**
  * Получает статус авторизации пользователя
