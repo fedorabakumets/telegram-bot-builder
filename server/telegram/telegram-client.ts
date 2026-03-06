@@ -7,12 +7,35 @@ import { Api } from 'telegram/tl';
 import { db } from '../database/db';
 import type { TelegramClientConfig } from './types/client/telegram-client-config.js';
 import type { AuthStatus } from './types/client/auth-status.js';
+import type { AuthStatusExtended } from './types/client/auth-status-extended.js';
+import type { AdminRights } from './types/client/admin-rights.js';
+import type { BannedRights } from './types/client/banned-rights.js';
+import type { GroupMember } from './types/client/group-member.js';
+import type { ChatInfo } from './types/client/chat-info.js';
 import { resolveChatEntity } from './utils/client/chat-entity-resolver.js';
 import { resolveUserEntity } from './utils/client/user-entity-resolver.js';
 import { createBannedRights } from './utils/client/banned-rights-builder.js';
 import { createAdminRights } from './utils/client/admin-rights-builder.js';
 import { resolveMemberStatus } from './utils/client/member-status-resolver.js';
 import { extractParticipantId } from './utils/client/participant-id-extractor.js';
+import {
+  loadSessionFromDb,
+  saveSessionToDb,
+  restoreSession,
+  initializeManager,
+  loadApiCredentials,
+  saveApiCredentials,
+  getEnvCredentials,
+  createTelegramClient,
+  disconnectTelegramClient,
+  disableUpdateLoop,
+  validateSession,
+  sendCode,
+  resendCode,
+  verifyCode,
+  verifyPassword,
+  logout,
+} from './services/client/index.js';
 
 /**
  * Класс для управления клиентами Telegram
@@ -33,22 +56,7 @@ class TelegramClientManager {
    * Инициализация менеджера с восстановлением всех сессий
    */
   async initialize(): Promise<void> {
-    try {
-
-      const allSessions = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.isActive, 1));
-
-      console.log(`🔄 Восстанавливаем ${allSessions.length} сессий из базы данных...`);
-
-      for (const sessionData of allSessions) {
-        if (sessionData.sessionString && sessionData.userId) {
-          await this.restoreSession(sessionData.userId);
-        }
-      }
-
-      console.log('✅ Все сессии восстановлены');
-    } catch (error) {
-      console.error('Ошибка при восстановлении сессий:', error);
-    }
+    return initializeManager(this.clients, this.sessions, this.authStatus);
   }
 
   /**
@@ -58,29 +66,7 @@ class TelegramClientManager {
    * @param phoneNumber - Номер телефона пользователя
    */
   private async saveSessionToDatabase(userId: string, sessionString: string, phoneNumber: string): Promise<void> {
-    try {
-
-      const existing = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
-
-      if (existing.length > 0) {
-        await db.update(userTelegramSettings)
-          .set({
-            sessionString,
-            phoneNumber,
-            updatedAt: new Date()
-          })
-          .where(eq(userTelegramSettings.userId, userId));
-      } else {
-        await db.insert(userTelegramSettings).values({
-          userId,
-          sessionString,
-          phoneNumber
-        });
-      }
-      console.log(`💾 Сессия сохранена в БД для пользователя ${phoneNumber}`);
-    } catch (error) {
-      console.error('Ошибка сохранения сессии в БД:', error);
-    }
+    return saveSessionToDb(userId, sessionString, phoneNumber);
   }
 
   /**
@@ -89,19 +75,7 @@ class TelegramClientManager {
    * @returns Строка сессии или null, если не найдена
    */
   private async loadSessionFromDatabase(userId: string): Promise<string | null> {
-    try {
-
-      const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
-
-      if (result.length > 0 && result[0].sessionString) {
-        console.log(`🔄 Сессия загружена из БД для пользователя ${userId}`);
-        return result[0].sessionString;
-      }
-      return null;
-    } catch (error) {
-      console.error('Ошибка загрузки сессии из БД:', error);
-      return null;
-    }
+    return loadSessionFromDb(userId);
   }
 
   /**
@@ -110,61 +84,7 @@ class TelegramClientManager {
    * @returns Успешность восстановления сессии
    */
   async restoreSession(userId: string): Promise<boolean> {
-    try {
-      const sessionString = await this.loadSessionFromDatabase(userId);
-      if (!sessionString) {
-        return false;
-      }
-
-      // Получаем credentials из env vars или БД
-      let apiId = process.env.TELEGRAM_API_ID;
-      let apiHash = process.env.TELEGRAM_API_HASH;
-
-      // Если нет в env vars, пробуем из БД
-      if (!apiId || !apiHash) {
-        const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
-
-        if (result.length > 0 && result[0].apiId && result[0].apiHash) {
-          apiId = result[0].apiId;
-          apiHash = result[0].apiHash;
-        } else {
-          console.log(`❌ API credentials не найдены для пользователя ${userId}`);
-          return false;
-        }
-      }
-
-      const stringSession = new StringSession(sessionString);
-      const client = new TelegramClient(stringSession, parseInt(apiId!), apiHash!, {
-        connectionRetries: 5,
-        useWSS: false,
-        autoReconnect: true,
-      });
-
-      await client.connect();
-
-      // Отключаем updateLoop чтобы избежать TIMEOUT ошибок
-      (client as any)._updateLoop = () => {};
-
-      // Проверяем, что сессия действительна
-      const me = await client.getMe();
-      if (me) {
-        this.clients.set(userId, client);
-        this.sessions.set(userId, sessionString);
-        this.authStatus.set(userId, {
-          isAuthenticated: true,
-          phoneNumber: (me as any).phone,
-          userId: userId,
-          needsCode: false,
-          needsPassword: false
-        });
-        console.log(`✅ Сессия восстановлена для пользователя ${userId}`);
-        return true;
-      }
-      return false;
-    } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      return false;
-    }
+    return restoreSession(userId, this.clients, this.sessions, this.authStatus);
   }
 
 
@@ -178,58 +98,34 @@ class TelegramClientManager {
    * @returns Результат проверки
    */
   async verifyPassword(userId: string, password: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const client = this.clients.get(userId);
-      if (!client) {
-        throw new Error('Клиент не найден. Сначала отправьте код.');
-      }
+    const client = this.clients.get(userId);
+    if (!client) {
+      return { success: false, error: 'Клиент не найден. Сначала отправьте код.' };
+    }
 
-      const authStatus = this.authStatus.get(userId);
-      if (!authStatus || !authStatus.needsPassword) {
-        throw new Error('Проверка пароля не требуется.');
-      }
+    const authStatus = this.authStatus.get(userId);
+    if (!authStatus || !authStatus.needsPassword) {
+      return { success: false, error: 'Проверка пароля не требуется.' };
+    }
 
-      // Получаем данные для 2FA аутентификации
-      const passwordInfo = await client.invoke(new Api.account.GetPassword());
+    const result = await verifyPassword(client, password);
 
-      // Импортируем необходимые модули для работы с SRP
-      const { computeCheck } = await import('telegram/Password');
+    if (result.success && result.sessionString) {
+      this.sessions.set(userId, result.sessionString);
+      await this.saveSessionToDatabase(userId, result.sessionString, authStatus.phoneNumber || '');
 
-      // Вычисляем правильный хеш пароля
-      const passwordCheck = await computeCheck(passwordInfo, password);
-
-      // Используем прямой API вызов для проверки пароля
-      await client.invoke(
-        new Api.auth.CheckPassword({
-          password: passwordCheck
-        })
-      );
-
-      // Сохраняем сессию
-      const sessionString = (client.session.save() as any) || '';
-      this.sessions.set(userId, sessionString);
-      await this.saveSessionToDatabase(userId, sessionString, authStatus.phoneNumber || '');
-
-      // Обновляем статус авторизации
       this.authStatus.set(userId, {
         isAuthenticated: true,
         phoneNumber: authStatus.phoneNumber,
-        userId: userId,
+        userId,
         needsCode: false,
-        needsPassword: false
+        needsPassword: false,
       });
 
       console.log(`✅ Пользователь ${authStatus.phoneNumber} успешно авторизован с 2FA`);
-
-      return { success: true };
-
-    } catch (error: any) {
-      console.error('Detailed error:', error?.message, error?.stack);
-      return {
-        success: false,
-        error: error.message === 'PASSWORD_HASH_INVALID' ? 'Неверный пароль' : (error.message || 'Ошибка авторизации')
-      };
     }
+
+    return result;
   }
 
   /**
@@ -238,32 +134,20 @@ class TelegramClientManager {
    * @returns Результат выхода
    */
   async logout(userId: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const client = this.clients.get(userId);
-      
-      // Закрываем соединение если клиент существует
-      if (client) {
-        try {
-          await client.disconnect();
-        } catch (disconnectError) {
-          console.error('Ошибка при отключении клиента:', disconnectError);
-        }
+    const client = this.clients.get(userId);
+
+    if (client) {
+      const result = await logout(client);
+      if (result.success) {
         this.clients.delete(userId);
+        this.sessions.delete(userId);
+        this.authStatus.delete(userId);
+        console.log(`✅ Пользователь ${userId} вышел из Client API`);
       }
-
-      // Очищаем сессию
-      this.sessions.delete(userId);
-
-      // Очищаем статус авторизации
-      this.authStatus.delete(userId);
-
-      console.log(`✅ Пользователь ${userId} вышел из Client API`);
-
-      return { success: true };
-    } catch (error: any) {
-      console.error('Ошибка при выходе:', error);
-      return { success: false, error: error.message || 'Ошибка при выходе' };
+      return result;
     }
+
+    return { success: false, error: 'Клиент не найден' };
   }
 
   /**
