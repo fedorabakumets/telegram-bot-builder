@@ -8,10 +8,10 @@
  */
 
 import {
-    downloadTelegramAudio,
-    downloadTelegramDocument,
-    downloadTelegramPhoto,
-    downloadTelegramVideo
+    downloadAudio,
+    downloadDocument,
+    downloadPhoto,
+    downloadVideo
 } from "../../../../../telegram/telegram-media";
 
 /**
@@ -34,13 +34,13 @@ export async function downloadMediaFromTelegram(
 ) {
     switch (mediaType) {
         case 'video':
-            return await downloadTelegramVideo(botToken, fileId, projectId);
+            return await downloadVideo(botToken, fileId, projectId);
         case 'audio':
-            return await downloadTelegramAudio(botToken, fileId, projectId);
+            return await downloadAudio(botToken, fileId, projectId);
         case 'document':
-            return await downloadTelegramDocument(botToken, fileId, projectId, originalFileName);
+            return await downloadDocument(botToken, fileId, projectId, originalFileName);
         case 'photo':
         default:
-            return await downloadTelegramPhoto(botToken, fileId, projectId);
+            return await downloadPhoto(botToken, fileId, projectId);
     }
 }
