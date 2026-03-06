@@ -25,6 +25,7 @@ import { telegramAuthService } from "../telegram/telegram-auth-service";
 import { createQRClient } from "../telegram/services/auth/create-qr-client";
 import { userTelegramSettings } from "@shared/schema";
 import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
+import { Api } from 'telegram';
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { setupAuthRoutes } from "./setupAuthRoutes";
@@ -1646,7 +1647,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const mediaFiles = await storage.searchMediaFiles(projectId, query);
       res.json(mediaFiles);
     } catch (error) {
-      console.error("Ошибка при поиске ����������йлов:", error);
+      console.error("Оши������ка при поиске ������������йлов:", error);
       res.status(500).json({ message: "Ошибка при поиске файлов" });
     }
   });
@@ -2464,6 +2465,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         console.log('♻️ QR-клиент найден для пользователя', userId, '- Система:', process.platform);
       }
 
+      // Инициализируем соединение с правильными параметрами устройства
+      // Это заставляет gramJS отправить InitConnection с appVersion, deviceModel, systemVersion
+      console.log('🔑 Инициализация соединения с параметрами устройства...');
+      try {
+        await client.invoke(new Api.help.GetConfig());
+        console.log('✅ Соединение инициализировано');
+      } catch (error: any) {
+        console.error('⚠️ Ошибка инициализации:', error.message);
+      }
+
       // Генерируем QR-токен через современный метод
       const result = await telegramAuthService.generateQRToken(
         client,
@@ -2472,31 +2483,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       );
 
       if (result.success && result.token) {
-        // Сразу вызываем refresh для обновления параметров устройства
-        // Это аналогично нажатию кнопки "Обновить QR"
-        console.log('🔄 Автоматический вызов refresh после generate...');
-        try {
-          const refreshResult = await telegramAuthService.generateQRToken(
-            client,
-            credentials.apiId,
-            credentials.apiHash
-          );
-          if (refreshResult.success && refreshResult.token) {
-            // Возвращаем обновлённый токен
-            res.json({
-              success: true,
-              qrUrl: refreshResult.qrUrl,
-              token: refreshResult.token,
-              expires: refreshResult.expires,
-            });
-            console.log('✅ Refresh выполнен успешно, возвращаем обновлённый токен');
-            return;
-          }
-        } catch (refreshError: any) {
-          console.error('⚠️ Ошибка refresh:', refreshError.message);
-          // Не прерываем, если refresh не удался — возвращаем оригинальный токен
-        }
-
         res.json({
           success: true,
           qrUrl: result.qrUrl,
