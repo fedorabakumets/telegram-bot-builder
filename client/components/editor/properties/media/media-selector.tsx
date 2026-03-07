@@ -281,12 +281,14 @@ export function MediaSelector({
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button
-                className="w-full h-10 sm:h-11 text-xs sm:text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 hover:from-blue-600 hover:to-cyan-600 dark:hover:from-blue-700 dark:hover:to-cyan-700 shadow-md hover:shadow-lg transition-all"
+                className="w-full h-auto min-h-[2.5rem] sm:h-11 text-xs sm:text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 hover:from-blue-600 hover:to-cyan-600 dark:hover:from-blue-700 dark:hover:to-cyan-700 shadow-md hover:shadow-lg transition-all px-2 sm:px-4 py-2"
               >
                 <Upload className="w-4 h-4 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                <span className="hidden lg:inline">Выбрать или загрузить файл</span>
-                <span className="lg:hidden sm:inline">Загрузить файл</span>
-                <span className="sm:hidden">Файл</span>
+                <span className="text-left break-words">
+                  <span className="hidden lg:inline">Выбрать или загрузить файл</span>
+                  <span className="lg:hidden sm:inline">Загрузить файл</span>
+                  <span className="sm:hidden">Файл</span>
+                </span>
               </Button>
             </DialogTrigger>
             <DialogContent className="w-full sm:max-w-5xl">
