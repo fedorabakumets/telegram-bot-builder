@@ -60,13 +60,6 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
 
         const botInfo = result.result;
 
-        console.log('Telegram API response:', JSON.stringify({
-            first_name: botInfo.first_name,
-            username: botInfo.username,
-            description: botInfo.description,
-            short_description: botInfo.short_description
-        }, null, 2));
-
         let photoUrl = null;
         if (botInfo.photo && botInfo.photo.big_file_id) {
             try {
