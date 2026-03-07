@@ -399,6 +399,7 @@ export function PropertiesPanel({
             <ConditionalMessagesToggle
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
+              onToggle={() => setIsConditionalMessagesSectionOpen(true)}
             />
 
             {isConditionalMessagesSectionOpen && (

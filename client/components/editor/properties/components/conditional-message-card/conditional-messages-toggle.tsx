@@ -13,6 +13,8 @@ interface ConditionalMessagesToggleProps {
   selectedNode: Node;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
+  /** Функция раскрытия секции */
+  onToggle?: () => void;
 }
 
 /**
@@ -23,7 +25,8 @@ interface ConditionalMessagesToggleProps {
  */
 export function ConditionalMessagesToggle({
   selectedNode,
-  onNodeUpdate
+  onNodeUpdate,
+  onToggle
 }: ConditionalMessagesToggleProps) {
   return (
     <div className="flex items-center gap-2.5 p-3 sm:p-4 md:p-5 rounded-lg bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200/40 dark:border-purple-800/40">
@@ -32,6 +35,9 @@ export function ConditionalMessagesToggle({
         checked={selectedNode.data.enableConditionalMessages ?? false}
         onCheckedChange={(checked) => {
           onNodeUpdate(selectedNode.id, { enableConditionalMessages: checked });
+          if (checked && onToggle) {
+            onToggle();
+          }
         }}
       />
     </div>
