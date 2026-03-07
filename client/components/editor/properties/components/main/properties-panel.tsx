@@ -494,6 +494,7 @@ export function PropertiesPanel({
         />
 
         </div>
+        </div>
 
         <PropertiesFooterWrapper
           selectedNode={selectedNode}
