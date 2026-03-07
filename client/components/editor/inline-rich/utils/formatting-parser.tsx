@@ -109,12 +109,13 @@ export function parseHTML(htmlText: string): JSX.Element[] {
 export function formatText(text: string): JSX.Element {
   if (!text) return <span>{text}</span>;
 
-  // Декодируем HTML-сущности (&lt; → <) через htmlToValue
+  // Декодируем HTML-сущности (&lt; → <)
   const decodedText = text
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"');
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
 
   const hasHTMLTags = decodedText.includes('<b>') || decodedText.includes('<i>') || decodedText.includes('<u>') ||
                      decodedText.includes('<s>') || decodedText.includes('<code>') || decodedText.includes('<strong>') ||

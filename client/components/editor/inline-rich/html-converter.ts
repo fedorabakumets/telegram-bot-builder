@@ -43,7 +43,13 @@ export function valueToHtml(text: string, enableMarkdown: boolean): string {
 export function htmlToValue(html: string, enableMarkdown: boolean): string {
   if (!html) return '';
 
-  let text = html;
+  // Сначала декодируем HTML-сущности (если они есть)
+  let text = html
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
 
   if (enableMarkdown) {
     text = text
