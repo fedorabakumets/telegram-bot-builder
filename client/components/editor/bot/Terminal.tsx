@@ -68,8 +68,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
 
   return (
     <div
-      className={`border rounded-lg overflow-hidden ${themeClasses.terminalBgClass} ${themeClasses.terminalTextClass} font-mono text-sm transition-all duration-200 w-full ${isVisible ? 'opacity-100' : 'hidden'}`}
-      style={{ width: `${dimensions.width}px`, height: `${dimensions.height}px` }}
+      className={`border rounded-lg overflow-hidden ${themeClasses.terminalBgClass} ${themeClasses.terminalTextClass} font-mono text-sm transition-all duration-200 w-full h-full flex flex-col ${isVisible ? 'opacity-100' : 'hidden'}`}
     >
       <TerminalHeader
         onZoomIn={() => adjustScale(1.2)}
@@ -82,11 +81,10 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         buttonTextColorClass={themeClasses.buttonTextColorClass}
         buttonHoverClass={themeClasses.buttonHoverClass}
       />
-
       <TerminalOutput
         lines={lines}
         containerRef={outputContainerRef}
-        height={dimensions.height}
+        height={dimensions.height - 40}
         scale={scale}
         terminalTextClass={themeClasses.terminalTextClass}
         stderrTextClass={themeClasses.stderrTextClass}

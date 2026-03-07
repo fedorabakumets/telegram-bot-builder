@@ -23,6 +23,7 @@ interface TerminalHeaderProps {
   headerBgClass: string;
   buttonTextColorClass: string;
   buttonHoverClass: string;
+  showControls?: boolean;
 }
 
 /**
@@ -37,63 +38,66 @@ export function TerminalHeader({
   onHide,
   headerBgClass,
   buttonTextColorClass,
-  buttonHoverClass
+  buttonHoverClass,
+  showControls = true
 }: TerminalHeaderProps) {
   return (
     <div className={`${headerBgClass} px-4 py-2 flex justify-between items-center`}>
       <h3 className="font-semibold">Терминал</h3>
-      <div className="flex space-x-2 flex-wrap justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onZoomIn}
-          className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
-        >
-          Увеличить
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onZoomOut}
-          className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
-        >
-          Уменьшить
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClear}
-          className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
-        >
-          Очистить
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCopy}
-          className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
-        >
-          Копировать
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onSave}
-          className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
-        >
-          Сохранить
-        </Button>
-        {onHide && (
+      {showControls && (
+        <div className="flex space-x-2 flex-wrap justify-end">
           <Button
             variant="ghost"
             size="sm"
-            onClick={onHide}
+            onClick={onZoomIn}
             className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
           >
-            Скрыть
+            Увеличить
           </Button>
-        )}
-      </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onZoomOut}
+            className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
+          >
+            Уменьшить
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClear}
+            className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
+          >
+            Очистить
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onCopy}
+            className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
+          >
+            Копировать
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSave}
+            className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
+          >
+            Сохранить
+          </Button>
+          {onHide && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onHide}
+              className={`${buttonTextColorClass} ${buttonHoverClass} mb-1`}
+            >
+              Скрыть
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
