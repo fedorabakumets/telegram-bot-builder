@@ -39,7 +39,7 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTyp
   return (
     <div className="flex gap-2.5 sm:gap-3">
       {/* Inline Keyboard */}
-      <div className="flex-1 flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/40">
+      <div className="flex-1 flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/40">
         <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer">
           Inline
         </label>
@@ -51,7 +51,7 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTyp
         />
       </div>
       {/* Reply Keyboard */}
-      <div className="flex-1 flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/40">
+      <div className="flex-1 flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/40">
         <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer">
           Reply
         </label>

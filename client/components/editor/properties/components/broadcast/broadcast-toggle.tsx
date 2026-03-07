@@ -44,7 +44,7 @@ export function BroadcastToggle({ selectedNode, onNodeUpdate, allNodes = [] }: B
   const targetBroadcast = selectedNode.data.broadcastTargetNode || 'all';
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-blue-50/60 to-indigo-50/40 dark:from-blue-950/30 dark:to-indigo-950/20 border border-blue-200/40 dark:border-blue-700/40 hover:border-blue-300/60 dark:hover:border-blue-600/60 hover:shadow-sm transition-all duration-200">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 p-3 sm:p-4 md:p-5 rounded-lg bg-gradient-to-br from-blue-50/60 to-indigo-50/40 dark:from-blue-950/30 dark:to-indigo-950/20 border border-blue-200/40 dark:border-blue-700/40 hover:border-blue-300/60 dark:hover:border-blue-600/60 hover:shadow-sm transition-all duration-200">
       <div className="flex-1 min-w-0 space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
