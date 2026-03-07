@@ -23,6 +23,7 @@ import { ServerStatus } from "@/components/server-status";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { BotLogsProvider } from "./components/editor/bot/bot-logs-context";
+import { ActiveTerminalsProvider } from "./components/editor/bot/ActiveTerminalsContext";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
@@ -167,9 +168,11 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <BotLogsProvider>
-            <ServerStatus />
-            <Toaster />
-            <Router />
+            <ActiveTerminalsProvider>
+              <ServerStatus />
+              <Toaster />
+              <Router />
+            </ActiveTerminalsProvider>
           </BotLogsProvider>
         </TooltipProvider>
       </QueryClientProvider>
