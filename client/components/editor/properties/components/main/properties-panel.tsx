@@ -42,8 +42,6 @@ import { LocationCoordinatesSection } from '../configuration/location-coordinate
 import { LocationDetailsSection } from '../configuration/location-details-section';
 import { FoursquareIntegrationSection } from '../configuration/foursquare-integration-section';
 import { MapServicesSection } from '../configuration/map-services-section';
-import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
-import { BroadcastHeader } from '../broadcast/broadcast-header';
 
 /**
  * Интерфейс пропсов для панели свойств узлов
@@ -125,7 +123,8 @@ export function PropertiesPanel({
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
   const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(true);
   const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(true);
-  const [isBroadcastSectionOpen, setIsBroadcastSectionOpen] = useState(true);
+  const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(true);
+  const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(true);
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
 
   // Синхронизируем displayNodeId с selectedNode.id при изменении узла

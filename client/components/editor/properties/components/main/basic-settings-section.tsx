@@ -50,7 +50,6 @@ interface BasicSettingsSectionProps {
   FoursquareIntegrationSection: any;
   MapServicesSection: any;
   ContactConfiguration: any;
-  BroadcastNodeProperties: any;
   ContentManagementConfiguration: any;
   UserManagementConfiguration: any;
   AdminRightsInfo: any;
@@ -85,7 +84,6 @@ export function BasicSettingsSection({
   FoursquareIntegrationSection,
   MapServicesSection,
   ContactConfiguration,
-  BroadcastNodeProperties,
   ContentManagementConfiguration,
   UserManagementConfiguration,
   AdminRightsInfo
@@ -125,7 +123,6 @@ export function BasicSettingsSection({
               <SynonymEditor
                 synonyms={selectedNode.data.synonyms || []}
                 onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
-                title="Синонимы"
                 description="Дополнительные текстовые варианты для вызова этого экрана. Например: старт, привет, начать"
                 placeholder="Например: старт, привет, начать"
               />
@@ -154,7 +151,6 @@ export function BasicSettingsSection({
             FoursquareIntegrationSection={FoursquareIntegrationSection}
             MapServicesSection={MapServicesSection}
             ContactConfiguration={ContactConfiguration}
-            BroadcastNodeProperties={BroadcastNodeProperties}
             ContentManagementConfiguration={ContentManagementConfiguration}
             UserManagementConfiguration={UserManagementConfiguration}
             AdminRightsInfo={AdminRightsInfo}
