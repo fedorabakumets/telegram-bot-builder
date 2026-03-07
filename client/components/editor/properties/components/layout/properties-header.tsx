@@ -158,7 +158,7 @@ export function PropertiesHeader({
                       }
                     }}
                   >
-                    <SelectTrigger className="max-w-[200px] sm:max-w-xs h-8 text-xs sm:text-sm bg-transparent border-none shadow-none focus:ring-0 p-0 text-slate-900 dark:text-slate-100 font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+                    <SelectTrigger className="max-w-[140px] sm:max-w-[180px] md:max-w-[200px] h-8 text-xs sm:text-sm bg-transparent border-none shadow-none focus:ring-0 p-0 text-slate-900 dark:text-slate-100 font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
                       {getNodeTitle()}
                     </SelectTrigger>
                     <SelectContent className="z-50 bg-gradient-to-br from-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-60 overflow-y-auto">
