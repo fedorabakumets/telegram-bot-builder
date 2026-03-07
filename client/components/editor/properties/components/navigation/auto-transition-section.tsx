@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { formatNodeDisplay } from '../../utils/node-formatters';
+import { useEffect } from 'react';
 
 /**
  * Пропсы компонента секции автоперехода
@@ -46,6 +47,13 @@ export function AutoTransitionSection({
   isOpen,
   onToggle
 }: AutoTransitionSectionProps) {
+  // Раскрываем секцию при включении автоперехода
+  useEffect(() => {
+    if (selectedNode.data.enableAutoTransition && !isOpen && onToggle) {
+      onToggle();
+    }
+  }, [selectedNode.data.enableAutoTransition]);
+
   return (
     <div className="w-full bg-gradient-to-br from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/30 dark:to-teal-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm">
       {/* Заголовок секции */}
@@ -76,10 +84,6 @@ export function AutoTransitionSection({
               onNodeUpdate(selectedNode.id, { collectUserInput: false });
             }
             onNodeUpdate(selectedNode.id, { enableAutoTransition: checked });
-            // Раскрываем секцию после обновления данных
-            if (checked && onToggle) {
-              setTimeout(() => onToggle(), 0);
-            }
           }}
         />
       </div>

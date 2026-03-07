@@ -1,6 +1,6 @@
 /**
  * @fileoverview Секция настроек сбора ответов
- * 
+ *
  * Компонент отображает настройки сбора пользовательского ввода.
  */
 
@@ -13,7 +13,8 @@ import { VariableInputGrid } from '../variables/variable-input-grid';
 import { ButtonTypeSelector } from '../keyboard/button-type-selector';
 import { ResponseOptionsList } from '../common/response-options-list';
 import { InputNavigationGrid } from '../navigation/input-navigation-grid';
-import type { Node } from '@shared/schema';
+import type { Node } from '@schema';
+import { useEffect } from 'react';
 
 /** Пропсы компонента */
 interface UserInputSettingsSectionProps {
@@ -45,6 +46,13 @@ export function UserInputSettingsSection({
   onNodeUpdate,
   formatNodeDisplay
 }: UserInputSettingsSectionProps) {
+  // Раскрываем секцию при включении сбора ответов
+  useEffect(() => {
+    if (selectedNode.data.collectUserInput && !isOpen && onToggle) {
+      onToggle();
+    }
+  }, [selectedNode.data.collectUserInput]);
+
   return (
     <div className="w-full bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
       <SectionHeader
@@ -68,10 +76,6 @@ export function UserInputSettingsSection({
               onNodeUpdate(selectedNode.id, { enableAutoTransition: false });
             }
             onNodeUpdate(selectedNode.id, { collectUserInput: checked });
-            // Раскрываем секцию после обновления данных
-            if (checked && onToggle) {
-              setTimeout(() => onToggle(), 0);
-            }
           }}
         />
       </div>

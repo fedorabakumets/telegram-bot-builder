@@ -135,6 +135,13 @@ export function PropertiesPanel({
     }
   }, [selectedNode?.id]);
 
+  // Раскрываем секцию клавиатуры при включении Inline/Reply
+  useEffect(() => {
+    if (selectedNode?.data.keyboardType && selectedNode.data.keyboardType !== 'none' && !isKeyboardSectionOpen) {
+      setIsKeyboardSectionOpen(true);
+    }
+  }, [selectedNode?.data.keyboardType]);
+
   /**
    * Мемоизированный список всех узлов из всех листов
    */

@@ -49,10 +49,6 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: K
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE}
           onCheckedChange={(checked) => {
             onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.INLINE : KEYBOARD_TYPES.NONE });
-            // Раскрываем секцию после обновления данных
-            if (checked && onToggle) {
-              setTimeout(() => onToggle(), 0);
-            }
           }}
         />
       </div>
@@ -65,10 +61,6 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: K
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
           onCheckedChange={(checked) => {
             onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.REPLY : KEYBOARD_TYPES.NONE });
-            // Раскрываем секцию после обновления данных
-            if (checked && onToggle) {
-              setTimeout(() => onToggle(), 0);
-            }
           }}
         />
       </div>
