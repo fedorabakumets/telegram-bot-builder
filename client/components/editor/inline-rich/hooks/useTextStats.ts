@@ -32,6 +32,7 @@ export function useTextStats(value: string): TextStats {
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&amp;/g, '&')
+      .replace(/\n/g, '')        // Символы новой строки
       .replace(/\*\*|__|~~|`/g, '');  // Markdown
     
     const words = plainText.trim().split(/\s+/).filter(word => word.length > 0);
