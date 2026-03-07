@@ -37,7 +37,7 @@ interface KeyboardTypeSelectorProps {
  */
 export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTypeSelectorProps) {
   return (
-    <div className="flex gap-2.5 sm:gap-3 mt-3">
+    <div className="flex gap-2.5 sm:gap-3">
       {/* Inline Keyboard */}
       <div className="flex-1 flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/40">
         <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer">
