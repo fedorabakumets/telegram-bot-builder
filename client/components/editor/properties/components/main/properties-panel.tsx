@@ -124,7 +124,7 @@ export function PropertiesPanel({
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
   const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(true);
   const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(true);
-  const [isBroadcastSectionOpen, setIsBroadcastSectionOpen] = useState(selectedNode?.type === 'broadcast');
+  const [isBroadcastSectionOpen, setIsBroadcastSectionOpen] = useState(true);
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
 
   // Синхронизируем displayNodeId с selectedNode.id при изменении узла
@@ -133,13 +133,6 @@ export function PropertiesPanel({
       setDisplayNodeId(selectedNode.id);
     }
   }, [selectedNode?.id]);
-
-  // Открывать основные настройки для узла рассылка
-  useEffect(() => {
-    if (selectedNode?.type === 'broadcast') {
-      setIsBasicSettingsOpen(true);
-    }
-  }, [selectedNode?.type]);
 
   /**
    * Мемоизированный список всех узлов из всех листов
@@ -219,33 +212,36 @@ export function PropertiesPanel({
       <div className="flex-1 overflow-y-auto">
         <div className="p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5 md:space-y-6">
 
-          <BasicSettingsSection
-            selectedNode={selectedNode}
-            projectId={projectId}
-            isOpen={isBasicSettingsOpen}
-            onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-            commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
-            descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
-            isValid={commandValidation.isValid}
-            errors={commandValidation.errors}
-            suggestions={commandSuggestions}
-            showSuggestions={showCommandSuggestions}
-            onNodeUpdate={onNodeUpdate}
-            onNodeIdChange={onNodeIdChange}
-            onCommandInput={setCommandInput}
-            onShowSuggestions={setShowCommandSuggestions}
-            StickerConfiguration={StickerConfiguration}
-            VoiceConfiguration={VoiceConfiguration}
-            AnimationConfiguration={AnimationConfiguration}
-            LocationCoordinatesSection={LocationCoordinatesSection}
-            LocationDetailsSection={LocationDetailsSection}
-            FoursquareIntegrationSection={FoursquareIntegrationSection}
-            MapServicesSection={MapServicesSection}
-            ContactConfiguration={ContactConfiguration}
-            ContentManagementConfiguration={ContentManagementConfiguration}
-            UserManagementConfiguration={UserManagementConfiguration}
-            AdminRightsInfo={AdminRightsInfo}
-          />
+          {/* Basic Settings Section - скрыто для узла рассылка */}
+          {selectedNode.type !== 'broadcast' && (
+            <BasicSettingsSection
+              selectedNode={selectedNode}
+              projectId={projectId}
+              isOpen={isBasicSettingsOpen}
+              onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
+              commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
+              descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
+              isValid={commandValidation.isValid}
+              errors={commandValidation.errors}
+              suggestions={commandSuggestions}
+              showSuggestions={showCommandSuggestions}
+              onNodeUpdate={onNodeUpdate}
+              onNodeIdChange={onNodeIdChange}
+              onCommandInput={setCommandInput}
+              onShowSuggestions={setShowCommandSuggestions}
+              StickerConfiguration={StickerConfiguration}
+              VoiceConfiguration={VoiceConfiguration}
+              AnimationConfiguration={AnimationConfiguration}
+              LocationCoordinatesSection={LocationCoordinatesSection}
+              LocationDetailsSection={LocationDetailsSection}
+              FoursquareIntegrationSection={FoursquareIntegrationSection}
+              MapServicesSection={MapServicesSection}
+              ContactConfiguration={ContactConfiguration}
+              ContentManagementConfiguration={ContentManagementConfiguration}
+              UserManagementConfiguration={UserManagementConfiguration}
+              AdminRightsInfo={AdminRightsInfo}
+            />
+          )}
         </div>
 
         {/* Message Content - скрыто для узлов управления */}
@@ -388,8 +384,6 @@ export function PropertiesPanel({
             <BroadcastHeader
               isOpen={isBroadcastSectionOpen}
               onToggle={() => setIsBroadcastSectionOpen(!isBroadcastSectionOpen)}
-              enabled={selectedNode.data.enabled ?? false}
-              onEnabledChange={(enabled) => onNodeUpdate(selectedNode.id, { enabled })}
             />
 
             {isBroadcastSectionOpen && (

@@ -4,18 +4,12 @@
  * Компонент отображает заголовок и переключатель секции рассылки.
  */
 
-import { Switch } from '@/components/ui/switch';
-
 /** Пропсы компонента */
 interface BroadcastHeaderProps {
   /** Флаг открытости секции */
   isOpen: boolean;
   /** Функция переключения открытости */
   onToggle: () => void;
-  /** Включена ли рассылка */
-  enabled: boolean;
-  /** Функция изменения статуса включения */
-  onEnabledChange: (enabled: boolean) => void;
 }
 
 /**
@@ -26,14 +20,12 @@ interface BroadcastHeaderProps {
  */
 export function BroadcastHeader({
   isOpen,
-  onToggle,
-  enabled,
-  onEnabledChange
+  onToggle
 }: BroadcastHeaderProps) {
   return (
     <div className="w-full">
       <div
-        className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group"
+        className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group cursor-pointer"
         onClick={onToggle}
       >
         <button className="flex items-start gap-2.5 sm:gap-3 w-full" title="Свернуть">
@@ -53,18 +45,6 @@ export function BroadcastHeader({
           <i className={`fas fa-chevron-${isOpen ? 'down' : 'right'} text-xs sm:text-sm text-orange-600 dark:text-orange-400 transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}></i>
         </div>
       </div>
-
-      {isOpen && (
-        <div className="flex items-center gap-2.5 p-2.5 sm:p-3 mt-3 rounded-lg bg-orange-50/40 dark:bg-orange-950/20 border border-orange-200/40 dark:border-orange-800/40">
-          <span className="text-xs sm:text-sm font-medium text-orange-900 dark:text-orange-100">
-            Включить
-          </span>
-          <Switch
-            checked={enabled}
-            onCheckedChange={onEnabledChange}
-          />
-        </div>
-      )}
     </div>
   );
 }
