@@ -12,7 +12,13 @@
 export function valueToHtml(text: string, enableMarkdown: boolean): string {
   if (!text) return '';
 
-  let html = text;
+  // Сначала декодируем HTML-сущности (если они есть)
+  let html = text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
 
   if (enableMarkdown) {
     html = html
