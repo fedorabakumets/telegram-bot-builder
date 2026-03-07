@@ -1,11 +1,10 @@
 /**
  * @fileoverview Содержимое секции медиафайлов
- * 
- * Компонент с MediaSelector и информационным блоком.
+ *
+ * Компонент с MediaSelector.
  */
 
 import { MediaSelector } from '@/components/editor/properties/media/media-selector';
-import { DevelopmentNoticeBlock } from '../layout/development-notice-block';
 import { getMediaUrlUpdates } from '../../utils/media-utils';
 
 /** Пропсы содержимого секции медиа */
@@ -37,8 +36,6 @@ export function MediaFileSectionContent({
 }: MediaFileSectionContentProps) {
   return (
     <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-rose-50/40 to-pink-50/20 dark:from-rose-950/30 dark:to-pink-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-rose-200/40 dark:border-rose-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
-      <DevelopmentNoticeBlock />
-
       <MediaSelector
         projectId={projectId}
         value={mediaUrl || ''}

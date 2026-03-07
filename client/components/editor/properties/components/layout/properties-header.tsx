@@ -139,7 +139,7 @@ export function PropertiesHeader({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Текущий элемент</p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mt-2 w-full">
                   <Select
                     value={selectedNode.type}
                     onValueChange={(value) => {
@@ -158,7 +158,7 @@ export function PropertiesHeader({
                       }
                     }}
                   >
-                    <SelectTrigger className="max-w-[140px] sm:max-w-[180px] md:max-w-[200px] h-8 text-xs sm:text-sm bg-transparent border-none shadow-none focus:ring-0 p-0 text-slate-900 dark:text-slate-100 font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+                    <SelectTrigger className="w-1/2 h-9 text-xs sm:text-sm bg-transparent border-none shadow-none focus:ring-0 p-0 text-slate-900 dark:text-slate-100 font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent min-h-[36px]">
                       {getNodeTitle()}
                     </SelectTrigger>
                     <SelectContent className="z-50 bg-gradient-to-br from-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-60 overflow-y-auto">
@@ -192,14 +192,14 @@ export function PropertiesHeader({
                         description: `"${displayNodeId}" в буфер обмена`,
                       });
                     }}
-                    className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/15 dark:from-blue-600/20 dark:to-cyan-600/20 hover:from-blue-500/25 hover:to-cyan-500/25 dark:hover:from-blue-600/30 dark:hover:to-cyan-600/30 border border-blue-300/40 dark:border-blue-600/40 hover:border-blue-400/60 dark:hover:border-blue-500/60 rounded-lg transition-all duration-200 group shadow-sm hover:shadow-md flex-shrink-0 min-w-0 flex-1"
+                    className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/15 dark:from-blue-600/20 dark:to-cyan-600/20 hover:from-blue-500/25 hover:to-cyan-500/25 dark:hover:from-blue-600/30 dark:hover:to-cyan-600/30 border border-blue-300/40 dark:border-blue-600/40 hover:border-blue-400/60 dark:hover:border-blue-500/60 rounded-lg transition-all duration-200 group shadow-sm hover:shadow-md w-1/2 min-w-0"
                     title="Нажмите, чтобы скопировать ID"
                     data-testid="button-copy-node-id"
                   >
-                    <code className="text-xs sm:text-sm font-mono font-semibold text-blue-700 dark:text-blue-300 truncate group-hover:text-blue-800 dark:group-hover:text-blue-200 transition-colors w-full overflow-hidden">
+                    <code className="text-sm font-mono font-semibold text-blue-700 dark:text-blue-300 truncate group-hover:text-blue-800 dark:group-hover:text-blue-200 transition-colors w-full overflow-hidden text-left">
                       {displayNodeId}
                     </code>
-                    <i className="fas fa-copy text-blue-600 dark:text-blue-400 text-xs opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
+                    <i className="fas fa-copy text-blue-600 dark:text-blue-400 text-sm opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
                   </button>
                 </div>
               </div>

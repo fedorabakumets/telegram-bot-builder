@@ -46,6 +46,9 @@ export function MessageTextSection({
   onNodeUpdate,
   onMediaVariableSelect
 }: MessageTextSectionProps) {
+  // Проверяем, есть ли узлы рассылки
+  const hasBroadcastNodes = allNodes.some(n => n.type === 'broadcast');
+
   return (
     <div className="space-y-3 sm:space-y-4">
       <MessageTextSectionHeader isOpen={isOpen} onToggle={onToggle} />
@@ -62,7 +65,7 @@ export function MessageTextSection({
         />
       )}
 
-      {selectedNode.type === 'message' && (
+      {selectedNode.type === 'message' && hasBroadcastNodes && (
         <div className="space-y-3 sm:space-y-4">
           <BroadcastToggle
             selectedNode={selectedNode}

@@ -8,6 +8,7 @@
  */
 
 import type { Express } from "express";
+import express from "express";
 import fs from "fs";
 import path from "path";
 import { createServer as createViteServer } from "vite";
@@ -34,7 +35,7 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
   };
 
   const vite = await createViteServer({
-    configFile: path.resolve(import.meta.dirname, "..", "vite.config.ts"),
+    configFile: path.resolve(import.meta.dirname, "..", "..", "..", "..", "vite.config.ts"),
     server: serverOptions,
     appType: "custom",
     customLogger: {
@@ -49,7 +50,7 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
   app.use(vite.middlewares);
 
   // Раздача файлов из public в режиме разработки
-  const publicPath = path.resolve(import.meta.dirname, "..", "..", "..", "public");
+  const publicPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "public");
   if (fs.existsSync(publicPath)) {
     app.use(express.static(publicPath));
   }
@@ -60,6 +61,9 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
     try {
       const clientTemplate = path.resolve(
         import.meta.dirname,
+        "..",
+        "..",
+        "..",
         "..",
         "client",
         "index.html",
