@@ -17,15 +17,20 @@ interface UserAvatarProps {
   user?: UserBotData | null;
   /** Идентификатор проекта для прокси аватара */
   projectId?: number;
+  /** Размер аватара в пикселях (по умолчанию 28) */
+  size?: number;
 }
 
 /**
  * Компонент аватара для сообщения с поддержкой реальных фото
  */
-export function UserAvatar({ messageType, user, projectId }: UserAvatarProps) {
+export function UserAvatar({ messageType, user, projectId, size = 28 }: UserAvatarProps) {
   const [imageError, setImageError] = useState(false);
   const isBot = messageType === 'bot';
   const hasPhoto = !!user?.avatarUrl && !!projectId && !!user?.userId && !imageError;
+
+  // Вычисляем размер иконки для fallback
+  const iconSize = size * 0.5;
 
   // Для бота с аватаркой показываем фото
   if (isBot && hasPhoto && user?.userId) {
@@ -36,7 +41,8 @@ export function UserAvatar({ messageType, user, projectId }: UserAvatarProps) {
       <img
         src={avatarUrl}
         alt="Bot avatar"
-        className="w-7 h-7 flex-shrink-0 rounded-full object-cover"
+        style={{ width: size, height: size }}
+        className="flex-shrink-0 rounded-full object-cover"
         onError={() => {
           setImageError(true);
         }}
@@ -47,8 +53,11 @@ export function UserAvatar({ messageType, user, projectId }: UserAvatarProps) {
   // Для бота без аватарки показываем иконку
   if (isBot) {
     return (
-      <div className="w-7 h-7 flex-shrink-0 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-        <Bot className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+      <div
+        style={{ width: size, height: size }}
+        className="flex-shrink-0 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center"
+      >
+        <Bot style={{ width: iconSize, height: iconSize }} className="text-blue-600 dark:text-blue-400" />
       </div>
     );
   }
@@ -61,7 +70,8 @@ export function UserAvatar({ messageType, user, projectId }: UserAvatarProps) {
       <img
         src={avatarUrl}
         alt="User avatar"
-        className="w-7 h-7 flex-shrink-0 rounded-full object-cover"
+        style={{ width: size, height: size }}
+        className="flex-shrink-0 rounded-full object-cover"
         onError={() => {
           setImageError(true);
         }}
@@ -71,8 +81,11 @@ export function UserAvatar({ messageType, user, projectId }: UserAvatarProps) {
 
   // Для пользователя без аватарки показываем иконку
   return (
-    <div className="w-7 h-7 flex-shrink-0 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-      <User className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+    <div
+      style={{ width: size, height: size }}
+      className="flex-shrink-0 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center"
+    >
+      <User style={{ width: iconSize, height: iconSize }} className="text-green-600 dark:text-green-400" />
     </div>
   );
 }

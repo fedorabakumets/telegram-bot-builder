@@ -65,18 +65,12 @@ export function BotAvatar({
   // Если есть projectId и botUserId, используем UserAvatar для загрузки аватарки из API
   if (projectId && extractedBotUserId && botUser) {
     return (
-      <div
-        className={className}
-        style={{ width: size, height: size }}
-      >
-        <div style={{ width: '100%', height: '100%' }}>
-          <UserAvatar
-            messageType="bot"
-            user={botUser}
-            projectId={projectId}
-          />
-        </div>
-      </div>
+      <UserAvatar
+        messageType="bot"
+        user={botUser}
+        projectId={projectId}
+        size={size}
+      />
     );
   }
 
