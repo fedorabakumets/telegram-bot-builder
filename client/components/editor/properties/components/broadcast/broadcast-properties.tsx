@@ -29,14 +29,7 @@ export function BroadcastNodeProperties({ node, onUpdate }: BroadcastNodePropert
   const data = node.data;
 
   return (
-    <div className="space-y-4 p-4">
-      <div>
-        <h3 className="text-lg font-semibold mb-2">📢 Рассылка</h3>
-        <p className="text-sm text-muted-foreground">
-          Настройка отправки сообщений всем пользователям
-        </p>
-      </div>
-
+    <div className="space-y-3">
       {/* Выбор типа API */}
       <ApiTypeSelector node={node} onUpdate={onUpdate} />
 

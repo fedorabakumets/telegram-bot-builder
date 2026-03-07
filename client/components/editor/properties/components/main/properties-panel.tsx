@@ -242,7 +242,25 @@ export function PropertiesPanel({
               AdminRightsInfo={AdminRightsInfo}
             />
           )}
+
+          {/* Блок рассылка - только для узла broadcast */}
+          {selectedNode.type === 'broadcast' && (
+            <BroadcastHeader
+              isOpen={isBroadcastSectionOpen}
+              onToggle={() => setIsBroadcastSectionOpen(!isBroadcastSectionOpen)}
+            />
+          )}
         </div>
+
+        {/* Блок рассылка контент - только для узла broadcast */}
+        {selectedNode.type === 'broadcast' && isBroadcastSectionOpen && (
+          <div className="px-3 sm:px-4 md:px-5 pb-3 sm:pb-4 md:pb-5">
+            <BroadcastNodeProperties
+              node={selectedNode}
+              onUpdate={onNodeUpdate}
+            />
+          </div>
+        )}
 
         {/* Message Content - скрыто для узлов управления */}
         <div className="pb-0.5 sm:pb-1 border-b border-border/20 mb-0.5 sm:mb-1">
@@ -373,25 +391,6 @@ export function PropertiesPanel({
                       }}
                     />
                   )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Блок рассылка - только для узла broadcast */}
-        {selectedNode.type === 'broadcast' && (
-          <div className="w-full">
-            <BroadcastHeader
-              isOpen={isBroadcastSectionOpen}
-              onToggle={() => setIsBroadcastSectionOpen(!isBroadcastSectionOpen)}
-            />
-
-            {isBroadcastSectionOpen && (
-              <div className="mt-3">
-                <BroadcastNodeProperties
-                  node={selectedNode}
-                  onUpdate={onNodeUpdate}
-                />
               </div>
             )}
           </div>
