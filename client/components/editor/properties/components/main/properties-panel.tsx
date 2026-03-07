@@ -259,7 +259,7 @@ export function PropertiesPanel({
         </div>
 
         {!isManagementNode(selectedNode.type) && (
-          <div className="space-y-3 sm:space-y-4 pb-3 sm:pb-4 mb-3 sm:mb-4">
+          <div className="space-y-3 sm:space-y-4">
             <KeyboardSectionHeader
               selectedNode={selectedNode}
               isOpen={isKeyboardSectionOpen}
