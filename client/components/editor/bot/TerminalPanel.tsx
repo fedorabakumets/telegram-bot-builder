@@ -7,7 +7,7 @@
  * @module bot/TerminalPanel
  */
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { ResizablePanel } from '@/components/ui/resizable';
 import { Terminal as TerminalComponent, type TerminalHandle } from './Terminal';
 import { BotTerminal } from './BotTerminal';
 import { TerminalTabs } from './TerminalTabs';
@@ -33,7 +33,14 @@ export function TerminalPanel({ defaultSize = 30 }: TerminalPanelProps) {
   };
 
   if (terminals.length === 0) {
-    return null;
+    return (
+      <div className="h-full flex items-center justify-center text-muted-foreground">
+        <div className="text-center">
+          <p className="text-lg font-medium mb-2">Терминалы не активны</p>
+          <p className="text-sm">Запустите бота, чтобы увидеть его логи</p>
+        </div>
+      </div>
+    );
   }
 
   const [projectIdStr, tokenIdStr] = (activeTerminalId || '').split('_');
