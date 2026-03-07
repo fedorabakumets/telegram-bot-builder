@@ -211,101 +211,83 @@ export function PropertiesPanel({
 
       {/* Properties Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5 md:space-y-6">
+        <div className="p-3 sm:p-4 md:p-5 space-y-3 sm:space-y-4">
 
-          {/* Блок рассылка - только для узла broadcast */}
-          {selectedNode.type === 'broadcast' && (
-            <BroadcastHeader
-              isOpen={isBroadcastSectionOpen}
-              onToggle={() => setIsBroadcastSectionOpen(!isBroadcastSectionOpen)}
+          {/* Basic Settings Section - скрыто для узла рассылка */}
+          {selectedNode.type !== 'broadcast' && (
+            <BasicSettingsSection
+              selectedNode={selectedNode}
+              projectId={projectId}
+              isOpen={isBasicSettingsOpen}
+              onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
+              commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
+              descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
+              isValid={commandValidation.isValid}
+              errors={commandValidation.errors}
+              suggestions={commandSuggestions}
+              showSuggestions={showCommandSuggestions}
+              onNodeUpdate={onNodeUpdate}
+              onNodeIdChange={onNodeIdChange}
+              onCommandInput={setCommandInput}
+              onShowSuggestions={setShowCommandSuggestions}
+              StickerConfiguration={StickerConfiguration}
+              VoiceConfiguration={VoiceConfiguration}
+              AnimationConfiguration={AnimationConfiguration}
+              LocationCoordinatesSection={LocationCoordinatesSection}
+              LocationDetailsSection={LocationDetailsSection}
+              FoursquareIntegrationSection={FoursquareIntegrationSection}
+              MapServicesSection={MapServicesSection}
+              ContactConfiguration={ContactConfiguration}
+              ContentManagementConfiguration={ContentManagementConfiguration}
+              UserManagementConfiguration={UserManagementConfiguration}
+              AdminRightsInfo={AdminRightsInfo}
             />
           )}
-        </div>
 
-        {/* Basic Settings Section - скрыто для узла рассылка */}
-        {selectedNode.type !== 'broadcast' && (
-          <BasicSettingsSection
-            selectedNode={selectedNode}
-            projectId={projectId}
-            isOpen={isBasicSettingsOpen}
-            onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-            commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
-            descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
-            isValid={commandValidation.isValid}
-            errors={commandValidation.errors}
-            suggestions={commandSuggestions}
-            showSuggestions={showCommandSuggestions}
-            onNodeUpdate={onNodeUpdate}
-            onNodeIdChange={onNodeIdChange}
-            onCommandInput={setCommandInput}
-            onShowSuggestions={setShowCommandSuggestions}
-            StickerConfiguration={StickerConfiguration}
-            VoiceConfiguration={VoiceConfiguration}
-            AnimationConfiguration={AnimationConfiguration}
-            LocationCoordinatesSection={LocationCoordinatesSection}
-            LocationDetailsSection={LocationDetailsSection}
-            FoursquareIntegrationSection={FoursquareIntegrationSection}
-            MapServicesSection={MapServicesSection}
-            ContactConfiguration={ContactConfiguration}
-            ContentManagementConfiguration={ContentManagementConfiguration}
-            UserManagementConfiguration={UserManagementConfiguration}
-            AdminRightsInfo={AdminRightsInfo}
-          />
-        )}
-
-        {/* Блок рассылка контент - только для узла broadcast */}
-        {selectedNode.type === 'broadcast' && isBroadcastSectionOpen && (
-          <div className="px-3 sm:px-4 md:px-5 pb-3 sm:pb-4 md:pb-5">
-            <BroadcastNodeProperties
-              node={selectedNode}
-              onUpdate={onNodeUpdate}
-            />
-          </div>
-        )}
-
-        {/* Message Content - скрыто для узлов управления */}
-        <div className="pb-0.5 sm:pb-1 mb-0.5 sm:mb-1">
-          <MessageContentSection
-            selectedNode={selectedNode}
-            allNodes={allNodes}
-            textVariables={textVariables}
-            mediaVariables={mediaVariables}
-            attachedMediaVariables={attachedMediaVariables}
-            isMessageTextOpen={isMessageTextOpen}
-            isMediaSectionOpen={isMessageTextOpen}
-            onMessageTextToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
-            onMediaSectionToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
-            onNodeUpdate={onNodeUpdate}
-            onMediaVariableRemove={handleMediaVariableRemove}
-            onMediaVariableSelect={handleMediaVariableSelect}
-            projectId={projectId}
-          />
-        </div>
-
-        {/* Media File Section - скрыто для узлов управления */}
-        {!isManagementNode(selectedNode.type) && (
-          <MediaFileSection
-            projectId={projectId}
-            selectedNode={selectedNode}
-            isOpen={isMediaSectionOpen}
-            onToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
-            onNodeUpdate={onNodeUpdate}
-          />
-        )}
-
-        {!isManagementNode(selectedNode.type) && (
-          <div className="w-full bg-gradient-to-br from-amber-50/40 to-yellow-50/20 dark:from-amber-950/30 dark:to-yellow-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-amber-200/40 dark:border-amber-800/40 backdrop-blur-sm">
-            <KeyboardSectionHeader
+          {/* Message Content - скрыто для узлов управления */}
+          {!isManagementNode(selectedNode.type) && (
+            <MessageContentSection
               selectedNode={selectedNode}
-              isOpen={isKeyboardSectionOpen}
-              onToggle={() => setIsKeyboardSectionOpen(!isKeyboardSectionOpen)}
+              allNodes={allNodes}
+              textVariables={textVariables}
+              mediaVariables={mediaVariables}
+              attachedMediaVariables={attachedMediaVariables}
+              isMessageTextOpen={isMessageTextOpen}
+              isMediaSectionOpen={isMediaSectionOpen}
+              onMessageTextToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
+              onMediaSectionToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
+              onNodeUpdate={onNodeUpdate}
+              onMediaVariableRemove={handleMediaVariableRemove}
+              onMediaVariableSelect={handleMediaVariableSelect}
+              projectId={projectId}
             />
+          )}
 
-            {/* Переключатели типа клавиатуры - всегда видны */}
-            <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
+          {/* Media File Section - скрыто для узлов управления */}
+          {!isManagementNode(selectedNode.type) && (
+            <MediaFileSection
+              projectId={projectId}
+              selectedNode={selectedNode}
+              isOpen={isMediaSectionOpen}
+              onToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
+              onNodeUpdate={onNodeUpdate}
+            />
+          )}
 
-            {isKeyboardSectionOpen && (
-              <div className="space-y-3 sm:space-y-4">
+          {/* Keyboard Section - скрыто для узлов управления */}
+          {!isManagementNode(selectedNode.type) && (
+            <div className="w-full bg-gradient-to-br from-amber-50/40 to-yellow-50/20 dark:from-amber-950/30 dark:to-yellow-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-amber-200/40 dark:border-amber-800/40 backdrop-blur-sm">
+              <KeyboardSectionHeader
+                selectedNode={selectedNode}
+                isOpen={isKeyboardSectionOpen}
+                onToggle={() => setIsKeyboardSectionOpen(!isKeyboardSectionOpen)}
+              />
+
+              {/* Переключатели типа клавиатуры - всегда видны */}
+              <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
+
+              {isKeyboardSectionOpen && (
+                <div className="space-y-3 sm:space-y-4">
                   {selectedNode.data.keyboardType !== 'none' && (
                     <>
                       {/* Множественный выбор */}
