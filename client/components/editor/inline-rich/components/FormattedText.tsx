@@ -5,7 +5,7 @@
  * @module FormattedText
  */
 
-import { formatText } from './formatting-parser';
+import { formatText } from '../utils/formatting-parser';
 
 /**
  * Свойства компонента FormattedText
