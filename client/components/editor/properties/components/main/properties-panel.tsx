@@ -272,7 +272,7 @@ export function PropertiesPanel({
             </div>
 
             {isKeyboardSectionOpen && (
-              <div className="space-y-2 mt-3">
+              <>
                   {selectedNode.data.keyboardType !== 'none' && (
                     <MultipleSelectionSettings
                       selectedNode={selectedNode}
@@ -317,14 +317,14 @@ export function PropertiesPanel({
                         // Если есть множественный выбор и нет кнопки complete, добавляем done-button в layout
                         const layout = selectedNode.data.keyboardLayout;
                         if (!layout) return undefined;
-                        
+
                         if (selectedNode.data.allowMultipleSelection) {
                           const hasCompleteButton = selectedNode.data.buttons.some((b: any) => b.action === 'complete');
                           if (!hasCompleteButton) {
                             // Добавляем done-button в последний ряд или создаём новый
                             const layoutWithDone = { ...layout };
                             const allButtonIds = layoutWithDone.rows.flatMap(r => r.buttonIds);
-                            
+
                             // Если done-button уже есть в layout, не добавляем
                             if (!allButtonIds.includes('done-button')) {
                               if (layout.autoLayout) {
@@ -340,11 +340,11 @@ export function PropertiesPanel({
                                 layoutWithDone.rows.push({ buttonIds: ['done-button'] });
                               }
                             }
-                            
+
                             return layoutWithDone;
                           }
                         }
-                        
+
                         return layout;
                       })()}
                       onLayoutChange={(layout) => {
@@ -353,7 +353,7 @@ export function PropertiesPanel({
                       }}
                     />
                   )}
-              </div>
+              </>
             )}
           </div>
         )}
