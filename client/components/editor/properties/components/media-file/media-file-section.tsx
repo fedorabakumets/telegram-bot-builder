@@ -34,11 +34,11 @@ export function MediaFileSection({
   onToggle,
   onNodeUpdate
 }: MediaFileSectionProps) {
-  const mediaUrl = selectedNode.data.imageUrl || selectedNode.data.videoUrl || 
+  const mediaUrl = selectedNode.data.imageUrl || selectedNode.data.videoUrl ||
                    selectedNode.data.audioUrl || selectedNode.data.documentUrl;
 
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="bg-gradient-to-br from-pink-50/40 to-rose-50/20 dark:from-pink-950/30 dark:to-rose-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-pink-200/40 dark:border-pink-800/40 backdrop-blur-sm">
       <MediaFileSectionHeader isOpen={isOpen} onToggle={onToggle} />
 
       {isOpen && (
