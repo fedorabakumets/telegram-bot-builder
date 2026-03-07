@@ -51,13 +51,18 @@ export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
   const [activeTerminalId, setActiveTerminalId] = useState<string | null>(null);
 
   const addTerminal = useCallback((info: TerminalInfo) => {
+    console.log('[ActiveTerminals] addTerminal:', info);
     setTerminals(prev => {
       const exists = prev.some(t => t.projectId === info.projectId && t.tokenId === info.tokenId);
+      console.log('[ActiveTerminals] terminal exists:', exists);
       if (exists) return prev;
-      return [...prev, info];
+      const newState = [...prev, info];
+      console.log('[ActiveTerminals] new terminals:', newState);
+      return newState;
     });
     // Автоматически переключаемся на новый терминал
     setActiveTerminalId(`${info.projectId}_${info.tokenId}`);
+    console.log('[ActiveTerminals] activeTerminalId:', `${info.projectId}_${info.tokenId}`);
   }, []);
 
   const removeTerminal = useCallback((projectId: number, tokenId: number) => {

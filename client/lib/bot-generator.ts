@@ -184,8 +184,6 @@ export function generatePythonCode(
   code += 'user_data = {}\n\n';
 
   // Добавляем функции для работы с базой данных
-  console.log('[bot-generator.ts] context.options.userDatabaseEnabled:', context.options.userDatabaseEnabled);
-  console.log('[bot-generator.ts] !!context.options.userDatabaseEnabled:', !!context.options.userDatabaseEnabled);
   code += generateDatabaseCode(!!context.options.userDatabaseEnabled, context.nodes || []);
 
 

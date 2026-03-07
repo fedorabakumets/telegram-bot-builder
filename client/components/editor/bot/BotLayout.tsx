@@ -24,7 +24,7 @@ export function BotLayout({ projectId, projectName }: BotLayoutProps) {
   return (
     <ActiveTerminalsProvider>
       <ResizablePanelGroup direction="horizontal" className="h-full">
-        <ResizablePanel defaultSize={60} minSize={30}>
+        <ResizablePanel defaultSize={60} minSize={20}>
           <BotsPanel projectId={projectId} projectName={projectName} />
         </ResizablePanel>
         <ResizableHandle withHandle />

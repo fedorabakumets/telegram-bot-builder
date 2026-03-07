@@ -103,12 +103,12 @@ export function createLogger(options: LoggerOptions = {}): GeneratorLogger {
 }
 
 /**
- * Логгер по умолчанию (включён, уровень info)
- * 
+ * Логгер по умолчанию (включён, уровень error)
+ *
  * @example
  * generatorLogger.info('Генерация началась');
  */
 export const generatorLogger: GeneratorLogger = createLogger({
   enabled: true,
-  level: 'info',
+  level: 'error',
 });
