@@ -42,6 +42,7 @@ import { LocationDetailsSection } from '../configuration/location-details-sectio
 import { FoursquareIntegrationSection } from '../configuration/foursquare-integration-section';
 import { MapServicesSection } from '../configuration/map-services-section';
 import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
+import { BroadcastHeader } from '../broadcast/broadcast-header';
 
 /**
  * Интерфейс пропсов для панели свойств узлов
@@ -123,6 +124,7 @@ export function PropertiesPanel({
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
   const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(true);
   const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(true);
+  const [isBroadcastSectionOpen, setIsBroadcastSectionOpen] = useState(selectedNode?.type === 'broadcast');
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
 
   // Синхронизируем displayNodeId с selectedNode.id при изменении узла
@@ -240,7 +242,6 @@ export function PropertiesPanel({
             FoursquareIntegrationSection={FoursquareIntegrationSection}
             MapServicesSection={MapServicesSection}
             ContactConfiguration={ContactConfiguration}
-            BroadcastNodeProperties={BroadcastNodeProperties}
             ContentManagementConfiguration={ContentManagementConfiguration}
             UserManagementConfiguration={UserManagementConfiguration}
             AdminRightsInfo={AdminRightsInfo}
@@ -376,6 +377,27 @@ export function PropertiesPanel({
                       }}
                     />
                   )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Блок рассылка - только для узла broadcast */}
+        {selectedNode.type === 'broadcast' && (
+          <div className="w-full">
+            <BroadcastHeader
+              isOpen={isBroadcastSectionOpen}
+              onToggle={() => setIsBroadcastSectionOpen(!isBroadcastSectionOpen)}
+              enabled={selectedNode.data.enabled ?? false}
+              onEnabledChange={(enabled) => onNodeUpdate(selectedNode.id, { enabled })}
+            />
+
+            {isBroadcastSectionOpen && (
+              <div className="mt-3">
+                <BroadcastNodeProperties
+                  node={selectedNode}
+                  onUpdate={onNodeUpdate}
+                />
               </div>
             )}
           </div>

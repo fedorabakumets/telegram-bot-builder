@@ -5,3 +5,4 @@
 
 export * from './broadcast-properties';
 export * from './broadcast-toggle';
+export * from './broadcast-header';

@@ -27,8 +27,6 @@ interface NodeTypeConfigurationsProps {
   MapServicesSection: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
   /** Компонент конфигурации контакта */
   ContactConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
-  /** Компонент конфигурации рассылки */
-  BroadcastNodeProperties: React.ComponentType<{ node: Node; onUpdate: (nodeId: string, updates: Partial<any>) => void }>;
   /** Компонент управления контентом */
   ContentManagementConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
   /** Компонент управления пользователями */
@@ -55,7 +53,6 @@ export function NodeTypeConfigurations({
   FoursquareIntegrationSection,
   MapServicesSection,
   ContactConfiguration,
-  BroadcastNodeProperties,
   ContentManagementConfiguration,
   UserManagementConfiguration,
   AdminRightsInfo
@@ -87,10 +84,6 @@ export function NodeTypeConfigurations({
 
   if (nodeType === 'contact') {
     return <ContactConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
-  }
-
-  if (nodeType === 'broadcast') {
-    return <BroadcastNodeProperties node={selectedNode} onUpdate={onNodeUpdate} />;
   }
 
   if (nodeType === 'pin_message' || nodeType === 'unpin_message' || nodeType === 'delete_message') {
