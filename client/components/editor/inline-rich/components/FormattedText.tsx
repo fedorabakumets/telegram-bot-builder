@@ -35,6 +35,20 @@ export function FormattedText({ value, className = '', lineClamp }: FormattedTex
     return null;
   }
 
+  // Проверяем, что текст не пустой (игнорируя HTML теги и пробелы)
+  const plainText = value
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/\n/g, '')
+    .trim();
+
+  if (!plainText) {
+    return null;
+  }
+
   const lineClampClass = lineClamp ? `line-clamp-${lineClamp}` : '';
   const html = valueToHtml(value, false);
 
