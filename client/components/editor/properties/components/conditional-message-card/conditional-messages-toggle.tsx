@@ -34,10 +34,11 @@ export function ConditionalMessagesToggle({
       <Switch
         checked={selectedNode.data.enableConditionalMessages ?? false}
         onCheckedChange={(checked) => {
-          onNodeUpdate(selectedNode.id, { enableConditionalMessages: checked });
+          // Сначала раскрываем секцию
           if (checked && onToggle) {
             onToggle();
           }
+          onNodeUpdate(selectedNode.id, { enableConditionalMessages: checked });
         }}
       />
     </div>
