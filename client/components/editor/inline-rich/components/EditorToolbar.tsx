@@ -48,9 +48,9 @@ export function EditorToolbar({
 }: EditorToolbarProps) {
   return (
     <div className="bg-gradient-to-r from-slate-50/60 to-slate-100/40 dark:from-slate-950/40 dark:to-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 rounded-lg p-2.5 sm:p-3 backdrop-blur-sm">
-      <div className="flex flex-row flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Кнопки форматирования */}
-        <div className="flex items-center gap-1 sm:gap-1.5 bg-white dark:bg-slate-900/50 rounded-lg p-1.5 sm:p-2 border border-slate-200/50 dark:border-slate-800/50">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 bg-white dark:bg-slate-900/50 rounded-lg p-1.5 sm:p-2 border border-slate-200/50 dark:border-slate-800/50">
           {formatOptions.map((format) => (
             <Button
               key={format.command}
@@ -66,7 +66,7 @@ export function EditorToolbar({
         </div>
 
         {/* Кнопки истории и копирования */}
-        <div className="flex items-center gap-1 sm:gap-1.5 bg-white dark:bg-slate-900/50 rounded-lg p-1.5 sm:p-2 border border-slate-200/50 dark:border-slate-800/50">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 bg-white dark:bg-slate-900/50 rounded-lg p-1.5 sm:p-2 border border-slate-200/50 dark:border-slate-800/50">
           <Button
             variant="ghost"
             size="sm"
