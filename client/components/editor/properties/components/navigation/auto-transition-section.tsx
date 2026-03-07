@@ -59,14 +59,14 @@ export function AutoTransitionSection({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm sm:text-base font-bold text-emerald-900 dark:text-emerald-100 text-left">Автопереход</h3>
-            <p className="text-xs sm:text-sm text-emerald-700/70 dark:text-emerald-300/70 mt-0.5 text-left">Переход к следующему узлу без ожидания ответа</p>
+            <p className="text-xs sm:text-sm text-emerald-700/70 dark:text-emerald-300/70 text-left">Переход к следующему узлу без ожидания ответа</p>
           </div>
         </button>
         <i className={`fas fa-chevron-down text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}></i>
       </div>
 
       {/* Переключатель - всегда виден */}
-      <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/40 dark:border-emerald-800/40 mt-3">
+      <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/40 dark:border-emerald-800/40">
         <span className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">Включить</span>
         <Switch
           checked={selectedNode.data.enableAutoTransition ?? false}
@@ -76,7 +76,7 @@ export function AutoTransitionSection({
 
       {/* Контент настроек */}
       {isOpen && selectedNode.data.enableAutoTransition && (
-        <div className="space-y-3 sm:space-y-4 mt-3">
+        <div className="space-y-3 sm:space-y-4">
           {/* Header */}
           <div className="flex items-start gap-2 sm:gap-2.5">
             <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-teal-200/50 dark:bg-teal-900/40">
