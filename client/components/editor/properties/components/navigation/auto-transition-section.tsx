@@ -62,7 +62,7 @@ export function AutoTransitionSection({
       {isOpen && (
         <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl p-3 sm:p-4 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
           {/* Enable Toggle */}
-          <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/40 dark:border-emerald-800/40">
+          <div className="flex items-center gap-2.5">
             <span className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">Включить</span>
             <Switch
               checked={selectedNode.data.enableAutoTransition ?? false}
