@@ -26,7 +26,7 @@ interface DevelopmentNoticeBlockProps {
  * @returns {JSX.Element} Информационный блок о разработке
  */
 export function DevelopmentNoticeBlock({
-  title = '⚠️ Раздел в разработке'
+  title = 'Раздел в разработке'
 }: DevelopmentNoticeBlockProps) {
   return (
     <div className="flex items-start gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40">
