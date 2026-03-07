@@ -1082,7 +1082,10 @@ export default function Editor() {
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full">
-            <BotLayout />
+            <BotLayout
+              projectId={activeProject.id}
+              projectName={activeProject.name}
+            />
           </div>
         ) : currentTab === 'users' ? (
           <div className="h-full overflow-hidden">

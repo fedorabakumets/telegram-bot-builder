@@ -10,10 +10,15 @@
 import { useActiveTerminals } from './ActiveTerminalsContext';
 import { BotControl } from './bot-control';
 
+interface BotsPanelProps {
+  projectId: number;
+  projectName: string;
+}
+
 /**
  * Панель ботов
  */
-export function BotsPanel() {
+export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
   const { addTerminal, updateTerminalStatus } = useActiveTerminals();
 
   // Обработчик запуска бота
@@ -29,6 +34,8 @@ export function BotsPanel() {
   return (
     <div className="h-full overflow-auto p-4 sm:p-6">
       <BotControl
+        projectId={projectId}
+        projectName={projectName}
         onBotStarted={handleBotStarted}
         onBotStopped={handleBotStopped}
       />

@@ -28,6 +28,8 @@ import { BotControlPanel } from './BotControlPanel';
  * @interface BotControlProps
  */
 interface BotControlProps {
+  projectId: number;
+  projectName: string;
   onBotStarted?: (projectId: number, tokenId: number, botName: string) => void;
   onBotStopped?: (projectId: number, tokenId: number) => void;
 }
@@ -74,10 +76,12 @@ interface BotStatusResponse {
  * Основной компонент управления ботом
  * Предоставляет интерфейс для управления токенами, запуска/остановки бота,
  * редактирования профиля и настройки базы данных
+ * @param projectId - Идентификатор проекта
+ * @param projectName - Название проекта
  * @param onBotStarted - Callback при успешном запуске бота
  * @param onBotStopped - Callback при остановке бота
  */
-export function BotControl({ onBotStarted, onBotStopped }: BotControlProps) {
+export function BotControl({ projectId, projectName, onBotStarted, onBotStopped }: BotControlProps) {
   // Состояние компонента
   /** Показывать ли форму добавления бота */
   const [showAddBot, setShowAddBot] = useState(false);

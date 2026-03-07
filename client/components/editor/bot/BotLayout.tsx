@@ -12,15 +12,20 @@ import { BotsPanel } from './BotsPanel';
 import { TerminalPanel } from './TerminalPanel';
 import { ActiveTerminalsProvider } from './ActiveTerminalsContext';
 
+interface BotLayoutProps {
+  projectId: number;
+  projectName: string;
+}
+
 /**
  * Компоновщик панели управления ботами
  */
-export function BotLayout() {
+export function BotLayout({ projectId, projectName }: BotLayoutProps) {
   return (
     <ActiveTerminalsProvider>
       <ResizablePanelGroup direction="horizontal" className="h-full">
         <ResizablePanel defaultSize={60} minSize={30}>
-          <BotsPanel />
+          <BotsPanel projectId={projectId} projectName={projectName} />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={40} minSize={20}>
