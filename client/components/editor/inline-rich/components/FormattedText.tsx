@@ -2,10 +2,12 @@
  * @fileoverview Компонент отображения форматированного текста
  * @description Read-only отображение текста с поддержкой HTML форматирования
  *
+ * Использует ту же логику конвертации, что и InlineRichEditor
+ *
  * @module FormattedText
  */
 
-import { formatText } from '../utils/formatting-parser';
+import { valueToHtml } from '../html-converter';
 
 /**
  * Свойства компонента FormattedText
@@ -34,10 +36,12 @@ export function FormattedText({ value, className = '', lineClamp }: FormattedTex
   }
 
   const lineClampClass = lineClamp ? `line-clamp-${lineClamp}` : '';
+  const html = valueToHtml(value, false);
 
   return (
-    <div className={`text-sm text-blue-700 dark:text-blue-300 leading-relaxed font-medium ${lineClampClass} ${className}`}>
-      {formatText(value)}
-    </div>
+    <div
+      className={`text-sm text-blue-700 dark:text-blue-300 leading-relaxed font-medium ${lineClampClass} ${className}`}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 }
