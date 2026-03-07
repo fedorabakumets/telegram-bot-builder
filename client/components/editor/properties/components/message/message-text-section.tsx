@@ -50,7 +50,7 @@ export function MessageTextSection({
   const hasBroadcastNodes = allNodes.some(n => n.type === 'broadcast');
 
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
       <MessageTextSectionHeader isOpen={isOpen} onToggle={onToggle} />
 
       {isOpen && (
