@@ -209,7 +209,7 @@ export function PropertiesPanel({
 
       {/* Properties Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="space-y-3 sm:space-y-4">
+        <div className="space-y-0">
 
           {/* Basic Settings Section - скрыто для узла рассылка */}
           {selectedNode.type !== 'broadcast' && (
