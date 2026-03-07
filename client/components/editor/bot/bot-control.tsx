@@ -274,9 +274,9 @@ export function BotControl({ projectId }: BotControlProps) {
   };
 
   // Получаем все токены в плоский массив с projectId
-  const allTokensFlat = allTokens.flatMap((tokens, idx) => 
-    tokens.map(token => ({ ...token, projectId: projects[idx].id }))
-  );
+  const allTokensFlat = allTokens?.flatMap((tokens, idx) =>
+    tokens.map(token => ({ ...token, projectId: projects[idx]?.id }))
+  ) || [];
 
   // Получаем статусы ботов для каждого токена отдельно
   const botStatusQueries = allTokensFlat.map(token =>
