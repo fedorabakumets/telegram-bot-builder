@@ -118,7 +118,7 @@ export function PropertiesPanel({
 }: PropertiesPanelProps) {
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
-  const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(false);
+  const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(selectedNode?.type === 'broadcast');
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
   const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(true);
@@ -131,6 +131,13 @@ export function PropertiesPanel({
       setDisplayNodeId(selectedNode.id);
     }
   }, [selectedNode?.id]);
+
+  // Открывать основные настройки для узла рассылка
+  useEffect(() => {
+    if (selectedNode?.type === 'broadcast') {
+      setIsBasicSettingsOpen(true);
+    }
+  }, [selectedNode?.type]);
 
   /**
    * Мемоизированный список всех узлов из всех листов
