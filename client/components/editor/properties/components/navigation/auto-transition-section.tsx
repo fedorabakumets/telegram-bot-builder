@@ -60,17 +60,17 @@ export function AutoTransitionSection({
         descriptionColor="text-emerald-700/70 dark:text-emerald-300/70"
       />
 
+      {/* Enable Toggle - всегда виден */}
+      <div className="flex items-center gap-2.5 p-3 sm:p-4 bg-gradient-to-br from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl border border-emerald-200/40 dark:border-emerald-800/40">
+        <span className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">Включить</span>
+        <Switch
+          checked={selectedNode.data.enableAutoTransition ?? false}
+          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableAutoTransition: checked })}
+        />
+      </div>
+
       {isOpen && (
         <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl p-3 sm:p-4 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
-          {/* Enable Toggle */}
-          <div className="flex items-center gap-2.5">
-            <span className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">Включить</span>
-            <Switch
-              checked={selectedNode.data.enableAutoTransition ?? false}
-              onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableAutoTransition: checked })}
-            />
-          </div>
-
           {/* Target Node Selection */}
           {selectedNode.data.enableAutoTransition && (
             <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 rounded-lg bg-gradient-to-br from-teal-50/60 to-cyan-50/40 dark:from-teal-950/30 dark:to-cyan-950/20 border border-teal-200/40 dark:border-teal-800/40 hover:shadow-sm transition-all duration-200">
