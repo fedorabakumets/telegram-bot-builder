@@ -69,11 +69,10 @@ export function AutoTransitionSection({
         />
       </div>
 
-      {isOpen && (
-        <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl p-3 sm:p-4 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
+      {isOpen && selectedNode.data.enableAutoTransition && (
+        <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 rounded-lg bg-gradient-to-br from-teal-50/60 to-cyan-50/40 dark:from-teal-950/30 dark:to-cyan-950/20 border border-teal-200/40 dark:border-teal-800/40 hover:shadow-sm transition-all duration-200">
           {/* Target Node Selection */}
-          {selectedNode.data.enableAutoTransition && (
-            <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 rounded-lg bg-gradient-to-br from-teal-50/60 to-cyan-50/40 dark:from-teal-950/30 dark:to-cyan-950/20 border border-teal-200/40 dark:border-teal-800/40 hover:shadow-sm transition-all duration-200">
+          <div className="space-y-3 sm:space-y-4">
               {/* Header */}
               <div className="flex items-start gap-2 sm:gap-2.5">
                 <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-teal-200/50 dark:bg-teal-900/40">
@@ -135,7 +134,6 @@ export function AutoTransitionSection({
                 </div>
               )}
             </div>
-          )}
         </div>
       )}
     </div>
