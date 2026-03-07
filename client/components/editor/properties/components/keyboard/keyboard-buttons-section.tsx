@@ -83,7 +83,7 @@ export function KeyboardButtonsSection({
             <Label className="text-xs sm:text-sm font-semibold text-orange-900 dark:text-orange-100 cursor-pointer block">
               Кнопки
             </Label>
-            <div className="text-xs text-orange-700/70 dark:text-orange-300/70 mt-0.5 leading-snug">
+            <div className="text-xs text-orange-700/70 dark:text-orange-300/70 leading-snug">
               Добавляйте и управляйте кнопками
             </div>
           </div>
