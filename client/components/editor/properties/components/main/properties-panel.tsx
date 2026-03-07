@@ -390,6 +390,9 @@ export function PropertiesPanel({
           </div>
         )}
 
+        </div>
+
+        {/* Conditional Messages Section - скрыто для узлов управления */}
         {!isManagementNode(selectedNode.type) && (
           <div className="w-full bg-gradient-to-br from-purple-50/40 to-indigo-50/20 dark:from-purple-950/30 dark:to-indigo-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-purple-200/40 dark:border-purple-800/40 backdrop-blur-sm">
             <ConditionalMessagesHeader
@@ -494,16 +497,15 @@ export function PropertiesPanel({
           isOpen={isBasicSettingsOpen}
           onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
         />
-      </div>
 
-      <PropertiesFooterWrapper
-        selectedNode={selectedNode}
-        onNodeUpdate={onNodeUpdate}
-        onActionLog={onActionLog}
-        onSaveProject={onSaveProject}
-      />
-    </aside>
-  );
-}
+        <PropertiesFooterWrapper
+          selectedNode={selectedNode}
+          onNodeUpdate={onNodeUpdate}
+          onActionLog={onActionLog}
+          onSaveProject={onSaveProject}
+        />
+      </aside>
+    );
+  }
 
 
