@@ -25,7 +25,15 @@ export function useTextStats(value: string): TextStats {
   const [charCount, setCharCount] = useState(0);
 
   useEffect(() => {
-    const plainText = value.replace(/<[^>]*>/g, '').replace(/\*\*|__|~~|`/g, '');
+    // Удаляем HTML теги и Markdown синтаксис
+    const plainText = value
+      .replace(/<[^>]*>/g, '')  // HTML теги
+      .replace(/&nbsp;/g, ' ')   // HTML сущности
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/\*\*|__|~~|`/g, '');  // Markdown
+    
     const words = plainText.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
     setCharCount(plainText.length);
