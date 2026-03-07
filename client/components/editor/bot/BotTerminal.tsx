@@ -44,18 +44,16 @@ export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalPro
   const { status: wsStatus, wsConnection, connect } = useTerminalWebSocket({
     terminalRef,
     projectId: projectId || null,
-    tokenId: isBotRunning ? tokenId : null
+    tokenId: tokenId || null
   });
-
-  // При остановке бота не скрываем терминал, чтобы пользователь мог видеть последние сообщения
 
   // Подключаемся при монтировании и переподключаемся при изменении статуса на disconnected
   useEffect(() => {
-    if (isBotRunning && wsStatus === 'disconnected') {
+    if (wsStatus === 'disconnected') {
       console.log('Подключение к терминалу, статус:', wsStatus);
       connect();
     }
-  }, [wsStatus, isBotRunning, connect]);
+  }, [wsStatus, connect]);
 
   return (
     <>
