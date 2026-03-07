@@ -29,7 +29,7 @@ export function BroadcastNodeProperties({ node, onUpdate }: BroadcastNodePropert
   const data = node.data;
 
   return (
-    <div className="space-y-3">
+    <div className="w-full bg-gradient-to-br from-orange-50/40 to-amber-50/20 dark:from-orange-950/30 dark:to-amber-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-orange-200/40 dark:border-orange-800/40 backdrop-blur-sm space-y-3">
       {/* Выбор типа API */}
       <ApiTypeSelector node={node} onUpdate={onUpdate} />
 

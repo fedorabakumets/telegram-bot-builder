@@ -42,6 +42,7 @@ import { LocationCoordinatesSection } from '../configuration/location-coordinate
 import { LocationDetailsSection } from '../configuration/location-details-section';
 import { FoursquareIntegrationSection } from '../configuration/foursquare-integration-section';
 import { MapServicesSection } from '../configuration/map-services-section';
+import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
 
 /**
  * Интерфейс пропсов для панели свойств узлов
@@ -238,6 +239,14 @@ export function PropertiesPanel({
               ContentManagementConfiguration={ContentManagementConfiguration}
               UserManagementConfiguration={UserManagementConfiguration}
               AdminRightsInfo={AdminRightsInfo}
+            />
+          )}
+
+          {/* Broadcast Section - только для узла рассылка */}
+          {selectedNode.type === 'broadcast' && (
+            <BroadcastNodeProperties
+              node={selectedNode}
+              onUpdate={onNodeUpdate}
             />
           )}
 
