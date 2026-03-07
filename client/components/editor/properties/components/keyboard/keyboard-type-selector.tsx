@@ -21,6 +21,8 @@ interface KeyboardTypeSelectorProps {
   selectedNode: Node;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
+  /** Функция раскрытия секции */
+  onToggle?: () => void;
 }
 
 /**
@@ -35,7 +37,7 @@ interface KeyboardTypeSelectorProps {
  * @param {KeyboardTypeSelectorProps} props - Пропсы компонента
  * @returns {JSX.Element} Селектор типа клавиатуры
  */
-export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTypeSelectorProps) {
+export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: KeyboardTypeSelectorProps) {
   return (
     <div className="flex gap-2.5 sm:gap-3">
       {/* Inline Keyboard */}
@@ -47,6 +49,9 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTyp
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE}
           onCheckedChange={(checked) => {
             onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.INLINE : KEYBOARD_TYPES.NONE });
+            if (checked && onToggle) {
+              onToggle();
+            }
           }}
         />
       </div>
@@ -59,6 +64,9 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTyp
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
           onCheckedChange={(checked) => {
             onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.REPLY : KEYBOARD_TYPES.NONE });
+            if (checked && onToggle) {
+              onToggle();
+            }
           }}
         />
       </div>

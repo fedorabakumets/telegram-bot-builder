@@ -70,7 +70,12 @@ export function AutoTransitionSection({
         <span className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">Включить</span>
         <Switch
           checked={selectedNode.data.enableAutoTransition ?? false}
-          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableAutoTransition: checked })}
+          onCheckedChange={(checked) => {
+            onNodeUpdate(selectedNode.id, { enableAutoTransition: checked });
+            if (checked && onToggle) {
+              onToggle();
+            }
+          }}
         />
       </div>
 

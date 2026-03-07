@@ -64,6 +64,9 @@ export function UserInputSettingsSection({
           checked={selectedNode.data.collectUserInput ?? false}
           onCheckedChange={(checked) => {
             onNodeUpdate(selectedNode.id, { collectUserInput: checked });
+            if (checked && onToggle) {
+              onToggle();
+            }
           }}
         />
       </div>

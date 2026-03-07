@@ -281,7 +281,7 @@ export function PropertiesPanel({
               />
 
               {/* Переключатели типа клавиатуры - всегда видны */}
-              <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
+              <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} onToggle={() => setIsKeyboardSectionOpen(true)} />
 
               {isKeyboardSectionOpen && (
                 <div className="space-y-3 sm:space-y-4">
