@@ -38,7 +38,7 @@ export function KeyboardSectionHeader({
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-100 text-left">Клавиатура</h3>
-          <p className="text-xs sm:text-sm text-amber-700/70 dark:text-amber-300/70 mt-0.5 text-left">Кнопки для взаимодействия с пользователем</p>
+          <p className="text-xs sm:text-sm text-amber-700/70 dark:text-amber-300/70 text-left">Кнопки для взаимодействия с пользователем</p>
         </div>
       </button>
       <i className={`fas fa-chevron-down text-xs sm:text-sm text-amber-600 dark:text-amber-400 transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}></i>
