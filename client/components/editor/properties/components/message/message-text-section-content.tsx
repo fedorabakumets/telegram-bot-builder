@@ -41,18 +41,16 @@ export function MessageTextSectionContent({
   onMediaVariableSelect
 }: MessageTextSectionContentProps) {
   return (
-    <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
-      <div className="space-y-2 sm:space-y-2.5">
-        <InlineRichEditor
-          value={messageText}
-          onChange={(value: string) => onNodeUpdate(nodeId, { messageText: value })}
-          placeholder="Введите текст сообщения..."
-          enableMarkdown={markdown}
-          onFormatModeChange={(newFormatMode: FormatMode) => onNodeUpdate(nodeId, { formatMode: newFormatMode })}
-          availableVariables={availableVariables as Variable[]}
-          onMediaVariableSelect={onMediaVariableSelect}
-        />
-      </div>
+    <div className="space-y-2 sm:space-y-2.5">
+      <InlineRichEditor
+        value={messageText}
+        onChange={(value: string) => onNodeUpdate(nodeId, { messageText: value })}
+        placeholder="Введите текст сообщения..."
+        enableMarkdown={markdown}
+        onFormatModeChange={(newFormatMode: FormatMode) => onNodeUpdate(nodeId, { formatMode: newFormatMode })}
+        availableVariables={availableVariables as Variable[]}
+        onMediaVariableSelect={onMediaVariableSelect}
+      />
     </div>
   );
 }
