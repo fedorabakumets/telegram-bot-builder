@@ -87,5 +87,6 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
       .replace(/<\/div>/g, '');
   }
 
-  return text;
+  // Очищаем пустые значения (только пробелы и новые строки)
+  return text.trim() === '' ? '' : text;
 }
