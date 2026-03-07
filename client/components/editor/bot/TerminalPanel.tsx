@@ -44,7 +44,7 @@ export function TerminalPanel() {
   return (
     <div className="h-full flex flex-col">
       <TerminalTabs onTerminalSelect={handleTerminalSelect} />
-      <div className="flex-1 overflow-auto p-2">
+      <div className="flex-1 overflow-hidden p-2">
         {terminals.map(terminal => {
           const key = `${terminal.projectId}_${terminal.tokenId}`;
           const isActive = key === activeTerminalId;
@@ -55,7 +55,7 @@ export function TerminalPanel() {
           return (
             <div
               key={key}
-              className={isActive ? 'block' : 'hidden'}
+              className={isActive ? 'block h-full' : 'hidden'}
             >
               <BotTerminal
                 projectId={terminal.projectId}
