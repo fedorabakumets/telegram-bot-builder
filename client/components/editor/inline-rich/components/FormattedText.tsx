@@ -35,16 +35,20 @@ export function FormattedText({ value, className = '', lineClamp }: FormattedTex
     return null;
   }
 
-  // Проверяем, что текст не пустой (игнорируя HTML теги и пробелы)
+  // Проверяем, что текст не пустой (игнорируя HTML теги, пробелы и переносы)
   const plainText = value
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
+    .replace(/<[^>]*>/g, '')       // HTML теги (первый проход)
+    .replace(/&nbsp;/g, ' ')       // HTML сущности
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
-    .replace(/\n/g, '')
+    .replace(/&#39;/g, "'")
+    .replace(/<[^>]*>/g, '')       // HTML теги (второй проход после декодирования)
+    .replace(/\n/g, '')            // Символы новой строки
+    .replace(/\r/g, '')
     .trim();
 
+  // Если после удаления всех тегов и пробелов пусто - не отображаем
   if (!plainText) {
     return null;
   }
