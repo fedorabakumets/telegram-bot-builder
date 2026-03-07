@@ -7,7 +7,6 @@
  */
 
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
-import { BotLayout } from '@/components/editor/bot/BotLayout';
 import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
 import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import type { EditorTab } from '../types';
@@ -144,14 +143,6 @@ export function CanvasContent(props: CanvasContentProps) {
         onActionLog={props.onActionLog}
         actionHistory={props.actionHistory}
       />
-    );
-  }
-
-  if (currentTab === 'bot') {
-    return (
-      <div className="h-full bg-background">
-        <BotLayout />
-      </div>
     );
   }
 

@@ -13,7 +13,7 @@ import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
-import { BotControl } from '@/components/editor/bot/bot-control';
+import { BotLayout } from '@/components/editor/bot/BotLayout';
 import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
 import { createActionHistoryItem } from './editor/utils/action-logger';
 import type { ActionType, PreviousEditorTab, ActionHistoryItem, EditorTab } from './editor/types';
@@ -1081,14 +1081,8 @@ export default function Editor() {
             actionHistory={actionHistory}
           />
         ) : currentTab === 'bot' ? (
-          <div className="h-full p-6 bg-background overflow-auto">
-            <div className="max-w-2xl mx-auto">
-              <BotControl
-                projectId={activeProject.id}
-                projectName={activeProject.name}
-                onBotStarted={handleOpenCodePanel}
-              />
-            </div>
+          <div className="h-full">
+            <BotLayout />
           </div>
         ) : currentTab === 'users' ? (
           <div className="h-full overflow-hidden">
