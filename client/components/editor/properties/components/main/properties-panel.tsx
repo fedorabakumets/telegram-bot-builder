@@ -263,7 +263,7 @@ export function PropertiesPanel({
         )}
 
         {/* Message Content - скрыто для узлов управления */}
-        <div className="pb-0.5 sm:pb-1 border-b border-border/20 mb-0.5 sm:mb-1">
+        <div className="pb-0.5 sm:pb-1 mb-0.5 sm:mb-1">
           <MessageContentSection
             selectedNode={selectedNode}
             allNodes={allNodes}
