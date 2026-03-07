@@ -140,7 +140,6 @@ export function PropertiesPanel({
   const getAllNodesFromAllSheets = useMemo(() =>
     collectAllNodesFromSheets(allSheets, allNodes, currentSheetId),
   [allSheets, allNodes, currentSheetId]);
-  const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(true);
 
   /**
    * Мемоизированный список доступных вопросов
