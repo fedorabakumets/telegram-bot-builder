@@ -66,7 +66,7 @@ export function DesktopActions({
       'flex',
       isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-1 lg:w-auto lg:order-none lg:ml-auto'
     )}>
-      {/* Кнопки управления состоянием панелей */}
+      {/* Кнопки управления состоянием панелей — ЗАКОММЕНТИРОВАНО
       {onToggleHeader && (
         <DesktopToggleHeaderButton
           headerVisible={headerVisible}
@@ -106,6 +106,7 @@ export function DesktopActions({
       {onOpenFileExplorer && (
         <DesktopOpenFileExplorerButton onClick={onOpenFileExplorer} />
       )}
+      — КОНЕЦ ЗАКОММЕНТИРОВАННОГО БЛОКА */}
 
       {/* Кнопки шаблонов */}
       {onLoadTemplate && (
