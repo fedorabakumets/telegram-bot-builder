@@ -47,7 +47,7 @@ export function AutoTransitionSection({
   onToggle
 }: AutoTransitionSectionProps) {
   return (
-    <div className="w-full">
+    <div className="w-full bg-gradient-to-br from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/30 dark:to-teal-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm">
       {/* Заголовок секции */}
       <div className="flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group" onClick={onToggle}>
         <button
@@ -66,7 +66,7 @@ export function AutoTransitionSection({
       </div>
 
       {/* Переключатель - всегда виден */}
-      <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/40 dark:border-emerald-800/40">
+      <div className="flex items-center gap-2.5 p-3 sm:p-4 md:p-5 rounded-lg bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/40 dark:border-emerald-800/40">
         <span className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">Включить</span>
         <Switch
           checked={selectedNode.data.enableAutoTransition ?? false}

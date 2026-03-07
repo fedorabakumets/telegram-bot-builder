@@ -46,7 +46,7 @@ export function UserInputSettingsSection({
   formatNodeDisplay
 }: UserInputSettingsSectionProps) {
   return (
-    <div className="w-full">
+    <div className="w-full bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
       <SectionHeader
         title="Сбор ответов"
         description="Собирать ввод пользователя в переменные"
@@ -58,7 +58,7 @@ export function UserInputSettingsSection({
         descriptionColor="text-blue-700/70 dark:text-blue-300/70"
       />
 
-      <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/40">
+      <div className="flex items-center gap-2.5 p-3 sm:p-4 md:p-5 rounded-lg bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/40">
         <span className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">Включить</span>
         <Switch
           checked={selectedNode.data.collectUserInput ?? false}
