@@ -17,6 +17,7 @@ import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
 import { BasicSettingsSection } from './basic-settings-section';
 import { MessageContentSection } from './message-content-section';
+import { MediaFileSection } from '../media-file/media-file-section';
 import { KeyboardSectionHeader } from '../keyboard/keyboard-section-header';
 import { KeyboardButtonsSection } from '../keyboard/keyboard-buttons-section';
 import { ConditionalMessagesHeader } from '../conditional-message-card/conditional-messages-header';
@@ -271,15 +272,26 @@ export function PropertiesPanel({
             mediaVariables={mediaVariables}
             attachedMediaVariables={attachedMediaVariables}
             isMessageTextOpen={isMessageTextOpen}
-            isMediaSectionOpen={isMediaSectionOpen}
+            isMediaSectionOpen={isMessageTextOpen}
             onMessageTextToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
-            onMediaSectionToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
+            onMediaSectionToggle={() => setIsMessageTextOpen(!isMessageTextOpen)}
             onNodeUpdate={onNodeUpdate}
             onMediaVariableRemove={handleMediaVariableRemove}
             onMediaVariableSelect={handleMediaVariableSelect}
             projectId={projectId}
           />
         </div>
+
+        {/* Media File Section - скрыто для узлов управления */}
+        {!isManagementNode(selectedNode.type) && (
+          <MediaFileSection
+            projectId={projectId}
+            selectedNode={selectedNode}
+            isOpen={isMediaSectionOpen}
+            onToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
+            onNodeUpdate={onNodeUpdate}
+          />
+        )}
 
         {!isManagementNode(selectedNode.type) && (
           <div className="w-full bg-gradient-to-br from-amber-50/40 to-yellow-50/20 dark:from-amber-950/30 dark:to-yellow-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-amber-200/40 dark:border-amber-800/40 backdrop-blur-sm">

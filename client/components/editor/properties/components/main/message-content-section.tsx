@@ -67,32 +67,22 @@ export function MessageContentSection({
   }
 
   return (
-    <div>
-      <div className="space-y-4">
-        <MediaVariablesSection
-          variables={attachedMediaVariables}
-          onRemove={onMediaVariableRemove}
-        />
+    <div className="space-y-4">
+      <MediaVariablesSection
+        variables={attachedMediaVariables}
+        onRemove={onMediaVariableRemove}
+      />
 
-        <MessageTextSection
-          selectedNode={selectedNode}
-          allNodes={allNodes}
-          textVariables={textVariables}
-          mediaVariables={mediaVariables}
-          isOpen={isMessageTextOpen}
-          onToggle={onMessageTextToggle}
-          onNodeUpdate={onNodeUpdate}
-          onMediaVariableSelect={onMediaVariableSelect}
-        />
-
-        <MediaFileSection
-          projectId={projectId}
-          selectedNode={selectedNode}
-          isOpen={isMediaSectionOpen}
-          onToggle={onMediaSectionToggle}
-          onNodeUpdate={onNodeUpdate}
-        />
-      </div>
+      <MessageTextSection
+        selectedNode={selectedNode}
+        allNodes={allNodes}
+        textVariables={textVariables}
+        mediaVariables={mediaVariables}
+        isOpen={isMessageTextOpen}
+        onToggle={onMessageTextToggle}
+        onNodeUpdate={onNodeUpdate}
+        onMediaVariableSelect={onMediaVariableSelect}
+      />
     </div>
   );
 }
