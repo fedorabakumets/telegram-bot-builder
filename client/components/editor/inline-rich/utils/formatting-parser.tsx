@@ -5,6 +5,8 @@
  * @module formatting-parser
  */
 
+import { htmlToValue } from '../html-converter';
+
 /**
  * Парсит HTML строку и возвращает массив JSX элементов
  *
@@ -107,10 +109,17 @@ export function parseHTML(htmlText: string): JSX.Element[] {
 export function formatText(text: string): JSX.Element {
   if (!text) return <span>{text}</span>;
 
-  const hasHTMLTags = text.includes('<b>') || text.includes('<i>') || text.includes('<u>') ||
-                     text.includes('<s>') || text.includes('<code>') || text.includes('<strong>') ||
-                     text.includes('<em>') || text.includes('<blockquote>') || text.includes('<br');
+  // Декодируем HTML-сущности (&lt; → <) через htmlToValue
+  const decodedText = text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"');
 
-  const parsedParts = hasHTMLTags ? parseHTML(text) : [<span key="0">{text}</span>];
+  const hasHTMLTags = decodedText.includes('<b>') || decodedText.includes('<i>') || decodedText.includes('<u>') ||
+                     decodedText.includes('<s>') || decodedText.includes('<code>') || decodedText.includes('<strong>') ||
+                     decodedText.includes('<em>') || decodedText.includes('<blockquote>') || decodedText.includes('<br');
+
+  const parsedParts = hasHTMLTags ? parseHTML(decodedText) : [<span key="0">{decodedText}</span>];
   return <span>{parsedParts}</span>;
 }
