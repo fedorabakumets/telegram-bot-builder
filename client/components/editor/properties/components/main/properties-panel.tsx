@@ -259,7 +259,7 @@ export function PropertiesPanel({
         </div>
 
         {!isManagementNode(selectedNode.type) && (
-          <div className="space-y-3 sm:space-y-4">
+          <div className="w-full">
             <KeyboardSectionHeader
               selectedNode={selectedNode}
               isOpen={isKeyboardSectionOpen}
@@ -270,7 +270,7 @@ export function PropertiesPanel({
             <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
 
             {isKeyboardSectionOpen && (
-              <>
+              <div className="space-y-3 sm:space-y-4">
                   {selectedNode.data.keyboardType !== 'none' && (
                     <MultipleSelectionSettings
                       selectedNode={selectedNode}
@@ -351,7 +351,7 @@ export function PropertiesPanel({
                       }}
                     />
                   )}
-              </>
+              </div>
             )}
           </div>
         )}
