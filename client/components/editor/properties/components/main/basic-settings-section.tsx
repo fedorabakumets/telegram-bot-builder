@@ -119,15 +119,18 @@ export function BasicSettingsSection({
             />
           )}
 
-          <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-green-50/20 dark:from-emerald-950/30 dark:to-green-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm">
-            <SynonymEditor
-              synonyms={selectedNode.data.synonyms || []}
-              onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
-              title="Синонимы"
-              description="Дополнительные текстовые варианты для вызова этого экрана. Например: старт, привет, начать"
-              placeholder="Например: старт, привет, начать"
-            />
-          </div>
+          {/* Синонимы - скрыто для узла рассылка */}
+          {selectedNode.type !== 'broadcast' && (
+            <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-green-50/20 dark:from-emerald-950/30 dark:to-green-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm">
+              <SynonymEditor
+                synonyms={selectedNode.data.synonyms || []}
+                onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
+                title="Синонимы"
+                description="Дополнительные текстовые варианты для вызова этого экрана. Например: старт, привет, начать"
+                placeholder="Например: старт, привет, начать"
+              />
+            </div>
+          )}
 
           {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message' ||
             selectedNode.type === 'ban_user' || selectedNode.type === 'unban_user' || selectedNode.type === 'mute_user' ||

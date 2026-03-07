@@ -448,25 +448,29 @@ export function PropertiesPanel({
 
         {/* Universal User Input Collection - скрыто для узлов управления */}
         {/* Conditional Messages - скрыто для узлов управления */}
-        <UserInputSettingsSection
-          selectedNode={selectedNode}
-          getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-          isOpen={isUserInputSectionOpen}
-          onToggle={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}
-          onNodeUpdate={onNodeUpdate}
-          formatNodeDisplay={formatNodeDisplay}
-        />
+        {!isManagementNode(selectedNode.type) && (
+          <UserInputSettingsSection
+            selectedNode={selectedNode}
+            getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+            isOpen={isUserInputSectionOpen}
+            onToggle={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}
+            onNodeUpdate={onNodeUpdate}
+            formatNodeDisplay={formatNodeDisplay}
+          />
+        )}
 
         {/* Auto Transition Section - скрыто для узлов управления */}
-        <AutoTransitionWrapper
-          selectedNode={selectedNode}
-          getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-          onNodeUpdate={onNodeUpdate}
-          isOpen={isAutoTransitionOpen}
-          onToggle={() => setIsAutoTransitionOpen(!isAutoTransitionOpen)}
-          keyboardType={selectedNode.data.keyboardType}
-          collectUserInput={selectedNode.data.collectUserInput}
-        />
+        {!isManagementNode(selectedNode.type) && (
+          <AutoTransitionWrapper
+            selectedNode={selectedNode}
+            getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+            onNodeUpdate={onNodeUpdate}
+            isOpen={isAutoTransitionOpen}
+            onToggle={() => setIsAutoTransitionOpen(!isAutoTransitionOpen)}
+            keyboardType={selectedNode.data.keyboardType}
+            collectUserInput={selectedNode.data.collectUserInput}
+          />
+        )}
 
         <CommandAdvancedSettingsWrapper
           selectedNode={selectedNode}
