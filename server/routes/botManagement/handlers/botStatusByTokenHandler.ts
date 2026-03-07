@@ -11,7 +11,7 @@ import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
 import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils/processChecker';
 import { restoreProcessTracking } from '../utils/processRestorer';
-import { findActiveProcessForProject } from '../../../utils/findActiveProcessForProject';
+import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
 
 /**
  * Обрабатывает запрос на получение статуса бота по токену
@@ -36,28 +36,25 @@ export async function handleBotStatusByToken(req: Request, res: Response): Promi
         }
 
         const projectId = instance.projectId;
-        const activeProcessInfo = findActiveProcessForProject(projectId);
-        
-        // Проверяем, является ли активный процесс именно этим токеном
-        const isThisProcessActive = activeProcessInfo && activeProcessInfo.processKey === `${projectId}_${tokenId}`;
-        
-        let actualStatus = isThisProcessActive ? 'running' : 'stopped';
+        const activeProcessInfo = findActiveProcessForToken(projectId, tokenId);
+
+        let actualStatus = activeProcessInfo ? 'running' : 'stopped';
 
         // Если процесс не найден в активных, но есть в БД, проверяем его существование
-        if (!isThisProcessActive && instance.processId && checkProcessExists(instance.processId)) {
+        if (!activeProcessInfo && instance.processId && checkProcessExists(instance.processId)) {
             console.log(`Процесс ${instance.processId} для токена ${tokenId} найден в системе`);
             restoreProcessTracking(projectId, instance.tokenId, parseInt(instance.processId));
             actualStatus = 'running';
         }
 
         // Дополнительная проверка для Python процессов
-        if (!isThisProcessActive && instance.processId && actualStatus === 'stopped' && isPythonProcess(instance.processId)) {
+        if (!activeProcessInfo && instance.processId && actualStatus === 'stopped' && isPythonProcess(instance.processId)) {
             restoreProcessTracking(projectId, instance.tokenId, parseInt(instance.processId));
             actualStatus = 'running';
         }
 
         // Поиск PID если не найден
-        if (!isThisProcessActive && actualStatus === 'stopped') {
+        if (!activeProcessInfo && actualStatus === 'stopped') {
             const realPid = findBotProcessPid(projectId);
             if (realPid) {
                 await storage.updateBotInstance(instance.id, { processId: realPid.toString() });
