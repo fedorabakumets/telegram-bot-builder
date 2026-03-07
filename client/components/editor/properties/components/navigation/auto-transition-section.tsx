@@ -9,7 +9,6 @@
 
 import { Node } from '@shared/schema';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { SectionHeader } from '../layout/section-header';
@@ -63,20 +62,12 @@ export function AutoTransitionSection({
       {isOpen && (
         <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl p-3 sm:p-4 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
           {/* Enable Toggle */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-emerald-50/60 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-200/40 dark:border-emerald-700/40 hover:border-emerald-300/60 dark:hover:border-emerald-600/60 hover:shadow-sm transition-all duration-200">
-            <div className="flex-1 min-w-0">
-              <Label className="text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
-                <i className="fas fa-power-off text-xs sm:text-sm"></i>
-                Включить автопереход
-              </Label>
-              <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">Активировать функцию автоперехода</div>
-            </div>
-            <div className="flex-shrink-0">
-              <Switch
-                checked={selectedNode.data.enableAutoTransition ?? false}
-                onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableAutoTransition: checked })}
-              />
-            </div>
+          <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-lg bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/40 dark:border-emerald-800/40">
+            <span className="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-100">Включить</span>
+            <Switch
+              checked={selectedNode.data.enableAutoTransition ?? false}
+              onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableAutoTransition: checked })}
+            />
           </div>
 
           {/* Target Node Selection */}
