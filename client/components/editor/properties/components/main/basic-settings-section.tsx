@@ -91,7 +91,7 @@ export function BasicSettingsSection({
   AdminRightsInfo
 }: BasicSettingsSectionProps) {
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="bg-gradient-to-br from-violet-50/40 to-purple-50/20 dark:from-violet-950/30 dark:to-purple-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-violet-200/40 dark:border-violet-800/40 backdrop-blur-sm">
       <SectionHeader
         title="Основные настройки"
         isOpen={isOpen}
@@ -101,7 +101,7 @@ export function BasicSettingsSection({
         iconColor="text-violet-600 dark:text-violet-400"
       />
       {isOpen && (
-        <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-violet-50/40 to-purple-50/20 dark:from-violet-950/30 dark:to-purple-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-violet-200/40 dark:border-violet-800/40 backdrop-blur-sm">
+        <div className="space-y-3 sm:space-y-4">
 
           {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
             <CommandSectionComplete
