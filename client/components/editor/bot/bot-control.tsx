@@ -273,14 +273,19 @@ export function BotControl({ projectId }: BotControlProps) {
     setEditValue('');
   };
 
-  // Получаем статусы ботов для всех проектов
-  const botStatusQueries = projects.map(project =>
+  // Получаем все токены в плоский массив с projectId
+  const allTokensFlat = allTokens.flatMap((tokens, idx) => 
+    tokens.map(token => ({ ...token, projectId: projects[idx].id }))
+  );
+
+  // Получаем статусы ботов для каждого токена отдельно
+  const botStatusQueries = allTokensFlat.map(token =>
     useQuery<BotStatusResponse>({
-      queryKey: [`/api/projects/${project.id}/bot`],
-      refetchInterval: 10000, // Уменьшили с 1 секунды до 10 секунд
-      refetchIntervalInBackground: true, // Продолжаем опрашивать в фоне
-      staleTime: 5000, // Считаем данные свежими 5 секунд
-      enabled: !!projects.length,
+      queryKey: [`/api/tokens/${token.id}/bot-status`],
+      refetchInterval: 10000,
+      refetchIntervalInBackground: true,
+      staleTime: 5000,
+      enabled: true,
     })
   );
 
@@ -293,7 +298,7 @@ export function BotControl({ projectId }: BotControlProps) {
   // Обновляем выбранный токен при изменении статусов ботов
   useEffect(() => {
     // Находим запущенный бот и устанавливаем его токен как выбранный
-    const runningBot = allBotStatuses.find(status => status.status === 'running' && status.instance);
+    const runningBot = allBotStatuses.find(status => status?.status === 'running' && status.instance);
     if (runningBot && runningBot.instance) {
       setSelectedTokenId(runningBot.instance.tokenId);
     }
@@ -302,8 +307,8 @@ export function BotControl({ projectId }: BotControlProps) {
 
   // Timer effect - обновляем таймеры для каждого запущенного бота
   useEffect(() => {
-    // Находим запущенные боты
-    const runningBots = allBotStatuses.filter(status => status.status === 'running' && status.instance?.startedAt);
+    // Находим запущенные боты из статусов
+    const runningBots = allBotStatuses.filter(status => status?.status === 'running' && status.instance?.startedAt);
 
     // Обновляем таймеры для каждого запущенного бота
     const interval = setInterval(() => {
@@ -518,6 +523,8 @@ export function BotControl({ projectId }: BotControlProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot`] });
       // Сразу обновляем статус на фронтенде
       queryClient.invalidateQueries({ queryKey: ['/api/projects/bot'] });
+      // Инвалидируем статус для конкретного токена
+      queryClient.invalidateQueries({ queryKey: [`/api/tokens/${variables.tokenId}/bot-status`] });
       // Обновляем информацию о боте (имя, описание)
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot/info`] });
       // Обновляем список токенов чтобы показать актуальное имя бота
@@ -541,6 +548,8 @@ export function BotControl({ projectId }: BotControlProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot`] });
       // Сразу обновляем статус на фронтенде
       queryClient.invalidateQueries({ queryKey: ['/api/projects/bot'] });
+      // Инвалидируем статус для конкретного токена
+      queryClient.invalidateQueries({ queryKey: [`/api/tokens/${variables.tokenId}/bot-status`] });
 
       // Если останавливаем текущий активный токен, сбрасываем его
       if (selectedTokenId === variables.tokenId) {
