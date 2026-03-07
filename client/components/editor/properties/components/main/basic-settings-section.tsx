@@ -97,11 +97,11 @@ export function BasicSettingsSection({
         isOpen={isOpen}
         onToggle={onToggle}
         icon="sliders-h"
-        iconGradient="from-slate-100 to-slate-200 dark:from-slate-900/50 dark:to-slate-800/50"
-        iconColor="text-slate-600 dark:text-slate-400"
+        iconGradient="from-violet-100 to-purple-100 dark:from-violet-900/50 dark:to-purple-900/50"
+        iconColor="text-violet-600 dark:text-violet-400"
       />
       {isOpen && (
-        <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-slate-50/30 to-slate-100/20 dark:from-slate-950/30 dark:to-slate-900/20 rounded-xl p-3 sm:p-4 border border-slate-200/30 dark:border-slate-800/30 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-violet-50/40 to-purple-50/20 dark:from-violet-950/30 dark:to-purple-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-violet-200/40 dark:border-violet-800/40 backdrop-blur-sm">
 
           {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
             <CommandSectionComplete
