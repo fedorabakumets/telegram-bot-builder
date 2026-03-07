@@ -7,11 +7,13 @@
  */
 
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
-import { BotControl } from '@/components/editor/bot/bot-control';
+import { BotLayout } from '@/components/editor/bot/BotLayout';
 import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
 import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import type { EditorTab } from '../types';
-import type { BotDataWithSheets, UserBotData } from '@shared/schema';
+import type { BotDataWithSheets, UserBotData, BotProject } from '@shared/schema';
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 /** Параметры компонента CanvasContent */
 export interface CanvasContentProps {
@@ -85,16 +87,10 @@ export interface CanvasContentProps {
   onActionLog: (type: string, description: string) => void;
   /** История действий */
   actionHistory: any[];
-  /** ID проекта */
-  projectId: number;
-  /** Имя проекта */
-  projectName: string;
   /** Обработчик открытия панели диалога */
   onOpenDialogPanel: (user: UserBotData) => void;
   /** Обработчик открытия панели деталей */
   onOpenUserDetailsPanel: (user: UserBotData) => void;
-  /** Обработчик открытия кодовой панели */
-  onBotStarted: () => void;
 }
 
 /**
@@ -104,7 +100,14 @@ export interface CanvasContentProps {
  * @returns JSX элемент контента
  */
 export function CanvasContent(props: CanvasContentProps) {
-  const { currentTab, projectId, projectName } = props;
+  const { currentTab } = props;
+  const { data: projects = [] } = useQuery<BotProject[]>({
+    queryKey: ['/api/projects'],
+    queryFn: () => apiRequest('GET', '/api/projects'),
+  });
+  const project = projects[0];
+  const projectId = project?.id || 0;
+  const projectName = project?.name || '';
 
   if (currentTab === 'editor') {
     return (
@@ -146,14 +149,8 @@ export function CanvasContent(props: CanvasContentProps) {
 
   if (currentTab === 'bot') {
     return (
-      <div className="h-full p-6 bg-background overflow-auto">
-        <div className="max-w-2xl mx-auto">
-          <BotControl
-            projectId={projectId}
-            projectName={projectName}
-            onBotStarted={props.onBotStarted}
-          />
-        </div>
+      <div className="h-full bg-background">
+        <BotLayout />
       </div>
     );
   }
@@ -162,8 +159,6 @@ export function CanvasContent(props: CanvasContentProps) {
     return (
       <div className="h-full">
         <UserDatabasePanel
-          projectId={projectId}
-          projectName={projectName}
           onOpenDialogPanel={props.onOpenDialogPanel}
           onOpenUserDetailsPanel={props.onOpenUserDetailsPanel}
         />
@@ -174,7 +169,7 @@ export function CanvasContent(props: CanvasContentProps) {
   if (currentTab === 'groups') {
     return (
       <div className="h-full">
-        <GroupsPanel projectId={projectId} projectName={projectName} />
+        <GroupsPanel />
       </div>
     );
   }

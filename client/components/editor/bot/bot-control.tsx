@@ -30,7 +30,8 @@ import { BotControlPanel } from './BotControlPanel';
 interface BotControlProps {
   projectId?: number;
   projectName?: string;
-  onBotStarted?: () => void;
+  onBotStarted?: (projectId: number, tokenId: number, botName: string) => void;
+  onBotStopped?: (projectId: number, tokenId: number) => void;
 }
 
 /**
@@ -537,6 +538,13 @@ export function BotControl({ projectId }: BotControlProps) {
 
       // Устанавливаем запущенный токен как активный для WebSocket
       setSelectedTokenId(variables.tokenId);
+      
+      // Уведомляем о запуске бота
+      const token = allTokensFlat.find(t => t.id === variables.tokenId);
+      if (token && onBotStarted) {
+        const botName = token.name || `Бот ${variables.tokenId}`;
+        onBotStarted(variables.projectId, variables.tokenId, botName);
+      }
     },
     onError: (error: any) => {
       toast({ title: "Ошибка запуска", description: error.message || "Не удалось запустить бота.", variant: "destructive" });
@@ -559,6 +567,11 @@ export function BotControl({ projectId }: BotControlProps) {
       // Если останавливаем текущий активный токен, сбрасываем его
       if (selectedTokenId === variables.tokenId) {
         setSelectedTokenId(null);
+      }
+      
+      // Уведомляем об остановке бота
+      if (onBotStopped) {
+        onBotStopped(variables.projectId, variables.tokenId);
       }
     },
     onError: (error: any) => {
