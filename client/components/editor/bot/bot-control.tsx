@@ -11,8 +11,8 @@
  * @module BotControl
  */
 
-import { useState, useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -187,17 +187,17 @@ export function BotControl({ projectId }: BotControlProps) {
     queryFn: () => apiRequest('GET', '/api/projects'),
   });
 
-  // Получаем токены для всех проектов
-  const tokensQueries = projects.map(project =>
-    useQuery<BotToken[]>({
+  // Получаем токены для всех проектов с использованием useQueries
+  const tokensQueriesResults = useQueries({
+    queries: projects.map(project => ({
       queryKey: [`/api/projects/${project.id}/tokens`],
       queryFn: () => apiRequest('GET', `/api/projects/${project.id}/tokens`),
       enabled: !!projects.length,
-    })
-  );
+    }))
+  });
 
   // Объединяем результаты всех запросов в один массив
-  const allTokens = tokensQueries.map(query => query.data || []).filter(data => data.length > 0);
+  const allTokens = tokensQueriesResults.map(query => query.data || []).filter(data => data && data.length > 0);
 
   // Мутация для обновления информации о боте через Telegram API
   /** Мутация для обновления информации о боте */
@@ -274,23 +274,27 @@ export function BotControl({ projectId }: BotControlProps) {
   };
 
   // Получаем все токены в плоский массив с projectId
-  const allTokensFlat = allTokens?.flatMap((tokens, idx) =>
-    tokens.map(token => ({ ...token, projectId: projects[idx]?.id }))
-  ) || [];
+  const allTokensFlat = useMemo(() => 
+    allTokens?.flatMap((tokens, idx) =>
+      tokens.map(token => ({ ...token, projectId: projects[idx]?.id }))
+    ) || [],
+    [allTokens, projects]
+  );
 
-  // Получаем статусы ботов для каждого токена отдельно
-  const botStatusQueries = allTokensFlat.map(token =>
-    useQuery<BotStatusResponse>({
+  // Получаем статусы ботов для каждого токена отдельно с использованием useQueries
+  const botStatusQueriesResults = useQueries({
+    queries: allTokensFlat.map(token => ({
       queryKey: [`/api/tokens/${token.id}/bot-status`],
+      queryFn: () => apiRequest('GET', `/api/tokens/${token.id}/bot-status`),
       refetchInterval: 10000,
       refetchIntervalInBackground: true,
       staleTime: 5000,
       enabled: true,
-    })
-  );
+    }))
+  });
 
   // Объединяем статусы ботов
-  const allBotStatuses = botStatusQueries.map(query => query.data).filter(Boolean) as BotStatusResponse[];
+  const allBotStatuses = botStatusQueriesResults.map(query => query.data).filter(Boolean) as BotStatusResponse[];
 
   // Состояние для отслеживания выбранного токена
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
@@ -354,7 +358,7 @@ export function BotControl({ projectId }: BotControlProps) {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         // Обновляем статусы ботов при возвращении на вкладку
-        botStatusQueries.forEach(query => query.refetch());
+        botStatusQueriesResults.forEach(query => query.refetch());
       }
     };
 
@@ -363,24 +367,25 @@ export function BotControl({ projectId }: BotControlProps) {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [botStatusQueries]);
+  }, [botStatusQueriesResults]);
 
   // Получаем токены по умолчанию для всех проектов
 
   // Объединяем токены по умолчанию
-  // Получаем информацию о ботах (getMe) для всех проектов
-  const botInfoQueries = projects.map(project =>
-    useQuery<BotInfo>({
+  // Получаем информацию о ботах (getMe) для всех проектов с использованием useQueries
+  const botInfoQueriesResults = useQueries({
+    queries: projects.map(project => ({
       queryKey: [`/api/projects/${project.id}/bot/info`],
+      queryFn: () => apiRequest('GET', `/api/projects/${project.id}/bot/info`),
       enabled: !!projects.length,
-      refetchInterval: allBotStatuses.some(status => status.status === 'running') ? 60000 : false, // Увеличили с 30 секунд до 1 минуты
-      refetchIntervalInBackground: false, // Не опрашиваем в фоне
-      staleTime: 30000, // Считаем данные свежими 30 секунд
-    })
-  );
+      refetchInterval: allBotStatuses.some(status => status?.status === 'running') ? 60000 : false,
+      refetchIntervalInBackground: false,
+      staleTime: 30000,
+    }))
+  });
 
   // Объединяем информацию о ботах
-  const allBotInfos = botInfoQueries.map(query => query.data).filter(Boolean) as BotInfo[];
+  const allBotInfos = botInfoQueriesResults.map(query => query.data).filter(Boolean) as BotInfo[];
 
   // Toggle user database enabled mutation
   const toggleDatabaseMutation = useMutation({
