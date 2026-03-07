@@ -64,7 +64,7 @@ export function BotCardHeader({
         photoUrl={projectBotInfo?.photoUrl || token.botPhotoUrl}
         botId={projectBotInfo?.id?.toString()}
         projectId={projectId}
-        size={48}
+        size={64}
         className="flex-shrink-0"
       />
 

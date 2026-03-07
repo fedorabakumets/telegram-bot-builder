@@ -69,11 +69,13 @@ export function BotAvatar({
         className={className}
         style={{ width: size, height: size }}
       >
-        <UserAvatar
-          messageType="bot"
-          user={botUser}
-          projectId={projectId}
-        />
+        <div style={{ width: '100%', height: '100%' }}>
+          <UserAvatar
+            messageType="bot"
+            user={botUser}
+            projectId={projectId}
+          />
+        </div>
       </div>
     );
   }
