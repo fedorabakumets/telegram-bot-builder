@@ -9,7 +9,8 @@
 
 import { useActiveTerminals } from './ActiveTerminalsContext';
 import { BotControl } from './bot-control';
-import { useQuery, useQueries, useEffect } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { apiRequest } from '@/lib/queryClient';
 
 interface BotsPanelProps {
