@@ -11,7 +11,9 @@ export type BotMessageWithMedia = BotMessage & {
     /** URL или путь к файлу */
     url: string;
     /** Тип медиа: "photo", "video", "audio", "document", "sticker" */
-    type: string;
+    type?: string;
+    /** Тип файла: "photo", "video", "audio", "document" */
+    fileType?: string;
     /** Ширина изображения в пикселях */
     width?: number;
     /** Высота изображения в пикселях */

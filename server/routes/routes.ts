@@ -485,11 +485,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const tokens = await storage.getBotTokensByProject(projectId);
 
-      // Hide actual token values for security
-      const safeTokens = tokens.map(token => ({
-        ...token,
-        token: `${token.token.substring(0, 10)}...`
-      }));
+      // Hide actual token values for security but include botId
+      const safeTokens = tokens.map(token => {
+        const botId = token.token ? token.token.split(':')[0] : null;
+        return {
+          ...token,
+          token: `${token.token.substring(0, 10)}...`,
+          botId
+        };
+      });
 
       res.json(safeTokens);
       return; // Явно указываем, что функция завершается

@@ -19,14 +19,48 @@ interface DesktopLastMessageCellProps {
 }
 
 /**
+ * Получить иконку для типа медиа
+ */
+function getMediaIcon(type: string): string {
+  switch (type) {
+    case 'photo':
+      return '📷';
+    case 'video':
+      return '🎬';
+    case 'audio':
+      return '🎵';
+    case 'document':
+      return '📄';
+    case 'sticker':
+      return ' sticker';
+    default:
+      return '📎';
+  }
+}
+
+/**
  * Компонент ячейки последнего сообщения
  * @param props - Пропсы компонента
  * @returns JSX компонент ячейки
  */
 export function DesktopLastMessageCell({ user, projectId }: DesktopLastMessageCellProps): React.JSX.Element {
-  const { data: lastMessage } = useLastMessage(projectId, user.id);
+  const { data: lastMessage } = useLastMessage(projectId, user.userId);
 
-  const messageText = lastMessage?.messageText || 'Нет сообщений';
+  // Получаем текст сообщения, обрабатывая null/undefined
+  const rawText = lastMessage?.messageText;
+  let messageText = (typeof rawText === 'string' && rawText.trim()) || '';
+
+  // Если текста нет, но есть медиа, показываем иконку медиа
+  if (!messageText && lastMessage?.media && lastMessage.media.length > 0) {
+    const mediaTypes = [...new Set(lastMessage.media.map(m => m.fileType || m.type))];
+    messageText = mediaTypes.map(type => getMediaIcon(type)).join(' ') + ' Медиафайл' + (mediaTypes.length > 1 ? 'ы' : '');
+  }
+
+  // Если всё ещё пусто, показываем заглушку
+  if (!messageText) {
+    messageText = 'Нет сообщений';
+  }
+
   const timeAgo = formatRelativeTime(lastMessage?.createdAt || user.lastInteraction);
 
   return (

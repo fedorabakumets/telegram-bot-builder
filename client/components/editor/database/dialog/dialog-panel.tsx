@@ -38,8 +38,6 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
   const { users } = useUserList(projectId);
   const { bot } = useBotData(projectId);
 
-  console.log('[DialogPanel] Render with user:', user);
-
   const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessageWithMedia[]>({
     queryKey: [`/api/projects/${projectId}/users/${user?.userId}/messages`],
     enabled: !!user?.userId,

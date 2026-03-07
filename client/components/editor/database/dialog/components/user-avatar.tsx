@@ -5,6 +5,7 @@
 
 import { Bot, User } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
+import { useState } from 'react';
 
 /**
  * Свойства аватара
@@ -22,8 +23,9 @@ interface UserAvatarProps {
  * Компонент аватара для сообщения с поддержкой реальных фото
  */
 export function UserAvatar({ messageType, user, projectId }: UserAvatarProps) {
+  const [imageError, setImageError] = useState(false);
   const isBot = messageType === 'bot';
-  const hasPhoto = user?.avatarUrl && projectId;
+  const hasPhoto = !!user?.avatarUrl && !!projectId && !!user?.userId && !imageError;
 
   // Для бота с аватаркой показываем фото
   if (isBot && hasPhoto && user?.userId) {
@@ -35,8 +37,8 @@ export function UserAvatar({ messageType, user, projectId }: UserAvatarProps) {
         src={avatarUrl}
         alt="Bot avatar"
         className="flex-shrink-0 w-7 h-7 rounded-full object-cover"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = 'none';
+        onError={() => {
+          setImageError(true);
         }}
       />
     );
@@ -60,8 +62,8 @@ export function UserAvatar({ messageType, user, projectId }: UserAvatarProps) {
         src={avatarUrl}
         alt="User avatar"
         className="flex-shrink-0 w-7 h-7 rounded-full object-cover"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = 'none';
+        onError={() => {
+          setImageError(true);
         }}
       />
     );

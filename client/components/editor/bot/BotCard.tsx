@@ -74,6 +74,7 @@ export function BotCard({
       <CardContent className="p-4 sm:p-5 space-y-4">
         <BotCardHeader
           token={token}
+          projectBotInfo={projectBotInfo}
           editingField={editingField}
           editValue={editValue}
           setEditValue={setEditValue}

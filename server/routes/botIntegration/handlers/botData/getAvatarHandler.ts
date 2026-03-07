@@ -39,7 +39,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
 
         // Проверяем, это аватарка бота или пользователя
         const isBotAvatar = userId === 'bot' || userId === defaultToken.token.split(':')[0];
-        
+
         let avatarUrl: string | null = null;
 
         if (isBotAvatar) {
@@ -50,10 +50,10 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
             );
             avatarUrl = botResult.rows[0]?.bot_photo_url || null;
         } else {
-            // Получаем аватарку пользователя из bot_users
+            // Получаем аватарку пользователя из user_bot_data
             const userResult = await pool.query(
-                'SELECT avatar_url FROM bot_users WHERE user_id = $1',
-                [userId]
+                'SELECT avatar_url FROM user_bot_data WHERE user_id = $1 AND project_id = $2',
+                [userId, projectId]
             );
             avatarUrl = userResult.rows[0]?.avatar_url || null;
         }
@@ -65,8 +65,20 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
             return;
         }
 
-        const filePath = avatarUrl.replace(`https://api.telegram.org/file/bot${defaultToken.token}/`, '');
-        const telegramFileUrl = `https://api.telegram.org/file/bot${defaultToken.token}/${filePath}`;
+        // Обрабатываем разные форматы avatarUrl
+        let telegramFileUrl: string;
+        const telegramPrefix = `https://api.telegram.org/file/bot${defaultToken.token}/`;
+        
+        if (avatarUrl.startsWith(telegramPrefix)) {
+            telegramFileUrl = avatarUrl;
+        } else if (avatarUrl.startsWith('https://')) {
+            // Другой HTTPS URL, используем как есть
+            telegramFileUrl = avatarUrl;
+        } else {
+            // Относительный путь, добавляем префикс
+            telegramFileUrl = telegramPrefix + avatarUrl;
+        }
+        
         const response = await fetch(telegramFileUrl);
 
         if (!response.ok) {

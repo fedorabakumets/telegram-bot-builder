@@ -17,6 +17,7 @@ import { BotActions } from './BotActions';
 
 interface BotCardHeaderProps {
   token: any;
+  projectBotInfo: any;
   editingField: { tokenId: number; field: string } | null;
   editValue: string;
   setEditValue: (value: string) => void;
@@ -39,6 +40,7 @@ interface BotCardHeaderProps {
  */
 export function BotCardHeader({
   token,
+  projectBotInfo,
   editingField,
   editValue,
   setEditValue,
@@ -59,7 +61,9 @@ export function BotCardHeader({
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
       <BotAvatar
         botName={token.botFirstName || token.name}
-        photoUrl={token.botPhotoUrl}
+        photoUrl={projectBotInfo?.photoUrl || token.botPhotoUrl}
+        botId={projectBotInfo?.id?.toString()}
+        projectId={projectId}
         size={48}
         className="flex-shrink-0"
       />

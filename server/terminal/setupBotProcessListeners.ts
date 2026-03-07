@@ -24,13 +24,13 @@ export function setupBotProcessListeners() {
     // Переопределяем метод set для автоматической подписки
     botProcesses.set = function (key: string, value: any) {
         console.log(`[Terminal] Добавление процесса: ${key}`);
-        
+
         // Сначала вызываем оригинальный метод
         const result = originalSet(key, value);
-        
+
         // Затем подписываемся на вывод процесса
         setupProcessOutputListener(key, value);
-        
+
         return result;
     };
 
@@ -40,6 +40,6 @@ export function setupBotProcessListeners() {
         console.log(`[Terminal] Подписка на существующий процесс: ${key}`);
         setupProcessOutputListener(key, process);
     }
-    
+
     console.log('[Terminal] Прослушивание процессов ботов настроено');
 }
