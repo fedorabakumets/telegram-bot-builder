@@ -76,7 +76,7 @@ export function AutoTransitionSection({
 
       {/* Контент настроек */}
       {isOpen && selectedNode.data.enableAutoTransition && (
-        <div className="space-y-3 sm:space-y-4">
+        <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-teal-50/20 dark:from-emerald-950/15 dark:to-teal-950/5 border border-emerald-200/25 dark:border-emerald-800/25 rounded-xl p-3 sm:p-4 md:p-5">
           {/* Header */}
           <div className="flex items-start gap-2 sm:gap-2.5">
             <div className="w-6 sm:w-7 h-6 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-teal-200/50 dark:bg-teal-900/40">

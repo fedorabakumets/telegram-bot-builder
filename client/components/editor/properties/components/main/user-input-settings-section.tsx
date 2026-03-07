@@ -69,7 +69,7 @@ export function UserInputSettingsSection({
       </div>
 
       {isOpen && selectedNode.data.collectUserInput && (
-        <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-indigo-50/20 dark:from-blue-950/15 dark:to-indigo-950/5 border border-blue-200/25 dark:border-blue-800/25 rounded-xl p-3 sm:p-4">
+        <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-indigo-50/20 dark:from-blue-950/15 dark:to-indigo-950/5 border border-blue-200/25 dark:border-blue-800/25 rounded-xl p-3 sm:p-4 md:p-5">
           <SaveToUserIdsSwitch
             selectedNode={selectedNode}
             onNodeUpdate={onNodeUpdate}
