@@ -74,10 +74,7 @@ export default defineConfig(async () => {
         deny: ["**/.*"],
       },
       hmr: {
-        overlay: false,
-        protocol: 'ws',
-        host: 'localhost',
-        port: 5000
+        overlay: false
       }
     },
     define: {
