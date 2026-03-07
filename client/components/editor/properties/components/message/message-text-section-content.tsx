@@ -1,11 +1,10 @@
 /**
  * @fileoverview Содержимое секции текста сообщения
- * 
- * Компонент с редактором текста и информационным блоком.
+ *
+ * Компонент с редактором текста сообщения.
  */
 
 import { InlineRichEditor } from '../../../inline-rich/inline-rich-editor';
-import { MessageInfoBlock } from '../common/message-info-block';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { FormatMode, Variable } from '../../../inline-rich/types';
 
@@ -53,7 +52,6 @@ export function MessageTextSectionContent({
           availableVariables={availableVariables as Variable[]}
           onMediaVariableSelect={onMediaVariableSelect}
         />
-        <MessageInfoBlock variant="blue" />
       </div>
     </div>
   );
