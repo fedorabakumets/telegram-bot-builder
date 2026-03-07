@@ -88,14 +88,21 @@ export async function startBot(projectId: number, token: string, tokenId: number
       // Находим все Python процессы, содержащие идентификаторы проекта и токена
       // Это позволяет находить процессы даже с кастомными именами файлов
       try {
+        // Ищем процесс с конкретным projectId и tokenId
         const searchPattern = `PROJECT_ID=${projectId}`;
+        const tokenIdPattern = `TOKEN_ID=${tokenId}`;
         const psCommand = process.platform === 'win32'
           ? `tasklist /FI "IMAGENAME eq python.exe" /FO CSV`
           : `ps aux | grep python`;
         const allPythonProcesses = execSync(psCommand, { encoding: 'utf8' }).trim();
 
         if (allPythonProcesses) {
-          const lines = allPythonProcesses.split('\n').filter((line: string) => line.trim() && line.includes(searchPattern));
+          // Фильтруем только процессы с этим projectId И tokenId
+          const lines = allPythonProcesses.split('\n').filter((line: string) => {
+            const hasProjectId = line.trim().includes(searchPattern);
+            const hasTokenId = line.trim().includes(tokenIdPattern);
+            return line.trim() && hasProjectId && hasTokenId;
+          });
 
           if (lines.length > 0) {
             console.log(`⚠️ Найдено ${lines.length} старых процессов для проекта ${projectId}. Останавливаем...`);
@@ -257,8 +264,8 @@ export async function startBot(projectId: number, token: string, tokenId: number
     }
 
     // Запускаем бота
-    const pythonPath = process.platform === 'win32' 
-      ? 'C:\\Users\\1\\AppData\\Local\\Programs\\Python\\Python313\\python.exe' 
+    const pythonPath = process.platform === 'win32'
+      ? 'C:\\Users\\1\\AppData\\Local\\Programs\\Python\\Python313\\python.exe'
       : 'python3';
     const botProcess = spawn(pythonPath, [mainFile], {
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -267,6 +274,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
       env: {
         ...process.env,
         PROJECT_ID: projectId.toString(),
+        TOKEN_ID: tokenId.toString(),
         BOT_TOKEN: token,
         API_BASE_URL: process.env.NODE_ENV === 'production'
           ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost:5000'}`
@@ -281,8 +289,8 @@ export async function startBot(projectId: number, token: string, tokenId: number
     // Сохраняем процесс
     botProcesses.set(processKey, botProcess);
 
-    // Создаем или обновляем запись в базе данных
-    const existingBotInstance = await storage.getBotInstance(projectId);
+    // Создаем или обновляем запись в базе данных для конкретного токена
+    const existingBotInstance = await storage.getBotInstanceByToken(tokenId);
     if (existingBotInstance) {
       await storage.updateBotInstance(existingBotInstance.id, {
         status: 'running',

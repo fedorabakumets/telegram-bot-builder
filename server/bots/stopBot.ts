@@ -53,25 +53,29 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
     const processKey = `${projectId}_${tokenId}`;
     const botProcess = botProcesses.get(processKey);
 
-    // Убиваем ВСЕ Python процессы для этого проекта (включая старые/зависшие)
+    // Убиваем ТОЛЬКО Python процесс для этого токена
     try {
-      const botFileName = `bot_${projectId}.py`;
-
-      // Находим все процессы с этим файлом
+      // Находим процессы с этим projectId и tokenId
       try {
         const psCommand = global.process.platform === 'win32'
-          ? `tasklist /FI "IMAGENAME eq python.exe" /FO CSV | findstr "${botFileName}"`
-          : `ps aux | grep python | grep "${botFileName}" | grep -v grep`;
+          ? `tasklist /FI "IMAGENAME eq python.exe" /FO CSV`
+          : `ps aux | grep python`;
         const allPythonProcesses = execSync(psCommand, { encoding: 'utf8' }).trim();
 
         if (allPythonProcesses) {
-          const lines = allPythonProcesses.split('\n').filter((line: string) => line.trim());
+          // Фильтруем только процессы с этим projectId И tokenId
+          const lines = allPythonProcesses.split('\n').filter((line: string) => {
+            const hasProjectId = line.includes(`PROJECT_ID=${projectId}`);
+            const hasTokenId = line.includes(`TOKEN_ID=${tokenId}`);
+            return line.trim() && hasProjectId && hasTokenId;
+          });
+          
           for (const line of lines) {
             const parts = line.trim().split(/\s+/);
             const pid = parseInt(parts[1]);
             if (pid && !isNaN(pid)) {
               try {
-                console.log(`Убиваем процесс ${pid} для бота ${projectId}`);
+                console.log(`Убиваем процесс ${pid} для бота ${projectId} (токен ${tokenId})`);
                 execSync(`kill -TERM ${pid}`, { encoding: 'utf8' });
               } catch (killError) {
                 console.log(`Процесс ${pid} уже завершен или недоступен`);
@@ -81,10 +85,10 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
         }
       } catch (grepError) {
         // Процессы не найдены - это нормально
-        console.log(`Процессы для бота ${projectId} не найдены`);
+        console.log(`Процессы для бота ${projectId} (токен ${tokenId}) не найдены`);
       }
     } catch (error) {
-      console.log(`Ошибка при поиске процессов для бота ${projectId}:`, error);
+      console.log(`Ошибка при поиске процессов для бота ${projectId} (токен ${tokenId}):`, error);
     }
 
     // Если процесс был в памяти - завершаем его мягко
@@ -108,16 +112,10 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
       botProcesses.delete(processKey);
     }
 
-    // Удаляем ВСЕ процессы для этого проекта из памяти
-    const keysToDelete: string[] = [];
-    for (const [key] of Array.from(botProcesses.entries())) {
-      if (key.startsWith(`${projectId}_`)) {
-        keysToDelete.push(key);
-      }
-    }
-    keysToDelete.forEach(key => botProcesses.delete(key));
+    // Удаляем ТОЛЬКО процесс для этого токена из памяти
+    botProcesses.delete(processKey);
 
-    await storage.stopBotInstance(projectId);
+    await storage.stopBotInstanceByToken(tokenId);
 
     return { success: true };
   } catch (error) {
