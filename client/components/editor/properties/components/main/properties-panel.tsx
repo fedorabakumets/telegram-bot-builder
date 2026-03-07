@@ -223,33 +223,35 @@ export function PropertiesPanel({
 
         {/* Basic Settings Section - скрыто для узла рассылка */}
         {selectedNode.type !== 'broadcast' && (
-          <BasicSettingsSection
-            selectedNode={selectedNode}
-            projectId={projectId}
-            isOpen={isBasicSettingsOpen}
-            onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-            commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
-            descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
-            isValid={commandValidation.isValid}
-            errors={commandValidation.errors}
-            suggestions={commandSuggestions}
-            showSuggestions={showCommandSuggestions}
-            onNodeUpdate={onNodeUpdate}
-            onNodeIdChange={onNodeIdChange}
-            onCommandInput={setCommandInput}
-            onShowSuggestions={setShowCommandSuggestions}
-            StickerConfiguration={StickerConfiguration}
-            VoiceConfiguration={VoiceConfiguration}
-            AnimationConfiguration={AnimationConfiguration}
-            LocationCoordinatesSection={LocationCoordinatesSection}
-            LocationDetailsSection={LocationDetailsSection}
-            FoursquareIntegrationSection={FoursquareIntegrationSection}
-            MapServicesSection={MapServicesSection}
-            ContactConfiguration={ContactConfiguration}
-            ContentManagementConfiguration={ContentManagementConfiguration}
-            UserManagementConfiguration={UserManagementConfiguration}
-            AdminRightsInfo={AdminRightsInfo}
-          />
+          <div className="-mt-3 sm:-mt-4 md:-mt-5">
+            <BasicSettingsSection
+              selectedNode={selectedNode}
+              projectId={projectId}
+              isOpen={isBasicSettingsOpen}
+              onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
+              commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
+              descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
+              isValid={commandValidation.isValid}
+              errors={commandValidation.errors}
+              suggestions={commandSuggestions}
+              showSuggestions={showCommandSuggestions}
+              onNodeUpdate={onNodeUpdate}
+              onNodeIdChange={onNodeIdChange}
+              onCommandInput={setCommandInput}
+              onShowSuggestions={setShowCommandSuggestions}
+              StickerConfiguration={StickerConfiguration}
+              VoiceConfiguration={VoiceConfiguration}
+              AnimationConfiguration={AnimationConfiguration}
+              LocationCoordinatesSection={LocationCoordinatesSection}
+              LocationDetailsSection={LocationDetailsSection}
+              FoursquareIntegrationSection={FoursquareIntegrationSection}
+              MapServicesSection={MapServicesSection}
+              ContactConfiguration={ContactConfiguration}
+              ContentManagementConfiguration={ContentManagementConfiguration}
+              UserManagementConfiguration={UserManagementConfiguration}
+              AdminRightsInfo={AdminRightsInfo}
+            />
+          </div>
         )}
 
         {/* Блок рассылка контент - только для узла broadcast */}
