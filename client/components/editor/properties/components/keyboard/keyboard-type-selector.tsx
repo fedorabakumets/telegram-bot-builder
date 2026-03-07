@@ -37,32 +37,30 @@ interface KeyboardTypeSelectorProps {
  */
 export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTypeSelectorProps) {
   return (
-    <div className="space-y-2.5 sm:space-y-3 animate-in fade-in duration-300">
-      <div className="flex gap-2.5 sm:gap-3">
-        {/* Inline Keyboard */}
-        <div className="flex-1 flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-white/50 dark:bg-slate-950/30 border border-amber-200/40 dark:border-amber-800/40 hover:border-amber-300/60 dark:hover:border-amber-700/60 hover:bg-white/70 dark:hover:bg-slate-900/50 transition-all duration-200">
-          <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer">
-            Inline
-          </label>
-          <Switch
-            checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE}
-            onCheckedChange={(checked) => {
-              onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.INLINE : KEYBOARD_TYPES.NONE });
-            }}
-          />
-        </div>
-        {/* Reply Keyboard */}
-        <div className="flex-1 flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-white/50 dark:bg-slate-950/30 border border-amber-200/40 dark:border-amber-800/40 hover:border-amber-300/60 dark:hover:border-amber-700/60 hover:bg-white/70 dark:hover:bg-slate-900/50 transition-all duration-200">
-          <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer">
-            Reply
-          </label>
-          <Switch
-            checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
-            onCheckedChange={(checked) => {
-              onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.REPLY : KEYBOARD_TYPES.NONE });
-            }}
-          />
-        </div>
+    <div className="flex gap-2.5 sm:gap-3">
+      {/* Inline Keyboard */}
+      <div className="flex-1 flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/40">
+        <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer">
+          Inline
+        </label>
+        <Switch
+          checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE}
+          onCheckedChange={(checked) => {
+            onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.INLINE : KEYBOARD_TYPES.NONE });
+          }}
+        />
+      </div>
+      {/* Reply Keyboard */}
+      <div className="flex-1 flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/40">
+        <label className="text-xs sm:text-sm font-medium text-amber-900 dark:text-amber-100 cursor-pointer">
+          Reply
+        </label>
+        <Switch
+          checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
+          onCheckedChange={(checked) => {
+            onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.REPLY : KEYBOARD_TYPES.NONE });
+          }}
+        />
       </div>
     </div>
   );
