@@ -353,7 +353,6 @@ export function PropertiesPanel({
                       }}
                     />
                   )}
-                </div>
               </div>
             )}
           </div>
