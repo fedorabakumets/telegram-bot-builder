@@ -212,37 +212,6 @@ export function PropertiesPanel({
       <div className="flex-1 overflow-y-auto">
         <div className="p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-5 md:space-y-6">
 
-          {/* Basic Settings Section - скрыто для узла рассылка */}
-          {selectedNode.type !== 'broadcast' && (
-            <BasicSettingsSection
-              selectedNode={selectedNode}
-              projectId={projectId}
-              isOpen={isBasicSettingsOpen}
-              onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-              commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
-              descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
-              isValid={commandValidation.isValid}
-              errors={commandValidation.errors}
-              suggestions={commandSuggestions}
-              showSuggestions={showCommandSuggestions}
-              onNodeUpdate={onNodeUpdate}
-              onNodeIdChange={onNodeIdChange}
-              onCommandInput={setCommandInput}
-              onShowSuggestions={setShowCommandSuggestions}
-              StickerConfiguration={StickerConfiguration}
-              VoiceConfiguration={VoiceConfiguration}
-              AnimationConfiguration={AnimationConfiguration}
-              LocationCoordinatesSection={LocationCoordinatesSection}
-              LocationDetailsSection={LocationDetailsSection}
-              FoursquareIntegrationSection={FoursquareIntegrationSection}
-              MapServicesSection={MapServicesSection}
-              ContactConfiguration={ContactConfiguration}
-              ContentManagementConfiguration={ContentManagementConfiguration}
-              UserManagementConfiguration={UserManagementConfiguration}
-              AdminRightsInfo={AdminRightsInfo}
-            />
-          )}
-
           {/* Блок рассылка - только для узла broadcast */}
           {selectedNode.type === 'broadcast' && (
             <BroadcastHeader
@@ -251,6 +220,37 @@ export function PropertiesPanel({
             />
           )}
         </div>
+
+        {/* Basic Settings Section - скрыто для узла рассылка */}
+        {selectedNode.type !== 'broadcast' && (
+          <BasicSettingsSection
+            selectedNode={selectedNode}
+            projectId={projectId}
+            isOpen={isBasicSettingsOpen}
+            onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
+            commandValue={selectedNode.data.command || getNodeDefaults(selectedNode.type).command || ''}
+            descriptionValue={selectedNode.data.description || getNodeDefaults(selectedNode.type).description || ''}
+            isValid={commandValidation.isValid}
+            errors={commandValidation.errors}
+            suggestions={commandSuggestions}
+            showSuggestions={showCommandSuggestions}
+            onNodeUpdate={onNodeUpdate}
+            onNodeIdChange={onNodeIdChange}
+            onCommandInput={setCommandInput}
+            onShowSuggestions={setShowCommandSuggestions}
+            StickerConfiguration={StickerConfiguration}
+            VoiceConfiguration={VoiceConfiguration}
+            AnimationConfiguration={AnimationConfiguration}
+            LocationCoordinatesSection={LocationCoordinatesSection}
+            LocationDetailsSection={LocationDetailsSection}
+            FoursquareIntegrationSection={FoursquareIntegrationSection}
+            MapServicesSection={MapServicesSection}
+            ContactConfiguration={ContactConfiguration}
+            ContentManagementConfiguration={ContentManagementConfiguration}
+            UserManagementConfiguration={UserManagementConfiguration}
+            AdminRightsInfo={AdminRightsInfo}
+          />
+        )}
 
         {/* Блок рассылка контент - только для узла broadcast */}
         {selectedNode.type === 'broadcast' && isBroadcastSectionOpen && (
