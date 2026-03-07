@@ -208,7 +208,7 @@ export function PropertiesPanel({
 
       {/* Properties Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-3 sm:p-4 md:p-5 space-y-3 sm:space-y-4">
+        <div className="space-y-3 sm:space-y-4">
 
           {/* Basic Settings Section - скрыто для узла рассылка */}
           {selectedNode.type !== 'broadcast' && (
@@ -386,8 +386,6 @@ export function PropertiesPanel({
             )}
           </div>
         )}
-
-        </div>
 
         {/* Conditional Messages Section - скрыто для узлов управления */}
         {!isManagementNode(selectedNode.type) && (
