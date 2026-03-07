@@ -7,19 +7,13 @@
  * @module bot/BotsPanel
  */
 
-import { ResizablePanel } from '@/components/ui/resizable';
-import { BotControl } from './bot-control';
 import { useActiveTerminals } from './ActiveTerminalsContext';
-
-interface BotsPanelProps {
-  /** Минимальный размер панели в процентах */
-  defaultSize?: number;
-}
+import { BotControl } from './bot-control';
 
 /**
  * Панель ботов
  */
-export function BotsPanel({ defaultSize = 70 }: BotsPanelProps) {
+export function BotsPanel() {
   const { addTerminal, updateTerminalStatus } = useActiveTerminals();
 
   // Обработчик запуска бота
@@ -33,13 +27,11 @@ export function BotsPanel({ defaultSize = 70 }: BotsPanelProps) {
   };
 
   return (
-    <ResizablePanel defaultSize={defaultSize} minSize={30}>
-      <div className="h-full overflow-auto p-4 sm:p-6">
-        <BotControl
-          onBotStarted={handleBotStarted}
-          onBotStopped={handleBotStopped}
-        />
-      </div>
-    </ResizablePanel>
+    <div className="h-full overflow-auto p-4 sm:p-6">
+      <BotControl
+        onBotStarted={handleBotStarted}
+        onBotStopped={handleBotStopped}
+      />
+    </div>
   );
 }
