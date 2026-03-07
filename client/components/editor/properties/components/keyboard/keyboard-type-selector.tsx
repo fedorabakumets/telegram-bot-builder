@@ -48,11 +48,11 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: K
         <Switch
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE}
           onCheckedChange={(checked) => {
-            // Сначала раскрываем секцию
-            if (checked && onToggle) {
-              onToggle();
-            }
             onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.INLINE : KEYBOARD_TYPES.NONE });
+            // Раскрываем секцию после обновления данных
+            if (checked && onToggle) {
+              setTimeout(() => onToggle(), 0);
+            }
           }}
         />
       </div>
@@ -64,11 +64,11 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: K
         <Switch
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
           onCheckedChange={(checked) => {
-            // Сначала раскрываем секцию
-            if (checked && onToggle) {
-              onToggle();
-            }
             onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.REPLY : KEYBOARD_TYPES.NONE });
+            // Раскрываем секцию после обновления данных
+            if (checked && onToggle) {
+              setTimeout(() => onToggle(), 0);
+            }
           }}
         />
       </div>

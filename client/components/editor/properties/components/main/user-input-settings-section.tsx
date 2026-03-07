@@ -63,15 +63,15 @@ export function UserInputSettingsSection({
         <Switch
           checked={selectedNode.data.collectUserInput ?? false}
           onCheckedChange={(checked) => {
-            // Сначала раскрываем секцию
-            if (checked && onToggle) {
-              onToggle();
-            }
             // Если включаем сбор ответов, выключаем автопереход
             if (checked && selectedNode.data.enableAutoTransition) {
               onNodeUpdate(selectedNode.id, { enableAutoTransition: false });
             }
             onNodeUpdate(selectedNode.id, { collectUserInput: checked });
+            // Раскрываем секцию после обновления данных
+            if (checked && onToggle) {
+              setTimeout(() => onToggle(), 0);
+            }
           }}
         />
       </div>
