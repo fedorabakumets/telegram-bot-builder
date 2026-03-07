@@ -9,6 +9,8 @@
 
 import { useActiveTerminals } from './ActiveTerminalsContext';
 import { BotControl } from './bot-control';
+import { useQuery, useQueries, useEffect } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 interface BotsPanelProps {
   projectId: number;
@@ -19,7 +21,40 @@ interface BotsPanelProps {
  * Панель ботов
  */
 export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
-  const { addTerminal, updateTerminalStatus } = useActiveTerminals();
+  const { addTerminal, updateTerminalStatus, terminals } = useActiveTerminals();
+  
+  // Получаем токены проекта
+  const { data: tokens = [] } = useQuery({
+    queryKey: [`/api/projects/${projectId}/tokens`],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/tokens`),
+    refetchInterval: false,
+  });
+  
+  // Получаем статусы для каждого токена
+  const tokenStatuses = useQueries({
+    queries: tokens.map(token => ({
+      queryKey: [`/api/tokens/${token.id}/bot-status`],
+      queryFn: () => apiRequest('GET', `/api/tokens/${token.id}/bot-status`),
+      refetchInterval: false,
+    }))
+  });
+  
+  // Инициализируем терминалы при загрузке для запущенных ботов
+  useEffect(() => {
+    if (tokens.length > 0 && terminals.length === 0) {
+      tokens.forEach((token, index) => {
+        const statusResponse = tokenStatuses[index]?.data;
+        if (statusResponse?.status === 'running' && statusResponse?.instance) {
+          addTerminal({
+            projectId: token.projectId,
+            tokenId: token.id,
+            botName: token.name || `${projectName} #${token.id}`,
+            isRunning: true
+          });
+        }
+      });
+    }
+  }, [tokens, tokenStatuses, terminals.length, projectId, projectName]);
 
   // Обработчик запуска бота
   const handleBotStarted = (projectId: number, tokenId: number, botName: string) => {
