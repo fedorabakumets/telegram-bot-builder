@@ -28,6 +28,7 @@ import { AutoTransitionWrapper } from './auto-transition-wrapper';
 import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
 import { KeyboardLayoutEditor } from '../keyboard/keyboard-layout-editor';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
+import { ButtonCard } from '../button-card/button-card';
 import { EmptyConditionalState } from '../conditional/empty-conditional-state';
 import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
@@ -272,23 +273,40 @@ export function PropertiesPanel({
             {isKeyboardSectionOpen && (
               <div className="space-y-3 sm:space-y-4">
                   {selectedNode.data.keyboardType !== 'none' && (
-                    <MultipleSelectionSettings
-                      selectedNode={selectedNode}
-                      keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply'}
-                      onNodeUpdate={onNodeUpdate}
-                    />
-                  )}
+                    <>
+                      {/* Множественный выбор */}
+                      <div className="p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30">
+                        <MultipleSelectionSettings
+                          selectedNode={selectedNode}
+                          keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply'}
+                          onNodeUpdate={onNodeUpdate}
+                        />
+                      </div>
 
-                  {selectedNode.data.keyboardType !== 'none' && (
-                    <KeyboardButtonsSection
-                      selectedNode={selectedNode}
-                      getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-                      textVariables={textVariables}
-                      onNodeUpdate={onNodeUpdate}
-                      onButtonAdd={onButtonAdd}
-                      onButtonUpdate={onButtonUpdate}
-                      onButtonDelete={onButtonDelete}
-                    />
+                      {/* Кнопки добавления */}
+                      <KeyboardButtonsSection
+                        selectedNode={selectedNode}
+                        onButtonAdd={onButtonAdd}
+                      />
+
+                      {/* Список кнопок */}
+                      {selectedNode.data.buttons && selectedNode.data.buttons.length > 0 && (
+                        <div className="space-y-3">
+                          {(selectedNode.data.buttons || []).map((button) => (
+                            <ButtonCard
+                              key={button.id}
+                              nodeId={selectedNode.id}
+                              button={button}
+                              textVariables={textVariables}
+                              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+                              onButtonUpdate={onButtonUpdate}
+                              onButtonDelete={onButtonDelete}
+                              selectedNode={selectedNode}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
 
                   {selectedNode.data.keyboardType !== 'none' && selectedNode.data.buttons && selectedNode.data.buttons.length > 0 && (

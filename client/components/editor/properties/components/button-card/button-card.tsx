@@ -61,6 +61,7 @@ export function ButtonCard({
         nodeId={nodeId}
         button={button}
         onButtonUpdate={onButtonUpdate}
+        allowMultipleSelection={selectedNode.data.allowMultipleSelection ?? false}
       />
 
       {button.action === 'goto' && (

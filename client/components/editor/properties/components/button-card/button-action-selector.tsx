@@ -16,6 +16,8 @@ interface ButtonActionSelectorProps {
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
   /** ID узла */
   nodeId: string;
+  /** Разрешён ли множественный выбор */
+  allowMultipleSelection?: boolean;
 }
 
 /**
@@ -27,7 +29,8 @@ interface ButtonActionSelectorProps {
 export function ButtonActionSelector({
   button,
   onButtonUpdate,
-  nodeId
+  nodeId,
+  allowMultipleSelection = false
 }: ButtonActionSelectorProps) {
   const config = ACTION_CONFIG[button.action as ButtonActionType];
 
@@ -48,8 +51,12 @@ export function ButtonActionSelector({
         <SelectContent className="bg-gradient-to-br from-teal-50/95 to-cyan-50/95 dark:from-slate-900/95 dark:to-slate-800/95 border border-teal-200/50 dark:border-teal-800/50 shadow-xl">
           <SelectItem value="goto"><ButtonActionOption action="goto" /></SelectItem>
           <SelectItem value="url"><ButtonActionOption action="url" /></SelectItem>
-          <SelectItem value="selection"><ButtonActionOption action="selection" /></SelectItem>
-          <SelectItem value="complete"><ButtonActionOption action="complete" /></SelectItem>
+          {allowMultipleSelection && (
+            <SelectItem value="selection"><ButtonActionOption action="selection" /></SelectItem>
+          )}
+          {allowMultipleSelection && (
+            <SelectItem value="complete"><ButtonActionOption action="complete" /></SelectItem>
+          )}
         </SelectContent>
       </Select>
     </div>
