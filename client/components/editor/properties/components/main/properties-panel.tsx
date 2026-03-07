@@ -498,6 +498,8 @@ export function PropertiesPanel({
           onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
         />
 
+        </div>
+
         <PropertiesFooterWrapper
           selectedNode={selectedNode}
           onNodeUpdate={onNodeUpdate}
