@@ -71,6 +71,10 @@ export function AutoTransitionSection({
         <Switch
           checked={selectedNode.data.enableAutoTransition ?? false}
           onCheckedChange={(checked) => {
+            // Если включаем автопереход, выключаем сбор ответов
+            if (checked && selectedNode.data.collectUserInput) {
+              onNodeUpdate(selectedNode.id, { collectUserInput: false });
+            }
             onNodeUpdate(selectedNode.id, { enableAutoTransition: checked });
             if (checked && onToggle) {
               onToggle();

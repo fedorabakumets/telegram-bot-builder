@@ -40,7 +40,13 @@ export function AutoTransitionWrapper({
   keyboardType,
   collectUserInput
 }: AutoTransitionWrapperProps) {
-  if (keyboardType !== 'none' || collectUserInput === true) {
+  // Если включен сбор ответов, выключаем автопереход
+  if (collectUserInput === true && selectedNode.data.enableAutoTransition) {
+    onNodeUpdate(selectedNode.id, { enableAutoTransition: false });
+  }
+
+  // Скрываем секцию только если есть клавиатура
+  if (keyboardType !== 'none') {
     return null;
   }
 
