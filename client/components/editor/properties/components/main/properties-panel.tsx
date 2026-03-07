@@ -267,9 +267,7 @@ export function PropertiesPanel({
             />
 
             {/* Переключатели типа клавиатуры - всегда видны */}
-            <div className="mt-3">
-              <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
-            </div>
+            <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
 
             {isKeyboardSectionOpen && (
               <>
