@@ -740,13 +740,13 @@ export function EnhancedMediaUploader({
           >
             {isUploading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Загрузка...
+                <Loader2 className="w-4 h-4 mr-2 flex-shrink-0 animate-spin" />
+                <span className="break-words">Загрузка...</span>
               </>
             ) : (
               <>
-                <Upload className="w-4 h-4 mr-2" />
-                Загрузить ({files.length})
+                <Upload className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="break-words">Загрузить ({files.length})</span>
               </>
             )}
           </Button>
