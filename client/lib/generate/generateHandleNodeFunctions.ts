@@ -117,7 +117,7 @@ export function generateHandleNodeFunctions(
 
       // Добавляем получение переменных из БД перед заменой
       code += '    \n';
-      code += `${indentLevel}# Получаем переменные из базы данных\n`;
+      code += '    # Получаем переменные из базы данных\n';
       code += generateDatabaseVariablesCode('    ', usedVariables);
       code += '    \n';
 
