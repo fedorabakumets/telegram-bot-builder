@@ -1,5 +1,5 @@
 import { Node } from '@/types/bot';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/bot-generator/utils';
 import { useState, useRef, useEffect } from 'react';
 import { DicePreview } from './dice-preview';
 import { StickerPreview } from './sticker-preview';
@@ -17,6 +17,7 @@ import { AdminRightsPreview } from './admin-rights-preview';
 import { NodeHeader } from './node-header';
 import { ConditionalMessagesIndicator } from './conditional-messages-indicator';
 import { ButtonsPreview } from './buttons-preview';
+import { ClientAuthCard } from './client-auth-card';
 
 /**
  * Интерфейс свойств компонента CanvasNode
@@ -413,7 +414,10 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
       {/* Admin Rights preview */}
       {node.type === 'admin_rights' && <AdminRightsPreview />}
-      
+
+      {/* Client Auth Card */}
+      {node.type === 'client_auth' && <ClientAuthCard node={node} />}
+
       {/* Poll preview */}
       {(node.type as any) === 'poll' && <PollPreview node={node} />}
       

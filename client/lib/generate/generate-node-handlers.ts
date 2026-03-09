@@ -10,11 +10,11 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastHandler } from '../Broadcast/BotApi/generateBroadcastHandler';
-import { generateBroadcastClientHandler } from '../Broadcast/Client/generateBroadcastClientHandler';
-import { generateCommandHandler, generateStartHandler } from '../CommandHandler';
-import { generateAnimationHandler, generateContactHandler, generateLocationHandler, generateStickerHandler, generateVoiceHandler } from '../MediaHandler';
-import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../MessageHandler';
+import { generateBroadcastHandler } from '../bot-generator/Broadcast/BotApi/generateBroadcastHandler';
+import { generateBroadcastClientHandler } from '../bot-generator/Client/generateBroadcastClientHandler';
+import { generateCommandHandler, generateStartHandler } from '../bot-generator/CommandHandler';
+import { generateAnimationHandler, generateContactHandler, generateLocationHandler, generateStickerHandler, generateVoiceHandler } from '../bot-generator/MediaHandler';
+import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
 import {
   generateAdminRightsHandler,
   generateBanUserHandler,
@@ -24,9 +24,9 @@ import {
   generatePromoteUserHandler,
   generateUnbanUserHandler,
   generateUnmuteUserHandler
-} from '../UserHandler';
-import { collectMediaVariables } from '../utils/collectMediaVariables';
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+} from '../bot-generator/UserHandler';
+import { collectMediaVariables } from '../bot-generator/utils/collectMediaVariables';
+import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 
 /**
  * Генерирует обработчики для каждого узла
@@ -54,10 +54,13 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   // Создаем mediaVariablesMap для всех узлов
   const mediaVariablesMap = collectMediaVariables(nodes);
+  
+  // Создаем массив всех ID узлов для генерации коротких ID
+  const allNodeIds = nodes.map(n => n.id);
 
   const nodeHandlers: Record<string, (node: Node) => string> = {
-    start: (node) => generateStartHandler(node, userDatabaseEnabled, mediaVariablesMap),
-    command: (node) => generateCommandHandler(node, userDatabaseEnabled, mediaVariablesMap),
+    start: (node) => generateStartHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
+    command: (node) => generateCommandHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,
     animation: generateAnimationHandler,

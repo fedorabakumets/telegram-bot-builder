@@ -1,0 +1,19 @@
+/**
+ * @fileoverview Экспорты конфигураций типов узлов
+ * @module components/editor/properties/components/configuration
+ */
+
+export * from './admin-rights-info';
+export * from './animation-configuration';
+export * from './contact-configuration';
+export * from './sticker-configuration';
+export * from './voice-configuration';
+export * from './content-management-configuration';
+export * from './user-management-configuration';
+export * from './location-coordinates-section';
+export * from './location-details-section';
+export * from './foursquare-integration-section';
+export * from './gis-map-section';
+export * from './google-map-section';
+export * from './map-services-section';
+export * from './yandex-map-section';

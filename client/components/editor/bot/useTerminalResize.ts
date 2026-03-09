@@ -24,17 +24,35 @@ interface UseTerminalResizeResult {
 }
 
 /**
+ * Параметры хука изменения размера
+ */
+interface UseTerminalResizeOptions {
+  initialDimensions?: Dimensions;
+  fullSize?: boolean;
+}
+
+/**
  * Хук для изменения размера терминала
- * @param initialDimensions - Начальные размеры
+ * @param options - Опции хука
  * @returns Объект с размерами и обработчиками
  */
-export function useTerminalResize(initialDimensions: Dimensions = { width: 600, height: 320 }): UseTerminalResizeResult {
+export function useTerminalResize(options: UseTerminalResizeOptions = {}): UseTerminalResizeResult {
+  const { initialDimensions = { width: 600, height: 320 }, fullSize = false } = options;
   const [dimensions, setDimensions] = useState<Dimensions>(initialDimensions);
   const isResizingRef = useRef(false);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
   const startWidthRef = useRef(0);
   const startHeightRef = useRef(0);
+
+  // Если fullSize, не используем изменение размера
+  if (fullSize) {
+    return {
+      dimensions: { width: 0, height: 0 },
+      isResizingRef,
+      startResize: () => {}
+    };
+  }
 
   const startResize = (e: React.MouseEvent) => {
     e.preventDefault();

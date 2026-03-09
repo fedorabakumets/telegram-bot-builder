@@ -17,7 +17,6 @@ export const broadcastNode: ComponentDefinition = {
   color: 'bg-purple-100 text-purple-600',
   type: 'broadcast',
   defaultData: {
-    messageText: 'Текст рассылки',
     keyboardType: 'none',
     buttons: [],
     markdown: false,

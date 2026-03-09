@@ -11,8 +11,8 @@ import {
   FileText
 } from 'lucide-react';
 import { CanvasSheet } from '@shared/schema';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/bot-generator/utils';
+import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 
 interface CanvasSheetsProps {
   sheets: CanvasSheet[];

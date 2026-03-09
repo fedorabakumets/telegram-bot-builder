@@ -9,7 +9,7 @@
  * @module generateBasicBotSetupCode
  */
 
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 
 /**
  * Функция для генерации основных настроек бота (загрузка .env, логирование, бот и диспетчер, администраторы)

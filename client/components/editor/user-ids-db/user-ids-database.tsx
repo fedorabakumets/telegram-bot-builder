@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserIdStats } from './user-id-stats';
 import { UserIdList, type UserIdRecord } from './user-id-list';
 import { UserIdActions } from './user-id-actions';
+import { UserIdCount } from './user-id-count';
 import {
   Dialog,
   DialogContent,
@@ -45,13 +46,6 @@ export function UserIdsDatabase() {
     queryKey: ['/api/user-ids'],
     queryFn: () => apiRequest('GET', '/api/user-ids'),
   });
-
-  // Загрузка статистики (общая база)
-  const { data: stats = { total: 0, addedToday: 0, addedThisWeek: 0 } } =
-    useQuery({
-      queryKey: ['/api/user-ids/stats'],
-      queryFn: () => apiRequest('GET', '/api/user-ids/stats'),
-    });
 
   // Мутация добавления
   const addMutation = useMutation({
@@ -154,18 +148,6 @@ export function UserIdsDatabase() {
     }
   };
 
-  const handleExport = (ids: number[]) => {
-    const idsToExport = items
-      .filter(item => ids.includes(item.id))
-      .map(item => item.userId);
-    
-    downloadCSV(idsToExport, 'user-ids.csv');
-    toast({
-      title: 'Экспорт',
-      description: `Скачано ${idsToExport.length} ID`
-    });
-  };
-
   const handleExportAll = () => {
     const allIds = items.map(item => item.userId);
     downloadCSV(allIds, 'user-ids.csv');
@@ -253,15 +235,15 @@ export function UserIdsDatabase() {
         />
       </div>
 
-      {/* Статистика */}
-      <UserIdStats stats={stats} />
+      {/* Счётчик ID */}
+      <UserIdCount count={items.length} />
 
       {/* Список ID */}
       <UserIdList
         items={items}
         isLoading={isLoading}
         onDelete={handleDelete}
-        onExport={handleExport}
+        onDeleteOne={(id) => handleDelete([id])}
       />
 
       {/* Диалог добавления */}

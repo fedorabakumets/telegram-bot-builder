@@ -1,0 +1,105 @@
+/**
+ * @fileoverview Хуки компонента UserDatabasePanel
+ * @description useUserDatabase и useUserMutations для загрузки данных и мутаций
+ */
+
+import { useUserDatabase, useUserMutations } from '../hooks';
+import { UseUserDatabaseParams, UseUserMutationsParams } from './panel-types';
+
+/**
+ * Пропсы для хука useUserDatabasePanelData
+ */
+interface UseUserDatabasePanelDataParams extends UseUserDatabaseParams {
+  /** Поисковый запрос */
+  searchQuery: string;
+}
+
+/**
+ * Пропсы для хука useUserDatabasePanelMutations
+ */
+interface UseUserDatabasePanelMutationsParams extends UseUserMutationsParams {
+  /** Функция обновления пользователей */
+  refetchUsers: () => void;
+  /** Функция обновления статистики */
+  refetchStats: () => void;
+}
+
+/**
+ * Результат хука useUserDatabasePanelData
+ */
+interface UseUserDatabasePanelDataReturn {
+  /** Данные проекта */
+  project: any;
+  /** Список пользователей */
+  users: any[];
+  /** Статистика */
+  stats: any;
+  /** Результаты поиска */
+  searchResults: any[];
+  /** Флаг загрузки */
+  isLoading: boolean;
+  /** Функция обновления пользователей */
+  refetchUsers: () => void;
+  /** Функция обновления статистики */
+  refetchStats: () => void;
+}
+
+/**
+ * Результат хука useUserDatabasePanelMutations
+ */
+interface UseUserDatabasePanelMutationsReturn {
+  /** Мутация удаления пользователя */
+  deleteUserMutation: any;
+  /** Мутация обновления пользователя */
+  updateUserMutation: any;
+  /** Мутация удаления всех */
+  deleteAllUsersMutation: any;
+  /** Мутация переключения БД */
+  toggleDatabaseMutation: any;
+}
+
+/**
+ * Хук для загрузки данных панели БД
+ * @param params - Параметры хука
+ * @returns Объект с данными и функциями
+ */
+export function useUserDatabasePanelData(
+  params: UseUserDatabasePanelDataParams
+): UseUserDatabasePanelDataReturn {
+  const {
+    projectId,
+    searchQuery,
+  } = params;
+
+  const data = useUserDatabase({
+    projectId,
+    searchQuery,
+  });
+
+  return {
+    project: data.project,
+    users: data.users,
+    stats: data.stats,
+    searchResults: data.searchResults,
+    isLoading: data.isLoading,
+    refetchUsers: data.refetchUsers,
+    refetchStats: data.refetchStats,
+  };
+}
+
+/**
+ * Хук для мутаций панели БД
+ * @param params - Параметры хука
+ * @returns Объект с мутациями
+ */
+export function useUserDatabasePanelMutations(
+  params: UseUserDatabasePanelMutationsParams
+): UseUserDatabasePanelMutationsReturn {
+  const { projectId, refetchUsers, refetchStats } = params;
+
+  return useUserMutations({
+    projectId,
+    refetchUsers,
+    refetchStats,
+  });
+}

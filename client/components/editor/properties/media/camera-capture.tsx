@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useUploadMedia } from "@/components/editor/properties/media/use-media";
+import { useUploadMedia } from "@/components/editor/properties/hooks/use-media";
 import { Camera, RotateCcw, Zap, Loader2 } from "lucide-react";
 
 /**

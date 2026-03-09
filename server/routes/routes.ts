@@ -22,10 +22,9 @@ import { seedDefaultTemplates } from "../utils/seed-templates";
 import { storage } from "../storages/storage";
 import { initializeTelegramManager, telegramClientManager } from "../telegram/telegram-client";
 import { telegramAuthService } from "../telegram/telegram-auth-service";
-import { StringSession } from "telegram/sessions";
-import { TelegramClient } from "telegram";
+import { createQRClient } from "../telegram/services/auth/create-qr-client";
 import { userTelegramSettings } from "@shared/schema";
-import { authMiddleware, getOwnerIdFromRequest } from "../telegram/auth-middleware";
+import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { setupAuthRoutes } from "./setupAuthRoutes";
@@ -486,11 +485,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const tokens = await storage.getBotTokensByProject(projectId);
 
-      // Hide actual token values for security
-      const safeTokens = tokens.map(token => ({
-        ...token,
-        token: `${token.token.substring(0, 10)}...`
-      }));
+      // Hide actual token values for security but include botId
+      const safeTokens = tokens.map(token => {
+        const botId = token.token ? token.token.split(':')[0] : null;
+        return {
+          ...token,
+          token: `${token.token.substring(0, 10)}...`,
+          botId
+        };
+      });
 
       res.json(safeTokens);
       return; // Явно указываем, что функция завершается
@@ -1647,7 +1650,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const mediaFiles = await storage.searchMediaFiles(projectId, query);
       res.json(mediaFiles);
     } catch (error) {
-      console.error("Ошибка при поиске файлов:", error);
+      console.error("Оши������ка при п����иске ������������йлов:", error);
       res.status(500).json({ message: "Ошибка при поиске файлов" });
     }
   });
@@ -1684,12 +1687,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
 
       const result = await pool.query(`
-        SELECT 
-          bu.user_id AS id,
-          bu.user_id AS "userId",
+        SELECT
+          ROW_NUMBER() OVER (ORDER BY bu.last_interaction DESC) AS id,
+          bu.user_id::text AS "userId",
           bu.username AS "userName",
           bu.first_name AS "firstName",
           bu.last_name AS "lastName",
+          bu.avatar_url AS "avatarUrl",
           bu.registered_at AS "registeredAt",
           bu.registered_at AS "createdAt",
           bu.last_interaction AS "lastInteraction",
@@ -1698,10 +1702,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           CASE WHEN bu.is_active = 1 THEN TRUE ELSE FALSE END AS "isActive",
           FALSE AS "isPremium",
           FALSE AS "isBlocked",
-          FALSE AS "isBot"
+          CASE WHEN bu.is_bot = 1 THEN TRUE ELSE FALSE END AS "isBot"
         FROM bot_users bu
         LEFT JOIN bot_messages bm ON bm.user_id = bu.user_id::text AND bm.project_id = $1
-        GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active
+        WHERE bu.is_bot = 0
+        GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.avatar_url, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active, bu.is_bot
         ORDER BY bu.last_interaction DESC
       `, [projectId]);
 
@@ -2215,13 +2220,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       if (result.success) {
         // Сохраняем клиент для последующей проверки кода
-        const client = new TelegramClient(
-          new StringSession(''),
-          parseInt(credentials.apiId),
-          credentials.apiHash,
-          { connectionRetries: 5, timeout: 30000 }
-        );
-        await client.connect();
+        const client = await createQRClient(credentials.apiId, credentials.apiHash);
         telegramClientManager.getClients().set(userId, client);
 
         res.json({
@@ -2456,28 +2455,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       let client = telegramClientManager.getClients().get(`${userId}_qr`);
 
       if (!client) {
-        // Создаём новый клиент для QR-авторизации БЕЗ updateLoop (чтобы не было TIMEOUT)
-        client = new TelegramClient(
-          new StringSession(''),
-          parseInt(credentials.apiId),
-          credentials.apiHash,
-          {
-            connectionRetries: 5,
-            timeout: 30000,
-            useWSS: false,
-            autoReconnect: false,
-          }
-        );
-        await client.connect();
+        // Создаём новый клиент для QR-авторизации с параметрами устройства
+        client = await createQRClient(credentials.apiId, credentials.apiHash);
 
         // Отключаем updateLoop чтобы не было TIMEOUT ошибок
         (client as any)._updateLoop = () => {};
 
         // Сохраняем клиента для последующего обновления токена
         telegramClientManager.getClients().set(`${userId}_qr`, client);
-        console.log('💾 QR-клиент сохранён для пользователя', userId);
+        console.log('💾 QR-клиент создан для пользователя', userId, '- Система:', process.platform, '- Устройство: Server Bot Builder');
       } else {
-        console.log('♻️ QR-клиент найден для пользователя', userId);
+        console.log('♻️ QR-клиент найден для пользователя', userId, '- Система:', process.platform);
       }
 
       // Генерируем QR-токен через современный метод
@@ -2529,10 +2517,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Refresh QR token (обновление токена каждые 30 сек)
   app.post("/api/telegram-auth/qr-refresh", async (req, res) => {
+    console.log('📥 /api/telegram-auth/qr-refresh вызван');
     try {
       const { projectId } = req.body;
       const userId = projectId ? String(projectId) : 'default';
 
+      console.log('🔍 Загрузка credentials для пользователя:', userId);
       const credentials = await telegramAuthService.loadCredentials(userId);
       if (!credentials || !credentials.apiId || !credentials.apiHash) {
         return res.status(400).json({
@@ -2543,7 +2533,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Получаем существующего клиента
       const client = telegramClientManager.getClients().get(`${userId}_qr`);
-      
+      console.log('🔍 Поиск клиента:', `${userId}_qr`, '- найден:', !!client);
+
       if (!client) {
         return res.status(400).json({
           success: false,
@@ -2552,6 +2543,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Обновляем токен
+      console.log('🔄 Генерация нового QR-токена...');
       const result = await telegramAuthService.generateQRToken(
         client,
         credentials.apiId,
@@ -2586,6 +2578,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const { projectId, token, password } = req.body;
       const userId = projectId ? String(projectId) : 'default';
+
+      console.log('📥 /api/telegram-auth/qr-check:', {
+        projectId,
+        token: token ? token.substring(0, 20) + '...' : 'нет',
+        password: password ? '***' + password.slice(-3) : 'нет',
+      });
 
       if (!token) {
         return res.status(400).json({

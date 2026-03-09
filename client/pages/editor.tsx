@@ -7,40 +7,56 @@
  * @module Editor
  */
 
-import { BotControl } from '@/components/editor/bot/bot-control';
-import { Canvas } from '@/components/editor/canvas/canvas/canvas';
 import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
 import { CodePanel } from '@/components/editor/code/code-panel';
 import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
-import { PropertiesPanel } from '@/components/editor/properties/properties-panel';
-import { logNodeUpdate, logNodeTypeChange, logNodeIdChange, logButtonAdd, logButtonUpdate, logButtonDelete, logSheetAdd, logSheetDelete, logSheetRename, logSheetDuplicate, logSheetSwitch } from '@/components/editor/properties';
+import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
+import { Canvas } from '@/components/editor/canvas/canvas/canvas';
+import { BotLayout } from '@/components/editor/bot/BotLayout';
+import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
+import { createActionHistoryItem } from './editor/utils/action-logger';
+import type { ActionType, PreviousEditorTab, ActionHistoryItem, EditorTab } from './editor/types';
+import { useProjectLoader } from './editor/hooks/use-project-loader';
+import { useTabNavigation } from './editor/hooks/use-tab-navigation';
+import { useLayoutManager as useFlexibleLayoutManager } from './editor/hooks/use-layout-management';
+import { useNodeHandlers } from './editor/hooks/use-node-handlers';
+import { useButtonHandlers } from './editor/hooks/use-button-handlers';
+import {
+  useSheetHandlers,
+  useEditorUIStates,
+  useSheetStates,
+  useCodeStates,
+  useMobileHandlers,
+  useCodePanelHandlers,
+} from '@/pages/editor/hooks';
 import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 
-import { DialogPanel } from '@/components/editor/database/dialog-panel';
+import { DialogPanel } from '@/components/editor/database/dialog/dialog-panel';
 import { GroupsPanel } from '@/components/editor/groups/groups-panel';
-import { UserDatabasePanel } from '@/components/editor/database/user-database-panel';
-import { UserDetailsPanel } from '@/components/editor/database/user-details-panel';
+import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
+import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
 import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
-import { AdaptiveHeader } from '@/components/layout/adaptive-header';
+import { AdaptiveHeader } from '@/components/editor/header/adaptive-header';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
-import { FlexibleLayout } from '@/components/layout/flexible-layout';
-import { LayoutCustomizer } from '@/components/layout/layout-customizer';
+import { FlexibleLayout } from '@/components/layout/flexible/flexible-layout';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
-import { SimpleLayoutConfig, SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
+import { SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
-import { CodeFormat, useCodeGenerator } from '@/components/editor/code/use-code-generator';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useCodeGenerator } from '@/components/editor/code/use-code-generator';
+import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { SheetsManager } from '@/utils/sheets-manager';
-import { BotData, BotDataWithSheets, BotProject, Button, ComponentDefinition, Node, UserBotData } from '@shared/schema';
+import { BotData, BotDataWithSheets, BotProject, UserBotData } from '@shared/schema';
+import type { ComponentDefinition, Node } from '@shared/schema';
 import { nanoid } from 'nanoid';
 
 /**
@@ -66,40 +82,15 @@ export default function Editor() {
 
   /**
    * Текущая выбранная вкладка в интерфейсе редактора
-   * @type {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'}
+   * @type {EditorTab}
    */
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'>('editor');
-  const [previousTab, setPreviousTab] = useState<'editor' | 'preview' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'>('editor');
+  const [currentTab, setCurrentTab] = useState<EditorTab>('editor');
 
   /**
    * Флаг отображения модального окна сохранения шаблона
    * @type {boolean}
    */
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
-
-  /**
-   * Флаг отображения мобильного сайдбара
-   * @type {boolean}
-   */
-  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
-
-  /**
-   * Флаг отображения мобильной панели свойств
-   * @type {boolean}
-   */
-  const [showMobileProperties, setShowMobileProperties] = useState(false);
-
-  /**
-   * Выбранный пользователь для отображения диалога
-   * @type {UserBotData|null}
-   */
-  const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
-
-  /**
-   * Выбранный пользователь для отображения деталей
-   * @type {UserBotData|null}
-   */
-  const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
 
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
@@ -111,408 +102,185 @@ export default function Editor() {
   const [] = useState(true);
 
   /**
-   * Флаг отображения менеджера макета
-   * @type {boolean}
-   */
-  const [showLayoutManager, setShowLayoutManager] = useState(false);
-
-  /**
    * Флаг использования гибкого макета
    * @type {boolean}
    */
   const [useFlexibleLayout] = useState(true);
 
-  /**
-   * Флаг отображения настройщика макета
-   * @type {boolean}
-   */
-  const [showLayoutCustomizer] = useState(false);
+  // Хуки состояний
+  const {
+    isLoadingTemplate,
+    showLayoutManager,
+    showMobileProperties,
+    showMobileSidebar,
+    setIsLoadingTemplate,
+    setShowLayoutManager,
+    setShowMobileProperties,
+    setShowMobileSidebar,
+  } = useEditorUIStates();
 
-  // Новая система листов
-  /**
-   * Данные проекта с поддержкой листов
-   * @type {BotDataWithSheets|null}
-   */
-  const [botDataWithSheets, setBotDataWithSheets] = useState<BotDataWithSheets | null>(null);
+  // Хук состояний листов
+  const {
+    botDataWithSheets,
+    currentNodeSizes,
+    actionHistory,
+    lastLoadedProjectId,
+    hasLocalChanges,
+    setBotDataWithSheets,
+    setCurrentNodeSizes,
+    setActionHistory,
+    setLastLoadedProjectId,
+    setHasLocalChanges,
+  } = useSheetStates();
 
-  /**
-   * Реальные размеры узлов (для иерархического layout)
-   * @type {Map<string, { width: number; height: number }>}
-   */
-  const [currentNodeSizes, setCurrentNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
+  // Хук состояний кода
+  const {
+    selectedFormat,
+    theme,
+    areAllCollapsed,
+    showFullCode,
+    codeEditorVisible,
+    codePanelVisible,
+    editorRef,
+    setSelectedFormat,
+    setTheme,
+    setAreAllCollapsed,
+    setShowFullCode,
+    setCodeEditorVisible,
+    setCodePanelVisible,
+  } = useCodeStates();
 
-  /**
-   * Флаг загрузки шаблона
-   * @type {boolean}
-   */
-  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  // Хук обработчиков мобильных панелей
+  const {
+    handleOpenMobileSidebar,
+    handleOpenMobileProperties,
+  } = useMobileHandlers({ setShowMobileSidebar, setShowMobileProperties });
 
-  /**
-   * Флаг наличия локальных изменений
-   * @type {boolean}
-   */
-  const [hasLocalChanges, setHasLocalChanges] = useState(false);
-
-  /**
-   * ID последнего загруженного проекта
-   * @type {number|null}
-   */
-  const [lastLoadedProjectId, setLastLoadedProjectId] = useState<number | null>(null);
-
-  /**
-   * Тип действия в истории
-   * @typedef {'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate' | 'reset' | 'type_change' | 'id_change' | 'button_add' | 'button_update' | 'button_delete' | 'move_end' | 'sheet_add' | 'sheet_delete' | 'sheet_rename' | 'sheet_duplicate' | 'sheet_switch'} ActionType
-   */
-  type ActionType = 'add' | 'delete' | 'move' | 'update' | 'connect' | 'disconnect' | 'duplicate' | 'reset' | 'type_change' | 'id_change' | 'button_add' | 'button_update' | 'button_delete' | 'move_end' | 'sheet_add' | 'sheet_delete' | 'sheet_rename' | 'sheet_duplicate' | 'sheet_switch';
-
-  /**
-   * Интерфейс элемента истории действий
-   * @interface ActionHistoryItem
-   */
-  interface ActionHistoryItem {
-    id: string;
-    type: ActionType;
-    description: string;
-    timestamp: number;
-  }
-
-  /**
-   * История действий пользователя
-   * @type {ActionHistoryItem[]}
-   */
-  const [actionHistory, setActionHistory] = useState<ActionHistoryItem[]>([]);
-
-  /**
-   * Callback для получения размеров узлов из Canvas
-   *
-   * @param {Map<string, { width: number; height: number }>} nodeSizes - Размеры узлов
-   */
-  const handleNodeSizesChange = useCallback((nodeSizes: Map<string, { width: number; height: number }>) => {
-    setCurrentNodeSizes(nodeSizes);
-  }, []);
-
-  /**
-   * Обработчик логирования действий в историю
-   *
-   * @param {string} type - Тип действия
-   * @param {string} description - Описание действия
-   */
+  // Обработчик логирования действий
   const handleActionLog = useCallback((type: string, description: string) => {
     console.log('📋 История действий:', type, '-', description);
-    const newAction: ActionHistoryItem = {
-      id: `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type: type as ActionType,
-      description,
-      timestamp: Date.now()
-    };
-    setActionHistory(prev => [newAction, ...prev].slice(0, 50)); // Храним последние 50
-  }, []);
+    setActionHistory((prevHistory: ActionHistoryItem[]) => [createActionHistoryItem(type as ActionType, description), ...prevHistory].slice(0, 50));
+  }, [setActionHistory]);
 
-  /**
-   * Функция переключения видимости шапки
-   */
-  const handleToggleHeader = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'header'
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    }));
-  }, []);
+  // Callback для получения размеров узлов
+  const handleNodeSizesChange = useCallback((nodeSizes: Map<string, { width: number; height: number }>) => {
+    setCurrentNodeSizes(nodeSizes);
+  }, [setCurrentNodeSizes]);
 
-  /**
-   * Функция переключения видимости сайдбара
-   */
-  const handleToggleSidebar = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'sidebar'
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    }));
-  }, []);
-
-  /**
-   * Функция переключения видимости панели свойств
-   */
-  const handleToggleProperties = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'properties'
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    }));
-  }, []);
-
-  /**
-   * Функция переключения видимости холста
-   */
-  const handleToggleCanvas = useCallback(() => {
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element =>
-        element.id === 'canvas'
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    }));
-  }, []);
-
-  /**
-   * Обработчик переключения видимости CodePanel
-   * Управляет видимостью только CodePanel (левая панель с проектами)
-   */
-  const handleToggleCodePanel = useCallback(() => {
-    setCodePanelVisible(prev => !prev);
-  }, []);
-
-  /**
-   * Обработчик открытия панели кода (открывает обе панели - левую и центральную)
-   */
-  const handleOpenCodePanel = useCallback(() => {
-    setCodePanelVisible(true);
-    setCodeEditorVisible(true);
-    // Скрываем панель свойств при открытии панелей кода
-    handleToggleProperties();
-    // На вкладке "Экспорт" скрываем canvas, чтобы codeEditor занял центр
-    if (currentTab === 'export') {
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(el =>
-          el.type === 'canvas' ? { ...el, visible: false } : el
-        )
-      }));
-    }
-  }, [currentTab]);
-
-  /**
-   * Обработчик закрытия панели кода
-   */
-  const handleCloseCodePanel = useCallback(() => {
-    setCodePanelVisible(false);
-    setCodeEditorVisible(false);
-  }, []);
-
-
-  /**
-   * Обработчик открытия панели диалога
-   *
-   * @param {UserBotData} user - Пользователь, для которого открывается диалог
-   */
-  const handleOpenDialogPanel = useCallback((user: UserBotData) => {
-    const isAlreadyOpen = selectedDialogUser && selectedDialogUser.id === user.id;
-
-    if (isAlreadyOpen) {
-      handleCloseDialogPanel();
-    } else {
-      setSelectedDialogUser(user);
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(element => {
-          if (element.id === 'dialog') {
-            return { ...element, visible: true };
-          }
-          if (element.id === 'properties') {
-            return { ...element, visible: false };
-          }
-          return element;
-        })
-      }));
-    }
-  }, [selectedDialogUser]);
-
-  /**
-   * Обработчик закрытия панели диалога
-   */
-  const handleCloseDialogPanel = useCallback(() => {
-    setSelectedDialogUser(null);
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element => {
-        if (element.id === 'dialog') {
-          return { ...element, visible: false };
-        }
-        if (element.id === 'properties') {
-          return { ...element, visible: true };
-        }
-        return element;
-      })
-    }));
-  }, []);
-
-  /**
-   * Обработчик открытия панели деталей пользователя
-   *
-   * @param {UserBotData} user - Пользователь, для которого открываются детали
-   */
-  const handleOpenUserDetailsPanel = useCallback((user: UserBotData) => {
-    const isAlreadyOpen = selectedUserDetails && selectedUserDetails.id === user.id;
-
-    if (isAlreadyOpen) {
-      handleCloseUserDetailsPanel();
-    } else {
-      setSelectedUserDetails(user);
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(element => {
-          if (element.id === 'userDetails') {
-            return { ...element, visible: true };
-          }
-          if (element.id === 'sidebar') {
-            return { ...element, visible: false };
-          }
-          return element;
-        })
-      }));
-    }
-  }, [selectedUserDetails]);
-
-  /**
-   * Обработчик закрытия панели деталей пользователя
-   */
-  const handleCloseUserDetailsPanel = useCallback(() => {
-    setSelectedUserDetails(null);
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element => {
-        if (element.id === 'userDetails') {
-          return { ...element, visible: false };
-        }
-        if (element.id === 'sidebar') {
-          return { ...element, visible: true };
-        }
-        return element;
-      })
-    }));
-  }, []);
-
-
-  /**
-   * Обработчик открытия мобильного сайдбара
-   */
-  const handleOpenMobileSidebar = useCallback(() => {
-    setShowMobileSidebar(true);
-  }, []);
-
-  /**
-   * Обработчик открытия мобильной панели свойств
-   */
-  const handleOpenMobileProperties = useCallback(() => {
-    setShowMobileProperties(true);
-  }, []);
-
-  /**
-   * Создает динамическую конфигурацию макета
-   *
-   * @returns {SimpleLayoutConfig} Конфигурация макета
-   */
-  const getFlexibleLayoutConfig = useCallback((): SimpleLayoutConfig => {
-    // Используем компактный заголовок для всех устройств
-    const headerSize = isMobile ? 2.5 : 3;
-    // Скрываем боковую панель и свойства на вкладке "Бот" и "Пользователи"
-    const isBotTab = currentTab === 'bot';
-    const isUsersTab = currentTab === 'users';
-    const hidePanels = isBotTab || isUsersTab;
-
-    return {
-      elements: [
-        {
-          id: 'header',
-          type: 'header',
-          name: 'Шапка',
-          position: 'top',
-          size: headerSize,
-          visible: true
-        },
-        {
-          id: 'sidebar',
-          type: 'sidebar',
-          name: 'Боковая панель',
-          position: 'left',
-          size: 20,
-          visible: !hidePanels
-        },
-        {
-          id: 'canvas',
-          type: 'canvas',
-          name: 'Холст',
-          position: 'center',
-          size: 35,
-          visible: true
-        },
-        {
-          id: 'properties',
-          type: 'properties',
-          name: 'Свойства',
-          position: 'right',
-          size: 20,
-          visible: !hidePanels
-        },
-        {
-          id: 'code',
-          type: 'code',
-          name: 'Код',
-          position: 'left',
-          size: 25,
-          visible: false
-        },
-        {
-          id: 'codeEditor',
-          type: 'codeEditor',
-          name: 'Редактор кода',
-          position: 'center',
-          size: 40,
-          visible: false
-        },
-        {
-          id: 'dialog',
-          type: 'dialog',
-          name: 'Диалог',
-          position: 'right',
-          size: 30,
-          visible: isUsersTab
-        },
-        {
-          id: 'userDetails',
-          type: 'userDetails',
-          name: 'Детали пользователя',
-          position: 'left',
-          size: 25,
-          visible: isUsersTab
-        },
-        {
-          id: 'fileExplorer',
-          type: 'fileExplorer',
-          name: 'Проводник файлов',
-          position: 'left',
-          size: 25,
-          visible: false
-        },
-      ],
-      compactMode: false,
-      showGrid: true
-    };
-  }, [currentTab, isMobile]);
-
-  const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>(getFlexibleLayoutConfig());
-
-  /**
-   * Эффект для обновления конфигурации макета при изменении вкладки
-   * Сбрасывает видимость элементов к значениям по умолчанию для новой вкладки
-   */
-  useEffect(() => {
-    setFlexibleLayoutConfig(getFlexibleLayoutConfig());
-  }, [currentTab, isMobile]);
+  // Управление макетом через хук
+  const {
+    flexibleLayoutConfig,
+    setFlexibleLayoutConfig,
+    handleToggleHeader,
+    handleToggleSidebar,
+    handleToggleProperties,
+    handleToggleCanvas
+  } = useFlexibleLayoutManager(isMobile, currentTab);
 
   const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Хук обработчиков диалогов
+  const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
+  const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
+
+  // Обработчики закрытия панелей (объявляем первыми для использования в других функциях)
+  const handleCloseDialogPanel = useCallback(() => {
+    setSelectedDialogUser(null);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el =>
+        el.id === 'dialog' ? { ...el, visible: false } : el
+      )
+    }));
+  }, [setFlexibleLayoutConfig]);
+
+  const handleCloseUserDetailsPanel = useCallback(() => {
+    setSelectedUserDetails(null);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el => {
+        if (el.id === 'userDetails') return { ...el, visible: false };
+        if (el.id === 'sidebar') return { ...el, visible: true };
+        return el;
+      })
+    }));
+  }, [setFlexibleLayoutConfig]);
+
+  // Обработчик выбора пользователя в диалоге
+  const handleSelectDialogUser = useCallback((user: UserBotData) => {
+    console.log('[handleSelectDialogUser] Selecting user:', user);
+    // Обновляем выбранного пользователя и открываем панель
+    setSelectedDialogUser(user);
+    setFlexibleLayoutConfig(prev => {
+      const newConfig = {
+        ...prev,
+        elements: prev.elements.map(el => {
+          if (el.id === 'dialog') return { ...el, visible: true };
+          if (el.id === 'properties') return { ...el, visible: false };
+          return el;
+        })
+      };
+      console.log('[handleSelectDialogUser] New config:', newConfig);
+      return newConfig;
+    });
+  }, [setFlexibleLayoutConfig]);
+
+  // Обработчик выбора пользователя в деталях
+  const handleSelectUserDetails = useCallback((user: UserBotData) => {
+    console.log('[handleSelectUserDetails] Selecting user:', user);
+    // Обновляем выбранного пользователя и открываем панель
+    setSelectedUserDetails(user);
+    setFlexibleLayoutConfig(prev => {
+      const newConfig = {
+        ...prev,
+        elements: prev.elements.map(el => {
+          if (el.id === 'userDetails') return { ...el, visible: true };
+          if (el.id === 'sidebar') return { ...el, visible: false };
+          return el;
+        })
+      };
+      console.log('[handleSelectUserDetails] New config:', newConfig);
+      return newConfig;
+    });
+  }, [setFlexibleLayoutConfig]);
+
+  // Обработчики для передачи в UserDatabasePanel (с toggle-логикой для кнопок)
+  const handleOpenDialogPanel = useCallback((user: UserBotData) => {
+    // Если панель уже открыта для этого пользователя, закрываем её
+    if (selectedDialogUser?.userId === user.userId) {
+      handleCloseDialogPanel();
+    } else {
+      handleSelectDialogUser(user);
+    }
+  }, [selectedDialogUser, handleSelectDialogUser, handleCloseDialogPanel]);
+
+  const handleOpenUserDetailsPanel = useCallback((user: UserBotData) => {
+    // Если панель уже открыта для этого пользователя, закрываем её
+    if (selectedUserDetails?.userId === user.userId) {
+      handleCloseUserDetailsPanel();
+    } else {
+      handleSelectUserDetails(user);
+    }
+  }, [selectedUserDetails, handleSelectUserDetails, handleCloseUserDetailsPanel]);
+
+  // Хук состояний вкладок
+  const [, setPreviousTab] = useState<PreviousEditorTab>('editor');
+
+  // Хук обработчиков кодовых панелей
+  const {
+    handleToggleCodePanel,
+    handleOpenCodePanel,
+    handleCloseCodePanel,
+    handleToggleCodeEditor,
+  } = useCodePanelHandlers({
+    setCodePanelVisible,
+    setCodeEditorVisible,
+    currentTab,
+    setFlexibleLayoutConfig,
+    codeEditorVisible,
+  });
 
   /**
    * Мутация для обновления проекта
@@ -634,32 +402,14 @@ export default function Editor() {
     }
   });
 
-  // Load current project directly by ID (much faster than loading all projects)
-  const { data: currentProject, isError: projectNotFound } = useQuery<BotProject>({
-    queryKey: [`/api/projects/${projectId}`],
-    enabled: !!projectId, // Всегда загружаем если есть ID в URL
-    staleTime: 30000, // Кешируем на 30 секунд
-  });
+  // Загрузка проекта через хук
+  const {
+    currentProject,
+    firstProject,
+    isProjectNotFound: projectNotFound
+  } = useProjectLoader({ projectId });
 
-  // If no projectId in URL, load project list to get first project ID
-  const { data: projectsList } = useQuery<Array<Omit<BotProject, 'data'>>>({
-    queryKey: ['/api/projects/list'],
-    enabled: !projectId, // Загружаем список только если нет ID в URL
-    staleTime: 30000,
-  });
-
-  // Get effective project ID (from URL or first in list)
-  const effectiveProjectId = projectId || projectsList?.[0]?.id;
-
-  // Load first project if no projectId in URL and we have the ID from list
-  const { data: firstProject } = useQuery<BotProject>({
-    queryKey: [`/api/projects/${effectiveProjectId}`],
-    enabled: !projectId && !!effectiveProjectId && typeof effectiveProjectId === 'number', // Добавить проверку типа
-    staleTime: 30000,
-  });
-
-
-  // Use the appropriate project
+  // Активный проект
   const activeProject = projectId ? currentProject : firstProject;
 
   // Загрузка пользователей для вкладки "Пользователи"
@@ -676,46 +426,11 @@ export default function Editor() {
   useEffect(() => {
     if (currentTab === 'users' && users.length > 0) {
       const firstUser = users[0];
-      // Устанавливаем первого пользователя как выбранного для обеих панелей
-      setSelectedUserDetails(firstUser);
-      setSelectedDialogUser(firstUser);
+      // Открываем обе панели с первым пользователем
+      handleSelectUserDetails(firstUser);
+      handleSelectDialogUser(firstUser);
     }
-  }, [currentTab, users]);
-
-  // Состояние для управления форматом кода
-  const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [areAllCollapsed, setAreAllCollapsed] = useState(true);
-  const [showFullCode, setShowFullCode] = useState(false);
-
-  // Ссылка на редактор Monaco для управления сворачиванием
-  const editorRef = useRef<any>(null);
-
-  // Состояние для управления видимостью редактора кода
-  const [codeEditorVisible, setCodeEditorVisible] = useState(false);
-
-  // Состояние для управления видимостью CodePanel
-  const [codePanelVisible, setCodePanelVisible] = useState(false);
-
-  /**
-   * Обработчик переключения видимости редактора кода
-   * Управляет видимостью только CodeEditorArea (панели с Monaco Editor)
-   */
-  const handleToggleCodeEditor = useCallback(() => {
-    const isVisible = !codeEditorVisible;
-    setCodeEditorVisible(isVisible);
-    
-    // Обновляем видимость элемента в конфигурации макета
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(element => {
-        if (element.id === 'codeEditor') {
-          return { ...element, visible: isVisible };
-        }
-        return { ...element, visible: element.visible ?? true };
-      })
-    }));
-  }, [codeEditorVisible]);
+  }, [currentTab, users, handleSelectUserDetails, handleSelectDialogUser]);
 
   // Использование хука генератора кода
   const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent, setCodeContent } = useCodeGenerator(
@@ -829,138 +544,24 @@ export default function Editor() {
     }
   }, [setBotData, currentNodeSizes, isMobile, nodes.length]);
 
-  // Обертка для обновления узлов, которая синхронизирует изменения с системой листов
-  const handleNodeUpdateWithSheets = useCallback((nodeId: string, updates: any) => {
-    // Находим узел для логирования
-    const node = nodes.find(n => n.id === nodeId);
-    const updatedFields = Object.keys(updates);
-    
-    // Логируем обновление
-    if (node && handleActionLog) {
-      logNodeUpdate({
-        node,
-        onActionLog: handleActionLog,
-        updatedFields
-      });
-    }
-    
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    
-    // Обновляем в старой системе
-    updateNodeData(nodeId, updates);
-
-    // Также обновляем в новой системе листов
-    if (botDataWithSheets && botDataWithSheets.activeSheetId) {
-      const updatedSheets = botDataWithSheets.sheets.map(sheet => {
-        if (sheet.id === botDataWithSheets.activeSheetId) {
-          return {
-            ...sheet,
-            nodes: sheet.nodes.map(node =>
-              node.id === nodeId
-                ? { ...node, data: { ...node.data, ...updates } }
-                : node
-            )
-          };
-        }
-        return sheet;
-      });
-
-      setBotDataWithSheets({
-        ...botDataWithSheets,
-        sheets: updatedSheets
-      });
-    }
-  }, [updateNodeData, botDataWithSheets, nodes, handleActionLog, saveToHistory]);
-
-  // Обработчик смены типа узла
-  const handleNodeTypeChange = useCallback((nodeId: string, newType: any, newData: any) => {
-    // Находим узел для логирования
-    const node = nodes.find(n => n.id === nodeId);
-    const oldType = node?.type;
-    
-    // Логируем изменение типа
-    if (node && oldType && handleActionLog) {
-      logNodeTypeChange({
-        node,
-        oldType,
-        newType,
-        onActionLog: handleActionLog
-      });
-    }
-    
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    
-    // Обновляем в старой системе
-    updateNode(nodeId, { type: newType, data: newData });
-
-    // Также обновляем в новой системе листов
-    if (botDataWithSheets && botDataWithSheets.activeSheetId) {
-      const updatedSheets = botDataWithSheets.sheets.map(sheet => {
-        if (sheet.id === botDataWithSheets.activeSheetId) {
-          return {
-            ...sheet,
-            nodes: sheet.nodes.map(node =>
-              node.id === nodeId
-                ? { ...node, type: newType, data: newData }
-                : node
-            )
-          };
-        }
-        return sheet;
-      });
-
-      setBotDataWithSheets({
-        ...botDataWithSheets,
-        sheets: updatedSheets
-      });
-    }
-  }, [updateNode, botDataWithSheets, nodes, handleActionLog, saveToHistory]);
-
-  // Обработчик смены ID узла
-  const handleNodeIdChange = useCallback((oldId: string, newId: string) => {
-    // Находим узел для логирования
-    const node = nodes.find(n => n.id === oldId);
-    
-    // Логируем изменение ID
-    if (node && handleActionLog) {
-      logNodeIdChange({
-        node,
-        oldId,
-        newId,
-        onActionLog: handleActionLog
-      });
-    }
-    
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    
-    if (!botDataWithSheets || !botDataWithSheets.activeSheetId) return;
-
-    const updatedSheets = botDataWithSheets.sheets.map(sheet => {
-      if (sheet.id === botDataWithSheets.activeSheetId) {
-        return {
-          ...sheet,
-          nodes: sheet.nodes.map(node =>
-            node.id === oldId
-              ? { ...node, id: newId }
-              : node
-          )
-        };
-      }
-      return sheet;
-    });
-
-    setBotDataWithSheets({
-      ...botDataWithSheets,
-      sheets: updatedSheets
-    });
-
-    if (selectedNodeId === oldId) {
-      setSelectedNodeId(newId);
-    }
-  }, [botDataWithSheets, selectedNodeId, nodes, handleActionLog, saveToHistory]);
+  // Обработчики узлов через хук
+  const {
+    handleNodeUpdateWithSheets,
+    handleNodeTypeChange,
+    handleNodeIdChange,
+    handleNodeMove,
+    handleNodeMoveEnd
+  } = useNodeHandlers({
+    nodes,
+    updateNode,
+    updateNodeData,
+    onActionLog: handleActionLog,
+    saveToHistory,
+    botDataWithSheets,
+    setBotDataWithSheets,
+    selectedNodeId,
+    setSelectedNodeId
+  });
 
   // Синхронизация nodes → botDataWithSheets для undo/redo
   useEffect(() => {
@@ -1005,6 +606,12 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
 
+      // Миграция keyboardLayout для всех узлов
+      sheetsData = {
+        ...sheetsData,
+        sheets: migrateAllKeyboardLayouts(sheetsData.sheets)
+      };
+
       // Устанавливаем данные листов для отображения панели
       setBotDataWithSheets(sheetsData);
 
@@ -1023,376 +630,55 @@ export default function Editor() {
 
 
   /**
-   * Обработчик изменения вкладки
-   *
-   * @param {'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api'} tab - Выбранная вкладка
+   * Обработчик восстановления видимости canvas
    */
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api') => {
-    // Если нажали на ту же вкладку "Код" - ничего не делаем (чтобы панель не закрывалась)
-    if (tab === 'export' && currentTab === 'export') {
-      return;
-    }
+  const handleRestoreCanvas = useCallback(() => {
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el => {
+        // Восстанавливаем все основные элементы интерфейса
+        if (el.type === 'canvas') return { ...el, visible: true };
+        if (el.id === 'sidebar') return { ...el, visible: true };
+        if (el.id === 'properties') return { ...el, visible: true };
+        return el;
+      })
+    }));
+  }, [setFlexibleLayoutConfig]);
 
-    // Сохраняем предыдущую вкладку (если не переключались на 'export')
-    if (currentTab !== 'export' && tab !== 'export') {
-      setPreviousTab(currentTab as 'editor' | 'preview' | 'bot' | 'users' | 'groups' | 'user-ids' | 'client-api');
-    }
+  // Навигация по вкладкам через хук
+  const { handleTabChange } = useTabNavigation({
+    currentTab,
+    setCurrentTab,
+    setPreviousTab,
+    onSaveProject: () => activeProject?.id && updateProjectMutation.mutate({}),
+    onOpenCodePanel: handleOpenCodePanel,
+    onCloseCodePanel: handleCloseCodePanel,
+    onRestoreCanvas: handleRestoreCanvas,
+    setLocation,
+    projectId: activeProject?.id || null
+  });
 
-    setCurrentTab(tab);
-    if (tab === 'preview') {
-      // Auto-save before showing preview
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-      // Navigate to preview page instead of showing modal
-      setLocation(`/preview/${activeProject?.id}`);
-      return;
-    } else if (tab === 'export') {
-      // Auto-save before showing export page и открываем панель кода
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({}, {
-          onSuccess: () => {
-            // Открываем панель кода после успешного сохранения
-            handleOpenCodePanel();
-          }
-        });
-      } else {
-        handleOpenCodePanel();
-      }
-    } else if ((currentTab as string) === 'export') {
-      // Закрываем панель кода при переключении с вкладки экспорт
-      handleCloseCodePanel();
-      // Восстанавливаем видимость canvas
-      setFlexibleLayoutConfig(prev => ({
-        ...prev,
-        elements: prev.elements.map(el =>
-          el.type === 'canvas' ? { ...el, visible: true } : el
-        )
-      }));
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    } else if (tab === 'bot') {
-      // Auto-save before showing bot controls
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    } else if (tab === 'users') {
-      // Auto-save before showing users panel
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    } else if (tab === 'user-ids') {
-      // Auto-save before showing user IDs panel
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    }
-  }, [updateProjectMutation, activeProject, setLocation, handleOpenCodePanel, handleCloseCodePanel, currentTab, previousTab, setPreviousTab]);
-
-  // Функции управления листами
-  /**
-   * Обработчик добавления нового листа
-   *
-   * @param {string} name - Название нового листа
-   */
-  const handleSheetAdd = useCallback((name: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Логируем ДО изменений
-      if (handleActionLog) {
-        logSheetAdd({
-          sheetName: name,
-          onActionLog: handleActionLog
-        });
-      }
-      
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      const updatedData = SheetsManager.addSheet(botDataWithSheets, name);
-      setBotDataWithSheets(updatedData);
-
-      // Переключаемся на новый лист
-      const newSheet = SheetsManager.getActiveSheet(updatedData);
-      if (newSheet) {
-        // При добавлении нового листа всегда применяем автоиерархию
-        const shouldSkipLayout = false; // Автоиерархия нужна для правильного расположения новых листов
-        setBotData({ nodes: newSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
-      }
-
-      // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-
-      toast({
-        title: "Лист создан",
-        description: `Лист "${name}" успешно создан`,
-      });
-    } catch (error) {
-      toast({
-        title: "Ошибка создания",
-        description: "Не удалось создать лист",
-        variant: "destructive",
-      });
-    }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject, handleActionLog, saveToHistory]);
-
-  /**
-   * Обработчик удаления листа
-   *
-   * @param {string} sheetId - ID удаляемого листа
-   */
-  const handleSheetDelete = useCallback((sheetId: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Находим лист для логирования
-      const sheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
-      
-      // Логируем ДО изменений
-      if (sheet && handleActionLog) {
-        logSheetDelete({
-          sheetName: sheet.name,
-          sheetId,
-          onActionLog: handleActionLog
-        });
-      }
-      
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      const updatedData = SheetsManager.deleteSheet(botDataWithSheets, sheetId);
-      setBotDataWithSheets(updatedData);
-
-      // Переключаемся на активный лист
-      const activeSheet = SheetsManager.getActiveSheet(updatedData);
-      if (activeSheet) {
-        setBotData({ nodes: activeSheet.nodes }); // автоиерархия должна работать при переключении листов
-      }
-
-      // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-
-      toast({
-        title: "Лист удален",
-        description: "Лист успешно удален",
-      });
-    } catch (error) {
-      toast({
-        title: "Ошибка удаления",
-        description: "Не удалось удалить лист",
-        variant: "destructive",
-      });
-    }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, activeProject, handleActionLog, saveToHistory, nodes]);
-
-  /**
-   * Обработчик переименования листа
-   *
-   * @param {string} sheetId - ID листа
-   * @param {string} newName - Новое название листа
-   */
-  const handleSheetRename = useCallback((sheetId: string, newName: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Находим лист для логирования
-      const sheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
-      
-      // Логируем ДО изменений
-      if (sheet && handleActionLog) {
-        logSheetRename({
-          sheetId,
-          oldName: sheet.name,
-          newName,
-          onActionLog: handleActionLog
-        });
-      }
-      
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      const updatedData = SheetsManager.renameSheet(botDataWithSheets, sheetId, newName);
-      setBotDataWithSheets(updatedData);
-
-      // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-
-      toast({
-        title: "Лист переименован",
-        description: `Лист переименован в "${newName}"`,
-      });
-    } catch (error) {
-      toast({
-        title: "Ошибка переименования",
-        description: "Не удалось переименовать лист",
-        variant: "destructive",
-      });
-    }
-  }, [botDataWithSheets, updateProjectMutation, toast, activeProject, handleActionLog, saveToHistory, nodes]);
-
-  /**
-   * Обработчик дублирования листа
-   *
-   * @param {string} sheetId - ID листа для дублирования
-   */
-  const handleSheetDuplicate = useCallback((sheetId: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Находим оригинальный лист для логирования
-      const originalSheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
-      
-      // Логируем ДО изменений
-      if (originalSheet && handleActionLog) {
-        // Имя нового листа будет сгенерировано функцией duplicateSheetInProject
-        // Поэтому логируем с placeholder
-        logSheetDuplicate({
-          originalName: originalSheet.name,
-          newName: `${originalSheet.name} (копия)`,
-          onActionLog: handleActionLog
-        });
-      }
-      
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      const updatedData = SheetsManager.duplicateSheetInProject(botDataWithSheets, sheetId);
-      setBotDataWithSheets(updatedData);
-
-      // Переключаемся на дублированный лист
-      const newSheet = SheetsManager.getActiveSheet(updatedData);
-      if (newSheet) {
-        // При дублировании листа всегда применяем автоиерархию
-        const shouldSkipLayout = false; // Автоиерархия нужна для правильного расположения дублированных листов
-        setBotData({ nodes: newSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
-      }
-
-      // Сохраняем изменения (мутация сама позаботится об инвалидации кэша)
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-
-      toast({
-        title: "Лист дублирован",
-        description: "Лист успешно дублирован",
-      });
-    } catch (error) {
-      toast({
-        title: "Ошибка дублирования",
-        description: "Не удалось дублировать лист",
-        variant: "destructive",
-      });
-    }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, activeProject, handleActionLog, saveToHistory, nodes, currentNodeSizes]);
-
-  /**
-   * Обработчик выбора листа
-   *
-   * @param {string} sheetId - ID выбираемого листа
-   */
-  const handleSheetSelect = useCallback((sheetId: string) => {
-    if (!botDataWithSheets) return;
-
-    try {
-      // Находим текущий и новый листы для логирования
-      const currentSheet = botDataWithSheets.sheets.find(s => s.id === botDataWithSheets.activeSheetId);
-      const newSheet = botDataWithSheets.sheets.find(s => s.id === sheetId);
-      
-      // Логируем ДО изменений
-      if (newSheet && handleActionLog) {
-        logSheetSwitch({
-          fromSheet: currentSheet?.name,
-          toSheet: newSheet.name,
-          onActionLog: handleActionLog
-        });
-      }
-      
-      // Сохраняем в историю ДО изменений
-      saveToHistory();
-
-      // Проверяем, существует ли лист с таким ID
-      const sheetExists = botDataWithSheets.sheets.some(sheet => sheet.id === sheetId);
-      if (!sheetExists) {
-        console.warn(`Лист ${sheetId} не найден в проекте`);
-
-        // Переключаемся на первый доступный лист
-        if (botDataWithSheets.sheets.length > 0) {
-          const firstAvailableSheet = botDataWithSheets.sheets[0];
-          const updatedData = SheetsManager.setActiveSheet(botDataWithSheets, firstAvailableSheet.id);
-          setBotDataWithSheets(updatedData);
-
-          // Загружаем данные первого доступного листа
-          const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
-          if (newActiveSheet) {
-            const shouldSkipLayout = false;
-            setBotData({ nodes: newActiveSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
-          }
-
-          // Сохраняем и принудительно перезагружаем проект
-          if (activeProject?.id) {
-            updateProjectMutation.mutate({});
-            // Принудительно перезагружаем данные проекта
-            setTimeout(() => {
-              queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
-              queryClient.refetchQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
-              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-              queryClient.refetchQueries({ queryKey: ['/api/projects'] });
-            }, 100);
-          }
-        }
-
-        toast({
-          title: "Лист был удален",
-          description: "Переключились на другой лист",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Сначала сохраняем текущие данные холста в активном листе
-      const currentCanvasData = getBotData();
-      const activeSheetId = botDataWithSheets.activeSheetId;
-      const updatedSheets = botDataWithSheets.sheets.map(sheet =>
-        sheet.id === activeSheetId
-          ? { ...sheet, nodes: currentCanvasData.nodes, updatedAt: new Date() }
-          : sheet
-      );
-
-      // Затем переключаемся на новый лист
-      const updatedData = SheetsManager.setActiveSheet(
-        { ...botDataWithSheets, sheets: updatedSheets },
-        sheetId
-      );
-      setBotDataWithSheets(updatedData);
-
-      // Загружаем данные нового активного листа на холст
-      const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
-      if (newActiveSheet) {
-        // При переключении листов применяем автоиерархию для лучшего отображения
-        const shouldSkipLayout = false; // Автоиерархия нужна для правильного отображения
-        setBotData({ nodes: newActiveSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
-      }
-
-      // Сохраняем изменения
-      if (activeProject?.id) {
-        updateProjectMutation.mutate({});
-      }
-    } catch (error) {
-      toast({
-        title: "Ошибка переключения",
-        description: "Не удалось переключиться на лист",
-        variant: "destructive",
-      });
-    }
-  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject, queryClient, handleActionLog, saveToHistory]);
+  // Хук для управления операциями с листами
+  const {
+    handleSheetAdd,
+    handleSheetDelete,
+    handleSheetRename,
+    handleSheetDuplicate,
+    handleSheetSelect,
+  } = useSheetHandlers({
+    botDataWithSheets,
+    setBotDataWithSheets,
+    setBotData,
+    getBotData,
+    handleActionLog,
+    saveToHistory,
+    updateProjectMutation,
+    toast,
+    queryClient,
+    currentNodeSizes,
+    nodes,
+    activeProjectId: activeProject?.id || null,
+  });
 
   // Проверяем, есть ли выбранный шаблон при загрузке страницы
   useEffect(() => {
@@ -1509,24 +795,6 @@ export default function Editor() {
     }
   }, [activeProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast, queryClient]);
 
-  // Enhanced onNodeUpdate that auto-saves changes
-
-  const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
-    updateNode(nodeId, { position });
-    // Не сохраняем каждое перемещение - это будет слишком часто
-    // Сохранение происходит только в конце перетаскивания
-  }, [updateNode]);
-
-  // Вызываем один раз в конце перетаскивания узла
-  const handleNodeMoveEnd = useCallback((nodeId: string) => {
-    const node = nodes.find(n => n.id === nodeId);
-    if (node && handleActionLog) {
-      handleActionLog('move_end', `Перемещён узел "${node.type}" (${node.id})`);
-    }
-    saveToHistory();
-    console.log('🏁 Конец перемещения, сохранено в историю');
-  }, [nodes, handleActionLog, saveToHistory]);
-
   // Обёртки для deleteNode и duplicateNode с логированием в историю
   const handleNodeDelete = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
@@ -1544,52 +812,15 @@ export default function Editor() {
     _duplicateNode(nodeId);
   }, [_duplicateNode, nodes, handleActionLog, saveToHistory]);
 
-  // Обёртки для кнопок с логированием
-  const handleButtonAdd = useCallback((nodeId: string, button: Button) => {
-    const node = nodes.find(n => n.id === nodeId);
-    if (node && handleActionLog) {
-      logButtonAdd({
-        node,
-        buttonText: button.text,
-        onActionLog: handleActionLog
-      });
-    }
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    addButton(nodeId, button);
-  }, [addButton, nodes, handleActionLog, saveToHistory]);
-
-  const handleButtonUpdate = useCallback((nodeId: string, buttonId: string, updates: Partial<Button>) => {
-    const node = nodes.find(n => n.id === nodeId);
-    const updatedFields = Object.keys(updates);
-    if (node && handleActionLog) {
-      logButtonUpdate({
-        node,
-        buttonId,
-        updatedFields,
-        onActionLog: handleActionLog
-      });
-    }
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    updateButton(nodeId, buttonId, updates);
-  }, [updateButton, nodes, handleActionLog, saveToHistory]);
-
-  const handleButtonDelete = useCallback((nodeId: string, buttonId: string) => {
-    const node = nodes.find(n => n.id === nodeId);
-    const button = node?.data.buttons?.find(b => b.id === buttonId);
-    if (node && handleActionLog) {
-      logButtonDelete({
-        node,
-        buttonId,
-        buttonText: button?.text,
-        onActionLog: handleActionLog
-      });
-    }
-    // Сохраняем в историю ДО изменений
-    saveToHistory();
-    deleteButton(nodeId, buttonId);
-  }, [deleteButton, nodes, handleActionLog, saveToHistory]);
+  // Обработчики кнопок через хук
+  const { handleButtonAdd, handleButtonUpdate, handleButtonDelete } = useButtonHandlers({
+    nodes,
+    addButton,
+    updateButton,
+    deleteButton,
+    onActionLog: handleActionLog,
+    saveToHistory
+  });
 
   const handleComponentDrag = useCallback((_component: ComponentDefinition) => {
     // Handle component drag start if needed
@@ -1604,7 +835,7 @@ export default function Editor() {
     // Set local changes flag first to prevent useEffect from running
     setHasLocalChanges(true);
 
-    // Создаем н��вый узел из компонента
+    // Создаем новый узел из компонента
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
@@ -1612,7 +843,7 @@ export default function Editor() {
       data: component.defaultData || {}
     };
 
-    // Логируем добавление в историю ��ействий
+    // Логируем добавление в историю действий
     console.log('📝 Добавление узла:', component.type);
     handleActionLog('add', `Добавлен узел "${component.type}"`);
 
@@ -1679,7 +910,7 @@ export default function Editor() {
 
 
   // Определяем содержимое панели свойств для переиспользования
-  const propertiesContent = activeProject ? (
+  const propertiesContent = activeProject && currentTab === 'editor' ? (
     <PropertiesPanel
       projectId={activeProject.id}
       selectedNode={selectedNode}
@@ -1785,7 +1016,7 @@ export default function Editor() {
             markdownContent={displayContent}
             theme={theme}
             onContentChange={(content) => {
-              // Обновляем контент README в состоянии генер��тора
+              // Обновляем контент README в состоянии генератора
               setCodeContent(prev => ({ ...prev, readme: content }));
             }}
           />
@@ -1815,7 +1046,7 @@ export default function Editor() {
             // Новая система листов
             botData={botDataWithSheets || undefined}
             onBotDataUpdate={handleBotDataUpdate}
-            // Существующие пр��псы для совместимости
+            // Существующие пропсы для совместимости
             nodes={nodes}
             selectedNodeId={selectedNodeId}
             onNodeSelect={setSelectedNodeId}
@@ -1850,17 +1081,14 @@ export default function Editor() {
             actionHistory={actionHistory}
           />
         ) : currentTab === 'bot' ? (
-          <div className="h-full p-6 bg-background overflow-auto">
-            <div className="max-w-2xl mx-auto">
-              <BotControl
-                projectId={activeProject.id}
-                projectName={activeProject.name}
-                onBotStarted={handleOpenCodePanel}
-              />
-            </div>
+          <div className="h-full">
+            <BotLayout
+              projectId={activeProject.id}
+              projectName={activeProject.name}
+            />
           </div>
         ) : currentTab === 'users' ? (
-          <div className="h-full">
+          <div className="h-full overflow-hidden">
             <UserDatabasePanel
               projectId={activeProject.id}
               projectName={activeProject.name}
@@ -1876,7 +1104,10 @@ export default function Editor() {
               <TelegramClientConfig />
             </div>
           </div>
-        ) : currentTab === 'export' ? null : null}
+        ) : currentTab === 'export' ? (
+          // Для вкладки Код показываем пустой контейнер (код показывается в CodeEditorArea и CodePanel)
+          <div className="h-full bg-background" />
+        ) : null}
       </div>
     );
 
@@ -1896,7 +1127,7 @@ export default function Editor() {
           onShowFullCodeChange={setShowFullCode}
         />
       </div>
-    ) : (
+    ) : currentTab === 'editor' ? (
       <ComponentsSidebar
         onComponentDrag={handleComponentDrag}
         onComponentAdd={handleComponentAdd}
@@ -1930,7 +1161,7 @@ export default function Editor() {
         isMobile={isMobile}
         onClose={handleToggleSidebar}
       />
-    );
+    ) : null;
 
     if (useFlexibleLayout) {
       return (
@@ -1965,19 +1196,23 @@ export default function Editor() {
             dialogContent={
               selectedDialogUser && activeProject && (
                 <DialogPanel
+                  key={`dialog-${selectedDialogUser?.userId || 'none'}`}
                   projectId={activeProject.id}
                   user={selectedDialogUser}
                   onClose={handleCloseDialogPanel}
+                  onSelectUser={handleSelectDialogUser}
                 />
               )
             }
             userDetailsContent={
               selectedUserDetails && activeProject && (
                 <UserDetailsPanel
+                  key={`userdetails-${selectedUserDetails?.userId || 'none'}`}
                   projectId={activeProject.id}
                   user={selectedUserDetails}
                   onClose={handleCloseUserDetailsPanel}
                   onOpenDialog={handleOpenDialogPanel}
+                  onSelectUser={handleSelectUserDetails}
                 />
               )
             }
@@ -2026,35 +1261,37 @@ export default function Editor() {
             />
           }
           sidebar={
-            <ComponentsSidebar
-              onComponentDrag={handleComponentDrag}
-              onComponentAdd={handleComponentAdd}
-              onLayoutChange={updateLayoutConfig}
-              onGoToProjects={handleGoToProjects}
-              onProjectSelect={handleProjectSelect}
-              currentProjectId={activeProject?.id}
-              activeSheetId={botDataWithSheets?.activeSheetId}
-              onToggleCanvas={handleToggleCanvas}
-              onToggleHeader={handleToggleHeader}
-              onToggleProperties={handleToggleProperties}
-              onShowFullLayout={() => {
-                setFlexibleLayoutConfig(prev => ({
-                  ...prev,
-                  elements: prev.elements.map(element => ({ ...element, visible: true }))
-                }))
-              }}
-              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
-              headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-              propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
-              showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
-              onSheetAdd={handleSheetAdd}
-              onSheetDelete={handleSheetDelete}
-              onSheetRename={handleSheetRename}
-              onSheetDuplicate={handleSheetDuplicate}
-              onSheetSelect={handleSheetSelect}
-              isMobile={isMobile}
-              onClose={handleToggleSidebar}
-            />
+            currentTab === 'editor' ? (
+              <ComponentsSidebar
+                onComponentDrag={handleComponentDrag}
+                onComponentAdd={handleComponentAdd}
+                onLayoutChange={updateLayoutConfig}
+                onGoToProjects={handleGoToProjects}
+                onProjectSelect={handleProjectSelect}
+                currentProjectId={activeProject?.id}
+                activeSheetId={botDataWithSheets?.activeSheetId}
+                onToggleCanvas={handleToggleCanvas}
+                onToggleHeader={handleToggleHeader}
+                onToggleProperties={handleToggleProperties}
+                onShowFullLayout={() => {
+                  setFlexibleLayoutConfig(prev => ({
+                    ...prev,
+                    elements: prev.elements.map(element => ({ ...element, visible: true }))
+                  }))
+                }}
+                canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+                headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+                propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+                showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+                onSheetAdd={handleSheetAdd}
+                onSheetDelete={handleSheetDelete}
+                onSheetRename={handleSheetRename}
+                onSheetDuplicate={handleSheetDuplicate}
+                onSheetSelect={handleSheetSelect}
+                isMobile={isMobile}
+                onClose={handleToggleSidebar}
+              />
+            ) : null
           }
           canvas={
             <div className="h-full">
@@ -2122,20 +1359,22 @@ export default function Editor() {
             </div>
           }
           properties={
-            <PropertiesPanel
-              projectId={activeProject.id}
-              selectedNode={selectedNode}
-              allNodes={nodes}
-              allSheets={botDataWithSheets?.sheets || []}
-              currentSheetId={botDataWithSheets?.activeSheetId || undefined}
-              onNodeUpdate={handleNodeUpdateWithSheets}
-              onNodeTypeChange={handleNodeTypeChange}
-              onNodeIdChange={handleNodeIdChange}
-              onButtonAdd={handleButtonAdd}
-              onButtonUpdate={handleButtonUpdate}
-              onButtonDelete={handleButtonDelete}
-              onActionLog={handleActionLog}
-            />
+            currentTab === 'editor' ? (
+              <PropertiesPanel
+                projectId={activeProject.id}
+                selectedNode={selectedNode}
+                allNodes={nodes}
+                allSheets={botDataWithSheets?.sheets || []}
+                currentSheetId={botDataWithSheets?.activeSheetId || undefined}
+                onNodeUpdate={handleNodeUpdateWithSheets}
+                onNodeTypeChange={handleNodeTypeChange}
+                onNodeIdChange={handleNodeIdChange}
+                onButtonAdd={handleButtonAdd}
+                onButtonUpdate={handleButtonUpdate}
+                onButtonDelete={handleButtonDelete}
+                onActionLog={handleActionLog}
+              />
+            ) : null
           }
         />
       )}
@@ -2149,184 +1388,6 @@ export default function Editor() {
         />
       )}
 
-      {showLayoutCustomizer && (
-        <LayoutCustomizer
-          headerContent={
-            <AdaptiveHeader
-              config={layoutConfig}
-              projectName={activeProject.name}
-              currentTab={currentTab}
-              onTabChange={handleTabChange}
-              onExport={() => { }}
-              onSaveAsTemplate={handleSaveAsTemplate}
-              onLoadTemplate={handleLoadTemplate}
-              onLayoutSettings={() => setShowLayoutManager(true)}
-              onToggleCode={handleToggleCodePanel}
-              onToggleCodeEditor={handleToggleCodeEditor}
-              codeVisible={codePanelVisible}
-              codeEditorVisible={codeEditorVisible}
-              onOpenMobileSidebar={() => setShowMobileSidebar(true)}
-              onOpenMobileProperties={() => setShowMobileProperties(true)}
-            />
-          }
-          sidebarContent={
-            <ComponentsSidebar
-              onComponentDrag={handleComponentDrag}
-              onComponentAdd={handleComponentAdd}
-              onLayoutChange={updateLayoutConfig}
-              activeSheetId={botDataWithSheets?.activeSheetId}
-              headerContent={
-                <AdaptiveHeader
-                  config={layoutConfig}
-                  projectName={activeProject.name}
-                  currentTab={currentTab}
-                  onTabChange={handleTabChange}
-                  onExport={() => { }}
-                  onSaveAsTemplate={handleSaveAsTemplate}
-                  onLoadTemplate={handleLoadTemplate}
-                  onLayoutSettings={() => setShowLayoutManager(true)}
-                  onToggleCode={handleToggleCodePanel}
-                  onToggleCodeEditor={handleToggleCodeEditor}
-                  codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
-                  codeEditorVisible={codeEditorVisible}
-                  onOpenMobileSidebar={() => setShowMobileSidebar(true)}
-                  onOpenMobileProperties={() => setShowMobileProperties(true)}
-                />
-              }
-              sidebarContent={<div>Sidebar</div>}
-              canvasContent={
-                <div className="h-full">
-                  {currentTab === 'editor' ? (
-                    <Canvas
-                      // Новая система листов
-                      botData={botDataWithSheets || undefined}
-                      onBotDataUpdate={handleBotDataUpdate}
-                      // Существующие пропсы для совместимости
-                      nodes={nodes}
-                      selectedNodeId={selectedNodeId}
-                      onNodeSelect={setSelectedNodeId}
-                      onNodeAdd={addNode}
-                      onNodeDelete={handleNodeDelete}
-                      onNodeDuplicate={handleNodeDuplicate}
-                      onNodeMove={handleNodeMove}
-                      onNodeMoveEnd={handleNodeMoveEnd}
-                      onNodesUpdate={updateNodes}
-                      onUndo={undo}
-                      onRedo={redo}
-                      canUndo={canUndo}
-                      canRedo={canRedo}
-                      onSave={() => updateProjectMutation.mutate({})}
-                      isSaving={updateProjectMutation.isPending}
-                      onCopyToClipboard={copyToClipboard}
-                      onPasteFromClipboard={pasteFromClipboard}
-                      hasClipboardData={hasClipboardData()}
-                      onToggleHeader={handleToggleHeader}
-                      onToggleSidebar={handleToggleSidebar}
-                      onToggleProperties={handleToggleProperties}
-                      headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-                      sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
-                      propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
-                      onActionLog={handleActionLog}
-                      actionHistory={actionHistory}
-                    />
-                  ) : null}
-                </div>
-              }
-              propertiesContent={
-                <PropertiesPanel
-                  projectId={activeProject.id}
-                  selectedNode={selectedNode}
-                  allNodes={nodes}
-                  allSheets={botDataWithSheets?.sheets || []}
-                  currentSheetId={botDataWithSheets?.activeSheetId || undefined}
-                  onNodeUpdate={handleNodeUpdateWithSheets}
-                  onNodeTypeChange={handleNodeTypeChange}
-                  onNodeIdChange={handleNodeIdChange}
-                  onButtonAdd={handleButtonAdd}
-                  onButtonUpdate={handleButtonUpdate}
-                  onButtonDelete={handleButtonDelete}
-                  onActionLog={handleActionLog}
-                />
-              }
-              onSheetAdd={handleSheetAdd}
-              onSheetDelete={handleSheetDelete}
-              onSheetRename={handleSheetRename}
-              onSheetDuplicate={handleSheetDuplicate}
-              onSheetSelect={handleSheetSelect}
-              isMobile={isMobile}
-              onClose={handleToggleSidebar}
-            />
-          }
-          canvasContent={
-            <div className="h-full">
-              {currentTab === 'editor' ? (
-                <Canvas
-                  botData={botDataWithSheets || undefined}
-                  onBotDataUpdate={handleBotDataUpdate}
-                  nodes={nodes}
-                  selectedNodeId={selectedNodeId}
-                  onNodeSelect={setSelectedNodeId}
-                  onNodeAdd={addNode}
-                  onNodeDelete={handleNodeDelete}
-                  onNodeDuplicate={handleNodeDuplicate}
-                  onNodeMove={handleNodeMove}
-                  onNodeMoveEnd={handleNodeMoveEnd}
-                  onNodesUpdate={updateNodes}
-                  onUndo={undo}
-                  onRedo={redo}
-                  canUndo={canUndo}
-                  canRedo={canRedo}
-                  onSave={() => updateProjectMutation.mutate({})}
-                  isSaving={updateProjectMutation.isPending}
-                  isNodeBeingDragged={isNodeBeingDragged}
-                  setIsNodeBeingDragged={setIsNodeBeingDragged}
-                  onToggleHeader={handleToggleHeader}
-                  onToggleSidebar={handleToggleSidebar}
-                  onToggleProperties={handleToggleProperties}
-                  headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-                  sidebarVisible={(() => {
-                    const calculated = !isMobile && (flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true);
-                    console.log('🔧 SIDEBAR VISIBLE CALC:', { isMobile, flexSidebarVisible: flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible, calculated });
-                    return calculated;
-                  })()}
-                  propertiesVisible={(() => {
-                    const calculated = !isMobile && (flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true);
-                    console.log('🔧 PROPERTIES VISIBLE CALC:', { isMobile, flexPropertiesVisible: flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible, calculated });
-                    return calculated;
-                  })()}
-                  onOpenMobileSidebar={handleOpenMobileSidebar}
-                  onOpenMobileProperties={handleOpenMobileProperties}
-                  onActionLog={handleActionLog}
-                  actionHistory={actionHistory}
-                />
-              ) : null}
-            </div>
-          }
-          propertiesContent={
-            <PropertiesPanel
-              projectId={activeProject.id}
-              selectedNode={selectedNode}
-              allNodes={nodes}
-              allSheets={botDataWithSheets?.sheets || []}
-              currentSheetId={botDataWithSheets?.activeSheetId || undefined}
-              onNodeUpdate={handleNodeUpdateWithSheets}
-              onNodeTypeChange={handleNodeTypeChange}
-              onNodeIdChange={handleNodeIdChange}
-              onButtonAdd={handleButtonAdd}
-              onButtonUpdate={handleButtonUpdate}
-              onButtonDelete={handleButtonDelete}
-              onActionLog={handleActionLog}
-            />
-          }
-          onLayoutChange={(_elements) => {
-            // Layout changed
-            // Здесь можно обновить конфигурацию макета
-          }}
-        />
-      )}
-
-
-
       <SaveTemplateModal
         isOpen={showSaveTemplate}
         onClose={() => setShowSaveTemplate(false)}
@@ -2336,7 +1397,7 @@ export default function Editor() {
 
 
       {/* Мобильный sidebar */}
-      <Sheet open={showMobileSidebar} onOpenChange={setShowMobileSidebar}>
+      <Sheet open={showMobileSidebar && currentTab === 'editor'} onOpenChange={setShowMobileSidebar}>
         <SheetContent side="left" className="p-0 w-80">
           <SheetHeader className="px-4 py-3 border-b">
             <SheetTitle>Компоненты</SheetTitle>
@@ -2376,19 +1437,12 @@ export default function Editor() {
       </Sheet>
 
       {/* Мобильная панель свойств - полноэкранная на мобильных */}
-      <Sheet open={showMobileProperties} onOpenChange={setShowMobileProperties}>
-        <SheetContent
-          side="right"
-          className="p-0 w-full max-w-full sm:w-96 sm:max-w-md"
-        >
-          <SheetHeader className="px-4 py-3 border-b bg-background/95 backdrop-blur-sm sticky top-0 z-10">
-            <SheetTitle className="text-lg font-semibold">Свойства элемента</SheetTitle>
-          </SheetHeader>
-          <div className="h-[calc(100vh-60px)] overflow-auto pb-safe">
-            {propertiesContent}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <MobilePropertiesSheet
+        open={showMobileProperties && currentTab === 'editor'}
+        onOpenChange={setShowMobileProperties}
+      >
+        {propertiesContent}
+      </MobilePropertiesSheet>
 
     </>
   );

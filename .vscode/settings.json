@@ -4,5 +4,9 @@
   ],
   "python.autoComplete.extraPaths": [
     "C:\\Users\\1\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages"
-  ]
+  ],
+  "json.schemaDownload.enable": false,
+  "files.associations": {
+    "package.json": "json"
+  }
 }

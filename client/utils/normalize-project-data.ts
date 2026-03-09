@@ -10,6 +10,44 @@
 import { BotDataWithSheets } from '@shared/schema';
 
 /**
+ * Нормализует кнопку, конвертируя устаревшие поля
+ * @param button Объект кнопки для нормализации
+ * @returns Нормализованная кнопка
+ */
+function normalizeButton(button: any): any {
+  // Конвертируем buttonType в action
+  if (button.buttonType) {
+    if (button.buttonType === 'complete' && !button.action) {
+      button.action = 'complete';
+    } else if (button.buttonType === 'option' && !button.action) {
+      button.action = 'selection';
+    }
+    // Удаляем устаревшее поле buttonType
+    delete button.buttonType;
+  }
+  
+  // Устанавливаем значения по умолчанию
+  if (button.skipDataCollection === undefined) {
+    button.skipDataCollection = false;
+  }
+  if (button.hideAfterClick === undefined) {
+    button.hideAfterClick = false;
+  }
+  
+  return button;
+}
+
+/**
+ * Нормализует массив кнопок
+ * @param buttons Массив кнопок для нормализации
+ * @returns Нормализованный массив кнопок
+ */
+function normalizeButtons(buttons: any[]): any[] {
+  if (!Array.isArray(buttons)) return [];
+  return buttons.map(normalizeButton);
+}
+
+/**
  * Нормализует данные проекта, добавляя все возможные поля условных сообщений
  * в каждый узел, чтобы они были доступны для использования
  * 
@@ -38,6 +76,29 @@ export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWit
         node.data.conditionalMessages = [];
       }
 
+      // Нормализуем кнопки в узле
+      if (Array.isArray(node.data.buttons)) {
+        node.data.buttons = normalizeButtons(node.data.buttons);
+      }
+
+      // Конвертируем continueButtonText в кнопку с action: 'complete'
+      if (node.data.allowMultipleSelection && node.data.continueButtonText) {
+        const hasCompleteButton = node.data.buttons.some((btn: any) => btn.action === 'complete');
+        if (!hasCompleteButton) {
+          node.data.buttons.push({
+            id: `complete-${Date.now()}`,
+            text: node.data.continueButtonText,
+            action: 'complete',
+            target: node.data.continueButtonTarget || '',
+            skipDataCollection: false,
+            hideAfterClick: false
+          });
+        }
+        // Удаляем устаревшие поля
+        delete node.data.continueButtonText;
+        delete node.data.continueButtonTarget;
+      }
+
       // Нормализуем каждый элемент conditionalMessages
       if (Array.isArray(node.data.conditionalMessages)) {
         node.data.conditionalMessages = node.data.conditionalMessages.map((condition: any) => {
@@ -46,22 +107,22 @@ export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWit
             // Обязательные поля
             id: condition.id || `condition-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             condition: condition.condition || 'user_data_exists',
-            
+
             // Поля для переменных
             variableName: condition.variableName || '',
             variableNames: Array.isArray(condition.variableNames) ? condition.variableNames : (condition.variableName ? [condition.variableName] : []),
             logicOperator: condition.logicOperator || 'AND',
-            
+
             // Поля для значений
             expectedValue: condition.expectedValue || '',
-            
+
             // Поля для сообщения
             messageText: condition.messageText || '',
             formatMode: condition.formatMode || 'text',
-            
+
             // Поля для клавиатуры
             keyboardType: condition.keyboardType || 'none',
-            buttons: Array.isArray(condition.buttons) ? condition.buttons : [],
+            buttons: normalizeButtons(condition.buttons || []),
             resizeKeyboard: condition.resizeKeyboard !== undefined ? condition.resizeKeyboard : true,
             oneTimeKeyboard: condition.oneTimeKeyboard !== undefined ? condition.oneTimeKeyboard : false,
             
@@ -97,18 +158,7 @@ export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWit
 
           // Нормализуем кнопки в условном сообщении
           if (Array.isArray(normalizedCondition.buttons)) {
-            normalizedCondition.buttons = normalizedCondition.buttons.map((button: any) => ({
-              id: button.id || `btn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              text: button.text || 'Кнопка',
-              action: button.action || 'goto',
-              target: button.target || '',
-              url: button.url || '',
-              buttonType: button.buttonType || 'normal',
-              skipDataCollection: button.skipDataCollection !== undefined ? button.skipDataCollection : false,
-              hideAfterClick: button.hideAfterClick !== undefined ? button.hideAfterClick : false,
-              // Копируем все остальные поля
-              ...button
-            }));
+            normalizedCondition.buttons = normalizeButtons(normalizedCondition.buttons);
           }
 
           return normalizedCondition;

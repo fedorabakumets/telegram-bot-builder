@@ -1,5 +1,5 @@
 import { Node } from '@/types/bot';
-import { getIsMobile } from '@/hooks/use-mobile';
+import { getIsMobile } from '@/components/editor/header/hooks/use-mobile';
 
 /**
  * Интерфейс для узла в иерархическом расположении

@@ -114,11 +114,6 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       ws.onopen = () => {
         console.log('Соединение с терминалом установлено');
         setStatus('connected');
-
-        // Отправляем сообщение в терминал о подключении
-        if (terminalRefRef.current?.current) {
-          terminalRefRef.current.current.addLineLocal(`[Система] Подключено к терминалу бота (ID проекта: ${projectIdRef.current}, ID токена: ${tokenIdRef.current})`, 'stdout');
-        }
       };
 
       ws.onmessage = (event) => {
@@ -142,10 +137,6 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       ws.onclose = (event) => {
         console.log(`Соединение с терминалом закрыто: код ${event.code}, причина: ${event.reason}`);
         setStatus('disconnected');
-
-        // НЕ пытаемся переподключиться автоматически
-        // Переподключение будет инициировано через useEffect в BotTerminal
-        // при изменении статуса на 'disconnected'
       };
 
       ws.onerror = (error) => {

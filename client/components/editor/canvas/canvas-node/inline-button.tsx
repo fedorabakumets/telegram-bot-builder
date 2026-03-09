@@ -47,9 +47,6 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
             <span className="text-xs font-medium text-blue-700 dark:text-blue-300 truncate">
               {button.text}
             </span>
-            {button.action === 'command' && (
-              <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
-            )}
             {button.action === 'url' && (
               <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title={`Ссылка: ${button.url}`}></i>
             )}
@@ -58,6 +55,9 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
             )}
             {button.action === 'selection' && (
               <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
+            )}
+            {button.action === 'complete' && (
+              <i className="fas fa-flag-checkered text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Завершение"></i>
             )}
           </div>
           {button.action === 'goto' && (

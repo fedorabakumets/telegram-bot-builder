@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { useUploadMedia, useUploadMultipleMedia } from "@/components/editor/properties/media/use-media";
+import { useUploadMedia, useUploadMultipleMedia } from "@/components/editor/properties/hooks/use-media";
 import { FileOptimizer } from "./file-optimizer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -740,13 +740,13 @@ export function EnhancedMediaUploader({
           >
             {isUploading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Загрузка...
+                <Loader2 className="w-4 h-4 mr-2 flex-shrink-0 animate-spin" />
+                <span className="break-words">Загрузка...</span>
               </>
             ) : (
               <>
-                <Upload className="w-4 h-4 mr-2" />
-                Загрузить ({files.length})
+                <Upload className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="break-words">Загрузить ({files.length})</span>
               </>
             )}
           </Button>

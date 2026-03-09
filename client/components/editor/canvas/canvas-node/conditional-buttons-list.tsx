@@ -83,8 +83,9 @@ export function ConditionalButtonsList({ buttons, keyboardType, allNodes }: Cond
                   <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
                   <div className="flex items-center space-x-1 ml-1 flex-shrink-0">
                     {button.action === 'goto' && <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>}
-                    {button.action === 'command' && <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>}
                     {button.action === 'url' && <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>}
+                    {button.action === 'selection' && <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>}
+                    {button.action === 'complete' && <i className="fas fa-flag-checkered text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Завершение"></i>}
                   </div>
                 </div>
                 {button.action === 'goto' && targetNodeDisplay && (

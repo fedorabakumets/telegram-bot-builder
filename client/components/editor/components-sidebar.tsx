@@ -1,9 +1,9 @@
 import { ComponentDefinition, BotProject } from '@shared/schema';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/bot-generator/utils';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
-import { parsePythonCodeToJson } from '@/lib/format';
+import { parsePythonCodeToJson } from '@/lib/bot-generator/format';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,8 +15,9 @@ import { apiRequest } from '@/lib/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { broadcastNode } from './canvas/canvas-node/broadcast-node';
+import { clientAuthNode } from './canvas/canvas-node/client-auth-node';
 
 /**
  * Свойства компонента боковой панели с компонентами
@@ -241,8 +242,8 @@ const components: ComponentDefinition[] = [
       messageText: '⚙️ Настройки бота:',
       keyboardType: 'inline',
       buttons: [
-        { id: 'btn-1', text: '📋 Язык', action: 'command', target: '/language' },
-        { id: 'btn-2', text: '🔔 Уведомления', action: 'command', target: '/notifications' }
+        { id: 'btn-1', text: '📋 Язык', action: 'goto', target: '/language' },
+        { id: 'btn-2', text: '🔔 Уведомления', action: 'goto', target: '/notifications' }
       ],
       markdown: true,
       oneTimeKeyboard: false,
@@ -266,10 +267,10 @@ const components: ComponentDefinition[] = [
       messageText: '📋 Главное меню:',
       keyboardType: 'reply',
       buttons: [
-        { id: 'btn-1', text: '📖 Информация', action: 'command', target: '/info' },
-        { id: 'btn-2', text: '⚙️ Настройки', action: 'command', target: '/settings' },
-        { id: 'btn-3', text: '❓ Помощь', action: 'command', target: '/help' },
-        { id: 'btn-4', text: '📞 Поддержка', action: 'command', target: '/support' }
+        { id: 'btn-1', text: '📖 Информация', action: 'goto', target: '/info' },
+        { id: 'btn-2', text: '⚙️ Настройки', action: 'goto', target: '/settings' },
+        { id: 'btn-3', text: '❓ Помощь', action: 'goto', target: '/help' },
+        { id: 'btn-4', text: '📞 Поддержка', action: 'goto', target: '/support' }
       ],
       markdown: true,
       oneTimeKeyboard: false,
@@ -495,7 +496,8 @@ const components: ComponentDefinition[] = [
       is_anonymous: false
     }
   },
-  broadcastNode
+  broadcastNode,
+  clientAuthNode
 ];
 
 /**
@@ -514,6 +516,10 @@ const componentCategories = [
   {
     title: 'Рассылка',
     components: components.filter(c => ['broadcast'].includes(c.type))
+  },
+  {
+    title: 'Client API',
+    components: components.filter(c => ['client_auth'].includes(c.type))
   },
   {
     title: 'Управление контентом',

@@ -1,10 +1,23 @@
-import { BotGroup } from '@shared/schema';
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+/**
+ * @fileoverview Генерация конфигурации групп бота
+ * 
+ * Модуль предоставляет функцию для генерации Python-кода конфигурации
+ * подключенных Telegram-групп.
+ * 
+ * @module generate/generateGroupsConfiguration
+ */
+
+import type { BotGroup } from '@shared/schema';
+import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 
 /**
- * Функция для генерации конфигурации подключенных групп
- * @param groups - Массив групп
- * @returns Строка с кодом конфигурации групп, если они есть, иначе пустая строка
+ * Генерирует конфигурацию подключенных групп
+ * 
+ * @param groups - Массив групп бота
+ * @returns Строка с кодом конфигурации групп или пустая строка
+ * 
+ * @example
+ * const config = generateGroupsConfiguration(groups);
  */
 export function generateGroupsConfiguration(groups: BotGroup[]): string {
   if (!groups || groups.length === 0) {
