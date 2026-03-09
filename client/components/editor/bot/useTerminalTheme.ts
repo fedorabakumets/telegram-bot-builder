@@ -6,7 +6,7 @@
  * @module useTerminalTheme
  */
 
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@/components/editor/header/utils/theme-provider';
 
 /**
  * Результат работы хука темы терминала

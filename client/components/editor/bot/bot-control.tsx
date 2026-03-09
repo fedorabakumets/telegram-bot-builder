@@ -11,13 +11,13 @@
  * @module BotControl
  */
 
-import { useState, useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useMemo } from 'react';
+import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotToken, type BotProject } from '@shared/schema';
-import { setCommentsEnabled, areCommentsEnabled } from '@/lib/utils/generateGeneratedComment';
+import { setCommentsEnabled, areCommentsEnabled } from '@/lib/bot-generator/utils/generateGeneratedComment';
 import { type BotInfo } from './BotProfileEditor';
 import { BotProfileSheet } from './BotProfileSheet';
 import { BotControlPanel } from './BotControlPanel';
@@ -28,9 +28,10 @@ import { BotControlPanel } from './BotControlPanel';
  * @interface BotControlProps
  */
 interface BotControlProps {
-  projectId?: number;
-  projectName?: string;
-  onBotStarted?: () => void;
+  projectId: number;
+  projectName: string;
+  onBotStarted?: (projectId: number, tokenId: number, botName: string) => void;
+  onBotStopped?: (projectId: number, tokenId: number) => void;
 }
 
 /**
@@ -78,15 +79,9 @@ interface BotStatusResponse {
  * @param projectId - Идентификатор проекта
  * @param projectName - Название проекта
  * @param onBotStarted - Callback при успешном запуске бота
+ * @param onBotStopped - Callback при остановке бота
  */
-export function BotControl({ projectId }: BotControlProps) {
-  // Используем projectId в BotTerminal компоненте
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _projectId = projectId;
-  // Используем переменную, чтобы избежать ошибки TypeScript
-  if (_projectId === undefined) {
-    console.log('projectId is undefined');
-  }
+export function BotControl({ projectId, projectName, onBotStarted, onBotStopped }: BotControlProps) {
   // Состояние компонента
   /** Показывать ли форму добавления бота */
   const [showAddBot, setShowAddBot] = useState(false);
@@ -187,17 +182,17 @@ export function BotControl({ projectId }: BotControlProps) {
     queryFn: () => apiRequest('GET', '/api/projects'),
   });
 
-  // Получаем токены для всех проектов
-  const tokensQueries = projects.map(project =>
-    useQuery<BotToken[]>({
+  // Получаем токены для всех проектов с использованием useQueries
+  const tokensQueriesResults = useQueries({
+    queries: projects.map(project => ({
       queryKey: [`/api/projects/${project.id}/tokens`],
       queryFn: () => apiRequest('GET', `/api/projects/${project.id}/tokens`),
       enabled: !!projects.length,
-    })
-  );
+    }))
+  });
 
   // Объединяем результаты всех запросов в один массив
-  const allTokens = tokensQueries.map(query => query.data || []).filter(data => data.length > 0);
+  const allTokens = tokensQueriesResults.map(query => query.data || []).filter(data => data && data.length > 0);
 
   // Мутация для обновления информации о боте через Telegram API
   /** Мутация для обновления информации о боте */
@@ -273,19 +268,28 @@ export function BotControl({ projectId }: BotControlProps) {
     setEditValue('');
   };
 
-  // Получаем статусы ботов для всех проектов
-  const botStatusQueries = projects.map(project =>
-    useQuery<BotStatusResponse>({
-      queryKey: [`/api/projects/${project.id}/bot`],
-      refetchInterval: 10000, // Уменьшили с 1 секунды до 10 секунд
-      refetchIntervalInBackground: true, // Продолжаем опрашивать в фоне
-      staleTime: 5000, // Считаем данные свежими 5 секунд
-      enabled: !!projects.length,
-    })
+  // Получаем все токены в плоский массив с projectId
+  const allTokensFlat = useMemo(() => 
+    allTokens?.flatMap((tokens, idx) =>
+      tokens.map(token => ({ ...token, projectId: projects[idx]?.id }))
+    ) || [],
+    [allTokens, projects]
   );
 
+  // Получаем статусы ботов для каждого токена отдельно с использованием useQueries
+  const botStatusQueriesResults = useQueries({
+    queries: allTokensFlat.map(token => ({
+      queryKey: [`/api/tokens/${token.id}/bot-status`],
+      queryFn: () => apiRequest('GET', `/api/tokens/${token.id}/bot-status`),
+      refetchInterval: 10000,
+      refetchIntervalInBackground: true,
+      staleTime: 5000,
+      enabled: true,
+    }))
+  });
+
   // Объединяем статусы ботов
-  const allBotStatuses = botStatusQueries.map(query => query.data).filter(Boolean) as BotStatusResponse[];
+  const allBotStatuses = botStatusQueriesResults.map(query => query.data).filter(Boolean) as BotStatusResponse[];
 
   // Состояние для отслеживания выбранного токена
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
@@ -293,7 +297,7 @@ export function BotControl({ projectId }: BotControlProps) {
   // Обновляем выбранный токен при изменении статусов ботов
   useEffect(() => {
     // Находим запущенный бот и устанавливаем его токен как выбранный
-    const runningBot = allBotStatuses.find(status => status.status === 'running' && status.instance);
+    const runningBot = allBotStatuses.find(status => status?.status === 'running' && status.instance);
     if (runningBot && runningBot.instance) {
       setSelectedTokenId(runningBot.instance.tokenId);
     }
@@ -302,8 +306,8 @@ export function BotControl({ projectId }: BotControlProps) {
 
   // Timer effect - обновляем таймеры для каждого запущенного бота
   useEffect(() => {
-    // Находим запущенные боты
-    const runningBots = allBotStatuses.filter(status => status.status === 'running' && status.instance?.startedAt);
+    // Находим запущенные боты из статусов
+    const runningBots = allBotStatuses.filter(status => status?.status === 'running' && status.instance?.startedAt);
 
     // Обновляем таймеры для каждого запущенного бота
     const interval = setInterval(() => {
@@ -349,7 +353,7 @@ export function BotControl({ projectId }: BotControlProps) {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         // Обновляем статусы ботов при возвращении на вкладку
-        botStatusQueries.forEach(query => query.refetch());
+        botStatusQueriesResults.forEach(query => query.refetch());
       }
     };
 
@@ -358,34 +362,35 @@ export function BotControl({ projectId }: BotControlProps) {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [botStatusQueries]);
+  }, [botStatusQueriesResults]);
 
   // Получаем токены по умолчанию для всех проектов
 
   // Объединяем токены по умолчанию
-  // Получаем информацию о ботах (getMe) для всех проектов
-  const botInfoQueries = projects.map(project =>
-    useQuery<BotInfo>({
+  // Получаем информацию о ботах (getMe) для всех проектов с использованием useQueries
+  const botInfoQueriesResults = useQueries({
+    queries: projects.map(project => ({
       queryKey: [`/api/projects/${project.id}/bot/info`],
+      queryFn: () => apiRequest('GET', `/api/projects/${project.id}/bot/info`),
       enabled: !!projects.length,
-      refetchInterval: allBotStatuses.some(status => status.status === 'running') ? 60000 : false, // Увеличили с 30 секунд до 1 минуты
-      refetchIntervalInBackground: false, // Не опрашиваем в фоне
-      staleTime: 30000, // Считаем данные свежими 30 секунд
-    })
-  );
+      refetchInterval: allBotStatuses.some(status => status?.status === 'running') ? 60000 : false,
+      refetchIntervalInBackground: false,
+      staleTime: 30000,
+    }))
+  });
 
   // Объединяем информацию о ботах
-  const allBotInfos = botInfoQueries.map(query => query.data).filter(Boolean) as BotInfo[];
+  const allBotInfos = botInfoQueriesResults.map(query => query.data).filter(Boolean) as BotInfo[];
 
   // Toggle user database enabled mutation
   const toggleDatabaseMutation = useMutation({
-    mutationFn: ({ projectId, enabled }: { projectId: number; enabled: boolean }) =>
+    mutationFn: (enabled: boolean) =>
       apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}`] });
+    onSuccess: (_, enabled) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
       toast({
-        title: variables.enabled ? "База данных включена" : "База данных выключена",
-        description: variables.enabled
+        title: enabled ? "База данных включена" : "База данных выключена",
+        description: enabled
           ? "Функции работы с базой данных пользователей будут генерироваться в коде бота."
           : "Функции работы с базой данных НЕ будут генерироваться в коде бота.",
       });
@@ -518,6 +523,8 @@ export function BotControl({ projectId }: BotControlProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot`] });
       // Сразу обновляем статус на фронтенде
       queryClient.invalidateQueries({ queryKey: ['/api/projects/bot'] });
+      // Инвалидируем статус для конкретного токена
+      queryClient.invalidateQueries({ queryKey: [`/api/tokens/${variables.tokenId}/bot-status`] });
       // Обновляем информацию о боте (имя, описание)
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot/info`] });
       // Обновляем список токенов чтобы показать актуальное имя бота
@@ -525,6 +532,13 @@ export function BotControl({ projectId }: BotControlProps) {
 
       // Устанавливаем запущенный токен как активный для WebSocket
       setSelectedTokenId(variables.tokenId);
+      
+      // Уведомляем о запуске бота
+      const token = allTokensFlat.find(t => t.id === variables.tokenId);
+      if (token && onBotStarted) {
+        const botName = token.name || `Бот ${variables.tokenId}`;
+        onBotStarted(variables.projectId, variables.tokenId, botName);
+      }
     },
     onError: (error: any) => {
       toast({ title: "Ошибка запуска", description: error.message || "Не удалось запустить бота.", variant: "destructive" });
@@ -541,10 +555,17 @@ export function BotControl({ projectId }: BotControlProps) {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/bot`] });
       // Сразу обновляем статус на фронтенде
       queryClient.invalidateQueries({ queryKey: ['/api/projects/bot'] });
+      // Инвалидируем статус для конкретного токена
+      queryClient.invalidateQueries({ queryKey: [`/api/tokens/${variables.tokenId}/bot-status`] });
 
       // Если останавливаем текущий активный токен, сбрасываем его
       if (selectedTokenId === variables.tokenId) {
         setSelectedTokenId(null);
+      }
+      
+      // Уведомляем об остановке бота
+      if (onBotStopped) {
+        onBotStopped(variables.projectId, variables.tokenId);
       }
     },
     onError: (error: any) => {

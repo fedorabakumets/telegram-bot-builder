@@ -108,16 +108,14 @@ async function seedDefaultTemplates(force = false) {
                       text: "Да 😎",
                       value: "yes",
                       action: "goto",
-                      target: "gender_selection",
-                      buttonType: "option"
+                      target: "gender_selection"
                     },
                     {
                       id: "btn-no",
                       text: "Нет 🙅",
                       value: "no",
                       action: "goto",
-                      target: "decline_response",
-                      buttonType: "option"
+                      target: "decline_response"
                     }
                   ],
                   markdown: false,
@@ -162,16 +160,14 @@ async function seedDefaultTemplates(force = false) {
                       text: "Мужчина 👨",
                       value: "male",
                       action: "goto",
-                      target: "name_input",
-                      buttonType: "option"
+                      target: "name_input"
                     },
                     {
                       id: "btn-female",
                       text: "Женщина 👩",
                       value: "female",
                       action: "goto",
-                      target: "name_input",
-                      buttonType: "option"
+                      target: "name_input"
                     }
                   ],
                   markdown: false,
@@ -235,7 +231,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "Красная ветка 🟥",
                       action: "goto",
                       target: "red_line_stations",
-                      buttonType: "option",
                       skipDataCollection: true
                     },
                     {
@@ -243,7 +238,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "Синяя ветка 🟦",
                       action: "goto",
                       target: "blue_line_stations",
-                      buttonType: "option",
                       skipDataCollection: true
                     },
                     {
@@ -251,7 +245,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "Зелёная ветка 🟩",
                       action: "goto",
                       target: "green_line_stations",
-                      buttonType: "option",
                       skipDataCollection: true
                     },
                     {
@@ -259,7 +252,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "Фиолетовая ветка 🟪",
                       action: "goto",
                       target: "purple_line_stations",
-                      buttonType: "option",
                       skipDataCollection: true
                     },
                     {
@@ -267,16 +259,14 @@ async function seedDefaultTemplates(force = false) {
                       text: "Я из ЛО 🏡",
                       value: "ЛО",
                       action: "goto",
-                      target: "interests_categories",
-                      buttonType: "option"
+                      target: "interests_categories"
                     },
                     {
                       id: "btn-not-spb",
                       text: "Я не в Питере 🌍",
                       value: "Не в СПб",
                       action: "goto",
-                      target: "interests_categories",
-                      buttonType: "option"
+                      target: "interests_categories"
                     }
                   ],
                   markdown: false,
@@ -296,26 +286,26 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "metro_stations",
                   continueButtonTarget: "interests_categories",
                   buttons: [
-                    { id: "red-devyatkino", text: "🟥 Девяткино", action: "selection", target: "devyatkino", buttonType: "option" },
-                    { id: "red-grazhdansky", text: "🟥 Гражданский проспект", action: "selection", target: "grazhdansky", buttonType: "option" },
-                    { id: "red-akademicheskaya", text: "🟥 Академическая", action: "selection", target: "akademicheskaya", buttonType: "option" },
-                    { id: "red-politehnicheskaya", text: "🟥 Политехническая", action: "selection", target: "politehnicheskaya", buttonType: "option" },
-                    { id: "red-pl-muzhestva", text: "🟥 Площадь Мужества", action: "selection", target: "pl_muzhestva", buttonType: "option" },
-                    { id: "red-lesnaya", text: "🟥 Лесная", action: "selection", target: "lesnaya", buttonType: "option" },
-                    { id: "red-vyborgskaya", text: "🟥 Выборгская", action: "selection", target: "vyborgskaya", buttonType: "option" },
-                    { id: "red-pl-lenina", text: "🟥 Площадь Ленина", action: "selection", target: "pl_lenina", buttonType: "option" },
-                    { id: "red-chernyshevskaya", text: "🟥 Чернышевская", action: "selection", target: "chernyshevskaya", buttonType: "option" },
-                    { id: "red-pl-vosstaniya", text: "🟥 Площадь Восстания", action: "selection", target: "pl_vosstaniya", buttonType: "option" },
-                    { id: "red-vladimirskaya", text: "🟥 Владимирская", action: "selection", target: "vladimirskaya", buttonType: "option" },
-                    { id: "red-pushkinskaya", text: "🟥 Пушкинская", action: "selection", target: "pushkinskaya", buttonType: "option" },
-                    { id: "red-tehinstitut1", text: "🟥 Технологический институт-1", action: "selection", target: "tehinstitut1", buttonType: "option" },
-                    { id: "red-baltiyskaya", text: "🟥 Балтийская", action: "selection", target: "baltiyskaya", buttonType: "option" },
-                    { id: "red-narvskaya", text: "🟥 Нарвская", action: "selection", target: "narvskaya", buttonType: "option" },
-                    { id: "red-kirovsky", text: "🟥 Кировский завод", action: "selection", target: "kirovsky", buttonType: "option" },
-                    { id: "red-avtovo", text: "🟥 Автово", action: "selection", target: "avtovo", buttonType: "option" },
-                    { id: "red-leninsky", text: "🟥 Ленинский проспект", action: "selection", target: "leninsky", buttonType: "option" },
-                    { id: "red-veteranov", text: "🟥 Проспект Ветеранов", action: "selection", target: "veteranov", buttonType: "option" },
-                    { id: "btn-back-metro", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+                    { id: "red-devyatkino", text: "🟥 Девяткино", action: "selection", target: "devyatkino" },
+                    { id: "red-grazhdansky", text: "🟥 Гражданский проспект", action: "selection", target: "grazhdansky" },
+                    { id: "red-akademicheskaya", text: "🟥 Академическая", action: "selection", target: "akademicheskaya" },
+                    { id: "red-politehnicheskaya", text: "🟥 Политехническая", action: "selection", target: "politehnicheskaya" },
+                    { id: "red-pl-muzhestva", text: "🟥 Площадь Мужества", action: "selection", target: "pl_muzhestva" },
+                    { id: "red-lesnaya", text: "🟥 Лесная", action: "selection", target: "lesnaya" },
+                    { id: "red-vyborgskaya", text: "🟥 Выборгская", action: "selection", target: "vyborgskaya" },
+                    { id: "red-pl-lenina", text: "🟥 Площадь Ленина", action: "selection", target: "pl_lenina" },
+                    { id: "red-chernyshevskaya", text: "🟥 Чернышевская", action: "selection", target: "chernyshevskaya" },
+                    { id: "red-pl-vosstaniya", text: "🟥 Площадь Восстания", action: "selection", target: "pl_vosstaniya" },
+                    { id: "red-vladimirskaya", text: "🟥 Владимирская", action: "selection", target: "vladimirskaya" },
+                    { id: "red-pushkinskaya", text: "🟥 Пушкинская", action: "selection", target: "pushkinskaya" },
+                    { id: "red-tehinstitut1", text: "🟥 Технологический институт-1", action: "selection", target: "tehinstitut1" },
+                    { id: "red-baltiyskaya", text: "🟥 Балтийская", action: "selection", target: "baltiyskaya" },
+                    { id: "red-narvskaya", text: "🟥 Нарвская", action: "selection", target: "narvskaya" },
+                    { id: "red-kirovsky", text: "🟥 Кировский завод", action: "selection", target: "kirovsky" },
+                    { id: "red-avtovo", text: "🟥 Автово", action: "selection", target: "avtovo" },
+                    { id: "red-leninsky", text: "🟥 Ленинский проспект", action: "selection", target: "leninsky" },
+                    { id: "red-veteranov", text: "🟥 Проспект Ветеранов", action: "selection", target: "veteranov" },
+                    { id: "btn-back-metro", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection" }
                   ],
                   markdown: false
                 }
@@ -332,25 +322,25 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "metro_stations",
                   continueButtonTarget: "interests_categories",
                   buttons: [
-                    { id: "blue-parnas", text: "🟦 Парнас", action: "selection", target: "parnas", buttonType: "option" },
-                    { id: "blue-prosp-prosvesh", text: "🟦 Проспект Просвещения", action: "selection", target: "prosp_prosvesh", buttonType: "option" },
-                    { id: "blue-ozerki", text: "🟦 Озерки", action: "selection", target: "ozerki", buttonType: "option" },
-                    { id: "blue-udelnaya", text: "🟦 Удельная", action: "selection", target: "udelnaya", buttonType: "option" },
-                    { id: "blue-pionerskaya", text: "🟦 Пионерская", action: "selection", target: "pionerskaya", buttonType: "option" },
-                    { id: "blue-chernaya", text: "🟦 Черная речка", action: "selection", target: "chernaya", buttonType: "option" },
-                    { id: "blue-petrogradskaya", text: "🟦 Петроградская", action: "selection", target: "petrogradskaya", buttonType: "option" },
-                    { id: "blue-gorkovskaya", text: "🟦 Горьковская", action: "selection", target: "gorkovskaya", buttonType: "option" },
-                    { id: "blue-nevsky", text: "🟦 Невский проспект", action: "selection", target: "nevsky", buttonType: "option" },
-                    { id: "blue-sennaya", text: "🟦 Сенная площадь", action: "selection", target: "sennaya", buttonType: "option" },
-                    { id: "blue-tehinstitut2", text: "🟦 Технологический институт-2", action: "selection", target: "tehinstitut2", buttonType: "option" },
-                    { id: "blue-frunzenskaya", text: "🟦 Фрунзенская", action: "selection", target: "frunzenskaya", buttonType: "option" },
-                    { id: "blue-mosk-vorota", text: "🟦 Московские ворота", action: "selection", target: "mosk_vorota", buttonType: "option" },
-                    { id: "blue-elektrosila", text: "🟦 Электросила", action: "selection", target: "elektrosila", buttonType: "option" },
-                    { id: "blue-park-pobedy", text: "🟦 Парк Победы", action: "selection", target: "park_pobedy", buttonType: "option" },
-                    { id: "blue-moskovskaya", text: "🟦 Московская", action: "selection", target: "moskovskaya", buttonType: "option" },
-                    { id: "blue-zvezdnaya", text: "🟦 Звездная", action: "selection", target: "zvezdnaya", buttonType: "option" },
-                    { id: "blue-kupchino", text: "🟦 Купчино", action: "selection", target: "kupchino", buttonType: "option" },
-                    { id: "btn-back-metro-blue", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+                    { id: "blue-parnas", text: "🟦 Парнас", action: "selection", target: "parnas" },
+                    { id: "blue-prosp-prosvesh", text: "🟦 Проспект Просвещения", action: "selection", target: "prosp_prosvesh" },
+                    { id: "blue-ozerki", text: "🟦 Озерки", action: "selection", target: "ozerki" },
+                    { id: "blue-udelnaya", text: "🟦 Удельная", action: "selection", target: "udelnaya" },
+                    { id: "blue-pionerskaya", text: "🟦 Пионерская", action: "selection", target: "pionerskaya" },
+                    { id: "blue-chernaya", text: "🟦 Черная речка", action: "selection", target: "chernaya" },
+                    { id: "blue-petrogradskaya", text: "🟦 Петроградская", action: "selection", target: "petrogradskaya" },
+                    { id: "blue-gorkovskaya", text: "🟦 Горьковская", action: "selection", target: "gorkovskaya" },
+                    { id: "blue-nevsky", text: "🟦 Невский проспект", action: "selection", target: "nevsky" },
+                    { id: "blue-sennaya", text: "🟦 Сенная площадь", action: "selection", target: "sennaya" },
+                    { id: "blue-tehinstitut2", text: "🟦 Технологический институт-2", action: "selection", target: "tehinstitut2" },
+                    { id: "blue-frunzenskaya", text: "🟦 Фрунзенская", action: "selection", target: "frunzenskaya" },
+                    { id: "blue-mosk-vorota", text: "🟦 Московские ворота", action: "selection", target: "mosk_vorota" },
+                    { id: "blue-elektrosila", text: "🟦 Электросила", action: "selection", target: "elektrosila" },
+                    { id: "blue-park-pobedy", text: "🟦 Парк Победы", action: "selection", target: "park_pobedy" },
+                    { id: "blue-moskovskaya", text: "🟦 Московская", action: "selection", target: "moskovskaya" },
+                    { id: "blue-zvezdnaya", text: "🟦 Звездная", action: "selection", target: "zvezdnaya" },
+                    { id: "blue-kupchino", text: "🟦 Купчино", action: "selection", target: "kupchino" },
+                    { id: "btn-back-metro-blue", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection" }
                   ],
                   markdown: false
                 }
@@ -367,19 +357,19 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "metro_stations",
                   continueButtonTarget: "interests_categories",
                   buttons: [
-                    { id: "green-primorskaya", text: "🟩 Приморская", action: "selection", target: "primorskaya", buttonType: "option" },
-                    { id: "green-vasileostr", text: "🟩 Василеостровская", action: "selection", target: "vasileostr", buttonType: "option" },
-                    { id: "green-gostiny", text: "🟩 Гостиный двор", action: "selection", target: "gostiny", buttonType: "option" },
-                    { id: "green-mayakovskaya", text: "🟩 Маяковская", action: "selection", target: "mayakovskaya", buttonType: "option" },
-                    { id: "green-pl-nevsk", text: "🟩 Площадь Александра Невского-1", action: "selection", target: "pl_nevsk", buttonType: "option" },
-                    { id: "green-elizarovskaya", text: "🟩 Елизаровская", action: "selection", target: "elizarovskaya", buttonType: "option" },
-                    { id: "green-lomonosovskaya", text: "🟩 Ломоносовская", action: "selection", target: "lomonosovskaya", buttonType: "option" },
-                    { id: "green-proletarskaya", text: "🟩 Пролетарская", action: "selection", target: "proletarskaya", buttonType: "option" },
-                    { id: "green-obuhovo", text: "🟩 Обухово", action: "selection", target: "obuhovo", buttonType: "option" },
-                    { id: "green-rybackoe", text: "🟩 Рыбацкое", action: "selection", target: "rybackoe", buttonType: "option" },
-                    { id: "green-novokrestovsk", text: "🟩 Новокрестовская", action: "selection", target: "novokrestovsk", buttonType: "option" },
-                    { id: "green-begovaya", text: "🟩 Беговая", action: "selection", target: "begovaya", buttonType: "option" },
-                    { id: "btn-back-metro-green", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+                    { id: "green-primorskaya", text: "🟩 Приморская", action: "selection", target: "primorskaya" },
+                    { id: "green-vasileostr", text: "🟩 Василеостровская", action: "selection", target: "vasileostr" },
+                    { id: "green-gostiny", text: "🟩 Гостиный двор", action: "selection", target: "gostiny" },
+                    { id: "green-mayakovskaya", text: "🟩 Маяковская", action: "selection", target: "mayakovskaya" },
+                    { id: "green-pl-nevsk", text: "🟩 Площадь Александра Невского-1", action: "selection", target: "pl_nevsk" },
+                    { id: "green-elizarovskaya", text: "🟩 Елизаровская", action: "selection", target: "elizarovskaya" },
+                    { id: "green-lomonosovskaya", text: "🟩 Ломоносовская", action: "selection", target: "lomonosovskaya" },
+                    { id: "green-proletarskaya", text: "🟩 Пролетарская", action: "selection", target: "proletarskaya" },
+                    { id: "green-obuhovo", text: "🟩 Обухово", action: "selection", target: "obuhovo" },
+                    { id: "green-rybackoe", text: "🟩 Рыбацкое", action: "selection", target: "rybackoe" },
+                    { id: "green-novokrestovsk", text: "🟩 Новокрестовская", action: "selection", target: "novokrestovsk" },
+                    { id: "green-begovaya", text: "🟩 Беговая", action: "selection", target: "begovaya" },
+                    { id: "btn-back-metro-green", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection" }
                   ],
                   markdown: false
                 }
@@ -396,19 +386,19 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "metro_stations",
                   continueButtonTarget: "interests_categories",
                   buttons: [
-                    { id: "purple-komendantsky", text: "🟪 Комендантский проспект", action: "selection", target: "komendantsky", buttonType: "option" },
-                    { id: "purple-staraya", text: "🟪 Старая Деревня", action: "selection", target: "staraya", buttonType: "option" },
-                    { id: "purple-krestovsky", text: "🟪 Крестовский остров", action: "selection", target: "krestovsky", buttonType: "option" },
-                    { id: "purple-chkalovskaya", text: "🟪 Чкаловская", action: "selection", target: "chkalovskaya", buttonType: "option" },
-                    { id: "purple-sportivnaya", text: "🟪 Спортивная", action: "selection", target: "sportivnaya", buttonType: "option" },
-                    { id: "purple-admiralteyskaya", text: "🟪 Адмиралтейская", action: "selection", target: "admiralteyskaya", buttonType: "option" },
-                    { id: "purple-sadovaya", text: "🟪 Садовая", action: "selection", target: "sadovaya", buttonType: "option" },
-                    { id: "purple-zvenigorodskaya", text: "🟪 Звенигородская", action: "selection", target: "zvenigorodskaya", buttonType: "option" },
-                    { id: "purple-obvodniy", text: "🟪 Обводный канал", action: "selection", target: "obvodniy", buttonType: "option" },
-                    { id: "purple-volkovskaya", text: "🟪 Волковская", action: "selection", target: "volkovskaya", buttonType: "option" },
-                    { id: "purple-buharestskaya", text: "🟪 Бухарестская", action: "selection", target: "buharestskaya", buttonType: "option" },
-                    { id: "purple-mezhdunar", text: "🟪 Международная", action: "selection", target: "mezhdunar", buttonType: "option" },
-                    { id: "btn-back-metro-purple", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+                    { id: "purple-komendantsky", text: "🟪 Комендантский проспект", action: "selection", target: "komendantsky" },
+                    { id: "purple-staraya", text: "🟪 Старая Деревня", action: "selection", target: "staraya" },
+                    { id: "purple-krestovsky", text: "🟪 Крестовский остров", action: "selection", target: "krestovsky" },
+                    { id: "purple-chkalovskaya", text: "🟪 Чкаловская", action: "selection", target: "chkalovskaya" },
+                    { id: "purple-sportivnaya", text: "🟪 Спортивная", action: "selection", target: "sportivnaya" },
+                    { id: "purple-admiralteyskaya", text: "🟪 Адмиралтейская", action: "selection", target: "admiralteyskaya" },
+                    { id: "purple-sadovaya", text: "🟪 Садовая", action: "selection", target: "sadovaya" },
+                    { id: "purple-zvenigorodskaya", text: "🟪 Звенигородская", action: "selection", target: "zvenigorodskaya" },
+                    { id: "purple-obvodniy", text: "🟪 Обводный канал", action: "selection", target: "obvodniy" },
+                    { id: "purple-volkovskaya", text: "🟪 Волковская", action: "selection", target: "volkovskaya" },
+                    { id: "purple-buharestskaya", text: "🟪 Бухарестская", action: "selection", target: "buharestskaya" },
+                    { id: "purple-mezhdunar", text: "🟪 Международная", action: "selection", target: "mezhdunar" },
+                    { id: "btn-back-metro-purple", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection" }
                   ],
                   markdown: false
                 }
@@ -438,7 +428,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "🎵 Музыка",
                       action: "goto",
                       target: "music_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -446,7 +435,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "🎨 Хобби",
                       action: "goto",
                       target: "hobby_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -454,7 +442,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "👥 Общение",
                       action: "goto",
                       target: "social_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -462,7 +449,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "🎭 Творчество",
                       action: "goto",
                       target: "creativity_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -470,7 +456,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "⚽ Активности",
                       action: "goto",
                       target: "active_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -478,7 +463,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "🍔 Еда",
                       action: "goto",
                       target: "food_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -486,7 +470,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "🏋️ Спорт",
                       action: "goto",
                       target: "sport_interests",
-                      buttonType: "normal",
                       skipDataCollection: true
                     }
                   ],
@@ -507,15 +490,15 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
-                    { id: "music-pop", text: "🎤 Поп", action: "selection", target: "pop", buttonType: "option" },
-                    { id: "music-rock", text: "🎸 Рок", action: "selection", target: "rock", buttonType: "option" },
-                    { id: "music-electronic", text: "🎧 Электро", action: "selection", target: "electronic", buttonType: "option" },
-                    { id: "music-jazz", text: "🎺 Джаз", action: "selection", target: "jazz", buttonType: "option" },
-                    { id: "music-classical", text: "🎼 Классика", action: "selection", target: "classical", buttonType: "option" },
-                    { id: "music-hiphop", text: "🎤 Хип-хоп", action: "selection", target: "hiphop", buttonType: "option" },
-                    { id: "music-indie", text: "🎸 Инди", action: "selection", target: "indie", buttonType: "option" },
-                    { id: "music-rnb", text: "🎵 R&B", action: "selection", target: "rnb", buttonType: "option" },
-                    { id: "btn-back-categories-music", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "music-pop", text: "🎤 Поп", action: "selection", target: "pop" },
+                    { id: "music-rock", text: "🎸 Рок", action: "selection", target: "rock" },
+                    { id: "music-electronic", text: "🎧 Электро", action: "selection", target: "electronic" },
+                    { id: "music-jazz", text: "🎺 Джаз", action: "selection", target: "jazz" },
+                    { id: "music-classical", text: "🎼 Классика", action: "selection", target: "classical" },
+                    { id: "music-hiphop", text: "🎤 Хип-хоп", action: "selection", target: "hiphop" },
+                    { id: "music-indie", text: "🎸 Инди", action: "selection", target: "indie" },
+                    { id: "music-rnb", text: "🎵 R&B", action: "selection", target: "rnb" },
+                    { id: "btn-back-categories-music", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -532,15 +515,15 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
-                    { id: "hobby-reading", text: "📚 Чтение", action: "selection", target: "reading", buttonType: "option" },
-                    { id: "hobby-gaming", text: "🎮 Игры", action: "selection", target: "gaming", buttonType: "option" },
-                    { id: "hobby-cooking", text: "👨‍🍳 Готовка", action: "selection", target: "cooking", buttonType: "option" },
-                    { id: "hobby-gardening", text: "🌱 Садоводство", action: "selection", target: "gardening", buttonType: "option" },
-                    { id: "hobby-collecting", text: "🏺 Коллекции", action: "selection", target: "collecting", buttonType: "option" },
-                    { id: "hobby-diy", text: "🔨 DIY", action: "selection", target: "diy", buttonType: "option" },
-                    { id: "hobby-pets", text: "🐕 Животные", action: "selection", target: "pets", buttonType: "option" },
-                    { id: "hobby-tech", text: "💻 Технологии", action: "selection", target: "tech", buttonType: "option" },
-                    { id: "btn-back-categories-hobby", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "hobby-reading", text: "📚 Чтение", action: "selection", target: "reading" },
+                    { id: "hobby-gaming", text: "🎮 Игры", action: "selection", target: "gaming" },
+                    { id: "hobby-cooking", text: "👨‍🍳 Готовка", action: "selection", target: "cooking" },
+                    { id: "hobby-gardening", text: "🌱 Садоводство", action: "selection", target: "gardening" },
+                    { id: "hobby-collecting", text: "🏺 Коллекции", action: "selection", target: "collecting" },
+                    { id: "hobby-diy", text: "🔨 DIY", action: "selection", target: "diy" },
+                    { id: "hobby-pets", text: "🐕 Животные", action: "selection", target: "pets" },
+                    { id: "hobby-tech", text: "💻 Технологии", action: "selection", target: "tech" },
+                    { id: "btn-back-categories-hobby", text: "⬅️ Назад к категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -557,13 +540,13 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
-                    { id: "social-parties", text: "🎉 Вечеринки", action: "selection", target: "parties", buttonType: "option" },
-                    { id: "social-networking", text: "🤝 Нетворкинг", action: "selection", target: "networking", buttonType: "option" },
-                    { id: "social-dating", text: "💕 Знакомства", action: "selection", target: "dating", buttonType: "option" },
-                    { id: "social-volunteering", text: "🤲 Волонтёрство", action: "selection", target: "volunteering", buttonType: "option" },
-                    { id: "social-events", text: "🎪 Мероприятия", action: "selection", target: "events", buttonType: "option" },
-                    { id: "social-community", text: "👥 Сообщества", action: "selection", target: "community", buttonType: "option" },
-                    { id: "btn-back-categories-social", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "social-parties", text: "🎉 Вечеринки", action: "selection", target: "parties" },
+                    { id: "social-networking", text: "🤝 Нетворкинг", action: "selection", target: "networking" },
+                    { id: "social-dating", text: "💕 Знакомства", action: "selection", target: "dating" },
+                    { id: "social-volunteering", text: "🤲 Волонтёрство", action: "selection", target: "volunteering" },
+                    { id: "social-events", text: "🎪 Мероприятия", action: "selection", target: "events" },
+                    { id: "social-community", text: "👥 Сообщества", action: "selection", target: "community" },
+                    { id: "btn-back-categories-social", text: "⬅️ К категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -580,14 +563,14 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
-                    { id: "creativity-art", text: "🎨 Рисование", action: "selection", target: "art", buttonType: "option" },
-                    { id: "creativity-music", text: "🎵 Музыка", action: "selection", target: "music", buttonType: "option" },
-                    { id: "creativity-photography", text: "📸 Фотография", action: "selection", target: "photography", buttonType: "option" },
-                    { id: "creativity-writing", text: "✍️ Писательство", action: "selection", target: "writing", buttonType: "option" },
-                    { id: "creativity-design", text: "🖌️ Дизайн", action: "selection", target: "design", buttonType: "option" },
-                    { id: "creativity-handmade", text: "🧶 Рукоделие", action: "selection", target: "handmade", buttonType: "option" },
-                    { id: "creativity-theater", text: "🎭 Театр", action: "selection", target: "theater", buttonType: "option" },
-                    { id: "btn-back-categories-creativity", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "creativity-art", text: "🎨 Рисование", action: "selection", target: "art" },
+                    { id: "creativity-music", text: "🎵 Музыка", action: "selection", target: "music" },
+                    { id: "creativity-photography", text: "📸 Фотография", action: "selection", target: "photography" },
+                    { id: "creativity-writing", text: "✍️ Писательство", action: "selection", target: "writing" },
+                    { id: "creativity-design", text: "🖌️ Дизайн", action: "selection", target: "design" },
+                    { id: "creativity-handmade", text: "🧶 Рукоделие", action: "selection", target: "handmade" },
+                    { id: "creativity-theater", text: "🎭 Театр", action: "selection", target: "theater" },
+                    { id: "btn-back-categories-creativity", text: "⬅️ К категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -604,14 +587,14 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
-                    { id: "active-running", text: "🏃 Бег", action: "selection", target: "running", buttonType: "option" },
-                    { id: "active-gym", text: "💪 Тренажёрный зал", action: "selection", target: "gym", buttonType: "option" },
-                    { id: "active-cycling", text: "🚴 Велосипед", action: "selection", target: "cycling", buttonType: "option" },
-                    { id: "active-hiking", text: "🥾 Походы", action: "selection", target: "hiking", buttonType: "option" },
-                    { id: "active-yoga", text: "🧘 Йога", action: "selection", target: "yoga", buttonType: "option" },
-                    { id: "active-swimming", text: "🏊 Плавание", action: "selection", target: "swimming", buttonType: "option" },
-                    { id: "active-dancing", text: "💃 Танцы", action: "selection", target: "dancing", buttonType: "option" },
-                    { id: "btn-back-categories-active", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "active-running", text: "🏃 Бег", action: "selection", target: "running" },
+                    { id: "active-gym", text: "💪 Тренажёрный зал", action: "selection", target: "gym" },
+                    { id: "active-cycling", text: "🚴 Велосипед", action: "selection", target: "cycling" },
+                    { id: "active-hiking", text: "🥾 Походы", action: "selection", target: "hiking" },
+                    { id: "active-yoga", text: "🧘 Йога", action: "selection", target: "yoga" },
+                    { id: "active-swimming", text: "🏊 Плавание", action: "selection", target: "swimming" },
+                    { id: "active-dancing", text: "💃 Танцы", action: "selection", target: "dancing" },
+                    { id: "btn-back-categories-active", text: "⬅️ К категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -628,14 +611,14 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
-                    { id: "food-cooking", text: "👨‍🍳 Готовка", action: "selection", target: "cooking", buttonType: "option" },
-                    { id: "food-restaurants", text: "🍽️ Рестораны", action: "selection", target: "restaurants", buttonType: "option" },
-                    { id: "food-wine", text: "🍷 Вино", action: "selection", target: "wine", buttonType: "option" },
-                    { id: "food-coffee", text: "☕ Кофе", action: "selection", target: "coffee", buttonType: "option" },
-                    { id: "food-baking", text: "🧁 Выпечка", action: "selection", target: "baking", buttonType: "option" },
-                    { id: "food-street", text: "🌮 Стрит-фуд", action: "selection", target: "street_food", buttonType: "option" },
-                    { id: "food-healthy", text: "🥗 Здоровое питание", action: "selection", target: "healthy_food", buttonType: "option" },
-                    { id: "btn-back-categories-food", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "food-cooking", text: "👨‍🍳 Готовка", action: "selection", target: "cooking" },
+                    { id: "food-restaurants", text: "🍽️ Рестораны", action: "selection", target: "restaurants" },
+                    { id: "food-wine", text: "🍷 Вино", action: "selection", target: "wine" },
+                    { id: "food-coffee", text: "☕ Кофе", action: "selection", target: "coffee" },
+                    { id: "food-baking", text: "🧁 Выпечка", action: "selection", target: "baking" },
+                    { id: "food-street", text: "🌮 Стрит-фуд", action: "selection", target: "street_food" },
+                    { id: "food-healthy", text: "🥗 Здоровое питание", action: "selection", target: "healthy_food" },
+                    { id: "btn-back-categories-food", text: "⬅️ К категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -652,14 +635,14 @@ async function seedDefaultTemplates(force = false) {
                   multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
-                    { id: "sport-football", text: "⚽ Футбол", action: "selection", target: "football", buttonType: "option" },
-                    { id: "sport-basketball", text: "🏀 Баскетбол", action: "selection", target: "basketball", buttonType: "option" },
-                    { id: "sport-tennis", text: "🎾 Теннис", action: "selection", target: "tennis", buttonType: "option" },
-                    { id: "sport-hockey", text: "🏒 Хоккей", action: "selection", target: "hockey", buttonType: "option" },
-                    { id: "sport-volleyball", text: "🏐 Волейбол", action: "selection", target: "volleyball", buttonType: "option" },
-                    { id: "sport-mma", text: "🥊 Единоборства", action: "selection", target: "mma", buttonType: "option" },
-                    { id: "sport-esports", text: "🎮 Киберспорт", action: "selection", target: "esports", buttonType: "option" },
-                    { id: "btn-back-categories-sport", text: "⬅️ К категориям", action: "goto", target: "interests_categories", buttonType: "navigation" }
+                    { id: "sport-football", text: "⚽ Футбол", action: "selection", target: "football" },
+                    { id: "sport-basketball", text: "🏀 Баскетбол", action: "selection", target: "basketball" },
+                    { id: "sport-tennis", text: "🎾 Теннис", action: "selection", target: "tennis" },
+                    { id: "sport-hockey", text: "🏒 Хоккей", action: "selection", target: "hockey" },
+                    { id: "sport-volleyball", text: "🏐 Волейбол", action: "selection", target: "volleyball" },
+                    { id: "sport-mma", text: "🥊 Единоборства", action: "selection", target: "mma" },
+                    { id: "sport-esports", text: "🎮 Киберспорт", action: "selection", target: "esports" },
+                    { id: "btn-back-categories-sport", text: "⬅️ К категориям", action: "goto", target: "interests_categories" }
                   ],
                   markdown: false
                 }
@@ -688,32 +671,28 @@ async function seedDefaultTemplates(force = false) {
                       text: "Холост/Не замужем 💚",
                       value: "single",
                       action: "goto",
-                      target: "sexual_orientation",
-                      buttonType: "option"
+                      target: "sexual_orientation"
                     },
                     {
                       id: "btn-relationship",
                       text: "В отношениях 💙",
                       value: "relationship",
                       action: "goto",
-                      target: "sexual_orientation",
-                      buttonType: "option"
+                      target: "sexual_orientation"
                     },
                     {
                       id: "btn-married",
                       text: "Женат/Замужем 💛",
                       value: "married",
                       action: "goto",
-                      target: "sexual_orientation",
-                      buttonType: "option"
+                      target: "sexual_orientation"
                     },
                     {
                       id: "btn-complicated",
                       text: "Всё сложно 🤷",
                       value: "complicated",
                       action: "goto",
-                      target: "sexual_orientation",
-                      buttonType: "option"
+                      target: "sexual_orientation"
                     }
                   ],
                   markdown: false,
@@ -737,40 +716,35 @@ async function seedDefaultTemplates(force = false) {
                       text: "Гетеро 👫",
                       value: "heterosexual",
                       action: "goto",
-                      target: "channel_choice",
-                      buttonType: "option"
+                      target: "channel_choice"
                     },
                     {
                       id: "btn-gay",
                       text: "Гей 👬",
                       value: "gay",
                       action: "goto",
-                      target: "channel_choice",
-                      buttonType: "option"
+                      target: "channel_choice"
                     },
                     {
                       id: "btn-lesbian",
                       text: "Лесбиянка 👭",
                       value: "lesbian",
                       action: "goto",
-                      target: "channel_choice",
-                      buttonType: "option"
+                      target: "channel_choice"
                     },
                     {
                       id: "btn-bi",
                       text: "Би 🌈",
                       value: "bisexual",
                       action: "goto",
-                      target: "channel_choice",
-                      buttonType: "option"
+                      target: "channel_choice"
                     },
                     {
                       id: "btn-other",
                       text: "Другое 🎭",
                       value: "other",
                       action: "goto",
-                      target: "channel_choice",
-                      buttonType: "option"
+                      target: "channel_choice"
                     }
                   ],
                   markdown: false,
@@ -796,7 +770,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "Пропустить ⏭️",
                       action: "goto",
                       target: "extra_info",
-                      buttonType: "normal",
                       skipDataCollection: true
                     }
                   ],
@@ -823,7 +796,6 @@ async function seedDefaultTemplates(force = false) {
                       text: "Пропустить ⏭️",
                       action: "goto",
                       target: "profile_complete",
-                      buttonType: "normal",
                       skipDataCollection: true
                     }
                   ],
@@ -853,15 +825,13 @@ async function seedDefaultTemplates(force = false) {
                       id: "btn-chat-link",
                       text: "Ссылка на чат 🔗",
                       action: "command",
-                      target: "/link",
-                      buttonType: "normal"
+                      target: "/link"
                     },
                     {
                       id: "btn-show-profile-edit",
                       text: "Редактировать профиль ✏️",
                       action: "command",
-                      target: "/profile",
-                      buttonType: "normal"
+                      target: "/profile"
                     }
                   ],
                   markdown: false,
@@ -885,71 +855,61 @@ async function seedDefaultTemplates(force = false) {
                       id: "btn-edit-gender",
                       text: "👤 Изменить пол",
                       action: "goto",
-                      target: "gender_selection",
-                      buttonType: "option"
+                      target: "gender_selection"
                     },
                     {
                       id: "btn-edit-name",
                       text: "✏️ Изменить имя",
                       action: "goto",
-                      target: "name_input",
-                      buttonType: "option"
+                      target: "name_input"
                     },
                     {
                       id: "btn-edit-age",
                       text: "🎂 Изменить возраст",
                       action: "goto",
-                      target: "age_input",
-                      buttonType: "option"
+                      target: "age_input"
                     },
                     {
                       id: "btn-edit-metro",
                       text: "🚇 Изменить метро",
                       action: "goto",
-                      target: "metro_selection",
-                      buttonType: "option"
+                      target: "metro_selection"
                     },
                     {
                       id: "btn-edit-interests",
                       text: "🎯 Изменить интересы",
                       action: "goto",
-                      target: "interests_categories",
-                      buttonType: "option"
+                      target: "interests_categories"
                     },
                     {
                       id: "btn-edit-marital",
                       text: "💍 Изменить семейное положение",
                       action: "goto",
-                      target: "marital_status",
-                      buttonType: "option"
+                      target: "marital_status"
                     },
                     {
                       id: "btn-edit-orientation",
                       text: "🌈 Изменить ориентацию",
                       action: "goto",
-                      target: "sexual_orientation",
-                      buttonType: "option"
+                      target: "sexual_orientation"
                     },
                     {
                       id: "btn-edit-channel",
                       text: "📢 Указать ТГК",
                       action: "goto",
-                      target: "channel_choice",
-                      buttonType: "option"
+                      target: "channel_choice"
                     },
                     {
                       id: "btn-edit-extra",
                       text: "📝 Добавить о себе",
                       action: "goto",
-                      target: "extra_info",
-                      buttonType: "option"
+                      target: "extra_info"
                     },
                     {
                       id: "btn-restart-from-profile",
                       text: "🔄 Начать заново",
                       action: "command",
-                      target: "/start",
-                      buttonType: "navigation"
+                      target: "/start"
                     }
                   ],
                   markdown: false
@@ -979,29 +939,26 @@ async function seedDefaultTemplates(force = false) {
                   commandName: "/help",
                   description: "Полная справка по всем командам бота и модерации",
                   synonyms: ["помощь", "справка", "команды", "что писать", "как пользоваться", "админ справка", "админ помощь", "админ команды"],
-                  messageText: "🤖 **Добро пожаловать в справочный центр!**\n\n🌟 **ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot**\n*Твой помощник в знакомствах*\n\n🎯 **ОСНОВНЫЕ КОМАНДЫ:**\n\n🚀 `/start` — *Начать заново*\n   📝 Синонимы: `старт`, `начать`, `привет`, `начало`, `начинаем`\n\n👤 `/profile` — *Мой профиль*\n   📝 Синонимы: `профиль`, `анкета`, `мой профиль`, `посмотреть профиль`, `редактировать профиль`\n\n🔗 `/link` — *Ссылка на чат*\n   📝 Синонимы: `ссылка`, `чат`, `сообщество`, `впрогулке`, `линк`\n\n🆘 `/help` — *Эта справка*\n   📝 Синонимы: `помощь`, `справка`, `команды`, `что писать`, `как пользоваться`\n\n📋 **РАЗДЕЛЫ АНКЕТЫ И ИХ СИНОНИМЫ:**\n\n👫 **Пол:** мужской, женский\n   📝 Синонимы: `пол`, `gender`\n\n🏷️ **Имя:** любое имя\n   📝 Синонимы: `имя`, `как зовут`, `назовись`\n\n🎂 **Возраст:** число от 18 до 99\n   📝 Синонимы: `возраст`, `лет`, `сколько лет`\n\n🚇 **Метро:** выбор линии и станции\n   📝 Синонимы: `метро`, `станция`\n   🟥 Красная линия: `красная линия`, `кировско-выборгская`, `красная ветка`\n   🟦 Синяя линия: `синяя линия`, `московско-петроградская`, `синяя ветка`\n   🟩 Зеленая линия: `зеленая линия`, `невско-василеостровская`, `зеленая ветка`\n   🟧 Оранжевая линия: `оранжевая линия`, `правобережная`, `оранжевая ветка`\n   🟪 Фиолетовая линия: `фиолетовая линия`, `фрунзенско-приморская`, `фиолетовая ветка`\n\n🎨 **Интересы и их синонимы:**\n   🎮 Хобби: `хобби`, `увлечения`, `занятия`, `игры`\n   🤝 Социальная жизнь: `общение`, `социальное`, `люди`, `тусовки`\n   🎭 Творчество: `творчество`, `искусство`, `рисование`, `музыка`\n   💪 Активный образ жизни: `активность`, `активный`, `движение`, `здоровье`\n   🍕 Еда и напитки: `еда`, `напитки`, `кухня`, `рестораны`\n   ⚽ Спорт: `спорт`, `фитнес`, `тренировки`, `футбол`\n\n💑 **Семейное положение:** поиск, отношения, женат/замужем, сложно\n   📝 Синонимы: `семейное положение`, `статус`, `отношения`, `семья`\n\n🌈 **Ориентация:** гетеро, гей, лесби, би, другое\n   📝 Синонимы: `ориентация`, `предпочтения`\n\n📺 **Телеграм-канал:** опционально\n   📝 Синонимы: `тгк`, `телеграм`, `канал`, `тг канал`\n\n📖 **О себе:** дополнительная информация\n   📝 Синонимы: `о себе`, `описание`, `расскажи`, `инфо`\n\n👮‍♂️ **КОМАНДЫ МОДЕРАЦИИ:**\n\n**Управление контентом:**\n📌 `/pin_message` - Закрепить сообщение\n   📝 Синонимы: `закрепить`, `прикрепить`, `зафиксировать`\n\n📌❌ `/unpin_message` - Открепить сообщение\n   📝 Синонимы: `открепить`, `отцепить`, `убрать закрепление`\n\n🗑️ `/delete_message` - Удалить сообщение\n   📝 Синонимы: `удалить`, `стереть`, `убрать сообщение`\n\n**Управление пользователями:**\n🚫 `/ban_user` - Заблокировать пользователя\n   📝 Синонимы: `забанить`, `заблокировать`, `бан`\n\n✅ `/unban_user` - Разблокировать пользователя\n   📝 Синонимы: `разбанить`, `разблокировать`, `unbán`\n\n🔇 `/mute_user` - Ограничить пользователя\n   📝 Синонимы: `замутить`, `заглушить`, `мут`\n\n🔊 `/unmute_user` - Снять ограничения\n   📝 Синонимы: `размутить`, `разглушить`, `анмут`\n\n👢 `/kick_user` - Исключить пользователя\n   📝 Синонимы: `кикнуть`, `исключить`, `выгнать`\n\n👑 `/promote_user` - Назначить администратором\n   📝 Синонимы: `повысить`, `назначить админом`, `промоут`\n\n👤 `/demote_user` - Снять с администратора\n   📝 Синонимы: `понизить`, `снять с админа`, `демоут`\n\n⚙️ `/admin_rights` - Настроить права администратора\n   📝 Синонимы: `права админа`, `настроить права`, `тг права`\n   ⚠️ Только для администраторов группы!\n   💡 Ответьте на сообщение пользователя командой\n\n**Примеры использования:**\n• Ответьте на сообщение командой для его обработки\n• Используйте команды в ответ на сообщения нарушителей\n• Команды с правами работают только в группах/су??ерг??уппах\n• ������се действия логируют???? для отчетности\n\n💡 **ПОЛЕЗНЫЕ СОВЕТЫ:**\n\n✨ Можешь писать команды или синонимы в любом месте разговора\n✨ Бот поймет твои сообщения даже без команд\n✨ В любой момент можешь написать /start для начала заново\n✨ Используй /profile для изменения любых данных\n✨ Нажми на любое выделенное слово чтобы скопировать его!\n\n🎉 **Удачных знакомств в Питере!** 🎉",
+                  messageText: "🤖 **Добро пожаловать в справочный центр!**\n\n🌟 **ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot**\n*Твой помощник в знакомствах*\n\n🎯 **ОСНОВНЫЕ КОМАНДЫ:**\n\n🚀 `/start` — *Начать заново*\n   📝 Синонимы: `старт`, `начать`, `привет`, `начало`, `начинаем`\n\n👤 `/profile` — *Мой профиль*\n   📝 Синонимы: `профиль`, `анкета`, `мой профиль`, `посмотреть профиль`, `редактировать профиль`\n\n🔗 `/link` — *Ссылка на чат*\n   📝 Синонимы: `ссылка`, `чат`, `сообщество`, `впрогулке`, `линк`\n\n🆘 `/help` — *Эта справка*\n   📝 Синонимы: `помощь`, `справка`, `команды`, `что писать`, `как пользоваться`\n\n📋 **РАЗДЕЛЫ АНКЕТЫ И ИХ СИНОНИМЫ:**\n\n👫 **Пол:** мужской, женский\n   📝 Синонимы: `пол`, `gender`\n\n🏷️ **Имя:** любое имя\n   📝 Синонимы: `имя`, `как зовут`, `назовись`\n\n🎂 **Возраст:** число от 18 до 99\n   📝 Синонимы: `возраст`, `лет`, `сколько лет`\n\n🚇 **Метро:** выбор линии и станции\n   📝 Синонимы: `метро`, `станция`\n   🟥 Красная линия: `красная линия`, `кировско-выборгская`, `красная ветка`\n   🟦 Синяя линия: `синяя линия`, `московско-петроградская`, `синяя ветка`\n   🟩 Зеленая линия: `зеленая линия`, `невско-василеостровская`, `зеленая ветка`\n   🟧 Оранжевая линия: `оранжевая линия`, `правобережная`, `оранжевая ветка`\n   🟪 Фиолетовая линия: `фиолетовая линия`, `фрунзенско-приморская`, `фиолетовая ветка`\n\n🎨 **Интересы и их синонимы:**\n   🎮 Хобби: `хобби`, `увлечения`, `занятия`, `игры`\n   🤝 Социальная жизнь: `общение`, `социальное`, `люди`, `тусовки`\n   🎭 Творчество: `творчество`, `искусство`, `рисование`, `музыка`\n   💪 Активный образ жизни: `активность`, `активный`, `движение`, `здоровье`\n   🍕 Еда и напитки: `еда`, `напитки`, `кухня`, `рестораны`\n   ⚽ Спорт: `спорт`, `фитнес`, `тренировки`, `футбол`\n\n💑 **Семейное положение:** поиск, отношения, женат/замужем, сложно\n   📝 Синонимы: `семейное положение`, `статус`, `отношения`, `семья`\n\n🌈 **Ориентация:** гетеро, гей, лесби, би, другое\n   📝 Синонимы: `ориентация`, `предпочтения`\n\n📺 **Телеграм-канал:** опционально\n   📝 Синонимы: `тгк`, `телеграм`, `канал`, `тг канал`\n\n📖 **О себе:** дополнительная информация\n   📝 Синонимы: `о себе`, `описание`, `расскажи`, `инфо`\n\n👮‍♂️ **КОМАНДЫ МОДЕРАЦИИ:**\n\n**Управление контентом:**\n📌 `/pin_message` - Закрепить сообщение\n   📝 Синонимы: `закрепить`, `прикрепить`, `зафиксировать`\n\n📌❌ `/unpin_message` - Открепить сообщение\n   📝 Синонимы: `открепить`, `отцепить`, `убрать закрепление`\n\n🗑️ `/delete_message` - Удалить сообщение\n   📝 Синонимы: `удалить`, `стереть`, `убрать сообщение`\n\n**Управление пользователями:**\n🚫 `/ban_user` - Заблокировать пользователя\n   📝 Синонимы: `забанить`, `заблокировать`, `бан`\n\n✅ `/unban_user` - Разблокировать пользователя\n   📝 Синонимы: `разбанить`, `разблокировать`, `unbán`\n\n🔇 `/mute_user` - Ограничить пользователя\n   📝 Синонимы: `замутить`, `заглушить`, `мут`\n\n🔊 `/unmute_user` - Снять ограничения\n   📝 Синонимы: `размутить`, `разглушить`, `анмут`\n\n👢 `/kick_user` - Исключить пользователя\n   📝 Синонимы: `кикнуть`, `исключить`, `выгнать`\n\n👑 `/promote_user` - Назначить администратором\n   📝 Синонимы: `повысить`, `назначить админом`, `промоут`\n\n👤 `/demote_user` - Снять с администратора\n   📝 Синонимы: `понизить`, `снять с админа`, `демоут`\n\n⚙️ `/admin_rights` - Настроить права администратора\n   📝 Синонимы: `права админа`, `настроить права`, `тг права`\n   ⚠️ Только для администраторов группы!\n   💡 Ответьте на сообщение пользователя командой\n\n**Примеры использования:**\n• Ответьте на сообщение командой для его обработки\n• Используйте команды в ответ на сообщения нарушителей\n• Команды с правами работают только в группах/су??ерг??уппах\n• ������се действия логи��уют???? для отчетности\n\n💡 **ПОЛЕЗНЫЕ СОВЕТЫ:**\n\n✨ Можешь писать команды или синонимы в любом месте разговора\n✨ Бот поймет твои сообщения даже без команд\n✨ В любой момент можешь написать /start для начала заново\n✨ Используй /profile для изменения любых данных\n✨ Нажми на любое выделенное слово чтобы скопировать его!\n\n🎉 **Удачных знакомств в Питере!** 🎉",
                   keyboardType: "inline",
                   buttons: [
                     {
                       id: "btn-help-start",
                       text: "🚀 Начать заполнение",
                       action: "command",
-                      target: "/start",
-                      buttonType: "navigation"
+                      target: "/start"
                     },
                     {
                       id: "btn-help-profile",
                       text: "👤 Мой профиль",
                       action: "command",
-                      target: "/profile",
-                      buttonType: "navigation"
+                      target: "/profile"
                     },
                     {
                       id: "btn-help-link",
                       text: "🔗 Ссылка на чат",
                       action: "command",
-                      target: "/link",
-                      buttonType: "navigation"
+                      target: "/link"
                     }
                   ],
                   markdown: true,
@@ -1238,3 +1195,6 @@ async function seedDefaultTemplates(force = false) {
 }
 
 export { seedDefaultTemplates };
+
+
+

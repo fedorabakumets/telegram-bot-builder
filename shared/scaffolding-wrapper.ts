@@ -11,7 +11,7 @@ export {
   generateReadme,
   generateDockerfile,
   generateEnvFile
-} from '../client/lib/scaffolding';
+} from '../client/lib/bot-generator/scaffolding';
 
 export {
   normalizeProjectData

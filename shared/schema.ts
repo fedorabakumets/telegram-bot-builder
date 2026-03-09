@@ -289,6 +289,8 @@ export const userBotData = pgTable("user_bot_data", {
   tags: text("tags").array().default([]),
   /** Заметки администратора */
   notes: text("notes"),
+  /** URL аватарки пользователя */
+  avatarUrl: text("avatar_url"),
   /** Дата создания записи */
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления записи */
@@ -307,6 +309,10 @@ export const botUsers = pgTable("bot_users", {
   firstName: text("first_name"),
   /** Фамилия пользователя */
   lastName: text("last_name"),
+  /** URL аватарки пользователя */
+  avatarUrl: text("avatar_url"),
+  /** Флаг бота (0 = человек, 1 = бот) */
+  isBot: integer("is_bot").default(0),
   /** Дата регистрации пользователя */
   registeredAt: timestamp("registered_at").defaultNow(),
   /** Дата последнего взаимодействия */
@@ -931,19 +937,18 @@ export type InsertUserId = z.infer<typeof insertUserIdSchema>;
 export const buttonSchema = z.object({
   id: z.string(),
   text: z.string(),
-  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'default']),
+  action: z.enum(['goto', 'url', 'selection', 'complete']),
   target: z.string().optional(),
   url: z.string().optional(),
   requestContact: z.boolean().optional(),
   requestLocation: z.boolean().optional(),
-  buttonType: z.enum(['normal', 'option', 'complete']).default('normal'),
   skipDataCollection: z.boolean().default(false), // Отключить сбор ответов для этой кнопки
   hideAfterClick: z.boolean().default(false), // Скрыть кнопку после использования
 });
 
 export const nodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['start', 'message', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'broadcast'
+  type: z.enum(['start', 'message', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'broadcast', 'client_auth'
     // , 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition' // Закомментированные типы узлов
   ]),
   position: z.object({
@@ -962,6 +967,13 @@ export const nodeSchema = z.object({
     mediaCaption: z.string().optional(),
     keyboardType: z.enum(['reply', 'inline', 'none']).default('none'),
     buttons: z.array(buttonSchema).default([]),
+    keyboardLayout: z.object({
+      rows: z.array(z.object({
+        buttonIds: z.array(z.string()),
+      })).default([]),
+      columns: z.number().min(1).max(6).default(2),
+      autoLayout: z.boolean().default(true),
+    }).optional(),
     oneTimeKeyboard: z.boolean().default(false),
     resizeKeyboard: z.boolean().default(true),
     markdown: z.boolean().default(false),
@@ -1157,7 +1169,7 @@ export const nodeSchema = z.object({
     adminUserIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'), // Источник ID пользователя
     adminUserVariableName: z.string().optional(), // Имя переменной с ID пользователя
     // Права администратора согласно Telegram Bot API (promoteChatMember)
-    can_manage_chat: z.boolean().default(false), // Может управлять чатом
+    can_manage_chat: z.boolean().default(false), // Может упр��влять чатом
     can_post_messages: z.boolean().default(false), // Может публиковать сообщения (только каналы)
     can_edit_messages: z.boolean().default(false), // Может редакт��ровать сообщения (только каналы)
     can_delete_messages: z.boolean().default(false), // Может удалять сообщения
@@ -1195,8 +1207,9 @@ export const nodeSchema = z.object({
     successMessage: z.string().optional(), // Сообщение об успешном завершении рассылки
     errorMessage: z.string().optional(), // Сообщение об ошибке при завершении рассылки
 
-    // Поле для сохранения ID в базу user_ids
-    saveToUserIds: z.boolean().default(false).optional(), // Сохранять ли ID в таблицу user_ids для рассылки
+    // Поля для узла client_auth (авторизация Client API)
+    sessionName: z.string().default('user_session').optional(), // Имя файла сессии
+    sessionCreated: z.boolean().default(false).optional(), // Флаг созданной сессии
 
     // Поле для сохранения ID в CSV файл
     saveToCsv: z.boolean().default(false).optional(), // Сохранять ли ID в CSV файл для рассылки
@@ -1260,6 +1273,10 @@ export interface ComponentDefinition {
 // Schema for sending message to user from admin panel
 export const sendMessageSchema = z.object({
   messageText: z.string().min(1, "Message text is required").max(4096, "Message text is too long"),
+  /** ID узла для отправки (если нужно отправить сообщение от узла с медиа/кнопками) */
+  nodeId: z.string().optional(),
+  /** Данные пользователя для замены переменных */
+  userData: z.record(z.unknown()).optional(),
 });
 
 export type SendMessage = z.infer<typeof sendMessageSchema>;

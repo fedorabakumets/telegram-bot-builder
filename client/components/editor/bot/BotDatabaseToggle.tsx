@@ -43,7 +43,7 @@ export function BotDatabaseToggle({
         id={`db-toggle-bot-${tokenId}`}
         data-testid="switch-database-toggle-bot-card"
         checked={isEnabled}
-        onCheckedChange={(checked) => toggleDatabaseMutation.mutate({ projectId, enabled: checked })}
+        onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
         disabled={toggleDatabaseMutation.isPending}
       />
     </div>

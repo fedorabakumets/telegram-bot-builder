@@ -2,18 +2,14 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    let errorData;
+    let errorData: any;
     try {
-      // Пытаемся распарсить JSON ответ с ошибкой
       errorData = await res.json();
     } catch (parseError) {
-      // Если не удалось распарсить JSON, используем statusText
       throw new Error(`${res.status}: ${res.statusText}`);
     }
-    
-    // Создаем ошибку с сохранением всех свойств (включая requiresClientApi)
+
     const error = new Error(errorData.message || `${res.status}: ${res.statusText}`);
-    // Добавляем все свойства из ответа к ошибке
     Object.assign(error, errorData);
     throw error;
   }

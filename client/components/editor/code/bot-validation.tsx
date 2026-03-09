@@ -30,7 +30,7 @@ export function BotValidation({ botData }: BotValidationProps) {
   useEffect(() => {
     async function loadValidation() {
       try {
-        const { validateBotStructure } = await import('@/lib/utils/validateBotStructure');
+        const { validateBotStructure } = await import('@/lib/bot-generator/utils/validateBotStructure');
         const result = validateBotStructure(botData);
         setValidationResult(result || { isValid: false, errors: [] });
       } catch (error) {

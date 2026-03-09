@@ -1,4 +1,15 @@
 /**
+ * @fileoverview Генерация утилитарных функций для бота
+ *
+ * Модуль создаёт Python-код вспомогательных функций,
+ * включая функции для сохранения в таблицы БД.
+ *
+ * @module generate/generateUtilityFunctions
+ */
+
+import { generateSaveHelperFunctions } from '../bot-generator/database/save-to-bot-users';
+
+/**
  * Генерирует код утилитарных функций для бота
  * @param userDatabaseEnabled - Флаг, указывающий, включена ли база данных пользователей
  * @returns Сгенерированный код утилитарных функций
@@ -32,6 +43,10 @@ export function generateUtilityFunctions(userDatabaseEnabled: boolean): string {
     utilityCode += '        user = await get_user_from_db(user_id)\n';
     utilityCode += '        return user is not None\n';
     utilityCode += '    return user_id in user_data\n\n';
+
+    // Добавляем функции для сохранения в таблицы
+    utilityCode += '\n# Функции для сохранения в таблицы БД\n';
+    utilityCode += generateSaveHelperFunctions('');
   } else {
     // Простая версия без БД - проверяем только локальное хранилище
     utilityCode += 'async def check_auth(user_id: int) -> bool:\n';

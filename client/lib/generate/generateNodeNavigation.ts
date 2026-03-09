@@ -1,19 +1,38 @@
-import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
-import { formatTextForPython } from '../format/formatTextForPython';
+/**
+ * @fileoverview Генерация навигации по узлам бота
+ *
+ * Модуль предоставляет функцию для генерации Python-кода навигации
+ * между узлами графа бота.
+ *
+ * @module generate/generateNodeNavigation
+ */
+
+import type { EnhancedNode } from '../bot-generator/types';
+import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
+import { formatTextForPython } from '../bot-generator/format/formatTextForPython';
 
 /**
- * Функция для генерации кода навигации по узлам
+ * Генерирует код навигации по узлам бота
+ *
  * @param nodes - Массив узлов для генерации навигации
  * @param baseIndent - Базовый отступ для форматирования
  * @param nextNodeIdVar - Имя переменной, содержащей ID следующего узла
  * @param messageVar - Имя переменной сообщения
  * @param userVarsVar - Имя переменной с пользовательскими данными
  * @returns Сгенерированный код навигации
+ *
+ * @example
+ * const navigationCode = generateNodeNavigation(nodes, '    ', 'next_node_id', 'message', 'user_vars');
  */
-export function generateNodeNavigation(nodes: any[], baseIndent: string, nextNodeIdVar: string, messageVar: string, userVarsVar: string): string {
+export function generateNodeNavigation(
+  nodes: EnhancedNode[],
+  baseIndent: string,
+  nextNodeIdVar: string,
+  messageVar: string,
+  userVarsVar: string
+): string {
   let code = '';
 
-  // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
   if (nodes.length > 0) {
     nodes.forEach((targetNode, index) => {
       const condition = index === 0 ? 'if' : 'elif';

@@ -1,8 +1,6 @@
-/**
- * @fileoverview Docker Compose конфигурация для конструктора Telegram-ботов
- * @description Запускает приложение и PostgreSQL базу данных одной командой
- * @usage docker compose up -d
- */
+# Docker Compose конфигурация для конструктора Telegram-ботов
+# Запускает приложение и PostgreSQL базу данных одной командой
+# Usage: docker compose up -d
 
 services:
   # База данных PostgreSQL для хранения проектов и настроек

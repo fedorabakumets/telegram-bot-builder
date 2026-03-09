@@ -42,7 +42,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   const themeClasses = useTerminalTheme();
 
   // Хук изменения размера
-  const { dimensions, startResize } = useTerminalResize();
+  const { dimensions, startResize } = useTerminalResize({ fullSize: true });
 
   // Хук масштаба
   const { scale, adjustScale } = useTerminalScale();
@@ -68,8 +68,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
 
   return (
     <div
-      className={`border rounded-lg overflow-hidden ${themeClasses.terminalBgClass} ${themeClasses.terminalTextClass} font-mono text-sm transition-all duration-200 w-full ${isVisible ? 'opacity-100' : 'hidden'}`}
-      style={{ width: `${dimensions.width}px`, height: `${dimensions.height}px` }}
+      className={`border rounded-lg overflow-hidden ${themeClasses.terminalBgClass} ${themeClasses.terminalTextClass} font-mono text-sm transition-all duration-200 w-full h-full flex flex-col ${isVisible ? 'opacity-100' : 'hidden'}`}
     >
       <TerminalHeader
         onZoomIn={() => adjustScale(1.2)}
@@ -82,23 +81,16 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         buttonTextColorClass={themeClasses.buttonTextColorClass}
         buttonHoverClass={themeClasses.buttonHoverClass}
       />
-
-      <TerminalOutput
-        lines={lines}
-        containerRef={outputContainerRef}
-        height={dimensions.height}
-        scale={scale}
-        terminalTextClass={themeClasses.terminalTextClass}
-        stderrTextClass={themeClasses.stderrTextClass}
-        placeholderTextClass={themeClasses.placeholderTextClass}
-      />
-
-      {/* Элемент для изменения размера */}
-      <div
-        className="resizer-corner cursor-se-resize absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-gray-400"
-        onMouseDown={startResize}
-        style={{ marginBottom: '2px', marginRight: '2px' }}
-      />
+      <div className="flex-1 overflow-auto p-4">
+        <TerminalOutput
+          lines={lines}
+          containerRef={outputContainerRef}
+          scale={scale}
+          terminalTextClass={themeClasses.terminalTextClass}
+          stderrTextClass={themeClasses.stderrTextClass}
+          placeholderTextClass={themeClasses.placeholderTextClass}
+        />
+      </div>
     </div>
   );
 });

@@ -1,0 +1,70 @@
+/**
+ * @fileoverview Хук загрузки проекта редактора
+ *
+ * Управляет загрузкой данных проекта по ID или выбору первого из списка.
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import type { BotProject } from '@shared/schema';
+
+/** Параметры хука загрузки проекта */
+interface UseProjectLoaderOptions {
+  /** ID проекта из URL */
+  projectId: number | null;
+}
+
+/** Результат работы хука загрузки проекта */
+interface UseProjectLoaderResult {
+  /** Данные текущего проекта */
+  currentProject: BotProject | undefined;
+  /** Данные первого проекта из списка */
+  firstProject: BotProject | undefined;
+  /** Список проектов (только метаданные) */
+  projectsList: Array<Omit<BotProject, 'data'>> | undefined;
+  /** Эффективный ID проекта (из URL или первый в списке) */
+  effectiveProjectId: number | undefined;
+  /** Флаг ошибки загрузки проекта */
+  isProjectNotFound: boolean;
+}
+
+/**
+ * Хук для загрузки данных проекта
+ *
+ * @param options - Параметры загрузки
+ * @returns Результат загрузки проекта
+ */
+export function useProjectLoader({
+  projectId
+}: UseProjectLoaderOptions): UseProjectLoaderResult {
+  // Загрузка проекта по ID из URL
+  const { data: currentProject, isError: projectNotFound } = useQuery<BotProject>({
+    queryKey: [`/api/projects/${projectId}`],
+    enabled: !!projectId,
+    staleTime: 30000,
+  });
+
+  // Загрузка списка проектов если нет ID в URL
+  const { data: projectsList } = useQuery<Array<Omit<BotProject, 'data'>>>({
+    queryKey: ['/api/projects/list'],
+    enabled: !projectId,
+    staleTime: 30000,
+  });
+
+  // Эффективный ID проекта
+  const effectiveProjectId = projectId || projectsList?.[0]?.id;
+
+  // Загрузка первого проекта если нет ID в URL
+  const { data: firstProject } = useQuery<BotProject>({
+    queryKey: [`/api/projects/${effectiveProjectId}`],
+    enabled: !projectId && !!effectiveProjectId,
+    staleTime: 30000,
+  });
+
+  return {
+    currentProject,
+    firstProject,
+    projectsList,
+    effectiveProjectId,
+    isProjectNotFound: projectNotFound
+  };
+}

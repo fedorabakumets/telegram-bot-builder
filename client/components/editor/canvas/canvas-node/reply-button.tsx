@@ -56,21 +56,18 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
               🔗 {button.url}
             </div>
           )}
-          {button.action === 'command' && (
-            <div className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-              Команда
-            </div>
-          )}
           {button.action === 'selection' && (
             <div className="mt-1.5 text-xs text-purple-600 dark:text-purple-400">
               Выбор
             </div>
           )}
+          {button.action === 'complete' && (
+            <div className="mt-1.5 text-xs text-purple-600 dark:text-purple-400">
+              Завершение
+            </div>
+          )}
         </div>
         <div className="flex items-center space-x-1 ml-2 flex-shrink-0">
-          {button.action === 'command' && (
-            <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
-          )}
           {button.action === 'url' && (
             <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title={`Ссылка: ${button.url}`}></i>
           )}
@@ -79,6 +76,9 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
           )}
           {button.action === 'selection' && (
             <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
+          )}
+          {button.action === 'complete' && (
+            <i className="fas fa-flag-checkered text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Завершение"></i>
           )}
         </div>
       </div>

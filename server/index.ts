@@ -17,14 +17,10 @@ dotenv.config({ debug: false });
  * Создает экземпляр приложения Express и настраивает основные middleware:
  * - парсинг JSON с лимитом 50MB
  * - парсинг URL-encoded данных с лимитом 50MB
- * - обслуживание статических файлов из директории uploads
  */
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
-
-// Отдача загруженных файлов
-app.use('/uploads', express.static('uploads'));
 
 /**
  * Middleware для логирования запросов к API

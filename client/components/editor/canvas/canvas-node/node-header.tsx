@@ -6,12 +6,13 @@
  */
 
 import { Node } from '@/types/bot';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/bot-generator/utils';
 import { CommandBadge } from './command-badge';
 import { ContentManagementHeader } from './content-management-header';
 import { UserManagementHeader } from './user-management-header';
 import { AdminRightsHeaderSmall } from './admin-rights-header-small';
 import { BroadcastHeader } from './broadcast-header';
+import { ClientAuthHeader } from './client-auth-header';
 import { SynonymsList } from './synonyms-list';
 import { nodeIcons } from './node-icons';
 import { nodeColors } from './node-colors';
@@ -76,6 +77,8 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
         return <AdminRightsHeaderSmall node={node} />;
       case 'broadcast':
         return <BroadcastHeader />;
+      case 'client_auth':
+        return <ClientAuthHeader />;
       default:
         return null;
     }

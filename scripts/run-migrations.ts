@@ -27,7 +27,10 @@ async function runMigrations() {
       '0001_add_google_sheet_export_fields.sql',
       '0002_add_structure_export_fields.sql',
       '0005_make_user_ids_global.sql',
-      '0006_migrate_telegram_settings_to_global.sql'
+      '0006_migrate_telegram_settings_to_global.sql',
+      '0007_add_avatar_url_to_user_bot_data.sql',
+      '0008_add_avatar_url_to_bot_users.sql',
+      '0009_add_is_bot_to_bot_users.sql'
     ];
 
     for (const file of migrationFiles) {

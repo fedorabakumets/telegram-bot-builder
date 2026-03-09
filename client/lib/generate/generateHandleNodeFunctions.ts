@@ -1,20 +1,36 @@
-import { isLoggingEnabled } from '../bot-generator';
-import { generateDatabaseVariablesCode } from '../Broadcast/generateDatabaseVariables';
-import { generateConditionalMessageLogic } from '../Conditional';
-import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
-import { formatTextForPython, getParseMode, stripHtmlTags } from '../format';
-import { generateAttachedMediaSendCode } from '../MediaHandler';
+/**
+ * @fileoverview Генерация функций handle_node_* для узлов
+ *
+ * Модуль предоставляет функцию для генерации Python-функций обработчиков
+ * для узлов с условными сообщениями.
+ *
+ * @module generate/generateHandleNodeFunctions
+ */
+
+import type { EnhancedNode } from '../bot-generator/types';
+import { generatorLogger } from '../bot-generator/core/generator-logger';
+import { generateDatabaseVariablesCode } from '../bot-generator/Broadcast/generate-database-variables-universal';
+import { generateConditionalMessageLogic } from '../bot-generator/Conditional';
+import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
+import { formatTextForPython, getParseMode, stripHtmlTags, toPythonBoolean } from '../bot-generator/format';
+import { generateAttachedMediaSendCode } from '../bot-generator/MediaHandler';
 
 /**
  * Генерирует функции handle_node_* для узлов с условными сообщениями
- * @param nodes - массив всех узлов
- * @param mediaVariablesMap - карта переменных медиа
- * @returns сгенерированный код для функций handle_node_*
+ *
+ * @param nodes - Массив всех узлов
+ * @param mediaVariablesMap - Карта переменных медиа
+ * @returns Сгенерированный код для функций handle_node_*
+ *
+ * @example
+ * const code = generateHandleNodeFunctions(nodes, mediaVariablesMap);
  */
-export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map<string, { type: string; variable: string; }>): string {
+export function generateHandleNodeFunctions(
+  nodes: EnhancedNode[],
+  mediaVariablesMap: Map<string, { type: string; variable: string }>
+): string {
   let code = '';
 
-  // Находим узлы, которые имеют условные сообщения и collectUserInput = true
   const conditionalNodes = nodes.filter(node =>
     node &&
     node.data?.enableConditionalMessages &&
@@ -24,20 +40,20 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
   );
 
   if (conditionalNodes.length === 0) {
-    if (isLoggingEnabled()) console.log('🔍 Нет узлов, требующих функций handle_node_*');
+    generatorLogger.debug('Нет узлов, требующих функций handle_node_*');
     return code;
   }
 
-  if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: Создаем функции handle_node_* для ${conditionalNodes.length} узлов`);
+  generatorLogger.info(`Создаем функции handle_node_* для ${conditionalNodes.length} узлов`);
 
   conditionalNodes.forEach(node => {
-    if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: Создаем handle_node_${node.id} для узла с условными сообщениями`);
+    generatorLogger.debug(`Создаем handle_node_${node.id} для узла с условными сообщениями`);
 
     const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
     const messageText = node.data.messageText || "Сообщение";
     const cleanedMessageText = stripHtmlTags(messageText);
     const formattedText = formatTextForPython(cleanedMessageText);
-    const parseMode = getParseMode(node.data.formatMode);
+    const parseMode = getParseMode(node.data.formatMode || undefined);
 
     code += `\nasync def handle_node_${safeFunctionName}(message: types.Message):\n`;
     code += '    # Обработчик узла с условными сообщениями\n';
@@ -47,7 +63,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
 
     // Инициализируем переменные пользователя
     code += '    # Инициализируем базовые переменные пользователя\n';
-    code += '    user_name = init_user_variables(user_id, message.from_user)\n';
+    code += '    user_name = await init_user_variables(user_id, message.from_user)\n';
     code += '    \n';
 
     // Подставляем все доступные переменные пользователя в текст
@@ -93,13 +109,22 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += '    if "text" not in locals():\n';
       code += `        text = ${formattedText}\n`;
 
+      // Извлекаем переменные из текста сообщения для загрузки из БД
+      const messageText = node.data?.messageText || '';
+      const usedVariables = messageText ?
+        [...messageText.matchAll(/\{([^}|]+)(?:\|[^}]+)?\}/g)].map(m => m[1]) :
+        undefined;
+
       // Добавляем получение переменных из БД перед заменой
       code += '    \n';
-      code += generateDatabaseVariablesCode('    ');
+      code += `${indentLevel}# Получаем переменные из базы данных\n`;
+      code += generateDatabaseVariablesCode('    ', usedVariables);
       code += '    \n';
 
       code += '    # Заменяем переменные в тексте, используя all_user_vars\n';
-      code += '    text = replace_variables_in_text(text, all_user_vars)\n';
+      code += '    # Сохраняем фильтры переменных в user_data для использования в replace_variables_in_text\n';
+      code += `    user_data[user_id]["_variable_filters"] = ${JSON.stringify(node.data.variableFilters || {})}\n`;
+      code += '    text = replace_variables_in_text(text, all_user_vars, user_data[user_id]["_variable_filters"])\n';
       code += '    \n';
       code += '    # Используем условную клавиатуру если есть\n';
       code += '    # Инициализируем переменную conditional_keyboard, если она не была определена\n';
@@ -141,7 +166,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
     // Отправляем сообщение с учетом прикрепленных медиа
     const attachedMedia = node.data.attachedMedia || [];
     if (attachedMedia.length > 0) {
-      if (isLoggingEnabled()) console.log(`🔧 ГЕНЕРАТОР: Узел ${node.id} имеет attachedMedia:`, attachedMedia);
+      generatorLogger.debug(`Узел ${node.id} имеет attachedMedia`, attachedMedia);
 
       const mediaCode = generateAttachedMediaSendCode(
         attachedMedia,
@@ -210,6 +235,7 @@ export function generateHandleNodeFunctions(nodes: any[], mediaVariablesMap: Map
       code += '        "save_to_database": True,\n';
       code += `        "node_id": "${node.id}",\n`;
       code += `        "next_node_id": "${node.data.inputTargetNodeId || ''}",\n`;
+      code += `        "appendVariable": ${toPythonBoolean(node.data.appendVariable || false)},\n`;
       code += '        "min_length": 0,\n';
       code += '        "max_length": 0,\n';
       code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';

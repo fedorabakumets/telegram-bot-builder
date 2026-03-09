@@ -19,6 +19,8 @@ import { MediaManager } from "./media-manager";
 import { UrlDownloader } from "./url-downloader";
 import type { MediaFile } from "@shared/schema";
 import { Upload, X, Eye, Image, LinkIcon } from "lucide-react";
+import { uploadImageFromUrl } from "@/lib/bot-generator/media/uploadImageFromUrl";
+import { toast } from "@/hooks/use-toast";
 
 /**
  * Свойства компонента MediaSelector
@@ -30,6 +32,7 @@ import { Upload, X, Eye, Image, LinkIcon } from "lucide-react";
  * @property {'photo' | 'video' | 'audio' | 'document'} [fileType] - Тип файла для фильтрации
  * @property {string} [placeholder] - Текст-заполнитель для поля ввода URL
  * @property {string} [label] - Название поля
+ * @property {string} [nodeName] - Имя узла для формирования имени файла при загрузке
  */
 interface MediaSelectorProps {
   projectId: number;
@@ -38,6 +41,7 @@ interface MediaSelectorProps {
   fileType?: 'photo' | 'video' | 'audio' | 'document';
   placeholder?: string;
   label?: string;
+  nodeName?: string;
 }
 
 /**
@@ -51,13 +55,14 @@ interface MediaSelectorProps {
  * @param {MediaSelectorProps} props - Свойства компонента
  * @returns {JSX.Element} Элемент компонента MediaSelector
  */
-export function MediaSelector({ 
-  projectId, 
-  value, 
-  onChange, 
-  fileType, 
+export function MediaSelector({
+  projectId,
+  value,
+  onChange,
+  fileType,
   placeholder = "Выберите файл или введите URL",
-  label = "Медиафайл"
+  label = "Медиафайл",
+  nodeName = "node"
 }: MediaSelectorProps) {
   /**
    * Состояние открытия диалогового окна выбора файла
@@ -68,6 +73,11 @@ export function MediaSelector({
    * Выбранный медиафайл
    */
   const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
+
+  /**
+   * Состояние загрузки изображения
+   */
+  const [isUploading, setIsUploading] = useState(false);
 
   /**
    * Обработчик выбора файла
@@ -92,6 +102,67 @@ export function MediaSelector({
   const handleClearSelection = () => {
     setSelectedFile(null);
     onChange('');
+  };
+
+  /**
+   * Обработчик изменения URL
+   *
+   * Если URL начинается с http/https, загружает изображение на сервер
+   *
+   * @param {string} url - Новый URL
+   */
+  const handleUrlChange = async (url: string) => {
+    // Если URL пустой, просто очищаем
+    if (!url) {
+      onChange('');
+      return;
+    }
+
+    // Если это не HTTP/HTTPS URL, просто передаём как есть
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      onChange(url);
+      return;
+    }
+
+    // Проверяем, это уже загруженный файл или новый URL
+    const isAlreadyUploaded = url.startsWith('/uploads/');
+    if (isAlreadyUploaded) {
+      onChange(url);
+      return;
+    }
+
+    // Загружаем изображение на сервер
+    setIsUploading(true);
+    try {
+      const result = await uploadImageFromUrl(url, projectId, nodeName);
+
+      if (result.success) {
+        // Используем localPath если есть, иначе imageUrl
+        const pathToUse = result.localPath || result.imageUrl || url;
+        
+        toast({
+          title: 'Изображение сохранено',
+          description: result.message || 'URL сохранён для использования в боте',
+        });
+        onChange(pathToUse);
+      } else {
+        toast({
+          title: 'Ошибка загрузки',
+          description: result.error || 'Не удалось загрузить изображение',
+          variant: 'destructive',
+        });
+        onChange(url);
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось загрузить изображение',
+        variant: 'destructive',
+      });
+      onChange(url);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
 
@@ -186,11 +257,17 @@ export function MediaSelector({
           <div className="relative">
             <Input
               value={value || ''}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={(e) => handleUrlChange(e.target.value)}
               placeholder={placeholder}
+              disabled={isUploading}
               className="h-10 sm:h-11 text-xs sm:text-sm pl-4 sm:pl-4 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-200/50 dark:focus:ring-blue-900/50 bg-white dark:bg-slate-950 transition-all"
             />
-            <i className="fas fa-link absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600 text-sm pointer-events-none"></i>
+            {isUploading && (
+              <i className="fas fa-spinner fa-spin absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-blue-500 text-sm"></i>
+            )}
+            {!isUploading && (
+              <i className="fas fa-link absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600 text-sm pointer-events-none"></i>
+            )}
           </div>
           
           {/* Or Divider */}
@@ -203,12 +280,15 @@ export function MediaSelector({
           {/* Media Browser Button */}
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button 
-                className="w-full h-10 sm:h-11 text-xs sm:text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 hover:from-blue-600 hover:to-cyan-600 dark:hover:from-blue-700 dark:hover:to-cyan-700 shadow-md hover:shadow-lg transition-all"
+              <Button
+                className="w-full h-auto min-h-[2.5rem] sm:h-11 text-xs sm:text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 hover:from-blue-600 hover:to-cyan-600 dark:hover:from-blue-700 dark:hover:to-cyan-700 shadow-md hover:shadow-lg transition-all px-2 sm:px-4 py-2 flex items-center justify-center gap-2"
               >
-                <Upload className="w-4 h-4 sm:w-4 sm:h-4 mr-2" />
-                <span className="hidden sm:inline">Выбрать или загрузить файл</span>
-                <span className="sm:hidden">Выбрать файл</span>
+                <Upload className="w-4 h-4 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="truncate text-center">
+                  <span className="hidden lg:inline">Выбрать или загрузить файл</span>
+                  <span className="lg:hidden sm:inline">Загрузить файл</span>
+                  <span className="sm:hidden">Файл</span>
+                </span>
               </Button>
             </DialogTrigger>
             <DialogContent className="w-full sm:max-w-5xl">

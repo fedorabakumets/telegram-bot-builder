@@ -684,7 +684,8 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
       .update(userBotData)
       .set({
         interactionCount: (userData.interactionCount || 0) + 1,
-        lastInteraction: new Date()
+        lastInteraction: new Date(),
+        updatedAt: new Date()
       })
       .where(eq(userBotData.id, id));
     return result.rowCount ? result.rowCount > 0 : false;

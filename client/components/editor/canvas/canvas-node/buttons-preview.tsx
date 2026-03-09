@@ -1,6 +1,6 @@
 /**
  * @fileoverview Компонент превью кнопок
- * 
+ *
  * Отображает превью кнопок узла с поддержкой inline/reply клавиатур,
  * множественного выбора и различных типов действий.
  */
@@ -11,6 +11,8 @@ import { InlineButton } from './inline-button';
 import { ReplyButton } from './reply-button';
 import { OptionButton } from './option-button';
 import { DoneButton } from './done-button';
+import { KeyboardGrid } from '../keyboard-grid';
+import { useMemo } from 'react';
 
 /**
  * Интерфейс свойств компонента ButtonsPreview
@@ -41,41 +43,45 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
     return null;
   }
 
-  const hasOptionButtons = node.data.buttons.some((button: any) => button.buttonType === 'option');
+  const hasOptionButtons = node.data.buttons.some((button: any) => button.action === 'selection');
   const isMultiSelect = hasOptionButtons && (node.data as any).allowMultipleSelection;
   const keyboardType = node.data.keyboardType as 'inline' | 'reply';
+
+  // Находим кнопку завершения (для множественного выбора)
+  const completeButton = useMemo(() =>
+    isMultiSelect
+      ? node.data.buttons.find((button: any) => button.action === 'complete')
+      : undefined,
+    [isMultiSelect, node.data.buttons]
+  );
+
+  // Все кнопки включая кнопку завершения для отображения в сетке
+  const allButtonsForGrid = useMemo(() => {
+    return node.data.buttons || [];
+  }, [node.data.buttons]);
 
   return (
     <div className="space-y-3">
       <ButtonsPreviewHeader isMultiSelect={isMultiSelect} keyboardType={keyboardType} />
 
       {keyboardType === 'inline' ? (
-        <div className="space-y-3">
-          {isMultiSelect ? (
-            <>
-              <div className="grid grid-cols-2 gap-2">
-                {node.data.buttons
-                  .filter((button: any) => button.buttonType === 'option')
-                  .map((button: any) => (
-                    <OptionButton key={button.id} button={button} />
-                  ))}
-              </div>
-              <DoneButton />
-            </>
-          ) : (
-            <div className="grid grid-cols-2 gap-2">
-              {node.data.buttons.map((button: any) => (
-                <InlineButton key={button.id} button={button} allNodes={allNodes} />
-              ))}
-            </div>
-          )}
-        </div>
+        <KeyboardGrid
+          buttons={allButtonsForGrid}
+          keyboardLayout={node.data.keyboardLayout}
+          buttonClassName=""
+          renderButton={(button) => {
+            if (button.action === 'complete') return <DoneButton button={button} />;
+            if (button.action === 'selection') return <OptionButton button={button} />;
+            return <InlineButton button={button} allNodes={allNodes} />;
+          }}
+        />
       ) : (
-        <div className="space-y-2">
-          {node.data.buttons.map((button: any) => (
-            <ReplyButton key={button.id} button={button} allNodes={allNodes} />
-          ))}
-        </div>
+        <KeyboardGrid
+          buttons={node.data.buttons}
+          keyboardLayout={node.data.keyboardLayout}
+          buttonClassName=""
+          renderButton={(button) => <ReplyButton button={button} allNodes={allNodes} />}
+        />
       )}
     </div>
   );

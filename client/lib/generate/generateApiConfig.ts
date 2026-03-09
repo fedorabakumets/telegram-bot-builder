@@ -7,7 +7,7 @@
  * @module generateApiConfig
  */
 
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 
 /**
  * Генерирует код конфигурации API

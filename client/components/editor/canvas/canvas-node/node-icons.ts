@@ -36,5 +36,6 @@ export const nodeIcons: Record<string, string> = {
   admin_rights: 'fas fa-user-shield',
   input: 'fas fa-edit',
   condition: 'fas fa-code-branch',
-  broadcast: 'fas fa-bullhorn'
+  broadcast: 'fas fa-bullhorn',
+  client_auth: 'fas fa-user-shield'
 };

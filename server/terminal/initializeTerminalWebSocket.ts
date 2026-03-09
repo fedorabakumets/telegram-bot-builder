@@ -37,8 +37,8 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
         }
         activeConnections.get(connectionKey)!.add(ws);
 
-        // Отправляем статус подключения
-        sendStatusMessage(ws, 'connected', parseInt(projectId), parseInt(tokenId));
+        // НЕ отправляем статус подключения - он создаёт спам в терминале
+        // sendStatusMessage(ws, 'connected', parseInt(projectId), parseInt(tokenId));
 
         // Обработка закрытия соединения
         ws.on('close', () => {

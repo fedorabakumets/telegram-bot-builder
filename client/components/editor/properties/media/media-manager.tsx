@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { useMediaFiles, useUploadMedia, useDeleteMedia, useUpdateMedia, useIncrementUsage } from "@/components/editor/properties/media/use-media";
+import { useMediaFiles, useUploadMedia, useDeleteMedia, useUpdateMedia, useIncrementUsage } from "@/components/editor/properties/hooks/use-media";
 import { CameraCapture } from "./camera-capture";
 import { EnhancedMediaUploader } from "./enhanced-media-uploader";
 import type { MediaFile, InsertMediaFile } from "@shared/schema";
@@ -508,22 +508,22 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
       {/* Область загрузки файлов */}
       <Card className="relative overflow-hidden">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+          <CardTitle className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                 <Upload className="w-4 h-4 text-white" />
               </div>
-              Загрузить медиафайлы
+              <span className="font-semibold truncate">Загрузить медиафайлы</span>
             </div>
             {uploadingFiles.length > 0 && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowUploadDetails(!showUploadDetails)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 flex-shrink-0"
               >
-                <Zap className="w-4 h-4" />
-                {uploadingFiles.length} загружается
+                <Zap className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">{uploadingFiles.length} загружается</span>
               </Button>
             )}
           </CardTitle>
