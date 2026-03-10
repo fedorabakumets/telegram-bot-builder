@@ -349,7 +349,7 @@ export function UrlDownloader({
       });
 
       // Обновляем кэш медиафайлов
-      queryClient.invalidateQueries({ queryKey: ['/api/media/project', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/media/project', projectId], exact: false });
 
       onDownloadComplete?.([result]);
 
@@ -421,7 +421,7 @@ export function UrlDownloader({
       });
 
       // Обновляем кэш медиафайлов
-      queryClient.invalidateQueries({ queryKey: ['/api/media/project', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/media/project', projectId], exact: false });
 
       if (result.downloadedFiles.length > 0) {
         onDownloadComplete?.(result.downloadedFiles);
