@@ -410,17 +410,33 @@
 <tr>
 <td valign="top">
 
+**1. Обновление системы:**
 ```bash
 sudo apt update && sudo apt upgrade -y
+```
+
+**2. Установка Git и зависимостей:**
+```bash
 sudo apt install -y curl git build-essential
 ```
+
+**3. Проверка установки:**
+```bash
+git --version
+```
+
+> **Альтернатива для других дистрибутивов:**
+> - **Fedora/CentOS:** `sudo dnf install -y git curl`
+> - **Arch Linux:** `sudo pacman -S git curl`
 
 </td>
 <td valign="top">
 
 **1. Установите Git:**
-- Скачайте с [git-scm.com](https://git-scm.com/)
-- Запустите установщик, оставьте настройки по умолчанию
+- Скачайте установщик с [git-scm.com](https://git-scm.com/)
+- Запустите `.exe` файл
+- Оставьте настройки по умолчанию (нажимайте "Next")
+- Дождитесь завершения установки
 
 **2. Откройте PowerShell от имени администратора:**
 - Нажмите `Win + X`
@@ -431,13 +447,27 @@ sudo apt install -y curl git build-essential
 git --version
 ```
 
+> Если версия не отображается, перезапустите PowerShell
+
 </td>
 <td valign="top">
 
+**1. Установка Homebrew (если не установлен):**
 ```bash
-# Установка Homebrew (если не установлен)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
+
+**2. Установка Git:**
+```bash
+brew install git
+```
+
+**3. Проверка установки:**
+```bash
+git --version
+```
+
+> Homebrew — менеджер пакетов для macOS, упрощает установку программ
 
 </td>
 </tr>
