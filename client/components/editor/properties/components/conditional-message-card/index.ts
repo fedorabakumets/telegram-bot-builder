@@ -6,3 +6,4 @@
 export * from './conditional-message-card-header';
 export * from './conditional-message-conflicts-list';
 export * from './conditional-message-card';
+export * from './coming-soon-badge';

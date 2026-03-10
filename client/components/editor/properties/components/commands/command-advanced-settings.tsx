@@ -1,9 +1,9 @@
 /**
  * @fileoverview Компонент расширенных настроек для команд
- * 
+ *
  * Содержит настройки отображения в меню, приватности
  * и ограничения доступа для администраторов.
- * 
+ *
  * @module CommandAdvancedSettings
  */
 
@@ -12,6 +12,7 @@ import { SectionHeader } from '../layout/section-header';
 import { ShowInMenuSetting } from '../admin/show-in-menu-setting';
 import { PrivateOnlySetting } from '../admin/private-only-setting';
 import { AdminOnlySetting } from '../admin/admin-only-setting';
+import { ComingSoonBadge } from '../conditional-message-card/coming-soon-badge';
 
 /**
  * Пропсы компонента расширенных настроек команд
@@ -29,12 +30,12 @@ interface CommandAdvancedSettingsProps {
 
 /**
  * Компонент расширенных настроек для команд
- * 
+ *
  * Включает:
  * - Показать в меню @BotFather
  * - Только приватные чаты
  * - Только администраторы
- * 
+ *
  * @param {CommandAdvancedSettingsProps} props - Пропсы компонента
  * @returns {JSX.Element | null} Расширенные настройки команд
  */
@@ -59,6 +60,7 @@ export function CommandAdvancedSettings({
         iconGradient="from-cyan-100 to-blue-100 dark:from-cyan-900/50 dark:to-blue-900/50"
         iconColor="text-cyan-600 dark:text-cyan-400"
         descriptionColor="text-cyan-700/70 dark:text-cyan-300/70"
+        extraContent={<ComingSoonBadge />}
       />
 
       {isOpen && (
