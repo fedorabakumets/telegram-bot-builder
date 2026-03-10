@@ -95,19 +95,6 @@ export function UserInputSettingsSection({
         />
       </div>
 
-      {/* Info Alert - где хранятся данные */}
-      {selectedNode.data.collectUserInput && (
-        <div className="mt-3 p-3 rounded-lg bg-blue-100/50 dark:bg-blue-900/30 border border-blue-200/30 dark:border-blue-700/30">
-          <p className="text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2">
-            <i className="fas fa-database mt-0.5"></i>
-            <span>
-              Данные сохраняются в <code className="bg-blue-200/50 dark:bg-blue-800/50 px-1.5 py-0.5 rounded font-mono">bot_users.user_data</code> (JSONB).
-              Используйте переменные для доступа к данным в других узлах.
-            </span>
-          </p>
-        </div>
-      )}
-
       {isOpen && selectedNode.data.collectUserInput && (
         <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-indigo-50/20 dark:from-blue-950/15 dark:to-indigo-950/5 border border-blue-200/25 dark:border-blue-800/25 rounded-xl p-3 sm:p-4 md:p-5">
           <AppendVariableToggle

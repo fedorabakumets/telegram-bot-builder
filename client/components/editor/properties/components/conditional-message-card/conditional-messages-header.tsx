@@ -40,6 +40,14 @@ export function ConditionalMessagesHeader({
           <h3 className="text-sm sm:text-base font-bold text-purple-900 dark:text-purple-100 text-left">Условные сообщения</h3>
           <p className="text-xs sm:text-sm text-purple-700/70 dark:text-purple-300/70 mt-0.5 text-left">Разные ответы на основе условий</p>
         </div>
+        <button
+          type="button"
+          className="flex items-center gap-1 px-2 py-1 text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-md transition-colors"
+          title="Скоро этот раздел превратится в отдельный блок. Ожидайте обновления"
+        >
+          <i className="fas fa-clock text-xs"></i>
+          <span className="hidden sm:inline">Скоро обновление</span>
+        </button>
       </button>
       <div className="flex items-center gap-2 flex-shrink-0">
         <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
