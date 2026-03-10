@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { MediaManager } from "./media-manager";
 import { UrlDownloader } from "./url-downloader";
 import type { MediaFile } from "@shared/schema";
-import { Upload, X, Eye, Image, LinkIcon } from "lucide-react";
+import { Upload, X, Eye, LinkIcon } from "lucide-react";
 import { uploadImageFromUrl } from "@/lib/bot-generator/media/uploadImageFromUrl";
 import { toast } from "@/hooks/use-toast";
 
@@ -302,13 +302,8 @@ export function MediaSelector({
                 </DialogDescription>
               </DialogHeader>
               
-              <Tabs defaultValue="library" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 h-auto">
-                  <TabsTrigger value="library" className="flex items-center gap-2 text-xs sm:text-sm py-2">
-                    <Image className="w-4 h-4" />
-                    <span className="hidden sm:inline">Библиотека</span>
-                    <span className="sm:hidden">Библ</span>
-                  </TabsTrigger>
+              <Tabs defaultValue="upload" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 h-auto">
                   <TabsTrigger value="upload" className="flex items-center gap-2 text-xs sm:text-sm py-2">
                     <Upload className="w-4 h-4" />
                     <span className="hidden sm:inline">Загрузить</span>
@@ -320,24 +315,16 @@ export function MediaSelector({
                     <span className="sm:hidden">URL</span>
                   </TabsTrigger>
                 </TabsList>
-                
-                <TabsContent value="library" className="mt-4">
-                  <MediaManager 
-                    projectId={projectId}
-                    onSelectFile={handleSelectFile}
-                    selectedType={fileType}
-                  />
-                </TabsContent>
-                
+
                 <TabsContent value="upload" className="mt-4">
-                  <MediaManager 
+                  <MediaManager
                     projectId={projectId}
                     onSelectFile={handleSelectFile}
                     selectedType={fileType}
                     showUploader={true}
                   />
                 </TabsContent>
-                
+
                 <TabsContent value="url" className="mt-4">
                   <UrlDownloader
                     projectId={projectId}
