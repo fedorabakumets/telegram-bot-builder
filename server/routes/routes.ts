@@ -70,10 +70,18 @@ const storage_multer = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (_req, file, cb) => {
+    // Исправляем кодировку UTF-8 перед формированием имени
+    let originalname = file.originalname;
+    try {
+      originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+    } catch (e) {
+      console.error('Error fixing filename encoding:', e);
+    }
+    
     // Генерируем уникальное имя файла с временной меткой и безопасным именем
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = file.originalname.split('.').pop()?.toLowerCase() || '';
-    const baseName = file.originalname
+    const extension = originalname.split('.').pop()?.toLowerCase() || '';
+    const baseName = originalname
       .split('.')[0] // Убираем расширение
       .replace(/[^a-zA-Z0-9._-]/g, '_') // Заменяем небезопасные символы
       .substring(0, 50); // Ограничиваем длину
@@ -205,6 +213,30 @@ const upload = multer({
     fields: 50 // Максимальное количество полей формы
   }
 });
+
+/**
+ * Middleware для исправления кодировки UTF-8 в именах файлов
+ * Применяется только к маршрутам загрузки медиа
+ */
+function fixUtf8Encoding(req: any, res: any, next: any) {
+  if (req.file && req.file.originalname) {
+    try {
+      req.file.originalname = Buffer.from(req.file.originalname, 'latin1').toString('utf-8');
+    } catch (e) {
+      console.error('Error fixing filename encoding:', e);
+    }
+  }
+  if (req.files && Array.isArray(req.files)) {
+    req.files.forEach((file: any) => {
+      try {
+        file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+      } catch (e) {
+        console.error('Error fixing filename encoding:', e);
+      }
+    });
+  }
+  next();
+}
 
 /**
  * Глобальные флаги готовности компонентов системы
@@ -955,7 +987,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // === МЕДИАФАЙЛЫ ===
 
   // Загрузка медиафайла (одиночная) с улучшенной обработкой
-  app.post("/api/media/upload/:projectId", upload.single('file'), async (req, res) => {
+  app.post("/api/media/upload/:projectId", upload.single('file'), fixUtf8Encoding, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const file = req.file;
@@ -1627,7 +1659,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "Файл не найден" });
       }
 
-      // Удаляем файл с диска
+      // Удал��ем файл с диска
       try {
         unlinkSync(mediaFile.filePath);
       } catch (error) {
