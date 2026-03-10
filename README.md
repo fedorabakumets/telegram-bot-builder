@@ -386,23 +386,65 @@
 
 ---
 
-## 🐧 Установка на Linux / 🪟 Windows / 🍎 macOS
+## 🚀 Установка
 
 <details>
-<summary><strong>📜 Пошаговая инструкция по установке</strong> (нажми для раскрытия)</summary>
+<summary><strong>📜 Пошаговая инструкция</strong> (нажми для раскрытия)</summary>
+
+### Требования
+- **Node.js** ≥ 18.0.0
+- **PostgreSQL** ≥ 15
+- **Python** ≥ 3.10 (для сгенерированных ботов)
+- **Git**
 
 ---
 
-#### 🐧 Linux (Ubuntu/Debian)
+### Шаг 1: Обновление системы и установка зависимостей
 
-**Шаг 1: Обновление системы и установка зависимостей**
+<table>
+<tr>
+<th width="33%">🐧 Linux (Ubuntu/Debian)</th>
+<th width="33%">🪟 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
 
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl git build-essential
 ```
 
-**Шаг 2: Установка Node.js LTS**
+</td>
+<td valign="top">
+
+- Установите Git с [git-scm.com](https://git-scm.com/)
+- Откройте PowerShell от имени администратора
+
+</td>
+<td valign="top">
+
+```bash
+# Установка Homebrew (если не установлен)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+### Шаг 2: Установка Node.js LTS
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🪟 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
@@ -410,77 +452,11 @@ sudo apt install -y nodejs
 node -v && npm -v
 ```
 
-**Шаг 3: Установка PostgreSQL**
-
-```bash
-sudo apt install -y postgresql postgresql-contrib
-sudo systemctl enable postgresql
-sudo systemctl start postgresql
-```
-
-**Шаг 4: Установка Python 3**
-
-```bash
-sudo apt install -y python3 python3-venv python3-pip
-python3 --version
-```
-
-**Шаг 5: Настройка базы данных**
-
-```bash
-sudo -u postgres psql
-```
-
-```sql
-CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
-GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
-GRANT ALL ON SCHEMA public TO tbb;
-\q
-```
-
-**Шаг 6: Клонирование проекта**
-
-```bash
-cd /opt
-sudo git clone https://github.com/fedorabakumets/telegram-bot-builder.git
-sudo chown -R "$USER":"$USER" telegram-bot-builder
-cd telegram-bot-builder
-```
-
-**Шаг 7: Настройка окружения**
-
-```bash
-cp .env.example .env
-nano .env
-```
-
-**Шаг 8: Установка зависимостей и запуск**
-
-```bash
-npm install
-npm run build
-npm run start
-```
-
-**Шаг 9: Python зависимости (для сгенерированных ботов)**
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
-
----
-
-#### 🪟 Windows
-
-**Шаг 1: Установка Node.js LTS**
+</td>
+<td valign="top">
 
 1. Скачайте установщик с [nodejs.org](https://nodejs.org/)
-2. Запустите установщик и следуйте инструкциям
+2. Запустите и следуйте инструкциям
 3. Проверьте установку:
 
 ```powershell
@@ -488,25 +464,124 @@ node -v
 npm -v
 ```
 
-**Шаг 2: Установка PostgreSQL**
+</td>
+<td valign="top">
 
-1. Скачайте установщик с [postgresql.org/download](https://www.postgresql.org/download/windows/)
+```bash
+brew install node@lts
+node -v && npm -v
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+### Шаг 3: Установка PostgreSQL
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🪟 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+```bash
+sudo apt install -y postgresql postgresql-contrib
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
+```
+
+</td>
+<td valign="top">
+
+1. Скачайте с [postgresql.org/download](https://www.postgresql.org/download/windows/)
 2. Установите PostgreSQL 15+
 3. Запомните пароль пользователя `postgres`
 
-**Шаг 3: Установка Python 3**
+</td>
+<td valign="top">
 
-1. Скачайте установщик с [python.org/downloads](https://www.python.org/downloads/)
-2. При установке отметьте **"Add Python to PATH"**
+```bash
+brew install postgresql@15
+brew services start postgresql@15
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+### Шаг 4: Установка Python 3
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🪟 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+```bash
+sudo apt install -y python3 python3-venv python3-pip
+python3 --version
+```
+
+</td>
+<td valign="top">
+
+1. Скачайте с [python.org/downloads](https://www.python.org/downloads/)
+2. Отметьте **"Add Python to PATH"**
 3. Проверьте установку:
 
 ```powershell
 python --version
 ```
 
-**Шаг 4: Настройка базы данных**
+</td>
+<td valign="top">
 
-Откройте PowerShell от имени администратора:
+```bash
+brew install python
+python3 --version
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+### Шаг 5: Настройка базы данных
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🪟 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+```bash
+sudo -u postgres psql
+```
+
+```sql
+CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
+CREATE DATABASE telegram_bot_builder OWNER tbb;
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
+GRANT ALL ON SCHEMA public TO tbb;
+\q
+```
+
+</td>
+<td valign="top">
 
 ```powershell
 psql -U postgres
@@ -520,81 +595,8 @@ GRANT ALL ON SCHEMA public TO tbb;
 \q
 ```
 
-**Шаг 5: Клонирование проекта**
-
-```powershell
-mkdir C:\projects
-cd C:\projects
-git clone https://github.com/fedorabakumets/telegram-bot-builder.git
-cd telegram-bot-builder
-```
-
-**Шаг 6: Настройка окружения**
-
-```powershell
-copy .env.example .env
-notepad .env
-```
-
-**Пример `.env` для Windows:**
-
-```env
-NODE_ENV=development
-PORT=5000
-DATABASE_URL=postgresql://tbb:builder2025!@localhost:5432/telegram_bot_builder
-```
-
-**Шаг 7: Установка зависимостей и запуск**
-
-```powershell
-npm install
-npm run build
-npm run start
-```
-
-**Шаг 8: Python зависимости (для сгенерированных ботов)**
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
-
----
-
-#### 🍎 macOS
-
-**Шаг 1: Установка Homebrew (если не установлен)**
-
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-**Шаг 2: Установка Node.js LTS**
-
-```bash
-brew install node@lts
-node -v && npm -v
-```
-
-**Шаг 3: Установка PostgreSQL**
-
-```bash
-brew install postgresql@15
-brew services start postgresql@15
-```
-
-**Шаг 4: Установка Python 3**
-
-```bash
-brew install python
-python3 --version
-```
-
-**Шаг 5: Настройка базы данных**
+</td>
+<td valign="top">
 
 ```bash
 psql postgres
@@ -608,7 +610,42 @@ GRANT ALL ON SCHEMA public TO tbb;
 \q
 ```
 
-**Шаг 6: Клонирование проекта**
+</td>
+</tr>
+</table>
+
+---
+
+### Шаг 6: Клонирование проекта
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🪟 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+```bash
+cd /opt
+sudo git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+sudo chown -R "$USER":"$USER" telegram-bot-builder
+cd telegram-bot-builder
+```
+
+</td>
+<td valign="top">
+
+```powershell
+mkdir C:\projects
+cd C:\projects
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+```
+
+</td>
+<td valign="top">
 
 ```bash
 mkdir -p ~/projects
@@ -617,14 +654,60 @@ git clone https://github.com/fedorabakumets/telegram-bot-builder.git
 cd telegram-bot-builder
 ```
 
-**Шаг 7: Настройка окружения**
+</td>
+</tr>
+</table>
+
+---
+
+### Шаг 7: Настройка окружения
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🪟 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
 
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-**Шаг 8: Установка зависимостей и запуск**
+</td>
+<td valign="top">
+
+```powershell
+copy .env.example .env
+notepad .env
+```
+
+**Пример `.env`:**
+```env
+NODE_ENV=development
+PORT=5000
+DATABASE_URL=postgresql://tbb:builder2025!@localhost:5432/telegram_bot_builder
+```
+
+</td>
+<td valign="top">
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+### Шаг 8: Установка зависимостей и запуск
+
+**Для всех систем:**
 
 ```bash
 npm install
@@ -632,7 +715,20 @@ npm run build
 npm run start
 ```
 
-**Шаг 9: Python зависимости (для сгенерированных ботов)**
+✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
+
+---
+
+### Шаг 9: Python зависимости (для сгенерированных ботов)
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🪟 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
 
 ```bash
 python3 -m venv .venv
@@ -641,7 +737,29 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
+</td>
+<td valign="top">
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+</td>
+<td valign="top">
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+</td>
+</tr>
+</table>
 
 ---
 
