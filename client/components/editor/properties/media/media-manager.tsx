@@ -148,6 +148,11 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
    */
   const { data: documentFiles } = useMediaFiles(projectId, 'document');
 
+  // Отладка: логирование данных
+  React.useEffect(() => {
+    console.log('[MediaManager Debug] projectId:', projectId, 'allFiles:', allFiles?.length, 'photo:', photoFiles?.length, 'video:', videoFiles?.length, 'audio:', audioFiles?.length, 'document:', documentFiles?.length);
+  }, [projectId, allFiles, photoFiles, videoFiles, audioFiles, documentFiles]);
+
   /**
    * Мутация для загрузки файлов
    */

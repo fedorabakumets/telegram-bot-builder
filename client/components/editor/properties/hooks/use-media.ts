@@ -24,11 +24,12 @@ import type { MediaUploadParams, MultipleMediaUploadParams, MultipleUploadResult
 export function useMediaFiles(projectId: number, fileType?: string) {
   return useQuery({
     queryKey: ["/api/media/project", projectId, fileType],
-    enabled: !!projectId && typeof projectId === 'number',
+    enabled: !!projectId,
     queryFn: async (): Promise<MediaFile[]> => {
+      const id = typeof projectId === 'number' ? projectId : parseInt(projectId as unknown as string);
       const url = fileType
-        ? `/api/media/project/${projectId}?type=${fileType}`
-        : `/api/media/project/${projectId}`;
+        ? `/api/media/project/${id}?type=${fileType}`
+        : `/api/media/project/${id}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Ошибка при загрузке медиафайлов");
