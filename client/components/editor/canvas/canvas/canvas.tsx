@@ -180,6 +180,7 @@ export function Canvas({
 
   // Функция для добавления действия в историю
   const addAction = useCallback((type: Action['type'], description: string) => {
+    console.log('📝 addAction called:', type, description);
     // Если есть внешний обработчик - используем его (централизованное управление)
     if (onActionLog) {
       onActionLog(type, description);
@@ -951,7 +952,8 @@ export function Canvas({
     const clickPos = { x: e.clientX, y: e.clientY };
     setLastClickPosition(clickPos);
     setClickTransform({ pan: { x: pan.x, y: pan.y }, zoom });
-
+    console.log('🖱️ Клик сохранён:', clickPos, 'transform:', { pan: { x: pan.x, y: pan.y }, zoom });
+    
     if (e.target === e.currentTarget) {
       onNodeSelect('');
     }
