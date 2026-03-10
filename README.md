@@ -391,14 +391,9 @@
 <details>
 <summary><strong>📜 Пошаговая инструкция по установке</strong> (нажми для раскрытия)</summary>
 
-### 🖥️ Выберите вашу операционную систему
-
 ---
 
 #### 🐧 Linux (Ubuntu/Debian)
-
-<details>
-<summary>Инструкция для Linux</summary>
 
 **Шаг 1: Обновление системы и установка зависимостей**
 
@@ -478,14 +473,9 @@ pip install -r requirements.txt
 
 ✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
 
-</details>
-
 ---
 
 #### 🪟 Windows
-
-<details>
-<summary>Инструкция для Windows</summary>
 
 **Шаг 1: Установка Node.js LTS**
 
@@ -519,10 +509,10 @@ python --version
 Откройте PowerShell от имени администратора:
 
 ```powershell
-# Вход в PostgreSQL
 psql -U postgres
+```
 
-# Создание пользователя и БД (в psql)
+```sql
 CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
 CREATE DATABASE telegram_bot_builder OWNER tbb;
 GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
@@ -533,11 +523,8 @@ GRANT ALL ON SCHEMA public TO tbb;
 **Шаг 5: Клонирование проекта**
 
 ```powershell
-# Создайте папку для проекта
 mkdir C:\projects
 cd C:\projects
-
-# Клонируйте репозиторий
 git clone https://github.com/fedorabakumets/telegram-bot-builder.git
 cd telegram-bot-builder
 ```
@@ -545,10 +532,7 @@ cd telegram-bot-builder
 **Шаг 6: Настройка окружения**
 
 ```powershell
-# Скопируйте пример
 copy .env.example .env
-
-# Откройте для редактирования
 notepad .env
 ```
 
@@ -579,14 +563,9 @@ pip install -r requirements.txt
 
 ✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
 
-</details>
-
 ---
 
 #### 🍎 macOS
-
-<details>
-<summary>Инструкция для macOS</summary>
 
 **Шаг 1: Установка Homebrew (если не установлен)**
 
@@ -664,45 +643,28 @@ pip install -r requirements.txt
 
 ✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
 
-</details>
-
 ---
 
 ### 🐳 Альтернатива: Docker (любая ОС)
 
-<details>
-<summary>Быстрый запуск через Docker</summary>
-
 **Требования:** Docker и Docker Compose
 
 ```bash
-# Клонирование проекта
 git clone https://github.com/fedorabakumets/telegram-bot-builder.git
 cd telegram-bot-builder
-
-# Запуск через Docker Compose
 docker compose up -d
-
-# Просмотр логов
 docker compose logs -f
 ```
-
-✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
 
 **Полезные команды:**
 
 ```bash
-# Остановить
-docker compose down
-
-# Пересобрать
-docker compose build --no-cache
-
-# Логи
-docker compose logs -f
+docker compose down        # Остановить
+docker compose build --no-cache  # Пересобрать
+docker compose logs -f     # Логи
 ```
 
-</details>
+✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
 
 </details>
 
