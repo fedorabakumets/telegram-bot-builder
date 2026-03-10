@@ -1,11 +1,11 @@
 /**
  * @fileoverview Хук для обработки touch-жестов на мобильных устройствах
- * 
+ *
  * Содержит логику панорамирования и масштабирования (pinch-to-zoom)
  * для компонента холста визуального редактора.
  */
 
-import { useCallback, RefObject } from 'react';
+import { useCallback, RefObject, useEffect } from 'react';
 
 /**
  * Свойства хука для обработки touch-жестов
@@ -101,12 +101,12 @@ export function useTouchGestures({
 
     if (isOnNode || isNodeBeingDragged) {
       if (e.touches.length >= 2) {
-        e.preventDefault();
+        // e.preventDefault() уже вызван в нативном обработчике
       }
       return;
     }
 
-    e.preventDefault();
+    // e.preventDefault() уже вызван в нативном обработчике
     const touches = e.touches;
 
     if (touches.length === 1) {
@@ -131,12 +131,12 @@ export function useTouchGestures({
 
     if (isOnNode || isNodeBeingDragged) {
       if (e.touches.length >= 2) {
-        e.preventDefault();
+        // e.preventDefault() уже вызван в нативном обработчике
       }
       return;
     }
 
-    e.preventDefault();
+    // e.preventDefault() уже вызван в нативном обработчике
     const touches = e.touches;
 
     if (touches.length === 1 && isTouchPanning) {
@@ -190,7 +190,7 @@ export function useTouchGestures({
    * Обработчик завершения touch-события
    */
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
+    // e.preventDefault() уже вызван в нативном обработчике
 
     if (e.touches.length === 0) {
       setIsTouchPanning(false);
@@ -203,6 +203,39 @@ export function useTouchGestures({
       setLastPinchDistance(0);
     }
   }, [pan, setIsTouchPanning, setTouchStart, setLastTouchPosition, setLastPinchDistance]);
+
+  // Добавляем нативные обработчики с passive: false для предотвращения предупреждений
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const options = { passive: false };
+
+    const nativeTouchStart = (e: TouchEvent) => {
+      // Проверяем, не на узле ли произошло событие
+      const target = e.target as HTMLElement;
+      const isOnNode = target.closest('[data-canvas-node]');
+      if (!isOnNode && e.touches.length >= 2) {
+        e.preventDefault();
+      }
+    };
+
+    const nativeTouchMove = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      const isOnNode = target.closest('[data-canvas-node]');
+      if (!isOnNode) {
+        e.preventDefault();
+      }
+    };
+
+    canvas.addEventListener('touchstart', nativeTouchStart, options);
+    canvas.addEventListener('touchmove', nativeTouchMove, options);
+
+    return () => {
+      canvas.removeEventListener('touchstart', nativeTouchStart);
+      canvas.removeEventListener('touchmove', nativeTouchMove);
+    };
+  }, [canvasRef]);
 
   return {
     handleTouchStart,
