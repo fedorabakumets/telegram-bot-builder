@@ -109,7 +109,7 @@
 npm run dev
 
 # Сервер доступен по адресу
-http://localhost:5173
+http://localhost:5000
 ```
 
 ### 🗄️ Вкладка «База ID»
