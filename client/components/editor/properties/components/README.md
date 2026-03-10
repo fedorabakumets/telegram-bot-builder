@@ -132,10 +132,6 @@ import {
 - `IdSourceSelector` — выбор источника ID
 - `InputNavigationGrid` — сетка навигации ввода
 
-### `csv/`
-Компоненты CSV экспорта:
-- `SaveToCsvSwitch` — переключатель сохранения в CSV
-
 ### `synonyms/`
 Компоненты синонимов:
 - `SynonymEditor` — редактор синонимов

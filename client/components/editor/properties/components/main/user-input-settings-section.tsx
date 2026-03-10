@@ -6,7 +6,6 @@
 
 import { Switch } from '@/components/ui/switch';
 import { SectionHeader } from '../layout/section-header';
-import { SaveToCsvSwitch } from '../csv/save-to-csv-switch';
 import { MediaInputToggles } from '../media/media-input-toggles';
 import { VariableInputGrid } from '../variables/variable-input-grid';
 import { ButtonTypeSelector } from '../keyboard/button-type-selector';
@@ -111,11 +110,6 @@ export function UserInputSettingsSection({
 
       {isOpen && selectedNode.data.collectUserInput && (
         <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-indigo-50/20 dark:from-blue-950/15 dark:to-indigo-950/5 border border-blue-200/25 dark:border-blue-800/25 rounded-xl p-3 sm:p-4 md:p-5">
-          <SaveToCsvSwitch
-            selectedNode={selectedNode}
-            onNodeUpdate={onNodeUpdate}
-          />
-
           <AppendVariableToggle
             selectedNode={selectedNode}
             onNodeUpdate={onNodeUpdate}

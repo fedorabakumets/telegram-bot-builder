@@ -1210,9 +1210,6 @@ export const nodeSchema = z.object({
     // Поля для узла client_auth (авторизация Client API)
     sessionName: z.string().default('user_session').optional(), // Имя файла сессии
     sessionCreated: z.boolean().default(false).optional(), // Флаг созданной сессии
-
-    // Поле для сохранения ID в CSV файл
-    saveToCsv: z.boolean().default(false).optional(), // Сохранять ли ID в CSV файл для рассылки
   }),
 });
 
