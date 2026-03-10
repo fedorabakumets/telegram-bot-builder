@@ -52,13 +52,13 @@ export interface UsePropertiesPanelStateReturn {
 export function usePropertiesPanelState(
   selectedNode: Node | null
 ): UsePropertiesPanelStateReturn {
-  const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
+  const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(false);
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
-  const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
-  const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(true);
-  const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(true);
-  const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(true);
-  const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(true);
+  const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(false);
+  const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(false);
+  const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(false);
+  const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(false);
+  const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(false);
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
 
   useEffect(() => {
