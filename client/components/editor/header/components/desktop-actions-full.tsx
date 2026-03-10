@@ -5,7 +5,6 @@
 
 import { DesktopActions } from './desktop-actions';
 import { TelegramChatInvite } from './telegram-chat-invite';
-import { GithubButton } from './github-button';
 import { UserAuth } from './user-auth';
 import { Separator } from './separator';
 import { cn } from '@/lib/bot-generator/utils';
@@ -107,14 +106,6 @@ export function DesktopActionsFull({
         isVertical ? 'w-full px-3 py-1.5' : 'hidden md:flex items-center px-3 py-1.5'
       )}>
         <TelegramChatInvite variant="desktop" />
-      </div>
-
-      <div className={cn(
-        'flex items-center gap-1',
-        isVertical ? 'flex-col w-full' : ''
-      )}>
-        <GithubButton />
-        {/* <ThemeToggle /> */}
       </div>
     </div>
   );

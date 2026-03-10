@@ -26,29 +26,14 @@
   
 </div>
 
----
+
 
 <div align="center">
   <p><strong>Визуальный конструктор с drag-and-drop интерфейсом, где вы просто перетаскиваете блоки на холст, а готовый бот появляется сам.</strong></p>
   
   > 💡 Идеально подходит для малого бизнеса, фрилансеров и тех, кто хочет быстро запустить бота, не изучая программирование.
   
-  <!-- Кнопки призыва к действию -->
-  <div style="margin: 20px 0;">
-    <a href="https://railway.com/deploy/aware-encouragement">
-      <img src="https://railway.com/button.svg" alt="Deploy on Railway"/>
-    </a>
-    <a href="#-быстрый-старт-5-минут">
-      <img src="https://img.shields.io/badge/🚀_Попробовать_сейчас-FF6B6B?style=for-the-badge&logoColor=white" alt="Попробовать"/>
-    </a>
-    <a href="#-демонстрация">
-      <img src="https://img.shields.io/badge/🎬_Живое_демо-4ECDC4?style=for-the-badge&logoColor=white" alt="Демо"/>
-    </a>
-    <a href="#-документация">
-      <img src="https://img.shields.io/badge/📚_Документация-45B7D1?style=for-the-badge&logoColor=white" alt="Docs"/>
-    </a>
-  </div>
-  
+
   <!-- Связь с нами -->
   <div style="margin: 20px 0;">
     <h3>📞 Связь с нами</h3>
@@ -69,13 +54,8 @@
 
 ---
 
-## 📸 Демонстрация
 
-### 🎬 Как это работает
-<div align="center">
-  <img src="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=2" alt="Процесс создания бота" width="600" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);"/>
-  <p><em>Процесс создания бота: от идеи до готового продукта</em></p>
-</div>
+
 
 ### 🏗️ Архитектура системы
 
@@ -171,11 +151,12 @@
 
 </details>
 
-#### 📁 Структура проекта
+---
 
-<div align="center">
-  <img src="https://img.shields.io/badge/Структура-Монорепозиторий-success?style=for-the-badge&logo=folder" alt="Structure"/>
-</div>
+## 📁 Структура проекта
+
+<details>
+<summary><strong>Показать структуру проекта</strong></summary>
 
 ```
 📦 telegram-bot-builder/
@@ -265,7 +246,11 @@
 ┗ 📄 .env.example                # 🔐 Пример переменных окружения
 ```
 
-#### 📡 API Endpoints
+</details>
+
+---
+
+## 📡 API Endpoints
 
 <div align="center">
   <img src="https://img.shields.io/badge/API-RESTful-blue?style=for-the-badge&logo=api" alt="API"/>
@@ -372,35 +357,14 @@
 
 ## ✨ Что это может делать?
 
-<details>
-<summary><strong>Развернуть возможности</strong> (нажми чтобы раскрыть)</summary>
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="33%" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
-        <h3>🎨 Визуальный редактор</h3>
-        <p>Drag-and-drop интерфейс<br/>Никакого кода!</p>
-      </td>
-      <td align="center" width="33%" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px;">
-        <h3>🤖 Готовые боты</h3>
-        <p>Python код генерируется<br/>автоматически</p>
-      </td>
-      <td align="center" width="33%" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 10px;">
+-radius: 10px;">
         <h3>☁️ Облачный деплой</h3>
         <p>Railway, VPS<br/>Один клик - бот в продакшене</p>
       </td>
     </tr>
   </table>
 </div>
-
-### 🎯 Основные возможности
-
-- **🎨 Создавайте боты перетаскиванием** - никакого кода, просто перемещайте блоки мышкой
-- **💬 Отправляйте сообщения** - с форматированием, кнопками и медиафайлами
-- **🎨 Красивые интерфейсы** - встроенные и обычные клавиатуры
-- **📁 Работа с медиа** - фото, видео, аудио, документы
-- **📝 Сбор данных** - формы для сбора информации от пользователей
+ормации от пользователей
 - **🧠 Логика и условия** - "если произошло то-то, то сделай это"
 - **👥 База пользователей** - автоматически собирает информацию о пользователях
 - **📊 Статистика** - смотрите, кто написал боту, какие команды использует
@@ -409,117 +373,9 @@
 
 </details>
 
----
 
-## 🚀 Быстрый старт (5 минут)
 
-<div align="center">
-  <img src="https://img.shields.io/badge/⏱️_Время_установки-5_минут-success?style=for-the-badge" alt="Installation time"/>
-  <img src="https://img.shields.io/badge/💻_Сложность-Легко-brightgreen?style=for-the-badge" alt="Difficulty"/>
-</div>
 
-<details>
-<summary>🐳 <strong>Запуск через Docker (рекомендуется)</strong> - нажмите для раскрытия</summary>
-
-### Что нужно:
-- **Docker** и **Docker Compose** (установить с [docker.com](https://www.docker.com/))
-
-### Установка:
-
-```bash
-# Скопируйте проект
-git clone https://github.com/fedorabakumets/telegram-bot-builder.git
-cd telegram-bot-builder
-
-# Запустите через Docker Compose (приложение + PostgreSQL)
-docker compose up -d
-```
-
-**Готово!** Приложение доступно по адресу: http://localhost:5000
-
-### Полезные команды:
-
-```bash
-# Остановить приложение
-docker compose down
-
-# Пересобрать образ
-docker compose build --no-cache
-
-# Посмотреть логи
-docker compose logs -f
-
-# Остановить и очистить данные
-docker compose down -v
-```
-
-### Переменные окружения (опционально):
-
-Создайте файл `.env` в корне проекта:
-
-```env
-# Порт приложения
-PORT=5000
-
-# Секрет сессии (замените на свой!)
-SESSION_SECRET=your-secret-key-here
-
-# PostgreSQL (не меняйте, если используете docker-compose.yml)
-DATABASE_URL=postgresql://postgres:postgres@db:5432/botbuilder
-```
-
-</details>
-
-<details>
-<summary>☁️ Альтернативные способы</summary>
-
-### Docker (одиночный контейнер):
-```bash
-# Сборка образа
-docker build -t telegram-bot-builder .
-
-# Запуск с PostgreSQL
-docker run -d --name bot-builder \
-  -e DATABASE_URL=postgresql://user:pass@host:5432/dbname \
-  -e SESSION_SECRET=your-secret \
-  -p 5000:5000 \
-  telegram-bot-builder
-```
-
-### Локальная установка:
-</details>
-
-<details>
-<summary>🖥️ <strong>Локальная установка</strong> - нажмите для раскрытия</summary>
-
-### Что нужно:
-- **Node.js** (скачать с [nodejs.org](https://nodejs.org))
-- **PostgreSQL** (база данных, скачать с [postgresql.org](https://www.postgresql.org/download/))
-
-### Установка:
-
-```bash
-# Скопируйте проект
-git clone https://github.com/fedorabakumets/telegram-bot-builder.git
-cd telegram-bot-builder
-
-# Установите нужные файлы
-npm install
-
-# Соберите проект
-npm run build
-
-# Запустите приложение
-npm run start
-```
-
-Если возникает ошибка подключения к базе данных, смотрите подробное руководство по устранению неполадок в файле [docs/development/TROUBLESHOOTING_RU.md](docs/development/TROUBLESHOOTING_RU.md).
-
-**Откройте в браузере:** http://localhost:5000
-
-</details>
-
----
 
 ## ☁️ Деплой в облако
 
@@ -533,6 +389,156 @@ npm run start
 7. Запустите миграции базы данных
 
 Подробные инструкции по деплою на Railway смотрите в файле [docs/deployment/RAILWAY_DEPLOY.md](docs/deployment/RAILWAY_DEPLOY.md).
+
+---
+
+## 🐧 Установка на Linux (VPS)
+
+<details>
+<summary><strong>Пошаговая инструкция по установке на Linux</strong> (нажми для раскрытия)</summary>
+
+### 📋 Шаг 1: Обновление системы и установка зависимостей
+
+```bash
+# Обновление системы
+sudo apt update && sudo apt upgrade -y
+
+# Установка необходимых инструментов
+sudo apt install -y curl git build-essential
+```
+
+### 🟢 Шаг 2: Установка Node.js LTS
+
+```bash
+# Установка Node.js через nodesource
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Проверка версий
+node -v
+npm -v
+```
+
+### 🗄️ Шаг 3: Установка PostgreSQL
+
+```bash
+# Установка PostgreSQL
+sudo apt install -y postgresql postgresql-contrib
+
+# Проверка статуса службы
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
+sudo systemctl status postgresql
+```
+
+### 🐍 Шаг 4: Установка Python 3
+
+```bash
+# Установка Python 3
+sudo apt install -y python3 python3-venv python3-pip
+
+# Проверка установки
+python3 --version
+```
+
+### 🔧 Шаг 5: Настройка базы данных
+
+```bash
+# Вход в PostgreSQL
+sudo -u postgres psql
+```
+
+```sql
+-- Создание пользователя
+CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
+
+-- Выдача прав на базу данных
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
+
+-- Выдача прав на схему public (опционально)
+GRANT ALL ON SCHEMA public TO tbb;
+
+-- Выход из psql
+\q
+```
+
+### 📦 Шаг 6: Клонирование проекта
+
+```bash
+# Переход в папку /opt
+cd /opt
+
+# Клонирование репозитория
+sudo git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+
+# Установка прав владельца
+sudo chown -R "$USER":"$USER" telegram-bot-builder
+
+# Переход в папку проекта
+cd telegram-bot-builder
+```
+
+### ⚙️ Шаг 7: Настройка окружения
+
+```bash
+# Создание файла окружения
+cp .env.example .env
+
+# Редактирование файла
+nano .env
+```
+
+**Пример содержимого `.env`:**
+
+```env
+NODE_ENV=development
+PORT=5000
+
+# Строка подключения к БД
+DATABASE_URL=postgresql://tbb:builder2025!@localhost:5432/telegram_bot_builder
+
+# Дополнительные настройки (опционально)
+PGHOST=localhost
+PGPORT=5432
+PGUSER=tbb
+PGPASSWORD=builder2025!
+PGDATABASE=telegram_bot_builder
+```
+
+### 🚀 Шаг 8: Установка зависимостей и запуск
+
+```bash
+# Установка Node.js зависимостей
+npm install
+
+# Сборка проекта
+npm run build
+
+# Запуск приложения
+npm run start
+```
+
+### 🐍 Шаг 9: Установка Python зависимостей (для сгенерированных ботов)
+
+```bash
+# Создание виртуального окружения
+python3 -m venv .venv
+
+# Активация виртуального окружения
+source .venv/bin/activate
+
+# Обновление pip
+pip install --upgrade pip
+
+# Установка зависимостей
+pip install -r requirements.txt
+```
+
+### ✅ Готово!
+
+Приложение доступно по адресу: `http://your-server-ip:5000`
+
+</details>
 
 ---
 
@@ -632,29 +638,6 @@ npm run start
 - **Открыть сообщение** - опубликовать сообщение в группе
 - **Удалить сообщение** - удалить сообщение из группы
 
-### 👫 Управление группами
-
-На вкладке **"Группы"** вы (администратор) можете управлять группами, в которых работает ваш бот:
-
-**Основные функции:**
-- **Просмотр групп** - список всех групп, в которых подключен ваш бот
-- **Добавить участников** - приглашать пользователей в существующую группу
-- **Посмотреть членов** - список всех участников группы
-- **Настройки группы** - изменить название, описание, права доступа для группы
-
-**Что можно настроить в группе:**
-- 👥 **Управление участниками** - добавлять/удалять людей в группу
-- 🔐 **Права доступа** - кто может писать сообщения, кто может менять настройки
-- 📋 **Описание группы** - информация о группе для участников
-- ⚙️ **Параметры** - различные настройки для работы группы
-
-**Что может делать бот в группе:**
-Все команды управления пользователями и контентом работают для всей группы. Бот может:
-- Отправлять сообщения всей группе одновременно
-- Управлять участниками по правилам, которые вы установили
-- Закреплять важные сообщения для всех видеть
-- Удалять спам или неуместные сообщения
-- Обрабатывать команды, введенные пользователями в группе
 
 ### 🔄 Логика переходов
 
