@@ -1325,8 +1325,8 @@ if __name__ == "__main__":
 <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
 <div style="text-align: left; font-size: 14px;">
 
-<p><strong>🛡️ <a href="docs/SECURITY.md" style="color: #FFE4E1;">Руководство</a></strong><br/>
-<small>Лучшие практики безопасности</small></p>
+<p><strong>🛡️ <a href="docs/development/HOW_TO_UPDATE.md" style="color: #FFE4E1;">Обновление проекта</a></strong><br/>
+<small>Как обновить проект с GitHub</small></p>
 
 <p><strong>🔐 Аутентификация</strong><br/>
 <small>Защита пользовательских данных</small></p>
@@ -1365,35 +1365,30 @@ if __name__ == "__main__":
     <summary><strong>🗂️ Полная структура документации</strong> (нажми для раскрытия)</summary>
     
   <div style="text-align: left; margin: 20px 0;">
-    
+
   ```
   📂 docs/
   ├── 📁 development/              # 🛠️ Документация для разработчиков
   │   ├── 📄 SETUP.md             # Настройка окружения разработки
   │   ├── 📄 TROUBLESHOOTING_RU.md # Устранение неполадок
   │   ├── 📄 CONTRIBUTING.md       # Руководство для контрибьюторов
-  │   └── 📄 REQUIREMENTS_SPECIFICATION.md # Техническая спецификация
+  │   ├── 📄 REQUIREMENTS_SPECIFICATION.md # Техническая спецификация
+  │   └── 📄 HOW_TO_UPDATE.md     # Как обновить проект
   │
   ├── 📁 deployment/               # 🚀 Руководства по развертыванию
   │   ├── 📄 RAILWAY_DEPLOY.md    # Развертывание на Railway
-  │   ├── 📄 DOCKER_DEPLOY.md     # Развертывание через Docker
-  │   └── 📄 VPS_DEPLOY.md        # Развертывание на VPS
+  │   ├── 📄 RAILWAY_CLI_GUIDE.md # Руководство по Railway CLI
+  │   └── 📄 RAILWAY_TROUBLESHOOTING.md # Устранение проблем
   │
   ├── 📁 analysis/                 # 📊 Анализ проекта
   │   ├── 📄 PROJECT_STRUCTURE_ANALYSIS.md # Анализ структуры
+  │   ├── 📄 PROJECT_STRUCTURE_DIAGRAM.md # Диаграмма структуры
   │   └── 📄 INFRASTRUCTURE_ANALYSIS.md    # Анализ инфраструктуры
   │
-  ├── 📁 api/                      # 📡 API документация
-  │   ├── 📄 REST_API.md          # REST API справочник
-  │   └── 📄 WEBSOCKET_API.md     # WebSocket API
-  │
-  ├── 📁 tutorials/                # 🎓 Обучающие материалы
-  │   ├── 📄 FIRST_BOT.md         # Создание первого бота
-  │   └── 📄 ADVANCED_FEATURES.md # Продвинутые возможности
-  │
-  └── 📄 SECURITY.md              # 🔒 Руководство по безопасности
+  ├── 📄 COMPONENTS.md            # 🧩 Компоненты проекта
+  └── 📄 README.md                # 📚 Индекс документации
   ```
-    
+
   </div>
     
   </details>
