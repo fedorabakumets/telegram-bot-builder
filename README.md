@@ -428,9 +428,9 @@ sudo pacman -S git
 ```
 
 **Способ 2: С сайта:**
-- Перейдите на [git-scm.com](https://git-scm.com/)
-- Скачайте исходный код
-- Следуйте инструкции по компиляции
+- Перейдите на [git-scm.com/install/linux](https://git-scm.com/install/linux)
+- Выберите ваш дистрибутив
+- Следуйте инструкции по установке
 
 **Проверка установки:**
 ```bash
@@ -446,7 +446,7 @@ winget install --id Git.Git -e --source winget
 ```
 
 **Способ 2: Через установщик:**
-- Скачайте установщик с [git-scm.com](https://git-scm.com/)
+- Скачайте с [git-scm.com/install/windows](https://git-scm.com/install/windows)
 - Запустите `.exe` файл
 - Оставьте настройки по умолчанию (нажимайте "Next")
 
@@ -471,7 +471,7 @@ brew install git
 ```
 
 **Способ 2: С сайта:**
-- Перейдите на [git-scm.com](https://git-scm.com/)
+- Перейдите на [git-scm.com/install/mac](https://git-scm.com/install/mac)
 - Скачайте установщик для macOS (`.dmg`)
 - Откройте `.dmg` файл и перетащите Git в Applications
 
