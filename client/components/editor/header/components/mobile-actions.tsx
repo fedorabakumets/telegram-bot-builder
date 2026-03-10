@@ -30,7 +30,7 @@ export interface MobileActionsProps {
   onToggleCode?: () => void;
   onToggleCodeEditor?: () => void;
   onOpenFileExplorer?: () => void;
-  /** Обработчики шаблонов */
+  /** Обработчики сценариев */
   onLoadTemplate?: () => void;
   onSaveAsTemplate?: () => void;
   /** Состояния видимости панелей */
@@ -51,7 +51,7 @@ export interface MobileActionsProps {
 }
 
 /**
- * Мобильные действия: кнопки управления панелями и шаблонами
+ * Мобильные действия: кнопки управления панелями и сценариями
  */
 export function MobileActions({
   onToggleHeader,

@@ -25,7 +25,7 @@ export interface DesktopActionsProps {
   onToggleCode?: () => void;
   onToggleCodeEditor?: () => void;
   onOpenFileExplorer?: () => void;
-  /** Обработчики шаблонов */
+  /** Обработчики сценариев */
   onLoadTemplate?: () => void;
   onSaveAsTemplate?: () => void;
   /** Состояния видимости панелей */
@@ -107,7 +107,7 @@ export function DesktopActions({
       )}
       — КОНЕЦ ЗАКОММЕНТИРОВАННОГО БЛОКА */}
 
-      {/* Кнопки шаблонов */}
+      {/* Кнопки сценариев */}
       {onLoadTemplate && (
         <DesktopLoadTemplateButton
           onClick={onLoadTemplate}

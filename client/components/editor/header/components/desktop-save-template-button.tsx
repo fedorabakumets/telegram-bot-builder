@@ -1,6 +1,6 @@
 /**
- * @fileoverview Десктопная кнопка сохранения шаблона
- * @description Кнопка для сохранения проекта как шаблона в десктопной версии
+ * @fileoverview Десктопная кнопка сохранения сценария
+ * @description Кнопка для сохранения текущего проекта как сценария в десктопной версии
  */
 
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Bookmark } from 'lucide-react';
 import { cn } from '@/lib/bot-generator/utils';
 
 /**
- * Свойства десктопной кнопки сохранения шаблона
+ * Свойства десктопной кнопки сохранения сценария
  */
 export interface DesktopSaveTemplateButtonProps {
   /** Обработчик клика */
@@ -18,7 +18,7 @@ export interface DesktopSaveTemplateButtonProps {
 }
 
 /**
- * Десктопная кнопка сохранения шаблона
+ * Десктопная кнопка сохранения сценария
  */
 export function DesktopSaveTemplateButton({ onClick, isVertical }: DesktopSaveTemplateButtonProps) {
   return (
@@ -36,7 +36,7 @@ export function DesktopSaveTemplateButton({ onClick, isVertical }: DesktopSaveTe
       )}
     >
       <Bookmark className="h-3.5 w-3.5 max-sm:mx-auto" />
-      <span className="max-sm:hidden ml-1">Сохранить шаблон</span>
+      <span className="max-sm:hidden ml-1">Сохранить сценарий</span>
     </Button>
   );
 }
