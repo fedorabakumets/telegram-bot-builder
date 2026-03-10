@@ -873,6 +873,8 @@ docker compose logs -f     # Логи
 
 </details>
 
+> 💡 **Нужно обновить проект?** См. [🔄 Как обновить проект с GitHub](docs/development/HOW_TO_UPDATE.md)
+
 ---
 
 ## 🎓 Как создать своего первого бота?
