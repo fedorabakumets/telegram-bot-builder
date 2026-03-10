@@ -418,8 +418,18 @@ sudo apt install -y curl git build-essential
 </td>
 <td valign="top">
 
-- Установите Git с [git-scm.com](https://git-scm.com/)
-- Откройте PowerShell от имени администратора
+**1. Установите Git:**
+- Скачайте с [git-scm.com](https://git-scm.com/)
+- Запустите установщик, оставьте настройки по умолчанию
+
+**2. Откройте PowerShell от имени администратора:**
+- Нажмите `Win + X`
+- Выберите "Windows PowerShell (администратор)" или "Терминал (администратор)"
+
+**3. Проверьте установку:**
+```powershell
+git --version
+```
 
 </td>
 <td valign="top">
