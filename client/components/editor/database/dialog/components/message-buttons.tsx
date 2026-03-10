@@ -20,7 +20,8 @@ interface MessageButtonsProps {
  * Компонент кнопок бота
  */
 export function MessageButtons({ buttons, index }: MessageButtonsProps) {
-  if (!buttons || buttons.length === 0) return null;
+  // Строгая проверка: buttons должен быть массивом
+  if (!Array.isArray(buttons) || buttons.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-1 mt-1">

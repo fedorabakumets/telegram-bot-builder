@@ -591,9 +591,11 @@ export interface IStorage {
    * @param projectId - ID проекта
    * @param userId - ID пользователя
    * @param limit - Ограничение количества сообщений (по умолчанию 100)
+   * @param order - Порядок сортировки: 'asc' или 'desc' (по умолчанию 'asc')
+   * @param messageType - Тип сообщения: 'user' или 'bot' (опционально)
    * @returns Массив сообщений бота с медиафайлами
    */
-  getBotMessagesWithMedia(projectId: number, userId: string, limit?: number): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]>;
+  getBotMessagesWithMedia(projectId: number, userId: string, limit?: number, order?: 'asc' | 'desc', messageType?: 'user' | 'bot'): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]>;
 
   /**
    * Удалить сообщения бота по проекту и пользователю

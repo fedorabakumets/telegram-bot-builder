@@ -6,7 +6,7 @@
 import { TableCell } from '@/components/ui/table';
 import { UserBotData } from '@shared/schema';
 import { useLastMessage } from '../../hooks/queries/use-last-message';
-import { formatRelativeTime } from '../../utils/format-relative-time';
+import { formatDate } from '../../../dialog/utils/format-date';
 
 /**
  * Пропсы компонента DesktopLastMessageCell
@@ -44,7 +44,7 @@ function getMediaIcon(type: string): string {
  * @returns JSX компонент ячейки
  */
 export function DesktopLastMessageCell({ user, projectId }: DesktopLastMessageCellProps): React.JSX.Element {
-  const { data: lastMessage } = useLastMessage(projectId, user.userId);
+  const { data: lastMessage } = useLastMessage(projectId, user.userId ? Number(user.userId) : 0);
 
   // Получаем текст сообщения, обрабатывая null/undefined
   const rawText = lastMessage?.messageText;
@@ -52,7 +52,7 @@ export function DesktopLastMessageCell({ user, projectId }: DesktopLastMessageCe
 
   // Если текста нет, но есть медиа, показываем иконку медиа
   if (!messageText && lastMessage?.media && lastMessage.media.length > 0) {
-    const mediaTypes = [...new Set(lastMessage.media.map(m => m.fileType || m.type))];
+    const mediaTypes = [...new Set(lastMessage.media.map(m => m.fileType ?? m.type ?? 'unknown'))];
     messageText = mediaTypes.map(type => getMediaIcon(type)).join(' ') + ' Медиафайл' + (mediaTypes.length > 1 ? 'ы' : '');
   }
 
@@ -61,13 +61,14 @@ export function DesktopLastMessageCell({ user, projectId }: DesktopLastMessageCe
     messageText = 'Нет сообщений';
   }
 
-  const timeAgo = formatRelativeTime(lastMessage?.createdAt || user.lastInteraction);
+  const timestampValue = lastMessage?.createdAt ?? user.lastInteraction;
+  const timestamp = timestampValue !== undefined ? formatDate(timestampValue) : '';
 
   return (
     <TableCell className="py-2 max-w-xs">
       <div className="flex flex-col gap-0.5 min-w-0">
         <div className="text-sm text-muted-foreground truncate">{messageText}</div>
-        <div className="text-xs text-muted-foreground/70">{timeAgo}</div>
+        <div className="text-xs text-muted-foreground/70">{timestamp}</div>
       </div>
     </TableCell>
   );

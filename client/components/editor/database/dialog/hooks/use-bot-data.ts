@@ -15,6 +15,14 @@ export function useBotData(projectId: number) {
   const { data: bot, isLoading } = useQuery<UserBotData | null>({
     queryKey: [`/api/projects/${projectId}/bot/data`],
     enabled: !!projectId,
+    select: (data) => {
+      // Защита: если данные не объект или null, возвращаем null
+      if (!data || typeof data !== 'object') {
+        console.warn('useBotData: API returned invalid data:', data);
+        return null;
+      }
+      return data;
+    },
   });
 
   return { bot, isLoading };

@@ -50,12 +50,21 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
             );
             avatarUrl = botResult.rows[0]?.bot_photo_url || null;
         } else {
-            // Получаем аватарку пользователя из user_bot_data
-            const userResult = await pool.query(
+            // Сначала пробуем получить аватарку пользователя из user_bot_data
+            let userResult = await pool.query(
                 'SELECT avatar_url FROM user_bot_data WHERE user_id = $1 AND project_id = $2',
                 [userId, projectId]
             );
             avatarUrl = userResult.rows[0]?.avatar_url || null;
+            
+            // Если не найдено, пробуем bot_users (для старых записей)
+            if (!avatarUrl) {
+                userResult = await pool.query(
+                    'SELECT avatar_url FROM bot_users WHERE user_id = $1',
+                    [userId]
+                );
+                avatarUrl = userResult.rows[0]?.avatar_url || null;
+            }
         }
 
         await pool.end();

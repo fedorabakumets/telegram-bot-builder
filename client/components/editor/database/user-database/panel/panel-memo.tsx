@@ -110,7 +110,8 @@ export function useUserMessageCounts(
   const { userDetailsMessages } = params;
 
   return useMemo(() => {
-    if (!userDetailsMessages.length) {
+    // Защита: если не массив, возвращаем нули
+    if (!Array.isArray(userDetailsMessages) || !userDetailsMessages.length) {
       return { userSent: 0, botSent: 0, total: 0 };
     }
     const userSent = userDetailsMessages.filter(m => m.messageType === 'user').length;

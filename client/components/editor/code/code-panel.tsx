@@ -6,7 +6,7 @@ import { CodeFormat, useCodeGenerator } from '@/components/editor/code/use-code-
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateProjectName } from '@/components/editor/bot/use-update-project-name';
 import { BotData, BotProject } from '@shared/schema';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { BotValidation } from './bot-validation';
@@ -47,7 +47,7 @@ interface CodePanelProps {
  * Управляет состоянием и данными для дочерних компонентов
  */
 export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange, onBotDataUpdate }: CodePanelProps) {
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient(); // Закомментировано - не используется после отключения экспорта
 
   // Состояние для управления форматом и отображением кода
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
@@ -411,7 +411,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                     </Button>
                   </div>
 
-                  {/* Export Structure Button */}
+                  {/* Export Structure Button - ЗАКОММЕНТИРОВАНО
                   {projectIds?.[index] && (
                     <Button
                       onClick={async (e) => {
@@ -483,7 +483,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                     </Button>
                   )}
 
-                  {/* Last Export Link */}
+                  {/* Last Export Link - ЗАКОММЕНТИРОВАНО
                   {projectIds?.[0] && project?.lastExportedStructureSheetUrl && (
                     <div className="flex items-center gap-2 text-sm bg-green-50 dark:bg-green-950/20 px-3 py-2 rounded-lg border border-green-200 dark:border-green-800">
                       <span className="text-green-600 dark:text-green-400">📊</span>
@@ -508,6 +508,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                       )}
                     </div>
                   )}
+                  */}
 
                   {/* Code Statistics */}
                   {lineCount > 0 && (

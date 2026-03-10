@@ -1,6 +1,6 @@
 /**
- * @fileoverview Хук загрузки последнего сообщения пользователя
- * Загружает последнее сообщение из диалога с пользователем
+ * Хук для загрузки последнего сообщения пользователя
+ * Загружает последнее сообщение от пользователя (которое пользователь написал боту)
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -14,14 +14,37 @@ import { BotMessageWithMedia } from '../../types';
  */
 export function useLastMessage(projectId: number, userId?: number) {
   return useQuery<BotMessageWithMedia | null>({
-    queryKey: [`/api/projects/${projectId}/users/${userId}/messages/last`],
+    queryKey: [`/api/projects/${projectId}/users/${userId}/messages/last-user`],
     enabled: !!userId,
-    staleTime: 30000, // 30 секунд
+    staleTime: 5000, // 5 секунд
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
-      const response = await fetch(`/api/projects/${projectId}/users/${userId}/messages?limit=1`);
-      if (!response.ok) return null;
+      // Запрашиваем последнее сообщение ОТ ПОЛЬЗОВАТЕЛЯ (messageType=user)
+      const url = `/api/projects/${projectId}/users/${userId}/messages?limit=1&order=desc&messageType=user`;
+      console.log('[useLastMessage] Fetching:', url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.error('[useLastMessage] Response not ok:', response.status);
+        return null;
+      }
+      
       const messages = await response.json();
-      return messages[0] || null;
+      console.log('[useLastMessage] Response:', messages);
+      
+      // Защита: проверяем, что messages — массив
+      if (!Array.isArray(messages) || messages.length === 0) {
+        console.log('[useLastMessage] No messages found');
+        return null;
+      }
+      
+      const message = messages[0];
+      console.log('[useLastMessage] Last message:', message);
+      
+      // Защита: проверяем, что message — объект
+      if (!message || typeof message !== 'object') return null;
+      return message;
     },
   });
 }

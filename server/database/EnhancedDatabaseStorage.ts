@@ -192,8 +192,19 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
   async getBotMessagesWithMedia(
     projectId: number,
     userId: string,
-    limit: number = 100
+    limit: number = 100,
+    order: 'asc' | 'desc' = 'asc',
+    messageType?: 'user' | 'bot'
   ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number; }>; })[]> {
+    const whereConditions = [
+      eq(botMessages.projectId, projectId),
+      eq(botMessages.userId, userId)
+    ];
+    
+    if (messageType) {
+      whereConditions.push(eq(botMessages.messageType, messageType));
+    }
+    
     const results = await this.db
       .select({
         message: botMessages,
@@ -204,11 +215,8 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
       .from(botMessages)
       .leftJoin(botMessageMedia, eq(botMessages.id, botMessageMedia.messageId))
       .leftJoin(mediaFiles, eq(botMessageMedia.mediaFileId, mediaFiles.id))
-      .where(and(
-        eq(botMessages.projectId, projectId),
-        eq(botMessages.userId, userId)
-      ))
-      .orderBy(asc(botMessages.createdAt), asc(botMessageMedia.orderIndex))
+      .where(and(...whereConditions))
+      .orderBy(order === 'desc' ? desc(botMessages.createdAt) : asc(botMessages.createdAt), asc(botMessageMedia.orderIndex))
       .limit(limit * 10);
 
     const messagesMap = new Map<number, BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number; }>; }>();

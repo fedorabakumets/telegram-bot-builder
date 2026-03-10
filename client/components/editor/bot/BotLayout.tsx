@@ -22,11 +22,11 @@ interface BotLayoutProps {
 export function BotLayout({ projectId, projectName }: BotLayoutProps) {
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full">
-      <ResizablePanel defaultSize={60} minSize={20}>
+      <ResizablePanel defaultSize={35} minSize={20}>
         <BotsPanel projectId={projectId} projectName={projectName} />
       </ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={40} minSize={20}>
+      <ResizablePanel defaultSize={65} minSize={20}>
         <TerminalPanel />
       </ResizablePanel>
     </ResizablePanelGroup>

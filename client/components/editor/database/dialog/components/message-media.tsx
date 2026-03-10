@@ -20,7 +20,8 @@ interface MessageMediaProps {
  * Компонент отображения медиафайлов
  */
 export function MessageMedia({ media }: MessageMediaProps) {
-  if (!media || !Array.isArray(media) || media.length === 0) return null;
+  // Строгая проверка: media должен быть массивом
+  if (!Array.isArray(media) || media.length === 0) return null;
 
   return (
     <div className="rounded-lg overflow-hidden max-w-[200px] space-y-1">

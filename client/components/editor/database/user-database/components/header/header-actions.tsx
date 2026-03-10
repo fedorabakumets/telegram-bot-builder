@@ -6,7 +6,7 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import { GoogleSheetsExportButton } from '../../../../google-sheets/GoogleSheetsExportButton';
+// import { GoogleSheetsExportButton } from '../../../../google-sheets/GoogleSheetsExportButton';
 
 /**
  * Пропсы компонента HeaderActions
@@ -34,7 +34,7 @@ export function HeaderActions({
 }: HeaderActionsProps): React.JSX.Element {
   return (
     <div className="flex gap-2">
-      <GoogleSheetsExportButton projectId={projectId} projectName={projectName} />
+      {/* <GoogleSheetsExportButton projectId={projectId} projectName={projectName} /> */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button

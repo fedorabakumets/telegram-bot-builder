@@ -9,22 +9,30 @@ import { BotMessageWithMedia } from '../types';
  * Проверка наличия кнопок в сообщении
  */
 export function hasButtons(message: BotMessageWithMedia): boolean {
-  return !!(
+  if (
     message.messageData &&
     typeof message.messageData === 'object' &&
-    'buttons' in message.messageData &&
-    Array.isArray((message.messageData as Record<string, any>).buttons) &&
-    ((message.messageData as Record<string, any>).buttons as Array<any>).length > 0
-  );
+    'buttons' in message.messageData
+  ) {
+    const buttons = (message.messageData as Record<string, any>).buttons;
+    return Array.isArray(buttons) && buttons.length > 0;
+  }
+  return false;
 }
 
 /**
  * Получение кнопок из сообщения
  */
 export function getButtons(message: BotMessageWithMedia): Array<any> {
-  return Array.isArray((message.messageData as any)?.buttons)
-    ? (message.messageData as any).buttons
-    : [];
+  if (
+    message.messageData &&
+    typeof message.messageData === 'object' &&
+    'buttons' in message.messageData
+  ) {
+    const buttons = (message.messageData as Record<string, any>).buttons;
+    return Array.isArray(buttons) ? buttons : [];
+  }
+  return [];
 }
 
 /**

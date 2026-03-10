@@ -18,6 +18,16 @@ export function useUserMessages(projectId: number, userId: number | undefined) {
     queryKey: [`/api/projects/${projectId}/users/${userId}/messages`],
     enabled: !!userId,
     staleTime: 0,
+    select: (data) => {
+      // Защита: если данные не массив, оборачиваем объект в массив
+      if (!Array.isArray(data)) {
+        if (data && typeof data === 'object') {
+          return [data];
+        }
+        return [];
+      }
+      return data;
+    },
   });
 
   const stats = useMemo(() => {

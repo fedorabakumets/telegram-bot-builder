@@ -2055,6 +2055,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
 
       try {
+        // Удаляем сообщения пользователя из таблицы bot_messages
+        try {
+          const deleteMessagesResult = await pool.query(
+            `DELETE FROM bot_messages WHERE user_id = $1`,
+            [id]
+          );
+
+          console.log(`Deleted ${deleteMessagesResult.rowCount || 0} messages from bot_messages for user ${id}`);
+        } catch (dbError) {
+          console.log("bot_messages table not found or error:", (dbError as any).message);
+        }
+
         // Пытаемся удалить из bot_users если пользователь передал user_id
         const deleteResult = await pool.query(
           `DELETE FROM bot_users WHERE user_id = $1`,
@@ -2109,6 +2121,19 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // НЕ закрываем пул - он нужен для других запросов
+
+      // Удаляем сообщения из таблицы bot_messages
+      try {
+        const deleteMessagesResult = await pool.query(
+          `DELETE FROM bot_messages WHERE project_id = $1`,
+          [projectId]
+        );
+
+        totalDeleted += deleteMessagesResult.rowCount || 0;
+        console.log(`Deleted ${deleteMessagesResult.rowCount || 0} messages from bot_messages for project ${projectId}`);
+      } catch (dbError) {
+        console.log("bot_messages table not found or error:", (dbError as any).message);
+      }
 
       // Подсчитываем количество записей в user_bot_data перед удалением
       const existingUserData = await storage.getUserBotDataByProject(projectId);
@@ -3314,7 +3339,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
 
         // Создаем копию шаблона, сохраняя оригинального владельца
         // Если это официальный шаблон (ownerId=null), он останется официальным
-        // Если это шаблон пользователя, остается приписан его автору
+        // Если это шаблон польз��вателя, остается приписан его автору
         // ВАЖНО: новый шаблон всегда создаётся как приватный (isPublic: 0)
         const copiedTemplate = await storage.createBotTemplate({
           name: template.name,

@@ -14,6 +14,14 @@ import { UserBotData } from '@shared/schema';
 export function useUserList(projectId: number): { users: UserBotData[]; isLoading: boolean } {
   const { data: users = [], isLoading } = useQuery<UserBotData[]>({
     queryKey: [`/api/projects/${projectId}/users`],
+    select: (data) => {
+      // Защита: если данные не массив, возвращаем пустой массив
+      if (!Array.isArray(data)) {
+        console.warn('useUserList: API returned non-array data:', data);
+        return [];
+      }
+      return data;
+    },
   });
 
   return { users, isLoading };

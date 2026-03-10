@@ -9,6 +9,7 @@
 
 import { useActiveTerminals } from './ActiveTerminalsContext';
 import { BotControl } from './bot-control';
+import { useBotLogs } from './bot-logs-context';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { apiRequest } from '@/lib/queryClient';
@@ -23,7 +24,8 @@ interface BotsPanelProps {
  */
 export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
   const { addTerminal, updateTerminalStatus, terminals } = useActiveTerminals();
-  
+  const { clearLogs } = useBotLogs();
+
   // Получаем токены проекта
   const { data: tokens = [] } = useQuery({
     queryKey: [`/api/projects/${projectId}/tokens`],
@@ -59,6 +61,9 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
 
   // Обработчик запуска бота
   const handleBotStarted = (projectId: number, tokenId: number, botName: string) => {
+    // Очищаем логи перед запуском
+    const logKey = `${projectId}-${tokenId}`;
+    clearLogs(logKey);
     addTerminal({ projectId, tokenId, botName, isRunning: true });
   };
 

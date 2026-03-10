@@ -35,6 +35,9 @@ export function DialogHeader({
   onSelectUser,
   onClose
 }: DialogHeaderProps) {
+  // Защита: если users не массив, используем пустой массив
+  const usersArray = Array.isArray(users) ? users : [];
+
   return (
     <div className="flex items-center justify-between gap-2 p-2 xs:p-2.5 sm:p-3 border-b">
       <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -49,7 +52,7 @@ export function DialogHeader({
           <Select
             value={user.userId.toString()}
             onValueChange={(value) => {
-              const selectedUser = users.find((u) => u.userId.toString() === value);
+              const selectedUser = usersArray.find((u) => u.userId.toString() === value);
               if (selectedUser) {
                 onSelectUser(selectedUser);
               }
@@ -59,7 +62,7 @@ export function DialogHeader({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {users.map((u) => (
+              {usersArray.map((u) => (
                 <SelectItem key={u.userId} value={u.userId.toString()}>
                   {formatUserName(u)}
                 </SelectItem>

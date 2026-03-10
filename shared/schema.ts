@@ -475,7 +475,7 @@ export const botMessages = pgTable("bot_messages", {
   /** ID основного медиа (фото/видео) для быстрого доступа */
   primaryMediaId: integer("primary_media_id").references(() => mediaFiles.id, { onDelete: "set null" }),
   /** Дата создания сообщения */
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { mode: 'date', withTimezone: true }).defaultNow(),
 });
 
 /**
@@ -1169,7 +1169,7 @@ export const nodeSchema = z.object({
     adminUserIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'), // Источник ID пользователя
     adminUserVariableName: z.string().optional(), // Имя переменной с ID пользователя
     // Права администратора согласно Telegram Bot API (promoteChatMember)
-    can_manage_chat: z.boolean().default(false), // Может упр��влять чатом
+    can_manage_chat: z.boolean().default(false), // Может упр��влять чат��м
     can_post_messages: z.boolean().default(false), // Может публиковать сообщения (только каналы)
     can_edit_messages: z.boolean().default(false), // Может редакт��ровать сообщения (только каналы)
     can_delete_messages: z.boolean().default(false), // Может удалять сообщения

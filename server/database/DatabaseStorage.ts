@@ -1169,21 +1169,31 @@ export class DatabaseStorage implements IStorage {
    * @param projectId - ID проекта
    * @param userId - ID пользователя
    * @param limit - Ограничение количества сообщений (по умолчанию 100)
+   * @param order - Порядок сортировки: 'asc' или 'desc' (по умолчанию 'asc')
+   * @param messageType - Тип сообщения: 'user' или 'bot' (опционально)
    * @returns Массив сообщений бота с медиафайлами
    */
   async getBotMessagesWithMedia(
     projectId: number,
     userId: string,
-    limit: number = 100
+    limit: number = 100,
+    order: 'asc' | 'desc' = 'asc',
+    messageType?: 'user' | 'bot'
   ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number; }> | undefined; })[]> {
+    const whereConditions = [
+      eq(botMessages.projectId, projectId),
+      eq(botMessages.userId, userId)
+    ];
+    
+    if (messageType) {
+      whereConditions.push(eq(botMessages.messageType, messageType));
+    }
+    
     const messages = await this.db
       .select()
       .from(botMessages)
-      .where(and(
-        eq(botMessages.projectId, projectId),
-        eq(botMessages.userId, userId)
-      ))
-      .orderBy(asc(botMessages.createdAt))
+      .where(and(...whereConditions))
+      .orderBy(order === 'desc' ? desc(botMessages.createdAt) : asc(botMessages.createdAt))
       .limit(limit);
 
     const messagesWithMedia = await Promise.all(

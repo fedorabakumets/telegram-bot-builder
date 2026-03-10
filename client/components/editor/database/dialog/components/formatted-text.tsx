@@ -26,9 +26,10 @@ export function FormattedText({ text, messageType }: FormattedTextProps) {
    * Поддерживает теги: b, strong, i, em, u, s, strike, del, code, pre, a
    */
   const formattedContent = useMemo(() => {
-    if (!text) return null;
+    // Строгая проверка: text должен быть строкой
+    if (typeof text !== 'string' || !text.trim()) return null;
 
-    const content = String(text).trimEnd();
+    const content = text.trimEnd();
 
     // Простая функция для парсинга HTML с тегами форматирования
     const parseFormattedText = (html: string): (string | JSX.Element)[] => {

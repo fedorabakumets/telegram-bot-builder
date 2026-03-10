@@ -44,6 +44,17 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
     staleTime: 5000, // 5 секунд
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    select: (data) => {
+      // Защита: если данные не массив, оборачиваем объект в массив
+      if (!Array.isArray(data)) {
+        if (data && typeof data === 'object') {
+          return [data];
+        }
+        console.warn('dialog-panel: messages API returned invalid data:', data);
+        return [];
+      }
+      return data;
+    },
   });
 
   /** Автопрокрутка к последнему сообщению */
