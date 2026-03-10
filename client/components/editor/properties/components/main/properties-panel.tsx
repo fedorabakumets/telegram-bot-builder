@@ -120,13 +120,13 @@ export function PropertiesPanel({
 }: PropertiesPanelProps) {
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
-  const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(selectedNode?.type === 'broadcast');
+  const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(false);
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
-  const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(true);
-  const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(true);
-  const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(true);
-  const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(true);
-  const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(true);
+  const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(false);
+  const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(false);
+  const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(false);
+  const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(false);
+  const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(false);
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
 
   // Синхронизируем displayNodeId с selectedNode.id при изменении узла
