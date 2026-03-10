@@ -1555,6 +1555,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const projectId = parseInt(req.params.projectId);
       const fileType = req.query.type as string;
 
+      // Отключаем кэширование
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+
       let mediaFiles;
       if (fileType && ['photo', 'video', 'audio', 'document'].includes(fileType)) {
         mediaFiles = await storage.getMediaFilesByType(projectId, fileType);
