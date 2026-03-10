@@ -354,32 +354,7 @@
 </details>
 
 ---
-
-## ✨ Что это может делать?
-
-<details>
-<summary><strong>Развернуть возможности</strong> (нажми для раскрытия)</summary>
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="33%" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
-        <h3>🎨 Визуальный редактор</h3>
-        <p>Drag-and-drop интерфейс<br/>Никакого кода!</p>
-      </td>
-      <td align="center" width="33%" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px;">
-        <h3>🤖 Готовые боты</h3>
-        <p>Python код генерируется<br/>автоматически</p>
-      </td>
-      <td align="center" width="33%" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 10px;">
-        <h3>☁️ Облачный деплой</h3>
-        <p>Railway, VPS<br/>Один клик - бот в продакшене</p>
-      </td>
-    </tr>
-  </table>
-</div>
-
-### 🎯 Основные возможности
+## 🎯 Основные возможности
 
 - **🎨 Создавайте ботов перетаскиванием** - никакого кода, просто перемещайте блоки мышкой
 - **💬 Отправляйте сообщения** - с форматированием, кнопками и медиафайлами
@@ -411,151 +386,323 @@
 
 ---
 
-## 🐧 Установка на Linux (VPS)
+## 🐧 Установка на Linux / 🪟 Windows / 🍎 macOS
 
 <details>
-<summary><strong>Пошаговая инструкция по установке на Linux</strong> (нажми для раскрытия)</summary>
+<summary><strong>📜 Пошаговая инструкция по установке</strong> (нажми для раскрытия)</summary>
 
-### 📋 Шаг 1: Обновление системы и установка зависимостей
+### 🖥️ Выберите вашу операционную систему
+
+---
+
+#### 🐧 Linux (Ubuntu/Debian)
+
+<details>
+<summary>Инструкция для Linux</summary>
+
+**Шаг 1: Обновление системы и установка зависимостей**
 
 ```bash
-# Обновление системы
 sudo apt update && sudo apt upgrade -y
-
-# Установка необходимых инструментов
 sudo apt install -y curl git build-essential
 ```
 
-### 🟢 Шаг 2: Установка Node.js LTS
+**Шаг 2: Установка Node.js LTS**
 
 ```bash
-# Установка Node.js через nodesource
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 sudo apt install -y nodejs
-
-# Проверка версий
-node -v
-npm -v
+node -v && npm -v
 ```
 
-### 🗄️ Шаг 3: Установка PostgreSQL
+**Шаг 3: Установка PostgreSQL**
 
 ```bash
-# Установка PostgreSQL
 sudo apt install -y postgresql postgresql-contrib
-
-# Проверка статуса службы
 sudo systemctl enable postgresql
 sudo systemctl start postgresql
-sudo systemctl status postgresql
 ```
 
-### 🐍 Шаг 4: Установка Python 3
+**Шаг 4: Установка Python 3**
 
 ```bash
-# Установка Python 3
 sudo apt install -y python3 python3-venv python3-pip
-
-# Проверка установки
 python3 --version
 ```
 
-### 🔧 Шаг 5: Настройка базы данных
+**Шаг 5: Настройка базы данных**
 
 ```bash
-# Вход в PostgreSQL
 sudo -u postgres psql
 ```
 
 ```sql
--- Создание пользователя
 CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
-
--- Выдача прав на базу данных
 GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
-
--- Выдача прав на схему public (опционально)
 GRANT ALL ON SCHEMA public TO tbb;
-
--- Выход из psql
 \q
 ```
 
-### 📦 Шаг 6: Клонирование проекта
+**Шаг 6: Клонирование проекта**
 
 ```bash
-# Переход в папку /opt
 cd /opt
-
-# Клонирование репозитория
 sudo git clone https://github.com/fedorabakumets/telegram-bot-builder.git
-
-# Установка прав владельца
 sudo chown -R "$USER":"$USER" telegram-bot-builder
-
-# Переход в папку проекта
 cd telegram-bot-builder
 ```
 
-### ⚙️ Шаг 7: Настройка окружения
+**Шаг 7: Настройка окружения**
 
 ```bash
-# Создание файла окружения
 cp .env.example .env
-
-# Редактирование файла
 nano .env
 ```
 
-**Пример содержимого `.env`:**
+**Шаг 8: Установка зависимостей и запуск**
+
+```bash
+npm install
+npm run build
+npm run start
+```
+
+**Шаг 9: Python зависимости (для сгенерированных ботов)**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
+
+</details>
+
+---
+
+#### 🪟 Windows
+
+<details>
+<summary>Инструкция для Windows</summary>
+
+**Шаг 1: Установка Node.js LTS**
+
+1. Скачайте установщик с [nodejs.org](https://nodejs.org/)
+2. Запустите установщик и следуйте инструкциям
+3. Проверьте установку:
+
+```powershell
+node -v
+npm -v
+```
+
+**Шаг 2: Установка PostgreSQL**
+
+1. Скачайте установщик с [postgresql.org/download](https://www.postgresql.org/download/windows/)
+2. Установите PostgreSQL 15+
+3. Запомните пароль пользователя `postgres`
+
+**Шаг 3: Установка Python 3**
+
+1. Скачайте установщик с [python.org/downloads](https://www.python.org/downloads/)
+2. При установке отметьте **"Add Python to PATH"**
+3. Проверьте установку:
+
+```powershell
+python --version
+```
+
+**Шаг 4: Настройка базы данных**
+
+Откройте PowerShell от имени администратора:
+
+```powershell
+# Вход в PostgreSQL
+psql -U postgres
+
+# Создание пользователя и БД (в psql)
+CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
+CREATE DATABASE telegram_bot_builder OWNER tbb;
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
+GRANT ALL ON SCHEMA public TO tbb;
+\q
+```
+
+**Шаг 5: Клонирование проекта**
+
+```powershell
+# Создайте папку для проекта
+mkdir C:\projects
+cd C:\projects
+
+# Клонируйте репозиторий
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+```
+
+**Шаг 6: Настройка окружения**
+
+```powershell
+# Скопируйте пример
+copy .env.example .env
+
+# Откройте для редактирования
+notepad .env
+```
+
+**Пример `.env` для Windows:**
 
 ```env
 NODE_ENV=development
 PORT=5000
-
-# Строка подключения к БД
 DATABASE_URL=postgresql://tbb:builder2025!@localhost:5432/telegram_bot_builder
-
-# Дополнительные настройки (опционально)
-PGHOST=localhost
-PGPORT=5432
-PGUSER=tbb
-PGPASSWORD=builder2025!
-PGDATABASE=telegram_bot_builder
 ```
 
-### 🚀 Шаг 8: Установка зависимостей и запуск
+**Шаг 7: Установка зависимостей и запуск**
 
-```bash
-# Установка Node.js зависимостей
+```powershell
 npm install
-
-# Сборка проекта
 npm run build
-
-# Запуск приложения
 npm run start
 ```
 
-### 🐍 Шаг 9: Установка Python зависимостей (для сгенерированных ботов)
+**Шаг 8: Python зависимости (для сгенерированных ботов)**
 
-```bash
-# Создание виртуального окружения
-python3 -m venv .venv
-
-# Активация виртуального окружения
-source .venv/bin/activate
-
-# Обновление pip
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate
 pip install --upgrade pip
-
-# Установка зависимостей
 pip install -r requirements.txt
 ```
 
-### ✅ Готово!
+✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
 
-Приложение доступно по адресу: `http://your-server-ip:5000`
+</details>
+
+---
+
+#### 🍎 macOS
+
+<details>
+<summary>Инструкция для macOS</summary>
+
+**Шаг 1: Установка Homebrew (если не установлен)**
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+**Шаг 2: Установка Node.js LTS**
+
+```bash
+brew install node@lts
+node -v && npm -v
+```
+
+**Шаг 3: Установка PostgreSQL**
+
+```bash
+brew install postgresql@15
+brew services start postgresql@15
+```
+
+**Шаг 4: Установка Python 3**
+
+```bash
+brew install python
+python3 --version
+```
+
+**Шаг 5: Настройка базы данных**
+
+```bash
+psql postgres
+```
+
+```sql
+CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
+CREATE DATABASE telegram_bot_builder OWNER tbb;
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
+GRANT ALL ON SCHEMA public TO tbb;
+\q
+```
+
+**Шаг 6: Клонирование проекта**
+
+```bash
+mkdir -p ~/projects
+cd ~/projects
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+```
+
+**Шаг 7: Настройка окружения**
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+**Шаг 8: Установка зависимостей и запуск**
+
+```bash
+npm install
+npm run build
+npm run start
+```
+
+**Шаг 9: Python зависимости (для сгенерированных ботов)**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
+
+</details>
+
+---
+
+### 🐳 Альтернатива: Docker (любая ОС)
+
+<details>
+<summary>Быстрый запуск через Docker</summary>
+
+**Требования:** Docker и Docker Compose
+
+```bash
+# Клонирование проекта
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+
+# Запуск через Docker Compose
+docker compose up -d
+
+# Просмотр логов
+docker compose logs -f
+```
+
+✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
+
+**Полезные команды:**
+
+```bash
+# Остановить
+docker compose down
+
+# Пересобрать
+docker compose build --no-cache
+
+# Логи
+docker compose logs -f
+```
+
+</details>
 
 </details>
 
