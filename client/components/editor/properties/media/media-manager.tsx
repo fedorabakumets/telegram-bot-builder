@@ -69,6 +69,11 @@ interface UploadingFile {
  */
 export function MediaManager({ projectId, onSelectFile, selectedType }: MediaManagerProps) {
   /**
+   * Ссылка на секцию с файлами
+   */
+  const filesSectionRef = React.useRef<HTMLDivElement>(null);
+
+  /**
    * Хук для показа уведомлений
    */
   const { toast } = useToast();
@@ -284,6 +289,10 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
           setTimeout(() => {
             setUploadingFiles(prev => prev.filter(uf => uf.file !== file));
           }, 3000);
+          // Прокрутка к секции с файлами
+          setTimeout(() => {
+            filesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 500);
         },
         onError: (error) => {
           setUploadingFiles(prev =>
@@ -853,7 +862,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
       </Card>
 
       {/* Вкладки */}
-      <Tabs value={currentTab} onValueChange={setCurrentTab}>
+      <Tabs value={currentTab} onValueChange={setCurrentTab} ref={filesSectionRef}>
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="all">Все</TabsTrigger>
           <TabsTrigger value="photo">Фото</TabsTrigger>
