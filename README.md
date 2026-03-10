@@ -410,24 +410,32 @@
 <tr>
 <td valign="top">
 
-**1. Обновление системы:**
+**Способ 1: Через терминал (рекомендуется):**
+
+**Ubuntu/Debian:**
 ```bash
-sudo apt update && sudo apt upgrade -y
+sudo apt update && sudo apt install -y git
 ```
 
-**2. Установка Git и зависимостей:**
+**Fedora/CentOS:**
 ```bash
-sudo apt install -y curl git build-essential
+sudo dnf install -y git
 ```
 
-**3. Проверка установки:**
+**Arch Linux:**
+```bash
+sudo pacman -S git
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [git-scm.com](https://git-scm.com/)
+- Скачайте исходный код
+- Следуйте инструкции по компиляции
+
+**Проверка установки:**
 ```bash
 git --version
 ```
-
-> **Альтернатива для других дистрибутивов:**
-> - **Fedora/CentOS:** `sudo dnf install -y git curl`
-> - **Arch Linux:** `sudo pacman -S git curl`
 
 </td>
 <td valign="top">
@@ -453,17 +461,21 @@ git --version
 </td>
 <td valign="top">
 
-**1. Установка Homebrew (если не установлен):**
+**Способ 1: Через Homebrew (рекомендуется):**
 ```bash
+# Установка Homebrew (если не установлен)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
 
-**2. Установка Git:**
-```bash
+# Установка Git
 brew install git
 ```
 
-**3. Проверка установки:**
+**Способ 2: С сайта:**
+- Перейдите на [git-scm.com](https://git-scm.com/)
+- Скачайте установщик для macOS (`.dmg`)
+- Откройте `.dmg` файл и перетащите Git в Applications
+
+**Проверка установки:**
 ```bash
 git --version
 ```
