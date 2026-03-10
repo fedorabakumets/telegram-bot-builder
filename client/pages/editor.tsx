@@ -158,7 +158,6 @@ export default function Editor() {
 
   // Обработчик логирования действий
   const handleActionLog = useCallback((type: string, description: string) => {
-    console.log('📋 История действий:', type, '-', description);
     setActionHistory((prevHistory: ActionHistoryItem[]) => [createActionHistoryItem(type as ActionType, description), ...prevHistory].slice(0, 50));
   }, [setActionHistory]);
 
@@ -566,12 +565,7 @@ export default function Editor() {
   // Синхронизация nodes → botDataWithSheets для undo/redo
   useEffect(() => {
     if (!botDataWithSheets || !botDataWithSheets.activeSheetId) return;
-    
-    console.log('🔄 Синхронизация nodes → botDataWithSheets:', {
-      nodesCount: nodes.length,
-      activeSheetId: botDataWithSheets.activeSheetId
-    });
-    
+
     // Обновляем узлы в активном листе при изменении nodes
     const updatedSheets = botDataWithSheets.sheets.map(sheet => {
       if (sheet.id === botDataWithSheets.activeSheetId) {
