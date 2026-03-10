@@ -831,32 +831,6 @@ npm install
 
 ---
 
-### Шаг 9: Python зависимости (для сгенерированных ботов)
-
-**1. Создание виртуального окружения:**
-
-**Linux/macOS:**
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-**Windows:**
-```powershell
-python -m venv .venv
-.venv\Scripts\activate
-```
-
-**2. Установка зависимостей:**
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-> ⚠️ Этот шаг нужен только если вы планируете генерировать и запускать ботов локально
-
----
-
 ### 🐳 Альтернатива: Docker (любая ОС)
 
 **Требования:** Docker и Docker Compose
