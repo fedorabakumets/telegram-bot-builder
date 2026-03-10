@@ -20,7 +20,7 @@ interface ComingSoonBadgeProps {
  * @returns {JSX.Element} Бейдж предстоящего обновления
  */
 export function ComingSoonBadge({
-  tooltip = "Скоро этот раздел превратится в отдельный блок. Ожидайте обновления",
+  tooltip = "Скоро эта секция изменится",
   label = "Скоро обновление"
 }: ComingSoonBadgeProps) {
   return (
