@@ -378,6 +378,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // ВАЖНО: должен быть подключен ПОСЛЕ session middleware
   app.use("/api", authMiddleware);
 
+  // Middleware для отключения кэширования на /api/media/*
+  app.use("/api/media", (_req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+  });
+
   // Запускаем инициализацию в фоне без блокировки сервера
   initializeComponents();
 
@@ -1554,11 +1562,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const projectId = parseInt(req.params.projectId);
       const fileType = req.query.type as string;
-
-      // Отключаем кэширование
-      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-      res.set('Pragma', 'no-cache');
-      res.set('Expires', '0');
 
       let mediaFiles;
       if (fileType && ['photo', 'video', 'audio', 'document'].includes(fileType)) {
