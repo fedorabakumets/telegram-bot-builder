@@ -13,7 +13,6 @@ import { ToggleCodeEditorButton } from './toggle-code-editor-button';
 import { OpenFileExplorerButton } from './open-file-explorer-button';
 import { LoadTemplateButton } from './load-template-button';
 import { SaveTemplateButton } from './save-template-button';
-import { GithubButton } from './github-button';
 import { ThemeToggle } from './theme-toggle';
 import { UserAuth } from './user-auth';
 import type { TelegramUser } from './user-section';
@@ -141,7 +140,6 @@ export function MobileActions({
         {onSaveAsTemplate && (
           <SaveTemplateButton onClick={() => handleAction(onSaveAsTemplate)} />
         )}
-        <GithubButton className={onSaveAsTemplate ? '' : 'sm:col-span-2'} />
         {/* <div className="flex justify-center sm:col-span-2 pt-2">
           <ThemeToggle />
         </div> */}

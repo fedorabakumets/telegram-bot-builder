@@ -6,6 +6,8 @@
 import { cn } from '@/lib/bot-generator/utils';
 import { Logo } from './logo';
 import { Title } from './title';
+import { VersionBadge } from './version-badge';
+import { GithubButton } from './github-button';
 import type { BotInfo } from '../types';
 
 /**
@@ -46,6 +48,8 @@ export function BrandSection({ projectName, botInfo, isVertical, isCompact, isMo
         isCompact={isCompact}
         isMobile={isMobile}
       />
+      <VersionBadge version="2.0.0" />
+      {!isVertical && <GithubButton className="!p-0 !h-auto" />}
     </div>
   );
 }
