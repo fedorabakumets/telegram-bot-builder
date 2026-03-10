@@ -397,9 +397,12 @@
 - **Python** ≥ 3.10 (для сгенерированных ботов)
 - **Git**
 
+</details>
+
 ---
 
-### Шаг 1: Обновление системы и установка зависимостей
+<details>
+<summary><strong>Шаг 1: Обновление системы и установка зависимостей</strong></summary>
 
 <table>
 <tr>
@@ -486,9 +489,12 @@ git --version
 </tr>
 </table>
 
+</details>
+
 ---
 
-### Шаг 2: Установка Node.js LTS
+<details>
+<summary><strong>Шаг 2: Установка Node.js LTS</strong></summary>
 
 <table>
 <tr>
@@ -548,9 +554,12 @@ node -v && npm -v
 </tr>
 </table>
 
+</details>
+
 ---
 
-### Шаг 3: Установка PostgreSQL
+<details>
+<summary><strong>Шаг 3: Установка PostgreSQL</strong></summary>
 
 <table>
 <tr>
@@ -604,9 +613,12 @@ brew services start postgresql@15
 </tr>
 </table>
 
+</details>
+
 ---
 
-### Шаг 4: Установка Python 3
+<details>
+<summary><strong>Шаг 4: Установка Python 3</strong></summary>
 
 <table>
 <tr>
@@ -663,14 +675,17 @@ python3 --version
 </tr>
 </table>
 
+</details>
+
 ---
 
-### Шаг 5: Настройка базы данных
+<details>
+<summary><strong>Шаг 5: Настройка базы данных</strong></summary>
 
 <table>
 <tr>
 <th width="33%">🐧 Linux</th>
-<th width="33%">🪟 Windows</th>
+<th width="33%">🏁 Windows</th>
 <th width="33%">🍎 macOS</th>
 </tr>
 <tr>
@@ -722,14 +737,17 @@ GRANT ALL ON SCHEMA public TO tbb;
 </tr>
 </table>
 
+</details>
+
 ---
 
-### Шаг 6: Клонирование проекта
+<details>
+<summary><strong>Шаг 6: Клонирование проекта</strong></summary>
 
 <table>
 <tr>
 <th width="33%">🐧 Linux</th>
-<th width="33%">🪟 Windows</th>
+<th width="33%">🏁 Windows</th>
 <th width="33%">🍎 macOS</th>
 </tr>
 <tr>
@@ -766,9 +784,12 @@ cd telegram-bot-builder
 </tr>
 </table>
 
+</details>
+
 ---
 
-### Шаг 7: Настройка окружения
+<details>
+<summary><strong>Шаг 7: Настройка окружения</strong></summary>
 
 **Пример `.env` для всех систем:**
 ```env
@@ -811,9 +832,12 @@ nano .env
 </tr>
 </table>
 
+</details>
+
 ---
 
-### Шаг 8: Установка зависимостей и запуск
+<details>
+<summary><strong>Шаг 8: Установка зависимостей и запуск</strong></summary>
 
 **1. Установка зависимостей:**
 ```bash
@@ -829,9 +853,12 @@ npm install
 
 ✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
 
+</details>
+
 ---
 
-### 🐳 Альтернатива: Docker (любая ОС)
+<details>
+<summary><strong>🐳 Альтернатива: Docker (любая ОС)</strong></summary>
 
 **Требования:** Docker и Docker Compose
 
@@ -889,6 +916,8 @@ docker compose logs -f     # Логи
 2. Нажмите кнопку **"Запустить"**
 3. Откройте своего бота в Telegram
 4. Тестируйте и улучшайте!
+
+</details>
 
 </details>
 
