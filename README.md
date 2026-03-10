@@ -770,10 +770,17 @@ cd telegram-bot-builder
 
 ### Шаг 7: Настройка окружения
 
+**Пример `.env` для всех систем:**
+```env
+NODE_ENV=development
+PORT=5000
+DATABASE_URL=postgresql://tbb:builder2025!@localhost:5432/telegram_bot_builder
+```
+
 <table>
 <tr>
 <th width="33%">🐧 Linux</th>
-<th width="33%">🪟 Windows</th>
+<th width="33%">🏁 Windows</th>
 <th width="33%">🍎 macOS</th>
 </tr>
 <tr>
@@ -790,13 +797,6 @@ nano .env
 ```powershell
 copy .env.example .env
 notepad .env
-```
-
-**Пример `.env`:**
-```env
-NODE_ENV=development
-PORT=5000
-DATABASE_URL=postgresql://tbb:builder2025!@localhost:5432/telegram_bot_builder
 ```
 
 </td>
