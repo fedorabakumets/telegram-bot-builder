@@ -133,6 +133,7 @@ export function useUploadMedia(projectId: number) {
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/media/project", projectId], exact: false });
       queryClient.refetchQueries({ queryKey: ["/api/media/project", projectId], exact: false });
     },
   });
@@ -230,6 +231,7 @@ export function useUploadMultipleMedia(projectId: number) {
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/media/project", projectId], exact: false });
       queryClient.refetchQueries({ queryKey: ["/api/media/project", projectId], exact: false });
     },
   });
@@ -267,6 +269,7 @@ export function useDeleteMedia() {
       }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/media/project"], exact: false });
       queryClient.refetchQueries({ queryKey: ["/api/media/project"], exact: false });
     },
   });
@@ -315,6 +318,7 @@ export function useUpdateMedia() {
       return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/media/project"], exact: false });
       queryClient.refetchQueries({ queryKey: ["/api/media/project"], exact: false });
     },
   });
@@ -352,6 +356,7 @@ export function useIncrementUsage() {
       }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/media/project"], exact: false });
       queryClient.refetchQueries({ queryKey: ["/api/media/project"], exact: false });
     },
   });
