@@ -9,7 +9,7 @@
 Если вы **не вносили локальных изменений**, выполните:
 
 ```bash
-cd C:\Users\1\Desktop\telegram-bot-builder
+cd путь/к/проекту
 git pull origin main
 ```
 
