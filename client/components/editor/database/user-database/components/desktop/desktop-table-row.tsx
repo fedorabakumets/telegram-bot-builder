@@ -19,12 +19,6 @@ interface DesktopTableRowProps {
   index: number;
   /** Функция форматирования имени */
   formatUserName: (user: UserBotData) => string;
-  /** Функция открытия панели деталей */
-  onOpenUserDetailsPanel?: (user: UserBotData) => void;
-  /** Функция открытия диалога */
-  onOpenDialogPanel?: (user: UserBotData) => void;
-  /** Функция переключения статуса */
-  handleUserStatusToggle: (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => void;
   /** Мутация удаления пользователя */
   deleteUserMutation: any;
   /** Количество видимых колонок */
@@ -65,7 +59,7 @@ export function DesktopTableRow(props: DesktopTableRowProps): React.JSX.Element 
   // Всегда показываем обязательные ячейки + дополнительные по visibleColumns
   const alwaysVisible = CELL_RENDERERS.filter(cell => cell.alwaysVisible);
   const optional = CELL_RENDERERS.filter(cell => !cell.alwaysVisible);
-  
+
   // Показываем все обязательные + первые N опциональных
   const cellsToShow = [...alwaysVisible, ...optional.slice(0, Math.max(0, visibleColumns - alwaysVisible.length))];
 

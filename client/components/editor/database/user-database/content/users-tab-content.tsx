@@ -17,9 +17,6 @@ type UsersTabContentProps = Pick<
   | 'filteredAndSortedUsers'
   | 'searchQuery'
   | 'formatUserName'
-  | 'onOpenUserDetailsPanel'
-  | 'onOpenDialogPanel'
-  | 'handleUserStatusToggle'
   | 'deleteUserMutation'
   | 'visibleColumns'
   | 'projectId'
@@ -36,9 +33,6 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
     filteredAndSortedUsers,
     searchQuery,
     formatUserName,
-    onOpenUserDetailsPanel,
-    onOpenDialogPanel,
-    handleUserStatusToggle,
     deleteUserMutation,
     visibleColumns,
     projectId,
@@ -52,18 +46,12 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
             users={filteredAndSortedUsers}
             searchQuery={searchQuery}
             formatUserName={formatUserName}
-            onOpenUserDetailsPanel={onOpenUserDetailsPanel}
-            onOpenDialogPanel={onOpenDialogPanel}
-            handleUserStatusToggle={handleUserStatusToggle}
           />
         ) : (
           <DesktopTable
             users={filteredAndSortedUsers}
             searchQuery={searchQuery}
             formatUserName={formatUserName}
-            onOpenUserDetailsPanel={onOpenUserDetailsPanel}
-            onOpenDialogPanel={onOpenDialogPanel}
-            handleUserStatusToggle={handleUserStatusToggle}
             deleteUserMutation={deleteUserMutation}
             visibleColumns={visibleColumns}
             projectId={projectId}

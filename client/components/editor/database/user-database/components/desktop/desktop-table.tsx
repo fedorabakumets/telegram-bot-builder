@@ -19,12 +19,6 @@ interface DesktopTableProps {
   searchQuery: string;
   /** Функция форматирования имени */
   formatUserName: (user: UserBotData) => string;
-  /** Функция открытия панели деталей */
-  onOpenUserDetailsPanel?: (user: UserBotData) => void;
-  /** Функция открытия диалога */
-  onOpenDialogPanel?: (user: UserBotData) => void;
-  /** Функция переключения статуса */
-  handleUserStatusToggle: (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => void;
   /** Мутация удаления пользователя */
   deleteUserMutation: any;
   /** Количество видимых колонок */
@@ -39,7 +33,7 @@ interface DesktopTableProps {
  * @returns JSX компонент таблицы
  */
 export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
-  const { users, searchQuery, visibleColumns, projectId, formatUserName, onOpenUserDetailsPanel, onOpenDialogPanel, handleUserStatusToggle, deleteUserMutation } = props;
+  const { users, searchQuery, visibleColumns, projectId, formatUserName, deleteUserMutation } = props;
 
   return (
     <div className="rounded-lg border border-border bg-card/40 overflow-hidden w-full">
@@ -51,7 +45,7 @@ export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
               <DesktopEmptyRow searchQuery={searchQuery} />
             ) : (
               users.map((user, index) => (
-                <DesktopTableRow key={user.id || index} user={user} index={index} visibleColumns={visibleColumns} projectId={projectId} formatUserName={formatUserName} onOpenUserDetailsPanel={onOpenUserDetailsPanel} onOpenDialogPanel={onOpenDialogPanel} handleUserStatusToggle={handleUserStatusToggle} deleteUserMutation={deleteUserMutation} />
+                <DesktopTableRow key={user.id || index} user={user} index={index} visibleColumns={visibleColumns} projectId={projectId} formatUserName={formatUserName} deleteUserMutation={deleteUserMutation} />
               ))
             )}
           </TableBody>

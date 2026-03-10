@@ -20,12 +20,6 @@ interface MobileUserCardProps {
   index: number;
   /** Функция форматирования имени */
   formatUserName: (user: UserBotData) => string;
-  /** Функция открытия панели деталей */
-  onOpenUserDetailsPanel?: (user: UserBotData) => void;
-  /** Функция открытия диалога */
-  onOpenDialogPanel?: (user: UserBotData) => void;
-  /** Функция переключения статуса */
-  handleUserStatusToggle: (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => void;
 }
 
 /**
