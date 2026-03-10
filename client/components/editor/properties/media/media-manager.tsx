@@ -126,37 +126,27 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
   /**
    * Все файлы проекта
    */
-  const { data: allFiles, isLoading: isLoadingAll, error: errorAll } = useMediaFiles(projectId);
+  const { data: allFiles, isLoading, error } = useMediaFiles(projectId);
 
   /**
    * Фото файлы проекта
    */
-  const { data: photoFiles, isLoading: isLoadingPhoto, error: errorPhoto } = useMediaFiles(projectId, 'photo');
+  const { data: photoFiles } = useMediaFiles(projectId, 'photo');
 
   /**
    * Видео файлы проекта
    */
-  const { data: videoFiles, isLoading: isLoadingVideo, error: errorVideo } = useMediaFiles(projectId, 'video');
+  const { data: videoFiles } = useMediaFiles(projectId, 'video');
 
   /**
    * Аудио файлы проекта
    */
-  const { data: audioFiles, isLoading: isLoadingAudio, error: errorAudio } = useMediaFiles(projectId, 'audio');
+  const { data: audioFiles } = useMediaFiles(projectId, 'audio');
 
   /**
    * Документы проекта
    */
-  const { data: documentFiles, isLoading: isLoadingDoc, error: errorDoc } = useMediaFiles(projectId, 'document');
-
-  // Отладка: логирование данных
-  React.useEffect(() => {
-    console.log('[MediaManager Debug] projectId:', projectId);
-    console.log('  allFiles:', { data: allFiles?.length, isLoading: isLoadingAll, error: errorAll });
-    console.log('  photoFiles:', { data: photoFiles?.length, isLoading: isLoadingPhoto, error: errorPhoto });
-    console.log('  videoFiles:', { data: videoFiles?.length, isLoading: isLoadingVideo, error: errorVideo });
-    console.log('  audioFiles:', { data: audioFiles?.length, isLoading: isLoadingAudio, error: errorAudio });
-    console.log('  documentFiles:', { data: documentFiles?.length, isLoading: isLoadingDoc, error: errorDoc });
-  }, [projectId, allFiles, photoFiles, videoFiles, audioFiles, documentFiles, isLoadingAll, isLoadingPhoto, isLoadingVideo, isLoadingAudio, isLoadingDoc, errorAll, errorPhoto, errorVideo, errorAudio, errorDoc]);
+  const { data: documentFiles } = useMediaFiles(projectId, 'document');
 
   /**
    * Мутация для загрузки файлов
@@ -522,7 +512,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  if (isLoadingAll) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin" />
