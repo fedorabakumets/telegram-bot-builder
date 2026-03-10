@@ -208,7 +208,7 @@ npm run build && npm run start
 - [Исходный код релиза](https://github.com/fedorabakumets/telegram-bot-builder/tree/v1.5.0)
 - [Сравнение изменений](https://github.com/fedorabakumets/telegram-bot-builder/compare/v1.4.4...v1.5.0)
 - [Полный список коммитов](https://github.com/fedorabakumets/telegram-bot-builder/commits/v1.5.0)
-- [Docker-документация](docs/CLIENT-README.md)
+- [Docker-документация](../CLIENT-README.md)
 
 ---
 
