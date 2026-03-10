@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { IdSourceSelector } from '../navigation/id-source-selector';
 import { ApiTypeSelector } from '../common/api-type-selector';
+import { ComingSoonBadge } from '../conditional-message-card/coming-soon-badge';
 
 /**
  * Свойства компонента панели настроек рассылки
@@ -38,7 +39,10 @@ export function BroadcastNodeProperties({ node, onUpdate }: BroadcastNodePropert
 
       {/* Подтверждение рассылки */}
       <div className="flex items-center justify-between">
-        <Label htmlFor="enableConfirmation">Подтверждение отправки</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="enableConfirmation">Подтверждение отправки</Label>
+          <ComingSoonBadge />
+        </div>
         <Switch
           id="enableConfirmation"
           checked={data.enableConfirmation}
@@ -51,7 +55,10 @@ export function BroadcastNodeProperties({ node, onUpdate }: BroadcastNodePropert
       {/* Текст подтверждения */}
       {data.enableConfirmation && (
         <div className="space-y-2">
-          <Label htmlFor="confirmationText">Текст подтверждения</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="confirmationText">Текст подтверждения</Label>
+            <ComingSoonBadge />
+          </div>
           <Input
             id="confirmationText"
             value={data.confirmationText || ''}

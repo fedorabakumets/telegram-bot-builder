@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { ComingSoonBadge } from '../conditional-message-card/coming-soon-badge';
 
 /**
  * Пропсы компонента выбора типа API
@@ -40,9 +41,12 @@ export function ApiTypeSelector({ node, onUpdate }: ApiTypeSelectorProps) {
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="apiType" className="text-sm font-medium">
-        Метод отправки
-      </Label>
+      <div className="flex items-center justify-between">
+        <Label htmlFor="apiType" className="text-sm font-medium">
+          Метод отправки
+        </Label>
+        <ComingSoonBadge />
+      </div>
       <Select
         value={apiType}
         onValueChange={(value: "bot" | "client") => onUpdate(node.id, { broadcastApiType: value })}
@@ -71,7 +75,7 @@ export function ApiTypeSelector({ node, onUpdate }: ApiTypeSelectorProps) {
           </SelectItem>
         </SelectContent>
       </Select>
-      
+
       {apiType === 'client' && (
         <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
           ⚠️ Требуется авторизация во вкладке{" "}

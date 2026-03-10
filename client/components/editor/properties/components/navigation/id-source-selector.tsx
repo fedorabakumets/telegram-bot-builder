@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ComingSoonBadge } from '../conditional-message-card/coming-soon-badge';
 
 /**
  * Типы источников ID пользователей
@@ -38,7 +39,10 @@ export function IdSourceSelector({ node, onUpdate }: IdSourceSelectorProps) {
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="idSourceType">Источник пользователей</Label>
+      <div className="flex items-center justify-between">
+        <Label htmlFor="idSourceType">Источник пользователей</Label>
+        <ComingSoonBadge />
+      </div>
       <Select
         value={sourceType}
         onValueChange={(value: IdSourceType) =>
