@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=2">
     <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=2">
@@ -404,7 +404,7 @@
 <table>
 <tr>
 <th width="33%">🐧 Linux (Ubuntu/Debian)</th>
-<th width="33%">🪟 Windows</th>
+<th width="33%">🏁 Windows</th>
 <th width="33%">🍎 macOS</th>
 </tr>
 <tr>
