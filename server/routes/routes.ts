@@ -1022,9 +1022,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Определяем тип файла
       const fileType = getFileType(file.mimetype);
-      
-      // Логирование для отладки
-      console.log('[Media Upload] Project:', projectId, 'File:', file.originalname, 'MIME:', file.mimetype, 'Type:', fileType);
 
       // Сохраняем информацию о файле в базе данных
       const mediaFile = await storage.createMediaFile({
@@ -1572,10 +1569,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       let mediaFiles;
       if (fileType && ['photo', 'video', 'audio', 'document'].includes(fileType)) {
         mediaFiles = await storage.getMediaFilesByType(projectId, fileType);
-        console.log('[Media Get] Project:', projectId, 'Type:', fileType, 'Count:', mediaFiles.length);
       } else {
         mediaFiles = await storage.getMediaFilesByProject(projectId);
-        console.log('[Media Get] Project:', projectId, 'All files, Count:', mediaFiles.length);
       }
 
       res.json(mediaFiles);
