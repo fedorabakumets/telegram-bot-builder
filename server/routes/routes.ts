@@ -70,21 +70,33 @@ const storage_multer = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (_req, file, cb) => {
-    // Исправляем кодировку UTF-8 перед формированием имени
+    // Исправляем кодировку UTF-8 - декодируем URL-encoded имя
     let originalname = file.originalname;
     try {
-      originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+      // Сначала пробуем декодировать URL-encoded строку
+      originalname = decodeURIComponent(file.originalname);
     } catch (e) {
-      console.error('Error fixing filename encoding:', e);
+      // Если не URL-encoded, пробуем исправить mojibake
+      try {
+        if (file.originalname.includes('Ñ') || file.originalname.includes('Ã')) {
+          originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+        }
+      } catch (e2) {
+        console.error('Error fixing filename encoding:', e2);
+      }
     }
     
-    // Генерируем уникальное имя файла с временной меткой и безопасным именем
+    // Если имя всё ещё пустое или содержит только спецсимволы, используем дефолтное
+    const baseNameRaw = originalname
+      .split('.')[0]
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .substring(0, 50);
+    
+    const baseName = baseNameRaw && baseNameRaw !== '_' ? baseNameRaw : 'file';
+    
+    // Генерируем уникальное имя файла с временной меткой
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = originalname.split('.').pop()?.toLowerCase() || '';
-    const baseName = originalname
-      .split('.')[0] // Убираем расширение
-      .replace(/[^a-zA-Z0-9._-]/g, '_') // Заменяем небезопасные символы
-      .substring(0, 50); // Ограничиваем длину
+    const extension = originalname.split('.').pop()?.toLowerCase() || 'jpg';
 
     cb(null, `${uniqueSuffix}-${baseName}.${extension}`);
   }
