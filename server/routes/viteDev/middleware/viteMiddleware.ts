@@ -62,6 +62,12 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
     app.use(express.static(publicPath));
   }
 
+  // Раздача файлов из uploads в режиме разработки
+  const uploadsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "uploads");
+  if (fs.existsSync(uploadsPath)) {
+    app.use("/uploads", express.static(uploadsPath));
+  }
+
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
