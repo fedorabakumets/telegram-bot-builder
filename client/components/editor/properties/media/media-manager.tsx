@@ -267,6 +267,12 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
       setUploadingFiles(prev => [...prev, uploadingFile]);
       setShowUploadDetails(true);
 
+      // Определяем тип файла для переключения вкладки
+      const uploadedFileType = file.type.startsWith('image/') ? 'photo'
+        : file.type.startsWith('video/') ? 'video'
+        : file.type.startsWith('audio/') ? 'audio'
+        : 'document';
+
       // Start upload with progress simulation
       uploadMutation.mutate({
         file,
@@ -285,6 +291,8 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
             title: "Файл загружен",
             description: `${file.name} успешно загружен`,
           });
+          // Переключаем вкладку на тип загруженного файла
+          setCurrentTab(uploadedFileType);
           // Remove from uploading list after delay
           setTimeout(() => {
             setUploadingFiles(prev => prev.filter(uf => uf.file !== file));
