@@ -30,7 +30,7 @@ import {
   useMobileHandlers,
   useCodePanelHandlers,
 } from '@/pages/editor/hooks';
-import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
+import { SaveTemplateModal } from '@/components/editor/header/components/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
