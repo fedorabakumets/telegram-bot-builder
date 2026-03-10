@@ -14,10 +14,10 @@
 - [Troubleshooting](development/TROUBLESHOOTING_RU.md) - Устранение неполадок
 - [Implementation Guide](development/REAL_IMPLEMENTATION_GUIDE.md) - Руководство по реализации
 - [Requirements](development/REQUIREMENTS_SPECIFICATION.md) - Спецификация требований
-- [Bot Generator Functions](development/СПИСОК_ФУНКЦИЙ_БОТ_ГЕНЕРАТОРА.md) - Функции генератора ботов
 - [Contributing](development/CONTRIBUTING.md) - Руководство для контрибьюторов
 - [GitHub Sync](development/GITHUB_SYNC.md) - Синхронизация с GitHub
 - [GitHub Topics](development/GITHUB_TOPICS.md) - Темы GitHub
+- [How to Update](development/HOW_TO_UPDATE.md) - Как обновить проект с GitHub
 
 ## 📊 Анализ проекта
 - [Project Structure Analysis](analysis/PROJECT_STRUCTURE_ANALYSIS.md) - Анализ структуры проекта
@@ -25,10 +25,6 @@
 - [Infrastructure Analysis](analysis/INFRASTRUCTURE_ANALYSIS.md) - Анализ инфраструктуры
 - [Analysis Summary](analysis/ANALYSIS_SUMMARY.md) - Сводка анализа
 
-
-## 🛠️ Скрипты и утилиты
-- [Scripts Documentation](../scripts/README.md) - Документация по скриптам проекта
-
 ## 📋 Компоненты
 - [Components Guide](COMPONENTS.md) - Руководство по компонентам
-- [JSDoc Standards](development/JSDOC_STANDARDS.md) - Стандарты документации
+- [JSDoc Standards](JSDOC_STANDARDS.md) - Стандарты документации JSDoc

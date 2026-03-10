@@ -69,6 +69,11 @@ interface UploadingFile {
  */
 export function MediaManager({ projectId, onSelectFile, selectedType }: MediaManagerProps) {
   /**
+   * Ссылка на секцию с файлами
+   */
+  const filesSectionRef = React.useRef<HTMLDivElement>(null);
+
+  /**
    * Хук для показа уведомлений
    */
   const { toast } = useToast();
@@ -121,7 +126,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
   /**
    * Все файлы проекта
    */
-  const { data: allFiles, isLoading } = useMediaFiles(projectId);
+  const { data: allFiles, isLoading, error } = useMediaFiles(projectId);
 
   /**
    * Фото файлы проекта
@@ -262,6 +267,12 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
       setUploadingFiles(prev => [...prev, uploadingFile]);
       setShowUploadDetails(true);
 
+      // Определяем тип файла для переключения вкладки
+      const uploadedFileType = file.type.startsWith('image/') ? 'photo'
+        : file.type.startsWith('video/') ? 'video'
+        : file.type.startsWith('audio/') ? 'audio'
+        : 'document';
+
       // Start upload with progress simulation
       uploadMutation.mutate({
         file,
@@ -280,10 +291,16 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
             title: "Файл загружен",
             description: `${file.name} успешно загружен`,
           });
+          // Переключаем вкладку на тип загруженного файла
+          setCurrentTab(uploadedFileType);
           // Remove from uploading list after delay
           setTimeout(() => {
             setUploadingFiles(prev => prev.filter(uf => uf.file !== file));
           }, 3000);
+          // Прокрутка к секции с файлами
+          setTimeout(() => {
+            filesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 500);
         },
         onError: (error) => {
           setUploadingFiles(prev =>
@@ -853,7 +870,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
       </Card>
 
       {/* Вкладки */}
-      <Tabs value={currentTab} onValueChange={setCurrentTab}>
+      <Tabs value={currentTab} onValueChange={setCurrentTab} ref={filesSectionRef}>
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="all">Все</TabsTrigger>
           <TabsTrigger value="photo">Фото</TabsTrigger>

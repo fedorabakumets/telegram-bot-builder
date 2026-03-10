@@ -90,64 +90,64 @@ export const botInstances = pgTable("bot_instances", {
 });
 
 /**
- * Таблица шаблонов ботов
+ * Таблица сценариев ботов
  */
 export const botTemplates = pgTable("bot_templates", {
-  /** Уникальный идентификатор шаблона */
+  /** Уникальный идентификатор сценария */
   id: serial("id").primaryKey(),
-  /** Идентификатор владельца шаблона (null для официальных шаблонов) */
+  /** Идентификатор владельца сценария (null для официальных сценариев) */
   ownerId: bigint("owner_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "cascade" }),
-  /** Название шаблона */
+  /** Название сценария */
   name: text("name").notNull(),
-  /** Описание шаблона */
+  /** Описание сценария */
   description: text("description"),
-  /** JSON-данные шаблона (структура узлов, соединений и т.д.) */
+  /** JSON-данные сценария (структура узлов, соединений и т.д.) */
   data: jsonb("data").notNull(),
-  /** Категория шаблона ("official", "community", "custom", "business", "entertainment", "education", "utility", "games") */
+  /** Категория сценария ("official", "community", "custom", "business", "entertainment", "education", "utility", "games") */
   category: text("category").default("custom"),
-  /** Теги шаблона */
+  /** Теги сценария */
   tags: text("tags").array(),
   /** Флаг публичности (0 = приватный, 1 = публичный) */
   isPublic: integer("is_public").default(0),
   /** Уровень сложности ("easy", "medium", "hard") */
   difficulty: text("difficulty").default("easy"),
-  /** Идентификатор автора шаблона (устаревшее, использовать ownerId) */
+  /** Идентификатор автора сценария (устаревшее, использовать ownerId) */
   authorId: text("author_id"),
-  /** Имя автора шаблона */
+  /** Имя автора сценария */
   authorName: text("author_name"),
-  /** Количество использований шаблона */
+  /** Количество использований сценария */
   useCount: integer("use_count").notNull().default(0),
-  /** Рейтинг шаблона (от 1 до 5) */
+  /** Рейтинг сценария (от 1 до 5) */
   rating: integer("rating").notNull().default(0),
-  /** Количество оценок шаблона */
+  /** Количество оценок сценария */
   ratingCount: integer("rating_count").notNull().default(0),
   /** Флаг рекомендуемости (0 = не рекомендуемый, 1 = рекомендуемый) */
   featured: integer("featured").notNull().default(0),
-  /** Версия шаблона */
+  /** Версия сценария */
   version: text("version").default("1.0.0"),
   /** URL изображения для предварительного просмотра */
   previewImage: text("preview_image"),
-  /** Время последнего использования шаблона */
+  /** Время последнего использования сценария */
   lastUsedAt: timestamp("last_used_at"),
-  /** Количество скачиваний шаблона */
+  /** Количество скачиваний сценария */
   downloadCount: integer("download_count").notNull().default(0),
-  /** Количество лайков шаблона */
+  /** Количество лайков сценария */
   likeCount: integer("like_count").notNull().default(0),
-  /** Количество закладок шаблона */
+  /** Количество закладок сценария */
   bookmarkCount: integer("bookmark_count").notNull().default(0),
-  /** Количество просмотров шаблона */
+  /** Количество просмотров сценария */
   viewCount: integer("view_count").notNull().default(0),
-  /** Язык шаблона */
+  /** Язык сценария */
   language: text("language").default("ru"),
   /** Флаг требования токена (0 = не требуется, 1 = требуется) */
   requiresToken: integer("requires_token").notNull().default(0),
-  /** Сложность шаблона (от 1 до 10) */
+  /** Сложность сценария (от 1 до 10) */
   complexity: integer("complexity").notNull().default(1),
   /** Примерное время настройки в минутах */
   estimatedTime: integer("estimated_time").notNull().default(5),
-  /** Дата создания шаблона */
+  /** Дата создания сценария */
   createdAt: timestamp("created_at").defaultNow(),
-  /** Дата последнего обновления шаблона */
+  /** Дата последнего обновления сценария */
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -545,7 +545,7 @@ export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
 });
 
 /**
- * Схема для вставки данных шаблона бота
+ * Схема для вставки данных сценария бота
  */
 export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   ownerId: true,
@@ -566,19 +566,19 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   complexity: true,
   estimatedTime: true,
 }).extend({
-  /** Идентификатор владельца шаблона */
+  /** Идентификатор владельца сценария */
   ownerId: z.number().nullable().optional(),
-  /** Категория шаблона */
+  /** Категория сценария */
   category: z.enum(["custom", "business", "entertainment", "education", "utility", "games", "official", "community"]).default("custom"),
   /** Уровень сложности */
   difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
-  /** Язык шаблона */
+  /** Язык сценария */
   language: z.enum(["ru", "en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko"]).default("ru"),
-  /** Сложность шаблона (от 1 до 10) */
+  /** Сложность сценария (от 1 до 10) */
   complexity: z.number().min(1).max(10).default(1),
   /** Примерное время настройки в минутах */
   estimatedTime: z.number().min(1).max(120).default(5),
-  /** Рейтинг шаблона (от 1 до 5) */
+  /** Рейтинг сценария (от 1 до 5) */
   rating: z.number().min(1).max(5).optional(),
 });
 
@@ -897,10 +897,10 @@ export const insertUserIdSchema = z.object({
 });
 
 /**
- * Схема для оценки шаблона
+ * Схема для оценки сценария
  */
 export const rateTemplateSchema = z.object({
-  /** Идентификатор шаблона */
+  /** Идентификатор сценария */
   templateId: z.number(),
   /** Рейтинг (от 1 до 5) */
   rating: z.number().min(1).max(5),
@@ -1210,9 +1210,6 @@ export const nodeSchema = z.object({
     // Поля для узла client_auth (авторизация Client API)
     sessionName: z.string().default('user_session').optional(), // Имя файла сессии
     sessionCreated: z.boolean().default(false).optional(), // Флаг созданной сессии
-
-    // Поле для сохранения ID в CSV файл
-    saveToCsv: z.boolean().default(false).optional(), // Сохранять ли ID в CSV файл для рассылки
   }),
 });
 

@@ -93,14 +93,14 @@ export function useTokens(options: UseUserDataOptions, projectId?: number) {
 }
 
 /**
- * Хук для управления шаблонами пользователя
+ * Хук для управления сценариями пользователя
  * Автоматически выбирает источник данных в зависимости от статуса аутентификации
- * 
+ *
  * @param {UseUserDataOptions} options - Опции конфигурации хука
  * @param {boolean} options.isAuthenticated - Флаг аутентификации пользователя
  * @param {number} [options.userId] - Идентификатор пользователя
- * @returns {UseQueryResult} Результат запроса с данными шаблонов
- * 
+ * @returns {UseQueryResult} Результат запроса с данными сценариев
+ *
  * @example
  * ```typescript
  * const { data: templates, isLoading, error } = useTemplates({
@@ -335,7 +335,7 @@ export function useDeleteToken(options: UseUserDataOptions) {
   });
 }
 
-// Hook для создания шаблона
+// Hook для создания сценария
 export function useCreateTemplate(options: UseUserDataOptions) {
   const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';
   
@@ -358,7 +358,7 @@ export function useCreateTemplate(options: UseUserDataOptions) {
   });
 }
 
-// Hook для обновления шаблона
+// Hook для обновления сценария
 export function useUpdateTemplate(options: UseUserDataOptions) {
   const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';
   
@@ -384,7 +384,7 @@ export function useUpdateTemplate(options: UseUserDataOptions) {
   });
 }
 
-// Hook для удаления шаблона
+// Hook для удаления сценария
 export function useDeleteTemplate(options: UseUserDataOptions) {
   const mode: UserDataMode = options.isAuthenticated && options.userId ? 'server' : 'local';
   

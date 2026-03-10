@@ -26,6 +26,8 @@ interface SectionHeaderProps {
   descriptionColor?: string;
   /** Дополнительные классы для контейнера */
   className?: string;
+  /** Дополнительный контент справа (например, бейдж) */
+  extraContent?: React.ReactNode;
 }
 
 /**
@@ -44,7 +46,8 @@ export function SectionHeader({
   iconColor,
   titleGradient,
   descriptionColor = 'text-slate-600/70 dark:text-slate-400/70',
-  className = ''
+  className = '',
+  extraContent
 }: SectionHeaderProps): JSX.Element {
   return (
     <div className={`flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group ${className}`} onClick={onToggle}>
@@ -65,6 +68,7 @@ export function SectionHeader({
             </p>
           )}
         </div>
+        {extraContent}
       </button>
       <i
         className={`fas fa-chevron-down text-xs sm:text-sm ${iconColor} ml-auto flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}

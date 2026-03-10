@@ -22,9 +22,9 @@ export interface HeaderContentProps {
   currentTab: EditorTab;
   /** Обработчик смены вкладки */
   onTabChange: (tab: EditorTab) => void;
-  /** Сохранить как шаблон */
+  /** Сохранить как сценарий */
   onSaveAsTemplate: () => void;
-  /** Загрузить шаблон */
+  /** Загрузить сценарий */
   onLoadTemplate: () => void;
   /** Открыть менеджер макета */
   onLayoutSettings: () => void;

@@ -30,7 +30,7 @@ import {
   useMobileHandlers,
   useCodePanelHandlers,
 } from '@/pages/editor/hooks';
-import { SaveTemplateModal } from '@/components/editor/template/save-template-modal';
+import { SaveTemplateModal } from '@/components/editor/header/components/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -87,7 +87,7 @@ export default function Editor() {
   const [currentTab, setCurrentTab] = useState<EditorTab>('editor');
 
   /**
-   * Флаг отображения модального окна сохранения шаблона
+   * Флаг отображения модального окна сохранения сценария
    * @type {boolean}
    */
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -158,7 +158,6 @@ export default function Editor() {
 
   // Обработчик логирования действий
   const handleActionLog = useCallback((type: string, description: string) => {
-    console.log('📋 История действий:', type, '-', description);
     setActionHistory((prevHistory: ActionHistoryItem[]) => [createActionHistoryItem(type as ActionType, description), ...prevHistory].slice(0, 50));
   }, [setActionHistory]);
 
@@ -566,12 +565,7 @@ export default function Editor() {
   // Синхронизация nodes → botDataWithSheets для undo/redo
   useEffect(() => {
     if (!botDataWithSheets || !botDataWithSheets.activeSheetId) return;
-    
-    console.log('🔄 Синхронизация nodes → botDataWithSheets:', {
-      nodesCount: nodes.length,
-      activeSheetId: botDataWithSheets.activeSheetId
-    });
-    
+
     // Обновляем узлы в активном листе при изменении nodes
     const updatedSheets = botDataWithSheets.sheets.map(sheet => {
       if (sheet.id === botDataWithSheets.activeSheetId) {
@@ -680,20 +674,20 @@ export default function Editor() {
     activeProjectId: activeProject?.id || null,
   });
 
-  // Проверяем, есть ли выбранный шаблон при загрузке страницы
+  // Проверяем, есть ли выбранный сценарий при загрузке страницы
   useEffect(() => {
     const selectedTemplateData = localStorage.getItem('selectedTemplate');
     if (selectedTemplateData && activeProject) {
       try {
-        setIsLoadingTemplate(true); // Устанавливаем флаг загрузки шаблона
+        setIsLoadingTemplate(true); // Устанавливаем флаг загрузки сценария
         const template = JSON.parse(selectedTemplateData);
-        console.log('Применяем сохраненный шаблон:', template.name);
+        console.log('Применяем сохраненный сценарий:', template.name);
 
-        // Проверяем, есть ли в шаблоне многолистовая структура
+        // Проверяем, есть ли в сценарии многолистовая структура
         if (template.data.sheets && Array.isArray(template.data.sheets)) {
-          console.log('Применяем многолистовой шаблон с листами:', template.data.sheets.length);
+          console.log('Применяем многолистовой сценарий с листами:', template.data.sheets.length);
 
-          // Создаем новые ID для листов шаблона
+          // Создаем новые ID для листов сценария
           const updatedSheets = template.data.sheets.map((sheet: any) => {
             // Очищаем узлы от потенциальных циклических ссылок
             const cleanNodes = sheet.nodes?.map((node: any) => {
@@ -733,8 +727,8 @@ export default function Editor() {
           // Устанавливаем первый лист как активный на холсте
           const firstSheet = updatedSheets[0];
           if (firstSheet) {
-            // Всегда применяем автоиерархию при загрузке шаблонов для правильного расположения
-            const shouldSkipLayout = false; // Автоиерархия необходима при загрузке многолистовых шаблонов
+            // Всегда применяем автоиерархию при загрузке сценариев для правильного расположения
+            const shouldSkipLayout = false; // Автоиерархия необходима при загрузке многолистовых сценариев
             setBotData({ nodes: firstSheet.nodes }, template.name, currentNodeSizes, shouldSkipLayout);
           }
 
@@ -750,13 +744,13 @@ export default function Editor() {
             updateProjectMutation.mutate({});
           }
         } else {
-          // Обычный шаблон без листов - мигрируем к формату с листами
-          console.log('Применяем обычный шаблон и мигрируем к формату с листами');
+          // Обычный сценарий без листов - мигрируем к формату с листами
+          console.log('Применяем обычный сценарий и мигрируем к формату с листами');
           const migratedData = SheetsManager.migrateLegacyData(template.data);
           setBotDataWithSheets(migratedData);
-          // Всегда применяем автоиерархию при загрузке шаблонов для правильного расположения
-          const shouldSkipLayout = false; // Автоиерархия необходима при загрузке обычных шаблонов
-          setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия должна работать при загрузке шаблонов
+          // Всегда применяем автоиерархию при загрузке сценариев для правильного расположения
+          const shouldSkipLayout = false; // Автоиерархия необходима при загрузке обычных сценариев
+          setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия должна работать при загрузке сценариев
 
           // Сохраняем в проект только если activeProject загружен
           if (activeProject?.id) {
@@ -771,16 +765,16 @@ export default function Editor() {
           }
         }
 
-        // Принудительно инвалидируем кеш проектов после применения шаблона
+        // Принудительно инвалидируем кеш проектов после применения сценария
         // чтобы на странице "Проекты" отображалось правильное количество листов
         queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
 
         toast({
-          title: 'Шаблон применен',
-          description: `Шаблон "${template.name}" успешно загружен`,
+          title: 'Сценарий применен',
+          description: `Сценарий "${template.name}" успешно загружен`,
         });
 
-        // Удаляем сохраненный шаблон
+        // Удаляем сохраненный сценарий
         localStorage.removeItem('selectedTemplate');
 
         // Небольшая задержка, чтобы дать время на сохранение, затем убираем флаг
@@ -788,7 +782,7 @@ export default function Editor() {
           setIsLoadingTemplate(false);
         }, 1000);
       } catch (error) {
-        console.error('Ошибка применения сохраненного шаблона:', error);
+        console.error('Ошибка применения сохраненного сценария:', error);
         localStorage.removeItem('selectedTemplate');
         setIsLoadingTemplate(false); // Убираем флаг при ошибке
       }
@@ -873,16 +867,16 @@ export default function Editor() {
   }, [activeProject?.id, updateProjectMutation]);
 
   /**
-   * Обработчик открытия модального окна сохранения шаблона
+   * Обработчик открытия модального окна сохранения сценария
    */
   const handleSaveAsTemplate = useCallback(() => {
     setShowSaveTemplate(true);
   }, []);
 
   /**
-   * Обработчик загрузки шаблона
+   * Обработчик загрузки сценария
    *
-   * Переходит на страницу шаблонов для выбора шаблона
+   * Переходит на страницу сценариев для выбора сценария
    */
   const handleLoadTemplate = useCallback(() => {
     console.log('Template button clicked, navigating to templates page...');

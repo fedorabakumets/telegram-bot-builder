@@ -14,13 +14,13 @@ import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-a
 import type { BotTemplate } from '@shared/schema';
 
 /**
- * Простая версия страницы шаблонов без сложной системы макетов
+ * Простая версия страницы сценариев без сложной системы макетов
  *
- * Этот компонент представляет собой упрощенную версию страницы шаблонов,
+ * Этот компонент представляет собой упрощенную версию страницы сценариев,
  * которая не использует сложную систему макетов. Он предоставляет
- * функциональность поиска, фильтрации и использования шаблонов ботов.
+ * функциональность поиска, фильтрации и использования сценариев ботов.
  *
- * @returns JSX элемент страницы шаблонов
+ * @returns JSX элемент страницы сценариев
  */
 export default function TemplatesPageWrapper() {
   const [, setLocation] = useLocation();
@@ -49,12 +49,12 @@ export default function TemplatesPageWrapper() {
   /**
    * Эффект для очистки локального состояния гостя при авторизации
    *
-   * При авторизации пользователя удаляет локальное хранилище ID шаблонов гостя
+   * При авторизации пользователя удаляет локальное хранилище ID сценариев гостя
    * и инвалидирует соответствующие кэши для обновления данных.
    */
   useEffect(() => {
     if (user) {
-      // Если пользователь авторизован - очищаем localStorage ID шаблонов гостя
+      // Если пользователь авторизован - очищаем localStorage ID сценариев гостя
       // Теперь используются данные из БД
       localStorage.removeItem('myTemplateIds');
       // КРИТИЧНО: удаляем старый кеш гостя и переполняем с новым user ID
@@ -68,11 +68,11 @@ export default function TemplatesPageWrapper() {
     queryKey: ['/api/templates/category/custom', user?.id || 'guest'],
     queryFn: async () => {
       try {
-        // Проверяем есть ли сохраненные шаблоны в localStorage для гостей
+        // Проверяем есть ли сохраненные сценарии в localStorage для гостей
         const myTemplateIds = localStorage.getItem('myTemplateIds');
 
         // Только для гостей добавляем параметр ids
-        // Для авторизованных пользователей сервер автоматически вернет их шаблоны по сессии
+        // Для авторизованных пользователей сервер автоматически вернет их сценарии по сессии
         const idsParam = (myTemplateIds && myTemplateIds.length > 0 && !user) ? `?ids=${myTemplateIds}` : '';
         console.log('📝 Fetching custom templates:', { user: user?.id, isGuest: !user, idsParam });
 
@@ -136,10 +136,10 @@ export default function TemplatesPageWrapper() {
 
     if (selectedCategory !== 'all') {
       if (selectedCategory === 'official') {
-        // Официальные шаблоны - это системные шаблоны (ownerId === null)
+        // Официальные сценарии - это системные сценарии (ownerId === null)
         currentTemplates = currentTemplates.filter(template => template.ownerId === null);
       } else if (selectedCategory === 'userTemplates') {
-        // Пользовательские шаблоны - это все что не официальные (ownerId !== null)
+        // Пользовательские сценарии - это все что не официальные (ownerId !== null)
         currentTemplates = currentTemplates.filter(template => template.ownerId !== null);
       } else {
         // Остальные категории - фильтруем по полю category
@@ -174,21 +174,21 @@ export default function TemplatesPageWrapper() {
       return response.json();
     },
     onSuccess: () => {
-      // Инвалидируем кеш проектов и шаблонов
+      // Инвалидируем кеш проектов и сценариев
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
 
       toast({
         title: "✅ Успешно!",
-        description: "Шаблон добавлен в ваши проекты и коллекцию",
+        description: "Сценарий добавлен в ваши проекты и коллекцию",
       });
     },
     onError: (error) => {
-      console.error('Ошибка при использовании шаблона:', error);
+      console.error('Ошибка при использовании сценария:', error);
       toast({
         title: "❌ Ошибка",
-        description: "Не удалось использовать шаблон",
+        description: "Не удалось использовать сценарий",
         variant: "destructive"
       });
     }
@@ -207,34 +207,34 @@ export default function TemplatesPageWrapper() {
       queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
       toast({
-        title: "✅ Шаблон удален",
-        description: "Ваш шаблон успешно удален",
+        title: "✅ Сценарий удален",
+        description: "Ваш сценарий успешно удален",
       });
     },
     onError: (error) => {
-      console.error('Ошибка при удалении шаблона:', error);
+      console.error('Ошибка при удалении сценария:', error);
       toast({
         title: "❌ Ошибка",
-        description: "Не удалось удалить шаблон",
+        description: "Не удалось удалить сценарий",
         variant: "destructive"
       });
     }
   });
 
   /**
-   * Обработчик использования шаблона
+   * Обработчик использования сценария
    *
-   * Вызывается при выборе пользователем шаблона для использования.
-   * Обновляет счетчики использования, сохраняет шаблон в localStorage
+   * Вызывается при выборе пользователем сценария для использования.
+   * Обновляет счетчики использования, сохраняет сценарий в localStorage
    * и перенаправляет пользователя в редактор.
    *
-   * @param template - выбранный шаблон
+   * @param template - выбранный сценарий
    */
   const handleUseTemplate = (template: BotTemplate) => {
     useTemplateMutation.mutate(template.id);
     localStorage.setItem('selectedTemplate', JSON.stringify(template));
 
-    // Сохраняем ID шаблона в список "моих" для гостей (для оффлайна)
+    // Сохраняем ID сценария в список "моих" для гостей (для оффлайна)
     const myTemplateIds = localStorage.getItem('myTemplateIds') || '';
     const ids = new Set(myTemplateIds.split(',').filter(Boolean).map(Number));
     ids.add(template.id);
@@ -243,21 +243,21 @@ export default function TemplatesPageWrapper() {
     setLocation('/');
 
     toast({
-      title: 'Шаблон загружен!',
-      description: `Шаблон "${template.name}" будет применен к вашему проекту`,
+      title: 'Сценарий загружен!',
+      description: `Сценарий "${template.name}" будет применен к вашему проекту`,
     });
   };
 
   /**
-   * Обработчик удаления шаблона
+   * Обработчик удаления сценария
    *
-   * Запрашивает подтверждение у пользователя и удаляет шаблон,
+   * Запрашивает подтверждение у пользователя и удаляет сценарий,
    * если пользователь подтверждает удаление.
    *
-   * @param template - шаблон для удаления
+   * @param template - сценарий для удаления
    */
   const handleDeleteTemplate = (template: BotTemplate) => {
-    if (window.confirm(`Вы уверены, что хотите удалить шаблон "${template.name}"? Это действие нельзя отменить.`)) {
+    if (window.confirm(`Вы уверены, что хотите удалить сценарий "${template.name}"? Это действие нельзя отменить.`)) {
       deleteTemplateMutation.mutate(template.id);
     }
   };
@@ -267,9 +267,9 @@ export default function TemplatesPageWrapper() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-destructive mb-2">Ошибка загрузки шаблонов</h2>
+          <h2 className="text-xl font-bold text-destructive mb-2">Ошибка загрузки сценариев</h2>
           <p className="text-muted-foreground mb-4">
-            Произошла ошибка при загрузке шаблонов. Пожалуйста, обновите страницу.
+            Произошла ошибка при загрузке сценариев. Пожалуйста, обновите страницу.
           </p>
           <Button onClick={() => window.location.reload()}>
             Обновить страницу
@@ -292,7 +292,7 @@ export default function TemplatesPageWrapper() {
                   Назад к редактору
                 </Button>
               </Link>
-              <h1 className="text-2xl font-bold">Шаблоны ботов</h1>
+              <h1 className="text-2xl font-bold">Сценарии ботов</h1>
             </div>
           </div>
         </div>
@@ -310,7 +310,7 @@ export default function TemplatesPageWrapper() {
                 <div className="relative group">
                   <Search className="absolute left-3 xs:left-3.5 top-1/2 transform -translate-y-1/2 text-blue-500/50 h-4 w-4 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors duration-200" />
                   <Input
-                    placeholder="Поиск шаблонов по названию..."
+                    placeholder="Поиск сценариев по названию..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9 xs:pl-10 h-10 xs:h-11 text-sm xs:text-base border border-border/50 rounded-lg bg-background/80 hover:bg-background hover:border-border/70 focus:border-blue-500/60 focus:ring-blue-500/15 transition-all duration-200 shadow-sm"
@@ -467,7 +467,7 @@ export default function TemplatesPageWrapper() {
 /**
  * Функция преобразования категории в русское название
  *
- * Преобразует внутреннее название категории шаблона в человекочитаемое
+ * Преобразует внутреннее название категории сценария в человекочитаемое
  * русское название для отображения пользователю.
  *
  * @param category - внутреннее название категории
@@ -488,18 +488,18 @@ function getCategoryLabel(category: string): string {
 }
 
 /**
- * Компонент для отображения сетки шаблонов
+ * Компонент для отображения сетки сценариев
  *
- * Отображает шаблоны в виде сетки карточек с возможностью использования
+ * Отображает сценарии в виде сетки карточек с возможностью использования
  * и удаления (если разрешено).
  *
  * @param props - свойства компонента
- * @param props.templates - массив шаблонов для отображения
+ * @param props.templates - массив сценариев для отображения
  * @param props.isLoading - флаг загрузки данных
- * @param props.onUse - функция обратного вызова при использовании шаблона
+ * @param props.onUse - функция обратного вызова при использовании сценария
  * @param props.showDelete - флаг отображения кнопки удаления
- * @param props.onDelete - функция обратного вызова при удалении шаблона
- * @returns JSX элемент сетки шаблонов
+ * @param props.onDelete - функция обратного вызова при удалении сценария
+ * @returns JSX элемент сетки сценариев
  */
 function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
   templates: BotTemplate[],
@@ -519,7 +519,7 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
   if (templates.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Шаблоны не найдены</p>
+        <p className="text-muted-foreground">Сценарии не найдены</p>
       </div>
     );
   }
@@ -529,7 +529,7 @@ function TemplateGrid({ templates, isLoading, onUse, showDelete, onDelete }: {
       {templates.map((template) => {
         // Проверяем, что template имеет все необходимые свойства
         if (!template || typeof template.id === 'undefined') {
-          console.warn('Некорректный шаблон:', template);
+          console.warn('Некорректный сценарий:', template);
           return null;
         }
 

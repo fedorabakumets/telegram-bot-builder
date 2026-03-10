@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { MediaManager } from "./media-manager";
 import { UrlDownloader } from "./url-downloader";
 import type { MediaFile } from "@shared/schema";
-import { Upload, X, Eye, Image, LinkIcon } from "lucide-react";
+import { Upload, X, Eye, LinkIcon } from "lucide-react";
 import { uploadImageFromUrl } from "@/lib/bot-generator/media/uploadImageFromUrl";
 import { toast } from "@/hooks/use-toast";
 
@@ -187,13 +187,16 @@ export function MediaSelector({
           {/* Selected File Card */}
           <div className="relative overflow-hidden rounded-lg border border-emerald-200/60 dark:border-emerald-800/60 bg-gradient-to-br from-emerald-50/50 to-green-50/30 dark:from-emerald-950/30 dark:to-green-900/20 p-3 sm:p-4 hover:border-emerald-300/80 dark:hover:border-emerald-700/80 transition-all">
             <div className="flex items-start gap-3">
-              {/* File Icon */}
-              <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 flex items-center justify-center flex-shrink-0">
-                <span className="text-lg sm:text-xl">
-                  {selectedFile.fileType === 'photo' ? '🖼️' : 
-                   selectedFile.fileType === 'video' ? '🎥' : 
-                   selectedFile.fileType === 'audio' ? '🎵' : '📄'}
-                </span>
+              {/* File Icon / Preview */}
+              <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {selectedFile.fileType === 'photo' ? (
+                  <img src={selectedFile.url} alt={selectedFile.fileName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-lg sm:text-xl">
+                    {selectedFile.fileType === 'video' ? '🎥' :
+                     selectedFile.fileType === 'audio' ? '🎵' : '📄'}
+                  </span>
+                )}
               </div>
               
               {/* File Info */}
@@ -302,13 +305,8 @@ export function MediaSelector({
                 </DialogDescription>
               </DialogHeader>
               
-              <Tabs defaultValue="library" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 h-auto">
-                  <TabsTrigger value="library" className="flex items-center gap-2 text-xs sm:text-sm py-2">
-                    <Image className="w-4 h-4" />
-                    <span className="hidden sm:inline">Библиотека</span>
-                    <span className="sm:hidden">Библ</span>
-                  </TabsTrigger>
+              <Tabs defaultValue="upload" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 h-auto">
                   <TabsTrigger value="upload" className="flex items-center gap-2 text-xs sm:text-sm py-2">
                     <Upload className="w-4 h-4" />
                     <span className="hidden sm:inline">Загрузить</span>
@@ -320,24 +318,16 @@ export function MediaSelector({
                     <span className="sm:hidden">URL</span>
                   </TabsTrigger>
                 </TabsList>
-                
-                <TabsContent value="library" className="mt-4">
-                  <MediaManager 
-                    projectId={projectId}
-                    onSelectFile={handleSelectFile}
-                    selectedType={fileType}
-                  />
-                </TabsContent>
-                
+
                 <TabsContent value="upload" className="mt-4">
-                  <MediaManager 
+                  <MediaManager
                     projectId={projectId}
                     onSelectFile={handleSelectFile}
                     selectedType={fileType}
                     showUploader={true}
                   />
                 </TabsContent>
-                
+
                 <TabsContent value="url" className="mt-4">
                   <UrlDownloader
                     projectId={projectId}

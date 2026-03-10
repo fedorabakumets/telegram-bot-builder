@@ -1,0 +1,81 @@
+1 вариант
+Настройка sql
+# обновление и т.п.
+sudo apt update & sudo apt upgrade -y
+# установка необходимых программ инструментов
+sudo apt install -y curl git build-essential
+# установка Node.js LTS (через nodesource)
+curl -fsSL https: /deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt install -y nodejs
+# Проверка версий
+node -v
+npm -v
+Определен автоматически
+# установка базы
+sudo apt install -y postgresql postgresql-contrib
+# Проверяем, что служба запущена
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
+sudo systemctl status postgresql
+Определен автоматически
+# установка python3
+sudo apt install -y python3 python3-venv python3-pip
+# проверяем установился ли python3
+python3 -version
+Elixir
+# входим в postgres
+sudo -u postgres psql
+Определен автоматически
+# создаём пользователя
+CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
+# даём все права на базу (если нужно)
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
+# снеобязательно: дать права на схему public внутри базы
+GRANT ALL ON SCHEMA public TO tbb;
+Elixir
+01.03.2026, 02:14 1 вариант - Trilium Notes
+192.168.1.111:8181/#root/uHetYRgymD1X/9E8Ncbm6b1CS/o8O4xsOkheXl/jUPjWmLgTit7/he5rzNSCgTyR?ntxId=6zaJLr 1/3
+клонируем проект
+Настройка окружение
+Минимальный набор
+# переходим в папку opt
+cd /opt
+# клонируем проект
+sudo git clone https: /github.com/fedorabakumets/telegram-bot-builder.git
+# даем прова
+sudo chown -R "$USER":"$USER" telegram-bot-builder
+# переходим в папку telegram-bot-builder
+cd telegram-bot-builder
+Определен автоматически
+# меняем имя
+cp .env.example .env
+# редактируем файл
+nano .env
+Определен автоматически
+NODE_ENV=development
+PORT=5000
+# строка подключения к БД
+DATABASE_URL=postgresql: /tbb:builder2025!@localhost:5432/telegram_bot_builder
+# опционально чуть более подробные настройки
+PGHOST=localhost
+PGPORT=5432
+PGUSER=tbb
+PGPASSWORD=builder2025!
+PGDATABASE=telegram_bot_builder
+Определен автоматически
+# Установите нужные файлы
+npm install
+# Соберите проект
+npm run build
+Определен автоматически
+01.03.2026, 02:14 1 вариант - Trilium Notes
+192.168.1.111:8181/#root/uHetYRgymD1X/9E8Ncbm6b1CS/o8O4xsOkheXl/jUPjWmLgTit7/he5rzNSCgTyR?ntxId=6zaJLr 2/3
+заходим IP:5000
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -upgrade pip
+pip install -r requirements.txt
+# Запустите приложение
+npm run start
+01.03.2026, 02:14 1 вариант - Trilium Notes
+192.168.1.111:8181/#root/uHetYRgymD1X/9E8Ncbm6b1CS/o8O4xsOkheXl/jUPjWmLgTit7/he5rzNSCgTyR?ntxId=6zaJLr 3/3

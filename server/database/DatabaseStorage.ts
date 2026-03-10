@@ -175,9 +175,9 @@ export class DatabaseStorage implements IStorage {
 
   // Bot Templates
   /**
-   * Получить шаблон бота по ID из базы данных
-   * @param id - ID шаблона
-   * @returns Шаблон бота или undefined, если не найден
+   * Получить сценарий бота по ID из базы данных
+   * @param id - ID сценария
+   * @returns Сценарий бота или undefined, если не найден
    */
   async getBotTemplate(id: number): Promise<BotTemplate | undefined> {
     const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
@@ -185,17 +185,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Получить все шаблоны ботов из базы данных
-   * @returns Массив шаблонов ботов
+   * Получить все сценарии ботов из базы данных
+   * @returns Массив сценариев ботов
    */
   async getAllBotTemplates(): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates).orderBy(desc(botTemplates.createdAt));
   }
 
   /**
-   * Создать новый шаблон бота в базе данных
-   * @param insertTemplate - Данные для создания шаблона
-   * @returns Созданный шаблон бота
+   * Создать новый сценарий бота в базе данных
+   * @param insertTemplate - Данные для создания сценария
+   * @returns Созданный сценарий бота
    */
   async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
     const [template] = await this.db
@@ -206,10 +206,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Обновить шаблон бота в базе данных
-   * @param id - ID шаблона
+   * Обновить сценарий бота в базе данных
+   * @param id - ID сценария
    * @param updateData - Данные для обновления
-   * @returns Обновленный шаблон бота или undefined, если не найден
+   * @returns Обновленный сценарий бота или undefined, если не найден
    */
   async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
     const [template] = await this.db
@@ -221,9 +221,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Удалить шаблон бота из базы данных
-   * @param id - ID шаблона
-   * @returns true, если шаблон был удален, иначе false
+   * Удалить сценарий бота из базы данных
+   * @param id - ID сценария
+   * @returns true, если сценарий был удален, иначе false
    */
   async deleteBotTemplate(id: number): Promise<boolean> {
     const result = await this.db.delete(botTemplates).where(eq(botTemplates.id, id));
@@ -231,8 +231,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Увеличить счетчик использования шаблона в базе данных
-   * @param id - ID шаблона
+   * Увеличить счетчик использования сценария в базе данных
+   * @param id - ID сценария
    * @returns true, если счетчик был увеличен, иначе false
    */
   async incrementTemplateUseCount(id: number): Promise<boolean> {
@@ -250,8 +250,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Увеличить счетчик просмотров шаблона в базе данных
-   * @param id - ID шаблона
+   * Увеличить счетчик просмотров сценария в базе данных
+   * @param id - ID сценария
    * @returns true, если счетчик был увеличен, иначе false
    */
   async incrementTemplateViewCount(id: number): Promise<boolean> {
@@ -268,8 +268,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Увеличить счетчик загрузок шаблона в базе данных
-   * @param id - ID шаблона
+   * Увеличить счетчик загрузок сценария в базе данных
+   * @param id - ID сценария
    * @returns true, если счетчик был увеличен, иначе false
    */
   async incrementTemplateDownloadCount(id: number): Promise<boolean> {
@@ -286,8 +286,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Переключить лайк шаблона в базе данных
-   * @param id - ID шаблона
+   * Переключить лайк сценария в базе данных
+   * @param id - ID сценария
    * @param liked - true для лайка, false для анлайка
    * @returns true, если статус лайка был изменен, иначе false
    */
@@ -308,8 +308,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Переключить закладку шаблона в базе данных
-   * @param id - ID шаблона
+   * Переключить закладку сценария в базе данных
+   * @param id - ID сценария
    * @param bookmarked - true для добавления в закладки, false для удаления
    * @returns true, если статус закладки был изменен, иначе false
    */
@@ -330,8 +330,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Оценить шаблон в базе данных
-   * @param id - ID шаблона
+   * Оценить сценарий в базе данных
+   * @param id - ID сценария
    * @param rating - Оценка (обычно от 1 до 5)
    * @returns true, если оценка была сохранена, иначе false
    */
@@ -356,26 +356,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Получить рекомендуемые шаблоны из базы данных
-   * @returns Массив рекомендованных шаблонов
+   * Получить рекомендуемые сценарии из базы данных
+   * @returns Массив рекомендованных сценариев
    */
   async getFeaturedTemplates(): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates).where(eq(botTemplates.featured, 1)).orderBy(desc(botTemplates.rating));
   }
 
   /**
-   * Получить шаблоны по категории из базы данных
-   * @param category - Категория шаблонов
-   * @returns Массив шаблонов указанной категории
+   * Получить сценарии по категории из базы данных
+   * @param category - Категория сценариев
+   * @returns Массив сценариев указанной категории
    */
   async getTemplatesByCategory(category: string): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates).where(eq(botTemplates.category, category)).orderBy(desc(botTemplates.createdAt));
   }
 
   /**
-   * Поиск шаблонов по запросу в базе данных
+   * Поиск сценариев по запросу в базе данных
    * @param query - Поисковый запрос
-   * @returns Массив найденных шаблонов
+   * @returns Массив найденных сценариев
    */
   async searchTemplates(query: string): Promise<BotTemplate[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
@@ -547,9 +547,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Получить шаблоны ботов пользователя из базы данных
+   * Получить сценарии ботов пользователя из базы данных
    * @param ownerId - ID владельца
-   * @returns Массив шаблонов ботов пользователя
+   * @returns Массив сценариев ботов пользователя
    */
   async getUserBotTemplates(ownerId: number): Promise<BotTemplate[]> {
     return await this.db.select().from(botTemplates)

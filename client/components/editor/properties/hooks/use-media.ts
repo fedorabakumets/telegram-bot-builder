@@ -24,11 +24,12 @@ import type { MediaUploadParams, MultipleMediaUploadParams, MultipleUploadResult
 export function useMediaFiles(projectId: number, fileType?: string) {
   return useQuery({
     queryKey: ["/api/media/project", projectId, fileType],
-    enabled: !!projectId && typeof projectId === 'number',
+    enabled: !!projectId,
     queryFn: async (): Promise<MediaFile[]> => {
+      const id = typeof projectId === 'number' ? projectId : parseInt(projectId as unknown as string);
       const url = fileType
-        ? `/api/media/project/${projectId}?type=${fileType}`
-        : `/api/media/project/${projectId}`;
+        ? `/api/media/project/${id}?type=${fileType}`
+        : `/api/media/project/${id}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Ошибка при загрузке медиафайлов");
@@ -133,7 +134,8 @@ export function useUploadMedia(projectId: number) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/media/project", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/media/project", projectId], exact: false });
+      queryClient.refetchQueries({ queryKey: ["/api/media/project", projectId], exact: false });
     },
   });
 }
@@ -230,7 +232,8 @@ export function useUploadMultipleMedia(projectId: number) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/media/project", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/media/project", projectId], exact: false });
+      queryClient.refetchQueries({ queryKey: ["/api/media/project", projectId], exact: false });
     },
   });
 }
@@ -267,7 +270,8 @@ export function useDeleteMedia() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/media/project"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/media/project"], exact: false });
+      queryClient.refetchQueries({ queryKey: ["/api/media/project"], exact: false });
     },
   });
 }
@@ -315,7 +319,8 @@ export function useUpdateMedia() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/media/project"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/media/project"], exact: false });
+      queryClient.refetchQueries({ queryKey: ["/api/media/project"], exact: false });
     },
   });
 }
@@ -352,7 +357,8 @@ export function useIncrementUsage() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/media/project"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/media/project"], exact: false });
+      queryClient.refetchQueries({ queryKey: ["/api/media/project"], exact: false });
     },
   });
 }

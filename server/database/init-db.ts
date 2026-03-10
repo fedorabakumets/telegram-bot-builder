@@ -48,7 +48,7 @@ async function executeWithRetry(db: any, query: any, description: string, maxRet
  * - bot_projects: проекты ботов
  * - bot_tokens: токены для ботов
  * - bot_instances: экземпляры запущенных ботов
- * - bot_templates: шаблоны ботов
+ * - bot_templates: сценарии ботов
  * - media_files: медиафайлы, используемые в ботах
  * - user_bot_data: данные пользователей ботов
  * - bot_groups: группы, в которых работают боты

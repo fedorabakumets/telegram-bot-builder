@@ -1,6 +1,6 @@
 /**
  * @fileoverview Кнопка перехода на GitHub
- * @description Мобильная кнопка для открытия репозитория проекта на GitHub
+ * @description Компактная кнопка для открытия репозитория проекта на GitHub
  */
 
 import { Button } from '@/components/ui/button';
@@ -16,27 +16,27 @@ export interface GithubButtonProps {
 }
 
 /**
- * Мобильная кнопка перехода на GitHub
+ * Компактная кнопка перехода на GitHub (только иконка)
  */
 export function GithubButton({ className }: GithubButtonProps) {
   return (
     <Button
-      size="sm"
+      size="icon"
+      variant="ghost"
       asChild
       className={cn(
-        'flex items-center justify-center gap-2 px-3 py-2 sm:py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg font-medium text-xs sm:text-sm transition-all',
+        'h-5 w-5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300',
         className
       )}
-      data-testid="button-mobile-github"
+      data-testid="button-github"
     >
       <a
         href="https://github.com/fedorabakumets/telegram-bot-builder"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full"
+        className="flex items-center justify-center"
       >
-        <Github className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-        <span>GitHub</span>
+        <Github className="h-3.5 w-3.5" />
       </a>
     </Button>
   );

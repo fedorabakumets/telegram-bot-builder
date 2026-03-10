@@ -1,10 +1,11 @@
 /**
  * @fileoverview Заголовок секции условных сообщений
- * 
+ *
  * Компонент заголовка с кнопкой сворачивания и счётчиком условий.
  */
 
 import type { Node } from '@shared/schema';
+import { ComingSoonBadge } from './coming-soon-badge';
 
 /** Пропсы компонента */
 interface ConditionalMessagesHeaderProps {
@@ -18,7 +19,7 @@ interface ConditionalMessagesHeaderProps {
 
 /**
  * Компонент заголовка секции условных сообщений
- * 
+ *
  * @param {ConditionalMessagesHeaderProps} props - Пропсы компонента
  * @returns {JSX.Element} Заголовок секции
  */
@@ -40,6 +41,7 @@ export function ConditionalMessagesHeader({
           <h3 className="text-sm sm:text-base font-bold text-purple-900 dark:text-purple-100 text-left">Условные сообщения</h3>
           <p className="text-xs sm:text-sm text-purple-700/70 dark:text-purple-300/70 mt-0.5 text-left">Разные ответы на основе условий</p>
         </div>
+        <ComingSoonBadge />
       </button>
       <div className="flex items-center gap-2 flex-shrink-0">
         <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">

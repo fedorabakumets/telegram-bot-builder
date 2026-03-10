@@ -118,8 +118,8 @@ export function usePropertiesPanel({
     isMediaSectionOpen: stateHooks.isMediaSectionOpen,
     isAutoTransitionOpen: stateHooks.isAutoTransitionOpen,
     isKeyboardSectionOpen: stateHooks.isKeyboardSectionOpen,
-    isConditionalMessagesSectionOpen: stateHooks.isConditionalMessagesSectionOpen ?? true,
-    isUserInputSectionOpen: stateHooks.isUserInputSectionOpen ?? true,
+    isConditionalMessagesSectionOpen: stateHooks.isConditionalMessagesSectionOpen ?? false,
+    isUserInputSectionOpen: stateHooks.isUserInputSectionOpen ?? false,
     displayNodeId: stateHooks.displayNodeId
   };
 

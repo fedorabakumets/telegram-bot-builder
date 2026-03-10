@@ -70,13 +70,33 @@ const storage_multer = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (_req, file, cb) => {
-    // Генерируем уникальное имя файла с временной меткой и безопасным именем
+    // Исправляем кодировку UTF-8 - декодируем URL-encoded имя
+    let originalname = file.originalname;
+    try {
+      // Сначала пробуем декодировать URL-encoded строку
+      originalname = decodeURIComponent(file.originalname);
+    } catch (e) {
+      // Если не URL-encoded, пробуем исправить mojibake
+      try {
+        if (file.originalname.includes('Ñ') || file.originalname.includes('Ã')) {
+          originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+        }
+      } catch (e2) {
+        console.error('Error fixing filename encoding:', e2);
+      }
+    }
+    
+    // Если имя всё ещё пустое или содержит только спецсимволы, используем дефолтное
+    const baseNameRaw = originalname
+      .split('.')[0]
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .substring(0, 50);
+    
+    const baseName = baseNameRaw && baseNameRaw !== '_' ? baseNameRaw : 'file';
+    
+    // Генерируем уникальное имя файла с временной меткой
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = file.originalname.split('.').pop()?.toLowerCase() || '';
-    const baseName = file.originalname
-      .split('.')[0] // Убираем расширение
-      .replace(/[^a-zA-Z0-9._-]/g, '_') // Заменяем небезопасные символы
-      .substring(0, 50); // Ограничиваем длину
+    const extension = originalname.split('.').pop()?.toLowerCase() || 'jpg';
 
     cb(null, `${uniqueSuffix}-${baseName}.${extension}`);
   }
@@ -205,6 +225,30 @@ const upload = multer({
     fields: 50 // Максимальное количество полей формы
   }
 });
+
+/**
+ * Middleware для исправления кодировки UTF-8 в именах файлов
+ * Применяется только к маршрутам загрузки медиа
+ */
+function fixUtf8Encoding(req: any, res: any, next: any) {
+  if (req.file && req.file.originalname) {
+    try {
+      req.file.originalname = Buffer.from(req.file.originalname, 'latin1').toString('utf-8');
+    } catch (e) {
+      console.error('Error fixing filename encoding:', e);
+    }
+  }
+  if (req.files && Array.isArray(req.files)) {
+    req.files.forEach((file: any) => {
+      try {
+        file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+      } catch (e) {
+        console.error('Error fixing filename encoding:', e);
+      }
+    });
+  }
+  next();
+}
 
 /**
  * Глобальные флаги готовности компонентов системы
@@ -377,6 +421,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Auth middleware для всех API роутов (устанавливает req.user если пользователь авторизован)
   // ВАЖНО: должен быть подключен ПОСЛЕ session middleware
   app.use("/api", authMiddleware);
+
+  // Middleware для отключения кэширования на /api/media/*
+  app.use("/api/media", (_req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+  });
 
   // Запускаем инициализацию в фоне без блокировки сервера
   initializeComponents();
@@ -947,7 +999,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // === МЕДИАФАЙЛЫ ===
 
   // Загрузка медиафайла (одиночная) с улучшенной обработкой
-  app.post("/api/media/upload/:projectId", upload.single('file'), async (req, res) => {
+  app.post("/api/media/upload/:projectId", upload.single('file'), fixUtf8Encoding, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const file = req.file;
@@ -1012,11 +1064,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const finalTags = Array.from(new Set([...processedTags, ...autoTags]));
 
+      // Определяем тип файла
+      const fileType = getFileType(file.mimetype);
+
       // Сохраняем информацию о файле в базе данных
       const mediaFile = await storage.createMediaFile({
         projectId,
         fileName: file.originalname,
-        fileType: getFileType(file.mimetype),
+        fileType: fileType,
         filePath: file.path,
         fileSize: file.size,
         mimeType: file.mimetype,
@@ -1616,7 +1671,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "Файл не найден" });
       }
 
-      // Удаляем файл с диска
+      // Удал��ем файл с диска
       try {
         unlinkSync(mediaFile.filePath);
       } catch (error) {
@@ -1627,7 +1682,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const success = await storage.deleteMediaFile(id);
 
       if (!success) {
-        return res.status(404).json({ message: "Файл не найден в базе данных" });
+        return res.status(404).json({ message: "Фай�� не найден в базе данных" });
       }
 
       res.json({ message: "Файл успешно удален" });

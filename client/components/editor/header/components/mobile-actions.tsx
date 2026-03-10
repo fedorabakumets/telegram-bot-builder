@@ -13,7 +13,6 @@ import { ToggleCodeEditorButton } from './toggle-code-editor-button';
 import { OpenFileExplorerButton } from './open-file-explorer-button';
 import { LoadTemplateButton } from './load-template-button';
 import { SaveTemplateButton } from './save-template-button';
-import { GithubButton } from './github-button';
 import { ThemeToggle } from './theme-toggle';
 import { UserAuth } from './user-auth';
 import type { TelegramUser } from './user-section';
@@ -30,7 +29,7 @@ export interface MobileActionsProps {
   onToggleCode?: () => void;
   onToggleCodeEditor?: () => void;
   onOpenFileExplorer?: () => void;
-  /** Обработчики шаблонов */
+  /** Обработчики сценариев */
   onLoadTemplate?: () => void;
   onSaveAsTemplate?: () => void;
   /** Состояния видимости панелей */
@@ -51,7 +50,7 @@ export interface MobileActionsProps {
 }
 
 /**
- * Мобильные действия: кнопки управления панелями и шаблонами
+ * Мобильные действия: кнопки управления панелями и сценариями
  */
 export function MobileActions({
   onToggleHeader,
@@ -141,7 +140,6 @@ export function MobileActions({
         {onSaveAsTemplate && (
           <SaveTemplateButton onClick={() => handleAction(onSaveAsTemplate)} />
         )}
-        <GithubButton className={onSaveAsTemplate ? '' : 'sm:col-span-2'} />
         {/* <div className="flex justify-center sm:col-span-2 pt-2">
           <ThemeToggle />
         </div> */}

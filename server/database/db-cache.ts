@@ -194,10 +194,10 @@ export class CachedDatabaseOperations {
   }
 
   /**
-   * Кэширует данные шаблона
-   * @param id Идентификатор шаблона
-   * @param fetcher Функция для получения данных шаблона, если они не кэшированы
-   * @returns Кэшированные или полученные данные шаблона
+   * Кэширует данные сценария
+   * @param id Идентификатор сценария
+   * @param fetcher Функция для получения данных сценария, если они не кэшированы
+   * @returns Кэшированные или полученные данные сценария
    */
   async getTemplateCached(id: number, fetcher: () => Promise<BotTemplate | undefined>): Promise<BotTemplate | undefined> {
     const key = `template:${id}`;
@@ -209,17 +209,17 @@ export class CachedDatabaseOperations {
 
     const template = await fetcher();
     if (template) {
-      this.cache.set(key, template, 10 * 60 * 1000); // 10 минут для шаблонов
+      this.cache.set(key, template, 10 * 60 * 1000); // 10 минут для сценариев
     }
 
     return template;
   }
 
   /**
-   * Кэширует список шаблонов
-   * @param category Категория шаблонов
-   * @param fetcher Функция для получения списка шаблонов, если они не кэшированы
-   * @returns Кэшированный или полученный список шаблонов
+   * Кэширует список сценариев
+   * @param category Категория сценариев
+   * @param fetcher Функция для получения списка сценариев, если они не кэшированы
+   * @returns Кэшированный или полученный список сценариев
    */
   async getTemplateListCached(category: string, fetcher: () => Promise<BotTemplate[]>): Promise<BotTemplate[]> {
     const key = `templates:${category}`;
@@ -245,16 +245,16 @@ export class CachedDatabaseOperations {
   }
 
   /**
-   * Инвалидирует кэш шаблона
-   * @param id Идентификатор шаблона для инвалидации
+   * Инвалидирует кэш сценария
+   * @param id Идентификатор сценария для инвалидации
    */
   invalidateTemplate(id: number): void {
     this.cache.delete(`template:${id}`);
-    this.cache.clearByPattern(`templates:.*`); // Инвалидировать все списки шаблонов
+    this.cache.clearByPattern(`templates:.*`); // Инвалидировать все списки сценариев
   }
 
   /**
-   * Инвалидирует кэш всех шаблонов
+   * Инвалидирует кэш всех сценариев
    */
   invalidateAllTemplates(): void {
     this.cache.clearByPattern(`templates:.*`);

@@ -78,12 +78,21 @@ export function validateMediaFile(file: unknown): ValidationResult<Record<string
     errors.push({ field: 'id', message: 'ID должен быть числом' });
   }
 
-  if (!isString(file.url)) {
-    errors.push({ field: 'url', message: 'URL должен быть строкой' });
+  const projectId = file.projectId;
+  if (typeof projectId !== 'number' && typeof projectId !== 'string') {
+    errors.push({ field: 'projectId', message: 'projectId должен быть числом или строкой' });
   }
 
-  if (!isString(file.type)) {
-    errors.push({ field: 'type', message: 'Тип должен быть строкой' });
+  if (!isString(file.fileName)) {
+    errors.push({ field: 'fileName', message: 'fileName должен быть строкой' });
+  }
+
+  if (!isString(file.fileType)) {
+    errors.push({ field: 'fileType', message: 'fileType должен быть строкой' });
+  }
+
+  if (!isString(file.url)) {
+    errors.push({ field: 'url', message: 'URL должен быть строкой' });
   }
 
   return {

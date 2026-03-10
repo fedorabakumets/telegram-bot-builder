@@ -23,9 +23,9 @@ export interface AdaptiveHeaderProps {
   onTabChange: (tab: HeaderTab) => void;
   /** Функция экспорта проекта */
   onExport: () => void;
-  /** Функция сохранения как шаблон */
+  /** Функция сохранения как сценарий */
   onSaveAsTemplate?: () => void;
-  /** Функция загрузки шаблона */
+  /** Функция загрузки сценария */
   onLoadTemplate?: () => void;
   /** Функция настройки макета */
   onLayoutSettings?: () => void;

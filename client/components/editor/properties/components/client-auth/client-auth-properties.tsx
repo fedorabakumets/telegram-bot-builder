@@ -1,15 +1,16 @@
 /**
  * @fileoverview Панель свойств для узла авторизации Client API
- * 
+ *
  * Отображает информацию о сессии Client API из таблицы user_telegram_settings.
  * Credentials (API ID, API Hash) читаются из базы данных, а не из узла.
- * 
+ *
  * @module editor/properties/components/client-auth/client-auth-properties
  */
 
 import { Node } from '@shared/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ComingSoonBadge } from '../conditional-message-card/coming-soon-badge';
 
 /**
  * Свойства компонента панели настроек Client API
@@ -21,7 +22,7 @@ interface ClientAuthPropertiesProps {
 
 /**
  * Компонент панели свойств для узла авторизации Client API
- * 
+ *
  * @param {ClientAuthPropertiesProps} props - Свойства компонента
  * @returns {JSX.Element} Панель свойств
  */
@@ -39,9 +40,12 @@ export function ClientAuthProperties({ node }: ClientAuthPropertiesProps) {
               <i className="fas fa-database text-emerald-600 dark:text-emerald-400"></i>
               Источник данных
             </h4>
-            <Badge variant={sessionCreated ? "default" : "secondary"} className={sessionCreated ? "bg-emerald-500" : "bg-gray-500"}>
-              {sessionCreated ? "✅ Сессия активна" : "⏳ Нет сессии"}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <ComingSoonBadge />
+              <Badge variant={sessionCreated ? "default" : "secondary"} className={sessionCreated ? "bg-emerald-500" : "bg-gray-500"}>
+                {sessionCreated ? "✅ Сессия активна" : "⏳ Нет сессии"}
+              </Badge>
+            </div>
           </div>
           
           <div className="space-y-2 text-sm text-emerald-700 dark:text-emerald-300">

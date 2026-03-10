@@ -1,6 +1,6 @@
 /**
- * @fileoverview Десктопная кнопка загрузки шаблона
- * @description Кнопка для открытия библиотеки шаблонов в десктопной версии
+ * @fileoverview Десктопная кнопка загрузки сценария
+ * @description Кнопка для открытия библиотеки сценариев в десктопной версии
  */
 
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/bot-generator/utils';
 
 /**
- * Свойства десктопной кнопки загрузки шаблона
+ * Свойства десктопной кнопки загрузки сценария
  */
 export interface DesktopLoadTemplateButtonProps {
   /** Обработчик клика */
@@ -18,7 +18,7 @@ export interface DesktopLoadTemplateButtonProps {
 }
 
 /**
- * Десктопная кнопка загрузки шаблона
+ * Десктопная кнопка загрузки сценария
  */
 export function DesktopLoadTemplateButton({ onClick, isVertical }: DesktopLoadTemplateButtonProps) {
   return (
@@ -36,7 +36,7 @@ export function DesktopLoadTemplateButton({ onClick, isVertical }: DesktopLoadTe
       )}
     >
       <FolderOpen className="h-3.5 w-3.5 max-sm:mx-auto" />
-      <span className="max-sm:hidden ml-1">Шаблоны</span>
+      <span className="max-sm:hidden ml-1">Сценарии</span>
     </Button>
   );
 }

@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=2">
     <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=2">
@@ -26,29 +26,14 @@
   
 </div>
 
----
+
 
 <div align="center">
   <p><strong>Визуальный конструктор с drag-and-drop интерфейсом, где вы просто перетаскиваете блоки на холст, а готовый бот появляется сам.</strong></p>
   
   > 💡 Идеально подходит для малого бизнеса, фрилансеров и тех, кто хочет быстро запустить бота, не изучая программирование.
   
-  <!-- Кнопки призыва к действию -->
-  <div style="margin: 20px 0;">
-    <a href="https://railway.com/deploy/aware-encouragement">
-      <img src="https://railway.com/button.svg" alt="Deploy on Railway"/>
-    </a>
-    <a href="#-быстрый-старт-5-минут">
-      <img src="https://img.shields.io/badge/🚀_Попробовать_сейчас-FF6B6B?style=for-the-badge&logoColor=white" alt="Попробовать"/>
-    </a>
-    <a href="#-демонстрация">
-      <img src="https://img.shields.io/badge/🎬_Живое_демо-4ECDC4?style=for-the-badge&logoColor=white" alt="Демо"/>
-    </a>
-    <a href="#-документация">
-      <img src="https://img.shields.io/badge/📚_Документация-45B7D1?style=for-the-badge&logoColor=white" alt="Docs"/>
-    </a>
-  </div>
-  
+
   <!-- Связь с нами -->
   <div style="margin: 20px 0;">
     <h3>📞 Связь с нами</h3>
@@ -69,13 +54,8 @@
 
 ---
 
-## 📸 Демонстрация
 
-### 🎬 Как это работает
-<div align="center">
-  <img src="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=2" alt="Процесс создания бота" width="600" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);"/>
-  <p><em>Процесс создания бота: от идеи до готового продукта</em></p>
-</div>
+
 
 ### 🏗️ Архитектура системы
 
@@ -171,11 +151,12 @@
 
 </details>
 
-#### 📁 Структура проекта
+---
 
-<div align="center">
-  <img src="https://img.shields.io/badge/Структура-Монорепозиторий-success?style=for-the-badge&logo=folder" alt="Structure"/>
-</div>
+## 📁 Структура проекта
+
+<details>
+<summary><strong>Показать структуру проекта</strong></summary>
 
 ```
 📦 telegram-bot-builder/
@@ -265,7 +246,11 @@
 ┗ 📄 .env.example                # 🔐 Пример переменных окружения
 ```
 
-#### 📡 API Endpoints
+</details>
+
+---
+
+## 📡 API Endpoints
 
 <div align="center">
   <img src="https://img.shields.io/badge/API-RESTful-blue?style=for-the-badge&logo=api" alt="API"/>
@@ -369,34 +354,9 @@
 </details>
 
 ---
+## 🎯 Основные возможности
 
-## ✨ Что это может делать?
-
-<details>
-<summary><strong>Развернуть возможности</strong> (нажми чтобы раскрыть)</summary>
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="33%" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
-        <h3>🎨 Визуальный редактор</h3>
-        <p>Drag-and-drop интерфейс<br/>Никакого кода!</p>
-      </td>
-      <td align="center" width="33%" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px;">
-        <h3>🤖 Готовые боты</h3>
-        <p>Python код генерируется<br/>автоматически</p>
-      </td>
-      <td align="center" width="33%" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 10px;">
-        <h3>☁️ Облачный деплой</h3>
-        <p>Railway, VPS<br/>Один клик - бот в продакшене</p>
-      </td>
-    </tr>
-  </table>
-</div>
-
-### 🎯 Основные возможности
-
-- **🎨 Создавайте боты перетаскиванием** - никакого кода, просто перемещайте блоки мышкой
+- **🎨 Создавайте ботов перетаскиванием** - никакого кода, просто перемещайте блоки мышкой
 - **💬 Отправляйте сообщения** - с форматированием, кнопками и медиафайлами
 - **🎨 Красивые интерфейсы** - встроенные и обычные клавиатуры
 - **📁 Работа с медиа** - фото, видео, аудио, документы
@@ -406,116 +366,6 @@
 - **📊 Статистика** - смотрите, кто написал боту, какие команды использует
 - **🎭 Светлая и темная темы** - удобно работать днем и ночью
 - **📱 Работает на мобильных телефонах** - создавайте ботов с планшета или смартфона, интерфейс адаптирован для всех устройств
-
-</details>
-
----
-
-## 🚀 Быстрый старт (5 минут)
-
-<div align="center">
-  <img src="https://img.shields.io/badge/⏱️_Время_установки-5_минут-success?style=for-the-badge" alt="Installation time"/>
-  <img src="https://img.shields.io/badge/💻_Сложность-Легко-brightgreen?style=for-the-badge" alt="Difficulty"/>
-</div>
-
-<details>
-<summary>🐳 <strong>Запуск через Docker (рекомендуется)</strong> - нажмите для раскрытия</summary>
-
-### Что нужно:
-- **Docker** и **Docker Compose** (установить с [docker.com](https://www.docker.com/))
-
-### Установка:
-
-```bash
-# Скопируйте проект
-git clone https://github.com/fedorabakumets/telegram-bot-builder.git
-cd telegram-bot-builder
-
-# Запустите через Docker Compose (приложение + PostgreSQL)
-docker compose up -d
-```
-
-**Готово!** Приложение доступно по адресу: http://localhost:5000
-
-### Полезные команды:
-
-```bash
-# Остановить приложение
-docker compose down
-
-# Пересобрать образ
-docker compose build --no-cache
-
-# Посмотреть логи
-docker compose logs -f
-
-# Остановить и очистить данные
-docker compose down -v
-```
-
-### Переменные окружения (опционально):
-
-Создайте файл `.env` в корне проекта:
-
-```env
-# Порт приложения
-PORT=5000
-
-# Секрет сессии (замените на свой!)
-SESSION_SECRET=your-secret-key-here
-
-# PostgreSQL (не меняйте, если используете docker-compose.yml)
-DATABASE_URL=postgresql://postgres:postgres@db:5432/botbuilder
-```
-
-</details>
-
-<details>
-<summary>☁️ Альтернативные способы</summary>
-
-### Docker (одиночный контейнер):
-```bash
-# Сборка образа
-docker build -t telegram-bot-builder .
-
-# Запуск с PostgreSQL
-docker run -d --name bot-builder \
-  -e DATABASE_URL=postgresql://user:pass@host:5432/dbname \
-  -e SESSION_SECRET=your-secret \
-  -p 5000:5000 \
-  telegram-bot-builder
-```
-
-### Локальная установка:
-</details>
-
-<details>
-<summary>🖥️ <strong>Локальная установка</strong> - нажмите для раскрытия</summary>
-
-### Что нужно:
-- **Node.js** (скачать с [nodejs.org](https://nodejs.org))
-- **PostgreSQL** (база данных, скачать с [postgresql.org](https://www.postgresql.org/download/))
-
-### Установка:
-
-```bash
-# Скопируйте проект
-git clone https://github.com/fedorabakumets/telegram-bot-builder.git
-cd telegram-bot-builder
-
-# Установите нужные файлы
-npm install
-
-# Соберите проект
-npm run build
-
-# Запустите приложение
-npm run start
-```
-
-Если возникает ошибка подключения к базе данных, смотрите подробное руководство по устранению неполадок в файле [docs/development/TROUBLESHOOTING_RU.md](docs/development/TROUBLESHOOTING_RU.md).
-
-**Откройте в браузере:** http://localhost:5000
 
 </details>
 
@@ -533,6 +383,497 @@ npm run start
 7. Запустите миграции базы данных
 
 Подробные инструкции по деплою на Railway смотрите в файле [docs/deployment/RAILWAY_DEPLOY.md](docs/deployment/RAILWAY_DEPLOY.md).
+
+---
+
+
+## 📜 Пошаговая инструкция
+### Требования
+- **Node.js** ≥ 18.0.0
+- **PostgreSQL** ≥ 15
+- **Python** ≥ 3.10 (для сгенерированных ботов)
+- **Git**
+<details>
+<summary><strong>Шаг 1: Обновление системы и установка зависимостей</strong></summary>
+
+<table>
+<tr>
+<th width="33%">🐧 Linux (Ubuntu/Debian)</th>
+<th width="33%">🏁 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+**Способ 1: Через терминал (рекомендуется):**
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update && sudo apt install -y git
+```
+
+**Fedora/CentOS:**
+```bash
+sudo dnf install -y git
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S git
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [git-scm.com/install/linux](https://git-scm.com/install/linux)
+- Выберите ваш дистрибутив
+- Следуйте инструкции по установке
+
+**Проверка установки:**
+```bash
+git --version
+```
+
+</td>
+<td valign="top">
+
+**Способ 1: Через winget (рекомендуется):**
+```powershell
+winget install --id Git.Git -e --source winget
+```
+
+**Способ 2: Через установщик:**
+- Скачайте с [git-scm.com/install/windows](https://git-scm.com/install/windows)
+- Запустите `.exe` файл
+- Оставьте настройки по умолчанию (нажимайте "Next")
+
+**Проверка установки:**
+Откройте PowerShell от имени администратора (`Win + X` → "Терминал (администратор)"):
+```powershell
+git --version
+```
+
+> Если версия не отображается, перезапустите PowerShell
+
+</td>
+<td valign="top">
+
+**Способ 1: Через Homebrew (рекомендуется):**
+```bash
+# Установка Homebrew (если не установлен)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Установка Git
+brew install git
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [git-scm.com/install/mac](https://git-scm.com/install/mac)
+- Скачайте установщик для macOS (`.dmg`)
+- Откройте `.dmg` файл и перетащите Git в Applications
+
+**Проверка установки:**
+```bash
+git --version
+```
+
+> Homebrew — менеджер пакетов для macOS, упрощает установку программ
+
+</td>
+</tr>
+</table>
+
+</details>
+
+---
+
+<details>
+<summary><strong>Шаг 2: Установка Node.js LTS</strong></summary>
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🏁 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+**Способ 1: Через терминал (рекомендуется):**
+```bash
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt install -y nodejs
+node -v && npm -v
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [nodejs.org](https://nodejs.org/)
+- Скачайте `.deb` или `.rpm` пакет
+- Установите: `sudo dpkg -i nodejs_*.deb`
+
+</td>
+<td valign="top">
+
+**Способ 1: Через winget:**
+```powershell
+winget install OpenJS.NodeJS.LTS
+node -v && npm -v
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [nodejs.org](https://nodejs.org/)
+- Скачайте установщик (`.msi`)
+- Запустите и следуйте инструкциям
+- Проверьте установку:
+```powershell
+node -v
+npm -v
+```
+
+</td>
+<td valign="top">
+
+**Способ 1: Через Homebrew:**
+```bash
+brew install node@lts
+node -v && npm -v
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [nodejs.org](https://nodejs.org/)
+- Скачайте установщик (`.pkg`)
+- Запустите и следуйте инструкциям
+
+</td>
+</tr>
+</table>
+
+</details>
+
+---
+
+<details>
+<summary><strong>Шаг 3: Установка PostgreSQL</strong></summary>
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🏁 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+**Способ 1: Через терминал:**
+```bash
+sudo apt install -y postgresql postgresql-contrib
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
+```
+
+**Способ 2: Официальный репозиторий:**
+- Посетите [postgresql.org/download/linux](https://www.postgresql.org/download/linux/)
+- Выберите дистрибутив
+- Следуйте инструкции
+
+</td>
+<td valign="top">
+
+**Способ 1: Через winget:**
+```powershell
+winget install PostgreSQL.PostgreSQL
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [postgresql.org/download/windows](https://www.postgresql.org/download/windows/)
+- Скачайте установщик
+- Запустите и запомните пароль `postgres`
+
+</td>
+<td valign="top">
+
+**Способ 1: Через Homebrew:**
+```bash
+brew install postgresql@15
+brew services start postgresql@15
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [postgresql.org/download/macosx](https://www.postgresql.org/download/macosx/)
+- Скачайте установщик
+- Запустите и следуйте инструкциям
+
+</td>
+</tr>
+</table>
+
+</details>
+
+---
+
+<details>
+<summary><strong>Шаг 4: Установка Python 3</strong></summary>
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🏁 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+**Способ 1: Через терминал:**
+```bash
+sudo apt install -y python3 python3-venv python3-pip
+python3 --version
+```
+
+**Способ 2: Официальный сайт:**
+- Посетите [python.org/downloads](https://www.python.org/downloads/)
+- Выберите версию для Linux
+- Следуйте инструкции по компиляции
+
+</td>
+<td valign="top">
+
+**Способ 1: Через winget:**
+```powershell
+winget install Python.Python.3.12
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [python.org/downloads](https://www.python.org/downloads/)
+- Скачайте установщик
+- При установке отметьте **"Add Python to PATH"**
+- Проверьте установку:
+```powershell
+python --version
+```
+
+</td>
+<td valign="top">
+
+**Способ 1: Через Homebrew:**
+```bash
+brew install python
+python3 --version
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [python.org/downloads](https://www.python.org/downloads/)
+- Скачайте установщик для macOS (`.pkg`)
+- Запустите и следуйте инструкциям
+
+</td>
+</tr>
+</table>
+
+</details>
+
+---
+
+<details>
+<summary><strong>Шаг 5: Настройка базы данных</strong></summary>
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🏁 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+```bash
+sudo -u postgres psql
+```
+
+```sql
+CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
+CREATE DATABASE telegram_bot_builder OWNER tbb;
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
+GRANT ALL ON SCHEMA public TO tbb;
+\q
+```
+
+</td>
+<td valign="top">
+
+```powershell
+psql -U postgres
+```
+
+```sql
+CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
+CREATE DATABASE telegram_bot_builder OWNER tbb;
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
+GRANT ALL ON SCHEMA public TO tbb;
+\q
+```
+
+</td>
+<td valign="top">
+
+```bash
+psql postgres
+```
+
+```sql
+CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
+CREATE DATABASE telegram_bot_builder OWNER tbb;
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
+GRANT ALL ON SCHEMA public TO tbb;
+\q
+```
+
+</td>
+</tr>
+</table>
+
+</details>
+
+---
+
+<details>
+<summary><strong>Шаг 6: Клонирование проекта</strong></summary>
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🏁 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+```bash
+cd /opt
+sudo git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+sudo chown -R "$USER":"$USER" telegram-bot-builder
+cd telegram-bot-builder
+```
+
+</td>
+<td valign="top">
+
+```powershell
+mkdir C:\projects
+cd C:\projects
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+```
+
+</td>
+<td valign="top">
+
+```bash
+mkdir -p ~/projects
+cd ~/projects
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+```
+
+</td>
+</tr>
+</table>
+
+</details>
+
+---
+
+<details>
+<summary><strong>Шаг 7: Настройка окружения</strong></summary>
+
+**Пример `.env` для всех систем:**
+```env
+NODE_ENV=development
+PORT=5000
+DATABASE_URL=postgresql://tbb:builder2025!@localhost:5432/telegram_bot_builder
+```
+
+<table>
+<tr>
+<th width="33%">🐧 Linux</th>
+<th width="33%">🏁 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+</td>
+<td valign="top">
+
+```powershell
+copy .env.example .env
+notepad .env
+```
+
+</td>
+<td valign="top">
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+</td>
+</tr>
+</table>
+
+</details>
+
+---
+
+<details>
+<summary><strong>Шаг 8: Установка зависимостей и запуск</strong></summary>
+
+**1. Установка зависимостей:**
+```bash
+npm install
+```
+
+**2. Запуск приложения:**
+
+| Режим | Команда | Описание |
+|-------|---------|----------|
+| **🧪 Разработка** | `npm run dev` | Запуск с автоперезагрузкой при изменениях |
+| **🚀 Продакшен** | `npm run build` → `npm run start` | Сборка и запуск готовой версии |
+
+✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
+
+</details>
+
+---
+
+<details>
+<summary><strong>🐳 Альтернатива: Docker (любая ОС)</strong></summary>
+
+**Требования:** Docker и Docker Compose
+
+```bash
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+docker compose up -d
+docker compose logs -f
+```
+
+**Полезные команды:**
+
+```bash
+docker compose down        # Остановить
+docker compose build --no-cache  # Пересобрать
+docker compose logs -f     # Логи
+```
+
+✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
+
+</details>
+
+> 💡 **Нужно обновить проект?** См. [🔄 Как обновить проект с GitHub](docs/development/HOW_TO_UPDATE.md)
 
 ---
 
@@ -569,6 +910,8 @@ npm run start
 2. Нажмите кнопку **"Запустить"**
 3. Откройте своего бота в Telegram
 4. Тестируйте и улучшайте!
+
+</details>
 
 </details>
 
@@ -632,29 +975,6 @@ npm run start
 - **Открыть сообщение** - опубликовать сообщение в группе
 - **Удалить сообщение** - удалить сообщение из группы
 
-### 👫 Управление группами
-
-На вкладке **"Группы"** вы (администратор) можете управлять группами, в которых работает ваш бот:
-
-**Основные функции:**
-- **Просмотр групп** - список всех групп, в которых подключен ваш бот
-- **Добавить участников** - приглашать пользователей в существующую группу
-- **Посмотреть членов** - список всех участников группы
-- **Настройки группы** - изменить название, описание, права доступа для группы
-
-**Что можно настроить в группе:**
-- 👥 **Управление участниками** - добавлять/удалять людей в группу
-- 🔐 **Права доступа** - кто может писать сообщения, кто может менять настройки
-- 📋 **Описание группы** - информация о группе для участников
-- ⚙️ **Параметры** - различные настройки для работы группы
-
-**Что может делать бот в группе:**
-Все команды управления пользователями и контентом работают для всей группы. Бот может:
-- Отправлять сообщения всей группе одновременно
-- Управлять участниками по правилам, которые вы установили
-- Закреплять важные сообщения для всех видеть
-- Удалять спам или неуместные сообщения
-- Обрабатывать команды, введенные пользователями в группе
 
 ### 🔄 Логика переходов
 
@@ -669,6 +989,9 @@ npm run start
 ---
 
 ## 📚 Пример: Простой бот для пиццерии
+
+<details>
+<summary><strong>🍕 Пошаговый пример создания бота</strong> (нажми для раскрытия)</summary>
 
 <div align="center">
   <img src="https://img.shields.io/badge/🍕_Пример-Пиццерия-red?style=for-the-badge&logo=pizza" alt="Pizza Bot"/>
@@ -830,7 +1153,7 @@ def get_pizza_keyboard():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="🍕 Маргарита")],
-            [KeyboardButton(text="🍕 Пепперони")], 
+            [KeyboardButton(text="🍕 Пепперони")],
             [KeyboardButton(text="🥬 Вегетарианская")]
         ],
         resize_keyboard=True,
@@ -909,6 +1232,8 @@ if __name__ == "__main__":
 <div align="center" style="margin: 30px 0;">
   <img src="https://img.shields.io/badge/🎉_Готово!-Бот_создан_за_10_минут-success?style=for-the-badge&logoColor=white" alt="Success"/>
 </div>
+
+</details>
 
 ---
 
@@ -1000,8 +1325,8 @@ if __name__ == "__main__":
 <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
 <div style="text-align: left; font-size: 14px;">
 
-<p><strong>🛡️ <a href="docs/SECURITY.md" style="color: #FFE4E1;">Руководство</a></strong><br/>
-<small>Лучшие практики безопасности</small></p>
+<p><strong>🛡️ <a href="docs/development/HOW_TO_UPDATE.md" style="color: #FFE4E1;">Обновление проекта</a></strong><br/>
+<small>Как обновить проект с GitHub</small></p>
 
 <p><strong>🔐 Аутентификация</strong><br/>
 <small>Защита пользовательских данных</small></p>
@@ -1040,178 +1365,33 @@ if __name__ == "__main__":
     <summary><strong>🗂️ Полная структура документации</strong> (нажми для раскрытия)</summary>
     
   <div style="text-align: left; margin: 20px 0;">
-    
+
   ```
   📂 docs/
   ├── 📁 development/              # 🛠️ Документация для разработчиков
   │   ├── 📄 SETUP.md             # Настройка окружения разработки
   │   ├── 📄 TROUBLESHOOTING_RU.md # Устранение неполадок
   │   ├── 📄 CONTRIBUTING.md       # Руководство для контрибьюторов
-  │   └── 📄 REQUIREMENTS_SPECIFICATION.md # Техническая спецификация
+  │   ├── 📄 REQUIREMENTS_SPECIFICATION.md # Техническая спецификация
+  │   └── 📄 HOW_TO_UPDATE.md     # Как обновить проект
   │
   ├── 📁 deployment/               # 🚀 Руководства по развертыванию
   │   ├── 📄 RAILWAY_DEPLOY.md    # Развертывание на Railway
-  │   ├── 📄 DOCKER_DEPLOY.md     # Развертывание через Docker
-  │   └── 📄 VPS_DEPLOY.md        # Развертывание на VPS
+  │   ├── 📄 RAILWAY_CLI_GUIDE.md # Руководство по Railway CLI
+  │   └── 📄 RAILWAY_TROUBLESHOOTING.md # Устранение проблем
   │
   ├── 📁 analysis/                 # 📊 Анализ проекта
   │   ├── 📄 PROJECT_STRUCTURE_ANALYSIS.md # Анализ структуры
+  │   ├── 📄 PROJECT_STRUCTURE_DIAGRAM.md # Диаграмма структуры
   │   └── 📄 INFRASTRUCTURE_ANALYSIS.md    # Анализ инфраструктуры
   │
-  ├── 📁 api/                      # 📡 API документация
-  │   ├── 📄 REST_API.md          # REST API справочник
-  │   └── 📄 WEBSOCKET_API.md     # WebSocket API
-  │
-  ├── 📁 tutorials/                # 🎓 Обучающие материалы
-  │   ├── 📄 FIRST_BOT.md         # Создание первого бота
-  │   └── 📄 ADVANCED_FEATURES.md # Продвинутые возможности
-  │
-  └── 📄 SECURITY.md              # 🔒 Руководство по безопасности
+  ├── 📄 COMPONENTS.md            # 🧩 Компоненты проекта
+  └── 📄 README.md                # 📚 Индекс документации
   ```
-    
+
   </div>
     
   </details>
-</div>
-
----
-
-## 🛠️ Скрипты и утилиты
-
-<div align="center">
-  <img src="https://img.shields.io/badge/🛠️_Автоматизация-Готовые_скрипты-blue?style=for-the-badge&logo=automation" alt="Automation"/>
-  <img src="https://img.shields.io/badge/⚡_Быстрый_запуск-Один_клик-green?style=for-the-badge&logo=rocket" alt="Quick Start"/>
-  <img src="https://img.shields.io/badge/🔧_Утилиты-Разработка-orange?style=for-the-badge&logo=tools" alt="Development"/>
-</div>
-
-<br/>
-
-<div align="center">
-  <p><strong>Проект включает набор скриптов для автоматизации задач разработки</strong></p>
-</div>
-
-<div align="center">
-
-<table>
-<tr>
-<td align="center" width="50%" style="padding: 15px;">
-<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 15px; color: white;">
-<h3>🚀 Быстрый запуск</h3>
-<hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-<div style="text-align: left; font-size: 14px;">
-
-<p><strong>Windows:</strong></p>
-<code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/start-dev.bat</code>
-<small>Запуск в режиме разработки</small>
-
-<code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/start-prod.bat</code>
-<small>Запуск в продакшене</small>
-
-<p><strong>Настройка:</strong></p>
-<code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/setup/setup.bat</code>
-<small>Основная настройка</small>
-
-<code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">scripts/setup/create-env.bat</code>
-<small>Создание .env файла</small>
-
-</div>
-</div>
-</td>
-<td align="center" width="50%" style="padding: 15px;">
-<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 15px; color: white;">
-<h3>🔧 Утилиты разработки</h3>
-<hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-<div style="text-align: left; font-size: 14px;">
-
-<p><strong>📦 Обновление проекта</strong><br/>
-<code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/update-project.js</code></p>
-
-<p><strong>✅ Валидация данных</strong><br/>
-<code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/validate.py</code></p>
-
-<p><strong>🔄 Синхронизация с GitHub</strong><br/>
-<code style="background: rgba(255,255,255,0.2); padding: 3px; border-radius: 3px;">scripts/utils/sync-to-github.sh</code></p>
-
-<p><strong>📖 Полная документация:</strong><br/>
-<a href="scripts/README.md" style="color: #FFE4E1;">scripts/README.md</a></p>
-
-</div>
-</div>
-</td>
-</tr>
-</table>
-
-</div>
-            <a href="scripts/README.md" style="color: #FFE4E1;">scripts/README.md</a></p>
-          </div>
-        </div>
-      </td>
-    </tr>
-  </table>
-</div>
-
----
-
-## 🐛 Что-то не работает?
-
-<div align="center">
-  <img src="https://img.shields.io/badge/🆘_Помощь-Быстрое_решение-red?style=for-the-badge&logo=help" alt="Help"/>
-  <img src="https://img.shields.io/badge/🔧_Поддержка-24/7-blue?style=for-the-badge&logo=support" alt="Support"/>
-  <img src="https://img.shields.io/badge/📚_Гайды-Пошаговые-green?style=for-the-badge&logo=guide" alt="Guides"/>
-</div>
-
-<br/>
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="33%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); padding: 20px; border-radius: 15px; color: white;">
-          <h3>🗄️ База данных</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>Не подключается?</strong></p>
-            <ul style="margin: 10px 0; padding-left: 20px;">
-              <li>Убедитесь что PostgreSQL запущен</li>
-              <li>Проверьте строку подключения в .env</li>
-              <li>Проверьте права доступа</li>
-            </ul>
-            <p><a href="docs/development/TROUBLESHOOTING_RU.md" style="color: #FFE4E1;">📖 Подробный гайд</a></p>
-          </div>
-        </div>
-      </td>
-      <td align="center" width="33%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%); padding: 20px; border-radius: 15px; color: white;">
-          <h3>🌐 Порт занят</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>Порт 5000 занят?</strong></p>
-            <ul style="margin: 10px 0; padding-left: 20px;">
-              <li>Измените порт в коде</li>
-              <li>Завершите процесс на порту</li>
-              <li>Используйте другой порт</li>
-            </ul>
-            <code style="background: rgba(255,255,255,0.2); padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">netstat -ano | findstr :5000</code>
-          </div>
-        </div>
-      </td>
-      <td align="center" width="33%" style="padding: 15px;">
-        <div style="background: linear-gradient(135deg, #5f27cd 0%, #00d2d3 100%); padding: 20px; border-radius: 15px; color: white;">
-          <h3>📦 Установка</h3>
-          <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
-          <div style="text-align: left; font-size: 14px;">
-            <p><strong>Ошибка при установке?</strong></p>
-            <ol style="margin: 10px 0; padding-left: 20px;">
-              <li>Удалите папку <code>node_modules</code></li>
-              <li>Выполните <code>npm install</code> заново</li>
-              <li>Попробуйте снова</li>
-            </ol>
-            <p><small>Если не помогло - создайте Issue</small></p>
-          </div>
-        </div>
-      </td>
-    </tr>
-  </table>
 </div>
 
 ---
