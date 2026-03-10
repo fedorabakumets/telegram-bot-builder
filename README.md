@@ -493,25 +493,38 @@ git --version
 <table>
 <tr>
 <th width="33%">🐧 Linux</th>
-<th width="33%">🪟 Windows</th>
+<th width="33%">🏁 Windows</th>
 <th width="33%">🍎 macOS</th>
 </tr>
 <tr>
 <td valign="top">
 
+**Способ 1: Через терминал (рекомендуется):**
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 sudo apt install -y nodejs
 node -v && npm -v
 ```
 
+**Способ 2: С сайта:**
+- Перейдите на [nodejs.org](https://nodejs.org/)
+- Скачайте `.deb` или `.rpm` пакет
+- Установите: `sudo dpkg -i nodejs_*.deb`
+
 </td>
 <td valign="top">
 
-1. Скачайте установщик с [nodejs.org](https://nodejs.org/)
-2. Запустите и следуйте инструкциям
-3. Проверьте установку:
+**Способ 1: Через winget:**
+```powershell
+winget install OpenJS.NodeJS.LTS
+node -v && npm -v
+```
 
+**Способ 2: С сайта:**
+- Перейдите на [nodejs.org](https://nodejs.org/)
+- Скачайте установщик (`.msi`)
+- Запустите и следуйте инструкциям
+- Проверьте установку:
 ```powershell
 node -v
 npm -v
@@ -520,10 +533,16 @@ npm -v
 </td>
 <td valign="top">
 
+**Способ 1: Через Homebrew:**
 ```bash
 brew install node@lts
 node -v && npm -v
 ```
+
+**Способ 2: С сайта:**
+- Перейдите на [nodejs.org](https://nodejs.org/)
+- Скачайте установщик (`.pkg`)
+- Запустите и следуйте инструкциям
 
 </td>
 </tr>
@@ -536,32 +555,50 @@ node -v && npm -v
 <table>
 <tr>
 <th width="33%">🐧 Linux</th>
-<th width="33%">🪟 Windows</th>
+<th width="33%">🏁 Windows</th>
 <th width="33%">🍎 macOS</th>
 </tr>
 <tr>
 <td valign="top">
 
+**Способ 1: Через терминал:**
 ```bash
 sudo apt install -y postgresql postgresql-contrib
 sudo systemctl enable postgresql
 sudo systemctl start postgresql
 ```
 
-</td>
-<td valign="top">
-
-1. Скачайте с [postgresql.org/download](https://www.postgresql.org/download/windows/)
-2. Установите PostgreSQL 15+
-3. Запомните пароль пользователя `postgres`
+**Способ 2: Официальный репозиторий:**
+- Посетите [postgresql.org/download/linux](https://www.postgresql.org/download/linux/)
+- Выберите дистрибутив
+- Следуйте инструкции
 
 </td>
 <td valign="top">
 
+**Способ 1: Через winget:**
+```powershell
+winget install PostgreSQL.PostgreSQL
+```
+
+**Способ 2: С сайта:**
+- Перейдите на [postgresql.org/download/windows](https://www.postgresql.org/download/windows/)
+- Скачайте установщик
+- Запустите и запомните пароль `postgres`
+
+</td>
+<td valign="top">
+
+**Способ 1: Через Homebrew:**
 ```bash
 brew install postgresql@15
 brew services start postgresql@15
 ```
+
+**Способ 2: С сайта:**
+- Перейдите на [postgresql.org/download/macosx](https://www.postgresql.org/download/macosx/)
+- Скачайте установщик
+- Запустите и следуйте инструкциям
 
 </td>
 </tr>
@@ -574,24 +611,36 @@ brew services start postgresql@15
 <table>
 <tr>
 <th width="33%">🐧 Linux</th>
-<th width="33%">🪟 Windows</th>
+<th width="33%">🏁 Windows</th>
 <th width="33%">🍎 macOS</th>
 </tr>
 <tr>
 <td valign="top">
 
+**Способ 1: Через терминал:**
 ```bash
 sudo apt install -y python3 python3-venv python3-pip
 python3 --version
 ```
 
+**Способ 2: Официальный сайт:**
+- Посетите [python.org/downloads](https://www.python.org/downloads/)
+- Выберите версию для Linux
+- Следуйте инструкции по компиляции
+
 </td>
 <td valign="top">
 
-1. Скачайте с [python.org/downloads](https://www.python.org/downloads/)
-2. Отметьте **"Add Python to PATH"**
-3. Проверьте установку:
+**Способ 1: Через winget:**
+```powershell
+winget install Python.Python.3.12
+```
 
+**Способ 2: С сайта:**
+- Перейдите на [python.org/downloads](https://www.python.org/downloads/)
+- Скачайте установщик
+- При установке отметьте **"Add Python to PATH"**
+- Проверьте установку:
 ```powershell
 python --version
 ```
@@ -599,10 +648,16 @@ python --version
 </td>
 <td valign="top">
 
+**Способ 1: Через Homebrew:**
 ```bash
 brew install python
 python3 --version
 ```
+
+**Способ 2: С сайта:**
+- Перейдите на [python.org/downloads](https://www.python.org/downloads/)
+- Скачайте установщик для macOS (`.pkg`)
+- Запустите и следуйте инструкциям
 
 </td>
 </tr>
