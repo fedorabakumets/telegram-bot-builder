@@ -59,10 +59,10 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: (query) => {
-        // Шаблоны и проекты имеют короче время жизни кеша для динамичности
+        // Сценарии и проекты имеют короче время жизни кеша для динамичности
         const key = query.queryKey[0];
         if (typeof key === 'string' && (key.includes('/api/templates') || key.includes('/api/projects'))) {
-          return 1 * 60 * 1000; // 1 минута для шаблонов и проектов
+          return 1 * 60 * 1000; // 1 минута для сценариев и проектов
         }
         return 10 * 60 * 1000; // 10 минут для остального
       },

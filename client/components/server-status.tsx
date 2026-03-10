@@ -7,7 +7,7 @@ import { RefreshCw, CheckCircle, Loader2 } from 'lucide-react';
  * Интерфейс статуса работоспособности сервера
  * @interface ServerHealthStatus
  * @property {boolean} database - Статус подключения к базе данных
- * @property {boolean} templates - Статус загрузки шаблонов
+ * @property {boolean} templates - Статус загрузки сценариев
  * @property {boolean} telegram - Статус подключения к Telegram
  * @property {boolean} ready - Общий статус готовности сервера
  */
@@ -22,7 +22,7 @@ interface ServerHealthStatus {
  * Компонент отображения статуса сервера
  *
  * Отображает индикатор загрузки и статуса работоспособности сервера,
- * включая подключение к базе данных, загрузку шаблонов и подключение к Telegram.
+ * включая подключение к базе данных, загрузку сценариев и подключение к Telegram.
  * Компонент автоматически проверяет статус сервера и обновляет отображение.
  *
  * @returns {JSX.Element | null} Компонент индикатора статуса сервера или null, если статус известен и сервер готов
@@ -131,7 +131,7 @@ export function ServerStatus() {
                 <Loader2 className="h-3 w-3 animate-spin text-orange-500" />
               )}
               <span className={status.templates ? 'text-green-700 dark:text-green-300' : 'text-orange-600 dark:text-orange-400'}>
-                Шаблоны
+                Сценарии
               </span>
             </div>
 

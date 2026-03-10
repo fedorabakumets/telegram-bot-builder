@@ -33,7 +33,7 @@ type CreateProjectForm = z.infer<typeof createProjectSchema>;
  * @description
  * Главная страница приложения, предоставляющая интерфейс для управления проектами Telegram ботов.
  * Позволяет создавать новые проекты, просматривать существующие, удалять их и переходить к редактированию.
- * Также предоставляет доступ к шаблонам ботов и возможность авторизации через Telegram.
+ * Также предоставляет доступ к сценариям ботов и возможность авторизации через Telegram.
  *
  * @example
  * // Использование компонента:
@@ -224,7 +224,7 @@ export default function Home() {
             <Link href="/templates">
               <Button variant="outline" size="sm">
                 <Bot className="h-4 w-4 mr-2" />
-                Шаблоны
+                Сценарии
               </Button>
             </Link>
             <ThemeToggle />

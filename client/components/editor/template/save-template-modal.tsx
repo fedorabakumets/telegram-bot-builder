@@ -13,7 +13,7 @@ import { apiRequest } from '@/lib/queryClient';
 import type { BotData } from '@/types/bot';
 
 /**
- * Интерфейс пропсов для модального окна сохранения шаблона
+ * Интерфейс пропсов для модального окна сохранения сценария
  * @interface SaveTemplateModalProps
  */
 interface SaveTemplateModalProps {
@@ -21,47 +21,47 @@ interface SaveTemplateModalProps {
   isOpen: boolean;
   /** Функция закрытия модального окна */
   onClose: () => void;
-  /** Данные бота для сохранения в шаблон */
+  /** Данные бота для сохранения в сценарий */
   botData: BotData;
   /** Необязательное название проекта для автозаполнения */
   projectName?: string;
 }
 
 /**
- * Интерфейс данных формы создания шаблона
+ * Интерфейс данных формы создания сценария
  * @interface TemplateFormData
  */
 interface TemplateFormData {
-  /** Название шаблона */
+  /** Название сценария */
   name: string;
-  /** Описание шаблона */
+  /** Описание сценария */
   description: string;
-  /** Категория шаблона */
+  /** Категория сценария */
   category: string;
-  /** Флаг публичности шаблона */
+  /** Флаг публичности сценария */
   isPublic: boolean;
   /** Флаг анонимного сохранения */
   isAnonymous: boolean;
 }
 
 /**
- * Компонент модального окна для сохранения бота как шаблона
- * 
- * Позволяет пользователю сохранить текущий бот в виде шаблона с настройками:
- * - Название и описание шаблона
+ * Компонент модального окна для сохранения бота как сценария
+ *
+ * Позволяет пользователю сохранить текущий бот в виде сценария с настройками:
+ * - Название и описание сценария
  * - Категория (пользовательский, бизнес, утилиты, игры)
  * - Публичность (доступен другим пользователям)
  * - Анонимность (скрыть имя автора)
- * 
- * Поддерживает как обычные, так и многолистовые шаблоны ботов.
- * Автоматически вычисляет статистику шаблона (узлы, связи, команды, кнопки).
- * 
+ *
+ * Поддерживает как обычные, так и многолистовые сценарии ботов.
+ * Автоматически вычисляет статистику сценария (узлы, связи, команды, кнопки).
+ *
  * @param {SaveTemplateModalProps} props - Пропсы компонента
- * @returns {JSX.Element} Модальное окно сохранения шаблона
+ * @returns {JSX.Element} Модальное окно сохранения сценария
  */
 export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: SaveTemplateModalProps) {
   const [formData, setFormData] = useState<TemplateFormData>({
-    name: projectName ? `${projectName} - Шаблон` : 'Новый шаблон',
+    name: projectName ? `${projectName} - Сценарий` : 'Новый сценарий',
     description: '',
     category: 'custom',
     isPublic: false,
@@ -72,24 +72,24 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
   const queryClient = useQueryClient();
 
   /**
-   * Функция для вычисления статистики бота с поддержкой многолистовых шаблонов
-   * 
+   * Функция для вычисления статистики бота с поддержкой многолистовых сценариев
+   *
    * Анализирует структуру данных бота и подсчитывает:
    * - Общее количество узлов (nodes)
    * - Общее количество связей (connections + interSheetConnections)
    * - Количество команд (узлы с полем command)
    * - Общее количество кнопок во всех узлах
-   * 
+   *
    * @param {BotData | any} data - Данные бота для анализа
    * @returns {Object} Объект со статистикой: nodes, connections, commands, buttons
    */
   const getStats = (data: BotData | any) => {
     let nodes: any[] = [];
     let connections: any[] = [];
-    
-    // Проверяем, это многолистовой шаблон или обычный
+
+    // Проверяем, это многолистовой сценарий или обычный
     if (data.sheets && Array.isArray(data.sheets)) {
-      // Многолистовой шаблон - собираем все узлы и связи из всех листов
+      // Многолистовой сценарий - собираем все узлы и связи из всех листов
       data.sheets.forEach((sheet: any) => {
         if (sheet.nodes) nodes.push(...sheet.nodes);
         if (sheet.connections) connections.push(...sheet.connections);
@@ -99,7 +99,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
         connections.push(...data.interSheetConnections);
       }
     } else {
-      // Обычный шаблон
+      // Обычный сценарий
       nodes = data.nodes || [];
       connections = data.connections || [];
     }
@@ -115,15 +115,15 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
   const stats = getStats(botData);
 
   /**
-   * Мутация для сохранения шаблона на сервере
-   * 
+   * Мутация для сохранения сценария на сервере
+   *
    * Отправляет POST запрос на /api/templates с данными формы и бота.
    * При успешном сохранении:
-   * - Инвалидирует кэш шаблонов
+   * - Инвалидирует кэш сценариев
    * - Показывает уведомление об успехе
    * - Закрывает модальное окно
    * - Сбрасывает форму
-   * 
+   *
    * При ошибке показывает уведомление об ошибке.
    */
   const saveTemplateMutation = useMutation({
@@ -148,8 +148,8 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
       toast({
-        title: 'Шаблон сохранен',
-        description: 'Ваш шаблон бота успешно сохранен',
+        title: 'Сценарий сохранен',
+        description: 'Ваш сценарий бота успешно сохранен',
       });
       onClose();
       resetForm();
@@ -157,7 +157,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     onError: () => {
       toast({
         title: 'Ошибка',
-        description: 'Не удалось сохранить шаблон',
+        description: 'Не удалось сохранить сценарий',
         variant: 'destructive',
       });
     },
@@ -165,9 +165,9 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
 
   /**
    * Функция сброса формы к начальным значениям
-   * 
+   *
    * Восстанавливает все поля формы к значениям по умолчанию:
-   * - Название: "{projectName} - Шаблон" или "Новый шаблон"
+   * - Название: "{projectName} - Сценарий" или "Новый сценарий"
    * - Описание: пустая строка
    * - Категория: "custom"
    * - Публичность: false
@@ -175,7 +175,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
    */
   const resetForm = () => {
     setFormData({
-      name: projectName ? `${projectName} - Шаблон` : 'Новый шаблон',
+      name: projectName ? `${projectName} - Сценарий` : 'Новый сценарий',
       description: '',
       category: 'custom',
       isPublic: false,
@@ -185,18 +185,18 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
 
 
   /**
-   * Обработчик сохранения шаблона
-   * 
+   * Обработчик сохранения сценария
+   *
    * Выполняет валидацию формы (проверяет наличие названия)
-   * и запускает мутацию сохранения шаблона.
-   * 
+   * и запускает мутацию сохранения сценария.
+   *
    * При отсутствии названия показывает ошибку валидации.
    */
   const handleSave = () => {
     if (!formData.name.trim()) {
       toast({
         title: 'Ошибка',
-        description: 'Название шаблона обязательно',
+        description: 'Название сценария обязательно',
         variant: 'destructive',
       });
       return;
@@ -205,9 +205,9 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
   };
 
   /**
-   * Список доступных категорий шаблонов
-   * 
-   * Содержит предопределенные категории для классификации шаблонов:
+   * Список доступных категорий сценариев
+   *
+   * Содержит предопределенные категории для классификации сценариев:
    * - custom: Пользовательский
    * - business: Бизнес
    * - utility: Утилиты
@@ -226,22 +226,22 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Save className="h-5 w-5" />
-            Сохранить как шаблон
+            Сохранить как сценарий
           </DialogTitle>
           <DialogDescription className="sr-only">
-            Сохраните текущую схему бота как шаблон для повторного использования
+            Сохраните текущую схему бота как сценарий для повторного использования
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* Название */}
           <div className="space-y-2">
-            <Label htmlFor="name">Название шаблона</Label>
+            <Label htmlFor="name">Название сценария</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Введите название шаблона"
+              placeholder="Введите название сценария"
             />
           </div>
 
@@ -252,7 +252,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Краткое описание того, для чего предназначен этот шаблон"
+              placeholder="Краткое описание того, для чего предназначен этот сценарий"
               rows={3}
             />
           </div>
@@ -288,14 +288,14 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
                 className="h-4 w-4"
               />
               <Label htmlFor="isPublic">
-                Сделать шаблон публичным (другие пользователи смогут его использовать)
+                Сделать сценарий публичным (другие пользователи смогут его использовать)
               </Label>
             </div>
 
             {/* Предупреждение о видимости */}
             {formData.isPublic && !formData.isAnonymous && (
               <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
-                ⚠️ <strong>Внимание!</strong> Ваш юзернейм Telegram будет виден всем, кто использует этот шаблон.
+                ⚠️ <strong>Внимание!</strong> Ваш юзернейм Telegram будет виден всем, кто использует этот сценарий.
               </div>
             )}
 
@@ -316,14 +316,14 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
             {/* Инфо об анонимности */}
             {formData.isAnonymous && (
               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-200">
-                ✓ Шаблон будет сохранён как "Сохранено от сообщества"
+                ✓ Сценарий будет сохранён как "Сохранено от сообщества"
               </div>
             )}
           </div>
 
-          {/* Статистика бота */}
+          {/* Статистика сценария */}
           <div className="p-4 bg-muted rounded-lg">
-            <h4 className="font-medium mb-2">Информация о шаблоне:</h4>
+            <h4 className="font-medium mb-2">Информация о сценарии:</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Узлов:</span>
@@ -354,7 +354,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
             disabled={saveTemplateMutation.isPending || !formData.name.trim()}
           >
             {saveTemplateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Сохранить шаблон
+            Сохранить сценарий
           </Button>
         </DialogFooter>
       </DialogContent>

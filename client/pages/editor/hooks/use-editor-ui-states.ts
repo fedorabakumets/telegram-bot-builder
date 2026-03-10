@@ -15,7 +15,7 @@ export interface UseEditorUIStatesResult {
   selectedDialogUser: UserBotData | null;
   /** Выбранный пользователь для деталей */
   selectedUserDetails: UserBotData | null;
-  /** Флаг загрузки шаблона */
+  /** Флаг загрузки сценария */
   isLoadingTemplate: boolean;
   /** Флаг отображения менеджера макета */
   showLayoutManager: boolean;

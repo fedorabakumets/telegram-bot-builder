@@ -629,14 +629,14 @@ function arrangeNodesLinear(nodes: LayoutNode[], options: HierarchicalLayoutOpti
 }
 
 /**
- * Функция для специального расположения шаблона VProgulke
+ * Функция для специального расположения сценария VProgulke
  *
- * Функция реализует специфическое размещение узлов для шаблона VProgulke (бот знакомств).
+ * Функция реализует специфическое размещение узлов для сценария VProgulke (бот знакомств).
  * Использует заранее определенные позиции для каждого типа узла в соответствии с логикой бота.
  *
  * @param nodes - массив узлов для размещения
  * @param _connections - массив соединений между узлами
- * @returns массив узлов с заранее определенными позициями для шаблона VProgulke
+ * @returns массив узлов с заранее определенными позициями для сценария VProgulke
  */
 export function createVProgulkeHierarchicalLayout(nodes: Node[], _connections: any[]): Node[] {
   // Определяем последовательность узлов для VProgulke бота
@@ -694,15 +694,15 @@ export function createVProgulkeHierarchicalLayout(nodes: Node[], _connections: a
 }
 
 /**
- * Автоматически определяет тип шаблона и применяет соответствующую компоновку
+ * Автоматически определяет тип сценария и применяет соответствующую компоновку
  *
- * Функция анализирует имя шаблона и применяет соответствующий алгоритм размещения узлов.
- * Для шаблона VProgulke используется специальное размещение, для остальных - стандартная
+ * Функция анализирует имя сценария и применяет соответствующий алгоритм размещения узлов.
+ * Для сценария VProgulke используется специальное размещение, для остальных - стандартная
  * иерархическая компоновка с учетом типа устройства (мобильное/десктоп).
  *
  * @param nodes - массив узлов для размещения
  * @param connections - массив соединений между узлами
- * @param templateName - название шаблона (опционально)
+ * @param templateName - название сценария (опционально)
  * @param nodeSizes - карта реальных размеров узлов (опционально)
  * @returns массив узлов с примененной компоновкой
  */
@@ -714,7 +714,7 @@ export function applyTemplateLayout(
 ): Node[] {
   console.log('🎯 ApplyTemplateLayout called:', templateName, 'nodes:', nodes.length, 'nodeSizes:', !!nodeSizes);
 
-  // Проверяем, это шаблон VProgulke
+  // Проверяем, это сценарий VProgulke
   if (templateName?.toLowerCase().includes('vprogulke') || templateName?.toLowerCase().includes('знакомства')) {
     console.log('🌟 Using VProgulke layout');
     return createVProgulkeHierarchicalLayout(nodes, connections);
@@ -723,7 +723,7 @@ export function applyTemplateLayout(
   // Определяем, мобильное ли это устройство
   const isMobile = getIsMobile();
 
-  // Для остальных шаблонов используем стандартную иерархическую компоновку
+  // Для остальных сценариев используем стандартную иерархическую компоновку
   console.log(isMobile ? '📱 Using mobile-optimized hierarchical layout' : '📏 Using desktop hierarchical layout with real sizes');
 
   // Параметры для мобильных устройств - более компактные
