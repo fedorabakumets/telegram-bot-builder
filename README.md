@@ -839,45 +839,27 @@ npm run start
 
 ### Шаг 9: Python зависимости (для сгенерированных ботов)
 
-<table>
-<tr>
-<th width="33%">🐧 Linux</th>
-<th width="33%">🪟 Windows</th>
-<th width="33%">🍎 macOS</th>
-</tr>
-<tr>
-<td valign="top">
+**1. Создание виртуального окружения:**
 
+**Linux/macOS:**
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
 ```
 
-</td>
-<td valign="top">
-
+**Windows:**
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate
-pip install --upgrade pip
-pip install -r requirements.txt
+.venv\Scripts\activate
 ```
 
-</td>
-<td valign="top">
-
+**2. Установка зависимостей:**
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-</td>
-</tr>
-</table>
+> ⚠️ Этот шаг нужен только если вы планируете генерировать и запускать ботов локально
 
 ---
 
