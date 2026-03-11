@@ -16,3 +16,5 @@ export * from './hasUploadImageUrls';
 export * from './extractNodesAndConnections';
 export * from './mediafiles';
 export * from './generateAttachedMediaSendCode';
+export * from './generateMultiMediaSendCode';
+export * from './utils';

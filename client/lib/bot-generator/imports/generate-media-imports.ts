@@ -12,6 +12,29 @@ export interface ImportGeneratorOptions {
 }
 
 /**
+ * Генерирует импорты для работы с медиа-группами
+ * @param options - Параметры генерации
+ * @returns {string} Python код импортов
+ */
+export const generateMediaGroupImports = (options: ImportGeneratorOptions): string => {
+  const { nodes } = options;
+  
+  // Проверяем, есть ли узлы с несколькими прикрепленными файлами
+  const hasMultiMediaNodes = nodes.some(
+    (node) => 
+      node.data?.attachedMedia && 
+      Array.isArray(node.data.attachedMedia) && 
+      node.data.attachedMedia.length > 1
+  );
+
+  if (!hasMultiMediaNodes) {
+    return '';
+  }
+
+  return 'from aiogram.types import InputMediaPhoto, InputMediaVideo, InputMediaAudio, InputMediaDocument\n';
+};
+
+/**
  * Генерирует импорты для работы с URL изображениями
  * @param options - Параметры генерации
  * @returns {string} Python код импортов

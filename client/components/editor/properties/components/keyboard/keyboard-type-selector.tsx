@@ -33,11 +33,26 @@ interface KeyboardTypeSelectorProps {
  * - Reply — кнопки отображаются в поле ввода сообщения
  *
  * При включении одного типа, другой автоматически выключается.
+ * При наличии >1 медиафайлов и включении клавиатуры — используется только первый файл.
  *
  * @param {KeyboardTypeSelectorProps} props - Пропсы компонента
  * @returns {JSX.Element} Селектор типа клавиатуры
  */
 export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: KeyboardTypeSelectorProps) {
+  const handleKeyboardChange = (checked: boolean, type: string) => {
+    const updates: Partial<Node['data']> = {};
+    
+    if (checked) {
+      // Включаем клавиатуру
+      updates.keyboardType = type;
+    } else {
+      // Выключаем клавиатуру
+      updates.keyboardType = KEYBOARD_TYPES.NONE;
+    }
+    
+    onNodeUpdate(selectedNode.id, updates);
+  };
+
   return (
     <div className="flex gap-2.5 sm:gap-3">
       {/* Inline Keyboard */}
@@ -47,9 +62,7 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: K
         </label>
         <Switch
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE}
-          onCheckedChange={(checked) => {
-            onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.INLINE : KEYBOARD_TYPES.NONE });
-          }}
+          onCheckedChange={(checked) => handleKeyboardChange(checked, KEYBOARD_TYPES.INLINE)}
         />
       </div>
       {/* Reply Keyboard */}
@@ -59,9 +72,7 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: K
         </label>
         <Switch
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
-          onCheckedChange={(checked) => {
-            onNodeUpdate(selectedNode.id, { keyboardType: checked ? KEYBOARD_TYPES.REPLY : KEYBOARD_TYPES.NONE });
-          }}
+          onCheckedChange={(checked) => handleKeyboardChange(checked, KEYBOARD_TYPES.REPLY)}
         />
       </div>
     </div>

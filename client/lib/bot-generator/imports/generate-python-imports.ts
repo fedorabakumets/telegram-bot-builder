@@ -7,7 +7,7 @@
 
 import { generateBaseImports } from './generate-base-imports';
 import { generateCommandImports } from './generate-command-imports';
-import { generateUrlImageImports, generateDatetimeImports } from './generate-media-imports';
+import { generateUrlImageImports, generateDatetimeImports, generateMediaGroupImports } from './generate-media-imports';
 import { generateParseModeImports } from './generate-parse-mode-imports';
 import { generateTelegramBadRequestImports } from './generate-exception-imports';
 
@@ -44,6 +44,7 @@ export const generatePythonImports = (
   imports += generateCommandImports(options);
   imports += generateUrlImageImports(options);
   imports += generateDatetimeImports(options);
+  imports += generateMediaGroupImports(options);
   imports += generateParseModeImports(options);
   imports += generateTelegramBadRequestImports(options);
 

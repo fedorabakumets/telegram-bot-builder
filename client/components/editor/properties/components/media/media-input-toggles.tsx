@@ -1,24 +1,17 @@
 /**
  * @fileoverview Компонент переключателей типов ввода медиа
- * 
- * Сетка переключателей для настройки типов ввода пользователя:
- * - Текстовый ввод
- * - Ввод фото
- * - Ввод видео
- * - Ввод аудио
- * - Ввод документа
- * 
- * Используется в панели свойств узлов для настройки сбора пользовательского ввода.
+ *
+ * Разделяет переключатели на группы: медиа (фото/видео/аудио),
+ * документы и текстовый ввод. Показывает предупреждение при
+ * смешивании документов с другими типами медиа.
  */
 
 import { Node } from '@shared/schema';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { TOGGLE_CONFIGS, InputToggleConfig } from './media-input-config';
+import { TOGGLE_CONFIGS } from './media-input-config';
+import { ToggleGroup } from './toggle-group';
+import { InfoBlock } from '@/components/ui/info-block';
 
-/**
- * Пропсы компонента MediaInputToggles
- */
+/** Пропсы компонента MediaInputToggles */
 interface MediaInputTogglesProps {
   /** Выбранный узел для редактирования */
   selectedNode: Node;
@@ -26,40 +19,77 @@ interface MediaInputTogglesProps {
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
 }
 
+/** Типы медиа для группы sendMediaGroup */
+const MEDIA_GROUP_TYPES: (keyof Node['data'])[] = ['enablePhotoInput', 'enableVideoInput', 'enableAudioInput'];
+
 /**
- * Компонент сетки переключателей типов ввода медиа
- * 
- * Отображает переключатели для настройки типов ввода пользователя.
- * Каждый переключатель имеет иконку, заголовок, описание и switch.
+ * Компонент переключателей типов ввода медиа
  *
  * @param {MediaInputTogglesProps} props - Пропсы компонента
- * @returns {JSX.Element} Сетка переключателей типов ввода
+ * @returns {JSX.Element} Переключатели с группировкой по типам
  */
 export function MediaInputToggles({ selectedNode, onNodeUpdate }: MediaInputTogglesProps) {
+  const hasDocumentInput = selectedNode.data.enableDocumentInput ?? false;
+  const hasMediaGroupInput = MEDIA_GROUP_TYPES.some(type => selectedNode.data[type] ?? false);
+  const showMixedWarning = hasDocumentInput && hasMediaGroupInput;
+
+  const mediaConfigs = TOGGLE_CONFIGS.filter(config =>
+    MEDIA_GROUP_TYPES.includes(config.type as keyof Node['data'])
+  );
+  const documentConfigs = TOGGLE_CONFIGS.filter(config => config.type === 'enableDocumentInput');
+  const textConfigs = TOGGLE_CONFIGS.filter(config => config.type === 'enableTextInput');
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-      {TOGGLE_CONFIGS.map((config: InputToggleConfig) => (
-        <div
-          key={config.type}
-          className={`flex flex-col sm:flex-row sm:items-start sm:justify-between p-2.5 sm:p-3 rounded-lg bg-gradient-to-br ${config.colors.bg} border ${config.colors.border} ${config.colors.hoverBorder} hover:shadow-sm transition-all duration-200`}
-        >
-          <div className="flex-1 min-w-0">
-            <Label className={`text-xs sm:text-sm font-semibold ${config.colors.text} flex items-center gap-1.5`}>
-              <i className={`fas ${config.icon} text-xs sm:text-sm`}></i>
-              {config.title}
-            </Label>
-            <div className={`text-xs ${config.colors.desc} ${config.colors.descDark} mt-1 line-clamp-2`}>
-              {config.description}
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-0 sm:ml-2 flex-shrink-0">
-            <Switch
-              checked={selectedNode.data[config.type] ?? false}
-              onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [config.type]: checked })}
-            />
-          </div>
-        </div>
-      ))}
+    <div className="space-y-4">
+      <ToggleGroup
+        title="Медиафайлы (группа)"
+        icon="fa-images"
+        colorClasses={{ title: 'text-blue-700 dark:text-blue-300', icon: 'text-blue-600 dark:text-blue-400' }}
+        configs={mediaConfigs}
+        selectedNode={selectedNode}
+        onNodeUpdate={onNodeUpdate}
+      />
+
+      <ToggleGroup
+        title="Документы"
+        icon="fa-file"
+        colorClasses={{ title: 'text-orange-700 dark:text-orange-300', icon: 'text-orange-600 dark:text-orange-400' }}
+        configs={documentConfigs}
+        selectedNode={selectedNode}
+        onNodeUpdate={onNodeUpdate}
+      />
+
+      {showMixedWarning && (
+        <InfoBlock
+          variant="warning"
+          title="⚠️ Документы отправятся отдельным сообщением"
+          description={
+            <>
+              Telegram не позволяет смешивать документы с фото/видео/аудио в одной группе.
+              <br /><br />
+              <strong>Рекомендация:</strong> используйте <strong>отдельный узел</strong> для отправки документов,
+              чтобы пользователь получил всё в одном сообщении.
+            </>
+          }
+        />
+      )}
+
+      {!showMixedWarning && hasDocumentInput && (
+        <InfoBlock
+          variant="info"
+          title="📄 Документы будут отправлены группой"
+          description="Если документов несколько, они отправятся вместе в одном сообщении"
+        />
+      )}
+
+      <ToggleGroup
+        title=""
+        icon=""
+        colorClasses={{ title: '', icon: '' }}
+        configs={textConfigs}
+        selectedNode={selectedNode}
+        onNodeUpdate={onNodeUpdate}
+      />
     </div>
   );
 }

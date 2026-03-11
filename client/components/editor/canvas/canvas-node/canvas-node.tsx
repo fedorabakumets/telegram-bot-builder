@@ -12,6 +12,7 @@ import { MediaAttachmentIndicator } from './media-attachment-indicator';
 import { TextInputIndicator } from './text-input-indicator';
 import { MessagePreview } from './message-preview';
 import { ImageAttachment } from './image-attachment';
+import { MediaAttachmentsPreview } from './media-attachments-preview';
 import { NodeActions } from './node-actions';
 import { AdminRightsPreview } from './admin-rights-preview';
 import { NodeHeader } from './node-header';
@@ -390,11 +391,14 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       {/* Message preview */}
       <MessagePreview node={node} />
 
-      {/* Image attachment */}
+      {/* Image attachment (старый формат - одиночное изображение) */}
       <ImageAttachment node={node} />
-      
+
+      {/* Media attachments (новый формат - несколько файлов) */}
+      <MediaAttachmentsPreview node={node} />
+
       {/* Media attachment indicator for non-image files */}
-      {(node.type === 'message' || node.type === 'command' || node.type === 'start') && !node.data.imageUrl && (node.data.videoUrl || node.data.audioUrl || node.data.documentUrl) && (
+      {(node.type === 'message' || node.type === 'command' || node.type === 'start') && !node.data.imageUrl && !node.data.attachedMedia?.length && (node.data.videoUrl || node.data.audioUrl || node.data.documentUrl) && (
         <MediaAttachmentIndicator node={node} />
       )}
       

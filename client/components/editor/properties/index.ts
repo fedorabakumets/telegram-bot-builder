@@ -23,9 +23,7 @@ export * from './types';
 export * from './constants';
 
 // Медиа компоненты
-export * from './media/media-manager';
-export * from './media/media-selector';
-export * from './media/enhanced-media-uploader';
-export * from './media/camera-capture';
-export * from './media/file-optimizer';
-export * from './media/url-downloader';
+export * from './media';
+
+// Медиа типы
+export type { MediaFileData } from './media/media-files-list';

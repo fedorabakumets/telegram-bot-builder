@@ -84,6 +84,18 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
           mediaType = 'audio';
         } else if (mediaVar.startsWith('document_url_') || mediaVar.startsWith('documentUrlVar')) {
           mediaType = 'document';
+        } else if (mediaVar.startsWith('http://') || mediaVar.startsWith('https://') || mediaVar.startsWith('/uploads/')) {
+          // Прямой URL или локальный файл — определяем тип по расширению
+          const ext = mediaVar.split('.').pop()?.toLowerCase() || '';
+          if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {
+            mediaType = 'photo';
+          } else if (['mp4', 'avi', 'mov', 'webm'].includes(ext)) {
+            mediaType = 'video';
+          } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+            mediaType = 'audio';
+          } else {
+            mediaType = 'document';
+          }
         }
 
         // Если тип медиа определен, добавляем переменную в карту

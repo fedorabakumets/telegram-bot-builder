@@ -12,6 +12,7 @@ import { useNodeCommandValidation } from '../../hooks/use-node-command-validatio
 import { formatNodeDisplay } from '../../utils/node-formatters';
 import { isManagementNode } from '../../utils/node-constants';
 import { AdminRightsInfo } from '../configuration/admin-rights-info';
+import { InfoBlock } from '@/components/ui/info-block';
 import { CommandAdvancedSettingsWrapper } from './command-advanced-settings-wrapper';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
@@ -129,19 +130,50 @@ export function PropertiesPanel({
   const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(false);
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
 
-  // Синхронизируем displayNodeId с selectedNode.id при изменении узла
+  // Раскрываем секции при наличии контента
   useEffect(() => {
-    if (selectedNode?.id) {
-      setDisplayNodeId(selectedNode.id);
-    }
-  }, [selectedNode?.id]);
+    if (!selectedNode?.data) return;
 
-  // Раскрываем секцию клавиатуры при включении Inline/Reply
-  useEffect(() => {
-    if (selectedNode?.data.keyboardType && selectedNode.data.keyboardType !== 'none' && !isKeyboardSectionOpen) {
+    // Секция медиафайлов
+    const hasMedia = selectedNode.data.attachedMedia?.length > 0 || 
+                     selectedNode.data.imageUrl || 
+                     selectedNode.data.videoUrl || 
+                     selectedNode.data.audioUrl || 
+                     selectedNode.data.documentUrl;
+    if (hasMedia && !isMediaSectionOpen) {
+      setIsMediaSectionOpen(true);
+    }
+
+    // Секция клавиатуры
+    const hasKeyboard = selectedNode.data.keyboardType && selectedNode.data.keyboardType !== 'none';
+    const hasButtons = selectedNode.data.buttons?.length > 0;
+    if ((hasKeyboard || hasButtons) && !isKeyboardSectionOpen) {
       setIsKeyboardSectionOpen(true);
     }
-  }, [selectedNode?.data.keyboardType]);
+
+    // Секция автоперехода
+    const hasAutoTransition = selectedNode.data.enableAutoTransition && selectedNode.data.autoTransitionTo;
+    if (hasAutoTransition && !isAutoTransitionOpen) {
+      setIsAutoTransitionOpen(true);
+    }
+
+    // Секция условных сообщений
+    const hasConditionalMessages = selectedNode.data.enableConditionalMessages && selectedNode.data.conditionalMessages?.length > 0;
+    if (hasConditionalMessages && !isConditionalMessagesSectionOpen) {
+      setIsConditionalMessagesSectionOpen(true);
+    }
+
+    // Секция ввода пользователя
+    const hasUserInput = selectedNode.data.collectUserInput || 
+                         selectedNode.data.enableTextInput || 
+                         selectedNode.data.enablePhotoInput || 
+                         selectedNode.data.enableVideoInput || 
+                         selectedNode.data.enableAudioInput || 
+                         selectedNode.data.enableDocumentInput;
+    if (hasUserInput && !isUserInputSectionOpen) {
+      setIsUserInputSectionOpen(true);
+    }
+  }, [selectedNode?.data, selectedNode?.id]);
 
   /**
    * Мемоизированный список всех узлов из всех листов
@@ -306,7 +338,22 @@ export function PropertiesPanel({
               />
 
               {/* Переключатели типа клавиатуры - всегда видны */}
-              <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} onToggle={() => setIsKeyboardSectionOpen(true)} />
+              <KeyboardTypeSelector
+                selectedNode={selectedNode}
+                onNodeUpdate={onNodeUpdate}
+                onToggle={() => setIsKeyboardSectionOpen(true)}
+              />
+
+              {selectedNode.data.attachedMedia && selectedNode.data.attachedMedia.length > 1 && 
+               (selectedNode.data.keyboardType === 'inline' || selectedNode.data.keyboardType === 'reply') && (
+                <div className="mt-2">
+                  <InfoBlock
+                    variant="info"
+                    title="ℹ️ При включении клавиатуры"
+                    description="Только первый файл будет отображаться и отправляться. Остальные файлы сохранены. Нажмите 'Включить все файлы' чтобы использовать все медиа (клавиатура отключится)."
+                  />
+                </div>
+              )}
 
               {isKeyboardSectionOpen && (
                 <div className="space-y-3 sm:space-y-4">

@@ -1,16 +1,17 @@
 /**
  * @fileoverview Генерация кода отправки медиа-сообщений
- * 
+ *
  * Модуль предоставляет функцию для генерации Python-кода отправки медиа-сообщений
  * (photo, video, audio, document) с поддержкой статических изображений, автопереходов
  * и обработки ошибок.
- * 
+ *
  * @module generateAttachedMediaSendCode
  */
 
 import { isLoggingEnabled } from "../../bot-generator";
 import { generateWaitingStateCode } from "../format/generateWaitingStateCode";
 import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
+import { generateMultiMediaSendCode } from "./generateMultiMediaSendCode";
 
 // ============================================================================
 // ГЕНЕРАТОРЫ МЕДИА И УСЛОВНЫХ СООБЩЕНИЙ
@@ -97,7 +98,6 @@ export function generateAttachedMediaSendCode(
   collectUserInput: boolean = true,
   nodeData?: any,
   handlerContext: 'message' | 'callback' = 'callback'): string {
-  
   // Собираем весь код в массив строк для автоматической обработки комментариев
   const codeLines: string[] = [];
 
@@ -107,6 +107,10 @@ export function generateAttachedMediaSendCode(
 
   // Проверяем, есть ли статическое изображение в узле
   const hasStaticImage = nodeData && nodeData.imageUrl && nodeData.imageUrl.trim() !== '' && nodeData.imageUrl !== 'undefined';
+
+  // Проверяем, включена ли клавиатура и есть ли несколько медиафайлов
+  const hasKeyboard = nodeData && (nodeData.keyboardType === 'inline' || nodeData.keyboardType === 'reply');
+  const mediaToSend = hasKeyboard && attachedMedia.length > 1 ? [attachedMedia[0]] : attachedMedia;
 
   // ИСПРАВЛЕНИЕ: Если есть статическое изображение, используем его напрямую
   if (hasStaticImage) {
@@ -214,7 +218,7 @@ export function generateAttachedMediaSendCode(
   } else {
     // Если статическое изображение не определено, проверяем есть ли динамические медиа
     // Если есть attachedMedia, не отправляем текст здесь - он отправится вместе с медиа ниже
-    if (!attachedMedia || attachedMedia.length === 0) {
+    if (!mediaToSend || mediaToSend.length === 0) {
       // Устанавливаем состояние ожидания ввода если нужно
       if (collectUserInput && nodeData) {
         codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId} (без изображения)`);
@@ -261,22 +265,46 @@ export function generateAttachedMediaSendCode(
     return processedCode.join('\n');
   }
   
-  if (!attachedMedia || attachedMedia.length === 0) {
+  if (!mediaToSend || mediaToSend.length === 0) {
     // Применяем автоматическое добавление комментариев ко всему коду
     const processedCode = processCodeWithAutoComments(codeLines, 'generateAttachedMediaSendCode.ts');
     return processedCode.join('\n');
   }
 
+  // ПРОВЕРКА: Если несколько файлов в mediaToSend, используем send_media_group
+  const validMediaUrls = mediaToSend.filter(url =>
+    url.startsWith('/uploads/') || url.startsWith('http')
+  );
+
+  if (validMediaUrls.length > 1) {
+    // Несколько файлов - используем send_media_group
+    const multiMediaCode = generateMultiMediaSendCode(
+      mediaToSend,
+      nodeId,
+      indentLevel,
+      'text',  // Передаём имя переменной, а не значение
+      parseMode,
+      keyboard,
+      handlerContext === 'message' ? 'message.from_user.id' : 'callback_query.from_user.id'
+    );
+    
+    if (multiMediaCode) {
+      codeLines.push(multiMediaCode);
+      const processedCode = processCodeWithAutoComments(codeLines, 'generateAttachedMediaSendCode.ts');
+      return processedCode.join('\n');
+    }
+  }
+
   // Убедимся, что переменная keyboardHTML определена
   codeLines.push(`${indentLevel}keyboardHTML = locals().get('keyboardHTML', None) or globals().get('keyboardHTML', None) or None`);
 
-  // Находим первую переменную из attachedMedia, которая также присутствует в mediaVariablesMap
+  // Находим первую переменную из mediaToSend, которая также присутствует в mediaVariablesMap
   // ИСПРАВЛЕНИЕ: Перебираем все переменные и пропускаем те, что равны "undefined"
   let mediaInfo = null;
   let mediaVariable = null;
   let mediaType = null;
 
-  for (const mediaVar of attachedMedia) {
+  for (const mediaVar of mediaToSend) {
     // Пропускаем переменные со значением "undefined"
     if (mediaVar === 'undefined' || mediaVar.startsWith('undefined')) {
       continue;
@@ -307,7 +335,7 @@ export function generateAttachedMediaSendCode(
     }
 
     if (!mediaInfo || !mediaVariable || !mediaType) {
-      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Ни одна из медиапеременных ${attachedMedia.join(', ')} не найдена в mediaVariablesMap`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Ни одна из медиапеременных ${mediaToSend.join(', ')} не найдена в mediaVariablesMap`);
       // Применяем автоматическое добавление комментариев ко всему коду
       const processedCode = processCodeWithAutoComments(codeLines, 'generateAttachedMediaSendCode.ts');
       return processedCode.join('\n');
@@ -315,85 +343,128 @@ export function generateAttachedMediaSendCode(
   }
 
   codeLines.push(`${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable}`);
-  codeLines.push(`${indentLevel}attached_media = None`);
 
-  // Создаем объединенный словарь переменных из базы данных и локального хранилища
-  codeLines.push(`${indentLevel}# Создаем объединенный словарь переменных из базы данных и локального хранилища`);
-  codeLines.push(`${indentLevel}user_id = ${userIdSource}`);
-  codeLines.push(`${indentLevel}all_user_vars = {}`);
-  codeLines.push(`${indentLevel}# Добавляем переменные из базы данных`);
-  codeLines.push(`${indentLevel}user_vars = await get_user_from_db(user_id)`);
-  codeLines.push(`${indentLevel}if user_vars and isinstance(user_vars, dict):`);
-  codeLines.push(`${indentLevel}    all_user_vars.update(user_vars)`);
-  codeLines.push(`${indentLevel}# Добавляем переменные из локального хранилища`);
-  codeLines.push(`${indentLevel}local_user_vars = user_data.get(user_id, {})`);
-  codeLines.push(`${indentLevel}if isinstance(local_user_vars, dict):`);
-  codeLines.push(`${indentLevel}    all_user_vars.update(local_user_vars)`);
-  codeLines.push(`${indentLevel}`);
-  codeLines.push(`${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable} в объединенном словаре`);
-  codeLines.push(`${indentLevel}attached_media = None`);
-  codeLines.push(`${indentLevel}if "${mediaVariable}" in all_user_vars:`);
-  codeLines.push(`${indentLevel}    media_data = all_user_vars["${mediaVariable}"]`);
-  codeLines.push(`${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:`);
-  codeLines.push(`${indentLevel}        # ИСПРАВЛЕНИЕ: Проверяем правильные URL поля в зависимости от типа медиа`);
-  codeLines.push(`${indentLevel}        # Для фото проверяем photoUrl`);
-  codeLines.push(`${indentLevel}        if "${mediaType}" == "photo" and "photoUrl" in media_data and media_data["photoUrl"]:`);
-  codeLines.push(`${indentLevel}            attached_media = media_data["photoUrl"]  # Используем URL вместо file_id`);
-  codeLines.push(`${indentLevel}        # Для видео проверяем videoUrl`);
-  codeLines.push(`${indentLevel}        elif "${mediaType}" == "video" and "videoUrl" in media_data and media_data["videoUrl"]:`);
-  codeLines.push(`${indentLevel}            attached_media = media_data["videoUrl"]  # Используем URL вместо file_id`);
-  codeLines.push(`${indentLevel}        # Для аудио проверяем audioUrl`);
-  codeLines.push(`${indentLevel}        elif "${mediaType}" == "audio" and "audioUrl" in media_data and media_data["audioUrl"]:`);
-  codeLines.push(`${indentLevel}            attached_media = media_data["audioUrl"]  # Используем URL вместо file_id`);
-  codeLines.push(`${indentLevel}        # Для документов проверяем documentUrl`);
-  codeLines.push(`${indentLevel}        elif "${mediaType}" == "document" and "documentUrl" in media_data and media_data["documentUrl"]:`);
-  codeLines.push(`${indentLevel}            attached_media = media_data["documentUrl"]  # Используем URL вместо file_id`);
-  codeLines.push(`${indentLevel}        else:`);
-  codeLines.push(`${indentLevel}            attached_media = media_data["value"]  # Используем file_id только если URL недоступен`);
-  codeLines.push(`${indentLevel}    elif isinstance(media_data, str):`);
-  codeLines.push(`${indentLevel}        attached_media = media_data`);
+  // Проверяем, является ли mediaVariable прямым URL
+  const isDirectUrl = mediaVariable.startsWith('http://') || mediaVariable.startsWith('https://') || mediaVariable.startsWith('/uploads/');
 
-  codeLines.push(`${indentLevel}`);
-
-  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Всегда устанавливаем состояние ожидания ввода для collectUserInput=true
-  if (collectUserInput && nodeData) {
-    codeLines.push(`${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
-    if (nodeData && nodeData.data) {
-      const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
-      const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
-      codeLines.push(...waitingStateLines);
+  if (isDirectUrl) {
+    // Прямой URL — используем напрямую, без проверки в БД
+    codeLines.push(`${indentLevel}attached_media_url = "${mediaVariable}"`);
+    codeLines.push(`${indentLevel}logging.info(f"📎 Отправка ${mediaType} медиа: {attached_media_url}")`);
+    
+    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Всегда устанавливаем состояние ожидания ввода для collectUserInput=true
+    if (collectUserInput && nodeData) {
+      codeLines.push(`${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
+      if (nodeData && nodeData.data) {
+        const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
+        const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
+        codeLines.push(...waitingStateLines);
+      }
+      codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки медиа")`);
     }
-    codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки медиа")`);
-  }
 
-  codeLines.push(`${indentLevel}# Если медиа найдено, отправляем с медиа, иначе обычное сообщение`);
-  codeLines.push(`${indentLevel}if attached_media and str(attached_media).strip():`);
-  codeLines.push(`${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа из переменной ${mediaVariable}: {attached_media}")`);
-  codeLines.push(`${indentLevel}    try:`);
-  codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
-  codeLines.push(`${indentLevel}        # Создаём all_user_vars если ещё не создан (для callback обработчиков)`);
-  codeLines.push(`${indentLevel}        if 'all_user_vars' not in locals():`);
-  codeLines.push(`${indentLevel}            all_user_vars = {}`);
-  codeLines.push(`${indentLevel}            db_vars = await get_user_from_db(${userIdSource})`);
-  codeLines.push(`${indentLevel}            if db_vars and isinstance(db_vars, dict):`);
-  codeLines.push(`${indentLevel}                all_user_vars.update(db_vars)`);
-  codeLines.push(`${indentLevel}            local_vars = user_data.get(${userIdSource}, {})`);
-  codeLines.push(`${indentLevel}            if isinstance(local_vars, dict):`);
-  codeLines.push(`${indentLevel}                all_user_vars.update(local_vars)`);
-  codeLines.push(`${indentLevel}        # Используем all_user_vars вместо user_vars для корректной замены переменных`);
-  codeLines.push(`${indentLevel}        # Получаем фильтры переменных для замены\n`);
-  codeLines.push(`${indentLevel}        variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})\n`);
-  codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)\n`);
-  codeLines.push(`${indentLevel}        # Проверяем, является ли медиа относительным путем к локальному файлу`);
-  codeLines.push(`${indentLevel}        if str(attached_media).startswith('/uploads/') or str(attached_media).startswith('/uploads\\\\') or '\\\\uploads\\\\' in str(attached_media):`);
-  codeLines.push(`${indentLevel}            attached_media_path = get_upload_file_path(attached_media)`);
-  codeLines.push(`${indentLevel}            attached_media_url = FSInputFile(attached_media_path)`);
-  codeLines.push(`${indentLevel}        else:`);
-  codeLines.push(`${indentLevel}            attached_media_url = attached_media`);
-  codeLines.push(`${indentLevel}        # Убедимся, что переменные keyboard и keyboardHTML определены`);
-  codeLines.push(`${indentLevel}        # ВАЖНО: Не затираем keyboard, если он уже существует (сгенерирован ранее)`);
-  codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
-  codeLines.push(`${indentLevel}            keyboardHTML = None`);
+    codeLines.push(`${indentLevel}# Отправляем медиа`);
+    codeLines.push(`${indentLevel}try:`);
+    codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой медиа`);
+    codeLines.push(`${indentLevel}    # Создаём all_user_vars если ещё не создан (для callback обработчиков)`);
+    codeLines.push(`${indentLevel}    if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}        all_user_vars = {}`);
+    codeLines.push(`${indentLevel}        db_vars = await get_user_from_db(${userIdSource})`);
+    codeLines.push(`${indentLevel}        if db_vars and isinstance(db_vars, dict):`);
+    codeLines.push(`${indentLevel}            all_user_vars.update(db_vars)`);
+    codeLines.push(`${indentLevel}        local_vars = user_data.get(${userIdSource}, {})`);
+    codeLines.push(`${indentLevel}        if isinstance(local_vars, dict):`);
+    codeLines.push(`${indentLevel}            all_user_vars.update(local_vars)`);
+    codeLines.push(`${indentLevel}    # Используем all_user_vars вместо user_vars для корректной замены переменных`);
+    codeLines.push(`${indentLevel}    # Получаем фильтры переменных для замены`);
+    codeLines.push(`${indentLevel}    variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})`);
+    codeLines.push(`${indentLevel}    processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)`);
+    codeLines.push(`${indentLevel}    # Проверяем, является ли медиа относительным путем к локальному файлу`);
+    codeLines.push(`${indentLevel}    if str(attached_media_url).startswith('/uploads/') or str(attached_media_url).startswith('/uploads\\\\') or '\\\\uploads\\\\' in str(attached_media_url):`);
+    codeLines.push(`${indentLevel}        attached_media_path = get_upload_file_path(attached_media_url)`);
+    codeLines.push(`${indentLevel}        attached_media_url = FSInputFile(attached_media_path)`);
+    codeLines.push(`${indentLevel}    # Убедимся, что переменные keyboard и keyboardHTML определены`);
+    codeLines.push(`${indentLevel}    # ВАЖНО: Не затираем keyboard, если он уже существует (сгенерирован ранее)`);
+    codeLines.push(`${indentLevel}    if 'keyboardHTML' not in locals():`);
+    codeLines.push(`${indentLevel}        keyboardHTML = None`);
+  } else {
+    // Переменная из БД — ищем в all_user_vars
+    codeLines.push(`${indentLevel}attached_media = None`);
+    codeLines.push(`${indentLevel}# Создаем объединенный словарь переменных из базы данных и локального хранилища`);
+    codeLines.push(`${indentLevel}user_id = ${userIdSource}`);
+    codeLines.push(`${indentLevel}all_user_vars = {}`);
+    codeLines.push(`${indentLevel}# Добавляем переменные из базы данных`);
+    codeLines.push(`${indentLevel}user_vars = await get_user_from_db(user_id)`);
+    codeLines.push(`${indentLevel}if user_vars and isinstance(user_vars, dict):`);
+    codeLines.push(`${indentLevel}    all_user_vars.update(user_vars)`);
+    codeLines.push(`${indentLevel}# Добавляем переменные из локального хранилища`);
+    codeLines.push(`${indentLevel}local_user_vars = user_data.get(user_id, {})`);
+    codeLines.push(`${indentLevel}if isinstance(local_user_vars, dict):`);
+    codeLines.push(`${indentLevel}    all_user_vars.update(local_user_vars)`);
+    codeLines.push(`${indentLevel}`);
+    codeLines.push(`${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable} в объединенном словаре`);
+    codeLines.push(`${indentLevel}if "${mediaVariable}" in all_user_vars:`);
+    codeLines.push(`${indentLevel}    media_data = all_user_vars["${mediaVariable}"]`);
+    codeLines.push(`${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:`);
+    codeLines.push(`${indentLevel}        # ИСПРАВЛЕНИЕ: Проверяем правильные URL поля в зависимости от типа медиа`);
+    codeLines.push(`${indentLevel}        # Для фото проверяем photoUrl`);
+    codeLines.push(`${indentLevel}        if "${mediaType}" == "photo" and "photoUrl" in media_data and media_data["photoUrl"]:`);
+    codeLines.push(`${indentLevel}            attached_media = media_data["photoUrl"]  # Используем URL вместо file_id`);
+    codeLines.push(`${indentLevel}        # Для видео проверяем videoUrl`);
+    codeLines.push(`${indentLevel}        elif "${mediaType}" == "video" and "videoUrl" in media_data and media_data["videoUrl"]:`);
+    codeLines.push(`${indentLevel}            attached_media = media_data["videoUrl"]  # Используем URL вместо file_id`);
+    codeLines.push(`${indentLevel}        # Для аудио проверяем audioUrl`);
+    codeLines.push(`${indentLevel}        elif "${mediaType}" == "audio" and "audioUrl" in media_data and media_data["audioUrl"]:`);
+    codeLines.push(`${indentLevel}            attached_media = media_data["audioUrl"]  # Используем URL вместо file_id`);
+    codeLines.push(`${indentLevel}        # Для документов проверяем documentUrl`);
+    codeLines.push(`${indentLevel}        elif "${mediaType}" == "document" and "documentUrl" in media_data and media_data["documentUrl"]:`);
+    codeLines.push(`${indentLevel}            attached_media = media_data["documentUrl"]  # Используем URL вместо file_id`);
+    codeLines.push(`${indentLevel}        else:`);
+    codeLines.push(`${indentLevel}            attached_media = media_data["value"]  # Используем file_id только если URL недоступен`);
+    codeLines.push(`${indentLevel}    elif isinstance(media_data, str):`);
+    codeLines.push(`${indentLevel}        attached_media = media_data`);
+    codeLines.push(`${indentLevel}`);
+    codeLines.push(`${indentLevel}# Если медиа найдено, используем его`);
+    codeLines.push(`${indentLevel}if attached_media and str(attached_media).strip():`);
+    codeLines.push(`${indentLevel}    attached_media_url = attached_media`);
+    codeLines.push(`${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа: {attached_media_url}")`);
+
+    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Всегда устанавливаем состояние ожидания ввода для collectUserInput=true
+    if (collectUserInput && nodeData) {
+      codeLines.push(`${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
+      if (nodeData && nodeData.data) {
+        const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
+        const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
+        codeLines.push(...waitingStateLines);
+      }
+      codeLines.push(`${indentLevel}logging.info(f"✅ Узел ${nodeId} настроен для сбора ввода (collectUserInput=true) после отправки медиа")`);
+    }
+
+    codeLines.push(`${indentLevel}    # Отправляем медиа`);
+    codeLines.push(`${indentLevel}    try:`);
+    codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
+    codeLines.push(`${indentLevel}        # Создаём all_user_vars если ещё не создан (для callback обработчиков)`);
+    codeLines.push(`${indentLevel}        if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}            all_user_vars = {}`);
+    codeLines.push(`${indentLevel}            db_vars = await get_user_from_db(${userIdSource})`);
+    codeLines.push(`${indentLevel}            if db_vars and isinstance(db_vars, dict):`);
+    codeLines.push(`${indentLevel}                all_user_vars.update(db_vars)`);
+    codeLines.push(`${indentLevel}            local_vars = user_data.get(${userIdSource}, {})`);
+    codeLines.push(`${indentLevel}            if isinstance(local_vars, dict):`);
+    codeLines.push(`${indentLevel}                all_user_vars.update(local_vars)`);
+    codeLines.push(`${indentLevel}        # Используем all_user_vars вместо user_vars для корректной замены переменных`);
+    codeLines.push(`${indentLevel}        # Получаем фильтры переменных для замены`);
+    codeLines.push(`${indentLevel}        variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})`);
+    codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)`);
+    codeLines.push(`${indentLevel}        # Проверяем, является ли медиа относительным путем к локальному файлу`);
+    codeLines.push(`${indentLevel}        if str(attached_media_url).startswith('/uploads/') or str(attached_media_url).startswith('/uploads\\\\') or '\\\\uploads\\\\' in str(attached_media_url):`);
+    codeLines.push(`${indentLevel}            attached_media_path = get_upload_file_path(attached_media_url)`);
+    codeLines.push(`${indentLevel}            attached_media_url = FSInputFile(attached_media_path)`);
+    codeLines.push(`${indentLevel}        # Убедимся, что переменные keyboard и keyboardHTML определены`);
+    codeLines.push(`${indentLevel}        # ВАЖНО: Не затираем keyboard, если он уже существует (сгенерирован ранее)`);
+    codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
+    codeLines.push(`${indentLevel}            keyboardHTML = None`);
+  }
   const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
   // ИСПРАВЛЕНИЕ: Генерируем parse_mode только если parseMode не пустой и не равен "none"
   let parseModeParam = '';
@@ -403,94 +474,162 @@ export function generateAttachedMediaSendCode(
     parseModeParam = `, parse_mode="${modeValue}"`;
   }
 
-  switch (mediaType) {
-    case 'photo':
-      codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
-      break;
-    case 'video':
-      codeLines.push(`${indentLevel}        await bot.send_video(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
-      break;
-    case 'audio':
-      codeLines.push(`${indentLevel}        await bot.send_audio(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
-      break;
-    case 'document':
-      codeLines.push(`${indentLevel}        await bot.send_document(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
-      break;
-    default:
-      codeLines.push(`${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение`);
-      const autoTransitionFlagDefault = autoTransitionTo ? ', is_auto_transition=True' : '';
-      codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseModeParam})`);
+  if (isDirectUrl) {
+    // Для прямых URL — switch внутри try
+    switch (mediaType) {
+      case 'photo':
+        codeLines.push(`${indentLevel}    await bot.send_photo(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
+        break;
+      case 'video':
+        codeLines.push(`${indentLevel}    await bot.send_video(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
+        break;
+      case 'audio':
+        codeLines.push(`${indentLevel}    await bot.send_audio(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
+        break;
+      case 'document':
+        codeLines.push(`${indentLevel}    await bot.send_document(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
+        break;
+      default:
+        codeLines.push(`${indentLevel}    # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение`);
+        const autoTransitionFlagDefault = autoTransitionTo ? ', is_auto_transition=True' : '';
+        codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault}${parseModeParam})`);
+    }
+
+    // АВТОПЕРЕХОД для прямых URL
+    if (autoTransitionTo && collectUserInput) {
+      const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
+      codeLines.push(`${indentLevel}    # ⚡ Автопереход к узлу ${autoTransitionTo}`);
+      codeLines.push(`${indentLevel}    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}    # Создаём FakeCallbackQuery для совместимости с callback обработчиком`);
+      codeLines.push(`${indentLevel}    class FakeCallbackQuery:`);
+      codeLines.push(`${indentLevel}        def __init__(self, message, target_node_id):`);
+      codeLines.push(`${indentLevel}            self.from_user = message.from_user`);
+      codeLines.push(`${indentLevel}            self.chat = message.chat`);
+      codeLines.push(`${indentLevel}            self.data = target_node_id`);
+      codeLines.push(`${indentLevel}            self.message = message`);
+      codeLines.push(`${indentLevel}    fake_callback = FakeCallbackQuery(${messageSource}, "${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}    await handle_callback_${safeAutoTargetId}(fake_callback)`);
+      codeLines.push(`${indentLevel}    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}    return`);
+    }
+
+    codeLines.push(`${indentLevel}except Exception as e:`);
+    codeLines.push(`${indentLevel}    logging.error(f"Ошибка отправки ${mediaType}: {e}")`);
+    codeLines.push(`${indentLevel}    # Fallback на обычное сообщение при ошибке`);
+    codeLines.push(`${indentLevel}    # Убедимся, что переменная keyboardHTML определена`);
+    codeLines.push(`${indentLevel}    if 'keyboardHTML' not in locals():`);
+    codeLines.push(`${indentLevel}        keyboardHTML = None`);
+    codeLines.push(`${indentLevel}    # Используем keyboard если keyboardHTML не определен`);
+    codeLines.push(`${indentLevel}    reply_markup_to_use = keyboard if keyboard is not None else keyboardHTML`);
+    const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
+    let parseModeFallbackParam = '';
+    if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
+      const modeValue = parseMode.trim().toLowerCase() === 'markdown' ? 'Markdown' : 'HTML';
+      parseModeFallbackParam = `, parse_mode="${modeValue}"`;
+    } else {
+      parseModeFallbackParam = ', parse_mode=None';
+    }
+    codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=reply_markup_to_use${autoTransitionFlag}${parseModeFallbackParam})`);
+    // Для прямых URL нет блока else — медиа всегда отправляется
+  } else {
+    // Для переменных из БД — switch внутри if attached_media
+    codeLines.push(`${indentLevel}    attached_media_url = attached_media`);
+    codeLines.push(`${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа: {attached_media_url}")`);
+    codeLines.push(`${indentLevel}    try:`);
+    codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
+    codeLines.push(`${indentLevel}        if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}            all_user_vars = {}`);
+    codeLines.push(`${indentLevel}            db_vars = await get_user_from_db(${userIdSource})`);
+    codeLines.push(`${indentLevel}            if db_vars and isinstance(db_vars, dict):`);
+    codeLines.push(`${indentLevel}                all_user_vars.update(db_vars)`);
+    codeLines.push(`${indentLevel}            local_vars = user_data.get(${userIdSource}, {})`);
+    codeLines.push(`${indentLevel}            if isinstance(local_vars, dict):`);
+    codeLines.push(`${indentLevel}                all_user_vars.update(local_vars)`);
+    codeLines.push(`${indentLevel}        variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})`);
+    codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)`);
+    codeLines.push(`${indentLevel}        if str(attached_media_url).startswith('/uploads/') or str(attached_media_url).startswith('/uploads\\\\') or '\\\\uploads\\\\' in str(attached_media_url):`);
+    codeLines.push(`${indentLevel}            attached_media_path = get_upload_file_path(attached_media_url)`);
+    codeLines.push(`${indentLevel}            attached_media_url = FSInputFile(attached_media_path)`);
+    codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
+    codeLines.push(`${indentLevel}            keyboardHTML = None`);
+
+    switch (mediaType) {
+      case 'photo':
+        codeLines.push(`${indentLevel}        await bot.send_photo(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
+        break;
+      case 'video':
+        codeLines.push(`${indentLevel}        await bot.send_video(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
+        break;
+      case 'audio':
+        codeLines.push(`${indentLevel}        await bot.send_audio(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
+        break;
+      case 'document':
+        codeLines.push(`${indentLevel}        await bot.send_document(${userIdSource}, attached_media_url, caption=processed_caption${parseModeParam}${keyboardParam})`);
+        break;
+      default:
+        codeLines.push(`${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение`);
+        const autoTransitionFlagDefault2 = autoTransitionTo ? ', is_auto_transition=True' : '';
+        codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, processed_caption, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlagDefault2}${parseModeParam})`);
+    }
+
+    if (autoTransitionTo && collectUserInput) {
+      const safeAutoTargetId2 = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
+      codeLines.push(`${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}`);
+      codeLines.push(`${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}        class FakeCallbackQuery:`);
+      codeLines.push(`${indentLevel}            def __init__(self, message, target_node_id):`);
+      codeLines.push(`${indentLevel}                self.from_user = message.from_user`);
+      codeLines.push(`${indentLevel}                self.chat = message.chat`);
+      codeLines.push(`${indentLevel}                self.data = target_node_id`);
+      codeLines.push(`${indentLevel}                self.message = message`);
+      codeLines.push(`${indentLevel}        fake_callback = FakeCallbackQuery(${messageSource}, "${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId2}(fake_callback)`);
+      codeLines.push(`${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
+      codeLines.push(`${indentLevel}        return`);
+    }
+
+    codeLines.push(`${indentLevel}    except Exception as e:`);
+    codeLines.push(`${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")`);
+    codeLines.push(`${indentLevel}        # Fallback на обычное сообщение при ошибке`);
+    codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
+    codeLines.push(`${indentLevel}            keyboardHTML = None`);
+    codeLines.push(`${indentLevel}        reply_markup_to_use = keyboard if keyboard is not None else keyboardHTML`);
+    const autoTransitionFlag2 = autoTransitionTo ? ', is_auto_transition=True' : '';
+    let parseModeFallbackParam2 = '';
+    if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
+      const modeValue2 = parseMode.trim().toLowerCase() === 'markdown' ? 'Markdown' : 'HTML';
+      parseModeFallbackParam2 = `, parse_mode="${modeValue2}"`;
+    } else {
+      parseModeFallbackParam2 = ', parse_mode=None';
+    }
+    codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=reply_markup_to_use${autoTransitionFlag2}${parseModeFallbackParam2})`);
+    codeLines.push(`${indentLevel}else:`);
+    codeLines.push(`${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение`);
+    codeLines.push(`${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")`);
+    codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
+    codeLines.push(`${indentLevel}    if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}        all_user_vars = {}`);
+    codeLines.push(`${indentLevel}        db_vars = await get_user_from_db(${userIdSource})`);
+    codeLines.push(`${indentLevel}        if db_vars and isinstance(db_vars, dict):`);
+    codeLines.push(`${indentLevel}            all_user_vars.update(db_vars)`);
+    codeLines.push(`${indentLevel}        local_vars = user_data.get(${userIdSource}, {})`);
+    codeLines.push(`${indentLevel}        if isinstance(local_vars, dict):`);
+    codeLines.push(`${indentLevel}            all_user_vars.update(local_vars)`);
+    codeLines.push(`${indentLevel}    variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})`);
+    codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, all_user_vars, variable_filters)`);
+    codeLines.push(`${indentLevel}    if 'keyboardHTML' not in locals():`);
+    codeLines.push(`${indentLevel}        keyboardHTML = None`);
+    codeLines.push(`${indentLevel}    reply_markup_to_use = keyboard if keyboard is not None else keyboardHTML`);
+    let parseModeElseParam = '';
+    if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
+      const modeValueElse = parseMode.trim().toLowerCase() === 'markdown' ? 'Markdown' : 'HTML';
+      parseModeElseParam = `, parse_mode="${modeValueElse}"`;
+    } else {
+      parseModeElseParam = ', parse_mode=None';
+    }
+    codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=reply_markup_to_use${autoTransitionFlag2}${parseModeElseParam})`);
   }
 
-  // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo и collectUserInput=true, добавляем переход после отправки медиа
-  if (autoTransitionTo && collectUserInput) {
-    const safeAutoTargetId = autoTransitionTo.replace(/[^a-zA-Z0-9_]/g, '_');
-    codeLines.push(`${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}`);
-    codeLines.push(`${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")`);
-    codeLines.push(`${indentLevel}        # Создаём FakeCallbackQuery для совместимости с callback обработчиком`);
-    codeLines.push(`${indentLevel}        class FakeCallbackQuery:`);
-    codeLines.push(`${indentLevel}            def __init__(self, message, target_node_id):`);
-    codeLines.push(`${indentLevel}                self.from_user = message.from_user`);
-    codeLines.push(`${indentLevel}                self.chat = message.chat`);
-    codeLines.push(`${indentLevel}                self.data = target_node_id`);
-    codeLines.push(`${indentLevel}                self.message = message`);
-    codeLines.push(`${indentLevel}        fake_callback = FakeCallbackQuery(${messageSource}, "${autoTransitionTo}")`);
-    codeLines.push(`${indentLevel}        await handle_callback_${safeAutoTargetId}(fake_callback)`);
-    codeLines.push(`${indentLevel}        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTo}")`);
-    codeLines.push(`${indentLevel}        return`);
-  }
-
-  codeLines.push(`${indentLevel}    except Exception as e:`);
-  codeLines.push(`${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")`);
-  codeLines.push(`${indentLevel}        # Fallback на обычное сообщение при ошибке`);
-  codeLines.push(`${indentLevel}        # Убедимся, что переменная keyboardHTML определена`);
-  codeLines.push(`${indentLevel}        if 'keyboardHTML' not in locals():`);
-  codeLines.push(`${indentLevel}            keyboardHTML = None`);
-  codeLines.push(`${indentLevel}        # Используем keyboard если keyboardHTML не определен`);
-  codeLines.push(`${indentLevel}        reply_markup_to_use = keyboard if keyboard is not None else keyboardHTML`);
-  const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
-  // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
-  let parseModeFallbackParam = '';
-  if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
-    // Используем строковое значение чтобы избежать необходимости импорта ParseMode
-    const modeValue = parseMode.trim().toLowerCase() === 'markdown' ? 'Markdown' : 'HTML';
-    parseModeFallbackParam = `, parse_mode="${modeValue}"`;
-  } else {
-    parseModeFallbackParam = ', parse_mode=None';
-  }
-  codeLines.push(`${indentLevel}        await safe_edit_or_send(${messageSource}, text, node_id="${nodeId}", reply_markup=reply_markup_to_use${autoTransitionFlag}${parseModeFallbackParam})`);
-  codeLines.push(`${indentLevel}else:`);
-  codeLines.push(`${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение`);
-  codeLines.push(`${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")`);
-  codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
-  codeLines.push(`${indentLevel}    # Создаём all_user_vars если ещё не создан (для callback обработчиков)`);
-  codeLines.push(`${indentLevel}    if 'all_user_vars' not in locals():`);
-  codeLines.push(`${indentLevel}        all_user_vars = {}`);
-  codeLines.push(`${indentLevel}        db_vars = await get_user_from_db(${userIdSource})`);
-  codeLines.push(`${indentLevel}        if db_vars and isinstance(db_vars, dict):`);
-  codeLines.push(`${indentLevel}            all_user_vars.update(db_vars)`);
-  codeLines.push(`${indentLevel}        local_vars = user_data.get(${userIdSource}, {})`);
-  codeLines.push(`${indentLevel}        if isinstance(local_vars, dict):`);
-  codeLines.push(`${indentLevel}            all_user_vars.update(local_vars)`);
-  codeLines.push(`${indentLevel}    # Используем all_user_vars вместо user_vars для корректной замены переменных`);
-  codeLines.push(`${indentLevel}    # Получаем фильтры переменных для замены\n`);
-  codeLines.push(`${indentLevel}    variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})\n`);
-  codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, all_user_vars, variable_filters)\n`);
-  codeLines.push(`${indentLevel}    # Убедимся, что переменная keyboardHTML определена`);
-  codeLines.push(`${indentLevel}    if 'keyboardHTML' not in locals():`);
-  codeLines.push(`${indentLevel}        keyboardHTML = None`);
-  codeLines.push(`${indentLevel}    # Отправляем сообщение с клавиатурой (используем keyboard если keyboardHTML не определен)`);
-  codeLines.push(`${indentLevel}    reply_markup_to_use = keyboard if keyboard is not None else keyboardHTML`);
-  // ИСПРАВЛЕНИЕ: Используем parse_mode=None если parseMode не указан или равен "none"
-  let parseModeElseParam = '';
-  if (parseMode && parseMode.trim() !== '' && parseMode.trim().toLowerCase() !== 'none') {
-    // Используем строковое значение чтобы избежать необходимости импорта ParseMode
-    const modeValue = parseMode.trim().toLowerCase() === 'markdown' ? 'Markdown' : 'HTML';
-    parseModeElseParam = `, parse_mode="${modeValue}"`;
-  } else {
-    parseModeElseParam = ', parse_mode=None';
-  }
-  codeLines.push(`${indentLevel}    await safe_edit_or_send(${messageSource}, processed_text, node_id="${nodeId}", reply_markup=reply_markup_to_use${autoTransitionFlag}${parseModeElseParam})`);
   codeLines.push(''); // Пустая строка для разделения кода
 
   // Применяем автоматическое добавление комментариев ко всему коду

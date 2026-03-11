@@ -3,14 +3,13 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/bot-generator/utils"
 
+/** Вариант стиля уведомления: "default" или "destructive" */
+type AlertVariant = "default" | "destructive";
+
 /**
  * Варианты стилей для компонента Alert
  *
  * @description Определяет различные варианты отображения уведомления с помощью class-variance-authority
- *
- * @param {object} variants - Объект, определяющий варианты стилей
- * @param {object} variants.variant - Варианты внешнего вида (по умолчанию или разрушительный)
- * @param {object} defaultVariants - Значения по умолчанию для вариантов
  */
 const alertVariants = cva(
   "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",

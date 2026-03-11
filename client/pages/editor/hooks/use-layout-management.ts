@@ -43,8 +43,8 @@ function createBaseConfig(isMobile: boolean, currentTab: string): SimpleLayoutCo
     elements: [
       { id: 'header', type: 'header', name: 'Шапка', position: 'top', size: headerSize, visible: true },
       { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', position: 'left', size: 20, visible: showPanels },
-      { id: 'canvas', type: 'canvas', name: 'Холст', position: 'center', size: 35, visible: showCanvas },
-      { id: 'properties', type: 'properties', name: 'Свойства', position: 'right', size: 20, visible: showPanels },
+      { id: 'canvas', type: 'canvas', name: 'Холст', position: 'center', size: 30, visible: showCanvas },
+      { id: 'properties', type: 'properties', name: 'Свойства', position: 'right', size: 25, visible: showPanels },
       { id: 'code', type: 'code', name: 'Код', position: 'left', size: 25, visible: showCodePanels },
       { id: 'codeEditor', type: 'codeEditor', name: 'Редактор кода', position: 'center', size: 40, visible: showCodePanels },
       { id: 'dialog', type: 'dialog', name: 'Диалог', position: 'right', size: 25, visible: currentTab === 'users' },

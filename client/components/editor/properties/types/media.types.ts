@@ -64,7 +64,7 @@ export interface MultipleUploadResult {
 }
 
 /**
- * Медиафайл
+ * Медиафайл (локальный тип для хуков)
  */
 export interface MediaFile {
   /** ID файла */
@@ -74,21 +74,25 @@ export interface MediaFile {
   /** URL файла */
   url: string;
   /** Тип медиа */
-  type: MediaType;
+  fileType: string;
   /** Имя файла */
   fileName: string;
   /** Размер файла в байтах */
   fileSize: number;
   /** Описание */
-  description?: string;
+  description: string | null;
   /** Теги */
-  tags?: string[];
+  tags: string[] | null;
   /** Публичный доступ */
-  isPublic: boolean;
+  isPublic: number | null;
   /** Количество использований */
-  usageCount: number;
+  usageCount: number | null;
   /** Дата создания */
-  createdAt: string;
+  createdAt: Date | null;
   /** Дата обновления */
-  updatedAt: string;
+  updatedAt: Date | null;
+  /** Путь к файлу */
+  filePath: string;
+  /** MIME тип */
+  mimeType: string;
 }

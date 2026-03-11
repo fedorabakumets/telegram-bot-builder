@@ -21,7 +21,6 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaFiles, useUploadMedia, useDeleteMedia, useUpdateMedia, useIncrementUsage } from "@/components/editor/properties/hooks/use-media";
 import { CameraCapture } from "./camera-capture";
-import { EnhancedMediaUploader } from "./enhanced-media-uploader";
 import type { MediaFile, InsertMediaFile } from "@shared/schema";
 import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Play, Volume2, FileText, Image, AlertCircle, CheckCircle2, Camera, FolderOpen, Zap, Plus } from "lucide-react";
 
@@ -112,11 +111,6 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
    * Показывать ли захват с камеры
    */
   const [showCameraCapture, setShowCameraCapture] = useState(false);
-
-  /**
-   * Показывать ли расширенный загрузчик
-   */
-  const [showEnhancedUploader, setShowEnhancedUploader] = useState(false);
 
   /**
    * Есть ли доступ к камере
@@ -700,16 +694,6 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
           <div className="mt-6 space-y-4">
             {/* Быстрые действия по загрузке */}
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Button
-                onClick={() => setShowEnhancedUploader(true)}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30"
-              >
-                <Plus className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                Расширенная загрузка
-              </Button>
-
               {hasCamera && (
                 <Button
                   onClick={() => setShowCameraCapture(true)}
@@ -1100,31 +1084,6 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
           });
         }}
       />
-
-      {/* Диалог расширенного загрузчика медиафайлов */}
-      <Dialog open={showEnhancedUploader} onOpenChange={setShowEnhancedUploader}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="enhanced-upload-description">
-          <DialogHeader>
-            <DialogTitle>Расширенная загрузка файлов</DialogTitle>
-            <div id="enhanced-upload-description" className="text-sm text-muted-foreground">
-              Загрузите медиа файлы с расширенными настройками: пакетная загрузка, теги, описания
-            </div>
-          </DialogHeader>
-          <EnhancedMediaUploader
-            projectId={projectId}
-            onUploadComplete={(uploadedFiles) => {
-              toast({
-                title: "Файлы загружены",
-                description: `Успешно загружено ${uploadedFiles.length} файлов`,
-              });
-              setShowEnhancedUploader(false);
-            }}
-            onClose={() => setShowEnhancedUploader(false)}
-            maxFiles={20}
-            acceptedTypes={['image/*', 'video/*', 'audio/*', '.pdf', '.doc', '.docx', '.txt']}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
