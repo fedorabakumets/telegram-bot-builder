@@ -35,6 +35,7 @@ export function useHandleAddButton({
       id: nanoid(),
       text: 'Новая кнопка',
       action: 'goto',
+      buttonType: 'normal',
       target: '',
       skipDataCollection: false,
       hideAfterClick: false

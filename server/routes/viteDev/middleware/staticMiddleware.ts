@@ -49,9 +49,10 @@ export function serveStatic(app: Express): void {
       const projectUploadsPath = path.join(botsPath, project, "uploads");
       if (fs.existsSync(projectUploadsPath)) {
         // Извлекаем project_id из имени папки (например, "импортированный_проект_2106_53_46" -> "53")
+        // Формат: {name}_{project_id}_{owner_id}
         const match = project.match(/_(\d+)_(\d+)$/);
         if (match) {
-          const projectId = match[2];
+          const projectId = match[1]; // Используем первое число (project_id)
           // Маппим /uploads/{projectId}/... на папку проекта
           app.use(`/uploads/${projectId}`, express.static(projectUploadsPath));
         }

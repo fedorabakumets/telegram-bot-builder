@@ -76,6 +76,7 @@ export function MultipleSelectionSettings({
                     id: Date.now().toString(),
                     text: 'Готово',
                     action: 'complete' as const,
+                    buttonType: 'complete' as const,
                     target: '',
                     skipDataCollection: false,
                     hideAfterClick: false

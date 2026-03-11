@@ -30,6 +30,7 @@ export function KeyboardButtonsSection({
       id: Date.now().toString(),
       text: 'Новая опция',
       action: 'selection' as const,
+      buttonType: 'option' as const,
       target: '',
       skipDataCollection: false,
       hideAfterClick: false
@@ -44,6 +45,7 @@ export function KeyboardButtonsSection({
       id: Date.now().toString(),
       text: 'Готово',
       action: 'complete' as const,
+      buttonType: 'complete' as const,
       target: '',
       skipDataCollection: false,
       hideAfterClick: false
@@ -62,6 +64,7 @@ export function KeyboardButtonsSection({
           id: Date.now().toString(),
           text: 'Новая кнопка',
           action: 'goto',
+          buttonType: 'normal' as const,
           target: '',
           skipDataCollection: false,
           hideAfterClick: false

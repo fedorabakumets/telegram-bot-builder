@@ -24,7 +24,7 @@ export function ConditionalButtonsList({
 }: ConditionalButtonsListProps) {
   const add_button = () => {
     const conditions = selectedNode.data.conditionalMessages || [];
-    const newButton = { id: Date.now().toString(), text: 'Новая кнопка', action: 'goto', target: '' };
+    const newButton = { id: Date.now().toString(), text: 'Новая кнопка', action: 'goto', buttonType: 'normal' as const, target: '' };
     onNodeUpdate(selectedNode.id, {
       conditionalMessages: conditions.map((c: any) => c.id === condition.id
         ? { ...c, buttons: [...(c.buttons || []), newButton] } : c)

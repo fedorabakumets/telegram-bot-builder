@@ -242,8 +242,8 @@ const components: ComponentDefinition[] = [
       messageText: '⚙️ Настройки бота:',
       keyboardType: 'inline',
       buttons: [
-        { id: 'btn-1', text: '📋 Язык', action: 'goto', target: '/language' },
-        { id: 'btn-2', text: '🔔 Уведомления', action: 'goto', target: '/notifications' }
+        { id: 'btn-1', text: '📋 Язык', action: 'goto', buttonType: 'normal' as const, target: '/language' },
+        { id: 'btn-2', text: '🔔 Уведомления', action: 'goto', buttonType: 'normal' as const, target: '/notifications' }
       ],
       markdown: true,
       oneTimeKeyboard: false,
@@ -267,10 +267,10 @@ const components: ComponentDefinition[] = [
       messageText: '📋 Главное меню:',
       keyboardType: 'reply',
       buttons: [
-        { id: 'btn-1', text: '📖 Информация', action: 'goto', target: '/info' },
-        { id: 'btn-2', text: '⚙️ Настройки', action: 'goto', target: '/settings' },
-        { id: 'btn-3', text: '❓ Помощь', action: 'goto', target: '/help' },
-        { id: 'btn-4', text: '📞 Поддержка', action: 'goto', target: '/support' }
+        { id: 'btn-1', text: '📖 Информация', action: 'goto', buttonType: 'normal' as const, target: '/info' },
+        { id: 'btn-2', text: '⚙️ Настройки', action: 'goto', buttonType: 'normal' as const, target: '/settings' },
+        { id: 'btn-3', text: '❓ Помощь', action: 'goto', buttonType: 'normal' as const, target: '/help' },
+        { id: 'btn-4', text: '📞 Поддержка', action: 'goto', buttonType: 'normal' as const, target: '/support' }
       ],
       markdown: true,
       oneTimeKeyboard: false,
@@ -1617,7 +1617,7 @@ export function ComponentsSidebar({
                 <div className="space-y-4">
                   {/* Три раздела: JSON текст, JSON файл и Python код */}
                   <div className="grid grid-cols-1 gap-4">
-                    {/* Вставка JSON текста */}
+                    {/* Вставка JSON т��кста */}
                     <div>
                       <label className="text-sm font-medium mb-2 flex items-center gap-2">
                         <i className="fas fa-paste text-blue-500" />

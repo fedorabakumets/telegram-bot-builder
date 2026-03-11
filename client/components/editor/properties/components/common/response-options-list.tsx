@@ -28,7 +28,7 @@ export function ResponseOptionsList({
 
   const updateOptions = (updated: any[]) => onNodeUpdate(selectedNode.id, { responseOptions: updated });
   const addOption = () => updateOptions([...responseOptions, {
-    id: Date.now().toString(), text: 'Новый вариант', value: '', action: 'goto' as ResponseAction, target: ''
+    id: Date.now().toString(), text: 'Новый вариант', value: '', action: 'goto' as ResponseAction, buttonType: 'normal' as const, target: ''
   }]);
   const removeOption = (i: number) => updateOptions(responseOptions.filter((_, idx) => idx !== i));
 

@@ -27,11 +27,12 @@ export function useHandleAddButton({
 }: UseHandleAddButtonProps): () => void {
   return () => {
     if (!selectedNode) return;
-    
+
     const newButton: Button = {
       id: nanoid(),
       text: 'Новая кнопка',
       action: 'goto',
+      buttonType: 'normal',
       target: '',
       skipDataCollection: false,
       hideAfterClick: false

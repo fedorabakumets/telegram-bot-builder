@@ -1038,8 +1038,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      // Создаем URL для доступа к файлу относительно проекта
-      const relativePath = file.path.replace(process.cwd(), '').replace(/\\/g, '/');
+      // Создаем относительный путь для file_path и URL
+      // file.path имеет вид: C:\...\uploads\{projectId}\{date}\{filename}
+      // Нам нужно: uploads/{projectId}/{date}/{filename} для file_path
+      // и /uploads/{projectId}/{date}/{filename} для url
+      const uploadsDir = join(process.cwd(), 'uploads');
+      const relativePath = file.path.replace(uploadsDir, 'uploads').replace(/\\/g, '/');
       const fileUrl = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
 
       // Обрабатываем теги
@@ -1641,7 +1645,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Обновление медиафайла
+  // Обно��ление медиафайла
   app.put("/api/media/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
