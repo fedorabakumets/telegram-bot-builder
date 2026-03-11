@@ -3,7 +3,7 @@
  * @description Интерфейс props для компонента AdaptiveHeader
  */
 
-import { LayoutConfig } from '../../layout/layout-manager';
+import type { LayoutConfig } from '@/components/layout';
 import { BotInfo } from './bot-info';
 import { HeaderTab } from './header-tab';
 
