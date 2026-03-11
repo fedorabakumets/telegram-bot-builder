@@ -130,6 +130,13 @@ export function PropertiesPanel({
   const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(false);
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
 
+  // Синхронизируем displayNodeId с selectedNode.id при изменении узла
+  useEffect(() => {
+    if (selectedNode?.id) {
+      setDisplayNodeId(selectedNode.id);
+    }
+  }, [selectedNode?.id]);
+
   // Раскрываем секции при наличии контента
   useEffect(() => {
     if (!selectedNode?.data) return;
