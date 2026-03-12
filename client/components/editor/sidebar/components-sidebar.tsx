@@ -5,6 +5,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { parsePythonCodeToJson } from '@/lib/bot-generator/format';
 import { components } from './massive/massiv';
+import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage } from './massive/messages';
+import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from './massive/commands';
+import { pinMessage, unpinMessage, deleteMessage } from './massive/content-management';
+import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from './massive/user-management';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,11 +94,11 @@ interface ComponentsSidebarProps {
 const componentCategories = [
   {
     title: 'Сообщения',
-    components: components.filter(c => ['message', 'sticker', 'voice', 'location', 'contact'].includes(c.type))
+    components: [textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage]
   },
   {
     title: 'Команды',
-    components: components.filter(c => ['start', 'command'].includes(c.type))
+    components: [startCommand, helpCommand, settingsCommand, menuCommand, customCommand]
   },
   {
     title: 'Рассылка',
@@ -106,11 +110,11 @@ const componentCategories = [
   },
   {
     title: 'Управление контентом',
-    components: components.filter(c => ['pin_message', 'unpin_message', 'delete_message'].includes(c.type))
+    components: [pinMessage, unpinMessage, deleteMessage]
   },
   {
     title: 'Управление пользователями',
-    components: components.filter(c => ['ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights'].includes(c.type))
+    components: [banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights]
   }
 ];
 
