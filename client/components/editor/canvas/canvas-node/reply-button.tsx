@@ -48,7 +48,7 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
           </div>
           {button.action === 'goto' && (
             <div className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400 truncate">
-              К узлу: {targetNodeDisplay}{targetNodeDisplay?.length === 30 ? '...' : ''}
+              К узлу: {targetNodeDisplay}{targetNodeDisplay.length > 30 ? '...' : ''}
             </div>
           )}
           {button.action === 'url' && (

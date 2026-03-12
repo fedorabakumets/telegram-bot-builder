@@ -59,7 +59,7 @@ export function ConditionalButtonsList({ buttons, keyboardType, allNodes }: Cond
                 <div className="truncate">{button.text}</div>
                 {button.action === 'goto' && targetNodeDisplay && (
                   <div className="text-[9px] text-blue-600 dark:text-blue-400 truncate mt-0.5">
-                    К узлу: {targetNodeDisplay}{targetNodeDisplay?.length === 20 ? '...' : ''}
+                    К узлу: {targetNodeDisplay}{targetNodeDisplay.length > 20 ? '...' : ''}
                   </div>
                 )}
                 {button.action === 'url' && button.url && (
@@ -90,7 +90,7 @@ export function ConditionalButtonsList({ buttons, keyboardType, allNodes }: Cond
                 </div>
                 {button.action === 'goto' && targetNodeDisplay && (
                   <div className="text-[9px] text-blue-600 dark:text-blue-400 truncate mt-0.5">
-                    К узлу: {targetNodeDisplay}{targetNodeDisplay?.length === 20 ? '...' : ''}
+                    К узлу: {targetNodeDisplay}{targetNodeDisplay.length > 20 ? '...' : ''}
                   </div>
                 )}
                 {button.action === 'url' && button.url && (

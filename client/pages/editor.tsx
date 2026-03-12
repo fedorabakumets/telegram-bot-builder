@@ -10,7 +10,7 @@
 import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
 import { CodePanel } from '@/components/editor/code/code-panel';
 import { ReadmePreview } from '@/components/editor/code/readme-preview';
-import { ComponentsSidebar } from '@/components/editor/components-sidebar';
+import { ComponentsSidebar } from '@/components/editor/sidebar/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
 import { BotLayout } from '@/components/editor/bot/BotLayout';

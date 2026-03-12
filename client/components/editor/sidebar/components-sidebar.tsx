@@ -4,6 +4,18 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { parsePythonCodeToJson } from '@/lib/bot-generator/format';
+import { textMessage } from './massive/messages';
+import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from './massive/commands';
+import {
+  handleProjectDragStart,
+  handleProjectDragOver,
+  handleProjectDragLeave,
+  handleProjectDrop,
+  handleProjectDragEnd,
+  formatDate,
+  getNodeCount,
+  getSheetsInfo
+} from './handlers';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,8 +28,6 @@ import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
-import { broadcastNode } from './canvas/canvas-node/broadcast-node';
-import { clientAuthNode } from './canvas/canvas-node/client-auth-node';
 
 /**
  * Свойства компонента боковой панели с компонентами
@@ -85,449 +95,17 @@ interface ComponentsSidebarProps {
 }
 
 /**
- * Массив определений компонентов для конструктора бота
- * Содержит все доступные типы узлов с их настройками по умолчанию
- */
-const components: ComponentDefinition[] = [
-  {
-    id: 'text-message',
-    name: 'Текстовое сообщение',
-    description: 'Обычный текст или Markdown',
-    icon: 'fas fa-comment',
-    color: 'bg-blue-100 text-blue-600',
-    type: 'message',
-    defaultData: {
-      messageText: 'Новое сообщение',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'sticker-message',
-    name: 'Стикер',
-    description: 'Анимированный стикер',
-    icon: 'fas fa-laugh',
-    color: 'bg-pink-100 text-pink-600',
-    type: 'sticker',
-    defaultData: {
-      messageText: 'Стикер',
-      stickerUrl: '',
-      stickerFileId: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'voice-message',
-    name: 'Голосовое сообщение',
-    description: 'Голосовое сообщение',
-    icon: 'fas fa-microphone',
-    color: 'bg-teal-100 text-teal-600',
-    type: 'voice',
-    defaultData: {
-      messageText: 'Голосовое сообщение',
-      voiceUrl: '',
-      duration: 0,
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'location-message',
-    name: 'Геолокация',
-    description: 'Отправка координат',
-    icon: 'fas fa-map-marker',
-    color: 'bg-green-100 text-green-600',
-    type: 'location',
-    defaultData: {
-      messageText: 'Местоположение',
-      latitude: 55.7558,
-      longitude: 37.6176,
-      title: 'Москва',
-      address: 'Москва, Россия',
-      foursquareId: '',
-      foursquareType: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'contact-message',
-    name: 'Контакт',
-    description: 'Поделиться контактом',
-    icon: 'fas fa-address-book',
-    color: 'bg-blue-100 text-blue-600',
-    type: 'contact',
-    defaultData: {
-      messageText: 'Контакт',
-      phoneNumber: '+7 (999) 123-45-67',
-      firstName: 'Имя',
-      lastName: 'Фамилия',
-      userId: 0,
-      vcard: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-
-  {
-    id: 'start-command',
-    name: '/start команда',
-    description: 'Точка входа в бота',
-    icon: 'fas fa-play',
-    color: 'bg-green-100 text-green-600',
-    type: 'start',
-    defaultData: {
-      command: '/start',
-      description: 'Запустить бота',
-      messageText: 'Привет! Добро пожаловать!',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
-    }
-  },
-  {
-    id: 'help-command',
-    name: '/help команда',
-    description: 'Справка по боту',
-    icon: 'fas fa-question-circle',
-    color: 'bg-blue-100 text-blue-600',
-    type: 'command',
-    defaultData: {
-      command: '/help',
-      description: 'Справка по боту',
-      messageText: '🤖 Доступные команды:\n\n/start - Начать работу\n/help - Эта справка\n/settings - Настройки',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: true,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
-    }
-  },
-  {
-    id: 'settings-command',
-    name: '/settings команда',
-    description: 'Настройки бота',
-    icon: 'fas fa-cog',
-    color: 'bg-gray-100 text-gray-600',
-    type: 'command',
-    defaultData: {
-      command: '/settings',
-      description: 'Настройки бота',
-      messageText: '⚙️ Настройки бота:',
-      keyboardType: 'inline',
-      buttons: [
-        { id: 'btn-1', text: '📋 Язык', action: 'goto', buttonType: 'normal' as const, target: '/language' },
-        { id: 'btn-2', text: '🔔 Уведомления', action: 'goto', buttonType: 'normal' as const, target: '/notifications' }
-      ],
-      markdown: true,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
-    }
-  },
-  {
-    id: 'menu-command',
-    name: '/menu команда',
-    description: 'Главное меню',
-    icon: 'fas fa-bars',
-    color: 'bg-purple-100 text-purple-600',
-    type: 'command',
-    defaultData: {
-      command: '/menu',
-      description: 'Главное меню',
-      messageText: '📋 Главное меню:',
-      keyboardType: 'reply',
-      buttons: [
-        { id: 'btn-1', text: '📖 Информация', action: 'goto', buttonType: 'normal' as const, target: '/info' },
-        { id: 'btn-2', text: '⚙️ Настройки', action: 'goto', buttonType: 'normal' as const, target: '/settings' },
-        { id: 'btn-3', text: '❓ Помощь', action: 'goto', buttonType: 'normal' as const, target: '/help' },
-        { id: 'btn-4', text: '📞 Поддержка', action: 'goto', buttonType: 'normal' as const, target: '/support' }
-      ],
-      markdown: true,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
-    }
-  },
-  {
-    id: 'custom-command',
-    name: 'Пользовательская команда',
-    description: 'Настраиваемая команда',
-    icon: 'fas fa-terminal',
-    color: 'bg-indigo-100 text-indigo-600',
-    type: 'command',
-    defaultData: {
-      command: '/custom',
-      description: 'Новая команда',
-      messageText: 'Команда выполнена',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
-    }
-  },
-  {
-    id: 'pin-message',
-    name: 'Закрепить сообщение',
-    description: 'Закрепление сообщения в группе',
-    icon: 'fas fa-thumbtack',
-    color: 'bg-cyan-100 text-cyan-600',
-    type: 'pin_message',
-    defaultData: {
-      command: '/pin_message',
-      targetMessageId: '',
-      messageIdSource: 'last_message',
-      variableName: '',
-      disableNotification: false
-    }
-  },
-  {
-    id: 'unpin-message',
-    name: 'Открепить сообщение',
-    description: 'Снятие закрепления сообщения',
-    icon: 'fas fa-times',
-    color: 'bg-slate-100 text-slate-600',
-    type: 'unpin_message',
-    defaultData: {
-      command: '/unpin_message',
-      targetMessageId: '',
-      messageIdSource: 'last_message',
-      variableName: ''
-    }
-  },
-  {
-    id: 'delete-message',
-    name: 'Удалить сообщение',
-    description: 'Удаление сообщения в группе',
-    icon: 'fas fa-trash',
-    color: 'bg-red-100 text-red-600',
-    type: 'delete_message',
-    defaultData: {
-      command: '/delete_message',
-      targetMessageId: '',
-      messageIdSource: 'last_message',
-      variableName: ''
-    }
-  },
-  {
-    id: 'ban-user',
-    name: 'Заблокировать пользователя',
-    description: 'Забанить участника группы',
-    icon: 'fas fa-ban',
-    color: 'bg-red-100 text-red-600',
-    type: 'ban_user',
-    defaultData: {
-      command: '/ban_user',
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: '',
-      reason: 'Нарушение правил группы',
-      untilDate: 0
-    }
-  },
-  {
-    id: 'unban-user',
-    name: 'Разблокировать пользователя',
-    description: 'Снять бан с участника группы',
-    icon: 'fas fa-user-check',
-    color: 'bg-green-100 text-green-600',
-    type: 'unban_user',
-    defaultData: {
-      command: '/unban_user',
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: ''
-    }
-  },
-  {
-    id: 'mute-user',
-    name: 'Заглушить пользователя',
-    description: 'Ограничить права участника',
-    icon: 'fas fa-volume-mute',
-    color: 'bg-orange-100 text-orange-600',
-    type: 'mute_user',
-    defaultData: {
-      command: '/mute_user',
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: '',
-      duration: 3600,
-      reason: 'Нарушение правил группы',
-      canSendMessages: false,
-      canSendMediaMessages: false,
-      canSendPolls: false,
-      canSendOtherMessages: false,
-      canAddWebPagePreviews: false,
-      canChangeGroupInfo: false,
-      canInviteUsers2: false,
-      canPinMessages2: false
-    }
-  },
-  {
-    id: 'unmute-user',
-    name: 'Снять ограничения',
-    description: 'Восстановить права участника',
-    icon: 'fas fa-volume-up',
-    color: 'bg-green-100 text-green-600',
-    type: 'unmute_user',
-    defaultData: {
-      command: '/unmute_user',
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: ''
-    }
-  },
-  {
-    id: 'kick-user',
-    name: 'Исключить пользователя',
-    description: 'Удалить участника из группы',
-    icon: 'fas fa-user-times',
-    color: 'bg-red-100 text-red-600',
-    type: 'kick_user',
-    defaultData: {
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: '',
-      reason: 'Нарушение правил группы'
-    }
-  },
-  {
-    id: 'promote-user',
-    name: 'Назначить администратором',
-    description: 'Дать права администратора',
-    icon: 'fas fa-crown',
-    color: 'bg-yellow-100 text-yellow-600',
-    type: 'promote_user',
-    defaultData: {
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: '',
-      canChangeInfo: false,
-      canDeleteMessages: true,
-      canBanUsers: false,
-      canInviteUsers: true,
-      canPinMessages: true,
-      canAddAdmins: false,
-      canRestrictMembers: false,
-      canPromoteMembers: false,
-      canManageVideoChats: false,
-      canManageTopics: false,
-      isAnonymous: false
-    }
-  },
-  {
-    id: 'demote-user',
-    name: 'Снять с администратора',
-    description: 'Убрать права администратора',
-    icon: 'fas fa-user-minus',
-    color: 'bg-gray-100 text-gray-600',
-    type: 'demote_user',
-    defaultData: {
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: ''
-    }
-  },
-  {
-    id: 'admin-rights',
-    name: 'Тг права',
-    description: 'Панель редактирования прав администратора',
-    icon: 'fas fa-user-cog',
-    color: 'bg-purple-100 text-purple-600',
-    type: 'admin_rights',
-    defaultData: {
-      command: '/admin_rights',
-      description: 'Управление правами администратора',
-      synonyms: ['права админа', 'изменить права', 'админ права', 'тг права', 'права'],
-      adminUserIdSource: 'last_message',
-      adminChatIdSource: 'current_chat',
-      // Права администратора согласно Telegram Bot API
-      can_manage_chat: false,
-      can_post_messages: false,
-      can_edit_messages: false,
-      can_delete_messages: true,
-      can_post_stories: false,
-      can_edit_stories: false,
-      can_delete_stories: false,
-      can_manage_video_chats: false,
-      can_restrict_members: false,
-      can_promote_members: false,
-      can_change_info: false,
-      can_invite_users: true,
-      can_pin_messages: true,
-      can_manage_topics: false,
-      is_anonymous: false
-    }
-  },
-  broadcastNode,
-  clientAuthNode
-];
-
-/**
  * Группировка компонентов по категориям для удобной навигации
  * Разделяет компоненты на логические группы в интерфейсе
  */
 const componentCategories = [
   {
     title: 'Сообщения',
-    components: components.filter(c => ['message', 'sticker', 'voice', 'location', 'contact'].includes(c.type))
+    components: [textMessage]
   },
   {
     title: 'Команды',
-    components: components.filter(c => ['start', 'command'].includes(c.type))
-  },
-  {
-    title: 'Рассылка',
-    components: components.filter(c => ['broadcast'].includes(c.type))
-  },
-  {
-    title: 'Client API',
-    components: components.filter(c => ['client_auth'].includes(c.type))
-  },
-  {
-    title: 'Управление контентом',
-    components: components.filter(c => ['pin_message', 'unpin_message', 'delete_message'].includes(c.type))
-  },
-  {
-    title: 'Управление пользователями',
-    components: components.filter(c => ['ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights'].includes(c.type))
+    components: [startCommand, helpCommand, settingsCommand, menuCommand, customCommand]
   }
 ];
 
@@ -1358,155 +936,6 @@ export function ComponentsSidebar({
     setEditingSheetName('');
   };
 
-  // Обработчики drag-and-drop для проектов
-  const handleProjectDragStart = (e: React.DragEvent, project: BotProject) => {
-    e.stopPropagation();
-    console.log('🎯 Начало перемещения проекта:', project.name);
-    setDraggedSheet(null);  // Очищаем лист, чтобы не конфликтовал с проектом
-    setDraggedProject(project);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', project.id.toString());
-  };
-
-  const handleProjectDragOver = (e: React.DragEvent, projectId: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverProject(projectId);
-  };
-
-  const handleProjectDragLeave = () => {
-    setDragOverProject(null);
-  };
-
-  const handleProjectDrop = (e: React.DragEvent, targetProject: BotProject) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverProject(null);
-
-    console.log('🎯 Попытка перемещения:', draggedProject?.name, '→', targetProject.name);
-
-    if (!draggedProject || draggedProject.id === targetProject.id) {
-      console.log('❌ Отмена: проект не выбран или это тот же проект');
-      setDraggedProject(null);
-      return;
-    }
-
-    // Получаем текущий список проектов из кеша
-    const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
-    console.log('📋 Текущие проекты:', currentProjects.map(p => p.name));
-
-    // Находим индексы перемещаемого и целевого проекта
-    const draggedIndex = currentProjects.findIndex(p => p.id === draggedProject.id);
-    const targetIndex = currentProjects.findIndex(p => p.id === targetProject.id);
-
-    console.log(`📍 Индексы: перемещаемый=${draggedIndex}, целевой=${targetIndex}`);
-
-    if (draggedIndex === -1 || targetIndex === -1) {
-      console.log('❌ Отмена: проект не найден');
-      setDraggedProject(null);
-      return;
-    }
-
-    // Создаём новый массив с переупорядоченными проектами
-    const newProjects = [...currentProjects];
-    const [movedProject] = newProjects.splice(draggedIndex, 1);
-    newProjects.splice(targetIndex, 0, movedProject);
-
-    console.log('✅ Новый порядок:', newProjects.map(p => p.name));
-
-    // Обновляем кеш
-    queryClient.setQueryData(['/api/projects'], newProjects);
-
-    // Обновляем список без данных
-    const newList = newProjects.map(({ data, ...rest }) => rest);
-    queryClient.setQueryData(['/api/projects/list'], newList);
-
-    toast({
-      title: "✅ Проекты переупорядочены",
-      description: `Проект "${draggedProject.name}" перемещен`,
-    });
-
-    setDraggedProject(null);
-  };
-
-  const handleProjectDragEnd = () => {
-    setDraggedProject(null);
-    setDragOverProject(null);
-  };
-
-  const formatDate = (dateString: string | Date | null) => {
-    if (!dateString) return 'Неизвестно';
-    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getNodeCount = (project: BotProject) => {
-    if (!project.data || typeof project.data !== 'object') return 0;
-
-    try {
-      // Проверяем, новый формат с листами или старый
-      if (SheetsManager.isNewFormat(project.data)) {
-        const sheets = (project.data as any).sheets || [];
-        const nodeCount = sheets.reduce((total: number, sheet: any) => total + (sheet.nodes?.length || 0), 0);
-        console.log(`[${project.name}] Формат с листами. Листов: ${sheets.length}, Узлов: ${nodeCount}`);
-        return nodeCount;
-      } else {
-        const data = project.data as { nodes?: any[] };
-        const nodeCount = data.nodes?.length || 0;
-        console.log(`[${project.name}] Старый формат. Узлов: ${nodeCount}`);
-        return nodeCount;
-      }
-    } catch (error) {
-      console.error('Ошибка подсчета узлов:', error);
-      // Попытка получить узлы напрямую из данных
-      const fallbackData = project.data as any;
-      if (fallbackData.nodes && Array.isArray(fallbackData.nodes)) {
-        return fallbackData.nodes.length;
-      }
-      if (fallbackData.sheets && Array.isArray(fallbackData.sheets)) {
-        return fallbackData.sheets.reduce((total: number, sheet: any) =>
-          total + (sheet.nodes ? sheet.nodes.length : 0), 0);
-      }
-      return 0;
-    }
-  };
-
-  const getSheetsInfo = (project: BotProject) => {
-    if (!project.data || typeof project.data !== 'object') return { count: 0, names: [] };
-
-    try {
-      // Проверяем, новый формат с листами или старый
-      if (SheetsManager.isNewFormat(project.data)) {
-        const sheets = (project.data as any).sheets || [];
-        const sheetsInfo = {
-          count: sheets.length,
-          names: sheets.map((sheet: any) => sheet.name || 'Лист без названия')
-        };
-        console.log(`[${project.name}] Информация о листах:`, sheetsInfo);
-        return sheetsInfo;
-      } else {
-        // Старый формат - один лист
-        console.log(`[${project.name}] Старый формат - один основной лист`);
-        return {
-          count: 1,
-          names: ['Лист 1']
-        };
-      }
-    } catch (error) {
-      console.error('Ошибка получения информации о листах:', error);
-      return {
-        count: 1,
-        names: ['Лист 1']
-      };
-    }
-  };
-
   // Создаем контент панели
   const SidebarContent = () => (
     <div className="h-full flex flex-col overflow-hidden">
@@ -1751,18 +1180,18 @@ export function ComponentsSidebar({
                   <div
                     key={project.id}
                     draggable
-                    onDragStart={(e) => handleProjectDragStart(e, project)}
+                    onDragStart={(e) => handleProjectDragStart(e, { project, setDraggedSheet, setDraggedProject })}
                     onDragOver={(e) => {
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
-                      handleProjectDragOver(e, project.id);
+                      handleProjectDragOver(e, project.id, setDragOverProject);
                       if (draggedSheet) {
                         console.log('🎯 Sheet over project:', project.id);
                         setDragOverSheet(`project-${project.id}`);
                       }
                     }}
                     onDragLeave={() => {
-                      handleProjectDragLeave();
+                      handleProjectDragLeave(setDragOverProject);
                       setDragOverSheet(null);
                     }}
                     onDrop={(e) => {
@@ -1770,10 +1199,10 @@ export function ComponentsSidebar({
                       if (draggedSheet) {
                         handleSheetDropOnProject(e, project.id);
                       } else if (draggedProject) {
-                        handleProjectDrop(e, project);
+                        handleProjectDrop(e, { draggedProject, targetProject: project, queryClient, setDraggedProject, setDragOverProject, toast });
                       }
                     }}
-                    onDragEnd={handleProjectDragEnd}
+                    onDragEnd={() => handleProjectDragEnd(setDraggedProject, setDragOverProject)}
                     className={`group p-2.5 xs:p-3 sm:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm overflow-hidden ${currentProjectId === project.id
                         ? 'bg-gradient-to-br from-blue-600/20 via-blue-500/10 to-cyan-600/15 dark:from-blue-600/30 dark:via-blue-500/20 dark:to-cyan-600/25 border-blue-500/50 dark:border-blue-400/50 shadow-lg shadow-blue-500/25'
                         : 'bg-gradient-to-br from-slate-50/60 to-slate-100/40 dark:from-slate-900/50 dark:to-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:border-slate-300/60 dark:hover:border-slate-600/60 hover:bg-gradient-to-br hover:from-slate-100/80 hover:to-slate-100/50 dark:hover:from-slate-800/70 dark:hover:to-slate-700/50 hover:shadow-md hover:shadow-slate-500/20'
