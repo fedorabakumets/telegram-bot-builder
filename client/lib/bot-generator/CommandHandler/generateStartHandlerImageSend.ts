@@ -46,11 +46,8 @@ export function generateStartHandlerImageSend(
     codeLines.push(`    image_url = "${imageUrl}"`);
     codeLines.push('    logging.info(f"🖼️ Отправка изображения: {image_url}")');
     codeLines.push('');
-    codeLines.push('    # Подставляем переменные в caption (text и all_user_vars определены выше)');
-    codeLines.push('    # Заменяем переменные в тексте\n');
-    codeLines.push('    # Получаем фильтры переменных для замены\n');
-    codeLines.push('    variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n');
-    codeLines.push('    caption = replace_variables_in_text(text, all_user_vars, variable_filters)\n');
+    codeLines.push('    # caption = text (переменные уже заменены в generateKeyboardAndProcessAttachedMedia)');
+    codeLines.push('    caption = text');
     codeLines.push('');
     codeLines.push('    # Гарантируем что keyboard определена (None если нет кнопок)');
     codeLines.push('    if \'keyboard\' not in locals():');

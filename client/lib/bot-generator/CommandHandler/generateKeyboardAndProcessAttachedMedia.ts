@@ -97,31 +97,12 @@ export function generateKeyboardAndProcessAttachedMedia(node: NodeWithConditiona
 
         // Не нужен else блок - text уже инициализирован основным сообщением
         codeLines.push('');
-
-        // Добавляем замену переменных в тексте для условных сообщений
-        codeLines.push('');
-        codeLines.push('    # Подставляем все доступные переменные пользователя в текст');
-        codeLines.push('    user_vars = await get_user_from_db(user_id)');
-        codeLines.push('    if not user_vars:');
-        codeLines.push('        user_vars = user_data.get(user_id, {})');
-        codeLines.push('');
-        codeLines.push('    # get_user_from_db теперь возвращает уже обработанные user_data');
-        codeLines.push('    if not isinstance(user_vars, dict):');
-        codeLines.push('        user_vars = user_data.get(user_id, {})');
-        codeLines.push('');
-        codeLines.push('    # Заменяем все переменные в тексте (text уже определён выше)');
-        codeLines.push('    # Заменяем переменные в тексте\n');
-        codeLines.push('    # Получаем фильтры переменных для замены\n');
-        codeLines.push('    variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n');
-        codeLines.push('    text = replace_variables_in_text(text, all_user_vars, variable_filters)\n');
-    } else {
-        // text уже определён в generateStartHandler, не переопределяем
-        codeLines.push('    # text уже определён выше, заменяем переменные');
-        codeLines.push('    # Заменяем переменные в тексте\n');
-        codeLines.push('    # Получаем фильтры переменных для замены\n');
-        codeLines.push('    variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n');
-        codeLines.push('    text = replace_variables_in_text(text, all_user_vars, variable_filters)\n');
     }
+    
+    // Заменяем переменные в тексте (всегда, независимо от условных сообщений)
+    codeLines.push('    # Заменяем переменные в тексте');
+    codeLines.push('    variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})');
+    codeLines.push('    text = replace_variables_in_text(text, all_user_vars, variable_filters)');
 
     // Применяем автоматическое добавление комментариев ко всему коду
     const processedCodeLines = processCodeWithAutoComments(codeLines, 'generateKeyboardAndProcessAttachedMedia.ts');
