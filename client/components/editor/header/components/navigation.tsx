@@ -28,8 +28,8 @@ const NAV_ITEMS = [
   { key: 'export' as HeaderTab, label: 'Код' },
   { key: 'bot' as HeaderTab, label: 'Бот' },
   { key: 'users' as HeaderTab, label: 'Пользователи' },
-  { key: 'user-ids' as HeaderTab, label: 'База ID' },
-  { key: 'client-api' as HeaderTab, label: 'Client API' },
+  // Временно скрыто: { key: 'user-ids' as HeaderTab, label: 'База ID' },
+  // Временно скрыто: { key: 'client-api' as HeaderTab, label: 'Client API' },
 ] as const;
 
 /**
