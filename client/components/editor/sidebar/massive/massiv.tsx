@@ -1,6 +1,7 @@
 import { ComponentDefinition } from "@shared/schema";
 import { broadcastNode } from "../../canvas/canvas-node/broadcast-node";
 import { clientAuthNode } from "../../canvas/canvas-node/client-auth-node";
+import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from "./commands";
 
 /**
  * Массив определений компонентов для конструктора бота
@@ -103,124 +104,11 @@ export const components: ComponentDefinition[] = [
     }
   },
 
-  {
-    id: 'start-command',
-    name: '/start команда',
-    description: 'Точка входа в бота',
-    icon: 'fas fa-play',
-    color: 'bg-green-100 text-green-600',
-    type: 'start',
-    defaultData: {
-      command: '/start',
-      description: 'Запустить бота',
-      messageText: 'Привет! Добро пожаловать!',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
-    }
-  },
-  {
-    id: 'help-command',
-    name: '/help команда',
-    description: 'Справка по боту',
-    icon: 'fas fa-question-circle',
-    color: 'bg-blue-100 text-blue-600',
-    type: 'command',
-    defaultData: {
-      command: '/help',
-      description: 'Справка по боту',
-      messageText: '🤖 Доступные команды:\n\n/start - Начать работу\n/help - Эта справка\n/settings - Настройки',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: true,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
-    }
-  },
-  {
-    id: 'settings-command',
-    name: '/settings команда',
-    description: 'Настройки бота',
-    icon: 'fas fa-cog',
-    color: 'bg-gray-100 text-gray-600',
-    type: 'command',
-    defaultData: {
-      command: '/settings',
-      description: 'Настройки бота',
-      messageText: '⚙️ Настройки бота:',
-      keyboardType: 'inline',
-      buttons: [
-        { id: 'btn-1', text: '📋 Язык', action: 'goto', buttonType: 'normal' as const, target: '/language' },
-        { id: 'btn-2', text: '🔔 Уведомления', action: 'goto', buttonType: 'normal' as const, target: '/notifications' }
-      ],
-      markdown: true,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
-    }
-  },
-  {
-    id: 'menu-command',
-    name: '/menu команда',
-    description: 'Главное меню',
-    icon: 'fas fa-bars',
-    color: 'bg-purple-100 text-purple-600',
-    type: 'command',
-    defaultData: {
-      command: '/menu',
-      description: 'Главное меню',
-      messageText: '📋 Главное меню:',
-      keyboardType: 'reply',
-      buttons: [
-        { id: 'btn-1', text: '📖 Информация', action: 'goto', buttonType: 'normal' as const, target: '/info' },
-        { id: 'btn-2', text: '⚙️ Настройки', action: 'goto', buttonType: 'normal' as const, target: '/settings' },
-        { id: 'btn-3', text: '❓ Помощь', action: 'goto', buttonType: 'normal' as const, target: '/help' },
-        { id: 'btn-4', text: '📞 Поддержка', action: 'goto', buttonType: 'normal' as const, target: '/support' }
-      ],
-      markdown: true,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
-    }
-  },
-  {
-    id: 'custom-command',
-    name: 'Пользовательская команда',
-    description: 'Настраиваемая команда',
-    icon: 'fas fa-terminal',
-    color: 'bg-indigo-100 text-indigo-600',
-    type: 'command',
-    defaultData: {
-      command: '/custom',
-      description: 'Новая команда',
-      messageText: 'Команда выполнена',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
-    }
-  },
+  startCommand,
+  helpCommand,
+  settingsCommand,
+  menuCommand,
+  customCommand,
   {
     id: 'pin-message',
     name: 'Закрепить сообщение',
