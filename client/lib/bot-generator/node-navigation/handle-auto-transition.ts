@@ -28,7 +28,7 @@ export function handleAutoTransition(
   const autoSafeFunctionName = autoTargetId.replace(/[^a-zA-Z0-9_]/g, '_');
 
   code += `${bodyIndent}\n`;
-  code += `${bodyIndent}# ⚡ Автопереход к узлу ${autoTargetId} (только если collectUserInput=true)\n`;
+  code += `${bodyIndent}# ⚡ Автопереход к узлу ${autoTargetId}\n`;
   code += `${bodyIndent}logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
   code += `${bodyIndent}import types as aiogram_types\n`;
   code += `${bodyIndent}async def noop(*args, **kwargs):\n`;
@@ -57,9 +57,16 @@ export function handleAutoTransition(
  * Проверяет, можно ли выполнить автопереход для узла
  * @param targetNode - Узел для проверки
  * @returns true если автопереход можно выполнить
+ *
+ * Логика проверки:
+ * - enableAutoTransition === true И autoTransitionTo существует → автопереход
+ * - collectUserInput === false И enableAutoTransition === true → тоже автопереход (узлы без сбора ввода)
+ * - collectUserInput === true → ждём ввода, потом переход по inputTargetNodeId/autoTransitionTo
  */
 export function canAutoTransition(targetNode: Node): boolean {
-  return targetNode.data?.enableAutoTransition === true &&
-    !!targetNode.data?.autoTransitionTo &&
-    targetNode.data?.collectUserInput !== false;
+  // Если явно включен автопереход и указана цель → выполняем автопереход
+  if (targetNode.data?.enableAutoTransition === true && !!targetNode.data?.autoTransitionTo) {
+    return true;
+  }
+  return false;
 }

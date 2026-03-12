@@ -249,26 +249,32 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
         const autoFlag2 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
         codeLines.push(`    await safe_edit_or_send(callback_query, text, node_id="${actualNodeId}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag2}${parseMode})`);
 
-        // АВяОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
-        // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
-        // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если collectUserInput=false
+        // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, выполняем автопереход
+        // Логика:
+        // - collectUserInput === false И enableAutoTransition === true → сразу выполняем автопереход
+        // - collectUserInput === true → ждём ввода пользователя, потом переход по inputTargetNodeId
         if (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) {
-            // Проверяем, нужно ли выполнять автопереход - только если collectUserInput=true
+            const autoTargetId = targetNode.data.autoTransitionTo;
+            const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
+            
             if (targetNode.data.collectUserInput !== false) {
-                const autoTargetId = targetNode.data.autoTransitionTo;
-                const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
+                // Узел собирает ввод - проверяем, не ждем ли условный ввод
                 codeLines.push('    ');
-                codeLines.push('    # Пяоверяем, не ждем ли мы условный ввод перед автопереходом');
+                codeLines.push('    # Проверяем, не ждем ли мы условный ввод перед автопереходом');
                 codeLines.push('    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:');
-                codeLines.push('        logging.info(f"⏸️ Автопяреход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")');
+                codeLines.push('        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")');
                 codeLines.push('    else:');
-                codeLines.push(`        # ⚡ Автопереход к узлу ${autoTargetId} (только если collectUserInput=true)`);
+                codeLines.push(`        # ⚡ Автопереход к узлу ${autoTargetId} (после сбора ввода)`);
                 codeLines.push(`        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")`);
                 codeLines.push(`        await handle_node_${safeAutoTargetId}(callback_query.message)`);
                 codeLines.push(`        return`);
             } else {
-                codeLines.push('    # Автопереход пропущен: collectUserInput=false');
-                codeLines.push(`    logging.info(f"ℹ️ Узел ${targetNode.id} не собирает ответы (collectUserInput=false)")`);
+                // Узел НЕ собирает ввод - выполняем автопереход сразу
+                codeLines.push('    ');
+                codeLines.push(`    # ⚡ Автопереход к узлу ${autoTargetId} (collectUserInput=false)`);
+                codeLines.push(`    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")`);
+                codeLines.push(`    await handle_node_${safeAutoTargetId}(callback_query.message)`);
+                codeLines.push(`    return`);
             }
         }
     }
