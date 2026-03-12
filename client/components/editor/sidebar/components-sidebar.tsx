@@ -7,8 +7,8 @@ import { parsePythonCodeToJson } from '@/lib/bot-generator/format';
 import { components } from './massive/massiv';
 import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage } from './massive/messages';
 import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from './massive/commands';
-import { pinMessage, unpinMessage, deleteMessage } from './massive/content-management';
-import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from './massive/user-management';
+import { pinMessage, unpinMessage, deleteMessage, adminRights } from './massive/content-management';
+import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser } from './massive/user-management';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
