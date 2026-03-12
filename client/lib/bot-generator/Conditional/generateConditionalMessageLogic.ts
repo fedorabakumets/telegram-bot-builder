@@ -96,29 +96,9 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
   codeLines.push(`${indentLevel}if not isinstance(user_vars, dict):`);
   codeLines.push(`${indentLevel}    user_vars = {}`);
   codeLines.push(`${indentLevel}`);
-  // Проверяем, была ли уже сгенерирована функция replace_variables_in_text
-  if (true) {
-    codeLines.push(`${indentLevel}# Заменяем все переменные в тексте`);
-    codeLines.push(`${indentLevel}import re`);
-    codeLines.push(`${indentLevel}def replace_variables_in_text(text_content, variables_dict):`);
-    codeLines.push(`${indentLevel}    if not text_content or not variables_dict:`);
-    codeLines.push(`${indentLevel}        return text_content`);
-    codeLines.push(`${indentLevel}    `);
-    codeLines.push(`${indentLevel}    for var_name, var_data in variables_dict.items():`);
-    codeLines.push(`${indentLevel}        placeholder = "{" + var_name + "}"`);
-    codeLines.push(`${indentLevel}        if placeholder in text_content:`);
-    codeLines.push(`${indentLevel}            if isinstance(var_data, dict) and "value" in var_data:`);
-    codeLines.push(`${indentLevel}                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name`);
-    codeLines.push(`${indentLevel}            elif var_data is not None:`);
-    codeLines.push(`${indentLevel}                var_value = str(var_data)`);
-    codeLines.push(`${indentLevel}            else:`);
-    codeLines.push(`${indentLevel}                var_value = var_name  # Показываем имя переменной если значения нет`);
-    codeLines.push(`${indentLevel}            text_content = text_content.replace(placeholder, var_value)`);
-    codeLines.push(`${indentLevel}    return text_content`);
-    codeLines.push(`${indentLevel}`);
-    // Отмечаем, что функция была сгенерирована
-    // marked as generated
-  }
+  // ИСПРАВЛЕНИЕ: НЕ генерируем локальную функцию replace_variables_in_text
+  // Используем глобальную функцию, определённую в начале файла
+  codeLines.push(`${indentLevel}# Используем глобальную функцию replace_variables_in_text`);
 
   // Добавляем определение функции check_user_variable_inline
   const checkUserVariableCode = generateCheckUserVariableFunction(indentLevel);
