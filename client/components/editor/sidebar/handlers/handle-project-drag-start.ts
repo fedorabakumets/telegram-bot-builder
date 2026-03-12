@@ -5,12 +5,20 @@
 import { BotProject } from '@shared/schema';
 import { Dispatch, SetStateAction } from 'react';
 
+/** Информация о перетаскиваемом листе */
+export interface DraggedSheetInfo {
+  /** Идентификатор листа */
+  sheetId: string;
+  /** Идентификатор проекта */
+  projectId: number;
+}
+
 /** Параметры обработчика начала перетаскивания проекта */
-interface ProjectDragStartParams {
+export interface ProjectDragStartParams {
   /** Проект, который перетаскивают */
   project: BotProject;
   /** Функция для установки перетаскиваемого листа */
-  setDraggedSheet: Dispatch<SetStateAction<null>>;
+  setDraggedSheet: Dispatch<SetStateAction<DraggedSheetInfo | null>>;
   /** Функция для установки перетаскиваемого проекта */
   setDraggedProject: Dispatch<SetStateAction<BotProject | null>>;
 }
