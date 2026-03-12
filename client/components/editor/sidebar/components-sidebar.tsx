@@ -104,7 +104,7 @@ interface ComponentsSidebarProps {
 const componentCategories = [
   {
     title: 'Сообщения',
-    components: [textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage]
+    components: [textMessage, voiceMessage, locationMessage, contactMessage]
   },
   {
     title: 'Команды',
