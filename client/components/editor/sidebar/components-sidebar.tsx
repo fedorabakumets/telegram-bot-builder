@@ -9,6 +9,16 @@ import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMess
 import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from './massive/commands';
 import { pinMessage, unpinMessage, deleteMessage } from './massive/content-management';
 import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from './massive/user-management';
+import {
+  handleProjectDragStart,
+  handleProjectDragOver,
+  handleProjectDragLeave,
+  handleProjectDrop,
+  handleProjectDragEnd,
+  formatDate,
+  getNodeCount,
+  getSheetsInfo
+} from './handlers';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -945,155 +955,6 @@ export function ComponentsSidebar({
     setEditingSheetName('');
   };
 
-  // Обработчики drag-and-drop для проектов
-  const handleProjectDragStart = (e: React.DragEvent, project: BotProject) => {
-    e.stopPropagation();
-    console.log('🎯 Начало перемещения проекта:', project.name);
-    setDraggedSheet(null);  // Очищаем лист, чтобы не конфликтовал с проектом
-    setDraggedProject(project);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', project.id.toString());
-  };
-
-  const handleProjectDragOver = (e: React.DragEvent, projectId: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverProject(projectId);
-  };
-
-  const handleProjectDragLeave = () => {
-    setDragOverProject(null);
-  };
-
-  const handleProjectDrop = (e: React.DragEvent, targetProject: BotProject) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverProject(null);
-
-    console.log('🎯 Попытка перемещения:', draggedProject?.name, '→', targetProject.name);
-
-    if (!draggedProject || draggedProject.id === targetProject.id) {
-      console.log('❌ Отмена: проект не выбран или это тот же проект');
-      setDraggedProject(null);
-      return;
-    }
-
-    // Получаем текущий список проектов из кеша
-    const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
-    console.log('📋 Текущие проекты:', currentProjects.map(p => p.name));
-
-    // Находим индексы перемещаемого и целевого проекта
-    const draggedIndex = currentProjects.findIndex(p => p.id === draggedProject.id);
-    const targetIndex = currentProjects.findIndex(p => p.id === targetProject.id);
-
-    console.log(`📍 Индексы: перемещаемый=${draggedIndex}, целевой=${targetIndex}`);
-
-    if (draggedIndex === -1 || targetIndex === -1) {
-      console.log('❌ Отмена: проект не найден');
-      setDraggedProject(null);
-      return;
-    }
-
-    // Создаём новый массив с переупорядоченными проектами
-    const newProjects = [...currentProjects];
-    const [movedProject] = newProjects.splice(draggedIndex, 1);
-    newProjects.splice(targetIndex, 0, movedProject);
-
-    console.log('✅ Новый порядок:', newProjects.map(p => p.name));
-
-    // Обновляем кеш
-    queryClient.setQueryData(['/api/projects'], newProjects);
-
-    // Обновляем список без данных
-    const newList = newProjects.map(({ data, ...rest }) => rest);
-    queryClient.setQueryData(['/api/projects/list'], newList);
-
-    toast({
-      title: "✅ Проекты переупорядочены",
-      description: `Проект "${draggedProject.name}" перемещен`,
-    });
-
-    setDraggedProject(null);
-  };
-
-  const handleProjectDragEnd = () => {
-    setDraggedProject(null);
-    setDragOverProject(null);
-  };
-
-  const formatDate = (dateString: string | Date | null) => {
-    if (!dateString) return 'Неизвестно';
-    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getNodeCount = (project: BotProject) => {
-    if (!project.data || typeof project.data !== 'object') return 0;
-
-    try {
-      // Проверяем, новый формат с листами или старый
-      if (SheetsManager.isNewFormat(project.data)) {
-        const sheets = (project.data as any).sheets || [];
-        const nodeCount = sheets.reduce((total: number, sheet: any) => total + (sheet.nodes?.length || 0), 0);
-        console.log(`[${project.name}] Формат с листами. Листов: ${sheets.length}, Узлов: ${nodeCount}`);
-        return nodeCount;
-      } else {
-        const data = project.data as { nodes?: any[] };
-        const nodeCount = data.nodes?.length || 0;
-        console.log(`[${project.name}] Старый формат. Узлов: ${nodeCount}`);
-        return nodeCount;
-      }
-    } catch (error) {
-      console.error('Ошибка подсчета узлов:', error);
-      // Попытка получить узлы напрямую из данных
-      const fallbackData = project.data as any;
-      if (fallbackData.nodes && Array.isArray(fallbackData.nodes)) {
-        return fallbackData.nodes.length;
-      }
-      if (fallbackData.sheets && Array.isArray(fallbackData.sheets)) {
-        return fallbackData.sheets.reduce((total: number, sheet: any) =>
-          total + (sheet.nodes ? sheet.nodes.length : 0), 0);
-      }
-      return 0;
-    }
-  };
-
-  const getSheetsInfo = (project: BotProject) => {
-    if (!project.data || typeof project.data !== 'object') return { count: 0, names: [] };
-
-    try {
-      // Проверяем, новый формат с листами или старый
-      if (SheetsManager.isNewFormat(project.data)) {
-        const sheets = (project.data as any).sheets || [];
-        const sheetsInfo = {
-          count: sheets.length,
-          names: sheets.map((sheet: any) => sheet.name || 'Лист без названия')
-        };
-        console.log(`[${project.name}] Информация о листах:`, sheetsInfo);
-        return sheetsInfo;
-      } else {
-        // Старый формат - один лист
-        console.log(`[${project.name}] Старый формат - один основной лист`);
-        return {
-          count: 1,
-          names: ['Лист 1']
-        };
-      }
-    } catch (error) {
-      console.error('Ошибка получения информации о листах:', error);
-      return {
-        count: 1,
-        names: ['Лист 1']
-      };
-    }
-  };
-
   // Создаем контент панели
   const SidebarContent = () => (
     <div className="h-full flex flex-col overflow-hidden">
@@ -1338,18 +1199,18 @@ export function ComponentsSidebar({
                   <div
                     key={project.id}
                     draggable
-                    onDragStart={(e) => handleProjectDragStart(e, project)}
+                    onDragStart={(e) => handleProjectDragStart(e, { project, setDraggedSheet, setDraggedProject })}
                     onDragOver={(e) => {
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
-                      handleProjectDragOver(e, project.id);
+                      handleProjectDragOver(e, project.id, setDragOverProject);
                       if (draggedSheet) {
                         console.log('🎯 Sheet over project:', project.id);
                         setDragOverSheet(`project-${project.id}`);
                       }
                     }}
                     onDragLeave={() => {
-                      handleProjectDragLeave();
+                      handleProjectDragLeave(setDragOverProject);
                       setDragOverSheet(null);
                     }}
                     onDrop={(e) => {
@@ -1357,10 +1218,10 @@ export function ComponentsSidebar({
                       if (draggedSheet) {
                         handleSheetDropOnProject(e, project.id);
                       } else if (draggedProject) {
-                        handleProjectDrop(e, project);
+                        handleProjectDrop(e, { draggedProject, targetProject: project, queryClient, setDraggedProject, setDragOverProject, toast });
                       }
                     }}
-                    onDragEnd={handleProjectDragEnd}
+                    onDragEnd={() => handleProjectDragEnd(setDraggedProject, setDragOverProject)}
                     className={`group p-2.5 xs:p-3 sm:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm overflow-hidden ${currentProjectId === project.id
                         ? 'bg-gradient-to-br from-blue-600/20 via-blue-500/10 to-cyan-600/15 dark:from-blue-600/30 dark:via-blue-500/20 dark:to-cyan-600/25 border-blue-500/50 dark:border-blue-400/50 shadow-lg shadow-blue-500/25'
                         : 'bg-gradient-to-br from-slate-50/60 to-slate-100/40 dark:from-slate-900/50 dark:to-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:border-slate-300/60 dark:hover:border-slate-600/60 hover:bg-gradient-to-br hover:from-slate-100/80 hover:to-slate-100/50 dark:hover:from-slate-800/70 dark:hover:to-slate-700/50 hover:shadow-md hover:shadow-slate-500/20'
