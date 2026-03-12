@@ -3,8 +3,8 @@ import { broadcastNode } from "../../canvas/canvas-node/broadcast-node";
 import { clientAuthNode } from "../../canvas/canvas-node/client-auth-node";
 import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from "./commands";
 import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage } from "./messages";
-import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser } from "./user-management";
-import { pinMessage, unpinMessage, deleteMessage, adminRights } from "./content-management";
+import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from "./user-management";
+import { pinMessage, unpinMessage, deleteMessage } from "./content-management";
 
 /**
  * Массив определений компонентов для конструктора бота
