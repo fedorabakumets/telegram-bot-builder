@@ -85,7 +85,7 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
         codeLines.push('        # Заменяем переменные в основном тексте, если условие не сработало');
         codeLines.push('        # Получаем фильтры переменных для замены\n');
         codeLines.push('        variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n');
-        codeLines.push('        text = replace_variables_in_text(text, user_vars, variable_filters)\n');
+        codeLines.push('        text = replace_variables_in_text(text, all_user_vars, variable_filters)\n');
         codeLines.push('    ');
         codeLines.push('    # Используем условную клавиатуру если есть');
         codeLines.push('    # Инициализируем переменную conditional_keyboard, если она не была определена');
