@@ -9,3 +9,4 @@ export { unmuteUser } from './unmute-user';
 export { kickUser } from './kick-user';
 export { promoteUser } from './promote-user';
 export { demoteUser } from './demote-user';
+export { adminRights } from './admin-rights';
