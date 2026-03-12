@@ -37,7 +37,7 @@ export function AutoTransitionIndicator({ node, allNodes }: AutoTransitionIndica
   }
 
   const targetNode = allNodes?.find(n => n.id === node.data.autoTransitionTo);
-  const targetNodeName = targetNode?.data.messageText?.slice(0, 30) || targetNode?.data.command || targetNode?.id.slice(0, 8);
+  const targetNodeName = targetNode?.data?.messageText?.slice(0, 30) || targetNode?.data?.command || targetNode?.id.slice(0, 8);
 
   return (
     <div className="bg-gradient-to-br from-emerald-50/70 to-green-50/70 dark:from-emerald-900/30 dark:to-green-900/30 rounded-xl p-3 mb-4 border border-emerald-200 dark:border-emerald-800/30">
@@ -50,13 +50,13 @@ export function AutoTransitionIndicator({ node, allNodes }: AutoTransitionIndica
             Автопереход
           </div>
           <div className="text-xs text-emerald-600 dark:text-emerald-400">
-            {targetNode ? (
+            {targetNode && targetNode.data ? (
               <>
                 К узлу: <span className="font-semibold">{targetNodeName}</span>
                 {targetNode.data.messageText && targetNode.data.messageText.length > 30 && '...'}
               </>
             ) : (
-              `К узлу: ${node.data.autoTransitionTo.slice(0, 8)}...`
+              `К узлу: ${node.data.autoTransitionTo?.slice(0, 8) || 'unknown'}...`
             )}
           </div>
         </div>

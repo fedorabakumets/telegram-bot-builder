@@ -62,7 +62,7 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
           </div>
           {button.action === 'goto' && (
             <div className="text-[10px] text-blue-600 dark:text-blue-300 truncate">
-              К узлу: {targetNodeDisplay}{targetNodeDisplay?.length === 30 ? '...' : ''}
+              К узлу: {targetNodeDisplay}{targetNodeDisplay.length > 30 ? '...' : ''}
             </div>
           )}
           {button.action === 'url' && (
