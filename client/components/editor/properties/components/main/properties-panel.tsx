@@ -21,18 +21,18 @@ import { MessageContentSection } from './message-content-section';
 import { MediaFileSection } from '../media-file/media-file-section';
 import { KeyboardSectionHeader } from '../keyboard/keyboard-section-header';
 import { KeyboardButtonsSection } from '../keyboard/keyboard-buttons-section';
-import { ConditionalMessagesHeader } from '../conditional-message-card/conditional-messages-header';
-import { ConditionalMessagesToggle } from '../conditional-message-card/conditional-messages-toggle';
-import { ConditionalMessagesInfoBlock } from '../conditional-message-card/conditional-messages-info-block';
-import { ConditionalMessagesActions } from '../conditional-message-card/conditional-messages-actions';
+// Временно скрыто: import { ConditionalMessagesHeader } from '../conditional-message-card/conditional-messages-header';
+// Временно скрыто: import { ConditionalMessagesToggle } from '../conditional-message-card/conditional-messages-toggle';
+// Временно скрыто: import { ConditionalMessagesInfoBlock } from '../conditional-message-card/conditional-messages-info-block';
+// Временно скрыто: import { ConditionalMessagesActions } from '../conditional-message-card/conditional-messages-actions';
 import { UserInputSettingsSection } from './user-input-settings-section';
 import { AutoTransitionWrapper } from './auto-transition-wrapper';
 import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
 import { KeyboardLayoutEditor } from '../keyboard/keyboard-layout-editor';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import { ButtonCard } from '../button-card/button-card';
-import { EmptyConditionalState } from '../conditional/empty-conditional-state';
-import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
+// Временно скрыто: import { EmptyConditionalState } from '../conditional/empty-conditional-state';
+// Временно скрыто: import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
 import { VoiceConfiguration } from '../configuration/voice-configuration';
 import { AnimationConfiguration } from '../configuration/animation-configuration';
@@ -466,8 +466,8 @@ export function PropertiesPanel({
           </div>
         )}
 
-        {/* Conditional Messages Section - скрыто для узлов управления */}
-        {!isManagementNode(selectedNode.type) && (
+        {/* Conditional Messages Section - временно скрыто */}
+        {/* {!isManagementNode(selectedNode.type) && (
           <div className="w-full bg-gradient-to-br from-purple-50/40 to-indigo-50/20 dark:from-purple-950/30 dark:to-indigo-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-purple-200/40 dark:border-purple-800/40 backdrop-blur-sm">
             <ConditionalMessagesHeader
               selectedNode={selectedNode}
@@ -538,7 +538,7 @@ export function PropertiesPanel({
               </div>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Universal User Input Collection - скрыто для узлов управления */}
         {/* Conditional Messages - скрыто для узлов управления */}
