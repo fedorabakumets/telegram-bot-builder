@@ -11,7 +11,7 @@ import { VariableInputGrid } from '../variables/variable-input-grid';
 import { ButtonTypeSelector } from '../keyboard/button-type-selector';
 import { ResponseOptionsList } from '../common/response-options-list';
 import { InputNavigationGrid } from '../navigation/input-navigation-grid';
-import { AppendVariableToggle } from '../variables/append-variable-toggle';
+// Временно скрыто: import { AppendVariableToggle } from '../variables/append-variable-toggle';
 import { extractVariables } from '../../utils/variables-utils';
 import type { Node } from '@schema';
 import type { Variable } from '../../../inline-rich/types';
@@ -97,10 +97,11 @@ export function UserInputSettingsSection({
 
       {isOpen && selectedNode.data.collectUserInput && (
         <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-blue-50/40 to-indigo-50/20 dark:from-blue-950/15 dark:to-indigo-950/5 border border-blue-200/25 dark:border-blue-800/25 rounded-xl p-3 sm:p-4 md:p-5">
-          <AppendVariableToggle
+          {/* Временно скрыто: Переключатель "Не перезаписывать" */}
+          {/* <AppendVariableToggle
             selectedNode={selectedNode}
             onNodeUpdate={onNodeUpdate}
-          />
+          /> */}
 
           <MediaInputToggles
             selectedNode={selectedNode}
