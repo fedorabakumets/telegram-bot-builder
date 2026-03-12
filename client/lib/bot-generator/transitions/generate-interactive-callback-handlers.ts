@@ -710,10 +710,10 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                       code += `                logging.info(f"🔧 Fallback переход к узлу с множественным выбором: ${navTargetNode.id}")\n`;
                       code += `                text = ${formattedText}\n`;
 
-                      // Замена переменных
+                      // Замена переменных (передаём navTargetNode для извлечения usedVariables)
                       code += '                user_data[user_id] = user_data.get(user_id, {})\n';
                       const universalVarCodeLines2: string[] = [];
-                      generateUniversalVariableReplacement(universalVarCodeLines2, '                ');
+                      generateUniversalVariableReplacement(universalVarCodeLines2, { node: navTargetNode, indentLevel: '                ' });
                       code += universalVarCodeLines2.join('\n');
 
                       // Инициализируем состояние множественного выбора

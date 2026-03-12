@@ -44,10 +44,10 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
     codeLines.push(`    # Отправляем сообщение для узла ${targetNode.id}`);
     codeLines.push(`    text = ${formattedText}`);
 
-    // Применяем универсальную замену переменных
+    // Применяем универсальную замену переменных (передаём targetNode для извлечения usedVariables)
     codeLines.push('    ');
     const universalVarCodeLines: string[] = [];
-    generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+    generateUniversalVariableReplacement(universalVarCodeLines, { node: targetNode, indentLevel: '    ' });
     codeLines.push(...universalVarCodeLines);
 
     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте

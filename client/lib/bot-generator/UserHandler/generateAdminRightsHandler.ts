@@ -116,7 +116,7 @@ export function generateAdminRightsHandler(node: Node): string {
   code += `    keyboard = await create_admin_rights_keyboard_${safeFunctionName}(bot, chat_id, target_user_id)\n`;
   code += `    text = ${formattedText}\n`;
   const universalVarCodeLines1: string[] = [];
-  generateUniversalVariableReplacement(universalVarCodeLines1, '    ');
+  generateUniversalVariableReplacement(universalVarCodeLines1, { node, indentLevel: '    ' });
   code += universalVarCodeLines1.join('\n');
   code += `    \n`;
   code += `    await message.answer(text, reply_markup=keyboard)\n`;
@@ -242,9 +242,9 @@ export function generateAdminRightsHandler(node: Node): string {
   code += `    # Текст сообщения\n`;
   code += `    text = ${formattedText}\n`;
 
-  // Добавляем универсальную замену переменных
+  // Добавляем универсальную замену переменных (передаём node для извлечения usedVariables)
   const universalVarCodeLines2: string[] = [];
-  generateUniversalVariableReplacement(universalVarCodeLines2, '    ');
+  generateUniversalVariableReplacement(universalVarCodeLines2, { node, indentLevel: '    ' });
   code += universalVarCodeLines2.join('\n');
   code += `    \n`;
   code += `    # Создаем интерактивную клавиатуру\n`;

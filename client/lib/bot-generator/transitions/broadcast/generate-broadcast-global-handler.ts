@@ -103,7 +103,13 @@ export function generateBroadcastDirectHandler(
 ): string {
   const { broadcastNode, nodes } = params;
   const broadcastApiType = broadcastNode.data?.broadcastApiType || 'bot';
-  
+
+  // Извлекаем переменные из текста сообщения для оптимизации загрузки из БД
+  const messageText = broadcastNode.data?.messageText || '';
+  const usedVariables = messageText
+    ? [...messageText.matchAll(/\{([^}|]+)(?:\|[^}]+)?\}/g)].map((m) => m[1])
+    : undefined;
+
   let code = '';
   code += `${indent}# Обработчик для прямой рассылки (без подтверждения)\n`;
   code += `${indent}async def handle_broadcast_direct(callback_query: types.CallbackQuery):\n`;
@@ -111,7 +117,7 @@ export function generateBroadcastDirectHandler(
   code += `${indent}    logging.info(f"📢 Прямая рассылка от пользователя {user_id}")\n`;
   code += `${indent}    \n`;
   code += `${indent}    # Получаем переменные из базы данных\n`;
-  code += generateDatabaseVariablesCode(`${indent}    `);
+  code += generateDatabaseVariablesCode(`${indent}    `, usedVariables);
   code += `${indent}    \n`;
   code += (broadcastApiType === 'client' 
     ? generateBroadcastClientInline(broadcastNode, nodes, `${indent}    `) 

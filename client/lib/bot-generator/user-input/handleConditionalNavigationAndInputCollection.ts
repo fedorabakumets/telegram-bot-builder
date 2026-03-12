@@ -19,10 +19,10 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                 code += `                        logging.info(f"🔧 Условная навигация к узлу с множественным выбором: ${targetNode.id}")\n`;
                 code += `                        text = ${formattedText}\n`;
 
-                // Замена переменных
+                // Замена переменных (передаём targetNode для извлечения usedVariables)
                 code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
                 const universalVarCodeLines1: string[] = [];
-                generateUniversalVariableReplacement(universalVarCodeLines1, '                        ');
+                generateUniversalVariableReplacement(universalVarCodeLines1, { node: targetNode, indentLevel: '                        ' });
                 code += universalVarCodeLines1.join('\n');
 
                 // Инициализируем состояние множественного выбора
@@ -301,10 +301,10 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                             code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput=true")\n`;
                             code += `                        text = ${formattedText}\n`;
 
-                            // Добавляем замену переменных
+                            // Добавляем замену переменных (передаём targetNode для извлечения usedVariables)
                             code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
                             const universalVarCodeLines2: string[] = [];
-                            generateUniversalVariableReplacement(universalVarCodeLines2, '                        ');
+                            generateUniversalVariableReplacement(universalVarCodeLines2, { node: targetNode, indentLevel: '                        ' });
                             code += universalVarCodeLines2.join('\n');
 
                             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Генерируем правильный тип клавиатуры в завясимости от keyboardType
@@ -378,10 +378,10 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                     code += `                        # Обычный узел - отправляем сообщение\n`;
                     code += `                        text = ${formattedText}\n`;
 
-                    // Добавляем замену переменных
+                    // Добавляем замену переменных (передаём targetNode для извлечения usedVariables)
                     code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
                     const universalVarCodeLines3: string[] = [];
-                    generateUniversalVariableReplacement(universalVarCodeLines3, '                        ');
+                    generateUniversalVariableReplacement(universalVarCodeLines3, { node: targetNode, indentLevel: '                        ' });
                     code += universalVarCodeLines3.join('\n');
 
                     // Проверяем, есть ли reply кнопки

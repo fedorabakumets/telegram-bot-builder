@@ -38,9 +38,9 @@ export function generateMessageNodeHandlerWithKeyboardAndInputCollection(code: s
 
         code += `    text = ${formattedTargetText}\n`;
 
-        // Добавляем замену переменных в тексте
+        // Добавляем замену переменных в тексте (передаём targetNode для извлечения usedVariables)
         const universalVarCodeLines: string[] = [];
-        generateUniversalVariableReplacement(universalVarCodeLines, '    ');
+        generateUniversalVariableReplacement(universalVarCodeLines, { node: targetNode, indentLevel: '    ' });
         code += universalVarCodeLines.join('\n');
 
         /**

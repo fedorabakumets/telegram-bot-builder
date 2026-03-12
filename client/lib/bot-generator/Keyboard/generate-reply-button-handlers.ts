@@ -103,7 +103,7 @@ export function generateReplyButtonHandlers(nodes: Node[] | undefined): string {
             code += '    \n';
 
             const universalVarCodeLines1: string[] = [];
-            generateUniversalVariableReplacement(universalVarCodeLines1, '    ');
+            generateUniversalVariableReplacement(universalVarCodeLines1, { node: targetNode, indentLevel: '    ' });
             code += universalVarCodeLines1.join('\n');
 
             // Устанавливаем переменные из attachedMedia для целевого узла

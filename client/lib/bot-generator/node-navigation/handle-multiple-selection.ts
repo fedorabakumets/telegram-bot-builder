@@ -36,10 +36,10 @@ export function handleMultipleSelectionNode(
   code += `${bodyIndent}logging.info(f"🔧 Переходим к узлу с множественным выбором: ${targetNode.id}")\n`;
   code += `${bodyIndent}text = ${formattedText}\n`;
 
-  // Замена переменных
+  // Замена переменных (передаём targetNode для извлечения usedVariables)
   code += `${bodyIndent}user_data[user_id] = user_data.get(user_id, {})\n`;
   const universalVarCodeLines: string[] = [];
-  generateUniversalVariableReplacement(universalVarCodeLines, bodyIndent);
+  generateUniversalVariableReplacement(universalVarCodeLines, { node: targetNode, indentLevel: bodyIndent });
   code += universalVarCodeLines.join('\n');
 
   // Инициализация состояния множественного выбора

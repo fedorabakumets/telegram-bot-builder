@@ -383,9 +383,9 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
     } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       // Проверяем, есть ли множественный выбор
       if (node.data.allowMultipleSelection) {
-        // Добавляем универсальную функцию замены переменных для доступа к user_vars
+        // Добавляем универсальную функцию замены переменных для доступа к user_vars (передаём node для извлечения usedVariables)
         const universalVarCodeLines2: string[] = [];
-        generateUniversalVariableReplacement(universalVarCodeLines2, indent3);
+        generateUniversalVariableReplacement(universalVarCodeLines2, { node, indentLevel: indent3 });
         code += universalVarCodeLines2.join('\n');
 
         // Добавляем логику загрузки ранее выбранных интересов
