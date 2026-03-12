@@ -2,108 +2,18 @@ import { ComponentDefinition } from "@shared/schema";
 import { broadcastNode } from "../../canvas/canvas-node/broadcast-node";
 import { clientAuthNode } from "../../canvas/canvas-node/client-auth-node";
 import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from "./commands";
+import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage } from "./messages";
 
 /**
  * Массив определений компонентов для конструктора бота
  * Содержит все доступные типы узлов с их настройками по умолчанию
  */
 export const components: ComponentDefinition[] = [
-  {
-    id: 'text-message',
-    name: 'Текстовое сообщение',
-    description: 'Обычный текст или Markdown',
-    icon: 'fas fa-comment',
-    color: 'bg-blue-100 text-blue-600',
-    type: 'message',
-    defaultData: {
-      messageText: 'Новое сообщение',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'sticker-message',
-    name: 'Стикер',
-    description: 'Анимированный стикер',
-    icon: 'fas fa-laugh',
-    color: 'bg-pink-100 text-pink-600',
-    type: 'sticker',
-    defaultData: {
-      messageText: 'Стикер',
-      stickerUrl: '',
-      stickerFileId: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'voice-message',
-    name: 'Голосовое сообщение',
-    description: 'Голосовое сообщение',
-    icon: 'fas fa-microphone',
-    color: 'bg-teal-100 text-teal-600',
-    type: 'voice',
-    defaultData: {
-      messageText: 'Голосовое сообщение',
-      voiceUrl: '',
-      duration: 0,
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'location-message',
-    name: 'Геолокация',
-    description: 'Отправка координат',
-    icon: 'fas fa-map-marker',
-    color: 'bg-green-100 text-green-600',
-    type: 'location',
-    defaultData: {
-      messageText: 'Местоположение',
-      latitude: 55.7558,
-      longitude: 37.6176,
-      title: 'Москва',
-      address: 'Москва, Россия',
-      foursquareId: '',
-      foursquareType: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'contact-message',
-    name: 'Контакт',
-    description: 'Поделиться контактом',
-    icon: 'fas fa-address-book',
-    color: 'bg-blue-100 text-blue-600',
-    type: 'contact',
-    defaultData: {
-      messageText: 'Контакт',
-      phoneNumber: '+7 (999) 123-45-67',
-      firstName: 'Имя',
-      lastName: 'Фамилия',
-      userId: 0,
-      vcard: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-
+  textMessage,
+  stickerMessage,
+  voiceMessage,
+  locationMessage,
+  contactMessage,
   startCommand,
   helpCommand,
   settingsCommand,
