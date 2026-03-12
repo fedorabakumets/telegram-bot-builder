@@ -3,6 +3,7 @@ import { broadcastNode } from "../../canvas/canvas-node/broadcast-node";
 import { clientAuthNode } from "../../canvas/canvas-node/client-auth-node";
 import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from "./commands";
 import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage } from "./messages";
+import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser } from "./user-management";
 
 /**
  * Массив определений компонентов для конструктора бота
@@ -62,125 +63,13 @@ export const components: ComponentDefinition[] = [
       variableName: ''
     }
   },
-  {
-    id: 'ban-user',
-    name: 'Заблокировать пользователя',
-    description: 'Забанить участника группы',
-    icon: 'fas fa-ban',
-    color: 'bg-red-100 text-red-600',
-    type: 'ban_user',
-    defaultData: {
-      command: '/ban_user',
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: '',
-      reason: 'Нарушение правил группы',
-      untilDate: 0
-    }
-  },
-  {
-    id: 'unban-user',
-    name: 'Разблокировать пользователя',
-    description: 'Снять бан с участника группы',
-    icon: 'fas fa-user-check',
-    color: 'bg-green-100 text-green-600',
-    type: 'unban_user',
-    defaultData: {
-      command: '/unban_user',
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: ''
-    }
-  },
-  {
-    id: 'mute-user',
-    name: 'Заглушить пользователя',
-    description: 'Ограничить права участника',
-    icon: 'fas fa-volume-mute',
-    color: 'bg-orange-100 text-orange-600',
-    type: 'mute_user',
-    defaultData: {
-      command: '/mute_user',
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: '',
-      duration: 3600,
-      reason: 'Нарушение правил группы',
-      canSendMessages: false,
-      canSendMediaMessages: false,
-      canSendPolls: false,
-      canSendOtherMessages: false,
-      canAddWebPagePreviews: false,
-      canChangeGroupInfo: false,
-      canInviteUsers2: false,
-      canPinMessages2: false
-    }
-  },
-  {
-    id: 'unmute-user',
-    name: 'Снять ограничения',
-    description: 'Восстановить права участника',
-    icon: 'fas fa-volume-up',
-    color: 'bg-green-100 text-green-600',
-    type: 'unmute_user',
-    defaultData: {
-      command: '/unmute_user',
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: ''
-    }
-  },
-  {
-    id: 'kick-user',
-    name: 'Исключить пользователя',
-    description: 'Удалить участника из группы',
-    icon: 'fas fa-user-times',
-    color: 'bg-red-100 text-red-600',
-    type: 'kick_user',
-    defaultData: {
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: '',
-      reason: 'Нарушение правил группы'
-    }
-  },
-  {
-    id: 'promote-user',
-    name: 'Назначить администратором',
-    description: 'Дать права администратора',
-    icon: 'fas fa-crown',
-    color: 'bg-yellow-100 text-yellow-600',
-    type: 'promote_user',
-    defaultData: {
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: '',
-      canChangeInfo: false,
-      canDeleteMessages: true,
-      canBanUsers: false,
-      canInviteUsers: true,
-      canPinMessages: true,
-      canAddAdmins: false,
-      canRestrictMembers: false,
-      canPromoteMembers: false,
-      canManageVideoChats: false,
-      canManageTopics: false,
-      isAnonymous: false
-    }
-  },
-  {
-    id: 'demote-user',
-    name: 'Снять с администратора',
-    description: 'Убрать права администратора',
-    icon: 'fas fa-user-minus',
-    color: 'bg-gray-100 text-gray-600',
-    type: 'demote_user',
-    defaultData: {
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: ''
-    }
-  },
+  banUser,
+  unbanUser,
+  muteUser,
+  unmuteUser,
+  kickUser,
+  promoteUser,
+  demoteUser,
   {
     id: 'admin-rights',
     name: 'Тг права',
