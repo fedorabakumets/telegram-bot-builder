@@ -2,51 +2,64 @@
  * @fileoverview Тесты для хука useBotData
  * Проверяет загрузку данных бота и обработку ошибок
  * @module tests/unit/hooks/use-bot-data.test
- *
- * @description
- * Для тестирования хуков React Query используется @testing-library/react
- * Запуск: npx vitest run client/components/editor/database/dialog/tests/unit/hooks/use-bot-data.test.ts
  */
 
 /// <reference types="vitest/globals" />
 
-import { beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useBotData } from '../../../hooks/use-bot-data';
 
-// Мокирование fetch
-const mockFetch = global.fetch as any;
+// Мокируем fetch
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
+beforeEach(() => {
+  mockFetch.mockClear();
+});
 
 /**
- * Создаёт тестовый QueryClient
+ * Создаёт тестовый QueryClient с default queryFn
  */
 function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
+        staleTime: 60 * 1000, // 1 минута как в продакшене
+        queryFn: async ({ queryKey }) => {
+          const res = await mockFetch(queryKey[0] as string);
+          if (!res.ok) {
+            throw new Error(`${res.status}: ${res.statusText}`);
+          }
+          return res.json();
+        },
       },
     },
   });
 }
 
-/**
- * Обёртка для тестирования хуков с QueryClient
- */
-function createWrapper() {
-  const queryClient = createTestQueryClient();
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-}
-
 describe('useBotData', () => {
-  beforeEach(() => {
-    mockFetch?.mockClear?.();
+  it('должен возвращать undefined при отсутствии projectId', async () => {
+    const queryClient = createTestQueryClient();
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    
+    const { result } = renderHook(() => useBotData(0), { wrapper });
+
+    // Запрос не должен выполняться для projectId = 0
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.bot).toBeUndefined();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it('должен загружать данные бота успешно', async () => {
+    const queryClient = createTestQueryClient();
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
     const mockBotData = {
       userId: 123,
       firstName: 'Test Bot',
@@ -54,19 +67,16 @@ describe('useBotData', () => {
       userName: 'test_bot',
     };
 
-    mockFetch.mockImplementationOnce(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockBotData),
-      })
-    );
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockBotData,
+    } as any);
 
-    const wrapper = createWrapper();
     const { result } = renderHook(() => useBotData(1), { wrapper });
 
     // Начальное состояние
     expect(result.current.isLoading).toBe(true);
-    expect(result.current.bot).toBeNull();
+    expect(result.current.bot).toBeUndefined();
 
     // Ожидаем загрузку
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -77,40 +87,35 @@ describe('useBotData', () => {
     );
   });
 
-  it('должен возвращать null при отсутствии projectId', async () => {
-    const wrapper = createWrapper();
-    const { result } = renderHook(() => useBotData(0), { wrapper });
-
-    // Запрос не должен выполняться для projectId = 0
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.bot).toBeNull();
-    expect(mockFetch).not.toHaveBeenCalled();
-  });
-
   it('должен обрабатывать ошибку загрузки', async () => {
-    mockFetch.mockImplementationOnce(() =>
-      Promise.resolve({
-        ok: false,
-        status: 500,
-      })
+    const queryClient = createTestQueryClient();
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
-    const wrapper = createWrapper();
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+    } as any);
+
     const { result } = renderHook(() => useBotData(1), { wrapper });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.bot).toBeNull();
+    expect(result.current.bot).toBeUndefined();
   });
 
   it('должен обрабатывать невалидные данные', async () => {
-    mockFetch.mockImplementationOnce(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve('invalid-data'),
-      })
+    const queryClient = createTestQueryClient();
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
-    const wrapper = createWrapper();
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => 'invalid-data',
+    } as any);
+
     const { result } = renderHook(() => useBotData(1), { wrapper });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -118,6 +123,11 @@ describe('useBotData', () => {
   });
 
   it('должен кэшировать данные', async () => {
+    const queryClient = createTestQueryClient();
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
     const mockBotData = {
       userId: 123,
       firstName: 'Cached Bot',
@@ -125,22 +135,20 @@ describe('useBotData', () => {
       userName: 'cached_bot',
     };
 
-    mockFetch.mockImplementationOnce(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockBotData),
-      })
-    );
-
-    const wrapper = createWrapper();
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockBotData,
+    } as any);
 
     // Первая загрузка
     const { result: result1 } = renderHook(() => useBotData(1), { wrapper });
     await waitFor(() => expect(result1.current.isLoading).toBe(false));
+    expect(result1.current.bot).toEqual(mockBotData);
 
     // Вторая загрузка (должно быть из кэша)
     const { result: result2 } = renderHook(() => useBotData(1), { wrapper });
-    await waitFor(() => expect(result2.current.isLoading).toBe(false));
+    expect(result2.current.isLoading).toBe(false);
+    expect(result2.current.bot).toEqual(mockBotData);
 
     // Fetch должен быть вызван только один раз
     expect(mockFetch).toHaveBeenCalledTimes(1);
