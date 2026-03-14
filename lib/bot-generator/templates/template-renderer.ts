@@ -16,13 +16,17 @@ import {
 } from './filters';
 import { getTemplatesDir } from './utils/get-templates-dir';
 
-// Получаем директорию шаблонов
-const templatesDir = getTemplatesDir();
+/**
+ * Проверяет что код выполняется в Node.js среде
+ */
+function isNodeEnvironment(): boolean {
+  return typeof window === 'undefined' && typeof process !== 'undefined';
+}
 
 /**
  * Окружение Nunjucks для рендеринга шаблонов
  */
-let env: Environment;
+let env: Environment | null = null;
 
 /**
  * Инициализирует окружение Nunjucks
@@ -30,7 +34,14 @@ let env: Environment;
  */
 function initEnvironment(): Environment {
   if (env) return env;
+  
+  // Проверяем что мы в Node.js
+  if (!isNodeEnvironment()) {
+    throw new Error('Nunjucks template rendering is only available in Node.js environment');
+  }
 
+  const templatesDir = getTemplatesDir();
+  
   env = new Environment(new FileSystemLoader(templatesDir), {
     autoescape: false,    // Отключаем авто-экранирование для Python кода
     trimBlocks: true,     // Удаляем первый newline после блока
@@ -123,13 +134,21 @@ export function renderPartialTemplate(
   partialName: string,
   context: Record<string, any>
 ): string {
-  const environment = initEnvironment();
-  // Добавляем 'partials/' если путь не начинается с него
-  const templatePath = partialName.startsWith('partials/') 
-    ? partialName 
-    : `partials/${partialName}`;
-  const template = environment.getTemplate(templatePath);
-  return template.render(context);
+  try {
+    const environment = initEnvironment();
+    // Добавляем 'partials/' если путь не начинается с него
+    const templatePath = partialName.startsWith('partials/')
+      ? partialName
+      : `partials/${partialName}`;
+    const template = environment.getTemplate(templatePath);
+    return template.render(context);
+  } catch (error: any) {
+    // Если мы в браузере и Nunjucks недоступен, бросаем понятную ошибку
+    if (error.message.includes('Node.js') || error.message.includes('browser')) {
+      throw new Error(`Template rendering is not available in browser. Use browser-compatible functions instead. Template: ${partialName}`);
+    }
+    throw error;
+  }
 }
 
 /**

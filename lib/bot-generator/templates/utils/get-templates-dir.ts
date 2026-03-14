@@ -11,8 +11,14 @@ import * as path from 'path';
  * @returns Абсолютный путь к lib/bot-generator/templates/
  */
 export function getTemplatesDir(): string {
-  // Используем process.cwd() для получения корня проекта
-  // Это работает в tsx/esbuild
+  // Для browser-сборки используем абсолютный путь
+  // Vite автоматически подставляет правильный путь при сборке
+  if (typeof window !== 'undefined') {
+    // В браузере возвращаем относительный путь который Vite обработает
+    return '/lib/bot-generator/templates';
+  }
+  
+  // Для Node.js используем process.cwd()
   const projectRoot = process.cwd();
   return path.join(projectRoot, 'lib', 'bot-generator', 'templates');
 }
