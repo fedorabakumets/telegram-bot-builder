@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>42/42</span>
+                <span class='fraction'>28/42</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>42/42</span>
+                <span class='fraction'>28/42</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -133,20 +133,20 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @fileoverview Хук для загрузки данных проекта
  * @description Получает полные данные проекта через API
@@ -174,21 +174,21 @@ export interface UseProjectDataResult {
  * @param projectId - Идентификатор проекта
  * @returns Объект с данными проекта и состоянием загрузки
  */
-export function useProjectData(projectId: number): UseProjectDataResult {
-  const { data, isLoading, isError, refetch } = useQuery&lt;BotProject&gt;({
-    queryKey: [`/api/projects/${projectId}`],
-    enabled: !!projectId,
-    staleTime: 5 * 60 * 1000, // 5 минут
-    retry: 1,
-  });
-&nbsp;
-  return {
-    project: data || null,
-    isLoading,
-    isError,
-    refetch,
-  };
-}
+export <span class="fstat-no" title="function not covered" >function useProjectData(projectId: number): UseProjectDataResult {</span>
+<span class="cstat-no" title="statement not covered" >  const { data, isLoading, isError, refetch } = useQuery&lt;BotProject&gt;({</span>
+<span class="cstat-no" title="statement not covered" >    queryKey: [`/api/projects/${projectId}`],</span>
+<span class="cstat-no" title="statement not covered" >    enabled: !!projectId,</span>
+<span class="cstat-no" title="statement not covered" >    staleTime: 5 * 60 * 1000, // 5 минут</span>
+<span class="cstat-no" title="statement not covered" >    retry: 1,</span>
+<span class="cstat-no" title="statement not covered" >  });</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >  return {</span>
+<span class="cstat-no" title="statement not covered" >    project: data || null,</span>
+<span class="cstat-no" title="statement not covered" >    isLoading,</span>
+<span class="cstat-no" title="statement not covered" >    isError,</span>
+<span class="cstat-no" title="statement not covered" >    refetch,</span>
+<span class="cstat-no" title="statement not covered" >  };</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -196,7 +196,7 @@ export function useProjectData(projectId: number): UseProjectDataResult {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-14T11:39:52.361Z
+                at 2026-03-14T11:49:35.278Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
