@@ -45,7 +45,8 @@
     "db:test": "tsx --tsconfig tsconfig.node.json server/test-db-connection.ts",
     "railway:setup": "npm run migrate",
     "railway:build": "npm run build:fast",
-    "test": "node run-tests.js"
+    "test": "node run-tests.js",
+    "test:coverage": "c8 --reporter=html --reporter=text --reporter=json node run-tests.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -163,6 +164,7 @@
     "@vitest/coverage-v8": "^1.6.0",
     "@vitest/ui": "^1.6.0",
     "autoprefixer": "^10.4.23",
+    "c8": "^11.0.0",
     "drizzle-kit": "^0.31.8",
     "esbuild": "^0.27.2",
     "jsdom": "^28.1.0",

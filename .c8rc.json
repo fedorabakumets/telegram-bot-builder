@@ -1,0 +1,22 @@
+{
+  "all": true,
+  "full": true,
+  "clean": true,
+  "reporter": ["html", "text", "json", "lcov"],
+  "reportsDir": "./coverage",
+  "include": [
+    "lib/bot-generator/**/*.ts",
+    "lib/generate/**/*.ts",
+    "lib/storage/**/*.ts",
+    "shared/**/*.ts"
+  ],
+  "exclude": [
+    "lib/tests/**",
+    "lib/bot-generator/Keyboard/EXAMPLES.ts",
+    "**/*.d.ts",
+    "**/*.test.ts"
+  ],
+  "extension": [".ts"],
+  "cache": true,
+  "tempDirectory": "./coverage/tmp"
+}

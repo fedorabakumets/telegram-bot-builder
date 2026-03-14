@@ -15,6 +15,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Проверка флага --coverage
+const useCoverage = process.argv.includes('--coverage');
+
 async function runTests() {
   const testFiles = [];
 
@@ -41,10 +44,17 @@ async function runTests() {
   console.log('Запуск тестов...\n');
 
   // Запускаем тесты через tsx для поддержки TypeScript
+  const execArgv = ['--import', 'tsx/esm'];
+  
+  // Добавляем флаг для покрытия если запрошено
+  if (useCoverage) {
+    console.log('📊 Сбор метрик покрытия...\n');
+  }
+
   const testRun = run({
     files: testFiles,
     timeout: 300000, // 5 минут на тест для обработки долгой генерации кода
-    execArgv: ['--import', 'tsx/esm']
+    execArgv
   });
 
   // Выводим результаты
