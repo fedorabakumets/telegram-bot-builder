@@ -4,7 +4,6 @@
  */
 
 import { Environment, FileSystemLoader } from 'nunjucks';
-import * as path from 'path';
 import {
   safeNameFilter,
   commandToHandlerFilter,
