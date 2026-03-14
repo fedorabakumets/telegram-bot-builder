@@ -47,11 +47,11 @@ ADMIN_IDS = [int(x.strip()) for x in os.getenv("ADMIN_IDS", "").replace(" ", "")
 # ID проекта для сохранения в базу данных
 PROJECT_ID = {{ projectId }}
 logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")
+{% endif %}
 
 # Директория проекта
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")
-{% endif %}
 
 {# Хранилище состояний (временное) #}
 # Хранилище пользователей (временное состояние)
