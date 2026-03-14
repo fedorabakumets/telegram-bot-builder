@@ -1,39 +1,48 @@
 {#
   Утилиты для бота
   
-  @fileoverview Вспомогательные функции: замена переменных, время, проверки
+  @fileoverview Вспомогательные функции: is_admin, check_auth, get_user_variables
+  @param {boolean} userDatabaseEnabled - Включена ли база данных
 #}
 
-def get_moscow_time():
-    """Возвращает текущее время в московском часовом поясе"""
-    from datetime import datetime, timezone, timedelta
-    moscow_tz = timezone(timedelta(hours=3))
-    return datetime.now(moscow_tz).isoformat()
-
-
-def replace_variables_in_text(text_content, variables_dict, variable_filters=None):
-    """Заменяет переменные формата {variable_name} в тексте на их значения"""
-    if not text_content or not variables_dict:
-        return text_content
-    
-    if variable_filters is None:
-        variable_filters = {}
-    
-    for var_name, var_data in variables_dict.items():
-        placeholder = "{" + var_name + "}"
-        if placeholder in text_content:
-            if isinstance(var_data, dict) and "value" in var_data:
-                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-            elif var_data is not None:
-                var_value = str(var_data)
-            else:
-                var_value = var_name
-            
-            text_content = text_content.replace(placeholder, var_value)
-    
-    return text_content
-
+# Утилитарные функции
+from aiogram import types
 
 async def is_admin(user_id: int) -> bool:
-    """Проверяет является ли пользователь администратором"""
     return user_id in ADMIN_IDS
+
+
+async def is_private_chat(message: types.Message) -> bool:
+    return message.chat.type == "private"
+
+
+def get_user_variables(user_id):
+    """Получает все переменные пользователя из локального хранилища
+
+    Args:
+        user_id (int): ID пользователя Telegram
+
+    Returns:
+        dict: Словарь с переменными пользователя или пустой словарь если пользователь не найден
+    """
+    # Возвращаем переменные пользователя из локального хранилища или пустой словарь
+    return user_data.get(user_id, {})
+
+
+{% if userDatabaseEnabled %}
+async def check_auth(user_id: int) -> bool:
+    # Проверяем наличие пользователя в БД или локальном хранилище
+    if db_pool:
+        user = await get_user_from_db(user_id)
+        return user is not None
+    return user_id in user_data
+
+
+# Функции для сохранения в таблицы БД
+# Здесь будут функции для сохранения в таблицы
+# generateSaveHelperFunctions будет добавлен отдельно
+{% else %}
+async def check_auth(user_id: int) -> bool:
+    return user_id in user_data
+
+{% endif %}

@@ -7,12 +7,15 @@
 #}
 
 {# Загрузка переменных окружения #}
+# Загрузка переменных окружения из .env файла
 load_dotenv()
 
 {# Токен бота #}
+# Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 {# Настройка логирования #}
+# Настройка логирования с поддержкой UTF-8
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
@@ -23,33 +26,47 @@ logging.basicConfig(
 )
 
 {# Подавление логирования asyncpg (настраивается через .env) #}
-{% if userDatabaseEnabled %}
+# Подавление всех сообщений от asyncpg (настраивается через .env)
 if os.getenv("DISABLE_ASYNC_LOG", "true").lower() == "true":
     logging.getLogger("asyncpg").setLevel(logging.CRITICAL)
-{% endif %}
 
 {# Создание бота и диспетчера #}
+# Создание бота и диспетчера
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 {# Список администраторов #}
+# Список администраторов (загружается из .env)
 ADMIN_IDS = [int(x.strip()) for x in os.getenv("ADMIN_IDS", "").replace(" ", "").split(",") if x.strip()]
 
 {# Конфигурация проекта #}
 {% if projectId %}
+# ┌─────────────────────────────────────────┐
+# │        Конфигурация проекта             │
+# └─────────────────────────────────────────┘
+# ID проекта для сохранения в базу данных
 PROJECT_ID = {{ projectId }}
 logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")
 
+# Директория проекта
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")
 {% endif %}
 
 {# Хранилище состояний (временное) #}
+# Хранилище пользователей (временное состояние)
 user_data = {}
 all_user_vars = {}  # Глобальные переменные пользователя
 
 {# База данных #}
 {% if userDatabaseEnabled %}
+# ┌─────────────────────────────────────────┐
+# │           Настройки базы данных         │
+# └─────────────────────────────────────────┘
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+# ┌─────────────────────────────────────────┐
+# │      Пул соединений с базой данных    │
+# └─────────────────────────────────────────┘
 db_pool = None
 {% endif %}

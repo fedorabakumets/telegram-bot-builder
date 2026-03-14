@@ -1,21 +1,25 @@
 {#
-  Заголовок файла: UTF-8 кодировка для Windows
+  Заголовок файла: UTF-8 кодировка и базовые импорты
   
-  @fileoverview Обеспечивает корректную работу UTF-8 на Windows
+  @fileoverview Генерирует UTF-8 кодировку и базовые импорты для Python бота
+  @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей
+  @param {boolean} hasInlineButtons - Есть ли inline кнопки
+  @param {boolean} hasMediaNodes - Есть ли узлы с медиа
 #}
-
 # -*- coding: utf-8 -*-
 import os
 import sys
 
-{# UTF-8 кодировка для Windows #}
+# Устанавливаем UTF-8 кодировку для вывода
 if sys.platform.startswith("win"):
+    # Для Windows устанавливаем UTF-8 кодировку
     os.environ["PYTHONIOENCODING"] = "utf-8"
     try:
         import codecs
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
     except (AttributeError, UnicodeError):
+        # Fallback для старых версий Python
         import codecs
         sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
         sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())

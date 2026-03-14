@@ -146,7 +146,6 @@ export function renderMacro(
   args: Record<string, any>
 ): string {
   const environment = initEnvironment();
-  const template = environment.getTemplate(`macros/${macroFile}`);
   
   // Создаём функцию которая возвращает результат вызова макроса
   const templateSource = `{% from 'macros/${macroFile}' import ${macroName} %}{{ ${macroName}(${JSON.stringify(args)}) }}`;
