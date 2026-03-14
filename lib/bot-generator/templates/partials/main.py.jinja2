@@ -1,0 +1,56 @@
+{#
+  Запуск бота
+  
+  @fileoverview Главная функция main() и запуск поллинга
+#}
+
+async def set_bot_commands():
+    """Настройка меню команд для BotFather"""
+    commands = [
+        BotCommand(command="start", description="Запустить бота"),
+    ]
+    await bot.set_my_commands(commands)
+
+
+async def main():
+    """Главная функция запуска бота"""
+    global db_pool
+    
+    def signal_handler(signum, frame):
+        print(f"⚠️ Получен сигнал {signum}, начинаем корректное завершение...")
+        import sys
+        sys.exit(0)
+    
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    try:
+        {% if userDatabaseEnabled %}
+        await init_database()
+        {% endif %}
+        
+        await set_bot_commands()
+        
+        {% if userDatabaseEnabled %}
+        dp.message.middleware(message_logging_middleware)
+        {% endif %}
+        
+        print("🚀 Бот запущен и готов к работе!")
+        await dp.start_polling(bot)
+    except KeyboardInterrupt:
+        print("⚠️ Получен сигнал остановки, завершаем работу...")
+    except SystemExit:
+        print("⚠️ Системное завершение, завершаем работу...")
+    except Exception as e:
+        logging.error(f"Ошибка: {e}")
+    finally:
+        {% if userDatabaseEnabled %}
+        if db_pool:
+            await db_pool.close()
+        {% endif %}
+        
+        await bot.session.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

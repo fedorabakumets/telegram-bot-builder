@@ -1,0 +1,140 @@
+{#
+  Макросы для генерации обработчиков узлов
+  
+  @fileoverview Предоставляет функции для рендеринга обработчиков разных типов узлов
+  @param {Object} node - Объект узла
+  @param {boolean} enableComments - Включить ли комментарии
+#}
+
+{# Рендеринг обработчика узла #}
+{% macro render_node_handler(node, enableComments) %}
+
+{% if enableComments %}
+# @@NODE_START:{{ node.id }}@@
+{% endif %}
+
+{% if node.type == 'start' %}
+{{ render_start_handler(node, enableComments) }}
+
+{% elif node.type == 'command' %}
+{{ render_command_handler(node, enableComments) }}
+
+{% elif node.type == 'callback' %}
+{{ render_callback_handler(node, enableComments) }}
+
+{% endif %}
+
+{% if enableComments %}
+# @@NODE_END:{{ node.id }}@@
+{% endif %}
+
+{% endmacro %}
+
+
+{# Обработчик команды /start #}
+{% macro render_start_handler(node, enableComments) %}
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
+    {# Регистрация пользователя #}
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    
+    await save_user_to_db(user_id, username, first_name, last_name)
+    
+    {# Инициализация переменных #}
+    user_name = await init_user_variables(user_id, message.from_user)
+    
+    {% if node.data.messageText %}
+    text = "{{ node.data.messageText|e }}"
+    
+    {# Замена переменных #}
+    all_user_vars = await init_all_user_vars(user_id)
+    variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})
+    text = replace_variables_in_text(text, all_user_vars, variable_filters)
+    {% endif %}
+    
+    {% if node.data.buttons %}
+    {{ render_keyboard(node.data.buttons, node.data.keyboardType) }}
+    await message.answer(text, reply_markup=keyboard)
+    {% else %}
+    await message.answer(text)
+    {% endif %}
+{% endmacro %}
+
+
+{# Обработчик команды #}
+{% macro render_command_handler(node, enableComments) %}
+@dp.message(Command("{{ node.data.command|e }}"))
+async def handle_{{ node.data.command|replace('/', '') }}_command(message: types.Message):
+    user_id = message.from_user.id
+    
+    {% if node.data.messageText %}
+    text = "{{ node.data.messageText|e }}"
+    all_user_vars = await init_all_user_vars(user_id)
+    variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})
+    text = replace_variables_in_text(text, all_user_vars, variable_filters)
+    {% endif %}
+    
+    {% if node.data.buttons %}
+    {{ render_keyboard(node.data.buttons, node.data.keyboardType) }}
+    await message.answer(text, reply_markup=keyboard)
+    {% else %}
+    await message.answer(text)
+    {% endif %}
+{% endmacro %}
+
+
+{# Обработчик callback query #}
+{% macro render_callback_handler(node, enableComments) %}
+@dp.callback_query(lambda c: c.data == "{{ node.id|e }}" or c.data.startswith("{{ node.id|e }}_btn_"))
+async def handle_callback_{{ node.id|safe_name }}(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    
+    {# Ответ на callback #}
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+    
+    {% if node.data.messageText %}
+    text = "{{ node.data.messageText|e }}"
+    
+    {# Замена переменных #}
+    all_user_vars = await init_all_user_vars(user_id)
+    variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})
+    text = replace_variables_in_text(text, all_user_vars, variable_filters)
+    {% endif %}
+    
+    {% if node.data.buttons %}
+    {{ render_keyboard(node.data.buttons, node.data.keyboardType) }}
+    await safe_edit_or_send(callback_query, text, node_id="{{ node.id|e }}", reply_markup=keyboard)
+    {% else %}
+    await safe_edit_or_send(callback_query, text, node_id="{{ node.id|e }}")
+    {% endif %}
+{% endmacro %}
+
+
+{# Рендеринг клавиатуры #}
+{% macro render_keyboard(buttons, keyboardType) %}
+{% if keyboardType == 'inline' %}
+keyboard = InlineKeyboardMarkup(inline_keyboard=[
+    {% for row in buttons %}
+    [
+        {% for button in row %}
+        InlineKeyboardButton(text="{{ button.text|e }}", {% if button.callback_data %}callback_data="{{ button.callback_data|e }}"{% endif %}{% if button.url %}url="{{ button.url|e }}"{% endif %}),
+        {% endfor %}
+    ],
+    {% endfor %}
+])
+{% else %}
+builder = ReplyKeyboardBuilder()
+{% for row in buttons %}
+{% for button in row %}
+builder.add(KeyboardButton(text="{{ button.text|e }}"))
+{% endfor %}
+{% endfor %}
+keyboard = builder.as_markup(resize_keyboard=True)
+{% endif %}
+{% endmacro %}

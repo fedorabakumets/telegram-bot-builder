@@ -1,0 +1,20 @@
+{#
+  Универсальные обработчики
+  
+  @fileoverview Fallback обработчики для необработанных сообщений
+#}
+
+@dp.message(F.text)
+async def fallback_text_handler(message: types.Message):
+    """
+    Fallback обработчик для всех текстовых сообщений без специфичного обработчика.
+    """
+    logging.info(f"📩 Получено необработанное текстовое сообщение от {message.from_user.id}: {message.text}")
+
+
+@dp.message(F.photo)
+async def handle_unhandled_photo(message: types.Message):
+    """
+    Обрабатывает фотографии, которые не были обработаны другими обработчиками.
+    """
+    logging.info(f"📸 Получено фото от пользователя {message.from_user.id}")

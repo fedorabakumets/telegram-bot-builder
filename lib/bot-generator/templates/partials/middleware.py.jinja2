@@ -1,0 +1,21 @@
+{#
+  Middleware для логирования сообщений
+  
+  @fileoverview Middleware для автоматического сохранения сообщений в БД
+#}
+
+async def message_logging_middleware(handler, event: types.Message, data: dict):
+    """Middleware для автоматического сохранения входящих сообщений"""
+    try:
+        user_id = str(event.from_user.id)
+        message_text = event.text or event.caption or "[медиа]"
+        
+        await save_message_to_api(
+            user_id=user_id,
+            message_type="user",
+            message_text=message_text,
+        )
+    except Exception as e:
+        logging.error(f"Ошибка в middleware сохранения сообщений: {e}")
+    
+    return await handler(event, data)

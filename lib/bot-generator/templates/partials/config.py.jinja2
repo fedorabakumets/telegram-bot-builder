@@ -1,0 +1,55 @@
+{#
+  Конфигурация бота
+  
+  @fileoverview Настройки бота: токены, администраторы, проект
+  @param {boolean} userDatabaseEnabled - Включена ли база данных
+  @param {number|null} projectId - ID проекта
+#}
+
+{# Загрузка переменных окружения #}
+load_dotenv()
+
+{# Токен бота #}
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+{# Настройка логирования #}
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+{# Подавление логирования asyncpg (настраивается через .env) #}
+{% if userDatabaseEnabled %}
+if os.getenv("DISABLE_ASYNC_LOG", "true").lower() == "true":
+    logging.getLogger("asyncpg").setLevel(logging.CRITICAL)
+{% endif %}
+
+{# Создание бота и диспетчера #}
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+{# Список администраторов #}
+ADMIN_IDS = [int(x.strip()) for x in os.getenv("ADMIN_IDS", "").replace(" ", "").split(",") if x.strip()]
+
+{# Конфигурация проекта #}
+{% if projectId %}
+PROJECT_ID = {{ projectId }}
+logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")
+
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")
+{% endif %}
+
+{# Хранилище состояний (временное) #}
+user_data = {}
+all_user_vars = {}  # Глобальные переменные пользователя
+
+{# База данных #}
+{% if userDatabaseEnabled %}
+DATABASE_URL = os.getenv("DATABASE_URL")
+db_pool = None
+{% endif %}
