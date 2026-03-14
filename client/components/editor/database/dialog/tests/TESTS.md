@@ -7,18 +7,23 @@
 ```
 dialog/tests/
 ├── unit/                          # Unit-тесты (node:test)
-│   ├── utils/                     ✅ 35 тестов
+│   ├── utils/                     ✅ 45 тестов
 │   │   ├── format-user-name.test.ts   ✅ 10 тестов
 │   │   ├── format-date.test.ts        ✅ 8 тестов
 │   │   ├── message-utils.test.ts      ✅ 17 тестов
 │   │   └── node-utils.test.ts         ✅ 10 тестов
 │   └── hooks/                       📝 Требует Vitest
-│       ├── use-bot-data.test.ts       ✅ Шаблон готов
+│       ├── use-bot-data.test.ts       ✅ 5 тестов (шаблон)
+│       ├── use-dialog-messages.test.ts ✅ 7 тестов (шаблон)
 │       └── ...
 ├── components/                    📝 Требует Vitest
-│   ├── formatted-text.test.tsx      ✅ Шаблон готов (20 тестов)
+│   ├── formatted-text.test.tsx      ✅ 20 тестов (шаблон)
+│   ├── message-bubble.test.tsx      ✅ 24 теста (шаблон)
 │   └── ...
 ├── run-unit-tests.ts              # Скрипт запуска
+├── run-simple.ts                  # Простой запуск с UTF-8
+├── run-tests.bat                  # Windows (UTF-8)
+├── run-tests.ps1                  # PowerShell (UTF-8)
 └── README.md                      # Документация
 ```
 
@@ -45,9 +50,9 @@ npx tsx --tsconfig tsconfig.json client/components/editor/database/dialog/tests/
 | Категория | Файлов | Тестов | Статус | Покрытие |
 |-----------|--------|--------|--------|----------|
 | **Утилиты** | 4 | 45 | ✅ Все проходят | ~100% |
-| **Хуки** | 1 | 5 | 📝 Шаблон готов | Требует Vitest |
-| **Компоненты** | 1 | 20 | 📝 Шаблон готов | Требует Vitest |
-| **Итого** | 6 | 70 | 45/70 готовы | 64% |
+| **Хуки** | 2 | 12 | 📝 Шаблоны готовы | Требует Vitest |
+| **Компоненты** | 2 | 44 | 📝 Шаблоны готовы | Требует Vitest |
+| **Итого** | 8 | 101 | 45/101 готовы | 45% |
 
 ## ✅ Существующие тесты
 
@@ -70,6 +75,38 @@ for file in client/components/editor/database/dialog/tests/unit/utils/*.test.ts;
   npx tsx --tsconfig tsconfig.json "$file"
 done
 ```
+
+### 📝 Шаблоны тестов для сообщений
+
+#### Хуки (Vitest + React Query)
+
+| Файл | Тестов | Описание |
+|------|--------|----------|
+| [`use-bot-data.test.ts`](unit/hooks/use-bot-data.test.ts) | 5 | Загрузка данных бота |
+| [`use-dialog-messages.test.ts`](unit/hooks/use-dialog-messages.test.ts) | 7 | Загрузка сообщений диалога |
+
+**Тестируемые сценарии:**
+- ✅ Успешная загрузка сообщений
+- ✅ Обработка ошибок API
+- ✅ Кэширование данных
+- ✅ Повторный запрос при изменении userId
+- ✅ Возврат пустого массива при отсутствии userId
+
+#### Компоненты (Vitest + Testing Library)
+
+| Файл | Тестов | Описание |
+|------|--------|----------|
+| [`formatted-text.test.tsx`](components/formatted-text.test.tsx) | 20 | Парсинг HTML-форматирования |
+| [`message-bubble.test.tsx`](components/message-bubble.test.tsx) | 24 | Отображение сообщений |
+
+**Тестируемые сценарии для MessageBubble:**
+- ✅ Отображение сообщений бота/пользователя
+- ✅ Форматирование текста (HTML теги)
+- ✅ Кнопки сообщений (отображение/нажатие)
+- ✅ Временные метки
+- ✅ Аватары
+- ✅ Медиафайлы (фото, видео)
+- ✅ DOM структура и CSS классы
 
 ## 📝 Шаблоны тестов
 
