@@ -15,7 +15,7 @@ describe('formatUserName', () => {
   });
 
   it('должен возвращать пустую строку для undefined', () => {
-    const result = formatUserName(undefined);
+    const result = formatUserName(undefined as any);
     assert.strictEqual(result, '');
   });
 
