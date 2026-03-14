@@ -181,7 +181,15 @@ vi.mock('../../utils', () => ({
 }));
 
 // Моки для localStorage
-const localStorageMock = {
+interface LocalStorageMock {
+  data: Record<string, string>;
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
+  removeItem: (key: string) => void;
+  clear: () => void;
+}
+
+const localStorageMock: LocalStorageMock = {
   data: {} as Record<string, string>,
   getItem: vi.fn((key: string) => localStorageMock.data[key] || null),
   setItem: vi.fn((key: string, value: string) => {
