@@ -16,7 +16,7 @@ describe('node-utils', () => {
     });
 
     it('должен возвращать пустой массив для undefined', () => {
-      const result = collectNodesFromProjectData(undefined);
+      const result = collectNodesFromProjectData(undefined as any);
       assert.deepStrictEqual(result, []);
     });
 
