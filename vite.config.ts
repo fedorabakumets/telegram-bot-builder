@@ -52,7 +52,8 @@ const serverOnlyModules: Plugin = {
          id.includes('generate-header') || 
          id.includes('generate-imports') || 
          id.includes('generate-config') || 
-         id.includes('generate-utils'))) {
+         id.includes('generate-utils') ||
+         id.includes('get-templates-dir'))) {
       // Возвращаем пустой модуль для браузера
       return { id, external: true };
     }
