@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">46.8% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>44/94</span>
+                <span class='fraction'>0/94</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">46.8% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>44/94</span>
+                <span class='fraction'>0/94</span>
             </div>
         
             
@@ -157,50 +157,7 @@
 <a name='L92'></a><a href='#L92'>92</a>
 <a name='L93'></a><a href='#L93'>93</a>
 <a name='L94'></a><a href='#L94'>94</a>
-<a name='L95'></a><a href='#L95'>95</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L95'></a><a href='#L95'>95</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -251,50 +208,93 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
- * @fileoverview Компонент панели выбора и отправки узла
- * @description Использует TargetNodeSelector из панели свойств
- */
-&nbsp;
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { RefreshCw, Send } from 'lucide-react';
-import { TargetNodeSelector } from '@/components/editor/properties/components/keyboard/target-node-selector';
-import { useSendNode } from '../hooks/use-send-node';
-import { useProjectData } from '../hooks/use-project-data';
-import { collectNodesFromProjectData } from '../utils/node-utils';
-import { formatNodeDisplay } from '@/components/editor/properties/utils/node-formatters';
-import type { Node } from '@shared/schema';
-&nbsp;
-/**
- * Свойства компонента NodeSender
- */
-export interface NodeSenderProps {
-  /** Идентификатор проекта */
-  projectId: number;
-  /** ID выбранного пользователя */
-  userId?: number;
-  /** Колбэк после отправки */
-  onSent?: () =&gt; void;
-}
-&nbsp;
-/** Фиктивный узел для совместимости с TargetNodeSelector */
-const DUMMY_NODE: Node = {
-  id: '',
-  type: 'message',
-  position: { x: 0, y: 0 },
-  data: {
-    messageText: '',
-    buttons: [],
-    keyboardType: 'none',
-    options: [],
-  } as any,
-};
-&nbsp;
-/**
- * Компонент для выбора и отправки узла пользователю
- */
-export <span class="fstat-no" title="function not covered" >function NodeSender({ projectId, userId, onSent }: NodeSenderProps) {</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
+<span class="cstat-no" title="statement not covered" > * @fileoverview Компонент панели выбора и отправки узла</span>
+<span class="cstat-no" title="statement not covered" > * @description Использует TargetNodeSelector из панели свойств</span>
+<span class="cstat-no" title="statement not covered" > */</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >import { useState } from 'react';</span>
+<span class="cstat-no" title="statement not covered" >import { Button } from '@/components/ui/button';</span>
+<span class="cstat-no" title="statement not covered" >import { RefreshCw, Send } from 'lucide-react';</span>
+<span class="cstat-no" title="statement not covered" >import { TargetNodeSelector } from '@/components/editor/properties/components/keyboard/target-node-selector';</span>
+<span class="cstat-no" title="statement not covered" >import { useSendNode } from '../hooks/use-send-node';</span>
+<span class="cstat-no" title="statement not covered" >import { useProjectData } from '../hooks/use-project-data';</span>
+<span class="cstat-no" title="statement not covered" >import { collectNodesFromProjectData } from '../utils/node-utils';</span>
+<span class="cstat-no" title="statement not covered" >import { formatNodeDisplay } from '@/components/editor/properties/utils/node-formatters';</span>
+<span class="cstat-no" title="statement not covered" >import type { Node } from '@shared/schema';</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >/**</span>
+<span class="cstat-no" title="statement not covered" > * Свойства компонента NodeSender</span>
+<span class="cstat-no" title="statement not covered" > */</span>
+<span class="cstat-no" title="statement not covered" >export interface NodeSenderProps {</span>
+<span class="cstat-no" title="statement not covered" >  /** Идентификатор проекта */</span>
+<span class="cstat-no" title="statement not covered" >  projectId: number;</span>
+<span class="cstat-no" title="statement not covered" >  /** ID выбранного пользователя */</span>
+<span class="cstat-no" title="statement not covered" >  userId?: number;</span>
+<span class="cstat-no" title="statement not covered" >  /** Колбэк после отправки */</span>
+<span class="cstat-no" title="statement not covered" >  onSent?: () =&gt; void;</span>
+<span class="cstat-no" title="statement not covered" >}</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >/** Фиктивный узел для совместимости с TargetNodeSelector */</span>
+<span class="cstat-no" title="statement not covered" >const DUMMY_NODE: Node = {</span>
+<span class="cstat-no" title="statement not covered" >  id: '',</span>
+<span class="cstat-no" title="statement not covered" >  type: 'message',</span>
+<span class="cstat-no" title="statement not covered" >  position: { x: 0, y: 0 },</span>
+<span class="cstat-no" title="statement not covered" >  data: {</span>
+<span class="cstat-no" title="statement not covered" >    messageText: '',</span>
+<span class="cstat-no" title="statement not covered" >    buttons: [],</span>
+<span class="cstat-no" title="statement not covered" >    keyboardType: 'none',</span>
+<span class="cstat-no" title="statement not covered" >    options: [],</span>
+<span class="cstat-no" title="statement not covered" >  } as any,</span>
+<span class="cstat-no" title="statement not covered" >};</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >/**</span>
+<span class="cstat-no" title="statement not covered" > * Компонент для выбора и отправки узла пользователю</span>
+<span class="cstat-no" title="statement not covered" > */</span>
+<span class="cstat-no" title="statement not covered" >export function NodeSender({ projectId, userId, onSent }: NodeSenderProps) {</span>
 <span class="cstat-no" title="statement not covered" >  const [selectedNodeId, setSelectedNodeId] = useState&lt;string | null&gt;(null);</span>
 <span class="cstat-no" title="statement not covered" >  const { project } = useProjectData(projectId);</span>
 <span class="cstat-no" title="statement not covered" >  const sendNodeMutation = useSendNode(projectId, onSent);</span>
@@ -352,7 +352,7 @@ export <span class="fstat-no" title="function not covered" >function NodeSender(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-14T12:23:17.908Z
+                at 2026-03-14T12:51:55.229Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

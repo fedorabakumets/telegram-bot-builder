@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">63.04% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>46/46</span>
+                <span class='fraction'>29/46</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>7/7</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">25% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>1/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">63.04% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>46/46</span>
+                <span class='fraction'>29/46</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -126,35 +126,35 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">44x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @fileoverview Хук отправки сообщения пользователю
  * Управляет мутацией отправки и обработкой результатов
@@ -179,26 +179,26 @@ export function useSendMessage(
   const { toast } = useToast();
 &nbsp;
   return useMutation({
-    mutationFn: async ({ messageText }: { messageText: string }) =&gt; {
-      if (!userId) throw new Error('No user selected');
-      return apiRequest('POST', `/api/projects/${projectId}/users/${userId}/send-message`, {
-        messageText
-      });
-    },
-    onSuccess: () =&gt; {
-      onSent?.();
-      toast({
-        title: "Сообщение отправлено",
-        description: "Сообщение успешно отправлено пользователю",
-      });
-    },
-    onError: () =&gt; {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось отправить сообщение",
-        variant: "destructive",
-      });
-    }
+    mutationFn: <span class="fstat-no" title="function not covered" >async ({ messageText }: { messageText: string }) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      if (!userId) throw new Error('No user selected');</span>
+<span class="cstat-no" title="statement not covered" >      return apiRequest('POST', `/api/projects/${projectId}/users/${userId}/send-message`, {</span>
+<span class="cstat-no" title="statement not covered" >        messageText</span>
+<span class="cstat-no" title="statement not covered" >      });</span>
+<span class="cstat-no" title="statement not covered" >    },</span>
+    onSuccess: <span class="fstat-no" title="function not covered" >() =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      onSent?.();</span>
+<span class="cstat-no" title="statement not covered" >      toast({</span>
+<span class="cstat-no" title="statement not covered" >        title: "Сообщение отправлено",</span>
+<span class="cstat-no" title="statement not covered" >        description: "Сообщение успешно отправлено пользователю",</span>
+<span class="cstat-no" title="statement not covered" >      });</span>
+<span class="cstat-no" title="statement not covered" >    },</span>
+    onError: <span class="fstat-no" title="function not covered" >() =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      toast({</span>
+<span class="cstat-no" title="statement not covered" >        title: "Ошибка",</span>
+<span class="cstat-no" title="statement not covered" >        description: "Не удалось отправить сообщение",</span>
+<span class="cstat-no" title="statement not covered" >        variant: "destructive",</span>
+<span class="cstat-no" title="statement not covered" >      });</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
   });
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -208,7 +208,7 @@ export function useSendMessage(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-14T12:23:17.908Z
+                at 2026-03-14T12:51:55.229Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
