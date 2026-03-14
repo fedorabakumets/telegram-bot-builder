@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">48.27% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>14/29</span>
+                <span class='fraction'>29/29</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">48.27% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>14/29</span>
+                <span class='fraction'>29/29</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -106,21 +106,21 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @fileoverview Хук загрузки данных бота
  * Загружает информацию о боте из bot_users
@@ -134,22 +134,22 @@ import { UserBotData } from '@shared/schema';
  * @param projectId - Идентификатор проекта
  * @returns Данные бота и состояние загрузки
  */
-export <span class="fstat-no" title="function not covered" >function useBotData(projectId: number) {</span>
-<span class="cstat-no" title="statement not covered" >  const { data: bot, isLoading } = useQuery&lt;UserBotData | null&gt;({</span>
-<span class="cstat-no" title="statement not covered" >    queryKey: [`/api/projects/${projectId}/bot/data`],</span>
-<span class="cstat-no" title="statement not covered" >    enabled: !!projectId,</span>
-<span class="cstat-no" title="statement not covered" >    select: (data) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      // Защита: если данные не объект или null, возвращаем null</span>
-<span class="cstat-no" title="statement not covered" >      if (!data || typeof data !== 'object') {</span>
-<span class="cstat-no" title="statement not covered" >        console.warn('useBotData: API returned invalid data:', data);</span>
-<span class="cstat-no" title="statement not covered" >        return null;</span>
-<span class="cstat-no" title="statement not covered" >      }</span>
-<span class="cstat-no" title="statement not covered" >      return data;</span>
-<span class="cstat-no" title="statement not covered" >    },</span>
-<span class="cstat-no" title="statement not covered" >  });</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >  return { bot, isLoading };</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+export function useBotData(projectId: number) {
+  const { data: bot, isLoading } = useQuery&lt;UserBotData | null&gt;({
+    queryKey: [`/api/projects/${projectId}/bot/data`],
+    enabled: !!projectId,
+    select: (data) =&gt; {
+      // Защита: если данные не объект или null, возвращаем null
+      if (!data || typeof data !== 'object') {
+        console.warn('useBotData: API returned invalid data:', data);
+        return null;
+      }
+      return data;
+    },
+  });
+&nbsp;
+  return { bot, isLoading };
+}
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -157,7 +157,7 @@ export <span class="fstat-no" title="function not covered" >function useBotData(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-14T11:20:17.359Z
+                at 2026-03-14T11:39:52.361Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
