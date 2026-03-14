@@ -8,9 +8,11 @@
  * Запуск: npx vitest run client/components/editor/database/dialog/tests/components/formatted-text.test.tsx
  */
 
+/// <reference types="vitest/globals" />
+
+import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import { FormattedText } from '../../components/formatted-text';
-import { describe, expect, it } from 'vitest';
 
 describe('FormattedText', () => {
   describe('Рендеринг базового текста', () => {

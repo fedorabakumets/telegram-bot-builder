@@ -8,11 +8,12 @@
  * Запуск: npx vitest run client/components/editor/database/dialog/tests/components/message-bubble.test.tsx
  */
 
+/// <reference types="vitest/globals" />
+
 import { render, screen } from '@testing-library/react';
 import { MessageBubble } from '../../components/message-bubble';
 import type { BotMessageWithMedia } from '../../types';
 import type { UserBotData } from '@shared/schema';
-import { describe, expect, it } from 'vitest';
 
 /**
  * Создаёт тестовое сообщение
