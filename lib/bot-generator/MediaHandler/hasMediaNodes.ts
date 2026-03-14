@@ -18,6 +18,9 @@ export function hasMediaNodes(nodes: BotNode[]): boolean {
     node.data?.enablePhotoInput ||
     node.data?.enableVideoInput ||
     node.data?.enableAudioInput ||
-    node.data?.enableDocumentInput)
+    node.data?.enableDocumentInput ||
+    // Проверяем attachedMedia (массив URL или переменных)
+    (node.data?.attachedMedia && Array.isArray(node.data.attachedMedia) && node.data.attachedMedia.length > 0)
+    )
   );
 }
