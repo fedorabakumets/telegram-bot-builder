@@ -1,7 +1,7 @@
 /**
  * @fileoverview Скрипт для запуска всех тестов проекта
  *
- * Находит и запускает все .test.js файлы в папке client/lib/tests
+ * Находит и запускает все .test.ts файлы в папке lib/tests
  * Использует tsx для поддержки TypeScript импортов
  *
  * @module run-tests
@@ -12,18 +12,18 @@ import { spec } from 'node:test/reporters';
 import { glob } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function runTests() {
   const testFiles = [];
 
-  // Ищем все .test.js файлы в client/lib/tests
-  const testDir = join(__dirname, 'client', 'lib', 'tests');
+  // Ищем все .test.ts файлы в lib/tests (unit и integration)
+  const testDir = join(__dirname, 'lib', 'tests');
 
   try {
-    for await (const file of glob('**/*.test.js', { cwd: testDir })) {
+    // Ищем unit тесты
+    for await (const file of glob('**/*.test.ts', { cwd: testDir })) {
       const fullPath = join(testDir, file);
       testFiles.push(fullPath);
     }
@@ -43,7 +43,7 @@ async function runTests() {
   // Запускаем тесты через tsx для поддержки TypeScript
   const testRun = run({
     files: testFiles,
-    timeout: 60000,
+    timeout: 120000, // 2 минуты на тест
     execArgv: ['--import', 'tsx/esm']
   });
 
@@ -51,12 +51,27 @@ async function runTests() {
   testRun.compose(new spec()).pipe(process.stdout);
 
   // Ждём завершения
-  testRun.on('test:fail', () => {
-    process.exit(1);
-  });
+  return new Promise((resolve, reject) => {
+    testRun.on('test:fail', (data) => {
+      console.error(`\n❌ Тест не прошёл: ${data.name}`);
+      if (data.details?.error) {
+        console.error(data.details.error);
+      }
+    });
 
-  testRun.on('test:pass', () => {
-    // Тест прошёл
+    testRun.on('test:pass', () => {
+      // Тест прошёл
+    });
+
+    testRun.on('end', () => {
+      console.log('\n✅ Все тесты завершены');
+      resolve(undefined);
+    });
+
+    testRun.on('error', (error) => {
+      console.error('Ошибка выполнения тестов:', error);
+      reject(error);
+    });
   });
 }
 

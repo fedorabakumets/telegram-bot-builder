@@ -72,7 +72,7 @@ npx c8 --reporter=html npm test
  */
 
 import { describe, it } from 'node:test';
-import assert from 'node:assert';
+import * as assert from 'node:assert';
 import { myFunction } from '../../module';
 
 describe('MyModule', () => {
