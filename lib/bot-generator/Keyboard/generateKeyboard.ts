@@ -5,7 +5,6 @@ import { generateButtonText } from '../format/generateButtonText';
 import { generateWaitingStateCode } from '../format/generateWaitingStateCode';
 import { toPythonBoolean } from '../format/toPythonBoolean';
 import { generateUniqueShortId } from '../format/generateUniqueShortId';
-import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { getAdjustCode } from './getAdjustCode';
 import { generateUniversalVariableReplacement } from '../database/generateUniversalVariableReplacement';
 import { escapePythonString } from '../format/escapePythonString';
@@ -432,7 +431,7 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
 
         if (hasManualLayout) {
           // Если есть ручная раскладка, добавляем кнопки в порядке из layout
-          const continueText = completeButton?.text || node.data.continueButtonText || 'Готово';
+          const _continueText = completeButton?.text || node.data.continueButtonText || 'Готово';
           const allButtonsMap = new Map<string, any>();
 
           // Создаём карту всех кнопок
@@ -446,35 +445,38 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
           }
 
           // Добавляем кнопки в порядке из keyboardLayout
-          node.data.keyboardLayout.rows.forEach((row: any) => {
-            row.buttonIds.forEach((buttonId: string) => {
-              const button = allButtonsMap.get(buttonId);
-              if (!button) return;
+          const keyboardLayout = node.data.keyboardLayout;
+          if (keyboardLayout) {
+            keyboardLayout.rows.forEach((row: any) => {
+              row.buttonIds.forEach((buttonId: string) => {
+                const button = allButtonsMap.get(buttonId);
+                if (!button) return;
 
-              if (button.action === 'complete') {
-                // Кнопка "Готово"
-                const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
-                code += `${indent3}builder.add(InlineKeyboardButton(text=${escapePythonString(button.text)}, callback_data="done_${shortNodeIdForDone}"))\n`;
-              } else if (button.action === 'selection') {
-                // Кнопка выбора с галочкой
-                const buttonValue = button.target || button.id || button.text;
-                const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
-                const escapedButtonText = button.text.replace(/'/g, "\\'");
-                code += `${indent3}# Проверяем каждый интерес и добавляем галочку если он выбран\n`;
-                code += `${indent3}logging.info(f"🔧 /START: Проверяем галочку для кнопки '${escapedButtonText}' в списке: {saved_interests}")\n`;
-                code += `${indent3}${safeVarName}_selected = ${escapePythonString(button.text)} in saved_interests\n`;
-                code += `${indent3}logging.info(f"🔍 /START: РЕЗУЛЬТАТ для '${escapedButtonText}': selected={${safeVarName}_selected}")\n`;
-                code += `${indent3}${safeVarName}_text = "✅ ${escapedButtonText}" if ${safeVarName}_selected else "${escapedButtonText}"\n`;
-                code += `${indent3}logging.info(f"📱 /START: СОЗДАЕМ КНОПКУ: text='{${safeVarName}_text}'")\n`;
-                code += `${indent3}builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
-              } else if (button.action === "url") {
-                code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
-              } else if (button.action === 'goto') {
-                const callbackData = button.target || button.id || 'no_action';
-                code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
-              }
+                if (button.action === 'complete') {
+                  // Кнопка "Готово"
+                  const shortNodeIdForDone = generateUniqueShortId(node.id, allNodeIds || []);
+                  code += `${indent3}builder.add(InlineKeyboardButton(text=${escapePythonString(button.text)}, callback_data="done_${shortNodeIdForDone}"))\n`;
+                } else if (button.action === 'selection') {
+                  // Кнопка выбора с галочкой
+                  const buttonValue = button.target || button.id || button.text;
+                  const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                  const escapedButtonText = button.text.replace(/'/g, "\\'");
+                  code += `${indent3}# Проверяем каждый интерес и добавляем галочку если он выбран\n`;
+                  code += `${indent3}logging.info(f"🔧 /START: Проверяем галочку для кнопки '${escapedButtonText}' в списке: {saved_interests}")\n`;
+                  code += `${indent3}${safeVarName}_selected = ${escapePythonString(button.text)} in saved_interests\n`;
+                  code += `${indent3}logging.info(f"🔍 /START: РЕЗУЛЬТАТ для '${escapedButtonText}': selected={${safeVarName}_selected}")\n`;
+                  code += `${indent3}${safeVarName}_text = "✅ ${escapedButtonText}" if ${safeVarName}_selected else "${escapedButtonText}"\n`;
+                  code += `${indent3}logging.info(f"📱 /START: СОЗДАЕМ КНОПКУ: text='{${safeVarName}_text}'")\n`;
+                  code += `${indent3}builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
+                } else if (button.action === "url") {
+                  code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+                } else if (button.action === 'goto') {
+                  const callbackData = button.target || button.id || 'no_action';
+                  code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+                }
+              });
             });
-          });
+          }
         } else {
           // Старая логика: добавляем кнопки в порядке массива
           // Добавляем кнопки для множественного выбора с логикой галочек
@@ -509,7 +511,7 @@ export function generateKeyboard(node: Node, allNodeIds: string[] = []): string 
 
         // Автоматическое распределение колонок
         // Для множественного выбора учитываем все кнопки: селекции + другие + завершение
-        const allButtons: Button[] = [...selectionButtons, ...otherButtons];
+        const _allButtons: Button[] = [...selectionButtons, ...otherButtons];
         code += `${indent3}keyboard = builder.as_markup()\n`;
 
         // Проверяем наличие изображения

@@ -12,7 +12,6 @@ import { generateCallbackHandlerInit } from './callback-handler-init';
 import { generateMultiSelectDoneButton, generateMultiSelectInit, generateMultiSelectReplyKeyboard, generateMultiSelectInlineKeyboard } from './multi-select';
 import { generateMultiSelectHandler, generateMultiSelectComplete } from './multi-select-handler';
 import { generateBroadcastNodeHandler, isBroadcastNode } from './broadcast-node-handler';
-import { generateSkipDataCollectionCheck } from './skip-data-collection';
 import { generateConditionalMessagesCheck } from './conditional-messages';
 import { hasConditionalMessages } from './conditional-messages-handler';
 import { generateMediaVariablesSetup } from './media-variables';

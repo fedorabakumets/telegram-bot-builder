@@ -13,9 +13,9 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 /**
  * Добавляет в код асинхронную функцию для сохранения сообщений в базу данных напрямую
  * @param {string[]} codeLines - Массив строк кода, в который будет добавлена функция
- * @param {number | null} projectId - ID проекта для сохранения в базу данных
+ * @param {_projectId} ID проекта для сохранения в базу данных
  */
-export function save_message_to_api(codeLines: string[], projectId: number | null) {
+export function save_message_to_api(codeLines: string[], _projectId: number | null) {
     const dbFunctionCodeLines: string[] = [];
 
     dbFunctionCodeLines.push('# Функция для сохранения сообщений в базу данных напрямую (без API)');

@@ -23,6 +23,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(process.cwd(), 'client'),
+      '@lib': path.resolve(process.cwd(), 'lib'),
       '@shared': path.resolve(process.cwd(), 'shared'),
       '@assets': path.resolve(process.cwd(), 'attached_assets'),
     },

@@ -9,7 +9,6 @@
 
 import { Button } from '../../types';
 import { generateButtonText, generateUniqueShortId } from '../../format';
-import { escapePythonString } from '../../format/escapePythonString';
 
 /**
  * Параметры для генерации inline клавиатуры multi-select

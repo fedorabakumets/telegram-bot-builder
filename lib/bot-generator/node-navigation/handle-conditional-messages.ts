@@ -126,7 +126,7 @@ function generateConditionalKeyboard(
     condition.enableTextInput === true;
 
   if (condCollectInput) {
-    code += generateConditionalInputWait(condition, bodyIndent, targetNodeId);
+    code += generateConditionalInputWait(condition, bodyIndent, targetNode);
   } else {
     code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура (сбор ответов НЕ настроен)")\n`;
   }
@@ -140,7 +140,7 @@ function generateConditionalKeyboard(
 function generateConditionalInputWait(
   condition: ConditionalMessage,
   bodyIndent: string,
-  targetNodeId: string
+  targetNode: Node
 ): string {
   let code = '';
   const condInputVariable = condition.inputVariable || condition.variableName || 'response';
@@ -152,7 +152,7 @@ function generateConditionalInputWait(
   code += `${bodyIndent}        "type": "text",\n`;
   code += `${bodyIndent}        "variable": "${condInputVariable}",\n`;
   code += `${bodyIndent}        "save_to_database": True,\n`;
-  code += `${bodyIndent}        "node_id": "${targetNodeId}",\n`;
+  code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
   code += `${bodyIndent}        "next_node_id": "${nextNodeAfterCondition}",\n`;
   code += `${bodyIndent}        "appendVariable": ${toPythonBoolean(targetNode.data.appendVariable || false)}\n`;
   code += `${bodyIndent}    }\n`;

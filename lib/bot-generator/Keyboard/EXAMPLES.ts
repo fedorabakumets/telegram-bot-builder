@@ -21,7 +21,7 @@ const buttons = [
 ];
 
 // Пример 1: Создание новой раскладки
-const layout1 = migrateKeyboardLayout(buttons, undefined, 2);
+const _layout1 = migrateKeyboardLayout(buttons, undefined, 2);
 // Результат:
 // {
 //   rows: [
@@ -39,11 +39,11 @@ const existingLayout = {
   columns: 3,
   autoLayout: false
 };
-const layout2 = migrateKeyboardLayout(buttons, existingLayout);
+const _layout2 = migrateKeyboardLayout(buttons, existingLayout);
 // Результат: existingLayout (без изменений)
 
 // Пример 3: Пустая раскладка
-const layout3 = migrateKeyboardLayout([], undefined, 2);
+const _layout3 = migrateKeyboardLayout([], undefined, 2);
 // Результат: { rows: [], columns: 2, autoLayout: true }
 
 
@@ -54,7 +54,7 @@ import { generateAdjustCode } from '@lib/bot-generator/Keyboard/generateKeyboard
 
 // Пример 1: Авто-раскладка
 const autoLayout = { rows: [], columns: 2, autoLayout: true };
-const code1 = generateAdjustCode(autoLayout, 4);
+const _code1 = generateAdjustCode(autoLayout, 4);
 // Результат: "builder.adjust(2)\n"
 
 // Пример 2: Ручная раскладка с разным количеством кнопок в рядах
@@ -67,7 +67,7 @@ const manualLayout = {
   columns: 2,
   autoLayout: false
 };
-const code2 = generateAdjustCode(manualLayout, 6);
+const _code2 = generateAdjustCode(manualLayout, 6);
 // Результат: "builder.adjust(2, 3, 1)\n"
 
 
@@ -85,7 +85,7 @@ const nodeData1 = {
     autoLayout: false
   }
 };
-const code3 = getAdjustCode([{ id: 'btn1' }, { id: 'btn2' }], nodeData1, '    ');
+const _code3 = getAdjustCode([{ id: 'btn1' }, { id: 'btn2' }], nodeData1, '    ');
 // Результат: "    builder.adjust(2)"
 
 // Пример 2: Без keyboardLayout (fallback на calculateOptimalColumns)
@@ -93,7 +93,7 @@ const nodeData2 = {
   keyboardType: 'inline',
   allowMultipleSelection: true
 };
-const code4 = getAdjustCode(
+const _code4 = getAdjustCode(
   [{ id: 'btn1' }, { id: 'btn2' }, { id: 'btn3' }, { id: 'btn4' }],
   nodeData2,
   ''
@@ -101,25 +101,26 @@ const code4 = getAdjustCode(
 // Результат: "builder.adjust(2)" (2 колонки для мультивыбора)
 
 // Пример 3: С отступами
-const code5 = getAdjustCode([{ id: 'btn1' }], nodeData1, '        ');
+const _code5 = getAdjustCode([{ id: 'btn1' }], nodeData1, '        ');
 // Результат: "        builder.adjust(2)"
 
 
 // ===== Интеграция в генератор =====
 // Как используется в generateKeyboard.ts
 
-function generateKeyboard(node) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _generateKeyboard(_node) {
   let code = '';
-  
+
   // Генерация кнопок
-  node.data.buttons.forEach(button => {
-    code += `    builder.add(KeyboardButton(text="${button.text}"))\n`;
+  _node.data.buttons.forEach((_button) => {
+    code += `    builder.add(KeyboardButton(text="${_button.text}"))\n`;
   });
-  
+
   // Использование keyboardLayout
-  code += `    ${getAdjustCode(node.data.buttons, node.data)}\n`;
+  code += `    ${getAdjustCode(_node.data.buttons, _node.data)}\n`;
   code += `    keyboard = builder.as_markup()\n`;
-  
+
   return code;
 }
 

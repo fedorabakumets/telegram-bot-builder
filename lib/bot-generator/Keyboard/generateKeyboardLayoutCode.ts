@@ -12,7 +12,7 @@ import { KeyboardLayout } from '@/components/editor/properties/types/keyboard-la
  * Генерирует Python-код для builder.adjust() на основе keyboardLayout
  *
  * @param layout - Раскладка клавиатуры
- * @param totalButtons - Общее количество кнопок
+ * @param _totalButtons - Общее количество кнопок (используется для валидации)
  * @returns Python-код для adjust() или пустая строка
  *
  * @example
@@ -21,7 +21,7 @@ import { KeyboardLayout } from '@/components/editor/properties/types/keyboard-la
  */
 export function generateAdjustCode(
   layout: KeyboardLayout,
-  totalButtons: number
+  _totalButtons: number
 ): string {
   // Если авто-раскладка, используем простое количество колонок
   if (layout.autoLayout || !layout.rows.length) {

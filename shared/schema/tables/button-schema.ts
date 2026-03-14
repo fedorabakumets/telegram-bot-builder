@@ -12,7 +12,7 @@ export const buttonSchema = z.object({
   /** Текст кнопки */
   text: z.string(),
   /** Действие кнопки */
-  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'default']),
+  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'complete', 'default']),
   /** Целевой узел для перехода */
   target: z.string().optional(),
   /** URL для внешних ссылок */

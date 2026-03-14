@@ -101,7 +101,7 @@ export function generateInlineKeyboardCode(buttons: any[], indentLevel: string, 
 
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: ДОБАВЛЯЕМ кнопку "Готово" для множественного выбора
   const completeButton = buttons.find((btn: any) => btn.action === 'complete');
-  if (hasSelectionButtons && isMultipleSelection && completeButton) {
+  if (hasSelectionButtons && isMultipleSelection && completeButton && nodeId) {
     const shortNodeIdForDone = generateUniqueShortId(nodeId, allNodeIds || []);
     const callbackData = `done_${shortNodeIdForDone}`;
     generatorLogger.debug(`ДОБАВЛЯЕМ кнопку "${completeButton.text}" для узла ${nodeId} с callback_data: ${callbackData}`);

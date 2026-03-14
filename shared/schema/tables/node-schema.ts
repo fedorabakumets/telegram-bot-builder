@@ -157,6 +157,8 @@ export const nodeSchema = z.object({
     maxLength: z.number().optional(),
     placeholder: z.string().optional(),
     defaultValue: z.string().optional(),
+    appendVariable: z.boolean().default(false),
+    variableFilters: z.record(z.string()).default({}),
     enableUserActions: z.boolean().default(false),
     actionTrigger: z.enum(['join', 'leave', 'message', 'button_click', 'custom']).optional(),
     triggerText: z.string().optional(),

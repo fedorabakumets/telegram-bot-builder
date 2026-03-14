@@ -15,14 +15,13 @@ import { generateConditionalMessageLogic } from '../Conditional';
 import { formatTextForPython } from '../format';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
-interface NodeWithConditionalMessages extends Node {
-  data: {
+type NodeWithConditionalMessages = Node & {
+  data: Node['data'] & {
     messageText?: string;
     enableConditionalMessages?: boolean;
     conditionalMessages?: any[];
-    [key: string]: any;
   };
-}
+};
 
 /**
  * Генерирует Python-код для обработки текста сообщения, условных сообщений и замены переменных

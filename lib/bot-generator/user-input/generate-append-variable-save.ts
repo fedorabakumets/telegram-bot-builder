@@ -8,13 +8,13 @@ import { Node } from '@shared/schema';
 
 /**
  * Генерирует Python код для сохранения переменной в массив
- * @param node - Узел с настройками
+ * @param _node - Узел с настройками
  * @param variableName - Имя переменной
  * @param indent - Отступ для кода
  * @returns Сгенерированный код
  */
 export function generateAppendVariableSaveCode(
-  node: Node,
+  _node: Node,
   variableName: string,
   indent: string = '        '
 ): string {

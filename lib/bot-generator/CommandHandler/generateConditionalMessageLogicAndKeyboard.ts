@@ -15,14 +15,13 @@ import { generateButtonText, toPythonBoolean } from '../format';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
-interface NodeWithKeyboard extends Node {
-  data: {
+type NodeWithKeyboard = Node & {
+  data: Node['data'] & {
     keyboardType?: 'inline' | 'reply' | 'none';
     buttons?: any[];
     attachedMedia?: string[];
-    [key: string]: any;
   };
-}
+};
 
 /**
  * Генерирует Python-код для обработки условных сообщений и генерации клавиатуры

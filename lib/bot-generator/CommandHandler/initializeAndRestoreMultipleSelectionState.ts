@@ -16,14 +16,13 @@ import { generateUniqueShortId } from '../format/generateUniqueShortId';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { generateAdjustCode } from '../Keyboard/generateKeyboardLayoutCode';
 
-interface NodeWithButtons extends Node {
-  data: {
+type NodeWithButtons = Node & {
+  data: Node['data'] & {
     allowMultipleSelection?: boolean;
     buttons?: Button[];
     continueButtonText?: string;
-    [key: string]: any;
   };
-}
+};
 
 /**
  * Генерирует Python-код для инициализации и восстановления состояния множественного выбора
@@ -165,7 +164,8 @@ export function initializeAndRestoreMultipleSelectionState(node: NodeWithButtons
 
             // Используем keyboardLayout если есть, иначе 2 колонки
             if (node && node.data && node.data.keyboardLayout && !node.data.keyboardLayout.autoLayout) {
-                const adjustCode = generateAdjustCode(node.data.keyboardLayout, node.data.buttons.length);
+                const buttonsLength = node.data.buttons?.length || 0;
+                const adjustCode = generateAdjustCode(node.data.keyboardLayout, buttonsLength);
                 codeLines.push(`    ${adjustCode.trim()}`);
             } else {
                 codeLines.push('    builder.adjust(2)  # Используем 2 колонки для консистентности');

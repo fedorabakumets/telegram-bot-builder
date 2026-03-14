@@ -1,6 +1,5 @@
 import { Node, Button } from '@shared/schema';
 import { generateUniqueShortId, generateButtonText } from '../format';
-import { calculateOptimalColumns } from './calculateOptimalColumns';
 import { generatorLogger } from '../core/generator-logger';
 import { generateAdjustCode } from './generateKeyboardLayoutCode';
 import { escapePythonString } from '../format/escapePythonString';

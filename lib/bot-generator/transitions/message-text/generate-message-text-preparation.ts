@@ -49,7 +49,7 @@ export function generateMessageTextPreparation(
         code += `${filterCode}\n`;
         // Заменяем {var|filter} на {var_filtered} в тексте
         const filteredPlaceholder = `{${varName}${filter}}`;
-        const newPlaceholder = `{${varName}_filtered}`;
+        const _newPlaceholder = `{${varName}_filtered}`;
         // Обновляем formattedText для использования _filtered переменной
         code += `${indent}text = text.replace("${filteredPlaceholder}", "{" + "${varName}_filtered" + "}")\n`;
       }

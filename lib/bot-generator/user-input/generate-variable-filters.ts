@@ -41,13 +41,13 @@ export function generateVariableFilterCode(
 /**
  * Генерирует код для подстановки переменной в текст с учётом фильтра
  * @param text - Текст с переменными
- * @param variableFilters - Объект с фильтрами переменных
+ * @param _variableFilters - Объект с фильтрами переменных
  * @param indent - Отступ для кода
  * @returns Сгенерированный код
  */
 export function generateTextWithFiltersCode(
   text: string,
-  variableFilters: Record<string, string>,
+  _variableFilters: Record<string, string>,
   indent: string = '        '
 ): string {
   const codeLines: string[] = [];
