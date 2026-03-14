@@ -100,22 +100,25 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
    */
   const generateContent = useCallback(async (format: CodeFormat): Promise<string> => {
     try {
-      let botGenerator;
-      let useBrowserVersion = false;
+      console.log('[generateContent] Начало генерации:', { format, projectName, nodesCount: botData?.nodes?.length });
       
+      let botGenerator;
+
       try {
         // Пытаемся загрузить генератор
         botGenerator = await loadBotGenerator();
+        console.log('[generateContent] Генератор загружен:', !!botGenerator);
       } catch (loadError) {
-        // Если не удалось загрузить (браузерная сборка), используем browser-версию
-        console.warn('Bot generator not available in browser, using browser version:', loadError);
-        useBrowserVersion = true;
+        // Если не удалось загрузить, возвращаем ошибку
+        console.error('Bot generator not available in browser:', loadError);
+        return `# Ошибка генерации\n# Модуль генератора недоступен в браузере\n# Используйте серверную генерацию через API`;
       }
 
       // Конвертируем многолистовую структуру в простую для генератора
       const convertSheetsToSimpleBotData = (data: any) => {
         // Если уже простая структура - возвращаем как есть
         if (data.nodes) {
+          console.log('[convertSheetsToSimpleBotData] Использована простая структура, узлов:', data.nodes.length);
           return data;
         }
 
@@ -127,12 +130,14 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
             if (sheet.nodes) allNodes.push(...sheet.nodes);
           });
 
+          console.log('[convertSheetsToSimpleBotData] Собрано узлов из sheets:', allNodes.length);
           return {
             nodes: allNodes
           };
         }
 
         // Если нет узлов вообще - возвращаем пустую структуру
+        console.log('[convertSheetsToSimpleBotData] Нет узлов, возвращена пустая структура');
         return {
           nodes: []
         };
@@ -140,62 +145,12 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
 
       const simpleBotData = convertSheetsToSimpleBotData(botData);
 
-      if (useBrowserVersion) {
-        // Используем browser-версии функций
-        const { generateHeaderBrowser } = await import('@lib/bot-generator/templates/generate-header-browser');
-        const { generateImportsBrowser } = await import('@lib/bot-generator/templates/generate-imports-browser');
-        const { generateConfigBrowser } = await import('@lib/bot-generator/templates/generate-config-browser');
-        const { generateRequirementsTxt, generateReadme, generateDockerfile, generateEnvFile } = await import('@lib/bot-generator');
-        
-        // Генерируем Python код вручную для browser-версии
-        if (format === 'python') {
-          let code = '"""\n';
-          code += `${projectName} - Telegram Bot\n`;
-          code += 'Сгенерировано с помощью TelegramBot Builder\n';
-          code += '"""\n\n';
-          
-          code += generateHeaderBrowser();
-          code += generateImportsBrowser({
-            userDatabaseEnabled: userDatabaseEnabled,
-            hasInlineButtons: false,
-            hasAutoTransitions: false,
-            hasMediaNodes: false,
-            hasUploadImages: false,
-          });
-          code += generateConfigBrowser({
-            userDatabaseEnabled: userDatabaseEnabled,
-            projectId: projectId,
-          });
-          
-          code += '# Обработчики будут добавлены в следующей версии\n';
-          code += '# Сейчас доступна только базовая конфигурация\n';
-          
-          return code;
-        }
-        
-        switch (format) {
-          case 'requirements':
-            return generateRequirementsTxt();
-          case 'readme':
-            const customFileName = projectName
-              .toLowerCase()
-              .trim()
-              .replace(/[^\p{L}\p{N}_\s-]/gu, '')
-              .replace(/\s+/g, '_')
-              .replace(/_{2,}/g, '_')
-              .replace(/^-+|-+$/g, '') || 'bot';
-            return generateReadme(botData, projectName, projectId || undefined, undefined, customFileName);
-          case 'dockerfile':
-            return generateDockerfile();
-          case 'env':
-            return generateEnvFile(defaultToken, "123456789", projectId || 1);
-          default:
-            return '';
-        }
-      }
-
       switch (format) {
         case 'python':
+          if (!botGenerator) {
+            return `# Ошибка генерации\n# Генератор не загружен`;
+          }
+
           // Получаем настройки генерации комментариев из localStorage
           // По умолчанию выключено (консистентность с сервером)
           const storedComments = typeof window !== 'undefined' ?
@@ -214,6 +169,10 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
         case 'json':
           return JSON.stringify(botData, null, 2);
         case 'requirements':
+          if (!botGenerator) {
+            const { generateRequirementsTxt } = await import('@lib/bot-generator');
+            return generateRequirementsTxt();
+          }
           return botGenerator.generateRequirementsTxt();
         case 'readme':
           // Нормализуем имя проекта для использования в качестве имени файла
@@ -224,15 +183,28 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
             .replace(/\s+/g, '_')
             .replace(/_{2,}/g, '_')
             .replace(/^-+|-+$/g, '') || 'bot';
+          if (!botGenerator) {
+            const { generateReadme } = await import('@lib/bot-generator');
+            return generateReadme(botData, projectName, projectId || undefined, undefined, customFileName);
+          }
           return botGenerator.generateReadme(botData, projectName, projectId || undefined, undefined, customFileName);
         case 'dockerfile':
+          if (!botGenerator) {
+            const { generateDockerfile } = await import('@lib/bot-generator');
+            return generateDockerfile();
+          }
           return botGenerator.generateDockerfile();
         case 'env':
+          if (!botGenerator) {
+            const { generateEnvFile } = await import('@lib/bot-generator');
+            return generateEnvFile(defaultToken, "123456789", projectId || 1);
+          }
           return botGenerator.generateEnvFile(defaultToken, "123456789", projectId || 1);
         default:
           return '';
       }
     } catch (error) {
+      console.error('Ошибка генерации кода:', error);
       return `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`;
     }
   }, [botData, projectName, userDatabaseEnabled, projectId, tokenData]);

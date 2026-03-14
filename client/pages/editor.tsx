@@ -10,6 +10,7 @@
 import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
 import { CodePanel } from '@/components/editor/code/code-panel';
 import { ReadmePreview } from '@/components/editor/code/readme-preview';
+import { useCodeGeneratorServer } from '@/components/editor/code/useCodeGeneratorServer';
 import { ComponentsSidebar } from '@/components/editor/sidebar/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
@@ -468,26 +469,23 @@ export default function Editor() {
   const content = getCurrentContent();
   const lines = content.split('\n');
   const lineCount = lines.length;
-  const MAX_VISIBLE_LINES = 1000;
 
-  // Отображаемый контент с учетом ограничения по количеству строк
+  // Отображаемый контент (без обрезки)
   const displayContent = useMemo(() => {
-    if (!showFullCode && lines.length > MAX_VISIBLE_LINES) {
-      return lines.slice(0, MAX_VISIBLE_LINES).join('\n');
-    }
     return content;
-  }, [content, showFullCode]);
+  }, [content]);
 
-  // Статистика кода для отображения информации о структуре
+  // Статистика кода для отображения информации о структуре (считается от отображаемого контента)
   const codeStats = useMemo(() => {
+    const displayLines = displayContent.split('\n');
     return {
-      totalLines: lineCount,
-      truncated: !showFullCode && lineCount > 1000,
-      functions: (content.match(/^def |^async def /gm) || []).length,
-      classes: (content.match(/^class /gm) || []).length,
-      comments: (content.match(/^[^#]*#/gm) || []).length
+      totalLines: displayLines.length,
+      truncated: false,
+      functions: (displayContent.match(/^def |^async def /gm) || []).length,
+      classes: (displayContent.match(/^class /gm) || []).length,
+      comments: (displayContent.match(/^[^#]*#/gm) || []).length
     };
-  }, [content, showFullCode]);
+  }, [displayContent]);
 
   // Determine if we're still loading
 
@@ -932,15 +930,15 @@ export default function Editor() {
   // Определяем содержимое панели кода
   const codeContent = activeProject ? (
     <CodePanel
-      botDataArray={allProjects.length > 0 
-        ? allProjects.map(project => 
-            project.id === activeProject.id 
+      botDataArray={allProjects.length > 0
+        ? allProjects.map(project =>
+            project.id === activeProject.id
               ? activeProject.data as BotData  // Используем актуальные данные активного проекта
               : project.data as BotData
           )
         : [activeProject.data as BotData]
       }
-      projectIds={allProjects.length > 0 
+      projectIds={allProjects.length > 0
         ? allProjects.map(project => project.id)
         : [activeProject.id]
       }
@@ -952,6 +950,9 @@ export default function Editor() {
       onCollapseChange={setAreAllCollapsed}
       showFullCode={showFullCode}
       onShowFullCodeChange={setShowFullCode}
+      codeContent={generatedCodeContent}
+      isLoading={isCodeLoading}
+      displayContent={displayContent}
     />
   ) : null;
 
@@ -1119,6 +1120,9 @@ export default function Editor() {
           onCollapseChange={setAreAllCollapsed}
           showFullCode={showFullCode}
           onShowFullCodeChange={setShowFullCode}
+          codeContent={generatedCodeContent}
+          isLoading={isCodeLoading}
+          displayContent={displayContent}
         />
       </div>
     ) : currentTab === 'editor' ? (

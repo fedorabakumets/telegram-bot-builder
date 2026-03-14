@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CodeFormat, useCodeGeneratorServer } from '@/components/editor/code/useCodeGeneratorServer';
+import { CodeFormat } from '@/components/editor/code/useCodeGeneratorServer';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateProjectName } from '@/components/editor/bot/use-update-project-name';
 import { BotData, BotProject } from '@shared/schema';
@@ -40,13 +40,19 @@ interface CodePanelProps {
   onShowFullCodeChange?: (showFull: boolean) => void;
   /** Функция для обновления данных ботов */
   onBotDataUpdate?: (updatedBotDataArray: BotData[], index: number, newName: string) => void;
+  /** Сгенерированный контент для каждого формата */
+  codeContent?: Record<CodeFormat, string>;
+  /** Состояние загрузки */
+  isLoading?: boolean;
+  /** Отображаемый контент (с учетом обрезки) */
+  displayContent?: string;
 }
 
 /**
  * [CONTAINER] CodePanel - Основной контейнер для панели кода
  * Управляет состоянием и данными для дочерних компонентов
  */
-export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange, onBotDataUpdate }: CodePanelProps) {
+export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange, onBotDataUpdate, codeContent, isLoading, displayContent }: CodePanelProps) {
   // const queryClient = useQueryClient(); // Закомментировано - не используется после отключения экспорта
 
   // Состояние для управления форматом и отображением кода
@@ -93,25 +99,6 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
     enabled: !!projectIds?.[0],
     staleTime: 1000 * 60 * 5, // 5 минут
   });
-
-  /**
-   * Использование хука генератора кода для всех форматов
-   */
-  const codeGenerators = botDataArray.map((botData, index) => useCodeGeneratorServer(
-    botData,
-    `${projectName}_project_${index}`,
-    project?.userDatabaseEnabled === 1,
-    projectIds?.[index] || null
-  ));
-
-  /**
-   * Загрузка контента при изменении выбранного формата
-   */
-  useEffect(() => {
-    codeGenerators.forEach(({ loadContent }) => {
-      loadContent(selectedFormat);
-    });
-  }, [selectedFormat, codeGenerators]);
 
   // [FUNCTIONS] Вспомогательные функции для взаимодействия с кодом
 
@@ -184,18 +171,44 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
    * Получение текущего содержимого кода для выбранного формата
    * @returns Строка с кодом или пустая строка если контент не загружен
    */
-  const getCurrentContent = (index: number) => codeGenerators[index].codeContent[selectedFormat] || '';
+  const getCurrentContent = (index: number) => {
+    // Если передан displayContent (обрезанный), используем его
+    if (displayContent) {
+      return displayContent;
+    }
+    // Иначе используем переданный контент из пропсов
+    if (codeContent && codeContent[selectedFormat]) {
+      return codeContent[selectedFormat];
+    }
+    return '';
+  };
 
   // [CALCULATIONS] Расчеты для отображения кода и статистики
 
   const getContentAndStats = (index: number) => {
     const content = getCurrentContent(index);
+    
+    // Проверяем, что контент не пустой и не является ошибкой
+    if (!content || content.trim() === '' || content.startsWith('# Ошибка')) {
+      return { 
+        content, 
+        lineCount: 0, 
+        codeStats: {
+          totalLines: 0,
+          truncated: false,
+          functions: 0,
+          classes: 0,
+          comments: 0
+        }
+      };
+    }
+    
     const lines = content.split(/\r?\n/); // Правильный подсчёт строк (Unix и Windows)
     const lineCount = lines.length;
 
     const codeStats = {
       totalLines: lineCount,
-      truncated: !(showFullCode !== undefined ? showFullCode : false) && lineCount > 1000,
+      truncated: false, // Убрал обрезку кода
       functions: (content.match(/^def |^async def /gm) || []).length,
       classes: (content.match(/^class /gm) || []).length,
       comments: (content.match(/^[^#]*#/gm) || []).length
@@ -511,7 +524,12 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                   */}
 
                   {/* Code Statistics */}
-                  {lineCount > 0 && (
+                  {isLoading ? (
+                    <div className="flex items-center gap-2 text-muted-foreground p-3 bg-muted/30 rounded-md border border-border/50">
+                      <i className="fas fa-spinner fa-spin text-sm"></i>
+                      <span className="text-sm">Генерация кода...</span>
+                    </div>
+                  ) : lineCount > 0 ? (
                     <div className="grid grid-cols-2 gap-3 sm:gap-4">
                       <div className="bg-blue-50/50 dark:bg-blue-900/25 border border-blue-200/50 dark:border-blue-800/50 rounded-md p-3 sm:p-4 text-center">
                         <div className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-400">{codeStats.totalLines}</div>
@@ -536,7 +554,17 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                         </div>
                       )}
                     </div>
-                  )}
+                  ) : !content || content.trim() === '' ? (
+                    <div className="flex items-center gap-2 text-muted-foreground p-3 bg-muted/30 rounded-md border border-border/50">
+                      <i className="fas fa-info-circle text-sm"></i>
+                      <span className="text-sm">Нажмите на вкладку формата для загрузки кода</span>
+                    </div>
+                  ) : content.startsWith('# Ошибка') ? (
+                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400 p-3 bg-red-50 dark:bg-red-950/30 rounded-md border border-red-200 dark:border-red-800/40">
+                      <i className="fas fa-exclamation-triangle text-sm"></i>
+                      <span className="text-sm">Ошибка генерации кода</span>
+                    </div>
+                  ) : null}
 
                   <Separator className="my-2 xs:my-3" />
 
