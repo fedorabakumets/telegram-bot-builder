@@ -4,7 +4,6 @@
  */
 
 import * as path from 'path';
-import { fileURLToPath } from 'url';
 
 /**
  * Получает абсолютный путь к директории шаблонов
@@ -12,24 +11,10 @@ import { fileURLToPath } from 'url';
  * @returns Абсолютный путь к lib/bot-generator/templates/
  */
 export function getTemplatesDir(): string {
-  // Пробуем __dirname (работает в большинстве случаев)
-  if (typeof __dirname !== 'undefined') {
-    return __dirname;
-  }
-  
-  // Пробуем import.meta.url
-  try {
-    if (typeof import.meta !== 'undefined' && import.meta.url) {
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      return __dirname;
-    }
-  } catch (e) {
-    // Игнорируем ошибки import.meta
-  }
-  
-  // Fallback для Vite/browser
-  throw new Error('getTemplatesDir() works only in Node.js environment');
+  // Используем process.cwd() для получения корня проекта
+  // Это работает в tsx/esbuild
+  const projectRoot = process.cwd();
+  return path.join(projectRoot, 'lib', 'bot-generator', 'templates');
 }
 
 /**
