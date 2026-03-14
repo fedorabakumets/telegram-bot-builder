@@ -1,8 +1,8 @@
 /**
  * @fileoverview Бочка для модуля transitions
- * 
+ *
  * Экспортирует все функции генерации переходов между узлами.
- * 
+ *
  * @module bot-generator/transitions
  */
 
@@ -23,3 +23,10 @@ export { generateParseMode } from './generate-parse-mode';
 export { generateReplyKeyboardSend } from './generate-reply-keyboard-send';
 export { generateTextSend } from './generate-text-send';
 export { newgenerateStateTransitionAndRenderLogic } from './generate-state-transition-and-render-logic';
+export {
+  generateNavigateToNode,
+  generateNavigateToNodeCall,
+  generateNavigateToNodeWithText,
+  generateNavigateToNodeWithVars,
+  generateNavigateToNodeSafe,
+} from './generate-node-navigation';

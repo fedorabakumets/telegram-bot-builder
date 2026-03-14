@@ -3,6 +3,7 @@ import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean
 import { generateInlineKeyboardCode } from '../Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 import { generateCheckUserVariableFunction } from '../database';
+import { generateNavigateToNodeWithText } from '../transitions/generate-node-navigation';
 
 export function handleConditionalNavigationAndInputCollection(nodes: any[], code: string, allNodeIds: any[]) {
     if (nodes.length > 0) {
@@ -378,12 +379,6 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                     code += `                        # Обычный узел - отправляем сообщение\n`;
                     code += `                        text = ${formattedText}\n`;
 
-                    // Добавляем замену переменных (передаём targetNode для извлечения usedVariables)
-                    code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
-                    const universalVarCodeLines3: string[] = [];
-                    generateUniversalVariableReplacement(universalVarCodeLines3, { node: targetNode, indentLevel: '                        ' });
-                    code += universalVarCodeLines3.join('\n');
-
                     // Проверяем, есть ли reply кнопки
                     if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                         code += '                        # Создаем reply клавиатуру\n';
@@ -402,8 +397,8 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                         code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
                         code += '                        await message.answer(text, reply_markup=keyboard)\n';
                     } else {
-                        code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
-                        code += '                        await message.answer(text)\n';
+                        // Используем переиспользуемую функцию навигации
+                        code += generateNavigateToNodeWithText(targetNode.id, 'text', 'message', '                        ');
                     }
                 }
             }

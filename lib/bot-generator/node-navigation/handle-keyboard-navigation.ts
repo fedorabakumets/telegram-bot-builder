@@ -12,6 +12,7 @@ import type { Button } from '../types/button-types';
 import { generateButtonText } from '../format';
 import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { toPythonBoolean } from '../format';
+import { generateNavigateToNodeWithText } from '../transitions/generate-node-navigation';
 
 /**
  * Генерирует код для обработки навигации с клавиатурами
@@ -56,7 +57,10 @@ function generateInlineKeyboard(targetNode: Node, bodyIndent: string): string {
 
   code += `${bodyIndent}${getAdjustCode(targetNode.data.buttons, targetNode.data)}\n`;
   code += `${bodyIndent}keyboard = builder.as_markup()\n`;
-  code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
+  
+  // Используем переиспользуемую функцию навигации с клавиатурой
+  code += `${bodyIndent}# Навигация к узлу с отправкой сообщения и inline клавиатурой\n`;
+  code += `${bodyIndent}await navigate_to_node(message, current_node_id, text=text, reply_markup=keyboard)\n`;
 
   return code;
 }
@@ -87,11 +91,10 @@ function generateReplyKeyboard(
   const resizeKeyboard = toPythonBoolean(targetNode.data?.resizeKeyboard);
   const oneTimeKeyboard = toPythonBoolean(targetNode.data?.oneTimeKeyboard);
   code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-  code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
-  code += `${bodyIndent}# Получаем фильтры переменных для замены\n`;
-  code += `${bodyIndent}variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n`;
-  code += `${bodyIndent}text = replace_variables_in_text(text, ${allUserVars}, variable_filters)\n`;
-  code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
+  
+  // Используем переиспользуемую функцию навигации с клавиатурой
+  code += `${bodyIndent}# Навигация к узлу с отправкой сообщения и клавиатурой\n`;
+  code += `${bodyIndent}await navigate_to_node(message, current_node_id, text=text, reply_markup=keyboard)\n`;
 
   return code;
 }
@@ -105,11 +108,9 @@ function generateNoKeyboard(
 ): string {
   let code = '';
 
-  code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
-  code += `${bodyIndent}# Получаем фильтры переменных для замены\n`;
-  code += `${bodyIndent}variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n`;
-  code += `${bodyIndent}text = replace_variables_in_text(text, ${allUserVars}, variable_filters)\n`;
-  code += `${bodyIndent}await message.answer(text)\n`;
+  // Используем переиспользуемую функцию навигации
+  code += `${bodyIndent}# Навигация к узлу с отправкой сообщения\n`;
+  code += `${bodyIndent}await navigate_to_node(message, current_node_id, text=text)\n`;
 
   return code;
 }
