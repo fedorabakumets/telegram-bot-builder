@@ -18,4 +18,4 @@ export { generateMessageText, type GenerateMessageTextOptions } from './generate
 export * from './generateGeneratedComment';
 
 // Re-export cn utility for UI components
-export { cn } from '../../../utils/utils';
+export { cn } from '../../../../client/utils/utils';
