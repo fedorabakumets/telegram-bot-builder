@@ -2,7 +2,7 @@ import { Button } from '../types';
 import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from '../format';
 import { generateInlineKeyboardCode } from '../Keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
-import { generateCheckUserVariableFunction } from '../database';
+import { generateCheckUserVariableFunction, generateDatabaseVariablesBlockCall } from '../database';
 import { generateNavigateToNodeWithText } from '../transitions/generate-node-navigation';
 
 export function handleConditionalNavigationAndInputCollection(nodes: any[], code: string, allNodeIds: any[]) {

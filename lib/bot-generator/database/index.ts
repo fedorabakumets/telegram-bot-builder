@@ -1,6 +1,7 @@
 export { AliasNodes } from './AliasNodes';
 export { generateCheckUserVariableFunction } from './generateCheckUserVariableFunction';
 export { generateDatabaseCode } from './generateDatabaseCode';
+export { generateDatabaseVariablesBlock, generateDatabaseVariablesBlockCall, type DatabaseVariablesBlockOptions } from './generate-database-variables-block';
 export { generateInitAllUserVars, generateInitAllUserVarsCall, generateInitAllUserVarsSafe } from './generate-init-all-user-vars';
 export { generateUniversalVariableReplacement } from './generateUniversalVariableReplacement';
 export { generateVariableReplacement } from './generateVariableReplacement';
