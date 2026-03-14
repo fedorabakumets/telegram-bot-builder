@@ -109,12 +109,12 @@ export function renderBotTemplate(options: TemplateRenderOptions): string {
  * Рендерит отдельный частичный шаблон
  * Используется для тестирования отдельных компонентов
  *
- * @param partialName - Имя частичного шаблона (например, 'imports.py.jinja2')
+ * @param partialName - Имя частичного шаблона (например, 'partials/imports.py.jinja2')
  * @param context - Контекст для шаблона
  * @returns Сгенерированный код
  *
  * @example
- * renderPartialTemplate('imports.py.jinja2', {
+ * renderPartialTemplate('partials/imports.py.jinja2', {
  *   userDatabaseEnabled: true,
  *   hasInlineButtons: false,
  * })
@@ -124,7 +124,11 @@ export function renderPartialTemplate(
   context: Record<string, any>
 ): string {
   const environment = initEnvironment();
-  const template = environment.getTemplate(`partials/${partialName}`);
+  // Добавляем 'partials/' если путь не начинается с него
+  const templatePath = partialName.startsWith('partials/') 
+    ? partialName 
+    : `partials/${partialName}`;
+  const template = environment.getTemplate(templatePath);
   return template.render(context);
 }
 
