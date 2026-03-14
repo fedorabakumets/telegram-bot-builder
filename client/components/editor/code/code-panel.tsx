@@ -190,7 +190,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
 
   const getContentAndStats = (index: number) => {
     const content = getCurrentContent(index);
-    const lines = content.split('\n');
+    const lines = content.split(/\r?\n/); // Правильный подсчёт строк (Unix и Windows)
     const lineCount = lines.length;
 
     const codeStats = {
