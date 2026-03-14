@@ -4,7 +4,7 @@
  */
 
 import type { UtilsTemplateParams } from './types';
-import { generateUtils as typedGenerateUtils } from './typed-renderer-part2';
+import { generateUtils as typedGenerateUtils } from './typed-renderer-part3';
 
 /**
  * Генерация утилитарных функций

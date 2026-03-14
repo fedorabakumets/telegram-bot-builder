@@ -4,7 +4,7 @@
  */
 
 import type { MainTemplateParams } from './types';
-import { generateMain as typedGenerateMain } from './typed-renderer-part2';
+import { generateMain as typedGenerateMain } from './typed-renderer-part3';
 
 /**
  * Генерация функции запуска бота
