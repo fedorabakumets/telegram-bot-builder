@@ -34,14 +34,32 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       return;
     }
 
+    // Конвертируем многолистовую структуру в простую для генератора
+    const convertSheetsToSimpleBotData = (data: any) => {
+      if (data.nodes) return data;
+      if (data.sheets && Array.isArray(data.sheets)) {
+        let allNodes: any[] = [];
+        data.sheets.forEach((sheet: any) => {
+          if (sheet.nodes) allNodes.push(...sheet.nodes);
+        });
+        return { nodes: allNodes };
+      }
+      return { nodes: [] };
+    };
+
+    const simpleBotData = convertSheetsToSimpleBotData(project.data as any);
+
     // Генерируем код
-    const code = generatePythonCode(project.data as any, {
+    const code = generatePythonCode(simpleBotData, {
       botName: project.name,
       userDatabaseEnabled,
       enableComments,
       enableLogging,
       projectId,
     });
+
+    // Логирование для отладки
+    console.log(`[Generate] Project ${projectId}: ${code.split(/\r?\n/).length} lines generated`);
 
     // Возвращаем результат
     res.json({
