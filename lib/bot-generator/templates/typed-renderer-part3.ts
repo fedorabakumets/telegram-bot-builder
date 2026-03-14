@@ -20,7 +20,7 @@ import { renderPartialTemplate } from './template-renderer';
  */
 export function generateUtils(params: UtilsTemplateParams): string {
   const validated = utilsParamsSchema.parse(params);
-  return renderPartialTemplate('partials/utils.py.jinja2', validated);
+  return renderPartialTemplate('utils/utils.py.jinja2', validated);
 }
 
 /**
@@ -30,5 +30,5 @@ export function generateUtils(params: UtilsTemplateParams): string {
  */
 export function generateMain(params: MainTemplateParams): string {
   const validated = mainParamsSchema.parse(params);
-  return renderPartialTemplate('partials/main.py.jinja2', validated);
+  return renderPartialTemplate('main/main.py.jinja2', validated);
 }

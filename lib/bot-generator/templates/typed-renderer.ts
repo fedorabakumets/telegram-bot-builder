@@ -28,7 +28,7 @@ import { renderPartialTemplate } from './template-renderer';
  */
 export function generateImports(params: ImportsTemplateParams): string {
   const validated = importsParamsSchema.parse(params);
-  return renderPartialTemplate('partials/imports.py.jinja2', validated);
+  return renderPartialTemplate('imports/imports.py.jinja2', validated);
 }
 
 /**
@@ -38,5 +38,5 @@ export function generateImports(params: ImportsTemplateParams): string {
  */
 export function generateConfig(params: ConfigTemplateParams): string {
   const validated = configParamsSchema.parse(params);
-  return renderPartialTemplate('partials/config.py.jinja2', validated);
+  return renderPartialTemplate('config/config.py.jinja2', validated);
 }

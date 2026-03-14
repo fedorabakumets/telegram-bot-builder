@@ -20,7 +20,7 @@ import { renderPartialTemplate } from './template-renderer';
  */
 export function generateHeader(params: HeaderTemplateParams): string {
   const validated = headerParamsSchema.parse(params);
-  return renderPartialTemplate('partials/header.py.jinja2', validated);
+  return renderPartialTemplate('header/header.py.jinja2', validated);
 }
 
 /**
@@ -30,5 +30,5 @@ export function generateHeader(params: HeaderTemplateParams): string {
  */
 export function generateDatabase(params: DatabaseTemplateParams): string {
   const validated = databaseParamsSchema.parse(params);
-  return renderPartialTemplate('partials/database.py.jinja2', validated);
+  return renderPartialTemplate('database/database.py.jinja2', validated);
 }

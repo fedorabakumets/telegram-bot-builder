@@ -129,14 +129,14 @@ export function renderBotTemplate(options: TemplateRenderOptions): string {
  * Рендерит отдельный частичный шаблон
  * Используется для тестирования отдельных компонентов
  *
- * @param partialName - Имя частичного шаблона (например, 'partials/imports.py.jinja2')
+ * @param partialName - Имя частичного шаблона (например, 'config/config.py.jinja2')
  * @param context - Контекст для шаблона
  * @returns Сгенерированный код
  *
  * @example
- * renderPartialTemplate('partials/imports.py.jinja2', {
+ * renderPartialTemplate('config/config.py.jinja2', {
  *   userDatabaseEnabled: true,
- *   hasInlineButtons: false,
+ *   projectId: 123,
  * })
  */
 export function renderPartialTemplate(
@@ -156,8 +156,20 @@ export function renderPartialTemplate(
       'bot': botParamsSchema,
     };
 
-    // Извлекаем имя шаблона из пути
-    const templateName = partialName.replace('partials/', '').replace('.py.jinja2', '');
+    // Извлекаем имя шаблона из пути (поддерживаем оба формата)
+    let templateName = partialName;
+    // Удаляем расширение
+    templateName = templateName.replace('.py.jinja2', '');
+    // Удаляем путь директории
+    templateName = templateName.replace('partials/', '')
+                               .replace('config/', '')
+                               .replace('database/', '')
+                               .replace('utils/', '')
+                               .replace('main/', '')
+                               .replace('header/', '')
+                               .replace('middleware/', '')
+                               .replace('universal-handlers/', '');
+
     if (schemaMap[templateName]) {
       try {
         validated = schemaMap[templateName].parse(context);
@@ -168,10 +180,22 @@ export function renderPartialTemplate(
     }
 
     const environment = initEnvironment();
-    // Добавляем 'partials/' если путь не начинается с него
-    const templatePath = partialName.startsWith('partials/')
-      ? partialName
-      : `partials/${partialName}`;
+    // Определяем путь к шаблону на основе имени
+    // Новые шаблоны находятся в своих директориях: config/config.py.jinja2, database/database.py.jinja2, etc.
+    let templatePath = partialName;
+    
+    // Если путь не содержит '/', определяем директорию на основе имени шаблона
+    if (!partialName.includes('/')) {
+      const templateDirs = ['config', 'database', 'utils', 'main', 'header', 'middleware', 'universal-handlers', 'imports'];
+      const dir = templateDirs.find(d => partialName.startsWith(d));
+      if (dir) {
+        templatePath = `${dir}/${partialName}`;
+      } else {
+        // Для обратной совместимости используем 'partials/'
+        templatePath = `partials/${partialName}`;
+      }
+    }
+    
     const template = environment.getTemplate(templatePath);
     return template.render(validated);
   } catch (error: any) {
