@@ -194,8 +194,6 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
         }
       }
 
-      const simpleBotData = convertSheetsToSimpleBotData(botData);
-
       switch (format) {
         case 'python':
           // Получаем настройки генерации комментариев из localStorage
