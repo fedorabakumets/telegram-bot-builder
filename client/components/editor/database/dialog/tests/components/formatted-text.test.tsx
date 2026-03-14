@@ -10,6 +10,7 @@
 
 import { render, screen } from '@testing-library/react';
 import { FormattedText } from '../../components/formatted-text';
+import { describe, expect, it } from 'vitest';
 
 describe('FormattedText', () => {
   describe('Рендеринг базового текста', () => {

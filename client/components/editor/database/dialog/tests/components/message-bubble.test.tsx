@@ -12,6 +12,7 @@ import { render, screen } from '@testing-library/react';
 import { MessageBubble } from '../../components/message-bubble';
 import type { BotMessageWithMedia } from '../../types';
 import type { UserBotData } from '@shared/schema';
+import { describe, expect, it } from 'vitest';
 
 /**
  * Создаёт тестовое сообщение
