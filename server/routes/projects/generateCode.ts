@@ -46,7 +46,7 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
     // Возвращаем результат
     res.json({
       code,
-      lines: code.split('\n').length,
+      lines: code.split(/\r?\n/).length, // Правильный подсчёт строк
       generatedAt: Date.now(),
     });
   } catch (error: any) {
