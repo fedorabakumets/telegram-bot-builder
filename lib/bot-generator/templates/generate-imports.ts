@@ -46,7 +46,7 @@ export interface ImportsOptions {
  * const imports = generateImports({ userDatabaseEnabled: true, hasInlineButtons: true });
  */
 export function generateImports(options: ImportsOptions = {}): string {
-  return renderPartialTemplate('partials/imports.py.jinja2', {
+  return renderPartialTemplate('imports.py.jinja2', {
     userDatabaseEnabled: options.userDatabaseEnabled ?? false,
     hasInlineButtons: options.hasInlineButtons ?? false,
     hasAutoTransitions: options.hasAutoTransitions ?? false,

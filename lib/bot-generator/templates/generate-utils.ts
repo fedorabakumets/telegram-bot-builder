@@ -26,7 +26,7 @@ export interface UtilsOptions {
  * const utils = generateUtils({ userDatabaseEnabled: true });
  */
 export function generateUtils(options: UtilsOptions = {}): string {
-  return renderPartialTemplate('partials/utils.py.jinja2', {
+  return renderPartialTemplate('utils.py.jinja2', {
     userDatabaseEnabled: options.userDatabaseEnabled ?? false,
   });
 }

@@ -31,5 +31,5 @@ export interface HeaderOptions {
  * const header = generateHeader();
  */
 export function generateHeader(_options: HeaderOptions = {}): string {
-  return renderPartialTemplate('partials/header.py.jinja2', {});
+  return renderPartialTemplate('header.py.jinja2', {});
 }

@@ -28,7 +28,7 @@ export interface ConfigOptions {
  * const config = generateConfig({ userDatabaseEnabled: true, projectId: 123 });
  */
 export function generateConfig(options: ConfigOptions = {}): string {
-  return renderPartialTemplate('partials/config.py.jinja2', {
+  return renderPartialTemplate('config.py.jinja2', {
     userDatabaseEnabled: options.userDatabaseEnabled ?? false,
     projectId: options.projectId ?? null,
   });
