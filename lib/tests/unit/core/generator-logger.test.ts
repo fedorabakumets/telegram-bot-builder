@@ -194,7 +194,6 @@ describe('GeneratorLogger', () => {
       // Arrange
       const logger = createLogger({ enabled: false, level: 'debug' });
       let anyCalled = false;
-      const restoreConsole = () => {};
 
       const originalLog = console.log;
       const originalInfo = console.info;
@@ -229,7 +228,7 @@ describe('GeneratorLogger', () => {
       const logger = createLogger({ enabled: true, level: 'debug' });
       let capturedData: any = null;
       const originalLog = console.log;
-      console.log = (msg, data) => { capturedData = data; };
+      console.log = (_msg, data) => { capturedData = data; };
 
       // Act
       const testData = { key: 'value' };
@@ -247,7 +246,7 @@ describe('GeneratorLogger', () => {
       const logger = createLogger({ enabled: true, level: 'error' });
       let capturedError: Error | undefined;
       const originalError = console.error;
-      console.error = (msg, error) => { capturedError = error; };
+      console.error = (_msg, error) => { capturedError = error; };
 
       // Act
       const testError = new Error('test error');

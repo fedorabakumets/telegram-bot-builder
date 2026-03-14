@@ -124,7 +124,7 @@ describe('GenerationContext', () => {
       const groups: BotGroup[] = [
         { id: 1, projectId: 1, name: 'Group 1', groupId: '-100123', enabled: true },
         { id: 2, projectId: 1, name: 'Group 2', groupId: '-100456', enabled: false },
-      ] as BotGroup[];
+      ] as unknown as BotGroup[];
       const options: GenerationOptions = {};
 
       // Act
@@ -407,7 +407,7 @@ describe('GenerationContext', () => {
   describe('Edge cases', () => {
     it('должен обрабатывать botData с пустым массивом nodes', () => {
       // Arrange
-      const botData = { id: 1, projectId: 1, nodes: [] } as BotData;
+      const botData = { id: 1, projectId: 1, nodes: [] } as unknown as BotData;
       const botName = 'EmptyBot';
       const groups: BotGroup[] = [];
       const options: GenerationOptions = {};
@@ -470,7 +470,7 @@ describe('GenerationContext', () => {
         position: { x: i * 100, y: i * 100 },
         data: { text: `Message ${i}`, buttons: [] },
       }));
-      const botData = { id: 1, projectId: 1, nodes } as BotData;
+      const botData = { id: 1, projectId: 1, nodes } as unknown as BotData;
       const botName = 'BigBot';
       const groups: BotGroup[] = [];
       const options: GenerationOptions = {};

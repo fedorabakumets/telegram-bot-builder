@@ -10,7 +10,6 @@ import {
   toEnhancedNodes,
 } from '../../../bot-generator/utils/to-enhanced-node';
 import type { Node } from '@shared/schema';
-import type { EnhancedNode } from '../../../bot-generator/types/enhanced-node.types';
 
 describe('ToEnhancedNode', () => {
   describe('toEnhancedNode', () => {

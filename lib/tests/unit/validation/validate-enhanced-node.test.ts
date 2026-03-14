@@ -8,7 +8,6 @@ import * as assert from 'node:assert';
 import {
   validateEnhancedNode,
   validateEnhancedNodes,
-  type ValidationResult,
 } from '../../../bot-generator/validation/validate-enhanced-node';
 import type { EnhancedNode } from '../../../bot-generator/types/enhanced-node.types';
 import {

@@ -44,7 +44,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, {
@@ -80,7 +80,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, { botName: 'MyCustomBot' });
@@ -106,7 +106,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData);
@@ -157,7 +157,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, { botName: 'CommandsBot' });
@@ -204,7 +204,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, { botName: 'InlineBot' });
@@ -249,7 +249,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, { botName: 'ReplyBot' });
@@ -290,7 +290,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, { botName: 'AutoBot' });
@@ -330,7 +330,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, { botName: 'InputBot' });
@@ -359,7 +359,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, {
@@ -390,7 +390,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, {
@@ -420,7 +420,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, {
@@ -453,7 +453,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, {
@@ -485,7 +485,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       const groups: BotGroup[] = [
         {
@@ -495,7 +495,7 @@ describe('FullGeneration (Integration)', () => {
           groupId: '-1001234567890',
           enabled: true,
         },
-      ] as BotGroup[];
+      ] as unknown as BotGroup[];
 
       // Act
       const code = generatePythonCode(botData, {
@@ -517,7 +517,7 @@ describe('FullGeneration (Integration)', () => {
         id: 1,
         projectId: 1,
         nodes: [],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, { botName: 'EmptyBot' });
@@ -545,7 +545,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, { botName: 'SingleNodeBot' });
@@ -593,7 +593,7 @@ describe('FullGeneration (Integration)', () => {
           },
           ...nodes,
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, { botName: 'BigBot' });
@@ -622,7 +622,7 @@ describe('FullGeneration (Integration)', () => {
             },
           },
         ],
-      } as BotData;
+      } as unknown as BotData;
 
       // Act
       const code = generatePythonCode(botData, { botName: 'ValidBot' });

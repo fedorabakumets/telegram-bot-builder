@@ -67,7 +67,7 @@ export const validMessageNode: EnhancedNode = {
     responseType: 'buttons',
     responseOptions: ['Опция 1', 'Опция 2'],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Валидный узел типа command
@@ -82,7 +82,7 @@ export const validCommandNode: EnhancedNode = {
     showInMenu: true,
     buttons: [],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Валидный узел с автопереходом
@@ -98,7 +98,7 @@ export const validAutoTransitionNode: EnhancedNode = {
     autoTransitionDelay: 2,
     buttons: [],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Валидный узел с сбором пользовательского ввода
@@ -114,7 +114,7 @@ export const validInputNode: EnhancedNode = {
     responseType: 'text',
     buttons: [],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Валидный узел с inline кнопками
@@ -143,7 +143,7 @@ export const validInlineNode: EnhancedNode = {
     ],
     responseType: 'inline_buttons',
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Валидный узел с множественным выбором
@@ -173,7 +173,7 @@ export const validMultiSelectNode: EnhancedNode = {
     responseType: 'multiselect',
     multiSelect: true,
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Валидный узел с медиа
@@ -196,7 +196,7 @@ export const validMediaNode: EnhancedNode = {
     ],
     buttons: [],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Валидный узел с условными кнопками
@@ -222,7 +222,7 @@ export const validConditionalNode: EnhancedNode = {
       },
     ],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 // ============================================================================
 // НЕВАЛИДНЫЕ УЗЛЫ
@@ -239,7 +239,7 @@ export const invalidNodeNoId: EnhancedNode = {
     text: 'Сообщение',
     buttons: [],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Невалидный узел без типа
@@ -252,7 +252,7 @@ export const invalidNodeNoType: EnhancedNode = {
     text: 'Сообщение',
     buttons: [],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Невалидный узел без позиции
@@ -265,7 +265,7 @@ export const invalidNodeNoPosition: EnhancedNode = {
     text: 'Сообщение',
     buttons: [],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Невалидный узел с некорректной позицией
@@ -278,7 +278,7 @@ export const invalidNodeInvalidPosition: EnhancedNode = {
     text: 'Сообщение',
     buttons: [],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Невалидный узел без данных
@@ -348,7 +348,7 @@ export const invalidNodeButtonNoAction: EnhancedNode = {
       },
     ],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 /**
  * Невалидный узел с автопереходом без цели
@@ -363,7 +363,7 @@ export const invalidNodeAutoTransitionNoTarget: EnhancedNode = {
     autoTransitionTo: '',
     buttons: [],
   },
-} as EnhancedNode;
+} as unknown as EnhancedNode;
 
 // ============================================================================
 // МАССИВЫ УЗЛОВ
@@ -447,7 +447,7 @@ export const validSimpleBotData: BotData = {
       },
     },
   ],
-} as BotData;
+} as unknown as BotData;
 
 /**
  * Сложные данные бота с различными типами узлов
@@ -547,7 +547,7 @@ export const validComplexBotData: BotData = {
       },
     },
   ],
-} as BotData;
+} as unknown as BotData;
 
 /**
  * Данные бота с медиа
@@ -569,7 +569,7 @@ export const validMediaBotData: BotData = {
       },
     },
   ],
-} as BotData;
+} as unknown as BotData;
 
 /**
  * Данные бота с множественным выбором
@@ -618,7 +618,7 @@ export const validMultiSelectBotData: BotData = {
       },
     },
   ],
-} as BotData;
+} as unknown as BotData;
 
 // ============================================================================
 // ГРУППЫ БОТА (BotGroup)
@@ -633,7 +633,7 @@ export const simpleBotGroup: BotGroup = {
   name: 'Основная группа',
   groupId: '-1001234567890',
   enabled: true,
-} as BotGroup;
+} as unknown as BotGroup;
 
 /**
  * Массив групп бота
@@ -646,7 +646,7 @@ export const botGroups: BotGroup[] = [
     name: 'Тестовая группа',
     groupId: '-1009876543210',
     enabled: false,
-  } as BotGroup,
+  } as unknown as BotGroup,
 ];
 
 // ============================================================================
@@ -715,7 +715,7 @@ export function createMockLogger() {
     debug: (msg: string, data?: any) => logs.push({ level: 'debug', message: msg, data }),
     info: (msg: string) => logs.push({ level: 'info', message: msg }),
     warn: (msg: string) => logs.push({ level: 'warn', message: msg }),
-    error: (msg: string, error?: Error) => logs.push({ level: 'error', message: msg, error }),
+    error: (msg: string, error?: Error) => logs.push({ level: 'error', message: msg, data: error }),
     flow: (msg: string) => logs.push({ level: 'flow', message: msg }),
     clear: () => { logs.length = 0; },
   };
