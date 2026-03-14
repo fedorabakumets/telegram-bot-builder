@@ -306,7 +306,7 @@ describe('MessageBubble', () => {
       const message = createTestMessage({
         createdAt: new Date('2024-03-14T10:30:00Z'),
       });
-      
+
       render(
         <MessageBubble
           message={message}
@@ -314,15 +314,14 @@ describe('MessageBubble', () => {
           bot={createTestUser()}
         />
       );
-      
-      // Проверяем что timestamp присутствует
-      const timestamp = screen.getByTestId('message-timestamp');
-      expect(timestamp).toBeInTheDocument();
+
+      // Проверяем что timestamp присутствует (текст с датой)
+      expect(screen.getByText(/14 мар\. 2024/)).toBeInTheDocument();
     });
 
     it('должен обрабатывать null дату', () => {
       const message = createTestMessage({ createdAt: null });
-      
+
       const { container } = render(
         <MessageBubble
           message={message}
@@ -330,7 +329,7 @@ describe('MessageBubble', () => {
           bot={createTestUser()}
         />
       );
-      
+
       expect(container).toBeInTheDocument();
     });
   });
@@ -339,7 +338,7 @@ describe('MessageBubble', () => {
     it('должен отображать аватар бота', () => {
       const message = createTestMessage({ messageType: 'bot' });
       const bot = createTestUser();
-      
+
       render(
         <MessageBubble
           message={message}
@@ -348,16 +347,16 @@ describe('MessageBubble', () => {
           projectId={1}
         />
       );
-      
-      // Проверяем что аватар присутствует
-      const avatar = screen.getByTestId('message-avatar');
-      expect(avatar).toBeInTheDocument();
+
+      // Проверяем что аватар присутствует (иконка бота)
+      const botIcon = screen.getByTestId('dialog-message-bot-0').querySelector('.lucide-bot');
+      expect(botIcon).toBeInTheDocument();
     });
 
     it('должен отображать аватар пользователя', () => {
       const message = createTestMessage({ messageType: 'user' });
       const user = createTestUser();
-      
+
       render(
         <MessageBubble
           message={message}
@@ -366,9 +365,10 @@ describe('MessageBubble', () => {
           projectId={1}
         />
       );
-      
-      const avatar = screen.getByTestId('message-avatar');
-      expect(avatar).toBeInTheDocument();
+
+      // Проверяем что аватар присутствует (иконка пользователя)
+      const userIcon = screen.getByTestId('dialog-message-user-0').querySelector('.lucide-user');
+      expect(userIcon).toBeInTheDocument();
     });
   });
 

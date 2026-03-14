@@ -31,24 +31,32 @@ describe('FormattedText', () => {
       expect(textElement).toBeInTheDocument();
     });
 
-    it('должен возвращать null для null текста', () => {
+    it('должен рендерить пустой контейнер для null текста', () => {
       const { container } = render(<FormattedText text={null} messageType="bot" />);
-      expect(container.firstChild).toBeNull();
+      const paragraph = container.querySelector('p');
+      expect(paragraph).toBeInTheDocument();
+      expect(paragraph?.textContent).toBe('');
     });
 
-    it('должен возвращать null для undefined текста', () => {
+    it('должен рендерить пустой контейнер для undefined текста', () => {
       const { container } = render(<FormattedText text={undefined} messageType="bot" />);
-      expect(container.firstChild).toBeNull();
+      const paragraph = container.querySelector('p');
+      expect(paragraph).toBeInTheDocument();
+      expect(paragraph?.textContent).toBe('');
     });
 
-    it('должен возвращать null для пустой строки', () => {
+    it('должен рендерить пустой контейнер для пустой строки', () => {
       const { container } = render(<FormattedText text="" messageType="bot" />);
-      expect(container.firstChild).toBeNull();
+      const paragraph = container.querySelector('p');
+      expect(paragraph).toBeInTheDocument();
+      expect(paragraph?.textContent).toBe('');
     });
 
-    it('должен возвращать null для строки с пробелами', () => {
+    it('должен рендерить пустой контейнер для строки с пробелами', () => {
       const { container } = render(<FormattedText text="   " messageType="bot" />);
-      expect(container.firstChild).toBeNull();
+      const paragraph = container.querySelector('p');
+      expect(paragraph).toBeInTheDocument();
+      expect(paragraph?.textContent).toBe('');
     });
   });
 

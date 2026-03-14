@@ -39,7 +39,7 @@ export function FormattedText({ text, messageType }: FormattedTextProps) {
 
       while (remaining.length > 0) {
         // Ищем ближайший открывающий тег
-        const tagMatch = remaining.match(/<(b|strong|i|em|u|s|strike|del|code|pre|a[^>]*)>([\s\S]*?)<\/\1>|<(br\s*\/?)>/i);
+        const tagMatch = remaining.match(/<(b|strong|i|em|u|s|strike|del|code|pre)>([\s\S]*?)<\/\1>|<(a)([^>]*)>([\s\S]*?)<\/a>|<(br\s*\/?)>/i);
 
         if (!tagMatch || tagMatch.index === undefined) {
           // Тегов больше нет, добавляем оставшийся текст
@@ -57,14 +57,15 @@ export function FormattedText({ text, messageType }: FormattedTextProps) {
         }
 
         const fullMatch = tagMatch[0];
-        const tagName = tagMatch[1]?.toLowerCase() || '';
-        const innerContent = tagMatch[2];
+        const tagName = (tagMatch[1] || tagMatch[3])?.toLowerCase() || '';
+        const innerContent = tagMatch[2] ?? tagMatch[5];
+        const anchorAttrs = tagMatch[4];
 
         // Обработка тега
         if (tagName === 'br' || tagName === 'br/') {
           elements.push('\n');
         } else if (tagName === 'a') {
-          const hrefMatch = tagName.match(/href="([^"]*)"/);
+          const hrefMatch = anchorAttrs?.match(/href="([^"]*)"/);
           const href = hrefMatch ? hrefMatch[1] : '#';
           elements.push(
             <a
