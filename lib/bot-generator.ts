@@ -37,9 +37,9 @@ import { generateGlobalCheckUserVariableFunction } from "./bot-generator/databas
 import { generateUniversalVariableReplacement } from './bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython } from './bot-generator/format';
 import { generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtilityFunctions } from './generate';
-import { generateHeader } from './bot-generator/templates/generate-header';
-import { generateImports } from './bot-generator/templates/generate-imports';
-import { generateConfig } from './bot-generator/templates/generate-config';
+import { generateHeader } from '@lib/bot-generator/templates/generate-header';
+import { generateImports } from '@lib/bot-generator/templates/generate-imports';
+import { generateConfig } from '@lib/bot-generator/templates/generate-config';
 import { generateApiConfig } from './bot-generator/api';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';

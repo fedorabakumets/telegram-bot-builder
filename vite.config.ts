@@ -47,7 +47,7 @@ const serverOnlyModules: Plugin = {
   enforce: 'pre',
   resolveId(id: string) {
     // Исключаем модули шаблонов которые используются только на сервере
-    if (id.includes('/bot-generator/templates/') && 
+    if (id.includes('@lib/bot-generator/templates/') && 
         (id.includes('template-renderer') || 
          id.includes('generate-header') || 
          id.includes('generate-imports') || 
