@@ -1,6 +1,7 @@
 export { AliasNodes } from './AliasNodes';
 export { generateCheckUserVariableFunction } from './generateCheckUserVariableFunction';
 export { generateDatabaseCode } from './generateDatabaseCode';
+export { generateInitAllUserVars, generateInitAllUserVarsCall, generateInitAllUserVarsSafe } from './generate-init-all-user-vars';
 export { generateUniversalVariableReplacement } from './generateUniversalVariableReplacement';
 export { generateVariableReplacement } from './generateVariableReplacement';
 export { get_moscow_time } from './get_moscow_time';

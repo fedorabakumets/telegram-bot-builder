@@ -3,6 +3,7 @@ import { formatTextForPython, generateButtonText, toPythonBoolean } from '../for
 import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { generateInlineKeyboardCode } from '../Keyboard';
 import { escapePythonString } from '../format/escapePythonString';
+import { generateInitAllUserVarsCall } from '../database/generate-init-all-user-vars';
 
 export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) {
     code += '    # Проверяем, находится ли пользователь в режиме множественного выбора\n';
@@ -41,19 +42,8 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                         const formattedText = formatTextForPython(messageText);
                         code += `            text = ${formattedText}\n`;
 
-                        // Заменяем переменные в тексте
-                        code += '            user_vars = await get_user_from_db(user_id)\n';
-                        code += '            if not user_vars:\n';
-                        code += '                user_vars = user_data.get(user_id, {})\n';
-                        code += '            if not isinstance(user_vars, dict):\n';
-                        code += '                user_vars = {}\n';
-                        code += '            # Создаем объединенный словарь переменных\n';
-                        code += '            all_user_vars = {}\n';
-                        code += '            if user_vars and isinstance(user_vars, dict):\n';
-                        code += '                all_user_vars.update(user_vars)\n';
-                        code += '            local_user_vars = user_data.get(user_id, {})\n';
-                        code += '            if isinstance(local_user_vars, dict):\n';
-                        code += '                all_user_vars.update(local_user_vars)\n';
+                        // Заменяем переменные в тексте через переиспользуемую функцию
+                        code += `${generateInitAllUserVarsCall('user_id', 'all_user_vars', '            ')}\n`;
                         code += '            # Заменяем переменные в тексте\n';
                         code += '            # Получаем фильтры переменных для замены\n';
                         code += '            variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n';
@@ -143,19 +133,8 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                     const formattedText = formatTextForPython(messageText);
                     code += `                text = ${formattedText}\n`;
 
-                    // Заменяем пе??еменные в тексте
-                    code += '                user_vars = await get_user_from_db(user_id)\n';
-                    code += '                if not user_vars:\n';
-                    code += '                    user_vars = user_data.get(user_id, {})\n';
-                    code += '                if not isinstance(user_vars, dict):\n';
-                    code += '                    user_vars = {}\n';
-                    code += '                # Создаем объединенный словарь переменных\n';
-                    code += '                all_user_vars = {}\n';
-                    code += '                if user_vars and isinstance(user_vars, dict):\n';
-                    code += '                    all_user_vars.update(user_vars)\n';
-                    code += '                local_user_vars = user_data.get(user_id, {})\n';
-                    code += '                if isinstance(local_user_vars, dict):\n';
-                    code += '                    all_user_vars.update(local_user_vars)\n';
+                    // Заменяем переменные в тексте через переиспользуемую функцию
+                    code += `${generateInitAllUserVarsCall('user_id', 'all_user_vars', '                ')}\n`;
                     code += '                # Заменяем переменные в тексте\n';
                     code += '                # Получаем фильтры переменных для замены\n';
                     code += '                variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n';

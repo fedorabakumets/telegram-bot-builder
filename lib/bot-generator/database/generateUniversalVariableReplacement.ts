@@ -9,6 +9,7 @@
 
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { generateDatabaseVariablesCode } from '../Broadcast/generate-database-variables-universal';
+import { generateInitAllUserVarsCall } from './generate-init-all-user-vars';
 
 /**
  * Параметры для генерации универсальной замены переменных
@@ -32,7 +33,7 @@ export function generateUniversalVariableReplacement(
   // Поддержка старого формата вызова (обратная совместимость)
   let indentLevel = '';
   let node = null;
-  
+
   if (typeof params === 'string') {
     indentLevel = params;
     node = null;
@@ -43,31 +44,9 @@ export function generateUniversalVariableReplacement(
 
   const universalVarCodeLines: string[] = [];
 
-  // Инициализация all_user_vars
-  universalVarCodeLines.push(`${indentLevel}# Инициализируем all_user_vars пустым словарём`);
-  universalVarCodeLines.push(`${indentLevel}all_user_vars = {}`);
-
-  // Получаем переменные из БД
-  universalVarCodeLines.push(`${indentLevel}# Получаем переменные из БД`);
-  universalVarCodeLines.push(`${indentLevel}db_user_vars = await get_user_from_db(user_id)`);
-  universalVarCodeLines.push(`${indentLevel}if not db_user_vars:`);
-  universalVarCodeLines.push(`${indentLevel}    db_user_vars = user_data.get(user_id, {})`);
-
-  // Проверяем что db_user_vars это dict
-  universalVarCodeLines.push(`${indentLevel}# Проверяем что db_user_vars это dict`);
-  universalVarCodeLines.push(`${indentLevel}if not isinstance(db_user_vars, dict):`);
-  universalVarCodeLines.push(`${indentLevel}    db_user_vars = user_data.get(user_id, {})`);
-
-  // Обновляем all_user_vars
-  universalVarCodeLines.push(`${indentLevel}# Обновляем all_user_vars из БД`);
-  universalVarCodeLines.push(`${indentLevel}if db_user_vars and isinstance(db_user_vars, dict):`);
-  universalVarCodeLines.push(`${indentLevel}    all_user_vars.update(db_user_vars)`);
-
-  // Получаем локальные переменные
-  universalVarCodeLines.push(`${indentLevel}# Получаем локальные переменные из user_data`);
-  universalVarCodeLines.push(`${indentLevel}local_user_vars = user_data.get(user_id, {})`);
-  universalVarCodeLines.push(`${indentLevel}if isinstance(local_user_vars, dict):`);
-  universalVarCodeLines.push(`${indentLevel}    all_user_vars.update(local_user_vars)`);
+  // Инициализация all_user_vars через переиспользуемую функцию
+  universalVarCodeLines.push(`${indentLevel}# Инициализация all_user_vars из БД и локального хранилища`);
+  universalVarCodeLines.push(`${generateInitAllUserVarsCall('user_id', 'all_user_vars', indentLevel)}`);
   universalVarCodeLines.push('');
 
   // Добавляем переменные из таблиц БД (user_ids, user_ids_count, etc.)

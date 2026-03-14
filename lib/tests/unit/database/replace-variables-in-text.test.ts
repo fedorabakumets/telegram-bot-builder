@@ -90,35 +90,34 @@ describe('ReplaceVariablesInText (Python Code Generator)', () => {
     it('должна генерировать код инициализации all_user_vars', () => {
       // Arrange
       const codeLines: string[] = [];
-      
+
       // Act
       generateUniversalVariableReplacement(codeLines);
-      
-      // Assert
-      assert.ok(codeLines.some(line => line.includes('all_user_vars = {}')), 'Должна быть инициализация all_user_vars');
+
+      // Assert - теперь используется функция init_all_user_vars
+      assert.ok(codeLines.some(line => line.includes('init_all_user_vars')), 'Должна быть функция init_all_user_vars');
     });
 
     it('должна генерировать код получения переменных из БД', () => {
       // Arrange
       const codeLines: string[] = [];
-      
+
       // Act
       generateUniversalVariableReplacement(codeLines);
-      
-      // Assert
-      assert.ok(codeLines.some(line => line.includes('get_user_from_db')), 'Должна быть функция get_user_from_db');
-      assert.ok(codeLines.some(line => line.includes('db_user_vars')), 'Должна быть переменная db_user_vars');
+
+      // Assert - теперь используется функция init_all_user_vars которая внутри использует get_user_from_db
+      assert.ok(codeLines.some(line => line.includes('init_all_user_vars')), 'Должна быть функция init_all_user_vars');
     });
 
     it('должна генерировать код обновления all_user_vars', () => {
       // Arrange
       const codeLines: string[] = [];
-      
+
       // Act
       generateUniversalVariableReplacement(codeLines);
-      
-      // Assert
-      assert.ok(codeLines.some(line => line.includes('all_user_vars.update')), 'Должно быть обновление all_user_vars');
+
+      // Assert - теперь используется функция init_all_user_vars которая возвращает all_user_vars
+      assert.ok(codeLines.some(line => line.includes('all_user_vars')), 'Должна быть переменная all_user_vars');
     });
 
     it('должна генерировать код вызова replace_variables_in_text', () => {

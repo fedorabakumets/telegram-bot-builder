@@ -18,6 +18,7 @@ import { save_user_data_to_db } from './save_user_data_to_db';
 import { save_user_to_db } from './save_user_to_db';
 import { update_user_data_in_db } from './update_user_data_in_db';
 import { update_user_variable_in_db } from './update_user_variable_in_db';
+import { generateInitAllUserVars } from './generate-init-all-user-vars';
 
 /**
  * Вспомогательная функция для генерации кода, связанного с базой данных
@@ -58,6 +59,9 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     replace_variables_in_text(codeLines);
     // marked as generated
   }
+
+  // Функция инициализации all_user_vars (переиспользуемая)
+  codeLines.push(generateInitAllUserVars({ mode: 'function' }));
 
   // Инициализация пользовательских переменных
   init_user_variables(codeLines);

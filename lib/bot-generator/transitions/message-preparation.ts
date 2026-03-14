@@ -8,6 +8,7 @@
  */
 
 import { generateDatabaseVariablesCode } from '../Broadcast/generate-database-variables-universal';
+import { generateInitAllUserVarsCall } from '../database/generate-init-all-user-vars';
 
 /**
  * Параметры для подготовки сообщения
@@ -45,33 +46,18 @@ export function generateMessageText(messageText?: string, indent: string = '    
  */
 export function generateDatabaseVarsGet(indent: string = '    ', messageText?: string): string {
   let code = '';
-  code += `${indent}# Инициализируем all_user_vars пустым словарём\n`;
-  code += `${indent}all_user_vars = {}\n`;
-  code += `${indent}# Получаем переменные из БД\n`;
-  code += `${indent}db_user_vars = await get_user_from_db(user_id)\n`;
-  code += `${indent}if not db_user_vars:\n`;
-  code += `${indent}    db_user_vars = user_data.get(user_id, {})\n`;
-  code += `${indent}# Проверяем что db_user_vars это dict\n`;
-  code += `${indent}if not isinstance(db_user_vars, dict):\n`;
-  code += `${indent}    db_user_vars = user_data.get(user_id, {})\n`;
-  code += `${indent}# Обновляем all_user_vars из БД\n`;
-  code += `${indent}if db_user_vars and isinstance(db_user_vars, dict):\n`;
-  code += `${indent}    all_user_vars.update(db_user_vars)\n`;
-  code += `${indent}# Получаем локальные переменные из user_data\n`;
-  code += `${indent}local_user_vars = user_data.get(user_id, {})\n`;
-  code += `${indent}if isinstance(local_user_vars, dict):\n`;
-  code += `${indent}    all_user_vars.update(local_user_vars)\n`;
-  code += `${indent}\n`;
-  
+  code += `${indent}# Инициализация all_user_vars из БД и локального хранилища\n`;
+  code += `${generateInitAllUserVarsCall('user_id', 'all_user_vars', indent)}\n`;
+
   // Извлекаем все переменные из текста сообщения
-  const usedVariables = messageText ? 
-    [...messageText.matchAll(/\{([^}|]+)(?:\|[^}]+)?\}/g)].map(m => m[1]) : 
+  const usedVariables = messageText ?
+    [...messageText.matchAll(/\{([^}|]+)(?:\|[^}]+)?\}/g)].map(m => m[1]) :
     undefined;
-  
+
   // Генерируем код только для нужных таблиц
   code += `${indent}# Получаем переменные из базы данных\n`;
   code += generateDatabaseVariablesCode(indent, usedVariables);
-  
+
   return code;
 }
 

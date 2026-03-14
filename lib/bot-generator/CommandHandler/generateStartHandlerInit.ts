@@ -9,6 +9,7 @@
  */
 
 import { generateDatabaseVariablesCode } from '../Broadcast/generate-database-variables-universal';
+import { generateInitAllUserVarsCall } from '../database/generate-init-all-user-vars';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
@@ -38,23 +39,8 @@ export function generateStartHandlerInit(
   const { messageText = '', indent = '    ' } = params;
   const codeLines: string[] = [];
 
-  // Шаг 1: Инициализация all_user_vars
-  codeLines.push(`${indent}# Инициализируем all_user_vars пустым словарём`);
-  codeLines.push(`${indent}all_user_vars = {}`);
-  codeLines.push(`${indent}# Получаем переменные из БД`);
-  codeLines.push(`${indent}db_user_vars = await get_user_from_db(user_id)`);
-  codeLines.push(`${indent}if not db_user_vars:`);
-  codeLines.push(`${indent}    db_user_vars = user_data.get(user_id, {})`);
-  codeLines.push(`${indent}# Проверяем что db_user_vars это dict`);
-  codeLines.push(`${indent}if not isinstance(db_user_vars, dict):`);
-  codeLines.push(`${indent}    db_user_vars = user_data.get(user_id, {})`);
-  codeLines.push(`${indent}# Обновляем all_user_vars из БД`);
-  codeLines.push(`${indent}if db_user_vars and isinstance(db_user_vars, dict):`);
-  codeLines.push(`${indent}    all_user_vars.update(db_user_vars)`);
-  codeLines.push(`${indent}# Получаем локальные переменные из user_data`);
-  codeLines.push(`${indent}local_user_vars = user_data.get(user_id, {})`);
-  codeLines.push(`${indent}if isinstance(local_user_vars, dict):`);
-  codeLines.push(`${indent}    all_user_vars.update(local_user_vars)`);
+  // Шаг 1: Инициализация all_user_vars через переиспользуемую функцию
+  codeLines.push(generateInitAllUserVarsCall('user_id', 'all_user_vars', indent));
   codeLines.push('');
 
   // Шаг 2: Добавляем переменные из таблиц БД (user_ids, user_ids_count, etc.)
