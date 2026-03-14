@@ -146,7 +146,7 @@ describe('PythonUndefinedAccessValidation', () => {
           },
         ],
         connections: [],
-      };
+      } as any;
 
       it('не должен содержать ошибок доступа к неопределённым переменным', () => {
         const code = generatePythonCode(botData, {
@@ -221,7 +221,7 @@ describe('PythonUndefinedAccessValidation', () => {
           },
         ],
         connections: [],
-      };
+      } as any;
 
       it('должен импортировать все используемые модули', () => {
         const code = generatePythonCode(botData, { 
@@ -428,7 +428,7 @@ describe('PythonUndefinedAccessValidation', () => {
           },
         ],
         connections: [],
-      };
+      } as any;
 
       const code = generatePythonCode(botData, {
         botName: 'TestBot',
@@ -438,8 +438,7 @@ describe('PythonUndefinedAccessValidation', () => {
 
       // Проверяем что переменная user_name определяется до использования
       const userInitIndex = code.indexOf('await init_user_variables');
-      const userUsageIndex = code.indexOf('{user_name}');
-      
+
       // user_name используется в тексте сообщения, а не в коде
       // Проверяем что init_user_variables вызывается до использования user_name
       assert.ok(
@@ -465,7 +464,7 @@ describe('PythonUndefinedAccessValidation', () => {
           },
         ],
         connections: [],
-      };
+      } as any;
 
       const code = generatePythonCode(botData, {
         botName: 'TestBot',
@@ -501,7 +500,7 @@ describe('PythonUndefinedAccessValidation', () => {
           },
         ],
         connections: [],
-      };
+      } as any;
 
       const code = generatePythonCode(botData, { 
         botName: 'TestBot',
@@ -560,7 +559,7 @@ describe('PythonUndefinedAccessValidation', () => {
             },
           ],
           connections: [],
-        };
+        } as any;
 
         const code = generatePythonCode(botData, {
           botName: 'TestBot',
