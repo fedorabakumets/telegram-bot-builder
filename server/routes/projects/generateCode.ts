@@ -7,7 +7,7 @@
  */
 
 import type { Request, Response } from 'express';
-import { getProjectById } from '../../db/projects';
+import { storage } from '../../storages/storage';
 import { generatePythonCode } from '@lib/bot-generator';
 
 /**
@@ -28,7 +28,7 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
     const { userDatabaseEnabled = false, enableComments = true, enableLogging = false } = req.body;
 
     // Получаем проект из БД
-    const project = await getProjectById(projectId);
+    const project = await storage.getBotProject(projectId);
     if (!project) {
       res.status(404).json({ error: 'Project not found', message: `Project ${projectId} not found` });
       return;
