@@ -576,7 +576,7 @@ describe('DialogPanel', () => {
       const { rerender } = render(<DialogPanel {...defaultProps} user={user1} />, { wrapper: createWrapper() });
       expect(screen.getByTestId('user-name')).toHaveTextContent('Алексей');
 
-      rerender(<DialogPanel {...defaultProps} user={user2} />, { wrapper: createWrapper() });
+      rerender(<DialogPanel {...defaultProps} user={user2} />);
       expect(screen.getByTestId('user-name')).toHaveTextContent('Мария');
     });
 
