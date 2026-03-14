@@ -101,13 +101,15 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
   const generateContent = useCallback(async (format: CodeFormat): Promise<string> => {
     try {
       let botGenerator;
+      let useBrowserVersion = false;
+      
       try {
         // Пытаемся загрузить генератор
         botGenerator = await loadBotGenerator();
       } catch (loadError) {
-        // Если не удалось загрузить (браузерная сборка), используем заглушку
-        console.warn('Bot generator not available in browser, using mock:', loadError);
-        return `# Ошибка генерации\n# Генерация кода временно недоступна в браузере\n# Попробуйте обновить страницу или использовать серверную генерацию`;
+        // Если не удалось загрузить (браузерная сборка), используем browser-версию
+        console.warn('Bot generator not available in browser, using browser version:', loadError);
+        useBrowserVersion = true;
       }
 
       // Конвертируем многолистовую структуру в простую для генератора
@@ -135,6 +137,62 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
           nodes: []
         };
       };
+
+      const simpleBotData = convertSheetsToSimpleBotData(botData);
+
+      if (useBrowserVersion) {
+        // Используем browser-версии функций
+        const { generateHeaderBrowser } = await import('@lib/bot-generator/templates/generate-header-browser');
+        const { generateImportsBrowser } = await import('@lib/bot-generator/templates/generate-imports-browser');
+        const { generateConfigBrowser } = await import('@lib/bot-generator/templates/generate-config-browser');
+        const { generateRequirementsTxt, generateReadme, generateDockerfile, generateEnvFile } = await import('@lib/bot-generator');
+        
+        // Генерируем Python код вручную для browser-версии
+        if (format === 'python') {
+          let code = '"""\n';
+          code += `${projectName} - Telegram Bot\n`;
+          code += 'Сгенерировано с помощью TelegramBot Builder\n';
+          code += '"""\n\n';
+          
+          code += generateHeaderBrowser();
+          code += generateImportsBrowser({
+            userDatabaseEnabled: userDatabaseEnabled,
+            hasInlineButtons: false,
+            hasAutoTransitions: false,
+            hasMediaNodes: false,
+            hasUploadImages: false,
+          });
+          code += generateConfigBrowser({
+            userDatabaseEnabled: userDatabaseEnabled,
+            projectId: projectId,
+          });
+          
+          code += '# Обработчики будут добавлены в следующей версии\n';
+          code += '# Сейчас доступна только базовая конфигурация\n';
+          
+          return code;
+        }
+        
+        switch (format) {
+          case 'requirements':
+            return generateRequirementsTxt();
+          case 'readme':
+            const customFileName = projectName
+              .toLowerCase()
+              .trim()
+              .replace(/[^\p{L}\p{N}_\s-]/gu, '')
+              .replace(/\s+/g, '_')
+              .replace(/_{2,}/g, '_')
+              .replace(/^-+|-+$/g, '') || 'bot';
+            return generateReadme(botData, projectName, projectId || undefined, undefined, customFileName);
+          case 'dockerfile':
+            return generateDockerfile();
+          case 'env':
+            return generateEnvFile(defaultToken, "123456789", projectId || 1);
+          default:
+            return '';
+        }
+      }
 
       const simpleBotData = convertSheetsToSimpleBotData(botData);
 
