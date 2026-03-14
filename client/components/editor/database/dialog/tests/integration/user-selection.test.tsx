@@ -7,7 +7,7 @@
 /// <reference types="vitest/globals" />
 
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, rerender } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DialogPanel } from '../../dialog-panel';
 import type { UserBotData } from '@shared/schema';
