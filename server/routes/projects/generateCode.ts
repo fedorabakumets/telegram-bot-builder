@@ -49,6 +49,20 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
 
     const simpleBotData = convertSheetsToSimpleBotData(project.data as any);
 
+    // Логирование для отладки
+    console.log(`[Generate] Project ${projectId}:`);
+    console.log(`  - project.data keys:`, Object.keys(project.data || {}));
+    console.log(`  - Has sheets:`, Array.isArray((project.data as any)?.sheets));
+    console.log(`  - Has nodes:`, Array.isArray((project.data as any)?.nodes));
+    console.log(`  - simpleBotData.nodes count:`, simpleBotData.nodes?.length || 0);
+    if (simpleBotData.nodes && simpleBotData.nodes.length > 0) {
+      console.log(`  - First node:`, {
+        id: simpleBotData.nodes[0].id,
+        type: simpleBotData.nodes[0].type,
+        hasData: !!simpleBotData.nodes[0].data
+      });
+    }
+
     // Генерируем код
     const code = generatePythonCode(simpleBotData, {
       botName: project.name,
@@ -58,8 +72,8 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       projectId,
     });
 
-    // Логирование для отладки
-    console.log(`[Generate] Project ${projectId}: ${code.split(/\r?\n/).length} lines generated`);
+    // Логирование результата
+    console.log(`[Generate] Result: ${code.split(/\r?\n/).length} lines generated`);
 
     // Возвращаем результат
     res.json({
