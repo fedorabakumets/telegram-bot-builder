@@ -135,20 +135,21 @@ describe('PythonUndefinedAccessValidation', () => {
         nodes: [
           {
             id: 'start_node',
-            type: 'start',
+            type: 'start' as const,
             data: {
               command: '/start',
               messageText: 'Hello',
               buttons: [],
-              keyboardType: 'inline',
+              keyboardType: 'inline' as const,
             },
             position: { x: 0, y: 0 },
           },
         ],
+        connections: [],
       };
 
       it('не должен содержать ошибок доступа к неопределённым переменным', () => {
-        const code = generatePythonCode(botData, { 
+        const code = generatePythonCode(botData, {
           botName: 'TestBot',
           enableLogging: false,
           enableComments: false,
@@ -166,7 +167,7 @@ describe('PythonUndefinedAccessValidation', () => {
       });
 
       it('должен содержать основные определения функций', () => {
-        const code = generatePythonCode(botData, { 
+        const code = generatePythonCode(botData, {
           botName: 'TestBot',
           enableLogging: false,
           enableComments: false,
@@ -209,16 +210,17 @@ describe('PythonUndefinedAccessValidation', () => {
         nodes: [
           {
             id: 'start_node',
-            type: 'start',
+            type: 'start' as const,
             data: {
               command: '/start',
               messageText: 'Hello',
               buttons: [],
-              keyboardType: 'inline',
+              keyboardType: 'inline' as const,
             },
             position: { x: 0, y: 0 },
           },
         ],
+        connections: [],
       };
 
       it('должен импортировать все используемые модули', () => {
@@ -415,19 +417,20 @@ describe('PythonUndefinedAccessValidation', () => {
         nodes: [
           {
             id: 'start_node',
-            type: 'start',
+            type: 'start' as const,
             data: {
               command: '/start',
               messageText: 'Hello {user_name}',
               buttons: [],
-              keyboardType: 'inline',
+              keyboardType: 'inline' as const,
             },
             position: { x: 0, y: 0 },
           },
         ],
+        connections: [],
       };
 
-      const code = generatePythonCode(botData, { 
+      const code = generatePythonCode(botData, {
         botName: 'TestBot',
         enableLogging: false,
         enableComments: false,
@@ -451,19 +454,20 @@ describe('PythonUndefinedAccessValidation', () => {
         nodes: [
           {
             id: 'start_node',
-            type: 'start',
+            type: 'start' as const,
             data: {
               command: '/start',
               messageText: 'Hello',
               buttons: [],
-              keyboardType: 'inline',
+              keyboardType: 'inline' as const,
             },
             position: { x: 0, y: 0 },
           },
         ],
+        connections: [],
       };
 
-      const code = generatePythonCode(botData, { 
+      const code = generatePythonCode(botData, {
         botName: 'TestBot',
         userDatabaseEnabled: true,
         enableLogging: false,
@@ -496,6 +500,7 @@ describe('PythonUndefinedAccessValidation', () => {
             position: { x: 0, y: 0 },
           },
         ],
+        connections: [],
       };
 
       const code = generatePythonCode(botData, { 
@@ -554,9 +559,10 @@ describe('PythonUndefinedAccessValidation', () => {
               position: { x: 0, y: 0 },
             },
           ],
+          connections: [],
         };
 
-        const code = generatePythonCode(botData, { 
+        const code = generatePythonCode(botData, {
           botName: 'TestBot',
           enableLogging: false,
           enableComments: false,
