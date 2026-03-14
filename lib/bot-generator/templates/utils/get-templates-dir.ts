@@ -12,14 +12,23 @@ import { fileURLToPath } from 'url';
  * @returns Абсолютный путь к lib/bot-generator/templates/
  */
 export function getTemplatesDir(): string {
-  // Для Node.js
-  if (typeof import.meta !== 'undefined' && import.meta.url) {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
+  try {
+    // Для Node.js с ES modules
+    if (typeof import.meta !== 'undefined' && import.meta.url) {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      return __dirname;
+    }
+  } catch (e) {
+    // Игнорируем ошибки import.meta
+  }
+  
+  // Fallback для CommonJS или когда import.meta недоступен
+  if (typeof __dirname !== 'undefined') {
     return __dirname;
   }
   
-  // Fallback для Vite/browser
+  // Fallback для Vite/browser - используем относительный путь
   throw new Error('getTemplatesDir() works only in Node.js environment');
 }
 
