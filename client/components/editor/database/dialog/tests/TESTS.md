@@ -1,58 +1,66 @@
 # 🧪 Тесты для Dialog Components
 
-**Статус:** ✅ 45 тестов создано, все проходят
+**Статус:** ✅ 45 тестов создано и работают
 
 ## Структура тестов
 
 ```
 dialog/tests/
-├── unit/                          # Unit-тесты (node:test)
-│   ├── utils/                     ✅ 45 тестов
+├── unit/                          # Unit-тесты (node:test) ✅
+│   ├── utils/                     ✅ 45 тестов работают
 │   │   ├── format-user-name.test.ts   ✅ 10 тестов
 │   │   ├── format-date.test.ts        ✅ 8 тестов
 │   │   ├── message-utils.test.ts      ✅ 17 тестов
 │   │   └── node-utils.test.ts         ✅ 10 тестов
-│   └── hooks/                       📝 Требует Vitest
-│       ├── use-bot-data.test.ts       ✅ 5 тестов (шаблон)
-│       ├── use-dialog-messages.test.ts ✅ 7 тестов (шаблон)
-│       └── ...
-├── components/                    📝 Требует Vitest
+│   └── hooks/                       📝 Шаблоны (требуют настройки)
+│       ├── use-bot-data.test.tsx      ✅ 5 тестов (шаблон)
+│       └── use-dialog-messages.test.tsx ✅ 7 тестов (шаблон)
+├── components/                    📝 Шаблоны (требуют настройки)
 │   ├── formatted-text.test.tsx      ✅ 20 тестов (шаблон)
 │   ├── message-bubble.test.tsx      ✅ 24 теста (шаблон)
-│   └── ...
-├── run-unit-tests.ts              # Скрипт запуска
-├── run-simple.ts                  # Простой запуск с UTF-8
+│   └── message-bubble-simple.test.tsx ✅ 5 тестов (шаблон)
+├── run-simple.ts                  # Запуск unit-тестов с UTF-8
 ├── run-tests.bat                  # Windows (UTF-8)
 ├── run-tests.ps1                  # PowerShell (UTF-8)
+├── vitest.config.ts               # Конфиг для Vitest
+├── setup-tests.ts                 # Setup для тестов
 └── README.md                      # Документация
 ```
 
 ## 🚀 Быстрый старт
 
-### Запуск всех unit-тестов
+### Запуск unit-тестов (работают ✅)
 
 ```bash
 # Все unit-тесты утилит
+npx tsx --tsconfig tsconfig.json client/components/editor/database/dialog/tests/run-simple.ts
+
+# Отдельный тест
 npx tsx --tsconfig tsconfig.json client/components/editor/database/dialog/tests/unit/utils/format-user-name.test.ts
-npx tsx --tsconfig tsconfig.json client/components/editor/database/dialog/tests/unit/utils/format-date.test.ts
-npx tsx --tsconfig tsconfig.json client/components/editor/database/dialog/tests/unit/utils/message-utils.test.ts
-npx tsx --tsconfig tsconfig.json client/components/editor/database/dialog/tests/unit/utils/node-utils.test.ts
 ```
 
-### Запуск отдельного теста
+### Запуск тестов компонентов (📝 требуют настройки)
+
+Тесты компонентов и хуков используют Vitest и требуют дополнительной настройки:
 
 ```bash
-npx tsx --tsconfig tsconfig.json client/components/editor/database/dialog/tests/unit/utils/format-user-name.test.ts
+# Установка зависимостей (выполнено)
+npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom
+
+# Запуск тестов компонентов (требует настройки окружения)
+npx vitest run client/components/editor/database/dialog/tests/components/message-bubble.test.tsx
 ```
+
+**Примечание:** Тесты компонентов требуют настройки моков для React Query и других зависимостей.
 
 ## 📊 Статистика тестов
 
-| Категория | Файлов | Тестов | Статус | Покрытие |
-|-----------|--------|--------|--------|----------|
-| **Утилиты** | 4 | 45 | ✅ Все проходят | ~100% |
-| **Хуки** | 2 | 12 | 📝 Шаблоны готовы | Требует Vitest |
-| **Компоненты** | 2 | 44 | 📝 Шаблоны готовы | Требует Vitest |
-| **Итого** | 8 | 101 | 45/101 готовы | 45% |
+| Категория | Файлов | Тестов | Статус |
+|-----------|--------|--------|--------|
+| **Утилиты** | 4 | 45 | ✅ Все проходят |
+| **Хуки** | 2 | 12 | 📝 Шаблоны готовы |
+| **Компоненты** | 3 | 49 | 📝 Шаблоны готовы |
+| **Итого** | 9 | 106 | 45 рабочих + 61 шаблон |
 
 ## ✅ Существующие тесты
 
