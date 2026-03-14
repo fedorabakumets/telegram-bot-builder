@@ -46,6 +46,16 @@ const serverOnlyModules: Plugin = {
   name: 'server-only-modules',
   enforce: 'pre',
   resolveId(id: string) {
+    // Исключаем модули которые используются только на сервере
+    if (id.includes('@lib/bot-generator') && 
+        !id.includes('utils') && 
+        !id.includes('format') && 
+        !id.includes('map-utils') &&
+        !id.includes('media')) {
+      // Возвращаем пустой модуль для браузера
+      return { id, external: true };
+    }
+    
     // Исключаем модули шаблонов которые используются только на сервере
     if (id.includes('@lib/bot-generator/templates/') && 
         (id.includes('template-renderer') || 
