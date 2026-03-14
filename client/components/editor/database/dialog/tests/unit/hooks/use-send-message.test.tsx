@@ -17,7 +17,7 @@ vi.mock('@/lib/queryClient', () => ({
   apiRequest: vi.fn(),
 }));
 
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSendMessage } from '../../../hooks/use-send-message';
 import { useToast } from '@/hooks/use-toast';
@@ -102,11 +102,19 @@ describe('useSendMessage', () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useSendMessage(1, 123), { wrapper });
 
+    // Используем mutateAsync и ловим ошибку
     await act(async () => {
-      result.current.mutate({ messageText: 'Тестовое сообщение' });
+      try {
+        await result.current.mutateAsync({ messageText: 'Тестовое сообщение' });
+      } catch (error) {
+        // Ошибка ожидаема
+      }
     });
 
-    expect(result.current.isError).toBe(true);
+    // Ждём обновления состояния мутации
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
   });
 
   it('должен выбрасывать ошибку если userId не указан', async () => {

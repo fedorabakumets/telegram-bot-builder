@@ -17,7 +17,7 @@ vi.mock('@/lib/queryClient', () => ({
   apiRequest: vi.fn(),
 }));
 
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSendNode, type SendNodeData } from '../../../hooks/use-send-node';
 import { apiRequest } from '@/lib/queryClient';
@@ -145,11 +145,19 @@ describe('useSendNode', () => {
       userId: 456,
     };
 
+    // Используем mutateAsync и ловим ошибку
     await act(async () => {
-      result.current.mutate(sendNodeData);
+      try {
+        await result.current.mutateAsync(sendNodeData);
+      } catch (error) {
+        // Ошибка ожидаема
+      }
     });
 
-    expect(result.current.isError).toBe(true);
+    // Ждём обновления состояния мутации
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
   });
 
   it('должен обрабатывать ошибку без сообщения', async () => {
@@ -163,11 +171,19 @@ describe('useSendNode', () => {
       userId: 456,
     };
 
+    // Используем mutateAsync и ловим ошибку
     await act(async () => {
-      result.current.mutate(sendNodeData);
+      try {
+        await result.current.mutateAsync(sendNodeData);
+      } catch (error) {
+        // Ошибка ожидаема
+      }
     });
 
-    expect(result.current.isError).toBe(true);
+    // Ждём обновления состояния мутации
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
   });
 
   it('должен работать с разными projectId', async () => {
