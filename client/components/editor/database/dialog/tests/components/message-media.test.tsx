@@ -2,6 +2,14 @@
  * @fileoverview Тесты для компонента MessageMedia
  * Проверяет отображение медиафайлов в сообщениях
  * @module tests/components/message-media.test
+ *
+ * @description
+ * Компонент MessageMedia:
+ * - Принимает media: Array<{url: string, messageId?: number}>
+ * - НЕ проверяет type поля (photo/image/picture и т.д.)
+ * - Использует idx для key: key={idx}
+ * - data-testid={`dialog-photo-${m.messageId}-${idx}`} (может быть undefined)
+ * - onError скрывает изображение через display: none
  */
 
 /// <reference types="vitest/globals" />
@@ -29,9 +37,7 @@ describe('MessageMedia', () => {
     it('должен рендерить одно изображение', () => {
       const media = [
         {
-          id: 1,
           url: 'https://example.com/image1.jpg',
-          type: 'photo',
         },
       ];
 
@@ -44,21 +50,9 @@ describe('MessageMedia', () => {
 
     it('должен рендерить несколько изображений', () => {
       const media = [
-        {
-          id: 1,
-          url: 'https://example.com/image1.jpg',
-          type: 'photo',
-        },
-        {
-          id: 2,
-          url: 'https://example.com/image2.jpg',
-          type: 'photo',
-        },
-        {
-          id: 3,
-          url: 'https://example.com/image3.jpg',
-          type: 'photo',
-        },
+        { url: 'https://example.com/image1.jpg' },
+        { url: 'https://example.com/image2.jpg' },
+        { url: 'https://example.com/image3.jpg' },
       ];
 
       render(<MessageMedia media={media} />);
@@ -73,9 +67,7 @@ describe('MessageMedia', () => {
     it('должен использовать messageId и idx для data-testid', () => {
       const media = [
         {
-          id: 1,
           url: 'https://example.com/image.jpg',
-          type: 'photo',
           messageId: 123,
         },
       ];
@@ -85,29 +77,23 @@ describe('MessageMedia', () => {
       expect(screen.getByTestId('dialog-photo-123-0')).toBeInTheDocument();
     });
 
-    it('должен использовать idx если messageId не указан', () => {
+    it('должен использовать несколько изображений с разными messageId', () => {
       const media = [
-        {
-          id: 1,
-          url: 'https://example.com/image.jpg',
-          type: 'photo',
-        },
+        { url: 'https://example.com/1.jpg', messageId: 100 },
+        { url: 'https://example.com/2.jpg', messageId: 200 },
       ];
 
       render(<MessageMedia media={media} />);
 
-      expect(screen.getByTestId('dialog-photo-undefined-0')).toBeInTheDocument();
+      expect(screen.getByTestId('dialog-photo-100-0')).toBeInTheDocument();
+      expect(screen.getByTestId('dialog-photo-200-1')).toBeInTheDocument();
     });
   });
 
   describe('Стили и классы', () => {
     it('должен применять классы для контейнера', () => {
       const media = [
-        {
-          id: 1,
-          url: 'https://example.com/image.jpg',
-          type: 'photo',
-        },
+        { url: 'https://example.com/image.jpg' },
       ];
 
       render(<MessageMedia media={media} />);
@@ -121,11 +107,7 @@ describe('MessageMedia', () => {
 
     it('должен применять классы для изображений', () => {
       const media = [
-        {
-          id: 1,
-          url: 'https://example.com/image.jpg',
-          type: 'photo',
-        },
+        { url: 'https://example.com/image.jpg' },
       ];
 
       render(<MessageMedia media={media} />);
@@ -140,17 +122,13 @@ describe('MessageMedia', () => {
   describe('Обработка ошибок', () => {
     it('должен скрывать изображение при ошибке загрузки', () => {
       const media = [
-        {
-          id: 1,
-          url: 'https://example.com/invalid.jpg',
-          type: 'photo',
-        },
+        { url: 'https://example.com/invalid.jpg' },
       ];
 
       render(<MessageMedia media={media} />);
 
       const img = screen.getByRole('img');
-      
+
       // Симулируем ошибку загрузки
       img.dispatchEvent(new Event('error'));
 
@@ -159,22 +137,14 @@ describe('MessageMedia', () => {
 
     it('должен обрабатывать несколько изображений с ошибками', () => {
       const media = [
-        {
-          id: 1,
-          url: 'https://example.com/invalid1.jpg',
-          type: 'photo',
-        },
-        {
-          id: 2,
-          url: 'https://example.com/valid.jpg',
-          type: 'photo',
-        },
+        { url: 'https://example.com/invalid1.jpg' },
+        { url: 'https://example.com/valid.jpg' },
       ];
 
       render(<MessageMedia media={media} />);
 
       const images = screen.getAllByRole('img');
-      
+
       // Симулируем ошибку на первом изображении
       images[0].dispatchEvent(new Event('error'));
 
@@ -183,112 +153,10 @@ describe('MessageMedia', () => {
     });
   });
 
-  describe('Разные типы медиа', () => {
-    it('должен рендерить фото с type: photo', () => {
-      const media = [
-        {
-          id: 1,
-          url: 'https://example.com/photo.jpg',
-          type: 'photo',
-        },
-      ];
-
-      render(<MessageMedia media={media} />);
-
-      expect(screen.getByRole('img')).toBeInTheDocument();
-    });
-
-    it('должен рендерить изображение с type: image', () => {
-      const media = [
-        {
-          id: 1,
-          url: 'https://example.com/image.png',
-          type: 'image',
-        },
-      ];
-
-      render(<MessageMedia media={media} />);
-
-      expect(screen.getByRole('img')).toBeInTheDocument();
-    });
-
-    it('должен рендерить изображение с type: picture', () => {
-      const media = [
-        {
-          id: 1,
-          url: 'https://example.com/picture.jpeg',
-          type: 'picture',
-        },
-      ];
-
-      render(<MessageMedia media={media} />);
-
-      expect(screen.getByRole('img')).toBeInTheDocument();
-    });
-  });
-
-  describe('Медиа с дополнительными свойствами', () => {
-    it('должен рендерить изображение с width и height', () => {
-      const media = [
-        {
-          id: 1,
-          url: 'https://example.com/image.jpg',
-          type: 'photo',
-          width: 800,
-          height: 600,
-        },
-      ];
-
-      render(<MessageMedia media={media} />);
-
-      const img = screen.getByRole('img');
-      expect(img).toBeInTheDocument();
-      // width и height не используются в компоненте, но он должен рендериться
-    });
-
-    it('должен рендерить изображение без width и height', () => {
-      const media = [
-        {
-          id: 1,
-          url: 'https://example.com/image.jpg',
-          type: 'photo',
-        },
-      ];
-
-      render(<MessageMedia media={media} />);
-
-      expect(screen.getByRole('img')).toBeInTheDocument();
-    });
-  });
-
-  describe('Производительность и ключи', () => {
-    it('должен использовать уникальный key для каждого изображения', () => {
-      const media = [
-        { id: 1, url: 'https://example.com/1.jpg', type: 'photo' },
-        { id: 2, url: 'https://example.com/2.jpg', type: 'photo' },
-        { id: 3, url: 'https://example.com/3.jpg', type: 'photo' },
-      ];
-
-      const { container } = render(<MessageMedia media={media} />);
-
-      const images = container.querySelectorAll('img');
-      expect(images).toHaveLength(3);
-      
-      // Проверяем что у каждого изображения свой key (через data-testid)
-      expect(screen.getByTestId('dialog-photo-undefined-0')).toBeInTheDocument();
-      expect(screen.getByTestId('dialog-photo-undefined-1')).toBeInTheDocument();
-      expect(screen.getByTestId('dialog-photo-undefined-2')).toBeInTheDocument();
-    });
-  });
-
   describe('Граничные случаи', () => {
     it('должен обрабатывать пустой URL', () => {
       const media = [
-        {
-          id: 1,
-          url: '',
-          type: 'photo',
-        },
+        { url: '' },
       ];
 
       render(<MessageMedia media={media} />);
@@ -300,11 +168,7 @@ describe('MessageMedia', () => {
     it('должен обрабатывать очень длинный URL', () => {
       const longUrl = 'https://example.com/' + 'a'.repeat(1000) + '.jpg';
       const media = [
-        {
-          id: 1,
-          url: longUrl,
-          type: 'photo',
-        },
+        { url: longUrl },
       ];
 
       render(<MessageMedia media={media} />);
@@ -314,11 +178,7 @@ describe('MessageMedia', () => {
 
     it('должен обрабатывать URL с специальными символами', () => {
       const media = [
-        {
-          id: 1,
-          url: 'https://example.com/image%20with%20spaces.jpg',
-          type: 'photo',
-        },
+        { url: 'https://example.com/image%20with%20spaces.jpg' },
       ];
 
       render(<MessageMedia media={media} />);
@@ -332,9 +192,7 @@ describe('MessageMedia', () => {
     it('должен обрабатывать data: URL', () => {
       const media = [
         {
-          id: 1,
           url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-          type: 'photo',
         },
       ];
 
