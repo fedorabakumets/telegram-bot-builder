@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CodeFormat, useCodeGenerator } from '@/components/editor/code/use-code-generator';
+import { CodeFormat, useCodeGeneratorServer } from '@/components/editor/code/useCodeGeneratorServer';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateProjectName } from '@/components/editor/bot/use-update-project-name';
 import { BotData, BotProject } from '@shared/schema';
@@ -97,7 +97,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
   /**
    * Использование хука генератора кода для всех форматов
    */
-  const codeGenerators = botDataArray.map((botData, index) => useCodeGenerator(
+  const codeGenerators = botDataArray.map((botData, index) => useCodeGeneratorServer(
     botData,
     `${projectName}_project_${index}`,
     project?.userDatabaseEnabled === 1,

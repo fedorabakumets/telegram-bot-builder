@@ -22,6 +22,7 @@ import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tok
 import { updateCommentsSettingsHandler } from "./projectRoutes/handlers/settingsHandler";
 import { exportToGoogleSheetsHandler, exportStructureToGoogleSheetsHandler } from "./projectRoutes/handlers/googleSheetsHandlers";
 import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
+import { handleGenerateCode } from "./projects/generateCode";
 
 /**
  * Настраивает маршруты управления проектами
@@ -46,6 +47,9 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
     // Экспорт проекта в Python
     app.post("/api/projects/:id/export", exportProjectHandler);
+
+    // Генерация Python кода
+    app.post("/api/projects/:id/generate", requireDbReady, handleGenerateCode);
 
     // Управление токеном
     app.get("/api/projects/:id/token", getTokenHandler);
