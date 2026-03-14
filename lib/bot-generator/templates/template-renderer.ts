@@ -13,8 +13,8 @@ import {
   hasMediaNodesFilter,
   hasUploadImagesFilter,
   formatBotFatherCommands,
-} from './filters.js';
-import { getTemplatesDir } from './utils/get-templates-dir.js';
+} from './filters';
+import { getTemplatesDir } from './utils/get-templates-dir';
 
 // Получаем директорию шаблонов
 const templatesDir = getTemplatesDir();

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { renderPartialTemplate } from '../template-renderer.js';
+import { renderPartialTemplate } from '../template-renderer';
 
 describe('partials/imports.py.jinja2', () => {
   describe('Базовые импорты', () => {

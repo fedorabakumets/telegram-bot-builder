@@ -7,7 +7,7 @@
  * @module bot-generator/templates/generate-header
  */
 
-import { renderPartialTemplate } from './template-renderer.js';
+import { renderPartialTemplate } from './template-renderer';
 
 /**
  * Опции для генерации заголовка (параметры не используются, оставлены для совместимости API)

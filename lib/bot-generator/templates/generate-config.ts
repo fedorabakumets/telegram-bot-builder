@@ -6,7 +6,7 @@
  * @module bot-generator/templates/generate-config
  */
 
-import { renderPartialTemplate } from './template-renderer.js';
+import { renderPartialTemplate } from './template-renderer';
 
 /**
  * Опции для генерации конфигурации

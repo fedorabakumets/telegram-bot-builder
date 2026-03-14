@@ -7,7 +7,7 @@
  * @module bot-generator/templates/generate-imports
  */
 
-import { renderPartialTemplate } from './template-renderer.js';
+import { renderPartialTemplate } from './template-renderer';
 
 /**
  * Опции для генерации импортов
