@@ -35,6 +35,6 @@
     "archive/auto-transition-connections.ts",
     "archive/auto-connection.ts",
     "archive/header.tsx"
-  ],
+, "lib"  ],
   "exclude": ["node_modules", "dist"]
 }
