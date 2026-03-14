@@ -15,6 +15,15 @@ import {
   formatBotFatherCommands,
 } from './filters';
 import { getTemplatesDir } from './utils/get-templates-dir';
+import {
+  importsParamsSchema,
+  configParamsSchema,
+  headerParamsSchema,
+  databaseParamsSchema,
+  utilsParamsSchema,
+  mainParamsSchema,
+  botParamsSchema,
+} from './schemas';
 
 /**
  * Проверяет что код выполняется в Node.js среде
@@ -135,17 +144,44 @@ export function renderPartialTemplate(
   context: Record<string, any>
 ): string {
   try {
+    // Валидация параметров через Zod схемы
+    let validated = context;
+    const schemaMap: Record<string, any> = {
+      'imports': importsParamsSchema,
+      'config': configParamsSchema,
+      'header': headerParamsSchema,
+      'database': databaseParamsSchema,
+      'utils': utilsParamsSchema,
+      'main': mainParamsSchema,
+      'bot': botParamsSchema,
+    };
+
+    // Извлекаем имя шаблона из пути
+    const templateName = partialName.replace('partials/', '').replace('.py.jinja2', '');
+    if (schemaMap[templateName]) {
+      try {
+        validated = schemaMap[templateName].parse(context);
+      } catch (validationError: any) {
+        console.error(`[template-renderer] Валидация параметров для ${partialName} не пройдена:`, validationError.errors);
+        throw new Error(`Валидация параметров шаблона ${partialName} не пройдена: ${validationError.message}`);
+      }
+    }
+
     const environment = initEnvironment();
     // Добавляем 'partials/' если путь не начинается с него
     const templatePath = partialName.startsWith('partials/')
       ? partialName
       : `partials/${partialName}`;
     const template = environment.getTemplate(templatePath);
-    return template.render(context);
+    return template.render(validated);
   } catch (error: any) {
     // Если мы в браузере и Nunjucks недоступен, бросаем понятную ошибку
     if (error.message.includes('Node.js') || error.message.includes('browser')) {
       throw new Error(`Template rendering is not available in browser. Use browser-compatible functions instead. Template: ${partialName}`);
+    }
+    // Пробрасываем ошибки валидации
+    if (error.message.includes('Валидация параметров')) {
+      throw error;
     }
     throw error;
   }

@@ -1,7 +1,8 @@
 {#
   Middleware для логирования сообщений
-  
+
   @fileoverview Middleware для автоматического сохранения сообщений в БД
+  @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей (для регистрации middleware)
 #}
 
 async def message_logging_middleware(handler, event: types.Message, data: dict):

@@ -1,14 +1,12 @@
 {#
-  Шаблон всех импортов для генерации Python бота
-  
-  @fileoverview Генерирует ВСЕ необходимые импорты для aiogram бота
-  Заменяет generatePythonImports() и импорты из generateUtf8EncodingCode()
-  
-  @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей
-  @param {boolean} hasInlineButtons - Есть ли inline кнопки
-  @param {boolean} hasAutoTransitions - Есть ли автопереходы
-  @param {boolean} hasMediaNodes - Есть ли узлы с медиа
-  @param {boolean} hasUploadImages - Есть ли ссылки на /uploads/
+  Шаблон импортов для Python бота
+
+  @fileoverview Генерирует все необходимые импорты для aiogram бота
+  @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей (asyncpg, json)
+  @param {boolean} hasInlineButtons - Есть ли inline кнопки (нужен TelegramBadRequest)
+  @param {boolean} hasAutoTransitions - Есть ли автопереходы (нужен TelegramBadRequest)
+  @param {boolean} hasMediaNodes - Есть ли узлы с медиа (нужен aiohttp)
+  @param {boolean} hasUploadImages - Есть ли ссылки на /uploads/ (нужен aiohttp)
 #}
 
 {# Основные импорты Python #}
