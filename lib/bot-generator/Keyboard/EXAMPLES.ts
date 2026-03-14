@@ -50,7 +50,7 @@ const layout3 = migrateKeyboardLayout([], undefined, 2);
 // ===== generateAdjustCode =====
 // Генерация Python-кода для builder.adjust()
 
-import { generateAdjustCode } from '@/lib/bot-generator/Keyboard/generateKeyboardLayoutCode';
+import { generateAdjustCode } from '@lib/bot-generator/Keyboard/generateKeyboardLayoutCode';
 
 // Пример 1: Авто-раскладка
 const autoLayout = { rows: [], columns: 2, autoLayout: true };
@@ -74,7 +74,7 @@ const code2 = generateAdjustCode(manualLayout, 6);
 // ===== getAdjustCode =====
 // Универсальная функция для получения builder.adjust()
 
-import { getAdjustCode } from '@/lib/bot-generator/Keyboard/getAdjustCode';
+import { getAdjustCode } from '@lib/bot-generator/Keyboard/getAdjustCode';
 
 // Пример 1: С keyboardLayout
 const nodeData1 = {

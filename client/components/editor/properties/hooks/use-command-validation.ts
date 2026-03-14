@@ -5,7 +5,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
+import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@lib/commands';
 import { getNodeDefaults } from '../utils/node-defaults';
 import type { Node } from '@shared/schema';
 

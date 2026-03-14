@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as SwitchPrimitives from "@radix-ui/react-switch"
 
-import { cn } from "@/lib/bot-generator/utils"
+import { cn } from "@lib/bot-generator/utils"
 
 /**
  * Компонент переключателя (Switch)

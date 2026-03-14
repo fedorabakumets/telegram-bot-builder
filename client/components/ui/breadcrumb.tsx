@@ -2,7 +2,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { ChevronRight, MoreHorizontal } from "lucide-react"
 
-import { cn } from "@/lib/bot-generator/utils"
+import { cn } from "@lib/bot-generator/utils"
 
 /**
  * Компонент навигационной цепочки (Breadcrumb)

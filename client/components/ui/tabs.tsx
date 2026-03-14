@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 
-import { cn } from "@/lib/bot-generator/utils"
+import { cn } from "@lib/bot-generator/utils"
 
 /**
  * Компонент вкладок (Tabs)

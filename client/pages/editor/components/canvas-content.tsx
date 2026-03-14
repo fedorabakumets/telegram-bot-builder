@@ -12,7 +12,7 @@ import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import type { EditorTab } from '../types';
 import type { BotDataWithSheets, UserBotData, BotProject } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@lib/queryClient';
 
 /** Параметры компонента CanvasContent */
 export interface CanvasContentProps {

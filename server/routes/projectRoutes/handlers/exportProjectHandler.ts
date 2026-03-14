@@ -48,7 +48,7 @@ export async function exportProjectHandler(req: Request, res: Response): Promise
             return;
         }
 
-        const modUrl = new URL("../client/lib/bot-generator.ts", import.meta.url);
+        const modUrl = new URL("../lib/bot-generator.ts", import.meta.url);
         modUrl.searchParams.set("t", Date.now().toString());
         const { generatePythonCode } = await import(modUrl.href);
 

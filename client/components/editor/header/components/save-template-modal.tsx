@@ -9,7 +9,7 @@ import { Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@lib/queryClient';
 import type { BotData } from '@/types/bot';
 
 /**

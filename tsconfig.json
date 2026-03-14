@@ -22,6 +22,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["client/*"],
+      "@lib/*": ["lib/*"],
       "@shared/*": ["shared/*"],
       "@assets/*": ["attached_assets/*"]
     }

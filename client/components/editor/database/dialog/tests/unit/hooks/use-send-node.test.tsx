@@ -13,14 +13,14 @@ vi.mock('@/hooks/use-toast', () => ({
   })),
 }));
 
-vi.mock('@/lib/queryClient', () => ({
+vi.mock('@lib/queryClient', () => ({
   apiRequest: vi.fn(),
 }));
 
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSendNode, type SendNodeData } from '../../../hooks/use-send-node';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@lib/queryClient';
 
 const mockApiRequest = vi.mocked(apiRequest);
 

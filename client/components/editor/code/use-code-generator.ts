@@ -1,13 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { BotData } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@lib/queryClient';
 
 /**
  * Асинхронная функция для загрузки генератора ботов
  * @returns {Promise<any>} Модуль генератора ботов
  */
-const loadBotGenerator = () => import('@/lib/bot-generator');
+const loadBotGenerator = () => import('@lib/bot-generator');
 
 /**
  * Типы форматов кода, которые можно сгенерировать

@@ -3,7 +3,7 @@
  * @module components/editor/properties/utils/keyboard-layout-utils
  */
 
-import { Button } from '@/lib/bot-generator';
+import { Button } from '@lib/bot-generator';
 import { KeyboardLayout, KeyboardRow } from '../types/keyboard-layout';
 
 /**

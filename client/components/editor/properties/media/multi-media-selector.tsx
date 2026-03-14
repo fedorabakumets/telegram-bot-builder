@@ -17,7 +17,7 @@ import { MediaFilesList } from "./media-files-list";
 import type { MediaFile } from "@shared/schema";
 import type { MediaFileData } from "./media-files-list";
 import { Upload, Plus, LinkIcon } from "lucide-react";
-import { uploadImageFromUrl } from "@/lib/bot-generator/media/uploadImageFromUrl";
+import { uploadImageFromUrl } from "@lib/bot-generator/media/uploadImageFromUrl";
 import { toast } from "@/hooks/use-toast";
 
 /** Пропсы компонента MultiMediaSelector */

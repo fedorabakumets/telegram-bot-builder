@@ -19,7 +19,7 @@ import { MediaManager } from "./media-manager";
 import { UrlDownloader } from "./url-downloader";
 import type { MediaFile } from "@shared/schema";
 import { Upload, X, Eye, LinkIcon } from "lucide-react";
-import { uploadImageFromUrl } from "@/lib/bot-generator/media/uploadImageFromUrl";
+import { uploadImageFromUrl } from "@lib/bot-generator/media/uploadImageFromUrl";
 import { toast } from "@/hooks/use-toast";
 
 /**

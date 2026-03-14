@@ -2,7 +2,7 @@ import * as React from "react"
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
 
-import { cn } from "@/lib/bot-generator/utils"
+import { cn } from "@lib/bot-generator/utils"
 import { type CheckedState } from "@radix-ui/react-checkbox"
 
 const ContextMenu = ContextMenuPrimitive.Root

@@ -3,7 +3,7 @@
  * @description Объединяет логотип и название проекта в единую секцию
  */
 
-import { cn } from '@/lib/bot-generator/utils';
+import { cn } from '@lib/bot-generator/utils';
 import { Logo } from './logo';
 import { Title } from './title';
 import { VersionBadge } from './version-badge';

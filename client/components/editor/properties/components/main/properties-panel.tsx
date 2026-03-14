@@ -1,5 +1,5 @@
 import { Node, Button } from '@shared/schema';
-import { getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
+import { getCommandSuggestions, STANDARD_COMMANDS } from '@lib/commands';
 import { useState, useMemo, useEffect } from 'react';
 
 import { EmptyState } from '../layout/empty-state';

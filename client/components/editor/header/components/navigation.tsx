@@ -3,7 +3,7 @@
  * @description Отображает кнопки переключения между разделами редактора
  */
 
-import { cn } from '@/lib/bot-generator/utils';
+import { cn } from '@lib/bot-generator/utils';
 import type { HeaderTab } from '../types';
 
 /**

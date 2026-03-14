@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@lib/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { prepareDataForExport } from './prepareDataForExport';

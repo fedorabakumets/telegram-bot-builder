@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import { LocalStorageService } from "@/lib/storage/local-storage";
+import { queryClient } from "@lib/queryClient";
+import { LocalStorageService } from "@lib/storage/local-storage";
 
 /**
  * Режим работы с пользовательскими данными

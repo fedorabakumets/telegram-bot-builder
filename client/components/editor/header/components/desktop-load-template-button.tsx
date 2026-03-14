@@ -5,7 +5,7 @@
 
 import { Button } from '@/components/ui/button';
 import { FolderOpen } from 'lucide-react';
-import { cn } from '@/lib/bot-generator/utils';
+import { cn } from '@lib/bot-generator/utils';
 
 /**
  * Свойства десктопной кнопки загрузки сценария

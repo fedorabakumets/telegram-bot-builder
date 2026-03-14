@@ -4,7 +4,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/bot-generator/utils';
+import { cn } from '@lib/bot-generator/utils';
 
 /**
  * Свойства десктопной кнопки переключения редактора кода

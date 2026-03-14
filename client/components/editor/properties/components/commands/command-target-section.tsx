@@ -9,7 +9,7 @@
 import { Node, Button } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { STANDARD_COMMANDS } from '@/lib/commands';
+import { STANDARD_COMMANDS } from '@lib/commands';
 
 /**
  * Пропсы компонента CommandTargetSection

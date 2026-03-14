@@ -6,7 +6,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@lib/queryClient';
 import type { BotProject, BotData, BotDataWithSheets } from '@shared/schema';
 
 /** Результат сохранения проекта */

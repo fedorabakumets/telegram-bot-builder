@@ -53,7 +53,7 @@ import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useCodeGenerator } from '@/components/editor/code/use-code-generator';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@lib/queryClient';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { BotData, BotDataWithSheets, BotProject, UserBotData } from '@shared/schema';
 import type { ComponentDefinition, Node } from '@shared/schema';

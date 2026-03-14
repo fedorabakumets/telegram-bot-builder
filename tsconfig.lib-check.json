@@ -24,6 +24,6 @@
       "@client/*": ["client/*"]
     }
   },
-  "include": ["client/lib/**/*", "shared/**/*"],
-  "exclude": ["node_modules", "dist", "client/lib/tests", "client/components", "client/pages", "client/hooks"]
+  "include": ["lib/**/*", "shared/**/*"],
+  "exclude": ["node_modules", "dist", "lib/tests", "client/components", "client/pages", "client/hooks"]
 }

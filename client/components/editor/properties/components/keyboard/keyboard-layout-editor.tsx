@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Button } from '@/lib/bot-generator';
+import { Button } from '@lib/bot-generator';
 import { KeyboardLayout } from '../../types/keyboard-layout';
 import { useKeyboardLayout } from '../../hooks/useKeyboardLayout';
 import { KeyboardGridPreview } from './keyboard-grid-preview';
@@ -12,7 +12,7 @@ import { KeyboardPresetSelector } from './keyboard-preset-selector';
 import { KeyboardLayoutActions } from './keyboard-layout-actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { cn } from '@/lib/bot-generator/utils';
+import { cn } from '@lib/bot-generator/utils';
 
 /** Свойства компонента KeyboardLayoutEditor */
 export interface KeyboardLayoutEditorProps {

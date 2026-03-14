@@ -3,7 +3,7 @@
  * @description Вертикальный или горизонтальный разделитель для элементов заголовка
  */
 
-import { cn } from '@/lib/bot-generator/utils';
+import { cn } from '@lib/bot-generator/utils';
 
 /**
  * Свойства компонента разделителя

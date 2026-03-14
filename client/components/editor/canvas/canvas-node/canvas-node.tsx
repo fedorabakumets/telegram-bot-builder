@@ -1,5 +1,5 @@
 import { Node } from '@/types/bot';
-import { cn } from '@/lib/bot-generator/utils';
+import { cn } from '@lib/bot-generator/utils';
 import { useState, useRef, useEffect } from 'react';
 import { DicePreview } from './dice-preview';
 import { StickerPreview } from './sticker-preview';

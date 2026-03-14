@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Button } from '@/lib/bot-generator';
+import { Button } from '@lib/bot-generator';
 import { KeyboardLayout } from '../types/keyboard-layout';
 import { createLayoutFromButtons, updateLayoutColumns, moveButton } from '../utils/keyboard-layout-utils';
 

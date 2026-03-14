@@ -3,7 +3,7 @@
  * @description Отображает сетку кнопок переключения вкладок для мобильных устройств
  */
 
-import { cn } from '@/lib/bot-generator/utils';
+import { cn } from '@lib/bot-generator/utils';
 import type { HeaderTab } from '../types';
 
 /**

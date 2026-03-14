@@ -7,7 +7,7 @@ import { DesktopActions } from './desktop-actions';
 import { TelegramChatInvite } from './telegram-chat-invite';
 import { UserAuth } from './user-auth';
 import { Separator } from './separator';
-import { cn } from '@/lib/bot-generator/utils';
+import { cn } from '@lib/bot-generator/utils';
 import type { TelegramUser } from './user-section';
 
 /**

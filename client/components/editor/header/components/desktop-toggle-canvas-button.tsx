@@ -5,7 +5,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Monitor } from 'lucide-react';
-import { cn } from '@/lib/bot-generator/utils';
+import { cn } from '@lib/bot-generator/utils';
 
 /**
  * Свойства десктопной кнопки переключения холста

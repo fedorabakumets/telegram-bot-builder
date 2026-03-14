@@ -11,7 +11,7 @@
  */
 
 import { useState } from 'react';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { validateBotToken } from './tokenValidation';

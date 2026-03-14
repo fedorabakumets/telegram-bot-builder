@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { cn } from "@/lib/bot-generator/utils"
+import { cn } from "@lib/bot-generator/utils"
 
 const Table = React.forwardRef<
   HTMLTableElement,

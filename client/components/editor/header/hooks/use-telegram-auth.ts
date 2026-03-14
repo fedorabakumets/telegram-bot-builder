@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { queryClient } from '@/lib/queryClient';
+import { queryClient } from '@lib/queryClient';
 
 /**
  * Интерфейс данных пользователя Telegram
