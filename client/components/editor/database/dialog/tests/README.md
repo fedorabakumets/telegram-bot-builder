@@ -21,14 +21,25 @@ dialog/tests/
 │   ├── dialog-input.test.tsx        📝
 │   └── user-avatar.test.tsx         📝
 ├── run-unit-tests.ts              # Скрипт запуска unit-тестов
+├── run-tests.bat                  # Запуск в Windows (UTF-8)
+├── run-tests.ps1                  # Запуск в PowerShell (UTF-8)
 └── README.md                      # Этот файл
 ```
 
-## Запуск тестов
+## 🚀 Запуск тестов
 
 ### Быстрый старт
 
-**Запуск всех unit-тестов:**
+**Windows (с правильной кодировкой UTF-8):**
+```bash
+# Через BAT-файл (рекомендуется)
+client\components\editor\database\dialog\tests\run-tests.bat
+
+# Через PowerShell
+client\components\editor\database\dialog\tests\run-tests.ps1
+```
+
+**Linux/macOS:**
 ```bash
 npx tsx --tsconfig tsconfig.json client/components/editor/database/dialog/tests/run-unit-tests.ts
 ```

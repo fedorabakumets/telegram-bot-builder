@@ -5,12 +5,21 @@
  */
 
 import { run } from 'node:test';
-import { spec } from 'node:test/reporters';
 import { glob } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Устанавливаем UTF-8 кодировку для вывода в Windows
+if (process.platform === 'win32') {
+  try {
+    process.stdout.setEncoding('utf8');
+    process.stderr.setEncoding('utf8');
+  } catch {
+    // Игнорируем ошибки установки кодировки
+  }
+}
 
 async function runTests() {
   const testFiles: string[] = [];
@@ -40,10 +49,14 @@ async function runTests() {
     files: testFiles,
     timeout: 60000,
     execArgv: ['--import', 'tsx/esm'],
+    // Используем спецификацию для более читаемого вывода
+    reporter: {
+      write: (data: string) => {
+        // Преобразуем TAP-вывод в читаемый формат
+        process.stdout.write(data);
+      }
+    }
   });
-
-  // Выводим результаты
-  testRun.compose(new spec()).pipe(process.stdout);
 
   // Ждём завершения
   return new Promise<void>((resolve, reject) => {
