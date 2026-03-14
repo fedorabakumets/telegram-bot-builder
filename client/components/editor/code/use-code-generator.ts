@@ -100,7 +100,15 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
    */
   const generateContent = useCallback(async (format: CodeFormat): Promise<string> => {
     try {
-      const botGenerator = await loadBotGenerator();
+      let botGenerator;
+      try {
+        // Пытаемся загрузить генератор
+        botGenerator = await loadBotGenerator();
+      } catch (loadError) {
+        // Если не удалось загрузить (браузерная сборка), используем заглушку
+        console.warn('Bot generator not available in browser, using mock:', loadError);
+        return `# Ошибка генерации\n# Генерация кода временно недоступна в браузере\n# Попробуйте обновить страницу или использовать серверную генерацию`;
+      }
 
       // Конвертируем многолистовую структуру в простую для генератора
       const convertSheetsToSimpleBotData = (data: any) => {
