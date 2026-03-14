@@ -1,0 +1,46 @@
+{#
+  Шаблон импортов для Python бота
+
+  @fileoverview Генерирует все необходимые импорты для aiogram бота
+  @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей (asyncpg, json)
+  @param {boolean} hasInlineButtons - Есть ли inline кнопки (нужен TelegramBadRequest)
+  @param {boolean} hasAutoTransitions - Есть ли автопереходы (нужен TelegramBadRequest)
+  @param {boolean} hasMediaNodes - Есть ли узлы с медиа (нужен aiohttp)
+  @param {boolean} hasUploadImages - Есть ли ссылки на /uploads/ (нужен aiohttp)
+#}
+
+import asyncio
+import logging
+import signal
+from datetime import datetime
+
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.types import (
+    KeyboardButton,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    BotCommand,
+    ReplyKeyboardRemove,
+    FSInputFile
+)
+from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from typing import Optional
+
+from dotenv import load_dotenv
+from aiogram.filters import CommandStart
+
+{% if userDatabaseEnabled %}
+import asyncpg
+import json
+{% endif %}
+
+{% if hasInlineButtons or hasAutoTransitions %}
+from aiogram.exceptions import TelegramBadRequest
+{% endif %}
+
+{% if hasMediaNodes or hasUploadImages %}
+import aiohttp
+from aiohttp import TCPConnector
+{% endif %}
+
+import re
