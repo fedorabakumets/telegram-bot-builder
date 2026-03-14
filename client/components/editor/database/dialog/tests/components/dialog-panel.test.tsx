@@ -239,20 +239,6 @@ function createTestUser(overrides: Partial<UserBotData> = {}): UserBotData {
   } as UserBotData;
 }
 
-function createTestMessage(overrides: Partial<any> = {}) {
-  return {
-    id: 1,
-    createdAt: new Date('2024-03-14T10:30:00Z'),
-    projectId: 1,
-    userId: '123',
-    messageType: 'bot',
-    messageText: 'Test message',
-    messageData: null,
-    nodeId: null,
-    primaryMediaId: null,
-    ...overrides,
-  };
-}
 
 function createTestQueryClient() {
   return new QueryClient({
@@ -674,19 +660,19 @@ describe('DialogPanel', () => {
 
   describe('Классы ScrollArea', () => {
     it('должен иметь flex-1 класс', () => {
-      const { container } = render(<DialogPanel {...defaultProps} />, { wrapper: createWrapper() });
+      render(<DialogPanel {...defaultProps} />, { wrapper: createWrapper() });
       const scrollArea = screen.getByTestId('dialog-messages-scroll-area');
       expect(scrollArea).toHaveClass('flex-1');
     });
 
     it('должен иметь p-3 класс', () => {
-      const { container } = render(<DialogPanel {...defaultProps} />, { wrapper: createWrapper() });
+      render(<DialogPanel {...defaultProps} />, { wrapper: createWrapper() });
       const scrollArea = screen.getByTestId('dialog-messages-scroll-area');
       expect(scrollArea).toHaveClass('p-3');
     });
 
     it('должен иметь min-h-0 класс', () => {
-      const { container } = render(<DialogPanel {...defaultProps} />, { wrapper: createWrapper() });
+      render(<DialogPanel {...defaultProps} />, { wrapper: createWrapper() });
       const scrollArea = screen.getByTestId('dialog-messages-scroll-area');
       expect(scrollArea).toHaveClass('min-h-0');
     });
