@@ -57,15 +57,23 @@ export const LOCATION = 'location' as const;
 
 /**
  * Действие кнопки: выбор опции (multiple selection)
- * 
+ *
  * @example
  * const action: ButtonAction = BUTTON_ACTIONS.SELECTION;
  */
 export const SELECTION = 'selection' as const;
 
 /**
+ * Действие кнопки: завершение множественного выбора (complete)
+ *
+ * @example
+ * const action: ButtonAction = BUTTON_ACTIONS.COMPLETE;
+ */
+export const COMPLETE = 'complete' as const;
+
+/**
  * Действие кнопки: действие по умолчанию
- * 
+ *
  * @example
  * const action: ButtonAction = BUTTON_ACTIONS.DEFAULT;
  */
@@ -73,7 +81,7 @@ export const DEFAULT = 'default' as const;
 
 /**
  * Все действия кнопок в одном объекте
- * 
+ *
  * @example
  * const actions = Object.values(BUTTON_ACTIONS);
  */
@@ -85,6 +93,7 @@ export const BUTTON_ACTIONS = {
   CONTACT,
   LOCATION,
   SELECTION,
+  COMPLETE,
   DEFAULT,
 } as const;
 

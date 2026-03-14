@@ -589,4 +589,191 @@ describe('ValidateEnhancedNode', () => {
       assert.strictEqual(result.isValid, true);
     });
   });
+
+  describe('validateEnhancedNode - новые поля (appendVariable, variableFilters, complete)', () => {
+    it('должен возвращать isValid: true для узла с appendVariable = true', () => {
+      // Arrange
+      const node = {
+        id: 'append_var_1',
+        type: 'message' as const,
+        position: { x: 100, y: 100 },
+        data: {
+          text: 'Test',
+          buttons: [],
+          appendVariable: true,
+          inputVariable: 'user_values',
+          collectUserInput: true,
+        },
+      } as unknown as EnhancedNode;
+
+      // Act
+      const result = validateEnhancedNode(node);
+
+      // Assert
+      assert.strictEqual(result.isValid, true);
+      assert.strictEqual(result.errors.length, 0);
+    });
+
+    it('должен возвращать isValid: true для узла с variableFilters', () => {
+      // Arrange
+      const node = {
+        id: 'var_filters_1',
+        type: 'message' as const,
+        position: { x: 100, y: 100 },
+        data: {
+          text: 'Test {var|join:", "}',
+          buttons: [],
+          variableFilters: {
+            'myVar': '|join:", "',
+          },
+        },
+      } as unknown as EnhancedNode;
+
+      // Act
+      const result = validateEnhancedNode(node);
+
+      // Assert
+      assert.strictEqual(result.isValid, true);
+      assert.strictEqual(result.errors.length, 0);
+    });
+
+    it('должен возвращать isValid: true для узла с complete кнопкой', () => {
+      // Arrange
+      const node = {
+        id: 'complete_1',
+        type: 'message' as const,
+        position: { x: 100, y: 100 },
+        data: {
+          text: 'Test',
+          buttons: [
+            {
+              id: 'btn_1',
+              text: 'Выбрать',
+              action: 'selection' as const,
+              target: 'complete_1',
+            },
+            {
+              id: 'btn_complete',
+              text: 'Готово',
+              action: 'complete' as const,
+              target: 'final',
+            },
+          ],
+          allowMultipleSelection: true,
+        },
+      } as unknown as EnhancedNode;
+
+      // Act
+      const result = validateEnhancedNode(node);
+
+      // Assert
+      assert.strictEqual(result.isValid, true);
+      assert.strictEqual(result.errors.length, 0);
+    });
+
+    it('должен возвращать isValid: true для узла со всеми новыми полями', () => {
+      // Arrange
+      const node = {
+        id: 'all_features_1',
+        type: 'message' as const,
+        position: { x: 100, y: 100 },
+        data: {
+          text: 'Test {values|join:", "}',
+          buttons: [
+            {
+              id: 'btn_1',
+              text: 'Выбрать',
+              action: 'selection' as const,
+              target: 'all_features_1',
+            },
+            {
+              id: 'btn_complete',
+              text: 'Готово',
+              action: 'complete' as const,
+              target: 'final',
+            },
+          ],
+          appendVariable: true,
+          variableFilters: {
+            'values': '|join:", "',
+          },
+          inputVariable: 'user_values',
+          collectUserInput: true,
+          allowMultipleSelection: true,
+        },
+      } as unknown as EnhancedNode;
+
+      // Act
+      const result = validateEnhancedNode(node);
+
+      // Assert
+      assert.strictEqual(result.isValid, true);
+      assert.strictEqual(result.errors.length, 0);
+    });
+
+    it('должен возвращать isValid: true для узла с appendVariable = false', () => {
+      // Arrange
+      const node = {
+        id: 'test_1',
+        type: 'message' as const,
+        position: { x: 100, y: 100 },
+        data: {
+          text: 'Test',
+          buttons: [],
+          appendVariable: false,
+        },
+      } as unknown as EnhancedNode;
+
+      // Act
+      const result = validateEnhancedNode(node);
+
+      // Assert
+      assert.strictEqual(result.isValid, true);
+    });
+
+    it('должен возвращать isValid: true для узла с пустым variableFilters', () => {
+      // Arrange
+      const node = {
+        id: 'test_1',
+        type: 'message' as const,
+        position: { x: 100, y: 100 },
+        data: {
+          text: 'Test',
+          buttons: [],
+          variableFilters: {},
+        },
+      } as unknown as EnhancedNode;
+
+      // Act
+      const result = validateEnhancedNode(node);
+
+      // Assert
+      assert.strictEqual(result.isValid, true);
+    });
+
+    it('должен возвращать isValid: true для кнопки с action = complete без target', () => {
+      // Arrange
+      const node = {
+        id: 'test_1',
+        type: 'message' as const,
+        position: { x: 100, y: 100 },
+        data: {
+          text: 'Test',
+          buttons: [
+            {
+              id: 'btn_complete',
+              text: 'Готово',
+              action: 'complete' as const,
+            },
+          ],
+        },
+      } as unknown as EnhancedNode;
+
+      // Act
+      const result = validateEnhancedNode(node);
+
+      // Assert
+      assert.strictEqual(result.isValid, true);
+    });
+  });
 });

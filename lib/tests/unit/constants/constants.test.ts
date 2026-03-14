@@ -37,6 +37,7 @@ import {
   BUTTON_CONTACT,
   BUTTON_LOCATION,
   SELECTION,
+  COMPLETE,
   DEFAULT,
   BUTTON_ACTIONS,
   type ButtonActionType,
@@ -297,6 +298,13 @@ describe('Constants', () => {
       });
     });
 
+    describe('COMPLETE', () => {
+      it('должен быть равен "complete"', () => {
+        // Arrange & Act & Assert
+        assert.strictEqual(COMPLETE, 'complete');
+      });
+    });
+
     describe('DEFAULT', () => {
       it('должен быть равен "default"', () => {
         // Arrange & Act & Assert
@@ -311,7 +319,7 @@ describe('Constants', () => {
       const keys = Object.keys(BUTTON_ACTIONS);
 
       // Assert
-      assert.strictEqual(keys.length, 8);
+      assert.strictEqual(keys.length, 9);
       assert.ok(keys.includes('GOTO'));
       assert.ok(keys.includes('CALLBACK'));
       assert.ok(keys.includes('URL'));
@@ -319,6 +327,7 @@ describe('Constants', () => {
       assert.ok(keys.includes('CONTACT'));
       assert.ok(keys.includes('LOCATION'));
       assert.ok(keys.includes('SELECTION'));
+      assert.ok(keys.includes('COMPLETE'));
       assert.ok(keys.includes('DEFAULT'));
     });
 
@@ -331,6 +340,7 @@ describe('Constants', () => {
       assert.strictEqual(BUTTON_ACTIONS.CONTACT, 'contact');
       assert.strictEqual(BUTTON_ACTIONS.LOCATION, 'location');
       assert.strictEqual(BUTTON_ACTIONS.SELECTION, 'selection');
+      assert.strictEqual(BUTTON_ACTIONS.COMPLETE, 'complete');
       assert.strictEqual(BUTTON_ACTIONS.DEFAULT, 'default');
     });
 
@@ -340,10 +350,11 @@ describe('Constants', () => {
 
       // Assert
       assert.ok(Array.isArray(values));
-      assert.strictEqual(values.length, 8);
+      assert.strictEqual(values.length, 9);
       assert.ok(values.includes('goto'));
       assert.ok(values.includes('callback'));
       assert.ok(values.includes('url'));
+      assert.ok(values.includes('complete'));
     });
 
     it('должен позволять использовать ButtonActionType тип', () => {
@@ -483,11 +494,12 @@ describe('Constants', () => {
 
     it('должен позволять массив ButtonActionType', () => {
       // Arrange
-      const actions: ButtonActionType[] = [GOTO, CALLBACK, URL];
+      const actions: ButtonActionType[] = [GOTO, CALLBACK, URL, COMPLETE];
 
       // Act & Assert
-      assert.strictEqual(actions.length, 3);
+      assert.strictEqual(actions.length, 4);
       assert.strictEqual(actions[0], 'goto');
+      assert.strictEqual(actions[3], 'complete');
     });
   });
 });

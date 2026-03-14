@@ -43,6 +43,7 @@ export {
   CONTACT as BUTTON_CONTACT,
   LOCATION as BUTTON_LOCATION,
   SELECTION,
+  COMPLETE,
   DEFAULT,
   BUTTON_ACTIONS,
 } from './button-actions';

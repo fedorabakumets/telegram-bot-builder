@@ -66,6 +66,8 @@ export const validMessageNode: EnhancedNode = {
     ],
     responseType: 'buttons',
     responseOptions: ['Опция 1', 'Опция 2'],
+    appendVariable: false,
+    variableFilters: {},
   },
 } as unknown as EnhancedNode;
 
@@ -219,6 +221,111 @@ export const validConditionalNode: EnhancedNode = {
         target: 'premium_message',
         skipDataCollection: false,
         conditionalValue: 'premium',
+      },
+    ],
+  },
+} as unknown as EnhancedNode;
+
+/**
+ * Валидный узел с appendVariable = true
+ */
+export const validAppendVariableNode: EnhancedNode = {
+  id: 'append_var_1',
+  type: 'message',
+  position: { x: 1000, y: 1000 },
+  data: {
+    text: 'Введите значение (не перезаписывать)',
+    collectUserInput: true,
+    inputTargetNodeId: 'message_after_input',
+    inputVariable: 'user_values',
+    appendVariable: true,
+    variableFilters: {},
+    buttons: [],
+  },
+} as unknown as EnhancedNode;
+
+/**
+ * Валидный узел с variableFilters
+ */
+export const validVariableFiltersNode: EnhancedNode = {
+  id: 'var_filters_1',
+  type: 'message',
+  position: { x: 1100, y: 1100 },
+  data: {
+    text: 'Сообщение с фильтрами: {user_interests|join:", "}',
+    variableFilters: {
+      'user_interests': '|join:", "',
+      'user_tags': '|join:"\\n"',
+    },
+    buttons: [],
+  },
+} as unknown as EnhancedNode;
+
+/**
+ * Валидный узел с complete кнопкой
+ */
+export const validCompleteButtonNode: EnhancedNode = {
+  id: 'complete_1',
+  type: 'message',
+  position: { x: 1200, y: 1200 },
+  data: {
+    text: 'Выберите опции и нажмите Готово',
+    allowMultipleSelection: true,
+    buttons: [
+      {
+        id: 'ms_btn_1',
+        text: 'Опция A',
+        action: 'selection',
+        target: 'complete_1',
+        skipDataCollection: false,
+      },
+      {
+        id: 'ms_btn_2',
+        text: 'Опция B',
+        action: 'selection',
+        target: 'complete_1',
+        skipDataCollection: false,
+      },
+      {
+        id: 'complete_btn',
+        text: 'Готово',
+        action: 'complete',
+        target: 'final_message',
+        skipDataCollection: false,
+      },
+    ],
+  },
+} as unknown as EnhancedNode;
+
+/**
+ * Валидный узел со всеми новыми функциями
+ */
+export const validAllNewFeaturesNode: EnhancedNode = {
+  id: 'all_features_1',
+  type: 'message',
+  position: { x: 1300, y: 1300 },
+  data: {
+    text: 'Полный функционал: {user_values|join:", "}',
+    collectUserInput: true,
+    inputTargetNodeId: 'next_node',
+    inputVariable: 'user_values',
+    appendVariable: true,
+    variableFilters: {
+      'user_values': '|join:", "',
+    },
+    allowMultipleSelection: true,
+    buttons: [
+      {
+        id: 'sel_btn_1',
+        text: 'Выбрать 1',
+        action: 'selection',
+        target: 'all_features_1',
+      },
+      {
+        id: 'complete_btn',
+        text: 'Завершить',
+        action: 'complete',
+        target: 'final_node',
       },
     ],
   },
@@ -391,6 +498,10 @@ export const validComplexBotNodes: EnhancedNode[] = [
   validMultiSelectNode,
   validMediaNode,
   validConditionalNode,
+  validAppendVariableNode,
+  validVariableFiltersNode,
+  validCompleteButtonNode,
+  validAllNewFeaturesNode,
 ];
 
 /**
