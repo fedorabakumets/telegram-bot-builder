@@ -41,7 +41,7 @@ function createTestUser(overrides: Partial<UserBotData> = {}): UserBotData {
     lastName: 'Иванов',
     userName: 'ivanov',
     ...overrides,
-  };
+  } as UserBotData;
 }
 
 describe('MessageBubble', () => {
