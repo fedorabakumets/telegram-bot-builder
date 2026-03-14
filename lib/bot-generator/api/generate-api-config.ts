@@ -24,15 +24,10 @@ export function generateApiConfig(projectId: number | null, userDatabaseEnabled:
   codeLines.push('# └─────────────────────────────────────────┘');
 
   // Определяем PROJECT_ID (всегда, по умолчанию 0)
+  // PROJECT_DIR определяется в config.py.jinja2
   codeLines.push('# ID проекта для сохранения в базу данных');
   codeLines.push(`PROJECT_ID = ${projectId !== null ? projectId : 0}`);
   codeLines.push('logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")');
-  codeLines.push('');
-
-  // Определяем PROJECT_DIR (всегда)
-  codeLines.push('# Директория проекта');
-  codeLines.push('PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))');
-  codeLines.push('logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")');
   codeLines.push('');
 
   // Создаём заглушки для DB-функций (ТОЛЬКО если БД выключена)

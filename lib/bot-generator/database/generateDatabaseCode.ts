@@ -36,17 +36,11 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
   const codeLines: string[] = [];
 
   // Конфигурация базы данных
+  // DATABASE_URL и db_pool определяются в config.py.jinja2
   codeLines.push('# ┌─────────────────────────────────────────┐');
   codeLines.push('# │           Настройки базы данных         │');
   codeLines.push('# └─────────────────────────────────────────┘');
   codeLines.push('DATABASE_URL = os.getenv("DATABASE_URL")');
-  codeLines.push('');
-
-  // Пул соединений с базой данных
-  codeLines.push('# ┌─────────────────────────────────────────┐');
-  codeLines.push('# │        Пул соединений с базой данных    │');
-  codeLines.push('# └─────────────────────────────────────────┘');
-  codeLines.push('db_pool = None');
   codeLines.push('');
 
   // Инициализация БД

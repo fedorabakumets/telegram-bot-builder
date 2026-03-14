@@ -193,12 +193,6 @@ export function generatePythonCode(
   // Добавляем конфигурацию групп
   code += generateGroupsConfiguration(context.groups);
 
-  // user_data всегда нужен для временного хранения состояний даже при включенной БД
-  // ИСПРАВЛЕНИЕ: Создаем user_data всегда, так как он используется в callback handlers
-  code += '# Хранилище пользователей (временное состояние)\n';
-  code += 'user_data = {}\n';
-  code += 'all_user_vars = {}  # Глобальные переменные пользователя\n\n';
-
   // Добавляем функции для работы с базой данных
   code += generateDatabaseCode(!!context.options.userDatabaseEnabled, context.nodes || []);
 
