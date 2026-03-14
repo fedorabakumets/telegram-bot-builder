@@ -8,7 +8,7 @@
 
 import type { Request, Response } from 'express';
 import { storage } from '../../storages/storage';
-import { generatePythonCode } from '@lib/bot-generator';
+import { generatePythonCode } from '../../../lib/bot-generator';
 
 /**
  * Генерирует Python код для проекта
