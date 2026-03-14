@@ -4,19 +4,19 @@
  * @module tests/unit/utils/format-user-name.test
  */
 
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
+/// <reference types="vitest/globals" />
+
 import { formatUserName } from '../../../utils/format-user-name';
 
 describe('formatUserName', () => {
   it('должен возвращать пустую строку для null', () => {
     const result = formatUserName(null);
-    assert.strictEqual(result, '');
+    expect(result).toBe('');
   });
 
   it('должен возвращать пустую строку для undefined', () => {
     const result = formatUserName(undefined as any);
-    assert.strictEqual(result, '');
+    expect(result).toBe('');
   });
 
   it('должен форматировать только имя', () => {
@@ -28,7 +28,7 @@ describe('formatUserName', () => {
     } as any;
 
     const result = formatUserName(userData);
-    assert.strictEqual(result, 'Иван');
+    expect(result).toBe('Иван');
   });
 
   it('должен форматировать имя и фамилию', () => {
@@ -40,7 +40,7 @@ describe('formatUserName', () => {
     } as any;
 
     const result = formatUserName(userData);
-    assert.strictEqual(result, 'Иван Иванов');
+    expect(result).toBe('Иван Иванов');
   });
 
   it('должен форматировать имя, фамилию и username', () => {
@@ -52,7 +52,7 @@ describe('formatUserName', () => {
     } as any;
 
     const result = formatUserName(userData);
-    assert.strictEqual(result, 'Иван Иванов @ivanov');
+    expect(result).toBe('Иван Иванов @ivanov');
   });
 
   it('должен форматировать только username', () => {
@@ -64,7 +64,7 @@ describe('formatUserName', () => {
     } as any;
 
     const result = formatUserName(userData);
-    assert.strictEqual(result, '@ivanov');
+    expect(result).toBe('@ivanov');
   });
 
   it('должен возвращать ID если нет имени, фамилии и username', () => {
@@ -76,7 +76,7 @@ describe('formatUserName', () => {
     } as any;
 
     const result = formatUserName(userData);
-    assert.strictEqual(result, 'ID: 123');
+    expect(result).toBe('ID: 123');
   });
 
   it('должен форматировать только фамилию', () => {
@@ -88,7 +88,7 @@ describe('formatUserName', () => {
     } as any;
 
     const result = formatUserName(userData);
-    assert.strictEqual(result, 'Иванов');
+    expect(result).toBe('Иванов');
   });
 
   it('должен форматировать фамилию и username', () => {
@@ -100,7 +100,7 @@ describe('formatUserName', () => {
     } as any;
 
     const result = formatUserName(userData);
-    assert.strictEqual(result, 'Иванов @ivanov');
+    expect(result).toBe('Иванов @ivanov');
   });
 
   it('должен обрабатывать пустые строки как отсутствующие значения', () => {
@@ -112,6 +112,6 @@ describe('formatUserName', () => {
     } as any;
 
     const result = formatUserName(userData);
-    assert.strictEqual(result, 'ID: 123');
+    expect(result).toBe('ID: 123');
   });
 });

@@ -8,10 +8,12 @@
  * Запуск: npx vitest run client/components/editor/database/dialog/tests/unit/hooks/use-bot-data.test.ts
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+/// <reference types="vitest/globals" />
+
+import { beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useBotData } from '../../hooks/use-bot-data';
+import { useBotData } from '../../../hooks/use-bot-data';
 
 // Мокирование fetch
 const mockFetch = global.fetch as any;
@@ -24,11 +26,6 @@ function createTestQueryClient() {
     defaultOptions: {
       queries: {
         retry: false,
-        logger: {
-          log: console.log,
-          warn: console.warn,
-          error: () => {}, // Отключаем логирование ошибок в тестах
-        },
       },
     },
   });

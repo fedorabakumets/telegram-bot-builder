@@ -8,7 +8,9 @@
  * Запуск: npx vitest run client/components/editor/database/dialog/tests/unit/hooks/use-dialog-messages.test.ts
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+/// <reference types="vitest/globals" />
+
+import { beforeEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useDialogMessages } from '../../../hooks/use-dialog-messages';

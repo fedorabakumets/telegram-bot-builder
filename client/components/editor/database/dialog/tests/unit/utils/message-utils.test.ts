@@ -4,8 +4,8 @@
  * @module tests/unit/utils/message-utils.test
  */
 
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
+/// <reference types="vitest/globals" />
+
 import {
   hasButtons,
   getButtons,
@@ -32,170 +32,155 @@ function createTestMessage(overrides: Partial<BotMessageWithMedia> = {}): BotMes
   } as BotMessageWithMedia;
 }
 
-describe('message-utils', () => {
-  describe('hasButtons', () => {
-    it('должен возвращать false для сообщения без messageData', () => {
-      const message = createTestMessage({ messageData: null });
+describe('hasButtons', () => {
+  it('должен возвращать false для сообщения без messageData', () => {
+    const message = createTestMessage({ messageData: null });
 
-      const result = hasButtons(message);
-      assert.strictEqual(result, false);
-    });
-
-    it('должен возвращать false для сообщения без кнопок', () => {
-      const message = createTestMessage({ messageData: {} });
-
-      const result = hasButtons(message);
-      assert.strictEqual(result, false);
-    });
-
-    it('должен возвращать false для пустого массива кнопок', () => {
-      const message = createTestMessage({
-        messageData: { buttons: [] },
-      } as any);
-
-      const result = hasButtons(message);
-      assert.strictEqual(result, false);
-    });
-
-    it('должен возвращать true для сообщения с кнопками', () => {
-      const message = createTestMessage({
-        messageData: {
-          buttons: [{ text: 'Click me' }],
-        },
-      } as any);
-
-      const result = hasButtons(message);
-      assert.strictEqual(result, true);
-    });
-
-    it('должен возвращать false если buttons не массив', () => {
-      const message = createTestMessage({
-        messageData: {
-          buttons: 'not-array',
-        },
-      } as any);
-
-      const result = hasButtons(message);
-      assert.strictEqual(result, false);
-    });
+    const result = hasButtons(message);
+    expect(result).toBe(false);
   });
 
-  describe('getButtons', () => {
-    it('должен возвращать пустой массив для сообщения без messageData', () => {
-      const message = createTestMessage({ messageData: null });
+  it('должен возвращать false для сообщения без кнопок', () => {
+    const message = createTestMessage({ messageData: {} });
 
-      const result = getButtons(message);
-      assert.deepStrictEqual(result, []);
-    });
-
-    it('должен возвращать пустой массив для сообщения без кнопок', () => {
-      const message = createTestMessage({ messageData: {} });
-
-      const result = getButtons(message);
-      assert.deepStrictEqual(result, []);
-    });
-
-    it('должен возвращать пустой массив если buttons не массив', () => {
-      const message = createTestMessage({
-        messageData: {
-          buttons: 'not-array',
-        },
-      } as any);
-
-      const result = getButtons(message);
-      assert.deepStrictEqual(result, []);
-    });
-
-    it('должен возвращать массив кнопок', () => {
-      const expectedButtons = [
-        { text: 'Button 1' },
-        { text: 'Button 2' },
-      ];
-
-      const message = createTestMessage({
-        messageData: {
-          buttons: expectedButtons,
-        },
-      } as any);
-
-      const result = getButtons(message);
-      assert.deepStrictEqual(result, expectedButtons);
-    });
+    const result = hasButtons(message);
+    expect(result).toBe(false);
   });
 
-  describe('hasButtonClicked', () => {
-    it('должен возвращать false для сообщения без messageData', () => {
-      const message = createTestMessage({ messageData: null });
+  it('должен возвращать false для пустого массива кнопок', () => {
+    const message = createTestMessage({
+      messageData: { buttons: [] },
+    } as any);
 
-      const result = hasButtonClicked(message);
-      assert.strictEqual(result, false);
-    });
-
-    it('должен возвращать false для сообщения без button_clicked', () => {
-      const message = createTestMessage({ messageData: {} });
-
-      const result = hasButtonClicked(message);
-      assert.strictEqual(result, false);
-    });
-
-    it('должен возвращать false если button_clicked = false', () => {
-      const message = createTestMessage({
-        messageData: {
-          button_clicked: false,
-        },
-      } as any);
-
-      const result = hasButtonClicked(message);
-      assert.strictEqual(result, false);
-    });
-
-    it('должен возвращать true если button_clicked = true', () => {
-      const message = createTestMessage({
-        messageData: {
-          button_clicked: true,
-        },
-      } as any);
-
-      const result = hasButtonClicked(message);
-      assert.strictEqual(result, true);
-    });
+    const result = hasButtons(message);
+    expect(result).toBe(false);
   });
 
-  describe('getButtonText', () => {
-    it('должен возвращать null для сообщения без messageData', () => {
-      const message = createTestMessage({ messageData: null });
+  it('должен возвращать true для сообщения с кнопками', () => {
+    const message = createTestMessage({
+      messageData: {
+        buttons: [{ text: 'Click me' }],
+      },
+    } as any);
 
-      const result = getButtonText(message);
-      assert.strictEqual(result, null);
-    });
+    const result = hasButtons(message);
+    expect(result).toBe(true);
+  });
 
-    it('должен возвращать null для сообщения без button_text', () => {
-      const message = createTestMessage({ messageData: {} });
+  it('должен возвращать false если buttons не массив', () => {
+    const message = createTestMessage({
+      messageData: {
+        buttons: 'not-array',
+      },
+    } as any);
 
-      const result = getButtonText(message);
-      assert.strictEqual(result, null);
-    });
+    const result = hasButtons(message);
+    expect(result).toBe(false);
+  });
+});
 
-    it('должен возвращать форматированный текст кнопки', () => {
-      const message = createTestMessage({
-        messageData: {
-          button_text: 'Click me',
-        },
-      } as any);
+describe('getButtons', () => {
+  it('должен возвращать пустой массив для сообщения без messageData', () => {
+    const message = createTestMessage({ messageData: null });
 
-      const result = getButtonText(message);
-      assert.strictEqual(result, 'Нажата: Click me');
-    });
+    const result = getButtons(message);
+    expect(result).toEqual([]);
+  });
 
-    it('должен возвращать null для пустого button_text', () => {
-      const message = createTestMessage({
-        messageData: {
-          button_text: '',
-        },
-      } as any);
+  it('должен возвращать пустой массив для сообщения без кнопок', () => {
+    const message = createTestMessage({ messageData: {} });
 
-      const result = getButtonText(message);
-      assert.strictEqual(result, null);
-    });
+    const result = getButtons(message);
+    expect(result).toEqual([]);
+  });
+
+  it('должен возвращать пустой массив если buttons не массив', () => {
+    const message = createTestMessage({
+      messageData: {
+        buttons: 'not-array',
+      },
+    } as any);
+
+    const result = getButtons(message);
+    expect(result).toEqual([]);
+  });
+
+  it('должен возвращать массив кнопок', () => {
+    const message = createTestMessage({
+      messageData: {
+        buttons: [{ text: 'Click me' }, { text: 'Another' }],
+      },
+    } as any);
+
+    const result = getButtons(message);
+    expect(result).toEqual([{ text: 'Click me' }, { text: 'Another' }]);
+  });
+});
+
+describe('hasButtonClicked', () => {
+  it('должен возвращать false для сообщения без messageData', () => {
+    const message = createTestMessage({ messageData: null });
+
+    const result = hasButtonClicked(message);
+    expect(result).toBe(false);
+  });
+
+  it('должен возвращать false для сообщения без button_clicked', () => {
+    const message = createTestMessage({ messageData: {} });
+
+    const result = hasButtonClicked(message);
+    expect(result).toBe(false);
+  });
+
+  it('должен возвращать false если button_clicked = false', () => {
+    const message = createTestMessage({
+      messageData: { button_clicked: false },
+    } as any);
+
+    const result = hasButtonClicked(message);
+    expect(result).toBe(false);
+  });
+
+  it('должен возвращать true если button_clicked = true', () => {
+    const message = createTestMessage({
+      messageData: { button_clicked: true },
+    } as any);
+
+    const result = hasButtonClicked(message);
+    expect(result).toBe(true);
+  });
+});
+
+describe('getButtonText', () => {
+  it('должен возвращать null для сообщения без messageData', () => {
+    const message = createTestMessage({ messageData: null });
+
+    const result = getButtonText(message);
+    expect(result).toBeNull();
+  });
+
+  it('должен возвращать null для сообщения без button_text', () => {
+    const message = createTestMessage({ messageData: {} });
+
+    const result = getButtonText(message);
+    expect(result).toBeNull();
+  });
+
+  it('должен возвращать форматированный текст кнопки', () => {
+    const message = createTestMessage({
+      messageData: { button_text: 'Нажата кнопка' },
+    } as any);
+
+    const result = getButtonText(message);
+    expect(result).toBe('Нажата: Нажата кнопка');
+  });
+
+  it('должен возвращать null для пустого button_text', () => {
+    const message = createTestMessage({
+      messageData: { button_text: '' },
+    } as any);
+
+    const result = getButtonText(message);
+    expect(result).toBeNull();
   });
 });
