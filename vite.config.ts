@@ -41,6 +41,24 @@ const cryptoPolyfill: Plugin = {
   }
 };
 
+// Плагин для исключения серверных модулей из браузерной сборки
+const serverOnlyModules: Plugin = {
+  name: 'server-only-modules',
+  enforce: 'pre',
+  resolveId(id: string) {
+    // Исключаем модули шаблонов которые используются только на сервере
+    if (id.includes('/bot-generator/templates/') && 
+        (id.includes('template-renderer') || 
+         id.includes('generate-header') || 
+         id.includes('generate-imports') || 
+         id.includes('generate-config') || 
+         id.includes('generate-utils'))) {
+      // Возвращаем пустой модуль для браузера
+      return { id, external: true };
+    }
+  }
+};
+
 export default defineConfig(async () => {
   const cartographer = process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined
     ? await import("@replit/vite-plugin-cartographer").then((m) => m.cartographer())
@@ -51,7 +69,8 @@ export default defineConfig(async () => {
       react(),
       runtimeErrorOverlay(),
       cartographer,
-      cryptoPolyfill
+      cryptoPolyfill,
+      serverOnlyModules
     ].flat(),
     resolve: {
       alias: {

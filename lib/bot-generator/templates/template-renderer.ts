@@ -5,7 +5,6 @@
 
 import { Environment, FileSystemLoader } from 'nunjucks';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
 import {
   safeNameFilter,
   commandToHandlerFilter,
@@ -16,11 +15,10 @@ import {
   hasUploadImagesFilter,
   formatBotFatherCommands,
 } from './filters.js';
+import { getTemplatesDir } from './utils/get-templates-dir.js';
 
-// Получаем директорию текущего модуля
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const templatesDir = path.join(__dirname, 'templates');
+// Получаем директорию шаблонов
+const templatesDir = getTemplatesDir();
 
 /**
  * Окружение Nunjucks для рендеринга шаблонов
