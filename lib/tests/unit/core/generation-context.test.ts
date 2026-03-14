@@ -9,7 +9,6 @@ import {
   createGenerationContext,
   createGenerationContextFromNodes,
 } from '../../../bot-generator/core/create-generation-context';
-import type { GenerationContext } from '../../../bot-generator/core/generation-context';
 import type { GenerationOptions } from '../../../bot-generator/core/generation-options.types';
 import type { BotData, BotGroup } from '@shared/schema';
 import {
@@ -17,9 +16,6 @@ import {
   validComplexBotData,
   validStartNode,
   validMessageNode,
-  defaultGenerationOptions,
-  loggingEnabledOptions,
-  databaseEnabledOptions,
   allEnabledOptions,
 } from '../../helpers/test-fixtures';
 

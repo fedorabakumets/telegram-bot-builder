@@ -95,7 +95,6 @@ describe('GenerationState', () => {
 
       // Act & Assert
       // Попытка изменить Set напрямую не должна влиять на новое состояние
-      const originalSize = state.generatedComponents.size;
       (state.generatedComponents as any).add('test');
       // Примечание: это проверка на уровне TypeScript, в runtime Set мутирует
       // но функции ниже создают новые копии
