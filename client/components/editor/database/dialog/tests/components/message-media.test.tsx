@@ -1,41 +1,66 @@
 /**
  * @fileoverview Тесты для компонента MessageMedia
- * Проверяет отображение медиафайлов в сообщении
+ * Проверяет отображение медиафайлов в сообщениях
  * @module tests/components/message-media.test
- *
- * @description
- * Для тестирования React-компонентов используется @testing-library/react
- * Запуск: npx vitest run client/components/editor/database/dialog/tests/components/message-media.test.tsx
  */
 
 /// <reference types="vitest/globals" />
 
-import '@testing-library/jest-dom';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MessageMedia } from '../../components/message-media';
 
 describe('MessageMedia', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  describe('Отображение медиа', () => {
+    it('должен возвращать null если media не массив', () => {
+      const { container } = render(<MessageMedia media={null as any} />);
+      expect(container.firstChild).toBeNull();
+    });
 
-  describe('Рендеринг медиа', () => {
+    it('должен возвращать null если media пустой массив', () => {
+      const { container } = render(<MessageMedia media={[]} />);
+      expect(container.firstChild).toBeNull();
+    });
+
+    it('должен возвращать null если media undefined', () => {
+      const { container } = render(<MessageMedia media={undefined} />);
+      expect(container.firstChild).toBeNull();
+    });
+
     it('должен рендерить одно изображение', () => {
-      const media = [{ url: 'https://example.com/image.jpg', messageId: 1 }];
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/image1.jpg',
+          type: 'photo',
+        },
+      ];
+
       render(<MessageMedia media={media} />);
 
       const img = screen.getByRole('img');
-      expect(img).toBeInTheDocument();
-      expect(img).toHaveAttribute('src', 'https://example.com/image.jpg');
+      expect(img).toHaveAttribute('src', 'https://example.com/image1.jpg');
       expect(img).toHaveAttribute('alt', 'Photo');
     });
 
     it('должен рендерить несколько изображений', () => {
       const media = [
-        { url: 'https://example.com/image1.jpg', messageId: 1 },
-        { url: 'https://example.com/image2.jpg', messageId: 2 },
-        { url: 'https://example.com/image3.jpg', messageId: 3 },
+        {
+          id: 1,
+          url: 'https://example.com/image1.jpg',
+          type: 'photo',
+        },
+        {
+          id: 2,
+          url: 'https://example.com/image2.jpg',
+          type: 'photo',
+        },
+        {
+          id: 3,
+          url: 'https://example.com/image3.jpg',
+          type: 'photo',
+        },
       ];
+
       render(<MessageMedia media={media} />);
 
       const images = screen.getAllByRole('img');
@@ -45,19 +70,64 @@ describe('MessageMedia', () => {
       expect(images[2]).toHaveAttribute('src', 'https://example.com/image3.jpg');
     });
 
-    it('должен применять стили к контейнеру', () => {
-      const media = [{ url: 'https://example.com/image.jpg', messageId: 1 }];
-      const { container } = render(<MessageMedia media={media} />);
+    it('должен использовать messageId и idx для data-testid', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/image.jpg',
+          type: 'photo',
+          messageId: 123,
+        },
+      ];
 
-      const outerDiv = container.firstChild as HTMLElement;
-      expect(outerDiv).toHaveClass('rounded-lg');
-      expect(outerDiv).toHaveClass('overflow-hidden');
-      expect(outerDiv).toHaveClass('max-w-[200px]');
-      expect(outerDiv).toHaveClass('space-y-1');
+      render(<MessageMedia media={media} />);
+
+      expect(screen.getByTestId('dialog-photo-123-0')).toBeInTheDocument();
     });
 
-    it('должен применять стили к изображениям', () => {
-      const media = [{ url: 'https://example.com/image.jpg', messageId: 1 }];
+    it('должен использовать idx если messageId не указан', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/image.jpg',
+          type: 'photo',
+        },
+      ];
+
+      render(<MessageMedia media={media} />);
+
+      expect(screen.getByTestId('dialog-photo-undefined-0')).toBeInTheDocument();
+    });
+  });
+
+  describe('Стили и классы', () => {
+    it('должен применять классы для контейнера', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/image.jpg',
+          type: 'photo',
+        },
+      ];
+
+      render(<MessageMedia media={media} />);
+
+      const container = screen.getByRole('img').parentElement;
+      expect(container).toHaveClass('rounded-lg');
+      expect(container).toHaveClass('overflow-hidden');
+      expect(container).toHaveClass('max-w-[200px]');
+      expect(container).toHaveClass('space-y-1');
+    });
+
+    it('должен применять классы для изображений', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/image.jpg',
+          type: 'photo',
+        },
+      ];
+
       render(<MessageMedia media={media} />);
 
       const img = screen.getByRole('img');
@@ -65,109 +135,212 @@ describe('MessageMedia', () => {
       expect(img).toHaveClass('h-auto');
       expect(img).toHaveClass('rounded-lg');
     });
-
-    it('должен использовать data-testid с messageId и индексом', () => {
-      const media = [{ url: 'https://example.com/image.jpg', messageId: 123 }];
-      render(<MessageMedia media={media} />);
-
-      const img = screen.getByTestId('dialog-photo-123-0');
-      expect(img).toBeInTheDocument();
-    });
-
-    it('должен использовать правильный индекс для нескольких изображений', () => {
-      const media = [
-        { url: 'https://example.com/image1.jpg', messageId: 1 },
-        { url: 'https://example.com/image2.jpg', messageId: 1 },
-      ];
-      render(<MessageMedia media={media} />);
-
-      expect(screen.getByTestId('dialog-photo-1-0')).toBeInTheDocument();
-      expect(screen.getByTestId('dialog-photo-1-1')).toBeInTheDocument();
-    });
   });
 
-  describe('Отсутствие медиа', () => {
-    it('должен возвращать null когда media не передан', () => {
-      const { container } = render(<MessageMedia />);
-      expect(container.firstChild).toBeNull();
-    });
-
-    it('должен возвращать null когда media пустой массив', () => {
-      const { container } = render(<MessageMedia media={[]} />);
-      expect(container.firstChild).toBeNull();
-    });
-
-    it('должен возвращать null когда media не массив', () => {
-      const { container } = render(<MessageMedia media={'invalid' as any} />);
-      expect(container.firstChild).toBeNull();
-    });
-
-    it('должен возвращать null когда media null', () => {
-      const { container } = render(<MessageMedia media={null as any} />);
-      expect(container.firstChild).toBeNull();
-    });
-
-    it('должен возвращать null когда media undefined', () => {
-      const { container } = render(<MessageMedia media={undefined} />);
-      expect(container.firstChild).toBeNull();
-    });
-  });
-
-  describe('Обработка ошибок загрузки', () => {
+  describe('Обработка ошибок', () => {
     it('должен скрывать изображение при ошибке загрузки', () => {
-      const media = [{ url: 'https://example.com/broken.jpg', messageId: 1 }];
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/invalid.jpg',
+          type: 'photo',
+        },
+      ];
+
       render(<MessageMedia media={media} />);
 
       const img = screen.getByRole('img');
-      fireEvent.error(img);
+      
+      // Симулируем ошибку загрузки
+      img.dispatchEvent(new Event('error'));
 
-      expect(img).toHaveAttribute('style', 'display: none;');
+      expect(img).toHaveStyle('display: none');
     });
 
-    it('должен скрывать только изображение с ошибкой при нескольких медиа', () => {
+    it('должен обрабатывать несколько изображений с ошибками', () => {
       const media = [
-        { url: 'https://example.com/good.jpg', messageId: 1 },
-        { url: 'https://example.com/broken.jpg', messageId: 2 },
+        {
+          id: 1,
+          url: 'https://example.com/invalid1.jpg',
+          type: 'photo',
+        },
+        {
+          id: 2,
+          url: 'https://example.com/valid.jpg',
+          type: 'photo',
+        },
       ];
+
       render(<MessageMedia media={media} />);
 
       const images = screen.getAllByRole('img');
-      fireEvent.error(images[1]);
+      
+      // Симулируем ошибку на первом изображении
+      images[0].dispatchEvent(new Event('error'));
 
-      expect(images[0]).not.toHaveAttribute('style', 'display: none;');
-      expect(images[1]).toHaveAttribute('style', 'display: none;');
+      expect(images[0]).toHaveStyle('display: none');
+      expect(images[1]).not.toHaveStyle('display: none');
     });
   });
 
-  describe('Изображения без messageId', () => {
-    it('должен рендерить изображение без messageId', () => {
-      const media = [{ url: 'https://example.com/image.jpg' }];
+  describe('Разные типы медиа', () => {
+    it('должен рендерить фото с type: photo', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/photo.jpg',
+          type: 'photo',
+        },
+      ];
+
+      render(<MessageMedia media={media} />);
+
+      expect(screen.getByRole('img')).toBeInTheDocument();
+    });
+
+    it('должен рендерить изображение с type: image', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/image.png',
+          type: 'image',
+        },
+      ];
+
+      render(<MessageMedia media={media} />);
+
+      expect(screen.getByRole('img')).toBeInTheDocument();
+    });
+
+    it('должен рендерить изображение с type: picture', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/picture.jpeg',
+          type: 'picture',
+        },
+      ];
+
+      render(<MessageMedia media={media} />);
+
+      expect(screen.getByRole('img')).toBeInTheDocument();
+    });
+  });
+
+  describe('Медиа с дополнительными свойствами', () => {
+    it('должен рендерить изображение с width и height', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/image.jpg',
+          type: 'photo',
+          width: 800,
+          height: 600,
+        },
+      ];
+
       render(<MessageMedia media={media} />);
 
       const img = screen.getByRole('img');
       expect(img).toBeInTheDocument();
-      expect(img).toHaveAttribute('src', 'https://example.com/image.jpg');
+      // width и height не используются в компоненте, но он должен рендериться
     });
 
-    it('должен использовать undefined в data-testid когда нет messageId', () => {
-      const media = [{ url: 'https://example.com/image.jpg' }];
+    it('должен рендерить изображение без width и height', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/image.jpg',
+          type: 'photo',
+        },
+      ];
+
       render(<MessageMedia media={media} />);
 
-      const img = screen.getByTestId('dialog-photo-undefined-0');
-      expect(img).toBeInTheDocument();
+      expect(screen.getByRole('img')).toBeInTheDocument();
     });
   });
 
-  describe('Ключи для изображений', () => {
-    it('должен использовать индекс как ключ', () => {
+  describe('Производительность и ключи', () => {
+    it('должен использовать уникальный key для каждого изображения', () => {
       const media = [
-        { url: 'https://example.com/image1.jpg', messageId: 1 },
-        { url: 'https://example.com/image2.jpg', messageId: 1 },
+        { id: 1, url: 'https://example.com/1.jpg', type: 'photo' },
+        { id: 2, url: 'https://example.com/2.jpg', type: 'photo' },
+        { id: 3, url: 'https://example.com/3.jpg', type: 'photo' },
       ];
+
       const { container } = render(<MessageMedia media={media} />);
 
       const images = container.querySelectorAll('img');
-      expect(images).toHaveLength(2);
+      expect(images).toHaveLength(3);
+      
+      // Проверяем что у каждого изображения свой key (через data-testid)
+      expect(screen.getByTestId('dialog-photo-undefined-0')).toBeInTheDocument();
+      expect(screen.getByTestId('dialog-photo-undefined-1')).toBeInTheDocument();
+      expect(screen.getByTestId('dialog-photo-undefined-2')).toBeInTheDocument();
+    });
+  });
+
+  describe('Граничные случаи', () => {
+    it('должен обрабатывать пустой URL', () => {
+      const media = [
+        {
+          id: 1,
+          url: '',
+          type: 'photo',
+        },
+      ];
+
+      render(<MessageMedia media={media} />);
+
+      const img = screen.getByRole('img');
+      expect(img).toHaveAttribute('src', '');
+    });
+
+    it('должен обрабатывать очень длинный URL', () => {
+      const longUrl = 'https://example.com/' + 'a'.repeat(1000) + '.jpg';
+      const media = [
+        {
+          id: 1,
+          url: longUrl,
+          type: 'photo',
+        },
+      ];
+
+      render(<MessageMedia media={media} />);
+
+      expect(screen.getByRole('img')).toHaveAttribute('src', longUrl);
+    });
+
+    it('должен обрабатывать URL с специальными символами', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'https://example.com/image%20with%20spaces.jpg',
+          type: 'photo',
+        },
+      ];
+
+      render(<MessageMedia media={media} />);
+
+      expect(screen.getByRole('img')).toHaveAttribute(
+        'src',
+        'https://example.com/image%20with%20spaces.jpg'
+      );
+    });
+
+    it('должен обрабатывать data: URL', () => {
+      const media = [
+        {
+          id: 1,
+          url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+          type: 'photo',
+        },
+      ];
+
+      render(<MessageMedia media={media} />);
+
+      expect(screen.getByRole('img')).toBeInTheDocument();
     });
   });
 });
