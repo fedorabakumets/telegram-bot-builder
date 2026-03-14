@@ -8,7 +8,6 @@
  * Запуск: npx vitest run client/components/editor/database/dialog/tests/components/formatted-text.test.tsx
  */
 
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { FormattedText } from '../../components/formatted-text';
 
