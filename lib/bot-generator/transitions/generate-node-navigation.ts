@@ -83,7 +83,7 @@ export function generateNavigateToNodeCall(
   messageVar: string = 'message',
   indent: string = ''
 ): string {
-  return `${indent}await navigate_to_node(${messageVar}, "${nodeId}")`;
+  return `${indent}await navigate_to_node(${messageVar}, "${nodeId}")\n`;
 }
 
 /**
@@ -101,7 +101,7 @@ export function generateNavigateToNodeWithText(
   messageVar: string = 'message',
   indent: string = ''
 ): string {
-  return `${indent}await navigate_to_node(${messageVar}, "${nodeId}", text=${textVar})`;
+  return `${indent}await navigate_to_node(${messageVar}, "${nodeId}", text=${textVar})\n`;
 }
 
 /**
@@ -119,7 +119,7 @@ export function generateNavigateToNodeWithVars(
   messageVar: string = 'message',
   indent: string = ''
 ): string {
-  return `${indent}await navigate_to_node(${messageVar}, "${nodeId}", all_user_vars=${userVarsVar})`;
+  return `${indent}await navigate_to_node(${messageVar}, "${nodeId}", all_user_vars=${userVarsVar})\n`;
 }
 
 /**
