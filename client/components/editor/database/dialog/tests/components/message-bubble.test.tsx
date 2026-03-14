@@ -5,7 +5,7 @@
  *
  * @description
  * Для тестирования требуется Vitest и @testing-library/react
- * Запуск: npx vitest run client/components/editor/database/dialog/tests/components/message-bubble.test.tsx
+ * Запуск: npx vitest run --config vitest.config.ts components/message-bubble.test.tsx
  */
 
 import { describe, it, expect } from 'vitest';

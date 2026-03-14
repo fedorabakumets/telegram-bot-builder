@@ -8,11 +8,11 @@
  * Запуск: npx vitest run client/components/editor/database/dialog/tests/unit/hooks/use-dialog-messages.test.ts
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, beforeAll, afterAll } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useDialogMessages } from '../../hooks/use-dialog-messages';
-import type { BotMessageWithMedia } from '../../types';
+import { useDialogMessages } from '../../../hooks/use-dialog-messages';
+import type { BotMessageWithMedia } from '../../../types';
 
 // Мокирование fetch
 const mockFetch = global.fetch as any;
@@ -38,8 +38,7 @@ function createTestQueryClient() {
 /**
  * Обёртка для тестирования хуков
  */
-function createWrapper() {
-  const queryClient = createTestQueryClient();
+function createWrapper(queryClient: QueryClient) {
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
@@ -82,7 +81,8 @@ describe('useDialogMessages', () => {
       })
     );
 
-    const wrapper = createWrapper();
+    const queryClient = createTestQueryClient();
+    const wrapper = createWrapper(queryClient);
     const { result } = renderHook(() => useDialogMessages(1, 123), { wrapper });
 
     // Начальное состояние
@@ -100,7 +100,8 @@ describe('useDialogMessages', () => {
   });
 
   it('должен возвращать пустой массив если userId не указан', async () => {
-    const wrapper = createWrapper();
+    const queryClient = createTestQueryClient();
+    const wrapper = createWrapper(queryClient);
     const { result } = renderHook(() => useDialogMessages(1, undefined), { wrapper });
 
     // Запрос не должен выполняться
@@ -117,7 +118,8 @@ describe('useDialogMessages', () => {
       })
     );
 
-    const wrapper = createWrapper();
+    const queryClient = createTestQueryClient();
+    const wrapper = createWrapper(queryClient);
     const { result } = renderHook(() => useDialogMessages(1, 123), { wrapper });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -132,7 +134,8 @@ describe('useDialogMessages', () => {
       })
     );
 
-    const wrapper = createWrapper();
+    const queryClient = createTestQueryClient();
+    const wrapper = createWrapper(queryClient);
     const { result } = renderHook(() => useDialogMessages(1, 123), { wrapper });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -149,7 +152,8 @@ describe('useDialogMessages', () => {
       })
     );
 
-    const wrapper = createWrapper();
+    const queryClient = createTestQueryClient();
+    const wrapper = createWrapper(queryClient);
 
     // Первая загрузка
     const { result: result1 } = renderHook(() => useDialogMessages(1, 123), { wrapper });
@@ -181,7 +185,8 @@ describe('useDialogMessages', () => {
         })
       );
 
-    const wrapper = createWrapper();
+    const queryClient = createTestQueryClient();
+    const wrapper = createWrapper(queryClient);
     const { result, rerender } = renderHook(
       ({ userId }) => useDialogMessages(1, userId),
       { wrapper, initialProps: { userId: 123 } }
@@ -208,7 +213,8 @@ describe('useDialogMessages', () => {
       })
     );
 
-    const wrapper = createWrapper();
+    const queryClient = createTestQueryClient();
+    const wrapper = createWrapper(queryClient);
     const { result } = renderHook(() => useDialogMessages(1, 123), { wrapper });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
