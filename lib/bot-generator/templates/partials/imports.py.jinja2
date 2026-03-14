@@ -1,7 +1,9 @@
 {#
-  Шаблон импортов для генерации Python бота
+  Шаблон всех импортов для генерации Python бота
   
-  @fileoverview Генерирует все необходимые импорты для aiogram бота
+  @fileoverview Генерирует ВСЕ необходимые импорты для aiogram бота
+  Заменяет generatePythonImports() и импорты из generateUtf8EncodingCode()
+  
   @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей
   @param {boolean} hasInlineButtons - Есть ли inline кнопки
   @param {boolean} hasAutoTransitions - Есть ли автопереходы
@@ -9,10 +11,13 @@
   @param {boolean} hasUploadImages - Есть ли ссылки на /uploads/
 #}
 
-{# Основные импорты aiogram #}
+{# Основные импорты Python #}
 import asyncio
 import logging
 import signal
+from datetime import datetime
+
+{# Основные импорты aiogram #}
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import (
     KeyboardButton,
@@ -30,9 +35,6 @@ from dotenv import load_dotenv
 
 {# Фильтры и команды #}
 from aiogram.filters import CommandStart
-
-{# Дата и время #}
-from datetime import datetime
 
 {# Импорты для работы с БД #}
 {% if userDatabaseEnabled %}

@@ -1,7 +1,8 @@
 /**
- * @fileoverview Генерация импортов через шаблоны
+ * @fileoverview Генерация всех импортов через шаблоны
  * 
  * Использует Nunjucks шаблоны вместо конкатенации строк
+ * Заменяет generatePythonImports() и импорты из generateUtf8EncodingCode()
  * 
  * @module bot-generator/templates/generate-imports
  */
@@ -25,10 +26,21 @@ export interface ImportsOptions {
 }
 
 /**
- * Генерирует Python импорты
+ * Генерирует все Python импорты для бота
+ * 
+ * Включает:
+ * - Базовые импорты (asyncio, logging, signal)
+ * - Aiogram импорты (Bot, Dispatcher, types, F)
+ * - Типы клавиатур (KeyboardButton, InlineKeyboardButton, etc.)
+ * - Утилиты (ReplyKeyboardBuilder, InlineKeyboardBuilder)
+ * - Загрузку .env (load_dotenv)
+ * - Фильтры и команды (CommandStart)
+ * - Дату и время (datetime)
+ * - Условные импорты (asyncpg, json, TelegramBadRequest, aiohttp)
+ * - Регулярные выражения (re)
  * 
  * @param options - Опции генерации
- * @returns Строка с импортами
+ * @returns Строка со всеми импортами
  * 
  * @example
  * const imports = generateImports({ userDatabaseEnabled: true, hasInlineButtons: true });

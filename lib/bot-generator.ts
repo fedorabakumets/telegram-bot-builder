@@ -13,7 +13,6 @@ import { generatorLogger } from './bot-generator/core/generator-logger';
 
 // Типы
 import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
-import { generatePythonImports } from './bot-generator/imports';
 import { collectAllCommandCallbacksFromNodes, addCommandCallbackHandlers } from './bot-generator/commands';
 import {
   generateGroupBasedEventHandlers,
@@ -37,7 +36,10 @@ import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from
 import { generateGlobalCheckUserVariableFunction } from "./bot-generator/database/generateGlobalCheckUserVariableFunction";
 import { generateUniversalVariableReplacement } from './bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython } from './bot-generator/format';
-import { generateBasicBotSetupCode, generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtf8EncodingCode, generateUtilityFunctions } from './generate';
+import { generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtilityFunctions } from './generate';
+import { generateHeader } from './bot-generator/templates/generate-header.js';
+import { generateImports } from './bot-generator/templates/generate-imports.js';
+import { generateConfig } from './bot-generator/templates/generate-config.js';
 import { generateApiConfig } from './bot-generator/api';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
@@ -148,14 +150,23 @@ export function generatePythonCode(
   code += '"""\n\n';
 
   // Добавляем UTF-8 кодировку
-  code += generateUtf8EncodingCode();
+  code += generateHeader();
 
-  // Генерируем Python импорты на основе типов узлов
+  // Генерируем все импорты на основе типов узлов
   const hasInlineButtonsResult = hasInlineButtons(context.nodes || []);
-  code += generatePythonImports({ nodes: context.nodes || [], userDatabaseEnabled: !!context.options.userDatabaseEnabled, hasInlineButtons: hasInlineButtonsResult });
+  const hasAutoTransitionsResult = hasAutoTransitions(context.nodes || []);
+  const hasMediaNodesResult = hasMediaNodes(context.nodes || []);
+  const hasUploadImagesResult = hasUploadImageUrls(context.nodes || []);
+  
+  code += generateImports({
+    userDatabaseEnabled: !!context.options.userDatabaseEnabled,
+    hasInlineButtons: hasInlineButtonsResult,
+    hasAutoTransitions: hasAutoTransitionsResult,
+    hasMediaNodes: hasMediaNodesResult,
+    hasUploadImages: hasUploadImagesResult,
+  });
 
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
-  const hasAutoTransitionsResult = hasAutoTransitions(context.nodes || []);
   const hasNodesRequiringSafeEditOrSendResult = hasNodesRequiringSafeEditOrSend(context.nodes || []);
 
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
@@ -165,7 +176,11 @@ export function generatePythonCode(
     hasAutoTransitionsResult || !!context.options.userDatabaseEnabled
   );
 
-  code += generateBasicBotSetupCode();
+  // Добавляем конфигурацию бота (токен, логирование, бот, диспетчер, администраторы)
+  code += generateConfig({
+    userDatabaseEnabled: !!context.options.userDatabaseEnabled,
+    projectId: context.projectId,
+  });
 
   // Добавляем конфигурацию API
   code += generateApiConfig(context.projectId, context.options.userDatabaseEnabled);
