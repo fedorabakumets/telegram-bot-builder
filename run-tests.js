@@ -43,7 +43,7 @@ async function runTests() {
   // Запускаем тесты через tsx для поддержки TypeScript
   const testRun = run({
     files: testFiles,
-    timeout: 120000, // 2 минуты на тест
+    timeout: 300000, // 5 минут на тест для обработки долгой генерации кода
     execArgv: ['--import', 'tsx/esm']
   });
 
