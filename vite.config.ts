@@ -51,7 +51,8 @@ const serverOnlyModules: Plugin = {
         !id.includes('utils') && 
         !id.includes('format') && 
         !id.includes('map-utils') &&
-        !id.includes('media')) {
+        !id.includes('media') &&
+        !id.includes('-browser')) {  // Разрешаем browser-версии
       // Возвращаем пустой модуль для браузера
       return { id, external: true };
     }
@@ -59,10 +60,10 @@ const serverOnlyModules: Plugin = {
     // Исключаем модули шаблонов которые используются только на сервере
     if (id.includes('@lib/bot-generator/templates/') && 
         (id.includes('template-renderer') || 
-         id.includes('generate-header') || 
-         id.includes('generate-imports') || 
-         id.includes('generate-config') || 
-         id.includes('generate-utils') ||
+         id.includes('generate-header') && !id.includes('-browser') || 
+         id.includes('generate-imports') && !id.includes('-browser') || 
+         id.includes('generate-config') && !id.includes('-browser') || 
+         id.includes('generate-utils') && !id.includes('-browser') ||
          id.includes('get-templates-dir'))) {
       // Возвращаем пустой модуль для браузера
       return { id, external: true };
