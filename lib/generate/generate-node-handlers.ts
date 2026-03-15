@@ -10,21 +10,11 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastHandler } from '../bot-generator/Broadcast/BotApi/generateBroadcastHandler';
+import { generateBroadcastHandler as generateBroadcastTemplate, generateStickerHandler as generateStickerTemplate, generateVoiceHandler as generateVoiceTemplate, generateAdminHandler } from './generate-new-node-handlers';
 import { generateBroadcastClientHandler } from '../bot-generator/Client/generateBroadcastClientHandler';
 import { generateCommandHandler, generateStartHandler } from '../bot-generator/CommandHandler';
-import { generateAnimationHandler, generateContactHandler, generateLocationHandler, generateStickerHandler, generateVoiceHandler } from '../bot-generator/MediaHandler';
+import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
-import {
-  generateAdminRightsHandler,
-  generateBanUserHandler,
-  generateDemoteUserHandler,
-  generateKickUserHandler,
-  generateMuteUserHandler,
-  generatePromoteUserHandler,
-  generateUnbanUserHandler,
-  generateUnmuteUserHandler
-} from '../bot-generator/UserHandler';
 import { collectMediaVariables } from '../bot-generator/utils/collectMediaVariables';
 import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 
@@ -61,27 +51,27 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   const nodeHandlers: Record<string, (node: Node) => string> = {
     start: (node) => generateStartHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
     command: (node) => generateCommandHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
-    sticker: generateStickerHandler,
-    voice: generateVoiceHandler,
+    sticker: (node) => generateStickerHandler(node, enableComments),
+    voice: (node) => generateVoiceHandler(node, enableComments),
     animation: generateAnimationHandler,
     location: generateLocationHandler,
     contact: generateContactHandler,
     pin_message: generatePinMessageHandler,
     unpin_message: generateUnpinMessageHandler,
     delete_message: generateDeleteMessageHandler,
-    ban_user: generateBanUserHandler,
-    unban_user: generateUnbanUserHandler,
-    mute_user: generateMuteUserHandler,
-    unmute_user: generateUnmuteUserHandler,
-    kick_user: generateKickUserHandler,
-    promote_user: generatePromoteUserHandler,
-    demote_user: generateDemoteUserHandler,
-    admin_rights: generateAdminRightsHandler,
+    ban_user: (node) => generateAdminHandler(node, enableComments),
+    unban_user: (node) => generateAdminHandler(node, enableComments),
+    mute_user: (node) => generateAdminHandler(node, enableComments),
+    unmute_user: (node) => generateAdminHandler(node, enableComments),
+    kick_user: (node) => generateAdminHandler(node, enableComments),
+    promote_user: (node) => generateAdminHandler(node, enableComments),
+    demote_user: (node) => generateAdminHandler(node, enableComments),
+    admin_rights: (node) => generateAdminHandler(node, enableComments),
     broadcast: (node) => {
       const apiType = node.data?.broadcastApiType || 'bot';
       return apiType === 'client'
         ? generateBroadcastClientHandler(node, nodes)
-        : generateBroadcastHandler(node, nodes);
+        : generateBroadcastHandler(node, nodes, enableComments);
     },
   };
 
