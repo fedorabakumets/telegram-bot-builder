@@ -170,12 +170,12 @@ describe('middleware.py.jinja2 шаблон', () => {
     });
 
     describe('Значения по умолчанию', () => {
-      it('должен использовать false по умолчанию', () => {
+      it('должен принимать undefined по умолчанию', () => {
         const result = middlewareParamsSchema.safeParse({});
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, false);
+          assert.strictEqual(result.data.userDatabaseEnabled, undefined);
         }
       });
     });
@@ -186,9 +186,9 @@ describe('middleware.py.jinja2 шаблон', () => {
         assert.strictEqual(Object.keys(shape).length, 1);
       });
 
-      it('должен использовать ZodBoolean', () => {
+      it('должен использовать ZodOptional', () => {
         const shape = middlewareParamsSchema.shape;
-        assert.strictEqual(shape.userDatabaseEnabled.constructor.name, 'ZodBoolean');
+        assert.ok(shape.userDatabaseEnabled.isOptional());
       });
     });
   });

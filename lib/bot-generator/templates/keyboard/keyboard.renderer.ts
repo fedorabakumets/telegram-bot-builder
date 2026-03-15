@@ -25,11 +25,6 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateKeyboard(params: KeyboardTemplateParams): string {
-  const validated = keyboardParamsSchema.parse({
-    ...params,
-    keyboardType: params.keyboardType ?? 'none',
-    oneTimeKeyboard: params.oneTimeKeyboard ?? false,
-    resizeKeyboard: params.resizeKeyboard ?? true,
-  });
+  const validated = keyboardParamsSchema.parse(params);
   return renderPartialTemplate('keyboard/keyboard.py.jinja2', validated);
 }

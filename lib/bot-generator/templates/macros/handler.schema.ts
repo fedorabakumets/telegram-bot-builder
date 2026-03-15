@@ -21,7 +21,7 @@ export const handlerMacroParamsSchema = z.object({
       keyboardType: z.enum(['inline', 'reply']).optional(),
     }).optional(),
   }),
-  enableComments: z.boolean(),
+  enableComments: z.boolean().optional(),
 });
 
 /** Тип параметров макроса (выведен из схемы) */

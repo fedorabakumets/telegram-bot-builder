@@ -126,14 +126,14 @@ describe('handler.py.jinja2 макрос', () => {
         });
       });
 
-      it('должен использовать значения по умолчанию', () => {
+      it('должен принимать undefined для enableComments', () => {
         const result = handlerMacroParamsSchema.safeParse({
           node: { id: '1', type: 'start' },
         });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.enableComments, false);
+          assert.strictEqual(result.data.enableComments, undefined);
         }
       });
     });

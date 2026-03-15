@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров базы данных */
 export const databaseParamsSchema = z.object({
-  userDatabaseEnabled: z.boolean(),
+  userDatabaseEnabled: z.boolean().optional(),
 });
 
 /** Тип параметров базы данных (выведен из схемы) */

@@ -222,25 +222,25 @@ describe('config.py.jinja2 шаблон', () => {
     });
 
     describe('Значения по умолчанию', () => {
-      it('должен использовать false для userDatabaseEnabled по умолчанию', () => {
+      it('должен принимать undefined для userDatabaseEnabled', () => {
         const result = configParamsSchema.safeParse({});
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, false);
+          assert.strictEqual(result.data.userDatabaseEnabled, undefined);
         }
       });
 
-      it('должен использовать null для projectId по умолчанию', () => {
+      it('должен принимать undefined для projectId', () => {
         const result = configParamsSchema.safeParse({});
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.projectId, null);
+          assert.strictEqual(result.data.projectId, undefined);
         }
       });
 
-      it('должен использовать значения по умолчанию для отсутствующих полей', () => {
+      it('должен принимать значения для присутствующих полей', () => {
         const result = configParamsSchema.safeParse({
           userDatabaseEnabled: true,
         });
@@ -248,7 +248,7 @@ describe('config.py.jinja2 шаблон', () => {
         assert.ok(result.success);
         if (result.success) {
           assert.strictEqual(result.data.userDatabaseEnabled, true);
-          assert.strictEqual(result.data.projectId, null);
+          assert.strictEqual(result.data.projectId, undefined);
         }
       });
     });
@@ -263,14 +263,14 @@ describe('config.py.jinja2 шаблон', () => {
         assert.ok(fields.includes('projectId'));
       });
 
-      it('должен использовать ZodBoolean для userDatabaseEnabled', () => {
+      it('должен использовать ZodOptional для userDatabaseEnabled', () => {
         const shape = configParamsSchema.shape;
-        assert.strictEqual(shape.userDatabaseEnabled.constructor.name, 'ZodBoolean');
+        assert.ok(shape.userDatabaseEnabled.isOptional());
       });
 
-      it('должен использовать ZodNullable для projectId', () => {
+      it('должен использовать ZodOptional для projectId', () => {
         const shape = configParamsSchema.shape;
-        assert.strictEqual(shape.projectId.constructor.name, 'ZodNullable');
+        assert.ok(shape.projectId.isOptional());
       });
     });
   });

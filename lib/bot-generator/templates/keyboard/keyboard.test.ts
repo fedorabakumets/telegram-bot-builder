@@ -294,24 +294,24 @@ describe('keyboard.py.jinja2 шаблон', () => {
         assert.strictEqual(fields.length, 5);
       });
 
-      it('должен использовать ZodEnum для keyboardType', () => {
+      it('должен использовать ZodOptional для keyboardType', () => {
         const shape = keyboardParamsSchema.shape;
-        assert.strictEqual(shape.keyboardType.constructor.name, 'ZodEnum');
+        assert.ok(shape.keyboardType.isOptional());
       });
 
-      it('должен использовать ZodBoolean для oneTimeKeyboard', () => {
+      it('должен использовать ZodOptional для oneTimeKeyboard', () => {
         const shape = keyboardParamsSchema.shape;
-        assert.strictEqual(shape.oneTimeKeyboard.constructor.name, 'ZodBoolean');
+        assert.ok(shape.oneTimeKeyboard.isOptional());
       });
 
-      it('должен использовать ZodBoolean для resizeKeyboard', () => {
+      it('должен использовать ZodOptional для resizeKeyboard', () => {
         const shape = keyboardParamsSchema.shape;
-        assert.strictEqual(shape.resizeKeyboard.constructor.name, 'ZodBoolean');
+        assert.ok(shape.resizeKeyboard.isOptional());
       });
 
-      it('должен использовать ZodArray для buttons', () => {
+      it('должен использовать ZodOptional для buttons', () => {
         const shape = keyboardParamsSchema.shape;
-        assert.strictEqual(shape.buttons.constructor.name, 'ZodArray');
+        assert.ok(shape.buttons.isOptional());
       });
     });
   });

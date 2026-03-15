@@ -8,10 +8,10 @@ import { z } from 'zod';
 /** Схема для валидации параметров голосового сообщения */
 export const voiceParamsSchema = z.object({
   nodeId: z.string(),
-  voiceUrl: z.string().default(''),
-  mediaCaption: z.string().default(''),
+  voiceUrl: z.string().optional(),
+  mediaCaption: z.string().optional(),
   mediaDuration: z.number().optional(),
-  disableNotification: z.boolean(),
+  disableNotification: z.boolean().optional(),
 });
 
 /** Тип параметров голосового сообщения (выведен из схемы) */

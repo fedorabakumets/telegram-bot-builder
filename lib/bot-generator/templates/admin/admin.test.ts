@@ -249,7 +249,7 @@ describe('admin.py.jinja2 шаблон', () => {
     });
 
     describe('Граничные случаи', () => {
-      it('должен использовать значения по умолчанию для messageIdSource', () => {
+      it('должен принимать undefined для messageIdSource', () => {
         const result = adminParamsSchema.safeParse({
           nodeId: 'test',
           adminActionType: 'pin_message',
@@ -257,11 +257,11 @@ describe('admin.py.jinja2 шаблон', () => {
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.messageIdSource, 'last_message');
+          assert.strictEqual(result.data.messageIdSource, undefined);
         }
       });
 
-      it('должен использовать значения по умолчанию для userIdSource', () => {
+      it('должен принимать undefined для userIdSource', () => {
         const result = adminParamsSchema.safeParse({
           nodeId: 'test',
           adminActionType: 'ban_user',
@@ -269,11 +269,11 @@ describe('admin.py.jinja2 шаблон', () => {
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.userIdSource, 'last_message');
+          assert.strictEqual(result.data.userIdSource, undefined);
         }
       });
 
-      it('должен использовать false для всех прав по умолчанию', () => {
+      it('должен принимать undefined для всех прав', () => {
         const result = adminParamsSchema.safeParse({
           nodeId: 'test',
           adminActionType: 'promote_user',
@@ -281,13 +281,13 @@ describe('admin.py.jinja2 шаблон', () => {
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.canManageChat, false);
-          assert.strictEqual(result.data.canDeleteMessages, false);
-          assert.strictEqual(result.data.canPinMessages, false);
+          assert.strictEqual(result.data.canManageChat, undefined);
+          assert.strictEqual(result.data.canDeleteMessages, undefined);
+          assert.strictEqual(result.data.canPinMessages, undefined);
         }
       });
 
-      it('должен использовать undefined для untilDate по умолчанию', () => {
+      it('должен принимать undefined для untilDate', () => {
         const result = adminParamsSchema.safeParse({
           nodeId: 'test',
           adminActionType: 'ban_user',
@@ -378,7 +378,7 @@ describe('admin.py.jinja2 шаблон', () => {
         }
       });
 
-      it('должен использовать значения по умолчанию для всех полей', () => {
+      it('должен принимать undefined для всех опциональных полей', () => {
         const result = adminParamsSchema.safeParse({
           nodeId: 'test',
           adminActionType: 'ban_user',
@@ -386,35 +386,35 @@ describe('admin.py.jinja2 шаблон', () => {
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.messageIdSource, 'last_message');
-          assert.strictEqual(result.data.userIdSource, 'last_message');
-          assert.strictEqual(result.data.canManageChat, false);
-          assert.strictEqual(result.data.isAnonymous, false);
+          assert.strictEqual(result.data.messageIdSource, undefined);
+          assert.strictEqual(result.data.userIdSource, undefined);
+          assert.strictEqual(result.data.canManageChat, undefined);
+          assert.strictEqual(result.data.isAnonymous, undefined);
         }
       });
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 22 поля', () => {
+      it('должен иметь 21 поле', () => {
         const shape = adminParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 22);
+        assert.strictEqual(fields.length, 21);
       });
 
-      it('должен использовать ZodEnum для adminActionType', () => {
+      it('должен использовать ZodOptional для adminActionType', () => {
         const shape = adminParamsSchema.shape;
-        assert.strictEqual(shape.adminActionType.constructor.name, 'ZodEnum');
+        assert.ok(shape.adminActionType.isOptional());
       });
 
       it('должен использовать ZodOptional для untilDate', () => {
         const shape = adminParamsSchema.shape;
-        assert.strictEqual(shape.untilDate.constructor.name, 'ZodOptional');
+        assert.ok(shape.untilDate.isOptional());
       });
 
-      it('должен использовать ZodBoolean для canManageChat', () => {
+      it('должен использовать ZodOptional для canManageChat', () => {
         const shape = adminParamsSchema.shape;
-        assert.strictEqual(shape.canManageChat.constructor.name, 'ZodBoolean');
+        assert.ok(shape.canManageChat.isOptional());
       });
     });
   });

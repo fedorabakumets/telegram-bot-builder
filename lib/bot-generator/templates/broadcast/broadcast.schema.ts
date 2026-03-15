@@ -8,15 +8,15 @@ import { z } from 'zod';
 /** Схема для валидации параметров рассылки */
 export const broadcastParamsSchema = z.object({
   nodeId: z.string(),
-  broadcastApiType: z.enum(['bot', 'client']),
-  broadcastTargetNode: z.string().default(''),
-  enableBroadcast: z.boolean(),
-  enableConfirmation: z.boolean().default(false),
-  confirmationText: z.string().default('Подтвердите рассылку'),
-  successMessage: z.string().default('Рассылка выполнена успешно'),
-  errorMessage: z.string().default('Произошла ошибка при рассылке'),
-  idSourceType: z.enum(['user_ids', 'bot_users', 'both']),
-  messageText: z.string().default(''),
+  broadcastApiType: z.enum(['bot', 'client']).optional(),
+  broadcastTargetNode: z.string().optional(),
+  enableBroadcast: z.boolean().optional(),
+  enableConfirmation: z.boolean().optional(),
+  confirmationText: z.string().optional(),
+  successMessage: z.string().optional(),
+  errorMessage: z.string().optional(),
+  idSourceType: z.enum(['user_ids', 'bot_users', 'both']).optional(),
+  messageText: z.string().optional(),
 });
 
 /** Тип параметров рассылки (выведен из схемы) */

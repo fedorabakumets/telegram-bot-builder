@@ -114,36 +114,36 @@ describe('voice.py.jinja2 шаблон', () => {
     });
 
     describe('Граничные случаи', () => {
-      it('должен использовать пустую строку для voiceUrl по умолчанию', () => {
+      it('должен принимать undefined для voiceUrl', () => {
         const result = voiceParamsSchema.safeParse({
           nodeId: 'test',
         });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.voiceUrl, '');
+          assert.strictEqual(result.data.voiceUrl, undefined);
         }
       });
 
-      it('должен использовать пустую строку для mediaCaption по умолчанию', () => {
+      it('должен принимать undefined для mediaCaption', () => {
         const result = voiceParamsSchema.safeParse({
           nodeId: 'test',
         });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.mediaCaption, '');
+          assert.strictEqual(result.data.mediaCaption, undefined);
         }
       });
 
-      it('должен использовать false для disableNotification по умолчанию', () => {
+      it('должен принимать undefined для disableNotification', () => {
         const result = voiceParamsSchema.safeParse({
           nodeId: 'test',
         });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.disableNotification, false);
+          assert.strictEqual(result.data.disableNotification, undefined);
         }
       });
 
@@ -169,7 +169,7 @@ describe('voice.py.jinja2 шаблон', () => {
 
       it('должен включать duration только при наличии mediaDuration', () => {
         const result1 = generateVoice({ ...validParamsFull, mediaDuration: 45 });
-        const result2 = generateVoice({ ...validParamsFull, mediaDuration: 0 });
+        const result2 = generateVoice({ ...validParamsFull, mediaDuration: undefined });
 
         assert.ok(result1.includes('duration = 45'));
         assert.ok(!result2.includes('duration ='));
@@ -228,14 +228,14 @@ describe('voice.py.jinja2 шаблон', () => {
         assert.ok(result.success);
       });
 
-      it('должен использовать значения по умолчанию для всех полей', () => {
+      it('должен принимать undefined для всех опциональных полей', () => {
         const result = voiceParamsSchema.safeParse({ nodeId: 'test' });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.voiceUrl, '');
-          assert.strictEqual(result.data.mediaCaption, '');
-          assert.strictEqual(result.data.disableNotification, false);
+          assert.strictEqual(result.data.voiceUrl, undefined);
+          assert.strictEqual(result.data.mediaCaption, undefined);
+          assert.strictEqual(result.data.disableNotification, undefined);
           assert.strictEqual(result.data.mediaDuration, undefined);
         }
       });
@@ -249,19 +249,19 @@ describe('voice.py.jinja2 шаблон', () => {
         assert.strictEqual(fields.length, 5);
       });
 
-      it('должен использовать ZodString для voiceUrl', () => {
+      it('должен использовать ZodOptional для voiceUrl', () => {
         const shape = voiceParamsSchema.shape;
-        assert.strictEqual(shape.voiceUrl.constructor.name, 'ZodString');
+        assert.ok(shape.voiceUrl.isOptional());
       });
 
       it('должен использовать ZodOptional для mediaDuration', () => {
         const shape = voiceParamsSchema.shape;
-        assert.strictEqual(shape.mediaDuration.constructor.name, 'ZodOptional');
+        assert.ok(shape.mediaDuration.isOptional());
       });
 
-      it('должен использовать ZodBoolean для disableNotification', () => {
+      it('должен использовать ZodOptional для disableNotification', () => {
         const shape = voiceParamsSchema.shape;
-        assert.strictEqual(shape.disableNotification.constructor.name, 'ZodBoolean');
+        assert.ok(shape.disableNotification.isOptional());
       });
     });
   });

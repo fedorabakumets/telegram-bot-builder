@@ -222,15 +222,15 @@ describe('broadcast.py.jinja2 шаблон', () => {
         assert.ok(result1.success && result2.success && result3.success);
       });
 
-      it('должен использовать значения по умолчанию для всех полей', () => {
+      it('должен принимать undefined для всех опциональных полей', () => {
         const result = broadcastParamsSchema.safeParse({ nodeId: 'test' });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.broadcastApiType, 'bot');
-          assert.strictEqual(result.data.enableBroadcast, false);
-          assert.strictEqual(result.data.enableConfirmation, false);
-          assert.strictEqual(result.data.idSourceType, 'bot_users');
+          assert.strictEqual(result.data.broadcastApiType, undefined);
+          assert.strictEqual(result.data.enableBroadcast, undefined);
+          assert.strictEqual(result.data.enableConfirmation, undefined);
+          assert.strictEqual(result.data.idSourceType, undefined);
         }
       });
     });
@@ -243,19 +243,19 @@ describe('broadcast.py.jinja2 шаблон', () => {
         assert.strictEqual(fields.length, 10);
       });
 
-      it('должен использовать ZodEnum для broadcastApiType', () => {
+      it('должен использовать ZodOptional для broadcastApiType', () => {
         const shape = broadcastParamsSchema.shape;
-        assert.strictEqual(shape.broadcastApiType.constructor.name, 'ZodEnum');
+        assert.ok(shape.broadcastApiType.isOptional());
       });
 
-      it('должен использовать ZodEnum для idSourceType', () => {
+      it('должен использовать ZodOptional для idSourceType', () => {
         const shape = broadcastParamsSchema.shape;
-        assert.strictEqual(shape.idSourceType.constructor.name, 'ZodEnum');
+        assert.ok(shape.idSourceType.isOptional());
       });
 
-      it('должен использовать ZodBoolean для enableBroadcast', () => {
+      it('должен использовать ZodOptional для enableBroadcast', () => {
         const shape = broadcastParamsSchema.shape;
-        assert.strictEqual(shape.enableBroadcast.constructor.name, 'ZodBoolean');
+        assert.ok(shape.enableBroadcast.isOptional());
       });
     });
   });

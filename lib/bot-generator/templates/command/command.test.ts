@@ -275,7 +275,7 @@ describe('command.py.jinja2 шаблон', () => {
         assert.ok(result.success);
       });
 
-      it('должен использовать значения по умолчанию для всех полей', () => {
+      it('должен принимать undefined для всех опциональных полей', () => {
         const result = commandParamsSchema.safeParse({
           nodeId: 'test',
           command: '/help',
@@ -283,11 +283,12 @@ describe('command.py.jinja2 шаблон', () => {
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.isPrivateOnly, false);
-          assert.strictEqual(result.data.adminOnly, false);
-          assert.strictEqual(result.data.requiresAuth, false);
-          assert.strictEqual(result.data.keyboardType, 'none');
-          assert.strictEqual(result.data.formatMode, 'none');
+          assert.strictEqual(result.data.messageText, undefined);
+          assert.strictEqual(result.data.isPrivateOnly, undefined);
+          assert.strictEqual(result.data.adminOnly, undefined);
+          assert.strictEqual(result.data.requiresAuth, undefined);
+          assert.strictEqual(result.data.keyboardType, undefined);
+          assert.strictEqual(result.data.formatMode, undefined);
         }
       });
 
@@ -410,24 +411,29 @@ describe('command.py.jinja2 шаблон', () => {
         assert.strictEqual(fields.length, 20);
       });
 
-      it('должен использовать ZodEnum для keyboardType', () => {
+      it('должен использовать ZodOptional для messageText', () => {
         const shape = commandParamsSchema.shape;
-        assert.strictEqual(shape.keyboardType.constructor.name, 'ZodEnum');
+        assert.ok(shape.messageText.isOptional());
       });
 
-      it('должен использовать ZodEnum для formatMode', () => {
+      it('должен использовать ZodOptional для keyboardType', () => {
         const shape = commandParamsSchema.shape;
-        assert.strictEqual(shape.formatMode.constructor.name, 'ZodEnum');
+        assert.ok(shape.keyboardType.isOptional());
       });
 
-      it('должен использовать ZodBoolean для isPrivateOnly', () => {
+      it('должен использовать ZodOptional для formatMode', () => {
         const shape = commandParamsSchema.shape;
-        assert.strictEqual(shape.isPrivateOnly.constructor.name, 'ZodBoolean');
+        assert.ok(shape.formatMode.isOptional());
       });
 
-      it('должен использовать ZodArray для synonyms', () => {
+      it('должен использовать ZodOptional для isPrivateOnly', () => {
         const shape = commandParamsSchema.shape;
-        assert.strictEqual(shape.synonyms.constructor.name, 'ZodArray');
+        assert.ok(shape.isPrivateOnly.isOptional());
+      });
+
+      it('должен использовать ZodOptional для synonyms', () => {
+        const shape = commandParamsSchema.shape;
+        assert.ok(shape.synonyms.isOptional());
       });
     });
   });

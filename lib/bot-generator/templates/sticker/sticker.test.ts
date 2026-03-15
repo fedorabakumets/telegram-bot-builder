@@ -118,36 +118,36 @@ describe('sticker.py.jinja2 шаблон', () => {
     });
 
     describe('Граничные случаи', () => {
-      it('должен использовать пустую строку для stickerUrl по умолчанию', () => {
+      it('должен принимать undefined для stickerUrl', () => {
         const result = stickerParamsSchema.safeParse({
           nodeId: 'test',
         });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.stickerUrl, '');
+          assert.strictEqual(result.data.stickerUrl, undefined);
         }
       });
 
-      it('должен использовать пустую строку для mediaCaption по умолчанию', () => {
+      it('должен принимать undefined для mediaCaption', () => {
         const result = stickerParamsSchema.safeParse({
           nodeId: 'test',
         });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.mediaCaption, '');
+          assert.strictEqual(result.data.mediaCaption, undefined);
         }
       });
 
-      it('должен использовать false для disableNotification по умолчанию', () => {
+      it('должен принимать undefined для disableNotification', () => {
         const result = stickerParamsSchema.safeParse({
           nodeId: 'test',
         });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.disableNotification, false);
+          assert.strictEqual(result.data.disableNotification, undefined);
         }
       });
 
@@ -162,7 +162,7 @@ describe('sticker.py.jinja2 шаблон', () => {
 
       it('должен включать disable_notification только при disableNotification=true', () => {
         const result1 = generateSticker({ ...validParamsFileId, disableNotification: true });
-        const result2 = generateSticker({ ...validParamsFileId, disableNotification: false });
+        const result2 = generateSticker({ ...validParamsFileId, disableNotification: undefined });
 
         assert.ok(result1.includes('disable_notification=True'));
         assert.ok(!result2.includes('disable_notification=True'));
@@ -170,7 +170,7 @@ describe('sticker.py.jinja2 шаблон', () => {
 
       it('должен включать caption только при наличии mediaCaption', () => {
         const result1 = generateSticker({ ...validParamsFileId, mediaCaption: 'Test' });
-        const result2 = generateSticker({ ...validParamsFileId, mediaCaption: '' });
+        const result2 = generateSticker({ ...validParamsFileId, mediaCaption: undefined });
 
         assert.ok(result1.includes('caption ='));
         assert.ok(!result2.includes('caption ='));
@@ -231,16 +231,16 @@ describe('sticker.py.jinja2 шаблон', () => {
         assert.ok(result.success);
       });
 
-      it('должен использовать значения по умолчанию для всех полей', () => {
+      it('должен принимать undefined для всех опциональных полей', () => {
         const result = stickerParamsSchema.safeParse({ nodeId: 'test' });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.stickerUrl, '');
-          assert.strictEqual(result.data.stickerFileId, '');
-          assert.strictEqual(result.data.stickerSetName, '');
-          assert.strictEqual(result.data.mediaCaption, '');
-          assert.strictEqual(result.data.disableNotification, false);
+          assert.strictEqual(result.data.stickerUrl, undefined);
+          assert.strictEqual(result.data.stickerFileId, undefined);
+          assert.strictEqual(result.data.stickerSetName, undefined);
+          assert.strictEqual(result.data.mediaCaption, undefined);
+          assert.strictEqual(result.data.disableNotification, undefined);
         }
       });
     });
@@ -253,21 +253,24 @@ describe('sticker.py.jinja2 шаблон', () => {
         assert.strictEqual(fields.length, 6);
       });
 
-      it('должен использовать ZodString для stickerUrl', () => {
+      it('должен использовать ZodOptional для stickerUrl', () => {
         const shape = stickerParamsSchema.shape;
-        assert.strictEqual(shape.stickerUrl.constructor.name, 'ZodString');
+        assert.ok(shape.stickerUrl.isOptional());
       });
 
-      it('должен использовать ZodBoolean для disableNotification', () => {
+      it('должен использовать ZodOptional для disableNotification', () => {
         const shape = stickerParamsSchema.shape;
-        assert.strictEqual(shape.disableNotification.constructor.name, 'ZodBoolean');
+        assert.ok(shape.disableNotification.isOptional());
       });
 
-      it('должен использовать .default() для всех опциональных полей', () => {
+      it('должен использовать .optional() для всех опциональных полей', () => {
         const shape = stickerParamsSchema.shape;
 
-        assert.ok(shape.stickerUrl.defaultValue !== undefined);
-        assert.ok(shape.disableNotification.defaultValue !== undefined);
+        assert.ok(shape.stickerUrl.isOptional());
+        assert.ok(shape.stickerFileId.isOptional());
+        assert.ok(shape.stickerSetName.isOptional());
+        assert.ok(shape.mediaCaption.isOptional());
+        assert.ok(shape.disableNotification.isOptional());
       });
     });
   });

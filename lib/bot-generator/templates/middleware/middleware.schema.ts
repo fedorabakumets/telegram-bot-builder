@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров middleware */
 export const middlewareParamsSchema = z.object({
-  userDatabaseEnabled: z.boolean(),
+  userDatabaseEnabled: z.boolean().optional(),
 });
 
 /** Тип параметров middleware (выведен из схемы) */

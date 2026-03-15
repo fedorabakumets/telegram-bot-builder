@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров запуска бота */
 export const mainParamsSchema = z.object({
-  userDatabaseEnabled: z.boolean(),
+  userDatabaseEnabled: z.boolean().optional(),
 });
 
 /** Тип параметров запуска (выведен из схемы) */

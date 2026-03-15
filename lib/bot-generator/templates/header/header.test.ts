@@ -179,14 +179,14 @@ describe('header.py.jinja2 шаблон', () => {
     });
 
     describe('Значения по умолчанию', () => {
-      it('должен использовать false для всех полей', () => {
+      it('должен принимать undefined для всех полей', () => {
         const result = headerParamsSchema.safeParse({});
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, false);
-          assert.strictEqual(result.data.hasInlineButtons, false);
-          assert.strictEqual(result.data.hasMediaNodes, false);
+          assert.strictEqual(result.data.userDatabaseEnabled, undefined);
+          assert.strictEqual(result.data.hasInlineButtons, undefined);
+          assert.strictEqual(result.data.hasMediaNodes, undefined);
         }
       });
     });
@@ -199,7 +199,9 @@ describe('header.py.jinja2 шаблон', () => {
 
       it('должен использовать ZodOptional для всех полей', () => {
         const shape = headerParamsSchema.shape;
-        assert.ok(shape.userDatabaseEnabled.constructor.name.includes('Zod'));
+        assert.ok(shape.userDatabaseEnabled.isOptional());
+        assert.ok(shape.hasInlineButtons.isOptional());
+        assert.ok(shape.hasMediaNodes.isOptional());
       });
     });
   });

@@ -46,8 +46,8 @@ builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
 
 {# Настройки reply клавиатуры #}
 keyboard = builder.as_markup(
-    resize_keyboard={{ resizeKeyboard|lower }},
-    one_time_keyboard={{ oneTimeKeyboard|lower }}
+    resize_keyboard={{ 'True' if resizeKeyboard else 'False' }},
+    one_time_keyboard={{ 'True' if oneTimeKeyboard else 'False' }}
 )
 
 {% else %}

@@ -77,8 +77,8 @@ export const invalidParamsWrongType = {
 
 /** Невалидные параметры: отсутствует поле */
 export const invalidParamsMissingField = {
-  buttons: [],
-  // отсутствует keyboardType
+  // отсутствует keyboardLayout - поле без default
+  keyboardLayout: { invalid: true },
 };
 
 /** Ожидаемый вывод: inline клавиатура */

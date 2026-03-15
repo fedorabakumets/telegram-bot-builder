@@ -182,25 +182,25 @@ describe('database.py.jinja2 шаблон', () => {
         assert.ok(!result.success);
       });
 
-      it('должен отклонять undefined', () => {
+      it('должен принимать undefined', () => {
         const result = databaseParamsSchema.safeParse({
           userDatabaseEnabled: undefined,
         });
-        assert.ok(!result.success);
+        assert.ok(result.success);
       });
     });
 
     describe('Значения по умолчанию', () => {
-      it('должен использовать false для userDatabaseEnabled по умолчанию', () => {
+      it('должен принимать undefined для userDatabaseEnabled', () => {
         const result = databaseParamsSchema.safeParse({});
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, false);
+          assert.strictEqual(result.data.userDatabaseEnabled, undefined);
         }
       });
 
-      it('должен использовать false для отсутствующих полей', () => {
+      it('должен принимать true для userDatabaseEnabled', () => {
         const result = databaseParamsSchema.safeParse({
           userDatabaseEnabled: true,
         });
@@ -221,9 +221,9 @@ describe('database.py.jinja2 шаблон', () => {
         assert.ok(fields.includes('userDatabaseEnabled'));
       });
 
-      it('должен использовать ZodBoolean для userDatabaseEnabled', () => {
+      it('должен использовать ZodOptional для userDatabaseEnabled', () => {
         const shape = databaseParamsSchema.shape;
-        assert.strictEqual(shape.userDatabaseEnabled.constructor.name, 'ZodBoolean');
+        assert.ok(shape.userDatabaseEnabled.isOptional());
       });
     });
   });

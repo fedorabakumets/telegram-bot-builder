@@ -173,18 +173,20 @@ describe('utils.py.jinja2 шаблон', () => {
       });
 
       it('должен отклонять undefined', () => {
-        const result = utilsParamsSchema.safeParse({});
-        assert.ok(result.success); // имеет значение по умолчанию
+        const result = utilsParamsSchema.safeParse({
+          userDatabaseEnabled: undefined,
+        });
+        assert.ok(result.success);
       });
     });
 
     describe('Значения по умолчанию', () => {
-      it('должен использовать false по умолчанию', () => {
+      it('должен принимать undefined по умолчанию', () => {
         const result = utilsParamsSchema.safeParse({});
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, false);
+          assert.strictEqual(result.data.userDatabaseEnabled, undefined);
         }
       });
     });
@@ -195,9 +197,9 @@ describe('utils.py.jinja2 шаблон', () => {
         assert.strictEqual(Object.keys(shape).length, 1);
       });
 
-      it('должен использовать ZodBoolean', () => {
+      it('должен использовать ZodOptional', () => {
         const shape = utilsParamsSchema.shape;
-        assert.strictEqual(shape.userDatabaseEnabled.constructor.name, 'ZodBoolean');
+        assert.ok(shape.userDatabaseEnabled.isOptional());
       });
     });
   });
