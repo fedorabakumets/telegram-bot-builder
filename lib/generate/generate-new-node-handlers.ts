@@ -8,6 +8,7 @@ import { generateBroadcast as generateBroadcastTemplate } from '../bot-generator
 import { generateSticker as generateStickerTemplate } from '../bot-generator/templates/sticker/sticker.renderer';
 import { generateVoice as generateVoiceTemplate } from '../bot-generator/templates/voice/voice.renderer';
 import { generateAdmin as generateAdminTemplate } from '../bot-generator/templates/admin/admin.renderer';
+import { generateCommand as generateCommandTemplate } from '../bot-generator/templates/command/command.renderer';
 
 /**
  * Генерирует обработчик рассылки (broadcast)
@@ -109,4 +110,34 @@ export function generateAdminHandler(node: Node): string {
   };
 
   return generateAdminTemplate(params);
+}
+
+/**
+ * Генерирует обработчик команды (command)
+ * @param node - Узел команды
+ * @param userDatabaseEnabled - Включена ли БД пользователей
+ * @returns Сгенерированный Python код
+ */
+export function generateCommandHandler(
+  node: Node,
+  userDatabaseEnabled: boolean = false
+): string {
+  const params = {
+    nodeId: node.id,
+    command: node.data?.command || '/help',
+    messageText: node.data?.messageText || '',
+    isPrivateOnly: node.data?.isPrivateOnly || false,
+    adminOnly: node.data?.adminOnly || false,
+    requiresAuth: node.data?.requiresAuth || false,
+    synonyms: node.data?.synonyms || [],
+    enableConditionalMessages: node.data?.enableConditionalMessages || false,
+    conditionalMessages: node.data?.conditionalMessages || [],
+    keyboardType: node.data?.keyboardType || 'none',
+    buttons: node.data?.buttons || [],
+    formatMode: node.data?.formatMode || 'none',
+    markdown: node.data?.markdown || false,
+    userDatabaseEnabled,
+  };
+
+  return generateCommandTemplate(params);
 }

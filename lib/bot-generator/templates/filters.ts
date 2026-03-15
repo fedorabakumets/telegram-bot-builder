@@ -136,10 +136,35 @@ export function hasUploadImagesFilter(node: any): boolean {
  */
 export function formatBotFatherCommands(nodes: any[]): string {
   if (!Array.isArray(nodes)) return '';
-  
+
   return nodes
     .filter(node => node.type === 'start' || node.type === 'command')
     .filter(node => node.data?.showInMenu && node.data?.command)
     .map(node => `${node.data.command} - ${node.data.description || ''}`)
     .join('\n');
+}
+
+/**
+ * Форматирует текст для вставки в Python код
+ * Использует тройные кавычки для многострочного текста,
+ * одинарные для однострочного
+ *
+ * @param str - Строка для форматирования
+ * @returns Отформатированная строка для Python
+ *
+ * @example
+ * 'Hello' → '"Hello"'
+ * 'Line1\nLine2' → '"""Line1\nLine2"""'
+ */
+export function formatPythonTextFilter(str: string): string {
+  if (typeof str !== 'string') return '""';
+  if (!str) return '""';
+
+  // Для многострочного текста используем тройные кавычки
+  if (str.includes('\n')) {
+    return `"""${str}"""`;
+  } else {
+    // Для однострочного текста экранируем только кавычки
+    return `"${str.replace(/"/g, '\\"')}"`;
+  }
 }

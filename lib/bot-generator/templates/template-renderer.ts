@@ -13,6 +13,7 @@ import {
   hasMediaNodesFilter,
   hasUploadImagesFilter,
   formatBotFatherCommands,
+  formatPythonTextFilter,
 } from './filters';
 import { getTemplatesDir } from './utils/get-templates-dir';
 import {
@@ -67,6 +68,7 @@ function initEnvironment(): Environment {
   env.addFilter('has_media', hasMediaNodesFilter);
   env.addFilter('has_upload_images', hasUploadImagesFilter);
   env.addFilter('format_bot_father_commands', formatBotFatherCommands);
+  env.addFilter('format_python_text', formatPythonTextFilter);
 
   return env;
 }

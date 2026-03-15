@@ -10,9 +10,9 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateAdminHandler } from './generate-new-node-handlers';
+import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateAdminHandler, generateCommandHandler } from './generate-new-node-handlers';
 import { generateBroadcastClientHandler } from '../bot-generator/Client/generateBroadcastClientHandler';
-import { generateCommandHandler, generateStartHandler } from '../bot-generator/CommandHandler';
+import { generateStartHandler } from '../bot-generator/CommandHandler';
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
 import { collectMediaVariables } from '../bot-generator/utils/collectMediaVariables';
