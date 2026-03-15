@@ -42,6 +42,8 @@ export interface CommandTemplateParams {
   buttons: Button[];
   /** Режим форматирования */
   formatMode: FormatMode;
+  /** Markdown включён */
+  markdown: boolean;
   /** URL изображения */
   imageUrl: string;
   /** URL документа */

@@ -41,10 +41,10 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     codeLines.push('# Код сгенерирован в generate-node-handlers.ts');
   }
 
-  // Создаем mediaVariablesMap для всех узлов
+  // Создаем mediaVariablesMap для всех узлов (используется старыми обработчиками)
   const mediaVariablesMap = collectMediaVariables(nodes);
-  
-  // Создаем массив всех ID узлов для генерации коротких ID
+
+  // Создаем массив всех ID узлов для генерации коротких ID (используется старыми обработчиками)
   const allNodeIds = nodes.map(n => n.id);
 
   const nodeHandlers: Record<string, (node: Node) => string> = {
