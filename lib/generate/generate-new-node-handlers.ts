@@ -9,6 +9,7 @@ import { generateSticker as generateStickerTemplate } from '../bot-generator/tem
 import { generateVoice as generateVoiceTemplate } from '../bot-generator/templates/voice/voice.renderer';
 import { generateAdmin as generateAdminTemplate } from '../bot-generator/templates/admin/admin.renderer';
 import { generateCommand as generateCommandTemplate } from '../bot-generator/templates/command/command.renderer';
+import { generateStart as generateStartTemplate } from '../bot-generator/templates/start/start.renderer';
 
 /**
  * Генерирует обработчик рассылки (broadcast)
@@ -146,4 +147,44 @@ export function generateCommandHandler(
   };
 
   return generateCommandTemplate(params);
+}
+
+/**
+ * Генерирует обработчик команды /start (start)
+ * @param node - Узел команды /start
+ * @param userDatabaseEnabled - Включена ли БД пользователей
+ * @returns Сгенерированный Python код
+ */
+export function generateStartHandler(
+  node: Node,
+  userDatabaseEnabled: boolean = false
+): string {
+  const params = {
+    nodeId: node.id,
+    messageText: node.data?.messageText || '',
+    isPrivateOnly: node.data?.isPrivateOnly || false,
+    adminOnly: node.data?.adminOnly || false,
+    requiresAuth: node.data?.requiresAuth || false,
+    synonyms: node.data?.synonyms || [],
+    allowMultipleSelection: node.data?.allowMultipleSelection || false,
+    multiSelectVariable: node.data?.multiSelectVariable || 'selected_options',
+    buttons: node.data?.buttons?.map(btn => ({
+      ...btn,
+      target: btn.target || btn.id || '',
+    })) || [],
+    keyboardType: node.data?.keyboardType || 'none',
+    enableAutoTransition: node.data?.enableAutoTransition || false,
+    autoTransitionTo: node.data?.autoTransitionTo || '',
+    collectUserInput: node.data?.collectUserInput || false,
+    formatMode: node.data?.formatMode || 'none',
+    markdown: node.data?.markdown || false,
+    imageUrl: node.data?.imageUrl || '',
+    documentUrl: node.data?.documentUrl || '',
+    videoUrl: node.data?.videoUrl || '',
+    audioUrl: node.data?.audioUrl || '',
+    attachedMedia: node.data?.attachedMedia || [],
+    userDatabaseEnabled,
+  };
+
+  return generateStartTemplate(params);
 }

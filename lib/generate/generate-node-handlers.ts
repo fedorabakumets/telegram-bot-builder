@@ -10,9 +10,8 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateAdminHandler, generateCommandHandler } from './generate-new-node-handlers';
+import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateAdminHandler, generateCommandHandler, generateStartHandler } from './generate-new-node-handlers';
 import { generateBroadcastClientHandler } from '../bot-generator/Client/generateBroadcastClientHandler';
-import { generateStartHandler } from '../bot-generator/CommandHandler';
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
 import { collectMediaVariables } from '../bot-generator/utils/collectMediaVariables';
@@ -49,7 +48,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   const allNodeIds = nodes.map(n => n.id);
 
   const nodeHandlers: Record<string, (node: Node) => string> = {
-    start: (node) => generateStartHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
+    start: (node) => generateStartHandler(node, userDatabaseEnabled),
     command: (node) => generateCommandHandler(node, userDatabaseEnabled),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,

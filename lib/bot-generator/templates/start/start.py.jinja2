@@ -1,0 +1,265 @@
+{#
+  Шаблон обработчика команды /start
+
+  @fileoverview Генерирует Python код для обработки команды /start
+  @param {string} nodeId - Уникальный идентификатор узла
+  @param {string} messageText - Текст сообщения
+  @param {boolean} isPrivateOnly - Только приватные чаты
+  @param {boolean} adminOnly - Только администраторы
+  @param {boolean} requiresAuth - Требуется авторизация
+  @param {boolean} userDatabaseEnabled - База данных пользователей включена
+  @param {array} synonyms - Синонимы команды
+  @param {boolean} allowMultipleSelection - Множественный выбор
+  @param {string} multiSelectVariable - Переменная для хранения выбора
+  @param {array} buttons - Кнопки
+  @param {string} keyboardType - Тип клавиатуры: 'inline', 'reply', 'none'
+  @param {boolean} enableAutoTransition - Автопереход
+  @param {string} autoTransitionTo - Цель автоперехода
+  @param {boolean} collectUserInput - Сбор пользовательского ввода
+  @param {string} formatMode - Режим форматирования: 'html', 'markdown', 'none'
+  @param {string} imageUrl - URL изображения
+  @param {string} documentUrl - URL документа
+  @param {string} videoUrl - URL видео
+  @param {string} audioUrl - URL аудио
+  @param {array} attachedMedia - Прикреплённые медиа переменные
+#}
+
+{# Основная команда /start #}
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
+    """Обработчик команды /start"""
+    logging.info(f"Команда /start вызвана пользователем {message.from_user.id}")
+
+    {# Проверки безопасности #}
+    {% if isPrivateOnly %}
+    if not await is_private_chat(message):
+        await message.answer("❌ Эта команда доступна только в приватных чатах")
+        return
+    {% endif %}
+
+    {% if adminOnly %}
+    if not await is_admin(message.from_user.id):
+        await message.answer("❌ У вас нет прав для выполнения этой команды")
+        return
+    {% endif %}
+
+    {% if requiresAuth %}
+    if not await check_auth(message.from_user.id):
+        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")
+        return
+    {% endif %}
+
+    {# Сохранение информации о пользователе #}
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    avatar_url = None
+    # Получаем аватарку пользователя
+    try:
+        photos = await bot.get_user_profile_photos(user_id)
+        if photos.photos and len(photos.photos) > 0:
+            last_photo = photos.photos[-1][-1]
+            file = await bot.get_file(last_photo.file_id)
+            avatar_url = file.file_path
+    except Exception as e:
+        logging.warning(f"Не удалось получить аватарку: {e}")
+
+    {% if userDatabaseEnabled %}
+    # Сохраняем пользователя в базу данных
+    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name, avatar_url)
+
+    # Инициализируем базовые переменные пользователя
+    user_name = await init_user_variables(user_id, message.from_user)
+    await update_user_data_in_db(user_id, "user_name", user_name)
+    await update_user_data_in_db(user_id, "first_name", first_name)
+    await update_user_data_in_db(user_id, "last_name", last_name)
+    await update_user_data_in_db(user_id, "username", username)
+    {% endif %}
+
+    # Сохранение в локальное хранилище
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["username"] = username
+    user_data[user_id]["first_name"] = first_name
+    user_data[user_id]["last_name"] = last_name
+    user_data[user_id]["user_name"] = init_user_variables(user_id, message.from_user)
+
+    {# Инициализация множественного выбора #}
+    {% if allowMultipleSelection %}
+    # Инициализируем состояние множественного выбора
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["multi_select"] = []
+    user_data[user_id]["multi_select_node"] = "{{ nodeId }}"
+    logging.info(f"Инициализировано состояние множественного выбора для узла {{ nodeId }}")
+    {% endif %}
+
+    {# Сохранение медиа-переменных #}
+    {% if imageUrl and imageUrl != 'undefined' %}
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["image_url_{{ nodeId }}"] = "{{ imageUrl }}"
+    {% if userDatabaseEnabled %}
+    await update_user_data_in_db(user_id, "image_url_{{ nodeId }}", "{{ imageUrl }}")
+    {% endif %}
+    {% endif %}
+
+    {% if documentUrl %}
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["document_url_{{ nodeId }}"] = "{{ documentUrl }}"
+    {% if userDatabaseEnabled %}
+    await update_user_data_in_db(user_id, "document_url_{{ nodeId }}", "{{ documentUrl }}")
+    {% endif %}
+    {% endif %}
+
+    {% if videoUrl %}
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["video_url_{{ nodeId }}"] = "{{ videoUrl }}"
+    {% if userDatabaseEnabled %}
+    await update_user_data_in_db(user_id, "video_url_{{ nodeId }}", "{{ videoUrl }}")
+    {% endif %}
+    {% endif %}
+
+    {% if audioUrl %}
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["audio_url_{{ nodeId }}"] = "{{ audioUrl }}"
+    {% if userDatabaseEnabled %}
+    await update_user_data_in_db(user_id, "audio_url_{{ nodeId }}", "{{ audioUrl }}")
+    {% endif %}
+    {% endif %}
+
+    {# Текст сообщения #}
+    text = {{ messageText|format_python_text }}
+
+    {# Универсальная замена переменных #}
+    all_user_vars = await init_all_user_vars(user_id)
+    user_ids_record = await get_user_ids_from_db(user_id)
+    if user_ids_record:
+        all_user_vars["user_ids"] = user_ids_record.get("user_ids", [])
+        all_user_vars["user_ids_count"] = user_ids_record.get("count", 0)
+    text = replace_variables_in_text(text, all_user_vars, {})
+
+    {# Клавиатура #}
+    {% if keyboardType == 'inline' and buttons|length > 0 %}
+    builder = InlineKeyboardBuilder()
+    {% for btn in buttons %}
+    {% if btn.action == 'url' %}
+    builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, url="{{ btn.target }}"))
+    {% elif btn.action == 'selection' %}
+    builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="select_{{ btn.id or btn.target }}"))
+    {% else %}
+    builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.id or btn.target }}"))
+    {% endif %}
+    {% endfor %}
+    keyboard = builder.as_markup()
+
+    {% elif keyboardType == 'reply' and buttons|length > 0 %}
+    builder = ReplyKeyboardBuilder()
+    {% for btn in buttons %}
+    builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
+    {% endfor %}
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+
+    {% else %}
+    keyboard = None
+    {% endif %}
+
+    {# Отправка сообщения #}
+    {% if formatMode == 'html' %}
+    await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+    {% elif formatMode == 'markdown' %}
+    await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+    {% else %}
+    await message.answer(text, reply_markup=keyboard)
+    {% endif %}
+
+    {# Автопереход #}
+    {% if enableAutoTransition and autoTransitionTo %}
+    # ⚡ АВТОПЕРЕХОД к {{ autoTransitionTo }}
+    logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
+    class FakeCallbackQuery:
+        def __init__(self, message, target_node_id):
+            self.from_user = message.from_user
+            self.chat = message.chat
+            self.date = message.date
+            self.message_id = message.message_id
+            self.data = target_node_id
+            self.message = message
+            self._is_fake = True
+
+        async def answer(self, *args, **kwargs):
+            pass
+
+    fake_callback = FakeCallbackQuery(message, "{{ autoTransitionTo }}")
+    try:
+        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(fake_callback)
+        logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
+    except Exception as e:
+        logging.error(f"Ошибка при автопереходе к узлу {{ autoTransitionTo }}: {e}")
+        await message.answer("Переход завершен")
+    return
+    {% endif %}
+
+{# Обработчики синонимов #}
+{% for synonym in synonyms %}
+
+@dp.message(lambda message: message.text and message.text.lower() == "{{ synonym|lower }}" and message.chat.type in ['group', 'supergroup'])
+async def start_synonym_{{ loop.index }}_handler(message: types.Message):
+    """Обработчик синоима '{{ synonym }}' для команды /start"""
+    logging.info(f"Синоним '{{ synonym }}' вызван пользователем {message.from_user.id}")
+
+    {# Проверки безопасности #}
+    {% if adminOnly %}
+    if not await is_admin(message.from_user.id):
+        await message.answer("❌ У вас нет прав для выполнения этой команды")
+        return
+    {% endif %}
+
+    {# Сохранение информации о пользователе #}
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+
+    {% if userDatabaseEnabled %}
+    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
+    user_name = await init_user_variables(user_id, message.from_user)
+    {% endif %}
+
+    text = {{ messageText|format_python_text }}
+
+    # Универсальная замена переменных
+    all_user_vars = await init_all_user_vars(user_id)
+    user_ids_record = await get_user_ids_from_db(user_id)
+    if user_ids_record:
+        all_user_vars["user_ids"] = user_ids_record.get("user_ids", [])
+        all_user_vars["user_ids_count"] = user_ids_record.get("count", 0)
+    text = replace_variables_in_text(text, all_user_vars, {})
+
+    {# Клавиатура #}
+    {% if keyboardType == 'inline' and buttons|length > 0 %}
+    builder = InlineKeyboardBuilder()
+    {% for btn in buttons %}
+    builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.id or btn.target }}"))
+    {% endfor %}
+    keyboard = builder.as_markup()
+    {% elif keyboardType == 'reply' and buttons|length > 0 %}
+    builder = ReplyKeyboardBuilder()
+    {% for btn in buttons %}
+    builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
+    {% endfor %}
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    {% else %}
+    keyboard = None
+    {% endif %}
+
+    {# Отправка сообщения #}
+    {% if formatMode == 'html' %}
+    await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+    {% elif formatMode == 'markdown' %}
+    await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+    {% else %}
+    await message.answer(text, reply_markup=keyboard)
+    {% endif %}
+
+{% endfor %}
