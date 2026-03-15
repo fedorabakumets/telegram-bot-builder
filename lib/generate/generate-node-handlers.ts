@@ -10,7 +10,7 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastHandler as generateBroadcastTemplate, generateStickerHandler as generateStickerTemplate, generateVoiceHandler as generateVoiceTemplate, generateAdminHandler } from './generate-new-node-handlers';
+import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateAdminHandler } from './generate-new-node-handlers';
 import { generateBroadcastClientHandler } from '../bot-generator/Client/generateBroadcastClientHandler';
 import { generateCommandHandler, generateStartHandler } from '../bot-generator/CommandHandler';
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
@@ -51,27 +51,27 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   const nodeHandlers: Record<string, (node: Node) => string> = {
     start: (node) => generateStartHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
     command: (node) => generateCommandHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
-    sticker: (node) => generateStickerHandler(node, enableComments),
-    voice: (node) => generateVoiceHandler(node, enableComments),
+    sticker: generateStickerHandler,
+    voice: generateVoiceHandler,
     animation: generateAnimationHandler,
     location: generateLocationHandler,
     contact: generateContactHandler,
     pin_message: generatePinMessageHandler,
     unpin_message: generateUnpinMessageHandler,
     delete_message: generateDeleteMessageHandler,
-    ban_user: (node) => generateAdminHandler(node, enableComments),
-    unban_user: (node) => generateAdminHandler(node, enableComments),
-    mute_user: (node) => generateAdminHandler(node, enableComments),
-    unmute_user: (node) => generateAdminHandler(node, enableComments),
-    kick_user: (node) => generateAdminHandler(node, enableComments),
-    promote_user: (node) => generateAdminHandler(node, enableComments),
-    demote_user: (node) => generateAdminHandler(node, enableComments),
-    admin_rights: (node) => generateAdminHandler(node, enableComments),
+    ban_user: generateAdminHandler,
+    unban_user: generateAdminHandler,
+    mute_user: generateAdminHandler,
+    unmute_user: generateAdminHandler,
+    kick_user: generateAdminHandler,
+    promote_user: generateAdminHandler,
+    demote_user: generateAdminHandler,
+    admin_rights: generateAdminHandler,
     broadcast: (node) => {
       const apiType = node.data?.broadcastApiType || 'bot';
       return apiType === 'client'
         ? generateBroadcastClientHandler(node, nodes)
-        : generateBroadcastHandler(node, nodes, enableComments);
+        : generateBroadcastHandler(node, enableComments);
     },
   };
 

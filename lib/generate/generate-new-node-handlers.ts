@@ -12,16 +12,15 @@ import { generateAdmin as generateAdminTemplate } from '../bot-generator/templat
 /**
  * Генерирует обработчик рассылки (broadcast)
  * @param node - Узел рассылки
- * @param allNodes - Все узлы для контекста
- * @param enableComments - Включить ли комментарии
+ * @param _enableCommentss - Включить ли комментарии
  * @returns Сгенерированный Python код
  */
 export function generateBroadcastHandler(
   node: Node,
-  allNodes: Node[],
-  enableComments: boolean = true
+  _enableCommentss: boolean = true
 ): string {
   const params = {
+    nodeId: node.id,
     broadcastApiType: node.data?.broadcastApiType || 'bot',
     broadcastTargetNode: node.data?.broadcastTargetNode || '',
     enableBroadcast: node.data?.enableBroadcast || false,
@@ -30,6 +29,7 @@ export function generateBroadcastHandler(
     successMessage: node.data?.successMessage || '',
     errorMessage: node.data?.errorMessage || '',
     idSourceType: node.data?.idSourceType || 'bot_users',
+    messageText: node.data?.messageText || '',
   };
 
   return generateBroadcastTemplate(params);
@@ -38,14 +38,11 @@ export function generateBroadcastHandler(
 /**
  * Генерирует обработчик стикеров (sticker)
  * @param node - Узел стикера
- * @param enableComments - Включить ли комментарии
  * @returns Сгенерированный Python код
  */
-export function generateStickerHandler(
-  node: Node,
-  enableComments: boolean = true
-): string {
+export function generateStickerHandler(node: Node): string {
   const params = {
+    nodeId: node.id,
     stickerUrl: node.data?.stickerUrl || '',
     stickerFileId: node.data?.stickerFileId || '',
     stickerSetName: node.data?.stickerSetName || '',
@@ -59,14 +56,11 @@ export function generateStickerHandler(
 /**
  * Генерирует обработчик голосовых (voice)
  * @param node - Узел голосового сообщения
- * @param enableComments - Включить ли комментарии
  * @returns Сгенерированный Python код
  */
-export function generateVoiceHandler(
-  node: Node,
-  enableComments: boolean = true
-): string {
+export function generateVoiceHandler(node: Node): string {
   const params = {
+    nodeId: node.id,
     voiceUrl: node.data?.voiceUrl || '',
     mediaCaption: node.data?.mediaCaption || '',
     mediaDuration: node.data?.mediaDuration || 0,
@@ -79,13 +73,9 @@ export function generateVoiceHandler(
 /**
  * Генерирует обработчик администрирования (admin)
  * @param node - Узел администрирования
- * @param enableComments - Включить ли комментарии
  * @returns Сгенерированный Python код
  */
-export function generateAdminHandler(
-  node: Node,
-  enableComments: boolean = true
-): string {
+export function generateAdminHandler(node: Node): string {
   const adminType = node.type as string;
   
   const params: any = {
@@ -101,13 +91,13 @@ export function generateAdminHandler(
     adminTargetUserId: node.data?.adminTargetUserId || '',
     adminUserIdSource: node.data?.adminUserIdSource || 'last_message',
     adminUserVariableName: node.data?.adminUserVariableName || '',
-    // Права администратора
+    // Права администратора (camelCase)
     canManageChat: node.data?.can_manage_chat || false,
     canDeleteMessages: node.data?.can_delete_messages || false,
-    canBanUsers: node.data?.can_ban_users || false,
+    canBanUsers: node.data?.canBanUsers || false,
     canInviteUsers: node.data?.can_invite_users || false,
     canPinMessages: node.data?.can_pin_messages || false,
-    canAddAdmins: node.data?.can_add_admins || false,
+    canAddAdmins: node.data?.canAddAdmins || false,
     canRestrictMembers: node.data?.can_restrict_members || false,
     canPromoteMembers: node.data?.can_promote_members || false,
     canManageVideoChats: node.data?.can_manage_video_chats || false,
