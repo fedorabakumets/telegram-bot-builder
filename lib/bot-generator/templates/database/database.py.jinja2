@@ -5,6 +5,7 @@
   @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей (asyncpg)
 #}
 
+{% if userDatabaseEnabled %}
 async def init_database():
     """Инициализация подключения к базе данных и создание таблиц"""
     global db_pool
@@ -88,7 +89,7 @@ async def update_user_data_in_db(user_id: int, data_key: str, data_value):
                 VALUES ($1)
                 ON CONFLICT (user_id) DO NOTHING
             """, user_id)
-            
+
             update_data = {data_key: data_value}
             await conn.execute("""
                 UPDATE bot_users
@@ -100,3 +101,5 @@ async def update_user_data_in_db(user_id: int, data_key: str, data_value):
     except Exception as e:
         logging.error(f"Ошибка обновления данных пользователя: {e}")
         return False
+
+{% endif %}

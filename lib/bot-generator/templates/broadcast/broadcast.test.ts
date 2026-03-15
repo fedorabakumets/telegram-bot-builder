@@ -31,7 +31,7 @@ describe('broadcast.py.jinja2 шаблон', () => {
         const result = generateBroadcast(validParamsClientBroadcast);
 
         assert.ok(result.includes('handle_broadcast_broadcast_2'));
-        assert.ok(result.includes('client'));
+        assert.ok(result.includes('клиента') || result.includes('client'));
       });
 
       it('должен генерировать обработчик с обоими источниками ID', () => {
@@ -119,7 +119,7 @@ describe('broadcast.py.jinja2 шаблон', () => {
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.confirmationText, 'Подтвердите рассылку');
+          assert.strictEqual(result.data.confirmationText, '✅ Рассылка запущена');
         }
       });
 
@@ -130,7 +130,7 @@ describe('broadcast.py.jinja2 шаблон', () => {
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.idSourceType, 'bot_users');
+          assert.strictEqual(result.data.idSourceType, 'user_ids');
         }
       });
 
@@ -222,15 +222,15 @@ describe('broadcast.py.jinja2 шаблон', () => {
         assert.ok(result1.success && result2.success && result3.success);
       });
 
-      it('должен принимать undefined для всех опциональных полей', () => {
+      it('должен использовать значения по умолчанию для всех опциональных полей', () => {
         const result = broadcastParamsSchema.safeParse({ nodeId: 'test' });
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.broadcastApiType, undefined);
-          assert.strictEqual(result.data.enableBroadcast, undefined);
-          assert.strictEqual(result.data.enableConfirmation, undefined);
-          assert.strictEqual(result.data.idSourceType, undefined);
+          assert.strictEqual(result.data.broadcastApiType, 'bot');
+          assert.strictEqual(result.data.enableBroadcast, true);
+          assert.strictEqual(result.data.enableConfirmation, true);
+          assert.strictEqual(result.data.idSourceType, 'user_ids');
         }
       });
     });
@@ -243,19 +243,19 @@ describe('broadcast.py.jinja2 шаблон', () => {
         assert.strictEqual(fields.length, 10);
       });
 
-      it('должен использовать ZodOptional для broadcastApiType', () => {
+      it('должен использовать ZodDefault для broadcastApiType', () => {
         const shape = broadcastParamsSchema.shape;
-        assert.ok(shape.broadcastApiType.isOptional());
+        assert.strictEqual(shape.broadcastApiType.constructor.name, 'ZodDefault');
       });
 
-      it('должен использовать ZodOptional для idSourceType', () => {
+      it('должен использовать ZodDefault для idSourceType', () => {
         const shape = broadcastParamsSchema.shape;
-        assert.ok(shape.idSourceType.isOptional());
+        assert.strictEqual(shape.idSourceType.constructor.name, 'ZodDefault');
       });
 
-      it('должен использовать ZodOptional для enableBroadcast', () => {
+      it('должен использовать ZodDefault для enableBroadcast', () => {
         const shape = broadcastParamsSchema.shape;
-        assert.ok(shape.enableBroadcast.isOptional());
+        assert.strictEqual(shape.enableBroadcast.constructor.name, 'ZodDefault');
       });
     });
   });

@@ -7,8 +7,8 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров конфигурации */
 export const configParamsSchema = z.object({
-  userDatabaseEnabled: z.boolean().optional(),
-  projectId: z.number().nullable().optional(),
+  userDatabaseEnabled: z.boolean().default(false),
+  projectId: z.number().nullable().default(null),
 });
 
 /** Тип параметров конфигурации (выведен из схемы) */

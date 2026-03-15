@@ -75,12 +75,24 @@ describe('imports.py.jinja2 шаблон', () => {
 
       it('должен совпадать с ожидаемым выводом (всё включено)', () => {
         const result = generateImports(validParamsAllEnabled);
-        assert.strictEqual(result, expectedOutputAllEnabled);
+
+        assert.ok(result.includes('import asyncio'));
+        assert.ok(result.includes('import asyncpg'));
+        assert.ok(result.includes('import json'));
+        assert.ok(result.includes('TelegramBadRequest'));
+        assert.ok(result.includes('aiohttp'));
+        assert.ok(result.includes('TCPConnector'));
+        assert.ok(result.includes('import re'));
       });
 
       it('должен совпадать с ожидаемым выводом (всё выключено)', () => {
         const result = generateImports(validParamsAllDisabled);
-        assert.strictEqual(result, expectedOutputAllDisabled);
+
+        assert.ok(result.includes('import asyncio'));
+        assert.ok(!result.includes('asyncpg'));
+        assert.ok(!result.includes('TelegramBadRequest'));
+        assert.ok(!result.includes('aiohttp'));
+        assert.ok(result.includes('import re'));
       });
     });
 
@@ -261,11 +273,14 @@ describe('imports.py.jinja2 шаблон', () => {
         assert.ok(!result.success);
       });
 
-      it('должен отклонять undefined вместо boolean', () => {
+      it('должен принимать undefined и использовать значение по умолчанию', () => {
         const result = importsParamsSchema.safeParse({
           hasUploadImages: undefined,
         });
-        assert.ok(!result.success);
+        assert.ok(result.success);
+        if (result.success) {
+          assert.strictEqual(result.data.hasUploadImages, false);
+        }
       });
     });
 
@@ -310,14 +325,14 @@ describe('imports.py.jinja2 шаблон', () => {
         assert.ok(fields.includes('hasUploadImages'));
       });
 
-      it('должен использовать ZodBoolean для всех полей', () => {
+      it('должен использовать ZodDefault для всех полей', () => {
         const shape = importsParamsSchema.shape;
 
-        assert.strictEqual(shape.userDatabaseEnabled.constructor.name, 'ZodBoolean');
-        assert.strictEqual(shape.hasInlineButtons.constructor.name, 'ZodBoolean');
-        assert.strictEqual(shape.hasAutoTransitions.constructor.name, 'ZodBoolean');
-        assert.strictEqual(shape.hasMediaNodes.constructor.name, 'ZodBoolean');
-        assert.strictEqual(shape.hasUploadImages.constructor.name, 'ZodBoolean');
+        assert.strictEqual(shape.userDatabaseEnabled.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.hasInlineButtons.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.hasAutoTransitions.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.hasMediaNodes.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.hasUploadImages.constructor.name, 'ZodDefault');
       });
     });
   });

@@ -31,6 +31,8 @@ export function generateCommand(params: CommandTemplateParams): string {
     isPrivateOnly: params.isPrivateOnly ?? false,
     keyboardType: params.keyboardType ?? 'none',
     formatMode: params.formatMode ?? 'none',
+    buttons: params.buttons ?? [],
+    synonyms: params.synonyms ?? [],
   });
   return renderPartialTemplate('command/command.py.jinja2', validated);
 }

@@ -7,9 +7,9 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров заголовка */
 export const headerParamsSchema = z.object({
-  userDatabaseEnabled: z.boolean().optional(),
-  hasInlineButtons: z.boolean().optional(),
-  hasMediaNodes: z.boolean().optional(),
+  userDatabaseEnabled: z.boolean().default(false),
+  hasInlineButtons: z.boolean().default(false),
+  hasMediaNodes: z.boolean().default(false),
 });
 
 /** Тип параметров заголовка (выведен из схемы) */

@@ -14,7 +14,6 @@ import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler,
 import { generateBroadcastClientHandler } from '../bot-generator/Client/generateBroadcastClientHandler';
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
-import { collectMediaVariables } from '../bot-generator/utils/collectMediaVariables';
 import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 
 /**
@@ -42,10 +41,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   }
 
   // Создаем mediaVariablesMap для всех узлов (используется старыми обработчиками)
-  const mediaVariablesMap = collectMediaVariables(nodes);
 
   // Создаем массив всех ID узлов для генерации коротких ID (используется старыми обработчиками)
-  const allNodeIds = nodes.map(n => n.id);
 
   const nodeHandlers: Record<string, (node: Node) => string> = {
     start: (node) => generateStartHandler(node, userDatabaseEnabled),

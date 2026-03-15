@@ -149,7 +149,7 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
     # Условные сообщения будут обработаны отдельно
     # TODO: Интеграция с generateConditionalMessageLogic
     {% endif %}
-    
+
     {# Основное сообщение #}
     {% if fallbackMessage and enableConditionalMessages %}
     text = {{ fallbackMessage|format_python_text }}
@@ -182,6 +182,40 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
     await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
     {% else %}
     await message.answer(text, reply_markup=keyboard)
+    {% endif %}
+
+    {% else %}
+    {# Стандартная обработка без условных сообщений #}
+    {% if messageText %}
+    text = {{ messageText|format_python_text }}
+    {% else %}
+    text = ""
+    {% endif %}
+
+    # Универсальная замена переменных
+    # Инициализация all_user_vars
+    all_user_vars = await init_all_user_vars(user_id)
+
+    # Добавляем переменные из таблиц БД
+    user_ids_record = await get_user_ids_from_db(user_id)
+    if user_ids_record:
+        all_user_vars["user_ids"] = user_ids_record.get("user_ids", [])
+        all_user_vars["user_ids_count"] = user_ids_record.get("count", 0)
+
+    # Заменяем переменные в тексте
+    text = replace_variables_in_text(text, all_user_vars, {})
+
+    {# Клавиатура #}
+    {% include 'keyboard/keyboard.py.jinja2' %}
+
+    {# Отправка сообщения #}
+    {% if formatMode == 'html' %}
+    await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+    {% elif formatMode == 'markdown' %}
+    await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+    {% else %}
+    await message.answer(text, reply_markup=keyboard)
+    {% endif %}
     {% endif %}
 
 {# Обработчики синонимов #}
@@ -233,4 +267,3 @@ async def {{ command|replace('/', '')|safe_name }}_synonym_{{ loop.index }}_hand
     {% endif %}
 
 {% endfor %}
-{% endif %}

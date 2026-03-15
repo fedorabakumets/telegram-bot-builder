@@ -7,11 +7,11 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров импортов */
 export const importsParamsSchema = z.object({
-  userDatabaseEnabled: z.boolean(),
-  hasInlineButtons: z.boolean(),
-  hasAutoTransitions: z.boolean(),
-  hasMediaNodes: z.boolean(),
-  hasUploadImages: z.boolean(),
+  userDatabaseEnabled: z.boolean().default(false),
+  hasInlineButtons: z.boolean().default(false),
+  hasAutoTransitions: z.boolean().default(false),
+  hasMediaNodes: z.boolean().default(false),
+  hasUploadImages: z.boolean().default(false),
 });
 
 /** Тип параметров импортов (выведен из схемы) */
