@@ -82,6 +82,135 @@ describe('admin.py.jinja2 шаблон', () => {
         assert.ok(result1.includes('admin_pin_message_a'));
         assert.ok(result2.includes('admin_ban_user_b'));
       });
+
+      it('должен генерировать callback обработчик для pin_message', () => {
+        const result = generateAdmin(validParamsPinMessage);
+
+        assert.ok(result.includes('@dp.callback_query'));
+        assert.ok(result.includes('admin_callback_admin_1'));
+        assert.ok(result.includes('lambda c: c.data.startswith("admin_pin_message_admin_1_")'));
+      });
+
+      it('должен генерировать callback обработчик для delete_message', () => {
+        const result = generateAdmin(validParamsDeleteMessage);
+
+        assert.ok(result.includes('@dp.callback_query'));
+        assert.ok(result.includes('admin_callback_admin_5'));
+        assert.ok(result.includes('lambda c: c.data.startswith("admin_delete_message_admin_5_")'));
+      });
+
+      it('должен генерировать callback обработчик для ban_user', () => {
+        const result = generateAdmin(validParamsBanUser);
+
+        assert.ok(result.includes('@dp.callback_query'));
+        assert.ok(result.includes('admin_callback_admin_2'));
+        assert.ok(result.includes('lambda c: c.data.startswith("admin_ban_user_admin_2_")'));
+      });
+
+      it('должен генерировать callback обработчик с проверкой типа чата', () => {
+        const result = generateAdmin(validParamsPinMessage);
+
+        assert.ok(result.includes("chat.type not in ['group', 'supergroup']"));
+        assert.ok(result.includes('Команда работает только в группах'));
+      });
+
+      it('должен генерировать callback обработчик с проверкой прав администратора', () => {
+        const result = generateAdmin(validParamsPinMessage);
+
+        assert.ok(result.includes('get_chat_member'));
+        assert.ok(result.includes('creator'));
+        assert.ok(result.includes('administrator'));
+        assert.ok(result.includes('Требуются права администратора'));
+      });
+
+      it('должен генерировать обработчики синонимов', () => {
+        const result = generateAdmin({
+          ...validParamsPinMessage,
+          synonyms: ['закрепить', 'прикрепить', 'pin'],
+        });
+
+        assert.ok(result.includes('@dp.message'));
+        assert.ok(result.includes('message.text.lower() == "закрепить"'));
+        assert.ok(result.includes('message.text.lower() == "прикрепить"'));
+        assert.ok(result.includes('message.text.lower() == "pin"'));
+        assert.ok(result.includes('admin_synonym_admin_1_1'));
+        assert.ok(result.includes('admin_synonym_admin_1_2'));
+        assert.ok(result.includes('admin_synonym_admin_1_3'));
+      });
+
+      it('должен генерировать обработчики синонимов с проверкой типа чата', () => {
+        const result = generateAdmin({
+          ...validParamsPinMessage,
+          synonyms: ['закрепить'],
+        });
+
+        assert.ok(result.includes("message.chat.type in ['group', 'supergroup']"));
+      });
+
+      it('должен генерировать обработчики синонимов с проверкой прав администратора', () => {
+        const result = generateAdmin({
+          ...validParamsPinMessage,
+          synonyms: ['закрепить'],
+        });
+
+        assert.ok(result.includes('get_chat_member'));
+        assert.ok(result.includes('Требуются права администратора'));
+      });
+
+      it('должен генерировать обработчики синонимов для ban_user', () => {
+        const result = generateAdmin({
+          ...validParamsBanUser,
+          synonyms: ['забанить', 'блок'],
+        });
+
+        assert.ok(result.includes('message.text.lower() == "забанить"'));
+        assert.ok(result.includes('message.text.lower() == "блок"'));
+        assert.ok(result.includes('ban_chat_member'));
+      });
+
+      it('должен генерировать обработчики синонимов для kick_user', () => {
+        const result = generateAdmin({
+          ...validParamsBanUser,
+          actionType: 'kick_user',
+          synonyms: ['кик', 'выгнать'],
+        });
+
+        assert.ok(result.includes('message.text.lower() == "кик"'));
+        assert.ok(result.includes('message.text.lower() == "выгнать"'));
+        assert.ok(result.includes('ban_chat_member'));
+        assert.ok(result.includes('unban_chat_member'));
+      });
+
+      it('должен генерировать команду с проверкой типа чата', () => {
+        const result = generateAdmin(validParamsPinMessage);
+
+        assert.ok(result.includes('@dp.message(Command('));
+        assert.ok(result.includes("message.chat.type not in ['group', 'supergroup']"));
+        assert.ok(result.includes('Команда работает только в группах'));
+      });
+
+      it('должен генерировать команду с поддержкой reply на сообщения', () => {
+        const result = generateAdmin(validParamsPinMessage);
+
+        assert.ok(result.includes('message.reply_to_message'));
+        assert.ok(result.includes('message.reply_to_message.message_id'));
+      });
+
+      it('должен генерировать команду с поддержкой указания ID текстом', () => {
+        const result = generateAdmin(validParamsPinMessage);
+
+        assert.ok(result.includes('message.text.split()'));
+        assert.ok(result.includes('text_parts[1].isdigit()'));
+        assert.ok(result.includes('int(text_parts[1])'));
+      });
+
+      it('должен генерировать логирование действий', () => {
+        const result = generateAdmin(validParamsPinMessage);
+
+        assert.ok(result.includes('logging.info'));
+        assert.ok(result.includes('logging.error'));
+        assert.ok(result.includes('Сообщение закреплено пользователем'));
+      });
     });
 
     describe('Невалидные данные', () => {
