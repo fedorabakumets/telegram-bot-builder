@@ -60,4 +60,6 @@ export interface AdminTemplateParams {
   isAnonymous: boolean;
   /** Отправить без уведомления (для pin) */
   disableNotification: boolean;
+  /** Синонимы команды */
+  synonyms: string[];
 }

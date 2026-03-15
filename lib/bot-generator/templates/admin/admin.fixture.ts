@@ -28,6 +28,7 @@ export const validParamsPinMessage: AdminTemplateParams = {
   canManageTopics: false,
   isAnonymous: false,
   disableNotification: true,
+  synonyms: [],
 };
 
 /** Валидные параметры: бан пользователя */
@@ -53,6 +54,7 @@ export const validParamsBanUser: AdminTemplateParams = {
   canManageTopics: false,
   isAnonymous: false,
   disableNotification: false,
+  synonyms: [],
 };
 
 /** Валидные параметры: мут пользователя */
@@ -78,6 +80,7 @@ export const validParamsMuteUser: AdminTemplateParams = {
   canManageTopics: false,
   isAnonymous: false,
   disableNotification: false,
+  synonyms: [],
 };
 
 /** Валидные параметры: продвижение пользователя */
@@ -103,6 +106,7 @@ export const validParamsPromoteUser: AdminTemplateParams = {
   canManageTopics: false,
   isAnonymous: false,
   disableNotification: false,
+  synonyms: [],
 };
 
 /** Валидные параметры: удаление сообщения */
@@ -128,6 +132,7 @@ export const validParamsDeleteMessage: AdminTemplateParams = {
   canManageTopics: false,
   isAnonymous: false,
   disableNotification: false,
+  synonyms: [],
 };
 
 /** Невалидные параметры: неправильный тип */
