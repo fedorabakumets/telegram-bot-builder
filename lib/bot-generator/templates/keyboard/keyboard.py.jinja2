@@ -1,0 +1,55 @@
+{#
+  Шаблон генерации клавиатуры
+
+  @fileoverview Генерирует Python код для создания inline/reply клавиатуры
+  @param {string} keyboardType - Тип клавиатуры: 'inline', 'reply', 'none'
+  @param {array} buttons - Массив кнопок
+  @param {object} keyboardLayout - Раскладка клавиатуры (опционально)
+  @param {boolean} oneTimeKeyboard - Скрыть после использования
+  @param {boolean} resizeKeyboard - Изменить размер под кнопки
+#}
+
+{# Генерация клавиатуры #}
+{% if keyboardType == 'inline' and buttons|length > 0 %}
+builder = InlineKeyboardBuilder()
+{% for btn in buttons %}
+{% if btn.action == 'url' %}
+builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, url="{{ btn.url or btn.target }}"))
+{% elif btn.action == 'selection' %}
+builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="select_{{ btn.id or btn.target }}"))
+{% elif btn.action == 'goto' %}
+builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.target or btn.id }}_btn_{{ loop.index0 }}"))
+{% elif btn.action == 'command' %}
+builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="cmd_{{ btn.target|replace('/', '') or 'unknown' }}"))
+{% else %}
+builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.id or btn.target }}"))
+{% endif %}
+{% endfor %}
+
+{# Настройка раскладки если указана #}
+{% if keyboardLayout and not keyboardLayout.autoLayout %}
+{# Ручная раскладка по рядам #}
+{% for row in keyboardLayout.rows %}
+# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
+{% endfor %}
+{% elif keyboardLayout and keyboardLayout.autoLayout %}
+# Авто-раскладка: {{ keyboardLayout.columns }} колонок
+{% endif %}
+
+keyboard = builder.as_markup()
+
+{% elif keyboardType == 'reply' and buttons|length > 0 %}
+builder = ReplyKeyboardBuilder()
+{% for btn in buttons %}
+builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
+{% endfor %}
+
+{# Настройки reply клавиатуры #}
+keyboard = builder.as_markup(
+    resize_keyboard={{ resizeKeyboard|lower }},
+    one_time_keyboard={{ oneTimeKeyboard|lower }}
+)
+
+{% else %}
+keyboard = None
+{% endif %}

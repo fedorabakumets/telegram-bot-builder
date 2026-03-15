@@ -5,6 +5,7 @@
 
 import type { Button } from '../transitions/types/button-response-config-types';
 import type { ConditionalMessage } from '../node-navigation/handle-conditional-messages';
+import type { KeyboardLayout } from '../types/keyboard-layout';
 
 /** Тип клавиатуры */
 export type KeyboardType = 'inline' | 'reply' | 'none';
@@ -38,6 +39,12 @@ export interface CommandTemplateParams {
   fallbackMessage: string;
   /** Тип клавиатуры */
   keyboardType: KeyboardType;
+  /** Раскладка клавиатуры */
+  keyboardLayout?: KeyboardLayout;
+  /** Клавиатура скрывается после использования */
+  oneTimeKeyboard: boolean;
+  /** Изменить размер клавиатуры под кнопки */
+  resizeKeyboard: boolean;
   /** Кнопки */
   buttons: Button[];
   /** Режим форматирования */

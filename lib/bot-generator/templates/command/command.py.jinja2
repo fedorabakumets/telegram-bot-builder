@@ -173,29 +173,7 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
     text = replace_variables_in_text(text, all_user_vars, {})
 
     {# Клавиатура #}
-    {% if keyboardType == 'inline' and buttons|length > 0 %}
-    builder = InlineKeyboardBuilder()
-    {% for btn in buttons %}
-    {% if btn.action == 'url' %}
-    builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, url="{{ btn.target }}"))
-    {% elif btn.action == 'callback' %}
-    builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.target }}"))
-    {% else %}
-    builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.id or btn.target }}"))
-    {% endif %}
-    {% endfor %}
-    keyboard = builder.as_markup()
-
-    {% elif keyboardType == 'reply' and buttons|length > 0 %}
-    builder = ReplyKeyboardBuilder()
-    {% for btn in buttons %}
-    builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
-    {% endfor %}
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-
-    {% else %}
-    keyboard = None
-    {% endif %}
+    {% include 'keyboard/keyboard.py.jinja2' %}
 
     {# Отправка сообщения #}
     {% if formatMode == 'html' %}
@@ -243,21 +221,7 @@ async def {{ command|replace('/', '')|safe_name }}_synonym_{{ loop.index }}_hand
     text = replace_variables_in_text(text, all_user_vars, {})
 
     {# Клавиатура #}
-    {% if keyboardType == 'inline' and buttons|length > 0 %}
-    builder = InlineKeyboardBuilder()
-    {% for btn in buttons %}
-    builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.id or btn.target }}"))
-    {% endfor %}
-    keyboard = builder.as_markup()
-    {% elif keyboardType == 'reply' and buttons|length > 0 %}
-    builder = ReplyKeyboardBuilder()
-    {% for btn in buttons %}
-    builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
-    {% endfor %}
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    {% else %}
-    keyboard = None
-    {% endif %}
+    {% include 'keyboard/keyboard.py.jinja2' %}
 
     {# Отправка сообщения #}
     {% if formatMode == 'html' %}

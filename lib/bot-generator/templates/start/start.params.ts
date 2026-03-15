@@ -4,6 +4,7 @@
  */
 
 import type { Button } from '../../transitions/types/button-response-config-types';
+import type { KeyboardLayout } from '../types/keyboard-layout';
 
 /** Тип клавиатуры */
 export type KeyboardType = 'inline' | 'reply' | 'none';
@@ -35,6 +36,12 @@ export interface StartTemplateParams {
   buttons: Button[];
   /** Тип клавиатуры */
   keyboardType: KeyboardType;
+  /** Раскладка клавиатуры */
+  keyboardLayout?: KeyboardLayout;
+  /** Клавиатура скрывается после использования */
+  oneTimeKeyboard: boolean;
+  /** Изменить размер клавиатуры под кнопки */
+  resizeKeyboard: boolean;
   /** Автопереход включен */
   enableAutoTransition: boolean;
   /** Цель автоперехода */
