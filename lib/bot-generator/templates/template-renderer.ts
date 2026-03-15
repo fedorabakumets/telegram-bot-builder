@@ -214,28 +214,6 @@ export function renderPartialTemplate(
 }
 
 /**
- * Рендерит макрос из файла
- * Используется для тестирования макросов
- *
- * @param macroFile - Имя файла с макросом
- * @param macroName - Имя макроса
- * @param args - Аргументы для макроса
- * @returns Сгенерированный код
- */
-export function renderMacro(
-  macroFile: string,
-  macroName: string,
-  args: Record<string, any>
-): string {
-  const environment = initEnvironment();
-  
-  // Создаём функцию которая возвращает результат вызова макроса
-  const templateSource = `{% from 'macros/${macroFile}' import ${macroName} %}{{ ${macroName}(${JSON.stringify(args)}) }}`;
-  
-  return environment.renderString(templateSource, args);
-}
-
-/**
  * Проверяет существование шаблона
  *
  * @param templateName - Имя шаблона

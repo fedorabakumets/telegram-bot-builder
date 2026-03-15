@@ -60,10 +60,8 @@ start - Запустить бота{% endif %}
 
 {# Обработчики узлов #}
 {% block handlers %}
-{% for node in nodes %}
-{% from 'macros/handler.py.jinja2' import render_node_handler %}
-{{ render_node_handler(node, enableComments) }}
-{% endfor %}
+{# Обработчики генерируются отдельно для каждого типа узла #}
+{# См. lib/bot-generator/templates/{start,command,callback,...}.py.jinja2 #}
 {% endblock %}
 
 {# Универсальные обработчики #}
