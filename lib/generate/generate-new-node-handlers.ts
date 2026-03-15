@@ -79,7 +79,9 @@ export function generateAdminHandler(node: Node): string {
   const adminType = node.type as string;
   
   const params: any = {
+    nodeId: node.id,
     actionType: adminType,
+    synonyms: node.data?.synonyms || [],
     targetMessageId: node.data?.targetMessageId || '',
     messageIdSource: node.data?.messageIdSource || 'last_message',
     targetUserId: node.data?.targetUserId || '',
