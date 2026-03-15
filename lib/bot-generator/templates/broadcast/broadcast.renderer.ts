@@ -24,6 +24,11 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateBroadcast(params: BroadcastTemplateParams): string {
-  const validated = broadcastParamsSchema.parse(params);
+  const validated = broadcastParamsSchema.parse({
+    ...params,
+    broadcastApiType: params.broadcastApiType ?? 'bot',
+    enableBroadcast: params.enableBroadcast ?? false,
+    idSourceType: params.idSourceType ?? 'bot_users',
+  });
   return renderPartialTemplate('broadcast/broadcast.py.jinja2', validated);
 }

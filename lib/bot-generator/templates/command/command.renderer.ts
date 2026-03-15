@@ -26,6 +26,11 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateCommand(params: CommandTemplateParams): string {
-  const validated = commandParamsSchema.parse(params);
+  const validated = commandParamsSchema.parse({
+    ...params,
+    isPrivateOnly: params.isPrivateOnly ?? false,
+    keyboardType: params.keyboardType ?? 'none',
+    formatMode: params.formatMode ?? 'none',
+  });
   return renderPartialTemplate('command/command.py.jinja2', validated);
 }

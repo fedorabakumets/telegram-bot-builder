@@ -6,5 +6,5 @@
 /** Параметры для генерации middleware */
 export interface MiddlewareTemplateParams {
   /** Включена ли база данных пользователей */
-  userDatabaseEnabled: boolean;
+  userDatabaseEnabled?: boolean;
 }

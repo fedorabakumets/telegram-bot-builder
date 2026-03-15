@@ -21,6 +21,10 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateConfig(params: ConfigTemplateParams): string {
-  const validated = configParamsSchema.parse(params);
+  const validated = configParamsSchema.parse({
+    ...params,
+    userDatabaseEnabled: params.userDatabaseEnabled ?? false,
+    projectId: params.projectId ?? null,
+  });
   return renderPartialTemplate('config/config.py.jinja2', validated);
 }

@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров клавиатуры */
 export const keyboardParamsSchema = z.object({
-  keyboardType: z.enum(['inline', 'reply', 'none']).default('none'),
+  keyboardType: z.enum(['inline', 'reply', 'none']),
   buttons: z.array(z.object({
     id: z.string(),
     text: z.string(),
@@ -22,8 +22,8 @@ export const keyboardParamsSchema = z.object({
     columns: z.number(),
     autoLayout: z.boolean(),
   }).optional(),
-  oneTimeKeyboard: z.boolean().default(false),
-  resizeKeyboard: z.boolean().default(true),
+  oneTimeKeyboard: z.boolean(),
+  resizeKeyboard: z.boolean(),
 });
 
 export type KeyboardParams = z.infer<typeof keyboardParamsSchema>;

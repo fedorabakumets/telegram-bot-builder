@@ -11,7 +11,7 @@ export const voiceParamsSchema = z.object({
   voiceUrl: z.string().default(''),
   mediaCaption: z.string().default(''),
   mediaDuration: z.number().optional(),
-  disableNotification: z.boolean().default(false),
+  disableNotification: z.boolean(),
 });
 
 /** Тип параметров голосового сообщения (выведен из схемы) */

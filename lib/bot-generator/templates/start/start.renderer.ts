@@ -25,6 +25,11 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateStart(params: StartTemplateParams): string {
-  const validated = startParamsSchema.parse(params);
+  const validated = startParamsSchema.parse({
+    ...params,
+    isPrivateOnly: params.isPrivateOnly ?? false,
+    keyboardType: params.keyboardType ?? 'none',
+    formatMode: params.formatMode ?? 'none',
+  });
   return renderPartialTemplate('start/start.py.jinja2', validated);
 }

@@ -23,6 +23,19 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateAdmin(params: AdminTemplateParams): string {
-  const validated = adminParamsSchema.parse(params);
+  const validated = adminParamsSchema.parse({
+    ...params,
+    canManageChat: params.canManageChat ?? false,
+    canDeleteMessages: params.canDeleteMessages ?? false,
+    canManageVideoChats: params.canManageVideoChats ?? false,
+    canRestrictMembers: params.canRestrictMembers ?? false,
+    canPromoteMembers: params.canPromoteMembers ?? false,
+    canChangeInfo: params.canChangeInfo ?? false,
+    canInviteUsers: params.canInviteUsers ?? false,
+    canPinMessages: params.canPinMessages ?? false,
+    canManageTopics: params.canManageTopics ?? false,
+    isAnonymous: params.isAnonymous ?? false,
+    disableNotification: params.disableNotification ?? false,
+  });
   return renderPartialTemplate('admin/admin.py.jinja2', validated);
 }

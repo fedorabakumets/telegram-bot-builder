@@ -8,13 +8,13 @@ export interface StickerTemplateParams {
   /** Уникальный идентификатор узла */
   nodeId: string;
   /** URL стикера для отправки */
-  stickerUrl: string;
+  stickerUrl?: string;
   /** File ID стикера */
-  stickerFileId: string;
+  stickerFileId?: string;
   /** Название набора стикеров */
-  stickerSetName: string;
+  stickerSetName?: string;
   /** Подпись к стикеру */
-  mediaCaption: string;
+  mediaCaption?: string;
   /** Отправить без уведомления */
-  disableNotification: boolean;
+  disableNotification?: boolean;
 }

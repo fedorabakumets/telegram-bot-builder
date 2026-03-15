@@ -6,5 +6,5 @@
 /** Параметры для генерации универсальных обработчиков */
 export interface UniversalHandlersTemplateParams {
   /** Включена ли база данных пользователей */
-  userDatabaseEnabled: boolean;
+  userDatabaseEnabled?: boolean;
 }

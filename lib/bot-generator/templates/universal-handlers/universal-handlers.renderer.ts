@@ -20,6 +20,9 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateUniversalHandlers(params: UniversalHandlersTemplateParams): string {
-  const validated = universalHandlersParamsSchema.parse(params);
+  const validated = universalHandlersParamsSchema.parse({
+    ...params,
+    userDatabaseEnabled: params.userDatabaseEnabled ?? false,
+  });
   return renderPartialTemplate('universal-handlers/universal-handlers.py.jinja2', validated);
 }

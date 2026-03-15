@@ -23,11 +23,20 @@ async function runTests() {
 
   // Ищем все .test.ts файлы в lib/tests (unit и integration)
   const testDir = join(__dirname, 'lib', 'tests');
+  
+  // Ищем все .test.ts файлы в lib/bot-generator/templates (шаблоны)
+  const templatesDir = join(__dirname, 'lib', 'bot-generator', 'templates');
 
   try {
-    // Ищем unit тесты
+    // Ищем unit тесты в lib/tests
     for await (const file of glob('**/*.test.ts', { cwd: testDir })) {
       const fullPath = join(testDir, file);
+      testFiles.push(fullPath);
+    }
+    
+    // Ищем тесты шаблонов в lib/bot-generator/templates
+    for await (const file of glob('**/*.test.ts', { cwd: templatesDir })) {
+      const fullPath = join(templatesDir, file);
       testFiles.push(fullPath);
     }
   } catch (error) {

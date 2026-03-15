@@ -6,5 +6,5 @@
 /** Параметры для генерации функции запуска бота */
 export interface MainTemplateParams {
   /** Включена ли база данных пользователей */
-  userDatabaseEnabled: boolean;
+  userDatabaseEnabled?: boolean;
 }

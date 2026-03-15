@@ -20,45 +20,45 @@ export interface CommandTemplateParams {
   /** Команда (например, "/help") */
   command: string;
   /** Текст сообщения */
-  messageText: string;
+  messageText?: string;
   /** Только приватные чаты */
-  isPrivateOnly: boolean;
+  isPrivateOnly?: boolean;
   /** Только администраторы */
-  adminOnly: boolean;
+  adminOnly?: boolean;
   /** Требуется авторизация */
-  requiresAuth: boolean;
+  requiresAuth?: boolean;
   /** База данных пользователей включена */
-  userDatabaseEnabled: boolean;
+  userDatabaseEnabled?: boolean;
   /** Синонимы команды */
-  synonyms: string[];
+  synonyms?: string[];
   /** Условные сообщения включены */
-  enableConditionalMessages: boolean;
+  enableConditionalMessages?: boolean;
   /** Условные сообщения */
-  conditionalMessages: ConditionalMessage[];
+  conditionalMessages?: ConditionalMessage[];
   /** Запасное сообщение */
-  fallbackMessage: string;
+  fallbackMessage?: string;
   /** Тип клавиатуры */
-  keyboardType: KeyboardType;
+  keyboardType?: KeyboardType;
   /** Раскладка клавиатуры */
   keyboardLayout?: KeyboardLayout;
   /** Клавиатура скрывается после использования */
-  oneTimeKeyboard: boolean;
+  oneTimeKeyboard?: boolean;
   /** Изменить размер клавиатуры под кнопки */
-  resizeKeyboard: boolean;
+  resizeKeyboard?: boolean;
   /** Кнопки */
-  buttons: Button[];
+  buttons?: Button[];
   /** Режим форматирования */
-  formatMode: FormatMode;
+  formatMode?: FormatMode;
   /** Markdown включён */
-  markdown: boolean;
+  markdown?: boolean;
   /** URL изображения */
-  imageUrl: string;
+  imageUrl?: string;
   /** URL документа */
-  documentUrl: string;
+  documentUrl?: string;
   /** URL видео */
-  videoUrl: string;
+  videoUrl?: string;
   /** URL аудио */
-  audioUrl: string;
+  audioUrl?: string;
   /** Прикреплённые медиа переменные */
-  attachedMedia: string[];
+  attachedMedia?: string[];
 }

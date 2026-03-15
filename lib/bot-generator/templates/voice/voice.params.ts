@@ -8,11 +8,11 @@ export interface VoiceTemplateParams {
   /** Уникальный идентификатор узла */
   nodeId: string;
   /** URL голосового сообщения для отправки */
-  voiceUrl: string;
+  voiceUrl?: string;
   /** Подпись к голосовому сообщению */
-  mediaCaption: string;
+  mediaCaption?: string;
   /** Длительность голосового сообщения в секундах */
-  mediaDuration: number;
+  mediaDuration?: number;
   /** Отправить без уведомления */
-  disableNotification: boolean;
+  disableNotification?: boolean;
 }

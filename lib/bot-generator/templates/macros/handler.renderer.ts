@@ -25,6 +25,9 @@ import { renderMacro } from '../template-renderer';
  * ```
  */
 export function renderHandlerMacro(params: HandlerMacroParams): string {
-  const validated = handlerMacroParamsSchema.parse(params);
+  const validated = handlerMacroParamsSchema.parse({
+    ...params,
+    enableComments: params.enableComments ?? false,
+  });
   return renderMacro('handler.py.jinja2', 'render_node_handler', validated);
 }

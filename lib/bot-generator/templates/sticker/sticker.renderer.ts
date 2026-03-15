@@ -22,6 +22,9 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateSticker(params: StickerTemplateParams): string {
-  const validated = stickerParamsSchema.parse(params);
+  const validated = stickerParamsSchema.parse({
+    ...params,
+    disableNotification: params.disableNotification ?? false,
+  });
   return renderPartialTemplate('sticker/sticker.py.jinja2', validated);
 }

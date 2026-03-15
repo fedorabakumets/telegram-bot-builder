@@ -6,13 +6,13 @@
 /** Параметры для генерации Python импортов */
 export interface ImportsTemplateParams {
   /** Включена ли база данных пользователей (asyncpg, json) */
-  userDatabaseEnabled: boolean;
+  userDatabaseEnabled?: boolean;
   /** Есть ли inline кнопки (нужен TelegramBadRequest) */
-  hasInlineButtons: boolean;
+  hasInlineButtons?: boolean;
   /** Есть ли автопереходы (нужен TelegramBadRequest) */
-  hasAutoTransitions: boolean;
+  hasAutoTransitions?: boolean;
   /** Есть ли узлы с медиа (нужен aiohttp) */
-  hasMediaNodes: boolean;
+  hasMediaNodes?: boolean;
   /** Есть ли ссылки на /uploads/ (нужен aiohttp) */
-  hasUploadImages: boolean;
+  hasUploadImages?: boolean;
 }

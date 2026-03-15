@@ -23,6 +23,9 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateVoice(params: VoiceTemplateParams): string {
-  const validated = voiceParamsSchema.parse(params);
+  const validated = voiceParamsSchema.parse({
+    ...params,
+    disableNotification: params.disableNotification ?? false,
+  });
   return renderPartialTemplate('voice/voice.py.jinja2', validated);
 }

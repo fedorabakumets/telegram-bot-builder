@@ -17,49 +17,49 @@ export interface StartTemplateParams {
   /** Уникальный идентификатор узла */
   nodeId: string;
   /** Текст сообщения */
-  messageText: string;
+  messageText?: string;
   /** Только приватные чаты */
-  isPrivateOnly: boolean;
+  isPrivateOnly?: boolean;
   /** Только администраторы */
-  adminOnly: boolean;
+  adminOnly?: boolean;
   /** Требуется авторизация */
-  requiresAuth: boolean;
+  requiresAuth?: boolean;
   /** База данных пользователей включена */
-  userDatabaseEnabled: boolean;
+  userDatabaseEnabled?: boolean;
   /** Синонимы команды */
-  synonyms: string[];
+  synonyms?: string[];
   /** Множественный выбор включен */
-  allowMultipleSelection: boolean;
+  allowMultipleSelection?: boolean;
   /** Переменная для хранения выбора */
-  multiSelectVariable: string;
+  multiSelectVariable?: string;
   /** Кнопки */
-  buttons: Button[];
+  buttons?: Button[];
   /** Тип клавиатуры */
-  keyboardType: KeyboardType;
+  keyboardType?: KeyboardType;
   /** Раскладка клавиатуры */
   keyboardLayout?: KeyboardLayout;
   /** Клавиатура скрывается после использования */
-  oneTimeKeyboard: boolean;
+  oneTimeKeyboard?: boolean;
   /** Изменить размер клавиатуры под кнопки */
-  resizeKeyboard: boolean;
+  resizeKeyboard?: boolean;
   /** Автопереход включен */
-  enableAutoTransition: boolean;
+  enableAutoTransition?: boolean;
   /** Цель автоперехода */
-  autoTransitionTo: string;
+  autoTransitionTo?: string;
   /** Сбор пользовательского ввода */
-  collectUserInput: boolean;
+  collectUserInput?: boolean;
   /** Режим форматирования */
-  formatMode: FormatMode;
+  formatMode?: FormatMode;
   /** Markdown включён */
-  markdown: boolean;
+  markdown?: boolean;
   /** URL изображения */
-  imageUrl: string;
+  imageUrl?: string;
   /** URL документа */
-  documentUrl: string;
+  documentUrl?: string;
   /** URL видео */
-  videoUrl: string;
+  videoUrl?: string;
   /** URL аудио */
-  audioUrl: string;
+  audioUrl?: string;
   /** Прикреплённые медиа переменные */
-  attachedMedia: string[];
+  attachedMedia?: string[];
 }

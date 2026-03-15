@@ -20,6 +20,11 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateHeader(params: HeaderTemplateParams): string {
-  const validated = headerParamsSchema.parse(params);
+  const validated = headerParamsSchema.parse({
+    ...params,
+    userDatabaseEnabled: params.userDatabaseEnabled ?? false,
+    hasInlineButtons: params.hasInlineButtons ?? false,
+    hasMediaNodes: params.hasMediaNodes ?? false,
+  });
   return renderPartialTemplate('header/header.py.jinja2', validated);
 }

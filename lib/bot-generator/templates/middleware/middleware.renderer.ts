@@ -20,6 +20,9 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateMiddleware(params: MiddlewareTemplateParams): string {
-  const validated = middlewareParamsSchema.parse(params);
+  const validated = middlewareParamsSchema.parse({
+    ...params,
+    userDatabaseEnabled: params.userDatabaseEnabled ?? false,
+  });
   return renderPartialTemplate('middleware/middleware.py.jinja2', validated);
 }

@@ -12,13 +12,13 @@ export type KeyboardType = 'inline' | 'reply' | 'none';
 /** Параметры для генерации клавиатуры */
 export interface KeyboardTemplateParams {
   /** Тип клавиатуры */
-  keyboardType: KeyboardType;
+  keyboardType?: KeyboardType;
   /** Кнопки */
-  buttons: Button[];
+  buttons?: Button[];
   /** Раскладка клавиатуры */
   keyboardLayout?: KeyboardLayout;
   /** Клавиатура скрывается после использования */
-  oneTimeKeyboard: boolean;
+  oneTimeKeyboard?: boolean;
   /** Изменить размер клавиатуры под кнопки */
-  resizeKeyboard: boolean;
+  resizeKeyboard?: boolean;
 }

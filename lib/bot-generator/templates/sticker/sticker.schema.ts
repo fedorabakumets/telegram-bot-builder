@@ -12,7 +12,7 @@ export const stickerParamsSchema = z.object({
   stickerFileId: z.string().default(''),
   stickerSetName: z.string().default(''),
   mediaCaption: z.string().default(''),
-  disableNotification: z.boolean().default(false),
+  disableNotification: z.boolean(),
 });
 
 /** Тип параметров стикера (выведен из схемы) */

@@ -22,6 +22,13 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateImports(params: ImportsTemplateParams): string {
-  const validated = importsParamsSchema.parse(params);
+  const validated = importsParamsSchema.parse({
+    ...params,
+    userDatabaseEnabled: params.userDatabaseEnabled ?? false,
+    hasInlineButtons: params.hasInlineButtons ?? false,
+    hasAutoTransitions: params.hasAutoTransitions ?? false,
+    hasMediaNodes: params.hasMediaNodes ?? false,
+    hasUploadImages: params.hasUploadImages ?? false,
+  });
   return renderPartialTemplate('imports/imports.py.jinja2', validated);
 }

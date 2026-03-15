@@ -23,43 +23,43 @@ export interface AdminTemplateParams {
   /** Тип административного действия */
   adminActionType: AdminActionType;
   /** ID целевого сообщения */
-  targetMessageId: string;
+  targetMessageId?: string;
   /** Источник ID сообщения: 'manual', 'variable', 'last_message' */
-  messageIdSource: 'manual' | 'variable' | 'last_message';
+  messageIdSource?: 'manual' | 'variable' | 'last_message';
   /** ID целевого пользователя */
-  targetUserId: string;
+  targetUserId?: string;
   /** Источник ID пользователя: 'manual', 'variable', 'last_message' */
-  userIdSource: 'manual' | 'variable' | 'last_message';
+  userIdSource?: 'manual' | 'variable' | 'last_message';
   /** Дата окончания ограничения (timestamp) */
-  untilDate: number;
+  untilDate?: number;
   /** Причина действия */
-  reason: string;
+  reason?: string;
   /** Длительность мута в секундах */
-  muteDuration: number;
+  muteDuration?: number;
   /** ID пользователя для продвижения/понижения */
-  adminTargetUserId: string;
+  adminTargetUserId?: string;
   /** Право управления чатом */
-  canManageChat: boolean;
+  canManageChat?: boolean;
   /** Право удаления сообщений */
-  canDeleteMessages: boolean;
+  canDeleteMessages?: boolean;
   /** Право управления видеочатами */
-  canManageVideoChats: boolean;
+  canManageVideoChats?: boolean;
   /** Право ограничения участников */
-  canRestrictMembers: boolean;
+  canRestrictMembers?: boolean;
   /** Право продвижения участников */
-  canPromoteMembers: boolean;
+  canPromoteMembers?: boolean;
   /** Право изменения информации */
-  canChangeInfo: boolean;
+  canChangeInfo?: boolean;
   /** Право приглашения пользователей */
-  canInviteUsers: boolean;
+  canInviteUsers?: boolean;
   /** Право закрепления сообщений */
-  canPinMessages: boolean;
+  canPinMessages?: boolean;
   /** Право управления темами */
-  canManageTopics: boolean;
+  canManageTopics?: boolean;
   /** Анонимный администратор */
-  isAnonymous: boolean;
+  isAnonymous?: boolean;
   /** Отправить без уведомления (для pin) */
-  disableNotification: boolean;
+  disableNotification?: boolean;
   /** Синонимы команды */
-  synonyms: string[];
+  synonyms?: string[];
 }

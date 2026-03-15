@@ -24,5 +24,5 @@ export interface HandlerMacroParams {
     };
   };
   /** Включить ли комментарии в коде */
-  enableComments: boolean;
+  enableComments?: boolean;
 }

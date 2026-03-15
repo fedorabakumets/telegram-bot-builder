@@ -6,7 +6,7 @@
 /** Параметры для генерации конфигурации бота */
 export interface ConfigTemplateParams {
   /** Включена ли база данных пользователей (asyncpg, json) */
-  userDatabaseEnabled: boolean;
+  userDatabaseEnabled?: boolean;
   /** ID проекта для сохранения в базу данных */
-  projectId: number | null;
+  projectId?: number | null;
 }
