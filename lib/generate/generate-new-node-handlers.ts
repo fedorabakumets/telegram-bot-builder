@@ -136,6 +136,12 @@ export function generateCommandHandler(
     buttons: node.data?.buttons || [],
     formatMode: node.data?.formatMode || 'none',
     markdown: node.data?.markdown || false,
+    fallbackMessage: node.data?.fallbackMessage || '',
+    imageUrl: node.data?.imageUrl || '',
+    documentUrl: node.data?.documentUrl || '',
+    videoUrl: node.data?.videoUrl || '',
+    audioUrl: node.data?.audioUrl || '',
+    attachedMedia: node.data?.attachedMedia || [],
     userDatabaseEnabled,
   };
 

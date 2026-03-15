@@ -50,7 +50,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   const nodeHandlers: Record<string, (node: Node) => string> = {
     start: (node) => generateStartHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
-    command: (node) => generateCommandHandler(node, userDatabaseEnabled, mediaVariablesMap, allNodeIds),
+    command: (node) => generateCommandHandler(node, userDatabaseEnabled),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,
     animation: generateAnimationHandler,
