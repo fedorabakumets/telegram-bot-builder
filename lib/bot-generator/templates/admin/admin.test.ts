@@ -171,7 +171,7 @@ describe('admin.py.jinja2 шаблон', () => {
       it('должен генерировать обработчики синонимов для kick_user', () => {
         const result = generateAdmin({
           ...validParamsBanUser,
-          actionType: 'kick_user',
+          adminActionType: 'kick_user',
           synonyms: ['кик', 'выгнать'],
         });
 
