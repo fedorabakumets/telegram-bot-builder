@@ -134,15 +134,20 @@ async def start_handler(message: types.Message):
         all_user_vars["user_ids_count"] = user_ids_record.get("count", 0)
     text = replace_variables_in_text(text, all_user_vars, {})
 
+
     {# Клавиатура #}
     {%- include 'keyboard/keyboard.py.jinja2' %}
 
+
     {# Отправка сообщения #}
     {%- if formatMode == 'html' %}
+
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
     {%- elif formatMode == 'markdown' %}
+
     await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
     {%- else %}
+
     await message.answer(text, reply_markup=keyboard)
     {%- endif %}
 
