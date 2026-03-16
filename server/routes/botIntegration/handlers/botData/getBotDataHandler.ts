@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Обрабатывает запрос на получение данных бота
@@ -60,18 +61,18 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
 
         if (shouldSync) {
             try {
-                // Получаем информацию из Telegram API
+                // Получаем информацию из Telegram API через прокси
                 const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getMe`;
-                const response = await fetch(telegramApiUrl);
+                const response = await fetchWithProxy(telegramApiUrl);
                 const result = await response.json();
 
                 if (response.ok && result.result) {
                     const botInfo = result.result;
                     let photoUrl: string | null = null;
 
-                    // Получаем фото бота через getUserProfilePhotos
+                    // Получаем фото бота через getUserProfilePhotos через прокси
                     try {
-                        const photoResponse = await fetch(
+                        const photoResponse = await fetchWithProxy(
                             `https://api.telegram.org/bot${defaultToken.token}/getUserProfilePhotos`,
                             {
                                 method: 'POST',
@@ -87,7 +88,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
                         if (photoResponse.ok && photoResult.result?.total_count > 0 && photoResult.result.photos?.[0]?.length > 0) {
                             const fileId = photoResult.result.photos[0][photoResult.result.photos[0].length - 1].file_id;
 
-                            const fileResponse = await fetch(
+                            const fileResponse = await fetchWithProxy(
                                 `https://api.telegram.org/bot${defaultToken.token}/getFile`,
                                 {
                                     method: 'POST',

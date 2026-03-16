@@ -559,28 +559,40 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Parse bot information from Telegram API
   app.post("/api/projects/:id/tokens/parse", async (req, res) => {
+    console.log(`\n[📋 Routes] ==========================================`);
+    console.log(`[📋 Routes] ЗАПРОС: POST /api/projects/:id/tokens/parse`);
+    console.log(`[📋 Routes] Файл: server/routes/routes.ts`);
+    console.log(`[📋 Routes] Время: ${new Date().toISOString()}`);
+    console.log(`[📋 Routes] ==========================================`);
+    
     try {
       const { token } = req.body;
+      console.log(`[📋 Routes] Получены данные из req.body:`);
+      console.log(`  - token: ${token ? 'есть' : 'НЕТ (ошибка!)'}`);
+      console.log(`  - длина токена: ${token?.length || 0}`);
 
       if (!token) {
+        console.log(`[❌ Routes] Ошибка: токен не предоставлен`);
         return res.status(400).json({ message: "Token is required" });
       }
 
-      // Mask token for logging (show only first 8 and last 4 chars)
+      // Маскировка токена для логирования
       const maskedToken = token.length > 12
         ? `${token.slice(0, 8)}...${token.slice(-4)}`
         : '***';
 
-      console.log(`[Telegram API] Parsing bot info for token: ${maskedToken}`);
-      console.log(`[Telegram API] Request URL: https://api.telegram.org/bot${maskedToken}/getMe`);
-      console.log(`[Telegram API] Using undici ProxyAgent`);
+      console.log(`[📋 Routes] Маскированный токен: ${maskedToken}`);
+      console.log(`[📋 Routes] Вызываем fetchWithProxy для getMe...`);
 
       // Get bot information via Telegram Bot API
       const telegramApiUrl = `https://api.telegram.org/bot${token}/getMe`;
       const startTime = Date.now();
+      console.log(`[📋 Routes] URL запроса: ${telegramApiUrl}`);
+      console.log(`[📋 Routes] Таймаут: 10000ms`);
 
       let response;
       try {
+        console.log(`[📋 Routes] Вызов fetchWithProxy...`);
         response = await fetchWithProxy(telegramApiUrl, {
           method: 'GET',
           headers: {
@@ -589,13 +601,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           // Add timeout signal
           signal: AbortSignal.timeout(10000),
         });
+        console.log(`[📋 Routes] fetchWithProxy вернул ответ, статус: ${response.status}`);
       } catch (fetchError) {
+        console.error(`[❌ Routes] fetchWithProxy выбросил ошибку!`);
         const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown fetch error';
         const errorCause = fetchError instanceof Error && 'cause' in fetchError
           ? (fetchError.cause as Error)?.message || fetchError.cause
           : 'No cause';
 
-        console.error(`[Telegram API] Fetch failed for ${maskedToken}:`);
+        console.error(`[❌ Telegram] Fetch failed for ${maskedToken}:`);
         console.error(`  - Error: ${errorMessage}`);
         console.error(`  - Cause: ${errorCause}`);
         console.error(`  - Time: ${Date.now() - startTime}ms`);
@@ -615,19 +629,22 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       const duration = Date.now() - startTime;
-      console.log(`[Telegram API] Response received in ${duration}ms, status: ${response.status}`);
+      console.log(`[✅ Routes] Response received in ${duration}ms, status: ${response.status}`);
 
       const result = await response.json();
+      console.log(`[📋 Routes] Распарсили JSON ответ:`);
+      console.log(`  - ok: ${result.ok}`);
+      console.log(`  - result: ${JSON.stringify(result.result, null, 2).substring(0, 200)}...`);
 
       if (!response.ok) {
-        console.warn(`[Telegram API] Bot token validation failed for ${maskedToken}: ${result.description || 'Unknown error'}`);
+        console.warn(`[❌ Routes] Bot token validation failed for ${maskedToken}: ${result.description || 'Unknown error'}`);
         return res.status(400).json({
           message: "Invalid bot token or failed to get bot info",
           error: result.description || "Unknown error"
         });
       }
 
-      console.log(`[Telegram API] Bot info retrieved successfully: @${result.result.username}`);
+      console.log(`[✅ Routes] Bot info retrieved successfully: @${result.result.username}`);
       const botInfo = result.result;
 
       // Get bot description and short description
@@ -1578,7 +1595,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         mkdirSync(uploadDir, { recursive: true });
       }
 
-      // Обрабатываем каждый URL
+      // Обра��атываем каждый URL
       for (let i = 0; i < urls.length; i++) {
         const urlData = urls[i];
         const url = typeof urlData === 'string' ? urlData : urlData.url;
