@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Обрабатывает запрос на повышение участника
@@ -40,7 +41,7 @@ export async function promoteMemberHandler(req: Request, res: Response): Promise
         }
 
         const memberCheckUrl = `https://api.telegram.org/bot${defaultToken.token}/getChatMember`;
-        const memberCheckResponse = await fetch(memberCheckUrl, {
+        const memberCheckResponse = await fetchWithProxy(memberCheckUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: groupId, user_id: parseInt(userId) })
@@ -73,7 +74,7 @@ export async function promoteMemberHandler(req: Request, res: Response): Promise
         }
 
         const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/promoteChatMember`;
-        const response = await fetch(telegramApiUrl, {
+        const response = await fetchWithProxy(telegramApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

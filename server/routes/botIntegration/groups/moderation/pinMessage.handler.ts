@@ -6,6 +6,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Закрепляет сообщение в группе через Telegram Bot API
@@ -81,8 +82,8 @@ async function callPinChatMessage(
     disableNotification: boolean
 ): Promise<{ success: boolean; error?: string }> {
     const telegramApiUrl = `https://api.telegram.org/bot${token}/pinChatMessage`;
-    
-    const response = await fetch(telegramApiUrl, {
+
+    const response = await fetchWithProxy(telegramApiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

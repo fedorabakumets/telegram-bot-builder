@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import {
     analyzeTelegramError,
     getErrorStatusCode
@@ -39,7 +40,7 @@ export async function unbanMemberHandler(req: Request, res: Response): Promise<v
         }
 
         const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/unbanChatMember`;
-        const response = await fetch(telegramApiUrl, {
+        const response = await fetchWithProxy(telegramApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

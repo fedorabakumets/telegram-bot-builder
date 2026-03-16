@@ -6,6 +6,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Устанавливает описание группы через Telegram Bot API
@@ -79,7 +80,7 @@ async function callSetChatDescription(
 ): Promise<{ success: boolean; error?: string }> {
     const telegramApiUrl = `https://api.telegram.org/bot${token}/setChatDescription`;
     
-    const response = await fetch(telegramApiUrl, {
+    const response = await fetchWithProxy(telegramApiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

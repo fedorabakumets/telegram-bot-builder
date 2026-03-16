@@ -6,6 +6,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Удаляет сообщение в группе через Telegram Bot API
@@ -78,8 +79,8 @@ async function callDeleteMessage(
     messageId: number
 ): Promise<{ success: boolean; error?: string }> {
     const telegramApiUrl = `https://api.telegram.org/bot${token}/deleteMessage`;
-    
-    const response = await fetch(telegramApiUrl, {
+
+    const response = await fetchWithProxy(telegramApiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

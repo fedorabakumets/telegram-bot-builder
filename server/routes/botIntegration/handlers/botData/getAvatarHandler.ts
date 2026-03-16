@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Обрабатывает запрос на получение аватарки пользователя или бота
@@ -88,7 +89,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
             telegramFileUrl = telegramPrefix + avatarUrl;
         }
         
-        const response = await fetch(telegramFileUrl);
+        const response = await fetchWithProxy(telegramFileUrl);
 
         if (!response.ok) {
             res.status(404).json({ message: "Не удалось получить аватарку" });

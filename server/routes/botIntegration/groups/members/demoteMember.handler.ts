@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Обрабатывает запрос на понижение участника
@@ -35,7 +36,7 @@ export async function demoteMemberHandler(req: Request, res: Response): Promise<
         }
 
         const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/promoteChatMember`;
-        const response = await fetch(telegramApiUrl, {
+        const response = await fetchWithProxy(telegramApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

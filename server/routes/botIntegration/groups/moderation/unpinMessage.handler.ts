@@ -6,6 +6,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Открепляет сообщение в группе через Telegram Bot API
@@ -82,8 +83,8 @@ async function callUnpinChatMessage(
     const telegramApiUrl = messageId
         ? `https://api.telegram.org/bot${token}/unpinChatMessage`
         : `https://api.telegram.org/bot${token}/unpinAllChatMessages`;
-    
-    const response = await fetch(telegramApiUrl, {
+
+    const response = await fetchWithProxy(telegramApiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

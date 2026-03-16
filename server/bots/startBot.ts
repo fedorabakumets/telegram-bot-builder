@@ -15,6 +15,7 @@ import { URL } from "node:url";
  * @external path
  */
 import { dirname, join } from "node:path";
+import { fetchWithProxy } from "../utils/telegram-proxy";
 
 /**
  * Глобальная коллекция активных процессов ботов
@@ -162,7 +163,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
     // Сбрасываем webhook в Telegram чтобы избежать конфликтов
     try {
       const webhookUrl = `https://api.telegram.org/bot${token}/deleteWebhook?drop_pending_updates=true`;
-      await fetch(webhookUrl);
+      await fetchWithProxy(webhookUrl);
       console.log(`🧹 Webhook сброшен для токена ${tokenId}`);
     } catch (webhookError) {
       console.log(`Не удалось сбросить webhook:`, webhookError);

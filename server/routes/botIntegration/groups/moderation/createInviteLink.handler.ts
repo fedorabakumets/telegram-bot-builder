@@ -6,6 +6,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Создаёт новую ссылку-приглашение для группы
@@ -88,8 +89,8 @@ async function callCreateChatInviteLink(
     }
 ): Promise<{ success: boolean; error?: string; data?: any }> {
     const telegramApiUrl = `https://api.telegram.org/bot${token}/createChatInviteLink`;
-    
-    const response = await fetch(telegramApiUrl, {
+
+    const response = await fetchWithProxy(telegramApiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

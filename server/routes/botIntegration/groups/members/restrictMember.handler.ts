@@ -6,6 +6,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Ограничивает права участника группы
@@ -90,8 +91,8 @@ async function callRestrictApi(
     untilDate?: number
 ): Promise<{ success: boolean; error?: any }> {
     const telegramApiUrl = `https://api.telegram.org/bot${token}/restrictChatMember`;
-    
-    const response = await fetch(telegramApiUrl, {
+
+    const response = await fetchWithProxy(telegramApiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
