@@ -9,7 +9,8 @@
 
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { generateDatabaseVariablesCode } from '../Broadcast/generate-database-variables-universal';
-import { generateInitAllUserVarsCall } from './generate-init-all-user-vars';
+// Примечание: generateInitAllUserVarsCall удалена после миграции на Jinja2
+// import { generateInitAllUserVarsCall } from './generate-init-all-user-vars';
 
 /**
  * Параметры для генерации универсальной замены переменных
@@ -46,7 +47,8 @@ export function generateUniversalVariableReplacement(
 
   // Инициализация all_user_vars через переиспользуемую функцию
   universalVarCodeLines.push(`${indentLevel}# Инициализация all_user_vars из БД и локального хранилища`);
-  universalVarCodeLines.push(`${generateInitAllUserVarsCall('user_id', 'all_user_vars', indentLevel)}`);
+  // Примечание: generateInitAllUserVarsCall удалена, используем inline код
+  universalVarCodeLines.push(`${indentLevel}all_user_vars = await init_all_user_vars(user_id)`);
   universalVarCodeLines.push('');
 
   // Добавляем переменные из таблиц БД (user_ids, user_ids_count, etc.)

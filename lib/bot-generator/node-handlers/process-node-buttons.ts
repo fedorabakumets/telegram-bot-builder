@@ -1,14 +1,15 @@
 /**
  * @fileoverview Обработка кнопок узлов и генерация обработчиков callback
- * 
+ *
  * Модуль создаёт Python-код для обработки кнопок inline-узлов,
  * генерирует обработчики callback-запросов и управляет навигацией между узлами.
- * 
+ *
  * @module bot-generator/node-handlers/process-node-buttons
  */
 
-import { generateCommandNodeHandlerWithKeyboardAndImageSupport } from '../CommandHandler/generateCommandNodeHandlerWithKeyboardAndImageSupport';
-import { generateStartNodeHandlerWithConditionalLogicAndImages } from '../CommandHandler/generateStartNodeHandlerWithConditionalLogicAndImages';
+// Примечание: следующие импорты удалены после миграции на Jinja2:
+// import { generateCommandNodeHandlerWithKeyboardAndImageSupport } from '../CommandHandler/generateCommandNodeHandlerWithKeyboardAndImageSupport';
+// import { generateStartNodeHandlerWithConditionalLogicAndImages } from '../CommandHandler/generateStartNodeHandlerWithConditionalLogicAndImages';
 import { generateMessageNodeHandlerWithConditionalLogicAndMediaSupport } from '../Conditional/generateMessageNodeHandlerWithConditionalLogicAndMediaSupport';
 import { createFakeMessageEditForCallback } from '../Keyboard/createFakeMessageEditForCallback';
 import { generateCommandButtonCallbackHandler } from '../Keyboard/generateCommandButtonCallbackHandler';
@@ -98,20 +99,20 @@ export function newprocessNodeButtonsAndGenerateHandlers(
           else if (targetNode.type === 'contact') {
             code += generateContactHandler(targetNode);
           }
-          // Обработка start узлов
+          // Обработка start узлов - удалено после миграции на Jinja2
+          // start и command узлы теперь используют шаблоны:
+          // - lib/templates/start/start.py.jinja2
+          // - lib/templates/command/command.py.jinja2
           else if (targetNode.type === 'start') {
-            code = generateStartNodeHandlerWithConditionalLogicAndImages(
-              targetNode, 
-              code, 
-              actualNodeId
-            ).join('\n');
+            // Примечание: обработчики для start узлов теперь генерируются через Jinja2 шаблоны
+            // в generate-new-node-handlers.ts
+            code += `    # Start node handler generated via Jinja2 template\n`;
           }
-          // Обработка command узлов
+          // Обработка command узлов - удалено после миграции на Jinja2
           else if (targetNode.type === 'command') {
-            code += generateCommandNodeHandlerWithKeyboardAndImageSupport(
-              targetNode, 
-              actualNodeId
-            );
+            // Примечание: обработчики для command узлов теперь генерируются через Jinja2 шаблоны
+            // в generate-new-node-handlers.ts
+            code += `    # Command node handler generated via Jinja2 template\n`;
           }
           // Универсальный обработчик
           else {

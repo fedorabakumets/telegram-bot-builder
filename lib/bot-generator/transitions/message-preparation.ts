@@ -8,7 +8,8 @@
  */
 
 import { generateDatabaseVariablesCode } from '../Broadcast/generate-database-variables-universal';
-import { generateInitAllUserVarsCall } from '../database/generate-init-all-user-vars';
+// Примечание: generateInitAllUserVarsCall удалена после миграции на Jinja2
+// import { generateInitAllUserVarsCall } from '../database/generate-init-all-user-vars';
 
 /**
  * Параметры для подготовки сообщения
@@ -47,7 +48,8 @@ export function generateMessageText(messageText?: string, indent: string = '    
 export function generateDatabaseVarsGet(indent: string = '    ', messageText?: string): string {
   let code = '';
   code += `${indent}# Инициализация all_user_vars из БД и локального хранилища\n`;
-  code += `${generateInitAllUserVarsCall('user_id', 'all_user_vars', indent)}\n`;
+  // Примечание: generateInitAllUserVarsCall удалена, используем inline код
+  code += `${indent}all_user_vars = await init_all_user_vars(user_id)\n`;
 
   // Извлекаем все переменные из текста сообщения
   const usedVariables = messageText ?

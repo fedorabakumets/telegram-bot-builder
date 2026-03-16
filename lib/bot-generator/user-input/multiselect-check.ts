@@ -3,7 +3,8 @@ import { formatTextForPython, generateButtonText, toPythonBoolean } from '../for
 import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { generateInlineKeyboardCode } from '../Keyboard';
 import { escapePythonString } from '../format/escapePythonString';
-import { generateInitAllUserVarsCall } from '../database/generate-init-all-user-vars';
+// Примечание: generateInitAllUserVarsCall удалена после миграции на Jinja2
+// import { generateInitAllUserVarsCall } from '../database/generate-init-all-user-vars';
 
 export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) {
     code += '    # Проверяем, находится ли пользователь в режиме множественного выбора\n';
@@ -43,7 +44,8 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                         code += `            text = ${formattedText}\n`;
 
                         // Заменяем переменные в тексте через переиспользуемую функцию
-                        code += `${generateInitAllUserVarsCall('user_id', 'all_user_vars', '            ')}\n`;
+                        // Примечание: generateInitAllUserVarsCall удалена, используем inline код
+                        code += `            all_user_vars = await init_all_user_vars(user_id)\n`;
                         code += '            # Заменяем переменные в тексте\n';
                         code += '            # Получаем фильтры переменных для замены\n';
                         code += '            variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n';
@@ -134,7 +136,8 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                     code += `                text = ${formattedText}\n`;
 
                     // Заменяем переменные в тексте через переиспользуемую функцию
-                    code += `${generateInitAllUserVarsCall('user_id', 'all_user_vars', '                ')}\n`;
+                    // Примечание: generateInitAllUserVarsCall удалена, используем inline код
+                    code += `                all_user_vars = await init_all_user_vars(user_id)\n`;
                     code += '                # Заменяем переменные в тексте\n';
                     code += '                # Получаем фильтры переменных для замены\n';
                     code += '                variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n';

@@ -33,14 +33,9 @@ import { generateGlobalCheckUserVariableFunction } from "./bot-generator/databas
 import { generateUniversalVariableReplacement } from './bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython } from './bot-generator/format';
 import { generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation } from './generate';
-import { generateSafeEditOrSend } from './templates/generate-safe-edit-or-send';
-import { generateHeader } from './templates/generate-header';
-import { generateUniversalHandlers } from './templates/generate-universal-handlers';
-import { generateMain } from './templates/generate-main';
-import { generateImports } from './templates/generate-imports';
-import { generateConfig } from './templates/generate-config';
-import { generateUtils } from './templates/generate-utils';
-import { generateApiConfig } from './bot-generator/api';
+import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, generateMain, generateImports, generateConfig, generateUtils } from './templates/typed-renderer';
+// Примечание: generateApiConfig удалена после миграции на Jinja2
+// import { generateApiConfig } from './bot-generator/api';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateInlineKeyboardCode } from './bot-generator/Keyboard';
@@ -150,7 +145,7 @@ export function generatePythonCode(
   code += '"""\n\n';
 
   // Добавляем UTF-8 кодировку
-  code += generateHeader();
+  code += generateHeader({});
 
   // Генерируем все импорты на основе типов узлов
   const hasInlineButtonsResult = hasInlineButtons(context.nodes || []);
@@ -182,8 +177,8 @@ export function generatePythonCode(
     projectId: context.projectId,
   });
 
-  // Добавляем конфигурацию API
-  code += generateApiConfig(context.projectId, context.options.userDatabaseEnabled);
+  // Примечание: generateApiConfig удалена после миграции на Jinja2
+  // Конфигурация API теперь генерируется через lib/templates/config/config.py.jinja2
 
   // Генерируем логирование сообщений (только при включенной БД)
   if (context.options.userDatabaseEnabled) {

@@ -18,8 +18,8 @@ export * from './bot-generator/Synonyms';
 export * from './bot-generator/utils/addAutoTransitionNodes';
 export * from './bot-generator/utils/extractNodeData';
 
-// Command handlers
-export * from './bot-generator/CommandHandler';
+// Command handlers - удалено, функциональность перенесена в Jinja2 шаблоны
+// export * from './bot-generator/CommandHandler';
 
 // Conditional logic
 export * from './bot-generator/Conditional';
@@ -28,7 +28,7 @@ export * from './bot-generator/Conditional';
 export * from './bot-generator/format';
 
 // Feature detection
-export { hasCommandButtons } from './bot-generator/CommandHandler/hasCommandButtons';
+export { hasCommandButtons } from './bot-generator/utils/hasCommandButtons';
 export { hasConditionalButtons } from './bot-generator/Conditional/hasConditionalButtons';
 export { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
 export { hasMultiSelectNodes } from './bot-generator/Keyboard/hasMultiSelectNodes';

@@ -12,7 +12,8 @@ import { isLoggingEnabled } from "../../bot-generator";
 import { generateWaitingStateCode } from "../format/generateWaitingStateCode";
 import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 import { generateMultiMediaSendCode } from "./generateMultiMediaSendCode";
-import { generateInitAllUserVarsSafe } from '../database/generate-init-all-user-vars';
+// Примечание: generateInitAllUserVarsSafe удалена после миграции на Jinja2
+// import { generateInitAllUserVarsSafe } from '../database/generate-init-all-user-vars';
 
 // ============================================================================
 // ГЕНЕРАТОРЫ МЕДИА И УСЛОВНЫХ СООБЩЕНИЙ
@@ -171,7 +172,9 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}if not is_fake_callback:`);
     codeLines.push(`${indentLevel}    try:`);
     codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой`);
-    codeLines.push(generateInitAllUserVarsSafe(userIdSource, `${indentLevel}        `, '    '));
+    codeLines.push(`${indentLevel}        # Инициализация all_user_vars если ещё не создан`);
+    codeLines.push(`${indentLevel}        if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}            all_user_vars = await init_all_user_vars(${userIdSource})`);
     codeLines.push(`${indentLevel}        # Используем all_user_vars вместо user_vars для корректной замены переменных`);
     codeLines.push(`${indentLevel}        # Получаем фильтры переменных для замены\n`);
     codeLines.push(`${indentLevel}        variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})\n`);
@@ -359,7 +362,9 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}# Отправляем медиа`);
     codeLines.push(`${indentLevel}try:`);
     codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой медиа`);
-    codeLines.push(generateInitAllUserVarsSafe(userIdSource, `${indentLevel}    `, '        '));
+    codeLines.push(`${indentLevel}    # Инициализация all_user_vars если ещё не создан`);
+    codeLines.push(`${indentLevel}    if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}        all_user_vars = await init_all_user_vars(${userIdSource})`);
     codeLines.push(`${indentLevel}    # Используем all_user_vars вместо user_vars для корректной замены переменных`);
     codeLines.push(`${indentLevel}    # Получаем фильтры переменных для замены`);
     codeLines.push(`${indentLevel}    variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})`);
@@ -420,7 +425,9 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}    # Отправляем медиа`);
     codeLines.push(`${indentLevel}    try:`);
     codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
-    codeLines.push(generateInitAllUserVarsSafe(userIdSource, `${indentLevel}        `, '    '));
+    codeLines.push(`${indentLevel}        # Инициализация all_user_vars если ещё не создан`);
+    codeLines.push(`${indentLevel}        if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}            all_user_vars = await init_all_user_vars(${userIdSource})`);
     codeLines.push(`${indentLevel}        # Используем all_user_vars вместо user_vars для корректной замены переменных`);
     codeLines.push(`${indentLevel}        # Получаем фильтры переменных для замены`);
     codeLines.push(`${indentLevel}        variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})`);
@@ -506,7 +513,9 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа: {attached_media_url}")`);
     codeLines.push(`${indentLevel}    try:`);
     codeLines.push(`${indentLevel}        # Заменяем переменные в тексте перед отправкой медиа`);
-    codeLines.push(generateInitAllUserVarsSafe(userIdSource, `${indentLevel}        `, '    '));
+    codeLines.push(`${indentLevel}        # Инициализация all_user_vars если ещё не создан`);
+    codeLines.push(`${indentLevel}        if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}            all_user_vars = await init_all_user_vars(${userIdSource})`);
     codeLines.push(`${indentLevel}        variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})`);
     codeLines.push(`${indentLevel}        processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)`);
     codeLines.push(`${indentLevel}        if str(attached_media_url).startswith('/uploads/') or str(attached_media_url).startswith('/uploads\\\\') or '\\\\uploads\\\\' in str(attached_media_url):`);
@@ -569,7 +578,9 @@ export function generateAttachedMediaSendCode(
     codeLines.push(`${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение`);
     codeLines.push(`${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")`);
     codeLines.push(`${indentLevel}    # Заменяем переменные в тексте перед отправкой`);
-    codeLines.push(generateInitAllUserVarsSafe(userIdSource, `${indentLevel}    `, '        '));
+    codeLines.push(`${indentLevel}    # Инициализация all_user_vars если ещё не создан`);
+    codeLines.push(`${indentLevel}    if 'all_user_vars' not in locals():`);
+    codeLines.push(`${indentLevel}        all_user_vars = await init_all_user_vars(${userIdSource})`);
     codeLines.push(`${indentLevel}    variable_filters = user_data.get(${userIdSource}, {}).get("_variable_filters", {})`);
     codeLines.push(`${indentLevel}    processed_text = replace_variables_in_text(text, all_user_vars, variable_filters)`);
     codeLines.push(`${indentLevel}    if 'keyboardHTML' not in locals():`);

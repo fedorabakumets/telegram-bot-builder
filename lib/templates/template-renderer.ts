@@ -163,14 +163,22 @@ export function renderPartialTemplate(
     // Удаляем расширение
     templateName = templateName.replace('.py.jinja2', '');
     // Удаляем путь директории
-    templateName = templateName.replace('partials/', '')
-                               .replace('config/', '')
+    templateName = templateName.replace('config/', '')
                                .replace('database/', '')
                                .replace('utils/', '')
                                .replace('main/', '')
                                .replace('header/', '')
                                .replace('middleware/', '')
-                               .replace('universal-handlers/', '');
+                               .replace('universal-handlers/', '')
+                               .replace('imports/', '')
+                               .replace('command/', '')
+                               .replace('start/', '')
+                               .replace('keyboard/', '')
+                               .replace('message/', '')
+                               .replace('broadcast/', '')
+                               .replace('sticker/', '')
+                               .replace('voice/', '')
+                               .replace('safe-edit-or-send/', '');
 
     if (schemaMap[templateName]) {
       try {
@@ -183,18 +191,15 @@ export function renderPartialTemplate(
 
     const environment = initEnvironment();
     // Определяем путь к шаблону на основе имени
-    // Новые шаблоны находятся в своих директориях: config/config.py.jinja2, database/database.py.jinja2, etc.
+    // Шаблоны находятся в своих директориях: config/config.py.jinja2, database/database.py.jinja2, etc.
     let templatePath = partialName;
-    
+
     // Если путь не содержит '/', определяем директорию на основе имени шаблона
     if (!partialName.includes('/')) {
-      const templateDirs = ['config', 'database', 'utils', 'main', 'header', 'middleware', 'universal-handlers', 'imports'];
+      const templateDirs = ['config', 'database', 'utils', 'main', 'header', 'middleware', 'universal-handlers', 'imports', 'command', 'start', 'keyboard', 'message', 'broadcast', 'sticker', 'voice', 'safe-edit-or-send'];
       const dir = templateDirs.find(d => partialName.startsWith(d));
       if (dir) {
         templatePath = `${dir}/${partialName}`;
-      } else {
-        // Для обратной совместимости используем 'partials/'
-        templatePath = `partials/${partialName}`;
       }
     }
     

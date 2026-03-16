@@ -3,6 +3,10 @@
  * Предоставляет утилиты для преобразования данных в шаблонах
  */
 
+// Импортируем канонические реализации вместо дублирования
+import { generateBotFatherCommands } from '../commands';
+import { formatTextForPython } from '../bot-generator/format/formatTextForPython';
+
 /**
  * Преобразует ID узла в безопасное имя функции Python
  * Заменяет все недопустимые символы на подчёркивание
@@ -107,7 +111,7 @@ export function hasMediaNodesFilter(node: any): boolean {
 export function hasUploadImagesFilter(node: any): boolean {
   if (!node || !node.data) return false;
   const data = node.data;
-  
+
   // Проверяем attachedMedia
   if (Array.isArray(data.attachedMedia)) {
     for (const media of data.attachedMedia) {
@@ -116,17 +120,18 @@ export function hasUploadImagesFilter(node: any): boolean {
       }
     }
   }
-  
+
   // Проверяем messageText на наличие ссылок
   if (typeof data.messageText === 'string' && data.messageText.includes('/uploads/')) {
     return true;
   }
-  
+
   return false;
 }
 
 /**
  * Преобразует массив команд для BotFather в строку
+ * Использует каноническую реализацию из commands.ts
  *
  * @param nodes - Массив узлов
  * @returns Отформатированные команды
@@ -135,17 +140,12 @@ export function hasUploadImagesFilter(node: any): boolean {
  * [{command: "/start", description: "Запустить"}] → "/start - Запустить"
  */
 export function formatBotFatherCommands(nodes: any[]): string {
-  if (!Array.isArray(nodes)) return '';
-
-  return nodes
-    .filter(node => node.type === 'start' || node.type === 'command')
-    .filter(node => node.data?.showInMenu && node.data?.command)
-    .map(node => `${node.data.command} - ${node.data.description || ''}`)
-    .join('\n');
+  return generateBotFatherCommands(nodes);
 }
 
 /**
  * Форматирует текст для вставки в Python код
+ * Использует каноническую реализацию из formatTextForPython.ts
  * Использует тройные кавычки для многострочного текста,
  * одинарные для однострочного
  *
@@ -157,14 +157,5 @@ export function formatBotFatherCommands(nodes: any[]): string {
  * 'Line1\nLine2' → '"""Line1\nLine2"""'
  */
 export function formatPythonTextFilter(str: string): string {
-  if (typeof str !== 'string') return '""';
-  if (!str) return '""';
-
-  // Для многострочного текста используем тройные кавычки
-  if (str.includes('\n')) {
-    return `"""${str}"""`;
-  } else {
-    // Для однострочного текста экранируем только кавычки
-    return `"${str.replace(/"/g, '\\"')}"`;
-  }
+  return formatTextForPython(str);
 }

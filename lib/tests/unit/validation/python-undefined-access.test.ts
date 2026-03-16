@@ -16,62 +16,14 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
 import { generatePythonCode } from '../../../bot-generator';
-import { generateInitAllUserVars } from '../../../bot-generator/database/generate-init-all-user-vars';
+// Примечание: generateInitAllUserVars удалена после миграции на Jinja2
+// import { generateInitAllUserVars } from '../../../bot-generator/database/generate-init-all-user-vars';
 import { generateNavigateToNode } from '../../../bot-generator/transitions/generate-node-navigation';
 
 describe('PythonUndefinedAccessValidation', () => {
   describe('Проверка использования определённых переменных', () => {
-    describe('generateInitAllUserVars', () => {
-      const code = generateInitAllUserVars({ mode: 'function' });
-
-      it('должен использовать только определённые функции', () => {
-        // Проверяем что используются только известные функции
-        const usedFunctions = [
-          'get_user_from_db',
-          'user_data.get',
-          'isinstance',
-          'all_user_vars.update',
-        ];
-        
-        for (const func of usedFunctions) {
-          assert.ok(
-            code.includes(func),
-            `Должна использоваться функция: ${func}`
-          );
-        }
-      });
-
-      it('не должен использовать неопределённые переменные', () => {
-        // Проверяем что нет обращения к переменным которые не определены в функции
-        const undefinedPatterns = [
-          /user_id\s*=\s*message/,  // user_id должен быть параметром
-          /all_user_vars\s*=\s*{\}/,  // all_user_vars определяется внутри
-        ];
-        
-        for (const pattern of undefinedPatterns) {
-          assert.ok(
-            !pattern.test(code) || code.includes('async def init_all_user_vars(user_id: int)'),
-            'Не должно быть обращения к неопределённым переменным'
-          );
-        }
-      });
-
-      it('должен определять все используемые локальные переменные', () => {
-        // Проверяем что все локальные переменные определены до использования
-        assert.ok(
-          code.includes('all_user_vars = {}'),
-          'all_user_vars должна быть определена'
-        );
-        assert.ok(
-          code.includes('db_user_vars = await get_user_from_db(user_id)'),
-          'db_user_vars должна быть определена'
-        );
-        assert.ok(
-          code.includes('local_user_vars = user_data.get(user_id, {})'),
-          'local_user_vars должна быть определена'
-        );
-      });
-    });
+    // Примечание: тесты generateInitAllUserVars удалены после миграции на Jinja2
+    // Функциональность перенесена в lib/templates/database/database.py.jinja2
 
     describe('generateNavigateToNode', () => {
       const code = generateNavigateToNode();

@@ -6,8 +6,10 @@
  */
 
 import { AliasNodes } from './AliasNodes';
-import { init_user_variables } from '../utils';
-import { replace_variables_in_text } from './replace_variables_in_text';
+// Примечание: init_user_variables удалена после миграции на Jinja2
+// import { init_user_variables } from '../utils';
+// Примечание: replace_variables_in_text удалена после миграции на Jinja2
+// import { replace_variables_in_text } from './replace_variables_in_text';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { get_moscow_time } from './get_moscow_time';
 import { get_user_data_from_db } from './get_user_data_from_db';
@@ -19,7 +21,8 @@ import { save_user_data_to_db } from './save_user_data_to_db';
 import { save_user_to_db } from './save_user_to_db';
 import { update_user_data_in_db } from './update_user_data_in_db';
 import { update_user_variable_in_db } from './update_user_variable_in_db';
-import { generateInitAllUserVars } from './generate-init-all-user-vars';
+// Примечание: generateInitAllUserVars удалена после миграции на Jinja2
+// import { generateInitAllUserVars } from './generate-init-all-user-vars';
 import { generateNavigateToNode } from '../transitions/generate-node-navigation';
 
 /**
@@ -49,20 +52,13 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
   // Получение московского времени
   get_moscow_time(codeLines);
 
-  // Инициализация переменных пользователя (только если функция еще не была сгенерирована)
-  if (true) {
-    replace_variables_in_text(codeLines);
-    // marked as generated
-  }
-
-  // Функция инициализации all_user_vars (переиспользуемая)
-  codeLines.push(generateInitAllUserVars({ mode: 'function' }));
+  // Примечание: replace_variables_in_text, generateInitAllUserVars, init_user_variables
+  // удалены после миграции на Jinja2. Эти функции теперь генерируются через шаблоны:
+  // - lib/templates/database/database.py.jinja2
+  // - lib/templates/universal-handlers/universal-handlers.py.jinja2
 
   // Функция навигации к узлу (переиспользуемая)
   codeLines.push(generateNavigateToNode());
-
-  // Инициализация пользовательских переменных
-  init_user_variables(codeLines);
 
   // Сохранение пользователя в базу данных
   save_user_to_db(codeLines);
