@@ -7,7 +7,7 @@
  * @module botIntegration/handlers/telegramGroups/utils/fetchGroupMembers
  */
 
-import { fetchWithProxy } from "../../../../../../utils/telegram-proxy";
+import { fetchWithProxy } from "../../../../../utils/telegram-proxy";
 
 /**
  * Получает список администраторов группы
