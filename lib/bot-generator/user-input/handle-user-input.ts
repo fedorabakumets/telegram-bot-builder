@@ -1,7 +1,7 @@
 import { answersave } from './answersave';
 import { handleConditionalNavigationAndInputCollection } from './handleConditionalNavigationAndInputCollection';
 import { handleNodeNavigation } from '../node-navigation/handle-node-navigation';
-import { generateReplyHideAfterClickHandler } from '../Keyboard/generateReplyHideAfterClickHandler';
+import { generateReplyHideAfterClick } from '../../templates/handlers';
 import { mediafiles } from '../MediaHandler/mediafiles';
 import { navigateaftersave } from './navigateaftersave';
 import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
@@ -48,7 +48,7 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += universalVarCodeLines.join('\n');
     code += '    \n';
     code += '    # Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick\n';
-    code += `    ${generateReplyHideAfterClickHandler(nodes)}\n`;
+    code += generateReplyHideAfterClick({ nodes, indentLevel: '    ' });
     code += '    \n';
     
     // Обработчик условных сообщений

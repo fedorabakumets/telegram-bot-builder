@@ -12,8 +12,7 @@
 // import { generateStartNodeHandlerWithConditionalLogicAndImages } from '../CommandHandler/generateStartNodeHandlerWithConditionalLogicAndImages';
 import { generateMessageNodeHandlerWithConditionalLogicAndMediaSupport } from '../Conditional/generateMessageNodeHandlerWithConditionalLogicAndMediaSupport';
 import { createFakeMessageEditForCallback } from '../Keyboard/createFakeMessageEditForCallback';
-import { generateCommandButtonCallbackHandler } from '../Keyboard/generateCommandButtonCallbackHandler';
-import { generateMultiSelectButtonHandlerWithVariableSaving } from '../Keyboard/generateMultiSelectButtonHandlerWithVariableSaving';
+import { generateCommandCallbackHandler, generateMultiSelectButtonHandler } from '../../templates/handlers';
 import { generateMessageNodeHandlerWithKeyboardAndInputCollection } from '../MessageHandlers/generateMessageNodeHandlerWithKeyboardAndInputCollection';
 import { generateGotoHandler } from './generate-goto-handler';
 import { generateSaveVariableHandler } from './generate-save-variable';
@@ -54,14 +53,14 @@ export function newprocessNodeButtonsAndGenerateHandlers(
         const { targetNode, actualCallbackData, actualNodeId } = gotoResult;
 
         // Обработка множественного выбора
-        code = generateMultiSelectButtonHandlerWithVariableSaving(
-          targetNode, 
-          actualCallbackData, 
-          code, 
-          nodes, 
-          button, 
-          node
-        );
+        code += generateMultiSelectButtonHandler({
+          targetNode,
+          callbackData: actualCallbackData,
+          button,
+          node,
+          nodes,
+          indentLevel: '',
+        });
 
         if (targetNode) {
           // Обработка save_variable
@@ -138,7 +137,11 @@ export function newprocessNodeButtonsAndGenerateHandlers(
         }
         processedCallbacks.add(callbackData);
 
-        code = generateCommandButtonCallbackHandler(code, callbackData, button);
+        code += generateCommandCallbackHandler({
+          callbackData,
+          button,
+          indentLevel: '',
+        });
         code = createFakeMessageEditForCallback(button, code);
       }
     });

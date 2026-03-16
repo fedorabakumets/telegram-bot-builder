@@ -8,7 +8,7 @@
  */
 
 import { toPythonBoolean, escapeForJsonString } from '../format';
-import { generateInlineKeyboardCode } from '../Keyboard';
+import { generateKeyboard } from '../../templates/keyboard';
 import type { ButtonResponseConfigParams } from './types/button-response-config-params';
 import type { ResponseOption } from './types/button-response-config-types';
 
@@ -57,7 +57,13 @@ export function generateButtonResponseConfig(
     });
   }
   
-  code += generateInlineKeyboardCode(responseButtons, indent, node.id, node.data, allNodeIds);
+  code += generateKeyboard({
+    keyboardType: 'inline',
+    buttons: responseButtons,
+    nodeId: node.id,
+    allNodeIds,
+    indentLevel: indent,
+  });
   code += `${indent}await message.answer(prompt_text, reply_markup=keyboard)\n`;
   code += `${indent}\n`;
   code += `${indent}# Настраиваем конфигурацию кнопочного ответа\n`;

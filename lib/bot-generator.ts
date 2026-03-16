@@ -38,14 +38,12 @@ import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, gene
 // import { generateApiConfig } from './bot-generator/api';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
-import { generateInlineKeyboardCode } from './bot-generator/Keyboard';
+import { generateInlineKeyboardCode, generateKeyboard } from './bot-generator/Keyboard';
 import { filterInlineNodes } from './bot-generator/Keyboard/filterInlineNodes';
-import { generateReplyButtonHandlers } from './bot-generator/Keyboard/generate-reply-button-handlers';
-import { generateTransitionLogicForMultiSelectCompletion } from './bot-generator/Keyboard/generate-transition-logic-multi-select';
-import { generateButtonResponseHandlers, generateMultiSelectCallbackLogic, generateMultiSelectDoneHandler, generateMultiSelectReplyHandler } from './bot-generator/Keyboard';
 import { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
 import { identifyNodesRequiringMultiSelectLogic } from './bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic';
 import { processInlineButtonNodes } from './bot-generator/Keyboard/processInlineButtonNodes';
+import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers, generateMultiSelectTransition } from './templates/handlers';
 import { generateMessageLoggingCode } from './bot-generator/logging/generate-message-logging';
 import { generateGroupHandlers } from './bot-generator/MediaHandler/generateGroupHandlers';
 import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generateMediaFileFunctions';
@@ -264,7 +262,7 @@ export function generatePythonCode(
   generateInteractiveCallbackHandlers();
 
   // Генерируем обработчики для кнопок клавиатуры ответов
-  code += generateReplyButtonHandlers(context.nodes);
+  code += generateReplyButtonHandlers({ nodes: context.nodes, indentLevel: '' });
 
   // Добавляем обработчики кнопочных ответов для узлов сбора ввода
   generateButtonResponseHandlersForUserInputCollectionWithReplyKeyboard();
@@ -358,7 +356,12 @@ export function generatePythonCode(
 
     if (userInputNodes.length > 0) {
       code += '\n# Обработчики кнопочных ответов для сбора пользовательского ввода\n';
-      code = generateButtonResponseHandlers(code, userInputNodes, context.nodes);
+      code = generateButtonResponse({
+        userInputNodes,
+        allNodes: context.nodes,
+        hasUrlButtonsInProject: hasUrlButtons(context.nodes),
+        indentLevel: '',
+      });
     }
   }
 
