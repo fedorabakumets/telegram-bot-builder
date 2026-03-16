@@ -28,3 +28,6 @@ export interface CommandCallbackHandlerTemplateParams {
   /** Имя команды (без cmd_) */
   command?: string;
 }
+
+/** Параметры после валидации Zod (все поля обязательные) */
+export type CommandCallbackHandlerValidatedParams = Required<CommandCallbackHandlerTemplateParams>;

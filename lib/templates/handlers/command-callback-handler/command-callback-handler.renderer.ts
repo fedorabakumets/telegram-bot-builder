@@ -3,7 +3,8 @@
  * @module templates/handlers/command-callback-handler/command-callback-handler.renderer
  */
 
-import { commandCallbackHandlerParamsSchema, type CommandCallbackHandlerParams } from './command-callback-handler.schema';
+import { commandCallbackHandlerParamsSchema } from './command-callback-handler.schema';
+import type { CommandCallbackHandlerTemplateParams } from './command-callback-handler.params';
 import { renderPartialTemplate } from '../../template-renderer';
 
 /**
@@ -12,7 +13,7 @@ import { renderPartialTemplate } from '../../template-renderer';
  * @param params - Параметры для генерации
  * @returns Сгенерированный Python код
  */
-export function generateCommandCallbackHandler(params: CommandCallbackHandlerParams): string {
+export function generateCommandCallbackHandler(params: CommandCallbackHandlerTemplateParams): string {
   // Валидация параметров
   const validated = commandCallbackHandlerParamsSchema.safeParse(params);
   
@@ -26,6 +27,6 @@ export function generateCommandCallbackHandler(params: CommandCallbackHandlerPar
     button: validated.data.button,
     indentLevel: validated.data.indentLevel ?? '',
     commandNode: validated.data.commandNode ?? '',
-    command: validated.data.command ?? validated.data.button.target.replace('/', ''),
+    command: validated.data.command || validated.data.button.target.replace('/', ''),
   });
 }
