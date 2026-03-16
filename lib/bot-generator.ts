@@ -38,12 +38,13 @@ import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, gene
 // import { generateApiConfig } from './bot-generator/api';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
-import { generateInlineKeyboardCode, generateKeyboard } from './bot-generator/Keyboard';
+import { generateKeyboard } from './templates/keyboard';
 import { filterInlineNodes } from './bot-generator/Keyboard/filterInlineNodes';
 import { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
 import { identifyNodesRequiringMultiSelectLogic } from './bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic';
 import { processInlineButtonNodes } from './bot-generator/Keyboard/processInlineButtonNodes';
-import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers, generateMultiSelectTransition } from './templates/handlers';
+import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers } from './templates/handlers';
+import { hasUrlButtons } from './bot-generator/user-input';
 import { generateMessageLoggingCode } from './bot-generator/logging/generate-message-logging';
 import { generateGroupHandlers } from './bot-generator/MediaHandler/generateGroupHandlers';
 import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generateMediaFileFunctions';
@@ -309,15 +310,11 @@ export function generatePythonCode(
   const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(context.nodes as any[]);
 
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
-  code += generateMultiSelectCallbackHandler(
-    multiSelectNodes as any[],
-    context.nodes as any[] || [],
-    context.allNodeIds,
-    isLoggingEnabled(),
-    generateTransitionLogicForMultiSelectCompletion,
-    generateInlineKeyboardCode,
-    formatTextForPython
-  );
+  code += generateMultiSelectCallback({
+    multiSelectNodes: multiSelectNodes as any[],
+    allNodeIds: context.allNodeIds,
+    indentLevel: '    ',
+  });
 
   const finalCode = generateCompleteBotScriptFromNodeGraphWithDependencies(
     code,
@@ -325,9 +322,9 @@ export function generatePythonCode(
       multiSelectNodes: multiSelectNodes as any[],
       allNodeIds: context.allNodeIds,
       nodes: context.nodes as any[],
-      generateMultiSelectCallbackLogic: generateMultiSelectCallbackLogic as any,
-      generateMultiSelectDoneHandler: generateMultiSelectDoneHandler as any,
-      generateMultiSelectReplyHandler: generateMultiSelectReplyHandler as any
+      generateMultiSelectCallbackLogic: generateMultiSelectCallback as any,
+      generateMultiSelectDoneHandler: generateMultiSelectDone as any,
+      generateMultiSelectReplyHandler: generateMultiSelectReply as any
     }
   );
 
@@ -356,8 +353,12 @@ export function generatePythonCode(
 
     if (userInputNodes.length > 0) {
       code += '\n# Обработчики кнопочных ответов для сбора пользовательского ввода\n';
-      code = generateButtonResponse({
-        userInputNodes,
+      code += generateButtonResponse({
+        userInputNodes: userInputNodes.map(node => ({
+          id: node.id,
+          responseOptions: node.data.responseOptions,
+          allowSkip: node.data.allowSkip,
+        })),
         allNodes: context.nodes,
         hasUrlButtonsInProject: hasUrlButtons(context.nodes),
         indentLevel: '',
@@ -375,7 +376,7 @@ export function generatePythonCode(
       context.nodes || [],
       formatTextForPython,
       generateUniversalVariableReplacement,
-      generateInlineKeyboardCode,
+      generateKeyboard,
       context.allNodeIds,
       generateNodeNavigation
     );

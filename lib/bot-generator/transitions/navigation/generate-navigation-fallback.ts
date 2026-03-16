@@ -8,7 +8,7 @@
  */
 
 import { formatTextForPython, toPythonBoolean } from '../../format';
-import { generateInlineKeyboardCode } from '../../Keyboard';
+import { generateKeyboard } from '../../../templates/keyboard';
 
 /**
  * Параметры для генерации fallback навигации
