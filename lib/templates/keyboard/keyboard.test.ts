@@ -248,11 +248,11 @@ describe('keyboard.py.jinja2 шаблон', () => {
     describe('Проверка отступов', () => {
       it('должен генерировать keyboard = None без начальных отступов', () => {
         const result = generateKeyboard(validParamsEmpty);
-        
+
         // Проверяем, что keyboard = None начинается без отступов
         const lines = result.split('\n');
         const keyboardLine = lines.find(line => line.includes('keyboard = None'));
-        
+
         assert.ok(keyboardLine, 'Должна быть строка с keyboard = None');
         assert.ok(
           keyboardLine.startsWith('keyboard'),
@@ -262,10 +262,10 @@ describe('keyboard.py.jinja2 шаблон', () => {
 
       it('должен генерировать builder = InlineKeyboardBuilder без начальных отступов', () => {
         const result = generateKeyboard(validParamsInline);
-        
+
         const lines = result.split('\n');
         const builderLine = lines.find(line => line.includes('builder = InlineKeyboardBuilder()'));
-        
+
         assert.ok(builderLine, 'Должна быть строка с builder = InlineKeyboardBuilder()');
         assert.ok(
           builderLine.startsWith('builder'),
@@ -275,10 +275,10 @@ describe('keyboard.py.jinja2 шаблон', () => {
 
       it('должен генерировать keyboard = builder.as_markup() без начальных отступов', () => {
         const result = generateKeyboard(validParamsInline);
-        
+
         const lines = result.split('\n');
         const keyboardLine = lines.find(line => line.includes('keyboard = builder.as_markup()'));
-        
+
         assert.ok(keyboardLine, 'Должна быть строка с keyboard = builder.as_markup()');
         assert.ok(
           keyboardLine.startsWith('keyboard'),
@@ -291,6 +291,45 @@ describe('keyboard.py.jinja2 шаблон', () => {
         
         assert.ok(result.includes('resize_keyboard='));
         assert.ok(result.includes('one_time_keyboard='));
+      });
+
+      it('не должен содержать несколько операторов на одной строке (Python syntax)', () => {
+        const result = generateKeyboard(validParamsInline);
+
+        // Проверяем что нет конструкций вида ")builder.add(" или ")keyboard ="
+        assert.ok(
+          !result.includes(')builder.add('),
+          'Не должно быть нескольких операторов на одной строке: ")builder.add("'
+        );
+        assert.ok(
+          !result.includes(')keyboard ='),
+          'Не должно быть нескольких операторов на одной строке: ")keyboard ="'
+        );
+        assert.ok(
+          !result.includes('builder.add(InlineKeyboardButton') || result.split('\n').every(line => 
+            !line.includes('builder.add(InlineKeyboardButton') || 
+            line.trim().startsWith('builder.add(')
+          ),
+          'Каждый builder.add() должен быть на отдельной строке'
+        );
+      });
+
+      it('должен генерировать каждый оператор на отдельной строке', () => {
+        const result = generateKeyboard(validParamsInline);
+        const lines = result.split('\n');
+
+        // Находим строки с builder.add
+        const addLines = lines.filter(line => line.trim().startsWith('builder.add('));
+        
+        // Каждая строка должна содержать только один вызов builder.add
+        for (const line of addLines) {
+          const addCount = (line.match(/builder\.add\(/g) || []).length;
+          assert.strictEqual(
+            addCount,
+            1,
+            `Строка должна содержать только один builder.add(), получено ${addCount}: "${line.trim()}"`
+          );
+        }
       });
     });
   });
