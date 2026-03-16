@@ -64,4 +64,25 @@ export interface MessageTemplateParams {
   conditionalMessages?: any[];
   /** Запасное сообщение */
   fallbackMessage?: string;
+  // Поля для сбора пользовательского ввода
+  /** Включить текстовый ввод */
+  enableTextInput?: boolean;
+  /** Включить ввод фото */
+  enablePhotoInput?: boolean;
+  /** Включить ввод видео */
+  enableVideoInput?: boolean;
+  /** Включить ввод аудио */
+  enableAudioInput?: boolean;
+  /** Включить ввод документов */
+  enableDocumentInput?: boolean;
+  /** Переменная для сохранения ввода */
+  inputVariable?: string;
+  /** Целевой узел для ввода */
+  inputTargetNodeId?: string;
+  /** Минимальная длина ввода */
+  minLength?: number;
+  /** Максимальная длина ввода */
+  maxLength?: number;
+  /** Добавлять к существующей переменной */
+  appendVariable?: boolean;
 }

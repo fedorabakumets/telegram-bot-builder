@@ -32,6 +32,17 @@ export const messageParamsSchema = z.object({
   enableConditionalMessages: z.boolean().optional().default(false),
   conditionalMessages: z.array(z.any()).optional().default([]),
   fallbackMessage: z.string().optional(),
+  // Поля для сбора пользовательского ввода
+  enableTextInput: z.boolean().optional().default(false),
+  enablePhotoInput: z.boolean().optional().default(false),
+  enableVideoInput: z.boolean().optional().default(false),
+  enableAudioInput: z.boolean().optional().default(false),
+  enableDocumentInput: z.boolean().optional().default(false),
+  inputVariable: z.string().optional(),
+  inputTargetNodeId: z.string().optional(),
+  minLength: z.number().optional().default(0),
+  maxLength: z.number().optional().default(0),
+  appendVariable: z.boolean().optional().default(false),
 });
 
 /** Тип параметров сообщения (выведен из схемы) */

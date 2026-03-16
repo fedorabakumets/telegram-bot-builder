@@ -11,13 +11,13 @@
 // import { generateCommandNodeHandlerWithKeyboardAndImageSupport } from '../CommandHandler/generateCommandNodeHandlerWithKeyboardAndImageSupport';
 // import { generateStartNodeHandlerWithConditionalLogicAndImages } from '../CommandHandler/generateStartNodeHandlerWithConditionalLogicAndImages';
 // import { createFakeMessageEditForCallback } from '../Keyboard/createFakeMessageEditForCallback';
-import { generateMessageNodeHandlerWithConditionalLogicAndMediaSupport } from '../Conditional/generateMessageNodeHandlerWithConditionalLogicAndMediaSupport';
+// import { generateMessageNodeHandlerWithKeyboardAndInputCollection } from '../MessageHandlers/generateMessageNodeHandlerWithKeyboardAndInputCollection';
+// import { generateMessageNodeHandlerWithConditionalLogicAndMediaSupport } from '../Conditional/generateMessageNodeHandlerWithConditionalLogicAndMediaSupport';
+// import { generateStickerHandler, generateVoiceHandler, generateAnimationHandler } from './generate-media-handlers';
+// import { generateLocationHandler, generateContactHandler } from './generate-location-contact-handlers';
 import { generateMultiSelectButtonHandler } from '../../templates/handlers';
-import { generateMessageNodeHandlerWithKeyboardAndInputCollection } from '../MessageHandlers/generateMessageNodeHandlerWithKeyboardAndInputCollection';
 import { generateGotoHandler } from './generate-goto-handler';
 import { generateSaveVariableHandler } from './generate-save-variable';
-import { generateStickerHandler, generateVoiceHandler, generateAnimationHandler } from './generate-media-handlers';
-import { generateLocationHandler, generateContactHandler } from './generate-location-contact-handlers';
 
 /**
  * Обрабатывает кнопки узлов и генерирует обработчики callback-запросов
@@ -67,36 +67,21 @@ export function newprocessNodeButtonsAndGenerateHandlers(
           if (targetNode.type === 'message' && targetNode.data.action === 'save_variable') {
             code += generateSaveVariableHandler(targetNode);
           }
-          // Обработка message узлов
+          // Обработка message узлов - обработчик уже сгенерирован в generateNodeHandlers
+          // Просто вызываем существующий handle_callback_XXX
           else if (targetNode.type === 'message') {
-            code = generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(
-              targetNode, 
-              code, 
-              allNodeIds, 
-              connections, 
-              mediaVariablesMap, 
-              actualNodeId
-            );
+            const safeNodeId = actualNodeId.replace(/-/g, '_');
+            code += `    # Message node handler уже сгенерирован в generateNodeHandlers\n`;
+            code += `    # Вызываем существующий обработчик через handle_callback_${safeNodeId}\n`;
+            // Примечание: навигация к targetNode будет выполнена через вызов handle_callback_XXX
+            // который уже сгенерирован в generate-node-handlers.ts через message.py.jinja2
           }
-          // Обработка sticker узлов
-          else if (targetNode.type === 'sticker') {
-            code += generateStickerHandler(targetNode);
-          }
-          // Обработка voice узлов
-          else if (targetNode.type === 'voice') {
-            code += generateVoiceHandler(targetNode);
-          }
-          // Обработка animation узлов
-          else if (targetNode.type === 'animation') {
-            code += generateAnimationHandler(targetNode);
-          }
-          // Обработка location узлов
-          else if (targetNode.type === 'location') {
-            code += generateLocationHandler(targetNode);
-          }
-          // Обработка contact узлов
-          else if (targetNode.type === 'contact') {
-            code += generateContactHandler(targetNode);
+          // Обработка sticker, voice, animation, location, contact узлов
+          // Обработчики уже сгенерированы в generateNodeHandlers
+          else if (targetNode.type === 'sticker' || targetNode.type === 'voice' || 
+                   targetNode.type === 'animation' || targetNode.type === 'location' || 
+                   targetNode.type === 'contact') {
+            code += `    # ${targetNode.type} node handler уже сгенерирован в generateNodeHandlers\n`;
           }
           // Обработка start узлов - удалено после миграции на Jinja2
           // start и command узлы теперь используют шаблоны:
@@ -113,14 +98,9 @@ export function newprocessNodeButtonsAndGenerateHandlers(
             // в generate-new-node-handlers.ts
             code += `    # Command node handler generated via Jinja2 template\n`;
           }
-          // Универсальный обработчик
+          // Неизвестный тип узла
           else {
-            code = generateMessageNodeHandlerWithKeyboardAndInputCollection(
-              code, 
-              targetNode, 
-              actualNodeId, 
-              allNodeIds
-            );
+            code += `    # Нет обработчика для узла типа ${targetNode.type}\n`;
           }
         } else {
           // Кнопка без цели

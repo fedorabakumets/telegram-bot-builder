@@ -375,11 +375,11 @@ describe('keyboard.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 5 полей', () => {
+      it('должен иметь 20 полей', () => {
         const shape = keyboardParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 5);
+        assert.strictEqual(fields.length, 20);
       });
 
       it('должен использовать ZodOptional для keyboardType', () => {
