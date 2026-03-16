@@ -8,7 +8,8 @@
   @param {boolean} oneTimeKeyboard - Скрыть после использования
   @param {boolean} resizeKeyboard - Изменить размер под кнопки
 #}
-{%- if keyboardType == 'inline' and buttons|length > 0 %}builder = InlineKeyboardBuilder()
+{%- if keyboardType == 'inline' and buttons|length > 0 %}
+builder = InlineKeyboardBuilder()
 {%- for btn in buttons %}
 {%- if btn.action == 'url' %}
 builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, url="{{ btn.url or btn.target }}"))
@@ -30,7 +31,8 @@ builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callbac
 # Авто-раскладка: {{ keyboardLayout.columns }} колонок
 {%- endif %}
 keyboard = builder.as_markup()
-{%- elif keyboardType == 'reply' and buttons|length > 0 %}builder = ReplyKeyboardBuilder()
+{%- elif keyboardType == 'reply' and buttons|length > 0 %}
+builder = ReplyKeyboardBuilder()
 {%- for btn in buttons %}
 builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
 {%- endfor %}
@@ -38,5 +40,6 @@ keyboard = builder.as_markup(
     resize_keyboard={{ 'True' if resizeKeyboard else 'False' }},
     one_time_keyboard={{ 'True' if oneTimeKeyboard else 'False' }}
 )
-{%- else %}keyboard = None
+{%- else %}
+keyboard = None
 {%- endif %}

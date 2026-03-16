@@ -18,26 +18,66 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Проверка флага --coverage
 const useCoverage = process.argv.includes('--coverage');
 
+// Проверка флага --templates (только тесты шаблонов)
+const onlyTemplates = process.argv.includes('--templates');
+
+// Проверка флага --unit (только unit тесты)
+const onlyUnit = process.argv.includes('--unit');
+
+// Проверка флага --integration (только integration тесты)
+const onlyIntegration = process.argv.includes('--integration');
+
+// Проверка флага --pattern (фильтр по имени файла)
+const patternIndex = process.argv.indexOf('--pattern');
+const filePattern = patternIndex !== -1 ? process.argv[patternIndex + 1] : null;
+
 async function runTests() {
   const testFiles = [];
 
   // Ищем все .test.ts файлы в lib/tests (unit и integration)
   const testDir = join(__dirname, 'lib', 'tests');
-  
-  // Ищем все .test.ts файлы в lib/bot-generator/templates (шаблоны)
-  const templatesDir = join(__dirname, 'lib', 'bot-generator', 'templates');
+
+  // Ищем все .test.ts файлы в lib/templates (шаблоны)
+  const templatesDir = join(__dirname, 'lib', 'templates');
 
   try {
     // Ищем unit тесты в lib/tests
-    for await (const file of glob('**/*.test.ts', { cwd: testDir })) {
-      const fullPath = join(testDir, file);
-      testFiles.push(fullPath);
+    if (!onlyTemplates && !onlyIntegration) {
+      for await (const file of glob('**/*.test.ts', { cwd: testDir })) {
+        const fullPath = join(testDir, file);
+        if (filePattern && !fullPath.includes(filePattern)) continue;
+        testFiles.push(fullPath);
+      }
     }
-    
-    // Ищем тесты шаблонов в lib/bot-generator/templates
-    for await (const file of glob('**/*.test.ts', { cwd: templatesDir })) {
-      const fullPath = join(templatesDir, file);
-      testFiles.push(fullPath);
+
+    // Ищем тесты шаблонов в lib/templates
+    if (!onlyTemplates && !onlyUnit) {
+      for await (const file of glob('**/*.test.ts', { cwd: templatesDir })) {
+        const fullPath = join(templatesDir, file);
+        if (filePattern && !fullPath.includes(filePattern)) continue;
+        testFiles.push(fullPath);
+      }
+    } else if (onlyTemplates) {
+      // Только тесты шаблонов
+      for await (const file of glob('**/*.test.ts', { cwd: templatesDir })) {
+        const fullPath = join(templatesDir, file);
+        if (filePattern && !fullPath.includes(filePattern)) continue;
+        testFiles.push(fullPath);
+      }
+    } else if (onlyUnit) {
+      // Только unit тесты
+      for await (const file of glob('**/*.test.ts', { cwd: testDir })) {
+        const fullPath = join(testDir, file);
+        if (filePattern && !fullPath.includes(filePattern)) continue;
+        testFiles.push(fullPath);
+      }
+    } else if (onlyIntegration) {
+      // Только integration тесты
+      for await (const file of glob('integration/**/*.test.ts', { cwd: testDir })) {
+        const fullPath = join(testDir, file);
+        if (filePattern && !fullPath.includes(filePattern)) continue;
+        testFiles.push(fullPath);
+      }
     }
   } catch (error) {
     console.error('Ошибка поиска тестов:', error.message);

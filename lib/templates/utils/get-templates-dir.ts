@@ -7,20 +7,20 @@ import * as path from 'path';
 
 /**
  * Получает абсолютный путь к директории шаблонов
- * 
- * @returns Абсолютный путь к lib/bot-generator/templates/
+ *
+ * @returns Абсолютный путь к lib/templates/
  */
 export function getTemplatesDir(): string {
   // Для browser-сборки используем абсолютный путь
   // Vite автоматически подставляет правильный путь при сборке
   if (typeof window !== 'undefined') {
     // В браузере возвращаем относительный путь который Vite обработает
-    return '/lib/bot-generator/templates';
+    return '/lib/templates';
   }
-  
+
   // Для Node.js используем process.cwd()
   const projectRoot = process.cwd();
-  return path.join(projectRoot, 'lib', 'bot-generator', 'templates');
+  return path.join(projectRoot, 'lib', 'templates');
 }
 
 /**

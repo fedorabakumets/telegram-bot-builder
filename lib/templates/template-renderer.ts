@@ -54,7 +54,7 @@ function initEnvironment(): Environment {
   
   env = new Environment(new FileSystemLoader(templatesDir), {
     autoescape: false,    // Отключаем авто-экранирование для Python кода
-    trimBlocks: true,     // Удаляем первый newline после блока
+    trimBlocks: false,    // Сохраняем newlines после блоков для корректного форматирования
     lstripBlocks: true,   // Удаляем пробелы в начале строки блока
   });
 
