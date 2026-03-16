@@ -33,7 +33,7 @@ import { isLoggingEnabled } from '../../bot-generator';
 import { generateCheckUserVariableFunction } from '../database';
 import { formatTextForPython, generateWaitingStateCode, toPythonBoolean } from '../format';
 import { generateHandleNodeFunctions } from '../../generate/generateHandleNodeFunctions';
-import { generateInlineKeyboardCode } from '../Keyboard';
+import { generateKeyboard } from '../../templates/keyboard';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
 import { generateUniversalVariableReplacement } from '../utils';
 import { generateFullMessagePreparation } from './message-preparation';
@@ -726,7 +726,13 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
 
                       // Создаем inline клавиатуру с кнопками выбора
                       if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
-                        code += generateInlineKeyboardCode(navTargetNode.data.buttons, '                ', navTargetNode.id, navTargetNode.data, allNodeIds);
+                        code += generateKeyboard({
+                          keyboardType: 'inline',
+                          buttons: navTargetNode.data.buttons,
+                          nodeId: navTargetNode.id,
+                          allNodeIds,
+                          indentLevel: '                ',
+                        });
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
                         code += `                # Заменяем все переменные в тексте\n`;
                         code += `                # Получаем фильтры переменных для замены\n`;

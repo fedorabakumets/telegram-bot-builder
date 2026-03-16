@@ -8,7 +8,7 @@
  */
 
 import { generateButtonText, toPythonBoolean } from '../format';
-import { generateInlineKeyboardCode } from '../Keyboard';
+import { generateKeyboard } from '../../templates/keyboard';
 
 /**
  * Генерирует Python-код для отправки текстового сообщения
@@ -26,7 +26,13 @@ export function generateTextSend(
   let code = '';
   
   if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-    code += generateInlineKeyboardCode(node.data.buttons, indent, node.id, node.data, allNodeIds);
+    code += generateKeyboard({
+      keyboardType: 'inline',
+      buttons: node.data.buttons,
+      nodeId: node.id,
+      allNodeIds,
+      indentLevel: indent,
+    });
     code += `${indent}await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n`;
   } else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
     code += `${indent}builder = ReplyKeyboardBuilder()\n`;

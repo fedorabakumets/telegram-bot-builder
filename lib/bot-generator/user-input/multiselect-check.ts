@@ -1,7 +1,7 @@
 import { Button } from '../types';
 import { formatTextForPython, generateButtonText, toPythonBoolean } from '../format';
 import { getAdjustCode } from '../Keyboard/getAdjustCode';
-import { generateInlineKeyboardCode } from '../Keyboard';
+import { generateKeyboard } from '../../templates/keyboard';
 import { escapePythonString } from '../format/escapePythonString';
 // Примечание: generateInitAllUserVarsCall удалена после миграции на Jinja2
 // import { generateInitAllUserVarsCall } from '../database/generate-init-all-user-vars';
@@ -52,7 +52,13 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                         code += '            text = replace_variables_in_text(text, all_user_vars, variable_filters)\n';
 
                         if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                            code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data, allNodeIds);
+                            code += generateKeyboard({
+                                keyboardType: 'inline',
+                                buttons: targetNode.data.buttons,
+                                nodeId: targetNode.id,
+                                allNodeIds,
+                                indentLevel: '            ',
+                            });
                             code += '            await message.answer(text, reply_markup=keyboard)\n';
                         } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                             code += '            builder = ReplyKeyboardBuilder()\n';

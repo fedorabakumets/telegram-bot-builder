@@ -9,7 +9,7 @@
 
 import type { Node } from '@shared/schema';
 import { formatTextForPython } from '../format';
-import { generateInlineKeyboardCode } from '../Keyboard';
+import { generateKeyboard } from '../../templates/keyboard';
 import { generateUniversalVariableReplacement } from '../database';
 
 /**
@@ -54,13 +54,13 @@ export function handleMultipleSelectionNode(
 
   // Создание inline клавиатуры с кнопками выбора
   if (targetNode.data?.buttons && targetNode.data.buttons.length > 0) {
-    code += generateInlineKeyboardCode(
-      targetNode.data.buttons,
-      bodyIndent,
-      targetNode.id,
-      targetNode.data,
-      allNodeIds
-    );
+    code += generateKeyboard({
+      keyboardType: 'inline',
+      buttons: targetNode.data.buttons,
+      nodeId: targetNode.id,
+      allNodeIds,
+      indentLevel: bodyIndent,
+    });
     code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
   } else {
     code += `${bodyIndent}await message.answer(text)\n`;

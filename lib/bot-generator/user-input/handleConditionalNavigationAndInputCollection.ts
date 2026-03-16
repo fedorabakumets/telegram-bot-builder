@@ -1,6 +1,6 @@
 import { Button } from '../types';
 import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from '../format';
-import { generateInlineKeyboardCode } from '../Keyboard';
+import { generateKeyboard } from '../../templates/keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 import { generateCheckUserVariableFunction, generateDatabaseVariablesBlockCall } from '../database';
 import { generateNavigateToNodeWithText } from '../transitions/generate-node-navigation';
@@ -37,7 +37,13 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
 
                 // Создаем inline клавиатуру с кнопками выбора
                 if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                    code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+                    code += generateKeyboard({
+                        keyboardType: 'inline',
+                        buttons: targetNode.data.buttons,
+                        nodeId: targetNode.id,
+                        allNodeIds,
+                        indentLevel: '                        ',
+                    });
                     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
                     code += `                        # Заменяем все переменные в тексте\n`;
                     code += `                        # Получаем фильтры переменных для замены\n`;
@@ -320,7 +326,13 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                                 code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                             } else {
                                 // Генерируем inline клавиатуру
-                                code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+                                code += generateKeyboard({
+                                    keyboardType: 'inline',
+                                    buttons: targetNode.data.buttons,
+                                    nodeId: targetNode.id,
+                                    allNodeIds,
+                                    indentLevel: '                        ',
+                                });
                             }
                             code += `                        await message.answer(text, reply_markup=keyboard)\n`;
 
@@ -393,7 +405,13 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                         code += '                        await message.answer(text, reply_markup=keyboard)\n';
                     } else if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                         code += '                        # Создаем inline клавиатуру\n';
-                        code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+                        code += generateKeyboard({
+                            keyboardType: 'inline',
+                            buttons: targetNode.data.buttons,
+                            nodeId: targetNode.id,
+                            allNodeIds,
+                            indentLevel: '                        ',
+                        });
                         code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
                         code += '                        await message.answer(text, reply_markup=keyboard)\n';
                     } else {

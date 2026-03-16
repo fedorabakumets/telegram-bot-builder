@@ -11,7 +11,7 @@ import { generateConditionalMessageLogic } from '.';
 import { isLoggingEnabled } from '../../bot-generator';
 import { formatTextForPython, generateWaitingStateCode, getParseMode, stripHtmlTags } from '../format';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
-import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../Keyboard';
+import { generateKeyboard } from '../../templates/keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
@@ -117,13 +117,26 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
         if (keyboardType === "inline") {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ INLINE клавиатуру для узла ${targetNode.id}`);
             codeLines.push('        # Создаем inline клавиатуру');
-            const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
+            const keyboardCode = generateKeyboard({
+                keyboardType: 'inline',
+                buttons: targetNode.data.buttons,
+                nodeId: targetNode.id,
+                allNodeIds,
+                indentLevel: '        ',
+            });
             const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
             codeLines.push(...keyboardLines);
         } else if (keyboardType === "reply") {
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ REPLY клавиатуру для узла ${targetNode.id}`);
             codeLines.push('        # Создаем reply клавяатуру');
-            const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+            const keyboardCode = generateKeyboard({
+                keyboardType: 'reply',
+                buttons: targetNode.data.buttons,
+                nodeId: targetNode.id,
+                indentLevel: '        ',
+                oneTimeKeyboard: targetNode.data.oneTimeKeyboard,
+                resizeKeyboard: targetNode.data.resizeKeyboard,
+            });
             const keyboardLines = keyboardCode.split('\n').filter(line => line.trim());
             codeLines.push(...keyboardLines);
         }

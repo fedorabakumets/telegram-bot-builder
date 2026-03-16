@@ -11,7 +11,7 @@ import { Button } from '../../bot-generator';
 import { generateConditionalMessageLogic } from '../Conditional';
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
 import { getAdjustCode } from '../Keyboard/getAdjustCode';
-import { generateInlineKeyboardCode, generateReplyKeyboardCode } from '../Keyboard';
+import { generateKeyboard } from '../../templates/keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 
 /**
@@ -132,7 +132,14 @@ export function generateMessageNodeHandlerWithKeyboardAndInputCollection(code: s
             code += '    # Проверяем, есть ли условная клавиатура для этого узла\n';
             code += '    if "keyboard" not in locals() or keyboard is None:\n';
             code += '        # Создаем reply клавиатуру (+ сбор ввода включен)\n';
-            const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', actualNodeId, targetNode.data);
+            const keyboardCode = generateKeyboard({
+                keyboardType: 'reply',
+                buttons: targetNode.data.buttons,
+                nodeId: actualNodeId,
+                indentLevel: '        ',
+                oneTimeKeyboard: targetNode.data.oneTimeKeyboard,
+                resizeKeyboard: targetNode.data.resizeKeyboard,
+            });
             code += keyboardCode;
             // Определяем режим форматирования для целевого узла
             let parseModeTarget = '';
@@ -171,15 +178,27 @@ export function generateMessageNodeHandlerWithKeyboardAndInputCollection(code: s
             code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
             code += '    if "keyboard" not in locals() or keyboard is None:\n';
             code += '        # ИСПРАВЛЕНИЕ: Используем универсальную функцию создания клавиатуры\n';
-            // ИСПРАВЛЕНИЕ: Используем универсальную функцию generateInlineKeyboardCode
-            const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', actualNodeId, targetNode.data, allNodeIds);
+            const keyboardCode = generateKeyboard({
+                keyboardType: 'inline',
+                buttons: targetNode.data.buttons,
+                nodeId: actualNodeId,
+                allNodeIds,
+                indentLevel: '        ',
+            });
             code += keyboardCode;
             code += `    await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
         } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
             code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
             code += '    if "keyboard" not in locals() or keyboard is None:\n';
             code += '        # Создаем reply клавиатуру\n';
-            const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', actualNodeId, targetNode.data);
+            const keyboardCode = generateKeyboard({
+                keyboardType: 'reply',
+                buttons: targetNode.data.buttons,
+                nodeId: actualNodeId,
+                indentLevel: '        ',
+                oneTimeKeyboard: targetNode.data.oneTimeKeyboard,
+                resizeKeyboard: targetNode.data.resizeKeyboard,
+            });
             code += keyboardCode;
             // NOTE: Отправка сообщения для reply клавиатуры обрабатывается в основной функции
             // await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})
