@@ -6,24 +6,8 @@
  */
 
 import { AliasNodes } from './AliasNodes';
-// Примечание: init_user_variables удалена после миграции на Jinja2
-// import { init_user_variables } from '../utils';
-// Примечание: replace_variables_in_text удалена после миграции на Jinja2
-// import { replace_variables_in_text } from './replace_variables_in_text';
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
-import { get_moscow_time } from './get_moscow_time';
-import { get_user_data_from_db } from './get_user_data_from_db';
-import { get_user_from_db } from './get_user_from_db';
-import { get_user_ids_from_db } from './get_user_ids_from_db';
-import { init_database } from './init_database';
-import { log_message } from './log_message';
-import { save_user_data_to_db } from './save_user_data_to_db';
-import { save_user_to_db } from './save_user_to_db';
-import { update_user_data_in_db } from './update_user_data_in_db';
-import { update_user_variable_in_db } from './update_user_variable_in_db';
-// Примечание: generateInitAllUserVars удалена после миграции на Jinja2
-// import { generateInitAllUserVars } from './generate-init-all-user-vars';
-import { generateNavigateToNode } from '../transitions/generate-node-navigation';
+import { generateSaveToDatabaseTable } from './generateSaveToDatabaseTable';
+import { generateDatabase } from '../../templates/database/database.renderer';
 
 /**
  * Вспомогательная функция для генерации кода, связанного с базой данных
@@ -36,61 +20,31 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     return '';
   }
 
-  // Собираем весь код в массив строк для автоматической обработки
-  const codeLines: string[] = [];
+  // Определяем какие функции нужны
+  const hasMessageLogging = nodes.some(n => n.type === 'message' || n.type === 'command');
+  const hasUserIdsTable = nodes.some(n => n.data?.buttons?.some((b: any) => b.action === 'goto'));
 
-  // Примечание: DATABASE_URL и db_pool определяются в config.py.jinja2
-  // Здесь генерируются только функции для работы с БД
-  codeLines.push('# ┌─────────────────────────────────────────┐');
-  codeLines.push('# │      Функции для работы с базой данных  │');
-  codeLines.push('# └─────────────────────────────────────────┘');
-  codeLines.push('');
+  // Базовые функции через Jinja2
+  let code = generateDatabase({
+    userDatabaseEnabled: true,
+    hasMessageLogging,
+    hasUserIdsTable,
+  });
 
-  // Инициализация БД
-  init_database(codeLines);
-
-  // Получение московского времени
-  get_moscow_time(codeLines);
-
-  // Примечание: replace_variables_in_text, generateInitAllUserVars, init_user_variables
-  // удалены после миграции на Jinja2. Эти функции теперь генерируются через шаблоны:
-  // - lib/templates/database/database.py.jinja2
-  // - lib/templates/universal-handlers/universal-handlers.py.jinja2
-
-  // Функция навигации к узлу (переиспользуемая)
-  codeLines.push(generateNavigateToNode());
-
-  // Сохранение пользователя в базу данных
-  save_user_to_db(codeLines);
-
-  // Получение пользователя из базы данных
-  get_user_from_db(codeLines);
-
-  // Получение списка user_ids из таблицы user_ids
-  get_user_ids_from_db(codeLines);
-
-  // Получение данных пользователя из базы данных
-  get_user_data_from_db(codeLines);
+  code += '\n';
 
   // Алиасы для обработчиков команд
-  AliasNodes(codeLines, nodes);
+  const aliasCodeLines: string[] = [];
+  AliasNodes(aliasCodeLines, nodes);
+  code += aliasCodeLines.join('\n');
 
-  // Обновление данных пользователя в базе данных
-  update_user_data_in_db(codeLines);
+  code += '\n';
 
-  // Алиас для сохранения пользовательских данных (обратная совместимость)
-  save_user_data_to_db(codeLines);
+  // Сложные функции остаются в TS
+  code += generateSaveToDatabaseTable({
+    variableName: 'test_var',
+    valueExpression: 'test_value',
+  });
 
-  // Обновление переменной пользователя в базе данных
-  update_user_variable_in_db(codeLines);
-
-  // Логирование сообщений
-  log_message(codeLines);
-
-  // Применяем автоматическое добавление комментариев ко всему коду
-  const commentedCodeLines = processCodeWithAutoComments(codeLines, 'generateDatabaseCode.ts');
-
-  return commentedCodeLines.join('\n');
+  return code;
 }
-
-

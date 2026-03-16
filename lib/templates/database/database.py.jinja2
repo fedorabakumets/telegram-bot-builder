@@ -1,9 +1,135 @@
 {#
-  База данных: функции для работы с пользователями
+  Шаблон функций базы данных для Python бота
 
-  @fileoverview Функции для сохранения и получения данных пользователей
-  @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей (asyncpg)
+  @fileoverview Генерирует функции для работы с базой данных
+  @param {boolean} userDatabaseEnabled - База данных пользователей включена
+  @param {boolean} hasMessageLogging - Есть логирование сообщений (нужна таблица bot_messages)
+  @param {boolean} hasUserIdsTable - Есть таблица user_ids
+  @param {boolean} hasTelegramSettingsTable - Есть таблица user_telegram_settings
 #}
+
+{# ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===== #}
+
+{#
+  Получение московского времени
+#}
+{% macro get_moscow_time_macro() %}
+def get_moscow_time():
+    """Получает текущее время в Москве"""
+    from datetime import datetime, timezone, timedelta
+    moscow_tz = timezone(timedelta(hours=3))
+    return datetime.now(moscow_tz).strftime("%Y-%m-%d %H:%M:%S")
+{% endmacro %}
+
+{#
+  Логирование сообщений
+  @param hasMessageLogging - флаг наличия логирования
+#}
+{% macro log_message_function() %}
+async def log_message(user_id: int, message_type: str, message_text: str = None, message_data: str = None, node_id: str = None):
+    """Логирует сообщения в базу данных"""
+    if not db_pool:
+        return
+    try:
+        async with db_pool.acquire() as conn:
+            await conn.execute(
+                "INSERT INTO bot_messages (user_id, message_type, message_text, message_data, node_id, created_at) VALUES ($1, $2, $3, $4, $5, NOW())",
+                user_id, message_type, message_text, message_data, node_id
+            )
+    except Exception as e:
+        logging.error(f"❌ Ошибка логирования сообщения: {e}")
+{% endmacro %}
+
+{#
+  Получение списка user_ids
+#}
+{% macro get_user_ids_from_db() %}
+async def get_user_ids_from_db(user_id: int):
+    """Получает список user_ids из таблицы user_ids"""
+    if not db_pool:
+        return {"user_ids": [], "count": 0}
+    try:
+        async with db_pool.acquire() as conn:
+            rows = await conn.fetch("SELECT user_id FROM user_ids ORDER BY created_at DESC")
+            user_ids = [str(row["user_id"]) for row in rows]
+            count = len(rows)
+            logging.info(f"✅ Получено {count} ID из таблицы user_ids")
+            return {"user_ids": user_ids, "count": count}
+    except Exception as e:
+        logging.error(f"❌ Ошибка получения данных из user_ids: {e}")
+        return {"user_ids": [], "count": 0}
+{% endmacro %}
+
+{#
+  Получение данных пользователя
+#}
+{% macro get_user_data_from_db() %}
+async def get_user_data_from_db(user_id: int, data_key: str):
+    """Получает конкретное поле из user_data"""
+    if not db_pool:
+        return None
+    try:
+        async with db_pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT user_data FROM bot_users WHERE user_id = $1", user_id)
+            if row and row["user_data"]:
+                user_data = row["user_data"]
+                if isinstance(user_data, str):
+                    try:
+                        data = json.loads(user_data)
+                        return data.get(data_key)
+                    except (json.JSONDecodeError, TypeError):
+                        return None
+                elif isinstance(user_data, dict):
+                    return user_data.get(data_key)
+    except Exception as e:
+        logging.error(f"❌ Ошибка получения данных из БД: {e}")
+    return None
+{% endmacro %}
+
+{#
+  Обновление переменной пользователя
+#}
+{% macro update_user_variable_in_db() %}
+async def update_user_variable_in_db(user_id: int, variable_name: str, variable_value):
+    """Обновляет конкретную переменную в user_data"""
+    if not db_pool:
+        return False
+    try:
+        async with db_pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT user_data FROM bot_users WHERE user_id = $1", user_id)
+            if row and row["user_data"]:
+                user_data = row["user_data"]
+                if isinstance(user_data, str):
+                    try:
+                        user_data = json.loads(user_data)
+                    except (json.JSONDecodeError, TypeError):
+                        user_data = {}
+                elif not isinstance(user_data, dict):
+                    user_data = {}
+            else:
+                user_data = {}
+            
+            user_data[variable_name] = variable_value
+            
+            await conn.execute(
+                "UPDATE bot_users SET user_data = $1 WHERE user_id = $2",
+                json.dumps(user_data, ensure_ascii=False), user_id
+            )
+            logging.info(f"✅ Переменная '{variable_name}' обновлена в БД")
+            return True
+    except Exception as e:
+        logging.error(f"❌ Ошибка обновления переменной в БД: {e}")
+        return False
+{% endmacro %}
+
+{#
+  Алиас для update_user_data_in_db
+#}
+{% macro save_user_data_to_db() %}
+async def save_user_data_to_db(user_id: int, variable_name: str, variable_value):
+    """Алиас для update_user_variable_in_db (для обратной совместимости)"""
+    return await update_user_variable_in_db(user_id, variable_name, variable_value)
+{% endmacro %}
 
 {%- if userDatabaseEnabled %}
 async def init_database():
@@ -25,28 +151,42 @@ async def init_database():
                     is_active BOOLEAN DEFAULT TRUE
                 );
             """)
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS bot_messages (
+                    id SERIAL PRIMARY KEY,
+                    user_id BIGINT,
+                    message_type VARCHAR(50),
+                    message_text TEXT,
+                    message_data TEXT,
+                    node_id VARCHAR(255),
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """)
+            logging.info("✅ Таблица bot_messages создана")
         logging.info("✅ База данных инициализирована")
     except Exception as e:
         logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")
         db_pool = None
 
 
-async def save_user_to_db(user_id: int, username: str = None, first_name: str = None, last_name: str = None):
+async def save_user_to_db(user_id: int, username: str = None, first_name: str = None, 
+                          last_name: str = None, avatar_url: str = None):
     """Сохраняет пользователя в базу данных"""
     if not db_pool:
         return False
     try:
         async with db_pool.acquire() as conn:
             await conn.execute("""
-                INSERT INTO bot_users (user_id, username, first_name, last_name)
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO bot_users (user_id, username, first_name, last_name, avatar_url)
+                VALUES ($1, $2, $3, $4, $5)
                 ON CONFLICT (user_id) DO UPDATE SET
                     username = EXCLUDED.username,
                     first_name = EXCLUDED.first_name,
                     last_name = EXCLUDED.last_name,
+                    avatar_url = COALESCE(EXCLUDED.avatar_url, bot_users.avatar_url),
                     last_interaction = NOW(),
                     interaction_count = bot_users.interaction_count + 1
-            """, user_id, username, first_name, last_name)
+            """, user_id, username, first_name, last_name, avatar_url)
         return True
     except Exception as e:
         logging.error(f"Ошибка сохранения пользователя в БД: {e}")
@@ -101,5 +241,18 @@ async def update_user_data_in_db(user_id: int, data_key: str, data_value):
     except Exception as e:
         logging.error(f"Ошибка обновления данных пользователя: {e}")
         return False
+
+{# Вспомогательные функции #}
+{{ get_moscow_time_macro() }}
+
+{{ log_message_function() }}
+
+{{ get_user_ids_from_db() }}
+
+{{ get_user_data_from_db() }}
+
+{{ update_user_variable_in_db() }}
+
+{{ save_user_data_to_db() }}
 
 {%- endif %}

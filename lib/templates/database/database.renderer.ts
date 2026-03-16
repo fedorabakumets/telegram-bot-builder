@@ -20,9 +20,6 @@ import { renderPartialTemplate } from '../template-renderer';
  * ```
  */
 export function generateDatabase(params: DatabaseTemplateParams): string {
-  const validated = databaseParamsSchema.parse({
-    ...params,
-    userDatabaseEnabled: params.userDatabaseEnabled ?? false,
-  });
+  const validated = databaseParamsSchema.parse(params);
   return renderPartialTemplate('database/database.py.jinja2', validated);
 }
