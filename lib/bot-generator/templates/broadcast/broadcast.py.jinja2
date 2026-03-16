@@ -13,36 +13,36 @@
   @param {string} idSourceType - Источник ID: 'user_ids', 'bot_users', 'both'
 #}
 
-{% if enableBroadcast %}
+{%- if enableBroadcast %}
 @dp.message(Command("broadcast_{{ nodeId|safe_name }}"))
 async def handle_broadcast_{{ nodeId|safe_name }}(message: types.Message):
     """Обработчик рассылки сообщений для узла {{ nodeId }}"""
     user_id = message.from_user.id
 
-    {% if enableConfirmation %}
+    {%- if enableConfirmation %}
     {# Проверка подтверждения #}
     if user_data.get(user_id, {}).get(f"broadcast_{{ nodeId }}_confirmed"):
         user_data[user_id][f"broadcast_{{ nodeId }}_confirmed"] = False
-    {% endif %}
+    {%- endif %}
 
     {# Получение списка пользователей для рассылки #}
     target_users = []
 
-    {% if idSourceType == 'user_ids' or idSourceType == 'both' %}
+    {%- if idSourceType == 'user_ids' or idSourceType == 'both' %}
     {# Получение user_ids из базы данных #}
     if db_pool:
         async with db_pool.acquire() as conn:
             rows = await conn.fetch("SELECT user_id FROM users WHERE is_bot = FALSE")
             target_users.extend([row['user_id'] for row in rows])
-    {% endif %}
+    {%- endif %}
 
-    {% if idSourceType == 'bot_users' or idSourceType == 'both' %}
+    {%- if idSourceType == 'bot_users' or idSourceType == 'both' %}
     {# Получение bot_users из базы данных #}
     if db_pool:
         async with db_pool.acquire() as conn:
             rows = await conn.fetch("SELECT user_id FROM users WHERE is_bot = TRUE")
             target_users.extend([row['user_id'] for row in rows])
-    {% endif %}
+    {%- endif %}
 
     {# Текст рассылки #}
     broadcast_text = "{{ node.data.messageText|e }}" if node.data.get("messageText") else "Рассылка сообщений"
@@ -56,7 +56,7 @@ async def handle_broadcast_{{ nodeId|safe_name }}(message: types.Message):
     success_count = 0
     error_count = 0
 
-    {% if broadcastApiType == 'bot' %}
+    {%- if broadcastApiType == 'bot' %}
     {# Рассылка через бота #}
     for target_user_id in target_users:
         try:
@@ -66,7 +66,7 @@ async def handle_broadcast_{{ nodeId|safe_name }}(message: types.Message):
             logging.error(f"Ошибка отправки пользователю {target_user_id}: {e}")
             error_count += 1
         await asyncio.sleep(0.1)  # Задержка для избежания лимитов
-    {% elif broadcastApiType == 'client' %}
+    {%- elif broadcastApiType == 'client' %}
     {# Рассылка через клиента #}
     logging.warning("Рассылка через клиента требует дополнительной настройки")
     for target_user_id in target_users:
@@ -77,16 +77,16 @@ async def handle_broadcast_{{ nodeId|safe_name }}(message: types.Message):
         except Exception as e:
             logging.error(f"Ошибка отправки пользователю {target_user_id}: {e}")
             error_count += 1
-    {% endif %}
+    {%- endif %}
 
     {# Сообщение о результатах #}
     result_text = f"✅ Рассылка завершена\nУспешно: {success_count}\nОшибок: {error_count}"
     await message.answer(result_text)
 
-{% else %}
+{%- else %}
 {# Рассылка отключена #}
 @dp.message(Command("broadcast_{{ nodeId|safe_name }}"))
 async def handle_broadcast_{{ nodeId|safe_name }}(message: types.Message):
     """Обработчик рассылки (отключен) для узла {{ nodeId }}"""
     await message.answer("Рассылка отключена")
-{% endif %}
+{%- endif %}

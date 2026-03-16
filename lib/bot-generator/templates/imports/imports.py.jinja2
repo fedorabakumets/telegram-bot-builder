@@ -29,18 +29,18 @@ from typing import Optional
 from dotenv import load_dotenv
 from aiogram.filters import CommandStart
 
-{% if userDatabaseEnabled %}
+{%- if userDatabaseEnabled %}
 import asyncpg
 import json
-{% endif %}
+{%- endif %}
 
-{% if hasInlineButtons or hasAutoTransitions %}
+{%- if hasInlineButtons or hasAutoTransitions %}
 from aiogram.exceptions import TelegramBadRequest
-{% endif %}
+{%- endif %}
 
-{% if hasMediaNodes or hasUploadImages %}
+{%- if hasMediaNodes or hasUploadImages %}
 import aiohttp
 from aiohttp import TCPConnector
-{% endif %}
+{%- endif %}
 
 import re

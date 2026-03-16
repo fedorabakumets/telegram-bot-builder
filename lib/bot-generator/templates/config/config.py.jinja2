@@ -40,14 +40,14 @@ dp = Dispatcher()
 ADMIN_IDS = [int(x.strip()) for x in os.getenv("ADMIN_IDS", "").replace(" ", "").split(",") if x.strip()]
 
 {# Конфигурация проекта #}
-{% if projectId %}
+{%- if projectId %}
 # ┌─────────────────────────────────────────┐
 # │        Конфигурация проекта             │
 # └─────────────────────────────────────────┘
 # ID проекта для сохранения в базу данных
 PROJECT_ID = {{ projectId }}
 logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")
-{% endif %}
+{%- endif %}
 
 # Директория проекта
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -59,7 +59,7 @@ user_data = {}
 all_user_vars = {}  # Глобальные переменные пользователя
 
 {# База данных #}
-{% if userDatabaseEnabled %}
+{%- if userDatabaseEnabled %}
 # ┌─────────────────────────────────────────┐
 # │           Настройки базы данных         │
 # └─────────────────────────────────────────┘
@@ -69,4 +69,4 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # │      Пул соединений с базой данных    │
 # └─────────────────────────────────────────┘
 db_pool = None
-{% endif %}
+{%- endif %}

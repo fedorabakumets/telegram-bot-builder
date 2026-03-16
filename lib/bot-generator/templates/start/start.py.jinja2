@@ -31,23 +31,21 @@ async def start_handler(message: types.Message):
     logging.info(f"Команда /start вызвана пользователем {message.from_user.id}")
 
     {# Проверки безопасности #}
-    {% if isPrivateOnly %}
+    {%- if isPrivateOnly %}
     if not await is_private_chat(message):
         await message.answer("❌ Эта команда доступна только в приватных чатах")
         return
-    {% endif %}
-
-    {% if adminOnly %}
+    {%- endif %}
+    {%- if adminOnly %}
     if not await is_admin(message.from_user.id):
         await message.answer("❌ У вас нет прав для выполнения этой команды")
         return
-    {% endif %}
-
-    {% if requiresAuth %}
+    {%- endif %}
+    {%- if requiresAuth %}
     if not await check_auth(message.from_user.id):
         await message.answer("❌ Необходимо войти в систему для выполнения этой команды")
         return
-    {% endif %}
+    {%- endif %}
 
     {# Сохранение информации о пользователе #}
     user_id = message.from_user.id
@@ -65,7 +63,7 @@ async def start_handler(message: types.Message):
     except Exception as e:
         logging.warning(f"Не удалось получить аватарку: {e}")
 
-    {% if userDatabaseEnabled %}
+    {%- if userDatabaseEnabled %}
     # Сохраняем пользователя в базу данных
     saved_to_db = await save_user_to_db(user_id, username, first_name, last_name, avatar_url)
 
@@ -75,7 +73,7 @@ async def start_handler(message: types.Message):
     await update_user_data_in_db(user_id, "first_name", first_name)
     await update_user_data_in_db(user_id, "last_name", last_name)
     await update_user_data_in_db(user_id, "username", username)
-    {% endif %}
+    {%- endif %}
 
     # Сохранение в локальное хранилище
     if user_id not in user_data:
@@ -86,47 +84,44 @@ async def start_handler(message: types.Message):
     user_data[user_id]["user_name"] = init_user_variables(user_id, message.from_user)
 
     {# Инициализация множественного выбора #}
-    {% if allowMultipleSelection %}
+    {%- if allowMultipleSelection %}
     # Инициализируем состояние множественного выбора
     if user_id not in user_data:
         user_data[user_id] = {}
     user_data[user_id]["multi_select"] = []
     user_data[user_id]["multi_select_node"] = "{{ nodeId }}"
     logging.info(f"Инициализировано состояние множественного выбора для узла {{ nodeId }}")
-    {% endif %}
+    {%- endif %}
 
     {# Сохранение медиа-переменных #}
-    {% if imageUrl and imageUrl != 'undefined' %}
+    {%- if imageUrl and imageUrl != 'undefined' %}
     user_data[user_id] = user_data.get(user_id, {})
     user_data[user_id]["image_url_{{ nodeId }}"] = "{{ imageUrl }}"
-    {% if userDatabaseEnabled %}
+    {%- if userDatabaseEnabled %}
     await update_user_data_in_db(user_id, "image_url_{{ nodeId }}", "{{ imageUrl }}")
-    {% endif %}
-    {% endif %}
-
-    {% if documentUrl %}
+    {%- endif %}
+    {%- endif %}
+    {%- if documentUrl %}
     user_data[user_id] = user_data.get(user_id, {})
     user_data[user_id]["document_url_{{ nodeId }}"] = "{{ documentUrl }}"
-    {% if userDatabaseEnabled %}
+    {%- if userDatabaseEnabled %}
     await update_user_data_in_db(user_id, "document_url_{{ nodeId }}", "{{ documentUrl }}")
-    {% endif %}
-    {% endif %}
-
-    {% if videoUrl %}
+    {%- endif %}
+    {%- endif %}
+    {%- if videoUrl %}
     user_data[user_id] = user_data.get(user_id, {})
     user_data[user_id]["video_url_{{ nodeId }}"] = "{{ videoUrl }}"
-    {% if userDatabaseEnabled %}
+    {%- if userDatabaseEnabled %}
     await update_user_data_in_db(user_id, "video_url_{{ nodeId }}", "{{ videoUrl }}")
-    {% endif %}
-    {% endif %}
-
-    {% if audioUrl %}
+    {%- endif %}
+    {%- endif %}
+    {%- if audioUrl %}
     user_data[user_id] = user_data.get(user_id, {})
     user_data[user_id]["audio_url_{{ nodeId }}"] = "{{ audioUrl }}"
-    {% if userDatabaseEnabled %}
+    {%- if userDatabaseEnabled %}
     await update_user_data_in_db(user_id, "audio_url_{{ nodeId }}", "{{ audioUrl }}")
-    {% endif %}
-    {% endif %}
+    {%- endif %}
+    {%- endif %}
 
     {# Текст сообщения #}
     text = {{ messageText|format_python_text }}
@@ -140,19 +135,19 @@ async def start_handler(message: types.Message):
     text = replace_variables_in_text(text, all_user_vars, {})
 
     {# Клавиатура #}
-    {% include 'keyboard/keyboard.py.jinja2' %}
+    {%- include 'keyboard/keyboard.py.jinja2' %}
 
     {# Отправка сообщения #}
-    {% if formatMode == 'html' %}
+    {%- if formatMode == 'html' %}
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
-    {% elif formatMode == 'markdown' %}
+    {%- elif formatMode == 'markdown' %}
     await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
-    {% else %}
+    {%- else %}
     await message.answer(text, reply_markup=keyboard)
-    {% endif %}
+    {%- endif %}
 
     {# Автопереход #}
-    {% if enableAutoTransition and autoTransitionTo %}
+    {%- if enableAutoTransition and autoTransitionTo %}
     # ⚡ АВТОПЕРЕХОД к {{ autoTransitionTo }}
     logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
     class FakeCallbackQuery:
@@ -176,10 +171,10 @@ async def start_handler(message: types.Message):
         logging.error(f"Ошибка при автопереходе к узлу {{ autoTransitionTo }}: {e}")
         await message.answer("Переход завершен")
     return
-    {% endif %}
+    {%- endif %}
 
 {# Обработчики синонимов #}
-{% for synonym in synonyms %}
+{%- for synonym in synonyms %}
 
 @dp.message(lambda message: message.text and message.text.lower() == "{{ synonym|lower }}" and message.chat.type in ['group', 'supergroup'])
 async def start_synonym_{{ loop.index }}_handler(message: types.Message):
@@ -187,11 +182,11 @@ async def start_synonym_{{ loop.index }}_handler(message: types.Message):
     logging.info(f"Синоним '{{ synonym }}' вызван пользователем {message.from_user.id}")
 
     {# Проверки безопасности #}
-    {% if adminOnly %}
+    {%- if adminOnly %}
     if not await is_admin(message.from_user.id):
         await message.answer("❌ У вас нет прав для выполнения этой команды")
         return
-    {% endif %}
+    {%- endif %}
 
     {# Сохранение информации о пользователе #}
     user_id = message.from_user.id
@@ -199,10 +194,10 @@ async def start_synonym_{{ loop.index }}_handler(message: types.Message):
     first_name = message.from_user.first_name
     last_name = message.from_user.last_name
 
-    {% if userDatabaseEnabled %}
+    {%- if userDatabaseEnabled %}
     saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
     user_name = await init_user_variables(user_id, message.from_user)
-    {% endif %}
+    {%- endif %}
 
     text = {{ messageText|format_python_text }}
 
@@ -215,15 +210,15 @@ async def start_synonym_{{ loop.index }}_handler(message: types.Message):
     text = replace_variables_in_text(text, all_user_vars, {})
 
     {# Клавиатура #}
-    {% include 'keyboard/keyboard.py.jinja2' %}
+    {%- include 'keyboard/keyboard.py.jinja2' %}
 
     {# Отправка сообщения #}
-    {% if formatMode == 'html' %}
+    {%- if formatMode == 'html' %}
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
-    {% elif formatMode == 'markdown' %}
+    {%- elif formatMode == 'markdown' %}
     await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
-    {% else %}
+    {%- else %}
     await message.answer(text, reply_markup=keyboard)
-    {% endif %}
+    {%- endif %}
 
-{% endfor %}
+{%- endfor %}

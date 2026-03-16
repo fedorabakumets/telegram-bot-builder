@@ -40,23 +40,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         pass
 
     {# Проверки безопасности #}
-    {% if isPrivateOnly %}
+    {%- if isPrivateOnly %}
     if not await is_private_chat(callback_query.message):
         await callback_query.answer("❌ Эта команда доступна только в приватных чатах", show_alert=True)
         return
-    {% endif %}
-
-    {% if adminOnly %}
+    {%- endif %}
+    {%- if adminOnly %}
     if not await is_admin(user_id):
         await callback_query.answer("❌ У вас нет прав для выполнения этой команды", show_alert=True)
         return
-    {% endif %}
-
-    {% if requiresAuth %}
+    {%- endif %}
+    {%- if requiresAuth %}
     if not await check_auth(user_id):
         await callback_query.answer("❌ Необходимо войти в систему", show_alert=True)
         return
-    {% endif %}
+    {%- endif %}
 
     {# Сохранение информации о пользователе #}
     username = callback_query.from_user.username
@@ -95,45 +93,45 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     user_data[user_id]["user_name"] = init_user_variables(user_id, callback_query.from_user)
 
     {# Инициализация множественного выбора #}
-    {% if allowMultipleSelection %}
+    {%- if allowMultipleSelection %}
     # Инициализируем состояние множественного выбора
     user_data[user_id]["multi_select"] = []
     user_data[user_id]["multi_select_node"] = "{{ nodeId }}"
     logging.info(f"Инициализировано состояние множественного выбора для узла {{ nodeId }}")
-    {% endif %}
+    {%- endif %}
 
     {# Сохранение медиа-переменных #}
-    {% if imageUrl and imageUrl != 'undefined' %}
+    {%- if imageUrl and imageUrl != 'undefined' %}
     user_data[user_id] = user_data.get(user_id, {})
     user_data[user_id]["image_url_{{ nodeId }}"] = "{{ imageUrl }}"
-    {% if userDatabaseEnabled %}
+    {%- if userDatabaseEnabled %}
     await update_user_data_in_db(user_id, "image_url_{{ nodeId }}", "{{ imageUrl }}")
-    {% endif %}
-    {% endif %}
+    {%- endif %}
+    {%- endif %}
 
-    {% if documentUrl %}
+    {%- if documentUrl %}
     user_data[user_id] = user_data.get(user_id, {})
     user_data[user_id]["document_url_{{ nodeId }}"] = "{{ documentUrl }}"
-    {% if userDatabaseEnabled %}
+    {%- if userDatabaseEnabled %}
     await update_user_data_in_db(user_id, "document_url_{{ nodeId }}", "{{ documentUrl }}")
-    {% endif %}
-    {% endif %}
+    {%- endif %}
+    {%- endif %}
 
-    {% if videoUrl %}
+    {%- if videoUrl %}
     user_data[user_id] = user_data.get(user_id, {})
     user_data[user_id]["video_url_{{ nodeId }}"] = "{{ videoUrl }}"
-    {% if userDatabaseEnabled %}
+    {%- if userDatabaseEnabled %}
     await update_user_data_in_db(user_id, "video_url_{{ nodeId }}", "{{ videoUrl }}")
-    {% endif %}
-    {% endif %}
+    {%- endif %}
+    {%- endif %}
 
-    {% if audioUrl %}
+    {%- if audioUrl %}
     user_data[user_id] = user_data.get(user_id, {})
     user_data[user_id]["audio_url_{{ nodeId }}"] = "{{ audioUrl }}"
-    {% if userDatabaseEnabled %}
+    {%- if userDatabaseEnabled %}
     await update_user_data_in_db(user_id, "audio_url_{{ nodeId }}", "{{ audioUrl }}")
-    {% endif %}
-    {% endif %}
+    {%- endif %}
+    {%- endif %}
 
     {# Текст сообщения #}
     text = {{ messageText|format_python_text }}
@@ -147,19 +145,19 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     text = replace_variables_in_text(text, all_user_vars, {})
 
     {# Клавиатура #}
-    {% include 'keyboard/keyboard.py.jinja2' %}
+    {%- include 'keyboard/keyboard.py.jinja2' %}
 
     {# Отправка сообщения #}
-    {% if formatMode == 'html' %}
+    {%- if formatMode == 'html' %}
     await callback_query.message.answer(text, reply_markup=keyboard, parse_mode="HTML")
-    {% elif formatMode == 'markdown' %}
+    {%- elif formatMode == 'markdown' %}
     await callback_query.message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
-    {% else %}
+    {%- else %}
     await callback_query.message.answer(text, reply_markup=keyboard)
-    {% endif %}
+    {%- endif %}
 
     {# Автопереход #}
-    {% if enableAutoTransition and autoTransitionTo %}
+    {%- if enableAutoTransition and autoTransitionTo %}
     # ⚡ АВТОПЕРЕХОД к {{ autoTransitionTo }}
     logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
     class FakeCallbackQuery:
@@ -183,4 +181,4 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         logging.error(f"Ошибка при автопереходе к узлу {{ autoTransitionTo }}: {e}")
         await callback_query.message.answer("Переход завершен")
     return
-    {% endif %}
+    {%- endif %}

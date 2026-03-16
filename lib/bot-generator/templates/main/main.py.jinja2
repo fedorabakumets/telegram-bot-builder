@@ -24,18 +24,18 @@ async def main():
     
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
-    
+
     try:
-        {% if userDatabaseEnabled %}
+        {%- if userDatabaseEnabled %}
         await init_database()
-        {% endif %}
-        
+        {%- endif %}
+
         await set_bot_commands()
-        
-        {% if userDatabaseEnabled %}
+
+        {%- if userDatabaseEnabled %}
         dp.message.middleware(message_logging_middleware)
-        {% endif %}
-        
+        {%- endif %}
+
         print("🚀 Бот запущен и готов к работе!")
         await dp.start_polling(bot)
     except KeyboardInterrupt:
@@ -45,11 +45,11 @@ async def main():
     except Exception as e:
         logging.error(f"Ошибка: {e}")
     finally:
-        {% if userDatabaseEnabled %}
+        {%- if userDatabaseEnabled %}
         if db_pool:
             await db_pool.close()
-        {% endif %}
-        
+        {%- endif %}
+
         await bot.session.close()
 
 

@@ -29,7 +29,7 @@ def get_user_variables(user_id):
     return user_data.get(user_id, {})
 
 
-{% if userDatabaseEnabled %}
+{%- if userDatabaseEnabled %}
 async def check_auth(user_id: int) -> bool:
     # Проверяем наличие пользователя в БД или локальном хранилище
     if db_pool:
@@ -41,8 +41,8 @@ async def check_auth(user_id: int) -> bool:
 # Функции для сохранения в таблицы БД
 # Здесь будут функции для сохранения в таблицы
 # generateSaveHelperFunctions будет добавлен отдельно
-{% else %}
+{%- else %}
 async def check_auth(user_id: int) -> bool:
     return user_id in user_data
 
-{% endif %}
+{%- endif %}

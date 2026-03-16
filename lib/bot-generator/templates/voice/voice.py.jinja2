@@ -14,24 +14,24 @@ async def handle_voice_{{ nodeId|safe_name }}(message: types.Message):
     """Обработчик отправки голосового сообщения для узла {{ nodeId }}"""
     user_id = message.from_user.id
 
-    {% if voiceUrl %}
+    {%- if voiceUrl %}
     voice_url = "{{ voiceUrl|e }}"
-    {% else %}
+    {%- else %}
     voice_url = None
-    {% endif %}
+    {%- endif %}
 
-    {% if mediaCaption %}
+    {%- if mediaCaption %}
     caption = "{{ mediaCaption|e }}"
 
     {# Замена переменных #}
     all_user_vars = await init_all_user_vars(user_id)
     variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})
     caption = replace_variables_in_text(caption, all_user_vars, variable_filters)
-    {% endif %}
+    {%- endif %}
 
-    {% if mediaDuration %}
+    {%- if mediaDuration %}
     duration = {{ mediaDuration }}
-    {% endif %}
+    {%- endif %}
 
     if not voice_url:
         await message.answer("Голосовое сообщение не настроено")
@@ -42,31 +42,31 @@ async def handle_voice_{{ nodeId|safe_name }}(message: types.Message):
             async with session.get(voice_url) as resp:
                 voice_data = await resp.read()
 
-                {% if mediaCaption and mediaDuration %}
+                {%- if mediaCaption and mediaDuration %}
                 await message.answer_voice(
                     voice=voice_data,
                     caption=caption,
                     duration=duration
-                    {% if disableNotification %}, disable_notification=True{% endif %}
+                    {%- if disableNotification %}, disable_notification=True{%- endif %}
                 )
-                {% elif mediaCaption %}
+                {%- elif mediaCaption %}
                 await message.answer_voice(
                     voice=voice_data,
                     caption=caption
-                    {% if disableNotification %}, disable_notification=True{% endif %}
+                    {%- if disableNotification %}, disable_notification=True{%- endif %}
                 )
-                {% elif mediaDuration %}
+                {%- elif mediaDuration %}
                 await message.answer_voice(
                     voice=voice_data,
                     duration=duration
-                    {% if disableNotification %}, disable_notification=True{% endif %}
+                    {%- if disableNotification %}, disable_notification=True{%- endif %}
                 )
-                {% else %}
+                {%- else %}
                 await message.answer_voice(
                     voice=voice_data
-                    {% if disableNotification %}, disable_notification=True{% endif %}
+                    {%- if disableNotification %}, disable_notification=True{%- endif %}
                 )
-                {% endif %}
+                {%- endif %}
     except Exception as e:
         logging.error(f"Ошибка отправки голосового сообщения: {e}")
         await message.answer("Произошла ошибка при отправке голосового сообщения")
