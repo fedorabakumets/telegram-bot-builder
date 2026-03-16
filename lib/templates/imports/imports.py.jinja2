@@ -7,12 +7,16 @@
   @param {boolean} hasAutoTransitions - Есть ли автопереходы (нужен TelegramBadRequest)
   @param {boolean} hasMediaNodes - Есть ли узлы с медиа (нужен aiohttp)
   @param {boolean} hasUploadImages - Есть ли ссылки на /uploads/ (нужен aiohttp)
+  @param {boolean} hasParseModeNodes - Есть ли узлы с HTML/Markdown форматированием (нужен ParseMode)
+  @param {boolean} hasMediaGroups - Есть ли узлы с группами медиа (нужны InputMedia*)
+  @param {boolean} hasUrlImages - Есть ли узлы с URL изображениями (нужен URLInputFile)
+  @param {boolean} hasDatetimeNodes - Есть ли узлы требующие datetime
+  @param {boolean} hasTimezoneNodes - Есть ли узлы требующие timezone
 #}
 
 import asyncio
 import logging
 import signal
-from datetime import datetime
 
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import (
@@ -42,6 +46,22 @@ from aiogram.exceptions import TelegramBadRequest
 {%- if hasMediaNodes or hasUploadImages %}
 import aiohttp
 from aiohttp import TCPConnector
+{%- endif %}
+
+{%- if hasParseModeNodes %}
+from aiogram.enums import ParseMode
+{%- endif %}
+
+{%- if hasMediaGroups %}
+from aiogram.types import InputMediaPhoto, InputMediaVideo, InputMediaAudio, InputMediaDocument
+{%- endif %}
+
+{%- if hasUrlImages %}
+from aiogram.types import URLInputFile
+{%- endif %}
+
+{%- if hasDatetimeNodes or userDatabaseEnabled %}
+from datetime import datetime{%- if hasTimezoneNodes %}, timezone{%- endif %}
 {%- endif %}
 
 import re

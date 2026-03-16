@@ -18,6 +18,11 @@ import { renderPartialTemplate } from '../template-renderer';
  *   userDatabaseEnabled: true,
  *   hasInlineButtons: false,
  *   hasMediaNodes: true,
+ *   hasParseModeNodes: true,
+ *   hasMediaGroups: true,
+ *   hasUrlImages: true,
+ *   hasDatetimeNodes: true,
+ *   hasTimezoneNodes: true,
  * });
  * ```
  */
@@ -29,6 +34,11 @@ export function generateImports(params: ImportsTemplateParams): string {
     hasAutoTransitions: params.hasAutoTransitions ?? false,
     hasMediaNodes: params.hasMediaNodes ?? false,
     hasUploadImages: params.hasUploadImages ?? false,
+    hasParseModeNodes: params.hasParseModeNodes ?? false,
+    hasMediaGroups: params.hasMediaGroups ?? false,
+    hasUrlImages: params.hasUrlImages ?? false,
+    hasDatetimeNodes: params.hasDatetimeNodes ?? false,
+    hasTimezoneNodes: params.hasTimezoneNodes ?? false,
   });
   return renderPartialTemplate('imports/imports.py.jinja2', validated);
 }

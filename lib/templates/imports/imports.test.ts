@@ -13,6 +13,11 @@ import {
   validParamsMediaOnly,
   validParamsInlineOnly,
   validParamsAutoTransitionsOnly,
+  validParamsParseModeOnly,
+  validParamsMediaGroupsOnly,
+  validParamsUrlImagesOnly,
+  validParamsDatetimeOnly,
+  validParamsDatetimeWithTimezone,
   invalidParamsWrongType,
   expectedOutputAllEnabled,
   expectedOutputAllDisabled,
@@ -71,6 +76,54 @@ describe('imports.py.jinja2 шаблон', () => {
         assert.ok(result.includes('TelegramBadRequest'));
         assert.ok(!result.includes('asyncpg'));
         assert.ok(!result.includes('aiohttp'));
+      });
+
+      it('должен генерировать импорты для ParseMode', () => {
+        const result = generateImports(validParamsParseModeOnly);
+
+        assert.ok(result.includes('from aiogram.enums import ParseMode'));
+        assert.ok(!result.includes('asyncpg'));
+        assert.ok(!result.includes('aiohttp'));
+        assert.ok(!result.includes('TelegramBadRequest'));
+      });
+
+      it('должен генерировать импорты для MediaGroups', () => {
+        const result = generateImports(validParamsMediaGroupsOnly);
+
+        assert.ok(result.includes('from aiogram.types import InputMediaPhoto, InputMediaVideo, InputMediaAudio, InputMediaDocument'));
+        assert.ok(!result.includes('asyncpg'));
+        assert.ok(!result.includes('aiohttp'));
+        assert.ok(!result.includes('ParseMode'));
+      });
+
+      it('должен генерировать импорты для UrlImages', () => {
+        const result = generateImports(validParamsUrlImagesOnly);
+
+        assert.ok(result.includes('from aiogram.types import URLInputFile'));
+        assert.ok(!result.includes('asyncpg'));
+        assert.ok(!result.includes('aiohttp'));
+        assert.ok(!result.includes('ParseMode'));
+      });
+
+      it('должен генерировать импорты для Datetime', () => {
+        const result = generateImports(validParamsDatetimeOnly);
+
+        assert.ok(result.includes('from datetime import datetime'));
+        assert.ok(!result.includes('timezone'));
+        assert.ok(!result.includes('asyncpg'));
+      });
+
+      it('должен генерировать импорты для Datetime + Timezone', () => {
+        const result = generateImports(validParamsDatetimeWithTimezone);
+
+        assert.ok(result.includes('from datetime import datetime, timezone'));
+        assert.ok(!result.includes('asyncpg'));
+      });
+
+      it('должен генерировать datetime при userDatabaseEnabled=true', () => {
+        const result = generateImports(validParamsDatabaseOnly);
+
+        assert.ok(result.includes('from datetime import datetime'));
       });
 
       it('должен совпадать с ожидаемым выводом (всё включено)', () => {
@@ -295,6 +348,11 @@ describe('imports.py.jinja2 шаблон', () => {
           assert.strictEqual(result.data.hasAutoTransitions, false);
           assert.strictEqual(result.data.hasMediaNodes, false);
           assert.strictEqual(result.data.hasUploadImages, false);
+          assert.strictEqual(result.data.hasParseModeNodes, false);
+          assert.strictEqual(result.data.hasMediaGroups, false);
+          assert.strictEqual(result.data.hasUrlImages, false);
+          assert.strictEqual(result.data.hasDatetimeNodes, false);
+          assert.strictEqual(result.data.hasTimezoneNodes, false);
         }
       });
 
@@ -313,16 +371,21 @@ describe('imports.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь все 5 полей', () => {
+      it('должен иметь все 10 полей', () => {
         const shape = importsParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 5);
+        assert.strictEqual(fields.length, 10);
         assert.ok(fields.includes('userDatabaseEnabled'));
         assert.ok(fields.includes('hasInlineButtons'));
         assert.ok(fields.includes('hasAutoTransitions'));
         assert.ok(fields.includes('hasMediaNodes'));
         assert.ok(fields.includes('hasUploadImages'));
+        assert.ok(fields.includes('hasParseModeNodes'));
+        assert.ok(fields.includes('hasMediaGroups'));
+        assert.ok(fields.includes('hasUrlImages'));
+        assert.ok(fields.includes('hasDatetimeNodes'));
+        assert.ok(fields.includes('hasTimezoneNodes'));
       });
 
       it('должен использовать ZodDefault для всех полей', () => {
@@ -333,6 +396,11 @@ describe('imports.py.jinja2 шаблон', () => {
         assert.strictEqual(shape.hasAutoTransitions.constructor.name, 'ZodDefault');
         assert.strictEqual(shape.hasMediaNodes.constructor.name, 'ZodDefault');
         assert.strictEqual(shape.hasUploadImages.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.hasParseModeNodes.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.hasMediaGroups.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.hasUrlImages.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.hasDatetimeNodes.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.hasTimezoneNodes.constructor.name, 'ZodDefault');
       });
     });
   });

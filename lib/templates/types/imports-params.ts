@@ -15,4 +15,14 @@ export interface ImportsTemplateParams {
   hasMediaNodes: boolean;
   /** Есть ли ссылки на /uploads/ (нужен aiohttp) */
   hasUploadImages: boolean;
+  /** Есть ли узлы с HTML/Markdown форматированием (нужен ParseMode) */
+  hasParseModeNodes: boolean;
+  /** Есть ли узлы с группами медиа (attachedMedia.length > 1) */
+  hasMediaGroups: boolean;
+  /** Есть ли узлы с URL изображениями (imageUrl.startsWith('http')) */
+  hasUrlImages: boolean;
+  /** Есть ли узлы требующие datetime */
+  hasDatetimeNodes: boolean;
+  /** Есть ли узлы требующие timezone */
+  hasTimezoneNodes: boolean;
 }

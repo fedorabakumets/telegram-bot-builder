@@ -148,12 +148,116 @@ export function generatePythonCode(
   const hasMediaNodesResult = hasMediaNodes(context.nodes || []);
   const hasUploadImagesResult = hasUploadImageUrls(context.nodes || []);
 
+  // Вычисляем параметры для новых импортов
+  const hasParseModeNodesResult = (context.nodes || []).some((node) => {
+    const data = node.data || {};
+
+    // Узлы с явным formatMode
+    if (
+      data.formatMode &&
+      (data.formatMode.toLowerCase() === 'html' ||
+        data.formatMode.toLowerCase() === 'markdown')
+    ) {
+      return true;
+    }
+
+    // Узлы с markdown флагом
+    if (data.markdown) {
+      return true;
+    }
+
+    // Узлы с кнопками и форматированием
+    if (
+      data.buttons &&
+      data.buttons.length > 0 &&
+      (data.formatMode === 'html' ||
+        data.formatMode === 'markdown' ||
+        data.markdown)
+    ) {
+      return true;
+    }
+
+    // Узлы с медиа и caption
+    if (
+      (data.imageUrl ||
+        data.videoUrl ||
+        data.audioUrl ||
+        data.documentUrl) &&
+      data.mediaCaption
+    ) {
+      return true;
+    }
+
+    // Узлы с сбором ввода и форматированием
+    if (
+      data.collectUserInput &&
+      (data.formatMode === 'html' ||
+        data.formatMode === 'markdown' ||
+        data.markdown)
+    ) {
+      return true;
+    }
+
+    // Узлы с условными сообщениями и форматированием
+    if (
+      data.enableConditionalMessages &&
+      (data.formatMode === 'html' ||
+        data.formatMode === 'markdown' ||
+        data.markdown)
+    ) {
+      return true;
+    }
+
+    return false;
+  });
+
+  const hasMediaGroupsResult = (context.nodes || []).some(
+    (node) =>
+      node.data?.attachedMedia &&
+      Array.isArray(node.data.attachedMedia) &&
+      node.data.attachedMedia.length > 1
+  );
+
+  const hasUrlImagesResult = (context.nodes || []).some(
+    (node) => node.data?.imageUrl && node.data.imageUrl.startsWith('http')
+  );
+
+  const hasDatetimeNodesResult = (context.nodes || []).some(
+    (node) =>
+      node.type === 'command' ||
+      node.type === 'mute_user' ||
+      node.type === 'ban_user' ||
+      node.type === 'message' ||
+      node.type === 'sticker' ||
+      node.type === 'voice' ||
+      node.type === 'animation' ||
+      node.type === 'photo' ||
+      node.type === 'video' ||
+      node.type === 'document' ||
+      node.type === 'audio' ||
+      node.type === 'location' ||
+      node.type === 'contact' ||
+      (node as any).type === 'group_event'
+  );
+
+  const hasTimezoneNodesResult = (context.nodes || []).some(
+    (node) =>
+      node.type === 'photo' ||
+      (node as any).type === 'group_event' ||
+      (node.data && node.data.enablePhotoInput)
+  );
+
   code += generateImports({
     userDatabaseEnabled: !!context.options.userDatabaseEnabled,
     hasInlineButtons: hasInlineButtonsResult,
     hasAutoTransitions: hasAutoTransitionsResult,
     hasMediaNodes: hasMediaNodesResult,
     hasUploadImages: hasUploadImagesResult,
+    hasParseModeNodes: hasParseModeNodesResult,
+    hasMediaGroups: hasMediaGroupsResult,
+    hasUrlImages: hasUrlImagesResult,
+    hasDatetimeNodes: hasDatetimeNodesResult,
+    hasTimezoneNodes: hasTimezoneNodesResult,
   });
 
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции

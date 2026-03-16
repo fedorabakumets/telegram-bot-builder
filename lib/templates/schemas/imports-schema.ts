@@ -12,6 +12,11 @@ export const importsParamsSchema = z.object({
   hasAutoTransitions: z.boolean().default(false),
   hasMediaNodes: z.boolean().default(false),
   hasUploadImages: z.boolean().default(false),
+  hasParseModeNodes: z.boolean().default(false),
+  hasMediaGroups: z.boolean().default(false),
+  hasUrlImages: z.boolean().default(false),
+  hasDatetimeNodes: z.boolean().default(false),
+  hasTimezoneNodes: z.boolean().default(false),
 });
 
 /** Тип параметров импортов (выведен из схемы) */
