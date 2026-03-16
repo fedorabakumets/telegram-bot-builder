@@ -25,11 +25,18 @@ export function getTemplatesDir(): string {
 
 /**
  * Получает абсолютный путь к файлу шаблона
- * 
+ *
  * @param templateName - Имя шаблона относительно templates/
  * @returns Абсолютный путь к шаблону
  */
 export function getTemplatePath(templateName: string): string {
   const templatesDir = getTemplatesDir();
+  
+  // Для браузера используем простую конкатенацию вместо path.join
+  if (typeof window !== 'undefined') {
+    return templatesDir + '/' + templateName.replace(/\\/g, '/');
+  }
+  
+  // Для Node.js используем path.join
   return path.join(templatesDir, templateName);
 }
