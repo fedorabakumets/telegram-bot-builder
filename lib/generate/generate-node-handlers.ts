@@ -11,6 +11,7 @@
 
 import { Node } from '@shared/schema';
 import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './generate-new-node-handlers';
+import { generateMessage } from '../bot-generator/templates/message/message.renderer';
 import { generateBroadcastClientHandler } from '../bot-generator/Client/generateBroadcastClientHandler';
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
@@ -47,6 +48,31 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   const nodeHandlers: Record<string, (node: Node) => string> = {
     start: (node) => generateStartHandler(node, userDatabaseEnabled),
     command: (node) => generateCommandHandler(node, userDatabaseEnabled),
+    message: (node) => generateMessage({
+      nodeId: node.id,
+      messageText: node.data?.messageText || '',
+      isPrivateOnly: node.data?.isPrivateOnly || false,
+      adminOnly: node.data?.adminOnly || false,
+      requiresAuth: node.data?.requiresAuth || false,
+      userDatabaseEnabled,
+      allowMultipleSelection: node.data?.allowMultipleSelection || false,
+      multiSelectVariable: node.data?.multiSelectVariable,
+      buttons: node.data?.buttons || [],
+      keyboardType: node.data?.keyboardType || 'none',
+      keyboardLayout: node.data?.keyboardLayout,
+      enableAutoTransition: node.data?.enableAutoTransition || false,
+      autoTransitionTo: node.data?.autoTransitionTo,
+      collectUserInput: node.data?.collectUserInput || false,
+      formatMode: node.data?.formatMode || 'none',
+      imageUrl: node.data?.imageUrl,
+      documentUrl: node.data?.documentUrl,
+      videoUrl: node.data?.videoUrl,
+      audioUrl: node.data?.audioUrl,
+      attachedMedia: node.data?.attachedMedia || [],
+      enableConditionalMessages: node.data?.enableConditionalMessages || false,
+      conditionalMessages: node.data?.conditionalMessages || [],
+      fallbackMessage: node.data?.fallbackMessage,
+    }),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,
     animation: generateAnimationHandler,
@@ -148,15 +174,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
       // Разбиваем код обработчика на строки и добавляем в codeLines
       handlerCode.split('\n').forEach(line => codeLines.push(line));
     } else {
-      // Если нет специфического обработчика, проверим, может быть, это обычный узел сообщения
-      if (node.type === 'message' || node.type === 'command') {
-        // Для узлов типа message и command без медиа-контента используем стандартную логику
-        codeLines.push(`    # Обработчик для узла ${node.id} типа ${node.type} будет сгенерирован отдельно`);
-      } else {
-        codeLines.push(`    # Нет обработчика для узла типа ${node.type}`);
-      }
+      codeLines.push(`    # Нет обработчика для узла типа ${node.type}`);
     }
-    // Примечание: узлы ввода пользователя и сообщений обрабатываются через обработчики обратного вызова, а не как отдельные обработчики команд
 
     codeLines.push(`# @@NODE_END:${node.id}@@`);
   });

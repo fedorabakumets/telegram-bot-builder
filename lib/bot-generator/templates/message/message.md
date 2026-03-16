@@ -1,0 +1,206 @@
+# Шаблон: message.py.jinja2
+
+## Описание
+
+Генерирует Python код обработчика для узла типа `message`. Этот обработчик используется для навигации к узлу сообщения через callback кнопки.
+
+## Параметры
+
+| Параметр | Тип | По умолчанию | Описание |
+|----------|-----|--------------|----------|
+| `nodeId` | `string` | - | Уникальный идентификатор узла |
+| `messageText` | `string` | `''` | Текст сообщения |
+| `isPrivateOnly` | `boolean` | `false` | Только для приватных чатов |
+| `adminOnly` | `boolean` | `false` | Только для администраторов |
+| `requiresAuth` | `boolean` | `false` | Требуется авторизация |
+| `userDatabaseEnabled` | `boolean` | `false` | База данных включена |
+| `allowMultipleSelection` | `boolean` | `false` | Множественный выбор разрешён |
+| `keyboardType` | `'inline' \| 'reply' \| 'none'` | `'none'` | Тип клавиатуры |
+| `formatMode` | `'html' \| 'markdown' \| 'none'` | `'none'` | Режим форматирования |
+| `enableAutoTransition` | `boolean` | `false` | Автопереход включён |
+| `autoTransitionTo` | `string` | - | Цель автоперехода |
+| `imageUrl` | `string` | - | URL изображения |
+| `attachedMedia` | `string[]` | `[]` | Прикреплённые медиа |
+
+## Использование
+
+### Базовое
+
+```typescript
+import { generateMessage } from './message.renderer';
+
+const code = generateMessage({
+  nodeId: 'msg_123',
+  messageText: 'Привет! Выберите опцию:',
+  keyboardType: 'inline',
+  buttons: [
+    { text: 'Опция 1', action: 'goto', target: 'option_1', id: 'btn_1' },
+    { text: 'Опция 2', action: 'goto', target: 'option_2', id: 'btn_2' },
+  ],
+});
+```
+
+### С автопереходом
+
+```typescript
+const code = generateMessage({
+  nodeId: 'welcome',
+  messageText: 'Добро пожаловать!',
+  enableAutoTransition: true,
+  autoTransitionTo: 'main_menu',
+});
+```
+
+### С медиа
+
+```typescript
+const code = generateMessage({
+  nodeId: 'photo_node',
+  messageText: 'Вот ваше фото:',
+  imageUrl: 'https://example.com/image.jpg',
+  keyboardType: 'inline',
+  buttons: [
+    { text: '👍 Нравится', action: 'goto', target: 'like', id: 'btn_like' },
+  ],
+});
+```
+
+## Примеры вывода
+
+### Простое сообщение с кнопками
+
+**Вход:**
+```typescript
+{
+  nodeId: 'main_menu',
+  messageText: 'Главное меню',
+  keyboardType: 'inline',
+  buttons: [
+    { text: 'Профиль', action: 'goto', target: 'profile', id: 'btn_profile' },
+    { text: 'Настройки', action: 'goto', target: 'settings', id: 'btn_settings' },
+  ]
+}
+```
+
+**Выход:**
+```python
+@dp.callback_query(lambda c: c.data == "main_menu" or c.data.startswith("main_menu_btn_"))
+async def handle_callback_main_menu(callback_query: types.CallbackQuery):
+    """Обработчик перехода к узлу main_menu"""
+    user_id = callback_query.from_user.id
+    logging.info(f"🔵 Переход к узлу main_menu для пользователя {user_id}")
+
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    text = "Главное меню"
+    
+    all_user_vars = await init_all_user_vars(user_id)
+    text = replace_variables_in_text(text, all_user_vars, {})
+
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Профиль", callback_data="btn_profile"))
+    builder.add(InlineKeyboardButton(text="Настройки", callback_data="btn_settings"))
+    keyboard = builder.as_markup()
+
+    await callback_query.message.answer(text, reply_markup=keyboard)
+```
+
+### Сообщение с автопереходом
+
+**Вход:**
+```typescript
+{
+  nodeId: 'loading',
+  messageText: 'Загрузка...',
+  enableAutoTransition: true,
+  autoTransitionTo: 'next_step'
+}
+```
+
+**Выход:**
+```python
+@dp.callback_query(lambda c: c.data == "loading" or c.data.startswith("loading_btn_"))
+async def handle_callback_loading(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    
+    text = "Загрузка..."
+    await callback_query.message.answer(text)
+    
+    # ⚡ АВТОПЕРЕХОД к next_step
+    logging.info(f"⚡ Автопереход от узла loading к узлу next_step")
+    
+    class FakeCallbackQuery:
+        def __init__(self, message, target_node_id):
+            self.from_user = message.from_user
+            self.chat = message.chat
+            self.data = target_node_id
+            self.message = message
+            self._is_fake = True
+        
+        async def answer(self, *args, **kwargs):
+            pass
+    
+    fake_callback = FakeCallbackQuery(callback_query.message, "next_step")
+    try:
+        await handle_callback_next_step(fake_callback)
+        logging.info(f"✅ Автопереход выполнен: loading -> next_step")
+    except Exception as e:
+        logging.error(f"Ошибка при автопереходе к узлу next_step: {e}")
+        await callback_query.message.answer("Переход завершен")
+    return
+```
+
+## Логика условий
+
+### Проверки безопасности
+
+```typescript
+if (isPrivateOnly) {
+  // Добавить проверку is_private_chat
+}
+
+if (adminOnly) {
+  // Добавить проверку is_admin
+}
+
+if (requiresAuth) {
+  // Добавить проверку check_auth
+}
+```
+
+### Сохранение пользователя
+
+```typescript
+if (userDatabaseEnabled) {
+  // Добавить save_user_to_db и update_user_data_in_db
+}
+```
+
+### Автопереход
+
+```typescript
+if (enableAutoTransition && autoTransitionTo) {
+  // Сгенерировать FakeCallbackQuery и переход
+}
+```
+
+## Зависимости
+
+### Внешние
+- `zod` — валидация параметров
+- `nunjucks` — рендеринг шаблона
+
+### Внутренние
+- `../template-renderer` — функция рендеринга
+- `./message.params` — типы параметров
+- `./message.schema` — Zod схема
+- `keyboard/keyboard.py.jinja2` — шаблон клавиатуры
+
+## См. также
+
+- [`start.py.jinja2`](../start/start.md) — шаблон команды /start
+- [`command.py.jinja2`](../command/command.md) — шаблон команды
+- [`keyboard.py.jinja2`](../keyboard/keyboard.md) — шаблон клавиатуры
