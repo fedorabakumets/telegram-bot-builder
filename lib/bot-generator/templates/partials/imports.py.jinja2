@@ -36,17 +36,20 @@ from aiogram.filters import CommandStart
 
 {# Импорты для работы с БД #}
 {%- if userDatabaseEnabled %}
+
 import asyncpg
 import json
 {%- endif %}
 
 {# Импорты для обработки ошибок inline кнопок и автопереходов #}
 {%- if hasInlineButtons or hasAutoTransitions %}
+
 from aiogram.exceptions import TelegramBadRequest
 {%- endif %}
 
 {# Импорты для работы с медиа и HTTP запросами #}
 {%- if hasMediaNodes or hasUploadImages %}
+
 import aiohttp
 from aiohttp import TCPConnector
 {%- endif %}
