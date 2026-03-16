@@ -28,7 +28,19 @@ export interface Button {
   /** Действие кнопки */
   action: string;
   /** Цель перехода */
-  target: string;
+  target?: string;
   /** ID кнопки */
   id: string;
+  /** URL для внешних ссылок */
+  url?: string;
+  /** Запрос контакта пользователя */
+  requestContact?: boolean;
+  /** Запрос геолокации пользователя */
+  requestLocation?: boolean;
+  /** Тип кнопки */
+  buttonType?: 'normal' | 'option' | 'complete';
+  /** Отключить сбор ответов для этой кнопки */
+  skipDataCollection?: boolean;
+  /** Скрыть кнопку после использования */
+  hideAfterClick?: boolean;
 }

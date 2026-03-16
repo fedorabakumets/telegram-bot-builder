@@ -36,6 +36,10 @@ export interface MessageTemplateParams {
   keyboardType?: KeyboardType;
   /** Раскладка клавиатуры */
   keyboardLayout?: KeyboardLayout;
+  /** Клавиатура скрывается после использования */
+  oneTimeKeyboard?: boolean;
+  /** Изменить размер клавиатуры под кнопки */
+  resizeKeyboard?: boolean;
   /** Автопереход включён */
   enableAutoTransition?: boolean;
   /** Цель автоперехода */

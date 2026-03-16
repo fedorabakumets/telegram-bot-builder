@@ -330,11 +330,11 @@ describe('message.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 21 поле', () => {
+      it('должен иметь 25 полей', () => {
         const shape = messageParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 21);
+        assert.strictEqual(fields.length, 25);
       });
 
       it('должен использовать ZodOptional для isPrivateOnly', () => {

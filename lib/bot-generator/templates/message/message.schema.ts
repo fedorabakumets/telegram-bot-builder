@@ -18,6 +18,8 @@ export const messageParamsSchema = z.object({
   buttons: z.array(z.any()).optional().default([]),
   keyboardType: z.enum(['inline', 'reply', 'none']).optional().default('none'),
   keyboardLayout: z.any().optional(),
+  oneTimeKeyboard: z.boolean().optional().default(false),
+  resizeKeyboard: z.boolean().optional().default(true),
   enableAutoTransition: z.boolean().optional().default(false),
   autoTransitionTo: z.string().optional(),
   collectUserInput: z.boolean().optional().default(false),

@@ -28,6 +28,15 @@ export function generateMessage(params: MessageTemplateParams): string {
     userDatabaseEnabled: params.userDatabaseEnabled ?? false,
     keyboardType: params.keyboardType ?? 'none',
     formatMode: params.formatMode ?? 'none',
+    requiresAuth: params.requiresAuth ?? false,
+    isPrivateOnly: params.isPrivateOnly ?? false,
+    adminOnly: params.adminOnly ?? false,
+    enableAutoTransition: params.enableAutoTransition ?? false,
+    allowMultipleSelection: params.allowMultipleSelection ?? false,
+    collectUserInput: params.collectUserInput ?? false,
+    enableConditionalMessages: params.enableConditionalMessages ?? false,
+    oneTimeKeyboard: params.oneTimeKeyboard ?? false,
+    resizeKeyboard: params.resizeKeyboard ?? true,
   });
   return renderPartialTemplate('message/message.py.jinja2', validated);
 }
