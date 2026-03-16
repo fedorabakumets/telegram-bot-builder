@@ -61,6 +61,6 @@ export const unknownCommandFixture: CommandCallbackHandlerTemplateParams = {
     skipDataCollection: false,
   },
   indentLevel: '',
-  commandNode: null,
+  commandNode: '',
   command: 'unknown',
 };

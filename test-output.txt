@@ -1,20 +1,10 @@
-file:///c:/Users/1/Desktop/telegram-bot-builder/node_modules/vitest/dist/vendor/global.CkGT_TMy.js:5
-    throw new Error(errorMsg);
-          ^
-
-Error: Vitest failed to access its internal state.
-
-One of the following is possible:
-- "vitest" is imported directly without running "vitest" command
-- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
-- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
-
-    at getWorkerState (file:///c:/Users/1/Desktop/telegram-bot-builder/node_modules/vitest/dist/vendor/global.CkGT_TMy.js:5:11)
-    at getCurrentEnvironment (file:///c:/Users/1/Desktop/telegram-bot-builder/node_modules/vitest/dist/vendor/global.CkGT_TMy.js:19:17)
-    at createExpect (file:///c:/Users/1/Desktop/telegram-bot-builder/node_modules/vitest/dist/vendor/vi.YFlodzP_.js:388:18)
-    at file:///c:/Users/1/Desktop/telegram-bot-builder/node_modules/vitest/dist/vendor/vi.YFlodzP_.js:426:22
-    at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
-    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
-    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
-
-Node.js v22.17.1
+▶ generateCommandCallbackHandler
+  ✔ должен генерировать обработчик для командной callback кнопки (13.6667ms)
+  ✔ должен генерировать FakeCallbackQuery класс для start узла (0.6567ms)
+  ✔ должен генерировать fake_message объект для command узла (0.3984ms)
+  ✔ должен генерировать обработчик для команды меню (0.2343ms)
+  ✔ должен генерировать обработчик для команды настроек (0.2635ms)
+  ✔ должен генерировать обработчик для неизвестной команды (0.1853ms)
+  ✔ должен экранировать специальные символы в тексте кнопки (0.2509ms)
+  ✔ должен генерировать логирование выполнения команды (0.2545ms)
+✔ generateCommandCallbackHandler (17.2259ms)

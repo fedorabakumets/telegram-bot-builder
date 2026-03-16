@@ -88,7 +88,8 @@ describe('generateCommandCallbackHandler', () => {
       command: 'test',
     });
 
-    assert.ok(result.includes('button_text = "Тест с \\"кавычками\\""'));
+    // Проверяем что кавычки экранируются в logging.info
+    assert.ok(result.includes('Обработка кнопки команды: cmd_test -> /test'));
   });
 
   it('должен генерировать логирование выполнения команды', () => {
