@@ -10,9 +10,9 @@
 // Примечание: следующие импорты удалены после миграции на Jinja2:
 // import { generateCommandNodeHandlerWithKeyboardAndImageSupport } from '../CommandHandler/generateCommandNodeHandlerWithKeyboardAndImageSupport';
 // import { generateStartNodeHandlerWithConditionalLogicAndImages } from '../CommandHandler/generateStartNodeHandlerWithConditionalLogicAndImages';
+// import { createFakeMessageEditForCallback } from '../Keyboard/createFakeMessageEditForCallback';
 import { generateMessageNodeHandlerWithConditionalLogicAndMediaSupport } from '../Conditional/generateMessageNodeHandlerWithConditionalLogicAndMediaSupport';
-import { createFakeMessageEditForCallback } from '../Keyboard/createFakeMessageEditForCallback';
-import { generateCommandCallbackHandler, generateMultiSelectButtonHandler } from '../../templates/handlers';
+import { generateMultiSelectButtonHandler } from '../../templates/handlers';
 import { generateMessageNodeHandlerWithKeyboardAndInputCollection } from '../MessageHandlers/generateMessageNodeHandlerWithKeyboardAndInputCollection';
 import { generateGotoHandler } from './generate-goto-handler';
 import { generateSaveVariableHandler } from './generate-save-variable';
@@ -125,24 +125,8 @@ export function newprocessNodeButtonsAndGenerateHandlers(
         } else {
           // Кнопка без цели
           code += '    # Кнопка пока никуда не ведет\n';
-          code += '    await callback_query.answer("⚠️ Эта кнопка яока не настроена", show_alert=True)\n';
+          code += '    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)\n';
         }
-      }
-      // Обработка кнопок с действием 'goto' и target начинается с /
-      else if (button.action === 'goto' && button.target && button.target.startsWith('/') && button.id) {
-        const callbackData = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-
-        if (processedCallbacks.has(callbackData)) {
-          return;
-        }
-        processedCallbacks.add(callbackData);
-
-        code += generateCommandCallbackHandler({
-          callbackData,
-          button,
-          indentLevel: '',
-        });
-        code = createFakeMessageEditForCallback(button, code);
       }
     });
   });

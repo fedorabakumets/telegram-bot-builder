@@ -12,6 +12,9 @@ export interface CommandButton {
   skipDataCollection?: boolean;
 }
 
+/** Тип узла команды */
+export type CommandNodeType = 'start' | 'command' | '';
+
 /** Параметры для генерации обработчика командной callback кнопки */
 export interface CommandCallbackHandlerTemplateParams {
   /** Callback data для идентификации кнопки */
@@ -20,4 +23,8 @@ export interface CommandCallbackHandlerTemplateParams {
   button: CommandButton;
   /** Уровень отступа */
   indentLevel?: string;
+  /** Тип узла команды (start, command, или пустая строка) */
+  commandNode?: CommandNodeType;
+  /** Имя команды (без cmd_) */
+  command?: string;
 }

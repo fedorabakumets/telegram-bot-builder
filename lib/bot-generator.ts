@@ -13,7 +13,8 @@ import { generatorLogger } from './bot-generator/core/generator-logger';
 
 // Типы
 import { logFlowAnalysis } from './bot-generator/core';
-import { collectAllCommandCallbacksFromNodes, addCommandCallbackHandlers } from './bot-generator/commands';
+import { generateCommandCallbackHandler } from './templates/handlers';
+import { Button } from './bot-generator/types';
 import {
   generateGroupBasedEventHandlers,
 } from './bot-generator/handlers';
@@ -389,7 +390,31 @@ export function generatePythonCode(
   generatorLogger.info(`Найдено кнопок команд: ${commandButtons.size}`);
   generatorLogger.debug('Список кнопок команд', Array.from(commandButtons));
 
-  code = addCommandCallbackHandlers(commandButtons, code, context.nodes || []);
+  // Добавляем обработчики callback для командных кнопок через Jinja2 шаблон
+  if (commandButtons.size > 0) {
+    code += '\n# Обработчики для кнопок команд\n';
+    code += `# Найдено ${commandButtons.size} кнопок команд: ${Array.from(commandButtons).join(', ')}\n`;
+
+    commandButtons.forEach(commandCallback => {
+      // Найти соответствующий узел команды для определения типа
+      const commandNode = findCommandNode(commandCallback, context.nodes || []);
+      const commandNodeType = commandNode ? (commandNode.type as 'start' | 'command') : '';
+      const command = commandCallback.replace('cmd_', '');
+
+      code += generateCommandCallbackHandler({
+        callbackData: commandCallback,
+        button: {
+          action: 'command',
+          id: `btn_${command}`,
+          target: command,
+          text: `Команда /${command}`,
+        },
+        indentLevel: '',
+        commandNode: commandNodeType,
+        command: command,
+      });
+    });
+  }
 
   // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком текста
   if (!!context.options.enableGroupHandlers) {
@@ -500,6 +525,56 @@ export function generatePythonCode(
    */
   function generateStateTransitionAndRenderLogic() {
     code = newgenerateStateTransitionAndRenderLogic(context.nodes, code, context.allNodeIds, []);
+  }
+
+  /**
+   * Собирает все callback-идентификаторы команд из узлов бота
+   * @param nodes - Массив узлов бота
+   * @returns {Set<string>} Уникальные callback идентификаторы команд
+   */
+  function collectAllCommandCallbacksFromNodes(nodes: any[]): Set<string> {
+    const commandButtons = new Set<string>();
+
+    nodes.forEach(node => {
+      // Обычные кнопки узла
+      if (node.data?.buttons) {
+        node.data.buttons.forEach((button: Button) => {
+          if (button.action === 'goto' && button.target) {
+            const commandCallback = `cmd_${button.target.replace('/', '')}`;
+            commandButtons.add(commandCallback);
+          }
+        });
+      }
+
+      // Кнопки в условных сообщениях
+      if (node.data?.conditionalMessages) {
+        node.data.conditionalMessages.forEach((condition: any) => {
+          if (condition.buttons) {
+            condition.buttons.forEach((button: Button) => {
+              if (button.action === 'goto' && button.target) {
+                const commandCallback = `cmd_${button.target.replace('/', '')}`;
+                commandButtons.add(commandCallback);
+              }
+            });
+          }
+        });
+      }
+    });
+
+    return commandButtons;
+  }
+
+  /**
+   * Находит узел команды по имени
+   * @param commandCallback - Callback команды (cmd_xxx)
+   * @param nodes - Массив узлов бота
+   * @returns {any|null} Узел команды или null
+   */
+  function findCommandNode(commandCallback: string, nodes: any[]): any | null {
+    const command = commandCallback.replace('cmd_', '');
+    return nodes.find(
+      n => n.data.command === `/${command}` || n.data.command === command
+    ) || null;
   }
 }
 

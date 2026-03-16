@@ -16,6 +16,8 @@ export const commandCallbackHandlerFixture: CommandCallbackHandlerTemplateParams
     skipDataCollection: false,
   },
   indentLevel: '',
+  commandNode: 'start',
+  command: 'start',
 };
 
 /** Фикстура с командной кнопкой для меню */
@@ -29,6 +31,8 @@ export const menuCommandFixture: CommandCallbackHandlerTemplateParams = {
     skipDataCollection: true,
   },
   indentLevel: '',
+  commandNode: 'command',
+  command: 'menu',
 };
 
 /** Фикстура с командной кнопкой для настроек */
@@ -42,4 +46,21 @@ export const settingsCommandFixture: CommandCallbackHandlerTemplateParams = {
     skipDataCollection: false,
   },
   indentLevel: '',
+  commandNode: 'command',
+  command: 'settings',
+};
+
+/** Фикстура с неизвестной командой (без узла) */
+export const unknownCommandFixture: CommandCallbackHandlerTemplateParams = {
+  callbackData: 'cmd_btn_unknown_999',
+  button: {
+    action: 'command',
+    id: 'btn_unknown',
+    target: 'unknown',
+    text: 'Неизвестная команда',
+    skipDataCollection: false,
+  },
+  indentLevel: '',
+  commandNode: null,
+  command: 'unknown',
 };

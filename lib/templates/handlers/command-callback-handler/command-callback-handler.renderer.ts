@@ -21,5 +21,7 @@ export function generateCommandCallbackHandler(params: CommandCallbackHandlerPar
     callbackData: validatedParams.callbackData,
     button: validatedParams.button,
     indentLevel: validatedParams.indentLevel,
+    commandNode: validatedParams.commandNode ?? null,
+    command: validatedParams.command ?? validatedParams.button.target.replace('/', ''),
   });
 }

@@ -5,6 +5,8 @@
   @param {string} callbackData - Callback data для идентификации кнопки
   @param {object} button - Объект кнопки (action, id, target, text)
   @param {string} indentLevel - Уровень отступа (по умолчанию '')
+  @param {string} commandNode - Тип узла команды (start, command, или null)
+  @param {string} command - Имя команды (без cmd_)
 
   @example
   ```jinja2
@@ -13,22 +15,47 @@
 #}
 
 {% set indent = indentLevel or '' %}
+{% set safeFunctionName = callbackData | replace('[^a-zA-Z0-9_]', '_') %}
+{% set command = button.target | replace('/', '') %}
 
 {{ indent }}@dp.callback_query(lambda c: c.data == "{{ callbackData }}")
-{% set safeFunctionName = callbackData | replace('[^a-zA-Z0-9_]', '_') %}
 {{ indent }}async def handle_callback_{{ safeFunctionName }}(callback_query: types.CallbackQuery):
-{{ indent }}    # Проверяем флаг hideAfterClick для кнопок
-{{ indent }}    # Обработка hideAfterClick не применяется в этом обработчике, так как он используется для специальных командных кнопок
 {{ indent }}    await callback_query.answer()
-{{ indent }}    user_id = callback_query.from_user.id
-{{ indent }}    # Инициализируем базовые переменные пользователя
-{{ indent }}    user_name = await init_user_variables(user_id, callback_query.from_user)
+{{ indent }}    logging.info(f"Обработка кнопки команды: {{ callbackData }} -> /{{ command }} (пользователь {callback_query.from_user.id})")
+{{ indent }}    # Симулируем выполнение команды /{{ command }}
 {{ indent }}    
-{{ indent }}    button_text = "{{ button.text | replace('"', '\\"') }}"
+{{ indent }}    # Создаем fake message object для команды
+{{ indent }}    from types import SimpleNamespace
+{{ indent }}    fake_message = SimpleNamespace()
+{{ indent }}    fake_message.from_user = callback_query.from_user
+{{ indent }}    fake_message.chat = callback_query.message.chat
+{{ indent }}    fake_message.date = callback_query.message.date
+{{ indent }}    fake_message.answer = callback_query.message.answer
+{{ indent }}    fake_message.edit_text = callback_query.message.edit_text
 {{ indent }}    
-{{ indent }}    # Сохраняем кнопку в базу данных
-{{ indent }}    timestamp = get_moscow_time()
-{{ indent }}    response_data = button_text
-{{ indent }}    await update_user_data_in_db(user_id, button_text, response_data)
-{{ indent }}    logging.info(f"Команда {{ button.target or 'неизвестная' }} выполнена через callback кнопку (пользователь {user_id})")
+{{ indent }}    {% if commandNode == 'start' %}# Вызываем start handler через edit_text
+{{ indent }}    # Создаем специальный объект для редактирования сообщения
+{{ indent }}    class FakeCallbackQuery:
+{{ indent }}        def __init__(self, callback_query):
+{{ indent }}            self.from_user = callback_query.from_user
+{{ indent }}            self.chat = callback_query.message.chat
+{{ indent }}            self.date = callback_query.message.date
+{{ indent }}            self.message_id = callback_query.message.message_id
+{{ indent }}            self.data = callback_query.data  # callback_data для навигации
+{{ indent }}            self.message = callback_query.message
+{{ indent }}            self._callback_query = callback_query
+{{ indent }}        
+{{ indent }}        async def answer(self, *args, **kwargs):
+{{ indent }}            pass  # Игнорируем answer для fake callback
+{{ indent }}        
+{{ indent }}        async def edit_text(self, text, parse_mode=None, reply_markup=None):
+{{ indent }}            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
 {{ indent }}    
+{{ indent }}    fake_callback = FakeCallbackQuery(callback_query)
+{{ indent }}    await start_handler(fake_callback)
+{{ indent }}    {% elif commandNode == 'command' %}# Вызываем {{ command }} handler
+{{ indent }}    await {{ command }}_handler(fake_message)
+{{ indent }}    {% else %}await callback_query.message.edit_text("Команда /{{ command }} выполнена")
+{{ indent }}    {% endif %}
+{{ indent }}    logging.info(f"Команда /{{ command }} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
+{{ indent }}
