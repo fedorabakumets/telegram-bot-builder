@@ -122,7 +122,6 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
 
       const code = generateStart({
         nodeId: 'start_1',
-        command: '/start',
         messageText: '👋 Добро пожаловать!',
         isPrivateOnly: false,
         adminOnly: false,
