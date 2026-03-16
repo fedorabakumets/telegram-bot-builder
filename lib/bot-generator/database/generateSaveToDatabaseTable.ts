@@ -7,10 +7,8 @@
  * @module bot-generator/database/generateSaveToDatabaseTable
  */
 
+import { renderPartialTemplate } from '../../templates/template-renderer';
 import { getTableForVariable } from './get-table-for-variable';
-import { generateSaveToBotUsers } from './save-to-bot-users';
-import { generateSaveToTable } from './save-to-table';
-import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 export interface GenerateSaveToDatabaseTableParams {
   variableName: string;
@@ -40,34 +38,28 @@ export function generateSaveToDatabaseTable(
   } = params;
 
   const tableInfo = getTableForVariable(variableName);
-  const codeLines: string[] = [];
 
-  const appendExpr = appendExpression || (appendMode ? 'True' : 'False');
-  const isDynamicAppend = !!appendExpression;
+  // Определяем appendMode: если есть appendExpression, используем его как boolean
+  const effectiveAppendMode = appendExpression 
+    ? (appendExpression === 'True' || appendExpression === 'true')
+    : appendMode;
 
   // bot_users или неизвестная таблица
   if (!tableInfo || tableInfo.table === 'bot_users') {
-    const saveCode = generateSaveToBotUsers({
-      variableName,
+    return renderPartialTemplate('database/save-to-bot-users.py.jinja2', {
+      variableName: isVariableNameDynamic ? variableName : variableName,
       valueExpression,
-      indent,
-      appendExpression: appendExpr,
-      isVariableNameDynamic
+      appendMode: effectiveAppendMode,
+      indentLevel: indent,
     });
-    codeLines.push(saveCode);
-  }
-  // Любая другая таблица (user_ids, user_telegram_settings, etc.)
-  else {
-    const saveCode = generateSaveToTable({
-      table: tableInfo.table,
-      column: tableInfo.column || variableName,
+  } else {
+    // Любая другая таблица (user_ids, user_telegram_settings, etc.)
+    return renderPartialTemplate('database/save-to-table.py.jinja2', {
+      tableName: tableInfo.table,
+      columnName: tableInfo.column || variableName,
       valueExpression,
-      indent,
-      appendExpression: appendExpr,
-      isDynamicAppend
+      appendMode: effectiveAppendMode,
+      indentLevel: indent,
     });
-    codeLines.push(saveCode);
   }
-
-  return processCodeWithAutoComments(codeLines, 'generateSaveToDatabaseTable.ts').join('\n');
 }

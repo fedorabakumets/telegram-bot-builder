@@ -2,7 +2,7 @@ import { Button } from '../types';
 import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from '../format';
 import { generateKeyboard } from '../../templates/keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
-import { generateCheckUserVariableFunction, generateDatabaseVariablesBlockCall } from '../database';
+import { generateDatabaseVariablesBlockCall } from '../database';
 import { generateNavigateToNodeWithText } from '../transitions/generate-node-navigation';
 
 export function handleConditionalNavigationAndInputCollection(nodes: any[], code: string, allNodeIds: any[]) {
@@ -77,7 +77,8 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                         // Генерируем логику проверки условий встроенно
                         const conditionalMessages = targetNode.data.conditionalMessages.sort((a: { priority: any; }, b: { priority: any; }) => (b.priority || 0) - (a.priority || 0));
 
-                        code += generateCheckUserVariableFunction('                        ');
+                        // Примечание: generateCheckUserVariableFunction удалена после миграции на Jinja2
+                        // Функция check_user_variable_inline используется глобальная
 
                         // Генерируем условия
                         code += `                        conditional_met = False\n`;

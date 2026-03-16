@@ -7,7 +7,7 @@
  * @module bot-generator/user-input/generate-response-save
  */
 
-import { generateSaveToDatabaseUniversal } from '../database/save-to-bot-users';
+import { renderPartialTemplate } from '../../templates/template-renderer';
 
 /**
  * Генерирует Python-код для сохранения ответа
@@ -28,11 +28,13 @@ export function generateResponseSave(
     ? (appendMode ? 'True' : 'False')
     : appendMode;
 
+  const effectiveAppendMode = appendExpr === 'True' || appendExpr === 'true';
+
   // Используем универсальную функцию для runtime определения таблицы
-  return generateSaveToDatabaseUniversal({
+  return renderPartialTemplate('database/save-to-bot-users.py.jinja2', {
     variableName,
     valueExpression,
-    indent,
-    appendExpression: appendExpr
+    appendMode: effectiveAppendMode,
+    indentLevel: indent,
   });
 }

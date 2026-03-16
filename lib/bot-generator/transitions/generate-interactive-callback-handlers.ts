@@ -30,7 +30,7 @@ import { generateRedirectLogic } from './redirect';
 import { generateNavigationErrorHandler, generateUnknownNodeWarning, generateNoNodesAvailableWarning, generateMultiSelectFallbackNavigation, generateRegularFallbackNavigation } from './navigation';
 import { generateInputNodeHandling } from './input';
 import { isLoggingEnabled } from '../../bot-generator';
-import { generateCheckUserVariableFunction } from '../database';
+// Примечание: generateCheckUserVariableFunction удалена после миграции на Jinja2
 import { formatTextForPython, generateWaitingStateCode, toPythonBoolean } from '../format';
 import { generateHandleNodeFunctions } from '../../generate/generateHandleNodeFunctions';
 import { generateKeyboard } from '../../templates/keyboard';
@@ -673,8 +673,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                     code += '            user_data_dict = await get_user_from_db(user_id) or {}\n';
                     code += '            user_data_dict.update(user_data.get(user_id, {}))\n\n';
 
-                    // Добавляем определение функции check_user_variable_inline
-                    code += generateCheckUserVariableFunction('            ');
+                    // Примечание: generateCheckUserVariableFunction удалена после миграции на Jinja2
+                    // Функция check_user_variable_inline используется глобальная
 
                     // Генерируем условную логику для этого узла
                     const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a: { priority: any; }, b: { priority: any; }) => (b.priority || 0) - (a.priority || 0));

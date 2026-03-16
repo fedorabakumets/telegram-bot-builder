@@ -1,0 +1,69 @@
+{#
+  Шаблон сохранения в таблицу БД
+
+  @param {string} tableName - Имя таблицы (user_ids, user_telegram_settings)
+  @param {string} columnName - Имя колонки
+  @param {string} valueExpression - Выражение значения
+  @param {boolean} appendMode - Режим добавления
+  @param {string} indentLevel - Уровень отступа
+#}
+
+{% set indent = indentLevel or '' %}
+
+{{ indent }}# Сохранение в таблицу {{ tableName }}
+{{ indent }}if db_pool:
+{{ indent }}    try:
+{{ indent }}        async with db_pool.acquire() as conn:
+{% if appendMode %}
+{{ indent }}            # Append mode: добавляем к существующему значению
+{{ indent }}            row = await conn.fetchrow(
+{{ indent }}                "SELECT {{ columnName }} FROM {{ tableName }} WHERE user_id = $1",
+{{ indent }}                user_id
+{{ indent }}            )
+{{ indent }}
+{{ indent }}            if row and row["{{ columnName }}"]:
+{{ indent }}                existing_value = row["{{ columnName }}"]
+{{ indent }}                if isinstance(existing_value, str):
+{{ indent }}                    try:
+{{ indent }}                        existing_value = json.loads(existing_value)
+{{ indent }}                    except:
+{{ indent }}                        existing_value = None
+{{ indent }}            else:
+{{ indent }}                existing_value = None
+{{ indent }}
+{{ indent }}            if existing_value:
+{{ indent }}                if isinstance(existing_value, list):
+{{ indent }}                    if isinstance({{ valueExpression }}, list):
+{{ indent }}                        existing_value.extend({{ valueExpression }})
+{{ indent }}                    else:
+{{ indent }}                        existing_value.append({{ valueExpression }})
+{{ indent }}                else:
+{{ indent }}                    existing_value = [existing_value, {{ valueExpression }}]
+{{ indent }}            else:
+{{ indent }}                existing_value = {{ valueExpression }}
+{{ indent }}
+{{ indent }}            # INSERT or UPDATE
+{{ indent }}            await conn.execute("""
+{{ indent }}                INSERT INTO {{ tableName }} (user_id, {{ columnName }})
+{{ indent }}                VALUES ($1, $2)
+{{ indent }}                ON CONFLICT (user_id) DO UPDATE
+{{ indent }}                SET {{ columnName }} = EXCLUDED.{{ columnName }}
+{{ indent }}            """, user_id, json.dumps(existing_value, ensure_ascii=False))
+{% else %}
+{{ indent }}            # Replace mode: INSERT or UPDATE
+{{ indent }}            await conn.execute("""
+{{ indent }}                INSERT INTO {{ tableName }} (user_id, {{ columnName }})
+{{ indent }}                VALUES ($1, $2)
+{{ indent }}                ON CONFLICT (user_id) DO UPDATE
+{{ indent }}                SET {{ columnName }} = EXCLUDED.{{ columnName }}
+{{ indent }}            """, user_id, json.dumps({{ valueExpression }}, ensure_ascii=False))
+{% endif %}
+{{ indent }}            logging.info(f"✅ Сохранено в {{ tableName }}: {{ columnName }} = {{ valueExpression }}")
+{{ indent }}    except Exception as e:
+{{ indent }}        logging.error(f"❌ Ошибка сохранения в {{ tableName }}: {e}")
+{{ indent }}else:
+{{ indent }}    # Локальное хранилище
+{{ indent }}    if user_id not in user_data:
+{{ indent }}        user_data[user_id] = {}
+{{ indent }}    user_data[user_id]["{{ columnName }}"] = {{ valueExpression }}
+{{ indent }}    logging.info(f"✅ Сохранено в user_data: {{ columnName }} = {{ valueExpression }}")

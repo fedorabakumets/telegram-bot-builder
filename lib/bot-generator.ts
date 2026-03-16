@@ -29,7 +29,6 @@ import { generateBotCommandsSetup } from './bot-commands-setup';
 import { generateBotFatherCommands } from './commands';
 import { collectConditionalMessageButtons } from './bot-generator/Conditional/collectConditionalMessageButtons';
 import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './bot-generator/Conditional/conditional-button-handler';
-import { generateGlobalCheckUserVariableFunction } from "./bot-generator/database/generateGlobalCheckUserVariableFunction";
 import { generateUniversalVariableReplacement } from './bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython } from './bot-generator/format';
 import { generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation } from './generate';
@@ -296,7 +295,7 @@ export function generatePythonCode(
 
 
   // Добавляем глобальные утилитарные функции
-  code += generateGlobalCheckUserVariableFunction(); // Добавляем глобальное определение функции
+  // Примечание: generateGlobalCheckUserVariableFunction удалена после миграции на Jinja2
   code += generateUtils({ userDatabaseEnabled: !!context.options.userDatabaseEnabled });
 
   // Функции для работы с файлами - если есть медиа или узлы с изображениями из папки uploads

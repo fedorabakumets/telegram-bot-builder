@@ -10,6 +10,15 @@
 
 {# ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===== #}
 
+{# Дополнительные шаблоны #}
+{% macro save_to_bot_users(variableName, valueExpression, appendMode=False, indentLevel='') %}
+{% include 'database/save-to-bot-users.py.jinja2' %}
+{% endmacro %}
+
+{% macro save_to_table(tableName, columnName, valueExpression, appendMode=False, indentLevel='') %}
+{% include 'database/save-to-table.py.jinja2' %}
+{% endmacro %}
+
 {#
   Получение московского времени
 #}

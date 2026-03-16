@@ -1,4 +1,3 @@
-import { generateCheckUserVariableFunction } from "../database/generateCheckUserVariableFunction";
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { processConditionalMessages } from './processConditionalMessages';
 
@@ -99,11 +98,8 @@ export function generateConditionalMessageLogic(conditionalMessages: any[], inde
   // ИСПРАВЛЕНИЕ: НЕ генерируем локальную функцию replace_variables_in_text
   // Используем глобальную функцию, определённую в начале файла
   codeLines.push(`${indentLevel}# Используем глобальную функцию replace_variables_in_text`);
-
-  // Добавляем определение функции check_user_variable_inline
-  const checkUserVariableCode = generateCheckUserVariableFunction(indentLevel);
-  const checkUserVariableLines = checkUserVariableCode.split('\n').filter(line => line.trim());
-  codeLines.push(...checkUserVariableLines);
+  codeLines.push(`${indentLevel}# Функция check_user_variable_inline также используется глобальная`);
+  codeLines.push('');
 
   // Создаем единую if/elif/else структуру для всех условий
   const processedCode = processConditionalMessages(sortedConditions, nodeData, codeLines.join('\n'), indentLevel);
