@@ -9,7 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
-import { fetchWithProxy, getTelegramProxyAgent } from "../../../../utils/telegram-proxy";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import {
     analyzeTelegramError,
     getErrorStatusCode
@@ -44,13 +44,8 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
             ? `${defaultToken.token.slice(0, 8)}...${defaultToken.token.slice(-4)}`
             : '***';
 
-        // Get proxy agent
-        const proxyAgent = getTelegramProxyAgent();
-
         console.log(`[Telegram API] Getting bot info for project ${projectId}, token: ${maskedToken}`);
-        if (proxyAgent) {
-            console.log(`[Telegram API] Using proxy agent`);
-        }
+        console.log(`[Telegram API] Using undici ProxyAgent`);
 
         const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getMe?_t=${Date.now()}`;
         const startTime = Date.now();

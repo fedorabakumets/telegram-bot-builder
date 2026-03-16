@@ -27,7 +27,7 @@ import { userTelegramSettings } from "@shared/schema";
 import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { handleTelegramError } from "../utils/telegram-error-handler";
-import { fetchWithProxy, getTelegramProxyAgent } from "../utils/telegram-proxy";
+import { fetchWithProxy } from "../utils/telegram-proxy";
 import { setupAuthRoutes } from "./setupAuthRoutes";
 import { setupBotIntegrationRoutes } from "./setupBotIntegrationRoutes";
 import { setupGithubPushRoute } from './setupGithubPushRoute';
@@ -571,16 +571,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         ? `${token.slice(0, 8)}...${token.slice(-4)}`
         : '***';
 
-      // Get proxy agent for Telegram API
-      const proxyAgent = getTelegramProxyAgent();
-
       console.log(`[Telegram API] Parsing bot info for token: ${maskedToken}`);
       console.log(`[Telegram API] Request URL: https://api.telegram.org/bot${maskedToken}/getMe`);
-      if (proxyAgent) {
-        console.log(`[Telegram API] Using proxy agent`);
-      } else {
-        console.log(`[Telegram API] No proxy configured, using direct connection`);
-      }
+      console.log(`[Telegram API] Using undici ProxyAgent`);
 
       // Get bot information via Telegram Bot API
       const telegramApiUrl = `https://api.telegram.org/bot${token}/getMe`;

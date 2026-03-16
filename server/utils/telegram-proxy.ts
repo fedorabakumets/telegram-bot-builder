@@ -3,12 +3,9 @@
  * @module server/utils/telegram-proxy
  */
 
-import { HttpProxyAgent } from 'http-proxy-agent';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import { SocksProxyAgent } from 'socks-proxy-agent';
-import nodeFetch, { RequestInit, Response } from 'node-fetch';
+import { ProxyAgent } from 'undici';
 
-let proxyAgent: HttpsProxyAgent | SocksProxyAgent | null = null;
+let proxyAgent: ProxyAgent | null = null;
 let proxyInitialized = false;
 
 /**
@@ -26,38 +23,24 @@ function initProxy(): void {
 
   try {
     const url = new URL(proxyUrl.trim());
-
-    // SOCKS прокси
-    if (url.protocol === 'socks:' || url.protocol === 'socks4:' || url.protocol === 'socks5:') {
-      console.log(`[Proxy] Using SOCKS proxy: ${url.hostname}:${url.port}`);
-      proxyAgent = new SocksProxyAgent(proxyUrl.trim());
-      return;
-    }
-
-    // HTTP/HTTPS прокси
-    if (url.protocol === 'http:' || url.protocol === 'https:') {
-      console.log(`[Proxy] Using HTTP proxy: ${url.hostname}:${url.port}`);
-      proxyAgent = new HttpsProxyAgent(proxyUrl.trim());
-      return;
-    }
-
-    console.warn(`[Proxy] Unknown proxy protocol: ${url.protocol}, ignoring proxy`);
+    console.log(`[Proxy] Creating undici ProxyAgent: ${url.hostname}:${url.port}`);
+    proxyAgent = new ProxyAgent(proxyUrl.trim());
+    console.log(`[Proxy] ProxyAgent created successfully`);
   } catch (error) {
     console.error(`[Proxy] Invalid proxy URL: ${proxyUrl}`, error);
   }
 }
 
 /**
- * Возвращает прокси-агент для HTTPS запросов к Telegram API
- * @returns Прокси-агент или null, если прокси не настроен
+ * Возвращает прокси-агент для использования с fetch
  */
-export function getTelegramProxyAgent(): HttpsProxyAgent | SocksProxyAgent | null {
+export function getProxyAgent(): ProxyAgent | null {
   initProxy();
   return proxyAgent;
 }
 
 /**
- * Выполняет fetch запрос через прокси
+ * Выполняет fetch запрос через прокси используя undici
  * @param url - URL запроса
  * @param options - Опции fetch
  * @returns Response от сервера
@@ -65,30 +48,16 @@ export function getTelegramProxyAgent(): HttpsProxyAgent | SocksProxyAgent | nul
 export async function fetchWithProxy(url: string, options?: RequestInit): Promise<Response> {
   initProxy();
   
-  const agent = getTelegramProxyAgent();
-  
-  if (!agent) {
+  if (!proxyAgent) {
     // Если прокси нет, используем нативный fetch
     return fetch(url, options);
   }
 
-  // Используем node-fetch с прокси
-  return nodeFetch(url, {
+  // undici ProxyAgent может быть использован как dispatcher
+  const response = await fetch(url, {
     ...options,
-    agent,
+    dispatcher: proxyAgent,
   } as any);
-}
-
-/**
- * Возвращает опции для fetch запроса с прокси
- * @returns Опции для fetch или null, если прокси не настроен
- */
-export function getTelegramFetchOptions(): { agent?: HttpsProxyAgent | SocksProxyAgent } | null {
-  const agent = getTelegramProxyAgent();
   
-  if (!agent) {
-    return null;
-  }
-
-  return { agent };
+  return response;
 }
