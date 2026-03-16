@@ -12,6 +12,7 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 import { get_moscow_time } from './get_moscow_time';
 import { get_user_data_from_db } from './get_user_data_from_db';
 import { get_user_from_db } from './get_user_from_db';
+import { get_user_ids_from_db } from './get_user_ids_from_db';
 import { init_database } from './init_database';
 import { log_message } from './log_message';
 import { save_user_data_to_db } from './save_user_data_to_db';
@@ -35,12 +36,11 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
   // Собираем весь код в массив строк для автоматической обработки
   const codeLines: string[] = [];
 
-  // Конфигурация базы данных
-  // DATABASE_URL и db_pool определяются в config.py.jinja2
+  // Примечание: DATABASE_URL и db_pool определяются в config.py.jinja2
+  // Здесь генерируются только функции для работы с БД
   codeLines.push('# ┌─────────────────────────────────────────┐');
-  codeLines.push('# │           Настройки базы данных         │');
+  codeLines.push('# │      Функции для работы с базой данных  │');
   codeLines.push('# └─────────────────────────────────────────┘');
-  codeLines.push('DATABASE_URL = os.getenv("DATABASE_URL")');
   codeLines.push('');
 
   // Инициализация БД
@@ -69,6 +69,9 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
 
   // Получение пользователя из базы данных
   get_user_from_db(codeLines);
+
+  // Получение списка user_ids из таблицы user_ids
+  get_user_ids_from_db(codeLines);
 
   // Получение данных пользователя из базы данных
   get_user_data_from_db(codeLines);

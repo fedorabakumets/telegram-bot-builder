@@ -58,11 +58,11 @@ const code = generateKeyboard({
 **Вывод:**
 
 ```python
-builder = InlineKeyboardBuilder()
-builder.add(InlineKeyboardButton(text="📊 Статистика", callback_data="btn_stats"))
-builder.add(InlineKeyboardButton(text="⚙️ Настройки", callback_data="btn_settings"))
-builder.add(InlineKeyboardButton(text="🌐 Сайт", url="https://example.com"))
-keyboard = builder.as_markup()
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="📊 Статистика", callback_data="btn_stats"))
+    builder.add(InlineKeyboardButton(text="⚙️ Настройки", callback_data="btn_settings"))
+    builder.add(InlineKeyboardButton(text="🌐 Сайт", url="https://example.com"))
+    keyboard = builder.as_markup()
 ```
 
 ### Reply клавиатура
@@ -82,13 +82,13 @@ const code = generateKeyboard({
 **Вывод:**
 
 ```python
-builder = ReplyKeyboardBuilder()
-builder.add(KeyboardButton(text="📖 О боте"))
-builder.add(KeyboardButton(text="📞 Контакты"))
-keyboard = builder.as_markup(
-    resize_keyboard=True,
-    one_time_keyboard=False
-)
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="📖 О боте"))
+    builder.add(KeyboardButton(text="📞 Контакты"))
+    keyboard = builder.as_markup(
+        resize_keyboard=True,
+        one_time_keyboard=False
+    )
 ```
 
 ### Пустая клавиатура
@@ -105,7 +105,7 @@ const code = generateKeyboard({
 **Вывод:**
 
 ```python
-keyboard = None
+    keyboard = None
 ```
 
 ### С раскладкой

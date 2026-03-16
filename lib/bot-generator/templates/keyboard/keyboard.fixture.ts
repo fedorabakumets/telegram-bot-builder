@@ -83,23 +83,23 @@ export const invalidParamsMissingField = {
 
 /** Ожидаемый вывод: inline клавиатура */
 export const expectedOutputInline = `
-builder = InlineKeyboardBuilder()
-builder.add(InlineKeyboardButton(text="📊 Статистика", callback_data="btn_stats"))
-builder.add(InlineKeyboardButton(text="⚙️ Настройки", callback_data="btn_settings"))
-builder.add(InlineKeyboardButton(text="🌐 Сайт", url="https://example.com"))
-keyboard = builder.as_markup()
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="📊 Статистика", callback_data="btn_stats"))
+    builder.add(InlineKeyboardButton(text="⚙️ Настройки", callback_data="btn_settings"))
+    builder.add(InlineKeyboardButton(text="🌐 Сайт", url="https://example.com"))
+    keyboard = builder.as_markup()
 `.trim();
 
 /** Ожидаемый вывод: reply клавиатура */
 export const expectedOutputReply = `
-builder = ReplyKeyboardBuilder()
-builder.add(KeyboardButton(text="📖 О боте"))
-builder.add(KeyboardButton(text="📞 Контакты"))
-keyboard = builder.as_markup(
-    resize_keyboard=True,
-    one_time_keyboard=False
-)
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="📖 О боте"))
+    builder.add(KeyboardButton(text="📞 Контакты"))
+    keyboard = builder.as_markup(
+        resize_keyboard=True,
+        one_time_keyboard=False
+    )
 `.trim();
 
 /** Ожидаемый вывод: пустая клавиатура */
-export const expectedOutputEmpty = 'keyboard = None';
+export const expectedOutputEmpty = '    keyboard = None';

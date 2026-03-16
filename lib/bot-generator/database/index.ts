@@ -8,6 +8,7 @@ export { generateVariableReplacement } from './generateVariableReplacement';
 export { get_moscow_time } from './get_moscow_time';
 export { get_user_data_from_db } from './get_user_data_from_db';
 export { get_user_from_db } from './get_user_from_db';
+export { get_user_ids_from_db } from './get_user_ids_from_db';
 export { init_database } from './init_database';
 export { init_user_variables } from './init_user_variables';
 export { log_message } from './log_message';

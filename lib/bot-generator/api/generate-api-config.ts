@@ -1,8 +1,8 @@
 /**
  * @fileoverview Генерация конфигурации API
  *
- * Модуль создаёт Python-код для определения PROJECT_ID и PROJECT_DIR,
- * которые используются для сохранения данных в базу данных.
+ * Модуль создаёт Python-код для заглушек функций при выключенной БД.
+ * PROJECT_ID и PROJECT_DIR определяются в config.py.jinja2.
  *
  * @module bot-generator/api/generate-api-config
  */
@@ -19,16 +19,8 @@ import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 export function generateApiConfig(projectId: number | null, userDatabaseEnabled: boolean = false): string {
   const codeLines: string[] = [];
 
-  codeLines.push('# ┌─────────────────────────────────────────┐');
-  codeLines.push('# │        Конфигурация проекта             │');
-  codeLines.push('# └─────────────────────────────────────────┘');
-
-  // Определяем PROJECT_ID (всегда, по умолчанию 0)
-  // PROJECT_DIR определяется в config.py.jinja2
-  codeLines.push('# ID проекта для сохранения в базу данных');
-  codeLines.push(`PROJECT_ID = ${projectId !== null ? projectId : 0}`);
-  codeLines.push('logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")');
-  codeLines.push('');
+  // Примечание: PROJECT_ID и PROJECT_DIR определяются в config.py.jinja2
+  // Здесь генерируются только заглушки функций при выключенной БД
 
   // Создаём заглушки для DB-функций (ТОЛЬКО если БД выключена)
   if (!userDatabaseEnabled) {
