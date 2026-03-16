@@ -67,6 +67,71 @@ export const validParamsOneTime: KeyboardTemplateParams = {
   resizeKeyboard: false,
 };
 
+/** Валидные параметры: множественный выбор inline */
+export const validParamsMultiSelectInline: KeyboardTemplateParams = {
+  keyboardType: 'inline',
+  buttons: [
+    { text: 'Option 1', action: 'selection', target: 'opt1', id: 'btn_opt1' },
+    { text: 'Option 2', action: 'selection', target: 'opt2', id: 'btn_opt2' },
+    { text: 'Option 3', action: 'selection', target: 'opt3', id: 'btn_opt3' },
+    { text: 'Готово', action: 'complete', target: 'next_node', id: 'btn_done' },
+  ],
+  allowMultipleSelection: true,
+  multiSelectVariable: 'user_interests',
+  nodeId: 'node_123',
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+  allNodeIds: ['node_123', 'next_node'],
+};
+
+/** Валидные параметры: множественный выбор reply */
+export const validParamsMultiSelectReply: KeyboardTemplateParams = {
+  keyboardType: 'reply',
+  buttons: [
+    { text: 'Option 1', action: 'selection', target: 'opt1', id: 'btn_opt1' },
+    { text: 'Option 2', action: 'selection', target: 'opt2', id: 'btn_opt2' },
+    { text: 'Готово', action: 'complete', target: 'next_node', id: 'btn_done' },
+  ],
+  allowMultipleSelection: true,
+  multiSelectVariable: 'user_interests',
+  nodeId: 'node_456',
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};
+
+/** Валидные параметры: с contact/location кнопками */
+export const validParamsContactLocation: KeyboardTemplateParams = {
+  keyboardType: 'reply',
+  buttons: [
+    { text: '📱 Мой номер', action: 'contact', requestContact: true, id: 'btn_contact' },
+    { text: '📍 Моя геопозиция', action: 'location', requestLocation: true, id: 'btn_location' },
+    { text: 'Пропустить', action: 'goto', target: 'skip', id: 'btn_skip' },
+  ],
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};
+
+/** Валидные параметры: с parseMode HTML */
+export const validParamsParseModeHtml: KeyboardTemplateParams = {
+  keyboardType: 'inline',
+  buttons: [
+    { text: 'Button', action: 'goto', target: 'next', id: 'btn_next' },
+  ],
+  parseMode: 'html',
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};
+
+/** Валидные параметры: с переменными в тексте */
+export const validParamsWithVariables: KeyboardTemplateParams = {
+  keyboardType: 'inline',
+  buttons: [
+    { text: 'Привет, {user_name}!', action: 'goto', target: 'next', id: 'btn_greet' },
+  ],
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};
+
 /** Невалидные параметры: неправильный тип */
 export const invalidParamsWrongType = {
   keyboardType: 'popup', // неправильный тип

@@ -14,6 +14,10 @@ import {
   hasUploadImagesFilter,
   formatBotFatherCommands,
   formatPythonTextFilter,
+  toPythonBooleanFilter,
+  generateShortIdFilter,
+  escapePythonStringFilter,
+  sliceFilter,
 } from './filters';
 import { getTemplatesDir } from './utils/get-templates-dir';
 import {
@@ -69,6 +73,10 @@ function initEnvironment(): Environment {
   env.addFilter('has_upload_images', hasUploadImagesFilter);
   env.addFilter('format_bot_father_commands', formatBotFatherCommands);
   env.addFilter('format_python_text', formatPythonTextFilter);
+  env.addFilter('to_python_boolean', toPythonBooleanFilter);
+  env.addFilter('generate_short_id', generateShortIdFilter);
+  env.addFilter('escape_python_string', escapePythonStringFilter);
+  env.addFilter('slice', sliceFilter);
 
   return env;
 }

@@ -6,6 +6,8 @@
 // Импортируем канонические реализации вместо дублирования
 import { generateBotFatherCommands } from '../commands';
 import { formatTextForPython } from '../bot-generator/format/formatTextForPython';
+import { escapePythonString } from '../bot-generator/format/escapePythonString';
+import { generateUniqueShortId } from '../bot-generator/format/generateUniqueShortId';
 
 /**
  * Преобразует ID узла в безопасное имя функции Python
@@ -158,4 +160,68 @@ export function formatBotFatherCommands(nodes: any[]): string {
  */
 export function formatPythonTextFilter(str: string): string {
   return formatTextForPython(str);
+}
+
+/**
+ * Преобразует JavaScript boolean в Python boolean (True/False)
+ *
+ * @param value - Значение для преобразования
+ * @returns 'True' или 'False'
+ *
+ * @example
+ * true → 'True'
+ * false → 'False'
+ * null → 'False'
+ */
+export function toPythonBooleanFilter(value: any): string {
+  return value ? 'True' : 'False';
+}
+
+/**
+ * Генерирует короткий ID для узла (для callback_data)
+ * Использует каноническую реализацию из generateUniqueShortId.ts
+ *
+ * @param nodeId - ID узла
+ * @param allNodeIds - Массив всех ID узлов (опционально)
+ * @returns Короткий ID (последние 6 символов хеша)
+ *
+ * @example
+ * "node_123" → "a1b2c3"
+ */
+export function generateShortIdFilter(nodeId: string, allNodeIds: string[] = []): string {
+  if (!nodeId) return 'btn';
+  return generateUniqueShortId(nodeId, allNodeIds);
+}
+
+/**
+ * Экранирует строку для использования в Python f-strings
+ * Специальная версия для кнопок с галочками
+ *
+ * @param str - Строка для экранирования
+ * @returns Экранированная строка с одинарными кавычками
+ *
+ * @example
+ * 'Button "Test"' → "\\'Button \\\\"Test\\\\\"\\'"
+ */
+export function escapePythonStringFilter(str: string): string {
+  if (typeof str !== 'string') return "''";
+  return escapePythonString(str);
+}
+
+/**
+ * Обрезает строку до указанной длины с конца
+ *
+ * @param str - Строка для обрезки
+ * @param length - Количество символов
+ * @returns Обрезанная строка
+ *
+ * @example
+ * "ms_abc123" | slice(-8) → "abc123"
+ */
+export function sliceFilter(str: string, length: number): string {
+  if (typeof str !== 'string') return '';
+  if (length >= 0) {
+    return str.slice(0, length);
+  }
+  return str.slice(length);
 }
