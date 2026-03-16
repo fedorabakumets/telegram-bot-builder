@@ -1,6 +1,5 @@
 import { Button } from '../types';
 import { formatTextForPython, generateButtonText, toPythonBoolean } from '../format';
-import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { generateKeyboard } from '../../templates/keyboard';
 import { escapePythonString } from '../format/escapePythonString';
 // Примечание: generateInitAllUserVarsCall удалена после миграции на Jinja2
@@ -131,9 +130,8 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                     const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard !== false);
                     const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard === true);
 
-                    // Вычисляем оптимальное количество колонок для клавиатуры
-                    const allButtons = [...node.data.buttons];
-                    code += `                ${getAdjustCode(allButtons, node.data)}\n`;
+                    // Вычисляем оптимальное количество колонок для клавиатуры (2 для множественного выбора)
+                    code += `                builder.adjust(2)\n`;
                     code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})  # builder variable is used here\n`;
 
                     // Отправляем сообщение с обновленной клавиатурой

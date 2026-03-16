@@ -1,7 +1,5 @@
 import { Button } from "../../bot-generator";
-import { generateButtonText } from '../format/generateButtonText';
-import { getAdjustCode } from '../Keyboard/getAdjustCode';
-import { toPythonBoolean } from "../format/toPythonBoolean";
+import { generateKeyboard } from '../../templates/keyboard';
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
 
 /**
@@ -50,47 +48,29 @@ export function generateConditionalKeyboard(condition: any, indentLevel: string,
   const codeLines: string[] = [];
 
   if (condition.keyboardType === 'inline') {
-    // Создаем inline клавиатуру
+    // Создаем inline клавиатуру через Jinja2 шаблон
     codeLines.push(`${indentLevel}# Создаем inline клавиатуру для условного сообщения`);
-    codeLines.push(`${indentLevel}builder = InlineKeyboardBuilder()`);
-
-    // Обрабатываем каждую кнопку
-    condition.buttons.forEach((button: Button) => {
-      if (button.action === "url") {
-        codeLines.push(`${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))`);
-      } else if (button.action === 'goto' || button.action === 'selection' || button.action === 'complete') {
-        const callbackData = button.target || button.id || 'no_action';
-        codeLines.push(`${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))`);
-      } else {
-        const callbackData = button.target || button.id || 'no_action';
-        codeLines.push(`${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))`);
-      }
+    const keyboardCode = generateKeyboard({
+      keyboardType: 'inline',
+      buttons: condition.buttons || [],
+      nodeId: condition.nodeId || 'conditional',
+      indentLevel,
     });
-
-    // Автоматическое распределение колонок для inline клавиатуры
-    const nodeData = { keyboardType: condition.keyboardType };
-    codeLines.push(`${indentLevel}${getAdjustCode(condition.buttons, nodeData)}`);
-    codeLines.push(`${indentLevel}keyboard = builder.as_markup()`);
+    codeLines.push(keyboardCode.trimEnd());
     codeLines.push(`${indentLevel}conditional_keyboard = keyboard`);
 
   } else if (condition.keyboardType === 'reply') {
-    // Создаем reply клавиатуру
+    // Создаем reply клавиатуру через Jinja2 шаблон
     codeLines.push(`${indentLevel}# Создаем reply клавиатуру для условного сообщения`);
-    codeLines.push(`${indentLevel}builder = ReplyKeyboardBuilder()`);
-
-    condition.buttons.forEach((button: Button) => {
-      if (button.action === "contact" && button.requestContact) {
-        codeLines.push(`${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))`);
-      } else if (button.action === "location" && button.requestLocation) {
-        codeLines.push(`${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))`);
-      } else {
-        codeLines.push(`${indentLevel}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))`);
-      }
+    const keyboardCode = generateKeyboard({
+      keyboardType: 'reply',
+      buttons: condition.buttons || [],
+      nodeId: condition.nodeId || 'conditional',
+      indentLevel,
+      resizeKeyboard: true,
+      oneTimeKeyboard: condition.oneTimeKeyboard === true,
     });
-
-    // Используем oneTimeKeyboard из настроек условного сообщения
-    const conditionOneTimeKb = toPythonBoolean(condition.oneTimeKeyboard === true);
-    codeLines.push(`${indentLevel}keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKb})`);
+    codeLines.push(keyboardCode.trimEnd());
     codeLines.push(`${indentLevel}conditional_keyboard = keyboard`);
   }
 

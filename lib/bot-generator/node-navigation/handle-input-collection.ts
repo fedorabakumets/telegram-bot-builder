@@ -10,7 +10,7 @@
 import type { Node } from '@shared/schema';
 import type { Button } from '../types/button-types';
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, toPythonBoolean } from '../format';
-import { getAdjustCode } from '../Keyboard/getAdjustCode';
+import { generateKeyboard } from '../../templates/keyboard';
 
 /**
  * Генерирует код для сбора ввода от пользователя
@@ -60,21 +60,13 @@ function generateInlineKeyboardWithInput(
   let code = '';
 
   code += `${bodyIndent}# Показываем inline кнопки вместе с ожиданием ввода\n`;
-  code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
-
-  targetNode.data.buttons.forEach((btn: Button) => {
-    if (btn.action === 'goto' && btn.target) {
-      code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btn.target}"))\n`;
-    } else if (btn.action === 'url' && btn.url) {
-      code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url}"))\n`;
-    } else if (btn.action === 'command' && btn.target) {
-      const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-      code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-    }
+  const keyboardCode = generateKeyboard({
+    keyboardType: 'inline',
+    buttons: targetNode.data.buttons || [],
+    nodeId: targetNode.id,
+    indentLevel: bodyIndent,
   });
-
-  code += `${bodyIndent}${getAdjustCode(targetNode.data.buttons, targetNode.data)}\n`;
-  code += `${bodyIndent}keyboard = builder.as_markup()\n`;
+  code += keyboardCode;
   code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
   code += `${bodyIndent}logging.info(f"✅ Показаны inline кнопки для узла ${targetNode.id} с collectUserInput")\n`;
 
@@ -91,21 +83,15 @@ function generateReplyKeyboardWithInput(
   let code = '';
 
   code += `${bodyIndent}# Показываем reply клавиатуру вместе с ожиданием ввода\n`;
-  code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
-
-  targetNode.data.buttons.forEach((btn: Button) => {
-    if (btn.action === 'contact' && btn.requestContact) {
-      code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-    } else if (btn.action === 'location' && btn.requestLocation) {
-      code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-    } else {
-      code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-    }
+  const keyboardCode = generateKeyboard({
+    keyboardType: 'reply',
+    buttons: targetNode.data.buttons || [],
+    nodeId: targetNode.id,
+    indentLevel: bodyIndent,
+    resizeKeyboard: targetNode.data?.resizeKeyboard !== false,
+    oneTimeKeyboard: targetNode.data?.oneTimeKeyboard === true,
   });
-
-  const resizeKeyboard = toPythonBoolean(targetNode.data?.resizeKeyboard);
-  const oneTimeKeyboard = toPythonBoolean(targetNode.data?.oneTimeKeyboard);
-  code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+  code += keyboardCode;
   code += `${bodyIndent}# Заменяем все переменные в тексте\n`;
   code += `${bodyIndent}# Получаем фильтры переменных для замены\n`;
   code += `${bodyIndent}variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})\n`;

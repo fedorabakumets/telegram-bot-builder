@@ -10,9 +10,9 @@
 import type { Node } from '@shared/schema';
 import type { Button } from '../types/button-types';
 import { generateButtonText } from '../format';
-import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { toPythonBoolean } from '../format';
 import { generateNavigateToNodeWithText } from '../transitions/generate-node-navigation';
+import { generateKeyboard } from '../../templates/keyboard';
 
 /**
  * Генерирует код для обработки навигации с клавиатурами
@@ -42,22 +42,14 @@ function generateInlineKeyboard(targetNode: Node, bodyIndent: string): string {
   let code = '';
 
   code += `${bodyIndent}# Создаем inline клавиатуру\n`;
-  code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
-
-  targetNode.data.buttons.forEach((btn: Button) => {
-    if (btn.action === 'goto' && btn.target) {
-      code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btn.target}"))\n`;
-    } else if (btn.action === 'url' && btn.url) {
-      code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url}"))\n`;
-    } else if (btn.action === 'command' && btn.target) {
-      const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-      code += `${bodyIndent}builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-    }
+  const keyboardCode = generateKeyboard({
+    keyboardType: 'inline',
+    buttons: targetNode.data.buttons || [],
+    nodeId: targetNode.id,
+    indentLevel: bodyIndent,
   });
+  code += keyboardCode;
 
-  code += `${bodyIndent}${getAdjustCode(targetNode.data.buttons, targetNode.data)}\n`;
-  code += `${bodyIndent}keyboard = builder.as_markup()\n`;
-  
   // Используем переиспользуемую функцию навигации с клавиатурой
   code += `${bodyIndent}# Навигация к узлу с отправкой сообщения и inline клавиатурой\n`;
   code += `${bodyIndent}await navigate_to_node(message, current_node_id, text=text, reply_markup=keyboard)\n`;
@@ -76,22 +68,16 @@ function generateReplyKeyboard(
   let code = '';
 
   code += `${bodyIndent}# Создаем reply клавиатуру\n`;
-  code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
-
-  targetNode.data.buttons.forEach((btn: Button) => {
-    if (btn.action === 'contact' && btn.requestContact) {
-      code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-    } else if (btn.action === 'location' && btn.requestLocation) {
-      code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-    } else {
-      code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-    }
+  const keyboardCode = generateKeyboard({
+    keyboardType: 'reply',
+    buttons: targetNode.data.buttons || [],
+    nodeId: targetNode.id,
+    indentLevel: bodyIndent,
+    resizeKeyboard: targetNode.data?.resizeKeyboard !== false,
+    oneTimeKeyboard: targetNode.data?.oneTimeKeyboard === true,
   });
+  code += keyboardCode;
 
-  const resizeKeyboard = toPythonBoolean(targetNode.data?.resizeKeyboard);
-  const oneTimeKeyboard = toPythonBoolean(targetNode.data?.oneTimeKeyboard);
-  code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-  
   // Используем переиспользуемую функцию навигации с клавиатурой
   code += `${bodyIndent}# Навигация к узлу с отправкой сообщения и клавиатурой\n`;
   code += `${bodyIndent}await navigate_to_node(message, current_node_id, text=text, reply_markup=keyboard)\n`;

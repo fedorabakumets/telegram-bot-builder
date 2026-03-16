@@ -27,6 +27,35 @@
   @param {string} indentLevel - Уровень отступа (по умолчанию '')
 #}
 
+{# ===== МАКРОСЫ ДЛЯ РАСЧЁТА ПАРАМЕТРОВ КЛАВИАТУРЫ ===== #}
+
+{#
+  Вычисляет оптимальное количество колонок
+  @param buttons - массив кнопок
+  @param allowMultipleSelection - флаг множественного выбора
+#}
+{% macro calculateOptimalColumns(buttons, allowMultipleSelection=False) %}
+{% set total = buttons|length if buttons else 0 %}
+{% if allowMultipleSelection %}2{% elif total >= 6 %}2{% else %}1{% endif %}
+{% endmacro %}
+
+{#
+  Генерирует builder.adjust() код
+  @param keyboardLayout - раскладка {autoLayout, columns, rows}
+  @param buttons - массив кнопок
+  @param allowMultipleSelection - флаг множественного выбора
+#}
+{% macro generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection=False) %}
+{% if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows %}
+{{- indent }}builder.adjust({{ keyboardLayout.rows|map(attribute='buttonIds')|map('length')|join(', ') }})
+{% elif keyboardLayout and keyboardLayout.autoLayout %}
+{{- indent }}builder.adjust({{ keyboardLayout.columns }})
+{% else %}
+{% set cols = calculateOptimalColumns(buttons, allowMultipleSelection) %}
+{{- indent }}builder.adjust({{ cols }})
+{% endif %}
+{% endmacro %}
+
 {# Определяем отступ #}
 {% set indent = indentLevel or '' %}
 
@@ -116,18 +145,8 @@
 {% endif %}
 {% endfor %}
 
-{# Раскладка клавиатуры #}
-{% if keyboardLayout and not keyboardLayout.autoLayout %}
-{% for row in keyboardLayout.rows %}
-{{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
-{% endfor %}
-{{ indent }}builder.adjust({{ keyboardLayout.rows|map(attribute='buttonIds')|map('length')|join(', ') }})
-{% elif keyboardLayout and keyboardLayout.autoLayout %}
-{{ indent }}# Авто-раскладка: {{ keyboardLayout.columns }} колонок
-{{ indent }}builder.adjust({{ keyboardLayout.columns }})
-{% else %}
-{{ indent }}builder.adjust({{ 2 if allowMultipleSelection else 1 }})
-{% endif %}
+{# Генерация раскладки через макрос #}
+{{ generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection) }}
 
 {{ indent }}keyboard = builder.as_markup()
 
@@ -160,18 +179,8 @@
 {% endif %}
 {% endfor %}
 
-{# Раскладка reply клавиатуры #}
-{% if keyboardLayout and not keyboardLayout.autoLayout %}
-{% for row in keyboardLayout.rows %}
-{{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
-{% endfor %}
-{{ indent }}builder.adjust({{ keyboardLayout.rows|map(attribute='buttonIds')|map('length')|join(', ') }})
-{% elif keyboardLayout and keyboardLayout.autoLayout %}
-{{ indent }}# Авто-раскладка: {{ keyboardLayout.columns }} колонок
-{{ indent }}builder.adjust({{ keyboardLayout.columns }})
-{% else %}
-{{ indent }}builder.adjust({{ keyboardLayout.columns or 2 }})
-{% endif %}
+{# Генерация раскладки через макрос #}
+{{ generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection) }}
 
 {{ indent }}keyboard = builder.as_markup(
 {{ indent }}    resize_keyboard={{ 'True' if resizeKeyboard else 'False' }},

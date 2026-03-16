@@ -111,6 +111,7 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
         logging.info(f"🏁 Сообщение отправлено, ЗАВЕРШАЕМ функцию")
         return
 {% endif %}
+{# END: if node.targetNode.type == 'message' #}
 
 {% if node.targetNode.type != 'message' %}
         # Узел не message
@@ -127,7 +128,10 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
         logging.info(f"⚠️ Целевой узел не найден")
         await callback_query.message.answer("Переход завершен")
 {% endif %}
+{# END: if node.continueButtonTarget and node.targetNode #}
 
 {% endfor %}
+{# END: for node in multiSelectNodes #}
 
 {% endif %}
+{# END: if multiSelectNodes #}

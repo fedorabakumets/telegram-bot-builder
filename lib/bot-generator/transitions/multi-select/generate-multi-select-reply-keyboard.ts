@@ -9,7 +9,7 @@
 
 import { Button } from '../../types';
 import { generateButtonText, toPythonBoolean } from '../../format';
-import { getAdjustCode } from '../../Keyboard/getAdjustCode';
+import { generateKeyboard } from '../../../templates/keyboard';
 import { escapePythonString } from '../../format/escapePythonString';
 
 /**
@@ -62,15 +62,12 @@ export function generateMultiSelectReplyKeyboard(
     code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
   });
 
-  // Вычисляем оптимальное количество колонок
-  const totalButtons = selectionButtons.length + otherButtons.length + (completeButton ? 1 : 0);
-  const multiSelectNodeData = { allowMultipleSelection: true };
-  const allButtonsForCalculation = Array(totalButtons).fill({});
-  code += `${indent}${getAdjustCode(allButtonsForCalculation, multiSelectNodeData)}\n`;
-  
+  // Вычисляем оптимальное количество колонок (2 для множественного выбора)
+  code += `${indent}builder.adjust(2)\n`;
+
   const resize = toPythonBoolean(resizeKeyboard !== false);
   const oneTime = toPythonBoolean(oneTimeKeyboard === true);
   code += `${indent}keyboard = builder.as_markup(resize_keyboard=${resize}, one_time_keyboard=${oneTime})\n`;
-  
+
   return code;
 }

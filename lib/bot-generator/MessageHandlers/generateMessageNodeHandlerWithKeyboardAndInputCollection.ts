@@ -10,7 +10,6 @@
 import { Button } from '../../bot-generator';
 import { generateConditionalMessageLogic } from '../Conditional';
 import { formatTextForPython, generateButtonText, generateWaitingStateCode, stripHtmlTags, toPythonBoolean } from '../format';
-import { getAdjustCode } from '../Keyboard/getAdjustCode';
 import { generateKeyboard } from '../../templates/keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 
@@ -102,24 +101,13 @@ export function generateMessageNodeHandlerWithKeyboardAndInputCollection(code: s
             code += '    # Проверяем, есть ли условная клавиатуря для этого узла\n';
             code += '    if "keyboard" not in locals() or keyboard is None:\n';
             code += '        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
-            code += '        builder = InlineKeyboardBuilder()\n';
-            targetNode.data.buttons.forEach((btn: Button, index: number) => {
-                if (btn.action === "url") {
-                    code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-                } else if (btn.action === 'goto') {
-                    // Создаем уникальный callback_data для каждой кнопки
-                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                    const uniqueCallbackData = `${callbackData}_btn_${targetNode.data.buttons.indexOf(btn)}`;
-                    code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${uniqueCallbackData}"))\n`;
-                } else if (btn.action === 'command') {
-                    // Для кнопок команд создаем специальную callback_data
-                    const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
-                    code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-                }
+            const keyboardCode = generateKeyboard({
+                keyboardType: 'inline',
+                buttons: targetNode.data.buttons || [],
+                nodeId: actualNodeId,
+                indentLevel: '        ',
             });
-            // Добавляем настройку колонок для консистентности
-            code += `        ${getAdjustCode(targetNode.data.buttons, targetNode.data)}\n`;
-            code += '        keyboard = builder.as_markup()\n';
+            code += keyboardCode;
             // Определяем режим форматирования для целевого узла
             let parseModeTarget = '';
             if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {

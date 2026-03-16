@@ -1,15 +1,14 @@
 /**
  * @fileoverview Генерация обычной reply клавиатуры
- * 
+ *
  * Модуль создаёт Python-код для генерации reply клавиатуры
  * для узлов без множественного выбора.
- * 
+ *
  * @module bot-generator/transitions/keyboard/generate-regular-reply-keyboard
  */
 
 import { Button } from '../../types';
-import { generateButtonText, toPythonBoolean } from '../../format';
-import { getAdjustCode } from '../../Keyboard/getAdjustCode';
+import { generateKeyboard } from '../../../templates/keyboard';
 
 /**
  * Параметры для генерации reply клавиатуры
@@ -19,11 +18,12 @@ export interface RegularReplyKeyboardParams {
   resizeKeyboard?: boolean;
   oneTimeKeyboard?: boolean;
   hasConditionalMessages?: boolean;
+  nodeId?: string;
 }
 
 /**
  * Генерирует Python-код для обычной reply клавиатуры
- * 
+ *
  * @param params - Параметры клавиатуры
  * @param indent - Отступ для форматирования кода
  * @returns Сгенерированный Python-код
@@ -32,10 +32,10 @@ export function generateRegularReplyKeyboard(
   params: RegularReplyKeyboardParams,
   indent: string = '    '
 ): string {
-  const { buttons, resizeKeyboard, oneTimeKeyboard, hasConditionalMessages } = params;
-  
+  const { buttons, resizeKeyboard, oneTimeKeyboard, hasConditionalMessages, nodeId } = params;
+
   let code = '';
-  
+
   if (hasConditionalMessages) {
     // Проверяем, была ли уже создана условная клавиатура
     code += `${indent}if "conditional_keyboard" not in locals():\n`;
@@ -46,37 +46,27 @@ export function generateRegularReplyKeyboard(
     code += `${indent}    logging.info("✅ Используем условную reply клавиатуру")\n`;
     code += `${indent}else:\n`;
     code += `${indent}    # Условная клавиатура не создана, используем обычную\n`;
-    code += `${indent}    builder = ReplyKeyboardBuilder()\n`;
-    buttons.forEach((btn: Button) => {
-      if (btn.action === "contact" && btn.requestContact) {
-        code += `${indent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-      } else if (btn.action === "location" && btn.requestLocation) {
-        code += `${indent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-      } else {
-        code += `${indent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-      }
+    const keyboardCode = generateKeyboard({
+      keyboardType: 'reply',
+      buttons: buttons || [],
+      nodeId: nodeId || 'conditional',
+      indentLevel: `${indent}    `,
+      resizeKeyboard,
+      oneTimeKeyboard,
     });
-    code += `${indent}    ${getAdjustCode(buttons, { resizeKeyboard, oneTimeKeyboard })}\n`;
-    const resize = toPythonBoolean(resizeKeyboard);
-    const oneTime = toPythonBoolean(oneTimeKeyboard);
-    code += `${indent}    keyboard = builder.as_markup(resize_keyboard=${resize}, one_time_keyboard=${oneTime})\n`;
+    code += keyboardCode;
     code += `${indent}    logging.info("✅ Используем обычную reply клавиатуру")\n`;
   } else {
     // Нет условных сообщений, просто создаем обычную клавиатуру
-    code += `${indent}builder = ReplyKeyboardBuilder()\n`;
-    buttons.forEach((btn: Button) => {
-      if (btn.action === "contact" && btn.requestContact) {
-        code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-      } else if (btn.action === "location" && btn.requestLocation) {
-        code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-      } else {
-        code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
-      }
+    const keyboardCode = generateKeyboard({
+      keyboardType: 'reply',
+      buttons: buttons || [],
+      nodeId: nodeId || 'regular',
+      indentLevel: indent,
+      resizeKeyboard,
+      oneTimeKeyboard,
     });
-    code += `${indent}${getAdjustCode(buttons, { resizeKeyboard, oneTimeKeyboard })}\n`;
-    const resize = toPythonBoolean(resizeKeyboard);
-    const oneTime = toPythonBoolean(oneTimeKeyboard);
-    code += `${indent}keyboard = builder.as_markup(resize_keyboard=${resize}, one_time_keyboard=${oneTime})\n`;
+    code += keyboardCode;
   }
 
   return code;
