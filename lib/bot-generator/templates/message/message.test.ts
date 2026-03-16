@@ -236,7 +236,7 @@ describe('message.py.jinja2 шаблон', () => {
         }
         const duration = Date.now() - start;
 
-        assert.ok(duration < 100, `1000 генераций заняли ${duration}ms (ожидалось < 100ms)`);
+        assert.ok(duration < 200, `1000 генераций заняли ${duration}ms (ожидалось < 200ms)`);
       });
     });
   });

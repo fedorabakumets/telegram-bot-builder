@@ -8,8 +8,7 @@
   @param {boolean} oneTimeKeyboard - Скрыть после использования
   @param {boolean} resizeKeyboard - Изменить размер под кнопки
 #}
-
-{# Генерация клавиатуры без отступов - отступы добавляются в месте использования #}
+{% macro generateKeyboard() %}
 {%- if keyboardType == 'inline' and buttons|length > 0 %}
 builder = InlineKeyboardBuilder()
 {%- for btn in buttons %}
@@ -26,7 +25,6 @@ builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callbac
 {%- endif %}
 {%- endfor %}
 {%- if keyboardLayout and not keyboardLayout.autoLayout %}
-{# Ручная раскладка по рядам #}
 {%- for row in keyboardLayout.rows %}
 # Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
 {%- endfor %}
@@ -39,7 +37,6 @@ builder = ReplyKeyboardBuilder()
 {%- for btn in buttons %}
 builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
 {%- endfor %}
-{# Настройки reply клавиатуры #}
 keyboard = builder.as_markup(
     resize_keyboard={{ 'True' if resizeKeyboard else 'False' }},
     one_time_keyboard={{ 'True' if oneTimeKeyboard else 'False' }}
@@ -47,3 +44,5 @@ keyboard = builder.as_markup(
 {%- else %}
 keyboard = None
 {%- endif %}
+{% endmacro %}
+{{ generateKeyboard() }}
