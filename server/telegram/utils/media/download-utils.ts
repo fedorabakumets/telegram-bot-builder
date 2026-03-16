@@ -19,20 +19,38 @@ export async function downloadFile(
   destination: string,
   timeout = 30000
 ): Promise<void> {
+  const startTime = Date.now();
+  const maskedUrl = url.replace(/bot[^/]+\//, 'bot***/');
+  
+  console.log(`[Telegram Media] Downloading file: ${maskedUrl}`);
+  
   return new Promise<void>((resolve, reject) => {
     const request = https.get(url, { timeout }, (res) => {
       if (res.statusCode !== 200) {
+        console.error(`[Telegram Media] Download failed: HTTP ${res.statusCode}`);
         reject(new Error(`Не удалось скачать файл: HTTP ${res.statusCode}`));
         return;
       }
 
+      console.log(`[Telegram Media] Download started, status: ${res.statusCode}`);
+
       const fileStream = createWriteStream(destination);
       pipeline(res, fileStream)
-        .then(() => resolve())
-        .catch(reject);
-    }).on('error', reject);
+        .then(() => {
+          console.log(`[Telegram Media] Download completed in ${Date.now() - startTime}ms`);
+          resolve();
+        })
+        .catch((err) => {
+          console.error(`[Telegram Media] Download pipeline error: ${err.message}`);
+          reject(err);
+        });
+    }).on('error', (err) => {
+      console.error(`[Telegram Media] Download error: ${err.message}`);
+      reject(err);
+    });
 
     request.on('timeout', () => {
+      console.error(`[Telegram Media] Download timeout after ${timeout}ms`);
       request.destroy();
       reject(new Error('Таймаут запроса'));
     });

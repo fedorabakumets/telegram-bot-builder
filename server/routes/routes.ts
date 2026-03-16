@@ -565,24 +565,67 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: "Token is required" });
       }
 
+      // Mask token for logging (show only first 8 and last 4 chars)
+      const maskedToken = token.length > 12 
+        ? `${token.slice(0, 8)}...${token.slice(-4)}`
+        : '***';
+
+      console.log(`[Telegram API] Parsing bot info for token: ${maskedToken}`);
+      console.log(`[Telegram API] Request URL: https://api.telegram.org/bot${maskedToken}/getMe`);
+
       // Get bot information via Telegram Bot API
       const telegramApiUrl = `https://api.telegram.org/bot${token}/getMe`;
-      const response = await fetch(telegramApiUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      const startTime = Date.now();
+      
+      let response;
+      try {
+        response = await fetch(telegramApiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Add timeout signal
+          signal: AbortSignal.timeout(10000)
+        });
+      } catch (fetchError) {
+        const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown fetch error';
+        const errorCause = fetchError instanceof Error && 'cause' in fetchError 
+          ? (fetchError.cause as Error)?.message || fetchError.cause 
+          : 'No cause';
+        
+        console.error(`[Telegram API] Fetch failed for ${maskedToken}:`);
+        console.error(`  - Error: ${errorMessage}`);
+        console.error(`  - Cause: ${errorCause}`);
+        console.error(`  - Time: ${Date.now() - startTime}ms`);
+        console.error(`  - Possible reasons:`);
+        console.error(`    • Telegram API is blocked in your network/region`);
+        console.error(`    • DNS resolution failed`);
+        console.error(`    • Firewall/antivirus blocking connection`);
+        console.error(`    • Network connectivity issues`);
+        console.error(`  - Solution: Use a proxy or VPN to access Telegram API`);
+        
+        return res.status(500).json({ 
+          message: "Failed to connect to Telegram API",
+          error: errorMessage,
+          details: "Telegram API may be blocked in your network. Try using a proxy or VPN.",
+          tokenMasked: maskedToken
+        });
+      }
+
+      const duration = Date.now() - startTime;
+      console.log(`[Telegram API] Response received in ${duration}ms, status: ${response.status}`);
 
       const result = await response.json();
 
       if (!response.ok) {
+        console.warn(`[Telegram API] Bot token validation failed for ${maskedToken}: ${result.description || 'Unknown error'}`);
         return res.status(400).json({
           message: "Invalid bot token or failed to get bot info",
           error: result.description || "Unknown error"
         });
       }
 
+      console.log(`[Telegram API] Bot info retrieved successfully: @${result.result.username}`);
       const botInfo = result.result;
 
       // Get bot description and short description
@@ -591,30 +634,44 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       try {
         // Get full description
-        const descResponse = await fetch(`https://api.telegram.org/bot${token}/getMyDescription`);
+        const descStartTime = Date.now();
+        const descResponse = await fetch(`https://api.telegram.org/bot${token}/getMyDescription`, {
+          signal: AbortSignal.timeout(5000)
+        });
+        console.log(`[Telegram API] Description response: ${descResponse.status} (${Date.now() - descStartTime}ms)`);
+        
         if (descResponse.ok) {
           const descResult = await descResponse.json();
           if (descResult.ok && descResult.result && descResult.result.description) {
             botDescription = descResult.result.description;
+            console.log(`[Telegram API] Bot description length: ${botDescription.length} chars`);
           }
         }
 
-        // Get short description  
-        const shortDescResponse = await fetch(`https://api.telegram.org/bot${token}/getMyShortDescription`);
+        // Get short description
+        const shortDescStartTime = Date.now();
+        const shortDescResponse = await fetch(`https://api.telegram.org/bot${token}/getMyShortDescription`, {
+          signal: AbortSignal.timeout(5000)
+        });
+        console.log(`[Telegram API] Short description response: ${shortDescResponse.status} (${Date.now() - shortDescStartTime}ms)`);
+        
         if (shortDescResponse.ok) {
           const shortDescResult = await shortDescResponse.json();
           if (shortDescResult.ok && shortDescResult.result && shortDescResult.result.short_description) {
             botShortDescription = shortDescResult.result.short_description;
+            console.log(`[Telegram API] Bot short description length: ${botShortDescription.length} chars`);
           }
         }
       } catch (descError) {
-        console.warn("Failed to get bot descriptions:", descError);
+        const descErrorMessage = descError instanceof Error ? descError.message : 'Unknown error';
+        console.warn(`[Telegram API] Failed to get bot descriptions for ${maskedToken}: ${descErrorMessage}`);
       }
 
       // Get bot photo URL if exists
       let photoUrl = null;
       if (botInfo.photo && botInfo.photo.big_file_id) {
         try {
+          const photoStartTime = Date.now();
           const fileResponse = await fetch(`https://api.telegram.org/bot${token}/getFile`, {
             method: 'POST',
             headers: {
@@ -622,16 +679,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             },
             body: JSON.stringify({
               file_id: botInfo.photo.big_file_id
-            })
+            }),
+            signal: AbortSignal.timeout(5000)
           });
 
           const fileResult = await fileResponse.json();
+          console.log(`[Telegram API] Photo file response: ${fileResponse.status} (${Date.now() - photoStartTime}ms)`);
 
           if (fileResponse.ok && fileResult.result && fileResult.result.file_path) {
             photoUrl = `https://api.telegram.org/file/bot${token}/${fileResult.result.file_path}`;
+            console.log(`[Telegram API] Bot photo URL obtained`);
           }
         } catch (photoError) {
-          console.warn("Failed to get bot photo URL:", photoError);
+          const photoErrorMessage = photoError instanceof Error ? photoError.message : 'Unknown error';
+          console.warn(`[Telegram API] Failed to get bot photo URL for ${maskedToken}: ${photoErrorMessage}`);
         }
       }
 
@@ -648,10 +709,25 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         botHasMainWebApp: botInfo.has_main_web_app ? 1 : 0,
       };
 
+      console.log(`[Telegram API] Bot parsing completed successfully for @${botInfo.username}`);
       res.json(parsedBotInfo);
     } catch (error) {
-      console.error("Failed to parse bot info:", error);
-      res.status(500).json({ message: "Failed to parse bot info" });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : 'No stack trace';
+      const errorCause = error instanceof Error && 'cause' in error 
+        ? (error.cause as Error)?.message || error.cause 
+        : 'No cause';
+      
+      console.error(`[Telegram API] Critical error parsing bot info:`);
+      console.error(`  - Message: ${errorMessage}`);
+      console.error(`  - Cause: ${errorCause}`);
+      console.error(`  - Stack: ${errorStack}`);
+      
+      res.status(500).json({ 
+        message: "Failed to parse bot info",
+        error: errorMessage,
+        details: errorCause !== 'No cause' ? errorCause : undefined
+      });
     }
   });
 

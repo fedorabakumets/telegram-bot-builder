@@ -24,6 +24,10 @@ export async function resolveUserId(token: string, query: string): Promise<strin
 
     // Если username - пробуем получить через @username
     const username = query.startsWith('@') ? query.slice(1) : query;
+    const maskedToken = token.length > 12 ? `${token.slice(0, 8)}...${token.slice(-4)}` : '***';
+
+    console.log(`[Telegram API] Resolving user ${username}, token: ${maskedToken}`);
+    const startTime = Date.now();
 
     try {
         const chatResponse = await fetch(`https://api.telegram.org/bot${token}/getChat`, {
@@ -33,15 +37,30 @@ export async function resolveUserId(token: string, query: string): Promise<strin
             },
             body: JSON.stringify({
                 chat_id: `@${username}`
-            })
+            }),
+            signal: AbortSignal.timeout(10000)
         });
+
+        const duration = Date.now() - startTime;
+        console.log(`[Telegram API] Resolve user response: ${chatResponse.status} (${duration}ms)`);
 
         const chatResult = await chatResponse.json();
         if (chatResponse.ok && chatResult.result && chatResult.result.id) {
+            console.log(`[Telegram API] User resolved: ${chatResult.result.id}`);
             return chatResult.result.id.toString();
+        } else {
+            console.warn(`[Telegram API] User ${username} not found: ${chatResult.description || 'Unknown error'}`);
         }
     } catch (error) {
-        console.log('Поиск по username не удался, у пользователя может не быть публичного username');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorCause = error instanceof Error && 'cause' in error 
+            ? (error.cause as Error)?.message || error.cause 
+            : 'No cause';
+        
+        console.warn(`[Telegram API] Failed to resolve user ${username}:`);
+        console.warn(`  - Error: ${errorMessage}`);
+        console.warn(`  - Cause: ${errorCause}`);
+        console.warn('  - Possible: User has no public username or Telegram API unreachable');
     }
 
     return null;
