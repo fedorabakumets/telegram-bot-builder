@@ -244,6 +244,55 @@ describe('keyboard.py.jinja2 шаблон', () => {
         assert.ok(duration < 100, `1000 генераций заняли ${duration}ms (ожидалось < 100ms)`);
       });
     });
+
+    describe('Проверка отступов', () => {
+      it('должен генерировать keyboard = None без начальных отступов', () => {
+        const result = generateKeyboard(validParamsEmpty);
+        
+        // Проверяем, что keyboard = None начинается без отступов
+        const lines = result.split('\n');
+        const keyboardLine = lines.find(line => line.includes('keyboard = None'));
+        
+        assert.ok(keyboardLine, 'Должна быть строка с keyboard = None');
+        assert.ok(
+          keyboardLine.startsWith('keyboard'),
+          `keyboard = None не должен начинаться с отступов, получено: "${keyboardLine}"`
+        );
+      });
+
+      it('должен генерировать builder = InlineKeyboardBuilder без начальных отступов', () => {
+        const result = generateKeyboard(validParamsInline);
+        
+        const lines = result.split('\n');
+        const builderLine = lines.find(line => line.includes('builder = InlineKeyboardBuilder()'));
+        
+        assert.ok(builderLine, 'Должна быть строка с builder = InlineKeyboardBuilder()');
+        assert.ok(
+          builderLine.startsWith('builder'),
+          `builder = InlineKeyboardBuilder() не должен начинаться с отступов, получено: "${builderLine}"`
+        );
+      });
+
+      it('должен генерировать keyboard = builder.as_markup() без начальных отступов', () => {
+        const result = generateKeyboard(validParamsInline);
+        
+        const lines = result.split('\n');
+        const keyboardLine = lines.find(line => line.includes('keyboard = builder.as_markup()'));
+        
+        assert.ok(keyboardLine, 'Должна быть строка с keyboard = builder.as_markup()');
+        assert.ok(
+          keyboardLine.startsWith('keyboard'),
+          `keyboard = builder.as_markup() не должен начинаться с отступов, получено: "${keyboardLine}"`
+        );
+      });
+
+      it('должен генерировать keyboard = builder.as_markup() с правильными параметрами', () => {
+        const result = generateKeyboard(validParamsReply);
+        
+        assert.ok(result.includes('resize_keyboard='));
+        assert.ok(result.includes('one_time_keyboard='));
+      });
+    });
   });
 
   describe('keyboardParamsSchema', () => {

@@ -336,6 +336,90 @@ describe('start.py.jinja2 шаблон', () => {
         assert.ok(duration < 100, `1000 генераций заняли ${duration}ms (ожидалось < 100ms)`);
       });
     });
+
+    describe('Проверка отступов', () => {
+      it('должен генерировать await message.answer с правильным отступом в 4 пробела', () => {
+        const result = generateStart(validParamsBasic);
+        
+        const lines = result.split('\n');
+        const answerLine = lines.find(line => line.includes('await message.answer(text'));
+        
+        assert.ok(answerLine, 'Должна быть строка с await message.answer');
+        assert.ok(
+          answerLine.startsWith('    await'),
+          `await message.answer должен начинаться с 4 пробелов, получено: "${answerLine}"`
+        );
+      });
+
+      it('должен генерировать keyboard = None с правильным отступом в 4 пробела', () => {
+        const result = generateStart({
+          ...validParamsBasic,
+          keyboardType: 'none',
+        });
+        
+        const lines = result.split('\n');
+        const keyboardLine = lines.find(line => line.includes('keyboard = None'));
+        
+        assert.ok(keyboardLine, 'Должна быть строка с keyboard = None');
+        assert.ok(
+          keyboardLine.startsWith('    keyboard'),
+          `keyboard = None должен начинаться с 4 пробелов, получено: "${keyboardLine}"`
+        );
+      });
+
+      it('должен генерировать await после keyboard без лишних отступов', () => {
+        const result = generateStart({
+          ...validParamsBasic,
+          keyboardType: 'none',
+        });
+        
+        const lines = result.split('\n');
+        const keyboardIndex = lines.findIndex(line => line.includes('keyboard = None'));
+        const answerIndex = lines.findIndex(line => line.includes('await message.answer'));
+        
+        assert.ok(keyboardIndex >= 0, 'Должна быть строка keyboard = None');
+        assert.ok(answerIndex >= 0, 'Должна быть строка await message.answer');
+        assert.ok(
+          answerIndex > keyboardIndex,
+          'await message.answer должен быть после keyboard = None'
+        );
+        
+        // Проверяем, что обе строки имеют одинаковый отступ в 4 пробела
+        const keyboardLine = lines[keyboardIndex];
+        const answerLine = lines[answerIndex];
+        
+        assert.ok(
+          keyboardLine.startsWith('    keyboard'),
+          `keyboard должен иметь отступ 4 пробела: "${keyboardLine}"`
+        );
+        assert.ok(
+          answerLine.startsWith('    await'),
+          `await должен иметь отступ 4 пробела: "${answerLine}"`
+        );
+      });
+
+      it('должен генерировать inline клавиатуру с правильными отступами', () => {
+        const result = generateStart(validParamsWithInlineKeyboard);
+        
+        const lines = result.split('\n');
+        
+        // Проверяем builder = InlineKeyboardBuilder()
+        const builderLine = lines.find(line => line.includes('builder = InlineKeyboardBuilder()'));
+        assert.ok(builderLine, 'Должна быть строка builder = InlineKeyboardBuilder()');
+        assert.ok(
+          builderLine.startsWith('    builder'),
+          `builder должен иметь отступ 4 пробела: "${builderLine}"`
+        );
+        
+        // Проверяем keyboard = builder.as_markup()
+        const keyboardLine = lines.find(line => line.includes('keyboard = builder.as_markup()'));
+        assert.ok(keyboardLine, 'Должна быть строка keyboard = builder.as_markup()');
+        assert.ok(
+          keyboardLine.startsWith('    keyboard'),
+          `keyboard должен иметь отступ 4 пробела: "${keyboardLine}"`
+        );
+      });
+    });
   });
 
   describe('startParamsSchema', () => {
