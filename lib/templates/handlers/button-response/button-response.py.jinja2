@@ -1,0 +1,267 @@
+{#
+  Шаблон генерации обработчиков для кнопочных ответов при сборе пользовательского ввода
+
+  @fileoverview Генерирует Python код для обработки callback кнопок при сборе ответов
+  @param {array} userInputNodes - Узлы с кнопочными ответами
+  @param {array} allNodes - Массив всех узлов для навигации
+  @param {boolean} hasUrlButtonsInProject - Есть ли URL кнопки в проекте
+  @param {string} indentLevel - Уровень отступа (по умолчанию '')
+
+  @example
+  ```jinja2
+  {% include 'handlers/button-response/button-response.py.jinja2' %}
+  ```
+#}
+
+{% set indent = indentLevel or '' %}
+
+{% if userInputNodes and userInputNodes|length > 0 %}
+{% for node in userInputNodes %}
+{% for option in node.responseOptions %}
+
+@dp.callback_query(F.data == "response_{{ node.id }}_{{ loop.index0 }}")
+async def handle_response_{{ node.id|safe_name }}_{{ loop.index0 }}(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+
+    # Проверяем настройки кнопочного ответа
+    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
+        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
+        return
+
+    config = user_data[user_id]["button_response_config"]
+    selected_value = "{{ option.value or option.text }}"
+    selected_text = "{{ option.text }}"
+
+    # Обработка множественного выбора
+    if config.get("allow_multiple"):
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = get_moscow_time()
+                node_id = config.get("node_id", "unknown")
+
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\\n\\n✅ Ваш выбор: {selected_items}")
+
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+{% for btnNode in allNodes %}
+{% set safeBtnName = btnNode.id|safe_name %}
+{% if loop.first %}
+                        if next_node_id == "{{ btnNode.id }}":
+{% else %}
+                        elif next_node_id == "{{ btnNode.id }}":
+{% endif %}
+                            await handle_callback_{{ safeBtnName }}(callback_query)
+{% endfor %}
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
+        else:
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
+
+    # Сохраняем одиночный выбор
+    variable_name = config.get("variable", "user_response")
+    import datetime
+    timestamp = get_moscow_time()
+    node_id = config.get("node_id", "unknown")
+
+    # Создаем структурированный ответ
+    response_data = {
+        "value": selected_value,
+        "text": selected_text,
+        "type": "button_choice",
+        "timestamp": timestamp,
+        "nodeId": node_id,
+        "variable": variable_name
+    }
+
+    # Сохраняем в пользовательские данные
+    user_data[user_id][variable_name] = response_data
+
+    # Сохраняем в базу данных если включено
+    if config.get("save_to_database"):
+        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+        if saved_to_db:
+            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
+        else:
+            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+
+    # Отправляем сообщение об успехе
+    success_message = config.get("success_message", "Спасибо за ваш выбор!")
+    await callback_query.message.edit_text(f"{success_message}\\n\\n✅ Ваш выбор: {selected_text}")
+
+    # Очищаем состояние
+    del user_data[user_id]["button_response_config"]
+
+    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+
+    # Навигация на основе индивидуальных настроек кнопки
+    # Находим настройки для этого конкретного варианта ответа
+    options = config.get("options", [])
+    current_option = None
+    for option in options:
+        if option.get("callback_data") == "response_{{ node.id }}_{{ loop.index0 }}":
+            current_option = option
+            break
+
+    if current_option:
+        option_action = current_option.get("action", "goto")
+        option_target = current_option.get("target", "")
+        option_url = current_option.get("url", "")
+
+{% if hasUrlButtonsInProject %}
+        if option_action == "url" and option_url:
+            # Открываем ссылку
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🔗 Открыть ссылку", url=option_url)]
+            ])
+            await callback_query.message.edit_text(f"{success_message}\\n\\n✅ Ваш выбор: {selected_text}", reply_markup=keyboard)
+        elif option_action == "command" and option_target:
+{% else %}
+        if option_action == "command" and option_target:
+{% endif %}
+            # Выполняем команду
+            command = option_target
+            if not command.startswith("/"):
+                command = "/" + command
+
+            # Создаем фиктивное сообщение для выполнения команды
+            import aiogram.types as aiogram_types
+            fake_message = aiogram_types.SimpleNamespace(
+                from_user=callback_query.from_user,
+                chat=callback_query.message.chat,
+                text=command,
+                message_id=callback_query.message.message_id
+            )
+
+{% set commandNodes = allNodes|selectattr('type', 'in', ['start', 'command'])|selectattr('data.command')|list %}
+{% for cmdNode in commandNodes %}
+{% set safeCmdName = cmdNode.data.command|replace('/', '')|safe_name %}
+{% if cmdNode.type == 'start' %}
+{% set handlerName = 'start_handler' %}
+{% else %}
+{% set handlerName = safeCmdName ~ '_handler' %}
+{% endif %}
+{% if loop.first %}
+            if command == "{{ cmdNode.data.command }}":
+{% else %}
+            elif command == "{{ cmdNode.data.command }}":
+{% endif %}
+                try:
+                    await {{ handlerName }}(fake_message)
+                except Exception as e:
+                    logging.error(f"Ошибка выполнения команды {{ cmdNode.data.command }}: {e}")
+{% endfor %}
+{% if commandNodes|length > 0 %}
+            else:
+                logging.warning(f"Неизвестная команда: {command}")
+{% endif %}
+        elif option_action == "goto" and option_target:
+            # Переход к узлу
+            target_node_id = option_target
+            try:
+                # Вызываем обработчик для целевого узла
+{% for btnNode in allNodes %}
+{% set safeBtnName = btnNode.id|safe_name %}
+{% if loop.first %}
+                if target_node_id == "{{ btnNode.id }}":
+{% else %}
+                elif target_node_id == "{{ btnNode.id }}":
+{% endif %}
+                    await handle_callback_{{ safeBtnName }}(callback_query)
+{% endfor %}
+                else:
+                    logging.warning(f"Неизвестный целевой узел: {target_node_id}")
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")
+    else:
+        # Fallback к старой системе next_node_id если нет настроек кнопки
+        next_node_id = config.get("next_node_id")
+        if next_node_id:
+            try:
+                # Вызываем обработчик для следующего узла
+{% for btnNode in allNodes %}
+{% set safeBtnName = btnNode.id|safe_name %}
+{% if loop.first %}
+                if next_node_id == "{{ btnNode.id }}":
+{% else %}
+                elif next_node_id == "{{ btnNode.id }}":
+{% endif %}
+                    await handle_callback_{{ safeBtnName }}(callback_query)
+{% endfor %}
+                else:
+                    logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+
+{% endfor %}
+
+{# Обработчик для кнопки "Пропустить" #}
+{% if node.allowSkip %}
+
+@dp.callback_query(F.data == "skip_{{ node.id }}")
+async def handle_skip_{{ node.id|safe_name }}(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+
+    # Проверяем настройки
+    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
+        await callback_query.answer("⚠️ Сессия истекла", show_alert=True)
+        return
+
+    await callback_query.message.edit_text("⏭️ Ответ пропущен")
+    del user_data[user_id]["button_response_config"]
+
+    logging.info(f"Пользователь {user_id} пропустил кнопочный ответ")
+{% endif %}
+
+{% endfor %}
+{% endif %}

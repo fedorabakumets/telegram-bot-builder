@@ -1,0 +1,171 @@
+{#
+  Шаблон генерации обработчика reply кнопок для multi-select
+
+  @fileoverview Генерирует Python код для обработки reply кнопок с множественным выбором
+  @param {array} multiSelectNodes - Массив узлов с reply множественным выбором
+  @param {array} allNodes - Массив всех узлов для поиска целевых узлов
+  @param {array} allNodeIds - Массив всех ID узлов
+  @param {string} indentLevel - Уровень отступа (по умолчанию '')
+
+  @example
+  ```jinja2
+  {% include 'handlers/multi-select-reply/multi-select-reply.py.jinja2' %}
+  ```
+#}
+
+{% set indent = indentLevel or '' %}
+
+{% if multiSelectNodes and multiSelectNodes|length > 0 %}
+# Обработчик для reply кнопок множественного выбора
+@dp.message()
+async def handle_multi_select_reply(message: types.Message):
+    user_id = message.from_user.id
+    user_input = message.text
+
+    # Проверяем, находится ли пользователь в режиме множественного выбора reply
+    logging.info(f"🔍 Проверяем режим множественного выбора для пользователя {user_id}: {user_data.get(user_id, {})}")
+    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":
+        node_id = user_data[user_id]["multi_select_node"]
+
+{% for node in multiSelectNodes %}
+{% set completeButton = node.completeButton %}
+{% set continueText = completeButton.text or node.continueButtonText or 'Готово' %}
+        if node_id == "{{ node.id }}" and user_input == {{ continueText|escape_python_string }}:
+            # Завершение множественного выбора для узла {{ node.id }}
+            selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])
+            if selected_options:
+                selected_text = ", ".join(selected_options)
+                await save_user_data_to_db(user_id, "{{ node.variableName }}", selected_text)
+
+            # Очищаем состояние
+            user_data[user_id].pop(f"multi_select_{node_id}", None)
+            user_data[user_id].pop("multi_select_node", None)
+            user_data[user_id].pop("multi_select_type", None)
+
+{% if node.continueButtonTarget %}
+            # Переход к следующему узлу
+{% if node.targetNode %}
+{% if node.targetNode.type == 'message' %}
+            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!
+            text = {{ node.targetNode.data.messageText|format_python_text }}
+{% if node.targetNode.data.keyboardType == "inline" and node.targetNode.data.buttons and node.targetNode.data.buttons|length > 0 %}
+            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для reply mode
+            # Загружаем пользовательские данные для клавиатуры
+            user_vars = await get_user_from_db(user_id)
+            if not user_vars:
+                user_vars = user_data.get(user_id, {})
+            if not isinstance(user_vars, dict):
+                user_vars = {}
+
+            {{ node.targetNode.keyboardCode|indent(12) }}
+            await message.answer(text, reply_markup=keyboard)
+{% else %}
+            await message.answer(text)
+{% endif %}
+{% elif node.targetNode.type == 'command' %}
+            await handle_command_{{ node.targetNode.data.command|safe_name }}(message)
+{% endif %}
+{% endif %}
+{% endif %}
+            return
+
+{% endfor %}
+
+        # Обработка выбора опции
+{% for node in multiSelectNodes %}
+{% if node.selectionButtons and node.selectionButtons|length > 0 %}
+        if node_id == "{{ node.id }}":
+{% for button in node.selectionButtons %}
+            # Проверяем текст кнопки, убирая галочку при необходимости
+            clean_user_input = user_input.replace("✅ ", "").strip()
+            if clean_user_input == {{ button.text|escape_python_string }}:
+                if f"multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id][f"multi_select_{node_id}"] = {}
+
+                selected_list = user_data[user_id][f"multi_select_{node_id}"]  # Variable used below to manage selections
+                if {{ button.text|escape_python_string }} in selected_list:
+                    selected_list.remove({{ button.text|escape_python_string }})
+                    await message.answer(f"❌ Убрано: {{{{ {button.text|escape_python_string }}}}}}")
+                else:
+                    selected_list.append({{ button.text|escape_python_string }})
+                    await message.answer(f"✅ Выбрано: {{{{ {button.text|escape_python_string }}}}}}")
+
+                # Обновляем клавиатуру с галочками
+                builder = ReplyKeyboardBuilder()  # Variable used for building keyboard
+
+                # Добавляем кнопки выбора с галочками (используем selected_list)
+{% for selBtn in node.selectionButtons %}
+                builder.add(KeyboardButton(text=f"{'✅ ' if '{{ selBtn.text|e }}' in selected_list else ''}{{ selBtn.text|e }}"))
+{% endfor %}
+
+{% if node.completeButton %}
+                builder.add(KeyboardButton(text={{ node.completeButton.text|escape_python_string }}))  # используем builder
+{% endif %}
+
+{# Добавляем обычные кнопки #}
+{% for regBtn in node.regularButtons %}
+                builder.add(KeyboardButton(text={{ regBtn.text|escape_python_string }}))  # используем builder
+{% endfor %}
+
+                # Применяем настройки клавиатуры
+                {{ node.adjustCode or 'builder.adjust(2)' }}
+                keyboard = builder.as_markup(resize_keyboard={{ node.resizeKeyboard|to_python_boolean }}, one_time_keyboard={{ node.oneTimeKeyboard|to_python_boolean }})  # builder variable is used here
+                text = """{{ node.messageText or 'Выберите опции:' }}"""
+                await message.answer(text, reply_markup=keyboard)
+                return
+
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+    # Обработка обычных кнопок (goto) в режиме множественного выбора
+    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":
+        node_id = user_data[user_id]["multi_select_node"]
+        # Ищем узел, чтобы получить информацию о кнопках
+
+{% for node in multiSelectNodes %}
+{% if node.gotoButtons and node.gotoButtons|length > 0 %}
+        if node_id == "{{ node.id }}":
+{% for button in node.gotoButtons %}
+{% if button.targetNode %}
+            if user_input == {{ button.text|escape_python_string }}:
+                # Сохраняем текущее состояние выбора перед переходом
+                selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])
+                if selected_options:
+                    selected_text = ", ".join(selected_options)
+                    await save_user_data_to_db(user_id, "{{ node.variableName or ('multi_select_' ~ node.id) }}", selected_text)
+                # Очищаем состояние множественного выбора перед переходом
+                user_data[user_id].pop(f"multi_select_{node_id}", None)
+                user_data[user_id].pop("multi_select_node", None)
+                user_data[user_id].pop("multi_select_type", None)
+
+{% if button.targetNode.type == 'command' %}
+                await handle_command_{{ button.targetNode.data.command|safe_name }}(message)
+{% else %}
+                import types as aiogram_types
+                fake_callback = aiogram_types.SimpleNamespace(
+                    id="multi_select_goto",
+                    from_user=message.from_user,
+                    chat_instance="",
+                    data="{{ button.target }}",
+                    message=message,
+                    answer=lambda *args, **kwargs: None
+                )
+                await handle_callback_{{ button.target|safe_name }}(fake_callback)
+{% endif %}
+                return
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+    # Если пользователь не находится в режиме множественного выбора, передаем дальше по цепочке обработчиков
+    # Проверяем, находится ли пользователь в режиме ожидания ввода
+    if user_id in user_data and "waiting_for_input" in user_data[user_id]:
+        # Пользователь ожидает ввод, но не в режиме множественного выбора - передаем дальше
+        pass
+    else:
+        # Пользователь не в режиме ожидания ввода и не в режиме множественного выбора - передаем дальше
+        pass
+
+{% endif %}
