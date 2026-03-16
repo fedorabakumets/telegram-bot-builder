@@ -9,7 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
-import { getTelegramProxyAgent } from "../../../../utils/telegram-proxy";
+import { fetchWithProxy, getTelegramProxyAgent } from "../../../../utils/telegram-proxy";
 import {
     analyzeTelegramError,
     getErrorStatusCode
@@ -46,7 +46,6 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
 
         // Get proxy agent
         const proxyAgent = getTelegramProxyAgent();
-        const fetchOptions = proxyAgent ? { agent: proxyAgent } : {};
 
         console.log(`[Telegram API] Getting bot info for project ${projectId}, token: ${maskedToken}`);
         if (proxyAgent) {
@@ -58,15 +57,14 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
 
         let response;
         try {
-            response = await fetch(telegramApiUrl, {
+            response = await fetchWithProxy(telegramApiUrl, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache'
                 },
-                signal: AbortSignal.timeout(10000),
-                ...fetchOptions
+                signal: AbortSignal.timeout(10000)
             });
         } catch (fetchError) {
             const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown fetch error';
@@ -108,7 +106,7 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
         if (botInfo.photo && botInfo.photo.big_file_id) {
             try {
                 const photoStartTime = Date.now();
-                const fileResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getFile`, {
+                const fileResponse = await fetchWithProxy(`https://api.telegram.org/bot${defaultToken.token}/getFile`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -116,8 +114,7 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
                     body: JSON.stringify({
                         file_id: botInfo.photo.big_file_id
                     }),
-                    signal: AbortSignal.timeout(5000),
-                    ...fetchOptions
+                    signal: AbortSignal.timeout(5000)
                 });
 
                 const fileResult = await fileResponse.json();

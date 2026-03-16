@@ -27,7 +27,7 @@ import { userTelegramSettings } from "@shared/schema";
 import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { handleTelegramError } from "../utils/telegram-error-handler";
-import { getTelegramProxyAgent } from "../utils/telegram-proxy";
+import { fetchWithProxy, getTelegramProxyAgent } from "../utils/telegram-proxy";
 import { setupAuthRoutes } from "./setupAuthRoutes";
 import { setupBotIntegrationRoutes } from "./setupBotIntegrationRoutes";
 import { setupGithubPushRoute } from './setupGithubPushRoute';
@@ -573,7 +573,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Get proxy agent for Telegram API
       const proxyAgent = getTelegramProxyAgent();
-      const fetchOptions = proxyAgent ? { agent: proxyAgent } : {};
 
       console.log(`[Telegram API] Parsing bot info for token: ${maskedToken}`);
       console.log(`[Telegram API] Request URL: https://api.telegram.org/bot${maskedToken}/getMe`);
@@ -589,14 +588,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       let response;
       try {
-        response = await fetch(telegramApiUrl, {
+        response = await fetchWithProxy(telegramApiUrl, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
           // Add timeout signal
           signal: AbortSignal.timeout(10000),
-          ...fetchOptions
         });
       } catch (fetchError) {
         const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown fetch error';
@@ -646,9 +644,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       try {
         // Get full description
         const descStartTime = Date.now();
-        const descResponse = await fetch(`https://api.telegram.org/bot${token}/getMyDescription`, {
+        const descResponse = await fetchWithProxy(`https://api.telegram.org/bot${token}/getMyDescription`, {
           signal: AbortSignal.timeout(5000),
-          ...fetchOptions
         });
         console.log(`[Telegram API] Description response: ${descResponse.status} (${Date.now() - descStartTime}ms)`);
         
@@ -662,9 +659,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         // Get short description
         const shortDescStartTime = Date.now();
-        const shortDescResponse = await fetch(`https://api.telegram.org/bot${token}/getMyShortDescription`, {
+        const shortDescResponse = await fetchWithProxy(`https://api.telegram.org/bot${token}/getMyShortDescription`, {
           signal: AbortSignal.timeout(5000),
-          ...fetchOptions
         });
         console.log(`[Telegram API] Short description response: ${shortDescResponse.status} (${Date.now() - shortDescStartTime}ms)`);
         
@@ -685,7 +681,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (botInfo.photo && botInfo.photo.big_file_id) {
         try {
           const photoStartTime = Date.now();
-          const fileResponse = await fetch(`https://api.telegram.org/bot${token}/getFile`, {
+          const fileResponse = await fetchWithProxy(`https://api.telegram.org/bot${token}/getFile`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -694,7 +690,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               file_id: botInfo.photo.big_file_id
             }),
             signal: AbortSignal.timeout(5000),
-            ...fetchOptions
           });
 
           const fileResult = await fileResponse.json();
@@ -791,20 +786,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Call Telegram API
       const telegramApiUrl = `https://api.telegram.org/bot${token.token}/${telegramApiMethod}`;
-      const proxyAgent = getTelegramProxyAgent();
-      const fetchOptions = proxyAgent ? { agent: proxyAgent } : {};
-      
-      if (proxyAgent) {
+
+      if (getTelegramProxyAgent()) {
         console.log(`[Telegram API] Using proxy for update ${field}`);
       }
-      
-      const response = await fetch(telegramApiUrl, {
+
+      const response = await fetchWithProxy(telegramApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
-        ...fetchOptions
       });
 
       const result = await response.json();
@@ -1611,7 +1603,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             continue;
           }
 
-          // Генерируем путь для файла
+          // Генерируем путь для ��айла
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
           const originalFileName = customFileName || urlCheck.fileName || `file-${i + 1}`;
           const extension = originalFileName.split('.').pop()?.toLowerCase() || 'bin';
