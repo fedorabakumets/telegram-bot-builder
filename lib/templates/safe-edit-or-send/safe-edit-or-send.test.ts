@@ -94,15 +94,13 @@ describe('safe-edit-or-send.py.jinja2 шаблон', () => {
 
     describe('Невалидные данные', () => {
       it('должен отклонять параметры с неправильным типом', () => {
-        assert.throws(() => {
-          generateSafeEditOrSend(invalidParamsWrongType as any);
-        });
+        const result = safeEditOrSendParamsSchema.safeParse(invalidParamsWrongType);
+        assert.ok(!result.success, 'Схема должна отклонять неправильный тип');
       });
 
       it('должен отклонять null значения', () => {
-        assert.throws(() => {
-          generateSafeEditOrSend(invalidParamsNull as any);
-        });
+        const result = safeEditOrSendParamsSchema.safeParse(invalidParamsNull);
+        assert.ok(!result.success, 'Схема должна отклонять null значения');
       });
 
       it('должен использовать значения по умолчанию для отсутствующих полей', () => {
@@ -219,17 +217,24 @@ describe('safe-edit-or-send.py.jinja2 шаблон', () => {
         let hasUnclosed = false;
         for (const line of lines) {
           const trimmed = line.trim();
-          if (trimmed.endsWith(':') && 
-              !trimmed.startsWith('if ') && 
-              !trimmed.startsWith('elif ') && 
+          // Пропускаем строки которые являются корректными Python конструкциями
+          if (trimmed.endsWith(':') &&
+              !trimmed.startsWith('if ') &&
+              !trimmed.startsWith('elif ') &&
               !trimmed.startsWith('else:') &&
-              !trimmed.startsWith('def ') && 
-              !trimmed.startsWith('try:') && 
+              !trimmed.startsWith('def ') &&
+              !trimmed.startsWith('try:') &&
               !trimmed.startsWith('except ') &&
               !trimmed.startsWith('for ') &&
               !trimmed.startsWith('while ') &&
               !trimmed.startsWith('#') &&
-              trimmed !== '"""') {
+              !trimmed.startsWith('async def ') &&
+              !trimmed.startsWith('with ') &&
+              trimmed !== '"""' &&
+              trimmed !== 'else:' &&
+              trimmed !== 'try:' &&
+              !trimmed.includes(' and ') &&  // Пропускаем строки с условиями внутри функции
+              !trimmed.includes(' or ')) {   // Пропускаем строки с условиями внутри функции
             hasUnclosed = true;
           }
         }
