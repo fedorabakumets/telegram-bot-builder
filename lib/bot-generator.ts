@@ -16,10 +16,6 @@ import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
 import { collectAllCommandCallbacksFromNodes, addCommandCallbackHandlers } from './bot-generator/commands';
 import {
   generateGroupBasedEventHandlers,
-  generateFallbackHandlers,
-  generateBotInitialization,
-  generateSignalHandler,
-  generatePollingLoop
 } from './bot-generator/handlers';
 import { generateMultiSelectCallbackHandler } from './bot-generator/multi-select';
 import {
@@ -36,10 +32,14 @@ import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from
 import { generateGlobalCheckUserVariableFunction } from "./bot-generator/database/generateGlobalCheckUserVariableFunction";
 import { generateUniversalVariableReplacement } from './bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython } from './bot-generator/format';
-import { generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation, generateSafeEditOrSendCode, generateUtilityFunctions } from './generate';
+import { generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation } from './generate';
+import { generateSafeEditOrSend } from './templates/generate-safe-edit-or-send';
 import { generateHeader } from './templates/generate-header';
+import { generateUniversalHandlers } from './templates/generate-universal-handlers';
+import { generateMain } from './templates/generate-main';
 import { generateImports } from './templates/generate-imports';
 import { generateConfig } from './templates/generate-config';
+import { generateUtils } from './templates/generate-utils';
 import { generateApiConfig } from './bot-generator/api';
 import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
@@ -171,10 +171,10 @@ export function generatePythonCode(
 
   // Добавляем safe_edit_or_send если есть inline кнопки ИЛИ автопереходы ИЛИ другие узлы, требующие этой функции
   // ИЛИ если включена база данных пользователей (т.к. callback-обработчики могут использовать эту функцию)
-  code += generateSafeEditOrSendCode(
-    hasInlineButtonsResult || hasNodesRequiringSafeEditOrSendResult || !!context.options.userDatabaseEnabled,
-    hasAutoTransitionsResult || !!context.options.userDatabaseEnabled
-  );
+  code += generateSafeEditOrSend({
+    hasInlineButtonsOrSpecialNodes: hasInlineButtonsResult || hasNodesRequiringSafeEditOrSendResult || !!context.options.userDatabaseEnabled,
+    hasAutoTransitions: hasAutoTransitionsResult || !!context.options.userDatabaseEnabled,
+  });
 
   // Добавляем конфигурацию бота (токен, логирование, бот, диспетчер, администраторы)
   code += generateConfig({
@@ -202,7 +202,7 @@ export function generatePythonCode(
 
   // Добавляем глобальные утилитарные функции
   code += generateGlobalCheckUserVariableFunction(); // Добавляем глобальное определение функции
-  code += generateUtilityFunctions(!!context.options.userDatabaseEnabled);
+  code += generateUtils({ userDatabaseEnabled: !!context.options.userDatabaseEnabled });
 
   // Функции для работы с файлами - если есть медиа или узлы с изображениями из папки uploads
   // ИЛИ если включена база данных пользователей (для функции send_photo_with_logging)
@@ -306,11 +306,14 @@ export function generatePythonCode(
   // Этот обработчик ОБЯЗАТЕЛЬНО нужен, чтобы middleware сохранял ВСЕ сообщения
   // Middleware вызывается только для зарегистрированных обработчиков!
   // ВАЖНО: Добавляем только если база данных включена
-  code += generateFallbackHandlers(!!context.options.userDatabaseEnabled);
+  code += generateUniversalHandlers({ userDatabaseEnabled: !!context.options.userDatabaseEnabled });
 
-  code += generateSignalHandler();
-  code += generateBotInitialization(!!context.options.userDatabaseEnabled, menuCommands.length, hasInlineButtons(context.nodes || []));
-  code += generatePollingLoop(!!context.options.userDatabaseEnabled);
+  // Добавляем функцию main() из шаблона
+  code += generateMain({
+    userDatabaseEnabled: !!context.options.userDatabaseEnabled,
+    hasInlineButtons: hasInlineButtons(context.nodes || []),
+    menuCommandsCount: menuCommands.length,
+  });
 
   // Найдем узла с множественным выбором для использования в обработчиках
   const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(context.nodes as any[]);

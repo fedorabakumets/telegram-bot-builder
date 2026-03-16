@@ -184,14 +184,16 @@ describe('main.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 1 поле', () => {
+      it('должен иметь 3 поля', () => {
         const shape = mainParamsSchema.shape;
-        assert.strictEqual(Object.keys(shape).length, 1);
+        assert.strictEqual(Object.keys(shape).length, 3);
       });
 
       it('должен использовать ZodOptional', () => {
         const shape = mainParamsSchema.shape;
         assert.ok(shape.userDatabaseEnabled.isOptional());
+        assert.ok(shape.hasInlineButtons.isOptional());
+        assert.ok(shape.menuCommandsCount.isOptional());
       });
     });
   });

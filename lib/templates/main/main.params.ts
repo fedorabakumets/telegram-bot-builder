@@ -7,4 +7,8 @@
 export interface MainTemplateParams {
   /** Включена ли база данных пользователей */
   userDatabaseEnabled?: boolean;
+  /** Есть ли inline кнопки */
+  hasInlineButtons?: boolean;
+  /** Количество команд меню */
+  menuCommandsCount?: number;
 }

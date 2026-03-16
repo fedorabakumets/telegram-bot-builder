@@ -8,6 +8,8 @@ import { z } from 'zod';
 /** Схема для валидации параметров запуска бота */
 export const mainParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().optional().default(false),
+  hasInlineButtons: z.boolean().optional().default(false),
+  menuCommandsCount: z.number().optional().default(0),
 });
 
 /** Тип параметров запуска (выведен из схемы) */

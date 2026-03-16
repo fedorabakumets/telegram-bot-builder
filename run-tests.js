@@ -15,6 +15,12 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Установка UTF-8 кодировки для Windows
+if (process.platform === 'win32') {
+  process.stdout.setDefaultEncoding('utf8');
+  process.stderr.setDefaultEncoding('utf8');
+}
+
 // Проверка флага --coverage
 const useCoverage = process.argv.includes('--coverage');
 

@@ -11,10 +11,12 @@ export * from '../bot-generator/logging/generate-message-logging';
 export * from '../bot-generator/MediaHandler/generateMediaFileFunctions';
 export * from './generate-node-handlers';
 export * from './generateApiConfig';
-export * from './generateBasicBotSetupCode';
 export * from './generateGroupsConfiguration';
 export * from './generateNodeNavigation';
-export * from './generateSafeEditOrSendCode';
-export * from './generateUtf8EncodingCode';
-export * from './generateUtilityFunctions';
+
+// Ре-экспорт из templates для миграции на Jinja2
+export { generateConfig } from '../templates/generate-config';
+export { generateHeader } from '../templates/generate-header';
+export { generateUtils } from '../templates/generate-utils';
+export { generateSafeEditOrSend } from '../templates/generate-safe-edit-or-send';
 
