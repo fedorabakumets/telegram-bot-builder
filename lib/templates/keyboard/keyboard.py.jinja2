@@ -11,9 +11,7 @@
   @param {boolean} allowMultipleSelection - Разрешить множественный выбор
   @param {string} multiSelectVariable - Имя переменной для хранения выборов
   @param {string} nodeId - ID узла для callback_data
-  @param {object} completeButton - Кнопка завершения {text, target}
-  
-  @param {boolean} enableConditionalMessages - Включить условные сообщения
+
   @param {array} conditionalMessages - Массив условий
   @param {string} conditionalKeyboardVar - Имя переменной условной клавиатуры
   
@@ -55,6 +53,18 @@
 {{- indent }}builder.adjust({{ cols }})
 {% endif %}
 {% endmacro %}
+
+{# ===== ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ ===== #}
+{% set keyboardType = keyboardType or 'reply' %}
+{% set buttons = buttons or [] %}
+{% set resizeKeyboard = resizeKeyboard != false %}
+{% set oneTimeKeyboard = oneTimeKeyboard or false %}
+{% set allowMultipleSelection = allowMultipleSelection or false %}
+{% set hasImage = imageUrl is defined and imageUrl and (imageUrl|trim).length > 0 %}
+{% set parseMode = formatMode or parseMode or 'none' %}
+{% set indent = indentLevel or '' %}
+{% set effectiveNodeId = shortNodeId or nodeId or 'unknown' %}
+{% set multiSelectVariable = multiSelectVariable or ('multi_select_' ~ effectiveNodeId) %}
 
 {# Определяем отступ #}
 {% set indent = indentLevel or '' %}
@@ -118,8 +128,6 @@
 {% endif %}
 
 {# Генерация кнопок #}
-{# shortNodeId уже определен в контексте или используем nodeId #}
-{% set effectiveNodeId = shortNodeId or nodeId %}
 {% for btn in buttons %}
 {% if btn.action == 'url' %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, url="{{ btn.url or btn.target or '#' }}"))

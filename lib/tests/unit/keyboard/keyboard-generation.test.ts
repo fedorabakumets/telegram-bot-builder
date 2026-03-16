@@ -34,7 +34,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['test_1', 'final']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);
@@ -69,7 +69,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['test_1', 'final']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);
@@ -112,7 +112,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['multiselect_1', 'final_node']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);
@@ -142,7 +142,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['test_1']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);
@@ -174,7 +174,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['test_1', 'next']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);
@@ -200,7 +200,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['test_1']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);
@@ -226,7 +226,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['input_1', 'next_node']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);
@@ -250,7 +250,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['input_1', 'next']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);
@@ -586,7 +586,6 @@ describe('KeyboardGeneration (new features)', () => {
         keyboardType: 'inline',
         buttons: node.data.buttons || [],
         nodeId: node.id,
-        allNodeIds: ['test_1', 'next'],
         indentLevel: '    ',
       });
 
@@ -621,7 +620,6 @@ describe('KeyboardGeneration (new features)', () => {
         keyboardType: 'inline',
         buttons: node.data.buttons || [],
         nodeId: node.id,
-        allNodeIds: ['test_1'],
         indentLevel: '    ',
       });
 
@@ -658,7 +656,6 @@ describe('KeyboardGeneration (new features)', () => {
         keyboardType: 'inline',
         buttons: node.data.buttons || [],
         nodeId: node.id,
-        allNodeIds: ['test_1', 'final'],
         indentLevel: '    ',
         allowMultipleSelection: true,
       });
@@ -684,7 +681,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['test_1']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);
@@ -711,7 +708,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['test_1', 'next']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);
@@ -738,7 +735,7 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateKeyboard(node, ['test_1', 'next']);
+      const code = generateKeyboard({...node.data, nodeId: node.id});
 
       // Assert
       assert.ok(code);

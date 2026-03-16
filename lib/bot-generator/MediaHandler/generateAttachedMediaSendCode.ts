@@ -124,7 +124,7 @@ export function generateAttachedMediaSendCode(
     if (hasButtons && (hasReplyKeyboard || hasInlineKeyboard)) {
       // Генерируем код клавиатуры
       const { generateKeyboard } = require('../Keyboard/generateKeyboard');
-      const keyboardCode = generateKeyboard(nodeData, []);
+      const keyboardCode = generateKeyboard({...nodeData.data, nodeId: nodeId});
 
       // ИСПРАВЛЕНИЕ: Извлекаем только код генерации клавиатуры, без отправки сообщения
       // Разбираем сгенерированный код на строки

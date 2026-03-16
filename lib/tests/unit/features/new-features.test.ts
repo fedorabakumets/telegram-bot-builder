@@ -264,10 +264,9 @@ describe('NewFeatures (appendVariable, variableFilters, complete)', () => {
       it('должен генерировать код для inline клавиатуры с complete кнопкой', { timeout: 60000 }, () => {
         // Arrange
         const node = validCompleteButtonNode;
-        const allNodeIds = ['complete_1', 'final_message'];
 
         // Act
-        const code = generateKeyboard(node, allNodeIds);
+        const code = generateKeyboard({...node.data, nodeId: node.id});
 
         // Assert
         assert.ok(code);
@@ -284,10 +283,9 @@ describe('NewFeatures (appendVariable, variableFilters, complete)', () => {
             keyboardType: 'reply' as const,
           },
         };
-        const allNodeIds = ['complete_1', 'final_message'];
 
         // Act
-        const code = generateKeyboard(node, allNodeIds);
+        const code = generateKeyboard({...node.data, nodeId: node.id});
 
         // Assert
         assert.ok(code);
@@ -346,10 +344,9 @@ describe('NewFeatures (appendVariable, variableFilters, complete)', () => {
       it('должен генерировать код для узла со всеми функциями', () => {
         // Arrange
         const node = validAllNewFeaturesNode;
-        const allNodeIds = ['all_features_1', 'final_node', 'next_node'];
 
         // Act
-        const code = generateKeyboard(node, allNodeIds);
+        const code = generateKeyboard({...node.data, nodeId: node.id});
 
         // Assert
         assert.ok(code);
@@ -470,7 +467,7 @@ describe('NewFeatures (appendVariable, variableFilters, complete)', () => {
         };
 
         // Act
-        const code = generateKeyboard(node, ['complete_1']);
+        const code = generateKeyboard({...node.data, nodeId: node.id});
 
         // Assert
         assert.ok(code);
@@ -495,7 +492,7 @@ describe('NewFeatures (appendVariable, variableFilters, complete)', () => {
         };
 
         // Act
-        const code = generateKeyboard(node, ['complete_1', 'final']);
+        const code = generateKeyboard({...node.data, nodeId: node.id});
 
         // Assert
         assert.ok(code);
