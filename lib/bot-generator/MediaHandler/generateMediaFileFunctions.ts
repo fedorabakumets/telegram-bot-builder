@@ -59,7 +59,7 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
         return None
 
 async def download_and_save_photo(file_id: str, bot_token: str, filename: str = None):
-    """Скачивает фото из Telegram и сохраняет его локальн??
+    """Скачивает фото из Telegram и сохраняет его локально
 
     Args:
         file_id: ID файла в Telegram
@@ -67,11 +67,12 @@ async def download_and_save_photo(file_id: str, bot_token: str, filename: str = 
         filename: Имя файла для сохранения (опционально)
 
     Returns:
-        П??ть к сохраненному файлу или None в случае ошибки
+        Путь к сохраненному файлу или None в случае ошибки
     """
     try:
         import tempfile
         import os
+        import aiohttp
 
         # Получаем информацию о файле
         file_info_url = f"https://api.telegram.org/bot{bot_token}/getFile?file_id={file_id}"
