@@ -8,7 +8,23 @@ import { storage } from "./storages/storage";
 import { initializeTerminalWebSocket } from './terminal/initializeTerminalWebSocket';
 import { stopCleanup } from "./utils/cache";
 import { shutdownAllBots } from "./utils/graceful-shutdown";
+
+// Настраиваем прокси для Telegram API ДО всех импортов
 dotenv.config({ debug: false });
+if (process.env.TELEGRAM_PROXY_URL && process.env.TELEGRAM_PROXY_URL.trim() !== '') {
+  process.env.HTTP_PROXY = process.env.TELEGRAM_PROXY_URL;
+  process.env.HTTPS_PROXY = process.env.TELEGRAM_PROXY_URL;
+  
+  // Активируем global-agent для перехвата всех HTTP/HTTPS запросов
+  try {
+    const { bootstrap } = await import('global-agent');
+    bootstrap();
+    console.log(`[Proxy] global-agent activated: HTTP_PROXY=${process.env.HTTP_PROXY}`);
+    console.log(`[Proxy] global-agent activated: HTTPS_PROXY=${process.env.HTTPS_PROXY}`);
+  } catch (e) {
+    console.warn('[Proxy] global-agent not available, using environment variables only');
+  }
+}
 
 /**
  * Основное приложение Express
