@@ -77,6 +77,7 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
         user_data[user_id]["multi_select_node"] = "{{ node.targetNode.id }}"
         user_data[user_id]["multi_select_type"] = "{{ node.targetNode.data.keyboardType or 'reply' }}"
         user_data[user_id]["multi_select_variable"] = "{{ node.targetNode.data.multiSelectVariable or 'user_interests' }}"
+{% endif %}
 
 {% if node.targetNode.data.keyboardType == 'reply' %}
         builder = ReplyKeyboardBuilder()
