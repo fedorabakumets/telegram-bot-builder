@@ -32,7 +32,17 @@
 
 {# Определяем тип медиа #}
 {% set hasMedia = hasImage or documentUrl or videoUrl or audioUrl %}
-{% set mediaType = 'photo' if hasImage else 'document' if documentUrl else 'video' if videoUrl else 'audio' if audioUrl else null %}
+{% if hasImage %}
+{% set mediaType = 'photo' %}
+{% elif documentUrl %}
+{% set mediaType = 'document' %}
+{% elif videoUrl %}
+{% set mediaType = 'video' %}
+{% elif audioUrl %}
+{% set mediaType = 'audio' %}
+{% else %}
+{% set mediaType = null %}
+{% endif %}
 
 {# Определяем parse_mode строку #}
 {% if parseMode == 'html' %}
@@ -55,7 +65,7 @@
 
 {{ indent }}# Загружаем ранее выбранные варианты
 {{ indent }}saved_selections = []
-{{ indent }}if user_vars:
+{{ indent }}if user_vars is defined and user_vars:
 {{ indent }}    for var_name, var_data in user_vars.items():
 {{ indent }}        if var_name == "{{ multiSelectVariable or ('multi_select_' ~ nodeId) }}":
 {{ indent }}            if isinstance(var_data, dict) and "value" in var_data:
@@ -79,21 +89,23 @@
 {% endif %}
 
 {# Генерация кнопок #}
+{# shortNodeId уже определен в контексте или используем nodeId #}
+{% set effectiveNodeId = shortNodeId or nodeId %}
 {% for btn in buttons %}
 {% if btn.action == 'url' %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, url="{{ btn.url or btn.target or '#' }}"))
 {% elif btn.action == 'selection' and allowMultipleSelection %}
 {# Кнопка выбора с галочкой для множественного выбора #}
 {{ indent }}# Кнопка выбора с галочками: {{ btn.text }}
-{{ indent }}builder.add(InlineKeyboardButton(text=f"{'✅ ' if '{{ btn.text|e }}' in user_data[user_id]['multi_select_{{ nodeId }}'] else ''}{{ btn.text|e }}", callback_data="ms_{{ nodeId|generate_short_id(allNodeIds) }}_{{ (btn.target or btn.id or 'btn')[-8:] }}"))
+{{ indent }}builder.add(InlineKeyboardButton(text=f"{'✅ ' if '{{ btn.text|e }}' in user_data[user_id]['multi_select_{{ nodeId }}'] else ''}{{ btn.text|e }}", callback_data="ms_{{ effectiveNodeId }}_{{ btn.shortButtonId or btn.target or btn.id or 'btn' }}"))
 {% elif btn.action == 'selection' %}
 {# Обычная кнопка выбора #}
-{{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="ms_{{ nodeId|generate_short_id(allNodeIds) }}_{{ (btn.target or btn.id or 'btn')[-8:] }}"))
+{{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="ms_{{ effectiveNodeId }}_{{ btn.shortButtonId or btn.target or btn.id or 'btn' }}"))
 {% elif btn.action == 'goto' or btn.action == 'complete' %}
 {% if btn.action == 'complete' and allowMultipleSelection %}
 {# Кнопка "Готово" для множественного выбора #}
 {{ indent }}# Кнопка завершения множественного выбора
-{{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="done_{{ nodeId|generate_short_id(allNodeIds) }}"))
+{{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="done_{{ effectiveNodeId }}"))
 {% else %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.target or btn.id or 'no_action' }}"))
 {% endif %}

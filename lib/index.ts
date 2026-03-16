@@ -11,8 +11,7 @@
 export * from './bot-commands-setup';
 export * from './bot-generator';
 export * from './commands';
-export * from './bot-generator/Keyboard/filterInlineNodes';
-export * from './bot-generator/Keyboard/generateButtonResponseHandlers';
+// Keyboard exports are now aggregated in './bot-generator/Keyboard'
 export * from './queryClient';
 export * from './bot-generator/Synonyms';
 export * from './bot-generator/utils/addAutoTransitionNodes';
@@ -30,15 +29,15 @@ export * from './bot-generator/format';
 // Feature detection
 export { hasCommandButtons } from './bot-generator/utils/hasCommandButtons';
 export { hasConditionalButtons } from './bot-generator/Conditional/hasConditionalButtons';
-export { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
-export { hasMultiSelectNodes } from './bot-generator/Keyboard/hasMultiSelectNodes';
+// hasInlineButtons и hasMultiSelectNodes экспортируются из './bot-generator/Keyboard'
 export { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
 export { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
 export { hasInputCollection } from './bot-generator/utils/hasInputCollection';
 export { hasLocationFeatures } from './bot-generator/map-utils/hasLocationFeatures';
 export { hasNodesRequiringSafeEditOrSend } from './bot-generator/utils/hasNodesRequiringSafeEditOrSend';
 
-// Keyboard generators
+// Keyboard generators - после миграции на Jinja2
+// Основные генераторы клавиатур используют адаптеры к Jinja2 шаблонам
 export * from './bot-generator/Keyboard';
 
 // Code mapping utilities

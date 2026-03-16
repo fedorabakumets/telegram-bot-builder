@@ -1,0 +1,193 @@
+{#
+  Шаблон генерации обработчика callback для multi-select кнопок
+
+  @fileoverview Генерирует Python код для обработки выбора кнопок с галочками (✓/✗)
+  @param {array} multiSelectNodes - Массив узлов с множественным выбором
+  @param {array} allNodeIds - Массив всех ID узлов для генерации коротких ID
+  @param {string} indentLevel - Уровень отступа (по умолчанию '    ')
+
+  @example
+  ```jinja2
+  {% include 'handlers/multi-select-callback/multi-select-callback.py.jinja2' %}
+  ```
+#}
+
+{% set indent = indentLevel or '    ' %}
+
+{% if multiSelectNodes and multiSelectNodes|length > 0 %}
+{{ indent }}# Обработка выбора опции
+{{ indent }}logging.info(f"📱 Обрабатываем callback_data: {callback_data}")
+{{ indent }}
+
+{{ indent }}# Поддерживаем и новый формат ms_ и старый multi_select_
+{{ indent }}if callback_data.startswith("ms_"):
+{{ indent }}    # Новый короткий формат: ms_shortNodeId_shortTarget
+{{ indent }}    parts = callback_data.split("_")
+{{ indent }}    if len(parts) >= 3:
+{{ indent }}        short_node_id = parts[1]
+{{ indent }}        button_id = "_".join(parts[2:])  # Используем полное имя для совместимости
+{{ indent }}        # Находим полный node_id по короткому суффиксу
+{{ indent }}        node_id = None
+{{ indent }}        logging.info(f"🔍 Ищем узел по короткому ID: {short_node_id}")
+{{ indent }}
+
+{{ indent }}        # Для станций метро ищем по содержимому кнопки, а не по короткому ID
+{{ indent }}        if short_node_id == "stations":
+{{ indent }}            # Проверяем каждый узел станций на наличие нужной кнопки
+{% for node in multiSelectNodes %}
+{% if node.shortNodeId == 'stations' %}
+{{ indent }}            # Проверяем узел {{ node.id }}
+{% for button in node.selectionButtons %}
+{{ indent }}            if button_id == "{{ button.value }}" or button_id == "{{ button.valueTruncated }}":
+{{ indent }}                node_id = "{{ node.id }}"
+{{ indent }}                logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")
+{% endfor %}
+{% endif %}
+{% endfor %}
+{{ indent }}            pass
+{{ indent }}        else:
+{{ indent }}            # Обычная логика для других узлов
+{% for node in multiSelectNodes %}
+{% if node.shortNodeId != 'stations' %}
+{{ indent }}            if short_node_id == "{{ node.shortNodeId }}":
+{{ indent }}                node_id = "{{ node.id }}"
+{{ indent }}                logging.info(f"✅ Найден узел: {node_id}")
+{% endif %}
+{% endfor %}
+{{ indent }}            pass
+{{ indent }}elif callback_data.startswith("multi_select_"):
+{{ indent }}    # Старый формат для обратной совместимости
+{{ indent }}    parts = callback_data.split("_")
+{{ indent }}    if len(parts) >= 3:
+{{ indent }}        node_id = parts[2]
+{{ indent }}        button_id = "_".join(parts[3:]) if len(parts) > 3 else parts[2]
+{{ indent }}else:
+{{ indent }}    logging.warning(f"⚠️ Неизвестный формат callback_data: {callback_data}")
+{{ indent }}    return
+{{ indent }}
+
+{{ indent }}if not node_id:
+{{ indent }}    # Резервный поиск: ищем узел, который содержит кнопку с target, совпадающим с button_id
+{{ indent }}    logging.info(f"🔍 Резервный поиск узла по button_id: {button_id}")
+{% for node in multiSelectNodes %}
+{% for button in node.selectionButtons %}
+{{ indent }}    if not node_id and (button_id == "{{ button.value }}" or button_id == "{{ button.valueTruncated }}"):
+{{ indent }}        node_id = "{{ node.id }}"
+{{ indent }}        logging.info(f"✅ Найден узел по target кнопки: {node_id}")
+{% endfor %}
+{% endfor %}
+{{ indent }}
+
+{{ indent }}if not node_id:
+{{ indent }}    logging.warning(f"⚠️ Не удалось найти node_id для callback_data: {callback_data}")
+{{ indent }}    return
+{{ indent }}
+
+{{ indent }}logging.info(f"📱 Определили node_id: {node_id}, button_id: {button_id}")
+{{ indent }}
+
+{{ indent }}# Инициализируем список выбранных опций с восстановлением из БД
+{{ indent }}if user_id not in user_data:
+{{ indent }}    user_data[user_id] = {}
+{{ indent }}
+
+{{ indent }}# Восстанавливаем ранее выбранные опции из базы данных
+{{ indent }}if f"multi_select_{node_id}" not in user_data[user_id]:
+{{ indent }}    # Загружаем сохраненные данные из базы
+{{ indent }}    user_vars = await get_user_from_db(user_id)
+{{ indent }}    saved_selections = []
+{{ indent }}
+
+{{ indent }}    if user_vars:
+{{ indent }}        # Ищем переменную с интересами
+{{ indent }}        for var_name, var_data in user_vars.items():
+{{ indent }}            if "интерес" in var_name.lower() or var_name == "interests" or var_name.startswith("multi_select_"):
+{{ indent }}                if isinstance(var_data, dict) and "value" in var_data:
+{{ indent }}                    saved_str = var_data["value"]
+{{ indent }}                elif isinstance(var_data, str):
+{{ indent }}                    saved_str = var_data
+{{ indent }}                else:
+{{ indent }}                    saved_str = str(var_data) if var_data else ""
+{{ indent }}
+
+{{ indent }}                if saved_str:
+{{ indent }}                    saved_selections = [item.strip() for item in saved_str.split(",")]
+{{ indent }}                    break
+{{ indent }}
+
+{{ indent }}    user_data[user_id][f"multi_select_{node_id}"] = saved_selections
+{{ indent }}
+
+{{ indent }}# Находим текст кнопки по button_id
+{{ indent }}button_text = None
+{% for node in multiSelectNodes %}
+{% if node.selectionButtons and node.selectionButtons|length > 0 %}
+{{ indent }}if node_id == "{{ node.id }}":
+{% for button in node.selectionButtons %}
+{{ indent }}    if button_id == "{{ button.value }}" or button_id == "{{ button.valueTruncated }}":
+{{ indent }}        button_text = {{ button.text|escape_python_string }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{{ indent }}
+
+{{ indent }}if button_text:
+{{ indent }}    logging.info(f"🔘 Обрабатываем кнопку: {button_text}")
+{{ indent }}    selected_list = user_data[user_id][f"multi_select_{node_id}"]
+{{ indent }}    if button_text in selected_list:
+{{ indent }}        selected_list.remove(button_text)
+{{ indent }}        logging.info(f"➖ Убрали выбор: {button_text}")
+{{ indent }}    else:
+{{ indent }}        selected_list.append(button_text)
+{{ indent }}        logging.info(f"➕ Добавили выбор: {button_text}")
+{{ indent }}
+
+{{ indent }}    logging.info(f"📋 Текущие выборы: {selected_list}")
+{{ indent }}
+
+{{ indent }}    # Обновляем клавиатуру с галочками
+{{ indent }}    builder = InlineKeyboardBuilder()
+{% for node in multiSelectNodes %}
+{% if node.selectionButtons and node.selectionButtons|length > 0 %}
+{{ indent }}    if node_id == "{{ node.id }}":
+{# Добавляем все кнопки выбора с галочками #}
+{% for button in node.selectionButtons %}
+{{ indent }}        builder.add(InlineKeyboardButton(text=f"{'✅ ' if '{{ button.escapedText }}' in selected_list else ''}{{ button.escapedText }}", callback_data="{{ button.callbackData }}"))
+{% endfor %}
+
+{# Добавляем обычные кнопки #}
+{% for button in node.regularButtons %}
+{% if button.action == 'goto' %}
+{{ indent }}        builder.add(InlineKeyboardButton(text={{ button.text|format_python_text }}, callback_data="{{ button.target or button.id or 'no_action' }}"))
+{% elif button.action == 'url' %}
+{{ indent }}        builder.add(InlineKeyboardButton(text={{ button.text|format_python_text }}, url="{{ button.url or '#' }}"))
+{% endif %}
+{% endfor %}
+
+{# Добавляем кнопку "Готово" если есть #}
+{% if node.completeButton %}
+{{ indent }}        builder.add(InlineKeyboardButton(text="{{ node.completeButton.text }}", callback_data="{{ node.doneCallbackData }}"))
+{% endif %}
+
+{# Применяем раскладку #}
+{% if node.hasKeyboardLayout and not node.keyboardLayoutAuto %}
+{{ indent }}        # Вычисляем раскладку с кнопкой "Готово" для узла {{ node.id }}
+{{ indent }}        builder.adjust({{ node.adjustCode }})
+{% else %}
+{{ indent }}        # Вычисляем оптимальное количество колонок для узла {{ node.id }} (multi-select с кнопкой Готово)
+{{ indent }}        total_buttons_with_done = {{ node.totalButtonsCount }}
+{{ indent }}        optimal_columns_with_done = calculate_optimal_columns(total_buttons_with_done)
+{{ indent }}        logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust({{ optimal_columns_with_done }}) для узла {{ node.id }} (multi-select с кнопкой Готово, всего кнопок: {{ total_buttons_with_done }})")
+{{ indent }}        builder.adjust(optimal_columns_with_done)
+{% endif %}
+{% endif %}
+{% endfor %}
+
+{{ indent }}
+{{ indent }}    keyboard = builder.as_markup()
+{{ indent }}    logging.info(f"🔄 ОБНОВЛЯЕМ клавиатуру для узла {node_id} с галочками")
+{{ indent }}    await callback_query.message.edit_reply_markup(reply_markup=keyboard)
+{{ indent }}
+
+{% endif %}

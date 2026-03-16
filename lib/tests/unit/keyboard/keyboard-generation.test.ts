@@ -5,9 +5,9 @@
 
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
-import { generateKeyboard } from '../../../bot-generator/Keyboard/generateKeyboard';
-import { generateReplyKeyboardCode } from '../../../bot-generator/Keyboard/generateReplyKeyboardCode';
-import { generateInlineKeyboardCode } from '../../../bot-generator/Keyboard/generateInlineKeyboardCode';
+import { generateKeyboard } from '../../../bot-generator/Keyboard';
+import { generateReplyKeyboardCode } from '../../../bot-generator/Keyboard';
+import { generateInlineKeyboardCode } from '../../../bot-generator/Keyboard';
 import { hasMultiSelectNodes } from '../../../bot-generator/Keyboard/hasMultiSelectNodes';
 import { identifyNodesRequiringMultiSelectLogic } from '../../../bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic';
 import type { Node } from '@shared/schema';
