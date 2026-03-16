@@ -128,9 +128,8 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         requiresAuth: false,
         userDatabaseEnabled: true,
         synonyms: [],
-        enableConditionalMessages: false,
-        conditionalMessages: [],
-        fallbackMessage: '',
+        allowMultipleSelection: false,
+        multiSelectVariable: '',
         keyboardType: 'inline',
         buttons: [
           { text: 'Menu', action: 'callback', target: 'menu', id: 'btn_menu' },
