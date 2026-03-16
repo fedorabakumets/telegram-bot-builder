@@ -225,3 +225,63 @@ export function sliceFilter(str: string, length: number): string {
   }
   return str.slice(length);
 }
+
+/**
+ * Фильтр map для применения функции к каждому элементу массива
+ * Поддерживает обращение к свойствам объектов
+ *
+ * @param arr - Массив для обработки
+ * @param attr - Имя свойства или функция
+ * @returns Массив результатов
+ *
+ * @example
+ * [{text: "a"}, {text: "b"}] | map(attribute='text') → ["a", "b"]
+ */
+export function mapFilter(arr: any[], attr: string): any[] {
+  if (!Array.isArray(arr)) return [];
+  if (typeof attr === 'string') {
+    return arr.map(item => item?.[attr]);
+  }
+  return arr;
+}
+
+/**
+ * Фильтр join для объединения массива в строку
+ *
+ * @param arr - Массив для объединения
+ * @param separator - Разделитель
+ * @returns Объединённая строка
+ *
+ * @example
+ * ["a", "b", "c"] | join(", ") → "a, b, c"
+ */
+export function joinFilter(arr: any[], separator = ''): string {
+  if (!Array.isArray(arr)) return '';
+  return arr.join(separator);
+}
+
+/**
+ * Фильтр lower для преобразования строки в нижний регистр
+ *
+ * @param str - Строка для преобразования
+ * @returns Строка в нижнем регистре
+ */
+export function lowerFilter(str: string): string {
+  if (typeof str !== 'string') return '';
+  return str.toLowerCase();
+}
+
+/**
+ * Фильтр escape для экранирования строки (алиас для escape_python_string)
+ * Используется в шаблонах как | escape('python_string')
+ *
+ * @param str - Строка для экранирования
+ * @param type - Тип экранирования
+ * @returns Экранированная строка
+ */
+export function escapeFilter(str: string, type = 'python_string'): string {
+  if (type === 'python_string') {
+    return escapePythonStringFilter(str);
+  }
+  return str;
+}

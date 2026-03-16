@@ -18,6 +18,10 @@ import {
   generateShortIdFilter,
   escapePythonStringFilter,
   sliceFilter,
+  mapFilter,
+  joinFilter,
+  lowerFilter,
+  escapeFilter,
 } from './filters';
 import { getTemplatesDir } from './utils/get-templates-dir';
 import {
@@ -77,6 +81,10 @@ function initEnvironment(): Environment {
   env.addFilter('generate_short_id', generateShortIdFilter);
   env.addFilter('escape_python_string', escapePythonStringFilter);
   env.addFilter('slice', sliceFilter);
+  env.addFilter('map', mapFilter);
+  env.addFilter('join', joinFilter);
+  env.addFilter('lower', lowerFilter);
+  env.addFilter('escape', escapeFilter);
 
   return env;
 }

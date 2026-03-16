@@ -12,12 +12,11 @@ import type { GenerationOptions } from './bot-generator/core/generation-options.
 import { generatorLogger } from './bot-generator/core/generator-logger';
 
 // Типы
-import { isLoggingEnabled, logFlowAnalysis } from './bot-generator/core';
+import { logFlowAnalysis } from './bot-generator/core';
 import { collectAllCommandCallbacksFromNodes, addCommandCallbackHandlers } from './bot-generator/commands';
 import {
   generateGroupBasedEventHandlers,
 } from './bot-generator/handlers';
-import { generateMultiSelectCallbackHandler } from './bot-generator/multi-select';
 import {
   generateUserInputValidationAndContinuationLogic,
   generateAdHocInputCollectionHandler,
