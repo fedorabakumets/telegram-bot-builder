@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров универсальных обработчиков */
 export const universalHandlersParamsSchema = z.object({
-  userDatabaseEnabled: z.boolean().optional(),
+  userDatabaseEnabled: z.boolean().optional().default(false),
 });
 
 /** Тип параметров (выведен из схемы) */

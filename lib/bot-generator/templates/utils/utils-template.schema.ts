@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров утилит */
 export const utilsParamsSchema = z.object({
-  userDatabaseEnabled: z.boolean().optional(),
+  userDatabaseEnabled: z.boolean().optional().default(false),
 });
 
 /** Тип параметров утилит (выведен из схемы) */

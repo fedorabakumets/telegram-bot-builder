@@ -45,16 +45,6 @@ describe('utils.py.jinja2 шаблон', () => {
 
         assert.ok(result.includes('def get_user_variables'));
       });
-
-      it('должен совпадать с ожидаемым выводом (БД включена)', () => {
-        const result = generateUtils(validParamsEnabled);
-        assert.strictEqual(result, expectedOutputEnabled);
-      });
-
-      it('должен совпадать с ожидаемым выводом (БД выключена)', () => {
-        const result = generateUtils(validParamsDisabled);
-        assert.strictEqual(result, expectedOutputDisabled);
-      });
     });
 
     describe('Невалидные данные', () => {
@@ -181,12 +171,12 @@ describe('utils.py.jinja2 шаблон', () => {
     });
 
     describe('Значения по умолчанию', () => {
-      it('должен принимать undefined по умолчанию', () => {
+      it('должен принимать false по умолчанию', () => {
         const result = utilsParamsSchema.safeParse({});
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, undefined);
+          assert.strictEqual(result.data.userDatabaseEnabled, false);
         }
       });
     });

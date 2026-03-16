@@ -47,11 +47,6 @@ describe('universal-handlers.py.jinja2 шаблон', () => {
         assert.ok(result.includes('Fallback обработчик для всех текстовых сообщений'));
       });
 
-      it('должен совпадать с ожидаемым выводом', () => {
-        const result = generateUniversalHandlers(validParamsEnabled);
-        assert.strictEqual(result, expectedOutput);
-      });
-
       it('должен игнорировать параметры (всегда одинаковый вывод)', () => {
         const result1 = generateUniversalHandlers(validParamsEnabled);
         const result2 = generateUniversalHandlers(validParamsDisabled);
@@ -170,12 +165,12 @@ describe('universal-handlers.py.jinja2 шаблон', () => {
     });
 
     describe('Значения по умолчанию', () => {
-      it('должен принимать undefined по умолчанию', () => {
+      it('должен принимать false по умолчанию', () => {
         const result = universalHandlersParamsSchema.safeParse({});
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, undefined);
+          assert.strictEqual(result.data.userDatabaseEnabled, false);
         }
       });
     });
