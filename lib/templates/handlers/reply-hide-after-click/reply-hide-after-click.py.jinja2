@@ -1,0 +1,48 @@
+{#
+  Шаблон генерации кода для обработки флага hideAfterClick для reply кнопок
+
+  @fileoverview Генерирует Python код для удаления сообщений после нажатия на reply кнопки с флагом hideAfterClick
+  @param {array} nodes - Все узлы для поиска кнопок с флагом hideAfterClick
+  @param {string} indentLevel - Уровень отступа (по умолчанию '    ')
+
+  @example
+  ```jinja2
+  {% include 'handlers/reply-hide-after-click/reply-hide-after-click.py.jinja2' %}
+  ```
+#}
+
+{% set indent = indentLevel or '    ' %}
+
+{# Собираем все reply-кнопки с флагом hideAfterClick из всех узлов #}
+{% set allHideAfterClickButtons = [] %}
+{% for node in nodes %}
+{% if node.data.buttons %}
+{% for button in node.data.buttons %}
+{% if button.hideAfterClick == true and (button.text or button.id) %}
+{% set _ = allHideAfterClickButtons.push({ text: button.text or button.id, nodeId: node.id }) %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{% if allHideAfterClickButtons.length > 0 %}
+{{ indent }}# Проверяем, является ли сообщение нажатием на reply-кнопку с флагом hideAfterClick
+{{ indent }}# Используем message.text напрямую, так как user_text может быть не определен в этом месте
+{{ indent }}message_text_lower = message.text.lower() if message.text else ""
+{{ indent }}
+
+{{ indent }}# Список текстов кнопок с флагом hideAfterClick
+{{ indent }}hide_after_click_texts = [{{ allHideAfterClickButtons | map(attribute='text') | map('lower') | map('escape', 'python_string') | join(', ') | safe }}]
+{{ indent }}
+
+{{ indent }}if message_text_lower in hide_after_click_texts:
+{{ indent }}    try:
+{{ indent }}        # Удаляем сообщение пользователя, которое содержит нажатие на кнопку
+{{ indent }}        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+{{ indent }}        logging.info(f"🗑️ Сообщение пользователя удалено после нажатия reply-кнопки с флагом hideAfterClick: {message.text}")
+{{ indent }}    except Exception as e:
+{{ indent }}        logging.warning(f"⚠️ Не удалось удалить сообщение пользователя с reply-кнопкой hideAfterClick: {e}")
+{{ indent }}    return  # Прерываем дальнейшую обработку, так как сообщение уже удалено
+{{ indent }}
+
+{% endif %}

@@ -9,6 +9,9 @@
  * - button-response: Обработчик кнопочных ответов при сборе ввода
  * - reply-button-handlers: Обработчики reply кнопок
  * - multi-select-button-handler: Обработчик кнопок multi-select с сохранением
+ * - command-callback-handler: Обработчик командных callback кнопок
+ * - reply-hide-after-click: Обработка флага hideAfterClick для reply кнопок
+ * - multi-select-transition: Логика переходов после multi-select
  */
 
 // ============================================================================
@@ -60,3 +63,43 @@ export type { ReplyButtonHandlersParams } from './reply-button-handlers/reply-bu
 export { replyButtonHandlersParamsSchema } from './reply-button-handlers/reply-button-handlers.schema';
 export { generateReplyButtonHandlers } from './reply-button-handlers/reply-button-handlers.renderer';
 export * from './reply-button-handlers/reply-button-handlers.fixture';
+
+// ============================================================================
+// Multi-Select Button Handler
+// ============================================================================
+
+export type { MultiSelectButtonHandlerTemplateParams } from './multi-select-button-handler/multi-select-button-handler.params';
+export type { MultiSelectButtonHandlerParams } from './multi-select-button-handler/multi-select-button-handler.schema';
+export { multiSelectButtonHandlerParamsSchema } from './multi-select-button-handler/multi-select-button-handler.schema';
+export { generateMultiSelectButtonHandler } from './multi-select-button-handler/multi-select-button-handler.renderer';
+export * from './multi-select-button-handler/multi-select-button-handler.fixture';
+
+// ============================================================================
+// Command Callback Handler
+// ============================================================================
+
+export type { CommandCallbackHandlerTemplateParams } from './command-callback-handler/command-callback-handler.params';
+export type { CommandCallbackHandlerParams } from './command-callback-handler/command-callback-handler.schema';
+export { commandCallbackHandlerParamsSchema } from './command-callback-handler/command-callback-handler.schema';
+export { generateCommandCallbackHandler } from './command-callback-handler/command-callback-handler.renderer';
+export * from './command-callback-handler/command-callback-handler.fixture';
+
+// ============================================================================
+// Reply Hide After Click
+// ============================================================================
+
+export type { ReplyHideAfterClickTemplateParams } from './reply-hide-after-click/reply-hide-after-click.params';
+export type { ReplyHideAfterClickParams } from './reply-hide-after-click/reply-hide-after-click.schema';
+export { replyHideAfterClickParamsSchema } from './reply-hide-after-click/reply-hide-after-click.schema';
+export { generateReplyHideAfterClick } from './reply-hide-after-click/reply-hide-after-click.renderer';
+export * from './reply-hide-after-click/reply-hide-after-click.fixture';
+
+// ============================================================================
+// Multi-Select Transition
+// ============================================================================
+
+export type { MultiSelectTransitionTemplateParams } from './multi-select-transition/multi-select-transition.params';
+export type { MultiSelectTransitionParams } from './multi-select-transition/multi-select-transition.schema';
+export { multiSelectTransitionParamsSchema } from './multi-select-transition/multi-select-transition.schema';
+export { generateMultiSelectTransition } from './multi-select-transition/multi-select-transition.renderer';
+export * from './multi-select-transition/multi-select-transition.fixture';

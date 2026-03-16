@@ -1,0 +1,34 @@
+{#
+  Шаблон генерации обработчика callback для командной кнопки
+
+  @fileoverview Генерирует Python код для обработки командных callback кнопок
+  @param {string} callbackData - Callback data для идентификации кнопки
+  @param {object} button - Объект кнопки (action, id, target, text)
+  @param {string} indentLevel - Уровень отступа (по умолчанию '')
+
+  @example
+  ```jinja2
+  {% include 'handlers/command-callback-handler/command-callback-handler.py.jinja2' %}
+  ```
+#}
+
+{% set indent = indentLevel or '' %}
+
+{{ indent }}@dp.callback_query(lambda c: c.data == "{{ callbackData }}")
+{% set safeFunctionName = callbackData | replace('[^a-zA-Z0-9_]', '_') %}
+{{ indent }}async def handle_callback_{{ safeFunctionName }}(callback_query: types.CallbackQuery):
+{{ indent }}    # Проверяем флаг hideAfterClick для кнопок
+{{ indent }}    # Обработка hideAfterClick не применяется в этом обработчике, так как он используется для специальных командных кнопок
+{{ indent }}    await callback_query.answer()
+{{ indent }}    user_id = callback_query.from_user.id
+{{ indent }}    # Инициализируем базовые переменные пользователя
+{{ indent }}    user_name = await init_user_variables(user_id, callback_query.from_user)
+{{ indent }}    
+{{ indent }}    button_text = "{{ button.text | replace('"', '\\"') }}"
+{{ indent }}    
+{{ indent }}    # Сохраняем кнопку в базу данных
+{{ indent }}    timestamp = get_moscow_time()
+{{ indent }}    response_data = button_text
+{{ indent }}    await update_user_data_in_db(user_id, button_text, response_data)
+{{ indent }}    logging.info(f"Команда {{ button.target or 'неизвестная' }} выполнена через callback кнопку (пользователь {user_id})")
+{{ indent }}    

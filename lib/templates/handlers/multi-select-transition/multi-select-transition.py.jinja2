@@ -1,0 +1,104 @@
+{#
+  Шаблон генерации логики переходов для завершения множественного выбора
+
+  @fileoverview Генерирует Python код для переходов после завершения multi-select
+  @param {array} multiSelectNodes - Узлы с множественным выбором
+  @param {array} nodes - Все узлы графа
+  @param {array} connections - Соединения между узлами
+  @param {string} indentLevel - Уровень отступа (по умолчанию '        ')
+
+  @example
+  ```jinja2
+  {% include 'handlers/multi-select-transition/multi-select-transition.py.jinja2' %}
+  ```
+#}
+
+{% set indent = indentLevel or '        ' %}
+
+{{ indent }}# Определяем следующий узел для каждого node_id
+{% for node in multiSelectNodes %}
+{{ indent }}if node_id == "{{ node.id }}":
+{% set hasContent = false %}
+
+{# Проверяем continueButtonTarget #}
+{% if node.data.continueButtonTarget %}
+{% set targetNode = nodes | selectattr('id', 'equalto', node.data.continueButtonTarget) | first %}
+{% if targetNode %}
+{{ indent }}    # Переход к узлу {{ targetNode.id }}
+{{ indent }}    logging.info(f"🔄 Переходим к узлу {{ targetNode.id }} (тип: {{ targetNode.type }})")
+{% if targetNode.type == 'message' %}
+{{ indent }}    # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!
+{% set messageText = targetNode.data.messageText or 'Продолжение...' %}
+{{ indent }}    text = "{{ messageText | replace('"', '\\"') }}"
+{% if targetNode.data.keyboardType == 'inline' and targetNode.data.buttons and targetNode.data.buttons.length > 0 %}
+{{ indent }}    # Добавляем клавиатуру для целевого узла
+{{ indent }}    # Загружаем пользовательские данные для клавиатуры
+{{ indent }}    user_vars = await get_user_from_db(user_id)
+{{ indent }}    if not user_vars:
+{{ indent }}        user_vars = user_data.get(user_id, {})
+{{ indent }}    if not isinstance(user_vars, dict):
+{{ indent }}        user_vars = {}
+{{ indent }}    # TODO: сгенерировать клавиатуру через generateInlineKeyboardCode
+{{ indent }}    await callback_query.message.answer(text, reply_markup=keyboard)
+{% else %}
+{{ indent }}    await callback_query.message.answer(text)
+{% endif %}
+{{ indent }}    return
+{% set hasContent = true %}
+{% elif targetNode.type == 'command' %}
+{% set safeCommandName = targetNode.data.command | default('unknown') | replace('[^a-zA-Z0-9_]', '_') %}
+{{ indent }}    await handle_command_{{ safeCommandName }}(callback_query.message)
+{% set hasContent = true %}
+{% elif targetNode.type == 'start' %}
+{{ indent }}    # Вызываем полный обработчик start для правильного отображения главного меню
+{{ indent }}    await handle_command_start(callback_query.message)
+{{ indent }}    return
+{% set hasContent = true %}
+{% else %}
+{{ indent }}    logging.warning(f"⚠️ Неизвестный тип узла: {{ targetNode.type }}")
+{{ indent }}    pass
+{% set hasContent = true %}
+{% endif %}
+{% else %}
+{{ indent }}    # Целевой узел не найден, завершаем выбор
+{{ indent }}    logging.warning(f"⚠️ Целевой узел не найден: {{ node.data.continueButtonTarget }}")
+{{ indent }}    await safe_edit_or_send(callback_query, "✅ Выбор завершен!", is_auto_transition=True)
+{% set hasContent = true %}
+{% endif %}
+
+{# Если нет continueButtonTarget, проверяем соединения #}
+{% elif node.connections and node.connections.length > 0 %}
+{% set targetNode = nodes | selectattr('id', 'equalto', node.connections[0].target) | first %}
+{% if targetNode %}
+{{ indent }}    # Переход к узлу {{ targetNode.id }} через соединение
+{% if targetNode.type == 'message' %}
+{{ indent }}    # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!
+{% set messageText = targetNode.data.messageText or 'Продолжение...' %}
+{{ indent }}    text = "{{ messageText | replace('"', '\\"') }}"
+{% if targetNode.data.keyboardType == 'inline' and targetNode.data.buttons and targetNode.data.buttons.length > 0 %}
+{{ indent }}    # Добавляем клавиатуру для соединения
+{{ indent }}    user_vars = await get_user_from_db(user_id)
+{{ indent }}    if not user_vars:
+{{ indent }}        user_vars = user_data.get(user_id, {})
+{{ indent }}    if not isinstance(user_vars, dict):
+{{ indent }}        user_vars = {}
+{{ indent }}    # TODO: сгенерировать клавиатуру
+{{ indent }}    await callback_query.message.answer(text, reply_markup=keyboard)
+{% else %}
+{{ indent }}    await callback_query.message.answer(text)
+{% endif %}
+{{ indent }}    return
+{% elif targetNode.type == 'command' %}
+{% set safeCommandName = targetNode.data.command | default('unknown') | replace('[^a-zA-Z0-9_]', '_') %}
+{{ indent }}    await handle_command_{{ safeCommandName }}(callback_query.message)
+{% endif %}
+{% set hasContent = true %}
+{% endif %}
+{% endif %}
+
+{# Если блок if пустой, добавляем return #}
+{% if not hasContent %}
+{{ indent }}    return
+{% endif %}
+
+{% endfor %}
