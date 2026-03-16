@@ -194,7 +194,8 @@ export function renderPartialTemplate(
                                .replace('broadcast/', '')
                                .replace('sticker/', '')
                                .replace('voice/', '')
-                               .replace('safe-edit-or-send/', '');
+                               .replace('safe-edit-or-send/', '')
+                               .replace('handlers/', '');
 
     if (schemaMap[templateName]) {
       try {
@@ -206,11 +207,12 @@ export function renderPartialTemplate(
     }
 
     const environment = initEnvironment();
-    // Определяем путь к шаблону на основе имени
-    // Шаблоны находятся в своих директориях: config/config.py.jinja2, database/database.py.jinja2, etc.
+    
+    // Для шаблонов в handlers/ используем полный путь
+    // Для остальных шаблонов пытаемся определить директорию автоматически
     let templatePath = partialName;
 
-    // Если путь не содержит '/', определяем директорию на основе имени шаблона
+    // Если путь содержит '/', используем его как есть
     if (!partialName.includes('/')) {
       const templateDirs = ['config', 'database', 'utils', 'main', 'header', 'middleware', 'universal-handlers', 'imports', 'command', 'start', 'keyboard', 'message', 'broadcast', 'sticker', 'voice', 'safe-edit-or-send'];
       const dir = templateDirs.find(d => partialName.startsWith(d));
@@ -218,7 +220,7 @@ export function renderPartialTemplate(
         templatePath = `${dir}/${partialName}`;
       }
     }
-    
+
     const template = environment.getTemplate(templatePath);
     return template.render(validated);
   } catch (error: any) {
@@ -229,6 +231,10 @@ export function renderPartialTemplate(
     // Пробрасываем ошибки валидации
     if (error.message.includes('Валидация параметров')) {
       throw error;
+    }
+    // Добавляем информацию о шаблоне к ошибке
+    if (error.message.includes('template not found')) {
+      throw new Error(`Template not found: ${partialName}. Checked in ${getTemplatesDir()}`);
     }
     throw error;
   }

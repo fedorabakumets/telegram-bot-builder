@@ -75,32 +75,33 @@ async def handle_multi_select_reply(message: types.Message):
 {% for node in multiSelectNodes %}
 {% if node.selectionButtons and node.selectionButtons|length > 0 %}
         if node_id == "{{ node.id }}":
+            # Определяем тексты кнопок для проверки
+{% for button in node.selectionButtons %}
+            btn_text_{{ loop.index }} = {{ button.text|escape_python_string }}
+{% endfor %}
 {% for button in node.selectionButtons %}
             # Проверяем текст кнопки, убирая галочку при необходимости
             clean_user_input = user_input.replace("✅ ", "").strip()
-            if clean_user_input == {{ button.text|escape_python_string }}:
+            if clean_user_input == btn_text_{{ loop.index }}:
                 if f"multi_select_{node_id}" not in user_data[user_id]:
                     user_data[user_id][f"multi_select_{node_id}"] = {}
 
                 selected_list = user_data[user_id][f"multi_select_{node_id}"]  # Variable used below to manage selections
-                if {{ button.text|escape_python_string }} in selected_list:
-                    selected_list.remove({{ button.text|escape_python_string }})
-                    await message.answer(f"❌ Убрано: {{{{ {button.text|escape_python_string }}}}}}")
+                if btn_text_{{ loop.index }} in selected_list:
+                    selected_list.remove(btn_text_{{ loop.index }})
+                    await message.answer("❌ Убрано: " + btn_text_{{ loop.index }})
                 else:
-                    selected_list.append({{ button.text|escape_python_string }})
-                    await message.answer(f"✅ Выбрано: {{{{ {button.text|escape_python_string }}}}}}")
+                    selected_list.append(btn_text_{{ loop.index }})
+                    await message.answer("✅ Выбрано: " + btn_text_{{ loop.index }})
 
                 # Обновляем клавиатуру с галочками
                 builder = ReplyKeyboardBuilder()  # Variable used for building keyboard
 
                 # Добавляем кнопки выбора с галочками (используем selected_list)
 {% for selBtn in node.selectionButtons %}
-                builder.add(KeyboardButton(text=f"{'✅ ' if '{{ selBtn.text|e }}' in selected_list else ''}{{ selBtn.text|e }}"))
+{% set btnText = selBtn.text|escape_python_string %}
+                builder.add(KeyboardButton(text=('✅ ' if {{ btnText }} in selected_list else '') + {{ btnText }}))
 {% endfor %}
-
-{% if node.completeButton %}
-                builder.add(KeyboardButton(text={{ node.completeButton.text|escape_python_string }}))  # используем builder
-{% endif %}
 
 {# Добавляем обычные кнопки #}
 {% for regBtn in node.regularButtons %}

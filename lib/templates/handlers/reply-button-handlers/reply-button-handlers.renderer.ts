@@ -3,8 +3,8 @@
  * @module templates/handlers/reply-button-handlers/reply-button-handlers.renderer
  */
 
-import nunjucks from 'nunjucks';
 import { replyButtonHandlersParamsSchema, type ReplyButtonHandlersParams } from './reply-button-handlers.schema';
+import { renderPartialTemplate } from '../../template-renderer';
 
 /**
  * Генерация обработчиков reply кнопок через Jinja2 шаблон
@@ -16,18 +16,9 @@ export function generateReplyButtonHandlers(params: ReplyButtonHandlersParams): 
   // Валидация параметров
   const validatedParams = replyButtonHandlersParamsSchema.parse(params);
 
-  // Настройка nunjucks
-  const env = nunjucks.configure({
-    autoescape: false,
-    trimBlocks: true,
-    lstripBlocks: true,
-  });
-
   // Рендеринг шаблона
-  const template = nunjucks.render('handlers/reply-button-handlers/reply-button-handlers.py.jinja2', {
+  return renderPartialTemplate('handlers/reply-button-handlers/reply-button-handlers.py.jinja2', {
     nodes: validatedParams.nodes,
     indentLevel: validatedParams.indentLevel,
   });
-
-  return template;
 }

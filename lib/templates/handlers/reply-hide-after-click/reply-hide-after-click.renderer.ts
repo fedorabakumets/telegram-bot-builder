@@ -3,8 +3,8 @@
  * @module templates/handlers/reply-hide-after-click/reply-hide-after-click.renderer
  */
 
-import nunjucks from 'nunjucks';
 import { replyHideAfterClickParamsSchema, type ReplyHideAfterClickParams } from './reply-hide-after-click.schema';
+import { renderPartialTemplate } from '../../template-renderer';
 
 /**
  * Генерация кода обработки hideAfterClick через Jinja2 шаблон
@@ -17,10 +17,8 @@ export function generateReplyHideAfterClick(params: ReplyHideAfterClickParams): 
   const validatedParams = replyHideAfterClickParamsSchema.parse(params);
 
   // Рендеринг шаблона
-  const template = nunjucks.render('handlers/reply-hide-after-click/reply-hide-after-click.py.jinja2', {
+  return renderPartialTemplate('handlers/reply-hide-after-click/reply-hide-after-click.py.jinja2', {
     nodes: validatedParams.nodes,
     indentLevel: validatedParams.indentLevel,
   });
-
-  return template;
 }
