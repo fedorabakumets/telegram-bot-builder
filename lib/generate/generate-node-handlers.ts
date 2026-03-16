@@ -11,7 +11,7 @@
 
 import { Node } from '@shared/schema';
 import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './generate-new-node-handlers';
-import { generateMessage } from '../bot-generator/templates/message/message.renderer';
+import { generateMessage } from '../templates/message/message.renderer';
 import { generateBroadcastClientHandler } from '../bot-generator/Client/generateBroadcastClientHandler';
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';

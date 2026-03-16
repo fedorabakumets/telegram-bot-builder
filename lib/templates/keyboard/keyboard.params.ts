@@ -3,7 +3,7 @@
  * @module templates/keyboard/keyboard.params
  */
 
-import type { Button } from '../../transitions/types/button-response-config-types';
+import type { Button } from '../../bot-generator/transitions/types/button-response-config-types';
 import type { KeyboardLayout } from '../types/keyboard-layout';
 
 /** Тип клавиатуры */
