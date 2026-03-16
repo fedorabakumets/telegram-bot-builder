@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { getTelegramProxyAgent } from "../../../../utils/telegram-proxy";
 import {
     analyzeTelegramError,
     getErrorStatusCode
@@ -39,15 +40,22 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
         }
 
         // Mask token for logging
-        const maskedToken = defaultToken.token.length > 12 
+        const maskedToken = defaultToken.token.length > 12
             ? `${defaultToken.token.slice(0, 8)}...${defaultToken.token.slice(-4)}`
             : '***';
 
+        // Get proxy agent
+        const proxyAgent = getTelegramProxyAgent();
+        const fetchOptions = proxyAgent ? { agent: proxyAgent } : {};
+
         console.log(`[Telegram API] Getting bot info for project ${projectId}, token: ${maskedToken}`);
-        
+        if (proxyAgent) {
+            console.log(`[Telegram API] Using proxy agent`);
+        }
+
         const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getMe?_t=${Date.now()}`;
         const startTime = Date.now();
-        
+
         let response;
         try {
             response = await fetch(telegramApiUrl, {
@@ -57,7 +65,8 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache'
                 },
-                signal: AbortSignal.timeout(10000)
+                signal: AbortSignal.timeout(10000),
+                ...fetchOptions
             });
         } catch (fetchError) {
             const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown fetch error';
@@ -107,7 +116,8 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
                     body: JSON.stringify({
                         file_id: botInfo.photo.big_file_id
                     }),
-                    signal: AbortSignal.timeout(5000)
+                    signal: AbortSignal.timeout(5000),
+                    ...fetchOptions
                 });
 
                 const fileResult = await fileResponse.json();

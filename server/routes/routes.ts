@@ -27,6 +27,7 @@ import { userTelegramSettings } from "@shared/schema";
 import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { handleTelegramError } from "../utils/telegram-error-handler";
+import { getTelegramProxyAgent } from "../utils/telegram-proxy";
 import { setupAuthRoutes } from "./setupAuthRoutes";
 import { setupBotIntegrationRoutes } from "./setupBotIntegrationRoutes";
 import { setupGithubPushRoute } from './setupGithubPushRoute';
@@ -566,17 +567,26 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Mask token for logging (show only first 8 and last 4 chars)
-      const maskedToken = token.length > 12 
+      const maskedToken = token.length > 12
         ? `${token.slice(0, 8)}...${token.slice(-4)}`
         : '***';
 
+      // Get proxy agent for Telegram API
+      const proxyAgent = getTelegramProxyAgent();
+      const fetchOptions = proxyAgent ? { agent: proxyAgent } : {};
+
       console.log(`[Telegram API] Parsing bot info for token: ${maskedToken}`);
       console.log(`[Telegram API] Request URL: https://api.telegram.org/bot${maskedToken}/getMe`);
+      if (proxyAgent) {
+        console.log(`[Telegram API] Using proxy agent`);
+      } else {
+        console.log(`[Telegram API] No proxy configured, using direct connection`);
+      }
 
       // Get bot information via Telegram Bot API
       const telegramApiUrl = `https://api.telegram.org/bot${token}/getMe`;
       const startTime = Date.now();
-      
+
       let response;
       try {
         response = await fetch(telegramApiUrl, {
@@ -585,14 +595,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             'Content-Type': 'application/json',
           },
           // Add timeout signal
-          signal: AbortSignal.timeout(10000)
+          signal: AbortSignal.timeout(10000),
+          ...fetchOptions
         });
       } catch (fetchError) {
         const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown fetch error';
-        const errorCause = fetchError instanceof Error && 'cause' in fetchError 
-          ? (fetchError.cause as Error)?.message || fetchError.cause 
+        const errorCause = fetchError instanceof Error && 'cause' in fetchError
+          ? (fetchError.cause as Error)?.message || fetchError.cause
           : 'No cause';
-        
+
         console.error(`[Telegram API] Fetch failed for ${maskedToken}:`);
         console.error(`  - Error: ${errorMessage}`);
         console.error(`  - Cause: ${errorCause}`);
@@ -602,12 +613,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         console.error(`    • DNS resolution failed`);
         console.error(`    • Firewall/antivirus blocking connection`);
         console.error(`    • Network connectivity issues`);
-        console.error(`  - Solution: Use a proxy or VPN to access Telegram API`);
-        
-        return res.status(500).json({ 
+        console.error(`  - Solution: Set TELEGRAM_PROXY_URL in .env file`);
+
+        return res.status(500).json({
           message: "Failed to connect to Telegram API",
           error: errorMessage,
-          details: "Telegram API may be blocked in your network. Try using a proxy or VPN.",
+          details: "Telegram API may be blocked in your network. Set TELEGRAM_PROXY_URL in .env file.",
           tokenMasked: maskedToken
         });
       }
@@ -636,7 +647,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         // Get full description
         const descStartTime = Date.now();
         const descResponse = await fetch(`https://api.telegram.org/bot${token}/getMyDescription`, {
-          signal: AbortSignal.timeout(5000)
+          signal: AbortSignal.timeout(5000),
+          ...fetchOptions
         });
         console.log(`[Telegram API] Description response: ${descResponse.status} (${Date.now() - descStartTime}ms)`);
         
@@ -651,7 +663,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         // Get short description
         const shortDescStartTime = Date.now();
         const shortDescResponse = await fetch(`https://api.telegram.org/bot${token}/getMyShortDescription`, {
-          signal: AbortSignal.timeout(5000)
+          signal: AbortSignal.timeout(5000),
+          ...fetchOptions
         });
         console.log(`[Telegram API] Short description response: ${shortDescResponse.status} (${Date.now() - shortDescStartTime}ms)`);
         
@@ -680,7 +693,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             body: JSON.stringify({
               file_id: botInfo.photo.big_file_id
             }),
-            signal: AbortSignal.timeout(5000)
+            signal: AbortSignal.timeout(5000),
+            ...fetchOptions
           });
 
           const fileResult = await fileResponse.json();
@@ -777,12 +791,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Call Telegram API
       const telegramApiUrl = `https://api.telegram.org/bot${token.token}/${telegramApiMethod}`;
+      const proxyAgent = getTelegramProxyAgent();
+      const fetchOptions = proxyAgent ? { agent: proxyAgent } : {};
+      
+      if (proxyAgent) {
+        console.log(`[Telegram API] Using proxy for update ${field}`);
+      }
+      
       const response = await fetch(telegramApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        ...fetchOptions
       });
 
       const result = await response.json();

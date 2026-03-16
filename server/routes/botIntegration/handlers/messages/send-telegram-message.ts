@@ -1,11 +1,12 @@
 /**
  * @fileoverview Утилита отправки сообщений в Telegram
- * 
+ *
  * Отправляет сообщения с поддержкой медиа и кнопок.
  */
 
 import type { SendMediaFile } from "./extract-media";
 import type { InlineButton } from "./extract-buttons";
+import { getTelegramProxyAgent } from "../../../../utils/telegram-proxy";
 
 /**
  * Отправляет сообщение в Telegram с поддержкой медиа и кнопок
@@ -58,8 +59,13 @@ async function sendTextMessage(
 ): Promise<unknown> {
   const maskedToken = token.length > 12 ? `${token.slice(0, 8)}...${token.slice(-4)}` : '***';
   const startTime = Date.now();
+  const proxyAgent = getTelegramProxyAgent();
+  const fetchOptions = proxyAgent ? { agent: proxyAgent } : {};
   
   console.log(`[Telegram API] Sending message to chat ${chatId}, token: ${maskedToken}`);
+  if (proxyAgent) {
+    console.log(`[Telegram API] Using proxy agent`);
+  }
   
   try {
     const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -72,6 +78,7 @@ async function sendTextMessage(
         parse_mode: useHtml ? 'HTML' : undefined,
         reply_markup: replyMarkup,
       }),
+      ...fetchOptions
     });
     
     console.log(`[Telegram API] Message sent in ${Date.now() - startTime}ms, status: ${response.status}`);
@@ -111,8 +118,13 @@ async function sendMediaMessage(
 
   const endpoint = endpoints[media.type] || 'sendMessage';
   const startTime = Date.now();
+  const proxyAgent = getTelegramProxyAgent();
+  const fetchOptions = proxyAgent ? { agent: proxyAgent } : {};
   
   console.log(`[Telegram API] Sending ${media.type} to chat ${chatId}, token: ${maskedToken}`);
+  if (proxyAgent) {
+    console.log(`[Telegram API] Using proxy agent`);
+  }
   
   const body: Record<string, unknown> = {
     chat_id: chatId,
@@ -128,6 +140,7 @@ async function sendMediaMessage(
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(15000),
       body: JSON.stringify(body),
+      ...fetchOptions
     });
     
     console.log(`[Telegram API] Media sent in ${Date.now() - startTime}ms, status: ${response.status}`);
