@@ -1,0 +1,155 @@
+{#
+  Шаблон генерации обработчика callback для multi-select кнопки с сохранением переменных
+
+  @fileoverview Генерирует Python код для обработки кнопок множественного выбора с сохранением в БД
+  @param {object} targetNode - Целевой узел для перехода
+  @param {string} callbackData - Callback data для идентификации кнопки
+  @param {string} shortNodeIdForDone - Короткий ID узла для done обработчика
+  @param {object} button - Объект кнопки (action, id, target, text, skipDataCollection)
+  @param {object} node - Текущий узел (родительский)
+  @param {array} nodes - Все узлы для проверки существования целевого узла
+  @param {string} indentLevel - Уровень отступа (по умолчанию '    ')
+
+  @example
+  ```jinja2
+  {% include 'handlers/multi-select-button-handler/multi-select-button-handler.py.jinja2' %}
+  ```
+#}
+
+{% set indent = indentLevel or '    ' %}
+
+{% set isDoneHandlerNeeded = targetNode and targetNode.data.allowMultipleSelection and targetNode.data.continueButtonTarget %}
+
+{% if isDoneHandlerNeeded %}
+{{ indent }}@dp.callback_query(lambda c: c.data == "{{ callbackData }}" or c.data.startswith("{{ callbackData }}_btn_") or c.data == "done_{{ shortNodeIdForDone }}")
+{% else %}
+{{ indent }}@dp.callback_query(lambda c: c.data == "{{ callbackData }}" or c.data.startswith("{{ callbackData }}_btn_"))
+{% endif %}
+
+{# Создаем безопасное имя функции #}
+{% set safeFunctionName = callbackData | replace('[^a-zA-Z0-9_]', '_') %}
+{{ indent }}async def handle_callback_{{ safeFunctionName }}(callback_query: types.CallbackQuery):
+{{ indent }}    await callback_query.answer()
+{{ indent }}    user_id = callback_query.from_user.id
+{{ indent }}    callback_data = callback_query.data
+{{ indent }}    logging.info(f"📱 Обработка callback: {callback_data}")
+{{ indent }}
+
+{# Обработка кнопки "Готово" для множественного выбора #}
+{% if isDoneHandlerNeeded %}
+{{ indent }}    # Проверяем, является ли это кнопкой "Готово" для множественного выбора
+{{ indent }}    if callback_data == "done_{{ shortNodeIdForDone }}":
+{{ indent }}        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")
+{{ indent }}
+
+{{ indent }}        # Сохраняем выбранные значения в базу данных
+{% set multiSelectVariable = targetNode.data.multiSelectVariable or 'user_interests' %}
+{{ indent }}        selected_options = user_data.get(user_id, {}).get("multi_select_{{ callbackData }}", [])
+{{ indent }}        if selected_options:
+{{ indent }}            selected_text = ", ".join(selected_options)
+{{ indent }}
+{{ indent }}            # Универсальная логика аккумуляции для всех множественных выборов
+{{ indent }}            # Загружаем существующие значения
+{{ indent }}            existing_data = await get_user_data_from_db(user_id, "{{ multiSelectVariable }}")
+{{ indent }}            existing_selections = []
+{{ indent }}            if existing_data and existing_data.strip():
+{{ indent }}                existing_selections = [s.strip() for s in existing_data.split(",") if s.strip()]
+{{ indent }}
+{{ indent }}            # Объединяем существующие и новые выборы (убираем дубли)
+{{ indent }}            all_selections = list(set(existing_selections + selected_options))
+{{ indent }}            final_text = ", ".join(all_selections)
+{{ indent }}            await update_user_data_in_db(user_id, "{{ multiSelectVariable }}", final_text)
+{{ indent }}            logging.info(f"✅ Аккумулировано в переменную {{ multiSelectVariable }}: {final_text}")
+{{ indent }}
+{{ indent }}        # Очищаем состояние множественного выбора
+{{ indent }}        if user_id in user_data:
+{{ indent }}            user_data[user_id].pop("multi_select_{{ callbackData }}", None)
+{{ indent }}            user_data[user_id].pop("multi_select_node", None)
+{{ indent }}            user_data[user_id].pop("multi_select_type", None)
+{{ indent }}            user_data[user_id].pop("multi_select_variable", None)
+{{ indent }}
+{# Логика перехода к следующему узлу #}
+{% if targetNode.data.continueButtonTarget %}
+{% set nextNodeId = targetNode.data.continueButtonTarget %}
+{% set targetExists = nodes | selectattr('id', 'equalto', nextNodeId) | list | length > 0 %}
+{{ indent }}        # Переход к следующему узлу
+{{ indent }}        next_node_id = "{{ nextNodeId }}"
+{{ indent }}        logging.info(f"🚀 DEBUG: targetNode.id={{ targetNode.id }}, continueButtonTarget={{ targetNode.data.continueButtonTarget }}, nextNodeId={{ nextNodeId }}")
+{{ indent }}
+{# Специальная логика для metro_selection -> interests_result #}
+{% if 'metro_selection' in targetNode.id and nextNodeId == 'interests_result' %}
+{{ indent }}        # ИСПРАВЛЕНИЕ: Сохраняем метро выбор и устанавливаем флаг для показа клавиатуры
+{{ indent }}        selected_metro = user_data.get(user_id, {}).get("multi_select_{{ callbackData }}", [])
+{{ indent }}        if user_id not in user_data:
+{{ indent }}            user_data[user_id] = {}
+{{ indent }}        user_data[user_id]["saved_metro_selection"] = selected_metro
+{{ indent }}        user_data[user_id]["show_metro_keyboard"] = True
+{{ indent }}        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: targetNode.id={{ targetNode.id }}, nextNodeId={{ nextNodeId }}")
+{{ indent }}        logging.info(f"🚇 Сохранили метро выбор: {selected_metro}, установлен флаг show_metro_keyboard=True")
+{{ indent }}
+{% endif %}
+{{ indent }}        try:
+{% if targetExists %}
+{% set targetNodeObj = nodes | selectattr('id', 'equalto', nextNodeId) | first %}
+{% set targetSafeName = nextNodeId | replace('[^a-zA-Z0-9_]', '_') %}
+{% if targetNodeObj.type == 'message' %}
+{{ indent }}            await handle_callback_{{ targetSafeName }}(callback_query)
+{% elif targetNodeObj.type == 'command' %}
+{% set commandName = targetNodeObj.data.command | replace('/', '') | replace('[^a-zA-Z0-9_]', '_') %}
+{{ indent }}            await handle_command_{{ commandName }}(callback_query.message)
+{% elif targetNodeObj.type == 'start' %}
+{{ indent }}            await handle_command_start(callback_query.message)
+{% else %}
+{{ indent }}            await handle_callback_{{ targetSafeName }}(callback_query)
+{% endif %}
+{% else %}
+{{ indent }}            logging.warning(f"⚠️ Целевой узел не найден: {next_node_id}, завершаем переход")
+{{ indent }}            await callback_query.message.edit_text("Переход завершен")
+{% endif %}
+{{ indent }}        except Exception as e:
+{{ indent }}            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+{{ indent }}            await callback_query.message.edit_text("Переход завершен")
+{% else %}
+{{ indent }}        # Завершение множественного выбора
+{{ indent }}        await safe_edit_or_send(callback_query, "✅ Выбор завершен!", is_auto_transition=True)
+{% endif %}
+{{ indent }}        return
+{{ indent }}
+{% endif %}
+
+{# Обработка обычной кнопки выбора #}
+{{ indent }}    button_text = "{{ button.text | escape_python }}"
+{{ indent }}
+
+{# Логика сохранения переменных #}
+{% if not button.skipDataCollection %}
+{% if node.inputVariable %}
+{# Сохранение переменной из узла #}
+{{ indent }}    # Сохранение переменной из узла
+{{ indent }}    await update_user_data_in_db(user_id, "{{ node.inputVariable }}", button_text)
+{{ indent }}    logging.info(f"Переменная {{ node.inputVariable }} сохранена: " + str(button_text) + f" (пользователь {user_id})")
+{{ indent }}
+{{ indent }}    # Очищаем состояние ожидания ввода для этой переменной
+{{ indent }}    if user_id in user_data:
+{{ indent }}        # Удаляем waiting_for_input чтобы текстовый обработчик не перезаписал данные
+{{ indent }}        if "waiting_for_input" in user_data[user_id]:
+{{ indent }}            if user_data[user_id]["waiting_for_input"].get("node_id") == "{{ node.id }}":
+{{ indent }}                del user_data[user_id]["waiting_for_input"]
+{{ indent }}                logging.info(f"Состояние ожидания ввода очищено для переменной {{ node.inputVariable }} (пользователь {user_id})")
+{{ indent }}
+{% else %}
+{# Резервный вариант: сохраняем кнопку как есть #}
+{{ indent }}    # Сохраняем кнопку в базу данных
+{{ indent }}    timestamp = get_moscow_time()
+{{ indent }}    response_data = button_text  # Простое значение
+{{ indent }}    await update_user_data_in_db(user_id, button_text, response_data)
+{{ indent }}    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+{% endif %}
+{% else %}
+{# Пропуск сохранения данных #}
+{{ indent }}    # Кнопка настроена для пропуска сбора данных (skipDataCollection=true)
+{{ indent }}    logging.info(f"Кнопка пропущена: {button_text} (не сохраняется из-за skipDataCollection)")
+{{ indent }}    # Устанавливаем флаг, чтобы следующий узел не сохранил переменную
+{{ indent }}    user_data[user_id]["skipDataCollectionTransition"] = True
+{% endif %}
+{{ indent }}

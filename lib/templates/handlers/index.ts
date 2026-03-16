@@ -7,6 +7,8 @@
  * - multi-select-done: Обработчик кнопки "Готово" для multi-select
  * - multi-select-reply: Обработчик reply кнопок для multi-select
  * - button-response: Обработчик кнопочных ответов при сборе ввода
+ * - reply-button-handlers: Обработчики reply кнопок
+ * - multi-select-button-handler: Обработчик кнопок multi-select с сохранением
  */
 
 // ============================================================================
@@ -48,3 +50,13 @@ export type { ButtonResponseParams } from './button-response/button-response.sch
 export { buttonResponseParamsSchema } from './button-response/button-response.schema';
 export { generateButtonResponse } from './button-response/button-response.renderer';
 export * from './button-response/button-response.fixture';
+
+// ============================================================================
+// Reply Button Handlers
+// ============================================================================
+
+export type { ReplyButtonHandlersTemplateParams } from './reply-button-handlers/reply-button-handlers.params';
+export type { ReplyButtonHandlersParams } from './reply-button-handlers/reply-button-handlers.schema';
+export { replyButtonHandlersParamsSchema } from './reply-button-handlers/reply-button-handlers.schema';
+export { generateReplyButtonHandlers } from './reply-button-handlers/reply-button-handlers.renderer';
+export * from './reply-button-handlers/reply-button-handlers.fixture';
