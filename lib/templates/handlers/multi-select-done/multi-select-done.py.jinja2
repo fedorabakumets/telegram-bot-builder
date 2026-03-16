@@ -1,16 +1,5 @@
 {#
   Шаблон генерации обработчика кнопки "Готово" для multi-select
-
-  @fileoverview Генерирует Python код для обработки завершения множественного выбора
-  @param {array} multiSelectNodes - Массив узлов с множественным выбором
-  @param {array} allNodes - Массив всех узлов для поиска целевых узлов
-  @param {array} allNodeIds - Массив всех ID узлов для генерации коротких ID
-  @param {string} indentLevel - Уровень отступа (по умолчанию '')
-
-  @example
-  ```jinja2
-  {% include 'handlers/multi-select-done/multi-select-done.py.jinja2' %}
-  ```
 #}
 
 {% set indent = indentLevel or '' %}
@@ -22,56 +11,43 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
     logging.info(f"🏁 ОБРАБОТЧИК ГОТОВО АКТИВИРОВАН! callback_data: {callback_query.data}")
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    callback_data = callback_query.data  # Получаем данные callback
+    callback_data = callback_query.data
 
     logging.info(f"🏁 Завершение множественного выбора: {callback_data}")
-    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущее сообщение ID: {callback_query.message.message_id}")
-    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущий текст сообщения: {callback_query.message.text}")
-    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Есть ли клавиатура: {bool(callback_query.message.reply_markup)}")
-
-    # Извлекаем node_id из callback_data
     node_id = callback_data.replace("multi_select_done_", "")
     logging.info(f"🎯 Node ID для завершения: {node_id}")
 
 {% for node in multiSelectNodes %}
     if node_id == "{{ node.id }}":
-        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Обрабатываем завершение для узла {{ node.id }}")
-        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: continueButtonTarget = {{ node.continueButtonTarget or 'НЕТ' }}")
-        # Получаем выбранные опции для узла {{ node.id }}
+        logging.info(f"🔍 Обрабатываем завершение для узла {{ node.id }}")
         selected_options = user_data.get(user_id, {}).get("multi_select_{{ node.id }}", [])
-        logging.info(f"📋 ГЕНЕРАТОР DEBUG: Выбранные опции для {{ node.id }}: {selected_options}")
+        logging.info(f"📋 Выбранные опции для {{ node.id }}: {selected_options}")
 
         if selected_options:
             selected_text = ", ".join(selected_options)
             await save_user_data_to_db(user_id, "{{ node.variableName }}", selected_text)
-            logging.info(f"💾 ГЕНЕРАТОР DEBUG: Сохранили в БД: {{ node.variableName }} = {selected_text}")
+            logging.info(f"💾 Сохранили в БД: {{ node.variableName }} = {selected_text}")
         else:
-            logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Нет выбранных опций для сохранения")
+            logging.info(f"⚠️ Нет выбранных опций для сохранения")
 
+        # Переход к следующему узлу или завершение
 {% if node.continueButtonTarget and node.targetNode %}
         # Переход к следующему узлу: {{ node.continueButtonTarget }}
-        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Переходим к узлу '{{ node.continueButtonTarget }}'")
-        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Тип целевого узла: {{ node.targetNode.type or 'неизвестно' }}")
-        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: allowMultipleSelection: {{ node.targetNode.data.allowMultipleSelection or false }}")
-        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Есть ли кнопки: {{ node.targetNode.data.buttons|length or 0 }}")
-        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: keyboardType: {{ node.targetNode.data.keyboardType or 'нет' }}")
+        logging.info(f"🚀 Переходим к узлу '{{ node.continueButtonTarget }}'")
 
 {% if node.targetNode.data.allowMultipleSelection %}
-        # Узел {{ node.continueButtonTarget }} поддерживает множественный выбор - сохраняем состояние
-        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Инициализируем множественный выбор для узла {{ node.targetNode.id }}")
+        # Узел поддерживает множественный выбор
         if user_id not in user_data:
             user_data[user_id] = {}
         user_data[user_id]["multi_select_{{ node.targetNode.id }}"] = []
         user_data[user_id]["multi_select_node"] = "{{ node.targetNode.id }}"
         user_data[user_id]["multi_select_type"] = "{{ node.targetNode.data.keyboardType or 'inline' }}"
-        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Состояние множественного выбора установлено для узла {{ node.targetNode.id }}")
 {% endif %}
 
 {% if node.targetNode.type == 'message' %}
-        # Отправляем сообщение для следующего узла с ожиданием пользовательского ввода
+        # Отправляем сообщение
         text = {{ node.targetNode.data.messageText|format_python_text }}
 
-        # Инициализируем состояние множественного выбора для следующего узла
 {% if node.targetNode.data.allowMultipleSelection and node.targetNode.data.buttons and node.targetNode.data.buttons|length > 0 %}
         # Инициализируем состояние множественного выбора
         if user_id not in user_data:
@@ -97,13 +73,11 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
                 if isinstance(var_data, str) and var_data.strip():
                     saved_selections = [sel.strip() for sel in var_data.split(",") if sel.strip()]
 
-        # Инициализируем состояние с восстановленными значениями
         user_data[user_id]["multi_select_{{ node.targetNode.id }}"] = saved_selections.copy()
         user_data[user_id]["multi_select_node"] = "{{ node.targetNode.id }}"
         user_data[user_id]["multi_select_type"] = "{{ node.targetNode.data.keyboardType or 'reply' }}"
         user_data[user_id]["multi_select_variable"] = "{{ node.targetNode.data.multiSelectVariable or 'user_interests' }}"
 
-        # Генерируем клавиатуру в зависимости от типа
 {% if node.targetNode.data.keyboardType == 'reply' %}
         builder = ReplyKeyboardBuilder()
 {% for button in node.targetNode.data.buttons %}
@@ -114,7 +88,7 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
 {% endfor %}
 {% set completeBtn = node.targetNode.data.buttons|selectattr('action', 'equalto', 'complete')|first %}
 {% if completeBtn %}
-        builder.add(KeyboardButton(text="{{ completeBtn.text or node.targetNode.data.continueButtonText or 'Готово' }}"))
+        builder.add(KeyboardButton(text="{{ completeBtn.text or 'Готово' }}"))
 {% endif %}
         keyboard = builder.as_markup(resize_keyboard={{ node.targetNode.data.resizeKeyboard|to_python_boolean }}, one_time_keyboard={{ node.targetNode.data.oneTimeKeyboard|to_python_boolean }})
         await bot.send_message(user_id, text, reply_markup=keyboard)
@@ -128,16 +102,18 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
 {% endfor %}
 {% set completeBtn = node.targetNode.data.buttons|selectattr('action', 'equalto', 'complete')|first %}
 {% if completeBtn %}
-        builder.add(InlineKeyboardButton(text="{{ completeBtn.text or node.targetNode.data.continueButtonText or 'Готово' }}", callback_data="done_{{ node.targetNode.shortId or 'btn' }}"))
+        builder.add(InlineKeyboardButton(text="{{ completeBtn.text or 'Готово' }}", callback_data="done_{{ node.targetNode.shortId or 'btn' }}"))
 {% endif %}
         {{ node.targetNode.adjustCode or 'builder.adjust(2)' }}
         keyboard = builder.as_markup()
         await callback_query.message.answer(text, reply_markup=keyboard)
 {% endif %}
-        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено, ЗАВЕРШАЕМ функцию")
+        logging.info(f"🏁 Сообщение отправлено, ЗАВЕРШАЕМ функцию")
         return
-{% else %}
-        # Узел не message, просто вызываем обработчик
+{% endif %}
+
+{% if node.targetNode.type != 'message' %}
+        # Узел не message
 {% if node.targetNode.type == 'command' %}
         await handle_command_{{ node.targetNode.data.command|safe_name }}(callback_query.message)
 {% else %}
@@ -145,13 +121,12 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
 {% endif %}
         return
 {% endif %}
+
 {% else %}
         # Целевой узел не найден
-        logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Целевой узел не найден, отправляем простое сообщение")
+        logging.info(f"⚠️ Целевой узел не найден")
         await callback_query.message.answer("Переход завершен")
-        return
 {% endif %}
-        return
 
 {% endfor %}
 

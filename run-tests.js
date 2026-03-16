@@ -12,6 +12,8 @@ import { spec } from 'node:test/reporters';
 import { glob } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createWriteStream } from 'node:fs';
+import { PassThrough } from 'node:stream';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -35,7 +37,9 @@ const onlyIntegration = process.argv.includes('--integration');
 
 // Проверка флага --pattern (фильтр по имени файла)
 const patternIndex = process.argv.indexOf('--pattern');
-const filePattern = patternIndex !== -1 ? process.argv[patternIndex + 1] : null;
+const filePattern = patternIndex !== -1 
+  ? process.argv[patternIndex + 1] 
+  : process.argv.find(arg => arg.endsWith('.test.ts'));
 
 async function runTests() {
   const testFiles = [];
@@ -98,9 +102,21 @@ async function runTests() {
   console.log(`Найдено тестов: ${testFiles.length}`);
   console.log('Запуск тестов...\n');
 
+  // Создаём поток для записи в файл
+  const logStream = createWriteStream('test-output.txt', { encoding: 'utf8' });
+
+  // PassThrough stream для дублирования вывода
+  const teeStream = new PassThrough();
+
+  // Перенаправляем вывод из teeStream в консоль и файл
+  teeStream.on('data', (chunk) => {
+    process.stdout.write(chunk);
+    logStream.write(chunk);
+  });
+
   // Запускаем тесты через tsx для поддержки TypeScript
   const execArgv = ['--import', 'tsx/esm'];
-  
+
   // Добавляем флаг для покрытия если запрошено
   if (useCoverage) {
     console.log('📊 Сбор метрик покрытия...\n');
@@ -112,8 +128,8 @@ async function runTests() {
     execArgv
   });
 
-  // Выводим результаты
-  testRun.compose(new spec()).pipe(process.stdout);
+  // Выводим результаты через tee-поток
+  testRun.compose(new spec()).pipe(teeStream);
 
   // Ждём завершения
   return new Promise((resolve, reject) => {
@@ -130,6 +146,9 @@ async function runTests() {
 
     testRun.on('end', () => {
       console.log('\n✅ Все тесты завершены');
+      console.log('📄 Результаты сохранены в test-output.txt');
+      logStream.close();
+      teeStream.end();
       resolve(undefined);
     });
 

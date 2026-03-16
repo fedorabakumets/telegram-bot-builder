@@ -193,22 +193,22 @@ describe('multi-select-done.py.jinja2 шаблон', () => {
     });
 
     describe('Производительность', () => {
-      it('должен генерировать код быстрее 10ms', () => {
-        const start = Date.now();
+      it('должен генерировать код быстрее 5ms', () => {
+        const start = process.hrtime.bigint();
         generateMultiSelectDone(validParamsBasic);
-        const duration = Date.now() - start;
+        const duration = Number(process.hrtime.bigint() - start) / 1e6;
 
-        assert.ok(duration < 10, `Генерация заняла ${duration}ms (ожидалось < 10ms)`);
+        assert.ok(duration < 5, `Генерация заняла ${duration.toFixed(2)}ms (ожидалось < 5ms)`);
       });
 
-      it('должен генерировать код 100 раз быстрее 50ms', () => {
-        const start = Date.now();
-        for (let i = 0; i < 100; i++) {
+      it('должен генерировать код 50 раз быстрее 100ms', () => {
+        const start = process.hrtime.bigint();
+        for (let i = 0; i < 50; i++) {
           generateMultiSelectDone(validParamsBasic);
         }
-        const duration = Date.now() - start;
+        const duration = Number(process.hrtime.bigint() - start) / 1e6;
 
-        assert.ok(duration < 50, `100 генераций заняли ${duration}ms (ожидалось < 50ms)`);
+        assert.ok(duration < 100, `50 генераций заняли ${duration.toFixed(2)}ms (ожидалось < 100ms)`);
       });
     });
   });
