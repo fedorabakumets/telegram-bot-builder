@@ -48,10 +48,9 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
         else:
             logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Нет выбранных опций для сохранения")
 
-{% if node.continueButtonTarget %}
+{% if node.continueButtonTarget and node.targetNode %}
         # Переход к следующему узлу: {{ node.continueButtonTarget }}
         logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Переходим к узлу '{{ node.continueButtonTarget }}'")
-{% if node.targetNode %}
         logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Тип целевого узла: {{ node.targetNode.type or 'неизвестно' }}")
         logging.info(f"🚀 ГЕНЕРАТОР DEBUG: allowMultipleSelection: {{ node.targetNode.data.allowMultipleSelection or false }}")
         logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Есть ли кнопки: {{ node.targetNode.data.buttons|length or 0 }}")
@@ -104,65 +103,48 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
         user_data[user_id]["multi_select_type"] = "{{ node.targetNode.data.keyboardType or 'reply' }}"
         user_data[user_id]["multi_select_variable"] = "{{ node.targetNode.data.multiSelectVariable or 'user_interests' }}"
 
+        # Генерируем клавиатуру в зависимости от типа
 {% if node.targetNode.data.keyboardType == 'reply' %}
         builder = ReplyKeyboardBuilder()
 {% for button in node.targetNode.data.buttons %}
 {% if button.action == 'selection' %}
-        # Кнопка выбора: {{ button.text|e }}
 {% set btnText = button.text|escape_python_string %}
         builder.add(KeyboardButton(text=('✅ ' if {{ btnText }} in user_data[user_id]['multi_select_{{ node.targetNode.id }}'] else '') + {{ btnText }}))
 {% endif %}
 {% endfor %}
-{% if node.targetNode.data.buttons %}
 {% set completeBtn = node.targetNode.data.buttons|selectattr('action', 'equalto', 'complete')|first %}
 {% if completeBtn %}
         builder.add(KeyboardButton(text="{{ completeBtn.text or node.targetNode.data.continueButtonText or 'Готово' }}"))
 {% endif %}
-{% endif %}
         keyboard = builder.as_markup(resize_keyboard={{ node.targetNode.data.resizeKeyboard|to_python_boolean }}, one_time_keyboard={{ node.targetNode.data.oneTimeKeyboard|to_python_boolean }})
-
         await bot.send_message(user_id, text, reply_markup=keyboard)
 {% else %}
         builder = InlineKeyboardBuilder()
 {% for button in node.targetNode.data.buttons %}
 {% if button.action == 'selection' %}
-        # Кнопка с галочкой: {{ button.text|e }}
 {% set btnText = button.text|escape_python_string %}
         builder.add(InlineKeyboardButton(text=('✅ ' if {{ btnText }} in user_data[user_id]['multi_select_{{ node.targetNode.id }}'] else '') + {{ btnText }}, callback_data="{{ button.callbackData or 'btn' }}"))
 {% endif %}
 {% endfor %}
-{% if node.targetNode.data.buttons %}
 {% set completeBtn = node.targetNode.data.buttons|selectattr('action', 'equalto', 'complete')|first %}
 {% if completeBtn %}
         builder.add(InlineKeyboardButton(text="{{ completeBtn.text or node.targetNode.data.continueButtonText or 'Готово' }}", callback_data="done_{{ node.targetNode.shortId or 'btn' }}"))
 {% endif %}
-{% endif %}
         {{ node.targetNode.adjustCode or 'builder.adjust(2)' }}
         keyboard = builder.as_markup()
-
         await callback_query.message.answer(text, reply_markup=keyboard)
 {% endif %}
         logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено, ЗАВЕРШАЕМ функцию")
         return
 {% else %}
-{% if node.targetNode.data.keyboardType == "inline" and node.targetNode.data.buttons and node.targetNode.data.buttons|length > 0 %}
-        # Добавляем клавиатуру для целевого узла
-        # Загружаем пользовательские данные для клавиатуры
-        user_vars = await get_user_from_db(user_id)
-        if not user_vars:
-            user_vars = user_data.get(user_id, {})
-        if not isinstance(user_vars, dict):
-            user_vars = {}
-
-        {{ node.targetNode.keyboardCode|indent(8) }}
-        await callback_query.message.answer(text, reply_markup=keyboard)
-        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено С КЛАВИАТУРОЙ для узла {{ node.targetNode.id }}")
+        # Узел не message, просто вызываем обработчик
+{% if node.targetNode.type == 'command' %}
+        await handle_command_{{ node.targetNode.data.command|safe_name }}(callback_query.message)
 {% else %}
-        # Отправляем только сообщение без клавиатуры
-        await callback_query.message.answer(text)
-        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено БЕЗ КЛАВИАТУРОЙ для узла {{ node.targetNode.id }}")
+        await handle_callback_{{ node.targetNode.id|safe_name }}(callback_query)
 {% endif %}
         return
+{% endif %}
 {% else %}
         # Целевой узел не найден
         logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Целевой узел не найден, отправляем простое сообщение")

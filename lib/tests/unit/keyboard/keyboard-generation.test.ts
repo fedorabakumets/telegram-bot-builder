@@ -5,9 +5,7 @@
 
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
-import { generateKeyboard } from '../../../bot-generator/Keyboard';
-import { generateReplyKeyboardCode } from '../../../bot-generator/Keyboard';
-import { generateInlineKeyboardCode } from '../../../bot-generator/Keyboard';
+import { generateKeyboard } from '../../../templates/keyboard';
 import { hasMultiSelectNodes } from '../../../bot-generator/Keyboard/hasMultiSelectNodes';
 import { identifyNodesRequiringMultiSelectLogic } from '../../../bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic';
 import type { Node } from '@shared/schema';
@@ -556,7 +554,7 @@ describe('KeyboardGeneration (new features)', () => {
     });
   });
 
-  describe('generateInlineKeyboardCode', () => {
+  describe('generateKeyboard для inline клавиатуры', () => {
     it('должен генерировать код для inline клавиатуры', () => {
       // Arrange
       const node: Node = {
@@ -584,7 +582,13 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateInlineKeyboardCode(node.data.buttons || [], '    ', node.id, node.data, ['test_1', 'next']);
+      const code = generateKeyboard({
+        keyboardType: 'inline',
+        buttons: node.data.buttons || [],
+        nodeId: node.id,
+        allNodeIds: ['test_1', 'next'],
+        indentLevel: '    ',
+      });
 
       // Assert
       assert.ok(code);
@@ -613,7 +617,13 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateInlineKeyboardCode(node.data.buttons || [], '    ', node.id, node.data, ['test_1']);
+      const code = generateKeyboard({
+        keyboardType: 'inline',
+        buttons: node.data.buttons || [],
+        nodeId: node.id,
+        allNodeIds: ['test_1'],
+        indentLevel: '    ',
+      });
 
       // Assert
       assert.ok(code);
@@ -644,7 +654,14 @@ describe('KeyboardGeneration (new features)', () => {
       } as unknown as Node;
 
       // Act
-      const code = generateInlineKeyboardCode(node.data.buttons || [], '    ', node.id, node.data, ['test_1', 'final']);
+      const code = generateKeyboard({
+        keyboardType: 'inline',
+        buttons: node.data.buttons || [],
+        nodeId: node.id,
+        allNodeIds: ['test_1', 'final'],
+        indentLevel: '    ',
+        allowMultipleSelection: true,
+      });
 
       // Assert
       assert.ok(code);

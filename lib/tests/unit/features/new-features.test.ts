@@ -14,7 +14,7 @@ import {
 } from '../../helpers/test-fixtures';
 import { generateAppendVariableSaveCode } from '../../../bot-generator/user-input/generate-append-variable-save';
 import { generateVariableFilterCode } from '../../../bot-generator/user-input/generate-variable-filters';
-import { generateKeyboard } from '../../../bot-generator/Keyboard';
+import { generateKeyboard } from '../../../templates/keyboard';
 import { handleNodeNavigation } from '../../../bot-generator/node-navigation/handle-node-navigation';
 
 describe('NewFeatures (appendVariable, variableFilters, complete)', () => {
