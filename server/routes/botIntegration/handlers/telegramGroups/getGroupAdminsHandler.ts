@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import {
     analyzeTelegramError,
     getErrorStatusCode
@@ -40,7 +41,7 @@ export async function getGroupAdminsHandler(req: Request, res: Response): Promis
         }
 
         const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getChatAdministrators`;
-        const response = await fetch(telegramApiUrl, {
+        const response = await fetchWithProxy(telegramApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: groupId })
@@ -56,7 +57,7 @@ export async function getGroupAdminsHandler(req: Request, res: Response): Promis
             return;
         }
 
-        const botUser = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getMe`);
+        const botUser = await fetchWithProxy(`https://api.telegram.org/bot${defaultToken.token}/getMe`);
         const botInfo = await botUser.json();
 
         const botAdminRights = botUser.ok && result.result

@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import {
     analyzeTelegramError,
     getErrorStatusCode
@@ -42,7 +43,7 @@ export async function getGroupInfoHandler(req: Request, res: Response): Promise<
         }
 
         const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getChat`;
-        const response = await fetch(telegramApiUrl, {
+        const response = await fetchWithProxy(telegramApiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -65,7 +66,7 @@ export async function getGroupInfoHandler(req: Request, res: Response): Promise<
         let avatarUrl = null;
         if (chatInfo.photo && chatInfo.photo.big_file_id) {
             try {
-                const fileResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getFile`, {
+                const fileResponse = await fetchWithProxy(`https://api.telegram.org/bot${defaultToken.token}/getFile`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

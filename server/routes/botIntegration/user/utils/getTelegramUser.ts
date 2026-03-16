@@ -4,7 +4,7 @@
  * @module botIntegration/user/utils/getTelegramUser
  */
 
-import { getTelegramProxyAgent } from "../../../../utils/telegram-proxy";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /**
  * Результат получения данных пользователя
@@ -28,17 +28,12 @@ import { getTelegramProxyAgent } from "../../../../utils/telegram-proxy";
  */
 export async function getTelegramUser(token: string, userId: string): Promise<{ success: boolean; data?: any; error?: string }> {
     const maskedToken = token.length > 12 ? `${token.slice(0, 8)}...${token.slice(-4)}` : '***';
-    const proxyAgent = getTelegramProxyAgent();
-    const fetchOptions = proxyAgent ? { agent: proxyAgent } : {};
     const startTime = Date.now();
     
     console.log(`[Telegram API] Getting user ${userId}, token: ${maskedToken}`);
-    if (proxyAgent) {
-        console.log(`[Telegram API] Using proxy agent`);
-    }
     
     try {
-        const userResponse = await fetch(`https://api.telegram.org/bot${token}/getChat`, {
+        const userResponse = await fetchWithProxy(`https://api.telegram.org/bot${token}/getChat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -46,8 +41,7 @@ export async function getTelegramUser(token: string, userId: string): Promise<{ 
             body: JSON.stringify({
                 chat_id: userId
             }),
-            signal: AbortSignal.timeout(10000),
-            ...fetchOptions
+            signal: AbortSignal.timeout(10000)
         });
 
         const duration = Date.now() - startTime;

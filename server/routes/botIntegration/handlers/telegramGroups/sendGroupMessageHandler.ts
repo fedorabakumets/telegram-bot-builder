@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import {
     analyzeTelegramError,
     getErrorStatusCode
@@ -39,7 +40,7 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
         }
 
         const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/sendMessage`;
-        const response = await fetch(telegramApiUrl, {
+        const response = await fetchWithProxy(telegramApiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

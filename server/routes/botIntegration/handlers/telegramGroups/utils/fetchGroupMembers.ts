@@ -7,6 +7,8 @@
  * @module botIntegration/handlers/telegramGroups/utils/fetchGroupMembers
  */
 
+import { fetchWithProxy } from "./../../../../utils/telegram-proxy";
+
 /**
  * Получает список администраторов группы
  *
@@ -16,7 +18,7 @@
  * @returns {Promise<any>} Список участников
  */
 export async function fetchGroupMembers(token: string, groupId: string) {
-    const response = await fetch(`https://api.telegram.org/bot${token}/getChatAdministrators`, {
+    const response = await fetchWithProxy(`https://api.telegram.org/bot${token}/getChatAdministrators`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: groupId })

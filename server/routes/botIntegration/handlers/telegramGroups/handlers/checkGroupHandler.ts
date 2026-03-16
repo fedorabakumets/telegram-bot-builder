@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../../storages/storage";
+import { fetchWithProxy } from "../../../../../utils/telegram-proxy";
 import { isLargeGroup, createLargeGroupResponse } from "../utils/checkGroupSize";
 
 /**
@@ -35,7 +36,7 @@ export async function checkGroupHandler(req: Request, res: Response): Promise<an
             return null;
         }
 
-        const chatInfoResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChat`, {
+        const chatInfoResponse = await fetchWithProxy(`https://api.telegram.org/bot${defaultToken.token}/getChat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: groupId })
