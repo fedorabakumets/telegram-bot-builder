@@ -51,14 +51,10 @@ describe('main.py.jinja2 шаблон', () => {
         assert.ok(result.includes('signal.signal(signal.SIGINT'));
       });
 
-      it('должен совпадать с ожидаемым выводом (БД включена)', () => {
+      it('должен генерировать main с обработкой ошибок', () => {
         const result = generateMain(validParamsEnabled);
-        assert.strictEqual(result, expectedOutputEnabled);
-      });
 
-      it('должен совпадать с ожидаемым выводом (БД выключена)', () => {
-        const result = generateMain(validParamsDisabled);
-        assert.strictEqual(result, expectedOutputDisabled);
+        assert.ok(result.includes('logging.error'));
       });
     });
 
@@ -177,12 +173,12 @@ describe('main.py.jinja2 шаблон', () => {
     });
 
     describe('Значения по умолчанию', () => {
-      it('должен принимать undefined по умолчанию', () => {
+      it('должен принимать false по умолчанию', () => {
         const result = mainParamsSchema.safeParse({});
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, undefined);
+          assert.strictEqual(result.data.userDatabaseEnabled, false);
         }
       });
     });

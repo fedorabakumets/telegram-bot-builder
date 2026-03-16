@@ -10,7 +10,7 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateAdminHandler, generateCommandHandler, generateStartHandler } from './generate-new-node-handlers';
+import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './generate-new-node-handlers';
 import { generateBroadcastClientHandler } from '../bot-generator/Client/generateBroadcastClientHandler';
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
@@ -55,14 +55,14 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     pin_message: generatePinMessageHandler,
     unpin_message: generateUnpinMessageHandler,
     delete_message: generateDeleteMessageHandler,
-    ban_user: generateAdminHandler,
-    unban_user: generateAdminHandler,
-    mute_user: generateAdminHandler,
-    unmute_user: generateAdminHandler,
-    kick_user: generateAdminHandler,
-    promote_user: generateAdminHandler,
-    demote_user: generateAdminHandler,
-    admin_rights: generateAdminHandler,
+    ban_user: generateAnimationHandler,
+    unban_user: generateAnimationHandler,
+    mute_user: generateAnimationHandler,
+    unmute_user: generateAnimationHandler,
+    kick_user: generateAnimationHandler,
+    promote_user: generateAnimationHandler,
+    demote_user: generateAnimationHandler,
+    admin_rights: generateAnimationHandler,
     broadcast: (node) => {
       const apiType = node.data?.broadcastApiType || 'bot';
       return apiType === 'client'

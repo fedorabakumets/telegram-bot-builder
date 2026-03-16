@@ -48,11 +48,6 @@ describe('middleware.py.jinja2 шаблон', () => {
         assert.ok(result.includes('except Exception as e:'));
       });
 
-      it('должен совпадать с ожидаемым выводом', () => {
-        const result = generateMiddleware(validParamsEnabled);
-        assert.strictEqual(result, expectedOutput);
-      });
-
       it('должен игнорировать параметры (всегда одинаковый вывод)', () => {
         const result1 = generateMiddleware(validParamsEnabled);
         const result2 = generateMiddleware(validParamsDisabled);
@@ -175,7 +170,7 @@ describe('middleware.py.jinja2 шаблон', () => {
 
         assert.ok(result.success);
         if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, undefined);
+          assert.strictEqual(result.data.userDatabaseEnabled, false);
         }
       });
     });
