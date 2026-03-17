@@ -8,7 +8,8 @@ import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } fr
 import { generateUniversalVariableReplacement } from '../utils';
 import { hasInputCollection } from '../utils/hasInputCollection';
 import { hasAutoTransitions } from '../utils/hasAutoTransitions';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateWaitingStateCheck, generateDatabaseVarsGet, generateWaitingConfigExtract, generateMediaTypeCheck, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipFakeCallbackCompletion, generateSkipNavigation, generateButtonResponseSave, generateButtonResponseCleanup, generateInvalidChoiceHandler, generateMultiselectCheck, generateMinLengthValidation, generateMaxLengthValidation, generateEmailValidation, generateNumberValidation, generatePhoneValidation, generateResponseSave, generateAutoNavigationLoop, generateSkipTargetHandlerFunction } from './index';
+import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipFakeCallbackCompletion, generateSkipNavigation, generateButtonResponseSave, generateButtonResponseCleanup, generateInvalidChoiceHandler, generateMultiselectCheck, generateResponseSave, generateAutoNavigationLoop, generateSkipTargetHandlerFunction } from './index';
+import { generateHandleUserInput } from '../../templates/handle-user-input';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -203,18 +204,8 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
      * Универсальная система ожидания ввода
      * Проверяет состояние ожидания ввода и обрабатывает различные типы входных данных
      */
-    code += generateWaitingStateCheck('    ');
-
-    // Добавляем получение переменных из БД перед обработкой
-    code += generateDatabaseVarsGet('        ');
-    code += '        \n';
-
-    /**
-     * Извлечение конфигурации ожидания ввода
-     */
-    code += '        # Извлекаем конфигурацию из waiting_config (dict)\n';
-    code += generateWaitingConfigExtract('        ');
-    code += generateMediaTypeCheck('        ');
+    // Проверка waiting_for_input, извлечение конфигурации, валидация и очистка состояния
+    code += generateHandleUserInput({ indentLevel: '    ' });
 
     /**
      * Обработка кнопок skipDataCollection в универсальной системе
@@ -230,28 +221,6 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '        \n';
     code += '        user_text = message.text\n';
     code += '        \n';
-
-    /**
-     * Валидация входных данных
-     * Проверяет формат email, номера телефона, числовых значений
-     * и ограничения по длине текста
-     */
-    code += '        # Валидация ввода\n';
-
-    /**
-     * Валидация длины текста
-     * Проверяет минимальную и максимальную длину введенного текста
-     */
-    code += generateMinLengthValidation('        ');
-    code += generateMaxLengthValidation('        ');
-
-    /**
-     * Валидация типа ввода
-     * Проверяет соответствие введенных данных указанному типу (email, phone, number)
-     */
-    code += generateEmailValidation('        ');
-    code += generateNumberValidation('        ');
-    code += generatePhoneValidation('        ');
 
     /**
      * Подготовка response_data для сохранения

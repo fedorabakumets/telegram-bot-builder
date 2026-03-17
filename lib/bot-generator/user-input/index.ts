@@ -15,16 +15,11 @@ export { generateFakeMessageCreation, generateCommandHandlers, type CommandHandl
 export { generateGotoNavigation } from './generate-goto-navigation';
 export { generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, type MediaType } from './generate-media-skip-check';
 export { generateFakeCallbackCreation, generateSkipTargetNavigation } from './generate-media-skip-navigation';
-export { generateWaitingStateCheck, generateDatabaseVarsGet } from './generate-waiting-state-check';
-export { generateWaitingConfigExtract, generateMediaTypeCheck } from './generate-waiting-config-extract';
 export { generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipFakeCallbackCompletion, generateSkipNavigation } from './generate-skip-buttons-check';
 export { generateSkipTargetHandlerFunction } from './generate-skip-navigation';
 export { generateButtonResponseSave } from './generate-button-response-save';
 export { generateButtonResponseCleanup } from './generate-button-response-cleanup';
 export { generateInvalidChoiceHandler } from './generate-invalid-choice-handler';
 export { generateMultiselectCheck } from './generate-multiselect-check';
-export { generateMinLengthValidation, generateMaxLengthValidation } from './generate-text-length-validation';
-export { generateEmailValidation, generateNumberValidation, generatePhoneValidation } from './generate-input-type-validation';
 export { generateResponseSave } from './generate-response-save';
-export { generateWaitingCleanup } from './generate-waiting-cleanup';
 export { generateAutoNavigationLoop } from './generate-auto-navigation-loop';

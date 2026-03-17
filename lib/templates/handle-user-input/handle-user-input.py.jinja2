@@ -1,0 +1,86 @@
+{#
+  Шаблон runtime-обработки пользовательского ввода
+
+  @fileoverview Генерирует Python-код для обработки уже полученного ввода:
+    1. Проверка состояния waiting_for_input
+    2. Извлечение конфигурации из waiting_config
+    3. Проверка медиа-типа (игнорировать текст если ждём медиа)
+    4. Валидация длины текста (min/max)
+    5. Валидация типа ввода (email/phone/number)
+    6. Очистка состояния ожидания
+    7. Логирование
+
+  @param {string} indentLevel - базовый отступ (по умолчанию '    ')
+#}
+
+{% set ind = indentLevel or '    ' %}
+{{ ind }}# Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)
+{{ ind }}has_waiting_state = user_id in user_data and "waiting_for_input" in user_data[user_id]
+{{ ind }}logging.info(f"DEBUG: Получен текст {message.text}, состояние ожидания: {has_waiting_state}")
+{{ ind }}if user_id in user_data and "waiting_for_input" in user_data[user_id]:
+{{ ind }}    # Обрабатываем ввод через универсальную систему
+{{ ind }}    waiting_config = user_data[user_id]["waiting_for_input"]
+{{ ind }}    logging.info(f"DEBUG: waiting_config = {waiting_config}")
+{{ ind }}    logging.info(f"DEBUG: waiting_node_id = {waiting_config.get('node_id') if isinstance(waiting_config, dict) else waiting_config}")
+{{ ind }}    
+{{ ind }}    # Проверяем, что пользователь все еще находится в состоянии ожидания ввода
+{{ ind }}    if not waiting_config:
+{{ ind }}        logging.error(f"❌ waiting_config пустой! user_data[user_id] = {user_data.get(user_id)}")
+{{ ind }}        return  # Состояние ожидания пустое, игнорируем
+{{ ind }}    
+{{ ind }}    # Получаем переменные из базы данных (user_ids, user_ids_count)
+{{ ind }}    # generateDatabaseVariablesCode будет вызван отдельно
+{{ ind }}    
+{{ ind }}    # Извлекаем конфигурацию из waiting_config (dict)
+{{ ind }}    waiting_node_id = waiting_config.get("node_id")
+{{ ind }}    input_type = waiting_config.get("type", "text")
+{{ ind }}    variable_name = waiting_config.get("variable", "user_response")
+{{ ind }}    save_to_database = waiting_config.get("save_to_database", False)
+{{ ind }}    min_length = waiting_config.get("min_length", 0)
+{{ ind }}    max_length = waiting_config.get("max_length", 0)
+{{ ind }}    next_node_id = waiting_config.get("next_node_id")
+{{ ind }}    appendVariable = waiting_config.get("appendVariable", False)
+{{ ind }}    logging.info(f"DEBUG: input_type = {input_type}, variable_name = {variable_name}, next_node_id = {next_node_id}, appendVariable = {appendVariable}")
+{{ ind }}    # Проверяем, является ли тип ввода медиа (фото, видео, аудио, документ)
+{{ ind }}    # Если да, то текстовый обработчик не должен его обрабатывать
+{{ ind }}    if input_type in ["photo", "video", "audio", "document"]:
+{{ ind }}        logging.info(f"Текстовый ввод от пользователя {user_id} проигнорирован - ожидается медиа ({input_type})")
+{{ ind }}        return
+{{ ind }}    # Валидация длины
+{{ ind }}    if min_length > 0 and len(user_text) < min_length:
+{{ ind }}        retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
+{{ ind }}        await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")
+{{ ind }}        return
+{{ ind }}    if max_length > 0 and len(user_text) > max_length:
+{{ ind }}        retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
+{{ ind }}        await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")
+{{ ind }}        return
+{{ ind }}    
+{{ ind }}    # Валидация типа ввода
+{{ ind }}    if input_type == "email":
+{{ ind }}        import re
+{{ ind }}        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+{{ ind }}        if not re.match(email_pattern, user_text):
+{{ ind }}            retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
+{{ ind }}            await message.answer(f"❌ Неверный формат email. {retry_message}")
+{{ ind }}            return
+{{ ind }}    elif input_type == "number":
+{{ ind }}        try:
+{{ ind }}            float(user_text)
+{{ ind }}        except ValueError:
+{{ ind }}            retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
+{{ ind }}            await message.answer(f"❌ Введите корректное число. {retry_message}")
+{{ ind }}            return
+{{ ind }}    elif input_type == "phone":
+{{ ind }}        import re
+{{ ind }}        phone_pattern = r"^[+]?[0-9\s\-\(\)]{10,}$"
+{{ ind }}        if not re.match(phone_pattern, user_text):
+{{ ind }}            retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
+{{ ind }}            await message.answer(f"❌ Неверный формат телефона. {retry_message}")
+{{ ind }}            return
+{{ ind }}    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем старое состояние ожидания перед навигацией
+{{ ind }}    if "waiting_for_input" in user_data[user_id]:
+{{ ind }}        del user_data[user_id]["waiting_for_input"]
+{{ ind }}    
+{{ ind }}    logging.info(f"✅ Переход к следующему узлу выполнен успешно")
+{{ ind }}    logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")
