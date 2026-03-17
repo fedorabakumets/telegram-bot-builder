@@ -87,7 +87,8 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
         builder.add(KeyboardButton(text=('✅ ' if {{ btnText }} in user_data[user_id]['multi_select_{{ node.targetNode.id }}'] else '') + {{ btnText }}))
 {% endif %}
 {% endfor %}
-{% set completeBtn = node.targetNode.data.buttons|selectattr('action', 'equalto', 'complete')|first %}
+{% set completeBtn = null %}
+{% for button in node.targetNode.data.buttons %}{% if button.action == 'complete' %}{% set completeBtn = button %}{% endif %}{% endfor %}
 {% if completeBtn %}
         builder.add(KeyboardButton(text="{{ completeBtn.text or 'Готово' }}"))
 {% endif %}
@@ -101,7 +102,8 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery):
         builder.add(InlineKeyboardButton(text=('✅ ' if {{ btnText }} in user_data[user_id]['multi_select_{{ node.targetNode.id }}'] else '') + {{ btnText }}, callback_data="{{ button.callbackData or 'btn' }}"))
 {% endif %}
 {% endfor %}
-{% set completeBtn = node.targetNode.data.buttons|selectattr('action', 'equalto', 'complete')|first %}
+{% set completeBtn = null %}
+{% for button in node.targetNode.data.buttons %}{% if button.action == 'complete' %}{% set completeBtn = button %}{% endif %}{% endfor %}
 {% if completeBtn %}
         builder.add(InlineKeyboardButton(text="{{ completeBtn.text or 'Готово' }}", callback_data="done_{{ node.targetNode.shortId or 'btn' }}"))
 {% endif %}

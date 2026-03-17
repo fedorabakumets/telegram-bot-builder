@@ -38,5 +38,5 @@ export function generateMessage(params: MessageTemplateParams): string {
     oneTimeKeyboard: params.oneTimeKeyboard ?? false,
     resizeKeyboard: params.resizeKeyboard ?? true,
   });
-  return renderPartialTemplate('message/message.py.jinja2', validated);
+  return renderPartialTemplate('message/message.py.jinja2', { ...validated, handlerContext: 'callback' });
 }

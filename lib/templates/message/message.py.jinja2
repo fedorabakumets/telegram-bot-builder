@@ -146,13 +146,18 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {# Клавиатура #}
 {%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
 
-    {# Отправка сообщения #}
+    {# Отправка медиафайлов (attachedMedia) #}
+    {%- if attachedMedia and attachedMedia|length > 0 %}
+{%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
+    {%- else %}
+    {# Отправка сообщения без медиа #}
     {%- if formatMode == 'html' %}
     await callback_query.message.answer(text, reply_markup=keyboard, parse_mode="HTML")
     {%- elif formatMode == 'markdown' %}
     await callback_query.message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
     {%- else %}
     await callback_query.message.answer(text, reply_markup=keyboard)
+    {%- endif %}
     {%- endif %}
 
     {# Автопереход #}

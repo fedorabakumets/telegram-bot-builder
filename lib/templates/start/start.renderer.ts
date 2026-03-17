@@ -30,5 +30,5 @@ export function generateStart(params: StartTemplateParams): string {
     originalCommand: '/start',
   }));
 
-  return renderPartialTemplate('start/start.py.jinja2', { ...validated, synonymEntries });
+  return renderPartialTemplate('start/start.py.jinja2', { ...validated, synonymEntries, handlerContext: 'message' });
 }

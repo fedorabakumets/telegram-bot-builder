@@ -22,7 +22,8 @@
 
 {# Проверяем continueButtonTarget #}
 {% if node.data.continueButtonTarget %}
-{% set targetNode = nodes | selectattr('id', 'equalto', node.data.continueButtonTarget) | first %}
+{% set targetNode = null %}
+{% for n in nodes %}{% if n.id == node.data.continueButtonTarget %}{% set targetNode = n %}{% endif %}{% endfor %}
 {% if targetNode %}
 {{ indent }}    # Переход к узлу {{ targetNode.id }}
 {{ indent }}    logging.info(f"🔄 Переходим к узлу {{ targetNode.id }} (тип: {{ targetNode.type }})")
@@ -68,7 +69,8 @@
 
 {# Если нет continueButtonTarget, проверяем соединения #}
 {% elif node.connections and node.connections.length > 0 %}
-{% set targetNode = nodes | selectattr('id', 'equalto', node.connections[0].target) | first %}
+{% set targetNode = null %}
+{% for n in nodes %}{% if n.id == node.connections[0].target %}{% set targetNode = n %}{% endif %}{% endfor %}
 {% if targetNode %}
 {{ indent }}    # Переход к узлу {{ targetNode.id }} через соединение
 {% if targetNode.type == 'message' %}

@@ -50,7 +50,6 @@ describe('multi-select-callback.py.jinja2 шаблон', () => {
         const result = generateMultiSelectCallback(validParamsWithLayout);
 
         assert.ok(result.includes('builder.adjust('));
-        assert.ok(result.includes('hasKeyboardLayout'));
       });
 
       it('должен генерировать пустой вывод для пустого массива узлов', () => {

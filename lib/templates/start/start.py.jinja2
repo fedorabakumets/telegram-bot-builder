@@ -144,7 +144,11 @@ async def start_handler(message: types.Message):
     {# Клавиатура #}
 {%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
 
-    {# Отправка сообщения #}
+    {# Отправка медиафайлов (attachedMedia) #}
+{%- if attachedMedia and attachedMedia|length > 0 %}
+{%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
+{%- else %}
+    {# Отправка сообщения без медиа #}
 {%- if formatMode == 'html' %}
 
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
@@ -154,6 +158,7 @@ async def start_handler(message: types.Message):
 {%- else %}
 
     await message.answer(text, reply_markup=keyboard)
+{%- endif %}
 {%- endif %}
 
 {%- if enableAutoTransition and autoTransitionTo %}

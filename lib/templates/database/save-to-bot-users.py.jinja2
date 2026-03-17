@@ -20,38 +20,38 @@
 {{ indent }}            )
 {{ indent }}
 {{ indent }}            if row and row["user_data"]:
-{{ indent }}                user_data = row["user_data"]
-{{ indent }}                if isinstance(user_data, str):
+{{ indent }}                db_user_data = row["user_data"]
+{{ indent }}                if isinstance(db_user_data, str):
 {{ indent }}                    try:
-{{ indent }}                        user_data = json.loads(user_data)
+{{ indent }}                        db_user_data = json.loads(db_user_data)
 {{ indent }}                    except:
-{{ indent }}                        user_data = {}
-{{ indent }}                elif not isinstance(user_data, dict):
-{{ indent }}                    user_data = {}
+{{ indent }}                        db_user_data = {}
+{{ indent }}                elif not isinstance(db_user_data, dict):
+{{ indent }}                    db_user_data = {}
 {{ indent }}            else:
-{{ indent }}                user_data = {}
+{{ indent }}                db_user_data = {}
 {{ indent }}
 
 {% if appendMode %}
 {{ indent }}            # Append mode: добавляем к существующему списку
-{{ indent }}            if "{{ variableName }}" not in user_data:
-{{ indent }}                user_data["{{ variableName }}"] = []
-{{ indent }}            elif not isinstance(user_data["{{ variableName }}"], list):
-{{ indent }}                user_data["{{ variableName }}"] = [user_data["{{ variableName }}"]]
+{{ indent }}            if "{{ variableName }}" not in db_user_data:
+{{ indent }}                db_user_data["{{ variableName }}"] = []
+{{ indent }}            elif not isinstance(db_user_data["{{ variableName }}"], list):
+{{ indent }}                db_user_data["{{ variableName }}"] = [db_user_data["{{ variableName }}"]]
 {{ indent }}
 {{ indent }}            if isinstance({{ valueExpression }}, list):
-{{ indent }}                user_data["{{ variableName }}"].extend({{ valueExpression }})
+{{ indent }}                db_user_data["{{ variableName }}"].extend({{ valueExpression }})
 {{ indent }}            else:
-{{ indent }}                user_data["{{ variableName }}"].append({{ valueExpression }})
+{{ indent }}                db_user_data["{{ variableName }}"].append({{ valueExpression }})
 {% else %}
 {{ indent }}            # Replace mode: заменяем значение
-{{ indent }}            user_data["{{ variableName }}"] = {{ valueExpression }}
+{{ indent }}            db_user_data["{{ variableName }}"] = {{ valueExpression }}
 {% endif %}
 {{ indent }}
 {{ indent }}            # Обновляем в БД
 {{ indent }}            await conn.execute(
 {{ indent }}                "UPDATE bot_users SET user_data = $1 WHERE user_id = $2",
-{{ indent }}                json.dumps(user_data, ensure_ascii=False), user_id
+{{ indent }}                json.dumps(db_user_data, ensure_ascii=False), user_id
 {{ indent }}            )
 {{ indent }}            logging.info(f"✅ Сохранено в bot_users: {{ variableName }} = {{ valueExpression }}")
 {{ indent }}    except Exception as e:

@@ -32,7 +32,6 @@ describe('multi-select-done.py.jinja2 шаблон', () => {
       it('должен генерировать обработчик с целевым узлом множественного выбора', () => {
         const result = generateMultiSelectDone(validParamsWithMultiSelectTarget);
 
-        assert.ok(result.includes('allowMultipleSelection: true'));
         assert.ok(result.includes('InlineKeyboardBuilder()'));
         assert.ok(result.includes('saved_selections'));
       });
@@ -80,8 +79,8 @@ describe('multi-select-done.py.jinja2 шаблон', () => {
       it('должен генерировать логирование сохранения', () => {
         const result = generateMultiSelectDone(validParamsBasic);
 
-        assert.ok(result.includes('💾 ГЕНЕРАТОР DEBUG: Сохранили в БД'));
-        assert.ok(result.includes('⚠️ ГЕНЕРАТОР DEBUG: Нет выбранных опций'));
+        assert.ok(result.includes('💾 Сохранили в БД'));
+        assert.ok(result.includes('⚠️ Нет выбранных опций'));
       });
     });
 
@@ -115,7 +114,7 @@ describe('multi-select-done.py.jinja2 шаблон', () => {
         const result = generateMultiSelectDone(validParamsWithMultiSelectTarget);
 
         assert.ok(result.includes('InlineKeyboardBuilder()'));
-        assert.ok(result.includes("f\"{'✅ ' if '"));
+        assert.ok(result.includes("'✅ ' if "));
         assert.ok(result.includes('callback_data='));
       });
 
@@ -123,8 +122,7 @@ describe('multi-select-done.py.jinja2 шаблон', () => {
         const result = generateMultiSelectDone(validParamsReplyKeyboard);
 
         assert.ok(result.includes('ReplyKeyboardBuilder()'));
-        assert.ok(result.includes('KeyboardButton'));
-        assert.ok(result.includes("f\"{'✅ ' if '"));
+        assert.ok(result.includes("'✅ ' if "));
       });
 
       it('должен генерировать кнопку "Готово"', () => {

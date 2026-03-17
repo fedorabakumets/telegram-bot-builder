@@ -220,7 +220,7 @@ export function renderPartialTemplate(
 
     // Если путь содержит '/', используем его как есть
     if (!partialName.includes('/')) {
-      const templateDirs = ['config', 'database', 'utils', 'main', 'header', 'middleware', 'universal-handlers', 'imports', 'command', 'start', 'keyboard', 'message', 'broadcast', 'sticker', 'voice', 'safe-edit-or-send', 'synonyms'];
+      const templateDirs = ['config', 'database', 'utils', 'main', 'header', 'middleware', 'universal-handlers', 'imports', 'command', 'start', 'keyboard', 'message', 'broadcast', 'sticker', 'voice', 'safe-edit-or-send', 'synonyms', 'attached-media'];
       const dir = templateDirs.find(d => partialName.startsWith(d));
       if (dir) {
         templatePath = `${dir}/${partialName}`;

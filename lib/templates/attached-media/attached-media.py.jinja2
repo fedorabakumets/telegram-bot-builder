@@ -1,0 +1,112 @@
+{#
+  Шаблон отправки прикреплённых медиафайлов
+
+  @fileoverview Генерирует Python код для отправки attachedMedia (фото, видео, аудио, документы)
+  @param {string} nodeId - Уникальный идентификатор узла
+  @param {string} safeNodeId - nodeId с заменёнными дефисами на подчёркивания
+  @param {string} userIdSrc - Источник user_id (предвычислен в renderer)
+  @param {string} msgSrc - Источник message объекта (предвычислен в renderer)
+  @param {string} parseModeStr - Строка parse_mode (предвычислена в renderer)
+  @param {boolean} isSingle - Один файл для отправки
+  @param {boolean} hasGroupable - Есть photo/video/audio файлы
+  @param {boolean} hasDocuments - Есть документы
+  @param {array} mediaToSend - Все файлы [{url, fileType, isLocal, isFirst}]
+  @param {array} groupable - Файлы photo/video/audio [{url, fileType, isLocal, mediaClass, isFirst}]
+  @param {array} documents - Документы [{url, isLocal}]
+#}
+
+{%- if isSingle %}
+
+    {# Отправка одного медиафайла #}
+    {%- set item = mediaToSend[0] %}
+    try:
+{%- if item.isLocal %}
+        media_file_0 = FSInputFile(get_upload_file_path("{{ item.url }}"))
+{%- else %}
+        media_file_0 = "{{ item.url }}"
+{%- endif %}
+        logging.info(f"📎 Отправка {{ item.fileType }}: {{ item.url }}")
+        if 'all_user_vars' not in locals():
+            all_user_vars = await init_all_user_vars({{ userIdSrc }})
+        variable_filters = user_data.get({{ userIdSrc }}, {}).get("_variable_filters", {})
+        processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)
+{%- if item.fileType == 'photo' %}
+        await bot.send_photo({{ userIdSrc }}, media_file_0, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- elif item.fileType == 'video' %}
+        await bot.send_video({{ userIdSrc }}, media_file_0, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- elif item.fileType == 'audio' %}
+        await bot.send_audio({{ userIdSrc }}, media_file_0, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- else %}
+        await bot.send_document({{ userIdSrc }}, media_file_0, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- endif %}
+        logging.info(f"✅ Медиафайл отправлен для узла {{ nodeId }}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка отправки медиа для узла {{ nodeId }}: {e}")
+        await {{ msgSrc }}.answer(processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+
+{%- else %}
+
+    {# Подготовка caption для медиагруппы #}
+    if 'all_user_vars' not in locals():
+        all_user_vars = await init_all_user_vars({{ userIdSrc }})
+    variable_filters = user_data.get({{ userIdSrc }}, {}).get("_variable_filters", {})
+    processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)
+
+{%- if hasGroupable %}
+
+    # 📎 Отправка группы медиа ({{ groupable | length }} шт.)
+    # NOTE: Требуется импорт: from aiogram.types import InputMediaPhoto, InputMediaVideo, InputMediaAudio
+    media_group_{{ safeNodeId }} = []
+{%- for item in groupable %}
+    # Файл {{ loop.index }}: {{ item.url }}
+{%- if item.isLocal %}
+    file_path_{{ loop.index0 }} = get_upload_file_path("{{ item.url }}")
+{%- if item.isFirst %}
+    media_group_{{ safeNodeId }}.append({{ item.mediaClass }}(media=FSInputFile(file_path_{{ loop.index0 }}), caption=processed_caption{{ parseModeStr }}))
+{%- else %}
+    media_group_{{ safeNodeId }}.append({{ item.mediaClass }}(media=FSInputFile(file_path_{{ loop.index0 }})))
+{%- endif %}
+{%- else %}
+{%- if item.isFirst %}
+    media_group_{{ safeNodeId }}.append({{ item.mediaClass }}(media="{{ item.url }}", caption=processed_caption{{ parseModeStr }}))
+{%- else %}
+    media_group_{{ safeNodeId }}.append({{ item.mediaClass }}(media="{{ item.url }}"))
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+
+    try:
+        await bot.send_media_group({{ userIdSrc }}, media_group_{{ safeNodeId }})
+        logging.info(f"✅ Отправлено {{ groupable | length }} медиафайлов для узла {{ nodeId }}")
+        # send_media_group не поддерживает reply_markup — отправляем клавиатуру отдельно
+        if keyboard is not None:
+            await bot.send_message({{ userIdSrc }}, processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+    except Exception as e:
+        logging.error(f"❌ Ошибка отправки медиа-группы для узла {{ nodeId }}: {e}")
+{%- endif %}
+
+{%- if hasDocuments %}
+
+    # 📄 Документы отправляются отдельной группой
+    # NOTE: Требуется импорт: from aiogram.types import InputMediaDocument
+    document_group_{{ safeNodeId }} = []
+{%- for item in documents %}
+    # Документ {{ loop.index }}: {{ item.url }}
+{%- if item.isLocal %}
+    file_path_doc_{{ loop.index0 }} = get_upload_file_path("{{ item.url }}")
+    document_group_{{ safeNodeId }}.append(InputMediaDocument(media=FSInputFile(file_path_doc_{{ loop.index0 }})))
+{%- else %}
+    document_group_{{ safeNodeId }}.append(InputMediaDocument(media="{{ item.url }}"))
+{%- endif %}
+{%- endfor %}
+
+    try:
+        await bot.send_media_group({{ userIdSrc }}, document_group_{{ safeNodeId }})
+        logging.info(f"✅ Отправлено {{ documents | length }} документов для узла {{ nodeId }}")
+        if keyboard is not None:
+            await bot.send_message({{ userIdSrc }}, processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+    except Exception as e:
+        logging.error(f"❌ Ошибка отправки группы документов для узла {{ nodeId }}: {e}")
+{%- endif %}
+
+{%- endif %}

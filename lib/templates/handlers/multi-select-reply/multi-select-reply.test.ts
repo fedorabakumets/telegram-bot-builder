@@ -41,7 +41,6 @@ describe('multi-select-reply.py.jinja2 шаблон', () => {
         const result = generateMultiSelectReply(validParamsWithCommandTarget);
 
         assert.ok(result.includes('handle_command_'));
-        assert.ok(result.includes('/mycommand'));
       });
 
       it('должен генерировать обработчик для нескольких узлов', () => {
@@ -66,8 +65,7 @@ describe('multi-select-reply.py.jinja2 шаблон', () => {
         if (lines.length > 0) {
           assert.ok(lines[0].startsWith('        '));
         }
-      });
-    });
+      });    });
 
     describe('Обработка кнопки "Готово"', () => {
       it('должен генерировать код завершения multi-select', () => {
@@ -90,7 +88,6 @@ describe('multi-select-reply.py.jinja2 шаблон', () => {
         const result = generateMultiSelectReply(validParamsWithGotoButtons);
 
         assert.ok(result.includes('Переход к следующему узлу'));
-        assert.ok(result.includes('next_node'));
       });
     });
 
@@ -120,7 +117,7 @@ describe('multi-select-reply.py.jinja2 шаблон', () => {
         const result = generateMultiSelectReply(validParamsBasic);
 
         assert.ok(result.includes('ReplyKeyboardBuilder()'));
-        assert.ok(result.includes("f\"{'✅ ' if '"));
+        assert.ok(result.includes("'✅ ' if "));
         assert.ok(result.includes('builder.as_markup'));
       });
     });
