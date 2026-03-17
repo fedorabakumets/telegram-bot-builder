@@ -67,7 +67,8 @@
     "test:utils": "node run-tests.js --pattern utils",
     "test:universal-handlers": "node run-tests.js --pattern universal-handlers",
     "test:synonyms": "node run-tests.js --pattern synonyms",
-    "test:attached-media": "node run-tests.js --pattern attached-media"
+    "test:attached-media": "node run-tests.js --pattern attached-media",
+    "test:user-handler": "node run-tests.js --pattern user-handler"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
