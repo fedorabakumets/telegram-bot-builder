@@ -1,0 +1,57 @@
+{#
+  Шаблон блока waiting_for_input для сбора пользовательского ввода
+
+  @fileoverview Генерирует Python-код установки состояния ожидания ввода
+  @param {string} nodeId              — ID узла
+  @param {string} safeName            — безопасное имя (safe_name от nodeId)
+  @param {string} inputVariable       — имя переменной для сохранения ответа
+  @param {bool}   appendVariable      — режим добавления (не перезаписывать)
+  @param {string} inputTargetNodeId   — ID следующего узла после ввода
+  @param {bool}   enableTextInput     — принимать текстовый ввод
+  @param {bool}   enablePhotoInput    — принимать фото
+  @param {string} photoInputVariable  — переменная для фото
+  @param {bool}   enableVideoInput    — принимать видео
+  @param {string} videoInputVariable  — переменная для видео
+  @param {bool}   enableAudioInput    — принимать аудио
+  @param {string} audioInputVariable  — переменная для аудио
+  @param {bool}   enableDocumentInput — принимать документы
+  @param {string} documentInputVariable — переменная для документов
+  @param {string} validationType      — тип валидации: none | email | phone | number
+  @param {number} minLength           — минимальная длина текста (0 = без ограничений)
+  @param {number} maxLength           — максимальная длина текста (0 = без ограничений)
+  @param {string} retryMessage        — сообщение при ошибке валидации
+  @param {string} successMessage      — сообщение при успешном сохранении
+  @param {bool}   saveToDatabase      — сохранять в базу данных
+#}
+
+{# ── Вычисляем список принимаемых режимов ── #}
+{% set modes = [] %}
+{% if enableTextInput %}{% set _ = modes.append("text") %}{% endif %}
+{% if enablePhotoInput %}{% set _ = modes.append("photo") %}{% endif %}
+{% if enableVideoInput %}{% set _ = modes.append("video") %}{% endif %}
+{% if enableAudioInput %}{% set _ = modes.append("audio") %}{% endif %}
+{% if enableDocumentInput %}{% set _ = modes.append("document") %}{% endif %}
+{% if not modes %}{% set modes = ["text"] %}{% endif %}
+
+    # Устанавливаем состояние ожидания ввода для узла {{ nodeId }}
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = {
+        "type": "{{ modes[0] }}",
+        "modes": {{ modes | tojson }},
+        "variable": "{{ inputVariable }}",
+        "save_to_database": {{ saveToDatabase | default(true) | to_python_boolean }},
+        "node_id": "{{ nodeId }}",
+        "next_node_id": "{{ inputTargetNodeId | default('') }}",
+        "appendVariable": {{ appendVariable | default(false) | to_python_boolean }},
+        "min_length": {{ minLength | default(0) }},
+        "max_length": {{ maxLength | default(0) }},
+        "validation_type": "{{ validationType | default('none') }}",
+        "retry_message": "{{ retryMessage | default('Пожалуйста, попробуйте еще раз.') }}",
+        "success_message": "{{ successMessage | default('') }}"{% if enablePhotoInput and photoInputVariable %},
+        "photo_variable": "{{ photoInputVariable }}"{% endif %}{% if enableVideoInput and videoInputVariable %},
+        "video_variable": "{{ videoInputVariable }}"{% endif %}{% if enableAudioInput and audioInputVariable %},
+        "audio_variable": "{{ audioInputVariable }}"{% endif %}{% if enableDocumentInput and documentInputVariable %},
+        "document_variable": "{{ documentInputVariable }}"{% endif %}
+
+    }
+    logging.info(f"✅ Состояние ожидания настроено: modes={{ modes | tojson }} для переменной {{ inputVariable }} (узел {{ nodeId }})")
