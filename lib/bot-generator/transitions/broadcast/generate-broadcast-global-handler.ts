@@ -7,8 +7,8 @@
  * @module bot-generator/transitions/broadcast/generate-broadcast-global-handler
  */
 
-import { generateBroadcastInline } from '../../Broadcast/BotApi/generateBroadcastHandler';
-import { generateBroadcastClientInline } from '../../Client/generateBroadcastClientHandler';
+import { generateBroadcastBotFromNode } from '../../../templates/broadcast-bot/broadcast-bot.renderer';
+import { generateBroadcastClientFromNode } from '../../../templates/broadcast-client/broadcast-client.renderer';
 import { generateDatabaseVariablesCode } from '../../Broadcast/generate-database-variables-universal';
 import { formatTextForPython } from '../../format';
 
@@ -80,9 +80,10 @@ export function generateBroadcastConfirmationHandler(
   code += `${indent}    logging.info(f"📢 Подтверждение рассылки от пользователя {user_id}: {callback_query.data}")\n`;
   code += `${indent}    \n`;
   code += `${indent}    if callback_query.data == "broadcast_confirm_yes":\n`;
-  code += (broadcastApiType === 'client' 
-    ? generateBroadcastClientInline(broadcastNode, nodes, `${indent}        `) 
-    : generateBroadcastInline(broadcastNode, nodes, `${indent}        `)) + '\n';
+  const confirmInline = broadcastApiType === 'client'
+    ? generateBroadcastClientFromNode(broadcastNode, nodes)
+    : generateBroadcastBotFromNode(broadcastNode, nodes);
+  code += confirmInline.split('\n').map((l: string) => `${indent}        ${l}`).join('\n') + '\n';
   code += `${indent}    else:\n`;
   code += `${indent}        await callback_query.message.edit_text("❌ Рассылка отменена")\n`;
   code += `${indent}    \n`;
@@ -119,9 +120,10 @@ export function generateBroadcastDirectHandler(
   code += `${indent}    # Получаем переменные из базы данных\n`;
   code += generateDatabaseVariablesCode(`${indent}    `, usedVariables);
   code += `${indent}    \n`;
-  code += (broadcastApiType === 'client' 
-    ? generateBroadcastClientInline(broadcastNode, nodes, `${indent}    `) 
-    : generateBroadcastInline(broadcastNode, nodes, `${indent}    `)) + '\n';
+  const directInline = broadcastApiType === 'client'
+    ? generateBroadcastClientFromNode(broadcastNode, nodes)
+    : generateBroadcastBotFromNode(broadcastNode, nodes);
+  code += directInline.split('\n').map((l: string) => `${indent}    ${l}`).join('\n') + '\n';
   code += `${indent}    \n`;
   
   return code;
