@@ -1,7 +1,5 @@
 // UserHandler Module
-// ban/unban/kick/mute/unmute/promote/demote перенесены в lib/templates/user-handler (Jinja2)
-// generateUserManagementSynonymHandler перенесён в lib/templates/synonyms (Jinja2)
-// Здесь остаются только admin_rights до завершения его миграции
-
-export { generateAdminRightsHandler } from './generateAdminRightsHandler';
-export { generateAdminRightsToggleHandlers } from './generateAdminRightsToggleHandlers';
+// Все обработчики перенесены в Jinja2 шаблоны:
+// ban/unban/kick/mute/unmute/promote/demote → lib/templates/user-handler
+// admin_rights → lib/templates/admin-rights
+// synonyms → lib/templates/synonyms

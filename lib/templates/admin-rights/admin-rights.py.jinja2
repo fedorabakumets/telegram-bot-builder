@@ -1,0 +1,248 @@
+{#
+  Шаблон интерактивного обработчика прав администратора
+
+  @param {string} nodeId      — ID узла
+  @param {string} safeName    — безопасное имя функции
+  @param {string} messageText — текст сообщения
+  @param {string} command     — команда (без /)
+#}
+
+{# ── Список прав администратора (объекты для надёжной деструктуризации) ── #}
+{% set admin_rights_list = [
+  { "key": "can_change_info",        "short": "can_change_in",  "label": "Изменение профиля" },
+  { "key": "can_delete_messages",    "short": "can_delete_me",  "label": "Удаление сообщений" },
+  { "key": "can_restrict_members",   "short": "can_restrict_m", "label": "Блокировка участников" },
+  { "key": "can_invite_users",       "short": "can_invite_us",  "label": "Приглашение участников" },
+  { "key": "can_pin_messages",       "short": "can_pin_messa",  "label": "Закрепление сообщений" },
+  { "key": "can_manage_video_chats", "short": "can_manage_vi",  "label": "Управление видеочатами" },
+  { "key": "can_post_stories",       "short": "can_post_stor",  "label": "Публикация историй" },
+  { "key": "can_edit_stories",       "short": "can_edit_stor",  "label": "Редактирование историй" },
+  { "key": "can_delete_stories",     "short": "can_delete_st",  "label": "Удаление историй" },
+  { "key": "is_anonymous",           "short": "is_anonymous",   "label": "Анонимность" },
+  { "key": "can_promote_members",    "short": "can_promote_m",  "label": "Назначение администраторов" }
+] %}
+
+# ── Admin Rights Handler: {{ nodeId }} ──────────────────────────────────────
+
+async def get_admin_rights_{{ safeName }}(bot, chat_id, target_user_id):
+    """Получает текущие права администратора пользователя в чате"""
+    try:
+        member = await bot.get_chat_member(chat_id, target_user_id)
+        if hasattr(member, 'status') and member.status in ['administrator', 'creator']:
+            return {
+{% for right in admin_rights_list %}
+                '{{ right.key }}': getattr(member, '{{ right.key }}', False),
+{% endfor %}
+            }
+        return None
+    except Exception as e:
+        logging.error(f"Ошибка при получении прав администратора: {e}")
+        return None
+
+
+async def create_admin_rights_keyboard_{{ safeName }}(bot, chat_id, target_user_id, node_id="{{ nodeId }}"):
+    """Создаёт интерактивную клавиатуру с кнопками-переключателями прав"""
+    current_rights = await get_admin_rights_{{ safeName }}(bot, chat_id, target_user_id)
+    builder = InlineKeyboardBuilder()
+
+    if current_rights is None:
+        builder.add(InlineKeyboardButton(text="Пользователь не является администратором", callback_data="no_admin"))
+        return builder.as_markup()
+
+    short_node_id = str(hash(node_id))[-6:]
+{% for right in admin_rights_list %}
+    indicator_{{ loop.index }} = "OK" if current_rights.get('{{ right.key }}', False) else "OFF"
+    builder.add(InlineKeyboardButton(
+        text=f"{indicator_{{ loop.index }}} {{ right.label }}",
+        callback_data=f"tr_{{ right.short }}_{target_user_id}_{short_node_id}"
+    ))
+{% endfor %}
+    builder.add(InlineKeyboardButton(text="Обновить", callback_data=f"ref_{target_user_id}_{short_node_id}"))
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+@dp.message(Command("{{ command }}"))
+async def {{ safeName }}_command_handler(message: types.Message, bot):
+    """Основной обработчик команды /{{ command }}"""
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    target_user_id = None
+
+    logging.info(f"Команда admin_rights вызвана пользователем {user_id} в чате {chat_id}")
+
+    try:
+        current_user_member = await bot.get_chat_member(chat_id, user_id)
+        if current_user_member.status not in ['administrator', 'creator']:
+            await message.answer("У вас нет прав администратора для использования этой команды")
+            return
+        if current_user_member.status != 'creator' and not getattr(current_user_member, 'can_promote_members', False):
+            await message.answer("У вас нет права на управление правами других администраторов")
+            return
+    except Exception as e:
+        await message.answer(f"Ошибка при проверке ваших прав: {e}")
+        return
+
+    if message.reply_to_message and message.reply_to_message.from_user:
+        target_user_id = message.reply_to_message.from_user.id
+    elif message.entities:
+        for entity in message.entities:
+            if entity.type == "text_mention" and hasattr(entity, 'user'):
+                target_user_id = entity.user.id
+                break
+            elif entity.type == "mention":
+                username = message.text[entity.offset + 1:entity.offset + entity.length]
+                try:
+                    chat_admins = await bot.get_chat_administrators(chat_id)
+                    for member in chat_admins:
+                        if member.user.username and member.user.username.lower() == username.lower():
+                            target_user_id = member.user.id
+                            break
+                except Exception as e:
+                    logging.warning(f"Не удалось найти пользователя @{username}: {e}")
+                break
+
+    if target_user_id is None:
+        import re
+        command_text = message.text or ""
+        numbers = re.findall(r'\b\d{6,}\b', command_text)
+        for number_str in numbers:
+            try:
+                potential_user_id = int(number_str)
+                try:
+                    await bot.get_chat_member(chat_id, potential_user_id)
+                    target_user_id = potential_user_id
+                    break
+                except Exception:
+                    continue
+            except ValueError:
+                continue
+
+    if target_user_id is None:
+        await message.answer(
+            "Укажите пользователя для управления правами:\n"
+            "Ответьте на сообщение пользователя\n"
+            "Упомяните пользователя: /{{ command }} @username\n"
+            "Укажите ID: /{{ command }} 123456789"
+        )
+        return
+
+    try:
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+        if target_member.status not in ['administrator', 'creator']:
+            await message.answer("Указанный пользователь не является администратором")
+            return
+    except Exception as e:
+        await message.answer(f"Не удалось проверить пользователя: {e}")
+        return
+
+    keyboard = await create_admin_rights_keyboard_{{ safeName }}(bot, chat_id, target_user_id)
+    text = "{{ messageText | escape_python_string }}"
+    await message.answer(text, reply_markup=keyboard)
+
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, bot):
+    """Обработчик callback для узла admin_rights: {{ nodeId }}"""
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+
+    logging.info(f"Обработка callback admin_rights от пользователя {user_id} в чате {chat_id}")
+
+    try:
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "Бот не является администратором этой группы")
+            return
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "У бота нет права на управление правами администраторов")
+            return
+    except Exception as e:
+        logging.error(f"Ошибка при проверке прав администратора: {e}")
+        await safe_edit_or_send(callback_query, "Не удалось проверить права администратора. Попробуйте позже.")
+        return
+
+    target_user_id = user_id
+    if hasattr(callback_query.message, 'reply_to_message') and callback_query.message.reply_to_message:
+        target_user_id = callback_query.message.reply_to_message.from_user.id
+
+    text = "{{ messageText | escape_python_string }}"
+    keyboard = await create_admin_rights_keyboard_{{ safeName }}(bot, chat_id, target_user_id)
+    try:
+        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)
+    except Exception as e:
+        logging.info(f"Отправляем новое сообщение admin_rights: {e}")
+        await callback_query.message.answer(text, reply_markup=keyboard)
+
+
+{# ── Toggle handlers для каждого права ── #}
+{% for right in admin_rights_list %}
+# Обработчик переключения права: {{ right.key }}
+@dp.callback_query(lambda c: c.data.startswith("tr_{{ right.short }}_"))
+async def toggle_{{ right.key }}_{{ safeName }}(callback_query: types.CallbackQuery, bot):
+    """Переключает право {{ right.key }} для пользователя"""
+    await callback_query.answer()
+    try:
+        data_parts = callback_query.data.split('_')
+        if len(data_parts) < 4:
+            raise ValueError("Недостаточно частей в callback_data")
+        target_user_id = int(data_parts[-2])
+    except (ValueError, IndexError) as e:
+        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")
+        await callback_query.answer("Ошибка в данных кнопки")
+        return
+
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+
+    try:
+        bot_member = await bot.get_chat_member(chat_id, bot.id)
+        if bot_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "Бот не является администратором этой группы")
+            return
+        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):
+            await safe_edit_or_send(callback_query, "У бота нет права на управление правами администраторов")
+            return
+
+        target_member = await bot.get_chat_member(chat_id, target_user_id)
+        if target_member.status not in ['administrator', 'creator']:
+            await safe_edit_or_send(callback_query, "Целевой пользователь не является администратором")
+            return
+
+        current_value = getattr(target_member, '{{ right.key }}', False)
+        new_value = not current_value
+
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+{% for r in admin_rights_list %}
+            {{ r.key }}=new_value if '{{ r.key }}' == '{{ right.key }}' else getattr(target_member, '{{ r.key }}', False),
+{% endfor %}
+        )
+
+        keyboard = await create_admin_rights_keyboard_{{ safeName }}(bot, chat_id, target_user_id)
+        await safe_edit_or_send(callback_query, "Управление правами администратора", reply_markup=keyboard)
+        logging.info(f"Пользователь {user_id} изменил право '{{ right.key }}' для пользователя {target_user_id} на {new_value}")
+
+    except Exception as e:
+        logging.error(f"Ошибка при переключении права {{ right.key }}: {e}")
+        await safe_edit_or_send(callback_query, "Не удалось изменить права администратора. Попробуйте позже.")
+
+{% endfor %}
+
+# Обработчик кнопки обновления прав
+@dp.callback_query(lambda c: c.data.startswith("ref_"))
+async def refresh_admin_rights_{{ safeName }}(callback_query: types.CallbackQuery, bot):
+    """Обновляет отображение прав администратора"""
+    await callback_query.answer("Обновляем...")
+    data_parts = callback_query.data.split('_')
+    target_user_id = int(data_parts[-2])
+    chat_id = callback_query.message.chat.id
+    try:
+        keyboard = await create_admin_rights_keyboard_{{ safeName }}(bot, chat_id, target_user_id)
+        await safe_edit_or_send(callback_query, "Управление правами администратора", reply_markup=keyboard)
+        logging.info(f"Обновлены права для пользователя {target_user_id}")
+    except Exception as e:
+        logging.error(f"Ошибка при обновлении прав: {e}")
+        await safe_edit_or_send(callback_query, "Не удалось обновить права. Попробуйте позже.")

@@ -60,8 +60,8 @@ export * from './storage';
 
 // User management handlers — перенесено в templates/user-handler (Jinja2)
 export { generateUserHandler, generateUserHandlerFromNode, nodeToUserHandlerParams } from './templates/user-handler';
-// Оставляем generateAdminRightsHandler до завершения миграции admin-rights в Jinja2
-export { generateAdminRightsHandler, generateAdminRightsToggleHandlers } from './bot-generator/UserHandler';
+// admin-rights перенесён в templates/admin-rights (Jinja2)
+export { generateAdminRightsHandler, generateAdminRightsFromNode, nodeToAdminRightsParams } from './templates/admin-rights';
 
 // Additional utilities
 export { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
