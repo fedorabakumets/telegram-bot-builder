@@ -65,7 +65,8 @@
     "test:message": "node run-tests.js --pattern message",
     "test:middleware": "node run-tests.js --pattern middleware",
     "test:utils": "node run-tests.js --pattern utils",
-    "test:universal-handlers": "node run-tests.js --pattern universal-handlers"
+    "test:universal-handlers": "node run-tests.js --pattern universal-handlers",
+    "test:synonyms": "node run-tests.js --pattern synonyms"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

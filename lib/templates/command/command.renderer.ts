@@ -6,24 +6,12 @@
 import type { CommandTemplateParams } from './command.params';
 import { commandParamsSchema } from './command.schema';
 import { renderPartialTemplate } from '../template-renderer';
+import type { SynonymEntry } from '../synonyms/synonyms.params';
 
 /**
  * Генерация Python обработчика команды с валидацией параметров
  * @param params - Параметры обработчика команды
  * @returns Сгенерированный Python код обработчика
- *
- * @example
- * ```typescript
- * const code = generateCommand({
- *   nodeId: 'cmd_1',
- *   command: '/help',
- *   messageText: '🤖 Доступные команды:',
- *   isPrivateOnly: false,
- *   adminOnly: false,
- *   requiresAuth: false,
- *   userDatabaseEnabled: true,
- * });
- * ```
  */
 export function generateCommand(params: CommandTemplateParams): string {
   const validated = commandParamsSchema.parse({
@@ -34,5 +22,16 @@ export function generateCommand(params: CommandTemplateParams): string {
     buttons: params.buttons ?? [],
     synonyms: params.synonyms ?? [],
   });
-  return renderPartialTemplate('command/command.py.jinja2', validated);
+
+  // Преобразуем string[] → SynonymEntry[] для шаблона synonyms
+  const functionName = (params.command ?? '').replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
+  const synonymEntries: SynonymEntry[] = (params.synonyms ?? []).map(synonym => ({
+    synonym,
+    nodeId: params.nodeId,
+    nodeType: 'command' as const,
+    functionName,
+    originalCommand: params.command,
+  }));
+
+  return renderPartialTemplate('command/command.py.jinja2', { ...validated, synonymEntries });
 }

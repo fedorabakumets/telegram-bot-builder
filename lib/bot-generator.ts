@@ -499,11 +499,17 @@ export function generatePythonCode(
    */
   function generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation() {
     const adHocHandlerCode = generateAdHocInputCollectionHandler();
+
+    // Адаптер: generateContinuationLogicForButtonBasedInput ожидает (buttons, indent, nodeId, data, allNodeIds)
+    // generateKeyboard из templates ожидает KeyboardTemplateParams — оборачиваем
+    const generateInlineKbAdapter = (buttons: any[], indent: string, nodeId: string, data: any, allNodeIds: string[]) =>
+      generateKeyboard({ keyboardType: 'inline', buttons, nodeId, indentLevel: indent, allNodeIds });
+
     const continuationHandlerCode = generateContinuationLogicForButtonBasedInput(
       context.nodes || [],
       formatTextForPython,
       generateUniversalVariableReplacement,
-      generateKeyboard,
+      generateInlineKbAdapter,
       context.allNodeIds,
       generateNodeNavigation
     );

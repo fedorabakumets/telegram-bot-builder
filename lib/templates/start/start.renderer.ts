@@ -6,23 +6,12 @@
 import type { StartTemplateParams } from './start.params';
 import { startParamsSchema } from './start.schema';
 import { renderPartialTemplate } from '../template-renderer';
+import type { SynonymEntry } from '../synonyms/synonyms.params';
 
 /**
  * Генерация Python обработчика команды /start с валидацией параметров
  * @param params - Параметры обработчика /start
  * @returns Сгенерированный Python код обработчика
- *
- * @example
- * ```typescript
- * const code = generateStart({
- *   nodeId: 'start_1',
- *   messageText: '👋 Добро пожаловать!',
- *   isPrivateOnly: false,
- *   adminOnly: false,
- *   requiresAuth: false,
- *   userDatabaseEnabled: true,
- * });
- * ```
  */
 export function generateStart(params: StartTemplateParams): string {
   const validated = startParamsSchema.parse({
@@ -31,5 +20,15 @@ export function generateStart(params: StartTemplateParams): string {
     keyboardType: params.keyboardType ?? 'none',
     formatMode: params.formatMode ?? 'none',
   });
-  return renderPartialTemplate('start/start.py.jinja2', validated);
+
+  // Преобразуем string[] → SynonymEntry[] для шаблона synonyms
+  const synonymEntries: SynonymEntry[] = (params.synonyms ?? []).map(synonym => ({
+    synonym,
+    nodeId: params.nodeId,
+    nodeType: 'start' as const,
+    functionName: 'start',
+    originalCommand: '/start',
+  }));
+
+  return renderPartialTemplate('start/start.py.jinja2', { ...validated, synonymEntries });
 }
