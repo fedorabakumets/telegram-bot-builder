@@ -1,0 +1,11 @@
+{#
+  Шаблон резолвинга пути к медиафайлу
+
+  @param {string} mediaType   — тип медиа: 'photo', 'video', 'audio', 'document'
+  @param {string} urlVar      — имя переменной с URL
+  @param {string} indentLevel — базовый отступ (по умолчанию '                ')
+#}
+{% set ind = indentLevel or '                ' %}
+{{ ind }}if {{ urlVar }}.startswith('/uploads/'):
+{{ ind }}    {{ mediaType }}_path = get_upload_file_path("{{ urlVar }}")
+{{ ind }}    {{ mediaType }}_url = FSInputFile({{ mediaType }}_path)

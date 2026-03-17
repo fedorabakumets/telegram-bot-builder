@@ -1,0 +1,24 @@
+{#
+  Шаблон кода автоперехода
+
+  @fileoverview Генерирует Python-код выполнения автоперехода к целевому узлу.
+
+  @param {string}  nodeId              — ID текущего узла
+  @param {string}  autoTransitionTarget — ID целевого узла автоперехода
+  @param {boolean} targetExists        — существует ли целевой узел
+  @param {string}  indentLevel         — базовый отступ (по умолчанию '    ')
+#}
+
+{% set ind = indentLevel or '    ' %}
+
+{{ ind }}# Проверяем, что это не fake callback (для предотвращения дублирования сообщений)
+{{ ind }}if not is_fake_callback:
+{{ ind }}    logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTarget }}")
+{% if targetExists %}
+{{ ind }}    await handle_callback_{{ autoTransitionTarget | replace('-', '_') | replace('.', '_') }}(callback_query)
+{% else %}
+{{ ind }}    logging.warning(f"⚠️ Узел автоперехода не найден: {{ autoTransitionTarget }}, завершаем переход")
+{{ ind }}    await callback_query.message.edit_text("Переход завершен")
+{% endif %}
+{{ ind }}    logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTarget }}")
+{{ ind }}    return

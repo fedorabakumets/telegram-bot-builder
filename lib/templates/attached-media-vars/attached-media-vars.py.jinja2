@@ -1,0 +1,36 @@
+{#
+  Шаблон установки переменных из attachedMedia в user_data
+
+  @param {string}  nodeId       — ID узла
+  @param {array}   attachedMedia — массив имён медиа-переменных
+  @param {string}  imageUrl     — URL изображения (опционально)
+  @param {string}  videoUrl     — URL видео (опционально)
+  @param {string}  audioUrl     — URL аудио (опционально)
+  @param {string}  documentUrl  — URL документа (опционально)
+  @param {string}  indentLevel  — базовый отступ (по умолчанию '                ')
+#}
+{% if attachedMedia and attachedMedia | length > 0 %}
+{% set ind = indentLevel or '                ' %}
+{{ ind }}# Устанавливаем переменные из attachedMedia
+{{ ind }}user_id = message.from_user.id
+{{ ind }}if user_id not in user_data:
+{{ ind }}    user_data[user_id] = {}
+{% for mediaVar in attachedMedia %}
+{% if mediaVar.startswith('video_url_') and videoUrl %}
+{{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ videoUrl }}"
+{% elif mediaVar.startswith('audio_url_') and audioUrl %}
+{{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ audioUrl }}"
+{% elif mediaVar.startswith('document_url_') and documentUrl %}
+{{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ documentUrl }}"
+{% elif mediaVar.startswith('audioUrlVar') and audioUrl %}
+{{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ audioUrl }}"
+{% elif mediaVar.startswith('videoUrlVar') and videoUrl %}
+{{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ videoUrl }}"
+{% elif mediaVar.startswith('imageUrlVar') and imageUrl %}
+{{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ imageUrl }}"
+{% elif mediaVar.startswith('documentUrlVar') and documentUrl %}
+{{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ documentUrl }}"
+{% endif %}
+{% endfor %}
+{{ ind }}logging.info(f"✅ Переменные из attachedMedia установлены для узла {{ nodeId }}")
+{% endif %}

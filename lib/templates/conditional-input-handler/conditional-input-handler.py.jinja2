@@ -1,0 +1,141 @@
+{#
+  Шаблон обработчика условного ввода пользователя
+
+  Покрывает:
+  1. waiting_for_conditional_input — проверка состояния
+  2. skipDataCollection — кнопки пропуска
+  3. skip_button_target — навигация при пропуске
+  4. answersave — сохранение ответа в БД
+  5. navigateaftersave — навигация после сохранения
+  6. handleConditionalNavigationAndInputCollection — навигация к узлам
+
+  @param {array}   nodes      — все узлы [{id, safeName, type, data}]
+  @param {array}   allNodeIds — все ID узлов
+  @param {string}  indentLevel — базовый отступ (по умолчанию '    ')
+#}
+
+{% set ind = indentLevel or '    ' %}
+{% set ind2 = ind ~ '    ' %}
+{% set ind3 = ind2 ~ '    ' %}
+{% set ind4 = ind3 ~ '    ' %}
+{% set ind5 = ind4 ~ '    ' %}
+{% set ind6 = ind5 ~ '    ' %}
+
+{# ═══════════════════════════════════════════════════════════════
+   Проверяем, ожидаем ли мы ввод для условного сообщения
+   ═══════════════════════════════════════════════════════════════ #}
+{{ ind }}# Проверяем, ожидаем ли мы ввод для условного сообщения
+{{ ind }}if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:
+{{ ind2 }}config = user_data[user_id]["waiting_for_conditional_input"]
+{{ ind2 }}user_text = message.text
+{{ ind2 }}
+{{ ind2 }}# ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true
+{{ ind2 }}skip_buttons = config.get("skip_buttons", [])
+{{ ind2 }}skip_button_target = None
+{{ ind2 }}for skip_btn in skip_buttons:
+{{ ind3 }}if skip_btn.get("text") == user_text:
+{{ ind4 }}skip_button_target = skip_btn.get("target")
+{{ ind4 }}logging.info(f"⏭️ Нажата кнопка с skipDataCollection: {user_text} -> {skip_button_target}")
+{{ ind4 }}break
+{{ ind2 }}
+{{ ind2 }}# Если нажата кнопка пропуска - переходим к её target без сохранения
+{{ ind2 }}if skip_button_target:
+{{ ind3 }}# Очищаем состояние ожидания
+{{ ind3 }}del user_data[user_id]["waiting_for_conditional_input"]
+{{ ind3 }}
+{{ ind3 }}# Переходим к целевому узлу кнопки
+{{ ind3 }}try:
+{{ ind4 }}logging.info(f"🚀 Переходим к узлу кнопки skipDataCollection: {skip_button_target}")
+{{ ind4 }}import types as aiogram_types
+{{ ind4 }}fake_callback = aiogram_types.SimpleNamespace(
+{{ ind5 }}id="skip_button_nav",
+{{ ind5 }}from_user=message.from_user,
+{{ ind5 }}chat_instance="",
+{{ ind5 }}data=skip_button_target,
+{{ ind5 }}message=message,
+{{ ind5 }}answer=lambda *args, **kwargs: asyncio.sleep(0)
+{{ ind4 }})
+{% if nodes | length > 0 %}
+{% for node in nodes %}
+{{ ind4 }}{% if loop.first %}if{% else %}elif{% endif %} skip_button_target == "{{ node.id }}":
+{{ ind5 }}# Проверяем и вызываем обработчик, если он существует
+{{ ind5 }}if 'handle_callback_{{ node.safeName }}' in globals():
+{{ ind5 }}    await handle_callback_{{ node.safeName }}(fake_callback)
+{{ ind5 }}else:
+{{ ind5 }}    logging.warning(f"⚠️ Обработчик не найден для узла: {{ node.id }}, завершаем переход")
+{{ ind5 }}    await message.answer("Переход завершен")
+{% endfor %}
+{{ ind4 }}else:
+{{ ind5 }}logging.warning(f"Неизвестный целевой узел кнопки skipDataCollection: {skip_button_target}")
+{% endif %}
+{{ ind3 }}except Exception as e:
+{{ ind4 }}logging.error(f"Ошибка при переходе к узлу кнопки skipDataCollection {skip_button_target}: {e}")
+{{ ind3 }}return
+{{ ind2 }}
+{{ ind2 }}# Сохраняем текстовый ввод для условного сообщения (обычный случай без skipDataCollection)
+{{ ind2 }}condition_id = config.get("condition_id", "unknown")
+{{ ind2 }}next_node_id = config.get("next_node_id")
+{{ ind2 }}
+{{ ind2 }}# Сохраняем ответ пользователя
+{{ ind2 }}timestamp = get_moscow_time()
+{{ ind2 }}# Используем переменную из конфигурации или создаем автоматическую
+{{ ind2 }}input_variable = config.get("input_variable", "")
+{{ ind2 }}if input_variable:
+{{ ind3 }}variable_name = input_variable
+{{ ind2 }}else:
+{{ ind3 }}variable_name = f"conditional_response_{condition_id}"
+{{ ind2 }}
+{{ ind2 }}# Сохраняем в пользовательские данные
+{{ ind2 }}user_data[user_id][variable_name] = user_text
+{{ ind2 }}
+{{ ind2 }}# Сохраняем в базу данных
+{{ ind2 }}saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)
+{{ ind2 }}if saved_to_db:
+{{ ind3 }}logging.info(f"✅ Условный ответ сохранен в БД: {variable_name} = {user_text} (пользователь {user_id})")
+{{ ind2 }}
+{{ ind2 }}# Очищаем состояние ожидания
+{{ ind2 }}del user_data[user_id]["waiting_for_conditional_input"]
+{{ ind2 }}
+{{ ind2 }}logging.info(f"Получен ответ на условное сообщение: {variable_name} = {user_text}")
+{{ ind2 }}
+{{ ind2 }}# Переходим к следующему узлу если указан
+{{ ind2 }}if next_node_id:
+{{ ind3 }}try:
+{{ ind4 }}logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
+{{ ind4 }}
+{{ ind4 }}# Проверяем, является ли это командой
+{{ ind4 }}if next_node_id == "profile_command":
+{{ ind5 }}logging.info("Переход к команде /profile")
+{{ ind5 }}profile_func = globals().get("profile_handler")
+{{ ind5 }}if profile_func:
+{{ ind5 }}    await profile_func(message)
+{{ ind5 }}else:
+{{ ind5 }}    logging.warning("profile_handler не найден, пропускаем вызов")
+{{ ind5 }}    await message.answer("Команда /profile не найдена")
+{{ ind4 }}else:
+{{ ind5 }}# Создаем фиктивный callback для навигации к обычному узлу
+{{ ind5 }}import types as aiogram_types
+{{ ind5 }}fake_callback = aiogram_types.SimpleNamespace(
+{{ ind6 }}id="conditional_nav",
+{{ ind6 }}from_user=message.from_user,
+{{ ind6 }}chat_instance="",
+{{ ind6 }}data=next_node_id,
+{{ ind6 }}message=message,
+{{ ind6 }}answer=lambda *args, **kwargs: asyncio.sleep(0)
+{{ ind5 }})
+{{ ind5 }}
+{% if nodes | length > 0 %}
+{% for node in nodes %}
+{{ ind5 }}{% if loop.first %}if{% else %}elif{% endif %} next_node_id == "{{ node.id }}":
+{{ ind6 }}await handle_callback_{{ node.safeName }}(fake_callback)
+{% endfor %}
+{{ ind5 }}else:
+{{ ind6 }}logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+{% else %}
+{{ ind5 }}logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")
+{% endif %}
+{{ ind3 }}except Exception as e:
+{{ ind4 }}logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+{{ ind2 }}
+{{ ind }}return  # Завершаем обработку для условного сообщения
+{{ ind }}

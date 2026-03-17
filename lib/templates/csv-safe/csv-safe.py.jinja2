@@ -1,0 +1,36 @@
+{#
+  Шаблоны для безопасной работы с CSV файлами
+
+  @param {string} operation   — 'write' или 'read'
+  @param {string} csvFileVar  — имя переменной с путём к файлу
+  @param {string} dataVar     — имя переменной с данными (для write)
+  @param {string} resultVar   — имя переменной для результата (для read)
+  @param {string} indentLevel — базовый отступ (по умолчанию '                ')
+#}
+{% set ind = indentLevel or '                ' %}
+{% if operation == 'write' %}
+{{ ind }}try:
+{{ ind }}    # Проверяем наличие файла
+{{ ind }}    if os.path.exists({{ csvFileVar }}):
+{{ ind }}        with open({{ csvFileVar }}, 'r', encoding='utf-8') as f:
+{{ ind }}            existing_ids = [line.strip() for line in f if line.strip()]
+{{ ind }}            if str({{ dataVar }}).strip() in existing_ids:
+{{ ind }}                logging.info(f"⚠️ ID {{{ dataVar }}} уже есть в CSV, пропускаем")
+{{ ind }}                return
+{{ ind }}    
+{{ ind }}    # Записываем ID в файл
+{{ ind }}    with open({{ csvFileVar }}, 'a', encoding='utf-8') as f:
+{{ ind }}        f.write(f"{{{ dataVar }}}\n")
+{{ ind }}    logging.info(f"✅ ID {{{ dataVar }}} записан в CSV файл: {{{ csvFileVar }}}")
+{{ ind }}except Exception as e:
+{{ ind }}    logging.error(f"❌ Ошибка записи в CSV: {e}")
+{% elif operation == 'read' %}
+{{ ind }}try:
+{{ ind }}    {{ resultVar }} = []
+{{ ind }}    if os.path.exists({{ csvFileVar }}):
+{{ ind }}        with open({{ csvFileVar }}, 'r', encoding='utf-8') as f:
+{{ ind }}            {{ resultVar }} = [line.strip() for line in f if line.strip()]
+{{ ind }}except Exception as e:
+{{ ind }}    logging.error(f"❌ Ошибка чтения CSV: {e}")
+{{ ind }}    {{ resultVar }} = []
+{% endif %}

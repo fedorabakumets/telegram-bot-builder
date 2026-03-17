@@ -1,0 +1,161 @@
+{#
+  Шаблон проверки состояния множественного выбора
+
+  Покрывает:
+  1. Проверку multi_select_node в user_data
+  2. Обработку кнопки "Готово" — сохранение и переход
+  3. Обработку кнопок выбора — toggle с галочкой
+  4. Обработку кнопок goto в режиме multiselect
+  5. Fallback — продолжение стандартной обработки
+
+  @param {array}   nodes      — предобработанные узлы
+  @param {array}   allNodeIds — все ID узлов
+  @param {string}  indentLevel — базовый отступ (по умолчанию '    ')
+#}
+
+{% set ind = indentLevel or '    ' %}
+{% set ind2 = ind ~ '    ' %}
+{% set ind3 = ind2 ~ '    ' %}
+{% set ind4 = ind3 ~ '    ' %}
+
+{{ ind }}# Проверяем, находится ли пользователь в режиме множественного выбора
+{{ ind }}if user_id in user_data and "multi_select_node" in user_data[user_id]:
+{{ ind2 }}node_id = user_data[user_id]["multi_select_node"]
+{{ ind2 }}multi_select_type = user_data[user_id].get("multi_select_type", "selection")
+{{ ind2 }}user_input = message.text
+{{ ind2 }}logging.info(f"🔍 Проверяем режим множественного выбора для пользователя {user_id}: node_id={node_id}, type={multi_select_type}")
+{{ ind2 }}
+{% for node in nodes %}
+{% if node.allowMultipleSelection %}
+{{ ind2 }}if node_id == "{{ node.id }}" and user_input == {{ node.continueText | escape_python_string }}:
+{{ ind3 }}# Завершение множественного выбора для узла {{ node.id }}
+{{ ind3 }}selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])
+{{ ind3 }}if selected_options:
+{{ ind4 }}selected_text = ", ".join(selected_options)
+{{ ind4 }}await save_user_data_to_db(user_id, {{ node.variableName | escape_python_string }}, selected_text)
+{{ ind3 }}
+{{ ind3 }}# Очищаем состояние
+{{ ind3 }}user_data[user_id].pop(f"multi_select_{node_id}", None)
+{{ ind3 }}user_data[user_id].pop("multi_select_node", None)
+{{ ind3 }}user_data[user_id].pop("multi_select_type", None)
+{{ ind3 }}user_data[user_id].pop("multi_select_variable", None)
+{{ ind3 }}
+{% if node.targetNode %}
+{{ ind3 }}# Переход к следующему узлу
+{% if node.targetNode.type == 'command' %}
+{{ ind3 }}await handle_command_{{ node.targetNode.data.command | safe_name }}(message)
+{% else %}
+{{ ind3 }}all_user_vars = await init_all_user_vars(user_id)
+{{ ind3 }}variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})
+{{ ind3 }}text = {{ node.targetNode.messageText | format_python_text }}
+{{ ind3 }}text = replace_variables_in_text(text, all_user_vars, variable_filters)
+{% if node.targetNode.keyboardType == 'inline' and node.targetNode.buttons %}
+{{ ind3 }}keyboard = InlineKeyboardMarkup(inline_keyboard=[
+{% for btn in node.targetNode.buttons %}
+{{ ind3 }}    [InlineKeyboardButton(text={{ btn.text | escape_python_string }}, callback_data={{ btn.id | escape_python_string }})],
+{% endfor %}
+{{ ind3 }}])
+{{ ind3 }}await message.answer(text, reply_markup=keyboard)
+{% elif node.targetNode.keyboardType == 'reply' and node.targetNode.buttons %}
+{{ ind3 }}builder = ReplyKeyboardBuilder()
+{% for btn in node.targetNode.buttons %}
+{{ ind3 }}builder.add(KeyboardButton(text={{ btn.text | escape_python_string }}))
+{% endfor %}
+{{ ind3 }}keyboard = builder.as_markup(resize_keyboard={{ node.targetNode.resizeKeyboard | to_python_boolean }}, one_time_keyboard={{ node.targetNode.oneTimeKeyboard | to_python_boolean }})
+{{ ind3 }}await message.answer(text, reply_markup=keyboard)
+{% else %}
+{{ ind3 }}await message.answer(text)
+{% endif %}
+{% endif %}
+{% endif %}
+{{ ind3 }}return
+{{ ind2 }}
+{% endif %}
+{% endfor %}
+
+{% for node in nodes %}
+{% if node.allowMultipleSelection and node.selectionButtons %}
+{{ ind2 }}if node_id == "{{ node.id }}":
+{% for button in node.selectionButtons %}
+{{ ind3 }}# Проверяем текст кнопки, убирая галочку при необходимости
+{{ ind3 }}clean_user_input = user_input.replace("✅ ", "").strip()
+{{ ind3 }}if clean_user_input == {{ button.text | escape_python_string }}:
+{{ ind4 }}if f"multi_select_{node_id}" not in user_data[user_id]:
+{{ ind4 }}    user_data[user_id][f"multi_select_{node_id}"] = []
+{{ ind4 }}
+{{ ind4 }}selected_list = user_data[user_id][f"multi_select_{node_id}"]
+{{ ind4 }}if {{ button.text | escape_python_string }} in selected_list:
+{{ ind4 }}    selected_list.remove({{ button.text | escape_python_string }})
+{{ ind4 }}    await message.answer("❌ Убрано: " + {{ button.text | escape_python_string }})
+{{ ind4 }}else:
+{{ ind4 }}    selected_list.append({{ button.text | escape_python_string }})
+{{ ind4 }}    await message.answer("✅ Выбрано: " + {{ button.text | escape_python_string }})
+{{ ind4 }}
+{{ ind4 }}# Обновляем клавиатуру с галочками
+{{ ind4 }}builder = ReplyKeyboardBuilder()
+{% for sel_btn in node.selectionButtons %}
+{% set btn_text = sel_btn.text | escape_python_string %}
+{{ ind4 }}builder.add(KeyboardButton(text=('✅ ' if {{ btn_text }} in selected_list else '') + {{ btn_text }}))
+{% endfor %}
+{% if node.completeButton %}
+{{ ind4 }}builder.add(KeyboardButton(text={{ node.completeButton.text | escape_python_string }}))
+{% endif %}
+{% for reg_btn in node.regularButtons %}
+{{ ind4 }}builder.add(KeyboardButton(text={{ reg_btn.text | escape_python_string }}))
+{% endfor %}
+{{ ind4 }}builder.adjust(2)
+{{ ind4 }}keyboard = builder.as_markup(resize_keyboard={{ node.resizeKeyboard | to_python_boolean }}, one_time_keyboard={{ node.oneTimeKeyboard | to_python_boolean }})
+{{ ind4 }}all_user_vars = await init_all_user_vars(user_id)
+{{ ind4 }}variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})
+{{ ind4 }}text = {{ node.messageText | format_python_text }}
+{{ ind4 }}text = replace_variables_in_text(text, all_user_vars, variable_filters)
+{{ ind4 }}await message.answer(text, reply_markup=keyboard)
+{{ ind4 }}return
+{{ ind3 }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{{ ind }}# Обработка обычных кнопок (goto) в режиме множественного выбора
+{{ ind }}if user_id in user_data and "multi_select_node" in user_data[user_id]:
+{{ ind2 }}node_id = user_data[user_id]["multi_select_node"]
+{{ ind2 }}user_input = message.text
+{{ ind2 }}
+{% for node in nodes %}
+{% if node.allowMultipleSelection and node.gotoButtons %}
+{{ ind2 }}if node_id == "{{ node.id }}":
+{% for button in node.gotoButtons %}
+{% if button.targetNode %}
+{{ ind3 }}if user_input == {{ button.text | escape_python_string }}:
+{{ ind4 }}# Сохраняем текущее состояние выбора перед переходом
+{{ ind4 }}selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])
+{{ ind4 }}if selected_options:
+{{ ind4 }}    selected_text = ", ".join(selected_options)
+{{ ind4 }}    await save_user_data_to_db(user_id, {{ node.variableName | escape_python_string }}, selected_text)
+{{ ind4 }}# Очищаем состояние множественного выбора перед переходом
+{{ ind4 }}user_data[user_id].pop(f"multi_select_{node_id}", None)
+{{ ind4 }}user_data[user_id].pop("multi_select_node", None)
+{{ ind4 }}user_data[user_id].pop("multi_select_type", None)
+{{ ind4 }}user_data[user_id].pop("multi_select_variable", None)
+{% if button.targetNode.type == 'command' %}
+{{ ind4 }}await handle_command_{{ button.targetNode.safeName }}(message)
+{% else %}
+{{ ind4 }}import types as aiogram_types
+{{ ind4 }}fake_callback = aiogram_types.SimpleNamespace(
+{{ ind4 }}    id="multi_select_goto",
+{{ ind4 }}    from_user=message.from_user,
+{{ ind4 }}    chat_instance="",
+{{ ind4 }}    data={{ button.target | escape_python_string }},
+{{ ind4 }}    message=message,
+{{ ind4 }}    answer=lambda *args, **kwargs: None
+{{ ind4 }})
+{{ ind4 }}await handle_callback_{{ button.targetNode.safeName }}(fake_callback)
+{% endif %}
+{{ ind4 }}return
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{{ ind }}
+{{ ind }}# Если пользователь не находится в режиме множественного выбора, продолжаем стандартную обработку

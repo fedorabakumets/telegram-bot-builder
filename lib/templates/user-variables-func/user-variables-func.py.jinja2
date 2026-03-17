@@ -1,0 +1,17 @@
+{#
+  Шаблон функции get_user_variables
+
+  @param {string} indentLevel — базовый отступ (по умолчанию '')
+#}
+{% set ind = indentLevel or '' %}
+{{ ind }}def get_user_variables(user_id):
+{{ ind }}    """Получает все переменные пользователя из локального хранилища
+{{ ind }}    
+{{ ind }}    Args:
+{{ ind }}        user_id (int): ID пользователя Telegram
+{{ ind }}    
+{{ ind }}    Returns:
+{{ ind }}        dict: Словарь с переменными пользователя или пустой словарь если пользователь не найден
+{{ ind }}    """
+{{ ind }}    # Возвращаем переменные пользователя из локального хранилища или пустой словарь
+{{ ind }}    return user_data.get(user_id, {})

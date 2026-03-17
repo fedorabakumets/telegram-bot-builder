@@ -1,0 +1,32 @@
+{#
+  Шаблон инициализации callback-обработчика
+
+  @fileoverview Генерирует начальный блок callback-обработчика:
+    - ответ на callback (answer)
+    - инициализация переменных пользователя
+    - опциональное сохранение variableFilters
+
+  @param {string}  nodeId          — ID узла
+  @param {boolean} hasHideAfterClick — есть ли кнопки с hideAfterClick
+  @param {object}  variableFilters — фильтры переменных (опционально)
+  @param {string}  indentLevel     — базовый отступ (по умолчанию '    ')
+#}
+
+{% set ind = indentLevel or '    ' %}
+
+{% if hasHideAfterClick %}
+{{ ind }}await callback_query.message.edit_reply_markup(reply_markup=None)
+{{ ind }}
+{% endif %}
+{{ ind }}# Пытаемся ответить на callback (игнорируем ошибку если уже обработан)
+{{ ind }}try:
+{{ ind }}    await callback_query.answer()
+{{ ind }}except Exception:
+{{ ind }}    pass
+{{ ind }}
+{{ ind }}# Инициализируем базовые переменные пользователя
+{{ ind }}user_name = await init_user_variables(user_id, callback_query.from_user)
+{% if variableFilters %}
+{{ ind }}# Сохраняем фильтры переменных из узла
+{{ ind }}user_data[user_id]["_variable_filters"] = {{ variableFilters | dump }}
+{% endif %}

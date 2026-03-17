@@ -1,0 +1,39 @@
+{#
+  Шаблон сохранения медиа-переменных в user_data
+
+  @param {string}  nodeId      — ID узла
+  @param {string}  imageUrl    — URL изображения (опционально)
+  @param {string}  videoUrl    — URL видео (опционально)
+  @param {string}  audioUrl    — URL аудио (опционально)
+  @param {string}  documentUrl — URL документа (опционально)
+  @param {string}  indentLevel — базовый отступ (по умолчанию '                ')
+#}
+{% set ind = indentLevel or '                ' %}
+{% if imageUrl and imageUrl != 'undefined' %}
+{{ ind }}# Сохраняем imageUrl в переменную image_url_{{ nodeId }}
+{{ ind }}user_id = message.from_user.id
+{{ ind }}user_data[user_id] = user_data.get(user_id, {})
+{{ ind }}user_data[user_id]["image_url_{{ nodeId }}"] = "{{ imageUrl }}"
+{{ ind }}await update_user_data_in_db(user_id, "image_url_{{ nodeId }}", "{{ imageUrl }}")
+{% endif %}
+{% if documentUrl %}
+{{ ind }}# Сохраняем documentUrl в переменную document_url_{{ nodeId }}
+{{ ind }}user_id = message.from_user.id
+{{ ind }}user_data[user_id] = user_data.get(user_id, {})
+{{ ind }}user_data[user_id]["document_url_{{ nodeId }}"] = "{{ documentUrl }}"
+{{ ind }}await update_user_data_in_db(user_id, "document_url_{{ nodeId }}", "{{ documentUrl }}")
+{% endif %}
+{% if videoUrl %}
+{{ ind }}# Сохраняем videoUrl в переменную video_url_{{ nodeId }}
+{{ ind }}user_id = message.from_user.id
+{{ ind }}user_data[user_id] = user_data.get(user_id, {})
+{{ ind }}user_data[user_id]["video_url_{{ nodeId }}"] = "{{ videoUrl }}"
+{{ ind }}await update_user_data_in_db(user_id, "video_url_{{ nodeId }}", "{{ videoUrl }}")
+{% endif %}
+{% if audioUrl %}
+{{ ind }}# Сохраняем audioUrl в переменную audio_url_{{ nodeId }}
+{{ ind }}user_id = message.from_user.id
+{{ ind }}user_data[user_id] = user_data.get(user_id, {})
+{{ ind }}user_data[user_id]["audio_url_{{ nodeId }}"] = "{{ audioUrl }}"
+{{ ind }}await update_user_data_in_db(user_id, "audio_url_{{ nodeId }}", "{{ audioUrl }}")
+{% endif %}

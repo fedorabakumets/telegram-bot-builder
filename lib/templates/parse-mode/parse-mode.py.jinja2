@@ -1,0 +1,19 @@
+{#
+  Шаблон выбора parse_mode
+
+  @param {string} formatMode   — режим форматирования: 'markdown', 'html', или пусто
+  @param {boolean} markdown    — флаг markdown (устаревший)
+  @param {string} indentLevel  — базовый отступ (по умолчанию '                ')
+#}
+{% set ind = indentLevel or '                ' %}
+{{ ind }}# Используем parse_mode условного сообщения если он установлен
+{{ ind }}if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+{{ ind }}    parse_mode = conditional_parse_mode
+{{ ind }}else:
+{% if formatMode == 'markdown' or markdown %}
+{{ ind }}    parse_mode = ParseMode.MARKDOWN
+{% elif formatMode == 'html' %}
+{{ ind }}    parse_mode = ParseMode.HTML
+{% else %}
+{{ ind }}    parse_mode = None
+{% endif %}

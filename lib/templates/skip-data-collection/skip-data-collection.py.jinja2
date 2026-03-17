@@ -1,0 +1,18 @@
+{#
+  Шаблон проверки skipDataCollection
+
+  @param {string} variableName  — имя переменной для сохранения
+  @param {string} variableValue — выражение значения переменной
+  @param {string} indentLevel   — базовый отступ (по умолчанию '    ')
+#}
+{% set ind = indentLevel or '    ' %}
+{{ ind }}# Проверяем, был ли переход через кнопку с skipDataCollection
+{{ ind }}skip_transition_flag = user_data.get(user_id, {}).get("skipDataCollectionTransition", False)
+{{ ind }}if not skip_transition_flag:
+{{ ind }}    await update_user_data_in_db(user_id, "{{ variableName }}", {{ variableValue }})
+{{ ind }}    logging.info(f"Переменная {{ variableName }} сохранена: " + str({{ variableValue }}) + f" (пользователь {user_id})")
+{{ ind }}else:
+{{ ind }}    # Сбрасываем флаг
+{{ ind }}    if user_id in user_data and "skipDataCollectionTransition" in user_data[user_id]:
+{{ ind }}        del user_data[user_id]["skipDataCollectionTransition"]
+{{ ind }}    logging.info(f"Переход через skipDataCollection, переменная {{ variableName }} не сохраняется (пользователь {user_id})")

@@ -1,0 +1,13 @@
+{#
+  Шаблон условия if/elif для одного узла
+
+  @param {number}  index       — индекс узла (0 = if, >0 = elif)
+  @param {string}  nodeId      — ID узла
+  @param {string}  indentLevel — базовый отступ (по умолчанию '            ')
+#}
+{% set ind = indentLevel or '            ' %}
+{% if index == 0 %}
+{{ ind }}if next_node_id == "{{ nodeId }}":
+{% else %}
+{{ ind }}elif next_node_id == "{{ nodeId }}":
+{% endif %}

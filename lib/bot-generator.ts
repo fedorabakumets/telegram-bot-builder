@@ -502,7 +502,7 @@ export function generatePythonCode(
 
     // Адаптер: generateContinuationLogicForButtonBasedInput ожидает (buttons, indent, nodeId, data, allNodeIds)
     // generateKeyboard из templates ожидает KeyboardTemplateParams — оборачиваем
-    const generateInlineKbAdapter = (buttons: any[], indent: string, nodeId: string, data: any, allNodeIds: string[]) =>
+    const generateInlineKbAdapter = (buttons: any[], indent: string, nodeId: string, _data: any, allNodeIds: string[]) =>
       generateKeyboard({ keyboardType: 'inline', buttons, nodeId, indentLevel: indent, allNodeIds });
 
     const continuationHandlerCode = generateContinuationLogicForButtonBasedInput(

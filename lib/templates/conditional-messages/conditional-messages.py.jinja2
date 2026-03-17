@@ -1,0 +1,58 @@
+{#
+  Шаблон проверки условных сообщений
+
+  @fileoverview Генерирует Python-код для выбора текста сообщения
+  на основе условий (данных пользователя).
+
+  @param {array}  conditionalMessages — массив условных сообщений
+    каждый элемент: { condition, variableName, variableNames, logicOperator,
+                      messageText, priority, fallbackMessage }
+  @param {string} defaultText        — текст по умолчанию (fallback)
+  @param {string} indentLevel        — базовый отступ (по умолчанию '                ')
+#}
+
+{% set ind = indentLevel or '                ' %}
+{% set ind2 = ind ~ '    ' %}
+{% set ind3 = ind2 ~ '    ' %}
+
+{{ ind }}# Проверяем условные сообщения
+{{ ind }}text = None
+{{ ind }}
+{{ ind }}# Получаем данные пользователя для проверки условий
+{{ ind }}user_record = await get_user_from_db(user_id)
+{{ ind }}if not user_record:
+{{ ind2 }}user_record = user_data.get(user_id, {})
+{{ ind }}
+{{ ind }}# Безопасно извлекаем user_data
+{{ ind }}if isinstance(user_record, dict):
+{{ ind2 }}if "user_data" in user_record and isinstance(user_record["user_data"], dict):
+{{ ind3 }}user_data_dict = user_record["user_data"]
+{{ ind2 }}else:
+{{ ind3 }}user_data_dict = user_record
+{{ ind }}else:
+{{ ind2 }}user_data_dict = {}
+{{ ind }}
+
+{% for msg in conditionalMessages %}
+{% set varNames = msg.variableNames if msg.variableNames and msg.variableNames | length > 0 else ([msg.variableName] if msg.variableName else []) %}
+{% set op = msg.logicOperator or 'AND' %}
+{% if loop.first %}
+{{ ind }}if (
+{% else %}
+{{ ind }}elif (
+{% endif %}
+{% for varName in varNames %}
+{% if not loop.last %}
+{{ ind }}    check_user_variable_inline("{{ varName }}", user_data_dict)[0]{{ ' and' if op == 'AND' else ' or' }}
+{% else %}
+{{ ind }}    check_user_variable_inline("{{ varName }}", user_data_dict)[0]
+{% endif %}
+{% endfor %}
+{{ ind }}):
+{{ ind2 }}text = {{ msg.messageText | default('') | escape_python_string }}
+{{ ind2 }}logging.info("Условие выполнено: {{ varNames | join(', ') }}")
+{% endfor %}
+{{ ind }}else:
+{{ ind2 }}text = {{ defaultText | default('""') }}
+{{ ind2 }}logging.info("Используется основное сообщение узла")
+{{ ind }}

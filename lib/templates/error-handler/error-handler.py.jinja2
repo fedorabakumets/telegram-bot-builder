@@ -1,0 +1,9 @@
+{#
+  Шаблон обработчика ошибок при переходе между узлами
+
+  @param {string} indentLevel — базовый отступ (по умолчанию '        ')
+#}
+{% set ind = indentLevel or '        ' %}
+{{ ind }}except Exception as e:
+{{ ind }}    logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+
