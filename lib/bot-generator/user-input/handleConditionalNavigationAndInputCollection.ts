@@ -44,6 +44,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                         nodeId: targetNode.id,
                         allNodeIds,
                         indentLevel: '                        ',
+                        keyboardLayout: targetNode.data?.keyboardLayout,
                     });
                     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
                     code += `                        # Заменяем все переменные в тексте\n`;
@@ -305,6 +306,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                                     nodeId: targetNode.id,
                                     allNodeIds,
                                     indentLevel: '                        ',
+                                    keyboardLayout: targetNode.data?.keyboardLayout,
                                 });
                             }
                             code += `                        await message.answer(text, reply_markup=keyboard)\n`;
@@ -364,6 +366,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                             nodeId: targetNode.id,
                             allNodeIds,
                             indentLevel: '                        ',
+                            keyboardLayout: targetNode.data?.keyboardLayout,
                         });
                         code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
                         code += '                        await message.answer(text, reply_markup=keyboard)\n';

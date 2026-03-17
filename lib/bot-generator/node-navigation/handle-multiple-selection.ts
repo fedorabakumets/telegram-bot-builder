@@ -58,6 +58,7 @@ export function handleMultipleSelectionNode(
       keyboardType: 'inline',
       buttons: targetNode.data.buttons,
       nodeId: targetNode.id,
+      keyboardLayout: targetNode.data?.keyboardLayout,
       allNodeIds,
       indentLevel: bodyIndent,
     });

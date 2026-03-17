@@ -64,6 +64,7 @@ function generateInlineKeyboardWithInput(
     keyboardType: 'inline',
     buttons: targetNode.data.buttons || [],
     nodeId: targetNode.id,
+    keyboardLayout: targetNode.data?.keyboardLayout,
     indentLevel: bodyIndent,
   });
   code += keyboardCode;
@@ -87,6 +88,7 @@ function generateReplyKeyboardWithInput(
     keyboardType: 'reply',
     buttons: targetNode.data.buttons || [],
     nodeId: targetNode.id,
+    keyboardLayout: targetNode.data?.keyboardLayout,
     indentLevel: bodyIndent,
     resizeKeyboard: targetNode.data?.resizeKeyboard !== false,
     oneTimeKeyboard: targetNode.data?.oneTimeKeyboard === true,

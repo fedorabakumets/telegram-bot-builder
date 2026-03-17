@@ -17,6 +17,7 @@ export interface RegularInlineKeyboardParams {
   buttons: Button[];
   nodeData?: any;
   nodeId?: string;
+  keyboardLayout?: string;
 }
 
 /**
@@ -37,6 +38,7 @@ export function generateRegularInlineKeyboard(
     buttons: buttons || [],
     nodeId: nodeData?.id || params.nodeId || 'inline',
     indentLevel: indent,
+    keyboardLayout: params.keyboardLayout ?? nodeData?.keyboardLayout,
   });
 
   return keyboardCode;

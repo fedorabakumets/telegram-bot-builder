@@ -248,7 +248,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                 buttons: targetNode.data.buttons,
                 resizeKeyboard: targetNode.data.resizeKeyboard,
                 oneTimeKeyboard: targetNode.data.oneTimeKeyboard,
-                hasConditionalMessages: targetNode.data?.enableConditionalMessages && targetNode.data?.conditionalMessages && targetNode.data?.conditionalMessages.length > 0
+                hasConditionalMessages: targetNode.data?.enableConditionalMessages && targetNode.data?.conditionalMessages && targetNode.data?.conditionalMessages.length > 0,
+                keyboardLayout: targetNode.data?.keyboardLayout,
               }, '    ');
               
               // Для reply клавиатуры нужно отправить новое сообщение
@@ -396,7 +397,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
               // Генерируем inline клавиатуру (по умолчанию)
               code += generateRegularInlineKeyboard({
                 buttons: targetNode.data.buttons,
-                nodeData: targetNode.data
+                nodeData: targetNode.data,
+                keyboardLayout: targetNode.data?.keyboardLayout,
               }, '    ');
             }
           } else {
@@ -709,6 +711,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                           nodeId: navTargetNode.id,
                           allNodeIds,
                           indentLevel: '                ',
+                          keyboardLayout: navTargetNode.data?.keyboardLayout,
                         });
                         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательно вызываем замену переменных в тексте
                         code += `                # Заменяем все переменные в тексте\n`;

@@ -121,6 +121,7 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
                 keyboardType: 'inline',
                 buttons: targetNode.data.buttons,
                 nodeId: targetNode.id,
+                keyboardLayout: targetNode.data?.keyboardLayout,
                 allNodeIds,
                 indentLevel: '        ',
             });
@@ -133,6 +134,7 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
                 keyboardType: 'reply',
                 buttons: targetNode.data.buttons,
                 nodeId: targetNode.id,
+                keyboardLayout: targetNode.data?.keyboardLayout,
                 indentLevel: '        ',
                 oneTimeKeyboard: targetNode.data.oneTimeKeyboard,
                 resizeKeyboard: targetNode.data.resizeKeyboard,

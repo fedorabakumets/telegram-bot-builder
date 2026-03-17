@@ -19,6 +19,7 @@ export interface RegularReplyKeyboardParams {
   oneTimeKeyboard?: boolean;
   hasConditionalMessages?: boolean;
   nodeId?: string;
+  keyboardLayout?: string;
 }
 
 /**
@@ -32,7 +33,7 @@ export function generateRegularReplyKeyboard(
   params: RegularReplyKeyboardParams,
   indent: string = '    '
 ): string {
-  const { buttons, resizeKeyboard, oneTimeKeyboard, hasConditionalMessages, nodeId } = params;
+  const { buttons, resizeKeyboard, oneTimeKeyboard, hasConditionalMessages, nodeId, keyboardLayout } = params;
 
   let code = '';
 
@@ -53,6 +54,7 @@ export function generateRegularReplyKeyboard(
       indentLevel: `${indent}    `,
       resizeKeyboard,
       oneTimeKeyboard,
+      keyboardLayout,
     });
     code += keyboardCode;
     code += `${indent}    logging.info("✅ Используем обычную reply клавиатуру")\n`;
@@ -65,6 +67,7 @@ export function generateRegularReplyKeyboard(
       indentLevel: indent,
       resizeKeyboard,
       oneTimeKeyboard,
+      keyboardLayout,
     });
     code += keyboardCode;
   }

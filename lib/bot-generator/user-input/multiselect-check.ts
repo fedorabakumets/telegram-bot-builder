@@ -57,6 +57,7 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                                 nodeId: targetNode.id,
                                 allNodeIds,
                                 indentLevel: '            ',
+                                keyboardLayout: targetNode.data?.keyboardLayout,
                             });
                             code += '            await message.answer(text, reply_markup=keyboard)\n';
                         } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {

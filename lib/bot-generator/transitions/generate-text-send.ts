@@ -32,6 +32,7 @@ export function generateTextSend(
       nodeId: node.id,
       allNodeIds,
       indentLevel: indent,
+      keyboardLayout: node.data?.keyboardLayout,
     });
     code += `${indent}await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n`;
   } else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
