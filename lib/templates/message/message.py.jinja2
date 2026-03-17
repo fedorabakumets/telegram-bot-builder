@@ -56,6 +56,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         return
     {%- endif %}
 
+{# Обработчики синонимов #}
+{%- if synonymEntries and synonymEntries|length > 0 %}
+{% include 'synonyms/synonyms.py.jinja2' %}
+{%- endif %}
     {# Сохранение информации о пользователе #}
     username = callback_query.from_user.username
     first_name = callback_query.from_user.first_name

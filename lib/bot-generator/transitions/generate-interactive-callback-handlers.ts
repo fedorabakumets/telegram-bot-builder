@@ -470,8 +470,8 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             });
           }
 
-          // ИСПРАВЛЕНИЕ: Если автопереход не произошел, устанавливаем состояние ожидания
-          const collectInputAfterTransitionCheck = targetNode.data?.collectUserInput !== false ||
+          // Устанавливаем состояние ожидания только если явно включён сбор ввода
+          const collectInputAfterTransitionCheck = targetNode.data?.collectUserInput === true ||
             targetNode.data.enableTextInput === true ||
             targetNode.data.enablePhotoInput === true ||
             targetNode.data.enableVideoInput === true ||

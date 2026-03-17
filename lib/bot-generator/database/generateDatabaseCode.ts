@@ -40,11 +40,9 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
 
   code += '\n';
 
-  // Сложные функции остаются в TS
-  code += generateSaveToDatabaseTable({
-    variableName: 'test_var',
-    valueExpression: 'test_value',
-  });
+  // УДАЛЕНО: Тестовый код generateSaveToDatabaseTable больше не нужен
+  // Сохранение в таблицы БД теперь генерируется в обработчиках узлов
+  // где есть реальные переменные для сохранения
 
   return code;
 }

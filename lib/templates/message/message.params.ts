@@ -101,4 +101,8 @@ export interface MessageTemplateParams {
   conditionalMessages?: any[];
   /** Запасное сообщение */
   fallbackMessage?: string;
+
+  // --- Синонимы ---
+  /** Записи синонимов для генерации обработчиков */
+  synonymEntries?: any[];
 }

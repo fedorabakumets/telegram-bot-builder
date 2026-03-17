@@ -18,6 +18,7 @@ import { processCodeWithAutoComments } from '../bot-generator/utils/generateGene
 import { generateUserHandlerFromNode } from '../templates/user-handler';
 import { generateAnimationHandler } from '../templates/animation-handler/animation-handler.renderer';
 import { generateAdminRightsFromNode } from '../templates/admin-rights/admin-rights.renderer';
+import { collectSynonymEntries } from '../templates/synonyms/synonyms.renderer';
 
 /**
  * Генерирует обработчики для каждого узла
@@ -74,6 +75,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
       enableConditionalMessages: node.data?.enableConditionalMessages || false,
       conditionalMessages: node.data?.conditionalMessages || [],
       fallbackMessage: node.data?.fallbackMessage,
+      synonymEntries: collectSynonymEntries([node]),
     }),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,

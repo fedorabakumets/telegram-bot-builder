@@ -120,6 +120,26 @@ describe('main.py.jinja2 шаблон', () => {
 
         assert.ok(result.includes('if __name__ == "__main__":'));
       });
+
+      // ─── Проверка дублирования (проблема #4) ───────────────────────────────
+
+      it('set_bot_commands определяется ровно один раз', () => {
+        const result = generateMain(validParamsDisabled);
+        const count = (result.match(/async def set_bot_commands\(\)/g) || []).length;
+        assert.strictEqual(count, 1, `set_bot_commands определена ${count} раз(а), ожидалось 1`);
+      });
+
+      it('if __name__ == "__main__" встречается ровно один раз', () => {
+        const result = generateMain(validParamsDisabled);
+        const count = (result.match(/if __name__ == "__main__":/g) || []).length;
+        assert.strictEqual(count, 1, `if __name__ == "__main__" встречается ${count} раз(а), ожидалось 1`);
+      });
+
+      it('asyncio.run(main()) вызывается ровно один раз', () => {
+        const result = generateMain(validParamsDisabled);
+        const count = (result.match(/asyncio\.run\(main\(\)\)/g) || []).length;
+        assert.strictEqual(count, 1, `asyncio.run(main()) вызван ${count} раз(а), ожидалось 1`);
+      });
     });
 
     describe('Производительность', () => {

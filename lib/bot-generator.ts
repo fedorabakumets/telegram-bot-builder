@@ -55,7 +55,6 @@ import { newgenerateStateTransitionAndRenderLogic } from './bot-generator/transi
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './bot-generator/user-input';
 import { createProcessNodeButtonsFunction } from './bot-generator/node-handlers';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './bot-generator/scaffolding';
-import { generateSynonymHandlers } from './templates/synonyms';
 import { addAutoTransitionNodes } from './bot-generator/utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
 import { collectInputTargetNodes } from './bot-generator/utils/collectInputTargetNodes';
@@ -318,8 +317,8 @@ export function generatePythonCode(
   // Генерируем обработчики для каждого узла
   code += generateNodeHandlers(context.nodes || [], !!context.options.userDatabaseEnabled, !!context.options.enableComments);
 
-  // Генерируем обработчики синонимов для всех узлов
-  code += generateSynonymHandlers(context.nodes || []);
+  // Синонимы уже включены внутри шаблонов start.py.jinja2 / command.py.jinja2 / message.py.jinja2
+  // через {% include 'synonyms/synonyms.py.jinja2' %}, поэтому отдельный вызов не нужен.
 
   // Генерируем обработчики обратного вызова для inline кнопок И целевых узлов ввода
   const inlineNodes = filterInlineNodes(context.nodes || []);
@@ -343,10 +342,14 @@ export function generatePythonCode(
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем узла, которые являются целями автопереходов
   addAutoTransitionNodes(context.nodes || [], allReferencedNodeIds);
 
-  // Добавляем все узлы в allReferencedNodeIds, чтобы для каждого узла создавался обработчик
-  // Это необходимо, потому что в разных местах кода генерируются вызовы handle_callback_... для всех узлов
+  // Добавляем только узлы, которые НЕ имеют собственного обработчика из generateNodeHandlers.
+  // Узлы типа start/command/message уже получили handle_callback_* через message.py.jinja2 и
+  // generate-new-node-handlers, поэтому повторно их не добавляем — это источник дублирования.
+  const ALREADY_HANDLED_TYPES = new Set(['start', 'command', 'message']);
   context.nodes.forEach(node => {
-    allReferencedNodeIds.add(node.id);
+    if (!ALREADY_HANDLED_TYPES.has(node.type)) {
+      allReferencedNodeIds.add(node.id);
+    }
   });
 
   // ФИЛЬТРАЦИЯ: Убедимся, что allReferencedNodeIds содержит только реально существующие узлы

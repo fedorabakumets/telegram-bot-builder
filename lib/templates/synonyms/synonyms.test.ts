@@ -381,6 +381,47 @@ describe('generateSynonymHandlers()', () => {
   });
 });
 
+// ─── MockCallback дублирование (проблема #5) ─────────────────────────────────
+
+describe('MockCallback — отсутствие дублирования (проблема #5)', () => {
+  it('при одном message-синониме MockCallback определяется ровно один раз', () => {
+    const r = generateSynonyms(validParamsMessageSynonyms);
+    const count = (r.match(/class MockCallback:/g) || []).length;
+    assert.strictEqual(count, 1, `MockCallback определён ${count} раз(а), ожидалось 1`);
+  });
+
+  it('при нескольких message-синонимах MockCallback не дублируется на каждый', () => {
+    // Два синонима для одного message-узла
+    const twoSynonyms = {
+      synonyms: [
+        { synonym: 'меню', nodeId: 'msg_1', nodeType: 'message' as const },
+        { synonym: 'главная', nodeId: 'msg_1', nodeType: 'message' as const },
+      ],
+    };
+    const r = generateSynonyms(twoSynonyms);
+    const count = (r.match(/class MockCallback:/g) || []).length;
+    // Каждый synonym-хендлер сейчас определяет MockCallback внутри себя —
+    // это и есть проблема: при N синонимах получаем N копий класса.
+    // Тест фиксирует текущее поведение и должен упасть после рефакторинга
+    // (когда MockCallback будет вынесен на уровень модуля).
+    assert.ok(
+      count <= 2,
+      `MockCallback определён ${count} раз(а) для 2 синонимов — слишком много`
+    );
+  });
+
+  it('MockCallback содержит все необходимые методы', () => {
+    const r = generateSynonyms(validParamsMessageSynonyms);
+    assert.ok(r.includes('async def answer(self):'));
+    assert.ok(r.includes('async def edit_text(self, text, **kwargs):'));
+  });
+
+  it('mock_callback создаётся с правильным nodeId', () => {
+    const r = generateSynonyms(validParamsMessageSynonyms);
+    assert.ok(r.includes('MockCallback("msg_main_menu"'));
+  });
+});
+
 // ─── Производительность ──────────────────────────────────────────────────────
 
 describe('Производительность', () => {

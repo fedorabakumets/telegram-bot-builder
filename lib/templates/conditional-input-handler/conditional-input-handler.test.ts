@@ -130,6 +130,14 @@ describe('generateConditionalInputHandler()', () => {
       const r = generateConditionalInputHandler(validParamsWithNodes);
       assert.ok(r.includes('return  # Завершаем обработку для условного сообщения'));
     });
+
+    it('return находится внутри if-блока (отступ ind2, не ind)', () => {
+      const r = generateConditionalInputHandler(validParamsWithNodes);
+      // return должен быть с отступом ind2 (8 пробелов), а не ind (4 пробела)
+      assert.ok(r.includes('        return  # Завершаем обработку для условного сообщения'));
+      // Не должно быть строки с ровно 4 пробелами (уровень функции)
+      assert.ok(!r.match(/^    return  # Завершаем обработку для условного сообщения/m));
+    });
   });
 
   describe('пустые параметры', () => {
@@ -194,5 +202,48 @@ describe('Производительность', () => {
     const start = Date.now();
     generateConditionalInputHandler(validParamsWithNodes);
     assert.ok(Date.now() - start < 10);
+  });
+});
+
+// ─── Качество кода (проблема #1 — лишние пустые строки) ──────────────────────
+
+describe('качество кода — пустые строки', () => {
+  it('не содержит более 2 пустых строк подряд', () => {
+    const r = generateConditionalInputHandler(validParamsWithNodes);
+    assert.ok(
+      !r.includes('\n\n\n'),
+      'Обнаружено 3+ пустых строки подряд'
+    );
+  });
+
+  it('не содержит строк только из пробелов', () => {
+    const lines = generateConditionalInputHandler(validParamsWithNodes).split('\n');
+    const blankWithSpaces = lines.filter(l => l.length > 0 && l.trim() === '');
+    // TODO: шаблон генерирует строки с пробелами — это known issue #1
+    // Тест фиксирует количество таких строк чтобы оно не росло
+    assert.ok(
+      blankWithSpaces.length <= 40,
+      `Найдено ${blankWithSpaces.length} строк только из пробелов (порог: 40)`
+    );
+  });
+});
+
+// ─── Мёртвый код после return (проблема #6 — регрессия) ──────────────────────
+
+describe('отсутствие мёртвого кода после return', () => {
+  it('return находится внутри if-блока (отступ ind2, не ind)', () => {
+    const r = generateConditionalInputHandler(validParamsWithNodes);
+    assert.ok(r.includes('        return  # Завершаем обработку для условного сообщения'));
+    assert.ok(!r.match(/^    return  # Завершаем обработку для условного сообщения/m));
+  });
+
+  it('код после return не является мёртвым — return внутри if', () => {
+    const r = generateConditionalInputHandler(validParamsWithNodes);
+    // Находим позицию return и убеждаемся что он внутри if-блока (8 пробелов)
+    const lines = r.split('\n');
+    const returnLine = lines.find(l => l.includes('return  # Завершаем обработку'));
+    assert.ok(returnLine, 'Строка return не найдена');
+    const indent = returnLine!.match(/^(\s*)/)?.[1] ?? '';
+    assert.strictEqual(indent.length, 8, `Отступ return = ${indent.length} пробелов, ожидалось 8`);
   });
 });

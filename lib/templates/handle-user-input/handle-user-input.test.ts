@@ -185,3 +185,26 @@ describe('Производительность', () => {
     assert.ok(Date.now() - start < 10);
   });
 });
+
+// ─── Качество кода (проблема #1 — лишние пустые строки) ──────────────────────
+
+describe('качество кода — пустые строки', () => {
+  it('не содержит более 2 пустых строк подряд', () => {
+    const r = generateHandleUserInput(validParamsDefault);
+    assert.ok(
+      !r.includes('\n\n\n'),
+      'Обнаружено 3+ пустых строки подряд'
+    );
+  });
+
+  it('не содержит строк только из пробелов', () => {
+    const lines = generateHandleUserInput(validParamsDefault).split('\n');
+    const blankWithSpaces = lines.filter(l => l.length > 0 && l.trim() === '');
+    // TODO: шаблон генерирует строки с пробелами — это known issue #1
+    // Тест фиксирует количество таких строк чтобы оно не росло
+    assert.ok(
+      blankWithSpaces.length <= 10,
+      `Найдено ${blankWithSpaces.length} строк только из пробелов (порог: 10)`
+    );
+  });
+});

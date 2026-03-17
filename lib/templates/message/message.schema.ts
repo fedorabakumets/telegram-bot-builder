@@ -94,6 +94,10 @@ export const messageParamsSchema = z.object({
   conditionalMessages: z.array(z.any()).optional().default([]),
   /** Запасное сообщение */
   fallbackMessage: z.string().optional(),
+
+  // --- Синонимы ---
+  /** Записи синонимов для генерации обработчиков */
+  synonymEntries: z.array(z.any()).optional().default([]),
 });
 
 /** Тип параметров сообщения (выведен из схемы) */

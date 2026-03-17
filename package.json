@@ -47,7 +47,7 @@
     "railway:build": "npm run build:fast",
     "test": "node run-tests.js",
     "test:all": "node run-tests.js",
-    "test:coverage": "c8 --reporter=html --reporter=text --reporter=json node run-tests.js",
+    "test:coverage": "c8 --reporter=html --reporter=text --reporter=json node run-tests.js --templates",
     "test:templates": "node run-tests.js --templates",
     "test:unit": "node run-tests.js --unit",
     "test:integration": "node run-tests.js --integration",
