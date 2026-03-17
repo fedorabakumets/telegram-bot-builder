@@ -12,7 +12,6 @@
 import { Node } from '@shared/schema';
 import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './generate-new-node-handlers';
 import { generateMessage } from '../templates/message/message.renderer';
-import { generateBroadcastClientHandler } from '../bot-generator/Client/generateBroadcastClientHandler';
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
 import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
@@ -90,12 +89,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     promote_user: generateUserHandlerFromNode,
     demote_user: generateUserHandlerFromNode,
     admin_rights: generateAnimationHandler,
-    broadcast: (node) => {
-      const apiType = node.data?.broadcastApiType || 'bot';
-      return apiType === 'client'
-        ? generateBroadcastClientHandler(node, nodes)
-        : generateBroadcastHandler(node, enableComments);
-    },
+    broadcast: (node) => generateBroadcastHandler(node, nodes, enableComments),
   };
 
   // Проверяем, есть ли узлы типа 'start' или синонимы для них

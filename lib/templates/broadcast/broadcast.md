@@ -2,161 +2,179 @@
 
 ## Описание
 
-Шаблон генерирует Python обработчик для рассылки сообщений пользователям через Telegram бота или клиента.
+Шаблон генерирует Python `async def handle_broadcast_<nodeId>` для рассылки сообщений
+через **Bot API** (aiogram) или **Client API** (Telethon/Userbot).
+
+Ключевые возможности:
+- Получение получателей из `user_ids`, `bot_users` или обеих таблиц
+- Итерация по списку `broadcastNodes` с заменой переменных для каждого получателя
+- Отправка медиа (фото, видео, аудио, документы) с fallback на текст
+- Автопереход к следующему узлу (`autoTransitionTo`)
+- Подробный отчёт по итогам рассылки
 
 ## Параметры
 
-| Параметр | Тип | Описание | Значение по умолчанию |
-|----------|-----|----------|----------------------|
-| nodeId | string | Уникальный идентификатор узла | - |
-| broadcastApiType | 'bot' \| 'client' | Тип API для рассылки | 'bot' |
-| broadcastTargetNode | string | ID узла для получения целевых пользователей | '' |
-| enableBroadcast | boolean | Включить ли рассылку | false |
-| enableConfirmation | boolean | Требуется ли подтверждение | false |
-| confirmationText | string | Текст подтверждения | 'Подтвердите рассылку' |
-| successMessage | string | Сообщение об успехе | 'Рассылка выполнена успешно' |
-| errorMessage | string | Сообщение об ошибке | 'Произошла ошибка при рассылке' |
-| idSourceType | 'user_ids' \| 'bot_users' \| 'both' | Источник ID пользователей | 'bot_users' |
-| messageText | string | Текст сообщения для рассылки | '' |
+| Параметр | Тип | Описание | По умолчанию |
+|---|---|---|---|
+| `nodeId` | `string` | ID узла broadcast | — |
+| `broadcastApiType` | `'bot' \| 'client'` | Метод отправки | `'bot'` |
+| `idSourceType` | `'user_ids' \| 'bot_users' \| 'both'` | Источник получателей | `'bot_users'` |
+| `successMessage` | `string` | Текст отчёта об успехе | `'✅ Рассылка отправлена!'` |
+| `errorMessage` | `string` | Текст при ошибке получения получателей | `'❌ Ошибка рассылки'` |
+| `broadcastNodes` | `BroadcastNode[]` | Список сообщений для рассылки | `[]` |
+
+### BroadcastNode
+
+| Поле | Тип | Описание |
+|---|---|---|
+| `id` | `string` | ID узла сообщения |
+| `text` | `string` | Текст сообщения |
+| `formatMode` | `string` | Режим форматирования (`'html'`, `'markdown'`, `'none'`) |
+| `imageUrl` | `string` | URL фото |
+| `audioUrl` | `string` | URL аудио |
+| `videoUrl` | `string` | URL видео |
+| `documentUrl` | `string` | URL документа |
+| `attachedMedia` | `string[]` | Переменные медиа из БД |
+| `autoTransitionTo` | `string` | ID следующего узла для автоперехода |
+
+## API
+
+### Низкоуровневый — `generateBroadcast(params)`
+
+Принимает готовые параметры, включая предварительно собранный `broadcastNodes[]`.
+
+```typescript
+import { generateBroadcast } from './broadcast.renderer';
+
+const code = generateBroadcast({
+  nodeId: 'broadcast_1',
+  broadcastApiType: 'bot',
+  idSourceType: 'bot_users',
+  broadcastNodes: [
+    { id: 'msg_1', text: 'Привет!', formatMode: 'none', attachedMedia: [], autoTransitionTo: '' },
+  ],
+});
+```
+
+### Высокоуровневый — `generateBroadcastFromNode(node, allNodes)`
+
+Принимает узел графа и весь список узлов. Автоматически собирает `broadcastNodes`
+из `message`-узлов с `enableBroadcast=true` и разворачивает цепочки `autoTransitionTo`.
+
+```typescript
+import { generateBroadcastFromNode } from './broadcast.renderer';
+
+const code = generateBroadcastFromNode(broadcastNode, allNodes);
+```
+
+### Утилита — `collectBroadcastNodes(nodes, broadcastNodeId)`
+
+Собирает `BroadcastNode[]` из графа. Включает `message`-узлы с `enableBroadcast=true`,
+фильтрует по `broadcastTargetNode` и разворачивает цепочки `autoTransitionTo`.
+
+```typescript
+import { collectBroadcastNodes } from './broadcast.renderer';
+
+const nodes = collectBroadcastNodes(allNodes, 'broadcast_1');
+```
 
 ## Примеры использования
 
-### Пример 1: Рассылка через бота всем bot_users
+### Bot API, рассылка всем bot_users
 
 ```typescript
 generateBroadcast({
   nodeId: 'broadcast_1',
   broadcastApiType: 'bot',
-  enableBroadcast: true,
   idSourceType: 'bot_users',
-  messageText: 'Привет! Это важная новость.',
+  successMessage: '✅ Готово!',
+  broadcastNodes: [
+    { id: 'msg_1', text: 'Важная новость!', formatMode: 'html', attachedMedia: [], autoTransitionTo: '' },
+  ],
 });
 ```
 
-### Пример 2: Рассылка через клиента с подтверждением
+### Client API (Telethon), оба источника
 
 ```typescript
 generateBroadcast({
   nodeId: 'broadcast_2',
   broadcastApiType: 'client',
-  enableBroadcast: true,
-  enableConfirmation: true,
-  confirmationText: 'Вы уверены, что хотите отправить рассылку?',
-  idSourceType: 'user_ids',
-  messageText: 'Клиентская рассылка',
+  idSourceType: 'both',
+  broadcastNodes: [
+    { id: 'msg_1', text: 'Рассылка через Userbot', formatMode: 'none', attachedMedia: [], autoTransitionTo: '' },
+  ],
 });
 ```
 
-### Пример 3: Рассылка всем пользователям (и bot_users и user_ids)
+### Цепочка сообщений с автопереходом
 
 ```typescript
 generateBroadcast({
   nodeId: 'broadcast_3',
   broadcastApiType: 'bot',
-  enableBroadcast: true,
-  idSourceType: 'both',
-  messageText: 'Рассылка всем пользователям',
+  idSourceType: 'bot_users',
+  broadcastNodes: [
+    { id: 'msg_a', text: 'Первое', formatMode: 'none', attachedMedia: [], autoTransitionTo: 'msg_b' },
+    { id: 'msg_b', text: 'Второе', formatMode: 'none', attachedMedia: [], autoTransitionTo: '' },
+  ],
 });
 ```
 
-### Пример 4: Отключенная рассылка
+## Логика шаблона
 
-```typescript
-generateBroadcast({
-  nodeId: 'broadcast_4',
-  enableBroadcast: false,
-});
-```
+### Bot API (`broadcastApiType = 'bot'`)
 
-## Примеры вывода
+1. Получение получателей из БД (`user_ids` / `bot_users` / обе таблицы)
+2. Итерация по `recipients × broadcast_nodes`
+3. Замена переменных через `replace_variables_in_text`
+4. Отправка медиа (attachedMedia → статические URL → fallback на `bot.send_message`)
+5. Автопереход через `FakeCallbackQuery` + `globals().get("handle_callback_...")`
+6. `asyncio.sleep(0.05)` между получателями
+7. Отчёт: успешно / ошибок
 
-### Вывод 1: Рассылка через бота
+### Client API (`broadcastApiType = 'client'`)
 
-```python
-@dp.message(Command("broadcast_broadcast_1"))
-async def handle_broadcast_broadcast_1(message: types.Message):
-    """Обработчик рассылки сообщений для узла broadcast_1"""
-    user_id = message.from_user.id
+1. Проверка сессии из `user_telegram_settings`
+2. Получение получателей из БД
+3. Инициализация `TelegramClient(StringSession(...))`
+4. Итерация по `recipients`, внутри — цикл по `broadcast_nodes` с индексом
+5. Отправка через `app.send_file` / `app.send_message`
+6. Автопереход по индексу в `broadcast_nodes`
+7. Обработка `PEER_ID_INVALID` (заблокированные пользователи)
+8. `app.connect()` / `app.disconnect()` в `try/finally`
+9. Отчёт: успешно / ошибок / заблокировано
 
-    target_users = []
+## Зависимости Python
 
-    if db_pool:
-        async with db_pool.acquire() as conn:
-            rows = await conn.fetch("SELECT user_id FROM users WHERE is_bot = TRUE")
-            target_users.extend([row['user_id'] for row in rows])
+**Bot API:** `aiogram`, `asyncpg`, `asyncio`, `logging`
 
-    broadcast_text = "Привет! Это важная новость."
-    all_user_vars = await init_all_user_vars(user_id)
-    broadcast_text = replace_variables_in_text(broadcast_text, all_user_vars, variable_filters)
-
-    success_count = 0
-    error_count = 0
-
-    for target_user_id in target_users:
-        try:
-            await bot.send_message(target_user_id, broadcast_text)
-            success_count += 1
-        except Exception as e:
-            logging.error(f"Ошибка отправки пользователю {target_user_id}: {e}")
-            error_count += 1
-        await asyncio.sleep(0.1)
-
-    result_text = f"✅ Рассылка завершена\nУспешно: {success_count}\nОшибок: {error_count}"
-    await message.answer(result_text)
-```
-
-### Вывод 2: Рассылка отключена
-
-```python
-@dp.message(Command("broadcast_broadcast_4"))
-async def handle_broadcast_broadcast_4(message: types.Message):
-    """Обработчик рассылки (отключен) для узла broadcast_4"""
-    await message.answer("Рассылка отключена")
-```
-
-## Логика условий
-
-- **enableBroadcast = false**: Генерируется обработчик с сообщением "Рассылка отключена"
-- **enableBroadcast = true**: Генерируется полный обработчик рассылки
-- **enableConfirmation = true**: Добавляется проверка подтверждения перед рассылкой
-- **idSourceType = 'user_ids'**: Получение только user_ids (is_bot = FALSE)
-- **idSourceType = 'bot_users'**: Получение только bot_users (is_bot = TRUE)
-- **idSourceType = 'both'**: Получение обоих типов пользователей
-- **broadcastApiType = 'bot'**: Отправка через bot.send_message()
-- **broadcastApiType = 'client'**: Отправка через клиент (требует дополнительной настройки)
-
-## Тесты
-
-Запуск тестов:
-
-```bash
-npm test -- broadcast.test.ts
-```
-
-Тесты покрывают:
-- Валидные данные (8 тестов)
-- Невалидные данные (4 теста)
-- Граничные случаи (5 тестов)
-- Производительность (2 теста)
-- Валидация схемы (5 тестов)
-
-## Зависимости
-
-- aiogram (Bot, types.Message, Command)
-- asyncpg (для работы с базой данных)
-- asyncio (для задержек)
-- logging (для логирования ошибок)
+**Client API:** всё выше + `telethon` (`TelegramClient`, `StringSession`, `PeerUser`)
 
 ## Структура файлов
 
 ```
 broadcast/
-├── broadcast.py.jinja2       (шаблон обработчика)
-├── broadcast.params.ts       (типы параметров)
-├── broadcast.schema.ts       (Zod схема)
-├── broadcast.renderer.ts     (функция рендеринга)
-├── broadcast.fixture.ts      (тестовые данные)
-├── broadcast.test.ts         (тесты)
-├── broadcast.md              (документация)
-└── index.ts                  (экспорт)
+├── broadcast.py.jinja2       шаблон (Bot API + Client API)
+├── broadcast.params.ts       типы параметров + BroadcastNode
+├── broadcast.schema.ts       Zod схема валидации
+├── broadcast.renderer.ts     generateBroadcast / generateBroadcastFromNode / collectBroadcastNodes
+├── broadcast.fixture.ts      тестовые данные
+├── broadcast.test.ts         тесты
+├── broadcast.md              документация
+└── index.ts                  экспорт
 ```
+
+## Тесты
+
+```bash
+node --test lib/templates/broadcast/broadcast.test.ts
+```
+
+Покрытие:
+- Bot API: генерация, получатели, медиа, автопереход, отчёт
+- Client API: сессия, Telethon, отправка, автопереход, заблокированные
+- `collectBroadcastNodes`: фильтрация, цепочки, broadcastTargetNode
+- Невалидные данные и граничные случаи
+- Производительность
+- Валидация схемы
