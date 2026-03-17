@@ -13,7 +13,7 @@ export * from './bot-generator';
 export * from './commands';
 // Keyboard exports are now aggregated in './bot-generator/Keyboard'
 export * from './queryClient';
-export * from './bot-generator/Synonyms';
+export { generateSynonymHandlers, generateSynonyms, collectSynonymEntries } from './templates/synonyms';
 export * from './bot-generator/utils/addAutoTransitionNodes';
 export * from './bot-generator/utils/extractNodeData';
 
@@ -55,8 +55,8 @@ export * from './bot-generator/scaffolding';
 // Storage utilities
 export * from './storage';
 
-// Synonym handlers
-export * from './bot-generator/Synonyms';
+// Synonym handlers — перенесено в templates/synonyms (Jinja2)
+// export * from './bot-generator/Synonyms';
 
 // User management handlers
 export * from './bot-generator/UserHandler';

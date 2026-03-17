@@ -55,7 +55,7 @@ import { newgenerateStateTransitionAndRenderLogic } from './bot-generator/transi
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './bot-generator/user-input';
 import { createProcessNodeButtonsFunction } from './bot-generator/node-handlers';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './bot-generator/scaffolding';
-import { generateSynonymHandlers } from './bot-generator/Synonyms';
+import { generateSynonymHandlers } from './templates/synonyms';
 import { addAutoTransitionNodes } from './bot-generator/utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
 import { collectInputTargetNodes } from './bot-generator/utils/collectInputTargetNodes';

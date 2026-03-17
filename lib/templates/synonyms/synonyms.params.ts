@@ -22,24 +22,30 @@ export type SynonymNodeType =
 
 /** Один синоним с метаданными узла */
 export interface SynonymEntry {
-  /** Текст синонима */
   synonym: string;
-  /** ID узла */
   nodeId: string;
-  /** Тип узла */
   nodeType: SynonymNodeType;
-  /** Имя функции-обработчика оригинальной команды (для command/start) */
+  /** Для command/start */
   functionName?: string;
-  /** Оригинальная команда (для command/start) */
   originalCommand?: string;
-  /** Текст ответного сообщения (для content management) */
+  /** Для content management (pin/unpin/delete) */
   messageText?: string;
-  /** Отключить уведомление при закреплении (для pin_message) */
   disableNotification?: boolean;
+  /** Для ban/kick/mute */
+  reason?: string;
+  /** Для ban_user (0 = навсегда) */
+  untilDate?: number;
+  /** Для mute_user (секунды) */
+  duration?: number;
+  canSendMessages?: boolean;
+  canSendMediaMessages?: boolean;
+  /** Для promote_user */
+  canDeleteMessages?: boolean;
+  canInviteUsers?: boolean;
+  canPinMessages?: boolean;
 }
 
 /** Параметры для генерации всех обработчиков синонимов */
 export interface SynonymsTemplateParams {
-  /** Массив синонимов для генерации */
   synonyms: SynonymEntry[];
 }

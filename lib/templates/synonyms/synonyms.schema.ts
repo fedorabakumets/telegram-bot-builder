@@ -30,6 +30,14 @@ const synonymEntrySchema = z.object({
   originalCommand: z.string().optional(),
   messageText: z.string().optional(),
   disableNotification: z.boolean().optional(),
+  reason: z.string().optional(),
+  untilDate: z.number().optional(),
+  duration: z.number().optional(),
+  canSendMessages: z.boolean().optional(),
+  canSendMediaMessages: z.boolean().optional(),
+  canDeleteMessages: z.boolean().optional(),
+  canInviteUsers: z.boolean().optional(),
+  canPinMessages: z.boolean().optional(),
 });
 
 export const synonymsParamsSchema = z.object({
