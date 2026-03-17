@@ -1,0 +1,414 @@
+{#
+  Шаблон обработчиков управления пользователями
+
+  @fileoverview Генерирует Python обработчики для ban/unban/kick/mute/unmute/promote/demote
+  @param {string} nodeType     — тип узла
+  @param {string} nodeId       — ID узла
+  @param {string} safeName     — безопасное имя функции (safe_name от nodeId)
+  @param {array}  synonyms     — список синонимов-триггеров
+  @param {string} targetGroupId — ID конкретной группы (или '' для всех групп)
+
+  ban_user:
+    @param {string} reason     — причина бана
+    @param {number} untilDate  — unix timestamp окончания бана (0 = навсегда)
+
+  kick_user:
+    @param {string} reason     — причина кика
+
+  mute_user:
+    @param {number} duration           — длительность в секундах
+    @param {string} reason             — причина мута
+    @param {bool}   canSendMessages
+    @param {bool}   canSendMediaMessages
+    @param {bool}   canSendPolls
+    @param {bool}   canSendOtherMessages
+    @param {bool}   canAddWebPagePreviews
+    @param {bool}   canChangeGroupInfo
+    @param {bool}   canInviteUsers2
+    @param {bool}   canPinMessages2
+
+  promote_user:
+    @param {bool} canChangeInfo
+    @param {bool} canDeleteMessages
+    @param {bool} canInviteUsers
+    @param {bool} canRestrictMembers
+    @param {bool} canPinMessages
+    @param {bool} canPromoteMembers
+    @param {bool} canManageVideoChats
+    @param {bool} canManageTopics
+    @param {bool} isAnonymous
+#}
+
+{# ── Вычисляем условие фильтрации чата ── #}
+{% if targetGroupId %}
+{% set chat_condition = 'str(message.chat.id) == "' ~ targetGroupId ~ '"' %}
+{% else %}
+{% set chat_condition = "message.chat.type in ['group', 'supergroup']" %}
+{% endif %}
+
+{# ── Синонимы в виде Python-списка строк ── #}
+{% set synonyms_list = synonyms | join('", "') %}
+
+{# ============================================================ #}
+{# COMMAND HANDLER                                               #}
+{# ============================================================ #}
+
+# {{ nodeType | upper }} Handler
+@dp.message(Command("{{ nodeType }}"))
+async def {{ nodeType }}_{{ safeName }}_command_handler(message: types.Message):
+    """
+    Обработчик команды /{{ nodeType }}
+    Работает в группах где бот имеет права администратора
+    Использование: ответ на сообщение пользователя или упоминание
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+
+    target_user_id = None
+
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        if message.entities:
+            for entity in message.entities:
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+
+    try:
+{% if nodeType == 'ban_user' %}
+{% set reason = reason if reason else 'Нарушение правил группы' %}
+{% if untilDate and untilDate > 0 %}
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id, until_date={{ untilDate }})
+        await message.answer(f"✅ Пользователь {target_user_id} заблокирован до {{ untilDate }}\nПричина: {{ reason }}")
+{% else %}
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: {{ reason }}")
+{% endif %}
+        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для блокировки пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка блокировки пользователя: {e}")
+{% elif nodeType == 'unban_user' %}
+        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
+        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
+        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для разблокировки пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка разблокировки пользователя: {e}")
+{% elif nodeType == 'kick_user' %}
+{% set reason = reason if reason else 'Нарушение правил группы' %}
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id, revoke_messages=False)
+        import asyncio
+        await asyncio.sleep(0.5)
+        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
+        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: {{ reason }}")
+        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для исключения пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка исключения пользователя: {e}")
+{% elif nodeType == 'mute_user' %}
+{% set duration = duration if duration else 3600 %}
+{% set reason = reason if reason else 'Нарушение правил группы' %}
+        from datetime import datetime, timedelta
+        until_date = datetime.now() + timedelta(seconds={{ duration }})
+        await bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages={{ canSendMessages | default(false) | to_python_boolean }},
+                can_send_media_messages={{ canSendMediaMessages | default(false) | to_python_boolean }},
+                can_send_polls={{ canSendPolls | default(false) | to_python_boolean }},
+                can_send_other_messages={{ canSendOtherMessages | default(false) | to_python_boolean }},
+                can_add_web_page_previews={{ canAddWebPagePreviews | default(false) | to_python_boolean }},
+                can_change_info={{ canChangeGroupInfo | default(false) | to_python_boolean }},
+                can_invite_users={{ canInviteUsers2 | default(false) | to_python_boolean }},
+                can_pin_messages={{ canPinMessages2 | default(false) | to_python_boolean }}
+            ),
+            until_date=until_date
+        )
+        hours = {{ duration }} // 3600
+        minutes = ({{ duration }} % 3600) // 60
+        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
+        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: {{ reason }}")
+        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id} в группе {chat_id} на {{ duration }} секунд")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для ограничения пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка ограничения пользователя: {e}")
+{% elif nodeType == 'unmute_user' %}
+        await bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=True,
+                can_send_media_messages=True,
+                can_send_polls=True,
+                can_send_other_messages=True,
+                can_add_web_page_previews=True,
+                can_change_info=False,
+                can_invite_users=False,
+                can_pin_messages=False
+            )
+        )
+        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
+        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для снятия ограничений")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка снятия ограничений: {e}")
+{% elif nodeType == 'promote_user' %}
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info={{ canChangeInfo | default(false) | to_python_boolean }},
+            can_delete_messages={{ canDeleteMessages | default(true) | to_python_boolean }},
+            can_invite_users={{ canInviteUsers | default(true) | to_python_boolean }},
+            can_restrict_members={{ canRestrictMembers | default(false) | to_python_boolean }},
+            can_pin_messages={{ canPinMessages | default(true) | to_python_boolean }},
+            can_promote_members={{ canPromoteMembers | default(false) | to_python_boolean }},
+            can_manage_video_chats={{ canManageVideoChats | default(false) | to_python_boolean }},
+{% if canManageTopics %}
+            can_manage_topics={{ canManageTopics | to_python_boolean }},
+{% endif %}
+            is_anonymous={{ isAnonymous | default(false) | to_python_boolean }}
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором!")
+        logging.info(f"Пользователь {target_user_id} назначен администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e) or "RIGHT_FORBIDDEN" in str(e):
+            await message.answer("❌ Недостаточно прав для назначения администраторов")
+        elif "USER_NOT_PARTICIPANT" in str(e):
+            await message.answer("❌ Пользователь не является участником группы")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка назначения администратора: {e}")
+{% elif nodeType == 'demote_user' %}
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=False,
+            can_delete_messages=False,
+            can_invite_users=False,
+            can_restrict_members=False,
+            can_pin_messages=False,
+            can_promote_members=False,
+            can_manage_video_chats=False,
+            can_manage_topics=False,
+            is_anonymous=False
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} снят с должности администратора!")
+        logging.info(f"Пользователь {target_user_id} понижен администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для понижения администраторов")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка понижения администратора: {e}")
+{% endif %}
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {{ nodeType }}: {e}")
+
+{# ============================================================ #}
+{# SYNONYM / TEXT HANDLER                                        #}
+{# ============================================================ #}
+
+@dp.message(lambda message: message.text and any(message.text.lower().startswith(word) for word in ["{{ synonyms_list }}"]) and {{ chat_condition }})
+async def {{ nodeType }}_{{ safeName }}_handler(message: types.Message):
+    """
+    Обработчик текстовых синонимов для {{ nodeType }}
+    Синонимы: {{ synonyms | join(', ') }}
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    target_user_id = None
+
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+    else:
+        if message.entities:
+            for entity in message.entities:
+                if entity.type == "text_mention":
+                    target_user_id = entity.user.id
+                    break
+        if not target_user_id:
+            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")
+            return
+
+    if not target_user_id:
+        await message.answer("❌ Не удалось определить пользователя")
+        return
+
+    try:
+{% if nodeType == 'ban_user' %}
+{% set reason = reason if reason else 'Нарушение правил группы' %}
+{% if untilDate and untilDate > 0 %}
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id, until_date={{ untilDate }})
+        await message.answer(f"✅ Пользователь {target_user_id} заблокирован до {{ untilDate }}\nПричина: {{ reason }}")
+{% else %}
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)
+        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\nПричина: {{ reason }}")
+{% endif %}
+        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для блокировки пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка блокировки пользователя: {e}")
+{% elif nodeType == 'unban_user' %}
+        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
+        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")
+        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для разблокировки пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка разблокировки пользователя: {e}")
+{% elif nodeType == 'kick_user' %}
+{% set reason = reason if reason else 'Нарушение правил группы' %}
+        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id, revoke_messages=False)
+        import asyncio
+        await asyncio.sleep(0.5)
+        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
+        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: {{ reason }}")
+        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для исключения пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка исключения пользователя: {e}")
+{% elif nodeType == 'mute_user' %}
+{% set duration = duration if duration else 3600 %}
+{% set reason = reason if reason else 'Нарушение правил группы' %}
+        from datetime import datetime, timedelta
+        until_date = datetime.now() + timedelta(seconds={{ duration }})
+        await bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages={{ canSendMessages | default(false) | to_python_boolean }},
+                can_send_media_messages={{ canSendMediaMessages | default(false) | to_python_boolean }},
+                can_send_polls={{ canSendPolls | default(false) | to_python_boolean }},
+                can_send_other_messages={{ canSendOtherMessages | default(false) | to_python_boolean }},
+                can_add_web_page_previews={{ canAddWebPagePreviews | default(false) | to_python_boolean }},
+                can_change_info={{ canChangeGroupInfo | default(false) | to_python_boolean }},
+                can_invite_users={{ canInviteUsers2 | default(false) | to_python_boolean }},
+                can_pin_messages={{ canPinMessages2 | default(false) | to_python_boolean }}
+            ),
+            until_date=until_date
+        )
+        hours = {{ duration }} // 3600
+        minutes = ({{ duration }} % 3600) // 60
+        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
+        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\nПричина: {{ reason }}")
+        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id} в группе {chat_id} на {{ duration }} секунд")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для ограничения пользователя")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка ограничения пользователя: {e}")
+{% elif nodeType == 'unmute_user' %}
+        await bot.restrict_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            permissions=types.ChatPermissions(
+                can_send_messages=True,
+                can_send_media_messages=True,
+                can_send_polls=True,
+                can_send_other_messages=True,
+                can_add_web_page_previews=True,
+                can_change_info=False,
+                can_invite_users=False,
+                can_pin_messages=False
+            )
+        )
+        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")
+        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для снятия ограничений")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка снятия ограничений: {e}")
+{% elif nodeType == 'promote_user' %}
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info={{ canChangeInfo | default(false) | to_python_boolean }},
+            can_delete_messages={{ canDeleteMessages | default(true) | to_python_boolean }},
+            can_invite_users={{ canInviteUsers | default(true) | to_python_boolean }},
+            can_restrict_members={{ canRestrictMembers | default(false) | to_python_boolean }},
+            can_pin_messages={{ canPinMessages | default(true) | to_python_boolean }},
+            can_promote_members={{ canPromoteMembers | default(false) | to_python_boolean }},
+            can_manage_video_chats={{ canManageVideoChats | default(false) | to_python_boolean }},
+{% if canManageTopics %}
+            can_manage_topics={{ canManageTopics | to_python_boolean }},
+{% endif %}
+            is_anonymous={{ isAnonymous | default(false) | to_python_boolean }}
+        )
+        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором!")
+        logging.info(f"Пользователь {target_user_id} назначен администратором {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e) or "RIGHT_FORBIDDEN" in str(e):
+            await message.answer("❌ Недостаточно прав для назначения администраторов")
+        elif "USER_NOT_PARTICIPANT" in str(e):
+            await message.answer("❌ Пользователь не является участником группы")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка назначения администратора: {e}")
+{% elif nodeType == 'demote_user' %}
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=target_user_id,
+            can_change_info=False,
+            can_delete_messages=False,
+            can_invite_users=False,
+            can_restrict_members=False,
+            can_pin_messages=False,
+            can_promote_members=False,
+            can_manage_video_chats=False,
+            can_manage_topics=False,
+            is_anonymous=False
+        )
+        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")
+        logging.info(f"Права администратора сняты с пользователя {target_user_id} пользователем {user_id} в группе {chat_id}")
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав для снятия прав администратора")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка снятия прав администратора: {e}")
+{% endif %}
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {{ nodeType }}: {e}")
