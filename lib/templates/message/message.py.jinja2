@@ -26,6 +26,11 @@
   @param {string} fallbackMessage - Запасное сообщение
 #}
 
+{# Обработчики синонимов — генерируются ДО handle_callback, так как это отдельные функции #}
+{%- if synonymEntries and synonymEntries|length > 0 %}
+{% include 'synonyms/synonyms.py.jinja2' %}
+{%- endif %}
+
 {# Обработчик callback для навигации к узлу #}
 @dp.callback_query(lambda c: c.data == "{{ nodeId }}" or c.data.startswith("{{ nodeId }}_btn_"))
 async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery):
@@ -55,11 +60,6 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await callback_query.answer("❌ Необходимо войти в систему", show_alert=True)
         return
     {%- endif %}
-
-{# Обработчики синонимов #}
-{%- if synonymEntries and synonymEntries|length > 0 %}
-{% include 'synonyms/synonyms.py.jinja2' %}
-{%- endif %}
     {# Сохранение информации о пользователе #}
     username = callback_query.from_user.username
     first_name = callback_query.from_user.first_name
