@@ -68,6 +68,8 @@
     "test:utils": "node run-tests.js --pattern utils",
     "test:universal-handlers": "node run-tests.js --pattern universal-handlers",
     "test:synonyms": "node run-tests.js --pattern synonyms",
+    "test:handle-user-input": "node run-tests.js --pattern handle-user-input",
+    "test:safe-edit-or-send": "node run-tests.js --pattern safe-edit-or-send",
     "test:attached-media": "node run-tests.js --pattern attached-media",
     "test:user-handler": "node run-tests.js --pattern user-handler",
     "test:admin-rights": "node run-tests.js --pattern admin-rights",
