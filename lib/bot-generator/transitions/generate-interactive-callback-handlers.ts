@@ -9,7 +9,6 @@
 
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
 import { generateCallbackHandlerInit as generateCallbackHandlerInitOld } from './callback-handler-init';
-import { generateMultiSelectDoneButton, generateMultiSelectInit, generateMultiSelectReplyKeyboard, generateMultiSelectInlineKeyboard } from './multi-select';
 import { generateMultiSelectHandler, generateMultiSelectComplete } from './multi-select-handler';
 import { generateBroadcastNodeHandler, isBroadcastNode } from './broadcast-node-handler';
 import { generateConditionalMessagesCheck } from './conditional-messages';
@@ -23,6 +22,8 @@ import { generateCommandNavigation as generateCommandNavigationOld } from './gen
 import { generateConditionalMessage } from './generate-conditional-message';
 import { generateAllNodesDict, generateBroadcastConfirmationHandler, generateBroadcastDirectHandler } from './broadcast';
 import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
+import { generateKeyboard } from '../../templates/keyboard';
+import { generateMultiSelectDoneButtonTemplate } from '../../templates/handlers/multi-select-done-button/multi-select-done-button.renderer';
 import { generateMediaSendCode } from './media';
 import { generateButtonTextDetection } from './button';
 import { generateVariableSaveLogic } from './variable';
@@ -137,11 +138,14 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           // Добавляем обработку кнопки "Готово" для множественного выбора
           if (targetNode.data?.allowMultipleSelection) {
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
-            code += generateMultiSelectDoneButton({
+            const shortNodeIdForDone = String(nodeId).slice(-10).replace(/^_+/, '');
+            code += generateMultiSelectDoneButtonTemplate({
               nodeId,
+              shortNodeId: shortNodeIdForDone,
               multiSelectVariable,
-              continueButtonTarget: targetNode.data.continueButtonTarget
-            }, '    ');
+              continueButtonTarget: targetNode.data.continueButtonTarget,
+              indentLevel: '    ',
+            });
 
             // Обработка перехода после множественного выбора
             if (targetNode.data.continueButtonTarget) {
@@ -208,34 +212,22 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons: ${hasSelectionButtons}`);
             if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: ========================================`);
 
-            // Инициализация состояния множественного выбора
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_selection';
             const multiSelectKeyboardType = targetNode.data.keyboardType || 'reply';
 
-            code += generateMultiSelectInit({
+            // Инициализация + клавиатура через generateKeyboard (allowMultipleSelection=true)
+            code += generateKeyboard({
+              keyboardType: multiSelectKeyboardType as any,
+              buttons: targetNode.data.buttons || [],
               nodeId,
+              allNodeIds,
+              indentLevel: '    ',
+              allowMultipleSelection: true,
               multiSelectVariable,
-              multiSelectKeyboardType
-            }, '    ');
-
-            // ИСПРАВЛЕНИЕ: Проверяем тип клавиатуры и генерируем соответствующий код
-            if (multiSelectKeyboardType === 'reply') {
-              // Reply клавиатура для множественного выбора
-              code += generateMultiSelectReplyKeyboard({
-                nodeId,
-                buttons: targetNode.data.buttons || [],
-                resizeKeyboard: targetNode.data.resizeKeyboard,
-                oneTimeKeyboard: targetNode.data.oneTimeKeyboard
-              }, '    ');
-            } else {
-              // Inline клавиатура для множественного выбора
-              code += generateMultiSelectInlineKeyboard({
-                nodeId,
-                buttons: targetNode.data.buttons || [],
-                allNodeIds,
-                nodeData: targetNode.data
-              }, '    ');
-            }
+              resizeKeyboard: targetNode.data.resizeKeyboard,
+              oneTimeKeyboard: targetNode.data.oneTimeKeyboard,
+              keyboardLayout: targetNode.data?.keyboardLayout,
+            });
 
           } else if (targetNode.data?.keyboardType !== 'none' && targetNode.data?.buttons && targetNode.data?.buttons.length > 0) {
             // Обычные кнопки без множественного выбора

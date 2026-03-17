@@ -29,12 +29,18 @@
 {%- endmacro -%}
 
 {%- macro generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection=False) -%}
-{%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows -%}
-{%- for row in keyboardLayout.rows %}
+{%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows and keyboardLayout.rows|length > 0 -%}
+{%- set valid_rows = keyboardLayout.rows | selectattr('buttonIds') | list -%}
+{%- if valid_rows|length > 0 %}
+{%- for row in valid_rows %}
 {{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
 {%- endfor %}
-{{ indent }}builder.adjust({{ keyboardLayout.rows|map(attribute='buttonIds')|map('length')|join(', ') }})
-{%- elif keyboardLayout and keyboardLayout.autoLayout %}
+{{ indent }}builder.adjust({{ valid_rows|map(attribute='buttonIds')|map('length')|join(', ') }})
+{%- else -%}
+{%- set cols = calculateOptimalColumns(buttons, allowMultipleSelection) %}
+{{ indent }}builder.adjust({{ cols }})
+{%- endif -%}
+{%- elif keyboardLayout and keyboardLayout.autoLayout and keyboardLayout.columns %}
 {{ indent }}# Авто-раскладка: {{ keyboardLayout.columns }} колонок
 {{ indent }}builder.adjust({{ keyboardLayout.columns }})
 {%- else -%}

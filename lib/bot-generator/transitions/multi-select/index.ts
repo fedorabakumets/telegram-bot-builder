@@ -1,12 +1,8 @@
 /**
- * @fileoverview Бочка для модуля multi-select
- * 
- * Экспортирует функции генерации обработчиков множественного выбора.
- * 
+ * @fileoverview Экспорт модуля multi-select
  * @module bot-generator/transitions/multi-select
+ *
+ * Генерация клавиатур и инициализации множественного выбора
+ * выполняется через Jinja2 шаблон keyboard.py.jinja2 (allowMultipleSelection=true).
+ * Обработка кнопки "Готово" — через шаблон multi-select-done-button.py.jinja2.
  */
-
-export { generateMultiSelectDoneButton, type MultiSelectDoneParams } from './generate-multi-select-done-button';
-export { generateMultiSelectInit, type MultiSelectInitParams } from './generate-multi-select-init';
-export { generateMultiSelectReplyKeyboard, type MultiSelectReplyKeyboardParams } from './generate-multi-select-reply-keyboard';
-export { generateMultiSelectInlineKeyboard, type MultiSelectInlineKeyboardParams } from './generate-multi-select-inline-keyboard';

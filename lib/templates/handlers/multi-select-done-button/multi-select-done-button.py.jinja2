@@ -1,0 +1,36 @@
+{#
+  Шаблон проверки кнопки "Готово" внутри handle_callback_* обработчика
+
+  @param {string} nodeId - ID узла
+  @param {string} shortNodeId - Короткий ID узла (последние 10 символов)
+  @param {string} multiSelectVariable - Переменная для хранения выборов
+  @param {string} continueButtonTarget - ID следующего узла (опционально)
+  @param {string} indentLevel - Уровень отступа
+#}
+{%- set indent = indentLevel or '    ' -%}
+{{ indent }}# Проверяем, является ли это кнопкой "Готово"
+{{ indent }}if callback_data == "done_{{ shortNodeId }}":
+{{ indent }}    logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")
+{{ indent }}    
+{{ indent }}    # Сохраняем выбранные значения в базу данных
+{{ indent }}    selected_options = user_data.get(user_id, {}).get("multi_select_{{ nodeId }}", [])
+{{ indent }}    if selected_options:
+{{ indent }}        selected_text = ", ".join(selected_options)
+{{ indent }}        
+{{ indent }}        # Универсальная логика аккумуляции для всех множественных выборов
+{{ indent }}        existing_data = await get_user_data_from_db(user_id, "{{ multiSelectVariable }}")
+{{ indent }}        existing_selections = []
+{{ indent }}        if existing_data and existing_data.strip():
+{{ indent }}            existing_selections = [s.strip() for s in existing_data.split(",") if s.strip()]
+{{ indent }}        
+{{ indent }}        all_selections = list(set(existing_selections + selected_options))
+{{ indent }}        final_text = ", ".join(all_selections)
+{{ indent }}        await update_user_data_in_db(user_id, "{{ multiSelectVariable }}", final_text)
+{{ indent }}        logging.info(f"✅ Аккумулировано в переменную {{ multiSelectVariable }}: {final_text}")
+{{ indent }}    
+{{ indent }}    # Очищаем состояние множественного выбора
+{{ indent }}    if user_id in user_data:
+{{ indent }}        user_data[user_id].pop("multi_select_{{ nodeId }}", None)
+{{ indent }}        user_data[user_id].pop("multi_select_node", None)
+{{ indent }}        user_data[user_id].pop("multi_select_type", None)
+{{ indent }}        user_data[user_id].pop("multi_select_variable", None)
