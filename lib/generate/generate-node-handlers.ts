@@ -16,6 +16,7 @@ import { generateBroadcastClientHandler } from '../bot-generator/Client/generate
 import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
 import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
+import { generateUserHandlerFromNode } from '../templates/user-handler';
 
 /**
  * Генерирует обработчики для каждого узла
@@ -81,13 +82,13 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     pin_message: generatePinMessageHandler,
     unpin_message: generateUnpinMessageHandler,
     delete_message: generateDeleteMessageHandler,
-    ban_user: generateAnimationHandler,
-    unban_user: generateAnimationHandler,
-    mute_user: generateAnimationHandler,
-    unmute_user: generateAnimationHandler,
-    kick_user: generateAnimationHandler,
-    promote_user: generateAnimationHandler,
-    demote_user: generateAnimationHandler,
+    ban_user: generateUserHandlerFromNode,
+    unban_user: generateUserHandlerFromNode,
+    mute_user: generateUserHandlerFromNode,
+    unmute_user: generateUserHandlerFromNode,
+    kick_user: generateUserHandlerFromNode,
+    promote_user: generateUserHandlerFromNode,
+    demote_user: generateUserHandlerFromNode,
     admin_rights: generateAnimationHandler,
     broadcast: (node) => {
       const apiType = node.data?.broadcastApiType || 'bot';

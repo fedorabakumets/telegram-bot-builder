@@ -58,8 +58,10 @@ export * from './storage';
 // Synonym handlers — перенесено в templates/synonyms (Jinja2)
 // export * from './bot-generator/Synonyms';
 
-// User management handlers
-export * from './bot-generator/UserHandler';
+// User management handlers — перенесено в templates/user-handler (Jinja2)
+export { generateUserHandler, generateUserHandlerFromNode, nodeToUserHandlerParams } from './templates/user-handler';
+// Оставляем generateAdminRightsHandler и generateUserManagementSynonymHandler до миграции admin-rights
+export { generateAdminRightsHandler, generateAdminRightsToggleHandlers, generateUserManagementSynonymHandler } from './bot-generator/UserHandler';
 
 // Additional utilities
 export { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';

@@ -1,10 +1,7 @@
-// Экспорт всех функций из папки UserHandler
-export { generateBanUserHandler } from './generateBanUserHandler';
-export { generateUnbanUserHandler } from './generateUnbanUserHandler';
-export { generateMuteUserHandler } from './generateMuteUserHandler';
-export { generateUnmuteUserHandler } from './generateUnmuteUserHandler';
-export { generateKickUserHandler } from './generateKickUserHandler';
-export { generatePromoteUserHandler } from './generatePromoteUserHandler';
+// UserHandler Module
+// ban/unban/kick/mute/unmute/promote/demote перенесены в lib/templates/user-handler (Jinja2)
+// Здесь остаются только admin_rights до завершения его миграции
+
 export { generateAdminRightsHandler } from './generateAdminRightsHandler';
-export { generateDemoteUserHandler } from './generateDemoteUserHandler';
+export { generateAdminRightsToggleHandlers } from './generateAdminRightsToggleHandlers';
 export { generateUserManagementSynonymHandler } from './generateUserManagementSynonymHandler';
