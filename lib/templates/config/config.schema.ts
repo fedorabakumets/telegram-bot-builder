@@ -7,7 +7,9 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров конфигурации */
 export const configParamsSchema = z.object({
+  /** Включена ли база данных пользователей (asyncpg, json) */
   userDatabaseEnabled: z.boolean().default(false),
+  /** ID проекта для сохранения в базу данных */
   projectId: z.number().nullable().default(null),
 });
 

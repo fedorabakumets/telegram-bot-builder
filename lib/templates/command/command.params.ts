@@ -15,12 +15,19 @@ export type FormatMode = 'html' | 'markdown' | 'none';
 
 /** Параметры для генерации обработчика команды */
 export interface CommandTemplateParams {
+  // --- Идентификация ---
   /** Уникальный идентификатор узла */
   nodeId: string;
   /** Команда (например, "/help") */
   command: string;
+
+  // --- Контент ---
   /** Текст сообщения */
   messageText?: string;
+  /** Режим форматирования */
+  formatMode?: FormatMode;
+
+  // --- Доступ ---
   /** Только приватные чаты */
   isPrivateOnly?: boolean;
   /** Только администраторы */
@@ -29,28 +36,28 @@ export interface CommandTemplateParams {
   requiresAuth?: boolean;
   /** База данных пользователей включена */
   userDatabaseEnabled?: boolean;
-  /** Синонимы команды */
-  synonyms?: string[];
-  /** Условные сообщения включены */
-  enableConditionalMessages?: boolean;
-  /** Условные сообщения */
-  conditionalMessages?: ConditionalMessage[];
-  /** Запасное сообщение */
-  fallbackMessage?: string;
+
+  // --- Клавиатура ---
   /** Тип клавиатуры */
   keyboardType?: KeyboardType;
   /** Раскладка клавиатуры */
   keyboardLayout?: KeyboardLayout;
+  /** Кнопки */
+  buttons?: Button[];
   /** Клавиатура скрывается после использования */
   oneTimeKeyboard?: boolean;
   /** Изменить размер клавиатуры под кнопки */
   resizeKeyboard?: boolean;
-  /** Кнопки */
-  buttons?: Button[];
-  /** Режим форматирования */
-  formatMode?: FormatMode;
-  /** Markdown включён */
-  markdown?: boolean;
+
+  // --- Условные сообщения ---
+  /** Условные сообщения включены */
+  enableConditionalMessages?: boolean;
+  /** Массив условных сообщений */
+  conditionalMessages?: ConditionalMessage[];
+  /** Запасное сообщение */
+  fallbackMessage?: string;
+
+  // --- Медиа ---
   /** URL изображения */
   imageUrl?: string;
   /** URL документа */
@@ -59,6 +66,10 @@ export interface CommandTemplateParams {
   videoUrl?: string;
   /** URL аудио */
   audioUrl?: string;
-  /** Прикреплённые медиа переменные */
+  /** Прикреплённые медиафайлы */
   attachedMedia?: string[];
+
+  // --- Синонимы ---
+  /** Синонимы команды */
+  synonyms?: string[];
 }

@@ -4,10 +4,13 @@
  */
 
 export interface AdminRightsTemplateParams {
+  // --- Идентификация ---
   /** ID узла */
   nodeId: string;
   /** Безопасное имя функции */
   safeName: string;
+
+  // --- Контент ---
   /** Текст сообщения */
   messageText: string;
   /** Команда (без /) */

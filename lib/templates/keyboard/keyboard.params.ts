@@ -23,6 +23,7 @@ export interface CompleteButton {
 
 /** Расширенная кнопка с pre-computed shortButtonId */
 export interface ButtonWithShortId extends Button {
+  /** Короткий ID кнопки (pre-computed для callback_data) */
   shortButtonId?: string;
 }
 
@@ -37,6 +38,7 @@ export interface ConditionalMessage {
 
 /** Параметры для генерации клавиатуры */
 export interface KeyboardTemplateParams {
+  // --- Тип и кнопки ---
   /** Тип клавиатуры */
   keyboardType?: KeyboardType;
   /** Кнопки */
@@ -48,25 +50,25 @@ export interface KeyboardTemplateParams {
   /** Изменить размер клавиатуры под кнопки */
   resizeKeyboard?: boolean;
 
-  // Множественный выбор
+  // --- Множественный выбор ---
   /** Разрешить множественный выбор */
   allowMultipleSelection?: boolean;
-  /** Имя переменной для хранения выборов */
+  /** Переменная для хранения выборов */
   multiSelectVariable?: string;
   /** ID узла для callback_data */
   nodeId?: string;
-  /** Кнопка завершения */
+  /** Кнопка завершения выбора */
   completeButton?: CompleteButton;
 
-  // Условные сообщения
-  /** Включить условные сообщения */
+  // --- Условные сообщения ---
+  /** Условные сообщения включены */
   enableConditionalMessages?: boolean;
   /** Массив условий */
   conditionalMessages?: ConditionalMessage[];
-  /** Имя переменной условной клавиатуры */
+  /** Переменная условной клавиатуры */
   conditionalKeyboardVar?: string;
 
-  // Медиа
+  // --- Медиа ---
   /** Есть ли изображение */
   hasImage?: boolean;
   /** URL изображения */
@@ -78,11 +80,11 @@ export interface KeyboardTemplateParams {
   /** URL аудио */
   audioUrl?: string;
 
-  // Форматирование
+  // --- Форматирование ---
   /** Режим форматирования */
   parseMode?: ParseModeType;
 
-  // Служебные
+  // --- Служебные ---
   /** Уровень отступа */
   indentLevel?: string;
   /** Массив всех ID узлов */

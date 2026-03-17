@@ -22,30 +22,49 @@ export type SynonymNodeType =
 
 /** Один синоним с метаданными узла */
 export interface SynonymEntry {
+  // --- Основные ---
+  /** Текст синонима */
   synonym: string;
+  /** ID узла */
   nodeId: string;
+  /** Тип узла */
   nodeType: SynonymNodeType;
-  /** Для command/start */
+
+  // --- Для command/start ---
+  /** Имя функции */
   functionName?: string;
+  /** Оригинальная команда */
   originalCommand?: string;
-  /** Для content management (pin/unpin/delete) */
+
+  // --- Для content management (pin/unpin/delete) ---
+  /** Текст сообщения */
   messageText?: string;
+  /** Без уведомления */
   disableNotification?: boolean;
-  /** Для ban/kick/mute */
+
+  // --- Для ban/kick/mute ---
+  /** Причина */
   reason?: string;
-  /** Для ban_user (0 = навсегда) */
+  /** Unix timestamp окончания бана (0 = навсегда) */
   untilDate?: number;
-  /** Для mute_user (секунды) */
+  /** Длительность мута в секундах */
   duration?: number;
+  /** Разрешить отправку сообщений */
   canSendMessages?: boolean;
+  /** Разрешить отправку медиа */
   canSendMediaMessages?: boolean;
-  /** Для promote_user */
+
+  // --- Для promote_user ---
+  /** Удаление сообщений */
   canDeleteMessages?: boolean;
+  /** Приглашение пользователей */
   canInviteUsers?: boolean;
+  /** Закрепление сообщений */
   canPinMessages?: boolean;
 }
 
 /** Параметры для генерации всех обработчиков синонимов */
 export interface SynonymsTemplateParams {
+  /** Массив синонимов */
   synonyms: SynonymEntry[];
 }

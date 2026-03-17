@@ -14,10 +14,17 @@ export type FormatMode = 'html' | 'markdown' | 'none';
 
 /** Параметры для генерации обработчика сообщения */
 export interface MessageTemplateParams {
+  // --- Идентификация ---
   /** ID узла */
   nodeId: string;
+
+  // --- Контент ---
   /** Текст сообщения */
   messageText?: string;
+  /** Режим форматирования */
+  formatMode?: FormatMode;
+
+  // --- Доступ ---
   /** Только приватные чаты */
   isPrivateOnly?: boolean;
   /** Только администраторы */
@@ -26,45 +33,34 @@ export interface MessageTemplateParams {
   requiresAuth?: boolean;
   /** База данных пользователей включена */
   userDatabaseEnabled?: boolean;
-  /** Множественный выбор разрешён */
-  allowMultipleSelection?: boolean;
-  /** Переменная для множественного выбора */
-  multiSelectVariable?: string;
-  /** Кнопки */
-  buttons?: Button[];
+
+  // --- Клавиатура ---
   /** Тип клавиатуры */
   keyboardType?: KeyboardType;
   /** Раскладка клавиатуры */
   keyboardLayout?: KeyboardLayout;
+  /** Кнопки */
+  buttons?: Button[];
   /** Клавиатура скрывается после использования */
   oneTimeKeyboard?: boolean;
   /** Изменить размер клавиатуры под кнопки */
   resizeKeyboard?: boolean;
+
+  // --- Множественный выбор ---
+  /** Разрешить множественный выбор */
+  allowMultipleSelection?: boolean;
+  /** Переменная для хранения выборов */
+  multiSelectVariable?: string;
+
+  // --- Автопереход ---
   /** Автопереход включён */
   enableAutoTransition?: boolean;
-  /** Цель автоперехода */
+  /** ID узла для автоперехода (FakeCallbackQuery) */
   autoTransitionTo?: string;
-  /** Сбор пользовательского ввода */
+
+  // --- Сбор ввода ---
+  /** Сбор пользовательского ввода включён */
   collectUserInput?: boolean;
-  /** Режим форматирования */
-  formatMode?: FormatMode;
-  /** URL изображения */
-  imageUrl?: string;
-  /** URL документа */
-  documentUrl?: string;
-  /** URL видео */
-  videoUrl?: string;
-  /** URL аудио */
-  audioUrl?: string;
-  /** Прикреплённые медиа */
-  attachedMedia?: string[];
-  /** Условные сообщения включены */
-  enableConditionalMessages?: boolean;
-  /** Условные сообщения */
-  conditionalMessages?: any[];
-  /** Запасное сообщение */
-  fallbackMessage?: string;
-  // Поля для сбора пользовательского ввода
   /** Включить текстовый ввод */
   enableTextInput?: boolean;
   /** Включить ввод фото */
@@ -77,7 +73,7 @@ export interface MessageTemplateParams {
   enableDocumentInput?: boolean;
   /** Переменная для сохранения ввода */
   inputVariable?: string;
-  /** Целевой узел для ввода */
+  /** Целевой узел после ввода */
   inputTargetNodeId?: string;
   /** Минимальная длина ввода */
   minLength?: number;
@@ -85,4 +81,24 @@ export interface MessageTemplateParams {
   maxLength?: number;
   /** Добавлять к существующей переменной */
   appendVariable?: boolean;
+
+  // --- Медиа ---
+  /** URL изображения */
+  imageUrl?: string;
+  /** URL документа */
+  documentUrl?: string;
+  /** URL видео */
+  videoUrl?: string;
+  /** URL аудио */
+  audioUrl?: string;
+  /** Прикреплённые медиафайлы */
+  attachedMedia?: string[];
+
+  // --- Условные сообщения ---
+  /** Условные сообщения включены */
+  enableConditionalMessages?: boolean;
+  /** Массив условных сообщений */
+  conditionalMessages?: any[];
+  /** Запасное сообщение */
+  fallbackMessage?: string;
 }

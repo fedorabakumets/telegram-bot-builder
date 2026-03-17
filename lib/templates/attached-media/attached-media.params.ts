@@ -11,8 +11,11 @@ export type FormatMode = 'html' | 'markdown' | 'none';
 
 /** Параметры для генерации кода отправки прикреплённых медиафайлов */
 export interface AttachedMediaTemplateParams {
+  // --- Идентификация ---
   /** ID узла */
   nodeId: string;
+
+  // --- Медиафайлы ---
   /** Массив URL медиафайлов (/uploads/... или http...) */
   attachedMedia: string[];
   /** Режим форматирования текста */

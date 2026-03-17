@@ -14,10 +14,17 @@ export type FormatMode = 'html' | 'markdown' | 'none';
 
 /** Параметры для генерации обработчика команды /start */
 export interface StartTemplateParams {
+  // --- Идентификация ---
   /** Уникальный идентификатор узла */
   nodeId: string;
+
+  // --- Контент ---
   /** Текст сообщения */
   messageText?: string;
+  /** Режим форматирования */
+  formatMode?: FormatMode;
+
+  // --- Доступ ---
   /** Только приватные чаты */
   isPrivateOnly?: boolean;
   /** Только администраторы */
@@ -26,32 +33,36 @@ export interface StartTemplateParams {
   requiresAuth?: boolean;
   /** База данных пользователей включена */
   userDatabaseEnabled?: boolean;
-  /** Синонимы команды */
-  synonyms?: string[];
-  /** Множественный выбор включен */
-  allowMultipleSelection?: boolean;
-  /** Переменная для хранения выбора */
-  multiSelectVariable?: string;
-  /** Кнопки */
-  buttons?: Button[];
+
+  // --- Клавиатура ---
   /** Тип клавиатуры */
   keyboardType?: KeyboardType;
   /** Раскладка клавиатуры */
   keyboardLayout?: KeyboardLayout;
+  /** Кнопки */
+  buttons?: Button[];
   /** Клавиатура скрывается после использования */
   oneTimeKeyboard?: boolean;
   /** Изменить размер клавиатуры под кнопки */
   resizeKeyboard?: boolean;
+
+  // --- Множественный выбор ---
+  /** Множественный выбор включен */
+  allowMultipleSelection?: boolean;
+  /** Переменная для хранения выбора */
+  multiSelectVariable?: string;
+
+  // --- Автопереход ---
   /** Автопереход включен */
   enableAutoTransition?: boolean;
-  /** Цель автоперехода */
+  /** ID узла для автоперехода (FakeCallbackQuery) */
   autoTransitionTo?: string;
-  /** Сбор пользовательского ввода */
+
+  // --- Сбор ввода ---
+  /** Сбор пользовательского ввода включён */
   collectUserInput?: boolean;
-  /** Режим форматирования */
-  formatMode?: FormatMode;
-  /** Markdown включён */
-  markdown?: boolean;
+
+  // --- Медиа ---
   /** URL изображения */
   imageUrl?: string;
   /** URL документа */
@@ -60,6 +71,10 @@ export interface StartTemplateParams {
   videoUrl?: string;
   /** URL аудио */
   audioUrl?: string;
-  /** Прикреплённые медиа переменные */
+  /** Прикреплённые медиафайлы */
   attachedMedia?: string[];
+
+  // --- Синонимы ---
+  /** Синонимы команды /start */
+  synonyms?: string[];
 }

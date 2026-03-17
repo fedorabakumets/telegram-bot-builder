@@ -7,26 +7,39 @@ import { z } from 'zod';
 
 /** Схема для кнопки выбора */
 const selectionButtonSchema = z.object({
+  /** ID кнопки */
   id: z.string(),
+  /** Текст кнопки */
   text: z.string(),
+  /** Действие кнопки */
   action: z.literal('selection'),
+  /** Target для перехода */
   target: z.string().optional(),
 });
 
 /** Схема для обычной кнопки */
 const regularButtonSchema = z.object({
+  /** ID кнопки */
   id: z.string(),
+  /** Текст кнопки */
   text: z.string(),
+  /** Действие кнопки */
   action: z.enum(['goto', 'url', 'command']),
+  /** Target для перехода */
   target: z.string().optional(),
 });
 
 /** Схема для кнопки перехода */
 const gotoButtonSchema = z.object({
+  /** ID кнопки */
   id: z.string(),
+  /** Текст кнопки */
   text: z.string(),
+  /** Действие кнопки */
   action: z.literal('goto'),
+  /** Target для перехода */
   target: z.string(),
+  /** Целевой узел */
   targetNode: z.object({
     id: z.string(),
     type: z.string(),
@@ -38,7 +51,9 @@ const gotoButtonSchema = z.object({
 
 /** Схема для кнопки завершения */
 const completeButtonSchema = z.object({
+  /** Текст кнопки */
   text: z.string(),
+  /** Target для перехода */
   target: z.string().optional(),
 });
 
@@ -65,26 +80,53 @@ const targetNodeSchema = z.object({
 
 /** Схема для узла multi-select reply */
 const multiSelectReplyNodeSchema = z.object({
+  // --- Идентификация ---
+  /** ID узла */
   id: z.string(),
+  /** Имя переменной для хранения выборов */
   variableName: z.string(),
+
+  // --- Переходы ---
+  /** Target кнопки продолжения */
   continueButtonTarget: z.string().optional(),
+  /** Текст кнопки продолжения */
   continueButtonText: z.string().optional(),
+  /** Кнопка завершения */
   completeButton: completeButtonSchema.optional(),
-  selectionButtons: z.array(selectionButtonSchema),
-  regularButtons: z.array(regularButtonSchema),
-  gotoButtons: z.array(gotoButtonSchema),
-  adjustCode: z.string().optional(),
-  resizeKeyboard: z.boolean().optional(),
-  oneTimeKeyboard: z.boolean().optional(),
-  messageText: z.string().optional(),
+  /** Целевой узел для continueButtonTarget */
   targetNode: targetNodeSchema.optional(),
+
+  // --- Кнопки ---
+  /** Кнопки выбора (selection) */
+  selectionButtons: z.array(selectionButtonSchema),
+  /** Обычные кнопки */
+  regularButtons: z.array(regularButtonSchema),
+  /** Кнопки перехода (goto) */
+  gotoButtons: z.array(gotoButtonSchema),
+
+  // --- Поведение ---
+  /** Код для adjust() */
+  adjustCode: z.string().optional(),
+  /** Resize keyboard */
+  resizeKeyboard: z.boolean().optional(),
+  /** One time keyboard */
+  oneTimeKeyboard: z.boolean().optional(),
+  /** Текст сообщения */
+  messageText: z.string().optional(),
 });
 
 /** Схема для валидации параметров multi-select reply */
 export const multiSelectReplyParamsSchema = z.object({
+  // --- Узлы ---
+  /** Массив узлов с reply множественным выбором */
   multiSelectNodes: z.array(multiSelectReplyNodeSchema),
+  /** Массив всех узлов для поиска целевых узлов */
   allNodes: z.array(z.any()),
+  /** Массив всех ID узлов */
   allNodeIds: z.array(z.string()),
+
+  // --- Поведение ---
+  /** Уровень отступа (по умолчанию '') */
   indentLevel: z.string().optional().default(''),
 });
 

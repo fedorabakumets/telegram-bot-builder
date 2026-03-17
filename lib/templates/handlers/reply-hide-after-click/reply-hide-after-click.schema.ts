@@ -7,7 +7,9 @@ import { z } from 'zod';
 
 /** Схема параметров для генерации кода обработки hideAfterClick */
 export const replyHideAfterClickParamsSchema = z.object({
+  /** Все узлы для поиска кнопок с флагом hideAfterClick */
   nodes: z.array(z.any()),
+  /** Уровень отступа */
   indentLevel: z.string().optional().default('    '),
 });
 
