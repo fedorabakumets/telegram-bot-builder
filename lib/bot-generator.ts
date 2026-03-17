@@ -440,10 +440,24 @@ export function generatePythonCode(
   // Найдем узла с множественным выбором для использования в обработчиках
   const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(context.nodes as any[]);
 
+  // Вычисляем поля раскладки для каждого узла множественного выбора
+  const multiSelectNodesWithLayout = multiSelectNodes.map((node: any) => {
+    const layout = node.data?.keyboardLayout;
+    const hasKeyboardLayout = !!(layout && (layout.rows?.length > 0 || layout.autoLayout));
+    const keyboardLayoutAuto = !!(layout?.autoLayout);
+    let adjustCode: string | undefined;
+    if (hasKeyboardLayout && !keyboardLayoutAuto && layout.rows?.length > 0) {
+      adjustCode = layout.rows.map((r: any) => r.buttonIds?.length ?? 1).join(', ');
+    } else if (hasKeyboardLayout && keyboardLayoutAuto && layout.columns) {
+      adjustCode = String(layout.columns);
+    }
+    return { ...node, hasKeyboardLayout, keyboardLayoutAuto, adjustCode };
+  });
+
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узлы с множественным выбором
   if (multiSelectNodes && multiSelectNodes.length > 0) {
     code += generateMultiSelectCallback({
-      multiSelectNodes: multiSelectNodes as any[],
+      multiSelectNodes: multiSelectNodesWithLayout as any[],
       allNodeIds: context.allNodeIds,
       indentLevel: '    ',
     });
