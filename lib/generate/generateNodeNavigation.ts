@@ -77,8 +77,7 @@ export function generateNodeNavigation(
           code += `${baseIndent}    auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
           code += `${baseIndent}    logging.info(f"⚡ Автопереход от {${nextNodeIdVar}} к {auto_next_node_id}")\n`;
           code += `${baseIndent}    # Создаем искусственный callback для вызова обработчика\n`;
-          code += `${baseIndent}    import types as aiogram_types\n`;
-          code += `${baseIndent}    fake_callback = aiogram_types.SimpleNamespace(\n`;
+          code += `${baseIndent}    fake_callback = SimpleNamespace(\n`;
           code += `${baseIndent}        id="auto_transition",\n`;
           code += `${baseIndent}        from_user=${messageVar}.from_user,\n`;
           code += `${baseIndent}        chat_instance="",\n`;

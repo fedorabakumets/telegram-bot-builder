@@ -20,8 +20,7 @@ export function generateFakeMessageCreation(
   code += `${indent}# Выполнение команды\n`;
   code += `${indent}command = option_target\n`;
   code += `${indent}# Создаем фиктивное сообщение для выполнения команды\n`;
-  code += `${indent}import types as aiogram_types\n`;
-  code += `${indent}fake_message = aiogram_types.SimpleNamespace(\n`;
+  code += `${indent}fake_message = SimpleNamespace(\n`;
   code += `${indent}    from_user=message.from_user,\n`;
   code += `${indent}    chat=message.chat,\n`;
   code += `${indent}    text=command,\n`;

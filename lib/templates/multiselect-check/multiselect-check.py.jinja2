@@ -140,8 +140,7 @@
 {% if button.targetNode.type == 'command' %}
 {{ ind4 }}await handle_command_{{ button.targetNode.safeName }}(message)
 {% else %}
-{{ ind4 }}import types as aiogram_types
-{{ ind4 }}fake_callback = aiogram_types.SimpleNamespace(
+{{ ind4 }}fake_callback = SimpleNamespace(
 {{ ind4 }}    id="multi_select_goto",
 {{ ind4 }}    from_user=message.from_user,
 {{ ind4 }}    chat_instance="",

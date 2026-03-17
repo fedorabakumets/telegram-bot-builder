@@ -8,6 +8,7 @@
     "lib/bot-generator/**/*.ts",
     "lib/generate/**/*.ts",
     "lib/storage/**/*.ts",
+    "lib/templates/**/*.ts",
     "shared/**/*.ts"
   ],
   "exclude": [

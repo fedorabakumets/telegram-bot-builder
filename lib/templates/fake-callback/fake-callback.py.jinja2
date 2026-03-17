@@ -10,17 +10,16 @@
 {{ ind }}
 {{ ind }}# ⚡ Автопереход к узлу {{ targetNodeId }}
 {{ ind }}logging.info(f"⚡ Автопереход от узла {{ sourceNodeId }} к узлу {{ targetNodeId }}")
-{{ ind }}import types as aiogram_types
 {{ ind }}async def noop(*args, **kwargs):
 {{ ind }}    return None
-{{ ind }}fake_message = aiogram_types.SimpleNamespace(
-{{ ind }}    chat=aiogram_types.SimpleNamespace(id=message.from_user.id),
+{{ ind }}fake_message = SimpleNamespace(
+{{ ind }}    chat=SimpleNamespace(id=message.from_user.id),
 {{ ind }}    message_id=message.message_id,
 {{ ind }}    delete=noop,
 {{ ind }}    edit_text=noop,
 {{ ind }}    answer=lambda text, **kwargs: bot.send_message(message.from_user.id, text, **kwargs)
 {{ ind }})
-{{ ind }}fake_callback = aiogram_types.SimpleNamespace(
+{{ ind }}fake_callback = SimpleNamespace(
 {{ ind }}    id="auto_transition",
 {{ ind }}    from_user=message.from_user,
 {{ ind }}    chat_instance="",

@@ -126,7 +126,6 @@ export function generateNavigationToNode(
     const commandName = navTargetNode.data?.command?.replace('/', '') || 'unknown';
     const handlerName = `${commandName}_handler`;
     code += `${indent}# Выполняем команду ${navTargetNode.data?.command}\n`;
-    code += `${indent}from types import SimpleNamespace\n`;
     code += `${indent}fake_message = SimpleNamespace()\n`;
     code += `${indent}fake_message.from_user = callback_query.from_user\n`;
     code += `${indent}fake_message.chat = callback_query.message.chat\n`;

@@ -28,7 +28,6 @@ export function handleCommandNode(
   const handlerName = `${commandName}_handler`;
 
   code += `${bodyIndent}# Выполняем команду ${targetNode.data?.command}\n`;
-  code += `${bodyIndent}from types import SimpleNamespace\n`;
   code += `${bodyIndent}fake_message = SimpleNamespace()\n`;
   code += `${bodyIndent}fake_message.from_user = message.from_user\n`;
   code += `${bodyIndent}fake_message.chat = message.chat\n`;

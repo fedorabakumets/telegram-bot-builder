@@ -143,8 +143,7 @@ async def handle_multi_select_reply(message: types.Message):
 {% if button.targetNode.type == 'command' %}
                 await handle_command_{{ button.targetNode.data.command|safe_name }}(message)
 {% else %}
-                import types as aiogram_types
-                fake_callback = aiogram_types.SimpleNamespace(
+                fake_callback = SimpleNamespace(
                     id="multi_select_goto",
                     from_user=message.from_user,
                     chat_instance="",

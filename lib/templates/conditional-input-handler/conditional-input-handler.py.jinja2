@@ -46,8 +46,7 @@
 {{ ind3 }}# Переходим к целевому узлу кнопки
 {{ ind3 }}try:
 {{ ind4 }}logging.info(f"🚀 Переходим к узлу кнопки skipDataCollection: {skip_button_target}")
-{{ ind4 }}import types as aiogram_types
-{{ ind4 }}fake_callback = aiogram_types.SimpleNamespace(
+{{ ind4 }}fake_callback = SimpleNamespace(
 {{ ind5 }}id="skip_button_nav",
 {{ ind5 }}from_user=message.from_user,
 {{ ind5 }}chat_instance="",
@@ -114,8 +113,7 @@
 {{ ind5 }}    await message.answer("Команда /profile не найдена")
 {{ ind4 }}else:
 {{ ind5 }}# Создаем фиктивный callback для навигации к обычному узлу
-{{ ind5 }}import types as aiogram_types
-{{ ind5 }}fake_callback = aiogram_types.SimpleNamespace(
+{{ ind5 }}fake_callback = SimpleNamespace(
 {{ ind6 }}id="conditional_nav",
 {{ ind6 }}from_user=message.from_user,
 {{ ind6 }}chat_instance="",

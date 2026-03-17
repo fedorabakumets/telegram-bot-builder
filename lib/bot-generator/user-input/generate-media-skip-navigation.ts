@@ -21,8 +21,7 @@ export function generateFakeCallbackCreation(
   code += `${indent}if skip_target:\n`;
   code += `${indent}    try:\n`;
   code += `${indent}        logging.info(f"🚀 Переходим к узлу skipDataCollection медиа: {skip_target}")\n`;
-  code += `${indent}        import types as aiogram_types\n`;
-  code += `${indent}        fake_callback = aiogram_types.SimpleNamespace(\n`;
+  code += `${indent}        fake_callback = SimpleNamespace(\n`;
   code += `${indent}            id="skip_media_nav",\n`;
   code += `${indent}            from_user=message.from_user,\n`;
   code += `${indent}            chat_instance="",\n`;

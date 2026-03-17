@@ -7,110 +7,65 @@
   @param {object} keyboardLayout - Раскладка клавиатуры {autoLayout, columns, rows: [{buttonIds}]}
   @param {boolean} oneTimeKeyboard - Скрыть после использования
   @param {boolean} resizeKeyboard - Изменить размер под кнопки
-  
   @param {boolean} allowMultipleSelection - Разрешить множественный выбор
   @param {string} multiSelectVariable - Имя переменной для хранения выборов
   @param {string} nodeId - ID узла для callback_data
-
   @param {array} conditionalMessages - Массив условий
   @param {string} conditionalKeyboardVar - Имя переменной условной клавиатуры
-  
   @param {boolean} hasImage - Есть ли изображение
   @param {string} imageUrl - URL изображения
   @param {string} documentUrl - URL документа
   @param {string} videoUrl - URL видео
   @param {string} audioUrl - URL аудио
-  
   @param {string} parseMode - 'html' | 'markdown' | null
   @param {string} indentLevel - Уровень отступа (по умолчанию '')
 #}
 
-{# ===== МАКРОСЫ ДЛЯ РАСЧЁТА ПАРАМЕТРОВ КЛАВИАТУРЫ ===== #}
+{# ===== МАКРОСЫ ===== #}
 
-{#
-  Вычисляет оптимальное количество колонок
-  @param buttons - массив кнопок
-  @param allowMultipleSelection - флаг множественного выбора
-#}
-{% macro calculateOptimalColumns(buttons, allowMultipleSelection=False) %}
-{% set total = buttons|length if buttons else 0 %}
-{% if allowMultipleSelection %}2{% elif total >= 6 %}2{% else %}1{% endif %}
-{% endmacro %}
+{%- macro calculateOptimalColumns(buttons, allowMultipleSelection=False) -%}
+{%- set total = buttons|length if buttons else 0 -%}
+{%- if allowMultipleSelection %}2{%- elif total >= 6 %}2{%- else %}1{%- endif -%}
+{%- endmacro -%}
 
-{#
-  Генерирует builder.adjust() код
-  @param keyboardLayout - раскладка {autoLayout, columns, rows}
-  @param buttons - массив кнопок
-  @param allowMultipleSelection - флаг множественного выбора
-#}
-{% macro generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection=False) %}
-{% if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows %}
-{% for row in keyboardLayout.rows %}
+{%- macro generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection=False) -%}
+{%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows -%}
+{%- for row in keyboardLayout.rows %}
 {{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
-{% endfor %}
-{{- indent }}builder.adjust({{ keyboardLayout.rows|map(attribute='buttonIds')|map('length')|join(', ') }})
-{% elif keyboardLayout and keyboardLayout.autoLayout %}
+{%- endfor %}
+{{ indent }}builder.adjust({{ keyboardLayout.rows|map(attribute='buttonIds')|map('length')|join(', ') }})
+{%- elif keyboardLayout and keyboardLayout.autoLayout %}
 {{ indent }}# Авто-раскладка: {{ keyboardLayout.columns }} колонок
-{{- indent }}builder.adjust({{ keyboardLayout.columns }})
-{% else %}
-{% set cols = calculateOptimalColumns(buttons, allowMultipleSelection) %}
-{{- indent }}builder.adjust({{ cols }})
-{% endif %}
-{% endmacro %}
+{{ indent }}builder.adjust({{ keyboardLayout.columns }})
+{%- else -%}
+{%- set cols = calculateOptimalColumns(buttons, allowMultipleSelection) %}
+{{ indent }}builder.adjust({{ cols }})
+{%- endif -%}
+{%- endmacro -%}
 
 {# ===== ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ ===== #}
-{% set keyboardType = keyboardType or 'reply' %}
-{% set buttons = buttons or [] %}
-{% set resizeKeyboard = resizeKeyboard != false %}
-{% set oneTimeKeyboard = oneTimeKeyboard or false %}
-{% set allowMultipleSelection = allowMultipleSelection or false %}
-{% set hasImage = imageUrl is defined and imageUrl and (imageUrl|trim).length > 0 %}
-{% set parseMode = formatMode or parseMode or 'none' %}
-{% set indent = indentLevel or '' %}
-{% set effectiveNodeId = shortNodeId or nodeId or 'unknown' %}
-{% set multiSelectVariable = multiSelectVariable or ('multi_select_' ~ effectiveNodeId) %}
+{%- set keyboardType = keyboardType or 'reply' -%}
+{%- set buttons = buttons or [] -%}
+{%- set resizeKeyboard = resizeKeyboard != false -%}
+{%- set oneTimeKeyboard = oneTimeKeyboard or false -%}
+{%- set allowMultipleSelection = allowMultipleSelection or false -%}
+{%- set parseMode = formatMode or parseMode or 'none' -%}
+{%- set indent = indentLevel or '' -%}
+{%- set effectiveNodeId = shortNodeId or nodeId or 'unknown' -%}
+{%- set multiSelectVariable = multiSelectVariable or ('multi_select_' ~ effectiveNodeId) -%}
+{%- set hasMedia = (imageUrl is defined and imageUrl and (imageUrl|trim)|length > 0) or documentUrl or videoUrl or audioUrl -%}
 
-{# Определяем отступ #}
-{% set indent = indentLevel or '' %}
-
-{# Определяем тип медиа #}
-{% set hasMedia = hasImage or documentUrl or videoUrl or audioUrl %}
-{% if hasImage %}
-{% set mediaType = 'photo' %}
-{% elif documentUrl %}
-{% set mediaType = 'document' %}
-{% elif videoUrl %}
-{% set mediaType = 'video' %}
-{% elif audioUrl %}
-{% set mediaType = 'audio' %}
-{% else %}
-{% set mediaType = null %}
-{% endif %}
-
-{# Определяем parse_mode строку #}
-{% if parseMode == 'html' %}
-{% set parseModeStr = ', parse_mode=ParseMode.HTML' %}
-{% elif parseMode == 'markdown' %}
-{% set parseModeStr = ', parse_mode=ParseMode.MARKDOWN' %}
-{% else %}
-{% set parseModeStr = '' %}
-{% endif %}
-
-{# Генерация клавиатуры #}
-{% if keyboardType == 'inline' and buttons|length > 0 %}
+{# ===== ГЕНЕРАЦИЯ КЛАВИАТУРЫ ===== #}
+{%- if keyboardType == 'inline' and buttons|length > 0 %}
 {{ indent }}builder = InlineKeyboardBuilder()
-
-{# Инициализация множественного выбора #}
-{% if allowMultipleSelection and nodeId %}
+{%- if allowMultipleSelection and nodeId %}
 {{ indent }}# Инициализация состояния множественного выбора
 {{ indent }}if user_id not in user_data:
 {{ indent }}    user_data[user_id] = {}
-
-{{ indent }}# Загружаем ранее выбранные варианты
 {{ indent }}saved_selections = []
 {{ indent }}if user_vars is defined and user_vars:
 {{ indent }}    for var_name, var_data in user_vars.items():
-{{ indent }}        if var_name == "{{ multiSelectVariable or ('multi_select_' ~ nodeId) }}":
+{{ indent }}        if var_name == "{{ multiSelectVariable }}":
 {{ indent }}            if isinstance(var_data, dict) and "value" in var_data:
 {{ indent }}                selections_str = var_data["value"]
 {{ indent }}            elif isinstance(var_data, str):
@@ -120,85 +75,57 @@
 {{ indent }}            if selections_str and selections_str.strip():
 {{ indent }}                saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
 {{ indent }}                break
-
-{{ indent }}# Инициализируем состояние если его нет
 {{ indent }}if "multi_select_{{ nodeId }}" not in user_data[user_id]:
 {{ indent }}    user_data[user_id]["multi_select_{{ nodeId }}"] = saved_selections.copy()
 {{ indent }}user_data[user_id]["multi_select_node"] = "{{ nodeId }}"
 {{ indent }}user_data[user_id]["multi_select_type"] = "{{ keyboardType }}"
-{{ indent }}user_data[user_id]["multi_select_variable"] = "{{ multiSelectVariable or ('multi_select_' ~ nodeId) }}"
+{{ indent }}user_data[user_id]["multi_select_variable"] = "{{ multiSelectVariable }}"
 {{ indent }}logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")
-
-{% endif %}
-
-{# Генерация кнопок #}
-{% for btn in buttons %}
-{% if btn.action == 'url' %}
+{%- endif %}
+{%- for btn in buttons %}
+{%- if btn.action == 'url' %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, url="{{ btn.url or btn.target or '#' }}"))
-{% elif btn.action == 'selection' and allowMultipleSelection %}
-{# Кнопка выбора с галочкой для множественного выбора #}
-{{ indent }}# Кнопка выбора с галочками: {{ btn.text }}
+{%- elif btn.action == 'selection' and allowMultipleSelection %}
 {{ indent }}builder.add(InlineKeyboardButton(text=f"{'✅ ' if '{{ btn.text|e }}' in user_data[user_id]['multi_select_{{ nodeId }}'] else ''}{{ btn.text|e }}", callback_data="ms_{{ effectiveNodeId }}_{{ btn.shortButtonId or btn.target or btn.id or 'btn' }}"))
-{% elif btn.action == 'selection' %}
-{# Обычная кнопка выбора #}
+{%- elif btn.action == 'selection' %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="ms_{{ effectiveNodeId }}_{{ btn.shortButtonId or btn.target or btn.id or 'btn' }}"))
-{% elif btn.action == 'goto' or btn.action == 'complete' %}
-{% if btn.action == 'complete' and allowMultipleSelection %}
-{# Кнопка "Готово" для множественного выбора #}
-{{ indent }}# Кнопка завершения множественного выбора
+{%- elif btn.action == 'complete' and allowMultipleSelection %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="done_{{ effectiveNodeId }}"))
-{% else %}
+{%- elif btn.action == 'goto' or btn.action == 'complete' %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.target or btn.id or 'no_action' }}"))
-{% endif %}
-{% elif btn.action == 'command' %}
+{%- elif btn.action == 'command' %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="cmd_{{ (btn.target or '')|replace('/', '') or 'unknown' }}"))
-{% else %}
+{%- else %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.id or btn.target or 'btn' }}"))
-{% endif %}
-{% endfor %}
-
-{# Генерация раскладки через макрос #}
+{%- endif %}
+{%- endfor %}
 {{ generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection) }}
-
 {{ indent }}keyboard = builder.as_markup()
-
-{% elif keyboardType == 'reply' and buttons|length > 0 %}
+{%- elif keyboardType == 'reply' and buttons|length > 0 %}
 {{ indent }}builder = ReplyKeyboardBuilder()
-
-{# Инициализация множественного выбора для reply #}
-{% if allowMultipleSelection and nodeId %}
-{{ indent }}# Инициализация состояния множественного выбора (reply)
+{%- if allowMultipleSelection and nodeId %}
 {{ indent }}if user_id not in user_data:
 {{ indent }}    user_data[user_id] = {}
 {{ indent }}user_data[user_id]["multi_select_{{ nodeId }}"] = []
 {{ indent }}user_data[user_id]["multi_select_node"] = "{{ nodeId }}"
 {{ indent }}user_data[user_id]["multi_select_type"] = "reply"
-
-{% endif %}
-
-{# Генерация кнопок reply #}
-{% for btn in buttons %}
-{% if btn.action == 'contact' and btn.requestContact %}
+{%- endif %}
+{%- for btn in buttons %}
+{%- if btn.action == 'contact' and btn.requestContact %}
 {{ indent }}builder.add(KeyboardButton(text={{ btn.text|format_python_text }}, request_contact=True))
-{% elif btn.action == 'location' and btn.requestLocation %}
+{%- elif btn.action == 'location' and btn.requestLocation %}
 {{ indent }}builder.add(KeyboardButton(text={{ btn.text|format_python_text }}, request_location=True))
-{% elif btn.action == 'selection' and allowMultipleSelection %}
-{# Кнопка выбора с галочкой для reply #}
-{{ indent }}# Кнопка выбора с галочками: {{ btn.text }}
+{%- elif btn.action == 'selection' and allowMultipleSelection %}
 {{ indent }}builder.add(KeyboardButton(text=f"{'✅ ' if '{{ btn.text|e }}' in user_data[user_id]['multi_select_{{ nodeId }}'] else ''}{{ btn.text|e }}"))
-{% else %}
+{%- else %}
 {{ indent }}builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
-{% endif %}
-{% endfor %}
-
-{# Генерация раскладки через макрос #}
+{%- endif %}
+{%- endfor %}
 {{ generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection) }}
-
 {{ indent }}keyboard = builder.as_markup(
 {{ indent }}    resize_keyboard={{ 'True' if resizeKeyboard else 'False' }},
 {{ indent }}    one_time_keyboard={{ 'True' if oneTimeKeyboard else 'False' }}
 {{ indent }})
-
-{% else %}
+{%- else %}
 {{ indent }}keyboard = None
-{% endif %}
+{%- endif %}

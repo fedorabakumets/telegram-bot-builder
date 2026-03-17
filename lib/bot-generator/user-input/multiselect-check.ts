@@ -190,8 +190,7 @@ export function multiselectcheck(code: string, nodes: any[], allNodeIds: any[]) 
                             code += `                await handle_command_${safeCommandName}(message)\n`;
                         } else {
                             // Для обычных узлов создаем фиктивный callback и вызываем соответствующий обработчик
-                            code += '                import types as aiogram_types\n';
-                            code += '                fake_callback = aiogram_types.SimpleNamespace(\n';
+                            code += '                fake_callback = SimpleNamespace(\n';
                             code += '                    id="multi_select_goto",\n';
                             code += '                    from_user=message.from_user,\n';
                             code += '                    chat_instance="",\n';

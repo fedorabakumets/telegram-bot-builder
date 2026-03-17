@@ -30,7 +30,6 @@ export function handleAutoTransition(
   code += `${bodyIndent}\n`;
   code += `${bodyIndent}# ⚡ Автопереход к узлу ${autoTargetId}\n`;
   code += `${bodyIndent}logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-  code += `${bodyIndent}import types as aiogram_types\n`;
   code += `${bodyIndent}async def noop(*args, **kwargs):\n`;
   code += `${bodyIndent}    return None\n`;
   code += `${bodyIndent}fake_message = aiogram_types.SimpleNamespace(\n`;

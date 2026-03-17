@@ -1,23 +1,22 @@
-export function navigateaftersave(code: string) {
-    code += '        # Переходим к следующему узлу если указан\n';
+﻿export function navigateaftersave(code: string) {
+    code += '        # РџРµСЂРµС…РѕРґРёРј Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ РµСЃР»Рё СѓРєР°Р·Р°РЅ\n';
     code += '        if next_node_id:\n';
     code += '            try:\n';
-    code += '                logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+    code += '                logging.info(f"рџљЂ РџРµСЂРµС…РѕРґРёРј Рє СЃР»РµРґСѓСЋС‰РµРјСѓ СѓР·Р»Сѓ: {next_node_id}")\n';
     code += '                \n';
-    code += '                # Проверяем, является ли это командой\n';
+    code += '                # РџСЂРѕРІРµСЂСЏРµРј, СЏРІР»СЏРµС‚СЃСЏ Р»Рё СЌС‚Рѕ РєРѕРјР°РЅРґРѕР№\n';
     code += '                if next_node_id == "profile_command":\n';
-    code += '                    logging.info("Переход к команде /profile")\n';
-    code += '                    # Проверяем существование profile_handler перед вызовом\n';
+    code += '                    logging.info("РџРµСЂРµС…РѕРґ Рє РєРѕРјР°РЅРґРµ /profile")\n';
+    code += '                    # РџСЂРѕРІРµСЂСЏРµРј СЃСѓС‰РµСЃС‚РІРѕРІР°РЅРёРµ profile_handler РїРµСЂРµРґ РІС‹Р·РѕРІРѕРј\n';
     code += '                    profile_func = globals().get("profile_handler")\n';
     code += '                    if profile_func:\n';
     code += '                        await profile_func(message)\n';
     code += '                    else:\n';
-    code += '                        logging.warning("profile_handler не найден, пропускаем вызов")\n';
-    code += '                        await message.answer("Команда /profile не найдена")\n';
+    code += '                        logging.warning("profile_handler РЅРµ РЅР°Р№РґРµРЅ, РїСЂРѕРїСѓСЃРєР°РµРј РІС‹Р·РѕРІ")\n';
+    code += '                        await message.answer("РљРѕРјР°РЅРґР° /profile РЅРµ РЅР°Р№РґРµРЅР°")\n';
     code += '                else:\n';
-    code += '                    # Создаем фиктивный callback для навигации к обычному узлу\n';
-    code += '                    import types as aiogram_types\n';
-    code += '                    fake_callback = aiogram_types.SimpleNamespace(\n';
+    code += '                    # РЎРѕР·РґР°РµРј С„РёРєС‚РёРІРЅС‹Р№ callback РґР»СЏ РЅР°РІРёРіР°С†РёРё Рє РѕР±С‹С‡РЅРѕРјСѓ СѓР·Р»Сѓ\n';
+    code += '                    fake_callback = SimpleNamespace(\n';
     code += '                        id="conditional_nav",\n';
     code += '                        from_user=message.from_user,\n';
     code += '                        chat_instance="",\n';
@@ -28,3 +27,4 @@ export function navigateaftersave(code: string) {
     code += '                    \n';
     return code;
 }
+

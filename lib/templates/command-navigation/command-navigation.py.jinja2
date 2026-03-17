@@ -12,7 +12,6 @@
 {% set ind = indentLevel or '    ' %}
 
 {{ ind }}# Выполняем команду /{{ commandName }}
-{{ ind }}from types import SimpleNamespace
 {{ ind }}fake_message = SimpleNamespace()
 {{ ind }}fake_message.from_user = callback_query.from_user
 {{ ind }}fake_message.chat = callback_query.message.chat

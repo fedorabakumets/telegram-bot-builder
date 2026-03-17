@@ -92,8 +92,7 @@
 {% endif %}
 {{ ind4 }}# Выполнение команды через fake_message
 {{ ind4 }}command = option_target
-{{ ind4 }}import types as aiogram_types
-{{ ind4 }}fake_message = aiogram_types.SimpleNamespace(
+{{ ind4 }}fake_message = SimpleNamespace(
 {{ ind5 }}from_user=message.from_user,
 {{ ind5 }}chat=message.chat,
 {{ ind5 }}text=command,
@@ -164,8 +163,7 @@
 {{ ind4 }}if skip_target:
 {{ ind5 }}try:
 {{ ind5 }}    logging.info(f"🚀 Переходим к узлу skipDataCollection медиа: {skip_target}")
-{{ ind5 }}    import types as aiogram_types
-{{ ind5 }}    fake_callback = aiogram_types.SimpleNamespace(
+{{ ind5 }}    fake_callback = SimpleNamespace(
 {{ ind5 }}        id="skip_media_nav",
 {{ ind5 }}        from_user=message.from_user,
 {{ ind5 }}        chat_instance="",
@@ -203,8 +201,7 @@
 {{ ind }}    if skip_target:
 {{ ind }}        try:
 {{ ind }}            logging.info(f"🚀 Переходим к узлу skipDataCollection: {skip_target}")
-{{ ind }}            import types as aiogram_types
-{{ ind }}            fake_callback = aiogram_types.SimpleNamespace(
+{{ ind }}            fake_callback = SimpleNamespace(
 {{ ind }}                id="skip_button_nav",
 {{ ind }}                from_user=message.from_user,
 {{ ind }}                chat_instance="",
