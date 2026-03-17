@@ -12,6 +12,7 @@ import {
   validParamsWithLayout,
   validParamsEmpty,
   validParamsOneTime,
+  validParamsEmptyButtonIds,
   invalidParamsWrongType,
   invalidParamsMissingField,
   expectedOutputInline,
@@ -108,6 +109,16 @@ describe('keyboard.py.jinja2 шаблон', () => {
 
         assert.ok(result.includes('# Ряд 1:'));
         assert.ok(result.includes('# Ряд 2:'));
+      });
+
+      it('не должен генерировать builder.adjust(, ) при пустых buttonIds', () => {
+        const result = generateKeyboard(validParamsEmptyButtonIds);
+
+        assert.ok(
+          !result.includes('builder.adjust(, )'),
+          `Не должно быть builder.adjust(, ), получено:\n${result}`
+        );
+        assert.ok(result.includes('builder.adjust('), 'Должен быть builder.adjust() с аргументом');
       });
 
       it('должен генерировать авто-раскладку', () => {
@@ -365,7 +376,7 @@ describe('keyboard.py.jinja2 шаблон', () => {
         const result = keyboardParamsSchema.safeParse({
           keyboardType: 'inline',
           buttons: [
-            { id: 'btn_1', text: 'Button', action: 'callback', target: 'btn' },
+            { id: 'btn_1', text: 'Button', action: 'goto', target: 'btn', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
           ],
           oneTimeKeyboard: false,
           resizeKeyboard: true,

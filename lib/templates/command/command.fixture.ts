@@ -68,8 +68,8 @@ export const validParamsWithConditionals: CommandTemplateParams = {
       variableName: 'balance',
       priority: 1,
       buttons: [
-        { text: 'Пополнить', action: 'callback', target: 'deposit', id: 'btn_deposit' },
-        { text: 'Вывести', action: 'callback', target: 'withdraw', id: 'btn_withdraw' },
+        { text: 'Пополнить', action: 'goto', target: 'deposit', id: 'btn_deposit' },
+        { text: 'Вывести', action: 'goto', target: 'withdraw', id: 'btn_withdraw' },
       ],
       collectUserInput: false,
     },
@@ -107,8 +107,8 @@ export const validParamsWithKeyboard: CommandTemplateParams = {
   fallbackMessage: '',
   keyboardType: 'inline',
   buttons: [
-    { text: '📊 Статистика', action: 'callback', target: 'stats', id: 'btn_stats' },
-    { text: '⚙️ Настройки', action: 'callback', target: 'settings', id: 'btn_settings' },
+    { text: '📊 Статистика', action: 'goto', target: 'stats', id: 'btn_stats' },
+    { text: '⚙️ Настройки', action: 'goto', target: 'settings', id: 'btn_settings' },
     { text: '🌐 Сайт', action: 'url', target: 'https://example.com', id: 'btn_site' },
   ],
   formatMode: 'none',
@@ -134,8 +134,8 @@ export const validParamsWithSynonyms: CommandTemplateParams = {
   fallbackMessage: '',
   keyboardType: 'reply',
   buttons: [
-    { text: '📖 О боте', action: 'callback', target: 'about', id: 'btn_about' },
-    { text: '📞 Контакты', action: 'callback', target: 'contacts', id: 'btn_contacts' },
+    { text: '📖 О боте', action: 'goto', target: 'about', id: 'btn_about' },
+    { text: '📞 Контакты', action: 'goto', target: 'contacts', id: 'btn_contacts' },
   ],
   formatMode: 'none',
   imageUrl: '',

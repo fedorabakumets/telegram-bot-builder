@@ -118,8 +118,8 @@ export const validParamsWithSynonyms: StartTemplateParams = {
   allowMultipleSelection: false,
   multiSelectVariable: '',
   buttons: [
-    { text: '📖 О боте', action: 'callback', target: 'about', id: 'btn_about' },
-    { text: '📞 Контакты', action: 'callback', target: 'contacts', id: 'btn_contacts' },
+    { text: '📖 О боте', action: 'goto', target: 'about', id: 'btn_about' },
+    { text: '📞 Контакты', action: 'goto', target: 'contacts', id: 'btn_contacts' },
   ],
   keyboardType: 'reply',
   enableAutoTransition: false,
@@ -145,8 +145,8 @@ export const validParamsWithInlineKeyboard: StartTemplateParams = {
   allowMultipleSelection: false,
   multiSelectVariable: '',
   buttons: [
-    { text: '📊 Статистика', action: 'callback', target: 'stats', id: 'btn_stats' },
-    { text: '⚙️ Настройки', action: 'callback', target: 'settings', id: 'btn_settings' },
+    { text: '📊 Статистика', action: 'goto', target: 'stats', id: 'btn_stats' },
+    { text: '⚙️ Настройки', action: 'goto', target: 'settings', id: 'btn_settings' },
     { text: '🌐 Сайт', action: 'url', target: 'https://example.com', id: 'btn_site' },
   ],
   keyboardType: 'inline',

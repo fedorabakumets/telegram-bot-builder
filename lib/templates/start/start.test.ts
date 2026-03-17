@@ -465,7 +465,7 @@ describe('start.py.jinja2 шаблон', () => {
           buttons: [
             {
               text: 'Кнопка',
-              action: 'callback',
+              action: 'goto',
               target: 'target',
               id: 'btn_1',
             },

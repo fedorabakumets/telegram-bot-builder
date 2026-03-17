@@ -28,9 +28,14 @@
 {%- if allowMultipleSelection %}2{%- elif total >= 6 %}2{%- else %}1{%- endif -%}
 {%- endmacro -%}
 
-{%- macro generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection=False) -%}
+{%- macro generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection=False, indent='') -%}
 {%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows and keyboardLayout.rows|length > 0 -%}
-{%- set valid_rows = keyboardLayout.rows | selectattr('buttonIds') | list -%}
+{%- set valid_rows = [] -%}
+{%- for row in keyboardLayout.rows -%}
+  {%- if row.buttonIds and row.buttonIds|length > 0 -%}
+    {%- set valid_rows = valid_rows.concat([row]) -%}
+  {%- endif -%}
+{%- endfor -%}
 {%- if valid_rows|length > 0 %}
 {%- for row in valid_rows %}
 {{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
@@ -105,7 +110,25 @@
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.id or btn.target or 'btn' }}"))
 {%- endif %}
 {%- endfor %}
-{{ generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection) }}
+{%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows and keyboardLayout.rows|length > 0 -%}
+{%- set _adj_rows = [] -%}
+{%- for row in keyboardLayout.rows -%}{%- if row.buttonIds and row.buttonIds|length > 0 -%}{%- set _adj_rows = _adj_rows.concat([row]) -%}{%- endif -%}{%- endfor -%}
+{%- if _adj_rows|length > 0 %}
+{%- for row in _adj_rows %}
+{{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
+{%- endfor %}
+{{ indent }}builder.adjust({{ _adj_rows|map(attribute='buttonIds')|map('length')|join(', ') }})
+{%- else %}
+{%- set _cols = calculateOptimalColumns(buttons, allowMultipleSelection) %}
+{{ indent }}builder.adjust({{ _cols }})
+{%- endif %}
+{%- elif keyboardLayout and keyboardLayout.autoLayout and keyboardLayout.columns %}
+{{ indent }}# Авто-раскладка: {{ keyboardLayout.columns }} колонок
+{{ indent }}builder.adjust({{ keyboardLayout.columns }})
+{%- else %}
+{%- set _cols = calculateOptimalColumns(buttons, allowMultipleSelection) %}
+{{ indent }}builder.adjust({{ _cols }})
+{%- endif %}
 {{ indent }}keyboard = builder.as_markup()
 {%- elif keyboardType == 'reply' and buttons|length > 0 %}
 {{ indent }}builder = ReplyKeyboardBuilder()
@@ -127,7 +150,25 @@
 {{ indent }}builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
 {%- endif %}
 {%- endfor %}
-{{ generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection) }}
+{%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows and keyboardLayout.rows|length > 0 -%}
+{%- set _adj_rows2 = [] -%}
+{%- for row in keyboardLayout.rows -%}{%- if row.buttonIds and row.buttonIds|length > 0 -%}{%- set _adj_rows2 = _adj_rows2.concat([row]) -%}{%- endif -%}{%- endfor -%}
+{%- if _adj_rows2|length > 0 %}
+{%- for row in _adj_rows2 %}
+{{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
+{%- endfor %}
+{{ indent }}builder.adjust({{ _adj_rows2|map(attribute='buttonIds')|map('length')|join(', ') }})
+{%- else %}
+{%- set _cols2 = calculateOptimalColumns(buttons, allowMultipleSelection) %}
+{{ indent }}builder.adjust({{ _cols2 }})
+{%- endif %}
+{%- elif keyboardLayout and keyboardLayout.autoLayout and keyboardLayout.columns %}
+{{ indent }}# Авто-раскладка: {{ keyboardLayout.columns }} колонок
+{{ indent }}builder.adjust({{ keyboardLayout.columns }})
+{%- else %}
+{%- set _cols2 = calculateOptimalColumns(buttons, allowMultipleSelection) %}
+{{ indent }}builder.adjust({{ _cols2 }})
+{%- endif %}
 {{ indent }}keyboard = builder.as_markup(
 {{ indent }}    resize_keyboard={{ 'True' if resizeKeyboard else 'False' }},
 {{ indent }}    one_time_keyboard={{ 'True' if oneTimeKeyboard else 'False' }}

@@ -5,13 +5,25 @@
 
 import type { KeyboardTemplateParams } from './keyboard.params';
 
+/** Хелпер: создаёт кнопку с обязательными полями по умолчанию */
+function btn(text: string, action: string, opts: Record<string, any> = {}) {
+  return {
+    text,
+    action,
+    buttonType: 'normal' as const,
+    skipDataCollection: false,
+    hideAfterClick: false,
+    ...opts,
+  };
+}
+
 /** Валидные параметры: inline клавиатура */
 export const validParamsInline: KeyboardTemplateParams = {
   keyboardType: 'inline',
   buttons: [
-    { text: '📊 Статистика', action: 'callback', target: 'stats', id: 'btn_stats' },
-    { text: '⚙️ Настройки', action: 'callback', target: 'settings', id: 'btn_settings' },
-    { text: '🌐 Сайт', action: 'url', target: 'https://example.com', id: 'btn_site' },
+    btn('📊 Статистика', 'goto', { target: 'btn_stats', id: 'btn_stats' }),
+    btn('⚙️ Настройки', 'goto', { target: 'btn_settings', id: 'btn_settings' }),
+    btn('🌐 Сайт', 'url', { target: 'https://example.com', id: 'btn_site', url: 'https://example.com' }),
   ],
   oneTimeKeyboard: false,
   resizeKeyboard: true,
@@ -21,8 +33,8 @@ export const validParamsInline: KeyboardTemplateParams = {
 export const validParamsReply: KeyboardTemplateParams = {
   keyboardType: 'reply',
   buttons: [
-    { text: '📖 О боте', action: 'callback', target: 'about', id: 'btn_about' },
-    { text: '📞 Контакты', action: 'callback', target: 'contacts', id: 'btn_contacts' },
+    btn('📖 О боте', 'goto', { target: 'about', id: 'btn_about' }),
+    btn('📞 Контакты', 'goto', { target: 'contacts', id: 'btn_contacts' }),
   ],
   oneTimeKeyboard: false,
   resizeKeyboard: true,
@@ -32,10 +44,10 @@ export const validParamsReply: KeyboardTemplateParams = {
 export const validParamsWithLayout: KeyboardTemplateParams = {
   keyboardType: 'inline',
   buttons: [
-    { text: 'Button 1', action: 'callback', target: 'btn1', id: 'btn_1' },
-    { text: 'Button 2', action: 'callback', target: 'btn2', id: 'btn_2' },
-    { text: 'Button 3', action: 'callback', target: 'btn3', id: 'btn_3' },
-    { text: 'Button 4', action: 'callback', target: 'btn4', id: 'btn_4' },
+    btn('Button 1', 'goto', { target: 'btn1', id: 'btn_1' }),
+    btn('Button 2', 'goto', { target: 'btn2', id: 'btn_2' }),
+    btn('Button 3', 'goto', { target: 'btn3', id: 'btn_3' }),
+    btn('Button 4', 'goto', { target: 'btn4', id: 'btn_4' }),
   ],
   keyboardLayout: {
     rows: [
@@ -61,7 +73,7 @@ export const validParamsEmpty: KeyboardTemplateParams = {
 export const validParamsOneTime: KeyboardTemplateParams = {
   keyboardType: 'reply',
   buttons: [
-    { text: 'Continue', action: 'callback', target: 'continue', id: 'btn_continue' },
+    btn('Continue', 'goto', { target: 'continue', id: 'btn_continue' }),
   ],
   oneTimeKeyboard: true,
   resizeKeyboard: false,
@@ -71,10 +83,10 @@ export const validParamsOneTime: KeyboardTemplateParams = {
 export const validParamsMultiSelectInline: KeyboardTemplateParams = {
   keyboardType: 'inline',
   buttons: [
-    { text: 'Option 1', action: 'selection', target: 'opt1', id: 'btn_opt1' },
-    { text: 'Option 2', action: 'selection', target: 'opt2', id: 'btn_opt2' },
-    { text: 'Option 3', action: 'selection', target: 'opt3', id: 'btn_opt3' },
-    { text: 'Готово', action: 'complete', target: 'next_node', id: 'btn_done' },
+    btn('Option 1', 'selection', { target: 'opt1', id: 'btn_opt1' }),
+    btn('Option 2', 'selection', { target: 'opt2', id: 'btn_opt2' }),
+    btn('Option 3', 'selection', { target: 'opt3', id: 'btn_opt3' }),
+    btn('Готово', 'complete', { target: 'next_node', id: 'btn_done' }),
   ],
   allowMultipleSelection: true,
   multiSelectVariable: 'user_interests',
@@ -88,9 +100,9 @@ export const validParamsMultiSelectInline: KeyboardTemplateParams = {
 export const validParamsMultiSelectReply: KeyboardTemplateParams = {
   keyboardType: 'reply',
   buttons: [
-    { text: 'Option 1', action: 'selection', target: 'opt1', id: 'btn_opt1' },
-    { text: 'Option 2', action: 'selection', target: 'opt2', id: 'btn_opt2' },
-    { text: 'Готово', action: 'complete', target: 'next_node', id: 'btn_done' },
+    btn('Option 1', 'selection', { target: 'opt1', id: 'btn_opt1' }),
+    btn('Option 2', 'selection', { target: 'opt2', id: 'btn_opt2' }),
+    btn('Готово', 'complete', { target: 'next_node', id: 'btn_done' }),
   ],
   allowMultipleSelection: true,
   multiSelectVariable: 'user_interests',
@@ -103,9 +115,9 @@ export const validParamsMultiSelectReply: KeyboardTemplateParams = {
 export const validParamsContactLocation: KeyboardTemplateParams = {
   keyboardType: 'reply',
   buttons: [
-    { text: '📱 Мой номер', action: 'contact', requestContact: true, id: 'btn_contact' },
-    { text: '📍 Моя геопозиция', action: 'location', requestLocation: true, id: 'btn_location' },
-    { text: 'Пропустить', action: 'goto', target: 'skip', id: 'btn_skip' },
+    btn('📱 Мой номер', 'contact', { requestContact: true, id: 'btn_contact' }),
+    btn('📍 Моя геопозиция', 'location', { requestLocation: true, id: 'btn_location' }),
+    btn('Пропустить', 'goto', { target: 'skip', id: 'btn_skip' }),
   ],
   oneTimeKeyboard: false,
   resizeKeyboard: true,
@@ -115,7 +127,7 @@ export const validParamsContactLocation: KeyboardTemplateParams = {
 export const validParamsParseModeHtml: KeyboardTemplateParams = {
   keyboardType: 'inline',
   buttons: [
-    { text: 'Button', action: 'goto', target: 'next', id: 'btn_next' },
+    btn('Button', 'goto', { target: 'next', id: 'btn_next' }),
   ],
   parseMode: 'html',
   oneTimeKeyboard: false,
@@ -126,8 +138,27 @@ export const validParamsParseModeHtml: KeyboardTemplateParams = {
 export const validParamsWithVariables: KeyboardTemplateParams = {
   keyboardType: 'inline',
   buttons: [
-    { text: 'Привет, {user_name}!', action: 'goto', target: 'next', id: 'btn_greet' },
+    btn('Привет, {user_name}!', 'goto', { target: 'next', id: 'btn_greet' }),
   ],
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};
+
+/** Валидные параметры: раскладка с пустыми buttonIds (проверка защиты от builder.adjust(, )) */
+export const validParamsEmptyButtonIds: KeyboardTemplateParams = {
+  keyboardType: 'inline',
+  buttons: [
+    btn('Button 1', 'goto', { target: 'btn1', id: 'btn_1' }),
+    btn('Button 2', 'goto', { target: 'btn2', id: 'btn_2' }),
+  ],
+  keyboardLayout: {
+    rows: [
+      { buttonIds: [] },
+      { buttonIds: [] },
+    ],
+    columns: 1,
+    autoLayout: false,
+  },
   oneTimeKeyboard: false,
   resizeKeyboard: true,
 };

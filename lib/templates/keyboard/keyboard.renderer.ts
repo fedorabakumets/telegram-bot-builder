@@ -17,7 +17,7 @@ import { renderPartialTemplate } from '../template-renderer';
  * const code = generateKeyboard({
  *   keyboardType: 'inline',
  *   buttons: [
- *     { text: 'Button', action: 'callback', target: 'btn', id: 'btn_1' },
+ *     { text: 'Button', action: 'goto', target: 'btn', id: 'btn_1' },
  *   ],
  *   oneTimeKeyboard: false,
  *   resizeKeyboard: true,
