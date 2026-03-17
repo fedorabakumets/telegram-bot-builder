@@ -252,6 +252,46 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
 
       assertValidPythonSyntax(code, 'generateMessage');
     });
+
+    it('должен генерировать валидный Python код для message обработчика с синонимами', async () => {
+      if (!hasPython) {
+        console.warn('⚠️ Python не найден, тест пропущен');
+        return;
+      }
+
+      const { generateMessage } = await import('./message/message.renderer');
+
+      const code = generateMessage({
+        nodeId: 'msg_1',
+        messageText: 'Привет!',
+        isPrivateOnly: false,
+        adminOnly: false,
+        requiresAuth: false,
+        userDatabaseEnabled: true,
+        enableAutoTransition: false,
+        autoTransitionTo: undefined,
+        keyboardType: 'inline',
+        buttons: [
+          { text: 'OK', action: 'callback', target: 'ok', id: 'btn_ok' },
+        ],
+        formatMode: 'none',
+        enableConditionalMessages: false,
+        conditionalMessages: [],
+        fallbackMessage: '',
+        synonymEntries: [
+          {
+            synonym: 'новое',
+            nodeId: 'msg_1',
+            nodeType: 'message',
+            functionName: 'handle_callback_msg_1',
+            originalCommand: '',
+            messageText: '',
+          },
+        ],
+      });
+
+      assertValidPythonSyntax(code, 'generateMessage с синонимами');
+    });
   });
 
   describe('generateDatabase', () => {
@@ -1060,7 +1100,7 @@ describe('generateMultiSelectCallback', () => {
     if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
 
     const { generateMultiSelectCallback } = await import('./handlers/multi-select-callback/multi-select-callback.renderer');
-    const code = generateMultiSelectCallback({
+    const fragment = generateMultiSelectCallback({
       multiSelectNodes: [
         {
           id: 'node_123',
@@ -1076,6 +1116,22 @@ describe('generateMultiSelectCallback', () => {
       allNodeIds: ['node_123'],
       indentLevel: '    ',
     });
+    // Оборачиваем в функцию с заглушками глобальных переменных бота
+    const code = `
+import logging
+user_data = {}
+def calculate_optimal_columns(n): return 2
+async def get_user_from_db(uid): return {}
+async def handle_callback_node_123(callback_query): pass
+
+async def _test_handler(callback_query):
+    user_id = callback_query.from_user.id
+    callback_data = callback_query.data
+    from aiogram.utils.keyboard import InlineKeyboardBuilder
+    from aiogram import types
+    InlineKeyboardButton = types.InlineKeyboardButton
+${fragment}
+`;
     assertValidPythonSyntax(code, 'generateMultiSelectCallback');
   });
 });
