@@ -85,7 +85,6 @@ async def start_handler(message: types.Message):
     user_data[user_id]["username"] = username
     user_data[user_id]["first_name"] = first_name
     user_data[user_id]["last_name"] = last_name
-    user_data[user_id]["user_name"] = init_user_variables(user_id, message.from_user)
 
 {%- if allowMultipleSelection %}
 

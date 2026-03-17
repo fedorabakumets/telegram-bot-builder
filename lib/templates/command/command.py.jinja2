@@ -80,7 +80,7 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
 
     # Сохранение в локальное хранилище
     # Инициализируем базовые переменные пользователя в локальном хранилище
-    user_name = init_user_variables(user_id, message.from_user)
+    await init_user_variables(user_id, message.from_user)
 
     if "commands_used" not in user_data[user_id]:
         user_data[user_id]["commands_used"] = {}

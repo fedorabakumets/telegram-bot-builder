@@ -97,4 +97,23 @@ describe('generateCommandCallbackHandler', () => {
 
     assert.ok(result.includes('logging.info(f"Команда /menu выполнена через callback кнопку'));
   });
+
+  it('должен заменять дефисы в callbackData на подчёркивания в имени функции', () => {
+    const result = generateCommandCallbackHandler({
+      callbackData: 'cmd_1KvQin0bE6-tRu9mm8xK_',
+      button: {
+        action: 'command',
+        id: 'btn_test',
+        target: 'test',
+        text: 'Test',
+      },
+      indentLevel: '',
+      commandNode: 'command',
+      command: 'test',
+    });
+
+    // Имя функции не должно содержать дефис
+    assert.ok(result.includes('async def handle_callback_cmd_1KvQin0bE6_tRu9mm8xK_'));
+    assert.ok(!result.includes('async def handle_callback_cmd_1KvQin0bE6-tRu9mm8xK_'));
+  });
 });

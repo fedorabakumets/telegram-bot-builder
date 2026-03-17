@@ -90,7 +90,6 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     user_data[user_id]["username"] = username
     user_data[user_id]["first_name"] = first_name
     user_data[user_id]["last_name"] = last_name
-    user_data[user_id]["user_name"] = init_user_variables(user_id, callback_query.from_user)
 
     {# Инициализация множественного выбора #}
     {%- if allowMultipleSelection %}

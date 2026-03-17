@@ -24,6 +24,7 @@ export function generateCommandCallbackHandler(params: CommandCallbackHandlerTem
   // Рендеринг шаблона
   return renderPartialTemplate('handlers/command-callback-handler/command-callback-handler.py.jinja2', {
     callbackData: validated.data.callbackData,
+    safeFunctionName: validated.data.callbackData.replace(/[^a-zA-Z0-9_]/g, '_'),
     button: validated.data.button,
     indentLevel: validated.data.indentLevel ?? '',
     commandNode: validated.data.commandNode ?? '',

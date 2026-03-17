@@ -15,7 +15,6 @@
 #}
 
 {% set indent = indentLevel or '' %}
-{% set safeFunctionName = callbackData | replace('[^a-zA-Z0-9_]', '_') %}
 {% set command = button.target | replace('/', '') %}
 
 {{ indent }}@dp.callback_query(lambda c: c.data == "{{ callbackData }}")

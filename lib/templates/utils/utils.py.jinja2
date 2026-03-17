@@ -29,6 +29,30 @@ def get_user_variables(user_id):
     return user_data.get(user_id, {})
 
 
+async def init_user_variables(user_id: int, from_user) -> str:
+    """Инициализирует переменные пользователя в локальном хранилище
+
+    Args:
+        user_id (int): ID пользователя Telegram
+        from_user: Объект пользователя aiogram (types.User)
+
+    Returns:
+        str: Имя пользователя (username или first_name)
+    """
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    username = getattr(from_user, 'username', None) or ''
+    first_name = getattr(from_user, 'first_name', None) or ''
+    last_name = getattr(from_user, 'last_name', None) or ''
+    user_name = username or first_name or str(user_id)
+    user_data[user_id]['username'] = username
+    user_data[user_id]['first_name'] = first_name
+    user_data[user_id]['last_name'] = last_name
+    user_data[user_id]['user_name'] = user_name
+    user_data[user_id]['user_id'] = user_id
+    return user_name
+
+
 {%- if userDatabaseEnabled %}
 async def check_auth(user_id: int) -> bool:
     # Проверяем наличие пользователя в БД или локальном хранилище
@@ -45,4 +69,81 @@ async def check_auth(user_id: int) -> bool:
 async def check_auth(user_id: int) -> bool:
     return user_id in user_data
 
+{%- endif %}
+
+
+async def init_all_user_vars(user_id: int) -> dict:
+    """Собирает все переменные пользователя из локального хранилища и БД
+
+    Returns:
+        dict: Объединённый словарь всех переменных пользователя
+    """
+    all_vars = dict(user_data.get(user_id, {}))
+{%- if userDatabaseEnabled %}
+    try:
+        if db_pool:
+            async with db_pool.acquire() as conn:
+                row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1", user_id)
+                if row:
+                    for key in row.keys():
+                        if row[key] is not None:
+                            all_vars[key] = row[key]
+                    raw_user_data = row.get('user_data')
+                    if raw_user_data:
+                        import json as _json
+                        extra = _json.loads(raw_user_data) if isinstance(raw_user_data, str) else raw_user_data
+                        if isinstance(extra, dict):
+                            all_vars.update(extra)
+    except Exception as e:
+        logging.warning(f"⚠️ Не удалось загрузить переменные из БД: {e}")
+{%- endif %}
+    return all_vars
+
+
+def replace_variables_in_text(text: str, variables: dict, filters: dict = None) -> str:
+    """Заменяет переменные вида {var_name} в тексте на их значения
+
+    Args:
+        text: Исходный текст с переменными
+        variables: Словарь переменных для подстановки
+        filters: Словарь фильтров форматирования (опционально)
+
+    Returns:
+        str: Текст с подставленными значениями
+    """
+    if not text or not variables:
+        return text or ''
+    result = text
+    for key, value in variables.items():
+        if value is not None:
+            result = result.replace('{' + str(key) + '}', str(value))
+    return result
+
+
+{%- if userDatabaseEnabled %}
+async def save_message_to_api(user_id, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
+    """Сохраняет сообщение в базу данных напрямую через asyncpg"""
+    try:
+        if not db_pool:
+            return None
+        import json as _json
+        message_data_json = _json.dumps(message_data or {}, ensure_ascii=False)
+        async with db_pool.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                INSERT INTO bot_messages (project_id, user_id, message_type, message_text, node_id, message_data, created_at)
+                VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                RETURNING id, user_id, message_type, created_at
+                """,
+                PROJECT_ID, str(user_id), message_type, message_text, node_id, message_data_json
+            )
+            logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result['id']})")
+            return {"id": result['id'], "user_id": result['user_id'], "message_type": result['message_type']}
+    except Exception as e:
+        logging.error(f"❌ Ошибка сохранения сообщения в БД: {e}")
+    return None
+{%- else %}
+async def save_message_to_api(user_id, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
+    """Заглушка save_message_to_api когда БД отключена"""
+    return None
 {%- endif %}

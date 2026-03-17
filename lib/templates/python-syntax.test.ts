@@ -12,21 +12,15 @@ import { tmpdir } from 'os';
 
 /**
  * Проверяет синтаксическую корректность Python кода через py_compile
- * @param code - Python код для проверки
- * @param testName - Имя теста для сообщения об ошибке
  */
 function assertValidPythonSyntax(code: string, testName: string): void {
   const tempDir = join(tmpdir(), `bot-builder-test-${Date.now()}`);
   const tempFile = join(tempDir, 'test.py');
 
   try {
-    // Создаём временную директорию
     mkdirSync(tempDir, { recursive: true });
-
-    // Записываем код в файл
     writeFileSync(tempFile, code, 'utf-8');
 
-    // Запускаем python -m py_compile
     try {
       execSync(`python -m py_compile "${tempFile}"`, {
         stdio: 'pipe',
@@ -39,12 +33,67 @@ function assertValidPythonSyntax(code: string, testName: string): void {
       );
     }
   } finally {
-    // Очищаем временные файлы
     try {
       rmSync(tempDir, { recursive: true, force: true });
-    } catch {
-      // Игнорируем ошибки очистки
+    } catch { /* игнорируем */ }
+  }
+}
+
+/**
+ * Проверяет отсутствие undefined names через pyflakes.
+ * Ловит NameError-подобные проблемы которые py_compile пропускает.
+ *
+ * Игнорируемые категории (шум от глобальных переменных бота):
+ * - "imported but unused" — избыточные импорты не ломают бота
+ * - "redefinition of unused" — переопределения не критичны
+ * - "local variable.*assigned to but never used" — неиспользуемые переменные
+ * - "global.*is unused" — global-декларации без присваивания
+ * - "f-string is missing placeholders" — f-строки без {} (стилистика)
+ * - "local variable.*defined in enclosing scope" — замыкания
+ */
+function assertNoUndefinedNames(code: string, testName: string): void {
+  const tempDir = join(tmpdir(), `bot-builder-pyflakes-${Date.now()}`);
+  const tempFile = join(tempDir, 'test.py');
+
+  const IGNORED_PATTERNS = [
+    /imported but unused/,
+    /redefinition of unused/,
+    /local variable .+ assigned to but never used/,
+    /`global .+` is unused/,
+    /f-string is missing placeholders/,
+    /local variable .+ defined in enclosing scope/,
+  ];
+
+  try {
+    mkdirSync(tempDir, { recursive: true });
+    writeFileSync(tempFile, code, 'utf-8');
+
+    let output = '';
+    try {
+      output = execSync(`python -m pyflakes "${tempFile}"`, {
+        stdio: 'pipe',
+        timeout: 10000,
+      }).toString();
+    } catch (error: any) {
+      // pyflakes возвращает exit code 1 при наличии предупреждений — это нормально
+      output = error.stdout?.toString() || error.stderr?.toString() || '';
     }
+
+    // Фильтруем только критичные строки
+    const criticalLines = output
+      .split('\n')
+      .filter(line => line.trim())
+      .filter(line => !IGNORED_PATTERNS.some(p => p.test(line)));
+
+    if (criticalLines.length > 0) {
+      assert.fail(
+        `${testName}: pyflakes обнаружил undefined names:\n${criticalLines.join('\n')}`
+      );
+    }
+  } finally {
+    try {
+      rmSync(tempDir, { recursive: true, force: true });
+    } catch { /* игнорируем */ }
   }
 }
 
@@ -428,6 +477,128 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
       });
 
       assertValidPythonSyntax(code, 'generateSafeEditOrSend');
+    });
+  });
+
+  describe('generateCommandCallbackHandler - спецсимволы в nodeId', () => {
+    it('должен генерировать валидный Python код при дефисе в callbackData', async () => {
+      if (!hasPython) {
+        console.warn('⚠️ Python не найден, тест пропущен');
+        return;
+      }
+
+      const { generateCommandCallbackHandler } = await import('./handlers/command-callback-handler/command-callback-handler.renderer');
+
+      // Реальный nodeId из бага: cmd_1KvQin0bE6-tRu9mm8xK_
+      const code = generateCommandCallbackHandler({
+        callbackData: 'cmd_1KvQin0bE6-tRu9mm8xK_',
+        button: { action: 'command', id: 'btn_test', target: 'test', text: 'Test' },
+        indentLevel: '',
+        commandNode: 'command',
+        command: 'test',
+      });
+
+      assertValidPythonSyntax(code, 'generateCommandCallbackHandler с дефисом');
+    });
+
+    it('должен генерировать валидный Python код при точках и спецсимволах в callbackData', async () => {
+      if (!hasPython) {
+        console.warn('⚠️ Python не найден, тест пропущен');
+        return;
+      }
+
+      const { generateCommandCallbackHandler } = await import('./handlers/command-callback-handler/command-callback-handler.renderer');
+
+      const code = generateCommandCallbackHandler({
+        callbackData: 'cmd_node.id@v2+extra',
+        button: { action: 'command', id: 'btn_test', target: 'help', text: 'Help' },
+        indentLevel: '',
+        commandNode: 'command',
+        command: 'help',
+      });
+
+      assertValidPythonSyntax(code, 'generateCommandCallbackHandler со спецсимволами');
+    });
+
+    it('должен генерировать валидный Python код при цифре в начале callbackData', async () => {
+      if (!hasPython) {
+        console.warn('⚠️ Python не найден, тест пропущен');
+        return;
+      }
+
+      const { generateCommandCallbackHandler } = await import('./handlers/command-callback-handler/command-callback-handler.renderer');
+
+      const code = generateCommandCallbackHandler({
+        callbackData: '1abc-def',
+        button: { action: 'command', id: 'btn_test', target: 'start', text: 'Start' },
+        indentLevel: '',
+        commandNode: 'start',
+        command: 'start',
+      });
+
+      assertValidPythonSyntax(code, 'generateCommandCallbackHandler с цифрой в начале');
+    });
+  });
+
+  // ===== PYFLAKES: проверка undefined names =====
+  describe('pyflakes - полный собранный файл бота', () => {
+    let hasPyflakes = false;
+
+    before(() => {
+      try {
+        execSync('python -m pyflakes --version', { stdio: 'pipe' });
+        hasPyflakes = true;
+      } catch {
+        hasPyflakes = false;
+      }
+    });
+
+    it('полный минимальный файл бота не должен содержать undefined names', async () => {
+      if (!hasPython || !hasPyflakes) {
+        console.warn('⚠️ Python или pyflakes не найден, тест пропущен');
+        return;
+      }
+
+      // Собираем полный файл из всех шаблонов — как это делает bot-generator
+      const [
+        { generateImports },
+        { generateConfig },
+        { generateHeader },
+        { generateDatabase },
+        { generateUtils },
+        { generateMiddleware },
+        { generateStart },
+        { generateCommand },
+        { generateMessage },
+        { generateMain },
+      ] = await Promise.all([
+        import('./imports/imports.renderer'),
+        import('./config/config.renderer'),
+        import('./header/header.renderer'),
+        import('./database/database.renderer'),
+        import('./utils/utils-template.renderer'),
+        import('./middleware/middleware.renderer'),
+        import('./start/start.renderer'),
+        import('./command/command.renderer'),
+        import('./message/message.renderer'),
+        import('./main/main.renderer'),
+      ]);
+
+      const parts = [
+        generateHeader({ userDatabaseEnabled: true, hasInlineButtons: true, hasMediaNodes: false }),
+        generateImports({ userDatabaseEnabled: true, hasInlineButtons: true, hasAutoTransitions: false, hasMediaNodes: false, hasUploadImages: false }),
+        generateConfig({ userDatabaseEnabled: true, projectId: 1 }),
+        generateDatabase({ userDatabaseEnabled: true }),
+        generateUtils({ userDatabaseEnabled: true }),
+        generateMiddleware({ userDatabaseEnabled: true }),
+        generateStart({ nodeId: 'start_1', messageText: 'Привет!', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], allowMultipleSelection: false, multiSelectVariable: '', keyboardType: 'inline', buttons: [{ text: 'OK', action: 'callback', target: 'msg_1', id: 'btn_ok' }], formatMode: 'html' }),
+        generateCommand({ nodeId: 'cmd_1', command: '/help', messageText: 'Помощь', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '', keyboardType: 'inline', buttons: [], formatMode: 'html' }),
+        generateMessage({ nodeId: 'msg_1', messageText: 'Сообщение', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, enableAutoTransition: false, autoTransitionTo: undefined, keyboardType: 'inline', buttons: [], formatMode: 'none', enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '' }),
+        generateMain({ userDatabaseEnabled: true, hasInlineButtons: true, menuCommandsCount: 1 }),
+      ];
+
+      const fullCode = parts.join('\n');
+      assertNoUndefinedNames(fullCode, 'полный файл бота');
     });
   });
 });
