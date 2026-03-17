@@ -17,20 +17,19 @@ export function generateSkipButtonsCheck(
   indent: string = '        '
 ): string {
   let code = '';
-  const bodyIndent = indent + '    '; // Уровень внутри if isinstance
   
-  code += `${bodyIndent}# ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n`;
-  code += `${bodyIndent}skip_buttons = waiting_config.get("skip_buttons", [])\n`;
-  code += `${bodyIndent}logging.info(f"DEBUG: skip_buttons = {skip_buttons}")\n`;
-  code += `${bodyIndent}skip_target = None\n`;
-  code += `${bodyIndent}for skip_btn in skip_buttons:\n`;
-  code += `${bodyIndent}    if skip_btn.get("text") == user_text:\n`;
-  code += `${bodyIndent}        skip_target = skip_btn.get("target")\n`;
-  code += `${bodyIndent}        logging.info(f"⏭️ Нажата кнопка skipDataCollection в waiting_for_input: {user_text} -> {skip_target}")\n`;
-  code += `${bodyIndent}        # Очищаем состояние ожидания\n`;
-  code += `${bodyIndent}        if "waiting_for_input" in user_data[user_id]:\n`;
-  code += `${bodyIndent}            del user_data[user_id]["waiting_for_input"]\n`;
-  code += `${bodyIndent}        break\n`;
+  code += `${indent}# ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true\n`;
+  code += `${indent}skip_buttons = waiting_config.get("skip_buttons", [])\n`;
+  code += `${indent}logging.info(f"DEBUG: skip_buttons = {skip_buttons}")\n`;
+  code += `${indent}skip_target = None\n`;
+  code += `${indent}for skip_btn in skip_buttons:\n`;
+  code += `${indent}    if skip_btn.get("text") == user_text:\n`;
+  code += `${indent}        skip_target = skip_btn.get("target")\n`;
+  code += `${indent}        logging.info(f"⏭️ Нажата кнопка skipDataCollection в waiting_for_input: {user_text} -> {skip_target}")\n`;
+  code += `${indent}        # Очищаем состояние ожидания\n`;
+  code += `${indent}        if "waiting_for_input" in user_data[user_id]:\n`;
+  code += `${indent}            del user_data[user_id]["waiting_for_input"]\n`;
+  code += `${indent}        break\n`;
   return code;
 }
 

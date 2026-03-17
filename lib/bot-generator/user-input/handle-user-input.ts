@@ -1,15 +1,12 @@
-import { answersave } from './answersave';
-import { handleConditionalNavigationAndInputCollection } from './handleConditionalNavigationAndInputCollection';
 import { handleNodeNavigation } from '../node-navigation/handle-node-navigation';
 import { generateReplyHideAfterClick } from '../../templates/handlers';
 import { mediafiles } from '../MediaHandler/mediafiles';
-import { navigateaftersave } from './navigateaftersave';
-import { skip_button_target, skipDataCollection, skipDataCollectionnavigate } from './skipDataCollection';
 import { generateUniversalVariableReplacement } from '../utils';
 import { hasInputCollection } from '../utils/hasInputCollection';
 import { hasAutoTransitions } from '../utils/hasAutoTransitions';
-import { generateConditionalInputHandler, hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipFakeCallbackCompletion, generateSkipNavigation, generateButtonResponseSave, generateButtonResponseCleanup, generateInvalidChoiceHandler, generateMultiselectCheck, generateResponseSave, generateAutoNavigationLoop, generateSkipTargetHandlerFunction } from './index';
+import { hasUrlButtons, generateButtonResponseCheck, generateSelectedOptionSearch, generateResponseDataStructure, generateButtonActionExtract, generateUrlActionHandler, generateFakeMessageCreation, generateCommandHandlers, generateGotoNavigation, generateMediaSkipCheck, generateSkipButtonSearch, generateMediaWaitingCleanup, generateFakeCallbackCreation, generateSkipTargetNavigation, generateSkipButtonsCheck, generateSkipFakeCallbackCreation, generateSkipFakeCallbackCompletion, generateSkipNavigation, generateButtonResponseSave, generateButtonResponseCleanup, generateInvalidChoiceHandler, generateMultiselectCheck, generateResponseSave, generateAutoNavigationLoop, generateSkipTargetHandlerFunction } from './index';
 import { generateHandleUserInput } from '../../templates/handle-user-input';
+import { generateConditionalInputHandler, collectConditionalNavNodes } from '../../templates/conditional-input-handler/conditional-input-handler.renderer';
 
 // Функция для проверки наличия кнопок с URL-ссылками импортирована из bot-generator/user-input
 
@@ -53,14 +50,11 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '    \n';
     
     // Обработчик условных сообщений
-    code += generateConditionalInputHandler(nodes, allNodeIds, {
-      skipDataCollection,
-      skip_button_target,
-      skipDataCollectionnavigate,
-      answersave,
-      navigateaftersave,
-      handleConditionalNavigationAndInputCollection
-    }, '    ');
+    code += generateConditionalInputHandler({
+      nodes: collectConditionalNavNodes(nodes),
+      allNodeIds,
+      indentLevel: '    ',
+    });
     
     /**
      * Обработка кнопочных ответов через reply клавиатуру

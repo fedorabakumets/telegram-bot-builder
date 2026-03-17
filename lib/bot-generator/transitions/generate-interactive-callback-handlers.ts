@@ -8,18 +8,18 @@
  */
 
 import { generateCallbackHandlerStart, generateCollectUserInputFlag } from './callback-handler';
-import { generateCallbackHandlerInit } from './callback-handler-init';
+import { generateCallbackHandlerInit as generateCallbackHandlerInitOld } from './callback-handler-init';
 import { generateMultiSelectDoneButton, generateMultiSelectInit, generateMultiSelectReplyKeyboard, generateMultiSelectInlineKeyboard } from './multi-select';
 import { generateMultiSelectHandler, generateMultiSelectComplete } from './multi-select-handler';
 import { generateBroadcastNodeHandler, isBroadcastNode } from './broadcast-node-handler';
 import { generateConditionalMessagesCheck } from './conditional-messages';
 import { hasConditionalMessages } from './conditional-messages-handler';
 import { generateMediaVariablesSetup } from './media-variables';
-import { generateAutoTransitionCode } from './auto-transition-code';
+import { generateAutoTransitionCode as generateAutoTransitionCodeOld } from './auto-transition-code';
 import { calculateAutoTransitionTarget } from './auto-transition-check';
 import { generateNavigationMedia } from './generate-navigation-media';
 import { generateNavigationHandler, generateVariableReplacementInText, generateAutoTransitionCheck, generateAutoTransitionCall } from './generate-navigation-handler';
-import { generateCommandNavigation } from './generate-command-navigation';
+import { generateCommandNavigation as generateCommandNavigationOld } from './generate-command-navigation';
 import { generateConditionalMessage } from './generate-conditional-message';
 import { generateAllNodesDict, generateBroadcastConfirmationHandler, generateBroadcastDirectHandler } from './broadcast';
 import { generateRegularReplyKeyboard, generateRegularInlineKeyboard, generateConditionalKeyboardCheck } from './keyboard';
@@ -30,13 +30,18 @@ import { generateRedirectLogic } from './redirect';
 import { generateNavigationErrorHandler, generateUnknownNodeWarning, generateNoNodesAvailableWarning, generateMultiSelectFallbackNavigation, generateRegularFallbackNavigation } from './navigation';
 import { generateInputNodeHandling } from './input';
 import { isLoggingEnabled } from '../../bot-generator';
-// Примечание: generateCheckUserVariableFunction удалена после миграции на Jinja2
 import { formatTextForPython, generateWaitingStateCode, toPythonBoolean } from '../format';
 import { generateHandleNodeFunctions } from '../../generate/generateHandleNodeFunctions';
 import { generateKeyboard } from '../../templates/keyboard';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
 import { generateUniversalVariableReplacement } from '../utils';
 import { generateFullMessagePreparation } from './message-preparation';
+// Новые Jinja2 шаблоны
+import { generateCommandNavigation } from '../../templates/command-navigation/command-navigation.renderer';
+import { generateAutoTransition, calculateAutoTransitionTarget as calculateAutoTransitionTargetTemplate } from '../../templates/auto-transition/auto-transition.renderer';
+import { generateCallbackHandlerInit, buildCallbackHandlerInitParams } from '../../templates/callback-handler-init/callback-handler-init.renderer';
+import { generateFakeCallback } from '../../templates/fake-callback/fake-callback.renderer';
+import { generateErrorHandler } from '../../templates/error-handler/error-handler.renderer';
 
 /**
  * Генерирует интерактивные callback обработчики с поддержкой условных сообщений,
@@ -119,7 +124,7 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           code += '    \n';
           
           // Инициализация callback обработчика
-          code += generateCallbackHandlerInit(nodeId, shortNodeIdForDone, targetNode, '    ');
+          code += generateCallbackHandlerInit(buildCallbackHandlerInitParams(nodeId, targetNode, '    '));
           code += '    \n';
 
           // Устанавливаем флаг collectUserInput для текущего узла
@@ -456,11 +461,13 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
           );
 
           if (autoTransitionTarget) {
-            code += generateAutoTransitionCode({
+            const targetExists = nodes.some((n: any) => n.id === autoTransitionTarget);
+            code += generateAutoTransition({
               autoTransitionTarget,
               nodeId,
-              nodes
-            }, '    ');
+              targetExists,
+              indentLevel: '    ',
+            });
           }
 
           // ИСПРАВЛЕНИЕ: Если автопереход не произошел, устанавливаем состояние ожидания
@@ -617,7 +624,12 @@ export function generateInteractiveCallbackHandlersWithConditionalMessagesMultiS
                   }
                 } else if (navTargetNode.type === 'command') {
                   // Обработка навигации к узлу команды
-                  code += generateCommandNavigation({ navTargetNode }, '            ');
+                  const commandName = (navTargetNode.data.command || '/unknown').replace('/', '');
+                  code += generateCommandNavigation({
+                    commandName,
+                    handlerName: `${commandName}_handler`,
+                    indentLevel: '            ',
+                  });
                 } else if (navTargetNode.type === 'message' && (navTargetNode.data.enableTextInput ||
                   navTargetNode.data.enablePhotoInput ||
                   navTargetNode.data.enableVideoInput ||

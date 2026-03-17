@@ -10,7 +10,6 @@ export * from '../bot-generator/database/generateDatabaseCode';
 export * from '../bot-generator/logging/generate-message-logging';
 export * from '../bot-generator/MediaHandler/generateMediaFileFunctions';
 export * from './generate-node-handlers';
-export * from './generateApiConfig';
 export * from './generateGroupsConfiguration';
 export * from './generateNodeNavigation';
 

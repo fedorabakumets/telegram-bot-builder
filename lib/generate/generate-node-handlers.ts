@@ -12,10 +12,12 @@
 import { Node } from '@shared/schema';
 import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './generate-new-node-handlers';
 import { generateMessage } from '../templates/message/message.renderer';
-import { generateAnimationHandler, generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
+import { generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
 import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
 import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 import { generateUserHandlerFromNode } from '../templates/user-handler';
+import { generateAnimationHandler } from '../templates/animation-handler/animation-handler.renderer';
+import { generateAdminRightsFromNode } from '../templates/admin-rights/admin-rights.renderer';
 
 /**
  * Генерирует обработчики для каждого узла
@@ -75,7 +77,10 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     }),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,
-    animation: generateAnimationHandler,
+    animation: (node) => generateAnimationHandler({
+      nodeId: node.id,
+      animationUrl: node.data?.animationUrl || '',
+    }),
     location: generateLocationHandler,
     contact: generateContactHandler,
     pin_message: generatePinMessageHandler,
@@ -88,7 +93,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     kick_user: generateUserHandlerFromNode,
     promote_user: generateUserHandlerFromNode,
     demote_user: generateUserHandlerFromNode,
-    admin_rights: generateAnimationHandler,
+    admin_rights: generateAdminRightsFromNode,
     broadcast: (node) => generateBroadcastHandler(node, nodes, enableComments),
   };
 

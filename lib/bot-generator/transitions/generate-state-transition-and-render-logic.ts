@@ -10,11 +10,7 @@
 
 import { formatTextForPython, generateWaitingStateCode, escapeForJsonString } from '../format';
 import {
-  generateAttachedMediaVars,
   generateButtonResponseConfig,
-  generateConditionalBranch,
-  generateConditionalMessages,
-  generateErrorHandler,
   generateFallbackNode,
   generateInlineKeyboardSend,
   generateMediaSaveVars,
@@ -26,6 +22,10 @@ import {
   generateUnknownNextNodeWarning,
   generateUnknownNodeHandler
 } from './index';
+import { generateConditionalBranch as generateConditionalBranchTemplate } from '../../templates/conditional-branch/conditional-branch.renderer';
+import { generateConditionalMessages as generateConditionalMessagesTemplate } from '../../templates/conditional-messages/conditional-messages.renderer';
+import { generateErrorHandler as generateErrorHandlerTemplate } from '../../templates/error-handler/error-handler.renderer';
+import { generateAttachedMediaVars as generateAttachedMediaVarsTemplate, buildAttachedMediaVarsParams } from '../../templates/attached-media-vars/attached-media-vars.renderer';
 
 /**
  * Генерирует Python-код для переходов между узлами и отправки сообщений
@@ -44,7 +44,7 @@ export function newgenerateStateTransitionAndRenderLogic(
 ): string {
   if (nodes.length > 0) {
     nodes.forEach((targetNode, index) => {
-      code += generateConditionalBranch({ index, nodeId: targetNode.id, indent: '            ' });
+      code += generateConditionalBranchTemplate({ index, nodeId: targetNode.id, indentLevel: '            ' });
 
       if (targetNode.type === 'message' && targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
         code += generateInlineKeyboardSend(targetNode, '                ');
@@ -60,7 +60,11 @@ export function newgenerateStateTransitionAndRenderLogic(
         }
       } else if (targetNode.type === 'message') {
         if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
-          code += generateConditionalMessages(targetNode, '                ');
+          code += generateConditionalMessagesTemplate({
+            conditionalMessages: targetNode.data.conditionalMessages,
+            defaultText: targetNode.data.messageText || 'Сообщение',
+            indentLevel: '                ',
+          });
         } else {
           const messageText = targetNode.data.messageText || 'Сообщение';
           const formattedText = formatTextForPython(messageText);
@@ -69,7 +73,7 @@ export function newgenerateStateTransitionAndRenderLogic(
 
         code += generateParseMode(targetNode, '                ');
         code += generateMediaSaveVars(targetNode, '                ');
-        code += generateAttachedMediaVars(targetNode, '                ');
+        code += generateAttachedMediaVarsTemplate(buildAttachedMediaVarsParams(targetNode, '                '));
         code += generateMediaSend(targetNode, '                ');
 
         if (!targetNode.data.imageUrl && !targetNode.data.videoUrl && !targetNode.data.audioUrl && !targetNode.data.documentUrl) {
@@ -108,6 +112,6 @@ export function newgenerateStateTransitionAndRenderLogic(
     code += generateNoNodesAvailableWarning('            ');
   }
 
-  code += generateErrorHandler('        ');
+  code += generateErrorHandlerTemplate({ indentLevel: '        ' });
   return code;
 }
