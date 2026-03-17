@@ -12,8 +12,9 @@ import { generatorLogger } from '../bot-generator/core/generator-logger';
 import { generateDatabaseVariablesCode } from '../bot-generator/Broadcast/generate-database-variables-universal';
 import { generateConditionalMessageLogic } from '../bot-generator/Conditional';
 import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
-import { formatTextForPython, getParseMode, stripHtmlTags, toPythonBoolean } from '../bot-generator/format';
+import { formatTextForPython, getParseMode, stripHtmlTags } from '../bot-generator/format';
 import { generateAttachedMediaSendCode } from '../bot-generator/MediaHandler';
+import { generateUserInputFromNode } from '../templates/user-input';
 
 /**
  * Генерирует функции handle_node_* для узлов с условными сообщениями
@@ -224,25 +225,10 @@ export function generateHandleNodeFunctions(
       code += '        return\n';
     }
 
-    // Устанавливаем waiting_for_input, так как автопереход не выполнен
+    // Устанавливаем waiting_for_input через шаблон
     if (node.data.collectUserInput === true) {
       code += '    # Устанавливаем waiting_for_input, так как автопереход не выполнен\n';
-      code += '    user_data[user_id] = user_data.get(user_id, {})\n';
-      code += '    user_data[user_id]["waiting_for_input"] = {\n';
-      code += '        "type": "text",\n';
-      code += '        "modes": ["text"],\n';
-      code += `        "variable": "${node.data.inputVariable || 'input'}",\n`;
-      code += '        "save_to_database": True,\n';
-      code += `        "node_id": "${node.id}",\n`;
-      code += `        "next_node_id": "${node.data.inputTargetNodeId || ''}",\n`;
-      code += `        "appendVariable": ${toPythonBoolean(node.data.appendVariable || false)},\n`;
-      code += '        "min_length": 0,\n';
-      code += '        "max_length": 0,\n';
-      code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-      code += '        "success_message": ""\n';
-      code += '    }\n';
-      code += `    logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${node.data.inputVariable || 'input'} (узел ${node.id})")`;
-      code += '\n';
+      code += generateUserInputFromNode(node as any);
     }
 
     code += '    return\n\n';
