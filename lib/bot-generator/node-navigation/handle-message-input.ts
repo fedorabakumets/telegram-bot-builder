@@ -8,7 +8,8 @@
  */
 
 import type { Node } from '@shared/schema';
-import { formatTextForPython, toPythonBoolean } from '../format';
+import { formatTextForPython } from '../format';
+import { generateUserInputFromNode } from '../../templates/user-input';
 
 /**
  * Соединение между узлами графа
@@ -55,27 +56,7 @@ export function handleMessageWithInputType(
     targetNode.data?.enableDocumentInput === true;
 
   if (shouldCollectInput) {
-    code += `${bodyIndent}# Устанавливаем новое ожидание ввода (collectUserInput=true)\n`;
-    code += `${bodyIndent}user_data[user_id]["waiting_for_input"] = {\n`;
-    code += `${bodyIndent}    "type": "${targetNode.data?.inputType || 'text'}",\n`;
-    code += `${bodyIndent}    "variable": "${targetNode.data?.inputVariable || 'user_response'}",\n`;
-    code += `${bodyIndent}    "save_to_database": True,\n`;
-    code += `${bodyIndent}    "node_id": "${targetNode.id}",\n`;
-
-    // Определяем следующий узел из соединений
-    const nextConnection = connections.find(conn => conn.source === targetNode.id);
-    if (nextConnection) {
-      code += `${bodyIndent}    "next_node_id": "${nextConnection.target}",\n`;
-    } else {
-      code += `${bodyIndent}    "next_node_id": None,\n`;
-    }
-
-    code += `${bodyIndent}    "appendVariable": ${toPythonBoolean(targetNode.data?.appendVariable || false)},\n`;
-    code += `${bodyIndent}    "min_length": ${targetNode.data?.minLength || 0},\n`;
-    code += `${bodyIndent}    "max_length": ${targetNode.data?.maxLength || 0},\n`;
-    code += `${bodyIndent}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
-    code += `${bodyIndent}    "success_message": ""\n`;
-    code += `${bodyIndent}}\n`;
+    code += generateUserInputFromNode(targetNode, bodyIndent);
   } else {
     code += `${bodyIndent}# Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
   }

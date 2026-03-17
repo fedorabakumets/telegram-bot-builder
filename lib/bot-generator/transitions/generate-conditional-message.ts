@@ -11,6 +11,7 @@ import type { Button } from '../../bot-generator';
 import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from '../format';
 import type { ConditionalMessageParams as BaseConditionalMessageParams } from './types/conditional-message-params';
 import type { TransitionNode } from './types/transition-node';
+import { generateUserInputFromNode } from '../../templates/user-input';
 
 /**
  * Параметры условного сообщения
@@ -186,21 +187,5 @@ function generateConditionalInputWaiting(
   inputTargetNodeId: string,
   indent: string
 ): string {
-  const conditionalInputVariable = condition.textInputVariable ||
-    navTargetNode.data.inputVariable ||
-    `response_${navTargetNode.id}`;
-
-  let code = '';
-  code += `${indent}# Настраиваем ожидание текстового ввода для условного сообщения\n`;
-  code += `${indent}user_data[user_id]["waiting_for_input"] = {\n`;
-  code += `${indent}    "type": "text",\n`;
-  code += `${indent}    "variable": "${conditionalInputVariable}",\n`;
-  code += `${indent}    "save_to_database": True,\n`;
-  code += `${indent}    "node_id": "${navTargetNode.id}",\n`;
-  code += `${indent}    "next_node_id": "${condition.nextNodeAfterInput || inputTargetNodeId}",\n`;
-  code += `${indent}    "appendVariable": ${toPythonBoolean(navTargetNode.data.appendVariable || false)}\n`;
-  code += `${indent}}\n`;
-  code += `${indent}logging.info(f"🔧 Настроено условное ожидание ввода для переменной: ${conditionalInputVariable} (узел ${navTargetNode.id})")\n`;
-
-  return code;
+  return generateUserInputFromNode(navTargetNode as any, indent);
 }

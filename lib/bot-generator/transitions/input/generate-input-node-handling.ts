@@ -7,7 +7,8 @@
  * @module bot-generator/transitions/input/generate-input-node-handling
  */
 
-import { formatTextForPython, toPythonBoolean } from '../../format';
+import { formatTextForPython } from '../../format';
+import { generateUserInputFromNode } from '../../../templates/user-input';
 
 /**
  * Параметры для генерации обработки узла ввода
@@ -69,22 +70,7 @@ export function generateInputNodeHandling(
       targetNode.data?.enableDocumentInput === true;
     
     if (inlineTextCollect) {
-      // Находим следующий узел через соединения
-      const nextConnection = connections.find((conn: any) => conn && conn.source === targetNode.id);
-      const nextNodeId = nextConnection ? nextConnection.target : null;
-      
-      // ИСПОЛЬЗУЕМ inputTargetNodeId из данных узла, если nextConnection не найден
-      const finalNextNodeId = nextNodeId || targetNode.data?.inputTargetNodeId || '';
-      
-      code += `${indent}# Настраиваем ожидание ввода (collectUserInput=true)\n`;
-      code += `${indent}user_data[callback_query.from_user.id]["waiting_for_input"] = {\n`;
-      code += `${indent}    "type": "${inputType}",\n`;
-      code += `${indent}    "variable": "${inputVariable}",\n`;
-      code += `${indent}    "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
-      code += `${indent}    "node_id": "${targetNode.id}",\n`;
-      code += `${indent}    "next_node_id": "${finalNextNodeId}",\n`;
-      code += `${indent}    "appendVariable": ${toPythonBoolean(targetNode.data.appendVariable || false)}\n`;
-      code += `${indent}}\n`;
+      code += generateUserInputFromNode(targetNode, indent);
     } else {
       code += `${indent}# Узел ${targetNode.id} имеет collectUserInput=false - НЕ устанавливаем waiting_for_input\n`;
     }

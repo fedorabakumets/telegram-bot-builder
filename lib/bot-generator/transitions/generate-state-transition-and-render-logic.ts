@@ -17,7 +17,6 @@ import {
   generateErrorHandler,
   generateFallbackNode,
   generateInlineKeyboardSend,
-  generateInputWaitingSetup,
   generateMediaSaveVars,
   generateMediaSend,
   generateNoNodesAvailableWarning,
@@ -95,11 +94,7 @@ export function newgenerateStateTransitionAndRenderLogic(
             indent: '                '
           });
         } else {
-          code += generateInputWaitingSetup({
-            node: targetNode,
-            connections,
-            indent: '                '
-          });
+          code += generateWaitingStateCode(targetNode, '                ');
         }
       } else if (targetNode.type === 'message') {
         code += generateFallbackNode(targetNode, '                ');

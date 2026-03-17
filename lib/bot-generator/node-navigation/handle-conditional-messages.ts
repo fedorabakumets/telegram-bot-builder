@@ -11,6 +11,7 @@ import type { Node } from '@shared/schema';
 import type { Button } from '../types/button-types';
 import { generateButtonText } from '../format';
 import { toPythonBoolean } from '../format';
+import { generateUserInputFromNode } from '../../templates/user-input';
 
 /**
  * Интерфейс условного сообщения
@@ -143,19 +144,7 @@ function generateConditionalInputWait(
   targetNode: Node
 ): string {
   let code = '';
-  const condInputVariable = condition.inputVariable || condition.variableName || 'response';
-  const nextNodeAfterCondition = condition.nextNodeAfterInput || '';
-
   code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура (сбор ответов НАСТРОЕН)")\n`;
-  code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
-  code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
-  code += `${bodyIndent}        "type": "text",\n`;
-  code += `${bodyIndent}        "variable": "${condInputVariable}",\n`;
-  code += `${bodyIndent}        "save_to_database": True,\n`;
-  code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
-  code += `${bodyIndent}        "next_node_id": "${nextNodeAfterCondition}",\n`;
-  code += `${bodyIndent}        "appendVariable": ${toPythonBoolean(targetNode.data.appendVariable || false)}\n`;
-  code += `${bodyIndent}    }\n`;
-
+  code += generateUserInputFromNode(targetNode, `${bodyIndent}    `);
   return code;
 }

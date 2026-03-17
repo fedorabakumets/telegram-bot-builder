@@ -9,6 +9,7 @@
 
 import { formatTextForPython, toPythonBoolean } from '../../format';
 import { generateKeyboard } from '../../../templates/keyboard';
+import { generateUserInputFromNode } from '../../../templates/user-input';
 
 /**
  * Параметры для генерации fallback навигации
@@ -97,20 +98,9 @@ export function generateRegularFallbackNavigation(
   // Проверяем, включен ли сбор пользовательского ввода
   if (navTargetNode.data?.collectUserInput === true) {
     const regularInputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
-    
-    code += `${indent}# Проверяем, не была ли переменная уже сохранена inline кнопкой\n`;
     const userPrefix = userVars.includes('callback_query') ? 'callback_query.from_user.id' : 'user_id';
     code += `${indent}if "${regularInputVariable}" not in user_data[${userPrefix}] or not user_data[${userPrefix}]["${regularInputVariable}"]:\n`;
-    code += `${indent}    # Настраиваем ожидание ввода\n`;
-    code += `${indent}    user_data[${userPrefix}]["waiting_for_input"] = {\n`;
-    code += `${indent}        "type": "text",\n`;
-    code += `${indent}        "variable": "${regularInputVariable}",\n`;
-    code += `${indent}        "save_to_database": True,\n`;
-    code += `${indent}        "node_id": "${navTargetNode.id}",\n`;
-    code += `${indent}        "next_node_id": "${params.inputTargetNodeId || ''}",\n`;
-    code += `${indent}        "appendVariable": ${toPythonBoolean(navTargetNode.data.appendVariable || false)}\n`;
-    code += `${indent}    }\n`;
-    code += `${indent}    logging.info(f"🔧 Настроено ожидание ввода для переменной: ${regularInputVariable} (узел ${navTargetNode.id})")\n`;
+    code += generateUserInputFromNode(navTargetNode, `${indent}    `);
     code += `${indent}else:\n`;
     code += `${indent}    logging.info(f"⏭️ Переменная ${regularInputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
   } else {

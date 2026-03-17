@@ -4,6 +4,7 @@ import { generateKeyboard } from '../../templates/keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
 import { generateDatabaseVariablesBlockCall } from '../database';
 import { generateNavigateToNodeWithText } from '../transitions/generate-node-navigation';
+import { generateUserInputFromNode } from '../../templates/user-input';
 
 export function handleConditionalNavigationAndInputCollection(nodes: any[], code: string, allNodeIds: any[]) {
     if (nodes.length > 0) {
@@ -178,14 +179,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
 
                                         // Устанавливаем ожидание ввода, даже если есть клавиатура
                                         // Пользователь может ввести текст вместо нажатия кнопки
-                                        code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
-                                        code += `                                "type": "text",\n`;
-                                        code += `                                "variable": "${inputVariable}",\n`;
-                                        code += `                                "save_to_database": True,\n`;
-                                        code += `                                "node_id": "${targetNode.id}",\n`;
-                                        code += `                                "next_node_id": "${nextNodeAfterCondition || ''}",\n`;
-                                        code += `                                "appendVariable": ${toPythonBoolean(targetNode.data.appendVariable || false)}\n`;
-                                        code += `                            }\n`;
+                                        code += generateUserInputFromNode(targetNode, '                            ');
                                         code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}")\n`;
                                     } else {
                                         // Нет кнопок - показываем сообщение и ждем текстового ввода
@@ -209,16 +203,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                                         code += `                            \n`;
 
                                         code += `                            # Настраиваем ожидание ввода для условного сообщения\n`;
-                                        code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
-                                        code += `                                "type": "text",\n`;
-                                        code += `                                "variable": "${inputVariable}",\n`;
-                                        code += `                                "save_to_database": True,\n`;
-                                        code += `                                "node_id": "${targetNode.id}",\n`;
-                                        code += `                                "next_node_id": "${nextNodeAfterCondition || ''}",\n`;
-                                        code += `                                "appendVariable": ${toPythonBoolean(targetNode.data.appendVariable || false)}\n`;
-                                        code += `                            }\n`;
-                                        code += `                            logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (условное сообщение, узел ${targetNode.id})")`;
-                                        code += '\n';
+                                        code += generateUserInputFromNode(targetNode, '                            ');
                                     }
                                 } else {
                                     // ИСПРАВЛЕНИЕ: Проверяем, есть ли кнопки в условном сообщении
@@ -285,20 +270,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                         const formattedText = formatTextForPython(messageText);
                         code += `                            text = ${formattedText}\n`;
                         code += `                            await message.answer(text)\n`;
-
-                        const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-                        const inputTargetNodeId = targetNode.data.inputTargetNodeId;
-                        code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
-                        code += `                                "type": "text",\n`;
-                        code += `                                "modes": ["text"],\n`;
-                        code += `                                "variable": "${inputVariable}",\n`;
-                        code += `                                "save_to_database": True,\n`;
-                        code += `                                "node_id": "${targetNode.id}",\n`;
-                        code += `                                "next_node_id": "${inputTargetNodeId || ''}",\n`;
-                        code += `                                "appendVariable": ${toPythonBoolean(targetNode.data.appendVariable || false)}\n`;
-                        code += `                            }\n`;
-                        code += `                            logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")`;
-                        code += '\n';
+                        code += generateUserInputFromNode(targetNode, '                            ');
                     } else {
                         const messageText = targetNode.data.messageText || 'Сообщение';
                         const formattedText = formatTextForPython(messageText);
@@ -350,17 +322,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                             const skipButtonsJson2572 = JSON.stringify(skipButtons2572);
 
                             code += `                        # Настраиваем ожидание ввода для сохранения ответа кнопки\n`;
-                            code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
-                            code += `                            "type": "button",\n`;
-                            code += `                            "modes": ${hasTextInput ? "['button', 'text']" : "['button']"},\n`;
-                            code += `                            "variable": "${inputVariable}",\n`;
-                            code += `                            "save_to_database": True,\n`;
-                            code += `                            "node_id": "${targetNode.id}",\n`;
-                            code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
-                            code += `                            "appendVariable": ${toPythonBoolean(targetNode.data.appendVariable || false)},\n`;
-                            code += `                            "skip_buttons": ${skipButtonsJson2572}\n`;
-                            code += `                        }\n`;
-                            code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=${btnModesList} для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                            code += generateUserInputFromNode(targetNode, '                        ');
                         } else {
                             // Обычнzzzzе ожидание ввода если кнопок нет
                             code += `                        # Узел собирает пользовательский ввод\n`;
@@ -372,17 +334,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                             const inputTargetNodeId = targetNode.data.inputTargetNodeId;
                             code += `                        await message.answer(text)\n`;
                             code += `                        # Настраиваем ожидание ввода\n`;
-                            code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
-                            code += `                            "type": "text",\n`;
-                            code += `                            "modes": ["text"],\n`;
-                            code += `                            "variable": "${inputVariable}",\n`;
-                            code += `                            "save_to_database": True,\n`;
-                            code += `                            "node_id": "${targetNode.id}",\n`;
-                            code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
-                            code += `                            "appendVariable": ${toPythonBoolean(targetNode.data.appendVariable || false)}\n`;
-                            code += `                        }\n`;
-                            code += `                        logging.info(f"✅ Состояние ожидания настроено: modes=['text'] для переменной ${inputVariable} (узел ${targetNode.id})")`;
-                            code += '\n';
+                            code += generateUserInputFromNode(targetNode, '                        ');
                         }
                     }
                 } else {

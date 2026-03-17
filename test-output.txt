@@ -1,54 +1,54 @@
 ▶ generateUserInput()
-  [32m✔ генерирует waiting_for_input блок [90m(13.319ms)[39m[39m
-  [32m✔ содержит правильный node_id [90m(0.723ms)[39m[39m
-  [32m✔ содержит next_node_id [90m(0.4294ms)[39m[39m
-  [32m✔ пустой next_node_id если не задан [90m(0.2659ms)[39m[39m
-  [32m✔ содержит validation_type email [90m(0.3346ms)[39m[39m
-  [32m✔ содержит min_length и max_length [90m(0.2341ms)[39m[39m
-  [32m✔ appendVariable=True в Python [90m(0.2939ms)[39m[39m
-  [32m✔ appendVariable=False по умолчанию [90m(0.2779ms)[39m[39m
-  [32m✔ modes содержит только text для текстового ввода [90m(0.5466ms)[39m[39m
-  [32m✔ modes содержит photo для фото ввода [90m(0.5623ms)[39m[39m
-  [32m✔ modes содержит несколько типов для мультимедиа [90m(0.2487ms)[39m[39m
-  [32m✔ photo_variable добавляется при enablePhotoInput [90m(0.1739ms)[39m[39m
-  [32m✔ video_variable добавляется при enableVideoInput [90m(0.1683ms)[39m[39m
-  [32m✔ содержит logging.info с именем переменной [90m(0.1772ms)[39m[39m
-  [32m✔ save_to_database=True [90m(0.158ms)[39m[39m
-  [32m✔ save_to_database=False [90m(0.1642ms)[39m[39m
-  [32m✔ inputType button → type=button в Python [90m(0.2577ms)[39m[39m
-  [32m✔ inputType button + enableTextInput → modes=[button, text] [90m(0.1947ms)[39m[39m
-  [32m✔ skip_buttons добавляется в блок [90m(0.2307ms)[39m[39m
-  [32m✔ skip_buttons отсутствует если пустой массив [90m(0.2394ms)[39m[39m
-  [32m✔ дефолт inputVariable = "input" (совпадает с реальным кодом) [90m(0.3704ms)[39m[39m
-[32m✔ generateUserInput() [90m(21.3238ms)[39m[39m
+  [32m✔ генерирует waiting_for_input блок [90m(32.4674ms)[39m[39m
+  [32m✔ содержит правильный node_id [90m(0.5012ms)[39m[39m
+  [32m✔ содержит next_node_id [90m(0.3847ms)[39m[39m
+  [32m✔ пустой next_node_id если не задан [90m(0.2543ms)[39m[39m
+  [32m✔ содержит validation_type email [90m(0.3126ms)[39m[39m
+  [32m✔ содержит min_length и max_length [90m(0.2803ms)[39m[39m
+  [32m✔ appendVariable=True в Python [90m(0.329ms)[39m[39m
+  [32m✔ appendVariable=False по умолчанию [90m(0.47ms)[39m[39m
+  [32m✔ modes содержит только text для текстового ввода [90m(0.7562ms)[39m[39m
+  [32m✔ modes содержит photo для фото ввода [90m(0.7613ms)[39m[39m
+  [32m✔ modes содержит несколько типов для мультимедиа [90m(0.4805ms)[39m[39m
+  [32m✔ photo_variable добавляется при enablePhotoInput [90m(0.2178ms)[39m[39m
+  [32m✔ video_variable добавляется при enableVideoInput [90m(0.1838ms)[39m[39m
+  [32m✔ содержит logging.info с именем переменной [90m(0.2101ms)[39m[39m
+  [32m✔ save_to_database=True [90m(0.1628ms)[39m[39m
+  [32m✔ save_to_database=False [90m(0.161ms)[39m[39m
+  [32m✔ inputType button → type=button в Python [90m(0.258ms)[39m[39m
+  [32m✔ inputType button + enableTextInput → modes=[button, text] [90m(0.187ms)[39m[39m
+  [32m✔ skip_buttons добавляется в блок [90m(0.2267ms)[39m[39m
+  [32m✔ skip_buttons отсутствует если пустой массив [90m(0.1682ms)[39m[39m
+  [32m✔ дефолт inputVariable = "input" (совпадает с реальным кодом) [90m(0.2056ms)[39m[39m
+[32m✔ generateUserInput() [90m(40.911ms)[39m[39m
 ▶ userInputParamsSchema
-  [32m✔ принимает минимальные параметры [90m(0.539ms)[39m[39m
-  [32m✔ принимает полные параметры с валидацией [90m(0.2554ms)[39m[39m
-  [32m✔ принимает мультимедиа параметры [90m(0.1605ms)[39m[39m
-  [32m✔ отклоняет параметры без nodeId [90m(0.566ms)[39m[39m
-  [32m✔ применяет дефолты для необязательных полей [90m(0.1591ms)[39m[39m
-[32m✔ userInputParamsSchema [90m(1.9366ms)[39m[39m
+  [32m✔ принимает минимальные параметры [90m(0.2184ms)[39m[39m
+  [32m✔ принимает полные параметры с валидацией [90m(0.1359ms)[39m[39m
+  [32m✔ принимает мультимедиа параметры [90m(0.1317ms)[39m[39m
+  [32m✔ отклоняет параметры без nodeId [90m(0.6682ms)[39m[39m
+  [32m✔ применяет дефолты для необязательных полей [90m(0.2185ms)[39m[39m
+[32m✔ userInputParamsSchema [90m(1.6354ms)[39m[39m
 ▶ nodeToUserInputParams()
-  [32m✔ извлекает inputVariable из node.data [90m(0.3185ms)[39m[39m
-  [32m✔ извлекает inputTargetNodeId [90m(0.1487ms)[39m[39m
-  [32m✔ извлекает enablePhotoInput [90m(0.1082ms)[39m[39m
-  [32m✔ извлекает validationType [90m(0.0976ms)[39m[39m
-  [32m✔ генерирует safeName из nodeId [90m(0.1007ms)[39m[39m
-  [32m✔ дефолт inputVariable если не задан [90m(0.0979ms)[39m[39m
-[32m✔ nodeToUserInputParams() [90m(1.0491ms)[39m[39m
+  [32m✔ извлекает inputVariable из node.data [90m(0.7251ms)[39m[39m
+  [32m✔ извлекает inputTargetNodeId [90m(0.3666ms)[39m[39m
+  [32m✔ извлекает enablePhotoInput [90m(0.165ms)[39m[39m
+  [32m✔ извлекает validationType [90m(0.1024ms)[39m[39m
+  [32m✔ генерирует safeName из nodeId [90m(0.1069ms)[39m[39m
+  [32m✔ дефолт inputVariable если не задан [90m(0.0997ms)[39m[39m
+[32m✔ nodeToUserInputParams() [90m(1.8358ms)[39m[39m
 ▶ nodeHasUserInput()
-  [32m✔ возвращает true если collectUserInput=true [90m(0.1307ms)[39m[39m
-  [32m✔ возвращает false если collectUserInput=false [90m(0.0804ms)[39m[39m
-  [32m✔ фильтрует узлы с вводом из массива [90m(0.112ms)[39m[39m
-[32m✔ nodeHasUserInput() [90m(0.5207ms)[39m[39m
+  [32m✔ возвращает true если collectUserInput=true [90m(0.1599ms)[39m[39m
+  [32m✔ возвращает false если collectUserInput=false [90m(0.1161ms)[39m[39m
+  [32m✔ фильтрует узлы с вводом из массива [90m(0.1391ms)[39m[39m
+[32m✔ nodeHasUserInput() [90m(0.5405ms)[39m[39m
 ▶ generateUserInputFromNode()
-  [32m✔ генерирует код из узла с текстовым вводом [90m(1.7709ms)[39m[39m
-  [32m✔ генерирует код из узла с email валидацией [90m(0.3903ms)[39m[39m
-  [32m✔ генерирует код из узла с фото вводом [90m(0.4883ms)[39m[39m
-  [32m✔ генерирует код из узла с мультимедиа [90m(0.3424ms)[39m[39m
-  [32m✔ генерирует type=button для узла с кнопками [90m(0.3172ms)[39m[39m
-[32m✔ generateUserInputFromNode() [90m(3.543ms)[39m[39m
+  [32m✔ генерирует код из узла с текстовым вводом [90m(1.655ms)[39m[39m
+  [32m✔ генерирует код из узла с email валидацией [90m(0.1849ms)[39m[39m
+  [32m✔ генерирует код из узла с фото вводом [90m(0.2485ms)[39m[39m
+  [32m✔ генерирует код из узла с мультимедиа [90m(0.179ms)[39m[39m
+  [32m✔ генерирует type=button для узла с кнопками [90m(0.332ms)[39m[39m
+[32m✔ generateUserInputFromNode() [90m(2.808ms)[39m[39m
 ▶ Производительность
-  [32m✔ generateUserInput: быстрее 10ms [90m(0.2208ms)[39m[39m
-  [32m✔ generateUserInputFromNode: быстрее 10ms [90m(0.1591ms)[39m[39m
-[32m✔ Производительность [90m(0.5179ms)[39m[39m
+  [32m✔ generateUserInput: быстрее 10ms [90m(0.1992ms)[39m[39m
+  [32m✔ generateUserInputFromNode: быстрее 10ms [90m(0.1656ms)[39m[39m
+[32m✔ Производительность [90m(0.494ms)[39m[39m

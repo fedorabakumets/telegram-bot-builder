@@ -28,11 +28,19 @@ function buildModes(params: UserInputTemplateParams): string[] {
 
 /**
  * Генерирует Python-код блока waiting_for_input из параметров (низкоуровневый API)
+ * @param params - параметры шаблона
+ * @param indentLevel - отступ для каждой строки (по умолчанию '    ')
  */
-export function generateUserInput(params: UserInputTemplateParams): string {
+export function generateUserInput(params: UserInputTemplateParams, indentLevel: string = '    '): string {
   const validated = userInputParamsSchema.parse(params);
   const modes = buildModes(validated);
-  return renderPartialTemplate('user-input/user-input.py.jinja2', { ...validated, modes });
+  const raw = renderPartialTemplate('user-input/user-input.py.jinja2', { ...validated, modes });
+  if (indentLevel === '    ') return raw;
+  // Переиндентируем: каждая непустая строка получает нужный отступ вместо 4 пробелов
+  return raw
+    .split('\n')
+    .map(line => line.startsWith('    ') ? indentLevel + line.slice(4) : line)
+    .join('\n');
 }
 
 /**
@@ -71,9 +79,11 @@ export function nodeToUserInputParams(node: Node): UserInputTemplateParams {
 
 /**
  * Генерирует Python-код блока waiting_for_input из узла графа (высокоуровневый API)
+ * @param node - узел графа
+ * @param indentLevel - отступ для каждой строки (по умолчанию '    ')
  */
-export function generateUserInputFromNode(node: Node): string {
-  return generateUserInput(nodeToUserInputParams(node));
+export function generateUserInputFromNode(node: Node, indentLevel: string = '    '): string {
+  return generateUserInput(nodeToUserInputParams(node), indentLevel);
 }
 
 /**
