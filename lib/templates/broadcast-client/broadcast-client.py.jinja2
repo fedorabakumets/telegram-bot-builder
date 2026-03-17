@@ -1,36 +1,32 @@
 {#
-  Шаблон обработчика рассылки сообщений
+  Шаблон обработчика рассылки — Client API (Telethon / userbot)
 
-  @fileoverview Генерирует Python код для рассылки через Bot API или Client API (Telethon)
-  @param {string} nodeId - ID узла broadcast
-  @param {string} broadcastApiType - 'bot' | 'client'
-  @param {string} idSourceType - 'user_ids' | 'bot_users' | 'both'
-  @param {string} successMessage - Сообщение об успехе
-  @param {string} errorMessage - Сообщение об ошибке
-  @param {array} broadcastNodes - Список узлов для рассылки:
-    [{id, text, formatMode, imageUrl, audioUrl, videoUrl, documentUrl, attachedMedia, autoTransitionTo}]
+  @param {string} nodeId          - ID узла broadcast
+  @param {string} idSourceType    - 'user_ids' | 'bot_users' | 'both'
+  @param {string} successMessage  - Сообщение об успехе
+  @param {string} errorMessage    - Сообщение об ошибке
+  @param {array}  broadcastNodes  - [{id, text, formatMode, imageUrl, audioUrl, videoUrl, documentUrl, attachedMediaPy, autoTransitionTo}]
 #}
-
 {%- set safeNodeId = nodeId | safe_name %}
 {%- set successMsg = successMessage or '✅ Рассылка отправлена!' %}
 {%- set errorMsg = errorMessage or '❌ Ошибка рассылки' %}
 
 # @@NODE_START:{{ nodeId }}@@
 async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
-    """Обработчик рассылки для узла {{ nodeId }} ({{ broadcastApiType | upper }} API)"""
+    """Обработчик рассылки для узла {{ nodeId }} (Client API / Telethon)"""
     logging.info(f"📢 Запуск рассылки из узла {{ nodeId }}")
 
-{%- if broadcastApiType == 'client' %}
     # ── Проверка сессии Client API ──────────────────────────────────────────
     try:
         if db_pool is None:
-            logging.error("❌ База данных не инициализирована")
+            logging.error("❌ База данных не инициализирована. Включите 'База данных пользователей' в настройках проекта.")
             await callback_query.message.answer("⚠️ Для рассылки через Client API требуется включенная база данных")
             return
         async with db_pool.acquire() as conn:
             client_session = await conn.fetchrow(
                 "SELECT session_string, user_id, api_id, api_hash FROM user_telegram_settings WHERE is_active = 1 LIMIT 1"
             )
+            logging.info(f"🔑 Client API сессия: user_id={client_session['user_id'] if client_session else 'None'}")
     except Exception as e:
         logging.error(f"❌ Ошибка получения сессии Client API: {e}")
         await callback_query.message.answer("{{ errorMsg }}")
@@ -40,16 +36,13 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
         logging.error("❌ Client API не авторизован")
         await callback_query.message.answer("⚠️ Требуется авторизация Client API во вкладке Telegram Client")
         return
-{%- endif %}
 
     # ── Получение получателей ───────────────────────────────────────────────
     recipients = []
     try:
-{%- if broadcastApiType == 'client' %}
         if db_pool is None:
             await callback_query.message.answer("⚠️ Для рассылки через Client API требуется включенная база данных")
             return
-{%- endif %}
         async with db_pool.acquire() as conn:
 {%- if idSourceType == 'user_ids' or idSourceType == 'both' %}
             rows = await conn.fetch("SELECT DISTINCT user_id FROM user_ids")
@@ -66,6 +59,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
 
     recipients = list(set(recipients))
     logging.info(f"📋 Найдено {len(recipients)} получателей")
+    logging.info(f"👤 Рассылка через Client API (Userbot) от {client_session['user_id']}")
 
     # ── Список сообщений для рассылки ───────────────────────────────────────
 {%- if broadcastNodes and broadcastNodes | length > 0 %}
@@ -92,7 +86,6 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
         await callback_query.message.answer("⚠️ Нет сообщений для рассылки")
         return
 
-{%- if broadcastApiType == 'client' %}
     # ── Инициализация Telethon ──────────────────────────────────────────────
     api_id_val = client_session["api_id"] if client_session else None
     api_hash_val = client_session["api_hash"] if client_session else None
@@ -108,6 +101,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     from telethon import TelegramClient
     from telethon.sessions import StringSession
     import os
+    import re
 
     def get_full_media_path(url_or_path):
         if not url_or_path:
@@ -116,7 +110,6 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
             return url_or_path
         if os.path.exists(url_or_path):
             return url_or_path
-        import re
         match = re.search(r'[\/](uploads[\/].+)', url_or_path)
         if match:
             relative_path = re.sub(r'^uploads[\/]', '', match.group(1))
@@ -133,22 +126,20 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     api_id = int(client_session["api_id"])
     api_hash = client_session["api_hash"]
     session_string = client_session["session_string"]
+    logging.info(f"🔧 Инициализация Telethon: api_id={api_id}, session={session_string[:20]}...")
     app = TelegramClient(StringSession(session_string), api_id=api_id, api_hash=api_hash)
-{%- endif %}
 
     # ── Отправка ────────────────────────────────────────────────────────────
     success_count = 0
     error_count = 0
-{%- if broadcastApiType == 'client' %}
     blocked_count = 0
 
     await app.connect()
     try:
         for recipient_id in recipients:
             try:
-                recipient_int = int(recipient_id)
                 from telethon.tl.types import PeerUser
-                recipient = PeerUser(user_id=recipient_int)
+                recipient = PeerUser(user_id=int(recipient_id))
             except ValueError:
                 recipient = recipient_id
 
@@ -173,7 +164,17 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
                         try:
                             if attached_media:
                                 for media_var in attached_media:
-                                    media_url_to_use = node_data.get("imageUrl") or node_data.get("videoUrl") or node_data.get("audioUrl") or node_data.get("documentUrl")
+                                    # Сначала ищем URL напрямую в node_data по имени переменной
+                                    media_url_to_use = None
+                                    if "imageUrl" in media_var:
+                                        media_url_to_use = node_data.get("imageUrl")
+                                    elif "videoUrl" in media_var:
+                                        media_url_to_use = node_data.get("videoUrl")
+                                    elif "audioUrl" in media_var:
+                                        media_url_to_use = node_data.get("audioUrl")
+                                    elif "documentUrl" in media_var:
+                                        media_url_to_use = node_data.get("documentUrl")
+                                    # Fallback: ищем в переменных пользователя
                                     if not media_url_to_use:
                                         media_value = all_user_vars.get(media_var)
                                         if media_value:
@@ -197,13 +198,16 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
 
                     success_count += 1
 
-                    # Автопереход
+                    # Автопереход по индексу в broadcast_nodes
                     auto_transition_to = node_data.get("autoTransitionTo", "")
                     if auto_transition_to:
+                        logging.info(f"⚡ Автопереход от узла {node_data['id']} к узлу {auto_transition_to}")
                         next_index = next((i for i, n in enumerate(broadcast_nodes) if n["id"] == auto_transition_to), -1)
                         if next_index != -1:
                             current_node_index = next_index
+                            logging.info(f"✅ Автопереход выполнен: {node_data['id']} -> {auto_transition_to}")
                         else:
+                            logging.warning(f"⚠️ Узел для автоперехода не найден: {auto_transition_to}")
                             current_node_index += 1
                     else:
                         current_node_index += 1
@@ -223,108 +227,4 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     report = f"{{ successMsg }}\n👤 Метод: Client API (Userbot)\n✅ Успешно: {success_count}\n⚠️ Ошибок: {error_count}\n🚫 Заблокировано: {blocked_count}"
     logging.info(report)
     await callback_query.message.answer(report)
-
-{%- else %}
-    {# Bot API #}
-    for recipient_id in recipients:
-        for node_data in broadcast_nodes:
-            if not node_data["text"].strip():
-                continue
-            try:
-                message_text = replace_variables_in_text(node_data["text"], {**user_data.get(recipient_id, {}), "user_id": recipient_id})
-                all_user_vars = {**user_data.get(recipient_id, {}), "user_id": recipient_id}
-
-                # Отправка медиа
-                media_sent = False
-                attached_media = node_data.get("attachedMedia", [])
-                image_url = node_data.get("imageUrl")
-                audio_url = node_data.get("audioUrl")
-                video_url = node_data.get("videoUrl")
-                document_url = node_data.get("documentUrl")
-                if attached_media or image_url or audio_url or video_url or document_url:
-                    try:
-                        if attached_media:
-                            for media_var in attached_media:
-                                media_value = all_user_vars.get(media_var)
-                                if media_value:
-                                    media_url_to_use = None
-                                    if isinstance(media_value, dict):
-                                        if "audio" in media_var.lower() and "audioUrl" in media_value:
-                                            media_url_to_use = media_value.get("audioUrl")
-                                        elif "video" in media_var.lower() and "videoUrl" in media_value:
-                                            media_url_to_use = media_value.get("videoUrl")
-                                        elif "document" in media_var.lower() and "documentUrl" in media_value:
-                                            media_url_to_use = media_value.get("documentUrl")
-                                        elif "photoUrl" in media_value:
-                                            media_url_to_use = media_value.get("photoUrl")
-                                        if not media_url_to_use:
-                                            media_url_to_use = media_value.get("value")
-                                    else:
-                                        media_url_to_use = media_value
-                                    if media_url_to_use:
-                                        if "audio" in media_var.lower():
-                                            await bot.send_audio(recipient_id, media_url_to_use, caption=message_text)
-                                        elif "video" in media_var.lower():
-                                            await bot.send_video(recipient_id, media_url_to_use, caption=message_text)
-                                        elif "document" in media_var.lower():
-                                            await bot.send_document(recipient_id, media_url_to_use, caption=message_text)
-                                        else:
-                                            await bot.send_photo(recipient_id, media_url_to_use, caption=message_text)
-                                        media_sent = True
-                        if not media_sent:
-                            if audio_url:
-                                await bot.send_audio(recipient_id, audio_url, caption=message_text)
-                                media_sent = True
-                            elif video_url:
-                                await bot.send_video(recipient_id, video_url, caption=message_text)
-                                media_sent = True
-                            elif document_url:
-                                await bot.send_document(recipient_id, document_url, caption=message_text)
-                                media_sent = True
-                            elif image_url:
-                                await bot.send_photo(recipient_id, image_url, caption=message_text)
-                                media_sent = True
-                    except Exception as media_error:
-                        logging.error(f"❌ Ошибка отправки медиа: {media_error}")
-                if not media_sent:
-                    await bot.send_message(recipient_id, message_text)
-
-                success_count += 1
-
-                # Автопереход
-                auto_target = node_data.get("autoTransitionTo")
-                if auto_target:
-                    logging.info(f"🔄 Автопереход к узлу {auto_target} для пользователя {recipient_id}")
-                    try:
-                        from aiogram.types import CallbackQuery, User, Chat, Message as AioMessage
-                        fake_chat = Chat(id=int(recipient_id), type="private", first_name="User")
-                        fake_message = AioMessage(message_id=1, date=0, chat=fake_chat, from_user=User(id=int(recipient_id), is_bot=False, first_name="User"))
-                        fake_callback = CallbackQuery(
-                            id="broadcast_auto",
-                            from_user=User(id=int(recipient_id), is_bot=False, first_name="User"),
-                            chat_instance="broadcast",
-                            data=auto_target,
-                            message=fake_message
-                        )
-                        safe_auto_target = auto_target.replace("-", "_")
-                        handler = globals().get(f"handle_callback_{safe_auto_target}")
-                        if handler:
-                            try:
-                                await handler(fake_callback)
-                            except Exception as handler_error:
-                                if "not mounted to a any bot instance" not in str(handler_error) and "This method is not mounted" not in str(handler_error):
-                                    logging.error(f"❌ Ошибка handler при автопереходе к {auto_target}: {handler_error}")
-                    except Exception as auto_error:
-                        if "not mounted to a any bot instance" not in str(auto_error) and "This method is not mounted" not in str(auto_error):
-                            logging.error(f"❌ Ошибка автоперехода к {auto_target}: {auto_error}")
-
-            except Exception as send_error:
-                error_count += 1
-                logging.error(f"❌ Ошибка отправки {recipient_id}: {send_error}")
-
-        await asyncio.sleep(0.05)
-
-    report = f"{{ successMsg }}\n🤖 Метод: Bot API\n✅ Успешно: {success_count}\n❌ Ошибок: {error_count}"
-    await callback_query.message.answer(report)
-{%- endif %}
 # @@NODE_END:{{ nodeId }}@@

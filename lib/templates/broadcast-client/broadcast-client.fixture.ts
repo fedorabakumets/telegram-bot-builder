@@ -1,14 +1,14 @@
 /**
- * @fileoverview Тестовые данные для шаблона рассылки
- * @module templates/broadcast/broadcast.fixture
+ * @fileoverview Тестовые данные для шаблона рассылки Client API
+ * @module templates/broadcast-client/broadcast-client.fixture
  */
 
-import type { BroadcastTemplateParams } from './broadcast.params';
+import type { BroadcastClientTemplateParams } from './broadcast-client.params';
 
 const sampleNodes = [
   {
     id: 'msg_1',
-    text: 'Привет, это рассылка!',
+    text: 'Привет, это рассылка через Userbot!',
     formatMode: 'none',
     imageUrl: '',
     audioUrl: '',
@@ -19,46 +19,34 @@ const sampleNodes = [
   },
 ];
 
-/** Bot API, bot_users */
-export const validParamsBotBroadcast: BroadcastTemplateParams = {
+export const validParamsBotUsers: BroadcastClientTemplateParams = {
   nodeId: 'broadcast_1',
-  broadcastApiType: 'bot',
   idSourceType: 'bot_users',
   successMessage: 'Рассылка выполнена успешно',
   errorMessage: 'Произошла ошибка',
   broadcastNodes: sampleNodes,
 };
 
-/** Client API, user_ids */
-export const validParamsClientBroadcast: BroadcastTemplateParams = {
+export const validParamsUserIds: BroadcastClientTemplateParams = {
   nodeId: 'broadcast_2',
-  broadcastApiType: 'client',
   idSourceType: 'user_ids',
-  successMessage: 'Готово',
-  errorMessage: 'Ошибка',
   broadcastNodes: sampleNodes,
 };
 
-/** Оба источника */
-export const validParamsBothSources: BroadcastTemplateParams = {
+export const validParamsBoth: BroadcastClientTemplateParams = {
   nodeId: 'broadcast_3',
-  broadcastApiType: 'bot',
   idSourceType: 'both',
   broadcastNodes: sampleNodes,
 };
 
-/** Нет сообщений */
-export const validParamsEmpty: BroadcastTemplateParams = {
+export const validParamsEmpty: BroadcastClientTemplateParams = {
   nodeId: 'broadcast_4',
-  broadcastApiType: 'bot',
   idSourceType: 'bot_users',
   broadcastNodes: [],
 };
 
-/** С медиа */
-export const validParamsWithMedia: BroadcastTemplateParams = {
+export const validParamsWithMedia: BroadcastClientTemplateParams = {
   nodeId: 'broadcast_5',
-  broadcastApiType: 'bot',
   idSourceType: 'bot_users',
   broadcastNodes: [
     {
@@ -75,10 +63,8 @@ export const validParamsWithMedia: BroadcastTemplateParams = {
   ],
 };
 
-/** С автопереходом */
-export const validParamsWithAutoTransition: BroadcastTemplateParams = {
+export const validParamsWithAutoTransition: BroadcastClientTemplateParams = {
   nodeId: 'broadcast_6',
-  broadcastApiType: 'bot',
   idSourceType: 'bot_users',
   broadcastNodes: [
     {
@@ -107,4 +93,4 @@ export const validParamsWithAutoTransition: BroadcastTemplateParams = {
 };
 
 export const invalidParamsWrongType = { nodeId: 123 };
-export const invalidParamsMissingField = { broadcastApiType: 'bot' };
+export const invalidParamsMissingField = { idSourceType: 'bot_users' };

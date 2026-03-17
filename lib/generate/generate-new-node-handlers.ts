@@ -4,7 +4,8 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastFromNode } from '../templates/broadcast/broadcast.renderer';
+import { generateBroadcastBotFromNode } from '../templates/broadcast-bot/broadcast-bot.renderer';
+import { generateBroadcastClientFromNode } from '../templates/broadcast-client/broadcast-client.renderer';
 import { generateSticker as generateStickerTemplate } from '../templates/sticker/sticker.renderer';
 import { generateVoice as generateVoiceTemplate } from '../templates/voice/voice.renderer';
 import { generateCommand as generateCommandTemplate } from '../templates/command/command.renderer';
@@ -20,7 +21,9 @@ export function generateBroadcastHandler(
   allNodes: Node[] = [],
   _enableComments: boolean = true
 ): string {
-  return generateBroadcastFromNode(node, allNodes);
+  return node.data?.broadcastApiType === 'client'
+    ? generateBroadcastClientFromNode(node, allNodes)
+    : generateBroadcastBotFromNode(node, allNodes);
 }
 
 /**

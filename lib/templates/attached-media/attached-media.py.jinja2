@@ -13,9 +13,185 @@
   @param {array} mediaToSend - Все файлы [{url, fileType, isLocal, isFirst}]
   @param {array} groupable - Файлы photo/video/audio [{url, fileType, isLocal, mediaClass, isFirst}]
   @param {array} documents - Документы [{url, isLocal}]
+  @param {string} [staticImageUrl] - URL статического изображения
+  @param {boolean} [isStaticLocal] - Статическое изображение — локальный файл
+  @param {string} [mediaVariable] - Имя переменной медиа из БД
+  @param {string} [mediaType] - Тип медиа переменной (photo/video/audio/document)
+  @param {boolean} [isDirectUrl] - mediaVariable является прямым URL
+  @param {string} [autoTransitionTo] - ID узла для автоперехода
+  @param {string} [safeAutoTargetId] - autoTransitionTo с заменёнными спецсимволами
+  @param {string} [waitingStateCode] - Готовый Python-код waiting state
+  @param {boolean} [isFakeCallbackCheck] - Обернуть статическое изображение в if not is_fake_callback
+  @param {boolean} [fallbackUseSafeEdit] - Использовать safe_edit_or_send в fallback
 #}
 
-{%- if isSingle %}
+{# ============================================================ #}
+{# ВЕТКА 1: Статическое изображение из nodeData.imageUrl        #}
+{# ============================================================ #}
+{%- if staticImageUrl %}
+
+{%- if isFakeCallbackCheck %}
+    if not is_fake_callback:
+{%- set ind = "        " %}
+{%- else %}
+{%- set ind = "    " %}
+{%- endif %}
+{{ ind }}try:
+{{ ind }}    if 'all_user_vars' not in locals():
+{{ ind }}        all_user_vars = await init_all_user_vars({{ userIdSrc }})
+{{ ind }}    variable_filters = user_data.get({{ userIdSrc }}, {}).get("_variable_filters", {})
+{{ ind }}    processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)
+{%- if isStaticLocal %}
+{{ ind }}    image_path = get_upload_file_path("{{ staticImageUrl }}")
+{{ ind }}    image_url = FSInputFile(image_path)
+{%- else %}
+{{ ind }}    image_url = "{{ staticImageUrl }}"
+{{ ind }}    logging.info(f"🖼️ Отправка изображения: {image_url}")
+{%- endif %}
+{%- if waitingStateCode %}
+{{ waitingStateCode }}
+{%- endif %}
+{{ ind }}    if keyboard is not None:
+{{ ind }}        await bot.send_photo({{ userIdSrc }}, image_url, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{{ ind }}    else:
+{{ ind }}        await bot.send_photo({{ userIdSrc }}, image_url, caption=processed_caption{{ parseModeStr }})
+{%- if autoTransitionTo %}
+{{ ind }}    # ⚡ Автопереход к узлу {{ autoTransitionTo }}
+{{ ind }}    logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
+{{ ind }}    class FakeCallbackQuery:
+{{ ind }}        def __init__(self, message, target_node_id):
+{{ ind }}            self.from_user = message.from_user
+{{ ind }}            self.chat = message.chat
+{{ ind }}            self.data = target_node_id
+{{ ind }}            self.message = message
+{{ ind }}    fake_callback = FakeCallbackQuery({{ msgSrc }}, "{{ autoTransitionTo }}")
+{{ ind }}    await handle_callback_{{ safeAutoTargetId }}(fake_callback)
+{{ ind }}    logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
+{{ ind }}    return
+{%- endif %}
+{{ ind }}except Exception as e:
+{{ ind }}    logging.error(f"Ошибка отправки статического изображения: {e}")
+{%- if fallbackUseSafeEdit %}
+{{ ind }}    reply_markup_to_use = keyboard if keyboard is not None else None
+{%- if autoTransitionTo %}
+{{ ind }}    await safe_edit_or_send({{ msgSrc }}, text, node_id="{{ nodeId }}", reply_markup=reply_markup_to_use, is_auto_transition=True{{ parseModeStr }})
+{%- else %}
+{{ ind }}    await safe_edit_or_send({{ msgSrc }}, text, node_id="{{ nodeId }}", reply_markup=reply_markup_to_use{{ parseModeStr }})
+{%- endif %}
+{%- else %}
+{{ ind }}    await {{ msgSrc }}.answer(processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- endif %}
+
+{# ============================================================ #}
+{# ВЕТКА 2: Динамическое медиа из переменной БД                 #}
+{# ============================================================ #}
+{%- elif mediaVariable and not isDirectUrl %}
+
+    attached_media = None
+    user_id = {{ userIdSrc }}
+    all_user_vars = await init_all_user_vars(user_id)
+
+    if "{{ mediaVariable }}" in all_user_vars:
+        media_data = all_user_vars["{{ mediaVariable }}"]
+        if isinstance(media_data, dict) and "value" in media_data:
+{%- if mediaType == 'photo' %}
+            if "photoUrl" in media_data and media_data["photoUrl"]:
+                attached_media = media_data["photoUrl"]
+{%- elif mediaType == 'video' %}
+            if "videoUrl" in media_data and media_data["videoUrl"]:
+                attached_media = media_data["videoUrl"]
+{%- elif mediaType == 'audio' %}
+            if "audioUrl" in media_data and media_data["audioUrl"]:
+                attached_media = media_data["audioUrl"]
+{%- elif mediaType == 'document' %}
+            if "documentUrl" in media_data and media_data["documentUrl"]:
+                attached_media = media_data["documentUrl"]
+{%- else %}
+            if "photoUrl" in media_data and media_data["photoUrl"]:
+                attached_media = media_data["photoUrl"]
+            elif "videoUrl" in media_data and media_data["videoUrl"]:
+                attached_media = media_data["videoUrl"]
+            elif "audioUrl" in media_data and media_data["audioUrl"]:
+                attached_media = media_data["audioUrl"]
+            elif "documentUrl" in media_data and media_data["documentUrl"]:
+                attached_media = media_data["documentUrl"]
+{%- endif %}
+            else:
+                attached_media = media_data["value"]
+        elif isinstance(media_data, str):
+            attached_media = media_data
+
+    if attached_media and str(attached_media).strip():
+        attached_media_url = attached_media
+        logging.info(f"📎 Отправка {{ mediaType or 'медиа' }}: {attached_media_url}")
+{%- if waitingStateCode %}
+{{ waitingStateCode }}
+{%- endif %}
+        try:
+            if 'all_user_vars' not in locals():
+                all_user_vars = await init_all_user_vars({{ userIdSrc }})
+            variable_filters = user_data.get({{ userIdSrc }}, {}).get("_variable_filters", {})
+            processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)
+            if str(attached_media_url).startswith('/uploads/'):
+                attached_media_path = get_upload_file_path(attached_media_url)
+                attached_media_url = FSInputFile(attached_media_path)
+{%- if mediaType == 'photo' %}
+            await bot.send_photo({{ userIdSrc }}, attached_media_url, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- elif mediaType == 'video' %}
+            await bot.send_video({{ userIdSrc }}, attached_media_url, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- elif mediaType == 'audio' %}
+            await bot.send_audio({{ userIdSrc }}, attached_media_url, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- else %}
+            await bot.send_document({{ userIdSrc }}, attached_media_url, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- endif %}
+{%- if autoTransitionTo %}
+            # ⚡ Автопереход к узлу {{ autoTransitionTo }}
+            logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
+            class FakeCallbackQuery:
+                def __init__(self, message, target_node_id):
+                    self.from_user = message.from_user
+                    self.chat = message.chat
+                    self.data = target_node_id
+                    self.message = message
+            fake_callback = FakeCallbackQuery({{ msgSrc }}, "{{ autoTransitionTo }}")
+            await handle_callback_{{ safeAutoTargetId }}(fake_callback)
+            logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
+            return
+{%- endif %}
+        except Exception as e:
+            logging.error(f"Ошибка отправки {{ mediaType or 'медиа' }}: {e}")
+            reply_markup_to_use = keyboard if keyboard is not None else None
+{%- if fallbackUseSafeEdit %}
+{%- if autoTransitionTo %}
+            await safe_edit_or_send({{ msgSrc }}, text, node_id="{{ nodeId }}", reply_markup=reply_markup_to_use, is_auto_transition=True{{ parseModeStr }})
+{%- else %}
+            await safe_edit_or_send({{ msgSrc }}, text, node_id="{{ nodeId }}", reply_markup=reply_markup_to_use{{ parseModeStr }})
+{%- endif %}
+{%- else %}
+            await {{ msgSrc }}.answer(processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- endif %}
+    else:
+        # Медиа не найдено — fallback на текст
+        logging.info(f"📝 Медиа {{ mediaVariable }} не найдено, отправка текстового сообщения")
+        if 'all_user_vars' not in locals():
+            all_user_vars = await init_all_user_vars({{ userIdSrc }})
+        variable_filters = user_data.get({{ userIdSrc }}, {}).get("_variable_filters", {})
+        processed_text = replace_variables_in_text(text, all_user_vars, variable_filters)
+        reply_markup_to_use = keyboard if keyboard is not None else None
+{%- if fallbackUseSafeEdit %}
+{%- if autoTransitionTo %}
+        await safe_edit_or_send({{ msgSrc }}, processed_text, node_id="{{ nodeId }}", reply_markup=reply_markup_to_use, is_auto_transition=True{{ parseModeStr }})
+{%- else %}
+        await safe_edit_or_send({{ msgSrc }}, processed_text, node_id="{{ nodeId }}", reply_markup=reply_markup_to_use{{ parseModeStr }})
+{%- endif %}
+{%- else %}
+        await {{ msgSrc }}.answer(processed_text{{ parseModeStr }}, reply_markup=keyboard)
+{%- endif %}
+
+{# ============================================================ #}
+{# ВЕТКА 3: Обычные attachedMedia (статические URL)             #}
+{# ============================================================ #}
+{%- elif isSingle %}
 
     {# Отправка одного медиафайла #}
     {%- set item = mediaToSend[0] %}
@@ -30,6 +206,9 @@
             all_user_vars = await init_all_user_vars({{ userIdSrc }})
         variable_filters = user_data.get({{ userIdSrc }}, {}).get("_variable_filters", {})
         processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)
+{%- if waitingStateCode %}
+{{ waitingStateCode }}
+{%- endif %}
 {%- if item.fileType == 'photo' %}
         await bot.send_photo({{ userIdSrc }}, media_file_0, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
 {%- elif item.fileType == 'video' %}
@@ -39,10 +218,33 @@
 {%- else %}
         await bot.send_document({{ userIdSrc }}, media_file_0, caption=processed_caption{{ parseModeStr }}, reply_markup=keyboard)
 {%- endif %}
+{%- if autoTransitionTo %}
+        # ⚡ Автопереход к узлу {{ autoTransitionTo }}
+        logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
+        class FakeCallbackQuery:
+            def __init__(self, message, target_node_id):
+                self.from_user = message.from_user
+                self.chat = message.chat
+                self.data = target_node_id
+                self.message = message
+        fake_callback = FakeCallbackQuery({{ msgSrc }}, "{{ autoTransitionTo }}")
+        await handle_callback_{{ safeAutoTargetId }}(fake_callback)
+        logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
+        return
+{%- endif %}
         logging.info(f"✅ Медиафайл отправлен для узла {{ nodeId }}")
     except Exception as e:
         logging.error(f"❌ Ошибка отправки медиа для узла {{ nodeId }}: {e}")
+{%- if fallbackUseSafeEdit %}
+        reply_markup_to_use = keyboard if keyboard is not None else None
+{%- if autoTransitionTo %}
+        await safe_edit_or_send({{ msgSrc }}, text, node_id="{{ nodeId }}", reply_markup=reply_markup_to_use, is_auto_transition=True{{ parseModeStr }})
+{%- else %}
+        await safe_edit_or_send({{ msgSrc }}, text, node_id="{{ nodeId }}", reply_markup=reply_markup_to_use{{ parseModeStr }})
+{%- endif %}
+{%- else %}
         await {{ msgSrc }}.answer(processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- endif %}
 
 {%- else %}
 
@@ -51,6 +253,9 @@
         all_user_vars = await init_all_user_vars({{ userIdSrc }})
     variable_filters = user_data.get({{ userIdSrc }}, {}).get("_variable_filters", {})
     processed_caption = replace_variables_in_text(text, all_user_vars, variable_filters)
+{%- if waitingStateCode %}
+{{ waitingStateCode }}
+{%- endif %}
 
 {%- if hasGroupable %}
 
@@ -81,6 +286,20 @@
         # send_media_group не поддерживает reply_markup — отправляем клавиатуру отдельно
         if keyboard is not None:
             await bot.send_message({{ userIdSrc }}, processed_caption{{ parseModeStr }}, reply_markup=keyboard)
+{%- if autoTransitionTo %}
+        # ⚡ Автопереход к узлу {{ autoTransitionTo }}
+        logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
+        class FakeCallbackQuery:
+            def __init__(self, message, target_node_id):
+                self.from_user = message.from_user
+                self.chat = message.chat
+                self.data = target_node_id
+                self.message = message
+        fake_callback = FakeCallbackQuery({{ msgSrc }}, "{{ autoTransitionTo }}")
+        await handle_callback_{{ safeAutoTargetId }}(fake_callback)
+        logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
+        return
+{%- endif %}
     except Exception as e:
         logging.error(f"❌ Ошибка отправки медиа-группы для узла {{ nodeId }}: {e}")
 {%- endif %}

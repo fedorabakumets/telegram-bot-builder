@@ -1,0 +1,243 @@
+{#
+  Шаблон обработчика рассылки — Bot API (aiogram)
+
+  @param {string} nodeId          - ID узла broadcast
+  @param {string} idSourceType    - 'user_ids' | 'bot_users' | 'both'
+  @param {string} successMessage  - Сообщение об успехе
+  @param {string} errorMessage    - Сообщение об ошибке
+  @param {array}  broadcastNodes  - [{id, text, formatMode, imageUrl, audioUrl, videoUrl, documentUrl, attachedMediaPy, autoTransitionTo}]
+#}
+{%- set safeNodeId = nodeId | safe_name %}
+{%- set successMsg = successMessage or '✅ Рассылка отправлена!' %}
+{%- set errorMsg = errorMessage or '❌ Ошибка рассылки' %}
+
+# @@NODE_START:{{ nodeId }}@@
+async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
+    """Обработчик рассылки для узла {{ nodeId }} (Bot API / aiogram)"""
+    logging.info(f"📢 Запуск рассылки из узла {{ nodeId }}")
+
+    # ── Получение получателей ───────────────────────────────────────────────
+    recipients = []
+    try:
+        async with db_pool.acquire() as conn:
+{%- if idSourceType == 'user_ids' or idSourceType == 'both' %}
+            rows = await conn.fetch("SELECT DISTINCT user_id FROM user_ids")
+            recipients.extend([str(row["user_id"]) for row in rows])
+{%- endif %}
+{%- if idSourceType == 'bot_users' or idSourceType == 'both' %}
+            rows = await conn.fetch("SELECT DISTINCT user_id FROM bot_users")
+            recipients.extend([str(row["user_id"]) for row in rows])
+{%- endif %}
+    except Exception as e:
+        logging.error(f"❌ Ошибка получения списка пользователей: {e}")
+        await callback_query.message.answer("{{ errorMsg }}")
+        return
+
+    recipients = list(set(recipients))
+    logging.info(f"📋 Найдено {len(recipients)} получателей")
+
+    # ── Список сообщений для рассылки ───────────────────────────────────────
+{%- if broadcastNodes and broadcastNodes | length > 0 %}
+    broadcast_nodes = [
+{%- for node in broadcastNodes %}
+        {
+            "id": "{{ node.id }}",
+            "text": {{ node.text | format_python_text }},
+            "formatMode": "{{ node.formatMode or 'none' }}",
+            "imageUrl": "{{ node.imageUrl or '' }}",
+            "audioUrl": "{{ node.audioUrl or '' }}",
+            "videoUrl": "{{ node.videoUrl or '' }}",
+            "documentUrl": "{{ node.documentUrl or '' }}",
+            "attachedMedia": {{ node.attachedMediaPy }},
+            "autoTransitionTo": "{{ node.autoTransitionTo or '' }}",
+        },
+{%- endfor %}
+    ]
+{%- else %}
+    broadcast_nodes = []
+{%- endif %}
+
+    if not broadcast_nodes:
+        await callback_query.message.answer("⚠️ Нет сообщений для рассылки")
+        return
+
+    # ── Отправка ────────────────────────────────────────────────────────────
+    success_count = 0
+    error_count = 0
+
+    for recipient_id in recipients:
+        for node_data in broadcast_nodes:
+            if not node_data["text"].strip():
+                continue
+            try:
+                message_text = replace_variables_in_text(node_data["text"], {**user_data.get(recipient_id, {}), "user_id": recipient_id})
+                all_user_vars = {**user_data.get(recipient_id, {}), "user_id": recipient_id}
+
+                # Отправка медиа
+                media_sent = False
+                attached_media = node_data.get("attachedMedia", [])
+                image_url = node_data.get("imageUrl")
+                audio_url = node_data.get("audioUrl")
+                video_url = node_data.get("videoUrl")
+                document_url = node_data.get("documentUrl")
+                if attached_media or image_url or audio_url or video_url or document_url:
+                    try:
+                        if attached_media:
+                            for media_var in attached_media:
+                                media_value = all_user_vars.get(media_var)
+                                if media_value:
+                                    media_url_to_use = None
+                                    if isinstance(media_value, dict):
+                                        if "audio" in media_var.lower() and "audioUrl" in media_value:
+                                            media_url_to_use = media_value.get("audioUrl")
+                                        elif "video" in media_var.lower() and "videoUrl" in media_value:
+                                            media_url_to_use = media_value.get("videoUrl")
+                                        elif "document" in media_var.lower() and "documentUrl" in media_value:
+                                            media_url_to_use = media_value.get("documentUrl")
+                                        elif "photoUrl" in media_value:
+                                            media_url_to_use = media_value.get("photoUrl")
+                                        if not media_url_to_use:
+                                            media_url_to_use = media_value.get("value")
+                                    else:
+                                        media_url_to_use = media_value
+                                    if media_url_to_use:
+                                        if "audio" in media_var.lower():
+                                            await bot.send_audio(recipient_id, media_url_to_use, caption=message_text)
+                                        elif "video" in media_var.lower():
+                                            await bot.send_video(recipient_id, media_url_to_use, caption=message_text)
+                                        elif "document" in media_var.lower():
+                                            await bot.send_document(recipient_id, media_url_to_use, caption=message_text)
+                                        else:
+                                            await bot.send_photo(recipient_id, media_url_to_use, caption=message_text)
+                                        media_sent = True
+                        if not media_sent:
+                            if audio_url:
+                                await bot.send_audio(recipient_id, audio_url, caption=message_text)
+                                media_sent = True
+                            elif video_url:
+                                await bot.send_video(recipient_id, video_url, caption=message_text)
+                                media_sent = True
+                            elif document_url:
+                                await bot.send_document(recipient_id, document_url, caption=message_text)
+                                media_sent = True
+                            elif image_url:
+                                await bot.send_photo(recipient_id, image_url, caption=message_text)
+                                media_sent = True
+                    except Exception as media_error:
+                        logging.error(f"❌ Ошибка отправки медиа: {media_error}")
+                        # Fallback на статические медиа
+                        if not media_sent:
+                            if audio_url:
+                                await bot.send_audio(recipient_id, audio_url, caption=message_text)
+                                media_sent = True
+                            elif video_url:
+                                await bot.send_video(recipient_id, video_url, caption=message_text)
+                                media_sent = True
+                            elif document_url:
+                                await bot.send_document(recipient_id, document_url, caption=message_text)
+                                media_sent = True
+                            elif image_url:
+                                await bot.send_photo(recipient_id, image_url, caption=message_text)
+                                media_sent = True
+                if not media_sent:
+                    await bot.send_message(recipient_id, message_text)
+
+                success_count += 1
+
+                # Автопереход
+                auto_target = node_data.get("autoTransitionTo")
+                if auto_target:
+                    logging.info(f"🔄 Автопереход к узлу {auto_target} для пользователя {recipient_id}")
+                    try:
+                        from aiogram.types import CallbackQuery, User, Chat, Message as AioMessage
+                        fake_chat = Chat(id=int(recipient_id), type="private", first_name="User")
+                        fake_message = AioMessage(message_id=1, date=0, chat=fake_chat, from_user=User(id=int(recipient_id), is_bot=False, first_name="User"))
+                        fake_callback = CallbackQuery(
+                            id="broadcast_auto",
+                            from_user=User(id=int(recipient_id), is_bot=False, first_name="User"),
+                            chat_instance="broadcast",
+                            data=auto_target,
+                            message=fake_message
+                        )
+                        safe_auto_target = auto_target.replace("-", "_")
+                        handler_name = f"handle_callback_{safe_auto_target}"
+                        handler = globals().get(handler_name)
+                        logging.info(f"🔍 Handler {handler_name}: {'найден' if handler else 'НЕ НАЙДЕН'}")
+                        if handler:
+                            try:
+                                await handler(fake_callback)
+                                logging.info(f"✅ Handler {handler_name} выполнен")
+                            except Exception as handler_error:
+                                if "not mounted to a any bot instance" not in str(handler_error) and "This method is not mounted" not in str(handler_error):
+                                    logging.error(f"❌ Ошибка handler при автопереходе к {auto_target}: {handler_error}")
+                                    raise
+                        # Отправляем сообщение следующего узла напрямую
+                        next_node = all_nodes_dict.get(auto_target)
+                        if next_node:
+                            next_text = replace_variables_in_text(next_node["text"], {**user_data.get(recipient_id, {}), "user_id": recipient_id})
+                            next_all_user_vars = {**user_data.get(recipient_id, {}), "user_id": recipient_id}
+                            next_media_sent = False
+                            next_attached = next_node.get("attachedMedia", [])
+                            next_image = next_node.get("imageUrl")
+                            next_audio = next_node.get("audioUrl")
+                            next_video = next_node.get("videoUrl")
+                            next_document = next_node.get("documentUrl")
+                            if next_attached:
+                                for m_var in next_attached:
+                                    m_val = next_all_user_vars.get(m_var)
+                                    if m_val:
+                                        m_url = None
+                                        if isinstance(m_val, dict):
+                                            if "audio" in m_var.lower() and "audioUrl" in m_val:
+                                                m_url = m_val.get("audioUrl")
+                                            elif "video" in m_var.lower() and "videoUrl" in m_val:
+                                                m_url = m_val.get("videoUrl")
+                                            elif "document" in m_var.lower() and "documentUrl" in m_val:
+                                                m_url = m_val.get("documentUrl")
+                                            elif "photoUrl" in m_val:
+                                                m_url = m_val.get("photoUrl")
+                                            if not m_url:
+                                                m_url = m_val.get("value")
+                                        else:
+                                            m_url = m_val
+                                        if m_url:
+                                            if "audio" in m_var.lower():
+                                                await bot.send_audio(recipient_id, m_url, caption=next_text)
+                                            elif "video" in m_var.lower():
+                                                await bot.send_video(recipient_id, m_url, caption=next_text)
+                                            elif "document" in m_var.lower():
+                                                await bot.send_document(recipient_id, m_url, caption=next_text)
+                                            else:
+                                                await bot.send_photo(recipient_id, m_url, caption=next_text)
+                                            next_media_sent = True
+                            if not next_media_sent:
+                                if next_audio:
+                                    await bot.send_audio(recipient_id, next_audio, caption=next_text)
+                                    next_media_sent = True
+                                elif next_video:
+                                    await bot.send_video(recipient_id, next_video, caption=next_text)
+                                    next_media_sent = True
+                                elif next_document:
+                                    await bot.send_document(recipient_id, next_document, caption=next_text)
+                                    next_media_sent = True
+                                elif next_image:
+                                    await bot.send_photo(recipient_id, next_image, caption=next_text)
+                                    next_media_sent = True
+                            if not next_media_sent:
+                                await bot.send_message(recipient_id, next_text)
+                            logging.info(f"✅ Сообщение узла {auto_target} отправлено")
+                        else:
+                            logging.warning(f"⚠️ Узел {auto_target} не найден в all_nodes_dict")
+                    except Exception as auto_error:
+                        if "not mounted to a any bot instance" not in str(auto_error) and "This method is not mounted" not in str(auto_error):
+                            logging.error(f"❌ Ошибка автоперехода к {auto_target}: {auto_error}")
+
+            except Exception as send_error:
+                error_count += 1
+                logging.error(f"❌ Ошибка отправки {recipient_id}: {send_error}")
+
+        await asyncio.sleep(0.05)
+
+    report = f"{{ successMsg }}\n🤖 Метод: Bot API\n✅ Успешно: {success_count}\n❌ Ошибок: {error_count}"
+    await callback_query.message.answer(report)
+# @@NODE_END:{{ nodeId }}@@

@@ -1,15 +1,15 @@
 /**
- * @fileoverview Рендерер шаблона рассылки
- * @module templates/broadcast/broadcast.renderer
+ * @fileoverview Рендерер шаблона рассылки Client API (Telethon)
+ * @module templates/broadcast-client/broadcast-client.renderer
  */
 
 import type { Node } from '@shared/schema';
-import type { BroadcastNode, BroadcastTemplateParams } from './broadcast.params';
-import { broadcastParamsSchema } from './broadcast.schema';
+import type { BroadcastNode, BroadcastClientTemplateParams } from './broadcast-client.params';
+import { broadcastClientParamsSchema } from './broadcast-client.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
 /**
- * Собирает список BroadcastNode[] из графа узлов.
+ * Собирает BroadcastNode[] из графа узлов.
  * Включает message-узлы с enableBroadcast=true и разворачивает цепочки autoTransitionTo.
  */
 export function collectBroadcastNodes(nodes: Node[], broadcastNodeId: string): BroadcastNode[] {
@@ -22,7 +22,6 @@ export function collectBroadcastNodes(nodes: Node[], broadcastNodeId: string): B
     );
   });
 
-  // Разворачиваем цепочки autoTransitionTo
   const chain = new Map<string, BroadcastNode>();
 
   for (const node of broadcastMessages) {
@@ -40,7 +39,7 @@ export function collectBroadcastNodes(nodes: Node[], broadcastNodeId: string): B
     });
   }
 
-  // Добавляем узлы из цепочек автопереходов, которых ещё нет в списке
+  // Разворачиваем цепочки autoTransitionTo
   let hasNew = true;
   while (hasNew) {
     hasNew = false;
@@ -70,16 +69,11 @@ export function collectBroadcastNodes(nodes: Node[], broadcastNodeId: string): B
 }
 
 /**
- * Генерирует Python обработчик рассылки из параметров (низкоуровневый API).
+ * Генерирует Python обработчик рассылки Client API из параметров.
  */
-export function generateBroadcast(params: BroadcastTemplateParams): string {
-  const validated = broadcastParamsSchema.parse({
-    ...params,
-    broadcastApiType: params.broadcastApiType ?? 'bot',
-    idSourceType: params.idSourceType ?? 'bot_users',
-  });
+export function generateBroadcastClient(params: BroadcastClientTemplateParams): string {
+  const validated = broadcastClientParamsSchema.parse(params);
 
-  // Предсериализуем attachedMedia в Python-литерал, чтобы не использовать tojson в шаблоне
   const templateContext = {
     ...validated,
     broadcastNodes: validated.broadcastNodes.map(node => ({
@@ -90,23 +84,19 @@ export function generateBroadcast(params: BroadcastTemplateParams): string {
     })),
   };
 
-  return renderPartialTemplate('broadcast/broadcast.py.jinja2', templateContext);
+  return renderPartialTemplate('broadcast-client/broadcast-client.py.jinja2', templateContext);
 }
 
 /**
- * Генерирует Python обработчик рассылки из узла графа (высокоуровневый API).
- * Заменяет generateBroadcastHandler и generateBroadcastClientHandler из bot-generator.
+ * Генерирует Python обработчик рассылки Client API из узла графа.
  */
-export function generateBroadcastFromNode(node: Node, allNodes: Node[]): string {
+export function generateBroadcastClientFromNode(node: Node, allNodes: Node[]): string {
   const d = node.data as any;
-  const broadcastNodes = collectBroadcastNodes(allNodes, node.id);
-
-  return generateBroadcast({
+  return generateBroadcastClient({
     nodeId: node.id,
-    broadcastApiType: d.broadcastApiType || 'bot',
     idSourceType: d.idSourceType || 'bot_users',
     successMessage: d.successMessage || '',
     errorMessage: d.errorMessage || '',
-    broadcastNodes,
+    broadcastNodes: collectBroadcastNodes(allNodes, node.id),
   });
 }
