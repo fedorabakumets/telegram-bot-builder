@@ -7,3 +7,4 @@ export type { AttachedMediaTemplateParams, MediaFileType, FormatMode } from './a
 export type { AttachedMediaParams } from './attached-media.schema';
 export { attachedMediaParamsSchema } from './attached-media.schema';
 export { generateAttachedMedia } from './attached-media.renderer';
+export * from './attached-media.fixture';
