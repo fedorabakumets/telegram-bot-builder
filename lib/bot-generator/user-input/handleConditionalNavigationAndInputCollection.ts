@@ -2,7 +2,6 @@ import { Button } from '../types';
 import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from '../format';
 import { generateKeyboard } from '../../templates/keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
-import { generateDatabaseVariablesBlockCall } from '../database';
 import { generateNavigateToNodeWithText } from '../transitions/generate-node-navigation';
 import { generateUserInputFromNode } from '../../templates/user-input';
 
@@ -130,9 +129,6 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                                 if (shouldWaitForInput) {
                                     // Показываем сообщение и настраиваем ожидание ввода
                                     code += `                            # waitForTextInput=true: показываем сообщение и ждем ввода\n`;
-
-                                    const inputVariable = condition.textInputVariable || targetNode.data.inputVariable || `response_${targetNode.id}`;
-                                    const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
 
                                     // Проверяем, есть ли кнопки в условном сообщении
                                     const hasConditionalButtons = condition.buttons && condition.buttons.length > 0;
@@ -312,17 +308,6 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                             code += `                        await message.answer(text, reply_markup=keyboard)\n`;
 
                             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также яастраиваем waiting_for_input для сохранения ответа кнопки
-                            const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-                            const inputTargetNodeId = targetNode.data.inputTargetNodeId;
-                            // Определяем modes - если есть enableTextInput, добавляем и text и button
-                            const hasTextInput = targetNode.data.enableTextInput === true;
-                            const btnModesList = hasTextInput ? "['button', 'text']" : "['button']";
-                            // Собираем кнопки с skipDataCollection для кнопок
-                            const skipButtons2572 = (targetNode.data.buttons || [])
-                                .filter((btn: any) => btn.skipDataCollection === true && btn.target)
-                                .map((btn: any) => ({ text: btn.text, target: btn.target }));
-                            const skipButtonsJson2572 = JSON.stringify(skipButtons2572);
-
                             code += `                        # Настраиваем ожидание ввода для сохранения ответа кнопки\n`;
                             code += generateUserInputFromNode(targetNode, '                        ');
                         } else {
@@ -332,8 +317,6 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                             code += `                        text = ${formattedText}\n`;
 
                             // Настраиваем ожидание ввода
-                            const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-                            const inputTargetNodeId = targetNode.data.inputTargetNodeId;
                             code += `                        await message.answer(text)\n`;
                             code += `                        # Настраиваем ожидание ввода\n`;
                             code += generateUserInputFromNode(targetNode, '                        ');
