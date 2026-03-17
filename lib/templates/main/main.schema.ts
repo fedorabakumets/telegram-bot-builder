@@ -11,8 +11,11 @@ export const mainParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().optional().default(false),
   /** Есть ли inline кнопки */
   hasInlineButtons: z.boolean().optional().default(false),
-  /** Количество команд меню */
-  menuCommandsCount: z.number().optional().default(0),
+  /** Список команд меню для BotFather */
+  menuCommands: z.array(z.object({
+    command: z.string(),
+    description: z.string(),
+  })).optional().default([]),
 });
 
 /** Тип параметров запуска (выведен из схемы) */

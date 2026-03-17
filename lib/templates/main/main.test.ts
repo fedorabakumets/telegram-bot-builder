@@ -32,10 +32,19 @@ describe('main.py.jinja2 шаблон', () => {
         assert.ok(!result.includes('await init_database()'));
       });
 
-      it('должен включать set_bot_commands()', () => {
-        const result = generateMain(validParamsDisabled);
+      it('должен включать set_bot_commands() при наличии команд', () => {
+        const result = generateMain({
+          userDatabaseEnabled: false,
+          menuCommands: [{ command: 'start', description: 'Запустить бота' }],
+        });
 
         assert.ok(result.includes('async def set_bot_commands()'));
+      });
+
+      it('не должен включать set_bot_commands() без команд', () => {
+        const result = generateMain({ userDatabaseEnabled: false, menuCommands: [] });
+
+        assert.ok(!result.includes('async def set_bot_commands()'));
       });
 
       it('должен включать middleware при БД', () => {
@@ -213,7 +222,7 @@ describe('main.py.jinja2 шаблон', () => {
         const shape = mainParamsSchema.shape;
         assert.ok(shape.userDatabaseEnabled.isOptional());
         assert.ok(shape.hasInlineButtons.isOptional());
-        assert.ok(shape.menuCommandsCount.isOptional());
+        assert.ok(shape.menuCommands.isOptional());
       });
     });
   });

@@ -9,6 +9,6 @@ export interface MainTemplateParams {
   userDatabaseEnabled?: boolean;
   /** Есть ли inline кнопки */
   hasInlineButtons?: boolean;
-  /** Количество команд меню */
-  menuCommandsCount?: number;
+  /** Список команд меню для BotFather */
+  menuCommands?: Array<{ command: string; description: string }>;
 }

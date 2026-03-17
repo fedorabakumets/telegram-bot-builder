@@ -25,7 +25,6 @@ import {
 } from './bot-generator/input';
 
 // Внутренние модули - использование экспорта бочек
-import { generateBotCommandsSetup } from './bot-commands-setup';
 import { generateBotFatherCommands } from './commands';
 import { collectConditionalMessageButtons } from './bot-generator/Conditional/collectConditionalMessageButtons';
 import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './bot-generator/Conditional/conditional-button-handler';
@@ -35,7 +34,6 @@ import { generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigati
 import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, generateMain, generateImports, generateConfig, generateUtils } from './templates/typed-renderer';
 // Примечание: generateApiConfig удалена после миграции на Jinja2
 // import { generateApiConfig } from './bot-generator/api';
-import { generateCompleteBotScriptFromNodeGraphWithDependencies } from './generate-complete-bot-script';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { generateKeyboard } from './templates/keyboard';
 import { filterInlineNodes } from './bot-generator/Keyboard/filterInlineNodes';
@@ -311,8 +309,8 @@ export function generatePythonCode(
     node.data.command
   );
 
-  // Настройка меню команд для BotFather
-  code += generateBotCommandsSetup(menuCommands);
+  // Настройка меню команд для BotFather теперь генерируется в main.py.jinja2
+  // через параметр menuCommands — generateBotCommandsSetup больше не нужен
 
   // Генерируем обработчики для каждого узла
   code += generateNodeHandlers(context.nodes || [], !!context.options.userDatabaseEnabled, !!context.options.enableComments);
@@ -433,35 +431,38 @@ export function generatePythonCode(
   code += generateMain({
     userDatabaseEnabled: !!context.options.userDatabaseEnabled,
     hasInlineButtons: hasInlineButtons(context.nodes || []),
-    menuCommandsCount: menuCommands.length,
+    menuCommands: menuCommands.map(node => ({
+      command: (node.data.command || '').replace('/', ''),
+      description: node.data.description || 'Команда бота',
+    })),
   });
 
   // Найдем узла с множественным выбором для использования в обработчиках
   const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(context.nodes as any[]);
 
-  // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узла с множественным выбором
-  code += generateMultiSelectCallback({
-    multiSelectNodes: multiSelectNodes as any[],
-    allNodeIds: context.allNodeIds,
-    indentLevel: '    ',
-  });
-
-  const finalCode = generateCompleteBotScriptFromNodeGraphWithDependencies(
-    code,
-    {
+  // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узлы с множественным выбором
+  if (multiSelectNodes && multiSelectNodes.length > 0) {
+    code += generateMultiSelectCallback({
       multiSelectNodes: multiSelectNodes as any[],
       allNodeIds: context.allNodeIds,
-      nodes: context.nodes as any[],
-      generateMultiSelectCallbackLogic: generateMultiSelectCallback as any,
-      generateMultiSelectDoneHandler: generateMultiSelectDone as any,
-      generateMultiSelectReplyHandler: generateMultiSelectReply as any
-    }
-  );
+      indentLevel: '    ',
+    });
+    code += generateMultiSelectDone({
+      allNodes: context.nodes as any[],
+      multiSelectNodes: multiSelectNodes as any[],
+      allNodeIds: context.allNodeIds,
+    });
+    code += generateMultiSelectReply({
+      allNodes: context.nodes as any[],
+      multiSelectNodes: multiSelectNodes as any[],
+      allNodeIds: context.allNodeIds,
+    });
+  }
 
   // Валидация сгенерированного кода перед возвратом
-  assertValidPython(finalCode);
+  assertValidPython(code);
 
-  return finalCode;
+  return code;
 
   /**
    * Генерирует обработчики callback'ов для inline кнопок

@@ -7,8 +7,8 @@
 export interface MainTemplateParams {
   /** Включена ли база данных пользователей */
   userDatabaseEnabled: boolean;
-  /** Количество команд меню для BotFather */
-  menuCommandsCount?: number;
+  /** Список команд меню для BotFather [{command, description}] */
+  menuCommands?: Array<{ command: string; description: string }>;
   /** Есть ли inline кнопки (для callback middleware) */
   hasInlineButtons?: boolean;
 }

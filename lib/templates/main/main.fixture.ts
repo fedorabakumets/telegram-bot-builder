@@ -8,11 +8,13 @@ import type { MainTemplateParams } from './main.params';
 /** Валидные параметры: БД включена */
 export const validParamsEnabled: MainTemplateParams = {
   userDatabaseEnabled: true,
+  menuCommands: [{ command: 'start', description: 'Запустить бота' }],
 };
 
 /** Валидные параметры: БД выключена */
 export const validParamsDisabled: MainTemplateParams = {
   userDatabaseEnabled: false,
+  menuCommands: [{ command: 'start', description: 'Запустить бота' }],
 };
 
 /** Невалидные параметры: неправильный тип */

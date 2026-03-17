@@ -358,7 +358,7 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
       const code = generateMain({
         userDatabaseEnabled: true,
         hasInlineButtons: true,
-        menuCommandsCount: 2,
+        menuCommands: [{ command: 'start', description: 'Запустить бота' }, { command: 'help', description: 'Помощь' }],
       });
 
       assertValidPythonSyntax(code, 'generateMain');
@@ -604,7 +604,7 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         generateStart({ nodeId: 'start_1', messageText: 'Привет!', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], allowMultipleSelection: false, multiSelectVariable: '', keyboardType: 'inline', buttons: [{ text: 'OK', action: 'callback', target: 'msg_1', id: 'btn_ok' }], formatMode: 'html' }),
         generateCommand({ nodeId: 'cmd_1', command: '/help', messageText: 'Помощь', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '', keyboardType: 'inline', buttons: [], formatMode: 'html' }),
         generateMessage({ nodeId: 'msg_1', messageText: 'Сообщение', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, enableAutoTransition: false, autoTransitionTo: undefined, keyboardType: 'inline', buttons: [], formatMode: 'none', enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '' }),
-        generateMain({ userDatabaseEnabled: true, hasInlineButtons: true, menuCommandsCount: 1 }),
+        generateMain({ userDatabaseEnabled: true, hasInlineButtons: true, menuCommands: [{ command: 'start', description: 'Запустить бота' }] }),
       ];
 
       const fullCode = parts.join('\n');

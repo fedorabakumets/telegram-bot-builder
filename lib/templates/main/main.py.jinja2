@@ -4,16 +4,19 @@
   @fileoverview Главная функция main() и запуск поллинга
   @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей (для инициализации БД)
   @param {boolean} hasInlineButtons - Есть ли inline кнопки (для callback middleware)
-  @param {number} menuCommandsCount - Количество команд меню (для настройки команд)
+  @param {list} menuCommands - Список команд меню [{command, description}]
 #}
-
+{% if menuCommands and menuCommands | length > 0 %}
 async def set_bot_commands():
     """Настройка меню команд для BotFather"""
     commands = [
-        BotCommand(command="start", description="Запустить бота"),
+{% for cmd in menuCommands %}
+        BotCommand(command="{{ cmd.command }}", description="{{ cmd.description }}"),
+{% endfor %}
     ]
     await bot.set_my_commands(commands)
 
+{% endif %}
 
 async def main():
     """Главная функция запуска бота"""
@@ -32,7 +35,7 @@ async def main():
         await init_database()
         {%- endif %}
 
-        {%- if menuCommandsCount > 0 %}
+        {%- if menuCommands and menuCommands | length > 0 %}
         await set_bot_commands()
         {%- endif %}
 

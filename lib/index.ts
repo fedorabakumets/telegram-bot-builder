@@ -8,7 +8,6 @@
  */
 
 // Main bot generator
-export * from './bot-commands-setup';
 export * from './bot-generator';
 export * from './commands';
 // Keyboard exports are now aggregated in './bot-generator/Keyboard'
@@ -108,9 +107,7 @@ export type {
   FormatModeOverride
 } from './bot-generator/types';
 
-export type { MenuCommand } from './bot-commands-setup';
 export type { StandardCommand, CommandCategory } from './commands';
-export type { CompleteBotScriptOptions } from './generate-complete-bot-script';
 export type { ExtractNodeDataResult } from './bot-generator/utils/extractNodeData';
 
 // Утилиты конвертации и валидации
