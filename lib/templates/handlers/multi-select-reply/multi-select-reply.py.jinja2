@@ -16,8 +16,8 @@
 {% set indent = indentLevel or '' %}
 
 {% if multiSelectNodes and multiSelectNodes|length > 0 %}
-# Обработчик для reply кнопок множественного выбора
-@dp.message()
+{{ indent }}# Обработчик для reply кнопок множественного выбора
+{{ indent }}@dp.message()
 async def handle_multi_select_reply(message: types.Message):
     user_id = message.from_user.id
     user_input = message.text

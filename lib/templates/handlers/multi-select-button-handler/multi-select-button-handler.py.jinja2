@@ -77,13 +77,14 @@
 {{ indent }}        logging.info(f"🚀 DEBUG: targetNode.id={{ targetNode.id }}, continueButtonTarget={{ targetNode.data.continueButtonTarget }}, nextNodeId={{ nextNodeId }}")
 {{ indent }}
 {# Специальная логика для metro_selection -> interests_result #}
-{% if 'metro_selection' in targetNode.id and nextNodeId == 'interests_result' %}
+{% if targetNode.id and (targetNode.id == 'metro_selection_node' or targetNode.id == 'metro_selection') and nextNodeId == 'interests_result' %}
 {{ indent }}        # ИСПРАВЛЕНИЕ: Сохраняем метро выбор и устанавливаем флаг для показа клавиатуры
 {{ indent }}        selected_metro = user_data.get(user_id, {}).get("multi_select_{{ callbackData }}", [])
 {{ indent }}        if user_id not in user_data:
 {{ indent }}            user_data[user_id] = {}
 {{ indent }}        user_data[user_id]["saved_metro_selection"] = selected_metro
 {{ indent }}        user_data[user_id]["show_metro_keyboard"] = True
+{{ indent }}        show_metro_keyboard = True
 {{ indent }}        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: targetNode.id={{ targetNode.id }}, nextNodeId={{ nextNodeId }}")
 {{ indent }}        logging.info(f"🚇 Сохранили метро выбор: {selected_metro}, установлен флаг show_metro_keyboard=True")
 {{ indent }}

@@ -1,37 +1,1551 @@
-▶ generateAdminRightsHandler()
-  ▶ command handler
-    ✔ генерирует command handler с правильной командой (29.3488ms)
-    ✔ кастомная команда (1.1932ms)
-    ✔ проверяет права вызывающего пользователя (1.2845ms)
-    ✔ определяет target_user_id через reply, mention, ID (2.0262ms)
-  ✔ command handler (34.8689ms)
-  ▶ callback handler
-    ✔ генерирует callback handler с nodeId (0.9023ms)
-    ✔ проверяет права бота (0.8681ms)
-    ✔ содержит messageText (0.5206ms)
-  ✔ callback handler (2.6929ms)
-  ▶ keyboard builder
-    ✔ генерирует функцию создания клавиатуры (0.4961ms)
-    ✔ содержит все 11 прав администратора (0.6759ms)
-    ✔ генерирует get_admin_rights функцию (1.2967ms)
-  ✔ keyboard builder (2.9181ms)
-  ▶ toggle handlers
-    ✔ генерирует toggle handler для каждого права (2.0358ms)
-    ✔ toggle handler парсит callback_data (1.2521ms)
-    ✔ toggle handler вызывает promote_chat_member (0.9937ms)
-  ✔ toggle handlers (4.735ms)
-  ▶ refresh handler
-    ✔ генерирует refresh handler (0.6063ms)
-  ✔ refresh handler (0.7624ms)
-  ▶ safe_name изоляция
-    ✔ разные узлы не конфликтуют по именам функций (1.7381ms)
-  ✔ safe_name изоляция (1.8728ms)
-✔ generateAdminRightsHandler() (48.8013ms)
-▶ adminRightsParamsSchema
-  ✔ принимает валидные параметры (0.3326ms)
-  ✔ применяет defaults для messageText и command (0.6564ms)
-  ✔ отклоняет отсутствие nodeId (0.5641ms)
-✔ adminRightsParamsSchema (1.768ms)
+▶ SchemaValidation (new fields)
+  ▶ nodeSchema - appendVariable
+    ✔ должен принимать узел с appendVariable = true (3.1166ms)
+    ✔ должен принимать узел с appendVariable = false (1.7802ms)
+    ✔ должен использовать appendVariable = false по умолчанию (2.173ms)
+    ✔ должен отклонять некорректное значение appendVariable (0.8685ms)
+    ✔ должен принимать узел с inputVariable и appendVariable = true (0.6145ms)
+  ✔ nodeSchema - appendVariable (9.5229ms)
+  ▶ nodeSchema - variableFilters
+    ✔ должен принимать узел с variableFilters (1.1707ms)
+    ✔ должен принимать узел с несколькими variableFilters (1.0926ms)
+    ✔ должен использовать пустой объект variableFilters по умолчанию (1.0321ms)
+    ✔ должен принимать узел с variableFilters и text с фильтрами (0.6911ms)
+    ✔ должен отклонять variableFilters с некорректным типом значения (0.5854ms)
+  ✔ nodeSchema - variableFilters (5.0675ms)
+  ▶ buttonSchema - complete action
+    ✔ должен принимать кнопку с action = complete (0.2693ms)
+    ✔ должен принимать кнопку complete без target (0.139ms)
+    ✔ должен принимать кнопку complete с buttonType = complete (0.1357ms)
+    ✔ должен принимать кнопку complete со всеми опциями (0.1325ms)
+    ✔ должен отклонять кнопку с некорректным action (0.2383ms)
+  ✔ buttonSchema - complete action (1.0924ms)
+  ▶ buttonSchema - все действия
+    ✔ должен принимать все допустимые действия (0.3287ms)
+  ✔ buttonSchema - все действия (0.4912ms)
+  ▶ Комбинированные тесты схем
+    ✔ должен принимать узел с appendVariable и variableFilters (0.6155ms)
+    ✔ должен принимать узел с complete кнопкой и variableFilters (0.5227ms)
+    ✔ должен принимать узел со всеми новыми функциями (0.71ms)
+  ✔ Комбинированные тесты схем (2.0507ms)
+  ▶ Edge cases
+    ✔ должен принимать узел с пустым variableFilters (1.0365ms)
+    ✔ должен отклонять кнопку complete с пустым text (0.3993ms)
+    ✔ должен принимать узел с appendVariable = false и variableFilters (0.6092ms)
+  ✔ Edge cases (2.2982ms)
+✔ SchemaValidation (new fields) (21.4401ms)
+▶ ValidateEnhancedNode
+  ▶ validateEnhancedNode - валидные узлы
+    ✔ должен возвращать isValid: true для валидного start узла (0.7754ms)
+    ✔ должен возвращать isValid: true для валидного message узла (0.1327ms)
+    ✔ должен возвращать пустой массив errors для валидного узла (0.1639ms)
+    ✔ должен возвращать пустой массив warnings для валидного узла (0.1307ms)
+  ✔ validateEnhancedNode - валидные узлы (1.9999ms)
+  ▶ validateEnhancedNode - обязательные поля
+    ✔ должен возвращать ошибку при отсутствии id (0.273ms)
+    ✔ должен возвращать ошибку при пустом id (0.181ms)
+    ✔ должен возвращать ошибку при отсутствии type (0.132ms)
+    ✔ должен возвращать ошибку при пустом type (0.2895ms)
+    ✔ должен возвращать warning при отсутствии position (0.17ms)
+    ✔ должен возвращать ошибку при некорректном position (0.4414ms)
+    ✔ должен возвращать ошибку при отсутствии data (0.316ms)
+  ✔ validateEnhancedNode - обязательные поля (2.264ms)
+  ▶ validateEnhancedNode - валидация кнопок
+    ✔ должен возвращать ошибку для кнопки без id (2.0702ms)
+    ✔ должен возвращать ошибку для кнопки без text (0.2185ms)
+    ✔ должен возвращать ошибку для кнопки без action (0.1027ms)
+    ✔ должен возвращать ошибки для нескольких невалидных кнопок (0.1225ms)
+    ✔ должен возвращать isValid: true для узла без кнопок (0.0933ms)
+    ✔ должен возвращать isValid: true для узла с undefined buttons (0.0911ms)
+  ✔ validateEnhancedNode - валидация кнопок (2.9575ms)
+  ▶ validateEnhancedNode - автопереход
+    ✔ должен возвращать ошибку при автопереходе без цели (0.1473ms)
+    ✔ должен возвращать isValid: true при автопереходе с целью (0.0923ms)
+    ✔ должен возвращать isValid: true при отключенном автопереходе без цели (0.1112ms)
+  ✔ validateEnhancedNode - автопереход (0.5316ms)
+  ▶ validateEnhancedNode - сбор пользовательского ввода
+    ✔ должен возвращать warning при сборе ввода без цели (0.187ms)
+    ✔ должен возвращать isValid: true при сборе ввода с целью (0.1168ms)
+    ✔ должен возвращать isValid: true без сбора ввода (0.1031ms)
+  ✔ validateEnhancedNode - сбор пользовательского ввода (0.5204ms)
+  ▶ validateEnhancedNodes
+    ✔ должен возвращать isValid: true для массива валидных узлов (0.2682ms)
+    ✔ должен возвращать isValid: false для массива с невалидными узлами (0.1158ms)
+    ✔ должен возвращать ошибки с указанием индекса узла (0.1006ms)
+    ✔ должен возвращать ошибки с указанием id узла (0.1092ms)
+    ✔ должен возвращать пустой массив для пустого входного массива (0.0877ms)
+    ✔ должен агрегировать warnings от всех узлов (0.0899ms)
+    ✔ должен агрегировать errors от всех узлов (0.0847ms)
+  ✔ validateEnhancedNodes (1.0352ms)
+  ▶ ValidationResult type
+    ✔ должен иметь поле isValid (0.1252ms)
+    ✔ должен иметь поле errors (0.1144ms)
+    ✔ должен иметь поле warnings (0.0802ms)
+  ✔ ValidationResult type (0.4115ms)
+  ▶ Edge cases
+    ✔ должен обрабатывать узел с очень длинным id (0.1414ms)
+    ✔ должен обрабатывать узел с unicode в text (0.091ms)
+    ✔ должен обрабатывать узел с большим количеством кнопок (0.182ms)
+  ✔ Edge cases (0.5191ms)
+  ▶ validateEnhancedNode - новые поля (appendVariable, variableFilters, complete)
+    ✔ должен возвращать isValid: true для узла с appendVariable = true (0.2806ms)
+    ✔ должен возвращать isValid: true для узла с variableFilters (0.276ms)
+    ✔ должен возвращать isValid: true для узла с complete кнопкой (0.196ms)
+    ✔ должен возвращать isValid: true для узла со всеми новыми полями (0.2163ms)
+    ✔ должен возвращать isValid: true для узла с appendVariable = false (0.1824ms)
+    ✔ должен возвращать isValid: true для узла с пустым variableFilters (0.1391ms)
+    ✔ должен возвращать isValid: true для кнопки с action = complete без target (0.1823ms)
+  ✔ validateEnhancedNode - новые поля (appendVariable, variableFilters, complete) (1.8537ms)
+✔ ValidateEnhancedNode (13.3935ms)
+▶ ValidateGeneratedPython
+  ▶ validateGeneratedPython - валидный код
+    ✔ должен возвращать isValid: true для валидного Python кода (1.138ms)
+    ✔ должен возвращать пустой массив missingComponents для валидного кода (0.6119ms)
+    ✔ должен возвращать undefined errorMessage для валидного кода (0.2483ms)
+    ✔ должен принимать код с import asyncio (0.3994ms)
+    ✔ должен принимать код с Bot и Dispatcher из aiogram (1.0706ms)
+    ✔ должен принимать код с Dispatcher() (0.381ms)
+    ✔ должен принимать код с async def main(): (0.344ms)
+    ✔ должен принимать код с if __name__ == "__main__": (0.1445ms)
+    ✔ должен принимать код с asyncio.run(main()) (0.3702ms)
+  ✔ validateGeneratedPython - валидный код (6.719ms)
+  ▶ validateGeneratedPython - невалидный код
+    ✔ должен возвращать isValid: false для невалидного кода (0.3364ms)
+    ✔ должен возвращать missingComponents для кода без import asyncio (0.121ms)
+    ✔ должен возвращать missingComponents для кода без Bot (0.1077ms)
+    ✔ должен возвращать missingComponents для кода без Dispatcher (0.1431ms)
+    ✔ должен возвращать missingComponents для кода без async def main() (0.1409ms)
+    ✔ должен возвращать missingComponents для кода без if __name__ (0.1644ms)
+    ✔ должен возвращать missingComponents для кода без asyncio.run() (0.1226ms)
+    ✔ должен возвращать errorMessage для невалидного кода (0.1023ms)
+  ✔ validateGeneratedPython - невалидный код (1.5596ms)
+  ▶ assertValidPython
+    ✔ не должен бросать ошибку для валидного кода (0.4813ms)
+    ✔ должен бросать ошибку для невалидного кода (0.7713ms)
+    ✔ должен бросать ошибку с сообщением о missing components (0.3567ms)
+    ✔ должен бросать ошибку с типом Error (0.245ms)
+  ✔ assertValidPython (2.1738ms)
+  ▶ PythonValidationResult type
+    ✔ должен иметь поле isValid (0.4943ms)
+    ✔ должен иметь поле missingComponents (0.5221ms)
+    ✔ должен иметь поле errorMessage (0.2084ms)
+  ✔ PythonValidationResult type (2.1434ms)
+  ▶ Edge cases
+    ✔ должен обрабатывать пустую строку (0.4747ms)
+    ✔ должен обрабатывать строку только с пробелами (0.2152ms)
+    ✔ должен обрабатывать код с комментариями (0.2032ms)
+    ✔ должен обрабатывать код с docstring (0.1475ms)
+    ✔ должен обрабатывать код с разными отступами (0.1072ms)
+    ✔ должен обрабатывать код с unicode (1.0063ms)
+    ✔ должен обрабатывать очень большой код (0.5403ms)
+  ✔ Edge cases (5.4914ms)
+  ▶ REQUIRED_PYTHON_PATTERNS coverage
+    ✔ должен проверять наличие import asyncio (0.3391ms)
+    ✔ должен проверять наличие Bot (0.1502ms)
+    ✔ должен проверять наличие Dispatcher (0.133ms)
+    ✔ должен проверять наличие Dispatcher() (0.1033ms)
+    ✔ должен проверять наличие async def main(): (0.1126ms)
+    ✔ должен проверять наличие if __name__ == "__main__": (0.1862ms)
+    ✔ должен проверять наличие asyncio.run(main()) (0.1558ms)
+  ✔ REQUIRED_PYTHON_PATTERNS coverage (1.4714ms)
+✔ ValidateGeneratedPython (20.8385ms)
+▶ MediaVariables Utils
+  ▶ findMediaVariablesInText
+    ▶ поиск переменных в формате {variable}
+      ✔ должна находить одну переменную в тексте (0.9533ms)
+      ✔ должна находить несколько переменных в тексте (0.8401ms)
+      ✔ должна находить переменные с цифрами в имени (0.4553ms)
+    ✔ поиск переменных в формате {variable} (3.1146ms)
+    ▶ поиск переменных в формате {{variable}}
+      ✔ должна находить переменные в двойных скобках (0.3959ms)
+      ✔ должна находить смешанные форматы переменных (0.7422ms)
+    ✔ поиск переменных в формате {{variable}} (1.6791ms)
+    ▶ обработка граничных случаев
+      ✔ должна возвращать пустой массив для текста без переменных (0.5932ms)
+      ✔ должна возвращать пустой массив для пустой строки (0.7397ms)
+      ✔ должна возвращать пустой массив для null/undefined (0.2988ms)
+      ✔ должна игнорировать переменные с пустым именем (0.2646ms)
+      ✔ должна обрезать пробелы вокруг имени переменной (0.6511ms)
+      ✔ должна находить переменные в начале строки (0.1819ms)
+      ✔ должна находить переменные в конце строки (0.1266ms)
+      ✔ должна находить переменные с подчёркиваниями (0.2096ms)
+      ✔ должна находить переменные с CamelCase (0.3856ms)
+      ✔ должна находить переменные в многострочном тексте (0.1622ms)
+    ✔ обработка граничных случаев (5.2227ms)
+    ▶ поиск медиапеременных
+      ✔ должна находить переменные image_url_* (0.2261ms)
+      ✔ должна находить переменные imageUrlVar_* (0.104ms)
+      ✔ должна находить переменные video_url_* (0.0925ms)
+      ✔ должна находить переменные audio_url_* (0.0879ms)
+      ✔ должна находить переменные document_url_* (0.1035ms)
+      ✔ должна находить смешанные медиапеременные (0.1117ms)
+    ✔ поиск медиапеременных (0.9158ms)
+  ✔ findMediaVariablesInText (11.5202ms)
+  ▶ collectMediaVariables
+    ▶ сбор переменных из photoInputVariable
+      ✔ должна собирать переменные из enablePhotoInput и photoInputVariable (0.4367ms)
+    ✔ сбор переменных из photoInputVariable (0.5049ms)
+    ▶ сбор переменных из videoInputVariable
+      ✔ должна собирать переменные из enableVideoInput и videoInputVariable (0.1318ms)
+    ✔ сбор переменных из videoInputVariable (0.1936ms)
+    ▶ сбор переменных из audioInputVariable
+      ✔ должна собирать переменные из enableAudioInput и audioInputVariable (0.1215ms)
+    ✔ сбор переменных из audioInputVariable (0.1838ms)
+    ▶ сбор переменных из documentInputVariable
+      ✔ должна собирать переменные из enableDocumentInput и documentInputVariable (0.1378ms)
+    ✔ сбор переменных из documentInputVariable (0.1978ms)
+    ▶ сбор переменных из attachedMedia
+      ✔ должна собирать переменные из attachedMedia с image_url_* (0.288ms)
+      ✔ должна собирать переменные из attachedMedia с imageUrlVar_* (0.1023ms)
+      ✔ должна собирать переменные из attachedMedia с video_url_* (0.1045ms)
+      ✔ должна собирать переменные из attachedMedia с audio_url_* (0.101ms)
+      ✔ должна собирать переменные из attachedMedia с document_url_* (0.1773ms)
+      ✔ должна собирать несколько переменных из attachedMedia (0.1195ms)
+    ✔ сбор переменных из attachedMedia (1.0717ms)
+    ▶ сбор переменных из imageUrl, videoUrl, audioUrl, documentUrl
+      ✔ должна собирать переменную из imageUrl (0.1561ms)
+      ✔ должна собирать переменную из videoUrl (0.1103ms)
+      ✔ должна собирать переменную из audioUrl (0.1119ms)
+      ✔ должна собирать переменную из documentUrl (0.1715ms)
+    ✔ сбор переменных из imageUrl, videoUrl, audioUrl, documentUrl (0.675ms)
+    ▶ обработка граничных случаев
+      ✔ должна возвращать пустую Map для пустого массива узлов (0.1743ms)
+      ✔ должна возвращать пустую Map для null/undefined (0.1379ms)
+      ✔ должна игнорировать null/undefined узлы в массиве (0.1142ms)
+      ✔ должна игнорировать узлы без data (0.1194ms)
+      ✔ должна собирать переменные из нескольких узлов (0.1405ms)
+      ✔ должна определять тип медиа по URL для http/https (0.1689ms)
+      ✔ должна определять тип медиа по URL для локальных файлов (0.1237ms)
+    ✔ обработка граничных случаев (1.201ms)
+  ✔ collectMediaVariables (4.5022ms)
+✔ MediaVariables Utils (16.4733ms)
+▶ ToEnhancedNode
+  ▶ toEnhancedNode
+    ✔ должен конвертировать Node в EnhancedNode (1.0612ms)
+    ✔ должен нормализовать кнопки с корректными значениями (0.19ms)
+    ✔ должен добавлять значения по умолчанию для кнопок (0.2036ms)
+    ✔ должен обрабатывать кнопки без id (0.2066ms)
+    ✔ должен обрабатывать кнопки без text (0.1319ms)
+    ✔ должен обрабатывать кнопки без action (0.1406ms)
+    ✔ должен обрабатывать пустой массив кнопок (0.2555ms)
+    ✔ должен обрабатывать отсутствие кнопок (0.2282ms)
+    ✔ должен добавлять attachedMedia по умолчанию (0.3786ms)
+    ✔ должен сохранять существующие attachedMedia (0.7892ms)
+    ✔ должен сохранять все поля data узла (0.4441ms)
+    ✔ должен сохранять position узла (0.2713ms)
+  ✔ toEnhancedNode (5.557ms)
+  ▶ toEnhancedNodes
+    ✔ должен конвертировать массив Node в EnhancedNode[] (0.3631ms)
+    ✔ должен возвращать пустой массив для пустого входного массива (0.118ms)
+    ✔ должен возвращать пустой массив для null (0.0986ms)
+    ✔ должен возвращать пустой массив для undefined (0.1189ms)
+    ✔ должен конвертировать каждый узел в массиве (0.1628ms)
+    ✔ должен нормализовать кнопки в каждом узле (0.1922ms)
+  ✔ toEnhancedNodes (1.3275ms)
+  ▶ Edge cases
+    ✔ должен обрабатывать узел с special characters в id (0.1672ms)
+    ✔ должен обрабатывать узел с unicode в text (1.2118ms)
+    ✔ должен обрабатывать узел с null в data (0.1738ms)
+    ✔ должен обрабатывать узел с undefined buttons (0.0956ms)
+  ✔ Edge cases (1.8006ms)
+✔ ToEnhancedNode (9.458ms)
+▶ generateNavigateToNode
+  ▶ генерация функции navigate_to_node
+    ✔ должен генерировать функцию navigate_to_node (1.1896ms)
+    ✔ должен генерировать функцию с параметрами message, node_id, text, all_user_vars, reply_markup (0.2696ms)
+    ✔ должен генерировать docstring с описанием параметров (0.1715ms)
+    ✔ должен генерировать инициализацию user_id (0.1628ms)
+    ✔ должен генерировать проверку all_user_vars is None (0.15ms)
+    ✔ должен генерировать проверку text is None (0.256ms)
+    ✔ должен генерировать замену переменных в тексте (0.4939ms)
+    ✔ должен генерировать логирование навигации (0.3462ms)
+    ✔ должен генерировать отправку сообщения с reply_markup и без (0.5059ms)
+    ✔ должен генерировать заголовок с комментарием (0.5192ms)
+  ✔ генерация функции navigate_to_node (5.3742ms)
+✔ generateNavigateToNode (5.9215ms)
+▶ generateNavigateToNodeCall
+  ▶ генерация вызова функции навигации
+    ✔ должен генерировать вызов функции с параметрами по умолчанию (0.2442ms)
+    ✔ должен поддерживать кастомное имя переменной сообщения (0.1264ms)
+    ✔ должен поддерживать кастомный отступ (0.0857ms)
+    ✔ должен поддерживать сложные ID узлов (0.0821ms)
+    ✔ должен поддерживать unicode в ID узла (0.1063ms)
+  ✔ генерация вызова функции навигации (0.8372ms)
+✔ generateNavigateToNodeCall (1.8706ms)
+▶ generateNavigateToNodeWithText
+  ▶ генерация вызова с кастомным текстом
+    ✔ должен генерировать вызов с параметром text (0.2336ms)
+    ✔ должен поддерживать кастомное имя переменной сообщения (0.0987ms)
+    ✔ должен поддерживать кастомный отступ (0.0847ms)
+  ✔ генерация вызова с кастомным текстом (0.5418ms)
+✔ generateNavigateToNodeWithText (0.7505ms)
+▶ generateNavigateToNodeWithVars
+  ▶ генерация вызова с кастомными переменными
+    ✔ должен генерировать вызов с параметром all_user_vars (0.141ms)
+    ✔ должен поддерживать кастомное имя переменной сообщения (0.0786ms)
+    ✔ должен поддерживать кастомный отступ (0.0822ms)
+  ✔ генерация вызова с кастомными переменными (0.4009ms)
+✔ generateNavigateToNodeWithVars (0.4864ms)
+▶ generateNavigateToNodeSafe
+  ▶ генерация безопасного вызова
+    ✔ должен генерировать проверку существования обработчика (0.2614ms)
+    ✔ должен генерировать вызов обработчика (0.0903ms)
+    ✔ должен генерировать warning при отсутствии обработчика (0.0856ms)
+    ✔ должен заменять дефисы на подчёркивания в имени функции (0.0936ms)
+    ✔ должен заменять пробелы на подчёркивания в имени функции (0.1338ms)
+    ✔ должен поддерживать кастомный отступ (0.1024ms)
+    ✔ должен поддерживать кастомный внутренний отступ (0.1184ms)
+    ✔ должен генерировать корректный код для сложных ID узлов (0.1269ms)
+  ✔ генерация безопасного вызова (1.2579ms)
+✔ generateNavigateToNodeSafe (1.6124ms)
+▶ generateNavigateToNode - Integration
+  ▶ интеграционные тесты
+    ✔ должен генерировать валидный Python код (0.4851ms)
+    ✔ должен генерировать код с правильными отступами (0.2964ms)
+    ✔ должен генерировать код который проходит валидацию Python (0.1467ms)
+  ✔ интеграционные тесты (1.0756ms)
+✔ generateNavigateToNode - Integration (1.2483ms)
+▶ generateNavigateToNode - Edge Cases
+  ▶ граничные случаи
+    ✔ должен генерировать код для пустого ID узла (0.2855ms)
+    ✔ должен генерировать код для ID узла с специальными символами (0.0967ms)
+    ✔ должен генерировать код для очень длинного ID узла (0.1015ms)
+    ✔ должен генерировать safe вызов для узла с цифрами (0.1117ms)
+  ✔ граничные случаи (0.7291ms)
+✔ generateNavigateToNode - Edge Cases (0.8144ms)
+▶ FormatUtils
+  ▶ formatTextForPython
+    ▶ пустые строки
+      ✔ должен возвращать "" для пустой строки (0.792ms)
+      ✔ должен возвращать "" для null (0.22ms)
+      ✔ должен возвращать "" для undefined (0.1849ms)
+    ✔ пустые строки (2.0538ms)
+    ▶ однострочный текст
+      ✔ должен форматировать простой однострочный текст (0.2768ms)
+      ✔ должен экранировать двойные кавычки в однострочном тексте (0.2888ms)
+      ✔ должен экранировать несколько двойных кавычек (0.1842ms)
+      ✔ должен сохранять одинарные кавычки без экранирования (0.1355ms)
+    ✔ однострочный текст (1.474ms)
+    ▶ многострочный текст
+      ✔ должен использовать тройные кавычки для многострочного текста (0.1878ms)
+      ✔ должен использовать тройные кавычки для текста с одним переносом (0.1828ms)
+      ✔ должен сохранять двойные кавычки в многострочном тексте без экранирования (0.2643ms)
+      ✔ должен обрабатывать текст с несколькими переносами подряд (0.1133ms)
+    ✔ многострочный текст (1.1061ms)
+    ▶ специальные символы
+      ✔ должен сохранять \n в однострочном тексте (0.1357ms)
+      ✔ должен обрабатывать текст с табуляцией (0.0878ms)
+      ✔ должен обрабатывать текст с обратным слешем (0.0852ms)
+    ✔ специальные символы (0.4877ms)
+    ▶ unicode и emoji
+      ✔ должен обрабатывать русский текст (0.1313ms)
+      ✔ должен обрабатывать emoji (0.0866ms)
+      ✔ должен обрабатывать многострочный текст с emoji (0.0884ms)
+    ✔ unicode и emoji (0.4114ms)
+    ▶ edge cases
+      ✔ должен обрабатывать очень длинную строку (0.2326ms)
+      ✔ должен обрабатывать строку только с кавычками (0.0894ms)
+      ✔ должен обрабатывать строку с пробелами (0.0881ms)
+    ✔ edge cases (0.5143ms)
+  ✔ formatTextForPython (6.7306ms)
+  ▶ createSafeFunctionName
+    ▶ валидные имена
+      ✔ должен возвращать неизменным валидное имя (0.212ms)
+      ✔ должен возвращать неизменным имя с цифрами (0.1377ms)
+      ✔ должен возвращать неизменным имя только с буквами (0.0943ms)
+    ✔ валидные имена (0.5616ms)
+    ▶ недопустимые символы
+      ✔ должен заменять дефис на подчеркивание (0.2286ms)
+      ✔ должен заменять несколько дефисов (0.1247ms)
+      ✔ должен заменять точку на подчеркивание (0.0851ms)
+      ✔ должен заменять специальные символы (0.0857ms)
+      ✔ должен заменять @ на подчеркивание (0.0823ms)
+      ✔ должен заменять # на подчеркивание (0.0964ms)
+      ✔ должен заменять пробелы на подчеркивание (0.0929ms)
+    ✔ недопустимые символы (0.9843ms)
+    ▶ имена начинающиеся с цифры
+      ✔ должен добавлять префикс node_ для имени начинающегося с цифры (0.1956ms)
+      ✔ должен добавлять префикс node_ для имени начинающегося с одной цифры (0.1246ms)
+      ✔ должен добавлять префикс после замены специальных символов (0.1143ms)
+    ✔ имена начинающиеся с цифры (0.7543ms)
+    ▶ edge cases
+      ✔ должен обрабатывать пустую строку (0.2649ms)
+      ✔ должен обрабатывать строку только со специальными символами (2.4289ms)
+      ✔ должен обрабатывать очень длинное имя (0.2439ms)
+      ✔ должен обрабатывать имя с подчеркиваниями (0.0872ms)
+      ✔ должен обрабатывать unicode символы (0.1397ms)
+    ✔ edge cases (3.4ms)
+  ✔ createSafeFunctionName (6.0821ms)
+  ▶ escapeForPython
+    ▶ базовое экранирование
+      ✔ должен возвращать пустую строку для пустого ввода (0.1566ms)
+      ✔ должен экранировать двойные кавычки (0.0885ms)
+      ✔ должен экранировать несколько двойных кавычек (0.0906ms)
+    ✔ базовое экранирование (0.4413ms)
+    ▶ экранирование специальных символов
+      ✔ должен экранировать перевод строки (0.1298ms)
+      ✔ должен экранировать возврат каретки (0.0847ms)
+      ✔ должен экранировать табуляцию (0.0877ms)
+      ✔ должен экранировать все специальные символы вместе (0.0852ms)
+    ✔ экранирование специальных символов (0.5012ms)
+    ▶ текст без специальных символов
+      ✔ должен возвращать неизменным текст без специальных символов (0.1189ms)
+      ✔ должен сохранять одинарные кавычки (0.0856ms)
+      ✔ должен сохранять обратные слеши (0.1127ms)
+    ✔ текст без специальных символов (0.4149ms)
+    ▶ unicode и emoji
+      ✔ должен сохранять русский текст (0.1299ms)
+      ✔ должен сохранять emoji (0.0885ms)
+      ✔ должен экранировать кавычки в тексте с emoji (0.0893ms)
+    ✔ unicode и emoji (0.4017ms)
+    ▶ edge cases
+      ✔ должен обрабатывать очень длинную строку (0.1363ms)
+      ✔ должен обрабатывать строку только с кавычками (0.0883ms)
+      ✔ должен обрабатывать множественные специальные символы (0.0873ms)
+    ✔ edge cases (0.4104ms)
+  ✔ escapeForPython (2.3724ms)
+✔ FormatUtils (15.6295ms)
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\1\Desktop\telegram-bot-builder\lib\bot-generator\Broadcast\generate-database-variables-universal' imported from C:\Users\1\Desktop\telegram-bot-builder\lib\bot-generator\database\generateUniversalVariableReplacement.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:275:11)
+    at moduleResolve (node:internal/modules/esm/resolve:860:10)
+    at defaultResolve (node:internal/modules/esm/resolve:984:11)
+    at nextResolve (node:internal/modules/esm/hooks:748:28)
+    at resolveBase (file:///C:/Users/1/Desktop/telegram-bot-builder/node_modules/tsx/dist/esm/index.mjs?1773735783577:2:3744)
+    at async resolveDirectory (file:///C:/Users/1/Desktop/telegram-bot-builder/node_modules/tsx/dist/esm/index.mjs?1773735783577:2:4237)
+    at async resolve (file:///C:/Users/1/Desktop/telegram-bot-builder/node_modules/tsx/dist/esm/index.mjs?1773735783577:2:5355)
+    at async nextResolve (node:internal/modules/esm/hooks:748:22)
+    at async Hooks.resolve (node:internal/modules/esm/hooks:240:24)
+    at async handleMessage (node:internal/modules/esm/worker:199:18) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///C:/Users/1/Desktop/telegram-bot-builder/lib/bot-generator/Broadcast/generate-database-variables-universal'
+}
+
+Node.js v22.17.1
+✖ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\unit\features\new-features.test.ts (449.1166ms)
+▶ generateDatabaseVariablesBlock
+  ▶ генерация блока по умолчанию
+    ✔ должен генерировать заголовок блока (1.655ms)
+    ✔ должен генерировать комментарии для таблиц по умолчанию (0.4729ms)
+    ✔ должен генерировать финальный комментарий (0.1422ms)
+    ✔ должен добавлять завершающую новую строку (0.1816ms)
+  ✔ генерация блока по умолчанию (3.4064ms)
+  ▶ генерация блока с кастомными опциями
+    ✔ должен использовать кастомные таблицы которые не требуются (0.1954ms)
+    ✔ должен использовать кастомные таблицы которые будут загружены (0.2976ms)
+    ✔ должен использовать кастомный отступ (0.2495ms)
+    ✔ должен работать с пустыми массивами (0.3566ms)
+  ✔ генерация блока с кастомными опциями (1.6622ms)
+  ▶ generateDatabaseVariablesBlockCall
+    ✔ должен генерировать код с заголовком (0.251ms)
+    ✔ должен генерировать код с отступами (0.4056ms)
+    ✔ должен генерировать тот же код что и generateDatabaseVariablesBlock (0.1973ms)
+  ✔ generateDatabaseVariablesBlockCall (1.0202ms)
+  ▶ интеграционные тесты
+    ✔ должен генерировать код который можно вставить в Python функцию (0.1635ms)
+    ✔ должен генерировать код который можно использовать в if блоке (0.1118ms)
+    ✔ должен генерировать код который можно использовать в try блоке (0.1704ms)
+  ✔ интеграционные тесты (0.6207ms)
+  ▶ проверка на распространённые ошибки Pylance
+    ✔ не должен содержать ошибку: Операторы без перевода строки перед else (0.4329ms)
+    ✔ не должен содержать ошибку: Операторы без перевода строки перед elif (0.2944ms)
+    ✔ не должен содержать ошибку: Операторы без перевода строки перед if (0.1124ms)
+    ✔ не должен содержать незавершённые конструкции (0.2394ms)
+    ✔ не должен содержать несколько операторов на одной строке (0.2369ms)
+  ✔ проверка на распространённые ошибки Pylance (2.9648ms)
+✔ generateDatabaseVariablesBlock (10.3663ms)
+▶ ReplaceVariablesInText (Python Code Generator) - DEPRECATED
+  ✔ тесты устарели после миграции на Jinja2 - требуется переписывание (0.7754ms)
+✔ ReplaceVariablesInText (Python Code Generator) - DEPRECATED (1.978ms)
+▶ GenerationContext
+  ▶ createGenerationContext
+    ✔ должен создавать контекст с базовыми параметрами (1.3352ms)
+    ✔ должен конвертировать узлы из botData в EnhancedNode[] (0.1719ms)
+    ✔ должен извлекать все Node IDs из узлов (0.1354ms)
+    ✔ должен создавать mediaVariablesMap (0.1275ms)
+    ✔ должен устанавливать projectId из options (0.2849ms)
+    ✔ должен устанавливать projectId в null по умолчанию (0.1984ms)
+    ✔ должен сохранять groups (0.5367ms)
+    ✔ должен создавать пустой массив groups по умолчанию (0.2984ms)
+    ✔ должен создавать state с опциями по умолчанию (0.4259ms)
+    ✔ должен создавать state с включенным логированием (0.6883ms)
+    ✔ должен создавать state с отключенными комментариями (0.1792ms)
+    ✔ должен сохранять options в контексте (0.1626ms)
+  ✔ createGenerationContext (5.798ms)
+  ▶ createGenerationContextFromNodes
+    ✔ должен создавать контекст из массива EnhancedNode[] (1.2676ms)
+    ✔ должен извлекать все Node IDs из массива узлов (0.1156ms)
+    ✔ должен создавать mediaVariablesMap (0.093ms)
+    ✔ должен использовать пустой массив groups по умолчанию (0.1138ms)
+    ✔ должен использовать пустые options по умолчанию (0.1019ms)
+    ✔ должен устанавливать projectId из options (0.1019ms)
+    ✔ должен устанавливать projectId в null по умолчанию (0.088ms)
+  ✔ createGenerationContextFromNodes (2.0956ms)
+  ▶ GenerationContext with complex bot data
+    ✔ должен создавать контекст для сложного бота (0.1945ms)
+    ✔ должен извлекать все Node IDs для сложного бота (0.1121ms)
+  ✔ GenerationContext with complex bot data (0.3876ms)
+  ▶ GenerationContext with all options enabled
+    ✔ должен создавать контекст со всеми включенными опциями (0.1273ms)
+  ✔ GenerationContext with all options enabled (0.2704ms)
+  ▶ GenerationContext type
+    ✔ должен иметь все требуемые поля (0.1219ms)
+  ✔ GenerationContext type (0.1844ms)
+  ▶ Edge cases
+    ✔ должен обрабатывать botData с пустым массивом nodes (0.1484ms)
+    ✔ должен обрабатывать botData с undefined nodes (0.0948ms)
+    ✔ должен обрабатывать очень длинное имя бота (0.0941ms)
+    ✔ должен обрабатывать unicode в имени бота (0.2279ms)
+    ✔ должен обрабатывать большое количество узлов (0.473ms)
+  ✔ Edge cases (1.2527ms)
+✔ GenerationContext (10.8037ms)
+▶ GenerationState
+  ▶ createGenerationState
+    ✔ должен создавать состояние с значениями по умолчанию при пустых опциях (0.905ms)
+    ✔ должен создавать состояние с включенным логированием при enableLogging: true (0.2686ms)
+    ✔ должен создавать состояние с отключенным логированием при enableLogging: false (0.2353ms)
+    ✔ должен создавать состояние с отключенными комментариями при enableComments: false (0.1931ms)
+    ✔ должен создавать состояние с включенными комментариями при enableComments: true (0.1235ms)
+    ✔ должен создавать состояние с projectId из опций (0.2041ms)
+    ✔ должен создавать immutable состояние (generatedComponents) (0.2157ms)
+  ✔ createGenerationState (3.313ms)
+  ▶ withLogging
+    ✔ должен включать логирование при enabled: true (0.547ms)
+    ✔ должен отключать логирование при enabled: false (0.4156ms)
+    ✔ должен сохранять другие поля состояния неизменными (0.2676ms)
+    ✔ должен сохранять generatedComponents неизменными (0.1704ms)
+    ✔ должен создавать новое состояние а не мутировать существующее (0.2023ms)
+  ✔ withLogging (1.9482ms)
+  ▶ withComments
+    ✔ должен отключать комментарии при enabled: false (0.2125ms)
+    ✔ должен включать комментарии при enabled: true (0.2922ms)
+    ✔ должен сохранять другие поля состояния неизменными (0.1384ms)
+    ✔ должен создавать новое состояние а не мутировать существующее (0.2103ms)
+  ✔ withComments (0.9889ms)
+  ▶ markComponentGenerated
+    ✔ должен отмечать компонент как сгенерированный (0.2325ms)
+    ✔ должен отмечать несколько компонентов (0.1763ms)
+    ✔ должен сохранять ранее отмеченные компоненты (0.1358ms)
+    ✔ должен игнорировать повторную отметку того же компонента (0.1398ms)
+    ✔ должен создавать новое состояние а не мутировать существующее (0.1286ms)
+    ✔ должен работать с пустым именем компонента (0.1828ms)
+  ✔ markComponentGenerated (1.1624ms)
+  ▶ isComponentGenerated
+    ✔ должен возвращать true для отмеченного компонента (0.2667ms)
+    ✔ должен возвращать false для не отмеченного компонента (0.1163ms)
+    ✔ должен возвращать false для пустого состояния (2.1768ms)
+    ✔ должен возвращать false для пустого имени компонента (0.2785ms)
+  ✔ isComponentGenerated (3.0165ms)
+  ▶ GenerationState immutability
+    ✔ должен сохранять неизменность при цепочке операций (0.3066ms)
+  ✔ GenerationState immutability (0.3908ms)
+✔ GenerationState (11.699ms)
+▶ GeneratorLogger
+  ▶ createLogger
+    ✔ должен создавать логгер с настройками по умолчанию (1.4519ms)
+    ✔ должен создавать логгер с enabled: true по умолчанию (0.1985ms)
+    ✔ должен создавать логгер с level: "info" по умолчанию (0.1152ms)
+    ✔ должен создавать логгер с отключенным логированием при enabled: false (0.2165ms)
+    ✔ должен создавать логгер с указанным уровнем логирования (0.1802ms)
+  ✔ createLogger (3.3219ms)
+  ▶ Logger levels
+    ✔ должен логировать debug сообщения при уровне debug (0.3061ms)
+    ✔ должен логировать info сообщения при уровне info (0.1621ms)
+    ✔ должен логировать warn сообщения при уровне warn (0.2958ms)
+    ✔ должен логировать error сообщения при уровне error (0.226ms)
+    ✔ не должен логировать debug сообщения при уровне info (0.3065ms)
+    ✔ не должен логировать info сообщения при уровне warn (0.1357ms)
+    ✔ не должен логировать warn сообщения при уровне error (0.1093ms)
+  ✔ Logger levels (1.9655ms)
+  ▶ Logger with disabled state
+    ✔ не должен логировать никакие сообщения при enabled: false (0.158ms)
+  ✔ Logger with disabled state (0.2287ms)
+  ▶ Logger methods
+    ✔ должен принимать данные в debug методе (1.7123ms)
+    ✔ должен принимать ошибку в error методе (0.8405ms)
+    ✔ должен работать без данных в debug методе (0.1974ms)
+    ✔ должен работать без ошибки в error методе (0.1617ms)
+  ✔ Logger methods (3.4362ms)
+  ▶ generatorLogger (default logger)
+    ✔ должен быть определён (0.2418ms)
+    ✔ должен иметь все методы логгера (0.1181ms)
+    ✔ должен быть типа GeneratorLogger (0.0927ms)
+  ✔ generatorLogger (default logger) (0.6101ms)
+  ▶ LogLevel type
+    ✔ должен поддерживать уровень debug (0.1401ms)
+    ✔ должен поддерживать уровень info (0.0925ms)
+    ✔ должен поддерживать уровень warn (0.0711ms)
+    ✔ должен поддерживать уровень error (0.0741ms)
+    ✔ должен поддерживать уровень flow (0.0686ms)
+  ✔ LogLevel type (0.5911ms)
+  ▶ Logger level hierarchy
+    ✔ должен логировать все уровни при debug уровне (0.204ms)
+    ✔ должен логировать только error при error уровне (0.142ms)
+  ✔ Logger level hierarchy (0.423ms)
+✔ GeneratorLogger (11.6395ms)
+▶ Constants
+  ▶ Node Types
+    ▶ START
+      ✔ должен быть равен "start" (0.82ms)
+      ✔ должен быть readonly (0.1604ms)
+    ✔ START (1.8565ms)
+    ▶ MESSAGE
+      ✔ должен быть равен "message" (0.111ms)
+    ✔ MESSAGE (0.2382ms)
+    ▶ COMMAND
+      ✔ должен быть равен "command" (0.2209ms)
+    ✔ COMMAND (0.3942ms)
+    ▶ STICKER
+      ✔ должен быть равен "sticker" (0.1147ms)
+    ✔ STICKER (0.3864ms)
+    ▶ VOICE
+      ✔ должен быть равен "voice" (0.1221ms)
+    ✔ VOICE (0.2194ms)
+    ▶ ANIMATION
+      ✔ должен быть равен "animation" (0.1014ms)
+    ✔ ANIMATION (0.2201ms)
+    ▶ LOCATION
+      ✔ должен быть равен "location" (0.1117ms)
+    ✔ LOCATION (0.1786ms)
+    ▶ CONTACT
+      ✔ должен быть равен "contact" (0.1696ms)
+    ✔ CONTACT (0.3914ms)
+    ▶ PIN_MESSAGE
+      ✔ должен быть равен "pin_message" (0.1605ms)
+    ✔ PIN_MESSAGE (0.2272ms)
+    ▶ UNPIN_MESSAGE
+      ✔ должен быть равен "unpin_message" (0.116ms)
+    ✔ UNPIN_MESSAGE (0.1901ms)
+    ▶ DELETE_MESSAGE
+      ✔ должен быть равен "delete_message" (0.0989ms)
+    ✔ DELETE_MESSAGE (0.1552ms)
+    ▶ BAN_USER
+      ✔ должен быть равен "ban_user" (0.4981ms)
+    ✔ BAN_USER (2.5612ms)
+    ▶ UNBAN_USER
+      ✔ должен быть равен "unban_user" (0.1211ms)
+    ✔ UNBAN_USER (0.1993ms)
+    ▶ MUTE_USER
+      ✔ должен быть равен "mute_user" (0.1277ms)
+    ✔ MUTE_USER (0.2029ms)
+    ▶ UNMUTE_USER
+      ✔ должен быть равен "unmute_user" (0.0953ms)
+    ✔ UNMUTE_USER (0.174ms)
+    ▶ KICK_USER
+      ✔ должен быть равен "kick_user" (0.0945ms)
+    ✔ KICK_USER (0.1551ms)
+    ▶ PROMOTE_USER
+      ✔ должен быть равен "promote_user" (0.0845ms)
+    ✔ PROMOTE_USER (0.1347ms)
+    ▶ DEMOTE_USER
+      ✔ должен быть равен "demote_user" (0.0841ms)
+    ✔ DEMOTE_USER (0.1377ms)
+    ▶ ADMIN_RIGHTS
+      ✔ должен быть равен "admin_rights" (0.1497ms)
+    ✔ ADMIN_RIGHTS (0.202ms)
+    ▶ BROADCAST
+      ✔ должен быть равен "broadcast" (0.1306ms)
+    ✔ BROADCAST (0.1912ms)
+  ✔ Node Types (9.7033ms)
+  ▶ NODE_TYPES object
+    ✔ должен содержать все типы узлов (0.2941ms)
+    ✔ должен иметь правильные значения для всех ключей (0.1924ms)
+    ✔ должен возвращать массив значений через Object.values (0.1047ms)
+    ✔ должен позволять использовать NodeType тип (0.0749ms)
+  ✔ NODE_TYPES object (0.8028ms)
+  ▶ Button Actions
+    ▶ GOTO
+      ✔ должен быть равен "goto" (0.0884ms)
+    ✔ GOTO (0.1415ms)
+    ▶ CALLBACK
+      ✔ должен быть равен "callback" (0.0993ms)
+    ✔ CALLBACK (0.1499ms)
+    ▶ URL
+      ✔ должен быть равен "url" (0.1012ms)
+    ✔ URL (0.1509ms)
+    ▶ COMMAND
+      ✔ должен быть равен "command" (0.086ms)
+    ✔ COMMAND (0.1361ms)
+    ▶ CONTACT
+      ✔ должен быть равен "contact" (0.0849ms)
+    ✔ CONTACT (0.1372ms)
+    ▶ LOCATION
+      ✔ должен быть равен "location" (0.1141ms)
+    ✔ LOCATION (0.1632ms)
+    ▶ SELECTION
+      ✔ должен быть равен "selection" (0.0828ms)
+    ✔ SELECTION (0.131ms)
+    ▶ COMPLETE
+      ✔ должен быть равен "complete" (0.0892ms)
+    ✔ COMPLETE (0.1405ms)
+    ▶ DEFAULT
+      ✔ должен быть равен "default" (0.0987ms)
+    ✔ DEFAULT (0.1514ms)
+  ✔ Button Actions (1.6098ms)
+  ▶ BUTTON_ACTIONS object
+    ✔ должен содержать все действия кнопок (0.1638ms)
+    ✔ должен иметь правильные значения для всех ключей (0.1052ms)
+    ✔ должен возвращать массив значений через Object.values (0.1021ms)
+    ✔ должен позволять использовать ButtonActionType тип (0.0781ms)
+  ✔ BUTTON_ACTIONS object (0.578ms)
+  ▶ Constants immutability
+    ✔ должен быть неизменяемым для NODE_TYPES (0.1192ms)
+    ✔ должен быть неизменяемым для BUTTON_ACTIONS (0.0815ms)
+  ✔ Constants immutability (0.2762ms)
+  ▶ Constants usage
+    ✔ должен позволять сравнение с строковыми литералами (0.2415ms)
+    ✔ должен позволять использование в switch statement (0.0877ms)
+    ✔ должен позволять использование в объекте как ключ (0.1768ms)
+    ✔ должен позволять фильтрацию узлов по типу (0.1212ms)
+  ✔ Constants usage (0.7592ms)
+  ▶ Type compatibility
+    ✔ должен позволять присваивание NodeType переменной (0.1674ms)
+    ✔ должен позволять присваивание ButtonActionType переменной (0.0898ms)
+    ✔ должен позволять массив NodeType (0.1085ms)
+    ✔ должен позволять массив ButtonActionType (0.1116ms)
+  ✔ Type compatibility (0.6681ms)
+✔ Constants (15.2641ms)
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\1\Desktop\telegram-bot-builder\lib\bot-generator\Broadcast\generate-database-variables-universal' imported from C:\Users\1\Desktop\telegram-bot-builder\lib\bot-generator\database\generateUniversalVariableReplacement.ts
+    at finalizeResolution (node:internal/modules/esm/resolve:275:11)
+    at moduleResolve (node:internal/modules/esm/resolve:860:10)
+    at defaultResolve (node:internal/modules/esm/resolve:984:11)
+    at nextResolve (node:internal/modules/esm/hooks:748:28)
+    at resolveBase (file:///C:/Users/1/Desktop/telegram-bot-builder/node_modules/tsx/dist/esm/index.mjs?1773735786040:2:3744)
+    at async resolveDirectory (file:///C:/Users/1/Desktop/telegram-bot-builder/node_modules/tsx/dist/esm/index.mjs?1773735786040:2:4237)
+    at async resolve (file:///C:/Users/1/Desktop/telegram-bot-builder/node_modules/tsx/dist/esm/index.mjs?1773735786040:2:5355)
+    at async nextResolve (node:internal/modules/esm/hooks:748:22)
+    at async Hooks.resolve (node:internal/modules/esm/hooks:240:24)
+    at async handleMessage (node:internal/modules/esm/worker:199:18) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///C:/Users/1/Desktop/telegram-bot-builder/lib/bot-generator/Broadcast/generate-database-variables-universal'
+}
+
+Node.js v22.17.1
+✖ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\integration\full-generation.test.ts (459.1127ms)
+▶ PythonSyntaxValidation - интеграционные тесты
+  ▶ generateKeyboard
+    ✔ должен генерировать валидный Python код для inline клавиатуры (443.1486ms)
+    ✔ должен генерировать валидный Python код для reply клавиатуры (268.6685ms)
+  ✔ generateKeyboard (713.1829ms)
+  ▶ generateStart
+    ✔ должен генерировать валидный Python код для start обработчика (196.918ms)
+  ✔ generateStart (197.2934ms)
+  ▶ generateCommand
+    ✔ должен генерировать валидный Python код для command обработчика (185.5256ms)
+  ✔ generateCommand (186.197ms)
+  ▶ generateMessage
+    ✔ должен генерировать валидный Python код для message обработчика (173.8533ms)
+  ✔ generateMessage (174.5837ms)
+  ▶ generateDatabase
+    ✔ должен генерировать валидный Python код для database функций (189.3746ms)
+  ✔ generateDatabase (189.6941ms)
+  ▶ generateUtils
+    ✔ должен генерировать валидный Python код для utils функций (162.4537ms)
+  ✔ generateUtils (162.7341ms)
+  ▶ generateImports
+    ✔ должен генерировать валидный Python код для imports (165.1987ms)
+  ✔ generateImports (165.591ms)
+  ▶ generateConfig
+    ✔ должен генерировать валидный Python код для config (145.3484ms)
+  ✔ generateConfig (145.5463ms)
+  ▶ generateHeader
+    ✔ должен генерировать валидный Python код для header (150.1152ms)
+  ✔ generateHeader (150.3006ms)
+  ▶ generateMain
+    ✔ должен генерировать валидный Python код для main (167.8313ms)
+  ✔ generateMain (168.0976ms)
+  ▶ generateMiddleware
+    ✔ должен генерировать валидный Python код для middleware (194.4693ms)
+  ✔ generateMiddleware (194.7865ms)
+  ▶ generateUniversalHandlers
+    ✔ должен генерировать валидный Python код для universal handlers (157.8431ms)
+  ✔ generateUniversalHandlers (158.1542ms)
+  ▶ generateBroadcast
+    ✔ должен генерировать валидный Python код для broadcast (180.8003ms)
+  ✔ generateBroadcast (180.9837ms)
+  ▶ generateSticker
+    ✔ должен генерировать валидный Python код для sticker (153.5584ms)
+  ✔ generateSticker (153.7481ms)
+  ▶ generateVoice
+    ✔ должен генерировать валидный Python код для voice (152.4619ms)
+  ✔ generateVoice (152.6415ms)
+  ▶ generateSafeEditOrSend
+    ✔ должен генерировать валидный Python код для safe_edit_or_send (152.0503ms)
+  ✔ generateSafeEditOrSend (152.273ms)
+  ▶ generateCommandCallbackHandler - спецсимволы в nodeId
+    ✔ должен генерировать валидный Python код при дефисе в callbackData (195.0968ms)
+    ✔ должен генерировать валидный Python код при точках и спецсимволах в callbackData (148.3677ms)
+    ✔ должен генерировать валидный Python код при цифре в начале callbackData (138.1763ms)
+  ✔ generateCommandCallbackHandler - спецсимволы в nodeId (482.1703ms)
+  ▶ pyflakes - полный собранный файл бота
+    ✔ полный минимальный файл бота не должен содержать undefined names (302.3599ms)
+  ✔ pyflakes - полный собранный файл бота (587.3755ms)
+✔ PythonSyntaxValidation - интеграционные тесты (4376.8155ms)
+▶ voice.py.jinja2 шаблон
+  ▶ generateVoice()
+    ▶ Валидные данные
+      ✔ должен генерировать обработчик голосового сообщения с подписью и длительностью (11.2002ms)
+      ✔ должен генерировать обработчик только с URL (0.6408ms)
+      ✔ должен генерировать обработчик с длительностью (0.8224ms)
+      ✔ должен генерировать обработчик с disable_notification (0.266ms)
+      ✔ должен включать замену переменных в подписи (0.3134ms)
+      ✔ должен включать обработку ошибок (0.3056ms)
+      ✔ должен проверять наличие voice_url (0.1776ms)
+      ✔ должен скачивать голосовое сообщение через aiohttp (0.1676ms)
+    ✔ Валидные данные (15.0817ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (0.98ms)
+      ✔ должен отклонять параметры с отсутствующим полем (0.4158ms)
+      ✔ должен отклонять string вместо boolean (0.1806ms)
+      ✔ должен отклонять string вместо number для mediaDuration (0.2174ms)
+    ✔ Невалидные данные (2.0147ms)
+    ▶ Граничные случаи
+      ✔ должен принимать undefined для voiceUrl (0.291ms)
+      ✔ должен принимать undefined для mediaCaption (0.1446ms)
+      ✔ должен принимать undefined для disableNotification (0.1444ms)
+      ✔ должен использовать undefined для mediaDuration по умолчанию (0.1324ms)
+      ✔ должен генерировать разные команды для разных nodeId (0.8413ms)
+      ✔ должен включать duration только при наличии mediaDuration (0.4455ms)
+    ✔ Граничные случаи (2.3019ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.4305ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (20.0408ms)
+    ✔ Производительность (20.7805ms)
+  ✔ generateVoice() (40.8127ms)
+  ▶ voiceParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать все поля корректных типов (0.4158ms)
+      ✔ должен отклонять string вместо boolean (0.3157ms)
+      ✔ должен отклонять string вместо number для mediaDuration (0.4957ms)
+      ✔ должен принимать undefined для mediaDuration (0.1499ms)
+      ✔ должен принимать undefined для всех опциональных полей (0.109ms)
+    ✔ Валидация типов (1.6878ms)
+    ▶ Структура схемы
+      ✔ должен иметь 5 полей (0.1545ms)
+      ✔ должен использовать ZodOptional для voiceUrl (0.1121ms)
+      ✔ должен использовать ZodOptional для mediaDuration (0.0812ms)
+      ✔ должен использовать ZodOptional для disableNotification (0.0771ms)
+    ✔ Структура схемы (0.559ms)
+  ✔ voiceParamsSchema (2.5004ms)
+✔ voice.py.jinja2 шаблон (43.7942ms)
+▶ utils.py.jinja2 шаблон
+  ▶ generateUtils()
+    ▶ Валидные данные
+      ✔ должен генерировать утилиты с check_auth для БД (10.8711ms)
+      ✔ должен генерировать утилиты без БД (0.4646ms)
+      ✔ должен включать is_private_chat (0.5176ms)
+      ✔ должен включать get_user_variables (0.4583ms)
+    ✔ Валидные данные (13.8712ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (1.1654ms)
+      ✔ должен использовать значения по умолчанию (0.3038ms)
+      ✔ должен отклонять string вместо boolean (0.1835ms)
+      ✔ должен отклонять null вместо boolean (0.2781ms)
+    ✔ Невалидные данные (2.2715ms)
+    ▶ Граничные случаи
+      ✔ должен включать get_user_from_db при userDatabaseEnabled=true (0.2983ms)
+      ✔ должен включать ADMIN_IDS (0.2965ms)
+      ✔ должен включать docstring для get_user_variables (0.1546ms)
+      ✔ должен всегда включать is_admin (0.2172ms)
+      ✔ должен включать from aiogram import types (0.2496ms)
+    ✔ Граничные случаи (1.4556ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.2417ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (15.127ms)
+    ✔ Производительность (15.6781ms)
+  ✔ generateUtils() (34.6297ms)
+  ▶ utilsParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать boolean поле (0.6754ms)
+      ✔ должен отклонять string вместо boolean (0.5107ms)
+      ✔ должен отклонять number вместо boolean (0.3235ms)
+      ✔ должен отклонять null (0.1294ms)
+      ✔ должен отклонять undefined (0.0926ms)
+    ✔ Валидация типов (2.0149ms)
+    ▶ Значения по умолчанию
+      ✔ должен принимать false по умолчанию (0.1159ms)
+    ✔ Значения по умолчанию (0.1794ms)
+    ▶ Структура схемы
+      ✔ должен иметь 1 поле (0.1309ms)
+      ✔ должен использовать ZodOptional (0.1281ms)
+    ✔ Структура схемы (0.3432ms)
+  ✔ utilsParamsSchema (3.2054ms)
+✔ utils.py.jinja2 шаблон (39.4199ms)
+▶ ban_user
+  ✔ генерирует command handler /ban_user (34.685ms)
+  ✔ бессрочный бан: ban_chat_member без until_date (0.9641ms)
+  ✔ временный бан: содержит until_date (0.7895ms)
+  ✔ генерирует synonym handler с синонимами (1.0409ms)
+  ✔ фильтр чата: только группы (0.9641ms)
+  ✔ определяет target_user_id через reply и text_mention (0.4612ms)
+  ✔ обработка TelegramBadRequest (0.3544ms)
+✔ ban_user (40.6819ms)
+▶ unban_user
+  ✔ вызывает unban_chat_member с only_if_banned=True (0.5701ms)
+  ✔ генерирует command handler /unban_user (0.7737ms)
+✔ unban_user (1.8518ms)
+▶ kick_user
+  ✔ ban + sleep + unban для кика (1.0647ms)
+  ✔ targetGroupId: фильтр по конкретной группе (0.5223ms)
+✔ kick_user (1.7894ms)
+▶ mute_user
+  ✔ вызывает restrict_chat_member с ChatPermissions (0.4464ms)
+  ✔ вычисляет время из duration (0.2133ms)
+  ✔ генерирует оба handler (command + synonym) (0.197ms)
+✔ mute_user (0.9932ms)
+▶ unmute_user
+  ✔ снимает все ограничения (все True) (0.2221ms)
+✔ unmute_user (0.3969ms)
+▶ promote_user
+  ✔ вызывает promote_chat_member с правами (0.2804ms)
+  ✔ canManageTopics включается если задан (0.1885ms)
+  ✔ обработка USER_NOT_PARTICIPANT (0.1859ms)
+✔ promote_user (0.7728ms)
+▶ demote_user
+  ✔ снимает все права (все False) (0.2109ms)
+✔ demote_user (0.2859ms)
+▶ userHandlerParamsSchema
+  ✔ принимает валидные параметры ban_user (1.1306ms)
+  ✔ принимает все типы узлов (0.4883ms)
+  ✔ отклоняет неправильный nodeType (0.7448ms)
+  ✔ отклоняет пустой массив synonyms (0.4173ms)
+✔ userHandlerParamsSchema (3.003ms)
 ▶ Производительность
-  ✔ generateAdminRightsHandler: быстрее 20ms (0.4802ms)
-✔ Производительность (0.5849ms)
+  ✔ generateUserHandler: быстрее 10ms (0.5415ms)
+✔ Производительность (0.6945ms)
+▶ universal-handlers.py.jinja2 шаблон
+  ▶ generateUniversalHandlers()
+    ▶ Валидные данные
+      ✔ должен генерировать fallback_text_handler (6.1704ms)
+      ✔ должен генерировать handle_unhandled_photo (0.5393ms)
+      ✔ должен включать @dp.message(F.text) (0.2615ms)
+      ✔ должен включать @dp.message(F.photo) (0.2855ms)
+      ✔ должен включать docstring для fallback_text_handler (0.3316ms)
+      ✔ должен игнорировать параметры (всегда одинаковый вывод) (0.3388ms)
+    ✔ Валидные данные (9.2176ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (1.0567ms)
+      ✔ должен использовать значения по умолчанию (0.3719ms)
+      ✔ должен отклонять string вместо boolean (0.2664ms)
+      ✔ должен отклонять null (0.3422ms)
+    ✔ Невалидные данные (2.3417ms)
+    ▶ Граничные случаи
+      ✔ должен включать logging.info для текста (0.2378ms)
+      ✔ должен включать logging.info для фото (0.2364ms)
+      ✔ должен включать message.from_user.id (0.2454ms)
+      ✔ должен включать message.text (0.2196ms)
+    ✔ Граничные случаи (1.1113ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.1945ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (9.7796ms)
+    ✔ Производительность (10.169ms)
+  ✔ generateUniversalHandlers() (23.4068ms)
+  ▶ universalHandlersParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать boolean поле (0.4186ms)
+      ✔ должен отклонять string вместо boolean (0.1837ms)
+      ✔ должен отклонять number вместо boolean (0.1776ms)
+      ✔ должен отклонять null (0.1227ms)
+    ✔ Валидация типов (1.0563ms)
+    ▶ Значения по умолчанию
+      ✔ должен принимать false по умолчанию (0.1395ms)
+    ✔ Значения по умолчанию (0.2109ms)
+    ▶ Структура схемы
+      ✔ должен иметь 1 поле (0.1609ms)
+      ✔ должен использовать ZodOptional (0.1206ms)
+    ✔ Структура схемы (0.4045ms)
+  ✔ universalHandlersParamsSchema (1.9935ms)
+✔ universal-handlers.py.jinja2 шаблон (26.195ms)
+▶ generateSynonyms()
+  ✔ пустой массив → пустая строка (0.9542ms)
+  ▶ start / command
+    ✔ генерирует обработчик для start (32.5437ms)
+    ✔ генерирует оба синонима start (1.1749ms)
+    ✔ генерирует обработчик для command (0.3713ms)
+    ✔ fallback сообщение содержит оригинальную команду (0.8466ms)
+  ✔ start / command (35.313ms)
+  ▶ message
+    ✔ генерирует MockCallback (2.3405ms)
+    ✔ вызывает handle_callback с правильным id (0.5142ms)
+    ✔ MockCallback содержит edit_text с fallback (0.6643ms)
+  ✔ message (4.0091ms)
+  ▶ pin_message / unpin_message / delete_message
+    ✔ pin_message: вызывает bot.pin_chat_message (0.5575ms)
+    ✔ unpin_message: вызывает bot.unpin_chat_message (0.4658ms)
+    ✔ delete_message: вызывает bot.delete_message с кастомным текстом (0.3276ms)
+    ✔ фильтр чата только для групп (0.1985ms)
+    ✔ обработка ошибок TelegramBadRequest (0.195ms)
+    ✔ поддержка reply_to_message и ID из текста (0.1754ms)
+  ✔ pin_message / unpin_message / delete_message (2.1432ms)
+  ▶ ban_user
+    ✔ бессрочный бан: вызывает ban_chat_member без until_date (0.3862ms)
+    ✔ временный бан: содержит until_date (0.1622ms)
+    ✔ фильтр чата только для групп (0.1332ms)
+    ✔ определяет target_user_id через reply или ID (0.1414ms)
+  ✔ ban_user (0.9483ms)
+  ▶ unban_user
+    ✔ вызывает unban_chat_member с only_if_banned=True (0.1543ms)
+  ✔ unban_user (0.2358ms)
+  ▶ kick_user
+    ✔ ban + unban для кика (0.2827ms)
+  ✔ kick_user (0.3627ms)
+  ▶ mute_user
+    ✔ вызывает restrict_chat_member с ChatPermissions (0.456ms)
+    ✔ вычисляет время из duration (0.4467ms)
+  ✔ mute_user (1.0259ms)
+  ▶ unmute_user
+    ✔ снимает все ограничения (0.2716ms)
+  ✔ unmute_user (0.3686ms)
+  ▶ promote_user
+    ✔ вызывает promote_chat_member с правами (0.34ms)
+  ✔ promote_user (0.4331ms)
+  ▶ demote_user
+    ✔ снимает все права администратора (0.2857ms)
+  ✔ demote_user (0.3946ms)
+  ▶ admin_rights
+    ✔ нет фильтра чата (работает везде) (0.1789ms)
+    ✔ создаёт MockCallback и вызывает handle_callback с bot (0.1314ms)
+  ✔ admin_rights (0.3873ms)
+  ▶ маркеры и структура
+    ✔ генерирует NODE_START/NODE_END маркеры (0.236ms)
+    ✔ смешанные типы генерируются вместе (0.2431ms)
+  ✔ маркеры и структура (0.5584ms)
+✔ generateSynonyms() (48.5984ms)
+▶ synonymsParamsSchema
+  ✔ принимает валидные start параметры (0.1836ms)
+  ✔ принимает все user management типы (0.4099ms)
+  ✔ отклоняет неправильный nodeType (0.7089ms)
+  ✔ принимает пустой массив (0.0985ms)
+✔ synonymsParamsSchema (1.5914ms)
+▶ collectSynonymEntries()
+  ✔ собирает start синонимы с functionName и originalCommand (0.3214ms)
+  ✔ собирает command синонимы (0.1397ms)
+  ✔ собирает message синонимы (0.155ms)
+  ✔ собирает ban_user синонимы с reason и untilDate (0.1268ms)
+  ✔ собирает mute_user синонимы с duration и canSendMessages (0.1002ms)
+  ✔ собирает promote_user синонимы с правами (0.0929ms)
+  ✔ собирает admin_rights синонимы (0.1003ms)
+  ✔ фильтрует null узлы и узлы без синонимов (0.092ms)
+  ✔ возвращает пустой массив если нет синонимов (0.0917ms)
+  ✔ смешанные узлы: собирает все типы (0.1951ms)
+✔ collectSynonymEntries() (1.6711ms)
+▶ generateSynonymHandlers()
+  ✔ пустые узлы → пустая строка (0.2386ms)
+  ✔ генерирует код из узлов напрямую (0.3975ms)
+  ✔ генерирует ban_user из узлов (0.4841ms)
+  ✔ генерирует смешанные типы из узлов (0.4137ms)
+  ✔ фильтрует null и пустые узлы (0.1829ms)
+✔ generateSynonymHandlers() (1.9199ms)
+▶ Производительность
+  ✔ generateSynonyms: быстрее 10ms (0.4562ms)
+  ✔ generateSynonymHandlers: быстрее 10ms (0.2523ms)
+✔ Производительность (0.8214ms)
+▶ sticker.py.jinja2 шаблон
+  ▶ generateSticker()
+    ▶ Валидные данные
+      ✔ должен генерировать обработчик стикера по file_id (13.0784ms)
+      ✔ должен генерировать обработчик стикера по URL (0.5415ms)
+      ✔ должен генерировать обработчик стикера из набора (0.2665ms)
+      ✔ должен генерировать обработчик с disable_notification (0.2857ms)
+      ✔ должен включать замену переменных в подписи (0.5891ms)
+      ✔ должен включать обработку ошибок (0.6131ms)
+      ✔ должен включать caption при наличии mediaCaption (0.4825ms)
+      ✔ должен генерировать сообщение об ошибке при отсутствии стикера (0.3631ms)
+    ✔ Валидные данные (17.8096ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (1.4401ms)
+      ✔ должен отклонять параметры с отсутствующим полем (0.4937ms)
+      ✔ должен отклонять string вместо boolean (0.2078ms)
+      ✔ должен отклонять число вместо string (0.1581ms)
+    ✔ Невалидные данные (2.5674ms)
+    ▶ Граничные случаи
+      ✔ должен принимать undefined для stickerUrl (0.3423ms)
+      ✔ должен принимать undefined для mediaCaption (0.1211ms)
+      ✔ должен принимать undefined для disableNotification (0.126ms)
+      ✔ должен генерировать разные команды для разных nodeId (0.8029ms)
+      ✔ должен включать disable_notification только при disableNotification=true (0.5028ms)
+      ✔ должен включать caption только при наличии mediaCaption (0.2651ms)
+    ✔ Граничные случаи (2.4785ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.3414ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (22.7625ms)
+    ✔ Производительность (23.264ms)
+  ✔ generateSticker() (46.9726ms)
+  ▶ stickerParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать все поля корректных типов (0.2487ms)
+      ✔ должен отклонять string вместо boolean (0.2561ms)
+      ✔ должен отклонять число вместо string для nodeId (0.138ms)
+      ✔ должен принимать пустые строки для опциональных полей (0.1277ms)
+      ✔ должен принимать undefined для всех опциональных полей (0.1251ms)
+    ✔ Валидация типов (1.0624ms)
+    ▶ Структура схемы
+      ✔ должен иметь 6 полей (0.1776ms)
+      ✔ должен использовать ZodOptional для stickerUrl (0.1314ms)
+      ✔ должен использовать ZodOptional для disableNotification (0.0932ms)
+      ✔ должен использовать .optional() для всех опциональных полей (0.0992ms)
+    ✔ Структура схемы (0.6301ms)
+  ✔ stickerParamsSchema (1.8568ms)
+✔ sticker.py.jinja2 шаблон (49.2546ms)
+▶ start.py.jinja2 шаблон
+  ▶ generateStart()
+    ▶ Валидные данные
+      ✔ должен генерировать базовый обработчик /start (44.9212ms)
+      ✔ должен генерировать обработчик с проверкой приватности (0.8793ms)
+      ✔ должен генерировать обработчик с проверкой администратора (1.1025ms)
+      ✔ должен генерировать обработчик с проверкой авторизации (0.8212ms)
+      ✔ должен генерировать инициализацию множественного выбора (1.2978ms)
+      ✔ должен генерировать inline клавиатуру (0.1636ms)
+      ✔ должен генерировать reply клавиатуру (0.1075ms)
+      ✔ должен генерировать обработчики синонимов (15.1877ms)
+      ✔ должен генерировать автопереход (1.992ms)
+      ✔ должен генерировать логирование вызова команды (2.2305ms)
+      ✔ должен генерировать URL кнопки (1.3249ms)
+      ✔ должен генерировать сохранение пользователя в БД (0.3541ms)
+      ✔ должен генерировать HTML форматирование (0.1991ms)
+      ✔ должен генерировать разные команды для разных nodeId (0.209ms)
+    ✔ Валидные данные (72.9961ms)
+    ▶ Проверки безопасности
+      ✔ должен включать только isPrivateOnly проверку (0.2383ms)
+      ✔ должен включать только adminOnly проверку (0.1898ms)
+      ✔ должен включать только requiresAuth проверку (0.2071ms)
+    ✔ Проверки безопасности (0.7744ms)
+    ▶ Множественный выбор
+      ✔ должен инициализировать multi_select массив (0.5287ms)
+      ✔ должен инициализировать multi_select_node (1.4927ms)
+      ✔ должен генерировать кнопки selection с callback_data (0.9125ms)
+    ✔ Множественный выбор (3.1822ms)
+    ▶ Автопереходы
+      ✔ должен генерировать FakeCallbackQuery для автоперехода (0.3829ms)
+      ✔ должен генерировать вызов handle_callback для автоперехода (0.2005ms)
+    ✔ Автопереходы (0.709ms)
+    ▶ Синонимы
+      ✔ должен генерировать обработчики для всех синонимов (0.7825ms)
+      ✔ должен генерировать проверку типа чата для синонимов (0.3699ms)
+      ✔ должен генерировать проверку администратора для синонимов (0.5349ms)
+    ✔ Синонимы (1.8081ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (0.8407ms)
+      ✔ должен отклонять параметры с отсутствующим полем (0.2047ms)
+      ✔ должен отклонять неправильный keyboardType (0.2499ms)
+      ✔ должен отклонять неправильный formatMode (0.1856ms)
+    ✔ Невалидные данные (1.7621ms)
+    ▶ Валидация схемы
+      ✔ должен принимать все поля корректных типов (0.4004ms)
+      ✔ должен принимать undefined для всех опциональных полей (0.4381ms)
+      ✔ должен принимать все значения enum для keyboardType (0.2388ms)
+      ✔ должен принимать все значения enum для formatMode (0.2784ms)
+      ✔ должен принимать undefined для synonyms (0.1804ms)
+    ✔ Валидация схемы (1.7752ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.392ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (70.756ms)
+    ✔ Производительность (71.3448ms)
+    ▶ Проверка отступов
+      ✔ должен генерировать await message.answer с правильным отступом в 4 пробела (0.9837ms)
+      ✔ должен генерировать keyboard = None с правильным отступом в 4 пробела (0.3414ms)
+      ✔ должен генерировать await после keyboard без лишних отступов (0.3532ms)
+      ✔ должен генерировать inline клавиатуру с правильными отступами (0.5758ms)
+    ✔ Проверка отступов (3.7144ms)
+  ✔ generateStart() (159.4129ms)
+  ▶ startParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать все поля корректных типов (0.632ms)
+      ✔ должен отклонять string вместо boolean (0.4947ms)
+      ✔ должен отклонять неправильный enum для keyboardType (0.2376ms)
+      ✔ должен отклонять неправильный enum для formatMode (0.2234ms)
+      ✔ должен принимать buttons с правильной структурой (0.2626ms)
+    ✔ Валидация типов (2.317ms)
+    ▶ Структура схемы
+      ✔ должен иметь 20 полей (0.2283ms)
+      ✔ должен использовать ZodOptional для messageText (0.1383ms)
+      ✔ должен использовать ZodOptional для keyboardType (0.0867ms)
+      ✔ должен использовать ZodOptional для formatMode (0.0859ms)
+      ✔ должен использовать ZodOptional для isPrivateOnly (0.084ms)
+      ✔ должен использовать ZodOptional для synonyms (0.081ms)
+    ✔ Структура схемы (0.8736ms)
+  ✔ startParamsSchema (3.5929ms)
+✔ start.py.jinja2 шаблон (163.6841ms)
+▶ safe-edit-or-send.py.jinja2 шаблон
+  ▶ generateSafeEditOrSend()
+    ▶ Валидные данные
+      ✔ должен генерировать функцию при hasInlineButtonsOrSpecialNodes=true (11.6703ms)
+      ✔ должен генерировать функцию при hasAutoTransitions=true (0.3148ms)
+      ✔ должен генерировать функцию при обоих флагах=true (0.2823ms)
+      ✔ должен генерировать пустую строку при обоих флагах=false (0.2262ms)
+      ✔ должен генерировать обработку user_id (0.3045ms)
+      ✔ должен генерировать try-except блок (0.2604ms)
+      ✔ должен генерировать проверку is_auto_transition (0.2894ms)
+      ✔ должен генерировать проверку is_reply_keyboard (0.2275ms)
+      ✔ должен генерировать fallback на новое сообщение (0.3401ms)
+      ✔ должен генерировать логирование ошибок (0.7151ms)
+    ✔ Валидные данные (16.0441ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (1.2047ms)
+      ✔ должен отклонять null значения (0.209ms)
+      ✔ должен использовать значения по умолчанию для отсутствующих полей (0.1674ms)
+    ✔ Невалидные данные (1.8549ms)
+    ▶ Проверка схемы
+      ✔ должен иметь правильную структуру схемы (0.1484ms)
+      ✔ должен использовать ZodDefault для всех полей (0.165ms)
+      ✔ должен иметь 2 поля (0.0943ms)
+    ✔ Проверка схемы (0.5202ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.2002ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (13.1846ms)
+    ✔ Производительность (13.6154ms)
+    ▶ Интеграционные тесты
+      ✔ должен генерировать код который можно вставить в Python функцию (0.2288ms)
+      ✔ должен генерировать код который можно использовать в if блоке (0.117ms)
+      ✔ должен генерировать код который можно использовать в try блоке (0.1116ms)
+    ✔ Интеграционные тесты (0.5916ms)
+    ▶ Проверка на распространённые ошибки Pylance
+      ✔ не должен содержать ошибку: Операторы без перевода строки перед else (0.2341ms)
+      ✔ не должен содержать ошибку: Операторы без перевода строки перед elif (0.151ms)
+      ✔ не должен содержать незавершённые конструкции (0.2622ms)
+      ✔ не должен содержать несколько операторов на одной строке без точки с запятой (0.1627ms)
+    ✔ Проверка на распространённые ошибки Pylance (0.9436ms)
+    ▶ Edge cases
+      ✔ должен обрабатывать пустое имя узла (0.1572ms)
+      ✔ должен обрабатывать специальные символы в тексте (0.1135ms)
+      ✔ должен обрабатывать очень длинный текст (0.11ms)
+    ✔ Edge cases (0.4969ms)
+  ✔ generateSafeEditOrSend() (34.8029ms)
+  ▶ safeEditOrSendParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать boolean поля (1.5578ms)
+      ✔ должен отклонять string вместо boolean (0.7645ms)
+      ✔ должен отклонять null (0.2754ms)
+    ✔ Валидация типов (2.8446ms)
+    ▶ Значения по умолчанию
+      ✔ должен использовать false для hasInlineButtonsOrSpecialNodes по умолчанию (0.2669ms)
+      ✔ должен использовать false для hasAutoTransitions по умолчанию (0.1624ms)
+    ✔ Значения по умолчанию (0.5897ms)
+    ▶ Структура схемы
+      ✔ должен иметь 2 поля (0.2103ms)
+      ✔ должен использовать optional поля (0.1544ms)
+    ✔ Структура схемы (0.4643ms)
+  ✔ safeEditOrSendParamsSchema (4.3091ms)
+✔ safe-edit-or-send.py.jinja2 шаблон (39.5613ms)
+▶ middleware.py.jinja2 шаблон
+  ▶ generateMiddleware()
+    ▶ Валидные данные
+      ✔ должен генерировать message_logging_middleware (6.0299ms)
+      ✔ должен включать docstring (0.3722ms)
+      ✔ должен включать обработку user_id (0.171ms)
+      ✔ должен включать save_message_to_api (0.1834ms)
+      ✔ должен включать обработку ошибок (0.2344ms)
+      ✔ должен игнорировать параметры (всегда одинаковый вывод) (0.2982ms)
+    ✔ Валидные данные (8.1649ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (0.8666ms)
+      ✔ должен использовать значения по умолчанию (0.3714ms)
+      ✔ должен отклонять string вместо boolean (0.4309ms)
+      ✔ должен отклонять null (0.5028ms)
+    ✔ Невалидные данные (2.5332ms)
+    ▶ Граничные случаи
+      ✔ должен включать logging.error (0.4327ms)
+      ✔ должен включать return await handler (0.4801ms)
+      ✔ должен включать message.caption (0.3993ms)
+      ✔ должен включать [медиа] заглушку (0.3914ms)
+    ✔ Граничные случаи (1.9857ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.2881ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (9.6782ms)
+    ✔ Производительность (10.1461ms)
+  ✔ generateMiddleware() (23.3455ms)
+  ▶ middlewareParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать boolean поле (0.217ms)
+      ✔ должен отклонять string вместо boolean (0.1311ms)
+      ✔ должен отклонять number вместо boolean (0.1646ms)
+      ✔ должен отклонять null (0.1175ms)
+    ✔ Валидация типов (0.7799ms)
+    ▶ Значения по умолчанию
+      ✔ должен принимать undefined по умолчанию (0.1289ms)
+    ✔ Значения по умолчанию (0.2004ms)
+    ▶ Структура схемы
+      ✔ должен иметь 1 поле (0.1483ms)
+      ✔ должен использовать ZodOptional (0.1333ms)
+    ✔ Структура схемы (0.3889ms)
+  ✔ middlewareParamsSchema (1.7789ms)
+✔ middleware.py.jinja2 шаблон (25.8752ms)
+▶ message.py.jinja2 шаблон
+  ▶ generateMessage()
+    ▶ Валидные данные
+      ✔ должен генерировать обработчик callback для базового сообщения (40.2743ms)
+      ✔ должен генерировать callback.answer() (0.6762ms)
+      ✔ должен генерировать логирование (0.5968ms)
+      ✔ должен генерировать инициализацию переменных (0.3961ms)
+      ✔ должен генерировать inline клавиатуру (1.4382ms)
+      ✔ должен генерировать reply клавиатуру (1.2673ms)
+    ✔ Валидные данные (45.6125ms)
+    ▶ Проверки безопасности
+      ✔ должен генерировать isPrivateOnly проверку (0.474ms)
+      ✔ должен генерировать adminOnly проверку (0.4805ms)
+      ✔ должен генерировать requiresAuth проверку (0.6986ms)
+    ✔ Проверки безопасности (2.0135ms)
+    ▶ Автопереход
+      ✔ должен генерировать FakeCallbackQuery для автоперехода (0.6359ms)
+      ✔ должен генерировать вызов следующего обработчика (0.4233ms)
+      ✔ должен генерировать логирование автоперехода (0.3369ms)
+      ✔ должен возвращать после автоперехода (0.2651ms)
+    ✔ Автопереход (1.9481ms)
+    ▶ Медиа
+      ✔ должен генерировать сохранение imageUrl (1.0386ms)
+      ✔ должен генерировать update_user_data_in_db для медиа (0.5707ms)
+    ✔ Медиа (1.7761ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (1.0859ms)
+      ✔ должен отклонять параметры без nodeId (0.2949ms)
+      ✔ должен отклонять string вместо boolean (0.214ms)
+      ✔ должен отклонять неправильный keyboardType (0.2506ms)
+      ✔ должен отклонять неправильный formatMode (0.1728ms)
+    ✔ Невалидные данные (2.232ms)
+    ▶ Валидация схемы
+      ✔ должен принимать все поля корректных типов (0.2056ms)
+      ✔ должен использовать значения по умолчанию для всех полей (0.2401ms)
+      ✔ должен принимать все значения enum для keyboardType (0.2486ms)
+      ✔ должен принимать все значения enum для formatMode (0.248ms)
+    ✔ Валидация схемы (1.0741ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.3868ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (103.4207ms)
+    ✔ Производительность (103.9372ms)
+  ✔ generateMessage() (159.31ms)
+  ▶ messageParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать все поля корректных типов (0.3687ms)
+      ✔ должен отклонять string вместо boolean (0.3438ms)
+      ✔ должен отклонять number вместо string для nodeId (0.652ms)
+      ✔ должен принимать null для опциональных полей (1.2302ms)
+    ✔ Валидация типов (3.1383ms)
+    ▶ Значения по умолчанию
+      ✔ должен использовать false для isPrivateOnly по умолчанию (0.5836ms)
+      ✔ должен использовать false для adminOnly по умолчанию (1.1096ms)
+      ✔ должен использовать false для enableAutoTransition по умолчанию (0.1972ms)
+      ✔ должен использовать none для keyboardType по умолчанию (0.1128ms)
+      ✔ должен использовать none для formatMode по умолчанию (0.1054ms)
+    ✔ Значения по умолчанию (2.3849ms)
+    ▶ Структура схемы
+      ✔ должен иметь 35 полей (0.2044ms)
+      ✔ должен использовать ZodOptional для isPrivateOnly (0.1527ms)
+      ✔ должен использовать ZodOptional для adminOnly (0.0897ms)
+      ✔ должен использовать ZodOptional для enableAutoTransition (0.0807ms)
+    ✔ Структура схемы (0.6448ms)
+  ✔ messageParamsSchema (6.713ms)
+✔ message.py.jinja2 шаблон (166.4266ms)
+▶ main.py.jinja2 шаблон
+  ▶ generateMain()
+    ▶ Валидные данные
+      ✔ должен генерировать main() с init_database() (10.0143ms)
+      ✔ должен генерировать main() без init_database() (0.3558ms)
+      ✔ должен включать set_bot_commands() (0.2931ms)
+      ✔ должен включать middleware при БД (0.3251ms)
+      ✔ должен включать обработку сигналов (0.1847ms)
+      ✔ должен генерировать main с обработкой ошибок (0.2101ms)
+    ✔ Валидные данные (12.3768ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (0.7482ms)
+      ✔ должен использовать значения по умолчанию (0.3279ms)
+      ✔ должен отклонять string вместо boolean (0.2954ms)
+      ✔ должен отклонять null (0.4592ms)
+    ✔ Невалидные данные (2.1854ms)
+    ▶ Граничные случаи
+      ✔ должен включать finally блок (0.5854ms)
+      ✔ должен включать bot.session.close() (0.2762ms)
+      ✔ должен включать db_pool.close() при БД (0.3003ms)
+      ✔ должен включать asyncio.run(main()) (0.5258ms)
+      ✔ должен включать if __name__ == "__main__" (0.1951ms)
+    ✔ Граничные случаи (2.1407ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.1723ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (20.0834ms)
+    ✔ Производительность (20.5065ms)
+  ✔ generateMain() (37.7496ms)
+  ▶ mainParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать boolean поле (0.3055ms)
+      ✔ должен отклонять string вместо boolean (0.1593ms)
+      ✔ должен отклонять number вместо boolean (0.1643ms)
+      ✔ должен отклонять null (0.1224ms)
+    ✔ Валидация типов (0.9317ms)
+    ▶ Значения по умолчанию
+      ✔ должен принимать false по умолчанию (0.1329ms)
+    ✔ Значения по умолчанию (0.1998ms)
+    ▶ Структура схемы
+      ✔ должен иметь 3 поля (0.1799ms)
+      ✔ должен использовать ZodOptional (0.1836ms)
+    ✔ Структура схемы (0.4647ms)
+  ✔ mainParamsSchema (2.1043ms)
+✔ main.py.jinja2 шаблон (40.4506ms)
+▶ keyboard.py.jinja2 шаблон
+  ▶ generateKeyboard()
+    ▶ Валидные данные
+      ✔ должен генерировать inline клавиатуру (34.9694ms)
+      ✔ должен генерировать reply клавиатуру (0.476ms)
+      ✔ должен генерировать пустую клавиатуру (0.3124ms)
+      ✔ должен генерировать клавиатуру с раскладкой (1.0027ms)
+      ✔ должен генерировать oneTimeKeyboard (0.4291ms)
+    ✔ Валидные данные (38.2731ms)
+    ▶ Inline клавиатура
+      ✔ должен генерировать callback кнопки (1.012ms)
+      ✔ должен генерировать URL кнопки (0.5924ms)
+      ✔ должен генерировать keyboard = builder.as_markup() (1.3968ms)
+    ✔ Inline клавиатура (3.5511ms)
+    ▶ Reply клавиатура
+      ✔ должен генерировать KeyboardButton (2.4772ms)
+      ✔ должен генерировать resize_keyboard=True по умолчанию (1.2739ms)
+      ✔ должен генерировать one_time_keyboard=False по умолчанию (0.3894ms)
+    ✔ Reply клавиатура (4.6021ms)
+    ▶ Раскладка
+      ✔ должен генерировать комментарии для ручной раскладки (0.5594ms)
+      ✔ должен генерировать авто-раскладку (0.7183ms)
+      ✔ должен генерировать кнопки в правильном порядке (0.731ms)
+    ✔ Раскладка (2.2758ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (1.4835ms)
+      ✔ должен отклонять параметры с отсутствующим полем (0.3723ms)
+      ✔ должен отклонять неправильный keyboardType (0.19ms)
+    ✔ Невалидные данные (2.2458ms)
+    ▶ Валидация схемы
+      ✔ должен принимать все поля корректных типов (0.2552ms)
+      ✔ должен использовать значения по умолчанию для всех полей (0.2452ms)
+      ✔ должен принимать все значения enum для keyboardType (0.221ms)
+      ✔ должен принимать keyboardLayout с правильной структурой (0.205ms)
+      ✔ должен использовать пустой массив для buttons по умолчанию (1.1547ms)
+    ✔ Валидация схемы (2.3251ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.862ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (131.3057ms)
+    ✔ Производительность (132.5127ms)
+    ▶ Проверка отступов
+      ✔ должен генерировать keyboard = None без начальных отступов (0.9252ms)
+      ✔ должен генерировать builder = InlineKeyboardBuilder без начальных отступов (0.6409ms)
+      ✔ должен генерировать keyboard = builder.as_markup() без начальных отступов (0.7341ms)
+      ✔ должен генерировать keyboard = builder.as_markup() с правильными параметрами (0.4536ms)
+      ✔ не должен содержать несколько операторов на одной строке (Python syntax) (0.4594ms)
+      ✔ должен генерировать каждый оператор на отдельной строке (0.4406ms)
+    ✔ Проверка отступов (4.1314ms)
+  ✔ generateKeyboard() (191.2057ms)
+  ▶ keyboardParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать все поля корректных типов (0.2719ms)
+      ✔ должен отклонять string вместо boolean (0.2362ms)
+      ✔ должен отклонять неправильный enum для keyboardType (0.1395ms)
+      ✔ должен принимать buttons с правильной структурой (0.1586ms)
+    ✔ Валидация типов (0.9776ms)
+    ▶ Структура схемы
+      ✔ должен иметь 20 полей (0.1975ms)
+      ✔ должен использовать ZodOptional для keyboardType (0.2642ms)
+      ✔ должен использовать ZodOptional для oneTimeKeyboard (0.1213ms)
+      ✔ должен использовать ZodOptional для resizeKeyboard (0.1402ms)
+      ✔ должен использовать ZodOptional для buttons (0.1452ms)
+    ✔ Структура схемы (1.0775ms)
+  ✔ keyboardParamsSchema (2.2554ms)
+✔ keyboard.py.jinja2 шаблон (194.1572ms)
+▶ imports.py.jinja2 шаблон
+  ▶ generateImports()
+    ▶ Валидные данные
+      ✔ должен генерировать код со всеми импортами (всё включено) (10.028ms)
+      ✔ должен генерировать код без условных импортов (всё выключено) (0.4493ms)
+      ✔ должен генерировать только импорты БД (0.2311ms)
+      ✔ должен генерировать только импорты медиа (0.2006ms)
+      ✔ должен генерировать импорты для inline кнопок (0.2724ms)
+      ✔ должен генерировать импорты для автопереходов (0.2326ms)
+      ✔ должен генерировать импорты для ParseMode (0.1948ms)
+      ✔ должен генерировать импорты для MediaGroups (0.1919ms)
+      ✔ должен генерировать импорты для UrlImages (0.4387ms)
+      ✔ должен генерировать импорты для Datetime (0.7719ms)
+      ✔ должен генерировать импорты для Datetime + Timezone (0.4505ms)
+      ✔ должен генерировать datetime при userDatabaseEnabled=true (0.3454ms)
+      ✔ должен совпадать с ожидаемым выводом (всё включено) (0.3072ms)
+      ✔ должен совпадать с ожидаемым выводом (всё выключено) (0.1608ms)
+    ✔ Валидные данные (15.8017ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (0.8608ms)
+      ✔ должен использовать значения по умолчанию для отсутствующих полей (0.1966ms)
+      ✔ должен отклонять null вместо boolean (0.1486ms)
+      ✔ должен отклонять число вместо boolean (0.161ms)
+    ✔ Невалидные данные (1.597ms)
+    ▶ Граничные случаи
+      ✔ должен добавлять TelegramBadRequest при hasInlineButtons=true OR hasAutoTransitions=true (0.3539ms)
+      ✔ должен добавлять aiohttp при hasMediaNodes=true OR hasUploadImages=true (0.2394ms)
+      ✔ должен добавлять asyncpg только при userDatabaseEnabled=true (0.2088ms)
+      ✔ должен всегда включать базовые импорты (0.1609ms)
+    ✔ Граничные случаи (1.1101ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.2097ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (52.959ms)
+    ✔ Производительность (53.7376ms)
+  ✔ generateImports() (72.8961ms)
+  ▶ importsParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать все boolean поля (1.5255ms)
+      ✔ должен отклонять string вместо boolean (3.3842ms)
+      ✔ должен отклонять number вместо boolean (1.5471ms)
+      ✔ должен отклонять null вместо boolean (1.1703ms)
+      ✔ должен принимать undefined и использовать значение по умолчанию (0.5815ms)
+    ✔ Валидация типов (9.3596ms)
+    ▶ Значения по умолчанию
+      ✔ должен использовать false для всех полей по умолчанию (1.0234ms)
+      ✔ должен использовать false для отсутствующих полей (1.4421ms)
+    ✔ Значения по умолчанию (2.9625ms)
+    ▶ Структура схемы
+      ✔ должен иметь все 10 полей (0.8754ms)
+      ✔ должен использовать ZodDefault для всех полей (0.8179ms)
+    ✔ Структура схемы (2.1514ms)
+  ✔ importsParamsSchema (15.1364ms)
+✔ imports.py.jinja2 шаблон (88.8773ms)
+▶ header.py.jinja2 шаблон
+  ▶ generateHeader()
+    ▶ Валидные данные
+      ✔ должен генерировать UTF-8 заголовок (6.1969ms)
+      ✔ должен включать import os и import sys (0.3782ms)
+      ✔ должен включать проверку Windows (0.3081ms)
+      ✔ должен включать PYTHONIOENCODING (0.2335ms)
+      ✔ должен включать reconfigure для stdout (0.1723ms)
+      ✔ должен включать fallback для старых версий (0.2152ms)
+      ✔ должен совпадать с ожидаемым выводом (0.3019ms)
+      ✔ должен игнорировать параметры (всегда одинаковый вывод) (0.5835ms)
+    ✔ Валидные данные (9.5833ms)
+    ▶ Невалидные данные
+      ✔ должен отклонять параметры с неправильным типом (1.1657ms)
+      ✔ должен использовать значения по умолчанию (0.319ms)
+      ✔ должен отклонять string вместо boolean (0.1793ms)
+      ✔ должен отклонять null (0.1453ms)
+    ✔ Невалидные данные (2.058ms)
+    ▶ Граничные случаи
+      ✔ должен всегда включать codecs (0.362ms)
+      ✔ должен всегда включать try-except (0.1482ms)
+      ✔ должен включать stderr (0.1303ms)
+      ✔ должен включать os.environ (0.1189ms)
+    ✔ Граничные случаи (0.9094ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.1712ms)
+      ✔ должен генерировать код 1000 раз быстрее 100ms (21.3533ms)
+    ✔ Производительность (21.6972ms)
+  ✔ generateHeader() (34.9317ms)
+  ▶ headerParamsSchema
+    ▶ Валидация типов
+      ✔ должен принимать все boolean поля (1.0159ms)
+      ✔ должен отклонять string вместо boolean (0.7408ms)
+      ✔ должен отклонять number вместо boolean (0.5239ms)
+      ✔ должен отклонять null (0.5621ms)
+    ✔ Валидация типов (3.2748ms)
+    ▶ Значения по умолчанию
+      ✔ должен использовать false для всех полей по умолчанию (0.4375ms)
+    ✔ Значения по умолчанию (0.5874ms)
+    ▶ Структура схемы
+      ✔ должен иметь 3 поля (0.1835ms)
+      ✔ должен использовать ZodDefault для всех полей (0.107ms)
+    ✔ Структура схемы (0.3984ms)
+  ✔ headerParamsSchema (4.8406ms)
+✔ header.py.jinja2 шаблон (40.4616ms)

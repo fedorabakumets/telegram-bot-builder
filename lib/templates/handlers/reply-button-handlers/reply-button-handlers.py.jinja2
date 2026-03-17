@@ -1,67 +1,56 @@
 {#
   Шаблон генерации обработчиков reply кнопок
-
-  @fileoverview Генерирует Python код для обработки reply кнопок во всех узлах
-  @param {array} nodes - Все узлы для генерации обработчиков
-  @param {string} indentLevel - Уровень отступа (по умолчанию '')
-
-  @example
-  ```jinja2
-  {% include 'handlers/reply-button-handlers/reply-button-handlers.py.jinja2' %}
-  ```
+  @param {array} nodes - Все узлы
+  @param {string} indentLevel - Уровень отступа
 #}
+{%- set indent = indentLevel or '' -%}
+{%- set processedReplyButtons = [] -%}
+{%- set hasAnyReply = false -%}
+{%- set hasMultiSelect = false -%}
+{%- for node in nodes -%}
+{%- if node.data and node.data.keyboardType == 'reply' and node.data.buttons -%}
+{%- set hasAnyReply = true -%}
+{%- if node.data.allowMultipleSelection == true -%}
+{%- set hasMultiSelect = true -%}
+{%- endif -%}
+{%- endif -%}
+{%- endfor -%}
+{%- if hasAnyReply -%}
+{%- for node in nodes -%}
+{%- if node.data and node.data.keyboardType == 'reply' and node.data.buttons -%}
+{%- for button in node.data.buttons -%}
+{%- if button.text and button.action == 'goto' and button.target -%}
+{%- if button.text not in processedReplyButtons -%}
+{%- set _ = processedReplyButtons.push(button.text) -%}
+{%- set targetNode = none -%}
+{%- for n in nodes -%}{%- if n.id == button.target -%}{%- set targetNode = n -%}{%- endif -%}{%- endfor -%}
+{%- if targetNode %}
 
-{% set indent = indentLevel or '' %}
+{{ indent }}@dp.message(lambda message: message.text == "{{ button.text }}")
+{{ indent }}async def handle_reply_{{ button.id | safe_name }}(message: types.Message):
+{{ indent }}    user_id = message.from_user.id
+{{ indent }}    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":
+{%- if hasMultiSelect %}
+{{ indent }}        await handle_multi_select_reply(message)
+{{ indent }}        return
+{%- endif %}
+{{ indent }}        user_data[user_id].pop("multi_select_node", None)
+{{ indent }}        user_data[user_id].pop("multi_select_type", None)
+{{ indent }}    user_data[user_id]["last_node_id"] = "{{ targetNode.id }}"
+{%- if targetNode.type == 'command' and targetNode.data and targetNode.data.command %}
+{{ indent }}    await handle_command_{{ targetNode.data.command | safe_name }}(message)
+{%- else %}
+{{ indent }}    await handle_callback_{{ targetNode.id | safe_name }}(message)
+{%- endif %}
+{%- endif -%}
+{%- endif -%}
+{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
+{%- endfor -%}
+{%- if hasMultiSelect %}
 
-# Обработчики reply кнопок
-{% set replyNodes = nodes | selectattr('data.keyboardType', 'equalto', 'reply') | selectattr('data.buttons') | list %}
-
-{% if replyNodes.length > 0 %}
-{% set processedReplyButtons = [] %}
-
-{% for node in replyNodes %}
-{% for button in node.data.buttons %}
-{% set buttonText = button.text %}
-
-{# Избегаем дублирования обработчиков #}
-{% if buttonText and buttonText not in processedReplyButtons %}
-{% set _ = processedReplyButtons.push(buttonText) %}
-
-{# Обрабатываем только кнопки с действием goto #}
-{% if button.action == 'goto' and button.target %}
-{% set targetNode = nodes | selectattr('id', 'equalto', button.target) | first %}
-{% if targetNode %}
-
-@dp.message(lambda message: message.text == "{{ buttonText }}")
-async def handle_reply_{{ button.id | replace('[^a-zA-Z0-9_]', '_') }}(message: types.Message):
-    user_id = message.from_user.id
-    
-    # Проверяем, находится ли пользователь в режиме мультивыбора
-    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":
-{% set hasMultiSelectNodes = nodes | selectattr('data.allowMultipleSelection', 'equalto', true) | selectattr('data.keyboardType', 'equalto', 'reply') | list %}
-{% if hasMultiSelectNodes.length > 0 %}
-        # Пользователь в режиме мультивыбора, передаем управление общему обработчику
-        await handle_multi_select_reply(message)
-        return
-{% endif %}
-        
-        # Очищаем состояние мультивыбора
-        user_data[user_id].pop("multi_select_node", None)
-        user_data[user_id].pop("multi_select_type", None)
-    
-    # Переход к целевому узлу
-    user_data[user_id]["last_node_id"] = "{{ targetNode.id }}"
-{% if targetNode.type == 'command' and targetNode.data.command %}
-    # Вызов команды
-    await handle_command_{{ targetNode.data.command | replace('[^a-zA-Z0-9_]', '_') }}(message)
-{% elif targetNode.type == 'message' %}
-    # Отправка сообщения
-    await handle_callback_{{ targetNode.id | replace('[^a-zA-Z0-9_]', '_') }}(message)
-{% endif %}
-
-{% endif %}
-{% endif %}
-{% endif %}
-{% endfor %}
-{% endfor %}
-{% endif %}
+{{ indent }}# Обработчик для reply кнопок множественного выбора
+{{ indent }}# multi_select_node и multi_select_type управляются в handle_multi_select_reply
+{%- endif -%}
+{%- endif -%}

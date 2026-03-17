@@ -3,7 +3,8 @@
  * @module templates/handlers/multi-select-button-handler/multi-select-button-handler.test
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
 import { generateMultiSelectButtonHandler } from './multi-select-button-handler.renderer';
 import {
   validParamsBasic,
@@ -13,7 +14,6 @@ import {
   validParamsNoInputVariable,
   invalidParamsMissingCallbackData,
   invalidParamsWrongButtonType,
-  expectedOutputBasic,
 } from './multi-select-button-handler.fixture';
 import { multiSelectButtonHandlerParamsSchema } from './multi-select-button-handler.schema';
 
@@ -21,122 +21,107 @@ describe('generateMultiSelectButtonHandler', () => {
   describe('Валидные данные', () => {
     it('должен генерировать обработчик с done кнопкой', () => {
       const result = generateMultiSelectButtonHandler(validParamsBasic);
-
-      expect(result).toContain('@dp.callback_query');
-      expect(result).toContain('done_abc123');
-      expect(result).toContain('handle_callback_ms_abc123_btn456');
-      expect(result).toContain('callback_query.answer()');
-      expect(result).toContain('user_id = callback_query.from_user.id');
+      assert.ok(result.includes('@dp.callback_query'));
+      assert.ok(result.includes('done_abc123'));
+      assert.ok(result.includes('handle_callback_ms_abc123_btn456'));
+      assert.ok(result.includes('callback_query.answer()'));
+      assert.ok(result.includes('user_id = callback_query.from_user.id'));
     });
 
     it('должен генерировать логику сохранения выбранных значений в БД', () => {
       const result = generateMultiSelectButtonHandler(validParamsBasic);
-
-      expect(result).toContain('selected_options = user_data.get(user_id, {}).get("multi_select_');
-      expect(result).toContain('await update_user_data_in_db');
-      expect(result).toContain('user_interests');
+      assert.ok(result.includes('selected_options = user_data.get(user_id, {}).get("multi_select_'));
+      assert.ok(result.includes('await update_user_data_in_db'));
+      assert.ok(result.includes('user_interests'));
     });
 
     it('должен генерировать очистку состояния после done', () => {
       const result = generateMultiSelectButtonHandler(validParamsBasic);
-
-      expect(result).toContain('user_data[user_id].pop("multi_select_');
-      expect(result).toContain('user_data[user_id].pop("multi_select_node"');
+      assert.ok(result.includes('user_data[user_id].pop("multi_select_'));
+      assert.ok(result.includes('user_data[user_id].pop("multi_select_node"'));
     });
 
     it('должен генерировать переход к следующему узлу', () => {
       const result = generateMultiSelectButtonHandler(validParamsBasic);
-
-      expect(result).toContain('next_node_id = "next_node"');
-      expect(result).toContain('await handle_callback_');
+      assert.ok(result.includes('next_node_id = "next_node"'));
+      assert.ok(result.includes('await handle_callback_'));
     });
 
     it('должен генерировать специальную логику для metro_selection', () => {
       const result = generateMultiSelectButtonHandler(validParamsMetroSelection);
-
-      expect(result).toContain('saved_metro_selection');
-      expect(result).toContain('show_metro_keyboard = True');
-      expect(result).toContain('🚇 Сохранили метро выбор');
+      assert.ok(result.includes('saved_metro_selection'));
+      assert.ok(result.includes('show_metro_keyboard = True'));
+      assert.ok(result.includes('🚇 Сохранили метро выбор'));
     });
 
     it('должен генерировать обработчик без done кнопки', () => {
       const result = generateMultiSelectButtonHandler(validParamsWithoutDone);
-
-      expect(result).toContain('@dp.callback_query');
-      expect(result).not.toContain('done_');
-      expect(result).toContain('button_text =');
+      assert.ok(result.includes('@dp.callback_query'));
+      assert.ok(!result.includes('done_'));
+      assert.ok(result.includes('button_text ='));
     });
   });
 
   describe('Логика сохранения переменных', () => {
     it('должен сохранять переменную из узла при наличии inputVariable', () => {
       const result = generateMultiSelectButtonHandler(validParamsBasic);
-
-      expect(result).toContain('await update_user_data_in_db(user_id, "user_choice"');
-      expect(result).toContain('waiting_for_input');
+      assert.ok(result.includes('await update_user_data_in_db(user_id, "user_choice"'));
+      assert.ok(result.includes('waiting_for_input'));
     });
 
     it('должен сохранять кнопку как есть при отсутствии inputVariable', () => {
       const result = generateMultiSelectButtonHandler(validParamsNoInputVariable);
-
-      expect(result).toContain('timestamp = get_moscow_time()');
-      expect(result).toContain('response_data = button_text');
+      assert.ok(result.includes('timestamp = get_moscow_time()'));
+      assert.ok(result.includes('response_data = button_text'));
     });
 
     it('должен пропускать сохранение при skipDataCollection=true', () => {
       const result = generateMultiSelectButtonHandler(validParamsSkipData);
-
-      expect(result).toContain('skipDataCollection=true');
-      expect(result).toContain('skipDataCollectionTransition');
-      expect(result).not.toContain('await update_user_data_in_db(user_id, "skip_var"');
+      assert.ok(result.includes('skipDataCollection=true'));
+      assert.ok(result.includes('skipDataCollectionTransition'));
+      assert.ok(!result.includes('await update_user_data_in_db(user_id, "skip_var"'));
     });
   });
 
   describe('Callback data генерация', () => {
     it('должен использовать правильный формат callback_data', () => {
       const result = generateMultiSelectButtonHandler(validParamsBasic);
-
-      expect(result).toContain('c.data == "ms_abc123_btn456"');
-      expect(result).toContain('c.data.startswith("ms_abc123_btn456_btn_")');
+      assert.ok(result.includes('c.data == "ms_abc123_btn456"'));
+      assert.ok(result.includes('c.data.startswith("ms_abc123_btn456_btn_")'));
     });
 
     it('должен использовать безопасное имя функции', () => {
       const result = generateMultiSelectButtonHandler(validParamsBasic);
-
-      expect(result).toContain('handle_callback_ms_abc123_btn456');
+      assert.ok(result.includes('handle_callback_ms_abc123_btn456'));
     });
   });
 
   describe('Невалидные данные', () => {
     it('должен выбрасывать ошибку при отсутствии callbackData', () => {
-      expect(() =>
-        multiSelectButtonHandlerParamsSchema.parse(invalidParamsMissingCallbackData)
-      ).toThrow();
+      assert.throws(() => multiSelectButtonHandlerParamsSchema.parse(invalidParamsMissingCallbackData));
     });
 
     it('должен выбрасывать ошибку при неправильном типе button', () => {
-      expect(() =>
-        multiSelectButtonHandlerParamsSchema.parse(invalidParamsWrongButtonType)
-      ).toThrow();
+      assert.throws(() => multiSelectButtonHandlerParamsSchema.parse(invalidParamsWrongButtonType));
     });
   });
 
   describe('Валидация схемы', () => {
     it('должна принимать валидные параметры', () => {
       const result = multiSelectButtonHandlerParamsSchema.safeParse(validParamsBasic);
-      expect(result.success).toBe(true);
+      assert.ok(result.success);
     });
 
     it('должна принимать параметры без targetNode', () => {
       const params = { ...validParamsWithoutDone, targetNode: undefined };
       const result = multiSelectButtonHandlerParamsSchema.safeParse(params);
-      expect(result.success).toBe(true);
+      assert.ok(result.success);
     });
 
     it('должна принимать параметры с custom indent', () => {
       const params = { ...validParamsBasic, indentLevel: '        ' };
       const result = multiSelectButtonHandlerParamsSchema.safeParse(params);
-      expect(result.success).toBe(true);
+      assert.ok(result.success);
     });
   });
 
@@ -144,14 +129,16 @@ describe('generateMultiSelectButtonHandler', () => {
     it('должен использовать отступ по умолчанию', () => {
       const result = generateMultiSelectButtonHandler(validParamsBasic);
       const lines = result.split('\n');
-      expect(lines[0]).toMatch(/^    @dp/);
+      const firstNonEmpty = lines.find(l => l.trim().length > 0) || '';
+      assert.ok(firstNonEmpty.startsWith('    @dp'), `Expected '    @dp', got: "${firstNonEmpty}"`);
     });
 
     it('должен использовать custom indent', () => {
       const params = { ...validParamsBasic, indentLevel: '        ' };
       const result = generateMultiSelectButtonHandler(params);
       const lines = result.split('\n');
-      expect(lines[0]).toMatch(/^        @dp/);
+      const firstNonEmpty = lines.find(l => l.trim().length > 0) || '';
+      assert.ok(firstNonEmpty.startsWith('        @dp'), `Expected '        @dp', got: "${firstNonEmpty}"`);
     });
   });
 
@@ -160,23 +147,18 @@ describe('generateMultiSelectButtonHandler', () => {
       const start = performance.now();
       generateMultiSelectButtonHandler(validParamsBasic);
       const end = performance.now();
-      expect(end - start).toBeLessThan(100);
+      assert.ok(end - start < 100, `Генерация заняла ${end - start}ms`);
     });
 
     it('должен быстро генерировать код для множества узлов', () => {
       const params: any = {
         ...validParamsBasic,
-        nodes: Array.from({ length: 100 }, (_, i) => ({
-          id: `node_${i}`,
-          type: 'message',
-          data: {},
-        })),
+        nodes: Array.from({ length: 100 }, (_, i) => ({ id: `node_${i}`, type: 'message', data: {} })),
       };
-
       const start = performance.now();
       generateMultiSelectButtonHandler(params);
       const end = performance.now();
-      expect(end - start).toBeLessThan(500);
+      assert.ok(end - start < 500, `Генерация заняла ${end - start}ms`);
     });
   });
 });

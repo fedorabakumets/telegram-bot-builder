@@ -406,16 +406,26 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         return;
       }
 
-      const { generateBroadcast } = await import('./broadcast/broadcast.renderer');
+      const { generateBroadcastBot } = await import('./broadcast-bot/broadcast-bot.renderer');
 
-      const code = generateBroadcast({
+      const code = generateBroadcastBot({
         nodeId: 'broadcast_1',
-        messageText: 'Рассылка!',
-        enableBroadcast: true,
-        enableConfirmation: true,
-        confirmationText: 'Подтвердите',
-        idSourceType: 'user_ids',
-        broadcastApiType: 'bot',
+        idSourceType: 'bot_users',
+        successMessage: 'Рассылка завершена!',
+        errorMessage: 'Ошибка рассылки',
+        broadcastNodes: [
+          {
+            id: 'msg_1',
+            text: 'Рассылка!',
+            formatMode: 'none',
+            imageUrl: '',
+            audioUrl: '',
+            videoUrl: '',
+            documentUrl: '',
+            attachedMedia: [],
+            autoTransitionTo: '',
+          },
+        ],
       });
 
       assertValidPythonSyntax(code, 'generateBroadcast');

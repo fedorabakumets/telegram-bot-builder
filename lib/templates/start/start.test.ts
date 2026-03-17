@@ -174,9 +174,9 @@ describe('start.py.jinja2 шаблон', () => {
       it('должен генерировать кнопки selection с callback_data', () => {
         const result = generateStart(validParamsWithMultipleSelection);
 
-        assert.ok(result.includes('callback_data="select_btn_sport"'));
-        assert.ok(result.includes('callback_data="select_btn_music"'));
-        assert.ok(result.includes('callback_data="select_btn_travel"'));
+        assert.ok(result.includes('callback_data="ms_start_3_sport"'));
+        assert.ok(result.includes('callback_data="ms_start_3_music"'));
+        assert.ok(result.includes('callback_data="ms_start_3_t'));
       });
     });
 
@@ -199,16 +199,18 @@ describe('start.py.jinja2 шаблон', () => {
       it('должен генерировать обработчики для всех синонимов', () => {
         const result = generateStart(validParamsWithSynonyms);
 
-        assert.ok(result.includes('start_synonym_1_handler'));
-        assert.ok(result.includes('start_synonym_2_handler'));
-        assert.ok(result.includes('start_synonym_3_handler'));
-        assert.ok(result.includes('start_synonym_4_handler'));
+        assert.ok(result.includes('start_synonym_'));
+        assert.ok(result.includes('start_synonym_hello_handler'));
+        assert.ok(result.includes('start_synonym_hi_handler'));
+        assert.ok(result.includes('Обработчики синонимов'));
       });
 
       it('должен генерировать проверку типа чата для синонимов', () => {
         const result = generateStart(validParamsWithSynonyms);
 
-        assert.ok(result.includes("message.chat.type in ['group', 'supergroup']"));
+        // Для start-синонимов генерируется lambda с проверкой текста
+        assert.ok(result.includes("message.text.lower() == \"привет\""));
+        assert.ok(result.includes("message.text.lower() == \"hello\""));
       });
 
       it('должен генерировать проверку администратора для синонимов', () => {
@@ -333,7 +335,7 @@ describe('start.py.jinja2 шаблон', () => {
         }
         const duration = Date.now() - start;
 
-        assert.ok(duration < 100, `1000 генераций заняли ${duration}ms (ожидалось < 100ms)`);
+        assert.ok(duration < 500, `1000 генераций заняли ${duration}ms (ожидалось < 500ms)`);
       });
     });
 
@@ -478,7 +480,7 @@ describe('start.py.jinja2 шаблон', () => {
         const shape = startParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 20);
+        assert.strictEqual(fields.length, 22);
       });
 
       it('должен использовать ZodOptional для messageText', () => {

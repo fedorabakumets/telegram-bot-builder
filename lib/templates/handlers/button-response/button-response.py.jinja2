@@ -183,13 +183,14 @@ async def handle_response_{{ node.id|safe_name }}_{{ loop.index0 }}(callback_que
                 message_id=callback_query.message.message_id
             )
 
-{% set commandNodes = allNodes|selectattr('type', 'in', ['start', 'command'])|selectattr('data.command')|list %}
+{% set commandNodes = [] %}
+{% for n in allNodes %}{% if n.data and n.data.command and (n.type == 'start' or n.type == 'command') %}{% set _ = commandNodes.push(n) %}{% endif %}{% endfor %}
 {% for cmdNode in commandNodes %}
 {% set safeCmdName = cmdNode.data.command|replace('/', '')|safe_name %}
 {% if cmdNode.type == 'start' %}
 {% set handlerName = 'start_handler' %}
 {% else %}
-{% set handlerName = safeCmdName ~ '_handler' %}
+{% set handlerName = 'handle_command_' ~ safeCmdName %}
 {% endif %}
 {% if loop.first %}
             if command == "{{ cmdNode.data.command }}":
