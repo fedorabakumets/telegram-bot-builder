@@ -61,6 +61,7 @@
     "test:header": "node run-tests.js --pattern header",
     "test:imports": "node run-tests.js --pattern imports",
     "test:keyboard": "node run-tests.js --pattern keyboard",
+    "test:user-variables-func": "node run-tests.js --pattern user-variables-func",
     "test:main": "node run-tests.js --pattern main",
     "test:message": "node run-tests.js --pattern message",
     "test:middleware": "node run-tests.js --pattern middleware",

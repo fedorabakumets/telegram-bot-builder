@@ -1,64 +1,32 @@
-▶ generateReplyInputHandler()
-  ▶ button_response_config
-    ✔ генерирует проверку button_response_config (60.6461ms)
-    ✔ генерирует поиск selected_option (1.1282ms)
-    ✔ генерирует структуру response_data (1.1509ms)
-    ✔ генерирует очистку button_response_config (0.7903ms)
-    ✔ генерирует обработку неверного выбора (1.0106ms)
-  ✔ button_response_config (66.4217ms)
-  ▶ URL-кнопки
-    ✔ без URL: нет блока url action (1.6407ms)
-    ✔ с URL: генерирует блок url action (0.7708ms)
-  ✔ URL-кнопки (2.8975ms)
-  ▶ команды
-    ✔ генерирует fake_message для команд (1.5398ms)
-    ✔ генерирует обработчики команд (1.5448ms)
-  ✔ команды (3.6202ms)
-  ▶ goto-навигация
-    ✔ генерирует переход к узлам (0.9736ms)
-    ✔ генерирует fallback к next_node_id (0.4317ms)
-  ✔ goto-навигация (1.5763ms)
-  ▶ pending_skip_buttons
-    ✔ генерирует проверку pending_skip_buttons (0.7286ms)
-    ✔ генерирует очистку медиа-ожиданий (0.7589ms)
-  ✔ pending_skip_buttons (1.6744ms)
-  ▶ skip_buttons в waiting_for_input
-    ✔ генерирует проверку skip_buttons (0.7466ms)
-    ✔ генерирует call_skip_target_handler (2.2998ms)
-  ✔ skip_buttons в waiting_for_input (3.2797ms)
-  ▶ сохранение ответа
-    ✔ генерирует appendVariable логику (0.646ms)
-    ✔ генерирует сохранение в БД (0.3081ms)
-    ✔ обновляет all_user_vars (0.4085ms)
-  ✔ сохранение ответа (1.5686ms)
-  ▶ цикл автопереходов
-    ✔ генерирует while next_node_id (0.6713ms)
-    ✔ генерирует навигацию к узлам в цикле (0.4262ms)
-  ✔ цикл автопереходов (1.262ms)
-  ▶ call_skip_target_handler
-    ✔ генерирует функцию call_skip_target_handler (0.3496ms)
-  ✔ call_skip_target_handler (0.4586ms)
-  ▶ отступы
-    ✔ дефолтный отступ — 4 пробела (1.0183ms)
-    ✔ кастомный отступ — 8 пробелов (0.8148ms)
-  ✔ отступы (2.1606ms)
-  ▶ пустые параметры
-    ✔ работает без узлов и команд (0.497ms)
-  ✔ пустые параметры (0.6118ms)
-✔ generateReplyInputHandler() (87.5938ms)
-▶ replyInputHandlerParamsSchema
-  ✔ принимает валидные параметры (0.3313ms)
-  ✔ принимает пустые массивы (0.1719ms)
-  ✔ отклоняет числовой indentLevel (0.7155ms)
-✔ replyInputHandlerParamsSchema (1.4068ms)
-▶ collectGraphNodes()
-  ✔ собирает id и safeName (0.3518ms)
-  ✔ фильтрует null (0.1628ms)
-✔ collectGraphNodes() (0.6363ms)
-▶ collectCommandNodes()
-  ✔ собирает start и command узлы (0.273ms)
-  ✔ фильтрует узлы без команды (0.1081ms)
-✔ collectCommandNodes() (0.6327ms)
-▶ Производительность
-  ✔ generateReplyInputHandler: быстрее 10ms (1.2084ms)
-✔ Производительность (1.4781ms)
+▶ user-variables-func.py.jinja2 шаблон
+  ▶ generateGetUserVariablesFunction()
+    ▶ Базовая генерация
+      ✔ должен генерировать функцию без параметров (10.9253ms)
+      ✔ должен генерировать return с user_data.get (0.2994ms)
+      ✔ должен содержать docstring (0.4123ms)
+      ✔ должен содержать Args и Returns в docstring (0.2559ms)
+    ✔ Базовая генерация (12.7978ms)
+    ▶ Отступы
+      ✔ должен генерировать без отступа по умолчанию (0.4396ms)
+      ✔ должен генерировать с отступом 4 пробела (0.3096ms)
+      ✔ должен генерировать с отступом 8 пробелов (0.1979ms)
+      ✔ пустой indentLevel эквивалентен отсутствию параметра (1.9742ms)
+      ✔ тело функции должно иметь дополнительный отступ относительно def (1.3391ms)
+    ✔ Отступы (5.1088ms)
+    ▶ Корректность Python-кода
+      ✔ не должен содержать синтаксических артефактов Jinja2 (0.4847ms)
+      ✔ должен содержать только одно определение функции (0.3089ms)
+      ✔ должен содержать только один return (0.2474ms)
+    ✔ Корректность Python-кода (1.2412ms)
+    ▶ Производительность
+      ✔ должен генерировать код быстрее 10ms (0.3379ms)
+      ✔ должен генерировать 1000 раз быстрее 500ms (12.6459ms)
+    ✔ Производительность (13.3547ms)
+  ✔ generateGetUserVariablesFunction() (33.1398ms)
+  ▶ userVariablesFuncParamsSchema
+    ✔ должен принимать пустой объект (0.5766ms)
+    ✔ должен использовать пустую строку как default для indentLevel (0.3074ms)
+    ✔ должен принимать строку для indentLevel (0.1695ms)
+    ✔ должен отклонять число вместо строки для indentLevel (0.6876ms)
+  ✔ userVariablesFuncParamsSchema (2.0132ms)
+✔ user-variables-func.py.jinja2 шаблон (35.6619ms)
