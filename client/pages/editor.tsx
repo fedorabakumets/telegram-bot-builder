@@ -51,7 +51,6 @@ import { SimpleLayoutCustomizer } from '@/components/layout/simple-layout-custom
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
-import { useCodeGenerator } from '@/components/editor/code/use-code-generator';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@lib/queryClient';
@@ -433,7 +432,7 @@ export default function Editor() {
   }, [currentTab, users, handleSelectUserDetails, handleSelectDialogUser]);
 
   // Использование хука генератора кода
-  const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent, setCodeContent } = useCodeGenerator(
+  const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent, setCodeContent } = useCodeGeneratorServer(
     activeProject?.data as BotData || { nodes: [] },
     activeProject?.name || 'project',
     activeProject?.userDatabaseEnabled === 1,

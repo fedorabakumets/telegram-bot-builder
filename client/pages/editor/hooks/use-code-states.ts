@@ -7,7 +7,7 @@
  */
 
 import { useState, useRef } from 'react';
-import type { CodeFormat } from '@/components/editor/code/use-code-generator';
+import type { CodeFormat } from '@/components/editor/code/useCodeGeneratorServer';
 
 /** Результат работы хука useCodeStates */
 export interface UseCodeStatesResult {

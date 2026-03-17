@@ -69,12 +69,11 @@ export function useCodeGeneratorServer(
     try {
       // Python код генерируем на сервере
       if (format === 'python' && projectId) {
-        const response = await apiRequest('POST', `/api/projects/${projectId}/generate`, {
+        const data = await apiRequest('POST', `/api/projects/${projectId}/generate`, {
           userDatabaseEnabled,
           enableComments: true,
           enableLogging: false,
         });
-        const data = await response.json();
         return data.code;
       }
 
