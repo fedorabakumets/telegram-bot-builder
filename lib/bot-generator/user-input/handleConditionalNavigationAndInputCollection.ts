@@ -2,7 +2,6 @@ import { Button } from '../types';
 import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from '../format';
 import { generateKeyboard } from '../../templates/keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
-import { generateNavigateToNodeWithText } from '../transitions/generate-node-navigation';
 import { generateUserInputFromNode } from '../../templates/user-input';
 
 export function handleConditionalNavigationAndInputCollection(nodes: any[], code: string, allNodeIds: any[]) {
@@ -355,7 +354,6 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                         code += '                        await message.answer(text, reply_markup=keyboard)\n';
                     } else {
                         // Используем переиспользуемую функцию навигации
-                        code += generateNavigateToNodeWithText(targetNode.id, 'text', 'message', '                        ');
                     }
                 }
             }

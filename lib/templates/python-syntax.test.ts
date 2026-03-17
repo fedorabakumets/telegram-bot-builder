@@ -127,9 +127,24 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
       const code = generateKeyboard({
         keyboardType: 'inline',
         buttons: [
-          { text: 'Button 1', action: 'callback', target: 'btn1', id: 'btn_1' },
-          { text: 'Button 2', action: 'callback', target: 'btn2', id: 'btn_2' },
-          { text: 'Site', action: 'url', target: 'https://example.com', id: 'btn_site' },
+          {
+            text: 'Button 1', action: 'goto', target: 'btn1', id: 'btn_1',
+            buttonType: 'complete',
+            skipDataCollection: false,
+            hideAfterClick: false
+          },
+          {
+            text: 'Button 2', action: 'goto', target: 'btn2', id: 'btn_2',
+            buttonType: 'complete',
+            skipDataCollection: false,
+            hideAfterClick: false
+          },
+          {
+            text: 'Site', action: 'url', target: 'https://example.com', id: 'btn_site',
+            buttonType: 'complete',
+            skipDataCollection: false,
+            hideAfterClick: false
+          },
         ],
         resizeKeyboard: true,
         oneTimeKeyboard: false,
@@ -149,8 +164,18 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
       const code = generateKeyboard({
         keyboardType: 'reply',
         buttons: [
-          { text: 'Button 1', action: 'callback', target: 'btn1', id: 'btn_1' },
-          { text: 'Button 2', action: 'callback', target: 'btn2', id: 'btn_2' },
+          {
+            text: 'Button 1', action: 'goto', target: 'btn1', id: 'btn_1',
+            buttonType: 'complete',
+            skipDataCollection: false,
+            hideAfterClick: false
+          },
+          {
+            text: 'Button 2', action: 'goto', target: 'btn2', id: 'btn_2',
+            buttonType: 'complete',
+            skipDataCollection: false,
+            hideAfterClick: false
+          },
         ],
         resizeKeyboard: true,
         oneTimeKeyboard: false,
@@ -181,7 +206,12 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         multiSelectVariable: '',
         keyboardType: 'inline',
         buttons: [
-          { text: 'Menu', action: 'callback', target: 'menu', id: 'btn_menu' },
+          {
+            text: 'Menu', action: 'goto', target: 'menu', id: 'btn_menu',
+            buttonType: 'complete',
+            skipDataCollection: false,
+            hideAfterClick: false
+          },
         ],
         formatMode: 'html',
       });
@@ -213,7 +243,12 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         fallbackMessage: '',
         keyboardType: 'inline',
         buttons: [
-          { text: 'Help', action: 'callback', target: 'help', id: 'btn_help' },
+          {
+            text: 'Help', action: 'goto', target: 'help', id: 'btn_help',
+            buttonType: 'complete',
+            skipDataCollection: false,
+            hideAfterClick: false
+          },
         ],
         formatMode: 'html',
       });
@@ -242,7 +277,12 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         autoTransitionTo: undefined,
         keyboardType: 'inline',
         buttons: [
-          { text: 'OK', action: 'callback', target: 'ok', id: 'btn_ok' },
+          {
+            text: 'OK', action: 'goto', target: 'ok', id: 'btn_ok',
+            buttonType: 'complete',
+            skipDataCollection: false,
+            hideAfterClick: false
+          },
         ],
         formatMode: 'none',
         enableConditionalMessages: false,
@@ -272,7 +312,12 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         autoTransitionTo: undefined,
         keyboardType: 'inline',
         buttons: [
-          { text: 'OK', action: 'callback', target: 'ok', id: 'btn_ok' },
+          {
+            text: 'OK', action: 'goto', target: 'ok', id: 'btn_ok',
+            buttonType: 'complete',
+            skipDataCollection: false,
+            hideAfterClick: false
+          },
         ],
         formatMode: 'none',
         enableConditionalMessages: false,
@@ -641,7 +686,12 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         generateDatabase({ userDatabaseEnabled: true }),
         generateUtils({ userDatabaseEnabled: true }),
         generateMiddleware({ userDatabaseEnabled: true }),
-        generateStart({ nodeId: 'start_1', messageText: 'Привет!', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], allowMultipleSelection: false, multiSelectVariable: '', keyboardType: 'inline', buttons: [{ text: 'OK', action: 'callback', target: 'msg_1', id: 'btn_ok' }], formatMode: 'html' }),
+        generateStart({ nodeId: 'start_1', messageText: 'Привет!', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], allowMultipleSelection: false, multiSelectVariable: '', keyboardType: 'inline', buttons: [{
+          text: 'OK', action: 'goto', target: 'msg_1', id: 'btn_ok',
+          buttonType: 'complete',
+          skipDataCollection: false,
+          hideAfterClick: false
+        }], formatMode: 'html' }),
         generateCommand({ nodeId: 'cmd_1', command: '/help', messageText: 'Помощь', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '', keyboardType: 'inline', buttons: [], formatMode: 'html' }),
         generateMessage({ nodeId: 'msg_1', messageText: 'Сообщение', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, enableAutoTransition: false, autoTransitionTo: undefined, keyboardType: 'inline', buttons: [], formatMode: 'none', enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '' }),
         generateMain({ userDatabaseEnabled: true, hasInlineButtons: true, menuCommands: [{ command: 'start', description: 'Запустить бота' }] }),

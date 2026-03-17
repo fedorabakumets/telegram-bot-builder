@@ -3,10 +3,10 @@
  * @module templates/keyboard/keyboard.params
  */
 
-import type { Button } from '../../bot-generator/transitions/types/button-response-config-types';
+import type { Button } from '../../bot-generator/types/button-types';
 import type { KeyboardLayout } from '../types/keyboard-layout';
 
-export type { Button } from '../../bot-generator/transitions/types/button-response-config-types';
+export type { Button } from '../../bot-generator/types/button-types';
 export type { KeyboardLayout } from '../types/keyboard-layout';
 
 /** Тип клавиатуры */

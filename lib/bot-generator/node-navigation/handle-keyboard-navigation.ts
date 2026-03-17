@@ -11,7 +11,7 @@ import type { Node } from '@shared/schema';
 import type { Button } from '../types/button-types';
 import { generateButtonText } from '../format';
 import { toPythonBoolean } from '../format';
-import { generateNavigateToNodeWithText } from '../transitions/generate-node-navigation';
+import { generateNavigateToNodeWithText } from '../../templates/navigation';
 import { generateKeyboard } from '../../templates/keyboard';
 
 /**

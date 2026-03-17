@@ -48,10 +48,8 @@ import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generat
 import { generateSaveMediaToDb } from './bot-generator/MediaHandler/save-media-to-db';
 import { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
 import { hasUploadImageUrls } from './bot-generator/MediaHandler/hasUploadImageUrls';
-import { generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation } from './bot-generator/transitions';
-import { newgenerateStateTransitionAndRenderLogic } from './bot-generator/transitions';
 import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './bot-generator/user-input';
-import { createProcessNodeButtonsFunction } from './bot-generator/node-handlers';
+import { generateInteractiveCallbackHandlers } from './templates/interactive-callback-handlers';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './bot-generator/scaffolding';
 import { addAutoTransitionNodes } from './bot-generator/utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
@@ -364,7 +362,17 @@ export function generatePythonCode(
   allReferencedNodeIds = filteredReferencedNodeIds;
 
   // Генерируем обработчики только если есть inline кнопки или условные кнопки
-  generateInteractiveCallbackHandlers();
+  code += generateInteractiveCallbackHandlers({
+    inlineNodes,
+    allReferencedNodeIds,
+    allConditionalButtons,
+    nodes: context.nodes,
+    allNodeIds: context.allNodeIds,
+    connections: [],
+    userDatabaseEnabled: !!context.options.userDatabaseEnabled,
+    mediaVariablesMap: new Map(),
+    processNodeButtonsAndGenerateHandlers: (_processedCallbacks) => {},
+  });
 
   // Генерируем обработчики для кнопок клавиатуры ответов
   code += generateReplyButtonHandlers({ nodes: context.nodes, indentLevel: '' });
@@ -478,13 +486,7 @@ export function generatePythonCode(
 
   return code;
 
-  /**
-   * Генерирует обработчики callback'ов для inline кнопок
-   */
-  function generateInteractiveCallbackHandlers(): void {
-    const processNodeButtonsAndGenerateHandlers = createProcessNodeButtonsFunction(inlineNodes, context.nodes, code, context.allNodeIds, [], context.mediaVariablesMap);
-    code = generateInteractiveCallbackHandlersWithConditionalMessagesMultiSelectAndAutoNavigation(inlineNodes, allReferencedNodeIds, allConditionalButtons, code, processNodeButtonsAndGenerateHandlers, context.nodes, context.allNodeIds, [], !!context.options.userDatabaseEnabled, context.mediaVariablesMap);
-  }
+ 
 
   /**
    * Генерирует обработчики кнопочных ответов для сбора пользовательского ввода
@@ -539,16 +541,10 @@ export function generatePythonCode(
       () => adHocHandlerCode,
       () => continuationHandlerCode,
       generateUserInputValidationAndContinuationLogic,
-      generateStateTransitionAndRenderLogic
-    );
+      () => {}    );
   }
 
-  /**
-   * Генерирует код валидации пользовательского ввода и логики продолжения
-   */
-  function generateStateTransitionAndRenderLogic() {
-    code = newgenerateStateTransitionAndRenderLogic(context.nodes, code, context.allNodeIds, []);
-  }
+
 
   /**
    * Собирает все callback-идентификаторы команд из узлов бота

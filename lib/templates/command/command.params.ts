@@ -3,8 +3,8 @@
  * @module templates/command/command.params
  */
 
-import type { Button } from '../transitions/types/button-response-config-types';
-import type { ConditionalMessage } from '../node-navigation/handle-conditional-messages';
+import type { Button } from '../../bot-generator/types/button-types';
+import type { ConditionalMessage } from '../../bot-generator/node-navigation/handle-conditional-messages';
 import type { KeyboardLayout } from '../types/keyboard-layout';
 
 /** Тип клавиатуры */
