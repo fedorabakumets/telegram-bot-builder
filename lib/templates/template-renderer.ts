@@ -47,6 +47,11 @@ function isNodeEnvironment(): boolean {
 let env: Environment | null = null;
 
 /**
+ * Кеш скомпилированных шаблонов
+ */
+const templateCache = new Map<string, ReturnType<Environment['getTemplate']>>();
+
+/**
  * Инициализирует окружение Nunjucks
  * Вызывается один раз при первом использовании
  */
@@ -221,7 +226,12 @@ export function renderPartialTemplate(
       }
     }
 
-    const template = environment.getTemplate(templatePath);
+    // Используем кеш скомпилированных шаблонов
+    let template = templateCache.get(templatePath);
+    if (!template) {
+      template = environment.getTemplate(templatePath);
+      templateCache.set(templatePath, template);
+    }
     return template.render(validated);
   } catch (error: any) {
     // Если мы в браузере и Nunjucks недоступен, бросаем понятную ошибку

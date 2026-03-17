@@ -3,7 +3,8 @@
  * @module templates/handlers/multi-select-transition/multi-select-transition.test
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
 import { generateMultiSelectTransition } from './multi-select-transition.renderer';
 import {
   multiSelectTransitionFixture,
@@ -15,29 +16,29 @@ import {
 describe('generateMultiSelectTransition', () => {
   it('должен генерировать переход к целевому узлу через continueButtonTarget', () => {
     const result = generateMultiSelectTransition(multiSelectTransitionFixture);
-    
-    expect(result).toContain('if node_id == "node1":');
-    expect(result).toContain('Переход к узлу node2');
-    expect(result).toContain('🔄 Переходим к узлу node2');
+
+    assert.ok(result.includes('if node_id == "node1":'));
+    assert.ok(result.includes('Переход к узлу node2'));
+    assert.ok(result.includes('🔄 Переходим к узлу node2'));
   });
 
   it('должен генерировать вызов команды для command узла', () => {
     const result = generateMultiSelectTransition(commandTargetFixture);
-    
-    expect(result).toContain('await handle_command_menu');
+
+    assert.ok(result.includes('await handle_command_menu'));
   });
 
   it('должен генерировать переход по соединению если нет continueButtonTarget', () => {
     const result = generateMultiSelectTransition(connectionsFixture);
-    
-    expect(result).toContain('Переход к узлу node2 через соединение');
+
+    assert.ok(result.includes('Переход к узлу node2 через соединение'));
   });
 
   it('должен обрабатывать случай несуществующего целевого узла', () => {
     const result = generateMultiSelectTransition(missingTargetFixture);
-    
-    expect(result).toContain('Целевой узел не найден');
-    expect(result).toContain('✅ Выбор завершен!');
+
+    assert.ok(result.includes('Целевой узел не найден'));
+    assert.ok(result.includes('✅ Выбор завершен!'));
   });
 
   it('должен содержать предупреждение для неизвестного типа узла', () => {
@@ -67,7 +68,7 @@ describe('generateMultiSelectTransition', () => {
       connections: [],
       indentLevel: '        ',
     });
-    
-    expect(result).toContain('⚠️ Неизвестный тип узла');
+
+    assert.ok(result.includes('⚠️ Неизвестный тип узла'));
   });
 });
