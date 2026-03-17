@@ -20,7 +20,7 @@ const USER_MANAGEMENT_TYPES = new Set([
 export function collectSynonymEntries(nodes: Node[]): SynonymEntry[] {
   const validNodes = nodes.filter(n => n != null && n.data?.synonyms?.length > 0);
 
-  const hasStartNode = nodes.some(n => n.type === 'start');
+  const hasStartNode = nodes.some(n => n != null && n.type === 'start');
 
   const entries: SynonymEntry[] = [];
 
