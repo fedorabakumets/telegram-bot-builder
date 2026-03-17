@@ -6,8 +6,8 @@
 /** Тип валидации вводимых данных */
 export type InputValidationType = 'none' | 'email' | 'phone' | 'number';
 
-/** Тип ожидаемого медиа */
-export type InputMediaType = 'text' | 'photo' | 'video' | 'audio' | 'document';
+/** Тип ожидаемого ввода */
+export type InputType = 'text' | 'button';
 
 /** Параметры для генерации блока waiting_for_input */
 export interface UserInputTemplateParams {
@@ -26,7 +26,11 @@ export interface UserInputTemplateParams {
   /** ID следующего узла после ввода */
   inputTargetNodeId?: string;
 
-  // --- Типы ввода ---
+  // --- Тип ввода ---
+  /** Основной тип ввода: text (по умолчанию) или button */
+  inputType?: InputType;
+
+  // --- Типы ввода (медиа) ---
   /** Принимать текстовый ввод */
   enableTextInput?: boolean;
   /** Принимать фото */
@@ -45,6 +49,10 @@ export interface UserInputTemplateParams {
   enableDocumentInput?: boolean;
   /** Переменная для документов */
   documentInputVariable?: string;
+
+  // --- Кнопки пропуска ---
+  /** Кнопки skipDataCollection: [{text, target}] */
+  skipButtons?: Array<{ text: string; target: string }>;
 
   // --- Валидация ---
   /** Тип валидации */

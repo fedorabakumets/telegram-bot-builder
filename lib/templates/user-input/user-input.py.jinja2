@@ -24,20 +24,14 @@
   @param {bool}   saveToDatabase      — сохранять в базу данных
 #}
 
-{# ── Вычисляем список принимаемых режимов ── #}
-{% set modes = [] %}
-{% if enableTextInput %}{% set _ = modes.append("text") %}{% endif %}
-{% if enablePhotoInput %}{% set _ = modes.append("photo") %}{% endif %}
-{% if enableVideoInput %}{% set _ = modes.append("video") %}{% endif %}
-{% if enableAudioInput %}{% set _ = modes.append("audio") %}{% endif %}
-{% if enableDocumentInput %}{% set _ = modes.append("document") %}{% endif %}
-{% if not modes %}{% set modes = ["text"] %}{% endif %}
+{# ── modes передаётся готовым массивом из renderer ── #}
+{% set firstMode = modes[0] if modes else "text" %}
 
     # Устанавливаем состояние ожидания ввода для узла {{ nodeId }}
     user_data[user_id] = user_data.get(user_id, {})
     user_data[user_id]["waiting_for_input"] = {
-        "type": "{{ modes[0] }}",
-        "modes": {{ modes | tojson }},
+        "type": "{{ firstMode }}",
+        "modes": {{ modes | dump }},
         "variable": "{{ inputVariable }}",
         "save_to_database": {{ saveToDatabase | default(true) | to_python_boolean }},
         "node_id": "{{ nodeId }}",
@@ -51,7 +45,8 @@
         "photo_variable": "{{ photoInputVariable }}"{% endif %}{% if enableVideoInput and videoInputVariable %},
         "video_variable": "{{ videoInputVariable }}"{% endif %}{% if enableAudioInput and audioInputVariable %},
         "audio_variable": "{{ audioInputVariable }}"{% endif %}{% if enableDocumentInput and documentInputVariable %},
-        "document_variable": "{{ documentInputVariable }}"{% endif %}
+        "document_variable": "{{ documentInputVariable }}"{% endif %}{% if skipButtons and skipButtons.length %},
+        "skip_buttons": {{ skipButtons | dump }}{% endif %}
 
     }
-    logging.info(f"✅ Состояние ожидания настроено: modes={{ modes | tojson }} для переменной {{ inputVariable }} (узел {{ nodeId }})")
+    logging.info(f"✅ Состояние ожидания настроено: modes={{ modes | dump }} для переменной {{ inputVariable }} (узел {{ nodeId }})")

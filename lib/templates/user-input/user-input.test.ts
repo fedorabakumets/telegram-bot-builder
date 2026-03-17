@@ -15,11 +15,14 @@ import {
   validParamsWithValidation,
   validParamsAppendMode,
   validParamsNoTarget,
+  validParamsButtonInput,
+  validParamsButtonWithText,
   invalidParamsMissingNodeId,
   nodeWithTextInput,
   nodeWithEmailValidation,
   nodeWithPhotoInput,
   nodeWithMultiMedia,
+  nodeWithButtons,
   nodeWithoutCollectInput,
   nodesWithMixedInput,
 } from './user-input.fixture';
@@ -114,6 +117,35 @@ describe('generateUserInput()', () => {
     const r = generateUserInput(validParamsNoTarget);
     assert.ok(r.includes('"save_to_database": False'));
   });
+
+  it('inputType button → type=button в Python', () => {
+    const r = generateUserInput(validParamsButtonInput);
+    assert.ok(r.includes('"type": "button"'));
+    assert.ok(r.includes('"modes": ["button"]'));
+  });
+
+  it('inputType button + enableTextInput → modes=[button, text]', () => {
+    const r = generateUserInput(validParamsButtonWithText);
+    assert.ok(r.includes('"button"'));
+    assert.ok(r.includes('"text"'));
+  });
+
+  it('skip_buttons добавляется в блок', () => {
+    const r = generateUserInput(validParamsButtonInput);
+    assert.ok(r.includes('"skip_buttons"'));
+    assert.ok(r.includes('Пропустить'));
+    assert.ok(r.includes('msg_skip'));
+  });
+
+  it('skip_buttons отсутствует если пустой массив', () => {
+    const r = generateUserInput(validParamsMinimal);
+    assert.ok(!r.includes('"skip_buttons"'));
+  });
+
+  it('дефолт inputVariable = "input" (совпадает с реальным кодом)', () => {
+    const result = userInputParamsSchema.parse({ nodeId: 'n', safeName: 'n' });
+    assert.strictEqual(result.inputVariable, 'input');
+  });
 });
 
 // ─── userInputParamsSchema ───────────────────────────────────────────────────
@@ -176,7 +208,7 @@ describe('nodeToUserInputParams()', () => {
 
   it('дефолт inputVariable если не задан', () => {
     const params = nodeToUserInputParams(nodeWithoutCollectInput);
-    assert.strictEqual(params.inputVariable, 'user_response');
+    assert.strictEqual(params.inputVariable, 'input');
   });
 });
 
@@ -193,7 +225,7 @@ describe('nodeHasUserInput()', () => {
 
   it('фильтрует узлы с вводом из массива', () => {
     const inputNodes = nodesWithMixedInput.filter(nodeHasUserInput);
-    assert.strictEqual(inputNodes.length, 3);
+    assert.strictEqual(inputNodes.length, 4);
   });
 });
 
@@ -224,6 +256,13 @@ describe('generateUserInputFromNode()', () => {
     assert.ok(r.includes('"text"'));
     assert.ok(r.includes('"photo"'));
     assert.ok(r.includes('"video"'));
+  });
+
+  it('генерирует type=button для узла с кнопками', () => {
+    const r = generateUserInputFromNode(nodeWithButtons);
+    assert.ok(r.includes('"type": "button"'));
+    assert.ok(r.includes('"skip_buttons"'));
+    assert.ok(r.includes('Пропустить'));
   });
 });
 

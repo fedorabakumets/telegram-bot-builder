@@ -76,6 +76,27 @@ export const validParamsAppendMode: UserInputTemplateParams = {
   saveToDatabase: true,
 };
 
+export const validParamsButtonInput: UserInputTemplateParams = {
+  nodeId: 'msg_ask_choice',
+  safeName: 'msg_ask_choice',
+  inputVariable: 'user_choice',
+  inputType: 'button',
+  enableTextInput: false,
+  inputTargetNodeId: 'msg_next',
+  skipButtons: [{ text: 'Пропустить', target: 'msg_skip' }],
+  saveToDatabase: true,
+};
+
+export const validParamsButtonWithText: UserInputTemplateParams = {
+  nodeId: 'msg_ask_choice2',
+  safeName: 'msg_ask_choice2',
+  inputVariable: 'user_choice2',
+  inputType: 'button',
+  enableTextInput: true,
+  inputTargetNodeId: 'msg_next',
+  saveToDatabase: true,
+};
+
 export const validParamsNoTarget: UserInputTemplateParams = {
   nodeId: 'msg_final_input',
   safeName: 'msg_final_input',
@@ -139,9 +160,23 @@ export const nodeWithoutCollectInput: Node = makeNode('msg_plain', 'message', {
   inputVariable: '',
 });
 
+export const nodeWithButtons: Node = makeNode('msg_ask_choice', 'message', {
+  collectUserInput: true,
+  inputVariable: 'user_choice',
+  buttons: [
+    { id: 'btn1', text: 'Да', skipDataCollection: false, target: '' },
+    { id: 'btn2', text: 'Пропустить', skipDataCollection: true, target: 'msg_skip' },
+  ],
+  keyboardType: 'reply',
+  enableTextInput: false,
+  inputTargetNodeId: 'msg_next',
+  saveToDatabase: true,
+});
+
 export const nodesWithMixedInput: Node[] = [
   nodeWithTextInput,
   nodeWithEmailValidation,
   nodeWithPhotoInput,
+  nodeWithButtons,
   nodeWithoutCollectInput,
 ];

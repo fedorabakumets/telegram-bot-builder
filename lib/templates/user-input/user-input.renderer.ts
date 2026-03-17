@@ -9,11 +9,30 @@ import { userInputParamsSchema } from './user-input.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
 /**
+ * Вычисляет список принимаемых режимов ввода из параметров
+ */
+function buildModes(params: UserInputTemplateParams): string[] {
+  // Кнопочный ввод
+  if (params.inputType === 'button') {
+    return params.enableTextInput ? ['button', 'text'] : ['button'];
+  }
+  // Медиа/текстовый ввод
+  const modes: string[] = [];
+  if (params.enableTextInput !== false) modes.push('text');
+  if (params.enablePhotoInput) modes.push('photo');
+  if (params.enableVideoInput) modes.push('video');
+  if (params.enableAudioInput) modes.push('audio');
+  if (params.enableDocumentInput) modes.push('document');
+  return modes.length > 0 ? modes : ['text'];
+}
+
+/**
  * Генерирует Python-код блока waiting_for_input из параметров (низкоуровневый API)
  */
 export function generateUserInput(params: UserInputTemplateParams): string {
   const validated = userInputParamsSchema.parse(params);
-  return renderPartialTemplate('user-input/user-input.py.jinja2', validated);
+  const modes = buildModes(validated);
+  return renderPartialTemplate('user-input/user-input.py.jinja2', { ...validated, modes });
 }
 
 /**
@@ -25,7 +44,7 @@ export function nodeToUserInputParams(node: Node): UserInputTemplateParams {
   return {
     nodeId: node.id,
     safeName,
-    inputVariable: node.data.inputVariable || 'user_response',
+    inputVariable: node.data.inputVariable || 'input',
     appendVariable: node.data.appendVariable ?? false,
     inputTargetNodeId: node.data.inputTargetNodeId || '',
     enableTextInput: node.data.enableTextInput ?? true,
@@ -37,6 +56,10 @@ export function nodeToUserInputParams(node: Node): UserInputTemplateParams {
     audioInputVariable: node.data.audioInputVariable || '',
     enableDocumentInput: node.data.enableDocumentInput ?? false,
     documentInputVariable: node.data.documentInputVariable || '',
+    inputType: (node.data.buttons?.length > 0 && node.data.collectUserInput) ? 'button' : 'text',
+    skipButtons: (node.data.buttons || [])
+      .filter((btn: any) => btn.skipDataCollection === true && btn.target)
+      .map((btn: any) => ({ text: btn.text, target: btn.target })),
     validationType: (node.data.validationType as UserInputTemplateParams['validationType']) ?? 'none',
     minLength: node.data.minLength ?? 0,
     maxLength: node.data.maxLength ?? 0,
