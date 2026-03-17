@@ -16,19 +16,19 @@
 {{ ind }}if user_id not in user_data:
 {{ ind }}    user_data[user_id] = {}
 {% for mediaVar in attachedMedia %}
-{% if mediaVar.startswith('video_url_') and videoUrl %}
+{% if 'video_url_' in mediaVar and videoUrl %}
 {{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ videoUrl }}"
-{% elif mediaVar.startswith('audio_url_') and audioUrl %}
+{% elif 'audio_url_' in mediaVar and audioUrl %}
 {{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ audioUrl }}"
-{% elif mediaVar.startswith('document_url_') and documentUrl %}
+{% elif 'document_url_' in mediaVar and documentUrl %}
 {{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ documentUrl }}"
-{% elif mediaVar.startswith('audioUrlVar') and audioUrl %}
+{% elif 'audioUrlVar' in mediaVar and audioUrl %}
 {{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ audioUrl }}"
-{% elif mediaVar.startswith('videoUrlVar') and videoUrl %}
+{% elif 'videoUrlVar' in mediaVar and videoUrl %}
 {{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ videoUrl }}"
-{% elif mediaVar.startswith('imageUrlVar') and imageUrl %}
+{% elif 'imageUrlVar' in mediaVar and imageUrl %}
 {{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ imageUrl }}"
-{% elif mediaVar.startswith('documentUrlVar') and documentUrl %}
+{% elif 'documentUrlVar' in mediaVar and documentUrl %}
 {{ ind }}user_data[user_id]["{{ mediaVar }}"] = "{{ documentUrl }}"
 {% endif %}
 {% endfor %}

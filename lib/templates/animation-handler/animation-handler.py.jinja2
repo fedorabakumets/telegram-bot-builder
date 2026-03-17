@@ -1,0 +1,20 @@
+{#
+  Шаблон обработчика анимации (GIF)
+
+  @fileoverview Генерирует Python-код отправки анимации (GIF) пользователю.
+
+  @param {string} animationUrl — URL анимации (GIF)
+  @param {string} nodeId       — ID узла
+  @param {string} indentLevel  — базовый отступ (по умолчанию '                ')
+#}
+{% set ind = indentLevel or '                ' %}
+{% if animationUrl %}
+{% if '/uploads/' in animationUrl and animationUrl[0] == '/' %}
+{{ ind }}if "{{ animationUrl }}".startswith('/uploads/'):
+{{ ind }}    animation_path = get_upload_file_path("{{ animationUrl }}")
+{{ ind }}    animation_file = FSInputFile(animation_path)
+{{ ind }}await bot.send_animation(message.chat.id, animation_file, caption=text, parse_mode=parse_mode)
+{% else %}
+{{ ind }}await bot.send_animation(message.chat.id, "{{ animationUrl }}", caption=text, parse_mode=parse_mode)
+{% endif %}
+{% endif %}

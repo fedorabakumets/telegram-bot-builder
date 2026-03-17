@@ -10,7 +10,7 @@
 #}
 {% set ind = indentLevel or '                ' %}
 {% if imageUrl %}
-{% if imageUrl.startswith('/uploads/') %}
+{% if '/uploads/' in imageUrl and imageUrl[0] == '/' %}
 {{ ind }}if "{{ imageUrl }}".startswith('/uploads/'):
 {{ ind }}    photo_path = get_upload_file_path("{{ imageUrl }}")
 {{ ind }}    image_url = FSInputFile(photo_path)
@@ -19,7 +19,7 @@
 {{ ind }}await bot.send_photo(message.chat.id, "{{ imageUrl }}", caption=text, parse_mode=parse_mode)
 {% endif %}
 {% elif videoUrl %}
-{% if videoUrl.startswith('/uploads/') %}
+{% if '/uploads/' in videoUrl and videoUrl[0] == '/' %}
 {{ ind }}if "{{ videoUrl }}".startswith('/uploads/'):
 {{ ind }}    video_path = get_upload_file_path("{{ videoUrl }}")
 {{ ind }}    video_url = FSInputFile(video_path)
@@ -28,7 +28,7 @@
 {{ ind }}await bot.send_video(message.chat.id, "{{ videoUrl }}", caption=text, parse_mode=parse_mode)
 {% endif %}
 {% elif audioUrl %}
-{% if audioUrl.startswith('/uploads/') %}
+{% if '/uploads/' in audioUrl and audioUrl[0] == '/' %}
 {{ ind }}if "{{ audioUrl }}".startswith('/uploads/'):
 {{ ind }}    audio_path = get_upload_file_path("{{ audioUrl }}")
 {{ ind }}    audio_url = FSInputFile(audio_path)
@@ -37,7 +37,7 @@
 {{ ind }}await bot.send_audio(message.chat.id, "{{ audioUrl }}", caption=text, parse_mode=parse_mode)
 {% endif %}
 {% elif documentUrl %}
-{% if documentUrl.startswith('/uploads/') %}
+{% if '/uploads/' in documentUrl and documentUrl[0] == '/' %}
 {{ ind }}if "{{ documentUrl }}".startswith('/uploads/'):
 {{ ind }}    document_path = get_upload_file_path("{{ documentUrl }}")
 {{ ind }}    document_url = FSInputFile(document_path)

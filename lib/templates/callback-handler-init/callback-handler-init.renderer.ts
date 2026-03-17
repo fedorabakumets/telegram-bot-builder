@@ -4,14 +4,17 @@
  */
 
 import type { CallbackHandlerInitTemplateParams } from './callback-handler-init.params';
+import { callbackHandlerInitParamsSchema } from './callback-handler-init.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
 /**
  * Генерирует Python-код инициализации callback-обработчика.
- * Заменяет generateCallbackHandlerInit() из bot-generator/transitions/callback-handler-init.ts
+ * @param params - Параметры инициализации
+ * @returns Сгенерированный Python код
  */
 export function generateCallbackHandlerInit(params: CallbackHandlerInitTemplateParams): string {
-  return renderPartialTemplate('callback-handler-init/callback-handler-init.py.jinja2', params);
+  const validated = callbackHandlerInitParamsSchema.parse(params);
+  return renderPartialTemplate('callback-handler-init/callback-handler-init.py.jinja2', validated);
 }
 
 /**
