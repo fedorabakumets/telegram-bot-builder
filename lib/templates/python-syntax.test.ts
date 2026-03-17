@@ -612,3 +612,500 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
     });
   });
 });
+
+// ===== ИНТЕГРАЦИОННЫЕ ТЕСТЫ: шаблоны не покрытые выше =====
+
+describe('generateAdminRights', () => {
+  it('должен генерировать валидный Python код для admin-rights', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateAdminRightsHandler } = await import('./admin-rights/admin-rights.renderer');
+    const code = generateAdminRightsHandler({
+      nodeId: 'admin_rights_node_1',
+      safeName: 'admin_rights_node_1',
+      messageText: '⚙️ Управление правами',
+      command: 'admin_rights',
+    });
+    assertValidPythonSyntax(code, 'generateAdminRights');
+  });
+});
+
+describe('generateAnimationHandler', () => {
+  it('должен генерировать валидный Python код для animation-handler', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateAnimationHandler } = await import('./animation-handler/animation-handler.renderer');
+    const code = generateAnimationHandler({
+      animationUrl: 'https://example.com/animation.gif',
+      nodeId: 'node_anim_1',
+    });
+    assertValidPythonSyntax(code, 'generateAnimationHandler');
+  });
+});
+
+describe('generateAttachedMedia', () => {
+  it('должен генерировать валидный Python код для attached-media', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateAttachedMedia } = await import('./attached-media/attached-media.renderer');
+    const code = generateAttachedMedia({
+      nodeId: 'node_1',
+      attachedMedia: ['/uploads/photo.jpg'],
+      formatMode: 'none',
+      keyboardType: 'none',
+      handlerContext: 'callback',
+    });
+    assertValidPythonSyntax(code, 'generateAttachedMedia');
+  });
+});
+
+describe('generateAttachedMediaVars', () => {
+  it('должен генерировать валидный Python код для attached-media-vars', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateAttachedMediaVars } = await import('./attached-media-vars/attached-media-vars.renderer');
+    const code = generateAttachedMediaVars({
+      nodeId: 'node_img',
+      attachedMedia: ['imageUrlVar_node_img'],
+      imageUrl: 'https://example.com/photo.jpg',
+    });
+    assertValidPythonSyntax(code, 'generateAttachedMediaVars');
+  });
+});
+
+describe('generateAutoTransition', () => {
+  it('должен генерировать валидный Python код для auto-transition', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateAutoTransition } = await import('./auto-transition/auto-transition.renderer');
+    const code = generateAutoTransition({
+      nodeId: 'node_source',
+      autoTransitionTarget: 'node_target',
+      targetExists: true,
+    });
+    assertValidPythonSyntax(code, 'generateAutoTransition');
+  });
+});
+
+describe('generateCallbackHandlerInit', () => {
+  it('должен генерировать валидный Python код для callback-handler-init', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateCallbackHandlerInit } = await import('./callback-handler-init/callback-handler-init.renderer');
+    const code = generateCallbackHandlerInit({
+      nodeId: 'node_abc',
+      hasHideAfterClick: false,
+      variableFilters: null,
+    });
+    assertValidPythonSyntax(code, 'generateCallbackHandlerInit');
+  });
+});
+
+describe('generateCommandNavigation', () => {
+  it('должен генерировать валидный Python код для command-navigation', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateCommandNavigation } = await import('./command-navigation/command-navigation.renderer');
+    const code = generateCommandNavigation({
+      commandName: 'start',
+      handlerName: 'start_handler',
+    });
+    assertValidPythonSyntax(code, 'generateCommandNavigation');
+  });
+});
+
+describe('generateConditionalBranch', () => {
+  it('должен генерировать валидный Python код для conditional-branch', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateConditionalBranch } = await import('./conditional-branch/conditional-branch.renderer');
+    const code = generateConditionalBranch({ index: 0, nodeId: 'node_abc' });
+    assertValidPythonSyntax(code, 'generateConditionalBranch');
+  });
+});
+
+describe('generateConditionalInputHandler', () => {
+  it('должен генерировать валидный Python код для conditional-input-handler', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateConditionalInputHandler } = await import('./conditional-input-handler/conditional-input-handler.renderer');
+    const code = generateConditionalInputHandler({
+      nodes: [
+        { id: 'node_abc', safeName: 'node_abc', type: 'message', data: { messageText: 'Привет' } },
+      ],
+      allNodeIds: ['node_abc'],
+    });
+    assertValidPythonSyntax(code, 'generateConditionalInputHandler');
+  });
+});
+
+describe('generateConditionalMessages', () => {
+  it('должен генерировать валидный Python код для conditional-messages', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateConditionalMessages } = await import('./conditional-messages/conditional-messages.renderer');
+    const code = generateConditionalMessages({
+      conditionalMessages: [
+        { variableName: 'user_role', condition: 'user_role', messageText: 'Привет, администратор!' },
+      ],
+      defaultText: '"Привет!"',
+    });
+    assertValidPythonSyntax(code, 'generateConditionalMessages');
+  });
+});
+
+describe('generateCsvSafe', () => {
+  it('должен генерировать валидный Python код для csv-safe', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateCsvSafe } = await import('./csv-safe/csv-safe.renderer');
+    const code = generateCsvSafe({ operation: 'write', csvFileVar: 'csv_file_path', dataVar: 'user_id' });
+    assertValidPythonSyntax(code, 'generateCsvSafe');
+  });
+});
+
+describe('generateErrorHandler', () => {
+  it('должен генерировать валидный Python код для error-handler', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateErrorHandler } = await import('./error-handler/error-handler.renderer');
+    const code = generateErrorHandler({});
+    assertValidPythonSyntax(code, 'generateErrorHandler');
+  });
+});
+
+describe('generateFakeCallback', () => {
+  it('должен генерировать валидный Python код для fake-callback', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateFakeCallback } = await import('./fake-callback/fake-callback.renderer');
+    const code = generateFakeCallback({
+      targetNodeId: 'node_target',
+      sourceNodeId: 'node_source',
+      safeFunctionName: 'node_target',
+    });
+    assertValidPythonSyntax(code, 'generateFakeCallback');
+  });
+});
+
+describe('generateHandleUserInput', () => {
+  it('должен генерировать валидный Python код для handle-user-input', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateHandleUserInput } = await import('./handle-user-input/handle-user-input.renderer');
+    const code = generateHandleUserInput({});
+    assertValidPythonSyntax(code, 'generateHandleUserInput');
+  });
+});
+
+describe('generateMediaPathResolve', () => {
+  it('должен генерировать валидный Python код для media-path-resolve', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateMediaPathResolve } = await import('./media-path-resolve/media-path-resolve.renderer');
+    const code = generateMediaPathResolve({ mediaType: 'photo', urlVar: 'image_url' });
+    assertValidPythonSyntax(code, 'generateMediaPathResolve');
+  });
+});
+
+describe('generateMediaSaveVars', () => {
+  it('должен генерировать валидный Python код для media-save-vars', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateMediaSaveVars } = await import('./media-save-vars/media-save-vars.renderer');
+    const code = generateMediaSaveVars({ nodeId: 'node_img', imageUrl: 'https://example.com/photo.jpg' });
+    assertValidPythonSyntax(code, 'generateMediaSaveVars');
+  });
+});
+
+describe('generateMediaSend', () => {
+  it('должен генерировать валидный Python код для media-send', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateMediaSend } = await import('./media-send/media-send.renderer');
+    const code = generateMediaSend({ nodeId: 'node_img', imageUrl: 'https://example.com/photo.jpg' });
+    assertValidPythonSyntax(code, 'generateMediaSend');
+  });
+});
+
+describe('generateMultiselectCheck', () => {
+  it('должен генерировать валидный Python код для multiselect-check', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateMultiSelectCheck } = await import('./multiselect-check/multiselect-check.renderer');
+    const code = generateMultiSelectCheck({ nodes: [], allNodeIds: [] });
+    assertValidPythonSyntax(code, 'generateMultiselectCheck');
+  });
+});
+
+describe('generateNavigateToNode', () => {
+  it('должен генерировать валидный Python код для navigate-to-node', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateNavigateToNode } = await import('./navigation/navigate-to-node.renderer');
+    const code = generateNavigateToNode();
+    assertValidPythonSyntax(code, 'generateNavigateToNode');
+  });
+});
+
+describe('generateParseMode', () => {
+  it('должен генерировать валидный Python код для parse-mode (html)', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateParseMode } = await import('./parse-mode/parse-mode.renderer');
+    const code = generateParseMode({ formatMode: 'html' });
+    assertValidPythonSyntax(code, 'generateParseMode html');
+  });
+});
+
+describe('generateReplyInputHandler', () => {
+  it('должен генерировать валидный Python код для reply-input-handler', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateReplyInputHandler } = await import('./reply-input-handler/reply-input-handler.renderer');
+    const code = generateReplyInputHandler({
+      nodes: [{ id: 'node_abc', safeName: 'node_abc' }],
+      commandNodes: [{ id: 'start_1', type: 'start', command: '/start' }],
+      hasUrlButtons: false,
+    });
+    assertValidPythonSyntax(code, 'generateReplyInputHandler');
+  });
+});
+
+describe('generateSkipDataCollection', () => {
+  it('должен генерировать валидный Python код для skip-data-collection', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateSkipDataCollectionCheck } = await import('./skip-data-collection/skip-data-collection.renderer');
+    const code = generateSkipDataCollectionCheck({ variableName: 'user_name', variableValue: 'message.text' });
+    assertValidPythonSyntax(code, 'generateSkipDataCollection');
+  });
+});
+
+describe('generateSynonyms', () => {
+  it('должен генерировать валидный Python код для synonyms', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateSynonyms } = await import('./synonyms/synonyms.renderer');
+    const code = generateSynonyms({
+      synonyms: [
+        { synonym: 'привет', nodeId: 'start_1', nodeType: 'start', functionName: 'start', originalCommand: '/start' },
+      ],
+    });
+    assertValidPythonSyntax(code, 'generateSynonyms');
+  });
+});
+
+describe('generateUserHandler', () => {
+  it('должен генерировать валидный Python код для user-handler (ban_user)', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateUserHandler } = await import('./user-handler/user-handler.renderer');
+    const code = generateUserHandler({
+      nodeType: 'ban_user',
+      nodeId: 'ban_node_1',
+      safeName: 'ban_node_1',
+      synonyms: ['бан'],
+      reason: 'Спам',
+      untilDate: 0,
+    });
+    assertValidPythonSyntax(code, 'generateUserHandler ban_user');
+  });
+});
+
+describe('generateUserVariablesFunc', () => {
+  it('должен генерировать валидный Python код для user-variables-func', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateGetUserVariablesFunction } = await import('./user-variables-func/user-variables-func.renderer');
+    const code = generateGetUserVariablesFunction({});
+    assertValidPythonSyntax(code, 'generateUserVariablesFunc');
+  });
+});
+
+describe('generateButtonResponse', () => {
+  it('должен генерировать валидный Python код для button-response', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateButtonResponse } = await import('./handlers/button-response/button-response.renderer');
+    const code = generateButtonResponse({
+      userInputNodes: [
+        {
+          id: 'node_123',
+          responseOptions: [
+            { text: 'Опция 1', value: 'opt1' },
+            { text: 'Опция 2', value: 'opt2' },
+          ],
+          allowSkip: false,
+        },
+      ],
+      allNodes: [{ id: 'node_123', type: 'message' }],
+      hasUrlButtonsInProject: false,
+      indentLevel: '',
+    });
+    assertValidPythonSyntax(code, 'generateButtonResponse');
+  });
+});
+
+describe('generateMultiSelectCallback', () => {
+  it('должен генерировать валидный Python код для multi-select-callback', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateMultiSelectCallback } = await import('./handlers/multi-select-callback/multi-select-callback.renderer');
+    const code = generateMultiSelectCallback({
+      multiSelectNodes: [
+        {
+          id: 'node_123',
+          shortNodeId: 'abc123',
+          selectionButtons: [
+            { id: 'btn_1', text: 'Опция 1', action: 'selection', target: 'opt1', value: 'opt1', valueTruncated: 'opt1', escapedText: 'Опция 1', callbackData: 'ms_abc123_opt1' },
+          ],
+          regularButtons: [],
+          doneCallbackData: 'done_abc123',
+          totalButtonsCount: 1,
+        },
+      ],
+      allNodeIds: ['node_123'],
+      indentLevel: '    ',
+    });
+    assertValidPythonSyntax(code, 'generateMultiSelectCallback');
+  });
+});
+
+describe('generateReplyButtonHandlers', () => {
+  it('должен генерировать валидный Python код для reply-button-handlers', async () => {
+    const { execSync } = await import('child_process');
+    let hasPython = false;
+    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
+
+    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
+
+    const { generateReplyButtonHandlers } = await import('./handlers/reply-button-handlers/reply-button-handlers.renderer');
+    const code = generateReplyButtonHandlers({
+      nodes: [
+        {
+          id: 'node1',
+          type: 'message',
+          data: {
+            keyboardType: 'reply',
+            messageText: 'Выберите:',
+            buttons: [
+              { id: 'btn1', text: 'Опция 1', action: 'goto', target: 'node2' },
+            ],
+          },
+        },
+        { id: 'node2', type: 'message', data: { keyboardType: 'none', messageText: 'OK' } },
+      ] as any,
+      indentLevel: '',
+    });
+    assertValidPythonSyntax(code, 'generateReplyButtonHandlers');
+  });
+});

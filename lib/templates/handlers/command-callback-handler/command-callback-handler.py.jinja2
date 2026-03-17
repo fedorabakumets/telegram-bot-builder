@@ -24,6 +24,7 @@
 {{ indent }}    # Симулируем выполнение команды /{{ command }}
 {{ indent }}    
 {{ indent }}    # Создаем fake message object для команды
+{{ indent }}    from types import SimpleNamespace
 {{ indent }}    fake_message = SimpleNamespace()
 {{ indent }}    fake_message.from_user = callback_query.from_user
 {{ indent }}    fake_message.chat = callback_query.message.chat
