@@ -68,7 +68,20 @@
     "test:universal-handlers": "node run-tests.js --pattern universal-handlers",
     "test:synonyms": "node run-tests.js --pattern synonyms",
     "test:attached-media": "node run-tests.js --pattern attached-media",
-    "test:user-handler": "node run-tests.js --pattern user-handler"
+    "test:user-handler": "node run-tests.js --pattern user-handler",
+    "test:admin-rights": "node run-tests.js --pattern admin-rights",
+    "test:broadcast-bot": "node run-tests.js --pattern broadcast-bot",
+    "test:broadcast-client": "node run-tests.js --pattern broadcast-client",
+    "test:handlers": "node run-tests.js --pattern handlers",
+    "test:handlers:button-response": "node run-tests.js --pattern button-response",
+    "test:handlers:command-callback": "node run-tests.js --pattern command-callback-handler",
+    "test:handlers:multi-select-callback": "node run-tests.js --pattern multi-select-callback",
+    "test:handlers:multi-select-done": "node run-tests.js --pattern multi-select-done",
+    "test:handlers:multi-select-reply": "node run-tests.js --pattern multi-select-reply",
+    "test:handlers:multi-select-button": "node run-tests.js --pattern multi-select-button-handler",
+    "test:handlers:multi-select-transition": "node run-tests.js --pattern multi-select-transition",
+    "test:handlers:reply-button": "node run-tests.js --pattern reply-button-handlers",
+    "test:handlers:reply-hide": "node run-tests.js --pattern reply-hide-after-click"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
