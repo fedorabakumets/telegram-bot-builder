@@ -1,0 +1,29 @@
+{#
+  Функция сохранения сообщений в базу данных напрямую через asyncpg
+#}
+
+# Функция для сохранения сообщений в базу данных напрямую (без API)
+async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
+    """Сохраняет сообщение в базу данных напрямую через asyncpg"""
+    try:
+        async with db_pool.acquire() as conn:
+            message_data_json = json.dumps(message_data or {}, ensure_ascii=False)
+            result = await conn.fetchrow(
+                """
+                INSERT INTO bot_messages (project_id, user_id, message_type, message_text, node_id, message_data, created_at)
+                VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                RETURNING id, user_id, message_type, created_at
+                """,
+                PROJECT_ID,
+                str(user_id),
+                message_type,
+                message_text,
+                node_id,
+                message_data_json
+            )
+            logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result['id']})")
+            return {"id": result['id'], "user_id": result['user_id'], "message_type": result['message_type'], "created_at": result['created_at']}
+    except Exception as e:
+        logging.error(f"❌ Ошибка сохранения сообщения в БД: {e}")
+    return None
+

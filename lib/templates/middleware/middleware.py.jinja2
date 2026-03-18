@@ -1,22 +1,105 @@
 {#
   Middleware для логирования сообщений
 
-  @fileoverview Middleware для автоматического сохранения сообщений в БД
-  @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей (для регистрации middleware)
+  @param {boolean} userDatabaseEnabled - Включена ли база данных
+  @param {boolean} hasInlineButtons - Есть ли inline кнопки (для callback middleware)
 #}
 
+# Middleware для сохранения входящих сообщений
 async def message_logging_middleware(handler, event: types.Message, data: dict):
-    """Middleware для автоматического сохранения входящих сообщений"""
+    """Middleware для автоматического сохранения входящих сообщений от пользователей"""
     try:
+        # Сохраняем входящее сообщение от пользователя
         user_id = str(event.from_user.id)
         message_text = event.text or event.caption or "[медиа]"
-        
-        await save_message_to_api(
+        message_data = {"message_id": event.message_id}
+
+        # Проверяем наличие фото
+        photo_file_id = None
+        if event.photo:
+            # Берем фото наибольшего размера (последнее в списке)
+            largest_photo = event.photo[-1]
+            photo_file_id = largest_photo.file_id
+            message_data["photo"] = {
+                "file_id": largest_photo.file_id,
+                "file_unique_id": largest_photo.file_unique_id,
+                "width": largest_photo.width,
+                "height": largest_photo.height,
+                "file_size": largest_photo.file_size if hasattr(largest_photo, "file_size") else None
+            }
+            if not message_text or message_text == "[медиа]":
+                message_text = "[Фото]"
+
+        # Сохраняем сообщение в базу данных
+        saved_message = await save_message_to_api(
             user_id=user_id,
             message_type="user",
             message_text=message_text,
+            message_data=message_data
         )
+
+        # Если есть фото и сообщение сохранено, регистрируем медиа в БД
+        if photo_file_id and saved_message and "id" in saved_message:
+            try:
+                media_result = await save_media_to_db(
+                    file_id=photo_file_id,
+                    file_type="photo",
+                    file_name=f"photo_{photo_file_id}",
+                    file_size=event.photo[-1].file_size if event.photo and event.photo[-1].file_size else 0,
+                    mime_type="image/jpeg"
+                )
+                if media_result:
+                    await link_media_to_message(
+                        message_id=saved_message["id"],
+                        media_id=media_result["id"],
+                        media_kind="photo",
+                        order_index=0
+                    )
+                    logging.info(f"✅ Медиа зарегистрировано для сообщения {saved_message['id']}")
+            except Exception as media_error:
+                logging.warning(f"Ошибка при регистрации медиа: {media_error}")
     except Exception as e:
         logging.error(f"Ошибка в middleware сохранения сообщений: {e}")
-    
+
+    # Продолжаем обработку сообщения
     return await handler(event, data)
+
+{% if hasInlineButtons %}
+# Middleware для сохранения нажатий на кнопки
+async def callback_query_logging_middleware(handler, event: types.CallbackQuery, data: dict):
+    """Middleware для автоматического сохранения нажатий на кнопки"""
+    try:
+        user_id = str(event.from_user.id)
+        callback_data = event.data or ""
+
+        # Пытаемся найти текст кнопки из сообщения
+        button_text = None
+        if event.message and hasattr(event.message, "reply_markup"):
+            reply_markup = event.message.reply_markup
+            if hasattr(reply_markup, "inline_keyboard"):
+                for row in reply_markup.inline_keyboard:
+                    for btn in row:
+                        if hasattr(btn, "callback_data") and btn.callback_data == callback_data:
+                            button_text = btn.text
+                            break
+                    if button_text:
+                        break
+
+        message_text_to_save = f"[Нажата кнопка: {button_text}]" if button_text else "[Нажата кнопка]"
+        await save_message_to_api(
+            user_id=user_id,
+            message_type="user",
+            message_text=message_text_to_save,
+            message_data={
+                "button_clicked": True,
+                "button_text": button_text,
+                "callback_data": callback_data
+            }
+        )
+    except Exception as e:
+        logging.error(f"Ошибка в middleware сохранения нажатий кнопок: {e}")
+
+    # Продолжаем обработку callback query
+    return await handler(event, data)
+
+{% endif %}

@@ -1,28 +1,28 @@
 /**
- * @fileoverview Функция рендеринга шаблона middleware
+ * @fileoverview Renderer для генерации кода логирования сообщений
  * @module templates/middleware/middleware.renderer
  */
 
-import type { MiddlewareTemplateParams } from './middleware.params';
-import { middlewareParamsSchema } from './middleware.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
 /**
- * Генерация Python middleware с валидацией параметров
- * @param params - Параметры middleware
- * @returns Сгенерированный Python код middleware
- *
- * @example
- * ```typescript
- * const code = generateMiddleware({
- *   userDatabaseEnabled: true,
- * });
- * ```
+ * Генерирует код логирования: middleware, обёртки send/answer, save_message_to_api
  */
-export function generateMiddleware(params: MiddlewareTemplateParams): string {
-  const validated = middlewareParamsSchema.parse({
-    ...params,
-    userDatabaseEnabled: params.userDatabaseEnabled ?? false,
+export function generateMessageLoggingCode(
+  userDatabaseEnabled: boolean,
+  hasInlineButtonsValue: boolean,
+  projectId: number | null
+): string {
+  if (!userDatabaseEnabled) return '';
+
+  let code = '';
+  code += renderPartialTemplate('middleware/save-message-to-api.py.jinja2', { projectId });
+  code += renderPartialTemplate('middleware/middleware.py.jinja2', {
+    userDatabaseEnabled,
+    hasInlineButtons: hasInlineButtonsValue,
   });
-  return renderPartialTemplate('middleware/middleware.py.jinja2', validated);
+  code += renderPartialTemplate('middleware/answer-with-logging.py.jinja2', {});
+  code += renderPartialTemplate('middleware/send-message-with-logging.py.jinja2', {});
+  code += renderPartialTemplate('middleware/send-photo-with-logging.py.jinja2', {});
+  return code;
 }

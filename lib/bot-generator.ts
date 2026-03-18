@@ -24,9 +24,7 @@ import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, gene
 // Примечание: generateApiConfig удалена после миграции на Jinja2
 // import { generateApiConfig } from './bot-generator/api';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
-import { filterInlineNodes } from './bot-generator/Keyboard/filterInlineNodes';
-import { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
-import { identifyNodesRequiringMultiSelectLogic } from './bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic';
+import { filterInlineNodes, hasInlineButtons, identifyNodesRequiringMultiSelectLogic } from './templates/keyboard/keyboard.renderer';
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers } from './templates/handlers';
 import { hasUrlButtons } from './bot-generator/user-input';
 import { generateInteractiveCallbackHandlers } from './templates/interactive-callback-handlers';
@@ -36,7 +34,7 @@ import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generat
 import { generateSaveMediaToDb } from './bot-generator/MediaHandler/save-media-to-db';
 import { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
 import { hasUploadImageUrls } from './bot-generator/MediaHandler/hasUploadImageUrls';
-import { generateMessageLoggingCode } from './bot-generator/logging/generate-message-logging';
+import { generateMessageLoggingCode } from './templates/middleware/middleware.renderer';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './bot-generator/scaffolding';
 import { addAutoTransitionNodes } from './bot-generator/utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';

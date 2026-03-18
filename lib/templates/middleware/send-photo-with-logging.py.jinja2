@@ -1,0 +1,79 @@
+{#
+  Обёртка для bot.send_photo с автоматическим логированием и регистрацией медиа
+#}
+
+# Обертка для bot.send_photo с сохранением
+original_send_photo = bot.send_photo
+async def send_photo_with_logging(chat_id, photo, *args, caption=None, node_id=None, **kwargs):
+    """Обертка для bot.send_photo с автоматическим сохранением и регистрацией медиа"""
+    if isinstance(photo, str) and photo.startswith("/uploads/"):
+        file_path = get_upload_file_path(photo)
+        result = await original_send_photo(chat_id, FSInputFile(file_path), *args, caption=caption, **kwargs)
+    else:
+        result = await original_send_photo(chat_id, photo, *args, caption=caption, **kwargs)
+
+    message_data_obj = {"message_id": result.message_id if result else None}
+
+    if result and hasattr(result, "photo") and result.photo:
+        largest_photo = result.photo[-1]
+        message_data_obj["photo"] = {
+            "file_id": largest_photo.file_id,
+            "file_unique_id": largest_photo.file_unique_id,
+            "width": largest_photo.width,
+            "height": largest_photo.height
+        }
+    elif isinstance(photo, str):
+        message_data_obj["photo_url"] = photo
+
+    if "reply_markup" in kwargs:
+        try:
+            reply_markup = kwargs["reply_markup"]
+            buttons_data = []
+            if hasattr(reply_markup, "inline_keyboard"):
+                for row in reply_markup.inline_keyboard:
+                    for btn in row:
+                        button_info = {"text": btn.text}
+                        if hasattr(btn, "url") and btn.url:
+                            button_info["url"] = btn.url
+                        if hasattr(btn, "callback_data") and btn.callback_data:
+                            button_info["callback_data"] = btn.callback_data
+                        buttons_data.append(button_info)
+                if buttons_data:
+                    message_data_obj["buttons"] = buttons_data
+                    message_data_obj["keyboard_type"] = "inline"
+        except Exception as e:
+            logging.warning(f"Не удалось извлечь кнопки из send_photo: {e}")
+
+    saved_message = await save_message_to_api(
+        user_id=str(chat_id),
+        message_type="bot",
+        message_text=caption or "[Фото]",
+        node_id=node_id,
+        message_data=message_data_obj
+    )
+
+    if result and hasattr(result, "photo") and result.photo and saved_message and "id" in saved_message:
+        try:
+            largest_photo = result.photo[-1]
+            media_result = await save_media_to_db(
+                file_id=largest_photo.file_id,
+                file_type="photo",
+                file_name=f"photo_{largest_photo.file_id}",
+                file_size=largest_photo.file_size if hasattr(largest_photo, "file_size") else 0,
+                mime_type="image/jpeg"
+            )
+            if media_result:
+                await link_media_to_message(
+                    message_id=saved_message["id"],
+                    media_id=media_result["id"],
+                    media_kind="photo",
+                    order_index=0
+                )
+                logging.info(f"✅ Медиа бота зарегистрировано для сообщения {saved_message['id']}")
+        except Exception as media_error:
+            logging.warning(f"Ошибка при регистрации медиа бота: {media_error}")
+
+    return result
+
+bot.send_photo = send_photo_with_logging
+

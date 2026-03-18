@@ -46,3 +46,84 @@ export function processInlineButtonNodes(inlineNodes: any[], allReferencedNodeId
     }
   });
 }
+
+/**
+ * Идентифицирует узлы, требующие логики множественного выбора
+ * @param nodes - Массив узлов для проверки
+ * @returns Массив узлов с включенным множественным выбором
+ */
+export function identifyNodesRequiringMultiSelectLogic(nodes: any[]): any[] {
+  return nodes
+    .filter(node => node !== null && node !== undefined)
+    .filter(node => node.data?.allowMultipleSelection);
+}
+
+/**
+ * Фильтрует узлы с inline callback кнопками (action === 'selection' | 'complete')
+ */
+export function filterInlineNodes(nodes: any[]): any[] {
+  return nodes
+    .filter(node => node !== null && node !== undefined)
+    .filter(node => {
+      const buttons = node.data?.buttons;
+      return Array.isArray(buttons) && buttons.some(
+        (btn: any) => btn.action === 'selection' || btn.action === 'complete'
+      );
+    });
+}
+
+/**
+ * Проверяет наличие inline (callback) кнопок в узлах
+ */
+export function hasInlineButtons(nodes: any[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes
+    .filter(node => node !== null && node !== undefined)
+    .some(node => {
+      const hasMain = Array.isArray(node.data?.buttons) &&
+        node.data.buttons.some((btn: any) => btn.action === 'callback');
+      const hasConditional = Array.isArray(node.data?.conditionalMessages) &&
+        node.data.conditionalMessages.some((c: any) =>
+          Array.isArray(c.buttons) && c.buttons.some((btn: any) => btn.action === 'callback')
+        );
+      return hasMain || hasConditional;
+    });
+}
+
+/**
+ * Проверяет наличие узлов с множественным выбором
+ */
+export function hasMultiSelectNodes(nodes: any[]): boolean {
+  return nodes.some(node => {
+    if (!node?.data) return false;
+    if (node.data.allowMultipleSelection) return true;
+    return (node.data.buttons ?? []).some(
+      (btn: any) => btn.action === 'selection' || btn.action === 'complete'
+    );
+  });
+}
+
+/**
+ * Генерирует базовую структуру callback обработчика
+ */
+export function generateBaseCallbackHandlerStructure(code: string, safeFunctionName: any): string {
+  code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
+  code += '    # Безопасное получение данных из callback_query\n';
+  code += '    callback_data = None  # Инициализируем переменную\n';
+  code += '    try:\n';
+  code += '        user_id = callback_query.from_user.id\n';
+  code += '        callback_data = callback_query.data\n';
+  code += `        logging.info(f"🔵 Вызван callback handler: handle_callback_${safeFunctionName} для пользователя {user_id}")\n`;
+  code += '    except Exception as e:\n';
+  code += `        logging.error(f"❌ Ошибка доступа к callback_query в handle_callback_${safeFunctionName}: {e}")\n`;
+  code += '        return\n';
+  code += '    \n';
+  code += '    try:\n';
+  code += '        await callback_query.answer()\n';
+  code += '    except Exception:\n';
+  code += '        pass\n';
+  code += '    \n';
+  code += '    user_name = await init_user_variables(user_id, callback_query.from_user)\n';
+  code += '    \n';
+  return code;
+}

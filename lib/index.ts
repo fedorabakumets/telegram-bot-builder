@@ -37,7 +37,7 @@ export { hasNodesRequiringSafeEditOrSend } from './bot-generator/utils/hasNodesR
 
 // Keyboard generators - после миграции на Jinja2
 // Основные генераторы клавиатур используют адаптеры к Jinja2 шаблонам
-export * from './bot-generator/Keyboard';
+export * from './templates/keyboard/keyboard.renderer';
 
 // Code mapping utilities
 export * from './bot-generator/map-utils';

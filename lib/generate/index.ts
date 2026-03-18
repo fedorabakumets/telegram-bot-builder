@@ -7,7 +7,7 @@
 // Модуль для генерации различных частей кода Telegram ботов
 
 export * from '../templates/database/database-code.renderer';
-export * from '../bot-generator/logging/generate-message-logging';
+export * from '../templates/middleware/middleware.renderer';
 export * from '../bot-generator/MediaHandler/generateMediaFileFunctions';
 export * from './generate-node-handlers';
 export * from './generateGroupsConfiguration';
