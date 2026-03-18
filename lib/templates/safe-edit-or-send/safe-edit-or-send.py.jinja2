@@ -14,14 +14,7 @@ async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, *
     При автопереходе или при использовании ReplyKeyboard сразу отправляем новое сообщение
     """
     result = None
-    user_id = None
-    
-    # Получаем user_id для сохранения
-    if hasattr(cbq, "from_user") and cbq.from_user:
-        user_id = str(cbq.from_user.id)
-    elif hasattr(cbq, "message") and cbq.message and hasattr(cbq.message, "chat"):
-        user_id = str(cbq.message.chat.id)
-    
+
     # Проверяем, есть ли reply_markup и является ли он ReplyKeyboardMarkup
     reply_markup = kwargs.get("reply_markup", None)
     is_reply_keyboard = reply_markup and ("ReplyKeyboard" in str(type(reply_markup)))
@@ -66,20 +59,7 @@ async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, *
         else:
             logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")
             raise
-    
-    # Сохраняем сообщение в базу данных
-    # ЗАКОММЕНТИРОВАНО для предотвращения дублирования
-    # safe_edit_or_send используется вместе с send_message_with_logging
-    # if result and user_id:
-    #     message_data_obj = {"message_id": result.message_id if hasattr(result, "message_id") else None}
-    #     await save_message_to_api(
-    #         user_id=user_id,
-    #         message_type="bot",
-    #         message_text=text,
-    #         node_id=node_id,
-    #         message_data=message_data_obj
-    #     )
-    
+
     return result
 
 {%- endif %}

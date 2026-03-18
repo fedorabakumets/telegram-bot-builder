@@ -63,14 +63,7 @@ async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, *
     При автопереходе или при использовании ReplyKeyboard сразу отправляем новое сообщение
     """
     result = None
-    user_id = None
-    
-    # Получаем user_id для сохранения
-    if hasattr(cbq, "from_user") and cbq.from_user:
-        user_id = str(cbq.from_user.id)
-    elif hasattr(cbq, "message") and cbq.message and hasattr(cbq.message, "chat"):
-        user_id = str(cbq.message.chat.id)
-    
+
     # Проверяем, есть ли reply_markup и является ли он ReplyKeyboardMarkup
     reply_markup = kwargs.get("reply_markup", None)
     is_reply_keyboard = reply_markup and ("ReplyKeyboard" in str(type(reply_markup)))

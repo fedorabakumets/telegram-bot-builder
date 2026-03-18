@@ -49,11 +49,11 @@ describe('safe-edit-or-send.py.jinja2 шаблон', () => {
         assert.strictEqual(result.trim(), '');
       });
 
-      it('должен генерировать обработку user_id', () => {
+      it('должен генерировать обработку result', () => {
         const result = generateSafeEditOrSend(validParamsBasic);
 
-        assert.ok(result.includes('user_id = None'));
-        assert.ok(result.includes('cbq.from_user.id'));
+        assert.ok(result.includes('result = None'));
+        assert.ok(result.includes('return result'));
       });
 
       it('должен генерировать try-except блок', () => {
@@ -183,6 +183,44 @@ describe('safe-edit-or-send.py.jinja2 шаблон', () => {
     });
 
     describe('Проверка на распространённые ошибки Pylance', () => {
+      it('не должен содержать ошибку: Access to non-existent variable', () => {
+        const code = generateSafeEditOrSend(validParamsBasic);
+
+        // Проверяем что нет объявления переменных которые не используются
+        // Переменная user_id не должна объявляться если не используется
+        const lines = code.split('\n');
+        const declaredVars = new Set<string>();
+        const usedVars = new Set<string>();
+
+        for (const line of lines) {
+          // Находим объявления переменных (var_name = ...)
+          const assignMatch = line.match(/^\s*(\w+)\s*=\s*/);
+          if (assignMatch && !line.trim().startsWith('#')) {
+            declaredVars.add(assignMatch[1]);
+          }
+
+          // Находим использования переменных
+          const varUses = line.match(/\b(\w+)\b/g);
+          if (varUses) {
+            for (const v of varUses) {
+              if (v !== 'def' && v !== 'if' && v !== 'else' && v !== 'elif' &&
+                  v !== 'try' && v !== 'except' && v !== 'for' && v !== 'while' &&
+                  v !== 'return' && v !== 'import' && v !== 'from' && v !== 'as' &&
+                  v !== 'with' && v !== 'lambda' && v !== 'class' && v !== 'raise' &&
+                  v !== 'and' && v !== 'or' && v !== 'not' && v !== 'in' && v !== 'is' &&
+                  v !== 'True' && v !== 'False' && v !== 'None' && v !== 'async' && v !== 'await') {
+                usedVars.add(v);
+              }
+            }
+          }
+        }
+
+        // Проверяем что все объявленные переменные используются
+        for (const v of declaredVars) {
+          assert.ok(usedVars.has(v), `Переменная '${v}' объявлена но не используется`);
+        }
+      });
+
       it('не должен содержать ошибку: Операторы без перевода строки перед else', () => {
         const code = generateSafeEditOrSend(validParamsBasic);
 

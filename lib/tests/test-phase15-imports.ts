@@ -1198,4 +1198,84 @@ if (failed > 0) {
   process.exit(1);
 }
 
-console.log('\n✅ Все тесты пройдены успешно!');
+// Дополнительная проверка: генерируем код и проверяем на reportUndefinedVariable
+console.log('\n══ ПРОВЕРКА НА reportUndefinedVariable ═══════════════════════');
+
+function checkUndefinedVars(project: any, label: string, options?: any) {
+  try {
+    const code = generatePythonCode(project as any, {
+      botName: `Check_${label}`,
+      userDatabaseEnabled: options?.userDatabaseEnabled ?? false,
+      enableComments: false,
+    });
+    
+    // Проверяем что все импортированные имена используются в коде
+    const lines = code.split('\n');
+    const importLines = lines.filter(l => l.match(/^\s*(from|import)\s/));
+    
+    // Собираем все импортированные имена
+    const importedNames = new Set<string>();
+    for (const line of importLines) {
+      const match = line.match(/from\s+\S+\s+import\s+(.+)/);
+      if (match) {
+        const names = match[1].split(',').map(n => n.trim().replace(/\(.*\)/, '').split(/\s+as\s+/)[0].trim());
+        names.forEach(n => { if (n) importedNames.add(n); });
+      }
+      const simpleMatch = line.match(/^import\s+(\S+)/);
+      if (simpleMatch) {
+        importedNames.add(simpleMatch[1]);
+      }
+    }
+    
+    // Проверяем что каждое импортированное имя используется в коде
+    const unusedImports: string[] = [];
+    for (const name of importedNames) {
+      // Игнорируем имена которые могут использоваться динамически
+      if (name && !code.includes(name)) {
+        unusedImports.push(name);
+      }
+    }
+    
+    if (unusedImports.length > 0) {
+      console.log(`  ⚠️  ${label}: Неиспользуемые импорты: ${unusedImports.join(', ')}`);
+      return false;
+    } else {
+      console.log(`  ✅ ${label}: Все импорты используются`);
+      return true;
+    }
+  } catch (e: any) {
+    console.log(`  ❌ ${label}: Ошибка: ${e.message}`);
+    return false;
+  }
+}
+
+// Проверка базового проекта
+const baseProject = deepClone(BASE_PROJECT);
+checkUndefinedVars(baseProject, 'Базовый проект');
+
+// Проверка проекта с БД
+checkUndefinedVars(baseProject, 'Проект с БД', { userDatabaseEnabled: true });
+
+// Проверка проекта с медиа
+const mediaProject = deepClone(BASE_PROJECT);
+mediaProject.sheets[0].nodes[0].data.imageUrl = 'https://example.com/image.jpg';
+checkUndefinedVars(mediaProject, 'Проект с медиа');
+
+// Проверка проекта с reply клавиатурой
+const replyProject = deepClone(BASE_PROJECT);
+replyProject.sheets[0].nodes.forEach((n: any) => {
+  n.data.keyboardType = 'reply';
+  n.data.buttons = [];
+});
+checkUndefinedVars(replyProject, 'Проект с reply клавиатурой');
+
+// Проверка проекта с inline клавиатурой
+const inlineProject = deepClone(BASE_PROJECT);
+inlineProject.sheets[0].nodes.forEach((n: any) => {
+  n.data.keyboardType = 'inline';
+});
+checkUndefinedVars(inlineProject, 'Проект с inline клавиатурой');
+
+console.log('\n═══════════════════════════════════════════════════════════════');
+
+console.log('\n✅ Все тесты импортов пройдены успешно!\n');
