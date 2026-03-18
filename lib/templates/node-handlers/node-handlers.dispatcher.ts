@@ -81,6 +81,9 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
       fallbackMessage: node.data?.fallbackMessage,
       synonymEntries: collectSynonymEntries([node]),
       hasUserIdsVariable: hasUserIdsVar(node.data?.messageText),
+      hasHideAfterClickIncoming: nodes.some((n: Node) =>
+        (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === node.id)
+      ),
     }),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,

@@ -36,8 +36,12 @@ export const commandParamsSchema = z.object({
   buttons: z.array(z.object({
     text: z.string(),
     action: z.string(),
-    target: z.string(),
+    target: z.string().optional().default(''),
     id: z.string(),
+    url: z.string().optional(),
+    hideAfterClick: z.boolean().optional(),
+    requestContact: z.boolean().optional(),
+    requestLocation: z.boolean().optional(),
   })).optional(),
   /** Раскладка клавиатуры */
   keyboardLayout: z.object({

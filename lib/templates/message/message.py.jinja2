@@ -44,6 +44,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     except Exception:
         pass
 
+    {%- if hasHideAfterClickIncoming %}
+    # Скрываем клавиатуру предыдущего сообщения (hideAfterClick)
+    try:
+        await callback_query.message.edit_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    {%- endif %}
+
     {# Проверки безопасности #}
     {%- if isPrivateOnly %}
     if not await is_private_chat(callback_query.message):
@@ -146,12 +154,13 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
     {%- else %}
     {# Отправка сообщения без медиа #}
+    {%- set effectiveKeyboard = 'ReplyKeyboardRemove()' if (hasHideAfterClickIncoming and keyboardType == 'none') else 'keyboard' %}
     {%- if formatMode == 'html' %}
-    await callback_query.message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+    await callback_query.message.answer(text, reply_markup={{ effectiveKeyboard }}, parse_mode="HTML")
     {%- elif formatMode == 'markdown' %}
-    await callback_query.message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+    await callback_query.message.answer(text, reply_markup={{ effectiveKeyboard }}, parse_mode="Markdown")
     {%- else %}
-    await callback_query.message.answer(text, reply_markup=keyboard)
+    await callback_query.message.answer(text, reply_markup={{ effectiveKeyboard }})
     {%- endif %}
     {%- endif %}
 

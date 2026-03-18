@@ -83,7 +83,11 @@ export function generateInteractiveCallbackHandlers(
     code += '    \n';
 
     // Инициализация callback обработчика
-    code += generateCallbackHandlerInit(buildCallbackHandlerInitParams(nodeId, targetNode, '    '));
+    // Проверяем: есть ли в любом узле кнопка с hideAfterClick=true, ведущая к этому nodeId
+    const hasHideAfterClickIncoming = nodes.some((n: any) =>
+      (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === nodeId)
+    );
+    code += generateCallbackHandlerInit(buildCallbackHandlerInitParams(nodeId, targetNode, '    ', hasHideAfterClickIncoming));
     code += '    \n';
 
     // Переменные прикреплённых медиа

@@ -73,8 +73,8 @@ export function generateCommandHandler(
     conditionalMessages: node.data?.conditionalMessages || [],
     keyboardType: node.data?.keyboardType || 'none',
     keyboardLayout: node.data?.keyboardLayout,
-    oneTimeKeyboard: node.data?.oneTimeKeyboard || false,
-    resizeKeyboard: node.data?.resizeKeyboard || true,
+    oneTimeKeyboard: node.data?.oneTimeKeyboard ?? false,
+    resizeKeyboard: node.data?.resizeKeyboard ?? true,
     buttons: sortButtonsByLayout(
       node.data?.buttons?.map((btn: any) => ({ ...btn, target: btn.target || btn.id || '' })) || [],
       node.data?.keyboardLayout
@@ -113,8 +113,8 @@ export function generateStartHandler(
     ),
     keyboardType: node.data?.keyboardType || 'none',
     keyboardLayout: node.data?.keyboardLayout,
-    oneTimeKeyboard: node.data?.oneTimeKeyboard || false,
-    resizeKeyboard: node.data?.resizeKeyboard || true,
+    oneTimeKeyboard: node.data?.oneTimeKeyboard ?? false,
+    resizeKeyboard: node.data?.resizeKeyboard ?? true,
     enableAutoTransition: node.data?.enableAutoTransition || false,
     autoTransitionTo: node.data?.autoTransitionTo || '',
     collectUserInput: node.data?.collectUserInput || false,

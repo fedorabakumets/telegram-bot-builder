@@ -48,10 +48,15 @@ export function generateBaseCallbackHandlerStructure(code: string, safeFunctionN
 export function buildCallbackHandlerInitParams(
   nodeId: string,
   targetNode: any,
-  indent: string = '    '
+  indent: string = '    ',
+  overrideHideAfterClick?: boolean
 ): CallbackHandlerInitTemplateParams {
   const buttons = targetNode.data?.buttons || [];
-  const hasHideAfterClick = buttons.some((btn: any) => btn.hideAfterClick === true);
+  // Если передан override (кнопка с hideAfterClick ведёт к этому узлу) — используем его,
+  // иначе проверяем кнопки самого узла (для обратной совместимости)
+  const hasHideAfterClick = overrideHideAfterClick !== undefined
+    ? overrideHideAfterClick
+    : buttons.some((btn: any) => btn.hideAfterClick === true);
   const variableFilters = targetNode.data?.variableFilters &&
     Object.keys(targetNode.data.variableFilters).length > 0
     ? targetNode.data.variableFilters

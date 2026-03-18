@@ -37,7 +37,7 @@ export const messageParamsSchema = z.object({
   /** Клавиатура скрывается после использования */
   oneTimeKeyboard: z.boolean().optional().default(false),
   /** Изменить размер клавиатуры под кнопки */
-  resizeKeyboard: z.boolean().optional().default(true),
+  resizeKeyboard: z.boolean().optional(),
 
   // --- Множественный выбор ---
   /** Разрешить множественный выбор */
@@ -98,6 +98,12 @@ export const messageParamsSchema = z.object({
   // --- Синонимы ---
   /** Записи синонимов для генерации обработчиков */
   synonymEntries: z.array(z.any()).optional().default([]),
+
+  // --- Служебные ---
+  /** Есть ли входящие кнопки с hideAfterClick=true, ведущие к этому узлу */
+  hasHideAfterClickIncoming: z.boolean().optional().default(false),
+  /** Использует ли текст переменные user_ids */
+  hasUserIdsVariable: z.boolean().optional().default(false),
 });
 
 /** Тип параметров сообщения (выведен из схемы) */

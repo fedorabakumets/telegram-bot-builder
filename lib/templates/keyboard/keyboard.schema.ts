@@ -29,7 +29,7 @@ export const keyboardParamsSchema = z.object({
   /** Клавиатура скрывается после использования */
   oneTimeKeyboard: z.boolean().optional().default(false),
   /** Изменить размер клавиатуры под кнопки */
-  resizeKeyboard: z.boolean().optional().default(true),
+  resizeKeyboard: z.boolean().optional(),
 
   // --- Множественный выбор ---
   /** Разрешить множественный выбор */

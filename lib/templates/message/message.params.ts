@@ -105,4 +105,10 @@ export interface MessageTemplateParams {
   // --- Синонимы ---
   /** Записи синонимов для генерации обработчиков */
   synonymEntries?: any[];
+
+  // --- Служебные ---
+  /** Есть ли входящие кнопки с hideAfterClick=true, ведущие к этому узлу */
+  hasHideAfterClickIncoming?: boolean;
+  /** Использует ли текст переменные user_ids */
+  hasUserIdsVariable?: boolean;
 }
