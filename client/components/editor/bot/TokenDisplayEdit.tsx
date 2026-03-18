@@ -10,7 +10,7 @@
  * @module TokenDisplayEdit
  */
 
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTokenEdit } from './useTokenEdit';

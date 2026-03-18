@@ -1,0 +1,60 @@
+{#
+  Шаблон навигации по узлам бота
+
+  @param {array}  nodes          — целевые узлы
+  @param {string} baseIndent     — базовый отступ (передаётся как пробелы)
+  @param {string} nextNodeIdVar  — имя переменной с ID следующего узла
+  @param {string} messageVar     — имя переменной сообщения
+  @param {string} userVarsVar    — имя переменной с данными пользователя
+#}
+{% for node in nodes %}
+{% if loop.first %}{{ baseIndent }}if {{ nextNodeIdVar }} == "{{ node.id }}":
+{% else %}{{ baseIndent }}elif {{ nextNodeIdVar }} == "{{ node.id }}":
+{% endif %}
+{{ baseIndent }}    text = {{ node.messageText | format_python_text }}
+{{ baseIndent }}    # Замена переменных
+{{ baseIndent }}    all_user_vars = await init_all_user_vars(user_id)
+{{ baseIndent }}    text = replace_variables_in_text(text, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {}))
+{% if node.attachedMedia and 'photo' in node.attachedMedia %}
+{{ baseIndent }}    # Отправляем сохраненное фото с текстом узла
+{{ baseIndent }}    if "{{ node.attachedMedia[0] }}" in {{ userVarsVar }}:
+{{ baseIndent }}        media_file_id = {{ userVarsVar }}["{{ node.attachedMedia[0] }}"]
+{{ baseIndent }}        if isinstance(media_file_id, dict) and "value" in media_file_id:
+{{ baseIndent }}            media_file_id = media_file_id["value"]
+{{ baseIndent }}        await {{ messageVar }}.answer_photo(media_file_id, caption=text)
+{{ baseIndent }}        logging.info(f"✅ Отправлено фото из переменной {{ node.attachedMedia[0] }} с текстом узла {  {{- nextNodeIdVar -}}  }")
+{{ baseIndent }}    else:
+{{ baseIndent }}        await {{ messageVar }}.answer(text)
+{{ baseIndent }}        logging.warning(f"⚠️ Переменная {{ node.attachedMedia[0] }} не найдена, отправлен только текст")
+{% else %}
+{{ baseIndent }}    await {{ messageVar }}.answer(text)
+{% endif %}
+{% if node.enableAutoTransition and node.autoTransitionTo %}
+{% if node.collectUserInput != false %}
+{{ baseIndent }}
+{{ baseIndent }}    # Автопереход к следующему узлу
+{{ baseIndent }}    auto_next_node_id = "{{ node.autoTransitionTo }}"
+{{ baseIndent }}    logging.info(f"⚡ Автопереход от { {{- nextNodeIdVar -}} } к {auto_next_node_id}")
+{{ baseIndent }}    fake_callback = SimpleNamespace(
+{{ baseIndent }}        id="auto_transition",
+{{ baseIndent }}        from_user={{ messageVar }}.from_user,
+{{ baseIndent }}        chat_instance="",
+{{ baseIndent }}        data=auto_next_node_id,
+{{ baseIndent }}        message={{ messageVar }},
+{{ baseIndent }}        answer=lambda: None
+{{ baseIndent }}    )
+{% if node.autoTransitionExists %}
+{{ baseIndent }}    await handle_callback_{{ node.autoTransitionSafeName }}(fake_callback)
+{% else %}
+{{ baseIndent }}    logging.warning(f"⚠️ Узел автоперехода не найден: {{ node.autoTransitionTo }}")
+{{ baseIndent }}    await fake_callback.message.answer("Переход завершен")
+{% endif %}
+{{ baseIndent }}    logging.info(f"✅ Автопереход выполнен: { {{- nextNodeIdVar -}} } -> {auto_next_node_id}")
+{% else %}
+{{ baseIndent }}    # Автопереход пропущен: collectUserInput=false
+{{ baseIndent }}    logging.info(f"ℹ️ Узел { {{- nextNodeIdVar -}} } не собирает ответы (collectUserInput=false)")
+{% endif %}
+{% endif %}
+{% endfor %}
+{{ baseIndent }}else:
+{{ baseIndent }}    logging.warning(f"Неизвестный следующий узел: { {{- nextNodeIdVar -}} }")

@@ -10,15 +10,15 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './generate-new-node-handlers';
-import { generateMessage } from '../templates/message/message.renderer';
-import { generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
-import { generateMessageHandlerFromNode } from '../templates/message-handler';
-import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
-import { generateUserHandlerFromNode } from '../templates/user-handler';
-import { generateAnimationHandler } from '../templates/animation-handler/animation-handler.renderer';
-import { generateAdminRightsFromNode } from '../templates/admin-rights/admin-rights.renderer';
-import { collectSynonymEntries } from '../templates/synonyms/synonyms.renderer';
+import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './node-handlers.renderer';
+import { generateMessage } from '../message/message.renderer';
+import { generateContactHandler, generateLocationHandler } from '../../bot-generator/MediaHandler';
+import { generateMessageHandlerFromNode } from '../message-handler';
+import { processCodeWithAutoComments } from '../../bot-generator/utils/generateGeneratedComment';
+import { generateUserHandlerFromNode } from '../user-handler';
+import { generateAnimationHandler } from '../animation-handler/animation-handler.renderer';
+import { generateAdminRightsFromNode } from '../admin-rights/admin-rights.renderer';
+import { collectSynonymEntries } from '../synonyms/synonyms.renderer';
 
 /**
  * Генерирует обработчики для каждого узла

@@ -21,7 +21,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSendMessage } from '../../../hooks/use-send-message';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/queryClient';
 
 const mockApiRequest = vi.mocked(apiRequest);
 

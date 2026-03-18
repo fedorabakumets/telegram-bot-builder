@@ -1,0 +1,25 @@
+{#
+  Шаблон обработки флага hideAfterClick — удаление сообщения после нажатия кнопки
+
+  @param {array} buttons — кнопки с флагом hideAfterClick
+    каждый элемент:
+      id     — ID кнопки
+      text   — текст кнопки
+      target — цель кнопки
+#}
+{% for button in buttons %}
+{% set btn_id = button.id or button.target or 'unknown' %}
+    # Обработка флага hideAfterClick для кнопки "{{ button.text }}"
+    if callback_query and callback_query.message and callback_data == "{{ btn_id }}":
+        try:
+            await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
+            logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {{ button.text }}")
+        except Exception as e:
+            logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")
+            try:
+                await callback_query.answer()
+            except:
+                pass
+        return
+
+{% endfor %}

@@ -15,7 +15,7 @@ import { Plus, Bot, Edit, Trash2, Calendar, User, Download, Shield } from 'lucid
 import { ThemeToggle } from '@/components/editor/header/components/theme-toggle';
 import { TelegramAuth } from '@/components/editor/telegram-client/telegram-auth';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/queryClient';
 import type { BotProject } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
 

@@ -9,7 +9,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { BotData } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/queryClient';
 
 /** Типы форматов кода */
 export type CodeFormat = 'python' | 'json' | 'requirements' | 'readme' | 'dockerfile' | 'env';

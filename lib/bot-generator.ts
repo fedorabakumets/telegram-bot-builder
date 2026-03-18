@@ -3,9 +3,6 @@ import { BotData, BotGroup } from '@shared/schema';
 
 // Ядро: контекст и состояние
 import { createGenerationContext } from './bot-generator/core/create-generation-context';
-
-// Утилиты: комментарии
-import { setCommentsEnabled } from './bot-generator/utils/generateGeneratedComment';
 import type { GenerationOptions } from './bot-generator/core/generation-options.types';
 
 // Ядро: логирование
@@ -22,7 +19,7 @@ import { generateDatabaseCode } from './templates/database/database-code.rendere
 import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, generateMain, generateImports, generateConfig, generateUtils } from './templates/typed-renderer';
 // Примечание: generateApiConfig удалена после миграции на Jinja2
 // import { generateApiConfig } from './bot-generator/api';
-import { generateNodeHandlers } from './generate/generate-node-handlers';
+import { generateNodeHandlers } from './templates/node-handlers/node-handlers.dispatcher';
 import { filterInlineNodes, hasInlineButtons, identifyNodesRequiringMultiSelectLogic } from './templates/keyboard/keyboard.renderer';
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers } from './templates/handlers';
 import { hasUrlButtons } from './bot-generator/user-input';
@@ -86,9 +83,6 @@ export function generatePythonCode(
     enableGroupHandlers = false,
     enableComments = true,
   } = options;
-
-  // Синхронизируем глобальное состояние комментариев с опциями генерации
-  setCommentsEnabled(enableComments);
 
   // Создаём опции генерации
   const genOptions: GenerationOptions = {

@@ -1,7 +1,7 @@
 import { Button } from '../types';
-import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from '../format';
+import { formatTextForPython, generateButtonText, stripHtmlTags, toPythonBoolean } from '../../templates/filters';
 import { generateKeyboard } from '../../templates/keyboard';
-import { generateUniversalVariableReplacement } from '../utils';
+import { generateUniversalVariableReplacement } from '../../templates/database/universal-variable-replacement.renderer';
 import { generateUserInputFromNode } from '../../templates/user-input';
 
 export function handleConditionalNavigationAndInputCollection(nodes: any[], code: string, allNodeIds: any[]) {
@@ -120,7 +120,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
 
                                 // Когда условие выполнено (переменная уже есть), отмечаем это
                                 code += `                            conditional_met = True\n`;
-                                code += `                            logging.info(f"✅ Условие выполнено: переменная суяесявует")\n`;
+                                code += `                            logging.info(f"✅ Условие выполнено: переменная существует")\n`;
 
                                 // ИСПРАВЛЕНИЕ: Проверяем, нужно ли ждать ввода
                                 const shouldWaitForInput = condition.waitForTextInput === true;
@@ -241,7 +241,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                                         const conditionOneTimeKeyboard2 = toPythonBoolean(condition.oneTimeKeyboard === true);
                                         code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=${conditionOneTimeKeyboard2})\n`;
                                         code += `                            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, node_id="${targetNode.id}")\n`;
-                                        code += `                            logging.info(f"✅ Показана условная клавиатура (кнопяи ведут напрямую, автопереход НЕ выполняется)")\n`;
+                                        code += `                            logging.info(f"✅ Показана условная клавиатура (кнопки ведут напрямую, автопереход НЕ выполняется)")\n`;
                                     } else {
                                         // Нет кнопок - автоматически переходим к следующему узлу
                                         const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
@@ -250,9 +250,9 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                                             code += `                            logging.info(f"✅ Условие выполнено: переменная существует, автоматически переходим к следующему узлу")\n`;
                                             code += `                            # Рекурсивно обрабатываем следующий узел через ту же систему навигации\n`;
                                             code += `                            next_node_id_auto = "${nextNodeAfterCondition}"\n`;
-                                            code += `                            logging.info(f"я Автоматический переход к уялу: {next_node_id_auto}")\n`;
+                                            code += `                            logging.info(f"⚡ Автоматический переход к узлу: {next_node_id_auto}")\n`;
                                         } else {
-                                            code += `                            # Переменная яуществует, но слядующий узел не указан - завершаем обработяу\n`;
+                                            code += `                            # Переменная существует, но следующий узел не указан - завершаем обработку\n`;
                                         }
                                     }
                                 }
@@ -261,7 +261,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
 
                         // Fallback если условия не выпоянены
                         code += `                        if not conditional_met:\n`;
-                        code += `                            # Условие не выполнено - показываем основнояя сообщение\n`;
+                        code += `                            # Условие не выполнено - показываем основное сообщение\n`;
                         const messageText = targetNode.data.messageText || 'Сообщение';
                         const formattedText = formatTextForPython(messageText);
                         code += `                            text = ${formattedText}\n`;
@@ -271,7 +271,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                         const messageText = targetNode.data.messageText || 'Сообщение';
                         const formattedText = formatTextForPython(messageText);
 
-                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть кяяопки - показываем ях И настраиваем ожидание ввода
+                        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание ввода
                         if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                             code += `                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их И настраиваем ожидание для сохранения ответа\n`;
                             code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput=true")\n`;
@@ -283,7 +283,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                             generateUniversalVariableReplacement(universalVarCodeLines2, { node: targetNode, indentLevel: '                        ' });
                             code += universalVarCodeLines2.join('\n');
 
-                            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Генерируем правильный тип клавиатуры в завясимости от keyboardType
+                            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Генерируем правильный тип клавиатуры в зависимости от keyboardType
                             if (targetNode.data.keyboardType === 'reply') {
                                 code += '                        # Создаем reply клавиатуру\n';
                                 code += '                        builder = ReplyKeyboardBuilder()\n';
@@ -306,11 +306,11 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
                             }
                             code += `                        await message.answer(text, reply_markup=keyboard)\n`;
 
-                            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также яастраиваем waiting_for_input для сохранения ответа кнопки
+                            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также настраиваем waiting_for_input для сохранения ответа кнопки
                             code += `                        # Настраиваем ожидание ввода для сохранения ответа кнопки\n`;
                             code += generateUserInputFromNode(targetNode, '                        ');
                         } else {
-                            // Обычнzzzzе ожидание ввода если кнопок нет
+                            // Обычное ожидание ввода если кнопок нет
                             code += `                        # Узел собирает пользовательский ввод\n`;
                             code += `                        logging.info(f"🔧 Условная навигация к узлу с вводом: ${targetNode.id}")\n`;
                             code += `                        text = ${formattedText}\n`;
@@ -359,7 +359,7 @@ export function handleConditionalNavigationAndInputCollection(nodes: any[], code
             }
         });
         code += '                    else:\n';
-        code += '                        logging.warning(f"Неизвестныя следующий узел: {next_node_id}")\n';
+        code += '                        logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
     } else {
         code += '                    # No nodes available for navigation\n';
         code += '                    logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';

@@ -15,7 +15,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/queryClient';
 import { BotToken, type BotProject } from '@shared/schema';
 import { setCommentsEnabled, areCommentsEnabled } from '@lib/bot-generator/utils/generateGeneratedComment';
 import { type BotInfo } from './BotProfileEditor';

@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/queryClient';
 import { Edit2, X, Check } from 'lucide-react';
 
 // Типы, определенные в основном файле bot-control.tsx

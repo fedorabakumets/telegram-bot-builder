@@ -1,0 +1,170 @@
+{#
+  Шаблон функций handle_node_* для узлов с условными сообщениями
+
+  @fileoverview Генерирует Python async-функции handle_node_<safeName>
+  для узлов у которых включены условные сообщения и сбор пользовательского ввода.
+
+  @param {array}  nodes — массив HandleNodeFunctionParams
+    каждый элемент:
+      nodeId                  — ID узла
+      safeName                — безопасное имя (спецсимволы → _)
+      messageText             — текст сообщения (fallback)
+      formatMode              — 'html' | 'markdown' | 'none'
+      imageUrl                — URL изображения (опционально)
+      attachedMedia           — список прикреплённых медиа
+      enableConditionalMessages — включены ли условные сообщения
+      conditionalMessages     — список условий
+      variableFiltersJson     — JSON фильтров переменных
+      enableAutoTransition    — включён ли автопереход
+      autoTransitionTo        — ID целевого узла автоперехода
+      collectUserInput        — ожидать ли ввод пользователя
+      inputType               — тип ввода
+      inputTargetNodeId       — ID узла-цели ввода
+#}
+
+{% for node in nodes %}
+
+async def handle_node_{{ node.safeName }}(message: types.Message):
+    """Обработчик узла {{ node.nodeId }} с условными сообщениями"""
+    user_id = message.from_user.id
+    logging.info(f"🔧 Вызван обработчик узла с условными сообщениями: {{ node.nodeId }} для пользователя {user_id}")
+
+    # Инициализируем базовые переменные пользователя
+    user_name = await init_user_variables(user_id, message.from_user)
+
+    # Получаем данные пользователя из БД и локального хранилища
+    user_vars = await get_user_from_db(user_id)
+    if not user_vars:
+        user_vars = user_data.get(user_id, {})
+    if not isinstance(user_vars, dict):
+        user_vars = user_data.get(user_id, {})
+
+    # Объединяем переменные из БД и локального хранилища
+    all_user_vars = {}
+    if user_vars and isinstance(user_vars, dict):
+        all_user_vars.update(user_vars)
+    local_user_vars = user_data.get(user_id, {})
+    if isinstance(local_user_vars, dict):
+        all_user_vars.update(local_user_vars)
+
+    # Инициализация all_user_vars через стандартную функцию
+    all_user_vars = await init_all_user_vars(user_id)
+
+{% if node.enableConditionalMessages and node.conditionalMessages | length > 0 %}
+    # Проверка условных сообщений для навигации
+    conditional_parse_mode = None
+    conditional_keyboard = None
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    user_data_dict = user_record if user_record else user_data.get(user_id, {})
+
+{% for msg in node.conditionalMessages %}
+{% set varNames = msg.variableNames if msg.variableNames and msg.variableNames | length > 0 else ([msg.variableName] if msg.variableName else []) %}
+{% set op = msg.logicOperator or 'AND' %}
+{% if loop.first %}
+    if (
+{% else %}
+    elif (
+{% endif %}
+{% for varName in varNames %}
+{% if not loop.last %}
+        check_user_variable_inline("{{ varName }}", user_data_dict)[0]{{ ' and' if op == 'AND' else ' or' }}
+{% else %}
+        check_user_variable_inline("{{ varName }}", user_data_dict)[0]
+{% endif %}
+{% endfor %}
+    ):
+        text = {{ msg.messageText | default('') | escape_python_string }}
+        logging.info("✅ Условие выполнено: {{ varNames | join(', ') }}")
+{% endfor %}
+    else:
+        text = {{ node.messageText | format_python_text }}
+        logging.info("ℹ️ Используется основное сообщение узла")
+
+    # Получаем переменные из базы данных
+    user_ids_record = await get_user_ids_from_db(user_id)
+    if user_ids_record:
+        all_user_vars["user_ids"] = user_ids_record.get("user_ids", [])
+        all_user_vars["user_ids_count"] = user_ids_record.get("count", 0)
+
+    # Заменяем переменные в тексте
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["_variable_filters"] = {{ node.variableFiltersJson | default('{}') }}
+    text = replace_variables_in_text(text, all_user_vars, user_data[user_id]["_variable_filters"])
+
+    # Используем условную клавиатуру если есть
+    if "conditional_keyboard" not in locals():
+        conditional_keyboard = None
+    if "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+        user_data[user_id]["_has_conditional_keyboard"] = True
+        logging.info("✅ Используем условную клавиатуру для навигации")
+    else:
+        keyboard = None
+        user_data[user_id]["_has_conditional_keyboard"] = False
+{% else %}
+    text = {{ node.messageText | format_python_text }}
+    keyboard = None
+{% endif %}
+
+    # Устанавливаем переменную изображения для узла
+    user_data[user_id] = user_data.get(user_id, {})
+{% if node.imageUrl %}
+    user_data[user_id]["image_url_{{ node.nodeId }}"] = "{{ node.imageUrl }}"
+    await update_user_data_in_db(user_id, "image_url_{{ node.nodeId }}", "{{ node.imageUrl }}")
+    logging.info(f"✅ Переменная image_url_{{ node.nodeId }} установлена: {{ node.imageUrl }}")
+{% endif %}
+
+{% if node.attachedMedia | length > 0 %}
+    # Устанавливаем переменные из attachedMedia
+    logging.info(f"✅ Переменные из attachedMedia установлены для узла {{ node.nodeId }}")
+{% endif %}
+
+    # Отправляем сообщение
+{% if node.formatMode == 'html' %}
+    await safe_edit_or_send(None, text, node_id="{{ node.nodeId }}", reply_markup=keyboard, parse_mode=ParseMode.HTML, message=message)
+{% elif node.formatMode == 'markdown' %}
+    await safe_edit_or_send(None, text, node_id="{{ node.nodeId }}", reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN, message=message)
+{% else %}
+    await safe_edit_or_send(None, text, node_id="{{ node.nodeId }}", reply_markup=keyboard{% if node.enableAutoTransition and node.autoTransitionTo %}, is_auto_transition=True{% endif %}, message=message)
+{% endif %}
+
+{% if node.enableAutoTransition and node.autoTransitionTo %}
+    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла
+    # НЕ делаем автопереход если была показана условная клавиатура
+    has_conditional_keyboard = user_data.get(user_id, {}).get("_has_conditional_keyboard", False)
+    if has_conditional_keyboard:
+        logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")
+    elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):
+        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла {{ node.nodeId }}")
+    elif user_id in user_data and user_data[user_id].get("collectUserInput_{{ node.nodeId }}", True) == True:
+        logging.info(f"ℹ️ Узел {{ node.nodeId }} ожидает ввод (collectUserInput=true), автопереход пропущен")
+    else:
+        # ⚡ Автопереход к узлу {{ node.autoTransitionTo }}
+        logging.info(f"⚡ Автопереход от узла {{ node.nodeId }} к узлу {{ node.autoTransitionTo }}")
+        try:
+            await handle_node_{{ node.autoTransitionTo | safe_name }}(message)
+            logging.info(f"✅ Автопереход выполнен: {{ node.nodeId }} -> {{ node.autoTransitionTo }}")
+        except Exception as e:
+            logging.error(f"Ошибка при автопереходе к узлу {{ node.autoTransitionTo }}: {e}")
+            await message.answer("Переход завершен")
+        return
+{% endif %}
+
+{% if node.collectUserInput %}
+    # Устанавливаем waiting_for_input
+    user_data[user_id] = user_data.get(user_id, {})
+    user_data[user_id]["waiting_for_input"] = "{{ node.nodeId }}"
+{% if node.inputType %}
+    user_data[user_id]["input_type"] = "{{ node.inputType }}"
+{% endif %}
+{% if node.inputTargetNodeId %}
+    user_data[user_id]["input_target"] = "{{ node.inputTargetNodeId }}"
+{% endif %}
+    logging.info(f"⏳ Ожидаем ввод пользователя для узла {{ node.nodeId }}")
+{% endif %}
+
+    return
+
+{% endfor %}

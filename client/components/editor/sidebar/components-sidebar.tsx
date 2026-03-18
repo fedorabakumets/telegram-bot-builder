@@ -23,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { Home, Plus, Trash2, Calendar, GripVertical, FileText, Copy, Share2, ChevronDown, ChevronRight, X, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';

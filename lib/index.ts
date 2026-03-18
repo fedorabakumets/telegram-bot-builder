@@ -11,7 +11,7 @@
 export * from './bot-generator';
 export * from './commands';
 // Keyboard exports are now aggregated in './bot-generator/Keyboard'
-export * from './queryClient';
+export * from '../client/queryClient';
 export { generateSynonymHandlers, generateSynonyms, collectSynonymEntries } from './templates/synonyms';
 export * from './bot-generator/utils/addAutoTransitionNodes';
 export * from './bot-generator/utils/extractNodeData';
@@ -75,7 +75,7 @@ export * from './bot-generator/utils';
 export * from './bot-generator/node-navigation';
 
 // Handle node functions generator
-export { generateHandleNodeFunctions } from './generate/generateHandleNodeFunctions';
+export { generateHandleNodeFunctions } from './templates/handle-node-function';
 
 // Validation utilities
 export { validateGeneratedPython, assertValidPython } from './bot-generator/validation';
@@ -130,6 +130,4 @@ export { DEFAULT_GENERATION_OPTIONS, normalizeGenerationOptions } from './bot-ge
 export { createLogger, generatorLogger } from './bot-generator/core/generator-logger';
 export type { GeneratorLogger, LogLevel, LoggerOptions } from './bot-generator/core/generator-logger';
 
-// Константы
-export * from './bot-generator/constants';
 

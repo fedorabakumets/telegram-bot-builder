@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@lib/queryClient";
+import { queryClient } from "@/queryClient";
 import { LocalStorageService } from "@/storage/local-storage";
 
 /**

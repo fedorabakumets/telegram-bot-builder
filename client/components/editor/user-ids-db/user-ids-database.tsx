@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { UserIdStats } from './user-id-stats';
 import { UserIdList, type UserIdRecord } from './user-id-list';

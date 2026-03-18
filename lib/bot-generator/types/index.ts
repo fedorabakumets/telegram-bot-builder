@@ -32,7 +32,7 @@ export type { KeyboardTypeOverride } from './node-data-override.types';
 export type { FormatModeOverride } from './node-data-override.types';
 
 export type { GenerationOptions } from '../core/generation-options.types';
-export type { GenerationContext } from './generation.types';
+export type { GenerationContext } from '../core/generation-context';
 export type { InputCollectionCheckResult } from './generation.types';
 export type { PythonValidationResult } from './generation.types';
 export type { ImportGeneratorOptions } from './generation.types';

@@ -4,12 +4,12 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastBotFromNode } from '../templates/broadcast-bot/broadcast-bot.renderer';
-import { generateBroadcastClientFromNode } from '../templates/broadcast-client/broadcast-client.renderer';
-import { generateSticker as generateStickerTemplate } from '../templates/sticker/sticker.renderer';
-import { generateVoice as generateVoiceTemplate } from '../templates/voice/voice.renderer';
-import { generateCommand as generateCommandTemplate } from '../templates/command/command.renderer';
-import { generateStart as generateStartTemplate } from '../templates/start/start.renderer';
+import { generateBroadcastBotFromNode } from '../broadcast-bot/broadcast-bot.renderer';
+import { generateBroadcastClientFromNode } from '../broadcast-client/broadcast-client.renderer';
+import { generateSticker as generateStickerTemplate } from '../sticker/sticker.renderer';
+import { generateVoice as generateVoiceTemplate } from '../voice/voice.renderer';
+import { generateCommand as generateCommandTemplate } from '../command/command.renderer';
+import { generateStart as generateStartTemplate } from '../start/start.renderer';
 
 /**
  * Генерирует обработчик рассылки (broadcast)

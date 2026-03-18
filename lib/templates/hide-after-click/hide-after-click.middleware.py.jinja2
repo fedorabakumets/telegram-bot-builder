@@ -1,0 +1,48 @@
+{#
+  Шаблон middleware для hideAfterClick — проверка callback_data и удаление сообщения
+
+  @param {array} buttons — кнопки с флагом hideAfterClick
+  @param {array} buttonIds — ID кнопок (для проверки формата nodeId_btn_index)
+#}
+{% if buttons | length > 0 %}
+    # Проверяем, содержит ли callback_data кнопку с флагом hideAfterClick
+    hide_after_click_buttons = [{% for b in buttons %}{% if b.id %}"{{ b.id }}"{% if not loop.last %}, {% endif %}{% endif %}{% endfor %}{% for b in buttons %}{% if b.target %}, "{{ b.target }}"{% endif %}{% endfor %}]
+
+    # Проверяем, совпадает ли callback_data с одной из кнопок с флагом hideAfterClick
+    if callback_data in hide_after_click_buttons:
+        try:
+            await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
+            logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {callback_data}")
+        except Exception as e:
+            logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")
+            try:
+                await callback_query.answer()
+            except:
+                pass
+        return
+
+{% if buttonIds | length > 0 %}
+    # Проверяем формат callback_data вида nodeId_btn_index для кнопок с флагом hideAfterClick
+    if "_" in callback_data:
+        parts = callback_data.split("_btn_")
+        if len(parts) == 2:
+            node_part, index_part = parts
+{% for btnId in buttonIds %}
+{% if loop.first %}
+            if node_part == "{{ btnId }}":
+{% else %}
+            elif node_part == "{{ btnId }}":
+{% endif %}
+                try:
+                    await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
+                    logging.info(f"🗑️ Сообщение удалено после нажатия кнопки с флагом hideAfterClick: {callback_data}")
+                except Exception as e:
+                    logging.warning(f"⚠️ Не удалось удалить сообщение после нажатия кнопки: {e}")
+                    try:
+                        await callback_query.answer()
+                    except:
+                        pass
+                return
+{% endfor %}
+{% endif %}
+{% endif %}

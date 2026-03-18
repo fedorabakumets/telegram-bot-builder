@@ -3,15 +3,17 @@
  * Помогает отслеживать, какие части кода были сгенерированы автоматически
  */
 
-// Глобальная настройка для включения/отключения генерации комментариев
-let commentsEnabled = true;
+// Геттер состояния комментариев — по умолчанию возвращает true.
+// Переопределяется через initCommentsState() при создании GenerationContext.
+let commentsStateGetter: () => boolean = () => true;
 
 /**
- * Включает или отключает генерацию комментариев
- * @param enabled - true для включения, false для отключения
+ * Инициализирует источник состояния комментариев из GenerationState.
+ * Вызывается один раз при создании контекста генерации.
+ * @param getter - функция, возвращающая текущее значение commentsEnabled
  */
-export function setCommentsEnabled(enabled: boolean): void {
-  commentsEnabled = enabled;
+export function initCommentsState(getter: () => boolean): void {
+  commentsStateGetter = getter;
 }
 
 /**
@@ -19,7 +21,7 @@ export function setCommentsEnabled(enabled: boolean): void {
  * @returns true если генерация комментариев включена, иначе false
  */
 export function areCommentsEnabled(): boolean {
-  return commentsEnabled;
+  return commentsStateGetter();
 }
 
 /**

@@ -12,7 +12,7 @@ import { BotControl } from './bot-control';
 import { useBotLogs } from './bot-logs-context';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/queryClient';
 
 interface BotsPanelProps {
   projectId: number;

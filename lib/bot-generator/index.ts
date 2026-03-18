@@ -18,8 +18,6 @@ export { setGlobalLoggingEnabled, getGlobalLoggingEnabled } from './core';
 export { createLogger, generatorLogger } from './core/generator-logger';
 export type { GeneratorLogger, LogLevel, LoggerOptions } from './core/generator-logger';
 
-// Константы
-export * from './constants';
 
 // Типы из types/
 export type {

@@ -4,6 +4,7 @@
  */
 
 import type { KeyboardTemplateParams } from './keyboard.params';
+import type { EnhancedNode } from '../../bot-generator/types/enhanced-node.types';
 import { keyboardParamsSchema } from './keyboard.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
@@ -34,7 +35,7 @@ export function generateKeyboard(params: KeyboardTemplateParams): string {
  * @param inlineNodes - Массив узлов с inline кнопками
  * @param allReferencedNodeIds - Set для добавления найденных ID
  */
-export function processInlineButtonNodes(inlineNodes: any[], allReferencedNodeIds: Set<string>): void {
+export function processInlineButtonNodes(inlineNodes: EnhancedNode[], allReferencedNodeIds: Set<string>): void {
   inlineNodes.forEach(node => {
     node.data.buttons.forEach((button: { action: string; target: string }) => {
       if (button.action === 'goto' && button.target) {
@@ -52,7 +53,7 @@ export function processInlineButtonNodes(inlineNodes: any[], allReferencedNodeId
  * @param nodes - Массив узлов для проверки
  * @returns Массив узлов с включенным множественным выбором
  */
-export function identifyNodesRequiringMultiSelectLogic(nodes: any[]): any[] {
+export function identifyNodesRequiringMultiSelectLogic(nodes: EnhancedNode[]): EnhancedNode[] {
   return nodes
     .filter(node => node !== null && node !== undefined)
     .filter(node => node.data?.allowMultipleSelection);
@@ -61,7 +62,7 @@ export function identifyNodesRequiringMultiSelectLogic(nodes: any[]): any[] {
 /**
  * Фильтрует узлы с inline callback кнопками (action === 'selection' | 'complete')
  */
-export function filterInlineNodes(nodes: any[]): any[] {
+export function filterInlineNodes(nodes: EnhancedNode[]): EnhancedNode[] {
   return nodes
     .filter(node => node !== null && node !== undefined)
     .filter(node => {
@@ -75,7 +76,7 @@ export function filterInlineNodes(nodes: any[]): any[] {
 /**
  * Проверяет наличие inline (callback) кнопок в узлах
  */
-export function hasInlineButtons(nodes: any[]): boolean {
+export function hasInlineButtons(nodes: EnhancedNode[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes
     .filter(node => node !== null && node !== undefined)
@@ -93,7 +94,7 @@ export function hasInlineButtons(nodes: any[]): boolean {
 /**
  * Проверяет наличие узлов с множественным выбором
  */
-export function hasMultiSelectNodes(nodes: any[]): boolean {
+export function hasMultiSelectNodes(nodes: EnhancedNode[]): boolean {
   return nodes.some(node => {
     if (!node?.data) return false;
     if (node.data.allowMultipleSelection) return true;

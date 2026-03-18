@@ -4,7 +4,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@lib/queryClient";
+import { apiRequest } from "@/queryClient";
 import type { MediaFile, InsertMediaFile } from "@shared/schema";
 import { validateMediaFilesArray } from "../utils/api-validation";
 import type { MediaUploadParams, MultipleMediaUploadParams, MultipleUploadResult } from "../types/media.types";

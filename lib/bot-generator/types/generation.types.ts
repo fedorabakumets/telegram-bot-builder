@@ -11,27 +11,8 @@ import type { BotNode } from './bot-node-types';
 import type { Button } from './button-types';
 // GenerationOptions живёт в core/generation-options.types (с projectId)
 export type { GenerationOptions } from '../core/generation-options.types';
-
-/**
- * Контекст генерации кода
- * 
- * @example
- * const context: GenerationContext = {
- *   nodes: [...],
- *   allNodeIds: ['start_1', 'menu_2'],
- *   options: { enableLogging: true }
- * };
- */
-export interface GenerationContext {
-  /** Все узлы бота */
-  nodes: BotNode[];
-  /** Массив всех ID узлов */
-  allNodeIds: string[];
-  /** Опции генерации */
-  options: import('../core/generation-options.types').GenerationOptions;
-  /** Карта медиапеременных */
-  mediaVariablesMap?: Map<string, string>;
-}
+// GenerationContext живёт в core/generation-context.ts
+export type { GenerationContext } from '../core/generation-context';
 
 /**
  * Результат проверки сбора пользовательского ввода

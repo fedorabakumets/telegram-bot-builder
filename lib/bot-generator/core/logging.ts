@@ -38,10 +38,6 @@ export const logFlowAnalysis = (nodes: any[]): void => {
       console.log(`📊 ГЕНЕРАТОР:   - keyboardType: ${node.data.keyboardType || 'нет'}`);
       console.log(`📊 ГЕНЕРАТОР:   - continueButtonTarget: ${node.data.continueButtonTarget || 'нет'}`);
 
-      if (node.id === 'interests_result') {
-        console.log(`🎯 ГЕНЕРАТОР: НАЙДЕН interests_result!`);
-        console.log(`🎯 ГЕНЕРАТОР: interests_result полные данные:`, JSON.stringify(node.data, null, 2));
-      }
     });
   }
 };

@@ -1,7 +1,6 @@
 import { Button } from '../types';
-import { formatTextForPython, generateButtonText, toPythonBoolean } from '../format';
+import { formatTextForPython, generateButtonText, toPythonBoolean, escapePythonString } from '../../templates/filters';
 import { generateKeyboard } from '../../templates/keyboard';
-import { escapePythonString } from '../format/escapePythonString';
 // Примечание: generateInitAllUserVarsCall удалена после миграции на Jinja2
 // import { generateInitAllUserVarsCall } from '../database/generate-init-all-user-vars';
 

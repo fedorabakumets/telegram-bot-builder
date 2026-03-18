@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Search, ArrowLeft, Star, Trash2, Filter, SortAsc, Layers, Sparkles, Flame, Bookmark, Eye, Users, Globe, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient } from '@lib/queryClient';
+import { queryClient } from '@/queryClient';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import type { BotTemplate } from '@shared/schema';
 

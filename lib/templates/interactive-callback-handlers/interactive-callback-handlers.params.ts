@@ -3,16 +3,18 @@
  * @module templates/interactive-callback-handlers/interactive-callback-handlers.params
  */
 
+import type { EnhancedNode } from '../../bot-generator/types/enhanced-node.types';
+
 /** Параметры для генерации интерактивных callback-обработчиков */
 export interface InteractiveCallbackHandlersTemplateParams {
   /** Inline узлы (с кнопками) */
-  inlineNodes: any[];
+  inlineNodes: EnhancedNode[];
   /** Set всех referenced ID узлов */
   allReferencedNodeIds: Set<string>;
   /** Set всех условных кнопок */
   allConditionalButtons: Set<string>;
   /** Все узлы проекта */
-  nodes: any[];
+  nodes: EnhancedNode[];
   /** Все ID узлов */
   allNodeIds: string[];
   /** Соединения между узлами */
