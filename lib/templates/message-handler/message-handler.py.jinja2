@@ -1,0 +1,118 @@
+{#
+  Шаблон обработчиков управления сообщениями
+
+  @fileoverview Генерирует Python обработчики для pin/unpin/delete message
+  @param {string} nodeType        — тип узла: 'pin_message' | 'unpin_message' | 'delete_message'
+  @param {string} nodeId          — ID узла
+  @param {string} safeName        — безопасное имя функции
+  @param {array}  synonyms        — список синонимов-триггеров
+  @param {string} targetGroupId   — ID конкретной группы (или '' для всех групп)
+  @param {bool}   disableNotification — отключить уведомление (pin_message)
+  @param {string} messageText     — текст ответа после выполнения действия
+#}
+
+{# ── Условие фильтрации чата ── #}
+{% if targetGroupId %}
+{% set chat_condition = 'str(message.chat.id) == "' ~ targetGroupId ~ '"' %}
+{% else %}
+{% set chat_condition = "message.chat.type in ['group', 'supergroup']" %}
+{% endif %}
+
+{% set synonyms_list = synonyms | join('", "') %}
+
+{# ── Текст ответа ── #}
+{% if nodeType == 'pin_message' %}
+{% set success_text = messageText if messageText else '✅ Сообщение закреплено' %}
+{% elif nodeType == 'unpin_message' %}
+{% set success_text = messageText if messageText else '✅ Сообщение откреплено' %}
+{% else %}
+{% set success_text = messageText if messageText else '🗑️ Сообщение успешно удалено!' %}
+{% endif %}
+
+# {{ nodeType | upper }} Handler
+
+{# ============================================================ #}
+{# CALLBACK HANDLER                                              #}
+{# ============================================================ #}
+
+@dp.callback_query(lambda c: c.data.startswith("{{ nodeType }}_{{ safeName }}_"))
+async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
+    """
+    Обработчик callback запросов для {{ nodeType }}
+    Работает в группах где бот имеет права администратора
+    """
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
+
+    if callback_query.message.chat.type not in ['group', 'supergroup']:
+        await callback_query.message.answer("❌ Команда работает только в группах")
+        return
+
+{% if nodeType == 'unpin_message' %}
+    try:
+        await bot.unpin_all_chat_messages(chat_id=chat_id)
+        await callback_query.message.answer("{{ success_text }}")
+        logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
+{% else %}
+    target_message_id = int(callback_query.data.split('_')[-1]) if len(callback_query.data.split('_')) > 3 else None
+
+    if not target_message_id:
+        await callback_query.message.answer("❌ Не удалось определить ID сообщения")
+        return
+
+    try:
+{% if nodeType == 'pin_message' %}
+        await bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=target_message_id,
+            disable_notification={{ disableNotification | to_python_boolean }}
+        )
+        await callback_query.message.answer("{{ success_text }}")
+        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
+{% else %}
+        await bot.delete_message(chat_id=chat_id, message_id=target_message_id)
+        await callback_query.message.answer("{{ success_text }}")
+        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")
+{% endif %}
+{% endif %}
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await callback_query.message.answer("❌ Недостаточно прав")
+        elif "not found" in str(e):
+            await callback_query.message.answer("❌ Сообщение не найдено")
+        else:
+            await callback_query.message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {{ nodeType }}: {e}")
+    except Exception as e:
+        await callback_query.message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {{ nodeType }}: {e}")
+
+    try:
+        await callback_query.answer()
+    except:
+        pass
+
+{# ============================================================ #}
+{# COMMAND HANDLER                                               #}
+{# ============================================================ #}
+
+@dp.message(Command("{{ nodeType }}"))
+async def {{ nodeType }}_{{ safeName }}_command_handler(message: types.Message):
+    """
+    Обработчик команды /{{ nodeType }}
+    Работает в группах где бот имеет права администратора
+    """
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+    if message.chat.type not in ['group', 'supergroup']:
+        await message.answer("❌ Команда работает только в группах")
+        return
+
+{% if nodeType == 'unpin_message' %}
+    target_message_id = None
+    if message.reply_to_message:
+        target_message_id = message.reply_to_message.message_id
+    else:
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():

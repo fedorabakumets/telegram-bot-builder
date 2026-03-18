@@ -35,7 +35,7 @@ import { generateSaveMediaToDb } from './bot-generator/MediaHandler/save-media-t
 import { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
 import { hasUploadImageUrls } from './bot-generator/MediaHandler/hasUploadImageUrls';
 import { generateMessageLoggingCode } from './templates/middleware/middleware.renderer';
-import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './bot-generator/scaffolding';
+import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';
 import { addAutoTransitionNodes } from './bot-generator/utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
 import { collectInputTargetNodes } from './bot-generator/utils/collectInputTargetNodes';
