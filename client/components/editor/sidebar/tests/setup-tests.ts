@@ -7,6 +7,9 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Делаем vi доступным глобально
+(global as any).vi = vi;
+
 // Глобальный мок для fetch
 global.fetch = vi.fn();
 

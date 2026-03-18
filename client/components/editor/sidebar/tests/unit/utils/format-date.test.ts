@@ -41,8 +41,14 @@ describe('formatDate', () => {
     expect(result).toMatch(/\d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}/);
   });
 
-  it('должен возвращать "Invalid Date" для невалидной даты', () => {
+  it('должен возвращать "Неизвестно" для невалидной даты', () => {
     const result = formatDate('invalid-date');
-    expect(result).toBe('Invalid Date');
+    expect(result).toBe('Неизвестно');
+  });
+
+  it('должен форматировать timestamp', () => {
+    const timestamp = new Date('2024-03-14T10:30:00Z').getTime();
+    const result = formatDate(timestamp);
+    expect(result).toContain('2024');
   });
 });

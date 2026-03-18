@@ -90,7 +90,8 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
     // Извлекаем команду и описание для command узлов
     let command = '';
     let description = '';
-    const commandMatch = /commands?\s*=\s*\["([^"]+)"\]/.exec(nodeContent);
+    // Поддерживаем оба формата: commands=['start'] и commands=["start"]
+    const commandMatch = /commands?\s*=\s*[\[({]['"]([^'"]+)['"]\]})]/.exec(nodeContent);
     if (commandMatch) {
       command = commandMatch[1].startsWith('/') ? commandMatch[1] : '/' + commandMatch[1];
     }
@@ -99,55 +100,60 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
       description = descriptionMatch[1];
     }
 
-    // Извлекаем Inline кнопки
-    const buttons: Button[] = [];
-    const inlineButtonMatches = Array.from(nodeContent.matchAll(/InlineKeyboardButton\s*\(\s*text\s*=\s*([^,]+)\s*,\s*callback_data\s*=\s*"([^"]+)"\s*\)/g));
-    for (const btnMatch of inlineButtonMatches) {
-      let btnText = (btnMatch[1] as string).replace(/["'`]/g, '').trim();
-      // Убираем префиксы типа 'replace_variables_in_text('
-      if (btnText.includes('(')) {
-        const innerMatch = /\("([^"]+)"\)/.exec(btnText);
-        if (innerMatch) {
-          btnText = innerMatch[1];
-        }
-      }
-      const callbackData = btnMatch[2] as string;
-      buttons.push({
-        id: `btn_${nodeId}_${buttons.length}`,
-        text: btnText,
-        action: 'goto',
-        target: callbackData,
-      } as Button);
-    }
-
-    // Извлекаем Reply кнопки
-    const replyButtonMatches = Array.from(nodeContent.matchAll(/KeyboardButton\s*\(\s*text\s*=\s*([^)]+)\s*\)/g));
-    for (const btnMatch of replyButtonMatches) {
-      let btnText = (btnMatch[1] as string).replace(/["'`]/g, '').trim();
-      // Убираем функции типа replace_variables_in_text
-      if (btnText.includes('(')) {
-        const innerMatch = /\("([^"]+)"\)/.exec(btnText);
-        if (innerMatch) {
-          btnText = innerMatch[1];
-        }
-      }
-      if (!buttons.find((b: Button) => b.text === btnText)) {
-        buttons.push({
-          id: `btn_${nodeId}_${buttons.length}`,
-          text: btnText,
-          action: 'goto',
-          skipDataCollection: false,
-          hideAfterClick: false
-        } as Button);
-      }
-    }
-
     // Определяем тип клавиатуры
     let keyboardType = 'none';
     if (nodeContent.includes('InlineKeyboardMarkup')) {
       keyboardType = 'inline';
     } else if (nodeContent.includes('ReplyKeyboardMarkup')) {
       keyboardType = 'reply';
+    }
+
+    // Извлекаем Inline кнопки
+    const buttons: Button[] = [];
+    // Парсим Inline кнопки только для inline клавиатур
+    if (keyboardType === 'inline') {
+      const inlineButtonMatches = Array.from(nodeContent.matchAll(/InlineKeyboardButton\s*\(\s*text\s*=\s*([^,]+)\s*,\s*callback_data\s*=\s*"([^"]+)"\s*\)/g));
+      for (const btnMatch of inlineButtonMatches) {
+        let btnText = (btnMatch[1] as string).replace(/["'`]/g, '').trim();
+        // Убираем префиксы типа 'replace_variables_in_text('
+        if (btnText.includes('(')) {
+          const innerMatch = /\("([^"]+)"\)/.exec(btnText);
+          if (innerMatch) {
+            btnText = innerMatch[1];
+          }
+        }
+        const callbackData = btnMatch[2] as string;
+        buttons.push({
+          id: `btn_${nodeId}_${buttons.length}`,
+          text: btnText,
+          action: 'goto',
+          target: callbackData,
+        } as Button);
+      }
+    }
+
+    // Извлекаем Reply кнопки только для reply клавиатур
+    if (keyboardType === 'reply') {
+      const replyButtonMatches = Array.from(nodeContent.matchAll(/KeyboardButton\s*\(\s*text\s*=\s*([^)]+)\s*\)/g));
+      for (const btnMatch of replyButtonMatches) {
+        let btnText = (btnMatch[1] as string).replace(/["'`]/g, '').trim();
+        // Убираем функции типа replace_variables_in_text
+        if (btnText.includes('(')) {
+          const innerMatch = /\("([^"]+)"\)/.exec(btnText);
+          if (innerMatch) {
+            btnText = innerMatch[1];
+          }
+        }
+        if (!buttons.find((b: Button) => b.text === btnText)) {
+          buttons.push({
+            id: `btn_${nodeId}_${buttons.length}`,
+            text: btnText,
+            action: 'goto',
+            skipDataCollection: false,
+            hideAfterClick: false
+          } as Button);
+        }
+      }
     }
 
     // Извлекаем настройки ввода текста

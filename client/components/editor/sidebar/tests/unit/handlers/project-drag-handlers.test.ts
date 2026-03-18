@@ -6,6 +6,7 @@
 /// <reference types="vitest/globals" />
 
 import { vi, beforeEach } from 'vitest';
+import type { DragEvent } from 'react';
 import { handleProjectDragStart } from '../../../handlers/handle-project-drag-start';
 import { handleProjectDragOver } from '../../../handlers/handle-project-drag-over';
 import { handleProjectDragLeave } from '../../../handlers/handle-project-drag-leave';
@@ -30,7 +31,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       dropEffect: '',
       setData: vi.fn(),
     },
-  } as unknown as React.DragEvent);
+  } as unknown as DragEvent);
 
   describe('handleProjectDragStart', () => {
     it('должен устанавливать перетаскиваемый проект', () => {
