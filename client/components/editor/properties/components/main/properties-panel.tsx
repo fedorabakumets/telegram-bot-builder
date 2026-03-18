@@ -466,8 +466,8 @@ export function PropertiesPanel({
           </div>
         )}
 
-        {/* Conditional Messages Section - временно скрыто */}
-        {/* {!isManagementNode(selectedNode.type) && (
+        {/* Conditional Messages Section */}
+        {!isManagementNode(selectedNode.type) && (
           <div className="w-full bg-gradient-to-br from-purple-50/40 to-indigo-50/20 dark:from-purple-950/30 dark:to-indigo-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-purple-200/40 dark:border-purple-800/40 backdrop-blur-sm">
             <ConditionalMessagesHeader
               selectedNode={selectedNode}
@@ -538,10 +538,9 @@ export function PropertiesPanel({
               </div>
             )}
           </div>
-        )} */}
+        )}
 
         {/* Universal User Input Collection - скрыто для узлов управления */}
-        {/* Conditional Messages - скрыто для узлов управления */}
         {!isManagementNode(selectedNode.type) && (
           <UserInputSettingsSection
             selectedNode={selectedNode}
@@ -566,13 +565,13 @@ export function PropertiesPanel({
           />
         )}
 
-        {/* Временно скрыто: Расширенные настройки */}
-        {/* <CommandAdvancedSettingsWrapper
+        {/* Расширенные настройки */}
+        <CommandAdvancedSettingsWrapper
           selectedNode={selectedNode}
           onNodeUpdate={onNodeUpdate}
           isOpen={isBasicSettingsOpen}
           onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
-        /> */}
+        />
 
         </div>
         </div>

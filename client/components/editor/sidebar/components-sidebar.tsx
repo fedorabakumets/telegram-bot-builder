@@ -6,6 +6,7 @@ import { SheetsManager } from '@/utils/sheets-manager';
 import { parsePythonCodeToJson } from '@lib/bot-generator/format';
 import { textMessage } from './massive/messages';
 import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from './massive/commands';
+import { broadcastNode } from '../../canvas/canvas-node/broadcast-node';
 import {
   handleProjectDragStart,
   handleProjectDragOver,
@@ -106,6 +107,10 @@ const componentCategories = [
   {
     title: 'Команды',
     components: [startCommand, helpCommand, settingsCommand, menuCommand, customCommand]
+  },
+  {
+    title: 'Рассылка',
+    components: [broadcastNode]
   }
 ];
 
