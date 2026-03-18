@@ -46,13 +46,13 @@ export * from './bot-generator/map-utils';
 export * from './bot-generator/MediaHandler';
 
 // Message handlers
-export * from './bot-generator/MessageHandler';
+export * from './templates/message-handler';
 
 // Project scaffolding
 export * from './bot-generator/scaffolding';
 
 // Storage utilities
-export * from './storage';
+export * from '../client/storage';
 
 // Synonym handlers — перенесено в templates/synonyms (Jinja2)
 // export * from './bot-generator/Synonyms';

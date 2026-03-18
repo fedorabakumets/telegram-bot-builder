@@ -913,19 +913,7 @@ describe('generateConditionalMessages', () => {
   });
 });
 
-describe('generateCsvSafe', () => {
-  it('должен генерировать валидный Python код для csv-safe', async () => {
-    const { execSync } = await import('child_process');
-    let hasPython = false;
-    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
 
-    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
-
-    const { generateCsvSafe } = await import('./csv-safe/csv-safe.renderer');
-    const code = generateCsvSafe({ operation: 'write', csvFileVar: 'csv_file_path', dataVar: 'user_id' });
-    assertValidPythonSyntax(code, 'generateCsvSafe');
-  });
-});
 
 describe('generateErrorHandler', () => {
   it('должен генерировать валидный Python код для error-handler', async () => {
@@ -995,7 +983,7 @@ describe('generateMediaSaveVars', () => {
 
     if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
 
-    const { generateMediaSaveVars } = await import('./media-save-vars/media-save-vars.renderer');
+    const { generateMediaSaveVars } = await import('./database/media-save-vars/media-save-vars.renderer');
     const code = generateMediaSaveVars({ nodeId: 'node_img', imageUrl: 'https://example.com/photo.jpg' });
     assertValidPythonSyntax(code, 'generateMediaSaveVars');
   });

@@ -7,6 +7,7 @@ import { renderPartialTemplate } from '../template-renderer';
 
 /**
  * Генерирует код логирования: middleware, обёртки send/answer, save_message_to_api
+ * @alias generateMiddleware
  */
 export function generateMessageLoggingCode(
   userDatabaseEnabled: boolean,
@@ -25,4 +26,11 @@ export function generateMessageLoggingCode(
   code += renderPartialTemplate('middleware/send-message-with-logging.py.jinja2', {});
   code += renderPartialTemplate('middleware/send-photo-with-logging.py.jinja2', {});
   return code;
+}
+
+/**
+ * Обёртка для обратной совместимости с тестами
+ */
+export function generateMiddleware(params: { userDatabaseEnabled: boolean }): string {
+  return generateMessageLoggingCode(params.userDatabaseEnabled, false, null);
 }

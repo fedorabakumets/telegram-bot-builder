@@ -206,7 +206,8 @@ export function renderPartialTemplate(
                                .replace('synonyms/', '')
                                .replace('user-handler/', '')
                                .replace('admin-rights/', '')
-                               .replace('map/', '');
+                               .replace('map/', '')
+                               .replace('message-handler/', '');
 
     if (schemaMap[templateName]) {
       try {
@@ -225,7 +226,7 @@ export function renderPartialTemplate(
 
     // Если путь содержит '/', используем его как есть
     if (!partialName.includes('/')) {
-      const templateDirs = ['config', 'database', 'utils', 'main', 'header', 'middleware', 'universal-handlers', 'imports', 'command', 'start', 'keyboard', 'message', 'broadcast', 'broadcast-bot', 'broadcast-client', 'sticker', 'voice', 'safe-edit-or-send', 'synonyms', 'attached-media', 'user-handler', 'admin-rights', 'map'];
+      const templateDirs = ['config', 'database', 'utils', 'main', 'header', 'middleware', 'universal-handlers', 'imports', 'command', 'start', 'keyboard', 'message', 'broadcast', 'broadcast-bot', 'broadcast-client', 'sticker', 'voice', 'safe-edit-or-send', 'synonyms', 'attached-media', 'user-handler', 'admin-rights', 'map', 'message-handler'];
       const dir = templateDirs.find(d => partialName.startsWith(d));
       if (dir) {
         templatePath = `${dir}/${partialName}`;

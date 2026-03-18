@@ -9,26 +9,8 @@
 
 import type { BotNode } from './bot-node-types';
 import type { Button } from './button-types';
-
-/**
- * Опции генератора Python-кода
- * 
- * @example
- * const options: GenerationOptions = {
- *   enableLogging: true,
- *   enableComments: true
- * };
- */
-export interface GenerationOptions {
-  /** Включить логирование */
-  enableLogging?: boolean;
-  /** Включить комментарии в коде */
-  enableComments?: boolean;
-  /** Включить базу данных пользователей */
-  userDatabaseEnabled?: boolean;
-  /** Включить обработчики групп */
-  enableGroupHandlers?: boolean;
-}
+// GenerationOptions живёт в core/generation-options.types (с projectId)
+export type { GenerationOptions } from '../core/generation-options.types';
 
 /**
  * Контекст генерации кода
@@ -46,7 +28,7 @@ export interface GenerationContext {
   /** Массив всех ID узлов */
   allNodeIds: string[];
   /** Опции генерации */
-  options: GenerationOptions;
+  options: import('../core/generation-options.types').GenerationOptions;
   /** Карта медиапеременных */
   mediaVariablesMap?: Map<string, string>;
 }

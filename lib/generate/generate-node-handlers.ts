@@ -13,7 +13,7 @@ import { Node } from '@shared/schema';
 import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './generate-new-node-handlers';
 import { generateMessage } from '../templates/message/message.renderer';
 import { generateContactHandler, generateLocationHandler } from '../bot-generator/MediaHandler';
-import { generateDeleteMessageHandler, generatePinMessageHandler, generateUnpinMessageHandler } from '../bot-generator/MessageHandler';
+import { generateMessageHandlerFromNode } from '../templates/message-handler';
 import { processCodeWithAutoComments } from '../bot-generator/utils/generateGeneratedComment';
 import { generateUserHandlerFromNode } from '../templates/user-handler';
 import { generateAnimationHandler } from '../templates/animation-handler/animation-handler.renderer';
@@ -85,9 +85,9 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     }),
     location: generateLocationHandler,
     contact: generateContactHandler,
-    pin_message: generatePinMessageHandler,
-    unpin_message: generateUnpinMessageHandler,
-    delete_message: generateDeleteMessageHandler,
+    pin_message: generateMessageHandlerFromNode,
+    unpin_message: generateMessageHandlerFromNode,
+    delete_message: generateMessageHandlerFromNode,
     ban_user: generateUserHandlerFromNode,
     unban_user: generateUserHandlerFromNode,
     mute_user: generateUserHandlerFromNode,

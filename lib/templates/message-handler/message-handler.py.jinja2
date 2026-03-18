@@ -116,3 +116,123 @@ async def {{ nodeType }}_{{ safeName }}_command_handler(message: types.Message):
     else:
         text_parts = message.text.split()
         if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+
+    try:
+        if target_message_id:
+            await bot.unpin_chat_message(chat_id=chat_id, message_id=target_message_id)
+            await message.answer("✅ Сообщение откреплено")
+            logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id} в группе {chat_id}")
+        else:
+            await bot.unpin_all_chat_messages(chat_id=chat_id)
+            await message.answer("✅ Все сообщения откреплены")
+            logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")
+{% else %}
+    target_message_id = None
+    if message.reply_to_message:
+        target_message_id = message.reply_to_message.message_id
+    else:
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+        else:
+            await message.answer("❌ Ответьте на сообщение или укажите /{{ nodeType }} ID_сообщения")
+            return
+
+    try:
+{% if nodeType == 'pin_message' %}
+        await bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=target_message_id,
+            disable_notification={{ disableNotification | to_python_boolean }}
+        )
+        await message.answer("{{ success_text }}")
+        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")
+{% else %}
+        await bot.delete_message(chat_id=chat_id, message_id=target_message_id)
+        await message.answer("{{ success_text }}")
+        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")
+{% endif %}
+{% endif %}
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав")
+        elif "not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {{ nodeType }}: {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {{ nodeType }}: {e}")
+
+{# ============================================================ #}
+{# SYNONYM / TEXT HANDLERS                                       #}
+{# ============================================================ #}
+
+{% for synonym in synonyms %}
+{% set sanitized = synonym | safe_name %}
+@dp.message(lambda message: message.text and message.text.lower().startswith("{{ synonym }}") and {{ chat_condition }})
+async def {{ nodeType }}_{{ safeName }}_{{ sanitized }}_handler(message: types.Message):
+    """Обработчик синонима '{{ synonym }}' для {{ nodeType }}"""
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+
+{% if nodeType == 'unpin_message' %}
+    target_message_id = None
+    if message.reply_to_message:
+        target_message_id = message.reply_to_message.message_id
+    else:
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+
+    try:
+        if target_message_id:
+            await bot.unpin_chat_message(chat_id=chat_id, message_id=target_message_id)
+            await message.answer("✅ Сообщение откреплено")
+            logging.info(f"Сообщение {target_message_id} откреплено через синоним '{{ synonym }}' пользователем {user_id} в группе {chat_id}")
+        else:
+            await bot.unpin_all_chat_messages(chat_id=chat_id)
+            await message.answer("✅ Все сообщения откреплены")
+            logging.info(f"Все сообщения откреплены через синоним '{{ synonym }}' пользователем {user_id} в группе {chat_id}")
+{% else %}
+    target_message_id = None
+    if message.reply_to_message:
+        target_message_id = message.reply_to_message.message_id
+    else:
+        text_parts = message.text.split()
+        if len(text_parts) > 1 and text_parts[1].isdigit():
+            target_message_id = int(text_parts[1])
+        else:
+            await message.answer("❌ Укажите сообщение: ответьте на него или напишите '{{ synonym }} ID_сообщения'")
+            return
+
+    try:
+{% if nodeType == 'pin_message' %}
+        await bot.pin_chat_message(
+            chat_id=chat_id,
+            message_id=target_message_id,
+            disable_notification={{ disableNotification | to_python_boolean }}
+        )
+        await message.answer("{{ success_text }}")
+        logging.info(f"Сообщение {target_message_id} закреплено через синоним '{{ synonym }}' пользователем {user_id} в группе {chat_id}")
+{% else %}
+        await bot.delete_message(chat_id=chat_id, message_id=target_message_id)
+        await message.answer("{{ success_text }}")
+        logging.info(f"Сообщение {target_message_id} удалено через синоним '{{ synonym }}' пользователем {user_id} в группе {chat_id}")
+{% endif %}
+{% endif %}
+    except TelegramBadRequest as e:
+        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
+            await message.answer("❌ Недостаточно прав")
+        elif "not found" in str(e):
+            await message.answer("❌ Сообщение не найдено")
+        else:
+            await message.answer(f"❌ Ошибка: {e}")
+        logging.error(f"Ошибка {{ nodeType }} через синоним '{{ synonym }}': {e}")
+    except Exception as e:
+        await message.answer("❌ Произошла неожиданная ошибка")
+        logging.error(f"Неожиданная ошибка в {{ nodeType }}: {e}")
+
+{% endfor %}

@@ -19,7 +19,6 @@ import { Button } from './bot-generator/types';
 import { generateBotFatherCommands } from './commands';
 
 import { generateDatabaseCode } from './templates/database/database-code.renderer';
-import { generateGroupsConfiguration } from './generate';
 import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, generateMain, generateImports, generateConfig, generateUtils } from './templates/typed-renderer';
 // Примечание: generateApiConfig удалена после миграции на Jinja2
 // import { generateApiConfig } from './bot-generator/api';
@@ -264,7 +263,6 @@ export function generatePythonCode(
   }
 
   // Добавляем конфигурацию групп
-  code += generateGroupsConfiguration(context.groups);
 
   // Добавляем функции для работы с базой данных
   code += generateDatabaseCode(!!context.options.userDatabaseEnabled, context.nodes || []);
