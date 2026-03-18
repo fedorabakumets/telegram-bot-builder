@@ -12,9 +12,9 @@ import type { EnhancedNode } from '../types/enhanced-node.types';
 import type { GenerationOptions } from './generation-options.types';
 import type { GenerationContext } from './generation-context';
 import { createGenerationState } from './generation-state';
-import { toEnhancedNodes } from '../utils/to-enhanced-node';
-import { collectMediaVariables } from '../utils/collectMediaVariables';
-import { initCommentsState } from '../utils/generateGeneratedComment';
+import { toEnhancedNodes } from './to-enhanced-node';
+import { collectMediaVariables } from './collect-media-variables';
+import { initCommentsState } from './generated-comment';
 
 /**
  * Извлекает все ID узлов из массива узлов

@@ -24,15 +24,7 @@ import {
   escapeFilter,
 } from './filters';
 import { getTemplatesDir } from './utils/get-templates-dir';
-import {
-  importsParamsSchema,
-  configParamsSchema,
-  headerParamsSchema,
-  databaseParamsSchema,
-  utilsParamsSchema,
-  mainParamsSchema,
-  botParamsSchema,
-} from './schemas';
+
 
 /**
  * Проверяет что код выполняется в Node.js среде
@@ -167,57 +159,6 @@ export function renderPartialTemplate(
   context: Record<string, any>
 ): string {
   try {
-    // Валидация параметров через Zod схемы
-    let validated = context;
-    const schemaMap: Record<string, any> = {
-      'imports': importsParamsSchema,
-      'config': configParamsSchema,
-      'header': headerParamsSchema,
-      'database': databaseParamsSchema,
-      'utils': utilsParamsSchema,
-      'main': mainParamsSchema,
-      'bot': botParamsSchema,
-    };
-
-    // Извлекаем имя шаблона из пути (поддерживаем оба формата)
-    let templateName = partialName;
-    // Удаляем расширение
-    templateName = templateName.replace('.py.jinja2', '');
-    // Удаляем путь директории
-    templateName = templateName.replace('config/', '')
-                               .replace('database/', '')
-                               .replace('utils/', '')
-                               .replace('main/', '')
-                               .replace('header/', '')
-                               .replace('middleware/', '')
-                               .replace('universal-handlers/', '')
-                               .replace('imports/', '')
-                               .replace('command/', '')
-                               .replace('start/', '')
-                               .replace('keyboard/', '')
-                               .replace('message/', '')
-                               .replace('broadcast/', '')
-                               .replace('broadcast-bot/', '')
-                               .replace('broadcast-client/', '')
-                               .replace('sticker/', '')
-                               .replace('voice/', '')
-                               .replace('safe-edit-or-send/', '')
-                               .replace('handlers/', '')
-                               .replace('synonyms/', '')
-                               .replace('user-handler/', '')
-                               .replace('admin-rights/', '')
-                               .replace('map/', '')
-                               .replace('message-handler/', '');
-
-    if (schemaMap[templateName]) {
-      try {
-        validated = schemaMap[templateName].parse(context);
-      } catch (validationError: any) {
-        console.error(`[template-renderer] Валидация параметров для ${partialName} не пройдена:`, validationError.errors);
-        throw new Error(`Валидация параметров шаблона ${partialName} не пройдена: ${validationError.message}`);
-      }
-    }
-
     const environment = initEnvironment();
     
     // Для шаблонов в handlers/ используем полный путь
@@ -239,17 +180,11 @@ export function renderPartialTemplate(
       template = environment.getTemplate(templatePath);
       templateCache.set(templatePath, template);
     }
-    return template.render(validated);
+    return template.render(context);
   } catch (error: any) {
-    // Если мы в браузере и Nunjucks недоступен, бросаем понятную ошибку
     if (error.message.includes('Node.js') || error.message.includes('browser')) {
       throw new Error(`Template rendering is not available in browser. Use browser-compatible functions instead. Template: ${partialName}`);
     }
-    // Пробрасываем ошибки валидации
-    if (error.message.includes('Валидация параметров')) {
-      throw error;
-    }
-    // Добавляем информацию о шаблоне к ошибке
     if (error.message.includes('template not found')) {
       throw new Error(`Template not found: ${partialName}. Checked in ${getTemplatesDir()}`);
     }

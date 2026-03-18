@@ -36,8 +36,8 @@ export type { FormatModeOverride } from './node-data-override.types';
 
 export type { GenerationOptions } from '../core/generation-options.types';
 export type { GenerationContext } from '../core/generation-context';
-export type { InputCollectionCheckResult } from './generation.types';
-export type { PythonValidationResult } from './generation.types';
+export type { InputCollectionCheckResult } from './input-collection-check-result';
+export type { PythonValidationResult } from '../validation/validate-generated-python';
 export type { ImportGeneratorOptions } from './generation.types';
 export type { CallbackHandler } from './generation.types';
 

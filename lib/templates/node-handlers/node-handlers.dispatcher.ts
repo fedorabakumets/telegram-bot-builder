@@ -15,7 +15,7 @@ import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler,
 import { generateMessage } from '../message/message.renderer';
 import { generateContactHandler, generateLocationHandler } from './contact-location.renderer';
 import { generateMessageHandlerFromNode } from '../message-handler';
-import { processCodeWithAutoComments } from '../../bot-generator/utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../../bot-generator/core/generated-comment';
 import { generateUserHandlerFromNode } from '../user-handler';
 import { generateAnimationHandler } from '../animation-handler/animation-handler.renderer';
 import { generateAdminRightsFromNode } from '../admin-rights/admin-rights.renderer';

@@ -4,11 +4,11 @@
  * Модуль предоставляет функцию для добавления ID узлов автоперехода
  * в множество ссылочных узлов при генерации кода.
  *
- * @module bot-generator/utils/addAutoTransitionNodes
+ * @module bot-generator/core/add-auto-transition-nodes
  */
 
 import type { EnhancedNode } from '../types/enhanced-node.types';
-import { generatorLogger } from '../core/generator-logger';
+import { generatorLogger } from './generator-logger';
 
 /**
  * Добавляет целевые узлы автопереходов в множество ссылочных узлов

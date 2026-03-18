@@ -1,255 +1,51 @@
-# 🤖 Bot Generator Library
+# lib — Bot Generator Library
 
-> Мощная библиотека для генерации Telegram ботов с богатыми возможностями
+Библиотека генерации Python-кода для Telegram-ботов на базе aiogram.
 
-[![License](https://img.shields.io/github/license/your-repo/bot-generator)](LICENSE)
-[![Build Status](https://img.shields.io/travis/your-repo/bot-generator)](https://travis-ci.org/your-repo/bot-generator)
-[![Version](https://img.shields.io/npm/v/bot-generator.svg)](https://www.npmjs.com/package/bot-generator)
-
-## 📋 Содержание
-
-- [Описание](#-описание)
-- [Архитектура](#-архитектура)
-- [Основные файлы](#-основные-файлы)
-- [Структура модулей](#-структура-модулей)
-- [Переменные](#-переменные)
-- [Примеры использования](#-примеры-использования)
-- [Совместимость](#-совместимость)
-
-## 💡 Описание
-
-Эта библиотека предоставляет мощный инструментарий для генерации Telegram ботов с различными возможностями:
-
-- 🎨 Генерация сложных сценариев взаимодействия
-- 🔄 Поддержка множественного выбора
-- 🗂 Работа с группами ботов
-- 📝 Логирование сообщений
-- 🔐 Управление пользователями
-- 📊 Хранение данных пользователей
-- 🧠 Условная логика сообщений
-- 🎯 Обработка медиафайлов
-
-## 🏗 Архитектура
-
-Библиотека построена по модульному принципу, что обеспечивает:
-
-- 🧩 Легкость расширения
-- 🧹 Простоту обслуживания
-- 🚀 Высокую производительность
-- 🔒 Типовую безопасность
-
-### 📁 Структура проекта
+## Структура
 
 ```
-client/
-└── src/
-    └── lib/
-        ├── CommandHandler/        # Обработка команд
-        ├── Conditional/           # Условная логика
-        ├── format/                # Форматирование текста
-        ├── generate/              # Генерация кода
-        ├── Keyboard/              # Генерация клавиатур
-        ├── map-utils/             # Утилиты для работы с картами кода
-        ├── MediaHandler/          # Обработка медиафайлов
-        ├── MessageHandler/        # Обработка сообщений
-        ├── scaffolding/           # Генерация файлов проекта
-        ├── storage/               # Утилиты хранения
-        ├── Synonyms/              # Обработка синонимов
-        ├── UserHandler/           # Управление пользователями
-        ├── utils/                 # Общие утилиты
-        └── index.ts              # Главный экспорт всех модулей
+lib/
+├── bot-generator/       # Ядро генератора
+│   ├── core/            # Контекст, состояние, логирование, утилиты
+│   ├── types/           # TypeScript-типы и интерфейсы
+│   └── validation/      # Валидация узлов и сгенерированного кода
+├── templates/           # Jinja2-шаблоны и TypeScript-рендереры
+│   ├── <template>/      # Каждый шаблон: .py.jinja2 + renderer + schema + tests
+│   ├── filters/         # Предикаты и фильтры узлов (hasInputCollection и др.)
+│   ├── schemas/         # Zod-схемы для параметров шаблонов
+│   └── types/           # Общие типы параметров шаблонов
+├── scaffolding/         # Генерация файлов проекта (Dockerfile, requirements.txt и др.)
+├── bot-generator.ts     # Главная функция generatePythonCode()
+├── commands.ts          # Генерация команд для BotFather
+└── index.ts             # Единая точка входа библиотеки
 ```
 
-## 📄 Основные файлы
+## Модули
 
-| Файл | Назначение | Особенности |
-|------|------------|-------------|
-| `bot-generator.ts` | 🧠 Основной генератор кода ботов | Полная генерация Python-кода |
-| `commands.ts` | 🛠 Генерация команд для BotFather | Автоматическое создание команд |
-| `index.ts` | 🌐 Главный экспорт всех модулей | Единая точка входа |
-| `queryClient.ts` | 📬 Управление клиентом запросов | Асинхронные запросы |
-| `bot-commands-setup.ts` | 🛠 Настройка команд бота | Настройка команд |
+### `bot-generator/core/`
 
-## 📦 Структура модулей
+Ядро генератора: создание контекста (`create-generation-context`), управление состоянием (`generation-state`), централизованное логирование (`generator-logger`), утилиты обхода узлов.
 
-### 🛠 CommandHandler
-Обработка команд бота
+### `bot-generator/types/`
 
-- `generateCommandHandler.ts` - Обработка команд
-- `generateStartHandler.ts` - Обработка стартовой команды
+Все TypeScript-типы: `BotNode`, `NodeData`, `EnhancedNode`, `InputCollectionCheckResult`, `GenerationContext` и др. Единственная точка импорта типов через `index.ts`.
 
-### 🧩 Conditional
-Условная логика сообщений
+### `bot-generator/validation/`
 
-- `collectConditionalMessageButtons.ts` - Сбор условных кнопок сообщений
+Валидация `EnhancedNode` перед генерацией (`validate-enhanced-node`) и проверка обязательных компонентов в сгенерированном Python-коде (`validate-generated-python`).
 
-### 📝 format
-Форматирование и обработка текста
+### `templates/`
 
-- `calculateOptimalColumns.ts` - Подсчет оптимальных колонок клавиатуры
-- `createSafeFunctionName.ts` - Создание безопасных имен функций
-- `formatTextForPython.ts` - Форматирование текста для Python
-- `generateButtonText.ts` - Генерация текста кнопок
-- `getParseMode.ts` - Получение режима парсинга
-- `stripHtmlTags.ts` - Удаление HTML тегов
-- `toPythonBoolean.ts` - Преобразование в Python булевый тип
+Jinja2-шаблоны с TypeScript-рендерерами. Каждый шаблон — отдельная папка с файлами `.py.jinja2`, `.renderer.ts`, `.schema.ts`, `.params.ts`, `.test.ts`. Рендеринг через `template-renderer.ts` (Nunjucks).
 
-### 🏗 generate
-Утилиты для генерации различных частей кода бота
+### `scaffolding/`
 
-- `generate-message-logging.ts` - Генерация кода логирования сообщений
-- `generate-node-handlers.ts` - Генерация обработчиков узлов
+Генерация вспомогательных файлов проекта: `Dockerfile`, `requirements.txt`, `.env`, `README.md`.
 
-### ⌨️ Keyboard
-Генерация клавиатур
-
-- `generateKeyboard.ts` - Генерация клавиатур
-- `generate-reply-button-handlers.ts` - Генерация обработчиков для кнопочных ответов
-
-### 🗺 map-utils
-Утилиты для работы с картами кода
-
-- `map-utils.ts` - Утилиты для работы с картами кода
-
-### 📷 MediaHandler
-Обработка медиафайлов
-
-- `generateAudioHandler.ts` - Обработка аудио
-- `generateDocumentHandler.ts` - Обработка документов
-- `generatePhotoHandler.ts` - Обработка фото
-- `generateStickerHandler.ts` - Обработка стикеров
-- `generateVideoHandler.ts` - Обработка видео
-
-### 📨 MessageHandler
-Обработка сообщений
-
-- `generateDeleteMessageHandler.ts` - Удаление сообщений
-- `generatePinMessageHandler.ts` - Закрепление сообщений
-- `generateSendMessageHandler.ts` - Отправка сообщений
-- `generateUnpinMessageHandler.ts` - Открепление сообщений
-
-### 🏗 scaffolding
-Генерация файлов проекта
-
-- `generateRequirementsTxt.ts` - Генерация requirements.txt
-- `generateDockerfile.ts` - Генерация Dockerfile
-
-### 💾 storage
-Утилиты хранения
-
-- `generateLocalStorageCode.ts` - Генерация кода локального хранилища
-
-### 🔄 Synonyms
-Обработка синонимов
-
-- `generateSynonyms.ts` - Обработка синонимов
-
-### 👤 UserHandler
-Управление пользователями
-
-- `generateAdminRightsToggleHandlers.ts` - Переключение прав администратора
-- `generateDemoteUserHandler.ts` - Понижение пользователя
-- `generatePromoteUserHandler.ts` - Повышение пользователя
-
-### 🛠 utils
-Общие утилиты
-
-- `extractNodeData.ts` - Извлечение данных узлов
-- `filterInlineNodes.ts` - Фильтрация инлайн-узлов
-- `generateVariableReplacement.ts` - Замена переменных в тексте
-- `hasAutoTransitions.ts` - Проверка наличия автопереходов
-- `hasCommandButtons.ts` - Проверка наличия кнопок команд
-- `hasConditionalButtons.ts` - Проверка наличия условных кнопок
-- `hasInlineButtons.ts` - Проверка наличия инлайн-кнопок
-- `hasInputCollection.ts` - Проверка наличия сбора ввода
-- `hasLocationFeatures.ts` - Проверка наличия функций местоположения
-- `hasMediaNodes.ts` - Проверка наличия медиаузлов
-- `hasMultiSelectNodes.ts` - Проверка наличия узлов множественного выбора
-- `validateBotStructure.ts` - Валидация структуры бота
-
-## 📊 Переменные
-
-### 🧮 Системные переменные
-
-Боты автоматически получают доступ к следующим системным переменным:
-
-| Переменная | Описание | Пример | Источник |
-|------------|----------|--------|----------|
-| `{user_name}` | Имя для отображения (приоритет: first_name > username > "Пользователь") | "Алексей" | Telegram API |
-| `{first_name}` | Имя из профиля Telegram | "Алексей" | Telegram API |
-| `{last_name}` | Фамилия из профиля Telegram | "Иванов" | Telegram API |
-| `{username}` | Никнейм без @ | "alex123" | Telegram API |
-| `{user_id}` | Уникальный ID пользователя в Telegram | "123456789" | Telegram API |
-
-### 📝 Использование переменных
-
-Переменные можно использовать в любом тексте сообщения или кнопки:
-
-```
-Привет, {user_name}!
-Добро пожаловать, {first_name} {last_name}
-```
-
-### 🛠 Функции для работы с переменными
-
-#### `generateInitUserVariablesFunction(indentLevel?: string)`
-
-Генерирует Python код функции `init_user_variables()`, которая:
-- Извлекает данные пользователя из Telegram API
-- Инициализирует системные переменные
-- Сохраняет данные в `user_data`
-
-#### `generateReplaceVariablesFunction(indentLevel?: string)`
-
-Генерирует Python код функции `replace_variables_in_text()`, которая:
-- Находит все переменные формата `{variable_name}` в тексте
-- Заменяет их на соответствующие значения
-- Обрабатывает случаи отсутствующих переменных
-
-#### `generateUniversalVariableReplacement(indentLevel: string)`
-
-Генерирует полный код для:
-- Инициализации переменных пользователя
-- Получения данных из базы данных
-- Замены переменных в тексте
-
-## 📚 Примеры использования
-
-### 📌 Добавление новой системной переменной
-
-1. Обновите `SYSTEM_VARIABLES` в `utils/user-utils.ts`:
+## Точка входа
 
 ```typescript
-export const SYSTEM_VARIABLES = {
-  // ... существующие переменные
-  user_id: {
-    description: 'Уникальный ID пользователя в Telegram',
-    example: '123456789',
-    source: 'Telegram API'
-  }
-} as const;
+import { generatePythonCode } from 'lib';
+import type { BotNode, GenerationOptions } from 'lib';
 ```
-
-2. Обновите `generateInitUserVariablesFunction()` для инициализации новой переменной:
-
-```typescript
-code += `${indentLevel}    user_data[user_id]["user_id"] = user_id\n`;
-```
-
-### 🧪 Тестирование
-
-Запустите тесты для проверки функциональности:
-
-```bash
-npm test
-```
-
-## 🔁 Совместимость
-
-Библиотека полностью обратно совместима. Все существующие боты продолжат работать без изменений.
-
----
-
-<p align="center">
-  Made with ❤️ for Telegram Bot Developers
-</p>

@@ -21,19 +21,19 @@ import { generateNodeHandlers } from './templates/node-handlers/node-handlers.di
 import { filterInlineNodes, hasInlineButtons, identifyNodesRequiringMultiSelectLogic } from './templates/keyboard/keyboard.renderer';
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers, generateCommandCallbackHandler } from './templates/handlers';
 import { generateInteractiveCallbackHandlers } from './templates/interactive-callback-handlers';
-import { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
+import { hasAutoTransitions } from './templates/filters';
 import { generateGroupHandlers } from './templates/group-handlers/group-handlers.renderer';
 import { generateMediaFunctions } from './templates/media-functions/media-functions.renderer';
-import { hasMediaNodes } from './bot-generator/utils/hasMediaNodes';
-import { hasUploadImageUrls } from './bot-generator/utils/hasUploadImageUrls';
+import { hasMediaNodes } from './templates/filters';
+import { hasUploadImageUrls } from './templates/filters';
 import { generateMessageLoggingCode } from './templates/middleware/middleware.renderer';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';
-import { addAutoTransitionNodes } from './bot-generator/utils/addAutoTransitionNodes';
-import { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
-import { collectInputTargetNodes } from './bot-generator/utils/collectInputTargetNodes';
-import { hasNodesRequiringSafeEditOrSend } from './bot-generator/utils/hasNodesRequiringSafeEditOrSend';
+import { addAutoTransitionNodes } from './bot-generator/core/add-auto-transition-nodes';
+import { addInputTargetNodes } from './bot-generator/core/add-input-target-nodes';
+import { collectInputTargetNodes } from './bot-generator/core/collect-input-target-nodes';
+import { hasNodesRequiringSafeEditOrSend } from './templates/filters';
 import { assertValidPython } from './bot-generator/validation';
-import { collectAllCommandCallbacksFromNodes, findCommandNode } from './bot-generator/utils/command-utils';
+import { collectAllCommandCallbacksFromNodes, findCommandNode } from './bot-generator/core/command-utils';
 
 /**
  * Опции для генерации Python-кода бота

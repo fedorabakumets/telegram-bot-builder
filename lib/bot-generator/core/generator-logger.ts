@@ -95,7 +95,7 @@ export function createLogger(options: LoggerOptions = {}): GeneratorLogger {
       }
     },
     flow: (msg) => {
-      if (shouldLog('error')) {
+      if (shouldLog('debug')) {
         console.log(`🔄 [FLOW] ${msg}`);
       }
     },

@@ -1,10 +1,10 @@
 /**
  * @fileoverview Утилита для конвертации Node из схемы в EnhancedNode
- * 
+ *
  * Модуль предоставляет функции для безопасного преобразования узлов
  * из @shared/schema в тип EnhancedNode с полной совместимостью.
- * 
- * @module bot-generator/utils/to-enhanced-node
+ *
+ * @module bot-generator/core/to-enhanced-node
  */
 
 import type { Node } from '@shared/schema';
@@ -13,12 +13,6 @@ import type { ButtonOverride } from '../types/node-data-override.types';
 
 /**
  * Нормализует кнопки узла для совместимости
- *
- * @param buttons - Кнопки из схемы
- * @returns Нормализованные кнопки
- *
- * @example
- * const normalized = normalizeButtons(node.data.buttons);
  */
 function normalizeButtons(buttons: any[]): ButtonOverride[] {
   if (!buttons || !Array.isArray(buttons)) {
@@ -40,12 +34,6 @@ function normalizeButtons(buttons: any[]): ButtonOverride[] {
 
 /**
  * Конвертирует Node из схемы в EnhancedNode
- * 
- * @param node - Узел из @shared/schema
- * @returns Безопасный EnhancedNode
- * 
- * @example
- * const enhanced = toEnhancedNode(node);
  */
 export function toEnhancedNode(node: Node): EnhancedNode {
   return {
@@ -60,12 +48,6 @@ export function toEnhancedNode(node: Node): EnhancedNode {
 
 /**
  * Конвертирует массив узлов из схемы в EnhancedNode[]
- * 
- * @param nodes - Массив узлов из @shared/schema
- * @returns Массив EnhancedNode
- * 
- * @example
- * const enhanced = toEnhancedNodes(nodes);
  */
 export function toEnhancedNodes(nodes: Node[]): EnhancedNode[] {
   if (!nodes || !Array.isArray(nodes)) {

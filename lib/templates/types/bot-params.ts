@@ -4,7 +4,7 @@
  */
 
 /** Узел бота для генерации обработчиков */
-export interface BotNode {
+export interface BotTemplateNode {
   /** Имя узла */
   name: string;
   /** Команда узла */
@@ -18,7 +18,7 @@ export interface BotTemplateParams {
   /** Имя бота */
   botName: string;
   /** Массив узлов бота */
-  nodes: BotNode[];
+  nodes: BotTemplateNode[];
   /** Включена ли база данных пользователей */
   userDatabaseEnabled: boolean;
   /** ID проекта для сохранения в базу данных */

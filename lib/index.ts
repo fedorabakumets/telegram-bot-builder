@@ -12,8 +12,8 @@ export * from './bot-generator';
 export * from './commands';
 // Keyboard exports are now aggregated in './bot-generator/Keyboard'
 export { generateSynonymHandlers, generateSynonyms, collectSynonymEntries } from './templates/synonyms';
-export * from './bot-generator/utils/addAutoTransitionNodes';
-export * from './bot-generator/utils/extractNodeData';
+export * from './bot-generator/core/add-auto-transition-nodes';
+export * from './bot-generator/core/extract-node-data';
 
 // Conditional logic
 export * from './bot-generator/Conditional';
@@ -22,14 +22,14 @@ export * from './bot-generator/Conditional';
 export * from './templates/filters';
 
 // Feature detection
-export { hasCommandButtons } from './bot-generator/utils/hasCommandButtons';
+export { hasCommandButtons } from './templates/filters';
 export { hasConditionalButtons } from './bot-generator/Conditional/hasConditionalButtons';
 // hasInlineButtons и hasMultiSelectNodes экспортируются из './bot-generator/Keyboard'
 export { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
-export { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
-export { hasInputCollection } from './bot-generator/utils/hasInputCollection';
+export { hasAutoTransitions } from './templates/filters';
+export { hasInputCollection } from './templates/filters';
 export { hasLocationFeatures } from './bot-generator/map-utils/hasLocationFeatures';
-export { hasNodesRequiringSafeEditOrSend } from './bot-generator/utils/hasNodesRequiringSafeEditOrSend';
+export { hasNodesRequiringSafeEditOrSend } from './templates/filters';
 
 // Keyboard generators - после миграции на Jinja2
 // Основные генераторы клавиатур используют адаптеры к Jinja2 шаблонам
@@ -53,13 +53,12 @@ export { generateUserHandler, generateUserHandlerFromNode, nodeToUserHandlerPara
 export { generateAdminRightsHandler, generateAdminRightsFromNode, nodeToAdminRightsParams } from './templates/admin-rights';
 
 // Additional utilities
-export { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
+export { addInputTargetNodes } from './bot-generator/core/add-input-target-nodes';
 
 // Collection utilities
-export { collectInputTargetNodes } from './bot-generator/utils/collectInputTargetNodes';
+export { collectInputTargetNodes } from './bot-generator/core/collect-input-target-nodes';
 
-// General utilities
-export * from './bot-generator/utils';
+// General utilities (migrated to core/ and templates/filters/)
 
 // Node navigation
 export * from './bot-generator/node-navigation';
@@ -97,12 +96,12 @@ export type {
 } from './bot-generator/types';
 
 export type { StandardCommand, CommandCategory } from './commands';
-export type { ExtractNodeDataResult } from './bot-generator/utils/extractNodeData';
+export type { ExtractNodeDataResult } from './bot-generator/core/extract-node-data';
 
 // Утилиты конвертации и валидации
-export { toEnhancedNode, toEnhancedNodes } from './bot-generator/utils/to-enhanced-node';
-export { validateEnhancedNode, validateEnhancedNodes } from './bot-generator/validation/validate-enhanced-node';
-export type { ValidationResult } from './bot-generator/validation/validate-enhanced-node';
+export { toEnhancedNode, toEnhancedNodes } from './bot-generator/core/to-enhanced-node';
+export { validateEnhancedNode, validateEnhancedNodes } from './bot-generator/validation';
+export type { ValidationResult } from './bot-generator/validation';
 
 // Ядро: контекст и состояние генерации
 export { createGenerationState, withLogging, withComments } from './bot-generator/core/generation-state';

@@ -4,7 +4,7 @@
  * Модуль предоставляет функцию для сбора ID целевых узлов ввода
  * из всех узлов бота в множество.
  *
- * @module bot-generator/utils/collectInputTargetNodes
+ * @module bot-generator/core/collect-input-target-nodes
  */
 
 import type { EnhancedNode } from '../types/enhanced-node.types';
@@ -20,7 +20,7 @@ import type { EnhancedNode } from '../types/enhanced-node.types';
  */
 export function collectInputTargetNodes(nodes: EnhancedNode[]): Set<string> {
   const inputTargetNodeIds = new Set<string>();
-  
+
   nodes
     .filter(node => node !== null && node !== undefined)
     .forEach(node => {

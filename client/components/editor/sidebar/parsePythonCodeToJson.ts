@@ -9,7 +9,7 @@
  */
 
 import { Button, Node } from '@shared/schema';
-import { processCodeWithAutoComments } from '../../../../lib/bot-generator/utils/generateGeneratedComment';
+import { processCodeWithAutoComments } from '../../../../lib/bot-generator/core/generated-comment';
 
 
 /**

@@ -9,48 +9,10 @@
 
 import type { BotNode } from './bot-node-types';
 import type { Button } from './button-types';
-// GenerationOptions живёт в core/generation-options.types (с projectId)
 export type { GenerationOptions } from '../core/generation-options.types';
-// GenerationContext живёт в core/generation-context.ts
 export type { GenerationContext } from '../core/generation-context';
-
-/**
- * Результат проверки сбора пользовательского ввода
- * 
- * @example
- * const result: InputCollectionCheckResult = {
- *   hasCollectInput: true,
- *   hasInputValidation: false
- * };
- */
-export interface InputCollectionCheckResult {
-  /** Есть ли сбор ввода */
-  hasCollectInput: boolean;
-  /** Есть ли валидация ввода */
-  hasInputValidation: boolean;
-  /** Есть ли обработка кнопок ответа */
-  hasButtonResponseHandlers: boolean;
-  /** Есть ли обработка команд */
-  hasCommandHandlers: boolean;
-}
-
-/**
- * Результат валидации Python-кода
- * 
- * @example
- * const result: PythonValidationResult = {
- *   isValid: true,
- *   missingComponents: []
- * };
- */
-export interface PythonValidationResult {
-  /** Код валиден */
-  isValid: boolean;
-  /** Список отсутствующих компонентов */
-  missingComponents: string[];
-  /** Сообщение об ошибке */
-  errorMessage?: string;
-}
+export type { InputCollectionCheckResult } from './input-collection-check-result';
+export type { PythonValidationResult } from '../validation/validate-generated-python';
 
 /**
  * Параметры для генерации импортов

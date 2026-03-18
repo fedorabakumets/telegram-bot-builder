@@ -1,23 +1,20 @@
 /**
  * @fileoverview Утилиты для работы с командами бота
  *
- * Вынесено из bot-generator.ts для устранения вложенных функций.
- *
- * @module bot-generator/utils/command-utils
+ * @module bot-generator/core/command-utils
  */
 
-import type { Button } from '../types';
+import type { BotNode, Button } from '../types';
 
 /**
  * Собирает все callback-идентификаторы команд из узлов бота
  * @param nodes - Массив узлов бота
  * @returns Уникальные callback идентификаторы команд
  */
-export function collectAllCommandCallbacksFromNodes(nodes: any[]): Set<string> {
+export function collectAllCommandCallbacksFromNodes(nodes: BotNode[]): Set<string> {
   const commandButtons = new Set<string>();
 
   nodes.forEach(node => {
-    // Обычные кнопки узла
     if (node.data?.buttons) {
       node.data.buttons.forEach((button: Button) => {
         if (button.action === 'goto' && button.target) {
@@ -27,9 +24,8 @@ export function collectAllCommandCallbacksFromNodes(nodes: any[]): Set<string> {
       });
     }
 
-    // Кнопки в условных сообщениях
     if (node.data?.conditionalMessages) {
-      node.data.conditionalMessages.forEach((condition: any) => {
+      node.data.conditionalMessages.forEach((condition: { buttons?: Button[] }) => {
         if (condition.buttons) {
           condition.buttons.forEach((button: Button) => {
             if (button.action === 'goto' && button.target) {
@@ -51,7 +47,7 @@ export function collectAllCommandCallbacksFromNodes(nodes: any[]): Set<string> {
  * @param nodes - Массив узлов бота
  * @returns Узел команды или null
  */
-export function findCommandNode(commandCallback: string, nodes: any[]): any | null {
+export function findCommandNode(commandCallback: string, nodes: BotNode[]): BotNode | null {
   const command = commandCallback.replace('cmd_', '');
   return nodes.find(
     n => n.data.command === `/${command}` || n.data.command === command

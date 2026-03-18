@@ -7,3 +7,4 @@
  */
 
 export { validateGeneratedPython, assertValidPython, type PythonValidationResult } from './validate-generated-python';
+export { validateEnhancedNode, validateEnhancedNodes, type ValidationResult } from './validate-enhanced-node';
