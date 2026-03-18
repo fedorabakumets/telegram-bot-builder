@@ -18,24 +18,16 @@ import { Button } from './bot-generator/types';
 import {
   generateGroupBasedEventHandlers,
 } from './bot-generator/handlers';
-import {
-  generateUserInputValidationAndContinuationLogic,
-  generateAdHocInputCollectionHandler,
-  generateContinuationLogicForButtonBasedInput
-} from './bot-generator/input';
 
 // Внутренние модули - использование экспорта бочек
 import { generateBotFatherCommands } from './commands';
 import { collectConditionalMessageButtons } from './bot-generator/Conditional/collectConditionalMessageButtons';
 import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './bot-generator/Conditional/conditional-button-handler';
-import { generateUniversalVariableReplacement } from './bot-generator/database/generateUniversalVariableReplacement';
-import { formatTextForPython } from './bot-generator/format';
-import { generateDatabaseCode, generateGroupsConfiguration, generateNodeNavigation } from './generate';
+import { generateDatabaseCode, generateGroupsConfiguration } from './generate';
 import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, generateMain, generateImports, generateConfig, generateUtils } from './templates/typed-renderer';
 // Примечание: generateApiConfig удалена после миграции на Jinja2
 // import { generateApiConfig } from './bot-generator/api';
 import { generateNodeHandlers } from './generate/generate-node-handlers';
-import { generateKeyboard } from './templates/keyboard';
 import { filterInlineNodes } from './bot-generator/Keyboard/filterInlineNodes';
 import { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
 import { identifyNodesRequiringMultiSelectLogic } from './bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic';
@@ -518,29 +510,14 @@ export function generatePythonCode(
    * @returns {string} Python код обработчика
    */
   function generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation() {
-    const adHocHandlerCode = generateAdHocInputCollectionHandler();
-
-    // Адаптер: generateContinuationLogicForButtonBasedInput ожидает (buttons, indent, nodeId, data, allNodeIds)
-    // generateKeyboard из templates ожидает KeyboardTemplateParams — оборачиваем
-    const generateInlineKbAdapter = (buttons: any[], indent: string, nodeId: string, _data: any, allNodeIds: string[]) =>
-      generateKeyboard({ keyboardType: 'inline', buttons, nodeId, indentLevel: indent, allNodeIds });
-
-    const continuationHandlerCode = generateContinuationLogicForButtonBasedInput(
-      context.nodes || [],
-      formatTextForPython,
-      generateUniversalVariableReplacement,
-      generateInlineKbAdapter,
-      context.allNodeIds,
-      generateNodeNavigation
-    );
     code = newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(
       context.nodes,
       code,
       context.allNodeIds,
       [],
-      () => adHocHandlerCode,
-      () => continuationHandlerCode,
-      generateUserInputValidationAndContinuationLogic,
+      () => {},
+      () => '',
+      () => {},
       () => {}    );
   }
 

@@ -30,17 +30,27 @@
 
 {%- macro generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection=False, indent='') -%}
 {%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows and keyboardLayout.rows|length > 0 -%}
-{%- set valid_rows = [] -%}
+{%- set _m_counts = [] -%}
+{%- set _m_comments = [] -%}
 {%- for row in keyboardLayout.rows -%}
-  {%- if row.buttonIds and row.buttonIds|length > 0 -%}
-    {%- set valid_rows = valid_rows.concat([row]) -%}
+  {%- set _m_valid = [] -%}
+  {%- if row.buttonIds -%}
+    {%- for bid in row.buttonIds -%}
+      {%- if bid and (bid ~ '')|trim|length > 0 -%}
+        {%- set _m_valid = _m_valid + [bid] -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+  {%- if _m_valid|length > 0 -%}
+    {%- set _m_counts = _m_counts + [(_m_valid|length ~ '')] -%}
+    {%- set _m_comments = _m_comments + ['Ряд ' ~ loop.index ~ ': ' ~ _m_valid|join(', ')] -%}
   {%- endif -%}
 {%- endfor -%}
-{%- if valid_rows|length > 0 %}
-{%- for row in valid_rows %}
-{{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
+{%- if _m_counts|length > 0 %}
+{%- for comment in _m_comments %}
+{{ indent }}# {{ comment }}
 {%- endfor %}
-{{ indent }}builder.adjust({{ valid_rows|map(attribute='buttonIds')|map('length')|join(', ') }})
+{{ indent }}builder.adjust({{ _m_counts|join(', ') }})
 {%- else -%}
 {%- set cols = calculateOptimalColumns(buttons, allowMultipleSelection) %}
 {{ indent }}builder.adjust({{ cols }})
@@ -57,7 +67,7 @@
 {# ===== ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ ===== #}
 {%- set keyboardType = keyboardType or 'reply' -%}
 {%- set buttons = buttons or [] -%}
-{%- set resizeKeyboard = resizeKeyboard != false -%}
+{%- set resizeKeyboard = false if (resizeKeyboard is defined and resizeKeyboard == false) else true -%}
 {%- set oneTimeKeyboard = oneTimeKeyboard or false -%}
 {%- set allowMultipleSelection = allowMultipleSelection or false -%}
 {%- set parseMode = formatMode or parseMode or 'none' -%}
@@ -111,13 +121,14 @@
 {%- endif %}
 {%- endfor %}
 {%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows and keyboardLayout.rows|length > 0 -%}
-{%- set _adj_rows = [] -%}
-{%- for row in keyboardLayout.rows -%}{%- if row.buttonIds and row.buttonIds|length > 0 -%}{%- set _adj_rows = _adj_rows.concat([row]) -%}{%- endif -%}{%- endfor -%}
-{%- if _adj_rows|length > 0 %}
-{%- for row in _adj_rows %}
+{%- set _nonempty_count = keyboardLayout.rows | map(attribute='buttonIds') | select | map('length') | select | list | length -%}
+{%- if _nonempty_count > 0 %}
+{%- for row in keyboardLayout.rows %}
+{%- if row.buttonIds and row.buttonIds|length > 0 %}
 {{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
+{%- endif %}
 {%- endfor %}
-{{ indent }}builder.adjust({{ _adj_rows|map(attribute='buttonIds')|map('length')|join(', ') }})
+{{ indent }}builder.adjust({{ keyboardLayout.rows | map(attribute='buttonIds') | select | map('length') | join(', ') }})
 {%- else %}
 {%- set _cols = calculateOptimalColumns(buttons, allowMultipleSelection) %}
 {{ indent }}builder.adjust({{ _cols }})
@@ -151,13 +162,14 @@
 {%- endif %}
 {%- endfor %}
 {%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows and keyboardLayout.rows|length > 0 -%}
-{%- set _adj_rows2 = [] -%}
-{%- for row in keyboardLayout.rows -%}{%- if row.buttonIds and row.buttonIds|length > 0 -%}{%- set _adj_rows2 = _adj_rows2.concat([row]) -%}{%- endif -%}{%- endfor -%}
-{%- if _adj_rows2|length > 0 %}
-{%- for row in _adj_rows2 %}
+{%- set _nonempty_count2 = keyboardLayout.rows | map(attribute='buttonIds') | select | map('length') | select | list | length -%}
+{%- if _nonempty_count2 > 0 %}
+{%- for row in keyboardLayout.rows %}
+{%- if row.buttonIds and row.buttonIds|length > 0 %}
 {{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
+{%- endif %}
 {%- endfor %}
-{{ indent }}builder.adjust({{ _adj_rows2|map(attribute='buttonIds')|map('length')|join(', ') }})
+{{ indent }}builder.adjust({{ keyboardLayout.rows | map(attribute='buttonIds') | select | map('length') | join(', ') }})
 {%- else %}
 {%- set _cols2 = calculateOptimalColumns(buttons, allowMultipleSelection) %}
 {{ indent }}builder.adjust({{ _cols2 }})
@@ -170,8 +182,8 @@
 {{ indent }}builder.adjust({{ _cols2 }})
 {%- endif %}
 {{ indent }}keyboard = builder.as_markup(
-{{ indent }}    resize_keyboard={{ 'True' if resizeKeyboard else 'False' }},
-{{ indent }}    one_time_keyboard={{ 'True' if oneTimeKeyboard else 'False' }}
+{{ indent }}    resize_keyboard={{ resizeKeyboard | to_python_boolean }},
+{{ indent }}    one_time_keyboard={{ oneTimeKeyboard | to_python_boolean }}
 {{ indent }})
 {%- else %}
 {{ indent }}keyboard = None

@@ -10,14 +10,6 @@ import { renderPartialTemplate } from '../template-renderer';
 /**
  * Генерирует Python-код блока runtime-обработки пользовательского ввода.
  *
- * Включает:
- * - проверку waiting_for_input в user_data
- * - извлечение полей из waiting_config
- * - проверку медиа-типа
- * - валидацию длины (min/max)
- * - валидацию типа (email/phone/number)
- * - очистку состояния ожидания
- *
  * @param params - параметры шаблона
  * @returns Сгенерированный Python-код
  */

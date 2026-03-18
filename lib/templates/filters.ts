@@ -228,21 +228,37 @@ export function sliceFilter(str: string, length: number): string {
 
 /**
  * Фильтр map для применения функции к каждому элементу массива
- * Поддерживает обращение к свойствам объектов
+ * Поддерживает обращение к свойствам объектов и встроенные атрибуты
  *
  * @param arr - Массив для обработки
- * @param attr - Имя свойства или функция
+ * @param attrOrKwargs - Имя свойства, или kwargs объект {attribute: 'name'}
  * @returns Массив результатов
  *
  * @example
  * [{text: "a"}, {text: "b"}] | map(attribute='text') → ["a", "b"]
+ * [['a','b'], ['c']] | map('length') → [2, 1]
  */
-export function mapFilter(arr: any[], attr: string): any[] {
+export function mapFilter(arr: any[], attrOrKwargs: string | { attribute?: string } | null): any[] {
   if (!Array.isArray(arr)) return [];
-  if (typeof attr === 'string') {
-    return arr.map(item => item?.[attr]);
+
+  // Nunjucks передаёт именованные аргументы как объект kwargs
+  let key: string | null = null;
+  if (typeof attrOrKwargs === 'string') {
+    key = attrOrKwargs;
+  } else if (attrOrKwargs && typeof attrOrKwargs === 'object' && 'attribute' in attrOrKwargs) {
+    key = attrOrKwargs.attribute ?? null;
   }
-  return arr;
+
+  if (!key) return arr;
+
+  return arr.map(item => {
+    if (item == null) return undefined;
+    // Для 'length' — возвращаем длину массива или строки
+    if (key === 'length') {
+      return (item as any).length;
+    }
+    return (item as any)[key!];
+  });
 }
 
 /**

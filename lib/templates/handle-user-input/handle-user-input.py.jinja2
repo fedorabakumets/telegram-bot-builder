@@ -1,86 +1,140 @@
 {#
-  Шаблон runtime-обработки пользовательского ввода
+  Шаблон универсального обработчика пользовательского ввода
 
-  @fileoverview Генерирует Python-код для обработки уже полученного ввода:
-    1. Проверка состояния waiting_for_input
-    2. Извлечение конфигурации из waiting_config
-    3. Проверка медиа-типа (игнорировать текст если ждём медиа)
-    4. Валидация длины текста (min/max)
-    5. Валидация типа ввода (email/phone/number)
-    6. Очистка состояния ожидания
-    7. Логирование
-
-  @param {string} indentLevel - базовый отступ (по умолчанию '    ')
+  @param {string}  indentLevel  - базовый отступ (по умолчанию '    ')
+  @param {array}   nodes        - все узлы [{id, safeName, type, data}]
+  @param {array}   allNodeIds   - все ID узлов
+  @param {boolean} hasUrlButtons - есть ли URL кнопки в проекте
+  @param {array}   commandNodes - узлы с командами (start/command)
 #}
 
 {% set ind = indentLevel or '    ' %}
-{{ ind }}# Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)
-{{ ind }}has_waiting_state = user_id in user_data and "waiting_for_input" in user_data[user_id]
-{{ ind }}logging.info(f"DEBUG: Получен текст {message.text}, состояние ожидания: {has_waiting_state}")
-{{ ind }}if user_id in user_data and "waiting_for_input" in user_data[user_id]:
-{{ ind }}    # Обрабатываем ввод через универсальную систему
-{{ ind }}    waiting_config = user_data[user_id]["waiting_for_input"]
-{{ ind }}    logging.info(f"DEBUG: waiting_config = {waiting_config}")
-{{ ind }}    logging.info(f"DEBUG: waiting_node_id = {waiting_config.get('node_id') if isinstance(waiting_config, dict) else waiting_config}")
-{{ ind }}    
-{{ ind }}    # Проверяем, что пользователь все еще находится в состоянии ожидания ввода
-{{ ind }}    if not waiting_config:
-{{ ind }}        logging.error(f"❌ waiting_config пустой! user_data[user_id] = {user_data.get(user_id)}")
-{{ ind }}        return  # Состояние ожидания пустое, игнорируем
-{{ ind }}    
-{{ ind }}    # Получаем переменные из базы данных (user_ids, user_ids_count)
-{{ ind }}    # generateDatabaseVariablesCode будет вызван отдельно
-{{ ind }}    
-{{ ind }}    # Извлекаем конфигурацию из waiting_config (dict)
-{{ ind }}    waiting_node_id = waiting_config.get("node_id")
-{{ ind }}    input_type = waiting_config.get("type", "text")
-{{ ind }}    variable_name = waiting_config.get("variable", "user_response")
-{{ ind }}    save_to_database = waiting_config.get("save_to_database", False)
-{{ ind }}    min_length = waiting_config.get("min_length", 0)
-{{ ind }}    max_length = waiting_config.get("max_length", 0)
-{{ ind }}    next_node_id = waiting_config.get("next_node_id")
-{{ ind }}    appendVariable = waiting_config.get("appendVariable", False)
-{{ ind }}    logging.info(f"DEBUG: input_type = {input_type}, variable_name = {variable_name}, next_node_id = {next_node_id}, appendVariable = {appendVariable}")
-{{ ind }}    # Проверяем, является ли тип ввода медиа (фото, видео, аудио, документ)
-{{ ind }}    # Если да, то текстовый обработчик не должен его обрабатывать
-{{ ind }}    if input_type in ["photo", "video", "audio", "document"]:
-{{ ind }}        logging.info(f"Текстовый ввод от пользователя {user_id} проигнорирован - ожидается медиа ({input_type})")
-{{ ind }}        return
-{{ ind }}    # Валидация длины
-{{ ind }}    if min_length > 0 and len(user_text) < min_length:
-{{ ind }}        retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
-{{ ind }}        await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")
-{{ ind }}        return
-{{ ind }}    if max_length > 0 and len(user_text) > max_length:
-{{ ind }}        retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
-{{ ind }}        await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")
-{{ ind }}        return
-{{ ind }}    
-{{ ind }}    # Валидация типа ввода
-{{ ind }}    if input_type == "email":
-{{ ind }}        import re
-{{ ind }}        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-{{ ind }}        if not re.match(email_pattern, user_text):
-{{ ind }}            retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
-{{ ind }}            await message.answer(f"❌ Неверный формат email. {retry_message}")
-{{ ind }}            return
-{{ ind }}    elif input_type == "number":
-{{ ind }}        try:
-{{ ind }}            float(user_text)
-{{ ind }}        except ValueError:
-{{ ind }}            retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
-{{ ind }}            await message.answer(f"❌ Введите корректное число. {retry_message}")
-{{ ind }}            return
-{{ ind }}    elif input_type == "phone":
-{{ ind }}        import re
-{{ ind }}        phone_pattern = r"^[+]?[0-9\s\-\(\)]{10,}$"
-{{ ind }}        if not re.match(phone_pattern, user_text):
-{{ ind }}            retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
-{{ ind }}            await message.answer(f"❌ Неверный формат телефона. {retry_message}")
-{{ ind }}            return
-{{ ind }}    # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем старое состояние ожидания перед навигацией
-{{ ind }}    if "waiting_for_input" in user_data[user_id]:
-{{ ind }}        del user_data[user_id]["waiting_for_input"]
-{{ ind }}    
-{{ ind }}    logging.info(f"✅ Переход к следующему узлу выполнен успешно")
-{{ ind }}    logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")
+{% set ind2 = ind ~ '    ' %}
+{% set ind3 = ind2 ~ '    ' %}
+{% set ind4 = ind3 ~ '    ' %}
+{% set ind5 = ind4 ~ '    ' %}
+{% set ind6 = ind5 ~ '    ' %}
+
+{# ═══════════════════════════════════════════════════════════════
+   Проверяем button_response_config (reply клавиатура)
+   ═══════════════════════════════════════════════════════════════ #}
+{{ ind }}# Проверяем, ожидаем ли мы кнопочный ответ через reply клавиатуру
+{{ ind }}if user_id in user_data and "button_response_config" in user_data[user_id]:
+{{ ind2 }}config = user_data[user_id]["button_response_config"]
+{{ ind2 }}user_text = message.text
+{{ ind2 }}
+{{ ind2 }}# Ищем выбранный вариант среди доступных опций
+{{ ind2 }}selected_option = None
+{{ ind2 }}for option in config.get("options", []):
+{{ ind3 }}if option["text"] == user_text:
+{{ ind4 }}selected_option = option
+{{ ind4 }}break
+{{ ind2 }}
+{{ ind2 }}if selected_option:
+{{ ind3 }}selected_value = selected_option["value"]
+{{ ind3 }}selected_text = selected_option["text"]
+{{ ind3 }}
+{{ ind3 }}# Сохраняем ответ пользователя
+{{ ind3 }}variable_name = config.get("variable", "button_response")
+{{ ind3 }}timestamp = get_moscow_time()
+{{ ind3 }}node_id = config.get("node_id", "unknown")
+{{ ind3 }}
+{{ ind3 }}response_data = {
+{{ ind4 }}"value": selected_value,
+{{ ind4 }}"text": selected_text,
+{{ ind4 }}"type": "button_response",
+{{ ind4 }}"timestamp": timestamp,
+{{ ind4 }}"nodeId": node_id,
+{{ ind4 }}"variable": variable_name
+{{ ind3 }}}
+{{ ind3 }}
+{{ ind3 }}# Сохраняем в пользовательские данные
+{{ ind3 }}user_data[user_id][variable_name] = response_data
+{{ ind3 }}
+{{ ind3 }}# Сохраняем в базу данных если включено
+{{ ind3 }}if config.get("save_to_database"):
+{{ ind4 }}await update_user_data_in_db(user_id, variable_name, response_data)
+{{ ind4 }}logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
+{{ ind3 }}
+{{ ind3 }}# Отправляем сообщение об успехе
+{{ ind3 }}success_message = config.get("success_message", "Спасибо за ваш выбор!")
+{{ ind3 }}await message.answer(f"{success_message}\n\n✅ Ваш выбор: {selected_text}", reply_markup=ReplyKeyboardRemove())
+{{ ind3 }}
+{{ ind3 }}# Очищаем состояние
+{{ ind3 }}del user_data[user_id]["button_response_config"]
+{{ ind3 }}
+{{ ind3 }}logging.info(f"Получен кнопочный ответ через reply клавиатуру: {variable_name} = {selected_text}")
+{{ ind3 }}
+{{ ind3 }}# Навигация на основе действия кнопки
+{{ ind3 }}option_action = selected_option.get("action", "goto")
+{{ ind3 }}option_target = selected_option.get("target", "")
+{{ ind3 }}option_url = selected_option.get("url", "")
+{{ ind3 }}
+{% if hasUrlButtons %}
+{{ ind3 }}if option_action == "url" and option_url:
+{{ ind4 }}# Открытие ссылки
+{{ ind4 }}url = option_url
+{{ ind4 }}keyboard = InlineKeyboardMarkup(inline_keyboard=[
+{{ ind5 }}[InlineKeyboardButton(text="🔗 Открыть ссылку", url=url)]
+{{ ind4 }}])
+{{ ind4 }}await message.answer("Нажмите кнопку ниже, чтобы открыть ссылку:", reply_markup=keyboard)
+{{ ind3 }}elif option_action == "command" and option_target:
+{% else %}
+{{ ind3 }}if option_action == "command" and option_target:
+{% endif %}
+{{ ind4 }}# Выполнение команды
+{{ ind4 }}command = option_target
+{{ ind4 }}# Создаем фиктивное сообщение для выполнения команды
+{{ ind4 }}fake_message = SimpleNamespace(
+{{ ind5 }}from_user=message.from_user,
+{{ ind5 }}chat=message.chat,
+{{ ind5 }}text=command,
+{{ ind5 }}message_id=message.message_id
+{{ ind4 }})
+{{ ind4 }}
+{% for cmdNode in commandNodes %}
+{{ ind4 }}{% if loop.first %}if{% else %}elif{% endif %} command == "{{ cmdNode.data.command }}":
+{{ ind5 }}try:
+{{ ind6 }}await {% if cmdNode.type == 'start' %}start_handler{% else %}{{ cmdNode.data.command | replace('/', '') | replace('-', '_') }}_handler{% endif %}(fake_message)
+{{ ind5 }}except Exception as e:
+{{ ind6 }}logging.error(f"Ошибка при выполнении команды {{ cmdNode.data.command }}: {e}")
+{% endfor %}
+{{ ind3 }}elif option_action == "goto" and option_target:
+{{ ind4 }}# Переход к узлу
+{{ ind4 }}target_node_id = option_target
+{{ ind4 }}try:
+{{ ind5 }}# Вызываем обработчик для целевого узла
+{% for node in nodes %}
+{{ ind5 }}{% if loop.first %}if{% else %}elif{% endif %} target_node_id == "{{ node.id }}":
+{{ ind6 }}await handle_callback_{{ node.safeName }}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+{% endfor %}
+{% if nodes | length > 0 %}
+{{ ind5 }}else:
+{{ ind6 }}logging.warning(f"Неизвестный целевой узел: {target_node_id}")
+{% endif %}
+{{ ind4 }}except Exception as e:
+{{ ind5 }}logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")
+{{ ind3 }}else:
+{{ ind4 }}# Fallback к старой системе next_node_id если нет action
+{{ ind4 }}next_node_id = config.get("next_node_id")
+{{ ind4 }}if next_node_id:
+{{ ind5 }}try:
+{{ ind6 }}# Вызываем обработчик для следующего узла
+{% for node in nodes %}
+{{ ind6 }}{% if loop.first %}if{% else %}elif{% endif %} next_node_id == "{{ node.id }}":
+{{ ind6 }}    await handle_callback_{{ node.safeName }}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+{% endfor %}
+{% if nodes | length > 0 %}
+{{ ind6 }}else:
+{{ ind6 }}    logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+{% endif %}
+{{ ind5 }}except Exception as e:
+{{ ind6 }}logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+{{ ind3 }}return
+{{ ind2 }}else:
+{{ ind3 }}# Неверный выбор - показываем доступные варианты
+{{ ind3 }}available_options = [option["text"] for option in config.get("options", [])]
+{{ ind3 }}options_text = "\n".join([f"• {opt}" for opt in available_options])
+{{ ind3 }}await message.answer(f"❌ Неверный выбор. Пожалуйста, выберите один из предложенных вариантов:\n\n{options_text}")
+{{ ind3 }}return
+{{ ind }}

@@ -18,13 +18,13 @@ import { generateConditionalInputHandler, collectConditionalNavNodes } from '../
  * @param code - Текущий код
  * @param allNodeIds - Все ID узлов
  * @param connections - Массив соединений
- * @param generateAdHocInputCollectionHandler - Генерация обработчика сбора ввода
- * @param generateContinuationLogicForButtonBasedInput - Генерация логики продолжения
- * @param generateUserInputValidationAndContinuationLogic - Генерация валидации
- * @param generateStateTransitionAndRenderLogic - Генерация навигации
+ * @param _generateAdHocInputCollectionHandler - Генерация обработчика сбора ввода
+ * @param _generateContinuationLogicForButtonBasedInput - Генерация логики продолжения
+ * @param _generateUserInputValidationAndContinuationLogic - Генерация валидации
+ * @param _generateStateTransitionAndRenderLogic - Генерация навигации
  * @returns Обновлённый код
  */
-export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes: any[], code: string, allNodeIds: any[], connections: any[], generateAdHocInputCollectionHandler: () => void, generateContinuationLogicForButtonBasedInput: () => string, generateUserInputValidationAndContinuationLogic: () => void, generateStateTransitionAndRenderLogic: () => void) {
+export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(nodes: any[], code: string, allNodeIds: any[], connections: any[], _generateAdHocInputCollectionHandler: () => void, _generateContinuationLogicForButtonBasedInput: () => string, _generateUserInputValidationAndContinuationLogic: () => void, _generateStateTransitionAndRenderLogic: () => void) {
   // Проверяем, есть ли кнопки с URL-ссылками в проекте
   const hasUrlButtonsInProject = hasUrlButtons(nodes);
 
@@ -263,18 +263,8 @@ export function newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipB
     code += '            except Exception as e:\n';
     code += '                logging.error(f"Ошибка при переходе к узлу: {e}")\n';
 
-    generateAdHocInputCollectionHandler();
-
-    // Добавляем навигацию к целевому узлу
-    const navigationCode = generateContinuationLogicForButtonBasedInput();
     // Генерируем обработчики для медиа-файлов
-    code = mediafiles(nodes, navigationCode, code);
-
-
-    generateUserInputValidationAndContinuationLogic();
-
-    // Генерируем логику навигации для каждого типа узла
-    generateStateTransitionAndRenderLogic();
+    code = mediafiles(nodes, '', code);
   }
 
   // Добавляем функцию call_skip_target_handler на глобальном уровне

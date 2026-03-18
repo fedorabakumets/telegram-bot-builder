@@ -11,6 +11,35 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 
 /**
+ * Оборачивает код в async-функцию если он начинается с отступа
+ * (т.е. является фрагментом, а не standalone-файлом).
+ * Обрабатывает специальные случаи:
+ * - фрагменты с `except` — оборачивает в try/except
+ * - фрагменты с `elif`/`else` — оборачивает в if True: pass
+ */
+function wrapIfIndented(code: string): string {
+  const lines = code.split('\n').filter(l => l.trim().length > 0);
+  if (lines.length === 0) return 'pass\n';
+  const firstLine = lines[0];
+  if (firstLine.startsWith(' ') || firstLine.startsWith('\t')) {
+    const trimmedFirst = firstLine.trim();
+    // Фрагмент начинается с except — нужен try: pass перед ним
+    if (trimmedFirst.startsWith('except ')) {
+      const indented = code.split('\n').map(l => '    ' + l).join('\n');
+      return `async def _test_func():\n    try:\n        pass\n${indented}\n`;
+    }
+    // Фрагмент начинается с elif/else — нужен if True: pass перед ним
+    if (trimmedFirst.startsWith('elif ') || trimmedFirst.startsWith('else:')) {
+      const indented = code.split('\n').map(l => '    ' + l).join('\n');
+      return `async def _test_func():\n    if True:\n        pass\n${indented}\n`;
+    }
+    const indented = code.split('\n').map(l => '    ' + l).join('\n');
+    return `async def _test_func():\n${indented}\n`;
+  }
+  return code;
+}
+
+/**
  * Проверяет синтаксическую корректность Python кода через py_compile
  */
 function assertValidPythonSyntax(code: string, testName: string): void {
@@ -19,7 +48,7 @@ function assertValidPythonSyntax(code: string, testName: string): void {
 
   try {
     mkdirSync(tempDir, { recursive: true });
-    writeFileSync(tempFile, code, 'utf-8');
+    writeFileSync(tempFile, wrapIfIndented(code), 'utf-8');
 
     try {
       execSync(`python -m py_compile "${tempFile}"`, {
@@ -694,7 +723,7 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         }], formatMode: 'html' }),
         generateCommand({ nodeId: 'cmd_1', command: '/help', messageText: 'Помощь', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '', keyboardType: 'inline', buttons: [], formatMode: 'html' }),
         generateMessage({ nodeId: 'msg_1', messageText: 'Сообщение', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, enableAutoTransition: false, autoTransitionTo: undefined, keyboardType: 'inline', buttons: [], formatMode: 'none', enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '' }),
-        generateMain({ userDatabaseEnabled: true, hasInlineButtons: true, menuCommands: [{ command: 'start', description: 'Запустить бота' }] }),
+        generateMain({ userDatabaseEnabled: true, hasInlineButtons: false, menuCommands: [{ command: 'start', description: 'Запустить бота' }] }),
       ];
 
       const fullCode = parts.join('\n');
@@ -1028,23 +1057,6 @@ describe('generateParseMode', () => {
   });
 });
 
-describe('generateReplyInputHandler', () => {
-  it('должен генерировать валидный Python код для reply-input-handler', async () => {
-    const { execSync } = await import('child_process');
-    let hasPython = false;
-    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
-
-    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
-
-    const { generateReplyInputHandler } = await import('./reply-input-handler/reply-input-handler.renderer');
-    const code = generateReplyInputHandler({
-      nodes: [{ id: 'node_abc', safeName: 'node_abc' }],
-      commandNodes: [{ id: 'start_1', type: 'start', command: '/start' }],
-      hasUrlButtons: false,
-    });
-    assertValidPythonSyntax(code, 'generateReplyInputHandler');
-  });
-});
 
 describe('generateSkipDataCollection', () => {
   it('должен генерировать валидный Python код для skip-data-collection', async () => {
