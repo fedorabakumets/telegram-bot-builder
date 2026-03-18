@@ -5,7 +5,7 @@
 
 /// <reference types="vitest/globals" />
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { beforeEach, afterEach, vi } from 'vitest';
 import { getNodeCount } from '../../../handlers/get-node-count';
 import { BotProject } from '@shared/schema';
 

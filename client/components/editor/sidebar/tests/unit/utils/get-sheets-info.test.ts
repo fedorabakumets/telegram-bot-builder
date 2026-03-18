@@ -5,7 +5,7 @@
 
 /// <reference types="vitest/globals" />
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { beforeEach, afterEach, vi } from 'vitest';
 import { getSheetsInfo } from '../../../handlers/get-sheets-info';
 import { BotProject } from '@shared/schema';
 
