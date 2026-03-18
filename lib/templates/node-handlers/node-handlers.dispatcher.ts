@@ -69,6 +69,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         buttons: sortButtonsByLayout(node.data?.buttons || [], node.data?.keyboardLayout),
         keyboardType: node.data?.keyboardType || 'none',
         keyboardLayout: node.data?.keyboardLayout,
+        oneTimeKeyboard: node.data?.oneTimeKeyboard ?? false,
+        resizeKeyboard: node.data?.resizeKeyboard ?? true,
         enableAutoTransition: node.data?.enableAutoTransition || false,
         autoTransitionTo: node.data?.autoTransitionTo,
         collectUserInput: node.data?.collectUserInput || false,
