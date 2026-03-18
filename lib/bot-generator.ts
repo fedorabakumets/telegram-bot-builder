@@ -512,14 +512,6 @@ export function generatePythonCode(
   logFlowAnalysis(context.nodes);
 
   const flags = computeFeatureFlags(context);
-  
-  // DEBUG: вывод флагов
-  console.log('DEBUG flags:', {
-    hasReplyKeyboard: flags.hasReplyKeyboardResult,
-    hasInlineButtons: flags.hasInlineButtonsResult,
-    hasBotCommands: flags.hasBotCommandsResult,
-  });
-  
   const sections = generateCodeSections(context, flags);
 
   return assembleAndValidate(sections, context);
