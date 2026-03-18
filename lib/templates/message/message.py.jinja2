@@ -78,7 +78,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 
     {% if userDatabaseEnabled %}
     # Сохраняем пользователя в базу данных
-    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name, avatar_url)
+    await save_user_to_db(user_id, username, first_name, last_name, avatar_url)
 
     # Инициализируем базовые переменные пользователя
     user_name = await init_user_variables(user_id, callback_query.from_user)

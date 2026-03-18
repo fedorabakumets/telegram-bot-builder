@@ -180,9 +180,12 @@ function generateCodeSections(
   );
 
   // --- utils (содержит save_message_to_api-заглушку при userDatabaseEnabled=false) ---
-  const utils = emitOnce(state, COMPONENT_NAMES.UTILS, () =>
-    generateUtils({ userDatabaseEnabled })
-  );
+  const utils = emitOnce(state, COMPONENT_NAMES.UTILS, () => {
+    const adminOnly = nodes.some(n => n.data?.adminOnly);
+    const isPrivateOnly = nodes.some(n => n.data?.isPrivateOnly);
+    const requiresAuth = nodes.some(n => n.data?.requiresAuth);
+    return generateUtils({ userDatabaseEnabled, adminOnly, isPrivateOnly, requiresAuth });
+  });
 
   // --- media functions ---
   const mediaFunctions = emitOnce(state, COMPONENT_NAMES.MEDIA_FUNCTIONS, () =>

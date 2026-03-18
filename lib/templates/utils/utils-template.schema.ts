@@ -7,8 +7,10 @@ import { z } from 'zod';
 
 /** Схема для валидации параметров утилит */
 export const utilsParamsSchema = z.object({
-  /** Включена ли база данных пользователей */
   userDatabaseEnabled: z.boolean().optional().default(false),
+  adminOnly: z.boolean().optional().default(false),
+  isPrivateOnly: z.boolean().optional().default(false),
+  requiresAuth: z.boolean().optional().default(false),
 });
 
 /** Тип параметров утилит (выведен из схемы) */
