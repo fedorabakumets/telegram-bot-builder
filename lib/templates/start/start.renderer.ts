@@ -7,6 +7,7 @@ import type { StartTemplateParams } from './start.params';
 import { startParamsSchema } from './start.schema';
 import { renderPartialTemplate } from '../template-renderer';
 import type { SynonymEntry } from '../synonyms/synonyms.params';
+import { computeAdjustStr } from '../keyboard/keyboard.renderer';
 
 /**
  * Генерация Python обработчика команды /start с валидацией параметров
@@ -30,5 +31,10 @@ export function generateStart(params: StartTemplateParams): string {
     originalCommand: '/start',
   }));
 
-  return renderPartialTemplate('start/start.py.jinja2', { ...validated, synonymEntries, handlerContext: 'message' });
+  return renderPartialTemplate('start/start.py.jinja2', {
+    ...validated,
+    synonymEntries,
+    handlerContext: 'message',
+    adjustStr: computeAdjustStr(params.keyboardLayout),
+  });
 }

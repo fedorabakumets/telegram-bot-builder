@@ -12,6 +12,7 @@
 import { Node } from '@shared/schema';
 import { NODE_TYPES } from '../../bot-generator/types';
 import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './node-handlers.renderer';
+import { sortButtonsByLayout } from '../keyboard/keyboard.renderer';
 import { generateMessage } from '../message/message.renderer';
 import { generateContactHandler, generateLocationHandler } from './contact-location.renderer';
 import { generateMessageHandlerFromNode } from '../message-handler';
@@ -63,7 +64,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
       userDatabaseEnabled,
       allowMultipleSelection: node.data?.allowMultipleSelection || false,
       multiSelectVariable: node.data?.multiSelectVariable,
-      buttons: node.data?.buttons || [],
+      buttons: sortButtonsByLayout(node.data?.buttons || [], node.data?.keyboardLayout),
       keyboardType: node.data?.keyboardType || 'none',
       keyboardLayout: node.data?.keyboardLayout,
       enableAutoTransition: node.data?.enableAutoTransition || false,

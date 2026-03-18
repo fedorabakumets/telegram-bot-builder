@@ -41,6 +41,12 @@ export const startParamsSchema = z.object({
   oneTimeKeyboard: z.boolean().optional(),
   /** Изменить размер клавиатуры под кнопки */
   resizeKeyboard: z.boolean().optional(),
+  /** Раскладка клавиатуры */
+  keyboardLayout: z.object({
+    rows: z.array(z.object({ buttonIds: z.array(z.string()) })),
+    columns: z.number(),
+    autoLayout: z.boolean(),
+  }).optional(),
 
   // --- Множественный выбор ---
   /** Разрешить множественный выбор */

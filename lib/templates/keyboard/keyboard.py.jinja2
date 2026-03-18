@@ -33,17 +33,9 @@
 {%- set _m_counts = [] -%}
 {%- set _m_comments = [] -%}
 {%- for row in keyboardLayout.rows -%}
-  {%- set _m_valid = [] -%}
-  {%- if row.buttonIds -%}
-    {%- for bid in row.buttonIds -%}
-      {%- if bid and (bid ~ '')|trim|length > 0 -%}
-        {%- set _m_valid = _m_valid + [bid] -%}
-      {%- endif -%}
-    {%- endfor -%}
-  {%- endif -%}
-  {%- if _m_valid|length > 0 -%}
-    {%- set _m_counts = _m_counts + [(_m_valid|length ~ '')] -%}
-    {%- set _m_comments = _m_comments + ['Ряд ' ~ loop.index ~ ': ' ~ _m_valid|join(', ')] -%}
+  {%- if row.buttonIds and row.buttonIds|length > 0 -%}
+    {%- set _m_counts = _m_counts + [row.buttonIds|length] -%}
+    {%- set _m_comments = _m_comments + ['Ряд ' ~ loop.index ~ ': ' ~ row.buttonIds|join(', ')] -%}
   {%- endif -%}
 {%- endfor -%}
 {%- if _m_counts|length > 0 %}
@@ -113,32 +105,16 @@
 {%- elif btn.action == 'complete' and allowMultipleSelection %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="done_{{ effectiveNodeId }}"))
 {%- elif btn.action == 'goto' or btn.action == 'complete' %}
-{%- if btn.target and (btn.target|trim)|length > 0 %}
-{{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.target }}"))
-{%- else %}
-{{ indent }}# Кнопка без цели — пропускаем (target не задан)
-{%- endif %}
+{{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.target or btn.id or 'no_action' }}"))
 {%- elif btn.action == 'command' %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="cmd_{{ (btn.target or '')|replace('/', '') or 'unknown' }}"))
 {%- else %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.id or btn.target or 'btn' }}"))
 {%- endif %}
 {%- endfor %}
-{%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows and keyboardLayout.rows|length > 0 -%}
-{%- set _nonempty_count = keyboardLayout.rows | map(attribute='buttonIds') | select | map('length') | select | list | length -%}
-{%- if _nonempty_count > 0 %}
-{%- for row in keyboardLayout.rows %}
-{%- if row.buttonIds and row.buttonIds|length > 0 %}
-{{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
-{%- endif %}
-{%- endfor %}
-{{ indent }}builder.adjust({{ keyboardLayout.rows | map(attribute='buttonIds') | select | map('length') | join(', ') }})
-{%- else %}
-{%- set _cols = calculateOptimalColumns(buttons, allowMultipleSelection) %}
-{{ indent }}builder.adjust({{ _cols }})
-{%- endif %}
+{%- if adjustStr %}
+{{ indent }}builder.adjust({{ adjustStr }})
 {%- elif keyboardLayout and keyboardLayout.autoLayout and keyboardLayout.columns %}
-{{ indent }}# Авто-раскладка: {{ keyboardLayout.columns }} колонок
 {{ indent }}builder.adjust({{ keyboardLayout.columns }})
 {%- else %}
 {%- set _cols = calculateOptimalColumns(buttons, allowMultipleSelection) %}
@@ -165,21 +141,9 @@
 {{ indent }}builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
 {%- endif %}
 {%- endfor %}
-{%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows and keyboardLayout.rows|length > 0 -%}
-{%- set _nonempty_count2 = keyboardLayout.rows | map(attribute='buttonIds') | select | map('length') | select | list | length -%}
-{%- if _nonempty_count2 > 0 %}
-{%- for row in keyboardLayout.rows %}
-{%- if row.buttonIds and row.buttonIds|length > 0 %}
-{{ indent }}# Ряд {{ loop.index }}: {{ row.buttonIds|join(', ') }}
-{%- endif %}
-{%- endfor %}
-{{ indent }}builder.adjust({{ keyboardLayout.rows | map(attribute='buttonIds') | select | map('length') | join(', ') }})
-{%- else %}
-{%- set _cols2 = calculateOptimalColumns(buttons, allowMultipleSelection) %}
-{{ indent }}builder.adjust({{ _cols2 }})
-{%- endif %}
+{%- if adjustStr %}
+{{ indent }}builder.adjust({{ adjustStr }})
 {%- elif keyboardLayout and keyboardLayout.autoLayout and keyboardLayout.columns %}
-{{ indent }}# Авто-раскладка: {{ keyboardLayout.columns }} колонок
 {{ indent }}builder.adjust({{ keyboardLayout.columns }})
 {%- else %}
 {%- set _cols2 = calculateOptimalColumns(buttons, allowMultipleSelection) %}

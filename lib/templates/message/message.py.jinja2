@@ -64,21 +64,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     username = callback_query.from_user.username
     first_name = callback_query.from_user.first_name
     last_name = callback_query.from_user.last_name
-    avatar_url = None
-    
-    # Получаем аватарку пользователя
-    try:
-        photos = await bot.get_user_profile_photos(user_id)
-        if photos.photos and len(photos.photos) > 0:
-            last_photo = photos.photos[-1][-1]
-            file = await bot.get_file(last_photo.file_id)
-            avatar_url = file.file_path
-    except Exception as e:
-        logging.warning(f"Не удалось получить аватарку: {e}")
 
     {% if userDatabaseEnabled %}
     # Сохраняем пользователя в базу данных
-    await save_user_to_db(user_id, username, first_name, last_name, avatar_url)
+    await save_user_to_db(user_id, username, first_name, last_name)
 
     # Инициализируем базовые переменные пользователя
     user_name = await init_user_variables(user_id, callback_query.from_user)

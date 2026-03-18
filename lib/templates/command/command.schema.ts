@@ -39,6 +39,12 @@ export const commandParamsSchema = z.object({
     target: z.string(),
     id: z.string(),
   })).optional(),
+  /** Раскладка клавиатуры */
+  keyboardLayout: z.object({
+    rows: z.array(z.object({ buttonIds: z.array(z.string()) })),
+    columns: z.number(),
+    autoLayout: z.boolean(),
+  }).optional(),
 
   // --- Условные сообщения ---
   /** Условные сообщения включены */

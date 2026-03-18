@@ -6,6 +6,7 @@
 import type { MessageTemplateParams } from './message.params';
 import { messageParamsSchema } from './message.schema';
 import { renderPartialTemplate } from '../template-renderer';
+import { computeAdjustStr } from '../keyboard/keyboard.renderer';
 
 /**
  * Генерация Python кода обработчика сообщения с валидацией параметров
@@ -38,5 +39,9 @@ export function generateMessage(params: MessageTemplateParams): string {
     oneTimeKeyboard: params.oneTimeKeyboard ?? false,
     resizeKeyboard: params.resizeKeyboard ?? true,
   });
-  return renderPartialTemplate('message/message.py.jinja2', { ...validated, handlerContext: 'callback' });
+  return renderPartialTemplate('message/message.py.jinja2', {
+    ...validated,
+    handlerContext: 'callback',
+    adjustStr: computeAdjustStr(params.keyboardLayout),
+  });
 }

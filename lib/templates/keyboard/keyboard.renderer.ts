@@ -25,9 +25,63 @@ import { renderPartialTemplate } from '../template-renderer';
  * });
  * ```
  */
+/**
+ * Переупорядочивает кнопки согласно keyboardLayout.rows
+ * Если layout задан — кнопки идут в порядке buttonIds из rows
+ */
+export function sortButtonsByLayout(buttons: any[], keyboardLayout?: any): any[] {
+  if (!keyboardLayout || keyboardLayout.autoLayout || !keyboardLayout.rows?.length) {
+    return buttons;
+  }
+  const orderedIds: string[] = [];
+  for (const row of keyboardLayout.rows) {
+    if (Array.isArray(row.buttonIds)) {
+      orderedIds.push(...row.buttonIds);
+    }
+  }
+  if (orderedIds.length === 0) return buttons;
+
+  const btnMap = new Map(buttons.map(b => [b.id, b]));
+  const sorted: any[] = [];
+  for (const id of orderedIds) {
+    if (btnMap.has(id)) {
+      sorted.push(btnMap.get(id));
+      btnMap.delete(id);
+    }
+  }
+  for (const btn of btnMap.values()) {
+    sorted.push(btn);
+  }
+  return sorted;
+}
+
+/**
+ * Вычисляет строку аргументов для builder.adjust() на основе keyboardLayout
+ * Возвращает null если нужно использовать автоматический расчёт
+ */
+export function computeAdjustStr(keyboardLayout?: any): string | null {
+  if (!keyboardLayout) return null;
+  if (!keyboardLayout.autoLayout && keyboardLayout.rows?.length) {
+    const counts = (keyboardLayout.rows as any[])
+      .map((r: any) => Array.isArray(r.buttonIds) ? r.buttonIds.length : 0)
+      .filter((n: number) => n > 0);
+    if (counts.length > 0) return counts.join(', ');
+  }
+  if (keyboardLayout.autoLayout && keyboardLayout.columns) {
+    return String(keyboardLayout.columns);
+  }
+  return null;
+}
+
 export function generateKeyboard(params: KeyboardTemplateParams): string {
-  const validated = keyboardParamsSchema.parse(params);
-  return renderPartialTemplate('keyboard/keyboard.py.jinja2', validated);
+  const sortedButtons = sortButtonsByLayout(params.buttons ?? [], params.keyboardLayout);
+  const adjustStr = computeAdjustStr(params.keyboardLayout);
+  const withSortedButtons = {
+    ...params,
+    buttons: sortedButtons,
+  };
+  const validated = keyboardParamsSchema.parse(withSortedButtons);
+  return renderPartialTemplate('keyboard/keyboard.py.jinja2', { ...validated, adjustStr });
 }
 
 /**

@@ -10,6 +10,7 @@ import { generateSticker as generateStickerTemplate } from '../sticker/sticker.r
 import { generateVoice as generateVoiceTemplate } from '../voice/voice.renderer';
 import { generateCommand as generateCommandTemplate } from '../command/command.renderer';
 import { generateStart as generateStartTemplate } from '../start/start.renderer';
+import { sortButtonsByLayout } from '../keyboard/keyboard.renderer';
 
 /**
  * Генерирует обработчик рассылки (broadcast)
@@ -74,7 +75,10 @@ export function generateCommandHandler(
     keyboardLayout: node.data?.keyboardLayout,
     oneTimeKeyboard: node.data?.oneTimeKeyboard || false,
     resizeKeyboard: node.data?.resizeKeyboard || true,
-    buttons: node.data?.buttons?.map((btn: any) => ({ ...btn, target: btn.target || btn.id || '' })) || [],
+    buttons: sortButtonsByLayout(
+      node.data?.buttons?.map((btn: any) => ({ ...btn, target: btn.target || btn.id || '' })) || [],
+      node.data?.keyboardLayout
+    ),
     formatMode: node.data?.formatMode || 'none',
     markdown: node.data?.markdown || false,
     fallbackMessage: node.data?.fallbackMessage || '',
@@ -103,7 +107,10 @@ export function generateStartHandler(
     synonyms: node.data?.synonyms || [],
     allowMultipleSelection: node.data?.allowMultipleSelection || false,
     multiSelectVariable: node.data?.multiSelectVariable || 'selected_options',
-    buttons: node.data?.buttons?.map((btn: any) => ({ ...btn, target: btn.target || btn.id || '' })) || [],
+    buttons: sortButtonsByLayout(
+      node.data?.buttons?.map((btn: any) => ({ ...btn, target: btn.target || btn.id || '' })) || [],
+      node.data?.keyboardLayout
+    ),
     keyboardType: node.data?.keyboardType || 'none',
     keyboardLayout: node.data?.keyboardLayout,
     oneTimeKeyboard: node.data?.oneTimeKeyboard || false,

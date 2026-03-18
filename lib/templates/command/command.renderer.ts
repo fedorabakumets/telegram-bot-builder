@@ -7,6 +7,7 @@ import type { CommandTemplateParams } from './command.params';
 import { commandParamsSchema } from './command.schema';
 import { renderPartialTemplate } from '../template-renderer';
 import type { SynonymEntry } from '../synonyms/synonyms.params';
+import { computeAdjustStr } from '../keyboard/keyboard.renderer';
 
 /**
  * Генерация Python обработчика команды с валидацией параметров
@@ -33,5 +34,9 @@ export function generateCommand(params: CommandTemplateParams): string {
     originalCommand: params.command,
   }));
 
-  return renderPartialTemplate('command/command.py.jinja2', { ...validated, synonymEntries });
+  return renderPartialTemplate('command/command.py.jinja2', {
+    ...validated,
+    synonymEntries,
+    adjustStr: computeAdjustStr(params.keyboardLayout),
+  });
 }
