@@ -12,12 +12,15 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./client/components/editor/database/dialog/tests/setup-tests.ts'],
+    setupFiles: [
+      './client/components/editor/database/dialog/tests/setup-tests.ts',
+      './client/components/editor/sidebar/tests/setup-tests.ts'
+    ],
     include: ['client/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     coverage: {
       reporter: ['text', 'json', 'html'],
-      include: ['client/components/editor/database/dialog/**'],
-      exclude: ['client/components/editor/database/dialog/tests/**'],
+      include: ['client/components/editor/**'],
+      exclude: ['client/components/editor/**/tests/**'],
     },
   },
   resolve: {
