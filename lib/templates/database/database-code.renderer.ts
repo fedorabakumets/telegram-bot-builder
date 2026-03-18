@@ -27,7 +27,13 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     n.data?.saveToDatabase
   );
 
-  let code = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging, hasUserIdsTable, hasUserDataAccess });
+  // hasTelegramSettingsTable: нужна таблица user_telegram_settings — когда есть сбор tg_* переменных
+  const TG_VARS = new Set(['tg_phone', 'tg_api_id', 'tg_api_hash', 'tg_session', 'tg_is_active']);
+  const hasTelegramSettingsTable = nodes.some(n =>
+    n.data?.collectUserInput && TG_VARS.has(n.data?.inputVariable)
+  );
+
+  let code = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging, hasUserIdsTable, hasUserDataAccess, hasTelegramSettingsTable });
   code += '\n';
 
   const hasStartNode = nodes.some(n => n.type === NODE_TYPES.START);

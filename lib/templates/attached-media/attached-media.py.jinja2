@@ -1,0 +1,54 @@
+{#
+  Шаблон отправки медиафайлов (attachedMedia + imageUrl/videoUrl/audioUrl/documentUrl)
+
+  @fileoverview Генерирует Python код для отправки медиафайлов.
+  Используется внутри message.py.jinja2 и start.py.jinja2 через include + filter indent(4).
+  Поэтому строки здесь БЕЗ начального отступа — indent(4) добавит его сам.
+
+  @param {string}  nodeId       — ID узла
+  @param {string}  imageUrl     — URL изображения
+  @param {string}  videoUrl     — URL видео
+  @param {string}  audioUrl     — URL аудио
+  @param {string}  documentUrl  — URL документа
+  @param {array}   attachedMedia — массив имён медиа-переменных
+  @param {string}  formatMode   — режим форматирования: 'html', 'markdown', 'none'
+  @param {string}  keyboardType — тип клавиатуры
+  @param {boolean} hasHideAfterClickIncoming — скрыть клавиатуру предыдущего сообщения
+#}
+{%- set effectiveKeyboard = 'ReplyKeyboardRemove()' if (hasHideAfterClickIncoming and keyboardType == 'none') else 'keyboard' %}
+{%- set parse_mode_arg = ', parse_mode="HTML"' if formatMode == 'html' else (', parse_mode="Markdown"' if formatMode == 'markdown' else '') %}
+{%- if imageUrl and imageUrl != 'undefined' %}
+{%- if '/uploads/' in imageUrl %}
+image_path = get_upload_file_path("{{ imageUrl }}")
+image_file = FSInputFile(image_path)
+await message.answer_photo(image_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }})
+{%- else %}
+await message.answer_photo("{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }})
+{%- endif %}
+{%- elif videoUrl %}
+{%- if '/uploads/' in videoUrl %}
+video_path = get_upload_file_path("{{ videoUrl }}")
+video_file = FSInputFile(video_path)
+await message.answer_video(video_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }})
+{%- else %}
+await message.answer_video("{{ videoUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }})
+{%- endif %}
+{%- elif audioUrl %}
+{%- if '/uploads/' in audioUrl %}
+audio_path = get_upload_file_path("{{ audioUrl }}")
+audio_file = FSInputFile(audio_path)
+await message.answer_audio(audio_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }})
+{%- else %}
+await message.answer_audio("{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }})
+{%- endif %}
+{%- elif documentUrl %}
+{%- if '/uploads/' in documentUrl %}
+doc_path = get_upload_file_path("{{ documentUrl }}")
+doc_file = FSInputFile(doc_path)
+await message.answer_document(doc_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }})
+{%- else %}
+await message.answer_document("{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }})
+{%- endif %}
+{%- else %}
+await message.answer(text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }})
+{%- endif %}

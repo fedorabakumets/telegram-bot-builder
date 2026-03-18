@@ -127,6 +127,7 @@ async def handle_multi_select_reply(message: types.Message):
 {% for node in multiSelectNodes %}
 {% if node.gotoButtons and node.gotoButtons|length > 0 %}
         if node_id == "{{ node.id }}":
+            pass  # обработка goto кнопок
 {% for button in node.gotoButtons %}
 {% if button.targetNode %}
             if user_input == {{ button.text|escape_python_string }}:

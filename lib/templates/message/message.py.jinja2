@@ -133,6 +133,30 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {%- endif %}
     {%- endif %}
 
+    {%- if attachedMedia and attachedMedia|length > 0 %}
+    {# Сохранение переменных из attachedMedia #}
+    {%- set ind = '    ' %}
+    {%- for mediaVar in attachedMedia %}
+    {%- if 'imageUrlVar' in mediaVar and imageUrl and imageUrl != 'undefined' %}
+    user_data[user_id]["{{ mediaVar }}"] = "{{ imageUrl }}"
+    {%- elif 'videoUrlVar' in mediaVar and videoUrl %}
+    user_data[user_id]["{{ mediaVar }}"] = "{{ videoUrl }}"
+    {%- elif 'audioUrlVar' in mediaVar and audioUrl %}
+    user_data[user_id]["{{ mediaVar }}"] = "{{ audioUrl }}"
+    {%- elif 'documentUrlVar' in mediaVar and documentUrl %}
+    user_data[user_id]["{{ mediaVar }}"] = "{{ documentUrl }}"
+    {%- elif 'video_url_' in mediaVar and videoUrl %}
+    user_data[user_id]["{{ mediaVar }}"] = "{{ videoUrl }}"
+    {%- elif 'audio_url_' in mediaVar and audioUrl %}
+    user_data[user_id]["{{ mediaVar }}"] = "{{ audioUrl }}"
+    {%- elif 'document_url_' in mediaVar and documentUrl %}
+    user_data[user_id]["{{ mediaVar }}"] = "{{ documentUrl }}"
+    {%- elif 'image_url_' in mediaVar and imageUrl and imageUrl != 'undefined' %}
+    user_data[user_id]["{{ mediaVar }}"] = "{{ imageUrl }}"
+    {%- endif %}
+    {%- endfor %}
+    {%- endif %}
+
     {# Текст сообщения #}
     text = {{ messageText|format_python_text }}
 
@@ -149,8 +173,8 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {# Клавиатура #}
 {%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
 
-    {# Отправка медиафайлов (attachedMedia) #}
-    {%- if attachedMedia and attachedMedia|length > 0 %}
+    {# Отправка медиафайлов или обычного сообщения #}
+    {%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
 {%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
     {%- else %}
     {# Отправка сообщения без медиа #}
@@ -189,4 +213,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         logging.error(f"Ошибка при автопереходе к узлу {{ autoTransitionTo }}: {e}")
         await callback_query.message.answer("Переход завершен")
     return
+    {%- endif %}
+
+    {# ���� ����������������� ����� #}
+    {%- if collectUserInput and userInputBlock %}
+{{ userInputBlock }}
     {%- endif %}

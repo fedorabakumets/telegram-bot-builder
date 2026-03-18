@@ -11,7 +11,7 @@
 
 import { Node } from '@shared/schema';
 import { NODE_TYPES } from '../../bot-generator/types';
-import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './node-handlers.renderer';
+import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler, resolveMediaUrls } from './node-handlers.renderer';
 import { sortButtonsByLayout } from '../keyboard/keyboard.renderer';
 import { generateMessage } from '../message/message.renderer';
 import { generateContactHandler, generateLocationHandler } from './contact-location.renderer';
@@ -55,36 +55,57 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   const nodeHandlers: Record<string, (node: Node) => string> = {
     start: (node) => generateStartHandler(node, userDatabaseEnabled),
     command: (node) => generateCommandHandler(node, userDatabaseEnabled),
-    message: (node) => generateMessage({
-      nodeId: node.id,
-      messageText: node.data?.messageText || '',
-      isPrivateOnly: node.data?.isPrivateOnly || false,
-      adminOnly: node.data?.adminOnly || false,
-      requiresAuth: node.data?.requiresAuth || false,
-      userDatabaseEnabled,
-      allowMultipleSelection: node.data?.allowMultipleSelection || false,
-      multiSelectVariable: node.data?.multiSelectVariable,
-      buttons: sortButtonsByLayout(node.data?.buttons || [], node.data?.keyboardLayout),
-      keyboardType: node.data?.keyboardType || 'none',
-      keyboardLayout: node.data?.keyboardLayout,
-      enableAutoTransition: node.data?.enableAutoTransition || false,
-      autoTransitionTo: node.data?.autoTransitionTo,
-      collectUserInput: node.data?.collectUserInput || false,
-      formatMode: node.data?.formatMode || 'none',
-      imageUrl: node.data?.imageUrl,
-      documentUrl: node.data?.documentUrl,
-      videoUrl: node.data?.videoUrl,
-      audioUrl: node.data?.audioUrl,
-      attachedMedia: node.data?.attachedMedia || [],
-      enableConditionalMessages: node.data?.enableConditionalMessages || false,
-      conditionalMessages: node.data?.conditionalMessages || [],
-      fallbackMessage: node.data?.fallbackMessage,
-      synonymEntries: collectSynonymEntries([node]),
-      hasUserIdsVariable: hasUserIdsVar(node.data?.messageText),
-      hasHideAfterClickIncoming: nodes.some((n: Node) =>
-        (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === node.id)
-      ),
-    }),
+    message: (node) => {
+      const media = resolveMediaUrls(node.data);
+      return generateMessage({
+        nodeId: node.id,
+        messageText: node.data?.messageText || '',
+        isPrivateOnly: node.data?.isPrivateOnly || false,
+        adminOnly: node.data?.adminOnly || false,
+        requiresAuth: node.data?.requiresAuth || false,
+        userDatabaseEnabled,
+        allowMultipleSelection: node.data?.allowMultipleSelection || false,
+        multiSelectVariable: node.data?.multiSelectVariable,
+        buttons: sortButtonsByLayout(node.data?.buttons || [], node.data?.keyboardLayout),
+        keyboardType: node.data?.keyboardType || 'none',
+        keyboardLayout: node.data?.keyboardLayout,
+        enableAutoTransition: node.data?.enableAutoTransition || false,
+        autoTransitionTo: node.data?.autoTransitionTo,
+        collectUserInput: node.data?.collectUserInput || false,
+        enableTextInput: node.data?.enableTextInput ?? true,
+        enablePhotoInput: node.data?.enablePhotoInput || false,
+        enableVideoInput: node.data?.enableVideoInput || false,
+        enableAudioInput: node.data?.enableAudioInput || false,
+        enableDocumentInput: node.data?.enableDocumentInput || false,
+        inputVariable: node.data?.inputVariable || 'input',
+        inputTargetNodeId: node.data?.inputTargetNodeId || '',
+        minLength: node.data?.minLength ?? 0,
+        maxLength: node.data?.maxLength ?? 0,
+        appendVariable: node.data?.appendVariable ?? false,
+        validationType: node.data?.validationType || 'none',
+        retryMessage: node.data?.retryMessage || 'Пожалуйста, попробуйте еще раз.',
+        successMessage: node.data?.successMessage || '',
+        saveToDatabase: node.data?.saveToDatabase ?? true,
+        photoInputVariable: node.data?.photoInputVariable || '',
+        videoInputVariable: node.data?.videoInputVariable || '',
+        audioInputVariable: node.data?.audioInputVariable || '',
+        documentInputVariable: node.data?.documentInputVariable || '',
+        formatMode: (node.data?.formatMode && node.data.formatMode !== 'none') ? node.data.formatMode : (node.data?.markdown ? 'markdown' : 'none'),
+        imageUrl: media.imageUrl,
+        documentUrl: media.documentUrl,
+        videoUrl: media.videoUrl,
+        audioUrl: media.audioUrl,
+        attachedMedia: media.attachedMediaUrls,
+        enableConditionalMessages: node.data?.enableConditionalMessages || false,
+        conditionalMessages: node.data?.conditionalMessages || [],
+        fallbackMessage: node.data?.fallbackMessage,
+        synonymEntries: collectSynonymEntries([node]),
+        hasUserIdsVariable: hasUserIdsVar(node.data?.messageText),
+        hasHideAfterClickIncoming: nodes.some((n: Node) =>
+          (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === node.id)
+        ),
+      });
+    },
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,
     animation: (node) => generateAnimationHandler({

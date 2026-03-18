@@ -57,6 +57,12 @@ export interface CommandTemplateParams {
   /** Запасное сообщение */
   fallbackMessage?: string;
 
+  // --- Автопереход ---
+  /** Автопереход включен */
+  enableAutoTransition?: boolean;
+  /** ID узла для автоперехода */
+  autoTransitionTo?: string;
+
   // --- Медиа ---
   /** URL изображения */
   imageUrl?: string;

@@ -23,7 +23,12 @@ export function escapeForJsonString(text: string): string {
  * Экранирует строку для вставки в Python код (двойные кавычки)
  */
 export function escapeForPython(text: string): string {
-  return text.replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+  return text
+    .replace(/\\/g, '\\\\')   // \ → \\ (должен быть первым!)
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t');
 }
 
 /**
@@ -35,7 +40,10 @@ export function escapePythonString(value: string | number | null | undefined): s
   const escaped = value.toString()
     .replace(/\\/g, '\\\\')
     .replace(/'/g, "\\'")
-    .replace(/"/g, '\\"');
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t');
   return `'${escaped}'`;
 }
 
@@ -44,8 +52,16 @@ export function escapePythonString(value: string | number | null | undefined): s
  */
 export function formatTextForPython(text: string): string {
   if (!text) return '""';
-  if (text.includes('\n')) return `"""${text}"""`;
-  return `"${text.replace(/"/g, '\\"')}"`;
+  if (text.includes('\n')) {
+    // В тройных кавычках экранируем только """ и обратный слеш
+    const escaped = text
+      .replace(/\\/g, '\\\\')
+      .replace(/"""/g, '\\"\\"\\"')
+      .replace(/\r/g, '\\r');
+    return `"""${escaped}"""`;
+  }
+  // В обычных двойных кавычках — полное экранирование
+  return `"${text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\r/g, '\\r').replace(/\t/g, '\\t')}"`;
 }
 
 /**
@@ -119,10 +135,17 @@ export function generateMessageText(options: GenerateMessageTextOptions): string
   const messageText = node.data?.messageText || '';
   lines.push(`${indent}# Текст сообщения из узла`);
   if (messageText.includes('\n')) {
-    const escapedText = messageText.replace(/"""/g, '\\"\\"\\"');
+    const escapedText = messageText
+      .replace(/\\/g, '\\\\')
+      .replace(/"""/g, '\\"\\"\\"')
+      .replace(/\r/g, '\\r');
     lines.push(`${indent}${variableName} = """${escapedText}"""`);
   } else {
-    const escapedText = messageText.replace(/"/g, '\\"');
+    const escapedText = messageText
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g, '\\"')
+      .replace(/\r/g, '\\r')
+      .replace(/\t/g, '\\t');
     lines.push(`${indent}${variableName} = "${escapedText}"`);
   }
   lines.push('');

@@ -165,13 +165,17 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
     {# Клавиатура #}
     {%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
 
-    {# Отправка сообщения #}
+    {# Отправка медиафайлов или обычного сообщения #}
+    {%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
+{%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
+    {%- else %}
     {%- if formatMode == 'html' %}
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
     {%- elif formatMode == 'markdown' %}
     await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
     {%- else %}
     await message.answer(text, reply_markup=keyboard)
+    {%- endif %}
     {%- endif %}
 
     {%- else %}
@@ -200,13 +204,44 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
     {# Клавиатура #}
     {%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
 
-    {# Отправка сообщения #}
+    {# Отправка медиафайлов или обычного сообщения #}
+    {%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
+{%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
+    {%- else %}
     {%- if formatMode == 'html' %}
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
     {%- elif formatMode == 'markdown' %}
     await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
     {%- else %}
     await message.answer(text, reply_markup=keyboard)
+    {%- endif %}
+    {%- endif %}
+
+    {# Автопереход #}
+    {%- if enableAutoTransition and autoTransitionTo %}
+    # ⚡ АВТОПЕРЕХОД к {{ autoTransitionTo }}
+    logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
+    class FakeCallbackQuery:
+        def __init__(self, message, target_node_id):
+            self.from_user = message.from_user
+            self.chat = message.chat
+            self.date = message.date
+            self.message_id = message.message_id
+            self.data = target_node_id
+            self.message = message
+            self._is_fake = True
+
+        async def answer(self, *args, **kwargs):
+            pass
+
+    fake_callback = FakeCallbackQuery(message, "{{ autoTransitionTo }}")
+    try:
+        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(fake_callback)
+        logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
+    except Exception as e:
+        logging.error(f"Ошибка при автопереходе к узлу {{ autoTransitionTo }}: {e}")
+        await message.answer("Переход завершен")
+    return
     {%- endif %}
     {%- endif %}
 

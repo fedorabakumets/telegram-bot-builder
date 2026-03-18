@@ -173,6 +173,20 @@ async def init_database():
                 )
             """)
             logging.info("✅ Таблица bot_messages создана")
+{%- if hasTelegramSettingsTable %}
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS user_telegram_settings (
+                    user_id BIGINT PRIMARY KEY,
+                    api_id TEXT,
+                    api_hash TEXT,
+                    phone_number TEXT,
+                    session_string TEXT,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            """)
+            logging.info("✅ Таблица user_telegram_settings создана")
+{%- endif %}
         logging.info("✅ База данных инициализирована")
     except Exception as e:
         logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")

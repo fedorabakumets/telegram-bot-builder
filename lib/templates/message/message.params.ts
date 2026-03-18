@@ -81,6 +81,22 @@ export interface MessageTemplateParams {
   maxLength?: number;
   /** Добавлять к существующей переменной */
   appendVariable?: boolean;
+  /** Тип валидации */
+  validationType?: string;
+  /** Сообщение при ошибке валидации */
+  retryMessage?: string;
+  /** Сообщение при успешном сохранении */
+  successMessage?: string;
+  /** Сохранять в базу данных */
+  saveToDatabase?: boolean;
+  /** Переменная для фото */
+  photoInputVariable?: string;
+  /** Переменная для видео */
+  videoInputVariable?: string;
+  /** Переменная для аудио */
+  audioInputVariable?: string;
+  /** Переменная для документов */
+  documentInputVariable?: string;
 
   // --- Медиа ---
   /** URL изображения */

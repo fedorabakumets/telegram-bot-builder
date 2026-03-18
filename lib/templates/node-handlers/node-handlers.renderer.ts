@@ -13,6 +13,51 @@ import { generateStart as generateStartTemplate } from '../start/start.renderer'
 import { sortButtonsByLayout } from '../keyboard/keyboard.renderer';
 
 /**
+ * Определяет тип медиа по URL и возвращает объект с нужным полем.
+ * Если attachedMedia — массив URL-строк, берём первый и определяем тип по расширению.
+ * Если уже заданы imageUrl/videoUrl/audioUrl/documentUrl — они имеют приоритет.
+ */
+export function resolveMediaUrls(data: any): {
+  imageUrl: string;
+  videoUrl: string;
+  audioUrl: string;
+  documentUrl: string;
+  attachedMediaUrls: string[];
+} {
+  const imageUrl = data?.imageUrl || '';
+  const videoUrl = data?.videoUrl || '';
+  const audioUrl = data?.audioUrl || '';
+  const documentUrl = data?.documentUrl || '';
+  const rawAttached: unknown[] = Array.isArray(data?.attachedMedia) ? data.attachedMedia : [];
+
+  // Если уже есть явные URL-поля — используем их, attachedMedia как есть
+  if (imageUrl || videoUrl || audioUrl || documentUrl) {
+    return { imageUrl, videoUrl, audioUrl, documentUrl, attachedMediaUrls: rawAttached as string[] };
+  }
+
+  // attachedMedia — массив URL-строк: нормализуем
+  const urlStrings = (rawAttached as string[]).filter(u => typeof u === 'string' && u.startsWith('http'));
+  if (urlStrings.length === 0) {
+    return { imageUrl, videoUrl, audioUrl, documentUrl, attachedMediaUrls: [] };
+  }
+
+  // Первый URL определяет основной тип (для caption + keyboard)
+  const first = urlStrings[0].toLowerCase();
+  const isVideo = /\.(mp4|mov|avi|mkv|webm)(\?|$)/.test(first);
+  const isAudio = /\.(mp3|ogg|wav|m4a|flac)(\?|$)/.test(first);
+  const isDoc   = /\.(pdf|doc|docx|xls|xlsx|zip|rar|txt|csv)(\?|$)/.test(first);
+  const isPhoto = !isVideo && !isAudio && !isDoc;
+
+  return {
+    imageUrl:    isPhoto ? urlStrings[0] : '',
+    videoUrl:    isVideo ? urlStrings[0] : '',
+    audioUrl:    isAudio ? urlStrings[0] : '',
+    documentUrl: isDoc   ? urlStrings[0] : '',
+    attachedMediaUrls: urlStrings,
+  };
+}
+
+/**
  * Генерирует обработчик рассылки (broadcast)
  * @param node - Узел рассылки
  * @param allNodes - Все узлы проекта
@@ -61,6 +106,7 @@ export function generateCommandHandler(
   node: Node,
   userDatabaseEnabled: boolean = false
 ): string {
+  const media = resolveMediaUrls(node.data);
   return generateCommandTemplate({
     nodeId: node.id,
     command: node.data?.command || '/help',
@@ -79,15 +125,17 @@ export function generateCommandHandler(
       node.data?.buttons?.map((btn: any) => ({ ...btn, target: btn.target || btn.id || '' })) || [],
       node.data?.keyboardLayout
     ),
-    formatMode: node.data?.formatMode || 'none',
+    formatMode: (node.data?.formatMode && node.data.formatMode !== 'none') ? node.data.formatMode : (node.data?.markdown ? 'markdown' : 'none'),
     markdown: node.data?.markdown || false,
     fallbackMessage: node.data?.fallbackMessage || '',
-    imageUrl: node.data?.imageUrl || '',
-    documentUrl: node.data?.documentUrl || '',
-    videoUrl: node.data?.videoUrl || '',
-    audioUrl: node.data?.audioUrl || '',
-    attachedMedia: node.data?.attachedMedia || [],
+    imageUrl: media.imageUrl,
+    documentUrl: media.documentUrl,
+    videoUrl: media.videoUrl,
+    audioUrl: media.audioUrl,
+    attachedMedia: media.attachedMediaUrls,
     userDatabaseEnabled,
+    enableAutoTransition: node.data?.enableAutoTransition || false,
+    autoTransitionTo: node.data?.autoTransitionTo || '',
   });
 }
 
@@ -98,6 +146,7 @@ export function generateStartHandler(
   node: Node,
   userDatabaseEnabled: boolean = false
 ): string {
+  const media = resolveMediaUrls(node.data);
   return generateStartTemplate({
     nodeId: node.id,
     messageText: node.data?.messageText || '',
@@ -118,13 +167,31 @@ export function generateStartHandler(
     enableAutoTransition: node.data?.enableAutoTransition || false,
     autoTransitionTo: node.data?.autoTransitionTo || '',
     collectUserInput: node.data?.collectUserInput || false,
-    formatMode: node.data?.formatMode || 'none',
+    enableTextInput: node.data?.enableTextInput ?? true,
+    enablePhotoInput: node.data?.enablePhotoInput || false,
+    photoInputVariable: node.data?.photoInputVariable || '',
+    enableVideoInput: node.data?.enableVideoInput || false,
+    videoInputVariable: node.data?.videoInputVariable || '',
+    enableAudioInput: node.data?.enableAudioInput || false,
+    audioInputVariable: node.data?.audioInputVariable || '',
+    enableDocumentInput: node.data?.enableDocumentInput || false,
+    documentInputVariable: node.data?.documentInputVariable || '',
+    inputVariable: node.data?.inputVariable || 'input',
+    inputTargetNodeId: node.data?.inputTargetNodeId || '',
+    minLength: node.data?.minLength ?? 0,
+    maxLength: node.data?.maxLength ?? 0,
+    appendVariable: node.data?.appendVariable ?? false,
+    validationType: node.data?.validationType || 'none',
+    retryMessage: node.data?.retryMessage || 'Пожалуйста, попробуйте еще раз.',
+    successMessage: node.data?.successMessage || '',
+    saveToDatabase: node.data?.saveToDatabase ?? true,
+    formatMode: (node.data?.formatMode && node.data.formatMode !== 'none') ? node.data.formatMode : (node.data?.markdown ? 'markdown' : 'none'),
     markdown: node.data?.markdown || false,
-    imageUrl: node.data?.imageUrl || '',
-    documentUrl: node.data?.documentUrl || '',
-    videoUrl: node.data?.videoUrl || '',
-    audioUrl: node.data?.audioUrl || '',
-    attachedMedia: node.data?.attachedMedia || [],
+    imageUrl: media.imageUrl,
+    documentUrl: media.documentUrl,
+    videoUrl: media.videoUrl,
+    audioUrl: media.audioUrl,
+    attachedMedia: media.attachedMediaUrls,
     userDatabaseEnabled,
     hasUserIdsVariable: /\{user_ids(?:_count)?\}/.test(node.data?.messageText || ''),
   });

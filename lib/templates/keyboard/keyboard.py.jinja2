@@ -99,7 +99,9 @@
 {%- if btn.action == 'url' %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, url="{{ btn.url or btn.target or '#' }}"))
 {%- elif btn.action == 'selection' and allowMultipleSelection %}
-{{ indent }}builder.add(InlineKeyboardButton(text=f"{'✅ ' if '{{ btn.text|e }}' in user_data[user_id]['multi_select_{{ nodeId }}'] else ''}{{ btn.text|e }}", callback_data="ms_{{ effectiveNodeId }}_{{ btn.shortButtonId or btn.target or btn.id or 'btn' }}"))
+{%- set _btnVar = '_btn_' ~ loop.index %}
+{{ indent }}_btn_text = {{ btn.text|format_python_text }}
+{{ indent }}builder.add(InlineKeyboardButton(text=("✅ " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "") + _btn_text, callback_data="ms_{{ effectiveNodeId }}_{{ btn.shortButtonId or btn.target or btn.id or 'btn' }}"))
 {%- elif btn.action == 'selection' %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="ms_{{ effectiveNodeId }}_{{ btn.shortButtonId or btn.target or btn.id or 'btn' }}"))
 {%- elif btn.action == 'complete' and allowMultipleSelection %}
@@ -136,7 +138,8 @@
 {%- elif btn.action == 'location' and btn.requestLocation %}
 {{ indent }}builder.add(KeyboardButton(text={{ btn.text|format_python_text }}, request_location=True))
 {%- elif btn.action == 'selection' and allowMultipleSelection %}
-{{ indent }}builder.add(KeyboardButton(text=f"{'✅ ' if '{{ btn.text|e }}' in user_data[user_id]['multi_select_{{ nodeId }}'] else ''}{{ btn.text|e }}"))
+{{ indent }}_btn_text = {{ btn.text|format_python_text }}
+{{ indent }}builder.add(KeyboardButton(text=("✅ " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "") + _btn_text))
 {%- else %}
 {{ indent }}builder.add(KeyboardButton(text={{ btn.text|format_python_text }}))
 {%- endif %}

@@ -7,6 +7,8 @@ import type { MessageTemplateParams } from './message.params';
 import { messageParamsSchema } from './message.schema';
 import { renderPartialTemplate } from '../template-renderer';
 import { computeAdjustStr } from '../keyboard/keyboard.renderer';
+import { generateUserInput, nodeToUserInputParams } from '../user-input/user-input.renderer';
+import type { Node } from '@shared/schema';
 
 /**
  * Генерация Python кода обработчика сообщения с валидацией параметров
@@ -39,9 +41,23 @@ export function generateMessage(params: MessageTemplateParams): string {
     oneTimeKeyboard: params.oneTimeKeyboard ?? false,
     resizeKeyboard: params.resizeKeyboard ?? true,
   });
+
+  // Вычисляем блок waiting_for_input если нужен сбор ввода
+  let userInputBlock = '';
+  if (params.collectUserInput) {
+    const fakeNode = {
+      id: params.nodeId,
+      type: 'message',
+      position: { x: 0, y: 0 },
+      data: params as any,
+    } as Node;
+    userInputBlock = generateUserInput(nodeToUserInputParams(fakeNode));
+  }
+
   return renderPartialTemplate('message/message.py.jinja2', {
     ...validated,
     handlerContext: 'callback',
     adjustStr: computeAdjustStr(params.keyboardLayout),
+    userInputBlock,
   });
 }

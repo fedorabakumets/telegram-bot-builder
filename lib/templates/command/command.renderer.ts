@@ -26,7 +26,10 @@ export function generateCommand(params: CommandTemplateParams): string {
 
   // Преобразуем string[] → SynonymEntry[] для шаблона synonyms
   const functionName = (params.command ?? '').replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
-  const synonymEntries: SynonymEntry[] = (params.synonyms ?? []).map(synonym => ({
+  const synonymEntries: SynonymEntry[] = (params.synonyms ?? [])
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+    .map(synonym => ({
     synonym,
     nodeId: params.nodeId,
     nodeType: 'command' as const,

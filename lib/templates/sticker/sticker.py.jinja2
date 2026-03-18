@@ -35,8 +35,8 @@ async def handle_sticker_{{ nodeId|safe_name }}(message: types.Message):
     try:
         {%- if stickerFileId %}
         await message.answer_sticker(
-            sticker=sticker_file_id,
-            {%- if mediaCaption %}caption=caption{%- endif %}
+            sticker=sticker_file_id
+            {%- if mediaCaption %}, caption=caption{%- endif %}
             {%- if disableNotification %}, disable_notification=True{%- endif %}
         )
         {%- elif stickerUrl %}
@@ -44,15 +44,15 @@ async def handle_sticker_{{ nodeId|safe_name }}(message: types.Message):
             async with session.get(sticker_url) as resp:
                 sticker_data = await resp.read()
                 await message.answer_sticker(
-                    sticker=sticker_data,
-                    {%- if mediaCaption %}caption=caption{%- endif %}
+                    sticker=sticker_data
+                    {%- if mediaCaption %}, caption=caption{%- endif %}
                     {%- if disableNotification %}, disable_notification=True{%- endif %}
                 )
         {%- elif stickerSetName %}
         {# Отправка из набора стикеров #}
         await message.answer_sticker(
-            sticker="{{ stickerSetName|e }}",
-            {%- if mediaCaption %}caption=caption{%- endif %}
+            sticker="{{ stickerSetName|e }}"
+            {%- if mediaCaption %}, caption=caption{%- endif %}
             {%- if disableNotification %}, disable_notification=True{%- endif %}
         )
         {%- else %}

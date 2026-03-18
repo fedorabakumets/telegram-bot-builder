@@ -73,6 +73,12 @@ export const commandParamsSchema = z.object({
   /** Запасное сообщение */
   fallbackMessage: z.string().optional(),
 
+  // --- Автопереход ---
+  /** Автопереход включён */
+  enableAutoTransition: z.boolean().optional(),
+  /** ID узла для автоперехода */
+  autoTransitionTo: z.string().optional(),
+
   // --- Медиа ---
   /** URL изображения */
   imageUrl: z.string().optional(),

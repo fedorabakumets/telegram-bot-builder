@@ -61,6 +61,42 @@ export interface StartTemplateParams {
   // --- Сбор ввода ---
   /** Сбор пользовательского ввода включён */
   collectUserInput?: boolean;
+  /** Включить текстовый ввод */
+  enableTextInput?: boolean;
+  /** Включить ввод фото */
+  enablePhotoInput?: boolean;
+  /** Переменная для фото */
+  photoInputVariable?: string;
+  /** Включить ввод видео */
+  enableVideoInput?: boolean;
+  /** Переменная для видео */
+  videoInputVariable?: string;
+  /** Включить ввод аудио */
+  enableAudioInput?: boolean;
+  /** Переменная для аудио */
+  audioInputVariable?: string;
+  /** Включить ввод документов */
+  enableDocumentInput?: boolean;
+  /** Переменная для документов */
+  documentInputVariable?: string;
+  /** Переменная для сохранения ввода */
+  inputVariable?: string;
+  /** Целевой узел после ввода */
+  inputTargetNodeId?: string;
+  /** Минимальная длина ввода */
+  minLength?: number;
+  /** Максимальная длина ввода */
+  maxLength?: number;
+  /** Добавлять к существующей переменной */
+  appendVariable?: boolean;
+  /** Тип валидации */
+  validationType?: string;
+  /** Сообщение при ошибке валидации */
+  retryMessage?: string;
+  /** Сообщение при успешном сохранении */
+  successMessage?: string;
+  /** Сохранять в базу данных */
+  saveToDatabase?: boolean;
 
   // --- Медиа ---
   /** URL изображения */

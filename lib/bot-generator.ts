@@ -338,7 +338,48 @@ function generateCodeSections(
     } else if (hasKeyboardLayout && keyboardLayoutAuto && layout.columns) {
       adjustCode = String(layout.columns);
     }
-    return { ...node, hasKeyboardLayout, keyboardLayoutAuto, adjustCode };
+
+    // Вычисляем shortNodeId и кнопки для generateMultiSelectCallback
+    const shortNodeId = String(node.id).slice(-10).replace(/^_+/, '');
+    const allButtons: any[] = node.data?.buttons ?? [];
+    const selectionButtons = allButtons
+      .filter((b: any) => b.action === 'selection')
+      .map((b: any) => {
+        const value = b.target || b.id || 'btn';
+        const valueTruncated = value.slice(-8);
+        return {
+          id: b.id,
+          text: b.text,
+          action: b.action,
+          target: b.target,
+          value,
+          valueTruncated,
+          escapedText: b.text.replace(/"/g, '\\"'),
+          callbackData: `ms_${shortNodeId}_${valueTruncated}`,
+        };
+      });
+    const regularButtons = allButtons
+      .filter((b: any) => b.action !== 'selection' && b.action !== 'complete')
+      .map((b: any) => ({ id: b.id, text: b.text, action: b.action, target: b.target }));
+    const gotoButtons = allButtons
+      .filter((b: any) => b.action === 'goto' && b.target)
+      .map((b: any) => ({ id: b.id, text: b.text, action: b.action, target: b.target }));
+    const completeBtn = allButtons.find((b: any) => b.action === 'complete');
+
+    return {
+      ...node,
+      hasKeyboardLayout,
+      keyboardLayoutAuto,
+      adjustCode,
+      shortNodeId,
+      selectionButtons,
+      regularButtons,
+      gotoButtons,
+      completeButton: completeBtn ? { text: completeBtn.text, target: completeBtn.target } : undefined,
+      doneCallbackData: `done_${shortNodeId}`,
+      totalButtonsCount: allButtons.length,
+      variableName: node.data?.multiSelectVariable || `multi_select_${node.id}`,
+    };
   });
 
   let multiSelectHandlers = '';
@@ -350,12 +391,12 @@ function generateCodeSections(
     });
     multiSelectHandlers += generateMultiSelectDone({
       allNodes: nodes as any[],
-      multiSelectNodes: multiSelectNodes as any[],
+      multiSelectNodes: multiSelectNodesWithLayout as any[],
       allNodeIds: context.allNodeIds,
     });
     multiSelectHandlers += generateMultiSelectReply({
       allNodes: nodes as any[],
-      multiSelectNodes: multiSelectNodes as any[],
+      multiSelectNodes: multiSelectNodesWithLayout as any[],
       allNodeIds: context.allNodeIds,
     });
   }
@@ -423,8 +464,8 @@ function assembleAndValidate(
     sections.commandCallbackHandlers,
     sections.groupHandlers,
     sections.universalHandlers,
-    sections.main,
     sections.multiSelectHandlers,
+    sections.main,
   ];
 
   // Объединяем непустые секции с одним переносом строки между ними

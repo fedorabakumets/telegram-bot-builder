@@ -136,8 +136,8 @@ async def start_handler(message: types.Message):
     {# Клавиатура #}
 {%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
 
-    {# Отправка медиафайлов (attachedMedia) #}
-{%- if attachedMedia and attachedMedia|length > 0 %}
+    {# Отправка медиафайлов или обычного сообщения #}
+{%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
 {%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
 {%- else %}
     {# Отправка сообщения без медиа #}
@@ -184,4 +184,8 @@ async def start_handler(message: types.Message):
 {# Обработчики синонимов #}
 {%- if synonymEntries and synonymEntries|length > 0 %}
 {% include 'synonyms/synonyms.py.jinja2' %}
+{%- endif %}
+
+{%- if collectUserInput and userInputBlock %}
+{{ userInputBlock }}
 {%- endif %}

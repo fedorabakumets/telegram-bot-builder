@@ -1,20 +1,25 @@
 {#
   Шаблон обработчика анимации (GIF)
 
-  @fileoverview Генерирует Python-код отправки анимации (GIF) пользователю.
+  @fileoverview Генерирует Python-код полноценного обработчика анимации (GIF).
 
   @param {string} animationUrl — URL анимации (GIF)
   @param {string} nodeId       — ID узла
-  @param {string} indentLevel  — базовый отступ (по умолчанию '                ')
 #}
-{% set ind = indentLevel or '                ' %}
-{% if animationUrl %}
-{% if '/uploads/' in animationUrl and animationUrl[0] == '/' %}
-{{ ind }}if "{{ animationUrl }}".startswith('/uploads/'):
-{{ ind }}    animation_path = get_upload_file_path("{{ animationUrl }}")
-{{ ind }}    animation_file = FSInputFile(animation_path)
-{{ ind }}await bot.send_animation(message.chat.id, animation_file, caption=text, parse_mode=parse_mode)
-{% else %}
-{{ ind }}await bot.send_animation(message.chat.id, "{{ animationUrl }}", caption=text, parse_mode=parse_mode)
-{% endif %}
-{% endif %}
+@dp.message(F.animation)
+async def handle_animation_{{ nodeId|safe_name }}(message: types.Message):
+    """Обработчик анимации для узла {{ nodeId }}"""
+    user_id = message.from_user.id
+    text = ""
+    parse_mode = None
+{%- if animationUrl %}
+{%- if '/uploads/' in animationUrl %}
+    animation_path = get_upload_file_path("{{ animationUrl }}")
+    animation_file = FSInputFile(animation_path)
+    await bot.send_animation(message.chat.id, animation_file, caption=text, parse_mode=parse_mode)
+{%- else %}
+    await bot.send_animation(message.chat.id, "{{ animationUrl }}", caption=text, parse_mode=parse_mode)
+{%- endif %}
+{%- else %}
+    await message.answer("Анимация не настроена")
+{%- endif %}
