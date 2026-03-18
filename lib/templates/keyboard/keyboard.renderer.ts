@@ -28,3 +28,21 @@ export function generateKeyboard(params: KeyboardTemplateParams): string {
   const validated = keyboardParamsSchema.parse(params);
   return renderPartialTemplate('keyboard/keyboard.py.jinja2', validated);
 }
+
+/**
+ * Собирает ID целевых узлов из inline кнопок в Set
+ * @param inlineNodes - Массив узлов с inline кнопками
+ * @param allReferencedNodeIds - Set для добавления найденных ID
+ */
+export function processInlineButtonNodes(inlineNodes: any[], allReferencedNodeIds: Set<string>): void {
+  inlineNodes.forEach(node => {
+    node.data.buttons.forEach((button: { action: string; target: string }) => {
+      if (button.action === 'goto' && button.target) {
+        allReferencedNodeIds.add(button.target);
+      }
+    });
+    if (node.data.continueButtonTarget) {
+      allReferencedNodeIds.add(node.data.continueButtonTarget);
+    }
+  });
+}
