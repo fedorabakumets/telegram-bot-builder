@@ -23,6 +23,9 @@ import { renderPartialTemplate } from '../template-renderer';
  *   hasUrlImages: true,
  *   hasDatetimeNodes: true,
  *   hasTimezoneNodes: true,
+ *   hasReplyKeyboard: false,
+ *   hasLocalMediaFiles: false,
+ *   hasBotCommands: false,
  * });
  * ```
  */
@@ -39,6 +42,9 @@ export function generateImports(params: ImportsTemplateParams): string {
     hasUrlImages: params.hasUrlImages ?? false,
     hasDatetimeNodes: params.hasDatetimeNodes ?? false,
     hasTimezoneNodes: params.hasTimezoneNodes ?? false,
+    hasReplyKeyboard: params.hasReplyKeyboard ?? false,
+    hasLocalMediaFiles: params.hasLocalMediaFiles ?? false,
+    hasBotCommands: params.hasBotCommands ?? false,
   });
   return renderPartialTemplate('imports/imports.py.jinja2', validated);
 }

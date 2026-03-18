@@ -12,6 +12,9 @@
   @param {boolean} hasUrlImages - Есть ли узлы с URL изображениями (нужен URLInputFile)
   @param {boolean} hasDatetimeNodes - Есть ли узлы требующие datetime
   @param {boolean} hasTimezoneNodes - Есть ли узлы требующие timezone
+  @param {boolean} hasReplyKeyboard - Есть ли reply клавиатуры (нужен ReplyKeyboardBuilder, KeyboardButton)
+  @param {boolean} hasLocalMediaFiles - Есть ли локальные медиа файлы (нужен FSInputFile)
+  @param {boolean} hasBotCommands - Есть ли команды для BotCommand (нужен BotCommand)
 #}
 
 import asyncio
@@ -20,9 +23,9 @@ import signal
 
 from aiogram import Bot, Dispatcher, types, F, BaseMiddleware
 from aiogram.types import (
-    KeyboardButton,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    KeyboardButton,
     BotCommand,
     ReplyKeyboardRemove,
     FSInputFile

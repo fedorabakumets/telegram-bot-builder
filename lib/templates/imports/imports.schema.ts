@@ -27,6 +27,12 @@ export const importsParamsSchema = z.object({
   hasDatetimeNodes: z.boolean().default(false),
   /** Есть ли узлы требующие timezone */
   hasTimezoneNodes: z.boolean().default(false),
+  /** Есть ли reply клавиатуры (нужен ReplyKeyboardBuilder, KeyboardButton) */
+  hasReplyKeyboard: z.boolean().default(false),
+  /** Есть ли локальные медиа файлы (нужен FSInputFile) */
+  hasLocalMediaFiles: z.boolean().default(false),
+  /** Есть ли команды для BotCommand (нужен BotCommand) */
+  hasBotCommands: z.boolean().default(false),
 });
 
 /** Тип параметров импортов (выведен из схемы) */

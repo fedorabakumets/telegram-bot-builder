@@ -274,7 +274,7 @@ console.log('\n── Блок B: Импорт из папок bot_{projectId}_{
 
 test('B01', 'Папка bot_1_1 → projectId=1, tokenId=1', () => {
   setupTestDir();
-  const { dir, jsonPath, data } = createTestProject(1, 1);
+  const { jsonPath, data } = createTestProject(1, 1);
   writeProjectFile(jsonPath, data);
   assert(fs.existsSync(jsonPath), 'файл должен быть создан');
   const parsed = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));

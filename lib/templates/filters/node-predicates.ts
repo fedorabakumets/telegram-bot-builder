@@ -202,8 +202,9 @@ export function hasBotCommands(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes.some(node => {
     const data = node.data || {};
-    // showInMenu + description = команда для BotCommand
-    return data.showInMenu && data.description;
+    // showInMenu + command = команда для BotCommand
+    // description опционален (будет использован дефолтный)
+    return data.showInMenu && data.command;
   });
 }
 

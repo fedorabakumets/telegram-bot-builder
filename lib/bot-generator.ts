@@ -141,6 +141,9 @@ function generateCodeSections(
       hasUrlImages: flags.hasUrlImagesResult,
       hasDatetimeNodes: flags.hasDatetimeNodesResult,
       hasTimezoneNodes: flags.hasTimezoneNodesResult,
+      hasReplyKeyboard: flags.hasReplyKeyboardResult,
+      hasLocalMediaFiles: flags.hasLocalMediaFilesResult,
+      hasBotCommands: flags.hasBotCommandsResult,
     })
   );
 
@@ -509,6 +512,14 @@ export function generatePythonCode(
   logFlowAnalysis(context.nodes);
 
   const flags = computeFeatureFlags(context);
+  
+  // DEBUG: вывод флагов
+  console.log('DEBUG flags:', {
+    hasReplyKeyboard: flags.hasReplyKeyboardResult,
+    hasInlineButtons: flags.hasInlineButtonsResult,
+    hasBotCommands: flags.hasBotCommandsResult,
+  });
+  
   const sections = generateCodeSections(context, flags);
 
   return assembleAndValidate(sections, context);

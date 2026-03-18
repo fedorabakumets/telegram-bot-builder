@@ -124,5 +124,9 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
         (node.data && node.data.enablePhotoInput)
     ),
     hasNodesRequiringSafeEditOrSendResult: hasNodesRequiringSafeEditOrSend(nodes),
+    // Флаги для оптимизации импортов
+    hasReplyKeyboardResult: hasReplyKeyboardButtons(nodes),
+    hasLocalMediaFilesResult: hasLocalMediaFiles(nodes),
+    hasBotCommandsResult: hasBotCommands(nodes),
   };
 }
