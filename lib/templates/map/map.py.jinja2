@@ -1,0 +1,122 @@
+{#
+  Шаблон обработчика геолокации
+
+  @fileoverview Генерирует Python код для отправки/запроса геолокации
+  @param {string} nodeId - Уникальный идентификатор узла
+  @param {string} messageText - Текст сообщения
+  @param {number} latitude - Широта
+  @param {number} longitude - Долгота
+  @param {string} locationTitle - Название места
+  @param {string} locationAddress - Адрес места
+  @param {boolean} requestUserLocation - Запросить геолокацию у пользователя
+  @param {string} locationVariable - Переменная для сохранения геолокации
+  @param {boolean} isPrivateOnly - Только приватные чаты
+  @param {boolean} adminOnly - Только администраторы
+  @param {boolean} requiresAuth - Требуется авторизация
+  @param {boolean} userDatabaseEnabled - База данных пользователей включена
+  @param {string} keyboardType - Тип клавиатуры: 'inline', 'reply', 'none'
+  @param {array} buttons - Кнопки
+  @param {boolean} enableAutoTransition - Автопереход
+  @param {string} autoTransitionTo - Цель автоперехода
+  @param {string} formatMode - Режим форматирования: 'html', 'markdown', 'none'
+#}
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ nodeId|safe_name }}(callback: types.CallbackQuery):
+    """Обработчик геолокации для узла {{ nodeId }}"""
+    logging.info(f"Геолокация {{ nodeId }} вызвана пользователем {callback.from_user.id}")
+    await callback.answer()
+
+    user_id = callback.from_user.id
+
+{# Проверки безопасности #}
+{%- if isPrivateOnly %}
+
+    if not await is_private_chat(callback.message):
+        await callback.message.answer("❌ Эта команда доступна только в приватных чатах")
+        return
+{%- endif %}
+{%- if adminOnly %}
+
+    if not await is_admin(callback.from_user.id):
+        await callback.message.answer("❌ У вас нет прав для выполнения этой команды")
+        return
+{%- endif %}
+{%- if requiresAuth %}
+
+    if not await check_auth(callback.from_user.id):
+        await callback.message.answer("❌ Необходимо войти в систему для выполнения этой команды")
+        return
+{%- endif %}
+
+    {# Текст сообщения #}
+    text = {{ messageText|format_python_text }}
+
+    {# Универсальная замена переменных #}
+    all_user_vars = await init_all_user_vars(user_id)
+    text = replace_variables_in_text(text, all_user_vars, {})
+
+    {# Клавиатура #}
+{%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
+
+{%- if requestUserLocation %}
+
+    {# Запрос геолокации у пользователя #}
+    await callback.message.answer(text, reply_markup=keyboard)
+    logging.info(f"Запрос геолокации у пользователя {user_id} для узла {{ nodeId }}")
+{%- else %}
+
+    {# Отправка текстового сообщения #}
+{%- if formatMode == 'html' %}
+    await callback.message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+{%- elif formatMode == 'markdown' %}
+    await callback.message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+{%- else %}
+    await callback.message.answer(text, reply_markup=keyboard)
+{%- endif %}
+
+{%- if latitude is not none and longitude is not none %}
+
+    {# Отправка геолокации #}
+    await callback.message.answer_location(
+        latitude={{ latitude }},
+        longitude={{ longitude }}
+    )
+    logging.info(f"Геолокация отправлена пользователю {user_id}: {{ latitude }}, {{ longitude }}")
+{%- endif %}
+{%- endif %}
+
+{%- if userDatabaseEnabled and locationVariable %}
+
+    {# Сохранение геолокации в БД #}
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["{{ locationVariable }}"] = {"latitude": {{ latitude or 0 }}, "longitude": {{ longitude or 0 }}}
+    await update_user_data_in_db(user_id, "{{ locationVariable }}", str(user_data[user_id]["{{ locationVariable }}"]))
+{%- endif %}
+
+{%- if enableAutoTransition and autoTransitionTo %}
+
+    {# Автопереход #}
+    # ⚡ АВТОПЕРЕХОД к {{ autoTransitionTo }}
+    logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
+    class FakeCallbackQuery:
+        def __init__(self, callback, target_node_id):
+            self.from_user = callback.from_user
+            self.chat = callback.message.chat
+            self.date = callback.message.date
+            self.message = callback.message
+            self.data = target_node_id
+            self._is_fake = True
+
+        async def answer(self, *args, **kwargs):
+            pass
+
+    fake_callback = FakeCallbackQuery(callback, "{{ autoTransitionTo }}")
+    try:
+        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(fake_callback)
+        logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
+    except Exception as e:
+        logging.error(f"Ошибка при автопереходе к узлу {{ autoTransitionTo }}: {e}")
+    return
+{%- endif %}

@@ -205,7 +205,8 @@ export function renderPartialTemplate(
                                .replace('handlers/', '')
                                .replace('synonyms/', '')
                                .replace('user-handler/', '')
-                               .replace('admin-rights/', '');
+                               .replace('admin-rights/', '')
+                               .replace('map/', '');
 
     if (schemaMap[templateName]) {
       try {
