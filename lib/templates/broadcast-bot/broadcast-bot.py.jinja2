@@ -15,6 +15,8 @@
 async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     """Обработчик рассылки для узла {{ nodeId }} (Bot API / aiogram)"""
     logging.info(f"📢 Запуск рассылки из узла {{ nodeId }}")
+    _error_msg = {{ errorMsg | format_python_text }}
+    _success_msg = {{ successMsg | format_python_text }}
 
     # ── Получение получателей ───────────────────────────────────────────────
     recipients = []
@@ -30,7 +32,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
 {%- endif %}
     except Exception as e:
         logging.error(f"❌ Ошибка получения списка пользователей: {e}")
-        await callback_query.message.answer("{{ errorMsg }}")
+        await callback_query.message.answer(_error_msg)
         return
 
     recipients = list(set(recipients))
@@ -238,6 +240,6 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
 
         await asyncio.sleep(0.05)
 
-    report = f"{{ successMsg }}\n🤖 Метод: Bot API\n✅ Успешно: {success_count}\n❌ Ошибок: {error_count}"
+    report = f"{_success_msg}\n🤖 Метод: Bot API\n✅ Успешно: {success_count}\n❌ Ошибок: {error_count}"
     await callback_query.message.answer(report)
 # @@NODE_END:{{ nodeId }}@@

@@ -45,7 +45,7 @@ export function nodeToUserHandlerParams(node: Node): UserHandlerTemplateParams {
     safeName,
     synonyms: synonyms.length > 0 ? synonyms : (defaults[node.type] ?? []),
     targetGroupId: node.data.targetGroupId || '',
-    reason: node.data.reason,
+    reason: node.data.reason ? String(node.data.reason).replace(/"/g, '\\"') : undefined,
     untilDate: node.data.untilDate ?? 0,
     duration: node.data.duration ?? 3600,
     canSendMessages: node.data.canSendMessages ?? false,

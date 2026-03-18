@@ -40,7 +40,7 @@ export function generateContactHandler(node: Node): string {
   code += `    first_name = "${firstName}"\n`;
   if (lastName) code += `    last_name = "${lastName}"\n`;
   if (userId > 0) code += `    user_id = ${userId}\n`;
-  if (vcard) code += `    vcard = "${vcard}"\n`;
+  if (vcard) code += `    vcard = "${vcard.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r')}"\n`;
   code += '    try:\n';
   code += '        await message.answer_contact(\n';
   code += '            phone_number=phone_number,\n';
@@ -93,9 +93,9 @@ export function generateLocationHandler(node: Node): string {
     code += '        return\n';
   }
 
-  const latitude = node.data.latitude || 55.7558;
-  const longitude = node.data.longitude || 37.6176;
-  const title = node.data.title || "Местоположение";
+  const latitude = node.data.latitude !== undefined ? node.data.latitude : 55.7558;
+  const longitude = node.data.longitude !== undefined ? node.data.longitude : 37.6176;
+  const title = node.data.title || "";
   const address = node.data.address || "";
   const foursquareId = node.data.foursquareId || "";
   const foursquareType = node.data.foursquareType || "";
@@ -152,6 +152,7 @@ export function generateLocationHandler(node: Node): string {
   code += '        await message.answer(f"❌ Не удалось отправить геолокацию")\n';
 
   if (generateMapPreview) {
+    code += '    try:\n';
     code += '        map_urls = generate_map_urls(latitude, longitude, title)\n';
     code += '        map_builder = InlineKeyboardBuilder()\n';
     code += '        map_builder.add(InlineKeyboardButton(text="🗺️ Яндекс Карты", url=map_urls["yandex"]))\n';
@@ -165,9 +166,12 @@ export function generateLocationHandler(node: Node): string {
     code += '        map_builder.adjust(2)\n';
     code += '        map_keyboard = map_builder.as_markup()\n';
     code += `        await message.answer("🗺️ Откройте местоположение в удобном картографическом сервисе${node.data.showDirections ? ' или постройте маршрут' : ''}:", reply_markup=map_keyboard)\n`;
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки карты: {e}")\n';
   }
 
   if (node.data.keyboardType === "inline" && node.data.buttons?.length > 0) {
+    code += '    try:\n';
     code += '        builder = InlineKeyboardBuilder()\n';
     node.data.buttons.forEach((button: any) => {
       if (button.action === "url") {
@@ -178,11 +182,9 @@ export function generateLocationHandler(node: Node): string {
     });
     code += '        keyboard = builder.as_markup()\n';
     code += '        await message.answer("Выберите действие:", reply_markup=keyboard)\n';
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки клавиатуры: {e}")\n';
   }
-
-  code += '    except Exception as e:\n';
-  code += '        logging.error(f"Ошибка отправки геолокации: {e}")\n';
-  code += '        await message.answer("❌ Не удалось отправить геолокацию")\n';
 
   return code;
 }

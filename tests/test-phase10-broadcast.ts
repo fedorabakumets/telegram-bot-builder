@@ -792,3 +792,216 @@ test('J04', 'Client API → PEER_ID_INVALID в коде (обработка бл
   syntax(code, 'j04');
   ok(code.includes('PEER_ID_INVALID'), 'PEER_ID_INVALID должен быть в коде для обработки блокировки');
 });
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК K: Комбинации
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок K: Комбинации ────────────────────────────────────────────');
+
+test('K01', 'два broadcast-узла в одном проекте (bot + client) → оба обработчика в коде', () => {
+  const p = clone(BASE);
+  p.sheets[0].nodes.push({
+    id: 'broadcast_bot_node',
+    type: 'broadcast',
+    position: { x: 0, y: 0 },
+    data: { broadcastApiType: 'bot', idSourceType: 'bot_users', successMessage: '', errorMessage: '' },
+  });
+  p.sheets[0].nodes.push({
+    id: 'broadcast_client_node',
+    type: 'broadcast',
+    position: { x: 0, y: 0 },
+    data: { broadcastApiType: 'client', idSourceType: 'bot_users', successMessage: '', errorMessage: '' },
+  });
+  p.sheets[0].nodes.push({
+    id: 'msg_k01',
+    type: 'message',
+    position: { x: 0, y: 0 },
+    data: { messageText: 'Общее сообщение', keyboardType: 'none', buttons: [], enableBroadcast: true },
+  });
+  const code = gen(p, 'k01');
+  syntax(code, 'k01');
+  ok(code.includes('handle_broadcast_broadcast_bot_node'), 'обработчик bot должен быть');
+  ok(code.includes('handle_broadcast_broadcast_client_node'), 'обработчик client должен быть');
+});
+
+test('K02', 'broadcast + start + message + command → все обработчики, синтаксис OK', () => {
+  const p = clone(BASE);
+  p.sheets[0].nodes.push({
+    id: 'broadcast_k02',
+    type: 'broadcast',
+    position: { x: 0, y: 0 },
+    data: { broadcastApiType: 'bot', idSourceType: 'bot_users', successMessage: '', errorMessage: '' },
+  });
+  p.sheets[0].nodes.push({
+    id: 'cmd_k02',
+    type: 'command',
+    position: { x: 0, y: 0 },
+    data: { command: '/broadcast', messageText: 'Запуск рассылки', keyboardType: 'none', buttons: [], formatMode: 'none' },
+  });
+  p.sheets[0].nodes.push({
+    id: 'msg_k02',
+    type: 'message',
+    position: { x: 0, y: 0 },
+    data: { messageText: 'Рассылка', keyboardType: 'none', buttons: [], enableBroadcast: true },
+  });
+  const code = gen(p, 'k02');
+  syntax(code, 'k02');
+  ok(code.includes('handle_broadcast_broadcast_k02'), 'broadcast обработчик должен быть');
+  ok(code.includes('/broadcast'), 'command обработчик должен быть');
+});
+
+test('K03', 'broadcast с 5 broadcastNodes → все 5 в broadcast_nodes', () => {
+  const p = addBroadcastWithMessages(
+    {},
+    [
+      { id: 'msg_k03_1', data: { messageText: 'Сообщение 1', enableBroadcast: true } },
+      { id: 'msg_k03_2', data: { messageText: 'Сообщение 2', enableBroadcast: true } },
+      { id: 'msg_k03_3', data: { messageText: 'Сообщение 3', enableBroadcast: true } },
+      { id: 'msg_k03_4', data: { messageText: 'Сообщение 4', enableBroadcast: true } },
+      { id: 'msg_k03_5', data: { messageText: 'Сообщение 5', enableBroadcast: true } },
+    ]
+  );
+  const code = gen(p, 'k03');
+  syntax(code, 'k03');
+  for (let i = 1; i <= 5; i++) {
+    ok(code.includes(`Сообщение ${i}`), `Сообщение ${i} должно быть в broadcast_nodes`);
+  }
+});
+
+test('K04', 'broadcast + enableBroadcast message с imageUrl → imageUrl в broadcast_nodes', () => {
+  const p = addBroadcastWithMessages(
+    {},
+    [{ id: 'msg_k04', data: { messageText: 'Фото рассылка', enableBroadcast: true, imageUrl: 'https://example.com/broadcast.jpg' } }]
+  );
+  const code = gen(p, 'k04');
+  syntax(code, 'k04');
+  ok(code.includes('https://example.com/broadcast.jpg'), 'imageUrl должен быть в broadcast_nodes');
+  ok(code.includes('Фото рассылка'), 'текст должен быть в broadcast_nodes');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК L: Граничные случаи
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок L: Граничные случаи ──────────────────────────────────────');
+
+test('L01', 'nodeId с дефисами "broadcast-node-1" → safe_name применяется, синтаксис OK', () => {
+  const p = clone(BASE);
+  p.sheets[0].nodes.push({
+    id: 'broadcast-node-1',
+    type: 'broadcast',
+    position: { x: 0, y: 0 },
+    data: { broadcastApiType: 'bot', idSourceType: 'bot_users', successMessage: '', errorMessage: '' },
+  });
+  p.sheets[0].nodes.push({
+    id: 'msg_l01',
+    type: 'message',
+    position: { x: 0, y: 0 },
+    data: { messageText: 'Тест дефисов', keyboardType: 'none', buttons: [], enableBroadcast: true },
+  });
+  const code = gen(p, 'l01');
+  syntax(code, 'l01');
+  ok(code.includes('handle_broadcast_broadcast_node_1'), 'дефисы должны быть заменены на подчёркивания');
+});
+
+test('L02', 'nodeId с цифрами в начале "1broadcast" → синтаксис OK', () => {
+  const p = clone(BASE);
+  p.sheets[0].nodes.push({
+    id: '1broadcast',
+    type: 'broadcast',
+    position: { x: 0, y: 0 },
+    data: { broadcastApiType: 'bot', idSourceType: 'bot_users', successMessage: '', errorMessage: '' },
+  });
+  p.sheets[0].nodes.push({
+    id: 'msg_l02',
+    type: 'message',
+    position: { x: 0, y: 0 },
+    data: { messageText: 'Тест цифр', keyboardType: 'none', buttons: [], enableBroadcast: true },
+  });
+  const code = gen(p, 'l02');
+  syntax(code, 'l02');
+  ok(code.includes('handle_broadcast_'), 'обработчик должен быть');
+});
+
+test('L03', 'очень длинный текст (2000 символов) в broadcastNode → синтаксис OK', () => {
+  const longText = 'А'.repeat(2000);
+  const p = addBroadcastWithMessages(
+    {},
+    [{ id: 'msg_l03', data: { messageText: longText, enableBroadcast: true } }]
+  );
+  const code = gen(p, 'l03');
+  syntax(code, 'l03');
+  ok(code.includes('broadcast_nodes'), 'broadcast_nodes должен быть');
+});
+
+test('L04', 'текст с \\n переносами → синтаксис OK', () => {
+  const p = addBroadcastWithMessages(
+    {},
+    [{ id: 'msg_l04', data: { messageText: 'Строка 1\nСтрока 2\nСтрока 3', enableBroadcast: true } }]
+  );
+  const code = gen(p, 'l04');
+  syntax(code, 'l04');
+  ok(code.includes('broadcast_nodes'), 'broadcast_nodes должен быть');
+});
+
+test('L05', 'successMessage с кириллицей → синтаксис OK', () => {
+  const p = addBroadcastWithMessages(
+    { successMessage: 'Рассылка успешно завершена! Все получили сообщение.' },
+    [{ id: 'msg_l05', data: { messageText: 'Текст', enableBroadcast: true } }]
+  );
+  const code = gen(p, 'l05');
+  syntax(code, 'l05');
+  ok(code.includes('Рассылка успешно завершена!'), 'кириллица в successMessage должна быть');
+});
+
+test('L06', 'broadcastNode с formatMode: markdown → "markdown" в broadcast_nodes', () => {
+  const p = addBroadcastWithMessages(
+    {},
+    [{ id: 'msg_l06', data: { messageText: '*Жирный* текст', enableBroadcast: true, formatMode: 'markdown' } }]
+  );
+  const code = gen(p, 'l06');
+  syntax(code, 'l06');
+  ok(code.includes('"markdown"'), '"markdown" должен быть в broadcast_nodes');
+});
+
+test('L07', 'broadcastNode с formatMode: html → "html" в broadcast_nodes', () => {
+  const p = addBroadcastWithMessages(
+    {},
+    [{ id: 'msg_l07', data: { messageText: '<b>Жирный</b>', enableBroadcast: true, formatMode: 'html' } }]
+  );
+  const code = gen(p, 'l07');
+  syntax(code, 'l07');
+  ok(code.includes('"html"'), '"html" должен быть в broadcast_nodes');
+});
+
+test('L08', 'userDatabaseEnabled: true + broadcast → синтаксис OK', () => {
+  const p = addBroadcastWithMessages(
+    {},
+    [{ id: 'msg_l08', data: { messageText: 'С БД', enableBroadcast: true } }]
+  );
+  const code = genDB(p, 'l08');
+  syntax(code, 'l08');
+  ok(code.includes('handle_broadcast_'), 'обработчик должен быть');
+  ok(code.includes('broadcast_nodes'), 'broadcast_nodes должен быть');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// ИТОГ
+// ════════════════════════════════════════════════════════════════════════════
+
+const passed = results.filter(r => r.passed).length;
+const failed = results.filter(r => !r.passed).length;
+
+console.log('\n╔══════════════════════════════════════════════════════════════╗');
+console.log(`║  Итого: ${passed}/${results.length} пройдено, ${failed} провалено`.padEnd(63) + '║');
+console.log('╚══════════════════════════════════════════════════════════════╝\n');
+
+if (failed > 0) {
+  console.log('Провалившиеся тесты:');
+  results.filter(r => !r.passed).forEach(r => {
+    console.log(`  ❌ ${r.id}. ${r.name}`);
+    console.log(`     → ${r.note}`);
+  });
+  process.exit(1);
+}

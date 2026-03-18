@@ -15,6 +15,8 @@
 async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     """Обработчик рассылки для узла {{ nodeId }} (Client API / Telethon)"""
     logging.info(f"📢 Запуск рассылки из узла {{ nodeId }}")
+    _error_msg = {{ errorMsg | format_python_text }}
+    _success_msg = {{ successMsg | format_python_text }}
 
     # ── Проверка сессии Client API ──────────────────────────────────────────
     try:
@@ -29,7 +31,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
             logging.info(f"🔑 Client API сессия: user_id={client_session['user_id'] if client_session else 'None'}")
     except Exception as e:
         logging.error(f"❌ Ошибка получения сессии Client API: {e}")
-        await callback_query.message.answer("{{ errorMsg }}")
+        await callback_query.message.answer(_error_msg)
         return
 
     if not client_session:
@@ -54,7 +56,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
 {%- endif %}
     except Exception as e:
         logging.error(f"❌ Ошибка получения списка пользователей: {e}")
-        await callback_query.message.answer("{{ errorMsg }}")
+        await callback_query.message.answer(_error_msg)
         return
 
     recipients = list(set(recipients))
@@ -224,7 +226,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
     finally:
         await app.disconnect()
 
-    report = f"{{ successMsg }}\n👤 Метод: Client API (Userbot)\n✅ Успешно: {success_count}\n⚠️ Ошибок: {error_count}\n🚫 Заблокировано: {blocked_count}"
+    report = f"{_success_msg}\n👤 Метод: Client API (Userbot)\n✅ Успешно: {success_count}\n⚠️ Ошибок: {error_count}\n🚫 Заблокировано: {blocked_count}"
     logging.info(report)
     await callback_query.message.answer(report)
 # @@NODE_END:{{ nodeId }}@@
