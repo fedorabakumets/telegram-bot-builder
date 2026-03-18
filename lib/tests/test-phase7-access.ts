@@ -10,7 +10,7 @@
 
 import fs from 'fs';
 import { execSync } from 'child_process';
-import { generatePythonCode } from '../lib/bot-generator.ts';
+import { generatePythonCode } from '../bot-generator.ts';
 
 // ─── Константы ───────────────────────────────────────────────────────────────
 

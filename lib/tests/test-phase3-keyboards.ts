@@ -14,7 +14,7 @@
 
 import fs from 'fs';
 import { execSync } from 'child_process';
-import { generatePythonCode } from '../lib/bot-generator.ts';
+import { generatePythonCode } from '../bot-generator.ts';
 
 const PROJECT_PATH = 'bots/импортированный_проект_1723_60_53/project.json';
 const BASE = JSON.parse(fs.readFileSync(PROJECT_PATH, 'utf-8'));

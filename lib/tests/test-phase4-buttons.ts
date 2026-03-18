@@ -14,7 +14,7 @@
 
 import fs from 'fs';
 import { execSync } from 'child_process';
-import { generatePythonCode } from '../lib/bot-generator.ts';
+import { generatePythonCode } from '../bot-generator.ts';
 
 // ─── Константы ───────────────────────────────────────────────────────────────
 
@@ -170,10 +170,14 @@ test('A06', 'action:goto → текст кнопки с обратным сле�
 // ════════════════════════════════════════════════════════════════════════════
 
 test('B01', 'action:url → InlineKeyboardButton с url=', () => {
-  const code = gen(patchStart({
+  // Патчим оба узла чтобы убрать goto-кнопки из message-узла
+  const p = clone(BASE);
+  Object.assign(p.sheets[0].nodes[0].data, {
     keyboardType: 'inline',
     buttons: [makeBtn({ action: 'url', target: 'https://example.com', text: 'Сайт' })],
-  }), 'b01');
+  });
+  Object.assign(p.sheets[0].nodes[1].data, { keyboardType: 'none', buttons: [] });
+  const code = gen(p, 'b01');
   syntax(code, 'b01');
   ok(code.includes('url='), 'url= должен быть в кнопке');
   ok(code.includes('https://example.com'), 'URL должен быть в коде');

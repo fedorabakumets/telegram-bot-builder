@@ -1,0 +1,948 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║       Фаза 1 — Текст и форматирование (35 тестов)           ║
+╚══════════════════════════════════════════════════════════════╝
+
+  ✅ 01. Обычный текст — базовый случай
+  ✅ 02. Пустой messageText = ""
+  ✅ 03. Отсутствующий messageText (поле удалено)
+  ✅ 04. Очень длинный текст (5000 символов)
+  ✅ 05. Текст с двойными кавычками → экранирование
+  ✅ 06. Текст с одинарными кавычками → не ломает Python
+  ✅ 07. Текст с обратным слешем → экранирование
+  ✅ 08. Текст с переносами строк \n
+  ✅ 09. Текст с табуляцией \t
+  ✅ 10. Текст с управляющими символами (\r)
+  ✅ 11. Текст только из пробелов
+  ✅ 12. Текст с Unicode (эмодзи + CJK + арабский)
+  ✅ 13. Текст с переменной {user_name} → replace_variables_in_text
+  ✅ 14. Текст с несколькими переменными {var1} и {var2}
+  ✅ 15. formatMode: "none" → нет parse_mode
+  ✅ 16. formatMode: "html" → parse_mode="HTML"
+  ✅ 17. formatMode: "html" + все HTML-теги
+  ✅ 18. formatMode: "html" + незакрытый тег — генерация не падает
+  ✅ 19. formatMode: "html" + спецсимволы < > & в тексте
+  ✅ 20. formatMode: "markdown" → parse_mode="Markdown"
+  ✅ 21. formatMode: "markdown" + все MD-конструкции
+  ✅ 22. markdown:true + formatMode:"none" → legacy fallback → parse_mode="Markdown"
+  ✅ 23. markdown:false + formatMode:"none" → нет parse_mode
+  ✅ 24. markdown:true + formatMode:"html" → formatMode побеждает → parse_mode="HTML"
+  ✅ 25. disableNotification:true на start-узле — генерация не падает
+  ✅ 26. disableNotification:false → нет disable_notification=True
+  ✅ 27. Узел type="message" + formatMode:"html" → parse_mode="HTML"
+  ✅ 28. Два узла с разными formatMode — каждый независим
+  ✅ 29. Текст с Python-ключевыми словами (if, def, class, import)
+  ✅ 30. Текст с SQL-инъекцией — безопасная вставка
+  ✅ 31. Текст с HTML-инъекцией при formatMode:"none" — не интерпретируется
+  ✅ 32. Текст с тройными кавычками """ — не ломает Python
+  ✅ 33. Текст с Windows line endings \r\n
+  ✅ 34. messageText только из цифр
+  ✅ 35. messageText только из спецсимволов !@#$%^&*()
+
+╔══════════════════════════════════════════════════════════════╗
+║  Итог: 35/35 пройдено  |  Провалено: 0                                   ║
+╚══════════════════════════════════════════════════════════════╝
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase1-text-formatting.ts (6426.7436ms)
+
+╔══════════════════════════════════════════════════════════════╗
+║         Фаза 10 — Рассылка (broadcast)                      ║
+╚══════════════════════════════════════════════════════════════╝
+
+── Блок A: Bot API — idSourceType ────────────────────────────────
+  ✅ A01. idSourceType: bot_users → SELECT FROM bot_users
+  ✅ A02. idSourceType: user_ids → SELECT FROM user_ids
+  ✅ A03. idSourceType: both → оба SELECT
+  ✅ A04. idSourceType не задан → дефолт bot_users
+── Блок B: Bot API — текст broadcastNodes ────────────────────────
+  ✅ B01. один узел с текстом → текст в broadcast_nodes
+  ✅ B02. текст с переменной {user_name} → replace_variables_in_text
+  ✅ B03. текст с HTML-тегами + formatMode: html → "html" в broadcast_nodes
+  ✅ B04. текст с кириллицей и эмодзи → синтаксис не ломается
+  ✅ B05. текст с двойными кавычками → синтаксис не ломается
+  ✅ B06. текст с одинарными кавычками → синтаксис не ломается
+  ✅ B07. текст с обратным слешем → синтаксис не ломается
+  ✅ B08. пустой текст в узле → узел присутствует в broadcast_nodes
+  ✅ B09. несколько узлов → все в broadcast_nodes
+── Блок C: Bot API — медиа в broadcastNodes ──────────────────────
+  ✅ C01. imageUrl → "imageUrl" в broadcast_nodes
+  ✅ C02. videoUrl → "videoUrl" в broadcast_nodes
+  ✅ C03. audioUrl → "audioUrl" в broadcast_nodes
+  ✅ C04. documentUrl → "documentUrl" в broadcast_nodes
+  ✅ C05. все медиа одновременно → все поля в broadcast_nodes
+  ✅ C06. медиа пустые → пустые строки в broadcast_nodes
+── Блок D: Bot API — attachedMedia в broadcastNodes ──────────────
+  ✅ D01. attachedMedia: [imageUrlVar] → "attachedMedia": ["imageUrlVar"] в broadcast_nodes
+  ✅ D02. attachedMedia: [videoUrlVar, audioUrlVar] → оба в broadcast_nodes
+  ✅ D03. attachedMedia: [] → "attachedMedia": [] в broadcast_nodes
+── Блок E: Bot API — autoTransitionTo ────────────────────────────
+  ✅ E01. один узел с autoTransitionTo: msg_b → "autoTransitionTo": "msg_b" в broadcast_nodes
+  ✅ E02. цепочка A→B→C (три узла) → все три в broadcast_nodes
+  ✅ E03. autoTransitionTo: "" → пустая строка в broadcast_nodes
+── Блок F: Bot API — successMessage / errorMessage ───────────────
+  ✅ F01. successMessage: "Готово!" → "Готово!" в коде
+  ✅ F02. errorMessage: "Упс!" → "Упс!" в коде
+  ✅ F03. оба не заданы → дефолтные сообщения
+  ✅ F04. successMessage со спецсимволами Python → синтаксис не ломается
+── Блок G: Bot API — пустой broadcastNodes ───────────────────────
+  ✅ G01. нет message-узлов → broadcast_nodes = []
+  ✅ G02. message-узлы без enableBroadcast → broadcast_nodes = []
+── Блок H: collectBroadcastNodes ─────────────────────────────────
+  ✅ H01. message с enableBroadcast: true → попадает в broadcast_nodes
+  ✅ H02. message с enableBroadcast: false → НЕ попадает в broadcast_nodes
+  ✅ H03. message без enableBroadcast → НЕ попадает в broadcast_nodes
+  ✅ H04. broadcastTargetNode: "broadcast_test" → попадает (совпадает с nodeId)
+  ✅ H05. broadcastTargetNode: "other_broadcast" → НЕ попадает (не совпадает)
+  ✅ H06. broadcastTargetNode: "all" → попадает
+  ✅ H07. цепочка autoTransitionTo — target-узел без enableBroadcast разворачивается
+  ✅ H08. несколько message-узлов с enableBroadcast → все попадают
+── Блок I: Client API — базовые случаи ───────────────────────────
+  ✅ I01. broadcastApiType: client → TelegramClient в коде
+  ✅ I02. broadcastApiType: client → StringSession в коде
+  ✅ I03. broadcastApiType: client → app.send_message (не bot.send_message)
+  ✅ I04. broadcastApiType: client + idSourceType: user_ids → SELECT FROM user_ids
+  ✅ I05. broadcastApiType: client + idSourceType: both → оба SELECT
+  ✅ I06. broadcastApiType: bot → bot.send_message (не app.send_message)
+  ✅ I07. Client API → app.disconnect() в коде (finally блок)
+  ✅ I08. Client API → проверка сессии user_telegram_settings
+── Блок J: Client API — медиа и autoTransitionTo ─────────────────
+  ✅ J01. Client API + imageUrl → app.send_file в коде
+  ✅ J02. Client API + autoTransitionTo → autoTransitionTo в broadcast_nodes
+  ✅ J03. Client API + attachedMedia → attachedMedia в broadcast_nodes
+  ✅ J04. Client API → PEER_ID_INVALID в коде (обработка блокировки)
+── Блок K: Комбинации ────────────────────────────────────────────
+  ✅ K01. два broadcast-узла в одном проекте (bot + client) → оба обработчика в коде
+  ✅ K02. broadcast + start + message + command → все обработчики, синтаксис OK
+  ✅ K03. broadcast с 5 broadcastNodes → все 5 в broadcast_nodes
+  ✅ K04. broadcast + enableBroadcast message с imageUrl → imageUrl в broadcast_nodes
+── Блок L: Граничные случаи ──────────────────────────────────────
+  ✅ L01. nodeId с дефисами "broadcast-node-1" → safe_name применяется, синтаксис OK
+  ✅ L02. nodeId с цифрами в начале "1broadcast" → синтаксис OK
+  ✅ L03. очень длинный текст (2000 символов) в broadcastNode → синтаксис OK
+  ✅ L04. текст с \n переносами → синтаксис OK
+  ✅ L05. successMessage с кириллицей → синтаксис OK
+  ✅ L06. broadcastNode с formatMode: markdown → "markdown" в broadcast_nodes
+  ✅ L07. broadcastNode с formatMode: html → "html" в broadcast_nodes
+  ✅ L08. userDatabaseEnabled: true + broadcast → синтаксис OK
+
+╔══════════════════════════════════════════════════════════════╗
+║  Итого: 63/63 пройдено, 0 провалено                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase10-broadcast.ts (12354.4845ms)
+
+╔══════════════════════════════════════════════════════════════╗
+║   Фаза 11 — Действия с пользователями и сообщениями         ║
+╚══════════════════════════════════════════════════════════════╝
+
+── Блок A: ban_user ──────────────────────────────────────────────
+  ✅ A01. ban_user: базовый → ban_chat_member в коде, синтаксис OK
+  ✅ A02. ban_user: reason="Спам" → причина в коде
+  ✅ A03. ban_user: reason не задан → дефолтная причина "Нарушение правил группы"
+  ✅ A04. ban_user: untilDate=0 → бан навсегда (заблокирован навсегда)
+  ✅ A05. ban_user: untilDate=1735689600 → временный бан (число в коде)
+  ✅ A06. ban_user: synonyms=["бан","блок"] → синонимы в обработчике
+  ✅ A07. ban_user: synonyms=[] → дефолтные синонимы (забанить)
+  ✅ A08. ban_user: targetGroupId="-1001234567890" → ID группы в условии
+  ✅ A09. ban_user: targetGroupId="" → условие message.chat.type in [group, supergroup]
+  ✅ A10. ban_user: nodeId с дефисами → safe_name применяется, синтаксис OK
+── Блок B: unban_user ────────────────────────────────────────────
+  ✅ B01. unban_user: базовый → unban_chat_member в коде, синтаксис OK
+  ✅ B02. unban_user: only_if_banned=True в коде
+  ✅ B03. unban_user: synonyms=["разбан"] → синоним в обработчике
+  ✅ B04. unban_user: synonyms=[] → дефолтные синонимы (разбанить)
+  ✅ B05. unban_user: targetGroupId задан → ID группы в коде
+── Блок C: kick_user ─────────────────────────────────────────────
+  ✅ C01. kick_user: базовый → ban_chat_member + unban_chat_member, синтаксис OK
+  ✅ C02. kick_user: reason="Флуд" → причина в коде
+  ✅ C03. kick_user: reason не задан → дефолтная причина
+  ✅ C04. kick_user: synonyms=["кик","выгнать"] → синонимы в обработчике
+  ✅ C05. kick_user: revoke_messages=False в коде
+── Блок D: mute_user ─────────────────────────────────────────────
+  ✅ D01. mute_user: базовый → restrict_chat_member в коде, синтаксис OK
+  ✅ D02. mute_user: duration=3600 → 3600 в коде
+  ✅ D03. mute_user: duration=86400 → 86400 в коде (24 часа)
+  ✅ D04. mute_user: duration не задан → дефолт 3600
+  ✅ D05. mute_user: reason="Оффтоп" → причина в коде
+  ✅ D06. mute_user: все canSend*=false → все False в ChatPermissions
+  ✅ D07. mute_user: canSendMessages=true → can_send_messages=True
+  ✅ D08. mute_user: canSendMediaMessages=true → can_send_media_messages=True
+  ✅ D09. mute_user: canSendPolls=true → can_send_polls=True
+  ✅ D10. mute_user: canSendOtherMessages=true → can_send_other_messages=True
+  ✅ D11. mute_user: canAddWebPagePreviews=true → can_add_web_page_previews=True
+  ✅ D12. mute_user: canChangeGroupInfo=true → can_change_info=True
+  ✅ D13. mute_user: canInviteUsers2=true → can_invite_users=True
+  ✅ D14. mute_user: canPinMessages2=true → can_pin_messages=True
+  ✅ D15. mute_user: все canSend*=true → все True в ChatPermissions, синтаксис OK
+── Блок E: unmute_user ───────────────────────────────────────────
+  ✅ E01. unmute_user: базовый → restrict_chat_member с can_send_messages=True, синтаксис OK
+  ✅ E02. unmute_user: все права восстановлены → can_send_messages=True, can_send_media_messages=True и т.д.
+  ✅ E03. unmute_user: synonyms=["размут"] → синоним в обработчике
+  ✅ E04. unmute_user: synonyms=[] → дефолтные синонимы (размутить)
+── Блок F: promote_user ──────────────────────────────────────────
+  ✅ F01. promote_user: базовый → promote_chat_member в коде, синтаксис OK
+  ✅ F02. promote_user: canChangeInfo=true → can_change_info=True
+  ✅ F03. promote_user: canDeleteMessages=true → can_delete_messages=True
+  ✅ F04. promote_user: canInviteUsers=true → can_invite_users=True
+  ✅ F05. promote_user: canRestrictMembers=true → can_restrict_members=True
+  ✅ F06. promote_user: canPinMessages=true → can_pin_messages=True
+  ✅ F07. promote_user: canPromoteMembers=true → can_promote_members=True
+  ✅ F08. promote_user: canManageVideoChats=true → can_manage_video_chats=True
+  ✅ F09. promote_user: canManageTopics=true → can_manage_topics=True
+  ✅ F10. promote_user: isAnonymous=true → is_anonymous=True
+  ✅ F11. promote_user: все права false → все False, синтаксис OK
+  ✅ F12. promote_user: все права true → все True, синтаксис OK
+  ✅ F13. promote_user: synonyms=[] → дефолтные синонимы (повысить)
+── Блок G: demote_user ───────────────────────────────────────────
+  ✅ G01. demote_user: базовый → promote_chat_member с всеми False, синтаксис OK
+  ✅ G02. demote_user: все права явно False в коде
+  ✅ G03. demote_user: synonyms=["снять"] → синоним в обработчике
+  ✅ G04. demote_user: synonyms=[] → дефолтные синонимы (понизить)
+── Блок H: pin_message ───────────────────────────────────────────
+  ✅ H01. pin_message: базовый → pin_chat_message в коде, синтаксис OK
+  ✅ H02. pin_message: disableNotification=true → disable_notification=True
+  ✅ H03. pin_message: disableNotification=false → disable_notification=False
+  ✅ H04. pin_message: messageText="Закреплено!" → текст в коде
+  ✅ H05. pin_message: messageText не задан → дефолт "✅ Сообщение закреплено"
+  ✅ H06. pin_message: synonyms=["закрепи","прикрепи"] → синонимы в обработчике
+  ✅ H07. pin_message: synonyms=[] → дефолтные синонимы (закрепить)
+  ✅ H08. pin_message: targetGroupId="-1001234567890" → ID группы в условии
+  ✅ H09. pin_message: targetGroupId="" → условие по типу чата
+  ✅ H10. pin_message: nodeId с дефисами → синтаксис OK
+── Блок I: unpin_message ─────────────────────────────────────────
+  ✅ I01. unpin_message: базовый → unpin_all_chat_messages или unpin_chat_message, синтаксис OK
+  ✅ I02. unpin_message: messageText="Откреплено!" → текст в коде
+  ✅ I03. unpin_message: messageText не задан → дефолт "✅ Сообщение откреплено"
+  ✅ I04. unpin_message: synonyms=["открепи"] → синоним в обработчике
+  ✅ I05. unpin_message: synonyms=[] → дефолтные синонимы (открепить)
+── Блок J: delete_message ────────────────────────────────────────
+  ✅ J01. delete_message: базовый → delete_message в коде, синтаксис OK
+  ✅ J02. delete_message: messageText="Удалено!" → текст в коде
+  ✅ J03. delete_message: messageText не задан → дефолт "🗑️ Сообщение успешно удалено!"
+  ✅ J04. delete_message: synonyms=["удали","стёрт"] → синонимы в обработчике
+  ✅ J05. delete_message: synonyms=[] → дефолтные синонимы (удалить)
+  ✅ J06. delete_message: nodeId с дефисами → синтаксис OK
+── Блок K: contact ───────────────────────────────────────────────
+  ✅ K01. contact: базовый → answer_contact в коде, синтаксис OK
+  ✅ K02. contact: phoneNumber="+79991234567" → номер в коде
+  ✅ K03. contact: firstName="Иван" → имя в коде
+  ✅ K04. contact: lastName="Иванов" → фамилия в коде
+  ✅ K05. contact: lastName не задан → нет last_name в коде
+  ✅ K06. contact: userId=123456 → user_id в коде
+  ✅ K07. contact: userId=0 → нет user_id в коде
+  ✅ K08. contact: vcard="BEGIN:VCARD..." → vcard в коде
+  ✅ K09. contact: vcard не задан → нет vcard в коде
+  ✅ K10. contact: command="/contact" → Command("contact") в коде
+  ✅ K11. contact: isPrivateOnly=true → is_private_chat проверка
+  ✅ K12. contact: adminOnly=true → is_admin проверка
+  ✅ K13. contact: keyboardType="inline" + кнопки → InlineKeyboardBuilder в коде
+  ✅ K14. contact: phoneNumber со спецсимволами → синтаксис OK
+── Блок L: location ──────────────────────────────────────────────
+  ✅ L01. location: базовый → answer_location или answer_venue в коде, синтаксис OK
+  ✅ L02. location: latitude=55.7558, longitude=37.6176 → координаты в коде
+  ✅ L03. location: title="Офис" + address="ул. Ленина 1" → answer_venue в коде
+  ✅ L04. location: title не задан → answer_location (без venue)
+  ✅ L05. location: mapService="yandex" + yandexMapUrl → extract_coordinates_from_yandex в коде
+  ✅ L06. location: mapService="google" + googleMapUrl → extract_coordinates_from_google
+  ✅ L07. location: mapService="2gis" + gisMapUrl → extract_coordinates_from_2gis
+  ✅ L08. location: mapService="custom" → прямые координаты без extract
+  ✅ L09. location: generateMapPreview=true → InlineKeyboardBuilder с картами в коде
+  ✅ L10. location: generateMapPreview=false → нет карт-кнопок
+  ✅ L11. location: showDirections=true → кнопки маршрута в коде (Маршрут)
+  ✅ L12. location: showDirections=false → нет кнопок маршрута
+  ✅ L13. location: foursquareId="abc123" → foursquare_id в коде
+  ✅ L14. location: command="/location" → Command("location") в коде
+  ✅ L15. location: isPrivateOnly=true → is_private_chat проверка
+── Блок M: Комбинации ────────────────────────────────────────────
+  ✅ M01. ban + unban + kick в одном проекте → все три обработчика, синтаксис OK
+  ✅ M02. mute + unmute в одном проекте → оба обработчика, синтаксис OK
+  ✅ M03. promote + demote в одном проекте → оба обработчика, синтаксис OK
+  ✅ M04. pin + unpin + delete в одном проекте → все три обработчика, синтаксис OK
+  ✅ M05. contact + location в одном проекте → оба обработчика, синтаксис OK
+  ✅ M06. все типы узлов вместе → синтаксис OK
+  ✅ M07. ban_user + userDatabaseEnabled=true → синтаксис OK
+  ✅ M08. location с yandex + showDirections + generateMapPreview → синтаксис OK
+── Блок N: Граничные случаи ──────────────────────────────────────
+  ✅ N01. ban_user: очень длинный reason (500 символов) → синтаксис OK
+  ✅ N02. ban_user: reason с кавычками → синтаксис OK
+  ✅ N03. mute_user: duration=1 (1 секунда) → синтаксис OK
+  ✅ N04. mute_user: duration=2592000 (30 дней) → синтаксис OK
+  ✅ N05. promote_user: nodeId со спецсимволами → синтаксис OK
+  ✅ N06. pin_message: messageText с кириллицей и эмодзи → синтаксис OK
+  ✅ N07. contact: phoneNumber со скобками и дефисами → синтаксис OK
+  ✅ N08. location: координаты 0,0 → синтаксис OK
+  ✅ N09. location: отрицательные координаты (-33.8688, 151.2093) → синтаксис OK
+  ✅ N10. все user-handler типы с пустыми synonyms → дефолтные синонимы, синтаксис OK
+
+╔══════════════════════════════════════════════════════════════╗
+║  Итого: 124/124 пройдено ✅                                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase11-user-message-actions.ts (20522.5102ms)
+
+╔══════════════════════════════════════════════════════════════╗
+║         Фаза 13 — База данных (70+ тестов)                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+── Блок A: Базовые функции БД ────────────────────────────────────
+  ✅ A01. userDatabaseEnabled: false → НЕТ init_database
+  ✅ A02. userDatabaseEnabled: true → ЕСТЬ init_database
+  ✅ A03. userDatabaseEnabled: true → ЕСТЬ save_user_to_db
+  ✅ A04. userDatabaseEnabled: true → ЕСТЬ get_user_from_db
+  ✅ A05. userDatabaseEnabled: true → ЕСТЬ update_user_data_in_db
+  ✅ A06. userDatabaseEnabled: true → ЕСТЬ CREATE TABLE IF NOT EXISTS bot_users
+  ✅ A07. userDatabaseEnabled: true → ЕСТЬ CREATE TABLE IF NOT EXISTS bot_messages
+  ✅ A08. userDatabaseEnabled: true → ЕСТЬ asyncpg.create_pool
+  ✅ A09. userDatabaseEnabled: true → синтаксис Python OK
+  ✅ A10. userDatabaseEnabled: false → синтаксис Python OK
+── Блок B: hasMessageLogging ─────────────────────────────────────
+  ✅ B01. только start-узел → НЕТ log_message
+  ✅ B02. start + message-узел → ЕСТЬ log_message
+  ✅ B03. start + command-узел → ЕСТЬ log_message
+  ✅ B04. start + message + command → ЕСТЬ log_message (один раз)
+  ✅ B05. ЕСТЬ get_moscow_time при наличии message-узла
+  ✅ B06. НЕТ get_moscow_time при только start-узле
+── Блок C: hasUserIdsTable ───────────────────────────────────────
+  ✅ C01. кнопки с action: goto → ЕСТЬ get_user_ids_from_db
+  ✅ C02. кнопки с action: url → НЕТ get_user_ids_from_db
+  ✅ C03. нет кнопок → НЕТ get_user_ids_from_db
+  ✅ C04. смешанные кнопки (goto + url) → ЕСТЬ get_user_ids_from_db
+  ✅ C05. get_user_ids_from_db → ЕСТЬ SELECT user_id FROM user_ids
+── Блок D: hasUserDataAccess ─────────────────────────────────────
+  ✅ D01. collectUserInput: true → ЕСТЬ get_user_data_from_db
+  ✅ D02. collectUserInput: true → ЕСТЬ update_user_variable_in_db
+  ✅ D03. collectUserInput: true → ЕСТЬ save_user_data_to_db
+  ✅ D04. enableConditionalMessages: true → ЕСТЬ get_user_data_from_db
+  ✅ D05. saveToDatabase: true → ЕСТЬ get_user_data_from_db
+  ✅ D06. ни одного флага → НЕТ get_user_data_from_db
+  ✅ D07. ни одного флага → НЕТ update_user_variable_in_db
+── Блок E: hasTelegramSettingsTable ──────────────────────────────
+  ✅ E01. collectUserInput + inputVariable='tg_phone' → ЕСТЬ user_telegram_settings
+  ✅ E02. collectUserInput + inputVariable='tg_api_id' → ЕСТЬ user_telegram_settings
+  ✅ E03. collectUserInput + inputVariable='tg_api_hash' → ЕСТЬ user_telegram_settings
+  ✅ E04. collectUserInput + inputVariable='tg_session' → ЕСТЬ user_telegram_settings
+  ✅ E05. collectUserInput + inputVariable='tg_is_active' → ЕСТЬ user_telegram_settings
+  ✅ E06. collectUserInput + inputVariable='user_name' → НЕТ user_telegram_settings
+  ✅ E07. collectUserInput: false + inputVariable='tg_phone' → НЕТ user_telegram_settings
+── Блок F: Алиасы команд ─────────────────────────────────────────
+  ✅ F01. start-узел → ЕСТЬ handle_command_start алиас
+  ✅ F02. command-узел /help → ЕСТЬ handle_command_help алиас
+  ✅ F03. command-узел /my_profile → ЕСТЬ handle_command_my_profile алиас
+  ✅ F04. нет command-узлов → НЕТ handle_command_help (только start)
+  ✅ F05. несколько command-узлов → все алиасы присутствуют
+  ✅ F06. userDatabaseEnabled: false → НЕТ алиасов handle_command_
+── Блок G: update_user_data_in_db в обработчиках ─────────────────
+  ✅ G01. start + imageUrl + DB → update_user_data_in_db вызывается
+  ✅ G02. start + videoUrl + DB → update_user_data_in_db вызывается
+  ✅ G03. start + audioUrl + DB → update_user_data_in_db вызывается
+  ✅ G04. start + documentUrl + DB → update_user_data_in_db вызывается
+  ✅ G05. message + imageUrl + DB → update_user_data_in_db вызывается
+  ✅ G06. start + imageUrl + NO DB → НЕТ update_user_data_in_db вызова
+  ✅ G07. start + collectUserInput + inputVariable='answer' + DB → update_user_data_in_db вызывается
+── Блок H: save_user_to_db в обработчиках ────────────────────────
+  ✅ H01. start + DB → save_user_to_db вызывается в start_handler
+  ✅ H02. message + DB → save_user_to_db вызывается в message-обработчике
+  ✅ H03. command + DB → save_user_to_db вызывается в command-обработчике
+  ✅ H04. start + NO DB → НЕТ save_user_to_db вызова
+── Блок I: Комбинации флагов ─────────────────────────────────────
+  ✅ I01. start + message + command + goto + collectUserInput + DB → все функции
+  ✅ I02. только start + DB → минимальный набор
+  ✅ I03. start + message + goto-кнопки + DB → ЕСТЬ log_message + get_user_ids_from_db
+  ✅ I04. start + collectUserInput + tg_phone + DB → ЕСТЬ user_telegram_settings + get_user_data_from_db
+  ✅ I05. полный проект (все типы узлов) + DB → синтаксис OK
+── Блок J: Граничные случаи ──────────────────────────────────────
+  ✅ J01. userDatabaseEnabled: true + пустой messageText → синтаксис OK
+  ✅ J02. userDatabaseEnabled: true + очень длинный messageText (3000 символов) → синтаксис OK
+  ✅ J03. userDatabaseEnabled: true + messageText с кириллицей и эмодзи → синтаксис OK
+  ✅ J04. userDatabaseEnabled: true + messageText с двойными кавычками → синтаксис OK
+  ✅ J05. userDatabaseEnabled: true + messageText с одинарными кавычками → синтаксис OK
+  ✅ J06. несколько command-узлов с разными командами → все алиасы, синтаксис OK
+  ✅ J07. userDatabaseEnabled: true + broadcast-узел → синтаксис OK
+  ✅ J08. userDatabaseEnabled: true + multiselect (allowMultipleSelection) → синтаксис OK
+
+╔══════════════════════════════════════════════════════════════╗
+║  Итого: 65/65 пройдено ✅                                     ║
+╚══════════════════════════════════════════════════════════════╝
+
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase13-database.ts (5877.9942ms)
+
+=== Фаза 2: Команды и меню ===
+
+  ✅ 6. command = /my_cmd_123
+  ✅ 7a. synonyms = []
+  ✅ 7b. synonyms = ["старт", "начало", "go"]
+  ✅ 7c. synonyms с пробелом ["  старт  "]
+  ✅ 8. showInMenu=true + description → BotCommand в коде
+  ✅ 9. showInMenu=false → нет в set_my_commands
+  ✅ 10. adminOnly=true → проверка прав в коде
+  ✅ 11. requiresAuth=true → проверка авторизации
+  ✅ 12. isPrivateOnly=true → проверка private chat
+
+─── Итог ───────────────────────────────────────────────────────
+Пройдено: 9/9  |  Провалено: 0
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase2-commands.ts (2793.2226ms)
+
+╔══════════════════════════════════════════════════════════════╗
+║         Фаза 3 — Клавиатуры                                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+── Блок A: keyboardType ──────────────────────────────────────
+  ✅ A01. keyboardType:none → нет клавиатуры в коде
+  ✅ A02. keyboardType:inline → InlineKeyboardBuilder в коде
+  ✅ A03. keyboardType:reply → ReplyKeyboardBuilder в коде
+  ✅ A04. keyboardType:none → синтаксис Python OK
+  ✅ A05. keyboardType:inline → синтаксис Python OK
+  ✅ A06. keyboardType:reply → синтаксис Python OK
+
+── Блок B: Inline-кнопки ─────────────────────────────────────
+  ✅ B01. Одна кнопка goto → callback_data в коде
+  ✅ B02. Несколько кнопок goto → все callback_data в коде
+  ✅ B03. Кнопка action:url → url= в коде
+  ✅ B04. Смешанные кнопки (goto + url) → оба типа в коде
+  ✅ B05. Кнопка с пустым текстом → синтаксис OK
+  ✅ B06. Кнопка с текстом содержащим кавычки → синтаксис OK
+  ✅ B07. Кнопка с текстом содержащим эмодзи → синтаксис OK
+
+── Блок C: Reply-клавиатура ──────────────────────────────────
+  ✅ C01. keyboardType:reply + кнопки → ReplyKeyboardMarkup/Builder в коде
+  ✅ C02. oneTimeKeyboard:true → one_time_keyboard=True в коде
+  ✅ C03. oneTimeKeyboard:false → one_time_keyboard=False в коде
+  ✅ C04. resizeKeyboard:true → resize_keyboard=True в коде
+  ✅ C05. resizeKeyboard:false → resize_keyboard=False в коде
+  ✅ C06. Reply-клавиатура → синтаксис Python OK
+
+── Блок D: keyboardLayout ────────────────────────────────────
+  ✅ D01. keyboardLayout columns:1 → кнопки по 1 в ряд (adjust(1))
+  ✅ D02. keyboardLayout columns:2 → кнопки по 2 в ряд (adjust(2))
+  ✅ D03. keyboardLayout columns:3 → кнопки по 3 в ряд (adjust(3))
+  ✅ D04. autoLayout:true + columns:2 → builder.adjust(2)
+  ✅ D05. keyboardLayout → синтаксис Python OK для каждого варианта
+
+── Блок E: hideAfterClick ────────────────────────────────────
+  ✅ E01. hideAfterClick:true → клавиатура скрывается (edit_reply_markup или one_time_keyboard)
+  ✅ E02. hideAfterClick:false → клавиатура не скрывается
+  ✅ E03. hideAfterClick:true → синтаксис Python OK
+  ✅ E04. hideAfterClick:false → синтаксис Python OK
+  ✅ E05. Reply + hideAfterClick:true → синтаксис OK
+
+── Блок F: skipDataCollection ────────────────────────────────
+  ✅ F01. skipDataCollection:true → флаг передаётся в skip_buttons при collectUserInput
+  ✅ F02. skipDataCollection:false → данные собираются (нет флага пропуска)
+  ✅ F03. skipDataCollection:true → синтаксис Python OK
+  ✅ F04. skipDataCollection:false → синтаксис Python OK
+
+── Блок G: Комбинации ────────────────────────────────────────
+  ✅ G01. inline + несколько кнопок + layout → синтаксис OK
+  ✅ G02. reply + oneTimeKeyboard + resizeKeyboard → синтаксис OK
+  ✅ G03. Узел с кнопками + userDatabaseEnabled:true → синтаксис OK
+  ✅ G04. inline + goto + url + layout + userDb → синтаксис OK
+  ✅ G05. reply + oneTimeKeyboard:false + resizeKeyboard:false → синтаксис OK
+
+── Блок H: Граничные случаи ──────────────────────────────────
+  ✅ H01. Пустой массив кнопок + keyboardType:inline → нет InlineKeyboardBuilder
+  ✅ H02. Очень много кнопок (12 штук) → синтаксис OK
+  ✅ H03. Кнопка с очень длинным текстом → синтаксис OK
+  ✅ H04. Кнопка с текстом содержащим \n → синтаксис OK
+  ✅ H05. Кнопка с одинарными кавычками в тексте → синтаксис OK
+  ✅ H06. Кнопка с обратным слешем в тексте → синтаксис OK
+  ✅ H07. Кнопка с кириллицей и спецсимволами → синтаксис OK
+  ✅ H08. Пустой массив кнопок + keyboardType:reply → keyboard = None
+  ✅ H09. keyboardType:none + пустые кнопки → keyboard = None
+  ✅ H10. 12 reply-кнопок → синтаксис OK
+  ✅ H11. Кнопка с текстом из только эмодзи → синтаксис OK
+  ✅ H12. Кнопка url с полем url (не target) → url= в коде
+
+╔══════════════════════════════════════════════════════════════╗
+║  Итог: 50/50 пройдено  |  Провалено: 0                                     ║
+╚══════════════════════════════════════════════════════════════╝
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase3-keyboards.ts (9404.7789ms)
+
+╔══════════════════════════════════════════════════════════════╗
+║         Фаза 4 — Кнопки (action) (40 тестов)               ║
+╚══════════════════════════════════════════════════════════════╝
+
+  ✅ A01. action:goto inline → callback_data = target
+  ✅ A02. action:goto inline → пустой target → fallback no_action
+  ✅ A03. action:goto reply → KeyboardButton (не InlineKeyboardButton)
+  ✅ A04. action:goto → текст кнопки с эмодзи 🚀
+  ✅ A05. action:goto → текст кнопки с двойными кавычками
+  ✅ A06. action:goto → текст кнопки с обратным слешем
+  ✅ B01. action:url → InlineKeyboardButton с url=
+  ✅ B02. action:url → URL с query-параметрами
+  ✅ B03. action:url → пустой target → fallback #
+  ✅ B04. action:url → поле url (не target)
+  ✅ C01. action:command inline → callback_data с префиксом cmd_
+  ✅ C02. action:command → target без слеша
+  ✅ D01. action:contact + requestContact:true → request_contact=True
+  ✅ D02. action:location + requestLocation:true → request_location=True
+  ✅ D03. action:contact без requestContact → обычная кнопка
+  ✅ E01. hideAfterClick:true → edit_reply_markup в callback handler
+  ✅ E02. hideAfterClick:false → нет edit_reply_markup
+  ✅ E03. hideAfterClick:true на reply-кнопке → синтаксис не ломается
+  ✅ E04. Несколько кнопок: одна hideAfterClick:true, другая false
+  ✅ F01. skipDataCollection:true на inline-кнопке — синтаксис не ломается
+  ✅ F02. skipDataCollection:false → нет skipDataCollectionTransition
+  ✅ F03. skipDataCollection:true + reply keyboard
+  ✅ G01. Нет кнопок (buttons:[]) → keyboard = None
+  ✅ G02. Одна кнопка inline
+  ✅ G03. 10 кнопок inline → синтаксис корректен
+  ✅ G04. 10 кнопок reply → синтаксис корректен
+  ✅ G05. keyboardType:none с кнопками → keyboard = None
+  ✅ H01. Inline: goto + url в одной клавиатуре
+  ✅ H02. Inline: goto + url + command в одной клавиатуре
+  ✅ H03. Reply: contact + location + goto в одной клавиатуре
+  ✅ I01. Текст кнопки с переменной {user_name}
+  ✅ I02. Текст кнопки с переносом строки
+  ✅ I03. Текст кнопки только из пробелов
+  ✅ I04. Текст кнопки с HTML-тегами при formatMode:html
+  ✅ J01. buttonType:normal → стандартная кнопка
+  ✅ J02. allowMultipleSelection:true + selection + complete кнопки
+
+╔══════════════════════════════════════════════════════════════╗
+║  Итог: 36/36 пройдено  |  Провалено: 0                                     ║
+╚══════════════════════════════════════════════════════════════╝
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase4-buttons.ts (7565.5457ms)
+
+╔══════════════════════════════════════════════════════════════╗
+║         Фаза 5 — Сбор ввода (70+ тестов)                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+── Блок A: collectUserInput ──────────────────────────────────────
+  ✅ A01. collectUserInput:false → нет waiting_for_input
+  ✅ A02. collectUserInput:true → есть waiting_for_input
+  ✅ A03. collectUserInput:true без inputVariable → дефолт "input"
+  ✅ A04. collectUserInput:true + inputVariable задан явно
+── Блок B: inputType (медиа) ─────────────────────────────────────
+  ✅ B01. enableTextInput:true → modes содержит "text"
+  ✅ B02. enablePhotoInput:true + photoInputVariable → modes содержит "photo"
+  ✅ B03. enableVideoInput:true + videoInputVariable → modes содержит "video"
+  ✅ B04. enableAudioInput:true + audioInputVariable → modes содержит "audio"
+  ✅ B05. enableDocumentInput:true + documentInputVariable → modes содержит "document"
+  ✅ B06. все медиа-типы одновременно → все modes присутствуют
+  ✅ B07. все enableXInput:false → дефолт text
+── Блок C: validationType ────────────────────────────────────────
+  ✅ C01. validationType:none → "none" в коде
+  ✅ C02. validationType:email → "email" в коде
+  ✅ C03. validationType:phone → "phone" в коде
+  ✅ C04. validationType:number → "number" в коде
+  ✅ C05. validationType:email + retryMessage со спецсимволами
+  ✅ C06. validationType:number + retryMessage с обратным слешем
+── Блок D: minLength / maxLength ─────────────────────────────────
+  ✅ D01. minLength:0 maxLength:0 → без ограничений
+  ✅ D02. minLength:5 maxLength:100 → корректные значения
+  ✅ D03. minLength:1 maxLength:1 → ровно 1 символ
+  ✅ D04. minLength:255 maxLength:0 → только минимум
+  ✅ D05. minLength:0 maxLength:4096 → только максимум (лимит Telegram)
+  ✅ D06. minLength > maxLength (оба > 0) → синтаксис не ломается
+── Блок E: retryMessage / successMessage ─────────────────────────
+  ✅ E01. retryMessage пустой → дефолт
+  ✅ E02. successMessage задан → присутствует в коде
+  ✅ E03. retryMessage с переменной {user_name}
+  ✅ E04. retryMessage с переносом строки \n
+  ✅ E05. retryMessage с кавычками и апострофами
+  ✅ E06. successMessage с эмодзи и спецсимволами
+  ✅ E07. retryMessage очень длинный (500 символов)
+  ✅ E08. retryMessage с обратным слешем
+── Блок F: saveToDatabase ────────────────────────────────────────
+  ✅ F01. saveToDatabase:true → save_to_database: True в коде
+  ✅ F02. saveToDatabase:false → save_to_database: False в коде
+  ✅ F03. saveToDatabase:true + userDatabaseEnabled:true → db_pool код присутствует
+── Блок G: appendVariable ────────────────────────────────────────
+  ✅ G01. appendVariable:false → appendVariable: False в коде
+  ✅ G02. appendVariable:true → appendVariable: True в коде
+  ✅ G03. appendVariable:true + saveToDatabase:true + userDatabaseEnabled:true → append в БД
+── Блок H: inputTargetNodeId ─────────────────────────────────────
+  ✅ H01. inputTargetNodeId валидный ID → next_node_id в коде
+  ✅ H02. inputTargetNodeId пустой → next_node_id пустая строка
+  ✅ H03. inputTargetNodeId несуществующий → синтаксис не ломается
+── Блок I: skipButtons ───────────────────────────────────────────
+  ✅ I01. skipDataCollection:true на кнопке → skip_buttons в коде
+  ✅ I02. skipDataCollection:false на всех кнопках → нет skip_buttons
+  ✅ I03. несколько skipDataCollection:true кнопок
+── Блок J: Сохранение в bot_users ───────────────────────────────
+  ✅ J01. inputVariable:username → сохранение в bot_users
+  ✅ J02. inputVariable:first_name → сохранение в bot_users
+  ✅ J03. inputVariable:last_name → сохранение в bot_users
+  ✅ J04. inputVariable:user_id → сохранение в bot_users
+  ✅ J05. inputVariable:user_is_active → сохранение в bot_users
+  ✅ J06. inputVariable:user_interaction_count → сохранение в bot_users
+  ✅ J07. inputVariable:username + appendVariable:true → append в bot_users
+── Блок K: Сохранение в user_telegram_settings ───────────────────
+  ✅ K01. inputVariable:tg_phone → сохранение в user_telegram_settings
+  ✅ K02. inputVariable:tg_api_id → сохранение в user_telegram_settings
+  ✅ K03. inputVariable:tg_api_hash → сохранение в user_telegram_settings
+  ✅ K04. inputVariable:tg_session → сохранение в user_telegram_settings
+  ✅ K05. inputVariable:tg_is_active → сохранение в user_telegram_settings
+  ✅ K06. tg_phone + appendVariable:true → append в user_telegram_settings
+── Блок L: Сохранение в user_ids ─────────────────────────────────
+  ✅ L01. inputVariable:user_ids → сохранение в user_ids
+  ✅ L02. inputVariable:user_ids + appendVariable:true → append в user_ids
+  ✅ L03. inputVariable:user_ids_count → сохранение в user_ids
+── Блок M: Комбинации ────────────────────────────────────────────
+  ✅ M01. photo+text одновременно + сохранение в bot_users
+  ✅ M02. validationType:email + appendVariable:true + saveToDatabase:true
+  ✅ M03. tg_phone + validationType:phone + minLength:10 + maxLength:15
+  ✅ M04. все медиа + tg_api_hash + appendVariable:false
+  ✅ M05. user_ids + appendVariable:true + validationType:number
+  ✅ M06. skipButton + saveToDatabase:true + tg_phone
+  ✅ M07. successMessage + retryMessage + validationType:number + minLength:1 + maxLength:10
+── Блок N: Граничные случаи ──────────────────────────────────────
+  ✅ N01. inputVariable с подчёркиваниями и цифрами
+  ✅ N02. inputVariable очень длинное имя (50 символов)
+  ✅ N03. retryMessage с Unicode (китайские символы)
+  ✅ N04. retryMessage с HTML-тегами
+  ✅ N05. successMessage с URL
+  ✅ N06. collectUserInput:true + нет кнопок + нет inputTargetNodeId
+  ✅ N07. collectUserInput:true + saveToDatabase:false + userDatabaseEnabled:true
+  ✅ N08. inputVariable с кириллицей → безопасное имя в safeName
+  ✅ N09. два узла с collectUserInput:true → оба waiting_for_input
+  ✅ N10. retryMessage с нулевым символом и спецсимволами Python
+
+╔══════════════════════════════════════════════════════════════╗
+║  Итого: 76/76 пройдено, 0 провалено                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+✅ Все тесты пройдены!
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase5-user-input.ts (17294.106ms)
+
+╔══════════════════════════════════════════════════════════════╗
+║         Фаза 6 — Медиа (100+ тестов)                       ║
+╚══════════════════════════════════════════════════════════════╝
+
+── Блок A: Sticker ───────────────────────────────────────────────
+  ✅ A01. sticker: только stickerFileId → answer_sticker с file_id
+  ✅ A02. sticker: только stickerUrl → загрузка через aiohttp
+  ✅ A03. sticker: stickerSetName без file_id и URL → отправка из набора
+  ✅ A04. sticker: mediaCaption → caption в коде
+  ✅ A05. sticker: disableNotification:true → disable_notification=True
+  ✅ A06. sticker: disableNotification:false → нет disable_notification
+  ✅ A07. sticker: пустые поля → "Стикер не настроен"
+  ✅ A08. sticker: mediaCaption со спецсимволами Python
+  ✅ A09. sticker: file_id приоритетнее URL
+── Блок B: Voice ─────────────────────────────────────────────────
+  ✅ B01. voice: voiceUrl → answer_voice через aiohttp
+  ✅ B02. voice: mediaCaption → caption передаётся
+  ✅ B03. voice: mediaDuration → duration передаётся
+  ✅ B04. voice: mediaCaption + mediaDuration вместе
+  ✅ B05. voice: disableNotification:true → disable_notification=True
+  ✅ B06. voice: пустой voiceUrl → "Голосовое сообщение не настроено"
+  ✅ B07. voice: mediaDuration=0 → нет duration в вызове
+  ✅ B08. voice: mediaCaption со спецсимволами
+── Блок C: Animation ─────────────────────────────────────────────
+  ✅ C01. animation: внешний URL → send_animation с URL
+  ✅ C02. animation: /uploads/ путь → FSInputFile
+  ✅ C03. animation: пустой animationUrl → нет send_animation
+  ✅ C04. animation: URL с пробелами и спецсимволами
+── Блок D: message с imageUrl ────────────────────────────────────
+  ✅ D01. message: imageUrl задан → answer_photo
+  ✅ D02. message: imageUrl пустой → нет answer_photo
+  ✅ D03. message: imageUrl="undefined" → нет answer_photo
+  ✅ D04. message: imageUrl /uploads/ → FSInputFile
+  ✅ D05. message: imageUrl + formatMode=html → parse_mode="HTML"
+  ✅ D06. message: imageUrl + formatMode=markdown → parse_mode="Markdown"
+  ✅ D07. message: imageUrl сохраняется в user_data
+  ✅ D08. message: imageUrl + userDatabaseEnabled → update_user_data_in_db
+── Блок E: message с videoUrl ────────────────────────────────────
+  ✅ E01. message: videoUrl задан → answer_video
+  ✅ E02. message: videoUrl пустой → нет answer_video
+  ✅ E03. message: videoUrl /uploads/ → FSInputFile
+  ✅ E04. message: videoUrl сохраняется в user_data
+── Блок F: message с audioUrl ────────────────────────────────────
+  ✅ F01. message: audioUrl задан → answer_audio
+  ✅ F02. message: audioUrl пустой → нет answer_audio
+  ✅ F03. message: audioUrl /uploads/ → FSInputFile
+  ✅ F04. message: audioUrl сохраняется в user_data
+── Блок G: message с documentUrl ─────────────────────────────────
+  ✅ G01. message: documentUrl задан → answer_document
+  ✅ G02. message: documentUrl пустой → нет answer_document
+  ✅ G03. message: documentUrl /uploads/ → FSInputFile
+  ✅ G04. message: documentUrl сохраняется в user_data
+── Блок H: attachedMedia ─────────────────────────────────────────
+  ✅ H01. message: attachedMedia пустой → нет attached-media блока
+  ✅ H02. message: attachedMedia с imageUrlVar + imageUrl → user_data["imageUrlVar"]
+  ✅ H03. message: attachedMedia с videoUrlVar + videoUrl → user_data["videoUrlVar"]
+  ✅ H04. message: attachedMedia с audioUrlVar + audioUrl → user_data["audioUrlVar"]
+  ✅ H05. message: attachedMedia с documentUrlVar + documentUrl → user_data["documentUrlVar"]
+  ✅ H06. message: attachedMedia с video_url_ + videoUrl → user_data["video_url_..."]
+  ✅ H07. message: несколько attachedMedia переменных
+  ✅ H08. message: attachedMedia задан, imageUrl задан → answer_photo (не answer)
+  ✅ H09. start: attachedMedia=[jpg URL] → answer_photo (нет imageUrl)
+  ✅ H10. start: attachedMedia=[mp4 URL] → answer_video
+  ✅ H11. start: attachedMedia=[mp3 URL] → answer_audio
+  ✅ H12. start: attachedMedia=[pdf URL] → answer_document
+  ✅ H13. message: attachedMedia=[jpg URL] → answer_photo
+  ✅ H14. start: реальный project.json attachedMedia → answer_photo
+  ✅ H15. start: imageUrl имеет приоритет над attachedMedia URL
+── Блок I: start-узел с медиа ────────────────────────────────────
+  ✅ I01. start: imageUrl → сохраняется в user_data + answer_photo
+  ✅ I02. start: videoUrl → сохраняется в user_data + answer_video
+  ✅ I03. start: audioUrl → сохраняется в user_data + answer_audio
+  ✅ I04. start: documentUrl → сохраняется в user_data + answer_document
+  ✅ I05. start: imageUrl + userDatabaseEnabled → update_user_data_in_db
+  ✅ I06. start: imageUrl="undefined" → нет answer_photo
+  ✅ I07. start: attachedMedia с imageUrlVar + imageUrl → answer_photo
+── Блок J: command-узел с медиа ──────────────────────────────────
+  ✅ J01. command: imageUrl → answer_photo
+  ✅ J02. command: videoUrl → answer_video
+  ✅ J03. command: documentUrl → answer_document
+── Блок K: Комбинации ────────────────────────────────────────────
+  ✅ K01. message: imageUrl + attachedMedia → answer_photo (attachedMedia не перекрывает)
+  ✅ K02. message: imageUrl + videoUrl + audioUrl + documentUrl → только imageUrl (приоритет)
+  ✅ K03. message: только videoUrl + audioUrl + documentUrl → только videoUrl (приоритет)
+  ✅ K04. sticker: mediaCaption с переменными {user_name}
+  ✅ K05. voice: mediaCaption с переменными {first_name}
+  ✅ K06. message: imageUrl + formatMode=html + attachedMedia → parse_mode="HTML"
+  ✅ K07. message: videoUrl + formatMode=markdown → parse_mode="Markdown"
+  ✅ K08. sticker + voice + animation в одном проекте → все обработчики
+── Блок L: Граничные случаи ──────────────────────────────────────
+  ✅ L01. sticker: URL с кириллицей в пути
+  ✅ L02. voice: очень длинный URL (500 символов)
+  ✅ L03. message: imageUrl с query-параметрами
+  ✅ L04. message: imageUrl с хэшем в URL
+  ✅ L05. sticker: disableNotification:true + mediaCaption + stickerFileId — всё вместе
+  ✅ L06. voice: disableNotification:true + mediaCaption + mediaDuration — всё вместе
+  ✅ L07. message: imageUrl с одинарными кавычками в URL
+  ✅ L08. animation: URL с query-параметрами
+  ✅ L09. message: все медиа пустые + attachedMedia пустой → обычный answer
+  ✅ L10. message: documentUrl + audioUrl (без image/video) → audioUrl приоритетнее doc
+
+╔══════════════════════════════════════════════════════════════╗
+║  Итого: 84/84 пройдено, 0 провалено                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase6-media.ts (14902.9001ms)
+
+╔══════════════════════════════════════════════════════════════╗
+║         Фаза 7 — Доступ (isPrivateOnly, adminOnly, requiresAuth) ║
+╚══════════════════════════════════════════════════════════════╝
+
+── Блок A: isPrivateOnly ─────────────────────────────────────────
+  ✅ A01. start: isPrivateOnly:true → is_private_chat в коде
+  ✅ A02. message: isPrivateOnly:true → is_private_chat в коде
+  ✅ A03. start: isPrivateOnly:false → нет is_private_chat
+  ✅ A04. start: isPrivateOnly:true → синтаксис OK
+  ✅ A05. command: isPrivateOnly:true → is_private_chat в коде
+  ✅ A06. несколько узлов с isPrivateOnly:true → синтаксис OK
+  ✅ A07. message: isPrivateOnly:false → нет is_private_chat
+  ✅ A08. start: isPrivateOnly:true → сообщение об ошибке в коде
+── Блок B: adminOnly ─────────────────────────────────────────────
+  ✅ B01. start: adminOnly:true → is_admin в коде
+  ✅ B02. message: adminOnly:true → is_admin в коде
+  ✅ B03. start: adminOnly:false → нет is_admin
+  ✅ B04. start: adminOnly:true → синтаксис OK
+  ✅ B05. command: adminOnly:true → is_admin в коде
+  ✅ B06. message: adminOnly:false → нет is_admin
+  ✅ B07. start: adminOnly:true → сообщение об ошибке в коде
+  ✅ B08. message: adminOnly:true → синтаксис OK
+── Блок C: requiresAuth ──────────────────────────────────────────
+  ✅ C01. start: requiresAuth:true → await check_auth в коде
+  ✅ C02. message: requiresAuth:true → await check_auth в коде
+  ✅ C03. start: requiresAuth:false → нет вызова await check_auth
+  ✅ C04. start: requiresAuth:true → синтаксис OK
+  ✅ C05. message: requiresAuth:false → нет вызова await check_auth
+  ✅ C06. command: requiresAuth:true → await check_auth в коде
+  ✅ C07. message: requiresAuth:true → синтаксис OK
+  ✅ C08. start: requiresAuth:true → сообщение об ошибке в коде
+── Блок D: Комбинации флагов ─────────────────────────────────────
+  ✅ D01. start: isPrivateOnly:true + adminOnly:true → обе проверки + синтаксис OK
+  ✅ D02. start: isPrivateOnly:true + requiresAuth:true → обе проверки + синтаксис OK
+  ✅ D03. start: adminOnly:true + requiresAuth:true → обе проверки + синтаксис OK
+  ✅ D04. start: все три флага true → все три проверки + синтаксис OK
+  ✅ D05. start: все три флага true + userDatabaseEnabled:true → синтаксис OK
+  ✅ D06. message: isPrivateOnly:true + adminOnly:true → обе проверки + синтаксис OK
+  ✅ D07. message: все три флага true → все три проверки + синтаксис OK
+  ✅ D08. command: все три флага true → все три проверки + синтаксис OK
+── Блок E: Граничные случаи ──────────────────────────────────────
+  ✅ E01. message: isPrivateOnly:true + кнопки → синтаксис OK
+  ✅ E02. message: adminOnly:true + медиа → синтаксис OK
+  ✅ E03. message: requiresAuth:true + collectUserInput → синтаксис OK
+  ✅ E04. все флаги false → синтаксис OK
+  ✅ E05. start: isPrivateOnly:true + reply клавиатура → синтаксис OK
+  ✅ E06. start: adminOnly:true + formatMode=html → синтаксис OK
+  ✅ E07. start: requiresAuth:true + formatMode=markdown → синтаксис OK
+  ✅ E08. message: все три флага true + userDatabaseEnabled:true → синтаксис OK
+  ✅ E09. start: isPrivateOnly:true + enableAutoTransition → синтаксис OK
+  ✅ E10. command: adminOnly:true + requiresAuth:true + userDatabaseEnabled:true → синтаксис OK
+
+══════════════════════════════════════════════════════════════════
+Итого: 42 тестов | ✅ 42 прошло | ❌ 0 упало
+
+🎉 Все тесты прошли успешно!
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase7-access.ts (4610.9778ms)
+
+╔══════════════════════════════════════════════════════════════╗
+║         Фаза 8 — Автопереход (80+ тестов)                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+── Блок A: Базовый автопереход (start → message) ─────────────────
+  ✅ A01. start: enableAutoTransition:true + autoTransitionTo → АВТОПЕРЕХОД в коде
+  ✅ A02. start: FakeCallbackQuery класс генерируется
+  ✅ A03. start: вызов handle_callback_<targetId> генерируется
+  ✅ A04. start: fake_callback = FakeCallbackQuery(message, "targetId")
+  ✅ A05. start: logging.info автопереход выполнен
+  ✅ A06. start: except блок с logging.error
+  ✅ A07. start: return после автоперехода
+  ✅ A08. start: await перед handle_callback
+── Блок B: Автопереход из message → message ──────────────────────
+  ✅ B01. message: enableAutoTransition:true → АВТОПЕРЕХОД в коде
+  ✅ B02. message: FakeCallbackQuery использует callback_query.message
+  ✅ B03. message: handle_callback_<targetId> вызывается
+  ✅ B04. message: return после автоперехода
+── Блок C: Автопереход из command → message ──────────────────────
+  ✅ C01. command: enableAutoTransition:true → АВТОПЕРЕХОД в коде
+  ✅ C02. command: FakeCallbackQuery генерируется
+── Блок D: enableAutoTransition:false ────────────────────────────
+  ✅ D01. start: enableAutoTransition:false → нет АВТОПЕРЕХОД
+  ✅ D02. message: enableAutoTransition:false → нет АВТОПЕРЕХОД
+  ✅ D03. start: enableAutoTransition:true но autoTransitionTo пустой → нет АВТОПЕРЕХОД
+  ✅ D04. start: enableAutoTransition не задан → нет АВТОПЕРЕХОД
+  ✅ D05. message: enableAutoTransition:true, autoTransitionTo:undefined → нет АВТОПЕРЕХОД
+── Блок E: autoTransitionTo — несуществующий узел ────────────────
+  ✅ E01. start: autoTransitionTo несуществующий → код генерируется (синтаксис OK)
+  ✅ E02. start: autoTransitionTo несуществующий → handle_callback_nonexistent_node_xyz
+  ✅ E03. message: autoTransitionTo несуществующий → синтаксис OK
+── Блок F: Цепочки автопереходов ─────────────────────────────────
+  ✅ F01. цепочка start→msg_b→msg_c: все три узла генерируются
+  ✅ F02. цепочка из 3 автопереходов: 2 АВТОПЕРЕХОД блока
+  ✅ F03. цепочка msg→msg→msg: все три FakeCallbackQuery
+  ✅ F04. цепочка 4 узлов: синтаксис OK
+── Блок G: Автопереход + клавиатура ──────────────────────────────
+  ✅ G01. start: автопереход + keyboardType=inline → синтаксис OK
+  ✅ G02. start: автопереход + keyboardType=reply → синтаксис OK
+  ✅ G03. start: автопереход + keyboardType=none → синтаксис OK
+  ✅ G04. message: автопереход + inline кнопки → синтаксис OK
+── Блок H: Автопереход + collectUserInput ────────────────────────
+  ✅ H01. start: автопереход + collectUserInput:true → оба блока в коде
+  ✅ H02. message: автопереход + collectUserInput:false → только АВТОПЕРЕХОД
+  ✅ H03. message: автопереход + collectUserInput:true → оба блока
+── Блок I: Автопереход + медиа ───────────────────────────────────
+  ✅ I01. start: автопереход + imageUrl → answer_photo + АВТОПЕРЕХОД
+  ✅ I02. start: автопереход + videoUrl → answer_video + АВТОПЕРЕХОД
+  ✅ I03. message: автопереход + imageUrl → answer_photo + АВТОПЕРЕХОД
+  ✅ I04. message: автопереход + audioUrl → answer_audio + АВТОПЕРЕХОД
+── Блок J: Автопереход + formatMode ──────────────────────────────
+  ✅ J01. start: автопереход + formatMode=html → parse_mode="HTML" + АВТОПЕРЕХОД
+  ✅ J02. start: автопереход + formatMode=markdown → parse_mode="Markdown" + АВТОПЕРЕХОД
+  ✅ J03. message: автопереход + formatMode=html → синтаксис OK
+── Блок K: hasAutoTransitions → импорты ──────────────────────────
+  ✅ K01. с автопереходом → TelegramBadRequest импортируется
+  ✅ K02. без автоперехода + без inline кнопок → нет TelegramBadRequest
+  ✅ K03. с автопереходом → safe_edit_or_send генерируется
+  ✅ K04. с автопереходом → SimpleNamespace импортируется
+  ✅ K05. несколько узлов с автопереходом → TelegramBadRequest один раз
+── Блок L: FakeCallbackQuery структура ───────────────────────────
+  ✅ L01. FakeCallbackQuery: self.from_user = message.from_user
+  ✅ L02. FakeCallbackQuery: self.chat = message.chat
+  ✅ L03. FakeCallbackQuery: self.data = target_node_id
+  ✅ L04. FakeCallbackQuery: async def answer(self, *args, **kwargs)
+  ✅ L05. message: FakeCallbackQuery использует callback_query.message (не message)
+  ✅ L06. start: FakeCallbackQuery использует message (не callback_query.message)
+── Блок M: autoTransitionTo с дефисами в ID ──────────────────────
+  ✅ M01. start: autoTransitionTo с дефисами → handle_callback с подчёркиваниями
+  ✅ M02. message: autoTransitionTo с дефисами → handle_callback с подчёркиваниями
+  ✅ M03. autoTransitionTo с UUID-подобным ID → синтаксис OK
+  ✅ M04. autoTransitionTo с ID из base64-подобных символов → синтаксис OK
+── Блок N: Граничные случаи ──────────────────────────────────────
+  ✅ N01. start: autoTransitionTo = nodeId самого себя → синтаксис OK (рекурсия)
+  ✅ N02. start: enableAutoTransition:true, autoTransitionTo:null → нет АВТОПЕРЕХОД
+  ✅ N03. start: enableAutoTransition:false, autoTransitionTo задан → нет АВТОПЕРЕХОД
+  ✅ N04. start: messageText пустой + автопереход → синтаксис OK
+  ✅ N05. start: messageText со спецсимволами + автопереход → синтаксис OK
+  ✅ N06. message: enableAutoTransition:true, autoTransitionTo:""  → нет АВТОПЕРЕХОД
+── Блок O: Автопереход + userDatabaseEnabled ─────────────────────
+  ✅ O01. start: автопереход + userDatabaseEnabled → TelegramBadRequest + save_user_to_db
+  ✅ O02. message: автопереход + userDatabaseEnabled → синтаксис OK
+  ✅ O03. start: автопереход + userDatabaseEnabled + imageUrl → всё вместе
+── Блок P: Несколько узлов с автопереходом ───────────────────────
+  ✅ P01. start + message оба с автопереходом → оба АВТОПЕРЕХОД блока
+  ✅ P02. 5 узлов с автопереходом → синтаксис OK
+  ✅ P03. два узла указывают на один target → оба handle_callback одинаковые
+  ✅ P04. command + start + message все с автопереходом → синтаксис OK
+
+╔══════════════════════════════════════════════════════════════╗
+║  Итого: 68/68 пройдено, 0 провалено                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+✔ C:\Users\1\Desktop\telegram-bot-builder\lib\tests\test-phase8-auto-transition.ts (11427.233ms)
+
+=== БЛОК A: Базовая инициализация multi_select ===
+  ✅ A1: message-узел с allowMultipleSelection:true — multi_select_node инициализируется
+  ✅ A2: start-узел с allowMultipleSelection:true — multi_select_node инициализируется
+  ✅ A3: allowMultipleSelection:false — нет multi_select кода
+  ✅ A4: allowMultipleSelection:true — генерируется callback обработчик
+
+=== БЛОК B: multiSelectVariable ===
+  ✅ B1: multiSelectVariable задан — используется как имя переменной
+  ✅ B2: multiSelectVariable не задан — дефолт multi_select_<nodeId>
+  ✅ B3: multiSelectVariable с пробелами и спецсимволами
+  ✅ B4: multiSelectVariable длинное имя (50 символов)
+
+=== БЛОК C: Кнопки action:selection ===
+  ✅ C1: 3 кнопки selection — все попадают в callback обработчик
+  ✅ C2: callback_data формат ms_<shortNodeId>_<value>
+  ✅ C3: InlineKeyboardBuilder с selection кнопками
+  ✅ C4: reply keyboard с selection кнопками
+  ✅ C5: 1 кнопка selection (минимум)
+  ✅ C6: 10 кнопок selection (много)
+
+=== БЛОК D: Кнопка action:complete ===
+  ✅ D1: complete кнопка — генерируется done обработчик
+  ✅ D2: done обработчик — сохраняет выбор в БД
+  ✅ D3: done обработчик — очищает состояние multi_select
+  ✅ D4: done_<shortNodeId> callback_data формат
+
+=== БЛОК E: continueButtonTarget ===
+  ✅ E1: continueButtonTarget задан — переход к следующему узлу
+  ✅ E2: continueButtonTarget не задан — нет перехода
+  ✅ E3: continueButtonTarget — reply keyboard переход
+
+=== БЛОК F: continueButtonText ===
+  ✅ F1: continueButtonText задан — используется как текст кнопки
+  ✅ F2: continueButtonText не задан — дефолт "Готово"
+  ✅ F3: continueButtonText с эмодзи
+
+=== БЛОК G: allowMultipleSelection:false ===
+  ✅ G1: false — нет multiselect обработчиков
+  ✅ G2: undefined allowMultipleSelection — нет multiselect кода
+
+=== БЛОК H: start-узел с мультивыбором ===
+  ✅ H1: start + allowMultipleSelection + inline
+  ✅ H2: start + allowMultipleSelection + reply
+  ✅ H3: start + мультивыбор + continueButtonTarget
+
+=== БЛОК I: message-узел с мультивыбором ===
+  ✅ I1: message + allowMultipleSelection + inline
+  ✅ I2: message + allowMultipleSelection + reply
+
+=== БЛОК J: Несколько узлов с мультивыбором ===
+  ✅ J1: 2 message-узла с мультивыбором — оба обрабатываются
+  ✅ J2: start + message — оба с мультивыбором
+  ✅ J3: 3 узла — start + 2 message с мультивыбором
+
+=== БЛОК K: multiSelectVariable + userDatabaseEnabled ===
+  ✅ K1: userDatabaseEnabled:true — save_user_data_to_db вызывается
+  ✅ K2: userDatabaseEnabled:false — нет save_user_data_to_db в done
+  ✅ K3: userDatabaseEnabled:true + reply keyboard — сохранение работает
+
+=== БЛОК L: Комбинации ===
+  ✅ L1: мультивыбор + медиа (imageUrl)
+  ✅ L2: мультивыбор + автопереход (enableAutoTransition)
+  ✅ L3: мультивыбор + collectUserInput
+  ✅ L4: мультивыбор + userDatabaseEnabled + continueButtonTarget
+  ✅ L5: мультивыбор + keyboardLayout (custom rows)
+  ✅ L6: мультивыбор + autoLayout
+
+=== БЛОК M: Граничные случаи ===
+  ✅ M1: allowMultipleSelection:true без кнопок selection
+  ✅ M2: allowMultipleSelection:true без complete кнопки
+  ✅ M3: пустые кнопки при allowMultipleSelection:true
+  ✅ M4: multiSelectVariable с кириллицей
+  ✅ M5: кнопки selection с кириллическим текстом
+  ✅ M6: кнопки selection с кавычками в тексте
+  ✅ M7: nodeId с дефисами — safe_name применяется
+  ✅ M8: смешанные кнопки — selection + goto + complete
+  ✅ M9: reply keyboard — complete кнопка как текст
+  ✅ M10: enableComments:true — комментарии не ломают синтаксис
+
+============================================================
+ИТОГ: 53 пройдено, 0 провалено
+============================================================

@@ -8,7 +8,7 @@
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { generatePythonCode } from '../lib/bot-generator';
+import { generatePythonCode } from '../bot-generator';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 

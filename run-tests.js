@@ -58,6 +58,12 @@ async function runTests() {
         if (filePattern && !fullPath.includes(filePattern)) continue;
         testFiles.push(fullPath);
       }
+      // Ищем phase-тесты (test-phase*.ts)
+      for await (const file of glob('test-phase*.ts', { cwd: testDir })) {
+        const fullPath = join(testDir, file);
+        if (filePattern && !fullPath.includes(filePattern)) continue;
+        if (!testFiles.includes(fullPath)) testFiles.push(fullPath);
+      }
     }
 
     // Ищем тесты шаблонов в lib/templates
@@ -80,6 +86,11 @@ async function runTests() {
         const fullPath = join(testDir, file);
         if (filePattern && !fullPath.includes(filePattern)) continue;
         testFiles.push(fullPath);
+      }
+      for await (const file of glob('test-phase*.ts', { cwd: testDir })) {
+        const fullPath = join(testDir, file);
+        if (filePattern && !fullPath.includes(filePattern)) continue;
+        if (!testFiles.includes(fullPath)) testFiles.push(fullPath);
       }
     } else if (onlyIntegration) {
       // Только integration тесты

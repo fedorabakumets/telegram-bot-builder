@@ -4,7 +4,7 @@
  */
 import fs from 'fs';
 import { execSync } from 'child_process';
-import { generatePythonCode } from '../lib/bot-generator.ts';
+import { generatePythonCode } from '../bot-generator.ts';
 
 const OUTPUT_DIR = 'bots/импортированный_проект_1723_60_53';
 const BASE_PROJECT = JSON.parse(
