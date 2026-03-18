@@ -5,15 +5,15 @@
 
 /// <reference types="vitest/globals" />
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { vi, beforeEach, afterEach } from 'vitest';
 import { getNodeCount } from '../../../handlers/get-node-count';
 import { BotProject } from '@shared/schema';
 
 describe('getNodeCount', () => {
-  const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+  let mockConsoleLog: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    mockConsoleLog.mockClear();
+    mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {

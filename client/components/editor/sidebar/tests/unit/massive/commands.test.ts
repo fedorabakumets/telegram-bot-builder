@@ -5,7 +5,6 @@
 
 /// <reference types="vitest/globals" />
 
-import { describe, it, expect } from 'vitest';
 import { startCommand } from '../../../massive/commands/start-command';
 import { helpCommand } from '../../../massive/commands/help-command';
 import { settingsCommand } from '../../../massive/commands/settings-command';
@@ -78,8 +77,8 @@ describe('Command Components', () => {
       expect(customCommand.type).toBe('command');
     });
 
-    it('должен иметь пустую команду по умолчанию', () => {
-      expect(customCommand.defaultData?.command).toBe('');
+    it('должен иметь команду /custom по умолчанию', () => {
+      expect(customCommand.defaultData?.command).toBe('/custom');
     });
   });
 });

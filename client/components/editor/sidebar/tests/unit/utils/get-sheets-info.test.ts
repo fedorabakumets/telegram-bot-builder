@@ -5,15 +5,15 @@
 
 /// <reference types="vitest/globals" />
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { vi, beforeEach, afterEach } from 'vitest';
 import { getSheetsInfo } from '../../../handlers/get-sheets-info';
 import { BotProject } from '@shared/schema';
 
 describe('getSheetsInfo', () => {
-  const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+  let mockConsoleLog: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    mockConsoleLog.mockClear();
+    mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {

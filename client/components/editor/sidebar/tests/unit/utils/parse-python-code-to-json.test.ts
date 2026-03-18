@@ -5,7 +5,6 @@
 
 /// <reference types="vitest/globals" />
 
-import { describe, it, expect } from 'vitest';
 import { parsePythonCodeToJson } from '../../../parsePythonCodeToJson';
 
 describe('parsePythonCodeToJson', () => {

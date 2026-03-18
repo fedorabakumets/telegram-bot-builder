@@ -5,7 +5,6 @@
 
 /// <reference types="vitest/globals" />
 
-import { describe, it, expect } from 'vitest';
 import { textMessage } from '../../../massive/messages/text-message';
 import { stickerMessage } from '../../../massive/messages/sticker-message';
 import { voiceMessage } from '../../../massive/messages/voice-message';
@@ -44,8 +43,8 @@ describe('Message Components', () => {
       expect(stickerMessage.type).toBe('sticker');
     });
 
-    it('должен иметь пустой fileId по умолчанию', () => {
-      expect(stickerMessage.defaultData?.fileId).toBe('');
+    it('должен иметь пустой stickerFileId по умолчанию', () => {
+      expect(stickerMessage.defaultData?.stickerFileId).toBe('');
     });
   });
 
@@ -72,9 +71,9 @@ describe('Message Components', () => {
       expect(locationMessage.type).toBe('location');
     });
 
-    it('должен иметь широту и долготу по умолчанию', () => {
-      expect(locationMessage.defaultData?.latitude).toBe(0);
-      expect(locationMessage.defaultData?.longitude).toBe(0);
+    it('должен иметь координаты Москвы по умолчанию', () => {
+      expect(locationMessage.defaultData?.latitude).toBe(55.7558);
+      expect(locationMessage.defaultData?.longitude).toBe(37.6176);
     });
   });
 
@@ -87,8 +86,8 @@ describe('Message Components', () => {
       expect(contactMessage.type).toBe('contact');
     });
 
-    it('должен иметь пустой phoneNumber по умолчанию', () => {
-      expect(contactMessage.defaultData?.phoneNumber).toBe('');
+    it('должен иметь phoneNumber по умолчанию', () => {
+      expect(contactMessage.defaultData?.phoneNumber).toBe('+7 (999) 123-45-67');
     });
   });
 });

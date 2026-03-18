@@ -5,7 +5,7 @@
 
 /// <reference types="vitest/globals" />
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, beforeEach } from 'vitest';
 import { handleProjectDragStart } from '../../../handlers/handle-project-drag-start';
 import { handleProjectDragOver } from '../../../handlers/handle-project-drag-over';
 import { handleProjectDragLeave } from '../../../handlers/handle-project-drag-leave';
@@ -20,7 +20,7 @@ describe('Project Drag-and-Drop Handlers', () => {
     description: `Description for ${name}`,
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
-  } as BotProject);
+  } as unknown as BotProject);
 
   const createMockDragEvent = () => ({
     stopPropagation: vi.fn(),
