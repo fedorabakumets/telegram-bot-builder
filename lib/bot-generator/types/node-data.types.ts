@@ -16,7 +16,7 @@ import type { ButtonOverride } from './node-data-override.types';
  * @example
  * const keyboardType: KeyboardType = 'inline';
  */
-export type KeyboardType = 'inline' | 'reply' | 'none' | 'remove' | 'default';
+export type KeyboardType = 'inline' | 'reply' | 'none';
 
 /**
  * Режим форматирования текста
@@ -24,7 +24,7 @@ export type KeyboardType = 'inline' | 'reply' | 'none' | 'remove' | 'default';
  * @example
  * const formatMode: FormatMode = 'html';
  */
-export type FormatMode = 'html' | 'markdown' | 'markdown_v2';
+export type FormatMode = 'html' | 'markdown' | 'none';
 
 /**
  * Тип ввода данных от пользователя
@@ -113,6 +113,156 @@ export interface NodeData {
   /** Прикреплённые медиа */
   attachedMedia?: string[];
 
-  /** Дополнительные поля */
-  [key: string]: any;
+  // --- Отображение в меню ---
+  /** Показывать команду в меню BotFather */
+  showInMenu?: boolean;
+
+  // --- Текст и уведомления ---
+  /** Текст сообщения (альтернативное поле) */
+  messageText?: string;
+  /** Отключить уведомление */
+  disableNotification?: boolean;
+
+  // --- Синонимы ---
+  /** Синонимы для команды/сообщения */
+  synonyms?: string[];
+
+  // --- Условные сообщения ---
+  /** Включить условные сообщения */
+  enableConditionalMessages?: boolean;
+  /** Условные сообщения */
+  conditionalMessages?: Array<{
+    condition?: string;
+    message?: string;
+    buttons?: Button[];
+    [key: string]: unknown;
+  }>;
+  /** Запасное сообщение */
+  fallbackMessage?: string;
+
+  // --- Клавиатура ---
+  /** Одноразовая клавиатура */
+  oneTimeKeyboard?: boolean;
+  /** Изменить размер клавиатуры */
+  resizeKeyboard?: boolean;
+  /** Раскладка клавиатуры */
+  keyboardLayout?: {
+    rows?: Array<{ buttonIds?: string[] }>;
+    autoLayout?: boolean;
+    columns?: number;
+  };
+
+  // --- Мультивыбор ---
+  /** Переменная для мультивыбора */
+  multiSelectVariable?: string;
+  /** Текст кнопки продолжения */
+  continueButtonText?: string;
+
+  // --- Доступ ---
+  /** Только приватный чат */
+  isPrivateOnly?: boolean;
+  /** Только для администраторов */
+  adminOnly?: boolean;
+  /** Требует авторизации */
+  requiresAuth?: boolean;
+
+  // --- Медиа (специфичные типы) ---
+  /** URL стикера */
+  stickerUrl?: string;
+  /** ID файла стикера */
+  stickerFileId?: string;
+  /** Название набора стикеров */
+  stickerSetName?: string;
+  /** URL голосового сообщения */
+  voiceUrl?: string;
+  /** Подпись к медиа */
+  mediaCaption?: string;
+  /** Длительность медиа */
+  mediaDuration?: number;
+
+  // --- Ввод пользователя (расширенный) ---
+  /** Переменная для хранения ввода */
+  inputVariable?: string;
+  /** Добавлять к существующей переменной */
+  appendVariable?: boolean;
+  /** Включить текстовый ввод */
+  enableTextInput?: boolean;
+  /** Включить ввод фото */
+  enablePhotoInput?: boolean;
+  /** Переменная для фото */
+  photoInputVariable?: string;
+  /** Включить ввод видео */
+  enableVideoInput?: boolean;
+  /** Переменная для видео */
+  videoInputVariable?: string;
+  /** Включить ввод аудио */
+  enableAudioInput?: boolean;
+  /** Переменная для аудио */
+  audioInputVariable?: string;
+  /** Включить ввод документа */
+  enableDocumentInput?: boolean;
+  /** Переменная для документа */
+  documentInputVariable?: string;
+  /** Тип валидации */
+  validationType?: string;
+  /** Минимальная длина */
+  minLength?: number;
+  /** Максимальная длина */
+  maxLength?: number;
+  /** Сообщение при ошибке */
+  retryMessage?: string;
+  /** Сообщение при успехе */
+  successMessage?: string;
+  /** Сохранять в базу данных */
+  saveToDatabase?: boolean;
+  /** Тип ответа */
+  responseType?: string;
+  /** Варианты ответа */
+  responseOptions?: Array<{ text: string; target?: string; [key: string]: unknown }>;
+  /** Разрешить пропуск */
+  allowSkip?: boolean;
+
+  // --- Управление пользователями (mute/ban) ---
+  /** ID целевой группы */
+  targetGroupId?: string;
+  /** Причина */
+  reason?: string;
+  /** Дата окончания */
+  untilDate?: number;
+  /** Длительность */
+  duration?: number;
+  /** Разрешить отправку сообщений */
+  canSendMessages?: boolean;
+  /** Разрешить отправку медиа */
+  canSendMediaMessages?: boolean;
+  /** Разрешить отправку опросов */
+  canSendPolls?: boolean;
+  /** Разрешить отправку других сообщений */
+  canSendOtherMessages?: boolean;
+  /** Разрешить предпросмотр ссылок */
+  canAddWebPagePreviews?: boolean;
+  /** Разрешить изменение информации группы */
+  canChangeGroupInfo?: boolean;
+  /** Разрешить приглашение пользователей (v2) */
+  canInviteUsers2?: boolean;
+  /** Разрешить закрепление сообщений (v2) */
+  canPinMessages2?: boolean;
+  /** Разрешить изменение информации */
+  canChangeInfo?: boolean;
+  /** Разрешить удаление сообщений */
+  canDeleteMessages?: boolean;
+  /** Разрешить приглашение пользователей */
+  canInviteUsers?: boolean;
+  /** Разрешить ограничение участников */
+  canRestrictMembers?: boolean;
+  /** Разрешить закрепление сообщений */
+  canPinMessages?: boolean;
+  /** Разрешить продвижение участников */
+  canPromoteMembers?: boolean;
+  /** Разрешить управление видеочатами */
+  canManageVideoChats?: boolean;
+  /** Разрешить управление темами */
+  canManageTopics?: boolean;
+  /** Анонимный администратор */
+  isAnonymous?: boolean;
 }

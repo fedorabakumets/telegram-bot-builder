@@ -7,9 +7,13 @@
  * @module bot-generator/types/index
  */
 
+export { NODE_TYPES } from './node-type.constants';
+export type { NodeType } from './node-type.constants';
+
 export type { Button } from './button-types';
 export type { ResponseOption } from './button-types';
 export type { ButtonAction } from './button-types';
+export type { ButtonActionCore } from './button-types';
 
 export type { CodeNodeRange } from './code-types';
 export type { CodeWithMap } from './code-types';

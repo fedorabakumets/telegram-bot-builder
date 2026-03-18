@@ -12,7 +12,7 @@ import { generateCallbackHandlerInit, buildCallbackHandlerInitParams } from '../
 import { generateAutoTransition } from '../auto-transition';
 import { calculateAutoTransitionTarget } from '../auto-transition';
 import { generateAttachedMediaVars } from '../attached-media-vars';
-import { isLoggingEnabled } from '../../bot-generator';
+import { isLoggingEnabled } from '../../bot-generator/core/logging';
 
 /**
  * Генерирует интерактивные callback-обработчики для inline кнопок,

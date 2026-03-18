@@ -11,7 +11,6 @@
 export * from './bot-generator';
 export * from './commands';
 // Keyboard exports are now aggregated in './bot-generator/Keyboard'
-export * from '../client/queryClient';
 export { generateSynonymHandlers, generateSynonyms, collectSynonymEntries } from './templates/synonyms';
 export * from './bot-generator/utils/addAutoTransitionNodes';
 export * from './bot-generator/utils/extractNodeData';
@@ -47,9 +46,6 @@ export * from './templates/message-handler';
 
 // Project scaffolding
 export * from './bot-generator/scaffolding';
-
-// Storage utilities
-export * from '../client/storage';
 
 // User management handlers — перенесено в templates/user-handler (Jinja2)
 export { generateUserHandler, generateUserHandlerFromNode, nodeToUserHandlerParams } from './templates/user-handler';

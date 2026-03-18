@@ -81,11 +81,11 @@ export function hasInlineButtons(nodes: EnhancedNode[]): boolean {
   return nodes
     .filter(node => node !== null && node !== undefined)
     .some(node => {
-      const hasMain = Array.isArray(node.data?.buttons) &&
-        node.data.buttons.some((btn: any) => btn.action === 'callback');
+      const hasMain = node.data?.keyboardType === 'inline' &&
+        Array.isArray(node.data?.buttons) && node.data.buttons.length > 0;
       const hasConditional = Array.isArray(node.data?.conditionalMessages) &&
         node.data.conditionalMessages.some((c: any) =>
-          Array.isArray(c.buttons) && c.buttons.some((btn: any) => btn.action === 'callback')
+          c.keyboardType === 'inline' && Array.isArray(c.buttons) && c.buttons.length > 0
         );
       return hasMain || hasConditional;
     });

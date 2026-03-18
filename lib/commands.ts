@@ -8,6 +8,7 @@
  */
 
 import type { BotNode } from './bot-generator/types';
+import { NODE_TYPES } from './bot-generator/types';
 
 /**
  * Категория команды
@@ -218,7 +219,7 @@ export function generateBotFatherCommands(nodes: BotNode[]): string {
 
   const commandNodes = nodes.filter(node =>
     node &&
-    (node.type === 'start' || node.type === 'command') &&
+    (node.type === NODE_TYPES.START || node.type === NODE_TYPES.COMMAND) &&
     node.data?.command &&
     (node.data?.showInMenu !== false)
   );

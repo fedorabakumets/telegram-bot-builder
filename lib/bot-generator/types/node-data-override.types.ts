@@ -7,17 +7,16 @@
  * @module bot-generator/types/node-data-override-types
  */
 
+import type { FormatMode } from './node-data.types';
+import type { ButtonAction } from './button-types';
+
 /**
  * Тип действия кнопки для совместимости
  *
  * @example
  * const action: ButtonActionOverride = 'goto';
  */
-export type ButtonActionOverride =
-  | 'goto'
-  | 'url'
-  | 'selection'
-  | 'complete';
+export type ButtonActionOverride = ButtonAction;
 
 /**
  * Тип кнопки для совместимости со схемой
@@ -60,4 +59,4 @@ export type KeyboardTypeOverride = 'reply' | 'inline' | 'none';
  * @example
  * const mode: FormatModeOverride = 'html';
  */
-export type FormatModeOverride = 'html' | 'markdown' | 'none';
+export type FormatModeOverride = FormatMode;

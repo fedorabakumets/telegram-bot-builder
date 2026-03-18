@@ -10,6 +10,7 @@
  */
 
 import { Node } from '@shared/schema';
+import { NODE_TYPES } from '../../bot-generator/types';
 import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './node-handlers.renderer';
 import { generateMessage } from '../message/message.renderer';
 import { generateContactHandler, generateLocationHandler } from './contact-location.renderer';
@@ -100,14 +101,14 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   };
 
   // Проверяем, есть ли узлы типа 'start' или синонимы для них
-  const hasStartNodeType = nodes.some((node: Node) => node.type === 'start');
+  const hasStartNodeType = nodes.some((node: Node) => node.type === NODE_TYPES.START);
   const hasStartSynonyms = nodes.some((node: Node) =>
-    node.type === 'start' && node.data?.synonyms && node.data.synonyms.length > 0
+    node.type === NODE_TYPES.START && node.data?.synonyms && node.data.synonyms.length > 0
   );
 
   // Если есть узел типа 'start' или синонимы для него, обязательно генерируем start_handler
   if (hasStartNodeType || hasStartSynonyms) {
-    const startNode = nodes.find((node: Node) => node.type === 'start') || {
+    const startNode = nodes.find((node: Node) => node.type === NODE_TYPES.START) || {
       id: 'start',
       type: 'start',
       position: { x: 0, y: 0 },
@@ -164,7 +165,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   nodes.forEach((node: Node) => {
     // Пропускаем узлы типа 'start', так как они уже обработаны выше
-    if (node.type === 'start') {
+    if (node.type === NODE_TYPES.START) {
       return;
     }
 
