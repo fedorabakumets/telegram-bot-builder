@@ -15,15 +15,12 @@ import { generatorLogger } from './bot-generator/core/generator-logger';
 import { logFlowAnalysis } from './bot-generator/core';
 import { generateCommandCallbackHandler } from './templates/handlers';
 import { Button } from './bot-generator/types';
-import {
-  generateGroupBasedEventHandlers,
-} from './bot-generator/handlers';
-
 // Внутренние модули - использование экспорта бочек
 import { generateBotFatherCommands } from './commands';
 import { collectConditionalMessageButtons } from './bot-generator/Conditional/collectConditionalMessageButtons';
 import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './bot-generator/Conditional/conditional-button-handler';
-import { generateDatabaseCode, generateGroupsConfiguration } from './generate';
+import { generateDatabaseCode } from './templates/database/database-code.renderer';
+import { generateGroupsConfiguration } from './generate';
 import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, generateMain, generateImports, generateConfig, generateUtils } from './templates/typed-renderer';
 // Примечание: generateApiConfig удалена после миграции на Jinja2
 // import { generateApiConfig } from './bot-generator/api';
@@ -417,7 +414,7 @@ export function generatePythonCode(
 
   // Обработчики кнопок ответов уже добавлены выше, перед универсальным обработчиком текста
   if (!!context.options.enableGroupHandlers) {
-    code += generateGroupBasedEventHandlers(context.groups, generateGroupHandlers);
+    code += '\n' + generateGroupHandlers(context.groups);
   }
 
   // Добавляем универсальный fallback-обработчик для всех текстовых сообщений

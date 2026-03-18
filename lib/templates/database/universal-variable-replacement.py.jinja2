@@ -1,0 +1,22 @@
+{#
+  Шаблон универсальной замены переменных (inline-код внутри функций)
+
+  @param {string} indent - Отступ для кода
+  @param {array} sources - Отфильтрованные источники переменных (из database-variables.renderer)
+  @param {string|null} variableFiltersJson - JSON строка фильтров переменных (или null)
+#}
+{{ indent }}# Инициализация all_user_vars из БД и локального хранилища
+{{ indent }}all_user_vars = await init_all_user_vars(user_id)
+
+{{ indent }}# Добавляем переменные из таблиц БД (user_ids, user_ids_count, etc.)
+{% include 'database/database-variables.py.jinja2' %}
+{% if variableFiltersJson %}
+{{ indent }}# Сохраняем фильтры переменных из узла
+{{ indent }}user_data[user_id]["_variable_filters"] = {{ variableFiltersJson }}
+{% endif %}
+{{ indent }}# Заменяем переменные в тексте, если text определена
+{{ indent }}if 'text' not in locals():
+{{ indent }}    text = ""  # Инициализируем пустым текстом если не определена
+{{ indent }}# Получаем фильтры переменных из user_data или используем пустые
+{{ indent }}variable_filters = user_data.get(user_id, {}).get("_variable_filters", {})
+{{ indent }}text = replace_variables_in_text(text, all_user_vars, variable_filters)

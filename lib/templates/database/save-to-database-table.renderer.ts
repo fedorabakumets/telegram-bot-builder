@@ -7,7 +7,7 @@
  * @module bot-generator/database/generateSaveToDatabaseTable
  */
 
-import { renderPartialTemplate } from '../../templates/template-renderer';
+import { renderPartialTemplate } from '../template-renderer';
 import { getTableForVariable } from './get-table-for-variable';
 
 export interface GenerateSaveToDatabaseTableParams {

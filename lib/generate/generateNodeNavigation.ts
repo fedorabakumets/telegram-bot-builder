@@ -8,8 +8,8 @@
  */
 
 import type { EnhancedNode } from '../bot-generator/types';
-import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
-import { formatTextForPython } from '../bot-generator/format/formatTextForPython';
+import { generateUniversalVariableReplacement } from '../templates/database/universal-variable-replacement.renderer';
+import { formatTextForPython } from '../templates/filters';
 
 /**
  * Генерирует код навигации по узлам бота

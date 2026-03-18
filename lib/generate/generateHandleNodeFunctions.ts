@@ -11,8 +11,8 @@ import type { EnhancedNode } from '../bot-generator/types';
 import { generatorLogger } from '../bot-generator/core/generator-logger';
 import { generateDatabaseVariablesCode } from '../templates/database/database-variables.renderer';
 import { generateConditionalMessageLogic } from '../bot-generator/Conditional';
-import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
-import { formatTextForPython, getParseMode, stripHtmlTags } from '../bot-generator/format';
+import { generateUniversalVariableReplacement } from '../templates/database/universal-variable-replacement.renderer';
+import { formatTextForPython, getParseMode, stripHtmlTags } from '../templates/filters';
 import { generateAttachedMediaSendCode } from '../bot-generator/MediaHandler';
 import { generateUserInputFromNode } from '../templates/user-input';
 

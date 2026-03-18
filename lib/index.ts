@@ -23,7 +23,7 @@ export * from './bot-generator/utils/extractNodeData';
 export * from './bot-generator/Conditional';
 
 // Formatting utilities
-export * from './bot-generator/format';
+export * from './templates/filters';
 
 // Feature detection
 export { hasCommandButtons } from './bot-generator/utils/hasCommandButtons';

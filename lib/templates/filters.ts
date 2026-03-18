@@ -1,13 +1,9 @@
 /**
- * @fileoverview Фильтры для Nunjucks шаблонов
+ * @fileoverview Фильтры для Nunjucks шаблонов и утилиты форматирования
  * Предоставляет утилиты для преобразования данных в шаблонах
  */
 
-// Импортируем канонические реализации вместо дублирования
 import { generateBotFatherCommands } from '../commands';
-import { formatTextForPython } from '../bot-generator/format/formatTextForPython';
-import { escapePythonString } from '../bot-generator/format/escapePythonString';
-import { generateUniqueShortId } from '../bot-generator/format/generateUniqueShortId';
 
 /**
  * Преобразует ID узла в безопасное имя функции Python
@@ -300,4 +296,104 @@ export function escapeFilter(str: string, type = 'python_string'): string {
     return escapePythonStringFilter(str);
   }
   return str;
+}
+
+// ============================================================================
+// Утилиты форматирования (перенесены из bot-generator/format)
+// ============================================================================
+
+/**
+ * Создает безопасное имя функции Python из идентификатора узла
+ */
+export function createSafeFunctionName(nodeId: string): string {
+  let safeName = nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
+  if (/^\d/.test(safeName)) safeName = 'node_' + safeName;
+  return safeName;
+}
+
+/**
+ * Экранирует строку для JSON контекста
+ */
+export function escapeForJsonString(text: string): string {
+  if (!text) return '';
+  return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+}
+
+/**
+ * Экранирует строку для вставки в Python код (двойные кавычки)
+ */
+export function escapeForPython(text: string): string {
+  return text.replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+}
+
+/**
+ * Экранирует значение для безопасного использования в Python строках (одинарные кавычки)
+ */
+export function escapePythonString(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return 'None';
+  if (typeof value === 'number') return value.toString();
+  const escaped = value.toString()
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"');
+  return `'${escaped}'`;
+}
+
+/**
+ * Форматирует текст для вставки в Python код (тройные кавычки для многострочного)
+ */
+export function formatTextForPython(text: string): string {
+  if (!text) return '""';
+  if (text.includes('\n')) return `"""${text}"""`;
+  return `"${text.replace(/"/g, '\\"')}"`;
+}
+
+/**
+ * Генерирует текст кнопки с поддержкой переменных
+ */
+export function generateButtonText(buttonText: string): string {
+  if (buttonText.includes('{') && buttonText.includes('}')) {
+    return `replace_variables_in_text("${escapeForPython(buttonText)}", all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {}))`;
+  }
+  return `"${escapeForPython(buttonText)}"`;
+}
+
+/**
+ * Генерирует уникальный короткий идентификатор для узла
+ */
+export function generateUniqueShortId(nodeId: string, allNodeIds: string[]): string {
+  if (!nodeId) return 'node';
+  if (nodeId.endsWith('_interests')) {
+    const prefix = nodeId.replace('_interests', '');
+    return prefix.substring(0, Math.min(6, prefix.length));
+  }
+  const baseShortId = nodeId.slice(-10).replace(/^_+/, '');
+  const conflicts = allNodeIds.filter(id => id.slice(-10).replace(/^_+/, '') === baseShortId && id !== nodeId);
+  if (conflicts.length === 0) return baseShortId;
+  return nodeId.replace(/[^a-zA-Z0-9]/g, '').slice(-8);
+}
+
+/**
+ * Возвращает строку parse_mode для Telegram API
+ */
+export function getParseMode(formatMode: string): string {
+  if (!formatMode || formatMode.trim() === '' || formatMode.trim().toLowerCase() === 'none') return '';
+  if (formatMode.toLowerCase() === 'html') return ', parse_mode=ParseMode.HTML';
+  if (formatMode.toLowerCase() === 'markdown') return ', parse_mode=ParseMode.MARKDOWN';
+  return '';
+}
+
+/**
+ * Удаляет HTML теги из текста
+ */
+export function stripHtmlTags(text: string): string {
+  if (!text) return text;
+  return text.replace(/<[^>]*>/g, '');
+}
+
+/**
+ * Конвертирует JavaScript boolean в Python boolean ('True'/'False')
+ */
+export function toPythonBoolean(value: any): string {
+  return value ? 'True' : 'False';
 }

@@ -1,4 +1,4 @@
-import { generateSaveToDatabaseTable } from '../database/generateSaveToDatabaseTable';
+import { generateSaveToDatabaseTable } from '../../templates/database/save-to-database-table.renderer';
 
 export function answersave(code: string) {
     code += '        \n';

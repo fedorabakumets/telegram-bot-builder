@@ -9,7 +9,8 @@
 
 import type { Node } from '@shared/schema';
 import type { Button } from '../types/button-types';
-import { formatTextForPython, generateButtonText, generateWaitingStateCode, toPythonBoolean } from '../format';
+import { formatTextForPython, generateButtonText, toPythonBoolean } from '../format';
+import { generateUserInputFromNode } from '../../templates/user-input';
 import { generateKeyboard } from '../../templates/keyboard';
 
 /**
@@ -37,7 +38,7 @@ export function handleInputCollection(
 
   // Установка состояния ожидания ввода
   code += `${bodyIndent}# Устанавливаем состояние ожидания ввода для узла ${targetNode.id}\n`;
-  code += generateWaitingStateCode(targetNode, bodyIndent);
+  code += generateUserInputFromNode(targetNode, bodyIndent);
   code += `${bodyIndent}logging.info(f"✅ Узел ${targetNode.id} настроен для сбора ввода (collectUserInput=true)")\n`;
 
   // Обработка inline клавиатуры с вводом

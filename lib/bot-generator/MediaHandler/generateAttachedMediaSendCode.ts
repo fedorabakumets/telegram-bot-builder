@@ -9,7 +9,7 @@
  */
 
 import { isLoggingEnabled } from "../../bot-generator";
-import { generateWaitingStateCode } from "../format/generateWaitingStateCode";
+import { generateUserInputFromNode } from '../../templates/user-input';
 import { processCodeWithAutoComments } from "../utils/generateGeneratedComment";
 import { generateMultiMediaSendCode } from "./generateMultiMediaSendCode";
 // Примечание: generateInitAllUserVarsSafe удалена после миграции на Jinja2
@@ -160,7 +160,7 @@ export function generateAttachedMediaSendCode(
     if (collectUserInput && nodeData) {
       codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
       if (nodeData && nodeData.data) {
-        const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
+        const waitingStateCode = generateUserInputFromNode(nodeData, indentLevel, userIdSource);
         const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
         codeLines.push(...waitingStateLines);
       }
@@ -219,7 +219,7 @@ export function generateAttachedMediaSendCode(
       if (collectUserInput && nodeData) {
         codeLines.push(`${indentLevel}# Устанавливаем состояние ожидания ввода для узла ${nodeId} (без изображения)`);
         if (nodeData && nodeData.data) {
-          const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
+          const waitingStateCode = generateUserInputFromNode(nodeData, indentLevel, userIdSource);
           const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
           codeLines.push(...waitingStateLines);
         }
@@ -352,7 +352,7 @@ export function generateAttachedMediaSendCode(
     if (collectUserInput && nodeData) {
       codeLines.push(`${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
       if (nodeData && nodeData.data) {
-        const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
+        const waitingStateCode = generateUserInputFromNode(nodeData, indentLevel, userIdSource);
         const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
         codeLines.push(...waitingStateLines);
       }
@@ -415,7 +415,7 @@ export function generateAttachedMediaSendCode(
     if (collectUserInput && nodeData) {
       codeLines.push(`${indentLevel}# КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Устанавливаем состояние ожидания ввода для узла ${nodeId}`);
       if (nodeData && nodeData.data) {
-        const waitingStateCode = generateWaitingStateCode(nodeData, indentLevel, userIdSource);
+        const waitingStateCode = generateUserInputFromNode(nodeData, indentLevel, userIdSource);
         const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
         codeLines.push(...waitingStateLines);
       }

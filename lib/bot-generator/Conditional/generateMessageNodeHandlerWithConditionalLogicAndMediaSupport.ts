@@ -9,7 +9,8 @@
 
 import { generateConditionalMessageLogic } from '.';
 import { isLoggingEnabled } from '../../bot-generator';
-import { formatTextForPython, generateWaitingStateCode, getParseMode, stripHtmlTags } from '../format';
+import { formatTextForPython, getParseMode, stripHtmlTags } from '../format';
+import { generateUserInputFromNode } from '../../templates/user-input';
 import { generateAttachedMediaSendCode } from '../MediaHandler';
 import { generateKeyboard } from '../../templates/keyboard';
 import { generateUniversalVariableReplacement } from '../utils';
@@ -319,7 +320,7 @@ export function generateMessageNodeHandlerWithConditionalLogicAndMediaSupport(ta
             codeLines.push('    # Используем универсальную функцию для определения правильного типа ввода (text/photo/video/audio/document)');
             // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode с правильным контекстом callback_query
             if (targetNode && targetNode.data) {
-                const waitingStateCode = generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
+                const waitingStateCode = generateUserInputFromNode(targetNode, '    ');
                 const waitingStateLines = waitingStateCode.split('\n').filter(line => line.trim());
                 codeLines.push(...waitingStateLines);
             }

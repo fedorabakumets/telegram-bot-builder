@@ -7,7 +7,7 @@
  * @module bot-generator/user-input/generate-button-response-save
  */
 
-import { generateSaveToDatabaseTable } from '../database/generateSaveToDatabaseTable';
+import { generateSaveToDatabaseTable } from '../../templates/database/save-to-database-table.renderer';
 
 /**
  * Генерирует Python-код для сохранения ответа кнопки в БД
