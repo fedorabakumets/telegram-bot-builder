@@ -16,7 +16,6 @@ export type { CodeWithMap } from './code-types';
 
 export type { BotNode } from './bot-node-types';
 export type { BotNodeArray } from './bot-node-types';
-export type { LegacyEnhancedNode } from './bot-node-types';
 
 export type { NodeData } from './node-data.types';
 export type { KeyboardType } from './node-data.types';

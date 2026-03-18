@@ -12,7 +12,7 @@
 import { Node } from '@shared/schema';
 import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler } from './node-handlers.renderer';
 import { generateMessage } from '../message/message.renderer';
-import { generateContactHandler, generateLocationHandler } from '../../bot-generator/MediaHandler';
+import { generateContactHandler, generateLocationHandler } from './contact-location.renderer';
 import { generateMessageHandlerFromNode } from '../message-handler';
 import { processCodeWithAutoComments } from '../../bot-generator/utils/generateGeneratedComment';
 import { generateUserHandlerFromNode } from '../user-handler';

@@ -770,25 +770,7 @@ describe('generateAnimationHandler', () => {
   });
 });
 
-describe('generateAttachedMedia', () => {
-  it('должен генерировать валидный Python код для attached-media', async () => {
-    const { execSync } = await import('child_process');
-    let hasPython = false;
-    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
 
-    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
-
-    const { generateAttachedMedia } = await import('./attached-media/attached-media.renderer');
-    const code = generateAttachedMedia({
-      nodeId: 'node_1',
-      attachedMedia: ['/uploads/photo.jpg'],
-      formatMode: 'none',
-      keyboardType: 'none',
-      handlerContext: 'callback',
-    });
-    assertValidPythonSyntax(code, 'generateAttachedMedia');
-  });
-});
 
 describe('generateAttachedMediaVars', () => {
   it('должен генерировать валидный Python код для attached-media-vars', async () => {
@@ -961,19 +943,7 @@ describe('generateHandleUserInput', () => {
   });
 });
 
-describe('generateMediaPathResolve', () => {
-  it('должен генерировать валидный Python код для media-path-resolve', async () => {
-    const { execSync } = await import('child_process');
-    let hasPython = false;
-    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
 
-    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
-
-    const { generateMediaPathResolve } = await import('./media-path-resolve/media-path-resolve.renderer');
-    const code = generateMediaPathResolve({ mediaType: 'photo', urlVar: 'image_url' });
-    assertValidPythonSyntax(code, 'generateMediaPathResolve');
-  });
-});
 
 describe('generateMediaSaveVars', () => {
   it('должен генерировать валидный Python код для media-save-vars', async () => {
@@ -989,19 +959,7 @@ describe('generateMediaSaveVars', () => {
   });
 });
 
-describe('generateMediaSend', () => {
-  it('должен генерировать валидный Python код для media-send', async () => {
-    const { execSync } = await import('child_process');
-    let hasPython = false;
-    try { execSync('python --version', { stdio: 'pipe' }); hasPython = true; } catch { }
 
-    if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
-
-    const { generateMediaSend } = await import('./media-send/media-send.renderer');
-    const code = generateMediaSend({ nodeId: 'node_img', imageUrl: 'https://example.com/photo.jpg' });
-    assertValidPythonSyntax(code, 'generateMediaSend');
-  });
-});
 
 describe('generateMultiselectCheck', () => {
   it('должен генерировать валидный Python код для multiselect-check', async () => {

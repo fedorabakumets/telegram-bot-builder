@@ -16,9 +16,6 @@ export { generateSynonymHandlers, generateSynonyms, collectSynonymEntries } from
 export * from './bot-generator/utils/addAutoTransitionNodes';
 export * from './bot-generator/utils/extractNodeData';
 
-// Command handlers - удалено, функциональность перенесена в Jinja2 шаблоны
-// export * from './bot-generator/CommandHandler';
-
 // Conditional logic
 export * from './bot-generator/Conditional';
 
@@ -53,9 +50,6 @@ export * from './bot-generator/scaffolding';
 
 // Storage utilities
 export * from '../client/storage';
-
-// Synonym handlers — перенесено в templates/synonyms (Jinja2)
-// export * from './bot-generator/Synonyms';
 
 // User management handlers — перенесено в templates/user-handler (Jinja2)
 export { generateUserHandler, generateUserHandlerFromNode, nodeToUserHandlerParams } from './templates/user-handler';
@@ -100,7 +94,6 @@ export type {
   CallbackHandler,
   EnhancedNode,
   EnhancedNodeArray,
-  LegacyEnhancedNode,
   ButtonActionOverride,
   ButtonOverride,
   KeyboardTypeOverride,

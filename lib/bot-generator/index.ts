@@ -26,7 +26,7 @@ export type {
   ButtonAction
 } from './types';
 export type { CodeNodeRange, CodeWithMap } from './types';
-export type { BotNode, BotNodeArray, LegacyEnhancedNode } from './types';
+export type { BotNode, BotNodeArray } from './types';
 export type { NodeData, KeyboardType, FormatMode, InputType } from './types';
 export type { EnhancedNode, EnhancedNodeArray } from './types';
 export type {

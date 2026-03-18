@@ -17,19 +17,15 @@ import { generateBotFatherCommands } from './commands';
 
 import { generateDatabaseCode } from './templates/database/database-code.renderer';
 import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, generateMain, generateImports, generateConfig, generateUtils } from './templates/typed-renderer';
-// Примечание: generateApiConfig удалена после миграции на Jinja2
-// import { generateApiConfig } from './bot-generator/api';
 import { generateNodeHandlers } from './templates/node-handlers/node-handlers.dispatcher';
 import { filterInlineNodes, hasInlineButtons, identifyNodesRequiringMultiSelectLogic } from './templates/keyboard/keyboard.renderer';
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers } from './templates/handlers';
-import { hasUrlButtons } from './bot-generator/user-input';
 import { generateInteractiveCallbackHandlers } from './templates/interactive-callback-handlers';
 import { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
-import { generateGroupHandlers } from './bot-generator/MediaHandler/generateGroupHandlers';
-import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generateMediaFileFunctions';
-import { generateSaveMediaToDb } from './bot-generator/MediaHandler/save-media-to-db';
-import { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
-import { hasUploadImageUrls } from './bot-generator/MediaHandler/hasUploadImageUrls';
+import { generateGroupHandlers } from './templates/group-handlers/group-handlers.renderer';
+import { generateMediaFunctions } from './templates/media-functions/media-functions.renderer';
+import { hasMediaNodes } from './bot-generator/utils/hasMediaNodes';
+import { hasUploadImageUrls } from './bot-generator/utils/hasUploadImageUrls';
 import { generateMessageLoggingCode } from './templates/middleware/middleware.renderer';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';
 import { addAutoTransitionNodes } from './bot-generator/utils/addAutoTransitionNodes';
@@ -250,8 +246,6 @@ export function generatePythonCode(
 
   // Примечание: generateApiConfig удалена после миграции на Jinja2
   // Конфигурация API теперь генерируется через lib/templates/config/config.py.jinja2
-
-  // Генерируем логирование сообщений (только при включенной БД)
   if (context.options.userDatabaseEnabled) {
     code += generateMessageLoggingCode(context.options.userDatabaseEnabled, hasInlineButtons(context.nodes || []), context.projectId);
   }
@@ -272,8 +266,7 @@ export function generatePythonCode(
   // Функции для работы с файлами - если есть медиа или узлы с изображениями из папки uploads
   // ИЛИ если включена база данных пользователей (для функции send_photo_with_logging)
   if (hasMediaNodes(context.nodes || []) || hasUploadImageUrls(context.nodes || []) || !!context.options.userDatabaseEnabled) {
-    code += generateSaveMediaToDb();
-    code += generateMediaFileFunctions();
+    code += generateMediaFunctions();
   }
 
   // Определяем команды для меню BotFather
@@ -477,7 +470,6 @@ export function generatePythonCode(
           allowSkip: node.data.allowSkip,
         })),
         allNodes: context.nodes,
-        hasUrlButtonsInProject: hasUrlButtons(context.nodes),
         indentLevel: '',
       });
     }

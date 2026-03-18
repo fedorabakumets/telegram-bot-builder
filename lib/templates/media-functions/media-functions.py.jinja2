@@ -1,0 +1,129 @@
+{#
+  Python-функции для работы с медиафайлами:
+  - save_media_to_db / link_media_to_message
+  - get_upload_file_path / register_telegram_photo / send_photo_with_caption
+#}
+
+# ┌─────────────────────────────────────────┐
+# │      Сохранение медиа в БД              │
+# └─────────────────────────────────────────┘
+
+async def save_media_to_db(file_id: str, file_type: str, file_name: str = None, file_size: int = None, mime_type: str = None):
+    """Сохраняет информацию о медиа-файле в базу данных напрямую"""
+    try:
+        file_path = f"/uploads/{PROJECT_ID}/{file_id}_{file_name or file_type}"
+        file_url = f"{PROJECT_DIR}{file_path}"
+
+        async with db_pool.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                INSERT INTO media_files (project_id, file_name, file_type, file_path, file_size, mime_type, url, is_public, usage_count)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, 1, 0)
+                RETURNING id, file_name, file_type, url
+                """,
+                PROJECT_ID,
+                file_name or f"{file_type}_{file_id}",
+                file_type,
+                file_path,
+                file_size or 0,
+                mime_type or "application/octet-stream",
+                file_url
+            )
+            logging.info(f"✅ Медиа сохранено в БД: {file_type} (id={result['id']})")
+            return {"id": result["id"], "file_name": result["file_name"], "file_type": result["file_type"], "url": result["url"]}
+    except Exception as e:
+        logging.error(f"❌ Ошибка сохранения медиа в БД: {e}")
+    return None
+
+
+async def link_media_to_message(message_id: int, media_id: int, media_kind: str = "photo", order_index: int = 0):
+    """Связывает медиа с сообщением в базе данных"""
+    try:
+        async with db_pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO bot_message_media (message_id, media_file_id, media_kind, order_index)
+                VALUES ($1, $2, $3, $4)
+                """,
+                message_id, media_id, media_kind, order_index
+            )
+            await conn.execute(
+                """
+                UPDATE bot_messages SET primary_media_id = $1 WHERE id = $2
+                """,
+                media_id, message_id
+            )
+            logging.info(f"🔗 Медиа связано с сообщением {message_id}")
+            return True
+    except Exception as e:
+        logging.error(f"❌ Ошибка связи медиа с сообщением: {e}")
+    return False
+
+
+# Функция для получения пути к файлу в папке uploads
+def get_upload_file_path(file_path):
+    """Получает правильный путь к файлу в папке uploads"""
+    import os
+    bot_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(bot_dir))
+    relative_path = file_path[1:]
+    return os.path.join(project_root, relative_path)
+
+
+async def register_telegram_photo(message_id: int, file_id: str, bot_token: str, media_type: str = "photo"):
+    """Регистрирует фото из Telegram в системе и сохраняет в БД"""
+    try:
+        media_result = await save_media_to_db(
+            file_id=file_id,
+            file_type=media_type,
+            file_name=f"{media_type}_{file_id}",
+            file_size=0,
+            mime_type=f"image/{media_type}" if media_type == "photo" else "application/octet-stream"
+        )
+        if media_result:
+            await link_media_to_message(
+                message_id=message_id,
+                media_id=media_result["id"],
+                media_kind=media_type,
+                order_index=0
+            )
+            logging.info(f"✅ Медиа зарегистрировано для сообщения {message_id}")
+            return media_result
+        else:
+            logging.warning(f"⚠️ Не удалось сохранить медиа для сообщения {message_id}")
+            return None
+    except Exception as e:
+        logging.error(f"Ошибка при регистрации медиа: {e}")
+        return None
+
+
+async def send_photo_with_caption(chat_id: int, photo_source, caption: str = None, **kwargs):
+    """Отправляет фото с подписью и сохраняет в базу данных"""
+    try:
+        if isinstance(photo_source, str) and photo_source.startswith('/uploads/'):
+            file_path = get_upload_file_path(photo_source)
+            result = await bot.send_photo(chat_id, FSInputFile(file_path), caption=caption, **kwargs)
+        else:
+            result = await bot.send_photo(chat_id, photo_source, caption=caption, **kwargs)
+
+        message_data_obj = {"message_id": result.message_id if result else None}
+        if result and hasattr(result, "photo") and result.photo:
+            largest_photo = result.photo[-1]
+            message_data_obj["photo"] = {
+                "file_id": largest_photo.file_id,
+                "file_unique_id": largest_photo.file_unique_id,
+                "width": largest_photo.width,
+                "height": largest_photo.height
+            }
+
+        await save_message_to_api(
+            user_id=str(chat_id),
+            message_type="bot",
+            message_text=caption or "[Фото]",
+            message_data=message_data_obj
+        )
+        return result
+    except Exception as e:
+        logging.error(f"Ошибка при отправке фото: {e}")
+        if caption:
+            return await bot.send_message(chat_id, caption, **kwargs)

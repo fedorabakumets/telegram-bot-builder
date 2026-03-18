@@ -40,13 +40,3 @@ export interface BotNode {
  * const nodes: BotNode[] = [...];
  */
 export type BotNodeArray = BotNode[];
-
-/**
- * Улучшенный узел бота с полной совместимостью
- * 
- * @deprecated Используйте EnhancedNode напрямую
- * 
- * @example
- * const node: LegacyEnhancedNode = { ... };
- */
-export type LegacyEnhancedNode = EnhancedNode;
