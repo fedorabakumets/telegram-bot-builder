@@ -22,6 +22,13 @@ import { generateAdminRightsFromNode } from '../admin-rights/admin-rights.render
 import { collectSynonymEntries } from '../synonyms/synonyms.renderer';
 
 /**
+ * Проверяет, использует ли текст переменные {user_ids} или {user_ids_count}
+ */
+function hasUserIdsVar(text: string): boolean {
+  return /\{user_ids(?:_count)?\}/.test(text || '');
+}
+
+/**
  * Генерирует обработчики для каждого узла
  *
  * Функция проходит по всем узлам графа и генерирует соответствующие обработчики
@@ -37,13 +44,8 @@ import { collectSynonymEntries } from '../synonyms/synonyms.renderer';
  * const code = generateNodeHandlers(nodes, true, true);
  */
 export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean, enableComments: boolean = true): string {
-  // Собираем код в массив строк для автоматической обработки
+  // Собираем код в массив строк
   const codeLines: string[] = [];
-
-  // Добавляем комментарий о генерации, если включена генерация комментариев
-  if (enableComments) {
-    codeLines.push('# Код сгенерирован в generate-node-handlers.ts');
-  }
 
   // Создаем mediaVariablesMap для всех узлов (используется старыми обработчиками)
 
@@ -77,6 +79,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
       conditionalMessages: node.data?.conditionalMessages || [],
       fallbackMessage: node.data?.fallbackMessage,
       synonymEntries: collectSynonymEntries([node]),
+      hasUserIdsVariable: hasUserIdsVar(node.data?.messageText),
     }),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,
@@ -189,5 +192,5 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     : codeLines;
 
   // Собираем финальный код из обработанных строк
-  return processedCode.join('\n');
+  return codeLines.join('\n');
 }

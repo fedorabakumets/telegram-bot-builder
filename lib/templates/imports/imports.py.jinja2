@@ -18,7 +18,7 @@ import asyncio
 import logging
 import signal
 
-from aiogram import Bot, Dispatcher, types, F
+from aiogram import Bot, Dispatcher, types, F, BaseMiddleware
 from aiogram.types import (
     KeyboardButton,
     InlineKeyboardButton,
@@ -28,7 +28,7 @@ from aiogram.types import (
     FSInputFile
 )
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
-from typing import Optional
+from typing import Optional, Callable, Awaitable, Any
 
 from dotenv import load_dotenv
 from aiogram.filters import CommandStart, Command

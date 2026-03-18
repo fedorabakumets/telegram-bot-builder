@@ -113,7 +113,11 @@
 {%- elif btn.action == 'complete' and allowMultipleSelection %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="done_{{ effectiveNodeId }}"))
 {%- elif btn.action == 'goto' or btn.action == 'complete' %}
-{{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.target or btn.id or 'no_action' }}"))
+{%- if btn.target and (btn.target|trim)|length > 0 %}
+{{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="{{ btn.target }}"))
+{%- else %}
+{{ indent }}# Кнопка без цели — пропускаем (target не задан)
+{%- endif %}
 {%- elif btn.action == 'command' %}
 {{ indent }}builder.add(InlineKeyboardButton(text={{ btn.text|format_python_text }}, callback_data="cmd_{{ (btn.target or '')|replace('/', '') or 'unknown' }}"))
 {%- else %}

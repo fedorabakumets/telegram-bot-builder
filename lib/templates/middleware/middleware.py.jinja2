@@ -38,26 +38,6 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
             message_data=message_data
         )
 
-        # Если есть фото и сообщение сохранено, регистрируем медиа в БД
-        if photo_file_id and saved_message and "id" in saved_message:
-            try:
-                media_result = await save_media_to_db(
-                    file_id=photo_file_id,
-                    file_type="photo",
-                    file_name=f"photo_{photo_file_id}",
-                    file_size=event.photo[-1].file_size if event.photo and event.photo[-1].file_size else 0,
-                    mime_type="image/jpeg"
-                )
-                if media_result:
-                    await link_media_to_message(
-                        message_id=saved_message["id"],
-                        media_id=media_result["id"],
-                        media_kind="photo",
-                        order_index=0
-                    )
-                    logging.info(f"✅ Медиа зарегистрировано для сообщения {saved_message['id']}")
-            except Exception as media_error:
-                logging.warning(f"Ошибка при регистрации медиа: {media_error}")
     except Exception as e:
         logging.error(f"Ошибка в middleware сохранения сообщений: {e}")
 

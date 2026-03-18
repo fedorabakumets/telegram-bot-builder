@@ -20,8 +20,14 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
 
   const hasMessageLogging = nodes.some(n => n.type === NODE_TYPES.MESSAGE || n.type === NODE_TYPES.COMMAND);
   const hasUserIdsTable = nodes.some(n => n.data?.buttons?.some((b: any) => b.action === 'goto'));
+  // hasUserDataAccess: нужны функции чтения/записи переменных — когда есть сбор ввода или условные сообщения
+  const hasUserDataAccess = nodes.some(n =>
+    n.data?.collectUserInput ||
+    n.data?.enableConditionalMessages ||
+    n.data?.saveToDatabase
+  );
 
-  let code = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging, hasUserIdsTable });
+  let code = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging, hasUserIdsTable, hasUserDataAccess });
   code += '\n';
 
   const hasStartNode = nodes.some(n => n.type === NODE_TYPES.START);

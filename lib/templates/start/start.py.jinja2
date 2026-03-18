@@ -135,10 +135,12 @@ async def start_handler(message: types.Message):
 
     {# Универсальная замена переменных #}
     all_user_vars = await init_all_user_vars(user_id)
+    {%- if hasUserIdsVariable %}
     user_ids_record = await get_user_ids_from_db(user_id)
     if user_ids_record:
         all_user_vars["user_ids"] = user_ids_record.get("user_ids", [])
         all_user_vars["user_ids_count"] = user_ids_record.get("count", 0)
+    {%- endif %}
     text = replace_variables_in_text(text, all_user_vars, {})
 
     {# Клавиатура #}

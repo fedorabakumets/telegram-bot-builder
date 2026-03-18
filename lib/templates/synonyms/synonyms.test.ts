@@ -231,10 +231,10 @@ describe('generateSynonyms()', () => {
 
   // ── маркеры и общее ──
   describe('маркеры и структура', () => {
-    it('генерирует NODE_START/NODE_END маркеры', () => {
+    it('НЕ генерирует NODE_START/NODE_END маркеры (маркеры принадлежат dispatcher)', () => {
       const r = generateSynonyms(validParamsStartSynonyms);
-      assert.ok(r.includes('@@NODE_START:start_1@@'));
-      assert.ok(r.includes('@@NODE_END:start_1@@'));
+      assert.ok(!r.includes('@@NODE_START:'), 'synonyms не должны содержать @@NODE_START маркеры');
+      assert.ok(!r.includes('@@NODE_END:'), 'synonyms не должны содержать @@NODE_END маркеры');
     });
 
     it('смешанные типы генерируются вместе', () => {

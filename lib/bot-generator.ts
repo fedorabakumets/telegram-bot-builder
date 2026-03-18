@@ -34,7 +34,7 @@ import { addInputTargetNodes } from './bot-generator/core/add-input-target-nodes
 import { collectInputTargetNodes } from './bot-generator/core/collect-input-target-nodes';
 import { assertValidPython } from './bot-generator/validation';
 import { collectAllCommandCallbacksFromNodes, findCommandNode } from './bot-generator/core/command-utils';
-
+import { emitOnce, COMPONENT_NAMES } from './bot-generator/core/generation-state';
 /**
  * Опции для генерации Python-кода бота
  */
@@ -126,56 +126,70 @@ function generateCodeSections(
 ): CodeSections {
   const nodes = context.nodes || [];
   const userDatabaseEnabled = !!context.options.userDatabaseEnabled;
+  const state = context.state;
 
   // --- imports ---
-  const imports = generateImports({
-    userDatabaseEnabled,
-    hasInlineButtons: flags.hasInlineButtonsResult,
-    hasAutoTransitions: flags.hasAutoTransitionsResult,
-    hasMediaNodes: flags.hasMediaNodesResult,
-    hasUploadImages: flags.hasUploadImagesResult,
-    hasParseModeNodes: flags.hasParseModeNodesResult,
-    hasMediaGroups: flags.hasMediaGroupsResult,
-    hasUrlImages: flags.hasUrlImagesResult,
-    hasDatetimeNodes: flags.hasDatetimeNodesResult,
-    hasTimezoneNodes: flags.hasTimezoneNodesResult,
-  });
+  const imports = emitOnce(state, COMPONENT_NAMES.IMPORTS, () =>
+    generateImports({
+      userDatabaseEnabled,
+      hasInlineButtons: flags.hasInlineButtonsResult,
+      hasAutoTransitions: flags.hasAutoTransitionsResult,
+      hasMediaNodes: flags.hasMediaNodesResult,
+      hasUploadImages: flags.hasUploadImagesResult,
+      hasParseModeNodes: flags.hasParseModeNodesResult,
+      hasMediaGroups: flags.hasMediaGroupsResult,
+      hasUrlImages: flags.hasUrlImagesResult,
+      hasDatetimeNodes: flags.hasDatetimeNodesResult,
+      hasTimezoneNodes: flags.hasTimezoneNodesResult,
+    })
+  );
 
   // --- safeEditOrSend ---
-  const safeEditOrSend = generateSafeEditOrSend({
-    hasInlineButtonsOrSpecialNodes:
-      flags.hasInlineButtonsResult ||
-      flags.hasNodesRequiringSafeEditOrSendResult ||
-      userDatabaseEnabled,
-    hasAutoTransitions: flags.hasAutoTransitionsResult || userDatabaseEnabled,
-  });
+  const safeEditOrSend = emitOnce(state, COMPONENT_NAMES.SAFE_EDIT_OR_SEND, () =>
+    generateSafeEditOrSend({
+      hasInlineButtonsOrSpecialNodes:
+        flags.hasInlineButtonsResult ||
+        flags.hasNodesRequiringSafeEditOrSendResult ||
+        userDatabaseEnabled,
+      hasAutoTransitions: flags.hasAutoTransitionsResult || userDatabaseEnabled,
+    })
+  );
 
   // --- config ---
-  const config = generateConfig({
-    userDatabaseEnabled,
-    projectId: context.projectId,
-  });
+  const config = emitOnce(state, COMPONENT_NAMES.CONFIG, () =>
+    generateConfig({
+      userDatabaseEnabled,
+      projectId: context.projectId,
+    })
+  );
 
-  // --- logging middleware ---
-  const loggingCode = userDatabaseEnabled
-    ? generateMessageLoggingCode(
-        userDatabaseEnabled,
-        hasInlineButtons(nodes),
-        context.projectId
-      )
-    : '';
+  // --- logging middleware (включает save_message_to_api) ---
+  const loggingCode = emitOnce(state, COMPONENT_NAMES.MIDDLEWARE, () =>
+    userDatabaseEnabled
+      ? generateMessageLoggingCode(
+          userDatabaseEnabled,
+          hasInlineButtons(nodes),
+          context.projectId
+        )
+      : ''
+  );
 
   // --- database ---
-  const databaseCode = generateDatabaseCode(userDatabaseEnabled, nodes);
+  const databaseCode = emitOnce(state, COMPONENT_NAMES.DATABASE, () =>
+    generateDatabaseCode(userDatabaseEnabled, nodes)
+  );
 
-  // --- utils ---
-  const utils = generateUtils({ userDatabaseEnabled });
+  // --- utils (содержит save_message_to_api-заглушку при userDatabaseEnabled=false) ---
+  const utils = emitOnce(state, COMPONENT_NAMES.UTILS, () =>
+    generateUtils({ userDatabaseEnabled })
+  );
 
   // --- media functions ---
-  const mediaFunctions =
-    flags.hasMediaNodesResult || flags.hasUploadImagesResult || userDatabaseEnabled
+  const mediaFunctions = emitOnce(state, COMPONENT_NAMES.MEDIA_FUNCTIONS, () =>
+    flags.hasMediaNodesResult || flags.hasUploadImagesResult
       ? generateMediaFunctions()
-      : '';
+      : ''
+  );
 
   // --- node handlers ---
   const nodeHandlers = generateNodeHandlers(
@@ -280,12 +294,16 @@ function generateCodeSections(
   }
 
   // --- group handlers ---
-  const groupHandlers = !!context.options.enableGroupHandlers
-    ? '\n' + generateGroupHandlers(context.groups)
-    : '';
+  const groupHandlers = emitOnce(state, COMPONENT_NAMES.GROUP_HANDLERS, () =>
+    !!context.options.enableGroupHandlers
+      ? '\n' + generateGroupHandlers(context.groups)
+      : ''
+  );
 
   // --- universal handlers ---
-  const universalHandlers = generateUniversalHandlers({ userDatabaseEnabled });
+  const universalHandlers = emitOnce(state, COMPONENT_NAMES.UNIVERSAL_HANDLERS, () =>
+    generateUniversalHandlers({ userDatabaseEnabled })
+  );
 
   // --- main ---
   const menuCommands = nodes.filter(node =>
@@ -294,14 +312,16 @@ function generateCodeSections(
     node.data.command
   );
 
-  const main = generateMain({
-    userDatabaseEnabled,
-    hasInlineButtons: hasInlineButtons(nodes),
-    menuCommands: menuCommands.map(node => ({
-      command: (node.data.command || '').replace('/', ''),
-      description: node.data.description || 'Команда бота',
-    })),
-  });
+  const main = emitOnce(state, COMPONENT_NAMES.MAIN, () =>
+    generateMain({
+      userDatabaseEnabled,
+      hasInlineButtons: hasInlineButtons(nodes),
+      menuCommands: menuCommands.map(node => ({
+        command: (node.data.command || '').replace('/', ''),
+        description: node.data.description || 'Команда бота',
+      })),
+    })
+  );
 
   // --- multiselect handlers ---
   const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes);
@@ -338,7 +358,7 @@ function generateCodeSections(
   }
 
   return {
-    header: generateHeader({}),
+    header: emitOnce(state, COMPONENT_NAMES.HEADER, () => generateHeader({})),
     imports,
     safeEditOrSend,
     config,
@@ -382,23 +402,40 @@ function assembleAndValidate(
   }
 
   code += '"""\n\n';
-  code += sections.header;
-  code += sections.imports;
-  code += sections.safeEditOrSend;
-  code += sections.config;
-  code += sections.loggingCode;
-  code += sections.databaseCode;
-  code += sections.utils;
-  code += sections.mediaFunctions;
-  code += sections.nodeHandlers;
-  code += sections.interactiveCallbackHandlers;
-  code += sections.replyButtonHandlers;
-  code += sections.buttonResponseHandlers;
-  code += sections.commandCallbackHandlers;
-  code += sections.groupHandlers;
-  code += sections.universalHandlers;
-  code += sections.main;
-  code += sections.multiSelectHandlers;
+
+  // Собираем секции, фильтруя пустые и нормализуя пробелы
+  const sectionList = [
+    sections.header,
+    sections.imports,
+    sections.safeEditOrSend,
+    sections.config,
+    sections.loggingCode,
+    sections.databaseCode,
+    sections.utils,
+    sections.mediaFunctions,
+    sections.nodeHandlers,
+    sections.interactiveCallbackHandlers,
+    sections.replyButtonHandlers,
+    sections.buttonResponseHandlers,
+    sections.commandCallbackHandlers,
+    sections.groupHandlers,
+    sections.universalHandlers,
+    sections.main,
+    sections.multiSelectHandlers,
+  ];
+
+  // Объединяем непустые секции с одним переносом строки между ними
+  const nonEmpty = sectionList.filter(s => s && s.trim().length > 0);
+  // Нормализуем начало каждой секции — убираем ведущие пустые строки
+  const trimmedSections = nonEmpty.map(s => s.replace(/^[\r\n]+/, ''));
+  code += trimmedSections.join('\n\n');
+
+  // Нормализуем: не более 2 пустых строк подряд (PEP8: 2 пустые строки между top-level функциями)
+  code = code.replace(/\r\n/g, '\n');
+  code = code.replace(/\n[ \t]+\n/g, '\n\n');  // строки только с пробелами → пустые строки
+  code = code.replace(/\n{4,}/g, '\n\n\n');
+  // Внутри функций (строки с отступом) — не более 1 пустой строки
+  code = code.replace(/([ \t]+[^\n]+\n)\n{2,}([ \t])/g, '$1\n$2');
 
   assertValidPython(code);
 

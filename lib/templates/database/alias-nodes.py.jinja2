@@ -8,28 +8,14 @@
 # │      Алиасы для обработчиков команд     │
 # └─────────────────────────────────────────┘
 {% if hasStartNode %}
-# Проверяем, что start_handler существует перед вызовом
 async def handle_command_start(message):
     """Алиас для start_handler, используется в callback обработчиках"""
-    # Определяем user_id для использования в обработчике
-    user_id = message.from_user.id
-    if "start_handler" in globals():
-        await start_handler(message)
-    else:
-        # Если start_handler не определен, просто выводим сообщение
-        await message.answer("Команда /start временно недоступна")
+    await start_handler(message)
 
 {% endif %}
 {% for cmd in commandNodes %}
-# Проверяем, что {{ cmd.functionName }}_handler существует перед вызовом
 async def handle_command_{{ cmd.functionName }}(message):
     """Алиас для {{ cmd.functionName }}_handler, используется в callback обработчиках"""
-    # Определяем user_id для использования в обработчике
-    user_id = message.from_user.id
-    if "{{ cmd.functionName }}_handler" in globals():
-        await {{ cmd.functionName }}_handler(message)
-    else:
-        # Если {{ cmd.functionName }}_handler не определен, просто выводим сообщение
-        await message.answer("Команда /{{ cmd.command }} временно недоступна")
+    await {{ cmd.functionName }}_handler(message)
 
 {% endfor %}

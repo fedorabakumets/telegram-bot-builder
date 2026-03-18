@@ -42,8 +42,8 @@ async def log_message(user_id: int, message_type: str, message_text: str = None,
     try:
         async with db_pool.acquire() as conn:
             await conn.execute(
-                "INSERT INTO bot_messages (user_id, message_type, message_text, message_data, node_id, created_at) VALUES ($1, $2, $3, $4, $5, NOW())",
-                user_id, message_type, message_text, message_data, node_id
+                "INSERT INTO bot_messages (project_id, user_id, message_type, message_text, message_data, node_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())",
+                PROJECT_ID, user_id, message_type, message_text, message_data, node_id
             )
     except Exception as e:
         logging.error(f"❌ Ошибка логирования сообщения: {e}")
@@ -163,10 +163,11 @@ async def init_database():
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS bot_messages (
                     id SERIAL PRIMARY KEY,
+                    project_id INTEGER,
                     user_id BIGINT,
                     message_type VARCHAR(50),
                     message_text TEXT,
-                    message_data TEXT,
+                    message_data JSONB DEFAULT '{}',
                     node_id VARCHAR(255),
                     created_at TIMESTAMP DEFAULT NOW()
                 )
@@ -251,17 +252,18 @@ async def update_user_data_in_db(user_id: int, data_key: str, data_value):
         logging.error(f"Ошибка обновления данных пользователя: {e}")
         return False
 
-{# Вспомогательные функции #}
+{# Вспомогательные функции — генерируются только если используются #}
+{% if hasMessageLogging %}
 {{ get_moscow_time_macro() }}
-
 {{ log_message_function() }}
-
+{% endif %}
+{% if hasUserIdsTable %}
 {{ get_user_ids_from_db() }}
-
+{% endif %}
+{% if hasUserDataAccess %}
 {{ get_user_data_from_db() }}
-
 {{ update_user_variable_in_db() }}
-
 {{ save_user_data_to_db() }}
+{% endif %}
 
 {%- endif %}

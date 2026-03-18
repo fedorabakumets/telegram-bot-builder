@@ -1,7 +1,7 @@
 /**
  * @fileoverview Состояние генерации Python-кода бота
  * 
- * Модуль предоставляет immutable состояние для процесса генерации.
+ * Модуль предоставляет состояние для процесса генерации.
  * Заменяет глобальные переменные loggingEnabled и commentsEnabled.
  * 
  * @module bot-generator/core/generation-state
@@ -10,7 +10,29 @@
 import type { GenerationOptions } from './generation-options.types';
 
 /**
- * Immutable состояние генерации
+ * Имена компонентов, которые могут быть сгенерированы только один раз.
+ * Используются как ключи в generatedComponents.
+ */
+export const COMPONENT_NAMES = {
+  SAVE_MESSAGE_TO_API: 'save_message_to_api',
+  DATABASE: 'database',
+  UTILS: 'utils',
+  MIDDLEWARE: 'middleware',
+  MEDIA_FUNCTIONS: 'media_functions',
+  SAFE_EDIT_OR_SEND: 'safe_edit_or_send',
+  IMPORTS: 'imports',
+  CONFIG: 'config',
+  HEADER: 'header',
+  MAIN: 'main',
+  UNIVERSAL_HANDLERS: 'universal_handlers',
+  GROUP_HANDLERS: 'group_handlers',
+} as const;
+
+export type ComponentName = typeof COMPONENT_NAMES[keyof typeof COMPONENT_NAMES];
+
+/**
+ * Состояние генерации.
+ * generatedComponents — мутабельный Set для отслеживания уже эмитированных секций.
  * 
  * @example
  * const state: GenerationState = {
@@ -24,8 +46,12 @@ export interface GenerationState {
   readonly loggingEnabled: boolean;
   /** Включены ли комментарии */
   readonly commentsEnabled: boolean;
-  /** Множество сгенерированных компонентов */
-  readonly generatedComponents: ReadonlySet<string>;
+  /**
+   * Множество уже сгенерированных компонентов.
+   * Мутабельный — намеренно, чтобы pipeline мог регистрировать эмиссию
+   * без создания нового объекта состояния на каждом шаге.
+   */
+  readonly generatedComponents: Set<string>;
 }
 
 /**
@@ -125,4 +151,30 @@ export function isComponentGenerated(
   component: string
 ): boolean {
   return state.generatedComponents.has(component);
+}
+
+/**
+ * Генерирует компонент ровно один раз.
+ * Если компонент уже был сгенерирован — возвращает пустую строку и логирует предупреждение.
+ *
+ * @param state - Текущее состояние генерации
+ * @param component - Имя компонента (из COMPONENT_NAMES)
+ * @param generate - Функция генерации кода
+ * @returns Сгенерированный код или '' если компонент уже был эмитирован
+ *
+ * @example
+ * const code = emitOnce(state, COMPONENT_NAMES.DATABASE, () => generateDatabase(...));
+ */
+export function emitOnce(
+  state: GenerationState,
+  component: string,
+  generate: () => string
+): string {
+  if (state.generatedComponents.has(component)) {
+    // Дублирование — возвращаем пустую строку вместо повторной эмиссии
+    return '';
+  }
+  const code = generate();
+  state.generatedComponents.add(component);
+  return code;
 }

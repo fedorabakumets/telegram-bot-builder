@@ -111,23 +111,13 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
     ),
     hasDatetimeNodesResult: nodes.some(
       (node) =>
-        node.type === NODE_TYPES.COMMAND ||
         node.type === NODE_TYPES.MUTE_USER ||
-        node.type === NODE_TYPES.BAN_USER ||
-        node.type === NODE_TYPES.MESSAGE ||
-        node.type === NODE_TYPES.STICKER ||
-        node.type === NODE_TYPES.VOICE ||
-        node.type === NODE_TYPES.ANIMATION ||
-        node.type === NODE_TYPES.PHOTO ||
-        node.type === NODE_TYPES.VIDEO ||
-        node.type === NODE_TYPES.DOCUMENT ||
-        node.type === NODE_TYPES.AUDIO ||
-        node.type === NODE_TYPES.LOCATION ||
-        node.type === NODE_TYPES.CONTACT
+        node.type === NODE_TYPES.BAN_USER
     ),
     hasTimezoneNodesResult: nodes.some(
       (node) =>
-        node.type === NODE_TYPES.PHOTO || (node.data && node.data.enablePhotoInput)
+        node.type === NODE_TYPES.MUTE_USER ||
+        (node.data && node.data.enablePhotoInput)
     ),
     hasNodesRequiringSafeEditOrSendResult: hasNodesRequiringSafeEditOrSend(nodes),
   };

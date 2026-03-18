@@ -17,7 +17,8 @@ export function collectAllCommandCallbacksFromNodes(nodes: Node[]): Set<string> 
   nodes.forEach(node => {
     if (node.data?.buttons) {
       node.data.buttons.forEach((button: Button) => {
-        if (button.action === 'goto' && button.target) {
+        // Только кнопки с action === 'command', не goto
+        if (button.action === 'command' && button.target) {
           const commandCallback = `cmd_${button.target.replace('/', '')}`;
           commandButtons.add(commandCallback);
         }
@@ -28,7 +29,7 @@ export function collectAllCommandCallbacksFromNodes(nodes: Node[]): Set<string> 
       node.data.conditionalMessages.forEach((condition: { buttons?: Button[] }) => {
         if (condition.buttons) {
           condition.buttons.forEach((button: Button) => {
-            if (button.action === 'goto' && button.target) {
+            if (button.action === 'command' && button.target) {
               const commandCallback = `cmd_${button.target.replace('/', '')}`;
               commandButtons.add(commandCallback);
             }

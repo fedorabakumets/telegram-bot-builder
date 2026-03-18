@@ -5,6 +5,16 @@
 
 export { isLoggingEnabled, logFlowAnalysis } from './logging';
 
+// Состояние генерации
+export {
+  createGenerationState,
+  markComponentGenerated,
+  isComponentGenerated,
+  emitOnce,
+  COMPONENT_NAMES,
+} from './generation-state';
+export type { GenerationState, ComponentName } from './generation-state';
+
 // Утилиты узлов
 export { addAutoTransitionNodes } from './add-auto-transition-nodes';
 export { addInputTargetNodes } from './add-input-target-nodes';

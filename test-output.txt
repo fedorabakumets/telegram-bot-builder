@@ -1,141 +1,2101 @@
+▶ bloat-detection — медиа-функции не генерируются без медиа-узлов
+  [32m✔ не должен содержать медиа-функции при userDatabaseEnabled=true без медиа-узлов [90m(109.3626ms)[39m[39m
+  [32m✔ не должен содержать медиа-функции при userDatabaseEnabled=false без медиа-узлов [90m(1.364ms)[39m[39m
+  [32m✔ должен содержать обязательные компоненты при userDatabaseEnabled=true [90m(1.7051ms)[39m[39m
+  [32m✔ должен содержать обязательные компоненты при userDatabaseEnabled=false [90m(2.8486ms)[39m[39m
+[32m✔ bloat-detection — медиа-функции не генерируются без медиа-узлов [90m(117.0076ms)[39m[39m
 ▶ PythonSyntaxValidation - интеграционные тесты
   ▶ generateKeyboard
-    ✔ должен генерировать валидный Python код для inline клавиатуры (608.3199ms)
-    ✔ должен генерировать валидный Python код для reply клавиатуры (196.1338ms)
-  ✔ generateKeyboard (805.9149ms)
+    [32m✔ должен генерировать валидный Python код для inline клавиатуры [90m(363.1581ms)[39m[39m
+    [32m✔ должен генерировать валидный Python код для reply клавиатуры [90m(232.6472ms)[39m[39m
+  [32m✔ generateKeyboard [90m(597.2782ms)[39m[39m
   ▶ generateStart
-    ✔ должен генерировать валидный Python код для start обработчика (196.12ms)
-  ✔ generateStart (196.6949ms)
+    [32m✔ должен генерировать валидный Python код для start обработчика [90m(187.2925ms)[39m[39m
+  [32m✔ generateStart [90m(187.6115ms)[39m[39m
   ▶ generateCommand
-    ✔ должен генерировать валидный Python код для command обработчика (225.1589ms)
-  ✔ generateCommand (225.4953ms)
+    [32m✔ должен генерировать валидный Python код для command обработчика [90m(188.1144ms)[39m[39m
+  [32m✔ generateCommand [90m(188.5169ms)[39m[39m
   ▶ generateMessage
-    ✔ должен генерировать валидный Python код для message обработчика (264.5596ms)
-    ✔ должен генерировать валидный Python код для message обработчика с синонимами (164.2813ms)
-  ✔ generateMessage (430.4502ms)
+    [32m✔ должен генерировать валидный Python код для message обработчика [90m(173.6765ms)[39m[39m
+    [32m✔ должен генерировать валидный Python код для message обработчика с синонимами [90m(174.9568ms)[39m[39m
+  [32m✔ generateMessage [90m(349.57ms)[39m[39m
   ▶ generateDatabase
-    ✔ должен генерировать валидный Python код для database функций (191.3373ms)
-  ✔ generateDatabase (191.7316ms)
+    [32m✔ должен генерировать валидный Python код для database функций [90m(255.7235ms)[39m[39m
+  [32m✔ generateDatabase [90m(256.6714ms)[39m[39m
   ▶ generateUtils
-    ✔ должен генерировать валидный Python код для utils функций (166.311ms)
-  ✔ generateUtils (167.1052ms)
+    [32m✔ должен генерировать валидный Python код для utils функций [90m(169.8811ms)[39m[39m
+  [32m✔ generateUtils [90m(170.4987ms)[39m[39m
   ▶ generateImports
-    ✔ должен генерировать валидный Python код для imports (168.3092ms)
-  ✔ generateImports (168.6512ms)
+    [32m✔ должен генерировать валидный Python код для imports [90m(170.1903ms)[39m[39m
+  [32m✔ generateImports [90m(170.4228ms)[39m[39m
   ▶ generateConfig
-    ✔ должен генерировать валидный Python код для config (181.4141ms)
-  ✔ generateConfig (181.69ms)
+    [32m✔ должен генерировать валидный Python код для config [90m(171.7352ms)[39m[39m
+  [32m✔ generateConfig [90m(172.1176ms)[39m[39m
   ▶ generateHeader
-    ✔ должен генерировать валидный Python код для header (160.1934ms)
-  ✔ generateHeader (160.4467ms)
+    [32m✔ должен генерировать валидный Python код для header [90m(158.7068ms)[39m[39m
+  [32m✔ generateHeader [90m(159.1546ms)[39m[39m
   ▶ generateMain
-    ✔ должен генерировать валидный Python код для main (158.6181ms)
-  ✔ generateMain (158.9142ms)
+    [32m✔ должен генерировать валидный Python код для main [90m(162.0462ms)[39m[39m
+  [32m✔ generateMain [90m(162.4522ms)[39m[39m
   ▶ generateMiddleware
-    ✔ должен генерировать валидный Python код для middleware (157.3109ms)
-  ✔ generateMiddleware (157.6006ms)
+    [32m✔ должен генерировать валидный Python код для middleware [90m(175.2538ms)[39m[39m
+  [32m✔ generateMiddleware [90m(175.4553ms)[39m[39m
   ▶ generateUniversalHandlers
-    ✔ должен генерировать валидный Python код для universal handlers (173.509ms)
-  ✔ generateUniversalHandlers (173.8752ms)
+    [32m✔ должен генерировать валидный Python код для universal handlers [90m(257.6145ms)[39m[39m
+  [32m✔ generateUniversalHandlers [90m(257.8958ms)[39m[39m
   ▶ generateBroadcast
-    ✔ должен генерировать валидный Python код для broadcast (171.2224ms)
-  ✔ generateBroadcast (171.5661ms)
+    [32m✔ должен генерировать валидный Python код для broadcast [90m(218.2468ms)[39m[39m
+  [32m✔ generateBroadcast [90m(218.6039ms)[39m[39m
   ▶ generateSticker
-    ✔ должен генерировать валидный Python код для sticker (161.0768ms)
-  ✔ generateSticker (161.4713ms)
+    [32m✔ должен генерировать валидный Python код для sticker [90m(161.2909ms)[39m[39m
+  [32m✔ generateSticker [90m(161.7121ms)[39m[39m
   ▶ generateVoice
-    ✔ должен генерировать валидный Python код для voice (158.8527ms)
-  ✔ generateVoice (159.1625ms)
+    [32m✔ должен генерировать валидный Python код для voice [90m(154.0458ms)[39m[39m
+  [32m✔ generateVoice [90m(154.2865ms)[39m[39m
   ▶ generateSafeEditOrSend
-    ✔ должен генерировать валидный Python код для safe_edit_or_send (259.5648ms)
-  ✔ generateSafeEditOrSend (259.8247ms)
+    [32m✔ должен генерировать валидный Python код для safe_edit_or_send [90m(185.5111ms)[39m[39m
+  [32m✔ generateSafeEditOrSend [90m(185.8634ms)[39m[39m
   ▶ generateCommandCallbackHandler - спецсимволы в nodeId
-    ✔ должен генерировать валидный Python код при дефисе в callbackData (145.7008ms)
-    ✔ должен генерировать валидный Python код при точках и спецсимволах в callbackData (150.8821ms)
-    ✔ должен генерировать валидный Python код при цифре в начале callbackData (127.5561ms)
-  ✔ generateCommandCallbackHandler - спецсимволы в nodeId (424.6679ms)
+    [32m✔ должен генерировать валидный Python код при дефисе в callbackData [90m(164.8037ms)[39m[39m
+    [32m✔ должен генерировать валидный Python код при точках и спецсимволах в callbackData [90m(140.9437ms)[39m[39m
+    [32m✔ должен генерировать валидный Python код при цифре в начале callbackData [90m(150.3139ms)[39m[39m
+  [32m✔ generateCommandCallbackHandler - спецсимволы в nodeId [90m(456.5881ms)[39m[39m
   ▶ pyflakes - полный собранный файл бота
-    ✔ полный минимальный файл бота не должен содержать undefined names (342.225ms)
-  ✔ pyflakes - полный собранный файл бота (730.2866ms)
-✔ PythonSyntaxValidation - интеграционные тесты (5009.245ms)
+    [31m✖ полный минимальный файл бота не должен содержать undefined names [90m(1888.8373ms)[39m[39m
+  [31m✖ pyflakes - полный собранный файл бота [90m(2231.9766ms)[39m[39m
+[31m✖ PythonSyntaxValidation - интеграционные тесты [90m(6305.57ms)[39m[39m
 ▶ generateAdminRights
-  ✔ должен генерировать валидный Python код для admin-rights (350.3663ms)
-✔ generateAdminRights (350.6787ms)
+  [32m✔ должен генерировать валидный Python код для admin-rights [90m(274.7831ms)[39m[39m
+[32m✔ generateAdminRights [90m(275.237ms)[39m[39m
 ▶ generateAnimationHandler
-  ✔ должен генерировать валидный Python код для animation-handler (205.0804ms)
-✔ generateAnimationHandler (205.3725ms)
-▶ generateAttachedMedia
-  ✔ должен генерировать валидный Python код для attached-media (238.6445ms)
-✔ generateAttachedMedia (238.9015ms)
+  [32m✔ должен генерировать валидный Python код для animation-handler [90m(263.49ms)[39m[39m
+[32m✔ generateAnimationHandler [90m(263.9002ms)[39m[39m
 ▶ generateAttachedMediaVars
-  ✔ должен генерировать валидный Python код для attached-media-vars (283.4298ms)
-✔ generateAttachedMediaVars (283.6543ms)
+  [32m✔ должен генерировать валидный Python код для attached-media-vars [90m(252.7491ms)[39m[39m
+[32m✔ generateAttachedMediaVars [90m(253.128ms)[39m[39m
 ▶ generateAutoTransition
-  ✔ должен генерировать валидный Python код для auto-transition (194.7044ms)
-✔ generateAutoTransition (195.0621ms)
+  [32m✔ должен генерировать валидный Python код для auto-transition [90m(210.8963ms)[39m[39m
+[32m✔ generateAutoTransition [90m(211.3572ms)[39m[39m
 ▶ generateCallbackHandlerInit
-  ✔ должен генерировать валидный Python код для callback-handler-init (325.8428ms)
-✔ generateCallbackHandlerInit (326.1931ms)
+  [32m✔ должен генерировать валидный Python код для callback-handler-init [90m(208.8512ms)[39m[39m
+[32m✔ generateCallbackHandlerInit [90m(209.3406ms)[39m[39m
 ▶ generateCommandNavigation
-  ✔ должен генерировать валидный Python код для command-navigation (192.5634ms)
-✔ generateCommandNavigation (192.8815ms)
+  [32m✔ должен генерировать валидный Python код для command-navigation [90m(197.4521ms)[39m[39m
+[32m✔ generateCommandNavigation [90m(197.8257ms)[39m[39m
 ▶ generateConditionalBranch
-  ✔ должен генерировать валидный Python код для conditional-branch (187.9302ms)
-✔ generateConditionalBranch (188.4128ms)
+  [32m✔ должен генерировать валидный Python код для conditional-branch [90m(238.442ms)[39m[39m
+[32m✔ generateConditionalBranch [90m(238.8029ms)[39m[39m
 ▶ generateConditionalInputHandler
-  ✔ должен генерировать валидный Python код для conditional-input-handler (213.2925ms)
-✔ generateConditionalInputHandler (213.5384ms)
+  [32m✔ должен генерировать валидный Python код для conditional-input-handler [90m(210.6779ms)[39m[39m
+[32m✔ generateConditionalInputHandler [90m(210.8984ms)[39m[39m
 ▶ generateConditionalMessages
-  ✔ должен генерировать валидный Python код для conditional-messages (199.9613ms)
-✔ generateConditionalMessages (200.2842ms)
-▶ generateCsvSafe
-  ✔ должен генерировать валидный Python код для csv-safe (229.5681ms)
-✔ generateCsvSafe (229.9198ms)
+  [32m✔ должен генерировать валидный Python код для conditional-messages [90m(205.1792ms)[39m[39m
+[32m✔ generateConditionalMessages [90m(205.4776ms)[39m[39m
 ▶ generateErrorHandler
-  ✖ должен генерировать валидный Python код для error-handler (239.8006ms)
-✖ generateErrorHandler (240.7963ms)
+  [31m✖ должен генерировать валидный Python код для error-handler [90m(187.9672ms)[39m[39m
+[31m✖ generateErrorHandler [90m(188.7589ms)[39m[39m
 ▶ generateFakeCallback
-  ✔ должен генерировать валидный Python код для fake-callback (265.988ms)
-✔ generateFakeCallback (266.3667ms)
+  [32m✔ должен генерировать валидный Python код для fake-callback [90m(216.5146ms)[39m[39m
+[32m✔ generateFakeCallback [90m(216.9503ms)[39m[39m
 ▶ generateHandleUserInput
-  ✔ должен генерировать валидный Python код для handle-user-input (238.6468ms)
-✔ generateHandleUserInput (238.9472ms)
-▶ generateMediaPathResolve
-  ✔ должен генерировать валидный Python код для media-path-resolve (207.2768ms)
-✔ generateMediaPathResolve (207.5085ms)
+  [31m✖ должен генерировать валидный Python код для handle-user-input [90m(248.2926ms)[39m[39m
+[31m✖ generateHandleUserInput [90m(248.9843ms)[39m[39m
 ▶ generateMediaSaveVars
-  ✔ должен генерировать валидный Python код для media-save-vars (193.6304ms)
-✔ generateMediaSaveVars (193.8604ms)
-▶ generateMediaSend
-  ✔ должен генерировать валидный Python код для media-send (207.826ms)
-✔ generateMediaSend (208.5253ms)
+  [31m✖ должен генерировать валидный Python код для media-save-vars [90m(79.9369ms)[39m[39m
+[31m✖ generateMediaSaveVars [90m(80.329ms)[39m[39m
 ▶ generateMultiselectCheck
-  ✔ должен генерировать валидный Python код для multiselect-check (223.0425ms)
-✔ generateMultiselectCheck (223.3346ms)
+  [32m✔ должен генерировать валидный Python код для multiselect-check [90m(170.5742ms)[39m[39m
+[32m✔ generateMultiselectCheck [90m(170.7239ms)[39m[39m
 ▶ generateNavigateToNode
-  ✔ должен генерировать валидный Python код для navigate-to-node (209.668ms)
-✔ generateNavigateToNode (209.896ms)
+  [32m✔ должен генерировать валидный Python код для navigate-to-node [90m(622.8605ms)[39m[39m
+[32m✔ generateNavigateToNode [90m(623.089ms)[39m[39m
 ▶ generateParseMode
-  ✔ должен генерировать валидный Python код для parse-mode (html) (264.0758ms)
-✔ generateParseMode (264.3437ms)
+  [32m✔ должен генерировать валидный Python код для parse-mode (html) [90m(189.1904ms)[39m[39m
+[32m✔ generateParseMode [90m(189.3918ms)[39m[39m
 ▶ generateSkipDataCollection
-  ✔ должен генерировать валидный Python код для skip-data-collection (230.1549ms)
-✔ generateSkipDataCollection (230.5073ms)
+  [32m✔ должен генерировать валидный Python код для skip-data-collection [90m(181.23ms)[39m[39m
+[32m✔ generateSkipDataCollection [90m(181.6697ms)[39m[39m
 ▶ generateSynonyms
-  ✔ должен генерировать валидный Python код для synonyms (219.9638ms)
-✔ generateSynonyms (220.2287ms)
+  [32m✔ должен генерировать валидный Python код для synonyms [90m(191.2797ms)[39m[39m
+[32m✔ generateSynonyms [90m(191.7955ms)[39m[39m
 ▶ generateUserHandler
-  ✔ должен генерировать валидный Python код для user-handler (ban_user) (204.5216ms)
-✔ generateUserHandler (204.764ms)
+  [32m✔ должен генерировать валидный Python код для user-handler (ban_user) [90m(208.7605ms)[39m[39m
+[32m✔ generateUserHandler [90m(208.9922ms)[39m[39m
 ▶ generateUserVariablesFunc
-  ✔ должен генерировать валидный Python код для user-variables-func (235.0743ms)
-✔ generateUserVariablesFunc (235.3983ms)
+  [32m✔ должен генерировать валидный Python код для user-variables-func [90m(186.8168ms)[39m[39m
+[32m✔ generateUserVariablesFunc [90m(187.0154ms)[39m[39m
 ▶ generateButtonResponse
-  ✔ должен генерировать валидный Python код для button-response (269.0539ms)
-✔ generateButtonResponse (269.3153ms)
+  [32m✔ должен генерировать валидный Python код для button-response [90m(201.7932ms)[39m[39m
+[32m✔ generateButtonResponse [90m(202.002ms)[39m[39m
 ▶ generateMultiSelectCallback
-  ✔ должен генерировать валидный Python код для multi-select-callback (268.7974ms)
-✔ generateMultiSelectCallback (269.1669ms)
+  [32m✔ должен генерировать валидный Python код для multi-select-callback [90m(198.0881ms)[39m[39m
+[32m✔ generateMultiSelectCallback [90m(198.3324ms)[39m[39m
 ▶ generateReplyButtonHandlers
-  ✔ должен генерировать валидный Python код для reply-button-handlers (325.4522ms)
-✔ generateReplyButtonHandlers (325.7357ms)
+  [32m✔ должен генерировать валидный Python код для reply-button-handlers [90m(196.9656ms)[39m[39m
+[32m✔ generateReplyButtonHandlers [90m(197.1666ms)[39m[39m
+▶ voice.py.jinja2 шаблон
+  ▶ generateVoice()
+    ▶ Валидные данные
+      [32m✔ должен генерировать обработчик голосового сообщения с подписью и длительностью [90m(12.9972ms)[39m[39m
+      [32m✔ должен генерировать обработчик только с URL [90m(0.5183ms)[39m[39m
+      [32m✔ должен генерировать обработчик с длительностью [90m(0.6677ms)[39m[39m
+      [32m✔ должен генерировать обработчик с disable_notification [90m(0.3825ms)[39m[39m
+      [32m✔ должен включать замену переменных в подписи [90m(0.4878ms)[39m[39m
+      [32m✔ должен включать обработку ошибок [90m(0.4217ms)[39m[39m
+      [32m✔ должен проверять наличие voice_url [90m(0.1942ms)[39m[39m
+      [32m✔ должен скачивать голосовое сообщение через aiohttp [90m(0.1549ms)[39m[39m
+    [32m✔ Валидные данные [90m(17.0697ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.0443ms)[39m[39m
+      [32m✔ должен отклонять параметры с отсутствующим полем [90m(0.3665ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.165ms)[39m[39m
+      [32m✔ должен отклонять string вместо number для mediaDuration [90m(0.2238ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.0209ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ должен принимать undefined для voiceUrl [90m(0.2855ms)[39m[39m
+      [32m✔ должен принимать undefined для mediaCaption [90m(0.1114ms)[39m[39m
+      [32m✔ должен принимать undefined для disableNotification [90m(0.1172ms)[39m[39m
+      [32m✔ должен использовать undefined для mediaDuration по умолчанию [90m(0.1217ms)[39m[39m
+      [32m✔ должен генерировать разные команды для разных nodeId [90m(0.3556ms)[39m[39m
+      [32m✔ должен включать duration только при наличии mediaDuration [90m(0.1598ms)[39m[39m
+    [32m✔ Граничные случаи [90m(1.3458ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.1768ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(21.5214ms)[39m[39m
+    [32m✔ Производительность [90m(22.0232ms)[39m[39m
+  [32m✔ generateVoice() [90m(43.2164ms)[39m[39m
+  ▶ voiceParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать все поля корректных типов [90m(0.9674ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.2258ms)[39m[39m
+      [32m✔ должен отклонять string вместо number для mediaDuration [90m(0.1432ms)[39m[39m
+      [32m✔ должен принимать undefined для mediaDuration [90m(0.1198ms)[39m[39m
+      [32m✔ должен принимать undefined для всех опциональных полей [90m(0.1244ms)[39m[39m
+    [32m✔ Валидация типов [90m(1.7871ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 5 полей [90m(0.1911ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для voiceUrl [90m(0.1233ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для mediaDuration [90m(0.0962ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для disableNotification [90m(0.0865ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.63ms)[39m[39m
+  [32m✔ voiceParamsSchema [90m(2.8228ms)[39m[39m
+[32m✔ voice.py.jinja2 шаблон [90m(46.6945ms)[39m[39m
+▶ utils.py.jinja2 шаблон
+  ▶ generateUtils()
+    ▶ Валидные данные
+      [32m✔ должен генерировать утилиты с check_auth для БД [90m(12.6349ms)[39m[39m
+      [32m✔ должен генерировать утилиты без БД [90m(0.4074ms)[39m[39m
+      [32m✔ должен включать is_private_chat [90m(0.6176ms)[39m[39m
+      [32m✔ должен включать get_user_variables [90m(0.3762ms)[39m[39m
+    [32m✔ Валидные данные [90m(15.0785ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.1354ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию [90m(0.5336ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.6764ms)[39m[39m
+      [32m✔ должен отклонять null вместо boolean [90m(0.8689ms)[39m[39m
+    [32m✔ Невалидные данные [90m(3.7246ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ должен включать get_user_from_db при userDatabaseEnabled=true [90m(0.563ms)[39m[39m
+      [32m✔ должен включать ADMIN_IDS [90m(0.5242ms)[39m[39m
+      [32m✔ должен включать docstring для get_user_variables [90m(0.3356ms)[39m[39m
+      [32m✔ должен всегда включать is_admin [90m(0.3162ms)[39m[39m
+      [32m✔ должен включать from aiogram import types [90m(0.2404ms)[39m[39m
+    [32m✔ Граничные случаи [90m(2.3778ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.2681ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(8.5512ms)[39m[39m
+    [32m✔ Производительность [90m(9.053ms)[39m[39m
+  [32m✔ generateUtils() [90m(30.8414ms)[39m[39m
+  ▶ utilsParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать boolean поле [90m(0.9458ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.4872ms)[39m[39m
+      [32m✔ должен отклонять number вместо boolean [90m(0.6229ms)[39m[39m
+      [32m✔ должен отклонять null [90m(0.2292ms)[39m[39m
+      [32m✔ должен отклонять undefined [90m(0.1606ms)[39m[39m
+    [32m✔ Валидация типов [90m(2.9686ms)[39m[39m
+    ▶ Значения по умолчанию
+      [32m✔ должен принимать false по умолчанию [90m(0.3056ms)[39m[39m
+    [32m✔ Значения по умолчанию [90m(0.3974ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 1 поле [90m(0.189ms)[39m[39m
+      [32m✔ должен использовать ZodOptional [90m(0.1304ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.4277ms)[39m[39m
+  [32m✔ utilsParamsSchema [90m(4.1881ms)[39m[39m
+[32m✔ utils.py.jinja2 шаблон [90m(35.6341ms)[39m[39m
+▶ user-variables-func.py.jinja2 шаблон
+  ▶ generateGetUserVariablesFunction()
+    ▶ Базовая генерация
+      [32m✔ должен генерировать функцию без параметров [90m(11.0869ms)[39m[39m
+      [32m✔ должен генерировать return с user_data.get [90m(0.84ms)[39m[39m
+      [32m✔ должен содержать docstring [90m(0.3727ms)[39m[39m
+      [32m✔ должен содержать Args и Returns в docstring [90m(0.1717ms)[39m[39m
+    [32m✔ Базовая генерация [90m(13.479ms)[39m[39m
+    ▶ Отступы
+      [32m✔ должен генерировать без отступа по умолчанию [90m(0.3202ms)[39m[39m
+      [32m✔ должен генерировать с отступом 4 пробела [90m(0.1774ms)[39m[39m
+      [32m✔ должен генерировать с отступом 8 пробелов [90m(0.1592ms)[39m[39m
+      [32m✔ пустой indentLevel эквивалентен отсутствию параметра [90m(0.755ms)[39m[39m
+      [32m✔ тело функции должно иметь дополнительный отступ относительно def [90m(0.3655ms)[39m[39m
+    [32m✔ Отступы [90m(2.4017ms)[39m[39m
+    ▶ Корректность Python-кода
+      [32m✔ не должен содержать синтаксических артефактов Jinja2 [90m(0.9582ms)[39m[39m
+      [32m✔ должен содержать только одно определение функции [90m(0.7606ms)[39m[39m
+      [32m✔ должен содержать только один return [90m(0.6322ms)[39m[39m
+    [32m✔ Корректность Python-кода [90m(2.8235ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.9882ms)[39m[39m
+      [32m✔ должен генерировать 1000 раз быстрее 500ms [90m(13.8895ms)[39m[39m
+    [32m✔ Производительность [90m(15.8713ms)[39m[39m
+  [32m✔ generateGetUserVariablesFunction() [90m(35.4209ms)[39m[39m
+  ▶ userVariablesFuncParamsSchema
+    [32m✔ должен принимать пустой объект [90m(0.8438ms)[39m[39m
+    [32m✔ должен использовать пустую строку как default для indentLevel [90m(0.4674ms)[39m[39m
+    [32m✔ должен принимать строку для indentLevel [90m(0.2103ms)[39m[39m
+    [32m✔ должен отклонять число вместо строки для indentLevel [90m(1.2599ms)[39m[39m
+  [32m✔ userVariablesFuncParamsSchema [90m(3.1781ms)[39m[39m
+[32m✔ user-variables-func.py.jinja2 шаблон [90m(39.2694ms)[39m[39m
+▶ generateUserInput()
+  [32m✔ генерирует waiting_for_input блок [90m(24.1935ms)[39m[39m
+  [32m✔ содержит правильный node_id [90m(0.735ms)[39m[39m
+  [32m✔ содержит next_node_id [90m(0.664ms)[39m[39m
+  [32m✔ пустой next_node_id если не задан [90m(0.4111ms)[39m[39m
+  [32m✔ содержит validation_type email [90m(1.0174ms)[39m[39m
+  [32m✔ содержит min_length и max_length [90m(1.1706ms)[39m[39m
+  [32m✔ appendVariable=True в Python [90m(0.6871ms)[39m[39m
+  [32m✔ appendVariable=False по умолчанию [90m(0.6085ms)[39m[39m
+  [32m✔ modes содержит только text для текстового ввода [90m(1.2787ms)[39m[39m
+  [32m✔ modes содержит photo для фото ввода [90m(0.9602ms)[39m[39m
+  [32m✔ modes содержит несколько типов для мультимедиа [90m(0.3509ms)[39m[39m
+  [32m✔ photo_variable добавляется при enablePhotoInput [90m(0.2016ms)[39m[39m
+  [32m✔ video_variable добавляется при enableVideoInput [90m(0.2227ms)[39m[39m
+  [32m✔ содержит logging.info с именем переменной [90m(0.347ms)[39m[39m
+  [32m✔ save_to_database=True [90m(0.2231ms)[39m[39m
+  [32m✔ save_to_database=False [90m(0.2634ms)[39m[39m
+  [32m✔ inputType button → type=button в Python [90m(0.3735ms)[39m[39m
+  [32m✔ inputType button + enableTextInput → modes=[button, text] [90m(0.2294ms)[39m[39m
+  [32m✔ skip_buttons добавляется в блок [90m(0.2421ms)[39m[39m
+  [32m✔ skip_buttons отсутствует если пустой массив [90m(0.3226ms)[39m[39m
+  [32m✔ дефолт inputVariable = "input" (совпадает с реальным кодом) [90m(0.8836ms)[39m[39m
+[32m✔ generateUserInput() [90m(38.127ms)[39m[39m
+▶ userInputParamsSchema
+  [32m✔ принимает минимальные параметры [90m(0.4642ms)[39m[39m
+  [32m✔ принимает полные параметры с валидацией [90m(0.1864ms)[39m[39m
+  [32m✔ принимает мультимедиа параметры [90m(0.1498ms)[39m[39m
+  [32m✔ отклоняет параметры без nodeId [90m(0.7842ms)[39m[39m
+  [32m✔ применяет дефолты для необязательных полей [90m(0.2529ms)[39m[39m
+[32m✔ userInputParamsSchema [90m(2.1716ms)[39m[39m
+▶ nodeToUserInputParams()
+  [32m✔ извлекает inputVariable из node.data [90m(0.4117ms)[39m[39m
+  [32m✔ извлекает inputTargetNodeId [90m(0.2105ms)[39m[39m
+  [32m✔ извлекает enablePhotoInput [90m(0.1573ms)[39m[39m
+  [32m✔ извлекает validationType [90m(0.1131ms)[39m[39m
+  [32m✔ генерирует safeName из nodeId [90m(0.115ms)[39m[39m
+  [32m✔ дефолт inputVariable если не задан [90m(0.1029ms)[39m[39m
+[32m✔ nodeToUserInputParams() [90m(1.3362ms)[39m[39m
+▶ nodeHasUserInput()
+  [32m✔ возвращает true если collectUserInput=true [90m(0.1717ms)[39m[39m
+  [32m✔ возвращает false если collectUserInput=false [90m(0.0893ms)[39m[39m
+  [32m✔ фильтрует узлы с вводом из массива [90m(0.1996ms)[39m[39m
+[32m✔ nodeHasUserInput() [90m(0.5931ms)[39m[39m
+▶ generateUserInputFromNode()
+  [32m✔ генерирует код из узла с текстовым вводом [90m(2.6351ms)[39m[39m
+  [32m✔ генерирует код из узла с email валидацией [90m(1.1015ms)[39m[39m
+  [32m✔ генерирует код из узла с фото вводом [90m(0.7128ms)[39m[39m
+  [32m✔ генерирует код из узла с мультимедиа [90m(0.8222ms)[39m[39m
+  [32m✔ генерирует type=button для узла с кнопками [90m(0.5406ms)[39m[39m
+[32m✔ generateUserInputFromNode() [90m(6.3828ms)[39m[39m
+▶ Производительность
+  [32m✔ generateUserInput: быстрее 10ms [90m(0.3278ms)[39m[39m
+  [32m✔ generateUserInputFromNode: быстрее 10ms [90m(0.1978ms)[39m[39m
+[32m✔ Производительность [90m(0.6822ms)[39m[39m
+▶ ban_user
+  [32m✔ генерирует command handler /ban_user [90m(35.4199ms)[39m[39m
+  [32m✔ бессрочный бан: ban_chat_member без until_date [90m(0.8272ms)[39m[39m
+  [32m✔ временный бан: содержит until_date [90m(0.4092ms)[39m[39m
+  [32m✔ генерирует synonym handler с синонимами [90m(0.6569ms)[39m[39m
+  [32m✔ фильтр чата: только группы [90m(0.4859ms)[39m[39m
+  [32m✔ определяет target_user_id через reply и text_mention [90m(0.6783ms)[39m[39m
+  [32m✔ обработка TelegramBadRequest [90m(0.6768ms)[39m[39m
+[32m✔ ban_user [90m(40.7285ms)[39m[39m
+▶ unban_user
+  [32m✔ вызывает unban_chat_member с only_if_banned=True [90m(0.5465ms)[39m[39m
+  [32m✔ генерирует command handler /unban_user [90m(0.9068ms)[39m[39m
+[32m✔ unban_user [90m(1.9161ms)[39m[39m
+▶ kick_user
+  [32m✔ ban + sleep + unban для кика [90m(0.437ms)[39m[39m
+  [32m✔ targetGroupId: фильтр по конкретной группе [90m(0.2194ms)[39m[39m
+[32m✔ kick_user [90m(0.7759ms)[39m[39m
+▶ mute_user
+  [32m✔ вызывает restrict_chat_member с ChatPermissions [90m(0.3391ms)[39m[39m
+  [32m✔ вычисляет время из duration [90m(0.2274ms)[39m[39m
+  [32m✔ генерирует оба handler (command + synonym) [90m(0.2082ms)[39m[39m
+[32m✔ mute_user [90m(0.9002ms)[39m[39m
+▶ unmute_user
+  [32m✔ снимает все ограничения (все True) [90m(0.2342ms)[39m[39m
+[32m✔ unmute_user [90m(0.4212ms)[39m[39m
+▶ promote_user
+  [32m✔ вызывает promote_chat_member с правами [90m(0.2832ms)[39m[39m
+  [32m✔ canManageTopics включается если задан [90m(0.1938ms)[39m[39m
+  [32m✔ обработка USER_NOT_PARTICIPANT [90m(0.1842ms)[39m[39m
+[32m✔ promote_user [90m(0.7759ms)[39m[39m
+▶ demote_user
+  [32m✔ снимает все права (все False) [90m(0.2822ms)[39m[39m
+[32m✔ demote_user [90m(0.3593ms)[39m[39m
+▶ userHandlerParamsSchema
+  [32m✔ принимает валидные параметры ban_user [90m(0.4547ms)[39m[39m
+  [32m✔ принимает все типы узлов [90m(2.4113ms)[39m[39m
+  [32m✔ отклоняет неправильный nodeType [90m(1.0394ms)[39m[39m
+  [32m✔ отклоняет пустой массив synonyms [90m(0.2645ms)[39m[39m
+[32m✔ userHandlerParamsSchema [90m(4.4064ms)[39m[39m
+▶ Производительность
+  [32m✔ generateUserHandler: быстрее 10ms [90m(0.2558ms)[39m[39m
+[32m✔ Производительность [90m(0.3277ms)[39m[39m
+▶ universal-handlers.py.jinja2 шаблон
+  ▶ generateUniversalHandlers()
+    ▶ Валидные данные
+      [32m✔ должен генерировать fallback_text_handler [90m(6.4749ms)[39m[39m
+      [32m✔ должен генерировать handle_unhandled_photo [90m(0.9328ms)[39m[39m
+      [32m✔ должен включать @dp.message(F.text) [90m(0.3946ms)[39m[39m
+      [32m✔ должен включать @dp.message(F.photo) [90m(0.2496ms)[39m[39m
+      [32m✔ должен включать docstring для fallback_text_handler [90m(0.2776ms)[39m[39m
+      [32m✔ должен игнорировать параметры (всегда одинаковый вывод) [90m(0.5031ms)[39m[39m
+    [32m✔ Валидные данные [90m(10.0772ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.0974ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию [90m(0.4781ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.4288ms)[39m[39m
+      [32m✔ должен отклонять null [90m(0.4658ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.8861ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ должен включать logging.info для текста [90m(0.3501ms)[39m[39m
+      [32m✔ должен включать logging.info для фото [90m(0.3949ms)[39m[39m
+      [32m✔ должен включать message.from_user.id [90m(0.3579ms)[39m[39m
+      [32m✔ должен включать message.text [90m(0.3214ms)[39m[39m
+    [32m✔ Граничные случаи [90m(1.8528ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.3834ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(10.7917ms)[39m[39m
+    [32m✔ Производительность [90m(11.3827ms)[39m[39m
+  [32m✔ generateUniversalHandlers() [90m(26.7448ms)[39m[39m
+  ▶ universalHandlersParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать boolean поле [90m(0.4517ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.2343ms)[39m[39m
+      [32m✔ должен отклонять number вместо boolean [90m(0.2006ms)[39m[39m
+      [32m✔ должен отклонять null [90m(0.1165ms)[39m[39m
+    [32m✔ Валидация типов [90m(1.1561ms)[39m[39m
+    ▶ Значения по умолчанию
+      [32m✔ должен принимать false по умолчанию [90m(0.3201ms)[39m[39m
+    [32m✔ Значения по умолчанию [90m(0.4278ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 1 поле [90m(0.4519ms)[39m[39m
+      [32m✔ должен использовать ZodOptional [90m(0.2839ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.9045ms)[39m[39m
+  [32m✔ universalHandlersParamsSchema [90m(2.9675ms)[39m[39m
+[32m✔ universal-handlers.py.jinja2 шаблон [90m(30.3538ms)[39m[39m
+▶ generateSynonyms()
+  [32m✔ пустой массив → пустая строка [90m(2.7661ms)[39m[39m
+  ▶ start / command
+    [32m✔ генерирует обработчик для start [90m(41.7971ms)[39m[39m
+    [32m✔ генерирует оба синонима start [90m(1.41ms)[39m[39m
+    [32m✔ генерирует обработчик для command [90m(0.8556ms)[39m[39m
+    [32m✔ fallback сообщение содержит оригинальную команду [90m(0.7991ms)[39m[39m
+  [32m✔ start / command [90m(45.7564ms)[39m[39m
+  ▶ message
+    [32m✔ генерирует MockCallback [90m(0.8057ms)[39m[39m
+    [32m✔ вызывает handle_callback с правильным id [90m(0.285ms)[39m[39m
+    [32m✔ MockCallback содержит edit_text с fallback [90m(0.5884ms)[39m[39m
+  [32m✔ message [90m(2.2359ms)[39m[39m
+  ▶ pin_message / unpin_message / delete_message
+    [32m✔ pin_message: вызывает bot.pin_chat_message [90m(0.7472ms)[39m[39m
+    [32m✔ unpin_message: вызывает bot.unpin_chat_message [90m(1.0892ms)[39m[39m
+    [32m✔ delete_message: вызывает bot.delete_message с кастомным текстом [90m(0.6731ms)[39m[39m
+    [32m✔ фильтр чата только для групп [90m(0.4535ms)[39m[39m
+    [32m✔ обработка ошибок TelegramBadRequest [90m(0.344ms)[39m[39m
+    [32m✔ поддержка reply_to_message и ID из текста [90m(0.2952ms)[39m[39m
+  [32m✔ pin_message / unpin_message / delete_message [90m(4.0327ms)[39m[39m
+  ▶ ban_user
+    [32m✔ бессрочный бан: вызывает ban_chat_member без until_date [90m(1.2235ms)[39m[39m
+    [32m✔ временный бан: содержит until_date [90m(0.2041ms)[39m[39m
+    [32m✔ фильтр чата только для групп [90m(0.1668ms)[39m[39m
+    [32m✔ определяет target_user_id через reply или ID [90m(0.166ms)[39m[39m
+  [32m✔ ban_user [90m(2.0364ms)[39m[39m
+  ▶ unban_user
+    [32m✔ вызывает unban_chat_member с only_if_banned=True [90m(0.1886ms)[39m[39m
+  [32m✔ unban_user [90m(0.2795ms)[39m[39m
+  ▶ kick_user
+    [32m✔ ban + unban для кика [90m(0.2247ms)[39m[39m
+  [32m✔ kick_user [90m(0.3021ms)[39m[39m
+  ▶ mute_user
+    [32m✔ вызывает restrict_chat_member с ChatPermissions [90m(0.3052ms)[39m[39m
+    [32m✔ вычисляет время из duration [90m(0.191ms)[39m[39m
+  [32m✔ mute_user [90m(0.5902ms)[39m[39m
+  ▶ unmute_user
+    [32m✔ снимает все ограничения [90m(0.1752ms)[39m[39m
+  [32m✔ unmute_user [90m(0.2436ms)[39m[39m
+  ▶ promote_user
+    [32m✔ вызывает promote_chat_member с правами [90m(0.1969ms)[39m[39m
+  [32m✔ promote_user [90m(0.2646ms)[39m[39m
+  ▶ demote_user
+    [32m✔ снимает все права администратора [90m(0.2026ms)[39m[39m
+  [32m✔ demote_user [90m(0.2877ms)[39m[39m
+  ▶ admin_rights
+    [32m✔ нет фильтра чата (работает везде) [90m(0.2108ms)[39m[39m
+    [32m✔ создаёт MockCallback и вызывает handle_callback с bot [90m(0.2108ms)[39m[39m
+  [32m✔ admin_rights [90m(0.528ms)[39m[39m
+  ▶ маркеры и структура
+    [32m✔ генерирует NODE_START/NODE_END маркеры [90m(2.0051ms)[39m[39m
+    [32m✔ смешанные типы генерируются вместе [90m(0.9395ms)[39m[39m
+  [32m✔ маркеры и структура [90m(3.3119ms)[39m[39m
+[32m✔ generateSynonyms() [90m(64.8305ms)[39m[39m
+▶ synonymsParamsSchema
+  [32m✔ принимает валидные start параметры [90m(0.5935ms)[39m[39m
+  [32m✔ принимает все user management типы [90m(0.4534ms)[39m[39m
+  [32m✔ отклоняет неправильный nodeType [90m(0.6019ms)[39m[39m
+  [32m✔ принимает пустой массив [90m(0.103ms)[39m[39m
+[32m✔ synonymsParamsSchema [90m(1.9894ms)[39m[39m
+▶ collectSynonymEntries()
+  [32m✔ собирает start синонимы с functionName и originalCommand [90m(0.3274ms)[39m[39m
+  [32m✔ собирает command синонимы [90m(0.0979ms)[39m[39m
+  [32m✔ собирает message синонимы [90m(0.1785ms)[39m[39m
+  [32m✔ собирает ban_user синонимы с reason и untilDate [90m(0.1758ms)[39m[39m
+  [32m✔ собирает mute_user синонимы с duration и canSendMessages [90m(0.1262ms)[39m[39m
+  [32m✔ собирает promote_user синонимы с правами [90m(0.0996ms)[39m[39m
+  [32m✔ собирает admin_rights синонимы [90m(0.0904ms)[39m[39m
+  [32m✔ фильтрует null узлы и узлы без синонимов [90m(0.0898ms)[39m[39m
+  [32m✔ возвращает пустой массив если нет синонимов [90m(0.0815ms)[39m[39m
+  [32m✔ смешанные узлы: собирает все типы [90m(0.145ms)[39m[39m
+[32m✔ collectSynonymEntries() [90m(1.6548ms)[39m[39m
+▶ generateSynonymHandlers()
+  [32m✔ пустые узлы → пустая строка [90m(0.1737ms)[39m[39m
+  [32m✔ генерирует код из узлов напрямую [90m(0.2091ms)[39m[39m
+  [32m✔ генерирует ban_user из узлов [90m(0.1728ms)[39m[39m
+  [32m✔ генерирует смешанные типы из узлов [90m(0.247ms)[39m[39m
+  [32m✔ фильтрует null и пустые узлы [90m(0.1508ms)[39m[39m
+[32m✔ generateSynonymHandlers() [90m(1.0994ms)[39m[39m
+▶ MockCallback — отсутствие дублирования (проблема #5)
+  [32m✔ при одном message-синониме MockCallback определяется ровно один раз [90m(0.2594ms)[39m[39m
+  [32m✔ при нескольких message-синонимах MockCallback не дублируется на каждый [90m(0.2475ms)[39m[39m
+  [32m✔ MockCallback содержит все необходимые методы [90m(0.1599ms)[39m[39m
+  [32m✔ mock_callback создаётся с правильным nodeId [90m(0.1493ms)[39m[39m
+[32m✔ MockCallback — отсутствие дублирования (проблема #5) [90m(0.9885ms)[39m[39m
+▶ Производительность
+  [32m✔ generateSynonyms: быстрее 10ms [90m(0.5081ms)[39m[39m
+  [32m✔ generateSynonymHandlers: быстрее 10ms [90m(0.4234ms)[39m[39m
+[32m✔ Производительность [90m(1.0705ms)[39m[39m
+▶ sticker.py.jinja2 шаблон
+  ▶ generateSticker()
+    ▶ Валидные данные
+      [32m✔ должен генерировать обработчик стикера по file_id [90m(12.4406ms)[39m[39m
+      [32m✔ должен генерировать обработчик стикера по URL [90m(1.0595ms)[39m[39m
+      [32m✔ должен генерировать обработчик стикера из набора [90m(0.7157ms)[39m[39m
+      [32m✔ должен генерировать обработчик с disable_notification [90m(0.3205ms)[39m[39m
+      [32m✔ должен включать замену переменных в подписи [90m(0.4204ms)[39m[39m
+      [32m✔ должен включать обработку ошибок [90m(0.5514ms)[39m[39m
+      [32m✔ должен включать caption при наличии mediaCaption [90m(0.3467ms)[39m[39m
+      [32m✔ должен генерировать сообщение об ошибке при отсутствии стикера [90m(0.297ms)[39m[39m
+    [32m✔ Валидные данные [90m(18.0185ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.1395ms)[39m[39m
+      [32m✔ должен отклонять параметры с отсутствующим полем [90m(0.5843ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.3095ms)[39m[39m
+      [32m✔ должен отклонять число вместо string [90m(0.3756ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.7372ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ должен принимать undefined для stickerUrl [90m(1.121ms)[39m[39m
+      [32m✔ должен принимать undefined для mediaCaption [90m(0.2864ms)[39m[39m
+      [32m✔ должен принимать undefined для disableNotification [90m(0.1459ms)[39m[39m
+      [32m✔ должен генерировать разные команды для разных nodeId [90m(0.4178ms)[39m[39m
+      [32m✔ должен включать disable_notification только при disableNotification=true [90m(0.1813ms)[39m[39m
+      [32m✔ должен включать caption только при наличии mediaCaption [90m(0.1996ms)[39m[39m
+    [32m✔ Граничные случаи [90m(2.7119ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.3491ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(32.3202ms)[39m[39m
+    [32m✔ Производительность [90m(33.1122ms)[39m[39m
+  [32m✔ generateSticker() [90m(57.4763ms)[39m[39m
+  ▶ stickerParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать все поля корректных типов [90m(0.7281ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.6747ms)[39m[39m
+      [32m✔ должен отклонять число вместо string для nodeId [90m(0.3024ms)[39m[39m
+      [32m✔ должен принимать пустые строки для опциональных полей [90m(0.2085ms)[39m[39m
+      [32m✔ должен принимать undefined для всех опциональных полей [90m(0.21ms)[39m[39m
+    [32m✔ Валидация типов [90m(2.475ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 6 полей [90m(0.6599ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для stickerUrl [90m(0.5677ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для disableNotification [90m(0.213ms)[39m[39m
+      [32m✔ должен использовать .optional() для всех опциональных полей [90m(0.2677ms)[39m[39m
+    [32m✔ Структура схемы [90m(2.0769ms)[39m[39m
+  [32m✔ stickerParamsSchema [90m(4.9867ms)[39m[39m
+[32m✔ sticker.py.jinja2 шаблон [90m(63.1118ms)[39m[39m
+▶ start.py.jinja2 шаблон
+  ▶ generateStart()
+    ▶ Валидные данные
+      [32m✔ должен генерировать базовый обработчик /start [90m(46.9566ms)[39m[39m
+      [32m✔ должен генерировать обработчик с проверкой приватности [90m(0.9689ms)[39m[39m
+      [32m✔ должен генерировать обработчик с проверкой администратора [90m(0.9746ms)[39m[39m
+      [32m✔ должен генерировать обработчик с проверкой авторизации [90m(0.9524ms)[39m[39m
+      [32m✔ должен генерировать инициализацию множественного выбора [90m(1.0696ms)[39m[39m
+      [32m✔ должен генерировать inline клавиатуру [90m(0.1715ms)[39m[39m
+      [32m✔ должен генерировать reply клавиатуру [90m(0.0945ms)[39m[39m
+      [32m✔ должен генерировать обработчики синонимов [90m(17.8265ms)[39m[39m
+      [32m✔ должен генерировать автопереход [90m(2.0022ms)[39m[39m
+      [32m✔ должен генерировать логирование вызова команды [90m(1.8617ms)[39m[39m
+      [32m✔ должен генерировать URL кнопки [90m(1.5439ms)[39m[39m
+      [32m✔ должен генерировать сохранение пользователя в БД [90m(0.6724ms)[39m[39m
+      [32m✔ должен генерировать HTML форматирование [90m(0.2797ms)[39m[39m
+      [32m✔ должен генерировать разные команды для разных nodeId [90m(0.3533ms)[39m[39m
+    [32m✔ Валидные данные [90m(77.943ms)[39m[39m
+    ▶ Проверки безопасности
+      [32m✔ должен включать только isPrivateOnly проверку [90m(0.7213ms)[39m[39m
+      [32m✔ должен включать только adminOnly проверку [90m(0.2924ms)[39m[39m
+      [32m✔ должен включать только requiresAuth проверку [90m(0.2923ms)[39m[39m
+    [32m✔ Проверки безопасности [90m(1.5655ms)[39m[39m
+    ▶ Множественный выбор
+      [32m✔ должен инициализировать multi_select массив [90m(0.5783ms)[39m[39m
+      [32m✔ должен инициализировать multi_select_node [90m(0.5604ms)[39m[39m
+      [32m✔ должен генерировать кнопки selection с callback_data [90m(2.4205ms)[39m[39m
+    [32m✔ Множественный выбор [90m(3.8615ms)[39m[39m
+    ▶ Автопереходы
+      [32m✔ должен генерировать FakeCallbackQuery для автоперехода [90m(0.8626ms)[39m[39m
+      [32m✔ должен генерировать вызов handle_callback для автоперехода [90m(1.1513ms)[39m[39m
+    [32m✔ Автопереходы [90m(2.4777ms)[39m[39m
+    ▶ Синонимы
+      [32m✔ должен генерировать обработчики для всех синонимов [90m(1.2628ms)[39m[39m
+      [32m✔ должен генерировать проверку типа чата для синонимов [90m(0.4721ms)[39m[39m
+      [32m✔ должен генерировать проверку администратора для синонимов [90m(0.4714ms)[39m[39m
+    [32m✔ Синонимы [90m(2.3837ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(0.9747ms)[39m[39m
+      [32m✔ должен отклонять параметры с отсутствующим полем [90m(0.3381ms)[39m[39m
+      [32m✔ должен отклонять неправильный keyboardType [90m(0.5891ms)[39m[39m
+      [32m✔ должен отклонять неправильный formatMode [90m(0.2273ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.4518ms)[39m[39m
+    ▶ Валидация схемы
+      [32m✔ должен принимать все поля корректных типов [90m(0.3956ms)[39m[39m
+      [32m✔ должен принимать undefined для всех опциональных полей [90m(0.7016ms)[39m[39m
+      [32m✔ должен принимать все значения enum для keyboardType [90m(0.6596ms)[39m[39m
+      [32m✔ должен принимать все значения enum для formatMode [90m(0.3223ms)[39m[39m
+      [32m✔ должен принимать undefined для synonyms [90m(0.1847ms)[39m[39m
+    [32m✔ Валидация схемы [90m(2.5539ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.4865ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(63.5886ms)[39m[39m
+    [32m✔ Производительность [90m(64.3222ms)[39m[39m
+    ▶ Проверка отступов
+      [32m✔ должен генерировать await message.answer с правильным отступом в 4 пробела [90m(0.8502ms)[39m[39m
+      [32m✔ должен генерировать keyboard = None с правильным отступом в 4 пробела [90m(0.8755ms)[39m[39m
+      [32m✔ должен генерировать await после keyboard без лишних отступов [90m(0.7253ms)[39m[39m
+      [32m✔ должен генерировать inline клавиатуру с правильными отступами [90m(0.8681ms)[39m[39m
+    [32m✔ Проверка отступов [90m(4.501ms)[39m[39m
+  [32m✔ generateStart() [90m(163.2732ms)[39m[39m
+  ▶ startParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать все поля корректных типов [90m(0.4211ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.4293ms)[39m[39m
+      [32m✔ должен отклонять неправильный enum для keyboardType [90m(0.1723ms)[39m[39m
+      [32m✔ должен отклонять неправильный enum для formatMode [90m(0.1391ms)[39m[39m
+      [32m✔ должен принимать buttons с правильной структурой [90m(0.1788ms)[39m[39m
+    [32m✔ Валидация типов [90m(1.5264ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 20 полей [90m(0.1819ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для messageText [90m(0.142ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для keyboardType [90m(0.3143ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для formatMode [90m(0.1015ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для isPrivateOnly [90m(0.0877ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для synonyms [90m(0.0797ms)[39m[39m
+    [32m✔ Структура схемы [90m(1.0949ms)[39m[39m
+  [32m✔ startParamsSchema [90m(2.8597ms)[39m[39m
+[32m✔ start.py.jinja2 шаблон [90m(166.6255ms)[39m[39m
+▶ generateSkipDataCollectionCheck()
+  [32m✔ генерирует проверку skipDataCollectionTransition [90m(10.1814ms)[39m[39m
+  [32m✔ генерирует update_user_data_in_db [90m(0.3939ms)[39m[39m
+  [32m✔ генерирует сброс флага [90m(0.52ms)[39m[39m
+  [32m✔ генерирует logging.info [90m(0.7602ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.7533ms)[39m[39m
+[32m✔ generateSkipDataCollectionCheck() [90m(13.9631ms)[39m[39m
+▶ skipDataCollectionParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.3895ms)[39m[39m
+  [32m✔ отклоняет отсутствие variableName [90m(0.825ms)[39m[39m
+  [32m✔ отклоняет отсутствие variableValue [90m(0.4407ms)[39m[39m
+[32m✔ skipDataCollectionParamsSchema [90m(2.0395ms)[39m[39m
+▶ Производительность
+  [32m✔ generateSkipDataCollectionCheck: быстрее 10ms [90m(0.377ms)[39m[39m
+[32m✔ Производительность [90m(0.6581ms)[39m[39m
+▶ safe-edit-or-send.py.jinja2 шаблон
+  ▶ generateSafeEditOrSend()
+    ▶ Валидные данные
+      [32m✔ должен генерировать функцию при hasInlineButtonsOrSpecialNodes=true [90m(10.6791ms)[39m[39m
+      [32m✔ должен генерировать функцию при hasAutoTransitions=true [90m(0.5338ms)[39m[39m
+      [32m✔ должен генерировать функцию при обоих флагах=true [90m(0.349ms)[39m[39m
+      [32m✔ должен генерировать пустую строку при обоих флагах=false [90m(0.2981ms)[39m[39m
+      [32m✔ должен генерировать обработку user_id [90m(0.3189ms)[39m[39m
+      [32m✔ должен генерировать try-except блок [90m(0.6133ms)[39m[39m
+      [32m✔ должен генерировать проверку is_auto_transition [90m(0.4964ms)[39m[39m
+      [32m✔ должен генерировать проверку is_reply_keyboard [90m(0.2077ms)[39m[39m
+      [32m✔ должен генерировать fallback на новое сообщение [90m(0.3239ms)[39m[39m
+      [32m✔ должен генерировать логирование ошибок [90m(0.4578ms)[39m[39m
+    [32m✔ Валидные данные [90m(15.7583ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(0.6124ms)[39m[39m
+      [32m✔ должен отклонять null значения [90m(0.2334ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию для отсутствующих полей [90m(0.1474ms)[39m[39m
+    [32m✔ Невалидные данные [90m(1.1991ms)[39m[39m
+    ▶ Проверка схемы
+      [32m✔ должен иметь правильную структуру схемы [90m(0.1436ms)[39m[39m
+      [32m✔ должен использовать ZodDefault для всех полей [90m(0.1336ms)[39m[39m
+      [32m✔ должен иметь 2 поля [90m(0.0885ms)[39m[39m
+    [32m✔ Проверка схемы [90m(0.4796ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.1648ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(11.8574ms)[39m[39m
+    [32m✔ Производительность [90m(12.3092ms)[39m[39m
+    ▶ Интеграционные тесты
+      [32m✔ должен генерировать код который можно вставить в Python функцию [90m(0.4003ms)[39m[39m
+      [32m✔ должен генерировать код который можно использовать в if блоке [90m(0.2128ms)[39m[39m
+      [32m✔ должен генерировать код который можно использовать в try блоке [90m(0.1738ms)[39m[39m
+    [32m✔ Интеграционные тесты [90m(1.0365ms)[39m[39m
+    ▶ Проверка на распространённые ошибки Pylance
+      [32m✔ не должен содержать ошибку: Операторы без перевода строки перед else [90m(0.3607ms)[39m[39m
+      [32m✔ не должен содержать ошибку: Операторы без перевода строки перед elif [90m(0.2814ms)[39m[39m
+      [32m✔ не должен содержать незавершённые конструкции [90m(0.3729ms)[39m[39m
+      [32m✔ не должен содержать несколько операторов на одной строке без точки с запятой [90m(0.1773ms)[39m[39m
+    [32m✔ Проверка на распространённые ошибки Pylance [90m(1.3813ms)[39m[39m
+    ▶ Edge cases
+      [32m✔ должен обрабатывать пустое имя узла [90m(0.1866ms)[39m[39m
+      [32m✔ должен обрабатывать специальные символы в тексте [90m(0.1089ms)[39m[39m
+      [32m✔ должен обрабатывать очень длинный текст [90m(0.121ms)[39m[39m
+    [32m✔ Edge cases [90m(0.5373ms)[39m[39m
+  [32m✔ generateSafeEditOrSend() [90m(33.5982ms)[39m[39m
+  ▶ safeEditOrSendParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать boolean поля [90m(0.3031ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.2124ms)[39m[39m
+      [32m✔ должен отклонять null [90m(0.1906ms)[39m[39m
+    [32m✔ Валидация типов [90m(0.8551ms)[39m[39m
+    ▶ Значения по умолчанию
+      [32m✔ должен использовать false для hasInlineButtonsOrSpecialNodes по умолчанию [90m(0.8359ms)[39m[39m
+      [32m✔ должен использовать false для hasAutoTransitions по умолчанию [90m(0.1227ms)[39m[39m
+    [32m✔ Значения по умолчанию [90m(1.1755ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 2 поля [90m(0.1555ms)[39m[39m
+      [32m✔ должен использовать optional поля [90m(0.129ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.3917ms)[39m[39m
+  [32m✔ safeEditOrSendParamsSchema [90m(2.972ms)[39m[39m
+[32m✔ safe-edit-or-send.py.jinja2 шаблон [90m(37.0971ms)[39m[39m
+▶ generateParseMode()
+  [32m✔ генерирует ParseMode.MARKDOWN для markdown [90m(13.0606ms)[39m[39m
+  [32m✔ генерирует ParseMode.HTML для html [90m(0.5537ms)[39m[39m
+  [32m✔ генерирует parse_mode = None без форматирования [90m(0.3776ms)[39m[39m
+  [32m✔ генерирует ParseMode.MARKDOWN для флага markdown=true [90m(0.3541ms)[39m[39m
+  [32m✔ генерирует проверку conditional_parse_mode [90m(0.2134ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.3709ms)[39m[39m
+[32m✔ generateParseMode() [90m(16.1995ms)[39m[39m
+▶ parseModeParamsSchema
+  [32m✔ принимает пустой объект [90m(0.5823ms)[39m[39m
+  [32m✔ принимает markdown formatMode [90m(1.099ms)[39m[39m
+  [32m✔ отклоняет числовой markdown [90m(0.9136ms)[39m[39m
+[32m✔ parseModeParamsSchema [90m(3.1479ms)[39m[39m
+▶ Производительность
+  [32m✔ generateParseMode: быстрее 10ms [90m(0.3495ms)[39m[39m
+[32m✔ Производительность [90m(0.4613ms)[39m[39m
+▶ generateNavigateToNode()
+  [32m✔ генерирует async def navigate_to_node [90m(7.6826ms)[39m[39m
+  [32m✔ генерирует параметры функции [90m(0.9358ms)[39m[39m
+  [32m✔ генерирует replace_variables_in_text [90m(0.3603ms)[39m[39m
+  [32m✔ генерирует message.answer [90m(0.1888ms)[39m[39m
+[32m✔ generateNavigateToNode() [90m(10.8639ms)[39m[39m
+▶ generateNavigateToNodeCall()
+  [32m✔ генерирует вызов navigate_to_node [90m(0.49ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.2042ms)[39m[39m
+[32m✔ generateNavigateToNodeCall() [90m(0.9245ms)[39m[39m
+▶ generateNavigateToNodeWithText()
+  [32m✔ генерирует вызов с text параметром [90m(0.4889ms)[39m[39m
+[32m✔ generateNavigateToNodeWithText() [90m(0.8481ms)[39m[39m
+▶ navigateToNodeParamsSchema
+  [32m✔ принимает пустой объект [90m(1.4555ms)[39m[39m
+[32m✔ navigateToNodeParamsSchema [90m(1.6808ms)[39m[39m
+▶ Производительность
+  [32m✔ generateNavigateToNode: быстрее 10ms [90m(0.4555ms)[39m[39m
+[32m✔ Производительность [90m(0.9054ms)[39m[39m
+▶ generateMultiSelectCheck()
+  ▶ проверка состояния
+    [32m✔ генерирует проверку multi_select_node [90m(68.879ms)[39m[39m
+    [32m✔ читает node_id из user_data [90m(0.5931ms)[39m[39m
+    [32m✔ логирует режим множественного выбора [90m(1.464ms)[39m[39m
+  [32m✔ проверка состояния [90m(73.4136ms)[39m[39m
+  ▶ кнопка Готово
+    [32m✔ генерирует проверку кнопки Готово [90m(1.149ms)[39m[39m
+    [32m✔ сохраняет выбранные опции в БД [90m(0.8296ms)[39m[39m
+    [32m✔ очищает состояние после завершения [90m(0.6274ms)[39m[39m
+    [32m✔ переходит к следующему узлу [90m(0.5021ms)[39m[39m
+    [32m✔ генерирует return после завершения [90m(0.6179ms)[39m[39m
+  [32m✔ кнопка Готово [90m(4.1679ms)[39m[39m
+  ▶ кнопки выбора (selection)
+    [32m✔ генерирует проверку clean_user_input [90m(0.4893ms)[39m[39m
+    [32m✔ генерирует toggle логику [90m(1.1184ms)[39m[39m
+    [32m✔ генерирует обновление клавиатуры [90m(1.1088ms)[39m[39m
+    [32m✔ генерирует замену переменных в тексте [90m(1.2439ms)[39m[39m
+  [32m✔ кнопки выбора (selection) [90m(4.5174ms)[39m[39m
+  ▶ goto кнопки
+    [32m✔ генерирует обработку goto кнопок [90m(3.5258ms)[39m[39m
+    [32m✔ очищает состояние перед goto переходом [90m(1.8695ms)[39m[39m
+    [32m✔ генерирует fake_callback для goto [90m(2.6244ms)[39m[39m
+    [32m✔ вызывает handle_callback для целевого узла [90m(1.3112ms)[39m[39m
+  [32m✔ goto кнопки [90m(10.4205ms)[39m[39m
+  ▶ пустые параметры
+    [32m✔ работает без узлов [90m(0.9199ms)[39m[39m
+    [32m✔ генерирует fallback комментарий [90m(0.7254ms)[39m[39m
+  [32m✔ пустые параметры [90m(1.9888ms)[39m[39m
+  ▶ отступы
+    [32m✔ дефолтный отступ — 4 пробела [90m(1.0707ms)[39m[39m
+    [32m✔ кастомный отступ — 8 пробелов [90m(0.8612ms)[39m[39m
+  [32m✔ отступы [90m(2.1929ms)[39m[39m
+[32m✔ generateMultiSelectCheck() [90m(99.4184ms)[39m[39m
+▶ multiSelectCheckParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.4552ms)[39m[39m
+  [32m✔ принимает пустые массивы [90m(0.1887ms)[39m[39m
+  [32m✔ отклоняет числовой indentLevel [90m(0.9604ms)[39m[39m
+[32m✔ multiSelectCheckParamsSchema [90m(1.8942ms)[39m[39m
+▶ collectMultiSelectNodes()
+  [32m✔ собирает id и safeName [90m(0.4535ms)[39m[39m
+  [32m✔ фильтрует null [90m(0.1232ms)[39m[39m
+[32m✔ collectMultiSelectNodes() [90m(0.7097ms)[39m[39m
+▶ Производительность
+  [32m✔ generateMultiSelectCheck: быстрее 10ms [90m(0.4028ms)[39m[39m
+[32m✔ Производительность [90m(0.5076ms)[39m[39m
+▶ middleware.py.jinja2 шаблон
+  ▶ generateMiddleware()
+    ▶ Валидные данные
+      [32m✔ должен генерировать message_logging_middleware [90m(14.9358ms)[39m[39m
+      [32m✔ должен включать docstring [90m(0.2379ms)[39m[39m
+      [32m✔ должен включать обработку user_id [90m(0.2136ms)[39m[39m
+      [32m✔ должен включать save_message_to_api [90m(0.1655ms)[39m[39m
+      [32m✔ должен включать обработку ошибок [90m(0.1354ms)[39m[39m
+      [31m✖ должен игнорировать параметры (всегда одинаковый вывод) [90m(7.1979ms)[39m[39m
+    [31m✖ Валидные данные [90m(24.2494ms)[39m[39m
+    ▶ Невалидные данные
+      [31m✖ должен отклонять параметры с неправильным типом [90m(2.4001ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию [90m(1.8404ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.6508ms)[39m[39m
+      [32m✔ должен отклонять null [90m(0.3538ms)[39m[39m
+    [31m✖ Невалидные данные [90m(5.7933ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ должен включать logging.error [90m(0.2292ms)[39m[39m
+      [32m✔ должен включать return await handler [90m(0.1785ms)[39m[39m
+      [32m✔ должен включать message.caption [90m(0.115ms)[39m[39m
+      [32m✔ должен включать [медиа] заглушку [90m(0.1113ms)[39m[39m
+    [32m✔ Граничные случаи [90m(0.8599ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.2812ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(12.4191ms)[39m[39m
+    [32m✔ Производительность [90m(13.0081ms)[39m[39m
+  [31m✖ generateMiddleware() [90m(44.6978ms)[39m[39m
+  ▶ middlewareParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать boolean поле [90m(0.517ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.3703ms)[39m[39m
+      [32m✔ должен отклонять number вместо boolean [90m(0.242ms)[39m[39m
+      [32m✔ должен отклонять null [90m(0.194ms)[39m[39m
+    [32m✔ Валидация типов [90m(1.537ms)[39m[39m
+    ▶ Значения по умолчанию
+      [32m✔ должен принимать undefined по умолчанию [90m(0.3848ms)[39m[39m
+    [32m✔ Значения по умолчанию [90m(0.5017ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 1 поле [90m(0.1882ms)[39m[39m
+      [32m✔ должен использовать ZodOptional [90m(0.2238ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.5292ms)[39m[39m
+  [32m✔ middlewareParamsSchema [90m(2.8915ms)[39m[39m
+[31m✖ middleware.py.jinja2 шаблон [90m(48.1608ms)[39m[39m
+▶ message-handler.py.jinja2 шаблон
+  ▶ generateMessageHandler()
+    ▶ pin_message
+      [32m✔ должен генерировать callback обработчик [90m(24.1986ms)[39m[39m
+      [32m✔ должен генерировать command обработчик [90m(0.9008ms)[39m[39m
+      [32m✔ должен генерировать синонимы [90m(0.8685ms)[39m[39m
+      [32m✔ должен генерировать disable_notification [90m(0.4225ms)[39m[39m
+      [32m✔ должен фильтровать по конкретной группе [90m(0.7021ms)[39m[39m
+    [32m✔ pin_message [90m(28.2324ms)[39m[39m
+    ▶ unpin_message
+      [32m✔ должен генерировать unpin_all_chat_messages [90m(0.4472ms)[39m[39m
+      [32m✔ должен генерировать unpin_chat_message для конкретного сообщения [90m(0.3471ms)[39m[39m
+      [32m✔ должен генерировать синонимы [90m(0.6595ms)[39m[39m
+    [32m✔ unpin_message [90m(2ms)[39m[39m
+    ▶ delete_message
+      [32m✔ должен генерировать delete_message [90m(1.3306ms)[39m[39m
+      [32m✔ должен генерировать синонимы [90m(0.6404ms)[39m[39m
+      [32m✔ должен генерировать текст ответа [90m(0.4261ms)[39m[39m
+    [32m✔ delete_message [90m(2.7622ms)[39m[39m
+    ▶ Общее
+      [32m✔ должен генерировать проверку типа чата [90m(0.4427ms)[39m[39m
+      [32m✔ должен генерировать обработку TelegramBadRequest [90m(0.4404ms)[39m[39m
+      [32m✔ должен генерировать логирование [90m(0.3676ms)[39m[39m
+    [32m✔ Общее [90m(1.5803ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.1517ms)[39m[39m
+      [32m✔ должен отклонять параметры с отсутствующим полем [90m(0.2977ms)[39m[39m
+      [32m✔ должен отклонять неправильный nodeType [90m(0.3598ms)[39m[39m
+      [32m✔ должен отклонять пустой массив synonyms [90m(1.095ms)[39m[39m
+    [32m✔ Невалидные данные [90m(3.3258ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.4724ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 500ms [90m(46.3617ms)[39m[39m
+    [32m✔ Производительность [90m(47.1897ms)[39m[39m
+  [32m✔ generateMessageHandler() [90m(87.001ms)[39m[39m
+[32m✔ message-handler.py.jinja2 шаблон [90m(87.6445ms)[39m[39m
+▶ message.py.jinja2 шаблон
+  ▶ generateMessage()
+    ▶ Валидные данные
+      [32m✔ должен генерировать обработчик callback для базового сообщения [90m(57.6299ms)[39m[39m
+      [32m✔ должен генерировать callback.answer() [90m(1.3004ms)[39m[39m
+      [32m✔ должен генерировать логирование [90m(0.7964ms)[39m[39m
+      [32m✔ должен генерировать инициализацию переменных [90m(0.5112ms)[39m[39m
+      [32m✔ должен генерировать inline клавиатуру [90m(1.0206ms)[39m[39m
+      [32m✔ должен генерировать reply клавиатуру [90m(2.8295ms)[39m[39m
+    [32m✔ Валидные данные [90m(65.5941ms)[39m[39m
+    ▶ Проверки безопасности
+      [32m✔ должен генерировать isPrivateOnly проверку [90m(0.6086ms)[39m[39m
+      [32m✔ должен генерировать adminOnly проверку [90m(0.8468ms)[39m[39m
+      [32m✔ должен генерировать requiresAuth проверку [90m(1.1137ms)[39m[39m
+    [32m✔ Проверки безопасности [90m(3.1246ms)[39m[39m
+    ▶ Автопереход
+      [32m✔ должен генерировать FakeCallbackQuery для автоперехода [90m(0.9536ms)[39m[39m
+      [32m✔ должен генерировать вызов следующего обработчика [90m(1.5118ms)[39m[39m
+      [32m✔ должен генерировать логирование автоперехода [90m(0.5715ms)[39m[39m
+      [32m✔ должен возвращать после автоперехода [90m(0.3747ms)[39m[39m
+    [32m✔ Автопереход [90m(3.6932ms)[39m[39m
+    ▶ Медиа
+      [32m✔ должен генерировать сохранение imageUrl [90m(0.8335ms)[39m[39m
+      [32m✔ должен генерировать update_user_data_in_db для медиа [90m(0.4252ms)[39m[39m
+    [32m✔ Медиа [90m(1.4022ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.2064ms)[39m[39m
+      [32m✔ должен отклонять параметры без nodeId [90m(0.5464ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.3595ms)[39m[39m
+      [32m✔ должен отклонять неправильный keyboardType [90m(1.1882ms)[39m[39m
+      [32m✔ должен отклонять неправильный formatMode [90m(1.3284ms)[39m[39m
+    [32m✔ Невалидные данные [90m(5.0872ms)[39m[39m
+    ▶ Валидация схемы
+      [32m✔ должен принимать все поля корректных типов [90m(1.2312ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию для всех полей [90m(2.6099ms)[39m[39m
+      [32m✔ должен принимать все значения enum для keyboardType [90m(3.7633ms)[39m[39m
+      [32m✔ должен принимать все значения enum для formatMode [90m(1.3354ms)[39m[39m
+    [32m✔ Валидация схемы [90m(9.8283ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(1.6084ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(158.9707ms)[39m[39m
+    [32m✔ Производительность [90m(162.0284ms)[39m[39m
+  [32m✔ generateMessage() [90m(252.7563ms)[39m[39m
+  ▶ messageParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать все поля корректных типов [90m(0.7046ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.5413ms)[39m[39m
+      [32m✔ должен отклонять number вместо string для nodeId [90m(0.4952ms)[39m[39m
+      [32m✔ должен принимать null для опциональных полей [90m(0.6931ms)[39m[39m
+    [32m✔ Валидация типов [90m(2.8439ms)[39m[39m
+    ▶ Значения по умолчанию
+      [32m✔ должен использовать false для isPrivateOnly по умолчанию [90m(0.5277ms)[39m[39m
+      [32m✔ должен использовать false для adminOnly по умолчанию [90m(0.3352ms)[39m[39m
+      [32m✔ должен использовать false для enableAutoTransition по умолчанию [90m(0.2373ms)[39m[39m
+      [32m✔ должен использовать none для keyboardType по умолчанию [90m(0.2772ms)[39m[39m
+      [32m✔ должен использовать none для formatMode по умолчанию [90m(0.258ms)[39m[39m
+    [32m✔ Значения по умолчанию [90m(1.999ms)[39m[39m
+    ▶ Структура схемы
+      [31m✖ должен иметь 35 полей [90m(8.9115ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для isPrivateOnly [90m(0.2283ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для adminOnly [90m(0.1166ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для enableAutoTransition [90m(0.1285ms)[39m[39m
+    [31m✖ Структура схемы [90m(9.6602ms)[39m[39m
+  [31m✖ messageParamsSchema [90m(15.1756ms)[39m[39m
+[31m✖ message.py.jinja2 шаблон [90m(268.6002ms)[39m[39m
+▶ map.py.jinja2 шаблон
+  ▶ generateMap()
+    ▶ Валидные данные
+      [32m✔ должен генерировать базовый обработчик геолокации [90m(88.8684ms)[39m[39m
+      [32m✔ должен генерировать отправку координат [90m(1.2573ms)[39m[39m
+      [32m✔ должен генерировать запрос геолокации у пользователя [90m(1.2742ms)[39m[39m
+      [32m✔ должен генерировать обработчик с проверкой приватности [90m(0.3468ms)[39m[39m
+      [32m✔ должен генерировать обработчик с проверкой администратора [90m(0.661ms)[39m[39m
+      [32m✔ должен генерировать обработчик с проверкой авторизации [90m(0.6305ms)[39m[39m
+      [32m✔ должен генерировать HTML форматирование [90m(0.3252ms)[39m[39m
+      [32m✔ должен генерировать автопереход [90m(1.0491ms)[39m[39m
+      [32m✔ должен генерировать URL кнопки [90m(0.7808ms)[39m[39m
+      [32m✔ должен генерировать замену переменных [90m(0.6185ms)[39m[39m
+    [32m✔ Валидные данные [90m(97.6792ms)[39m[39m
+    ▶ Проверки безопасности
+      [32m✔ должен включать только isPrivateOnly проверку [90m(0.7044ms)[39m[39m
+      [32m✔ должен включать только adminOnly проверку [90m(0.7769ms)[39m[39m
+      [32m✔ должен включать только requiresAuth проверку [90m(1.3167ms)[39m[39m
+    [32m✔ Проверки безопасности [90m(3.242ms)[39m[39m
+    ▶ Автопереходы
+      [32m✔ должен генерировать FakeCallbackQuery для автоперехода [90m(2.4774ms)[39m[39m
+      [32m✔ должен генерировать вызов handle_callback для автоперехода [90m(1.5179ms)[39m[39m
+    [32m✔ Автопереходы [90m(4.6519ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(3.4713ms)[39m[39m
+      [32m✔ должен отклонять параметры с отсутствующим полем [90m(1.1202ms)[39m[39m
+      [32m✔ должен отклонять неправильный keyboardType [90m(1.1139ms)[39m[39m
+      [32m✔ должен отклонять неправильный formatMode [90m(0.5679ms)[39m[39m
+    [32m✔ Невалидные данные [90m(7.4252ms)[39m[39m
+    ▶ Валидация схемы
+      [32m✔ должен принимать все поля корректных типов [90m(0.6286ms)[39m[39m
+      [32m✔ должен принимать undefined для всех опциональных полей [90m(0.7692ms)[39m[39m
+      [32m✔ должен принимать все значения enum для keyboardType [90m(0.5254ms)[39m[39m
+      [32m✔ должен принимать все значения enum для formatMode [90m(0.2183ms)[39m[39m
+    [32m✔ Валидация схемы [90m(2.4676ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.4696ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 500ms [90m(64.9683ms)[39m[39m
+    [32m✔ Производительность [90m(65.6531ms)[39m[39m
+  [32m✔ generateMap() [90m(182.0524ms)[39m[39m
+[32m✔ map.py.jinja2 шаблон [90m(182.4842ms)[39m[39m
+▶ main.py.jinja2 шаблон
+  ▶ generateMain()
+    ▶ Валидные данные
+      [32m✔ должен генерировать main() с init_database() [90m(13.1342ms)[39m[39m
+      [32m✔ должен генерировать main() без init_database() [90m(0.4456ms)[39m[39m
+      [32m✔ должен включать set_bot_commands() при наличии команд [90m(0.7585ms)[39m[39m
+      [32m✔ не должен включать set_bot_commands() без команд [90m(0.4719ms)[39m[39m
+      [32m✔ должен включать middleware при БД [90m(0.2181ms)[39m[39m
+      [32m✔ должен включать обработку сигналов [90m(0.4501ms)[39m[39m
+      [32m✔ должен генерировать main с обработкой ошибок [90m(0.5099ms)[39m[39m
+    [32m✔ Валидные данные [90m(17.2093ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.305ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию [90m(0.4795ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.3396ms)[39m[39m
+      [32m✔ должен отклонять null [90m(0.164ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.6666ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ должен включать finally блок [90m(0.355ms)[39m[39m
+      [32m✔ должен включать bot.session.close() [90m(0.2036ms)[39m[39m
+      [32m✔ должен включать db_pool.close() при БД [90m(0.1651ms)[39m[39m
+      [32m✔ должен включать asyncio.run(main()) [90m(0.1698ms)[39m[39m
+      [32m✔ должен включать if __name__ == "__main__" [90m(0.2575ms)[39m[39m
+      [32m✔ set_bot_commands определяется ровно один раз [90m(0.4452ms)[39m[39m
+      [32m✔ if __name__ == "__main__" встречается ровно один раз [90m(0.5612ms)[39m[39m
+      [32m✔ asyncio.run(main()) вызывается ровно один раз [90m(0.2142ms)[39m[39m
+    [32m✔ Граничные случаи [90m(2.7287ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.2144ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(28.1449ms)[39m[39m
+    [32m✔ Производительность [90m(28.7126ms)[39m[39m
+  [32m✔ generateMain() [90m(51.9801ms)[39m[39m
+  ▶ mainParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать boolean поле [90m(0.3471ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(1.0254ms)[39m[39m
+      [32m✔ должен отклонять number вместо boolean [90m(0.7691ms)[39m[39m
+      [32m✔ должен отклонять null [90m(0.229ms)[39m[39m
+    [32m✔ Валидация типов [90m(2.6657ms)[39m[39m
+    ▶ Значения по умолчанию
+      [32m✔ должен принимать false по умолчанию [90m(0.1838ms)[39m[39m
+    [32m✔ Значения по умолчанию [90m(0.2697ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 3 поля [90m(0.1422ms)[39m[39m
+      [32m✔ должен использовать ZodOptional [90m(0.1259ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.3554ms)[39m[39m
+  [32m✔ mainParamsSchema [90m(3.6769ms)[39m[39m
+[32m✔ main.py.jinja2 шаблон [90m(56.3127ms)[39m[39m
+▶ keyboard.py.jinja2 шаблон
+  ▶ generateKeyboard()
+    ▶ Валидные данные
+      [32m✔ должен генерировать inline клавиатуру [90m(42.548ms)[39m[39m
+      [32m✔ должен генерировать reply клавиатуру [90m(0.5523ms)[39m[39m
+      [32m✔ должен генерировать пустую клавиатуру [90m(0.3855ms)[39m[39m
+      [32m✔ должен генерировать клавиатуру с раскладкой [90m(1.1361ms)[39m[39m
+      [32m✔ должен генерировать oneTimeKeyboard [90m(1.6649ms)[39m[39m
+    [32m✔ Валидные данные [90m(47.9068ms)[39m[39m
+    ▶ Inline клавиатура
+      [32m✔ должен генерировать callback кнопки [90m(2.0081ms)[39m[39m
+      [32m✔ должен генерировать URL кнопки [90m(0.6486ms)[39m[39m
+      [32m✔ должен генерировать keyboard = builder.as_markup() [90m(0.5328ms)[39m[39m
+    [32m✔ Inline клавиатура [90m(3.7973ms)[39m[39m
+    ▶ Reply клавиатура
+      [32m✔ должен генерировать KeyboardButton [90m(0.6049ms)[39m[39m
+      [32m✔ должен генерировать resize_keyboard=True по умолчанию [90m(0.5687ms)[39m[39m
+      [32m✔ должен генерировать one_time_keyboard=False по умолчанию [90m(0.4928ms)[39m[39m
+    [32m✔ Reply клавиатура [90m(1.8696ms)[39m[39m
+    ▶ Раскладка
+      [32m✔ должен генерировать комментарии для ручной раскладки [90m(0.5721ms)[39m[39m
+      [32m✔ не должен генерировать builder.adjust(, ) при пустых buttonIds [90m(0.4943ms)[39m[39m
+      [32m✔ должен генерировать авто-раскладку [90m(1.4692ms)[39m[39m
+      [32m✔ должен генерировать кнопки в правильном порядке [90m(1.4945ms)[39m[39m
+    [32m✔ Раскладка [90m(4.5244ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.5168ms)[39m[39m
+      [32m✔ должен отклонять параметры с отсутствующим полем [90m(0.7811ms)[39m[39m
+      [32m✔ должен отклонять неправильный keyboardType [90m(0.2387ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.8198ms)[39m[39m
+    ▶ Валидация схемы
+      [32m✔ должен принимать все поля корректных типов [90m(0.2606ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию для всех полей [90m(0.3066ms)[39m[39m
+      [32m✔ должен принимать все значения enum для keyboardType [90m(0.5084ms)[39m[39m
+      [32m✔ должен принимать keyboardLayout с правильной структурой [90m(0.4022ms)[39m[39m
+      [32m✔ должен использовать пустой массив для buttons по умолчанию [90m(2.4252ms)[39m[39m
+    [32m✔ Валидация схемы [90m(4.1761ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.4996ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(71.3768ms)[39m[39m
+    [32m✔ Производительность [90m(72.0863ms)[39m[39m
+    ▶ Проверка отступов
+      [32m✔ должен генерировать keyboard = None без начальных отступов [90m(0.5497ms)[39m[39m
+      [32m✔ должен генерировать builder = InlineKeyboardBuilder без начальных отступов [90m(0.3979ms)[39m[39m
+      [32m✔ должен генерировать keyboard = builder.as_markup() без начальных отступов [90m(0.6027ms)[39m[39m
+      [32m✔ должен генерировать keyboard = builder.as_markup() с правильными параметрами [90m(0.5662ms)[39m[39m
+      [32m✔ не должен содержать несколько операторов на одной строке (Python syntax) [90m(0.2921ms)[39m[39m
+      [32m✔ должен генерировать каждый оператор на отдельной строке [90m(0.2584ms)[39m[39m
+    [32m✔ Проверка отступов [90m(2.9642ms)[39m[39m
+  [32m✔ generateKeyboard() [90m(141.2357ms)[39m[39m
+  ▶ keyboardParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать все поля корректных типов [90m(0.1558ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.1516ms)[39m[39m
+      [32m✔ должен отклонять неправильный enum для keyboardType [90m(0.1306ms)[39m[39m
+      [32m✔ должен принимать buttons с правильной структурой [90m(0.1225ms)[39m[39m
+    [32m✔ Валидация типов [90m(0.7018ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 20 полей [90m(0.2309ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для keyboardType [90m(0.1477ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для oneTimeKeyboard [90m(0.0892ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для resizeKeyboard [90m(0.0925ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для buttons [90m(0.1082ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.8401ms)[39m[39m
+  [32m✔ keyboardParamsSchema [90m(1.8028ms)[39m[39m
+[32m✔ keyboard.py.jinja2 шаблон [90m(143.6124ms)[39m[39m
+▶ imports.py.jinja2 шаблон
+  ▶ generateImports()
+    ▶ Валидные данные
+      [32m✔ должен генерировать код со всеми импортами (всё включено) [90m(10.6242ms)[39m[39m
+      [32m✔ должен генерировать код без условных импортов (всё выключено) [90m(1.0237ms)[39m[39m
+      [32m✔ должен генерировать только импорты БД [90m(0.5455ms)[39m[39m
+      [32m✔ должен генерировать только импорты медиа [90m(0.4781ms)[39m[39m
+      [32m✔ должен генерировать импорты для inline кнопок [90m(0.233ms)[39m[39m
+      [32m✔ должен генерировать импорты для автопереходов [90m(0.3119ms)[39m[39m
+      [32m✔ должен генерировать импорты для ParseMode [90m(0.2177ms)[39m[39m
+      [32m✔ должен генерировать импорты для MediaGroups [90m(0.2278ms)[39m[39m
+      [32m✔ должен генерировать импорты для UrlImages [90m(0.4791ms)[39m[39m
+      [32m✔ должен генерировать импорты для Datetime [90m(0.5048ms)[39m[39m
+      [32m✔ должен генерировать импорты для Datetime + Timezone [90m(0.1704ms)[39m[39m
+      [32m✔ должен генерировать datetime при userDatabaseEnabled=true [90m(0.1261ms)[39m[39m
+      [32m✔ должен совпадать с ожидаемым выводом (всё включено) [90m(0.1624ms)[39m[39m
+      [32m✔ должен совпадать с ожидаемым выводом (всё выключено) [90m(0.1315ms)[39m[39m
+    [32m✔ Валидные данные [90m(16.6472ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(0.8734ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию для отсутствующих полей [90m(0.3951ms)[39m[39m
+      [32m✔ должен отклонять null вместо boolean [90m(0.4803ms)[39m[39m
+      [32m✔ должен отклонять число вместо boolean [90m(0.3113ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.4102ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ должен добавлять TelegramBadRequest при hasInlineButtons=true OR hasAutoTransitions=true [90m(0.3533ms)[39m[39m
+      [32m✔ должен добавлять aiohttp при hasMediaNodes=true OR hasUploadImages=true [90m(0.2307ms)[39m[39m
+      [32m✔ должен добавлять asyncpg только при userDatabaseEnabled=true [90m(0.1758ms)[39m[39m
+      [32m✔ должен всегда включать базовые импорты [90m(0.1402ms)[39m[39m
+    [32m✔ Граничные случаи [90m(1.0564ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.3834ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(26.6688ms)[39m[39m
+    [32m✔ Производительность [90m(27.3927ms)[39m[39m
+  [32m✔ generateImports() [90m(47.954ms)[39m[39m
+  ▶ importsParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать все boolean поля [90m(0.4883ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.3137ms)[39m[39m
+      [32m✔ должен отклонять number вместо boolean [90m(0.2518ms)[39m[39m
+      [32m✔ должен отклонять null вместо boolean [90m(0.2129ms)[39m[39m
+      [32m✔ должен принимать undefined и использовать значение по умолчанию [90m(0.1575ms)[39m[39m
+    [32m✔ Валидация типов [90m(1.6663ms)[39m[39m
+    ▶ Значения по умолчанию
+      [32m✔ должен использовать false для всех полей по умолчанию [90m(0.2734ms)[39m[39m
+      [32m✔ должен использовать false для отсутствующих полей [90m(0.2637ms)[39m[39m
+    [32m✔ Значения по умолчанию [90m(0.6546ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь все 10 полей [90m(0.2247ms)[39m[39m
+      [32m✔ должен использовать ZodDefault для всех полей [90m(0.1388ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.4671ms)[39m[39m
+  [32m✔ importsParamsSchema [90m(3.1119ms)[39m[39m
+[32m✔ imports.py.jinja2 шаблон [90m(51.6302ms)[39m[39m
+▶ header.py.jinja2 шаблон
+  ▶ generateHeader()
+    ▶ Валидные данные
+      [32m✔ должен генерировать UTF-8 заголовок [90m(6.8385ms)[39m[39m
+      [32m✔ должен включать import os и import sys [90m(0.4515ms)[39m[39m
+      [32m✔ должен включать проверку Windows [90m(0.3886ms)[39m[39m
+      [32m✔ должен включать PYTHONIOENCODING [90m(0.2966ms)[39m[39m
+      [32m✔ должен включать reconfigure для stdout [90m(0.1929ms)[39m[39m
+      [32m✔ должен включать fallback для старых версий [90m(0.3741ms)[39m[39m
+      [32m✔ должен совпадать с ожидаемым выводом [90m(0.2786ms)[39m[39m
+      [32m✔ должен игнорировать параметры (всегда одинаковый вывод) [90m(0.7762ms)[39m[39m
+    [32m✔ Валидные данные [90m(11.2977ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.5134ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию [90m(0.6317ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.2977ms)[39m[39m
+      [32m✔ должен отклонять null [90m(0.1954ms)[39m[39m
+    [32m✔ Невалидные данные [90m(3.169ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ должен всегда включать codecs [90m(0.3597ms)[39m[39m
+      [32m✔ должен всегда включать try-except [90m(0.194ms)[39m[39m
+      [32m✔ должен включать stderr [90m(0.131ms)[39m[39m
+      [32m✔ должен включать os.environ [90m(0.13ms)[39m[39m
+    [32m✔ Граничные случаи [90m(0.9951ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.2783ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(14.41ms)[39m[39m
+    [32m✔ Производительность [90m(15.1834ms)[39m[39m
+  [32m✔ generateHeader() [90m(31.8173ms)[39m[39m
+  ▶ headerParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать все boolean поля [90m(0.884ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.3202ms)[39m[39m
+      [32m✔ должен отклонять number вместо boolean [90m(0.2088ms)[39m[39m
+      [32m✔ должен отклонять null [90m(0.1828ms)[39m[39m
+    [32m✔ Валидация типов [90m(1.8341ms)[39m[39m
+    ▶ Значения по умолчанию
+      [32m✔ должен использовать false для всех полей по умолчанию [90m(0.2393ms)[39m[39m
+    [32m✔ Значения по умолчанию [90m(0.3383ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 3 поля [90m(0.1649ms)[39m[39m
+      [32m✔ должен использовать ZodDefault для всех полей [90m(0.1014ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.3634ms)[39m[39m
+  [32m✔ headerParamsSchema [90m(2.8896ms)[39m[39m
+[32m✔ header.py.jinja2 шаблон [90m(35.3257ms)[39m[39m
+▶ generateReplyHideAfterClick
+  [32m✔ должен генерировать код для кнопок с hideAfterClick [90m(15.9808ms)[39m[39m
+  [32m✔ должен генерировать пустую строку если нет кнопок с hideAfterClick [90m(0.3702ms)[39m[39m
+  [32m✔ должен генерировать код для нескольких кнопок hideAfterClick [90m(0.2379ms)[39m[39m
+  [32m✔ должен содержать обработку исключений [90m(0.3776ms)[39m[39m
+[32m✔ generateReplyHideAfterClick [90m(18.5132ms)[39m[39m
+▶ generateReplyButtonHandlers
+  [32m✔ должен генерировать обработчики для reply кнопок [90m(19.4518ms)[39m[39m
+  [32m✔ должен генерировать пустую строку для пустых узлов [90m(0.7291ms)[39m[39m
+  [32m✔ должен генерировать пустую строку для узлов без reply кнопок [90m(0.2995ms)[39m[39m
+  [32m✔ должен генерировать обработчики с поддержкой multi-select [90m(0.6739ms)[39m[39m
+[32m✔ generateReplyButtonHandlers [90m(22.6664ms)[39m[39m
+▶ generateMultiSelectTransition
+  [32m✔ должен генерировать переход к целевому узлу через continueButtonTarget [90m(28.6112ms)[39m[39m
+  [32m✔ должен генерировать вызов команды для command узла [90m(0.9708ms)[39m[39m
+  [32m✔ должен генерировать переход по соединению если нет continueButtonTarget [90m(1.1763ms)[39m[39m
+  [32m✔ должен обрабатывать случай несуществующего целевого узла [90m(0.8529ms)[39m[39m
+  [32m✔ должен содержать предупреждение для неизвестного типа узла [90m(0.2757ms)[39m[39m
+[32m✔ generateMultiSelectTransition [90m(33.3456ms)[39m[39m
+▶ multi-select-reply.py.jinja2 шаблон
+  ▶ generateMultiSelectReply()
+    ▶ Валидные данные
+      [32m✔ должен генерировать обработчик для базового multi-select reply [90m(29.7046ms)[39m[39m
+      [32m✔ должен генерировать обработчик с goto кнопками [90m(1.0783ms)[39m[39m
+      [32m✔ должен генерировать обработчик с command целевым узлом [90m(0.4951ms)[39m[39m
+      [32m✔ должен генерировать обработчик для нескольких узлов [90m(1.0287ms)[39m[39m
+      [32m✔ должен генерировать пустой вывод для пустого массива узлов [90m(0.4325ms)[39m[39m
+      [32m✔ должен использовать custom indent [90m(1.2009ms)[39m[39m
+    [32m✔ Валидные данные [90m(36.0529ms)[39m[39m
+    ▶ Обработка кнопки "Готово"
+      [32m✔ должен генерировать код завершения multi-select [90m(0.5141ms)[39m[39m
+      [32m✔ должен генерировать очистку состояния [90m(0.5953ms)[39m[39m
+      [32m✔ должен генерировать переход к следующему узлу [90m(0.7161ms)[39m[39m
+    [32m✔ Обработка кнопки "Готово" [90m(2.4316ms)[39m[39m
+    ▶ Обработка выбора опций
+      [32m✔ должен генерировать код добавления/удаления выбора [90m(0.572ms)[39m[39m
+      [32m✔ должен генерировать сообщения о выборе [90m(0.4119ms)[39m[39m
+      [32m✔ должен генерировать очистку текста от галочки [90m(0.2593ms)[39m[39m
+      [32m✔ должен генерировать обновление клавиатуры с галочками [90m(0.3685ms)[39m[39m
+    [32m✔ Обработка выбора опций [90m(1.8254ms)[39m[39m
+    ▶ Обработка goto кнопок
+      [32m✔ должен генерировать fake_callback для goto кнопок [90m(0.4689ms)[39m[39m
+      [32m✔ должен генерировать вызов command обработчика [90m(0.8009ms)[39m[39m
+      [32m✔ должен генерировать сохранение состояния перед переходом [90m(1.3236ms)[39m[39m
+    [32m✔ Обработка goto кнопок [90m(3.0314ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с отсутствующим multiSelectNodes [90m(1.2461ms)[39m[39m
+      [32m✔ должен отклонять параметры с неправильным типом [90m(0.3792ms)[39m[39m
+    [32m✔ Невалидные данные [90m(1.7966ms)[39m[39m
+    ▶ Валидация схемы
+      [32m✔ должен принимать все поля корректных типов [90m(0.3554ms)[39m[39m
+      [32m✔ должен использовать indentLevel по умолчанию [90m(0.1442ms)[39m[39m
+      [32m✔ должен принимать completeButton как опциональное поле [90m(0.1672ms)[39m[39m
+    [32m✔ Валидация схемы [90m(0.8075ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.4954ms)[39m[39m
+      [32m✔ должен генерировать код 100 раз быстрее 50ms [90m(14.5078ms)[39m[39m
+    [32m✔ Производительность [90m(15.219ms)[39m[39m
+  [32m✔ generateMultiSelectReply() [90m(62.2624ms)[39m[39m
+  ▶ multiSelectReplyParamsSchema
+    ▶ Структура схемы
+      [32m✔ должен иметь 4 поля [90m(0.3022ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для indentLevel [90m(0.2322ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.6719ms)[39m[39m
+  [32m✔ multiSelectReplyParamsSchema [90m(1.2236ms)[39m[39m
+[32m✔ multi-select-reply.py.jinja2 шаблон [90m(64.0501ms)[39m[39m
+▶ multi-select-done.py.jinja2 шаблон
+  ▶ generateMultiSelectDone()
+    ▶ Валидные данные
+      [32m✔ должен генерировать обработчик для базового multi-select done [90m(28.1482ms)[39m[39m
+      [32m✔ должен генерировать обработчик с целевым узлом множественного выбора [90m(0.9536ms)[39m[39m
+      [32m✔ должен генерировать обработчик с reply клавиатурой [90m(0.6322ms)[39m[39m
+      [32m✔ должен генерировать обработчик без целевого узла [90m(0.6748ms)[39m[39m
+      [32m✔ должен генерировать обработчик для нескольких узлов [90m(0.3259ms)[39m[39m
+      [32m✔ должен генерировать пустой вывод для пустого массива узлов [90m(0.3815ms)[39m[39m
+    [32m✔ Валидные данные [90m(32.3974ms)[39m[39m
+    ▶ Сохранение в БД
+      [32m✔ должен генерировать код сохранения выбранных опций [90m(0.6948ms)[39m[39m
+      [32m✔ должен генерировать логирование сохранения [90m(1.2417ms)[39m[39m
+    [32m✔ Сохранение в БД [90m(2.3372ms)[39m[39m
+    ▶ Переход к следующему узлу
+      [32m✔ должен генерировать код перехода к целевому узлу [90m(0.7403ms)[39m[39m
+      [32m✔ должен генерировать инициализацию multi-select состояния [90m(0.9537ms)[39m[39m
+      [32m✔ должен генерировать восстановление из БД [90m(0.3929ms)[39m[39m
+    [32m✔ Переход к следующему узлу [90m(2.3264ms)[39m[39m
+    ▶ Генерация клавиатуры
+      [32m✔ должен генерировать inline клавиатуру с галочками [90m(0.5247ms)[39m[39m
+      [32m✔ должен генерировать reply клавиатуру с галочками [90m(0.3612ms)[39m[39m
+      [32m✔ должен генерировать кнопку "Готово" [90m(0.3056ms)[39m[39m
+      [32m✔ должен генерировать adjust() для раскладки [90m(0.2649ms)[39m[39m
+    [32m✔ Генерация клавиатуры [90m(1.7657ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с отсутствующим multiSelectNodes [90m(1.5591ms)[39m[39m
+      [32m✔ должен отклонять параметры с неправильным типом [90m(0.6775ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.4495ms)[39m[39m
+    ▶ Валидация схемы
+      [32m✔ должен принимать все поля корректных типов [90m(0.3449ms)[39m[39m
+      [32m✔ должен использовать indentLevel по умолчанию [90m(0.1669ms)[39m[39m
+      [32m✔ должен принимать targetNode как опциональное поле [90m(0.1872ms)[39m[39m
+    [32m✔ Валидация схемы [90m(0.8479ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 5ms [90m(0.4405ms)[39m[39m
+      [32m✔ должен генерировать код 50 раз быстрее 100ms [90m(2.9875ms)[39m[39m
+    [32m✔ Производительность [90m(3.5571ms)[39m[39m
+  [32m✔ generateMultiSelectDone() [90m(47.054ms)[39m[39m
+  ▶ multiSelectDoneParamsSchema
+    ▶ Структура схемы
+      [32m✔ должен иметь 4 поля [90m(0.2659ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для indentLevel [90m(0.3238ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.7597ms)[39m[39m
+  [32m✔ multiSelectDoneParamsSchema [90m(1.2761ms)[39m[39m
+[32m✔ multi-select-done.py.jinja2 шаблон [90m(49.2427ms)[39m[39m
+▶ multi-select-callback.py.jinja2 шаблон
+  ▶ generateMultiSelectCallback()
+    ▶ Валидные данные
+      [32m✔ должен генерировать обработчик для базового multi-select узла [90m(35.9103ms)[39m[39m
+      [32m✔ должен генерировать обработчик с обычными кнопками [90m(0.9641ms)[39m[39m
+      [32m✔ должен генерировать обработчик для нескольких узлов [90m(0.969ms)[39m[39m
+      [32m✔ должен генерировать обработчик с раскладкой [90m(0.6303ms)[39m[39m
+      [32m✔ должен генерировать пустой вывод для пустого массива узлов [90m(1.0152ms)[39m[39m
+      [32m✔ должен использовать custom indent [90m(0.6309ms)[39m[39m
+    [32m✔ Валидные данные [90m(41.3355ms)[39m[39m
+    ▶ Callback data генерация
+      [32m✔ должен генерировать правильный callback_data для кнопок [90m(0.4373ms)[39m[39m
+      [32m✔ должен генерировать done callback_data [90m(0.5789ms)[39m[39m
+      [32m✔ должен генерировать поиск узла по короткому ID [90m(0.7133ms)[39m[39m
+    [32m✔ Callback data генерация [90m(2.1743ms)[39m[39m
+    ▶ Логика выбора
+      [32m✔ должен генерировать код добавления/удаления выбора [90m(0.643ms)[39m[39m
+      [32m✔ должен генерировать восстановление из БД [90m(0.4926ms)[39m[39m
+      [32m✔ должен генерировать обновление клавиатуры [90m(1.2232ms)[39m[39m
+    [32m✔ Логика выбора [90m(2.7532ms)[39m[39m
+    ▶ Галочки на кнопках
+      [32m✔ должен генерировать кнопки с галочками [90m(0.7462ms)[39m[39m
+      [32m✔ должен генерировать escaped текст для кнопок [90m(0.4215ms)[39m[39m
+    [32m✔ Галочки на кнопках [90m(1.4925ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с отсутствующим multiSelectNodes [90m(0.9677ms)[39m[39m
+      [32m✔ должен отклонять параметры с неправильным типом [90m(0.2577ms)[39m[39m
+    [32m✔ Невалидные данные [90m(1.3618ms)[39m[39m
+    ▶ Валидация схемы
+      [32m✔ должен принимать все поля корректных типов [90m(0.2195ms)[39m[39m
+      [32m✔ должен использовать indentLevel по умолчанию [90m(0.1214ms)[39m[39m
+      [32m✔ должен принимать completeButton как опциональное поле [90m(0.139ms)[39m[39m
+    [32m✔ Валидация схемы [90m(0.5985ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.3619ms)[39m[39m
+      [32m✔ должен генерировать код 100 раз быстрее 50ms [90m(14.2767ms)[39m[39m
+    [32m✔ Производительность [90m(14.8085ms)[39m[39m
+    ▶ Отступы
+      [32m✔ должен генерировать правильные отступы для всех строк [90m(0.6782ms)[39m[39m
+    [32m✔ Отступы [90m(0.8642ms)[39m[39m
+  [32m✔ generateMultiSelectCallback() [90m(66.4074ms)[39m[39m
+  ▶ multiSelectCallbackParamsSchema
+    ▶ Структура схемы
+      [32m✔ должен иметь 3 поля [90m(0.6725ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для indentLevel [90m(0.1883ms)[39m[39m
+      [32m✔ должен использовать ZodDefault для indentLevel [90m(0.109ms)[39m[39m
+    [32m✔ Структура схемы [90m(1.1262ms)[39m[39m
+  [32m✔ multiSelectCallbackParamsSchema [90m(1.4303ms)[39m[39m
+[32m✔ multi-select-callback.py.jinja2 шаблон [90m(68.485ms)[39m[39m
+▶ generateMultiSelectButtonHandler
+  ▶ Валидные данные
+    [32m✔ должен генерировать обработчик с done кнопкой [90m(32.0724ms)[39m[39m
+    [32m✔ должен генерировать логику сохранения выбранных значений в БД [90m(1.5733ms)[39m[39m
+    [32m✔ должен генерировать очистку состояния после done [90m(0.5513ms)[39m[39m
+    [32m✔ должен генерировать переход к следующему узлу [90m(0.276ms)[39m[39m
+    [32m✔ должен генерировать специальную логику для metro_selection [90m(0.2887ms)[39m[39m
+    [32m✔ должен генерировать обработчик без done кнопки [90m(0.2624ms)[39m[39m
+  [32m✔ Валидные данные [90m(36.1326ms)[39m[39m
+  ▶ Логика сохранения переменных
+    [32m✔ должен сохранять переменную из узла при наличии inputVariable [90m(0.4008ms)[39m[39m
+    [32m✔ должен сохранять кнопку как есть при отсутствии inputVariable [90m(0.6608ms)[39m[39m
+    [32m✔ должен пропускать сохранение при skipDataCollection=true [90m(1.2008ms)[39m[39m
+  [32m✔ Логика сохранения переменных [90m(2.9532ms)[39m[39m
+  ▶ Callback data генерация
+    [32m✔ должен использовать правильный формат callback_data [90m(0.8718ms)[39m[39m
+    [32m✔ должен использовать безопасное имя функции [90m(0.8172ms)[39m[39m
+  [32m✔ Callback data генерация [90m(1.9034ms)[39m[39m
+  ▶ Невалидные данные
+    [32m✔ должен выбрасывать ошибку при отсутствии callbackData [90m(0.9509ms)[39m[39m
+    [32m✔ должен выбрасывать ошибку при неправильном типе button [90m(0.2361ms)[39m[39m
+  [32m✔ Невалидные данные [90m(1.3097ms)[39m[39m
+  ▶ Валидация схемы
+    [32m✔ должна принимать валидные параметры [90m(0.2448ms)[39m[39m
+    [32m✔ должна принимать параметры без targetNode [90m(0.1474ms)[39m[39m
+    [32m✔ должна принимать параметры с custom indent [90m(0.132ms)[39m[39m
+  [32m✔ Валидация схемы [90m(0.6501ms)[39m[39m
+  ▶ Отступы
+    [32m✔ должен использовать отступ по умолчанию [90m(0.3305ms)[39m[39m
+    [32m✔ должен использовать custom indent [90m(0.2372ms)[39m[39m
+  [32m✔ Отступы [90m(0.6547ms)[39m[39m
+  ▶ Производительность
+    [32m✔ должен быстро генерировать код для одного узла [90m(1.3154ms)[39m[39m
+    [32m✔ должен быстро генерировать код для множества узлов [90m(0.901ms)[39m[39m
+  [32m✔ Производительность [90m(2.3757ms)[39m[39m
+[32m✔ generateMultiSelectButtonHandler [90m(47.0188ms)[39m[39m
+▶ generateCommandCallbackHandler
+  [32m✔ должен генерировать обработчик для командной callback кнопки [90m(28.2557ms)[39m[39m
+  [32m✔ должен генерировать FakeCallbackQuery класс для start узла [90m(1.0893ms)[39m[39m
+  [32m✔ должен генерировать fake_message объект для command узла [90m(1.1897ms)[39m[39m
+  [32m✔ должен генерировать обработчик для команды меню [90m(0.5443ms)[39m[39m
+  [32m✔ должен генерировать обработчик для команды настроек [90m(0.3187ms)[39m[39m
+  [32m✔ должен генерировать обработчик для неизвестной команды [90m(0.2678ms)[39m[39m
+  [32m✔ должен экранировать специальные символы в тексте кнопки [90m(0.5ms)[39m[39m
+  [32m✔ должен генерировать логирование выполнения команды [90m(0.363ms)[39m[39m
+  [32m✔ должен заменять дефисы в callbackData на подчёркивания в имени функции [90m(0.5891ms)[39m[39m
+[32m✔ generateCommandCallbackHandler [90m(34.9508ms)[39m[39m
+▶ button-response.py.jinja2 шаблон
+  ▶ generateButtonResponse()
+    ▶ Валидные данные
+      [32m✔ должен генерировать обработчик для базового button-response [90m(21.8819ms)[39m[39m
+      [32m✔ должен генерировать обработчик с allowSkip [90m(2.324ms)[39m[39m
+      [32m✔ должен генерировать обработчик с URL кнопками [90m(0.8011ms)[39m[39m
+      [32m✔ должен генерировать обработчик с command навигацией [90m(2.0934ms)[39m[39m
+      [32m✔ должен генерировать обработчик для нескольких узлов [90m(0.7458ms)[39m[39m
+      [32m✔ должен генерировать обработчик с множественным выбором [90m(0.6393ms)[39m[39m
+      [32m✔ должен генерировать пустой вывод для пустого массива узлов [90m(1.5649ms)[39m[39m
+    [32m✔ Валидные данные [90m(31.9075ms)[39m[39m
+    ▶ Обработка одиночного выбора
+      [32m✔ должен генерировать код сохранения одиночного выбора [90m(0.7083ms)[39m[39m
+      [32m✔ должен генерировать сообщение об успехе [90m(0.7776ms)[39m[39m
+      [32m✔ должен генерировать очистку состояния [90m(0.8454ms)[39m[39m
+    [32m✔ Обработка одиночного выбора [90m(2.8108ms)[39m[39m
+    ▶ Обработка множественного выбора
+      [32m✔ должен генерировать код добавления/удаления выбора [90m(0.3787ms)[39m[39m
+      [32m✔ должен генерировать обработку кнопки "Готово" [90m(0.4198ms)[39m[39m
+      [32m✔ должен генерировать структурированный ответ для множественного выбора [90m(0.4234ms)[39m[39m
+    [32m✔ Обработка множественного выбора [90m(1.487ms)[39m[39m
+    ▶ Навигация
+      [32m✔ должен генерировать навигацию по target_node_id [90m(1.3491ms)[39m[39m
+      [32m✔ должен генерировать навигацию по next_node_id [90m(0.8089ms)[39m[39m
+      [32m✔ должен генерировать обработку URL кнопок [90m(0.3703ms)[39m[39m
+      [32m✔ должен генерировать fake_message для command [90m(0.505ms)[39m[39m
+    [32m✔ Навигация [90m(3.6791ms)[39m[39m
+    ▶ Логирование
+      [32m✔ должен генерировать логирование сохранения в БД [90m(1.0493ms)[39m[39m
+      [32m✔ должен генерировать логирование ошибок навигации [90m(0.3092ms)[39m[39m
+    [32m✔ Логирование [90m(1.5333ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с отсутствующим userInputNodes [90m(0.9449ms)[39m[39m
+      [32m✔ должен отклонять параметры с неправильным типом [90m(0.2847ms)[39m[39m
+    [32m✔ Невалидные данные [90m(1.4022ms)[39m[39m
+    ▶ Валидация схемы
+      [32m✔ должен принимать все поля корректных типов [90m(0.7318ms)[39m[39m
+      [32m✔ должен использовать hasUrlButtonsInProject по умолчанию false [90m(0.1947ms)[39m[39m
+      [32m✔ должен использовать indentLevel по умолчанию [90m(0.1356ms)[39m[39m
+    [32m✔ Валидация схемы [90m(1.2507ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.3555ms)[39m[39m
+      [32m✔ должен генерировать код 100 раз быстрее 50ms [90m(14.6905ms)[39m[39m
+    [32m✔ Производительность [90m(15.1817ms)[39m[39m
+  [32m✔ generateButtonResponse() [90m(60.5502ms)[39m[39m
+  ▶ buttonResponseParamsSchema
+    ▶ Структура схемы
+      [32m✔ должен иметь 4 поля [90m(0.2124ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для hasUrlButtonsInProject [90m(0.1569ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для indentLevel [90m(0.0909ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.5643ms)[39m[39m
+  [32m✔ buttonResponseParamsSchema [90m(0.7689ms)[39m[39m
+[32m✔ button-response.py.jinja2 шаблон [90m(61.859ms)[39m[39m
+▶ generateHandleUserInput()
+  ▶ проверка состояния waiting_for_input
+    [32m✔ генерирует проверку has_waiting_state [90m(43.5173ms)[39m[39m
+    [32m✔ генерирует DEBUG лог с текстом сообщения [90m(1.2317ms)[39m[39m
+    [32m✔ генерирует if-блок проверки waiting_for_input [90m(0.46ms)[39m[39m
+    [32m✔ генерирует проверку пустого waiting_config [90m(0.3024ms)[39m[39m
+  [32m✔ проверка состояния waiting_for_input [90m(46.6458ms)[39m[39m
+  ▶ извлечение конфигурации
+    [32m✔ извлекает waiting_node_id [90m(0.5082ms)[39m[39m
+    [32m✔ извлекает input_type с дефолтом text [90m(0.3235ms)[39m[39m
+    [32m✔ извлекает variable_name с дефолтом user_response [90m(0.995ms)[39m[39m
+    [32m✔ извлекает min_length и max_length [90m(1.0797ms)[39m[39m
+    [32m✔ извлекает next_node_id и appendVariable [90m(1.8961ms)[39m[39m
+  [32m✔ извлечение конфигурации [90m(5.536ms)[39m[39m
+  ▶ проверка медиа-типа
+    [32m✔ генерирует проверку медиа-типов [90m(0.5325ms)[39m[39m
+    [32m✔ возвращает return при медиа-типе [90m(0.2269ms)[39m[39m
+  [32m✔ проверка медиа-типа [90m(0.9054ms)[39m[39m
+  ▶ валидация длины
+    [32m✔ генерирует проверку минимальной длины [90m(0.2916ms)[39m[39m
+    [32m✔ генерирует проверку максимальной длины [90m(0.2153ms)[39m[39m
+    [32m✔ использует retry_message из конфига [90m(0.2274ms)[39m[39m
+  [32m✔ валидация длины [90m(0.961ms)[39m[39m
+  ▶ валидация типа ввода
+    [31m✖ генерирует валидацию email [90m(28.7852ms)[39m[39m
+    [31m✖ генерирует валидацию number [90m(62.7899ms)[39m[39m
+    [31m✖ генерирует валидацию phone [90m(52.7424ms)[39m[39m
+  [31m✖ валидация типа ввода [90m(144.6713ms)[39m[39m
+  ▶ очистка состояния
+    [32m✔ удаляет waiting_for_input после обработки [90m(0.333ms)[39m[39m
+    [32m✔ логирует успешный переход [90m(0.2125ms)[39m[39m
+    [32m✔ логирует полученный ввод [90m(0.181ms)[39m[39m
+  [32m✔ очистка состояния [90m(0.8601ms)[39m[39m
+  ▶ отступы
+    [32m✔ дефолтный отступ — 4 пробела [90m(0.2009ms)[39m[39m
+    [32m✔ кастомный отступ — 8 пробелов [90m(0.6328ms)[39m[39m
+    [32m✔ пустой отступ — без пробелов [90m(0.1838ms)[39m[39m
+  [32m✔ отступы [90m(1.1256ms)[39m[39m
+[31m✖ generateHandleUserInput() [90m(202.0878ms)[39m[39m
+▶ handleUserInputParamsSchema
+  [32m✔ принимает пустой объект [90m(0.1414ms)[39m[39m
+  [32m✔ принимает indentLevel [90m(0.1041ms)[39m[39m
+  [32m✔ отклоняет числовой indentLevel [90m(0.5807ms)[39m[39m
+[32m✔ handleUserInputParamsSchema [90m(0.9699ms)[39m[39m
+▶ Производительность
+  [32m✔ generateHandleUserInput: быстрее 10ms [90m(0.3392ms)[39m[39m
+[32m✔ Производительность [90m(0.4763ms)[39m[39m
+▶ качество кода — пустые строки
+  [32m✔ не содержит более 2 пустых строк подряд [90m(0.4567ms)[39m[39m
+  [31m✖ не содержит строк только из пробелов [90m(0.6301ms)[39m[39m
+[31m✖ качество кода — пустые строки [90m(1.2343ms)[39m[39m
+▶ handle-node-function.py.jinja2 шаблон
+  ▶ generateHandleNodeFunction()
+    ▶ Валидные данные
+      [32m✔ должен генерировать async def функцию [90m(22.9477ms)[39m[39m
+      [32m✔ должен включать logging.info с nodeId [90m(1.5303ms)[39m[39m
+      [32m✔ должен включать init_user_variables [90m(0.8962ms)[39m[39m
+      [32m✔ должен включать get_user_from_db [90m(0.5724ms)[39m[39m
+      [32m✔ должен включать safe_edit_or_send [90m(0.5083ms)[39m[39m
+      [32m✔ должен устанавливать waiting_for_input при collectUserInput=true [90m(0.2596ms)[39m[39m
+    [32m✔ Валидные данные [90m(28.1396ms)[39m[39m
+    ▶ Условные сообщения
+      [32m✔ должен генерировать if/elif блоки для условий [90m(0.8813ms)[39m[39m
+      [32m✔ должен генерировать else с основным текстом [90m(0.6102ms)[39m[39m
+      [32m✔ должен включать replace_variables_in_text [90m(0.5366ms)[39m[39m
+      [32m✔ должен включать _variable_filters [90m(1.3564ms)[39m[39m
+    [32m✔ Условные сообщения [90m(3.9087ms)[39m[39m
+    ▶ Автопереход
+      [32m✔ должен генерировать блок автоперехода [90m(1.0145ms)[39m[39m
+      [32m✔ должен вызывать handle_node_ целевого узла [90m(0.5209ms)[39m[39m
+      [32m✔ должен проверять _has_conditional_keyboard перед автопереходом [90m(0.5052ms)[39m[39m
+    [32m✔ Автопереход [90m(2.2893ms)[39m[39m
+    ▶ Изображение
+      [32m✔ должен устанавливать image_url переменную [90m(0.3966ms)[39m[39m
+      [32m✔ должен вызывать update_user_data_in_db для imageUrl [90m(0.1866ms)[39m[39m
+    [32m✔ Изображение [90m(0.7161ms)[39m[39m
+    ▶ HTML форматирование
+      [32m✔ должен генерировать ParseMode.HTML при formatMode=html [90m(0.2743ms)[39m[39m
+      [32m✔ не должен включать ParseMode при formatMode=none [90m(0.169ms)[39m[39m
+    [32m✔ HTML форматирование [90m(0.5433ms)[39m[39m
+  [32m✔ generateHandleNodeFunction() [90m(36.411ms)[39m[39m
+  ▶ generateHandleNodeFunctionsFromParams()
+    [32m✔ должен генерировать несколько функций [90m(0.3091ms)[39m[39m
+    [32m✔ должен возвращать пустую строку для пустого массива [90m(0.1133ms)[39m[39m
+  [32m✔ generateHandleNodeFunctionsFromParams() [90m(0.5117ms)[39m[39m
+  ▶ Невалидные данные
+    [32m✔ должен отклонять параметры без nodeId [90m(1.4837ms)[39m[39m
+    [32m✔ должен отклонять параметры с неправильным типом nodeId [90m(0.5042ms)[39m[39m
+  [32m✔ Невалидные данные [90m(2.1654ms)[39m[39m
+  ▶ Валидация схемы
+    [32m✔ должен принимать валидные параметры [90m(0.2175ms)[39m[39m
+    [32m✔ должен применять defaults для опциональных полей [90m(0.2014ms)[39m[39m
+    [32m✔ должен отклонять неправильный logicOperator [90m(0.2691ms)[39m[39m
+  [32m✔ Валидация схемы [90m(0.8159ms)[39m[39m
+  ▶ Производительность
+    [32m✔ должен генерировать код быстрее 10ms [90m(0.2914ms)[39m[39m
+    [32m✔ должен генерировать 1000 функций быстрее 500ms [90m(40.1043ms)[39m[39m
+  [32m✔ Производительность [90m(40.7287ms)[39m[39m
+[32m✔ handle-node-function.py.jinja2 шаблон [90m(81.381ms)[39m[39m
+▶ generateFakeCallback()
+  [32m✔ генерирует fake_callback объект [90m(11.0667ms)[39m[39m
+  [32m✔ генерирует fake_message объект [90m(0.4293ms)[39m[39m
+  [32m✔ генерирует вызов handle_callback с safeFunctionName [90m(0.514ms)[39m[39m
+  [32m✔ генерирует logging.info с ID узлов [90m(0.3393ms)[39m[39m
+  [32m✔ генерирует data с targetNodeId [90m(0.2986ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.6322ms)[39m[39m
+  [32m✔ использует safeFunctionName с подчёркиваниями [90m(0.2793ms)[39m[39m
+[32m✔ generateFakeCallback() [90m(15.0097ms)[39m[39m
+▶ fakeCallbackParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.4581ms)[39m[39m
+  [32m✔ отклоняет отсутствие targetNodeId [90m(0.8403ms)[39m[39m
+[32m✔ fakeCallbackParamsSchema [90m(1.7811ms)[39m[39m
+▶ Производительность
+  [32m✔ generateFakeCallback: быстрее 10ms [90m(0.3279ms)[39m[39m
+[32m✔ Производительность [90m(0.4508ms)[39m[39m
+▶ generateErrorHandler()
+  [32m✔ генерирует except Exception as e: [90m(8.6528ms)[39m[39m
+  [32m✔ генерирует logging.error [90m(0.3746ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.6936ms)[39m[39m
+  [32m✔ работает без параметров [90m(0.3766ms)[39m[39m
+[32m✔ generateErrorHandler() [90m(11.2923ms)[39m[39m
+▶ errorHandlerParamsSchema
+  [32m✔ принимает пустой объект [90m(0.8483ms)[39m[39m
+  [32m✔ принимает indentLevel [90m(0.523ms)[39m[39m
+  [32m✔ отклоняет числовой indentLevel [90m(0.9015ms)[39m[39m
+[32m✔ errorHandlerParamsSchema [90m(3.0969ms)[39m[39m
+▶ Производительность
+  [32m✔ generateErrorHandler: быстрее 10ms [90m(0.625ms)[39m[39m
+[32m✔ Производительность [90m(0.9381ms)[39m[39m
+▶ database.py.jinja2 шаблон
+  ▶ generateDatabase()
+    ▶ Валидные данные
+      [32m✔ должен генерировать функции БД при userDatabaseEnabled=true [90m(15.4822ms)[39m[39m
+      [32m✔ должен генерировать пустую строку при userDatabaseEnabled=false [90m(0.5272ms)[39m[39m
+      [32m✔ должен включать CREATE TABLE для bot_users [90m(1.2429ms)[39m[39m
+      [32m✔ должен включать CREATE TABLE для bot_messages [90m(0.5425ms)[39m[39m
+      [32m✔ должен включать docstring для init_database [90m(0.2219ms)[39m[39m
+      [32m✔ должен включать обработку ошибок [90m(0.3514ms)[39m[39m
+      [32m✔ должен включать get_moscow_time [90m(0.223ms)[39m[39m
+      [32m✔ должен включать log_message [90m(0.1756ms)[39m[39m
+      [32m✔ должен включать get_user_ids_from_db [90m(0.4573ms)[39m[39m
+      [32m✔ должен включать get_user_data_from_db [90m(0.4996ms)[39m[39m
+      [32m✔ должен включать update_user_variable_in_db [90m(0.1804ms)[39m[39m
+      [32m✔ должен включать save_user_data_to_db [90m(0.1485ms)[39m[39m
+      [32m✔ должен включать save_user_to_db с avatar_url [90m(0.1459ms)[39m[39m
+    [32m✔ Валидные данные [90m(21.9197ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(0.8968ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию для отсутствующих полей [90m(0.4146ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.2716ms)[39m[39m
+      [32m✔ должен отклонять null вместо boolean [90m(0.1566ms)[39m[39m
+    [32m✔ Невалидные данные [90m(1.9728ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ должен генерировать все функции при включенной БД [90m(0.7661ms)[39m[39m
+      [32m✔ должен включать asyncpg.create_pool [90m(0.9161ms)[39m[39m
+      [32m✔ должен включать JSONB для user_data [90m(0.2343ms)[39m[39m
+      [32m✔ должен включать ON CONFLICT для upsert [90m(0.1666ms)[39m[39m
+      [32m✔ должен возвращать пустую строку при false [90m(0.1666ms)[39m[39m
+      [32m✔ должен включать новые поля схемы [90m(0.2119ms)[39m[39m
+    [32m✔ Граничные случаи [90m(2.8296ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.21ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(25.6434ms)[39m[39m
+    [32m✔ Производительность [90m(27.104ms)[39m[39m
+  [32m✔ generateDatabase() [90m(54.3951ms)[39m[39m
+  ▶ databaseParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать boolean поле [90m(0.3448ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.2066ms)[39m[39m
+      [32m✔ должен отклонять number вместо boolean [90m(0.2199ms)[39m[39m
+      [32m✔ должен отклонять null вместо boolean [90m(0.1643ms)[39m[39m
+      [32m✔ должен принимать undefined [90m(0.1298ms)[39m[39m
+    [32m✔ Валидация типов [90m(1.25ms)[39m[39m
+    ▶ Значения по умолчанию
+      [32m✔ должен использовать false для всех полей по умолчанию [90m(0.3189ms)[39m[39m
+      [32m✔ должен принимать true для всех полей [90m(0.1601ms)[39m[39m
+    [32m✔ Значения по умолчанию [90m(0.6046ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 4 поля [90m(0.29ms)[39m[39m
+      [32m✔ должен использовать ZodDefault для всех полей [90m(0.1712ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.661ms)[39m[39m
+  [32m✔ databaseParamsSchema [90m(2.8318ms)[39m[39m
+[32m✔ database.py.jinja2 шаблон [90m(58.0258ms)[39m[39m
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\1\Desktop\telegram-bot-builder\lib\templates\database\template-renderer' imported from C:\Users\1\Desktop\telegram-bot-builder\lib\templates\database\media-save-vars\media-save-vars.renderer.ts
+[90m    at finalizeResolution (node:internal/modules/esm/resolve:275:11)[39m
+[90m    at moduleResolve (node:internal/modules/esm/resolve:860:10)[39m
+[90m    at defaultResolve (node:internal/modules/esm/resolve:984:11)[39m
+[90m    at nextResolve (node:internal/modules/esm/hooks:748:28)[39m
+    at resolveBase [90m(file:///C:/Users/1/Desktop/telegram-bot-builder/[39mnode_modules/[4mtsx[24m/dist/esm/index.mjs?1773845580733:2:3744[90m)[39m
+    at async resolveDirectory [90m(file:///C:/Users/1/Desktop/telegram-bot-builder/[39mnode_modules/[4mtsx[24m/dist/esm/index.mjs?1773845580733:2:4237[90m)[39m
+    at async resolve [90m(file:///C:/Users/1/Desktop/telegram-bot-builder/[39mnode_modules/[4mtsx[24m/dist/esm/index.mjs?1773845580733:2:5355[90m)[39m
+[90m    at async nextResolve (node:internal/modules/esm/hooks:748:22)[39m
+[90m    at async Hooks.resolve (node:internal/modules/esm/hooks:240:24)[39m
+[90m    at async handleMessage (node:internal/modules/esm/worker:199:18)[39m {
+  code: [32m'ERR_MODULE_NOT_FOUND'[39m,
+  url: [32m'file:///C:/Users/1/Desktop/telegram-bot-builder/lib/templates/database/template-renderer'[39m
+}
+
+Node.js v22.17.1
+[31m✖ C:\Users\1\Desktop\telegram-bot-builder\lib\templates\database\media-save-vars\media-save-vars.test.ts [90m(380.1549ms)[39m[39m
+▶ config.py.jinja2 шаблон
+  ▶ generateConfig()
+    ▶ Валидные данные
+      [32m✔ должен генерировать код со всеми настройками (всё включено) [90m(10.6801ms)[39m[39m
+      [32m✔ должен генерировать код без PROJECT_ID (всё выключено) [90m(0.5194ms)[39m[39m
+      [32m✔ должен генерировать только настройки БД [90m(0.9093ms)[39m[39m
+      [32m✔ должен генерировать только PROJECT_ID [90m(0.7649ms)[39m[39m
+      [32m✔ должен включать базовые настройки логирования [90m(0.317ms)[39m[39m
+      [32m✔ должен включать ADMIN_IDS [90m(0.4019ms)[39m[39m
+      [32m✔ должен совпадать с ожидаемым выводом (всё включено) [90m(0.5119ms)[39m[39m
+      [32m✔ должен совпадать с ожидаемым выводом (всё выключено) [90m(0.2935ms)[39m[39m
+    [32m✔ Валидные данные [90m(16.025ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.1217ms)[39m[39m
+      [32m✔ должен использовать значения по умолчанию для отсутствующих полей [90m(0.5236ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.2573ms)[39m[39m
+      [32m✔ должен отклонять число вместо null для projectId [90m(0.1853ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.386ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ должен добавлять PROJECT_ID только при projectId !== null [90m(1.1718ms)[39m[39m
+      [32m✔ должен добавлять DATABASE_URL только при userDatabaseEnabled=true [90m(0.4178ms)[39m[39m
+      [32m✔ должен всегда включать базовые импорты и настройки [90m(0.2129ms)[39m[39m
+      [32m✔ должен включать user_data и all_user_vars [90m(0.1345ms)[39m[39m
+      [32m✔ должен включать PROJECT_DIR [90m(0.1187ms)[39m[39m
+    [32m✔ Граничные случаи [90m(2.3849ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.2656ms)[39m[39m
+      [32m✔ должен генерировать код 1000 раз быстрее 100ms [90m(13.2552ms)[39m[39m
+    [32m✔ Производительность [90m(13.7161ms)[39m[39m
+  [32m✔ generateConfig() [90m(35.2919ms)[39m[39m
+  ▶ configParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать все поля корректных типов [90m(0.3259ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.2188ms)[39m[39m
+      [32m✔ должен отклонять string вместо number для projectId [90m(0.1849ms)[39m[39m
+      [32m✔ должен принимать null для projectId [90m(0.1244ms)[39m[39m
+      [32m✔ должен принимать число для projectId [90m(0.1103ms)[39m[39m
+    [32m✔ Валидация типов [90m(1.2053ms)[39m[39m
+    ▶ Значения по умолчанию
+      [32m✔ должен использовать false для userDatabaseEnabled по умолчанию [90m(0.1991ms)[39m[39m
+      [32m✔ должен использовать null для projectId по умолчанию [90m(0.1319ms)[39m[39m
+      [32m✔ должен принимать значения для присутствующих полей [90m(0.1352ms)[39m[39m
+    [32m✔ Значения по умолчанию [90m(0.5965ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 2 поля [90m(0.2191ms)[39m[39m
+      [32m✔ должен использовать ZodDefault для userDatabaseEnabled [90m(0.1194ms)[39m[39m
+      [32m✔ должен использовать ZodDefault для projectId [90m(0.1595ms)[39m[39m
+    [32m✔ Структура схемы [90m(0.6545ms)[39m[39m
+  [32m✔ configParamsSchema [90m(2.8404ms)[39m[39m
+[32m✔ config.py.jinja2 шаблон [90m(39.279ms)[39m[39m
+▶ generateConditionalMessages()
+  [32m✔ генерирует проверку условных сообщений [90m(17.5421ms)[39m[39m
+  [32m✔ генерирует text = None [90m(0.409ms)[39m[39m
+  [32m✔ генерирует if для первого условия [90m(0.5222ms)[39m[39m
+  [32m✔ генерирует elif для второго условия [90m(0.3889ms)[39m[39m
+  [32m✔ генерирует else с defaultText [90m(1.0049ms)[39m[39m
+  [32m✔ генерирует get_user_from_db [90m(0.3612ms)[39m[39m
+  [32m✔ работает с пустыми условиями [90m(0.2556ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.6832ms)[39m[39m
+[32m✔ generateConditionalMessages() [90m(23.8415ms)[39m[39m
+▶ conditionalMessagesParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.4753ms)[39m[39m
+  [32m✔ принимает пустой массив условий [90m(0.4227ms)[39m[39m
+  [32m✔ отклоняет отсутствие defaultText [90m(0.7266ms)[39m[39m
+[32m✔ conditionalMessagesParamsSchema [90m(1.9252ms)[39m[39m
+▶ Производительность
+  [32m✔ generateConditionalMessages: быстрее 10ms [90m(0.3374ms)[39m[39m
+[32m✔ Производительность [90m(0.4217ms)[39m[39m
+▶ generateConditionalInputHandler()
+  ▶ проверка состояния
+    [32m✔ генерирует проверку waiting_for_conditional_input [90m(21.9776ms)[39m[39m
+    [32m✔ извлекает config из user_data [90m(0.6831ms)[39m[39m
+    [32m✔ читает user_text из message.text [90m(0.4401ms)[39m[39m
+  [32m✔ проверка состояния [90m(24.0226ms)[39m[39m
+  ▶ skipDataCollection
+    [32m✔ генерирует проверку skip_buttons [90m(0.5495ms)[39m[39m
+    [32m✔ генерирует поиск skip_button_target [90m(3.8359ms)[39m[39m
+    [32m✔ генерирует очистку состояния при пропуске [90m(0.8025ms)[39m[39m
+    [32m✔ генерирует fake_callback для навигации пропуска [90m(0.3549ms)[39m[39m
+    [32m✔ генерирует навигацию к узлам при пропуске [90m(0.4446ms)[39m[39m
+    [32m✔ генерирует обработку ошибки при пропуске [90m(0.3699ms)[39m[39m
+  [32m✔ skipDataCollection [90m(7.1112ms)[39m[39m
+  ▶ сохранение ответа
+    [32m✔ генерирует извлечение condition_id [90m(0.4756ms)[39m[39m
+    [32m✔ генерирует логику имени переменной [90m(0.6489ms)[39m[39m
+    [32m✔ сохраняет в user_data [90m(0.6351ms)[39m[39m
+    [32m✔ сохраняет в БД через update_user_data_in_db [90m(0.2638ms)[39m[39m
+    [32m✔ очищает состояние после сохранения [90m(0.3705ms)[39m[39m
+  [32m✔ сохранение ответа [90m(2.6887ms)[39m[39m
+  ▶ навигация после сохранения
+    [32m✔ генерирует проверку next_node_id [90m(0.3733ms)[39m[39m
+    [32m✔ генерирует обработку profile_command [90m(0.2222ms)[39m[39m
+    [32m✔ генерирует fake_callback для навигации [90m(0.1901ms)[39m[39m
+    [32m✔ генерирует переход к узлам [90m(0.2581ms)[39m[39m
+    [32m✔ генерирует обработку ошибки навигации [90m(0.1975ms)[39m[39m
+  [32m✔ навигация после сохранения [90m(1.556ms)[39m[39m
+  ▶ завершение обработки
+    [32m✔ генерирует return в конце [90m(0.3012ms)[39m[39m
+    [32m✔ return находится внутри if-блока (отступ ind2, не ind) [90m(0.4503ms)[39m[39m
+  [32m✔ завершение обработки [90m(0.8933ms)[39m[39m
+  ▶ пустые параметры
+    [32m✔ работает без узлов [90m(0.218ms)[39m[39m
+    [32m✔ без узлов нет навигации к конкретным узлам [90m(0.1311ms)[39m[39m
+  [32m✔ пустые параметры [90m(0.4586ms)[39m[39m
+  ▶ отступы
+    [32m✔ дефолтный отступ — 4 пробела [90m(0.2782ms)[39m[39m
+    [32m✔ кастомный отступ — 8 пробелов [90m(0.3255ms)[39m[39m
+  [32m✔ отступы [90m(0.7142ms)[39m[39m
+[32m✔ generateConditionalInputHandler() [90m(38.5004ms)[39m[39m
+▶ conditionalInputHandlerParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.4543ms)[39m[39m
+  [32m✔ принимает пустые массивы [90m(0.1962ms)[39m[39m
+  [32m✔ отклоняет числовой indentLevel [90m(1.3259ms)[39m[39m
+[32m✔ conditionalInputHandlerParamsSchema [90m(2.3691ms)[39m[39m
+▶ collectConditionalNavNodes()
+  [32m✔ собирает id и safeName [90m(0.6419ms)[39m[39m
+  [32m✔ фильтрует null [90m(0.1352ms)[39m[39m
+  [32m✔ устанавливает дефолтный type [90m(0.123ms)[39m[39m
+[32m✔ collectConditionalNavNodes() [90m(1.1209ms)[39m[39m
+▶ Производительность
+  [32m✔ generateConditionalInputHandler: быстрее 10ms [90m(0.3401ms)[39m[39m
+[32m✔ Производительность [90m(0.4234ms)[39m[39m
+▶ качество кода — пустые строки
+  [32m✔ не содержит более 2 пустых строк подряд [90m(0.364ms)[39m[39m
+  [32m✔ не содержит строк только из пробелов [90m(0.7226ms)[39m[39m
+[32m✔ качество кода — пустые строки [90m(1.214ms)[39m[39m
+▶ отсутствие мёртвого кода после return
+  [32m✔ return находится внутри if-блока (отступ ind2, не ind) [90m(0.3429ms)[39m[39m
+  [32m✔ код после return не является мёртвым — return внутри if [90m(0.5294ms)[39m[39m
+[32m✔ отсутствие мёртвого кода после return [90m(1.0435ms)[39m[39m
+▶ generateConditionalBranch()
+  [32m✔ генерирует if для index=0 [90m(10.7266ms)[39m[39m
+  [32m✔ генерирует elif для index>0 [90m(0.7511ms)[39m[39m
+  [32m✔ не генерирует elif для index=0 [90m(0.4376ms)[39m[39m
+  [32m✔ не генерирует if для index>0 [90m(0.3816ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.2023ms)[39m[39m
+  [32m✔ включает nodeId в условие [90m(0.2668ms)[39m[39m
+[32m✔ generateConditionalBranch() [90m(14.2977ms)[39m[39m
+▶ conditionalBranchParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.351ms)[39m[39m
+  [32m✔ отклоняет отрицательный index [90m(1.1626ms)[39m[39m
+  [32m✔ отклоняет дробный index [90m(0.9609ms)[39m[39m
+  [32m✔ отклоняет отсутствие nodeId [90m(0.6745ms)[39m[39m
+[32m✔ conditionalBranchParamsSchema [90m(3.6311ms)[39m[39m
+▶ Производительность
+  [32m✔ generateConditionalBranch: быстрее 10ms [90m(0.3224ms)[39m[39m
+[32m✔ Производительность [90m(0.4455ms)[39m[39m
+▶ generateCommandNavigation()
+  [32m✔ генерирует комментарий с именем команды [90m(9.0906ms)[39m[39m
+  [32m✔ генерирует вызов обработчика [90m(0.3129ms)[39m[39m
+  [32m✔ генерирует fake_message [90m(0.2816ms)[39m[39m
+  [32m✔ генерирует для команды /help [90m(0.1515ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.1475ms)[39m[39m
+[32m✔ generateCommandNavigation() [90m(11.7732ms)[39m[39m
+▶ commandNavigationParamsSchema
+  [32m✔ принимает валидные параметры [90m(1.5265ms)[39m[39m
+  [32m✔ отклоняет отсутствие commandName [90m(0.5861ms)[39m[39m
+  [32m✔ отклоняет отсутствие handlerName [90m(0.3641ms)[39m[39m
+[32m✔ commandNavigationParamsSchema [90m(2.8123ms)[39m[39m
+▶ Производительность
+  [32m✔ generateCommandNavigation: быстрее 10ms [90m(0.2492ms)[39m[39m
+[32m✔ Производительность [90m(0.4772ms)[39m[39m
+▶ command.py.jinja2 шаблон
+  ▶ generateCommand()
+    ▶ Валидные данные
+      [32m✔ должен генерировать базовый обработчик команды [90m(50.493ms)[39m[39m
+      [32m✔ должен генерировать обработчик с проверкой приватности [90m(0.8617ms)[39m[39m
+      [32m✔ должен генерировать обработчик с проверкой администратора [90m(0.7821ms)[39m[39m
+      [32m✔ должен генерировать обработчик с проверкой авторизации [90m(0.5446ms)[39m[39m
+      [32m✔ должен генерировать обработчик с условными сообщениями [90m(1.0878ms)[39m[39m
+      [32m✔ должен генерировать inline клавиатуру [90m(2.7754ms)[39m[39m
+      [32m✔ должен генерировать reply клавиатуру [90m(22.4174ms)[39m[39m
+      [32m✔ должен генерировать обработчики синонимов [90m(3.8898ms)[39m[39m
+      [32m✔ должен генерировать разные команды для разных узлов [90m(1.7622ms)[39m[39m
+      [32m✔ должен генерировать HTML форматирование [90m(0.8892ms)[39m[39m
+      [32m✔ должен генерировать сохранение пользователя в БД [90m(0.4942ms)[39m[39m
+      [32m✔ должен генерировать логирование вызова команды [90m(0.529ms)[39m[39m
+      [32m✔ должен генерировать URL кнопки [90m(0.823ms)[39m[39m
+      [32m✔ должен генерировать fallback сообщение [90m(1.7224ms)[39m[39m
+    [32m✔ Валидные данные [90m(91.6402ms)[39m[39m
+    ▶ Проверки безопасности
+      [32m✔ должен включать только isPrivateOnly проверку [90m(0.5348ms)[39m[39m
+      [32m✔ должен включать только adminOnly проверку [90m(0.2849ms)[39m[39m
+      [32m✔ должен включать только requiresAuth проверку [90m(0.2528ms)[39m[39m
+    [32m✔ Проверки безопасности [90m(1.288ms)[39m[39m
+    ▶ Условные сообщения
+      [32m✔ должен сортировать условия по приоритету [90m(0.3567ms)[39m[39m
+      [32m✔ должен генерировать клавиатуру для условного сообщения [90m(0.3318ms)[39m[39m
+      [32m✔ должен генерировать fallback при отсутствии условий [90m(0.6387ms)[39m[39m
+    [32m✔ Условные сообщения [90m(1.4748ms)[39m[39m
+    ▶ Клавиатуры
+      [31m✖ должен генерировать inline клавиатуру с callback [90m(145.7305ms)[39m[39m
+      [32m✔ должен генерировать inline клавиатуру с url [90m(0.8459ms)[39m[39m
+      [32m✔ должен генерировать reply клавиатуру [90m(1.1639ms)[39m[39m
+    [31m✖ Клавиатуры [90m(148.0882ms)[39m[39m
+    ▶ Синонимы
+      [32m✔ должен генерировать обработчики для всех синонимов [90m(1.0041ms)[39m[39m
+      [32m✔ должен генерировать проверку типа чата для синонимов [90m(0.5865ms)[39m[39m
+      [32m✔ должен генерировать проверку администратора для синонимов [90m(0.4603ms)[39m[39m
+    [32m✔ Синонимы [90m(2.2703ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ должен отклонять параметры с неправильным типом [90m(1.2044ms)[39m[39m
+      [32m✔ должен отклонять параметры с отсутствующим полем [90m(0.2978ms)[39m[39m
+      [32m✔ должен отклонять неправильный keyboardType [90m(0.2625ms)[39m[39m
+      [32m✔ должен отклонять неправильный formatMode [90m(0.1867ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.1376ms)[39m[39m
+    ▶ Валидация схемы
+      [32m✔ должен принимать все поля корректных типов [90m(0.2732ms)[39m[39m
+      [32m✔ должен принимать undefined для всех опциональных полей [90m(0.2264ms)[39m[39m
+      [32m✔ должен принимать все значения enum для keyboardType [90m(0.2603ms)[39m[39m
+      [32m✔ должен принимать все значения enum для formatMode [90m(0.2475ms)[39m[39m
+      [32m✔ должен использовать undefined для synonyms по умолчанию [90m(0.2256ms)[39m[39m
+    [32m✔ Валидация схемы [90m(1.4533ms)[39m[39m
+    ▶ Производительность
+      [32m✔ должен генерировать код быстрее 10ms [90m(0.5993ms)[39m[39m
+    [32m✔ Производительность [90m(0.7741ms)[39m[39m
+  [31m✖ generateCommand() [90m(250.5297ms)[39m[39m
+  ▶ commandParamsSchema
+    ▶ Валидация типов
+      [32m✔ должен принимать все поля корректных типов [90m(0.7381ms)[39m[39m
+      [32m✔ должен отклонять string вместо boolean [90m(0.7716ms)[39m[39m
+      [32m✔ должен отклонять неправильный enum для keyboardType [90m(0.3096ms)[39m[39m
+      [32m✔ должен отклонять неправильный enum для formatMode [90m(0.2088ms)[39m[39m
+      [32m✔ должен принимать conditionalMessages с правильной структурой [90m(0.2162ms)[39m[39m
+    [32m✔ Валидация типов [90m(2.809ms)[39m[39m
+    ▶ Структура схемы
+      [32m✔ должен иметь 19 полей [90m(0.2476ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для messageText [90m(0.1917ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для keyboardType [90m(0.1283ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для formatMode [90m(0.1114ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для isPrivateOnly [90m(0.0974ms)[39m[39m
+      [32m✔ должен использовать ZodOptional для synonyms [90m(0.0871ms)[39m[39m
+    [32m✔ Структура схемы [90m(1.0692ms)[39m[39m
+  [32m✔ commandParamsSchema [90m(4.2701ms)[39m[39m
+[31m✖ command.py.jinja2 шаблон [90m(255.7997ms)[39m[39m
+▶ generateCallbackHandlerInit()
+  [32m✔ генерирует callback_query.answer() [90m(11.0557ms)[39m[39m
+  [32m✔ генерирует init_user_variables [90m(0.4106ms)[39m[39m
+  [32m✔ генерирует edit_reply_markup при hasHideAfterClick [90m(0.3836ms)[39m[39m
+  [32m✔ не генерирует edit_reply_markup без hasHideAfterClick [90m(0.3056ms)[39m[39m
+  [32m✔ генерирует сохранение variableFilters [90m(0.49ms)[39m[39m
+  [32m✔ не генерирует variableFilters без фильтров [90m(0.6397ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.8458ms)[39m[39m
+  [32m✔ генерирует try/except для answer() [90m(0.6969ms)[39m[39m
+[32m✔ generateCallbackHandlerInit() [90m(16.5185ms)[39m[39m
+▶ callbackHandlerInitParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.3792ms)[39m[39m
+  [32m✔ отклоняет строку вместо boolean для hasHideAfterClick [90m(0.8805ms)[39m[39m
+  [32m✔ принимает null для variableFilters [90m(0.1633ms)[39m[39m
+[32m✔ callbackHandlerInitParamsSchema [90m(1.6829ms)[39m[39m
+▶ Производительность
+  [32m✔ generateCallbackHandlerInit: быстрее 10ms [90m(0.45ms)[39m[39m
+[32m✔ Производительность [90m(0.5711ms)[39m[39m
+▶ broadcast-client.py.jinja2
+  ▶ generateBroadcastClient()
+    [32m✔ генерирует async def handle_broadcast_<nodeId> [90m(21.2831ms)[39m[39m
+    [32m✔ содержит комментарий Client API / Telethon [90m(0.8653ms)[39m[39m
+    [32m✔ содержит маркеры @@NODE_START и @@NODE_END [90m(0.7223ms)[39m[39m
+    ▶ Сессия
+      [32m✔ проверяет db_pool и user_telegram_settings [90m(0.5657ms)[39m[39m
+      [32m✔ логирует user_id сессии [90m(0.4387ms)[39m[39m
+      [32m✔ возвращает ошибку если сессия не найдена [90m(0.6428ms)[39m[39m
+    [32m✔ Сессия [90m(2.0379ms)[39m[39m
+    ▶ Получатели
+      [32m✔ bot_users: SELECT из bot_users [90m(0.4558ms)[39m[39m
+      [32m✔ user_ids: SELECT из user_ids [90m(0.5864ms)[39m[39m
+      [32m✔ both: SELECT из обеих таблиц [90m(0.5996ms)[39m[39m
+      [32m✔ логирует userbot user_id [90m(0.7699ms)[39m[39m
+    [32m✔ Получатели [90m(2.8934ms)[39m[39m
+    ▶ Инициализация Telethon
+      [32m✔ содержит TelegramClient и StringSession [90m(1.5222ms)[39m[39m
+      [32m✔ содержит get_full_media_path [90m(0.5061ms)[39m[39m
+      [32m✔ логирует инициализацию Telethon [90m(0.3735ms)[39m[39m
+    [32m✔ Инициализация Telethon [90m(2.7223ms)[39m[39m
+    ▶ Отправка
+      [32m✔ содержит app.send_message [90m(0.315ms)[39m[39m
+      [32m✔ содержит success_count, error_count, blocked_count [90m(0.2235ms)[39m[39m
+      [32m✔ содержит await app.connect() и await app.disconnect() [90m(0.2115ms)[39m[39m
+      [32m✔ обрабатывает PEER_ID_INVALID [90m(1.5436ms)[39m[39m
+      [32m✔ содержит отчёт с Client API [90m(0.3309ms)[39m[39m
+      [32m✔ содержит successMessage в отчёте [90m(0.1994ms)[39m[39m
+    [32m✔ Отправка [90m(3.2523ms)[39m[39m
+    ▶ Пустой broadcastNodes
+      [32m✔ выводит предупреждение и broadcast_nodes = [] [90m(0.2253ms)[39m[39m
+    [32m✔ Пустой broadcastNodes [90m(0.3098ms)[39m[39m
+    ▶ Медиа
+      [32m✔ содержит app.send_file [90m(0.275ms)[39m[39m
+      [32m✔ fallback app.send_message если медиа не отправлено [90m(0.3985ms)[39m[39m
+    [32m✔ Медиа [90m(0.8632ms)[39m[39m
+    ▶ Автопереход
+      [32m✔ содержит current_node_index и autoTransitionTo [90m(0.9829ms)[39m[39m
+      [32m✔ ищет следующий узел по индексу в broadcast_nodes [90m(0.3769ms)[39m[39m
+    [32m✔ Автопереход [90m(1.5796ms)[39m[39m
+    ▶ broadcastNodes в шаблоне
+      [32m✔ встраивает id узла [90m(0.3445ms)[39m[39m
+      [32m✔ встраивает broadcast_nodes = [ [90m(0.2632ms)[39m[39m
+    [32m✔ broadcastNodes в шаблоне [90m(0.739ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ отклоняет nodeId не строку [90m(1.4352ms)[39m[39m
+      [32m✔ отклоняет отсутствие nodeId [90m(0.2585ms)[39m[39m
+      [32m✔ отклоняет неправильный idSourceType [90m(0.2818ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.1352ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ разные nodeId → разные имена функций [90m(0.4172ms)[39m[39m
+    [32m✔ Граничные случаи [90m(0.5263ms)[39m[39m
+    ▶ Производительность
+      [32m✔ генерирует код быстрее 10ms [90m(0.2329ms)[39m[39m
+      [32m✔ генерирует 1000 раз быстрее 200ms [90m(42.07ms)[39m[39m
+    [32m✔ Производительность [90m(42.4317ms)[39m[39m
+  [32m✔ generateBroadcastClient() [90m(84.1841ms)[39m[39m
+  ▶ collectBroadcastNodes()
+    [32m✔ собирает message-узлы с enableBroadcast=true [90m(1.2646ms)[39m[39m
+    [32m✔ разворачивает цепочку autoTransitionTo [90m(0.7791ms)[39m[39m
+    [32m✔ фильтрует по broadcastTargetNode [90m(0.3913ms)[39m[39m
+    [32m✔ возвращает пустой массив если нет подходящих узлов [90m(0.1693ms)[39m[39m
+  [32m✔ collectBroadcastNodes() [90m(2.934ms)[39m[39m
+  ▶ broadcastClientParamsSchema
+    [32m✔ принимает минимальный набор полей [90m(0.2728ms)[39m[39m
+    [32m✔ дефолт idSourceType = bot_users [90m(0.129ms)[39m[39m
+    [32m✔ принимает все значения idSourceType [90m(0.2214ms)[39m[39m
+    [32m✔ принимает broadcastNodes как массив [90m(0.213ms)[39m[39m
+    [32m✔ использует ZodDefault для idSourceType [90m(0.1668ms)[39m[39m
+  [32m✔ broadcastClientParamsSchema [90m(1.2041ms)[39m[39m
+[32m✔ broadcast-client.py.jinja2 [90m(88.867ms)[39m[39m
+▶ broadcast-bot.py.jinja2
+  ▶ generateBroadcastBot()
+    [32m✔ генерирует async def handle_broadcast_<nodeId> [90m(21.8924ms)[39m[39m
+    [32m✔ содержит комментарий Bot API / aiogram [90m(0.777ms)[39m[39m
+    [32m✔ содержит маркеры @@NODE_START и @@NODE_END [90m(0.4172ms)[39m[39m
+    ▶ Получатели
+      [32m✔ bot_users: SELECT из bot_users [90m(0.3516ms)[39m[39m
+      [32m✔ user_ids: SELECT из user_ids [90m(0.3269ms)[39m[39m
+      [32m✔ both: SELECT из обеих таблиц [90m(1.215ms)[39m[39m
+    [32m✔ Получатели [90m(2.2669ms)[39m[39m
+    ▶ Отправка
+      [32m✔ содержит replace_variables_in_text [90m(0.5802ms)[39m[39m
+      [32m✔ содержит bot.send_message [90m(0.6343ms)[39m[39m
+      [32m✔ содержит success_count и error_count [90m(0.847ms)[39m[39m
+      [32m✔ содержит asyncio.sleep [90m(0.7687ms)[39m[39m
+      [32m✔ содержит обработку ошибок [90m(0.22ms)[39m[39m
+      [32m✔ содержит successMessage в отчёте [90m(0.2766ms)[39m[39m
+    [32m✔ Отправка [90m(3.8402ms)[39m[39m
+    ▶ Пустой broadcastNodes
+      [32m✔ выводит предупреждение и broadcast_nodes = [] [90m(0.1614ms)[39m[39m
+    [32m✔ Пустой broadcastNodes [90m(0.2352ms)[39m[39m
+    ▶ Медиа
+      [32m✔ содержит bot.send_photo [90m(0.2734ms)[39m[39m
+      [32m✔ содержит fallback bot.send_message при media_sent=False [90m(2.3271ms)[39m[39m
+      [32m✔ содержит fallback медиа в блоке except [90m(0.3739ms)[39m[39m
+    [32m✔ Медиа [90m(3.2105ms)[39m[39m
+    ▶ Автопереход
+      [32m✔ содержит FakeCallbackQuery и handle_callback_ [90m(0.2715ms)[39m[39m
+      [32m✔ содержит all_nodes_dict для отправки следующего узла [90m(0.1775ms)[39m[39m
+      [32m✔ логирует статус поиска handler [90m(0.1674ms)[39m[39m
+    [32m✔ Автопереход [90m(0.7313ms)[39m[39m
+    ▶ broadcastNodes в шаблоне
+      [32m✔ встраивает id узла [90m(0.2438ms)[39m[39m
+      [32m✔ встраивает broadcast_nodes = [ [90m(0.1509ms)[39m[39m
+    [32m✔ broadcastNodes в шаблоне [90m(0.4842ms)[39m[39m
+    ▶ Невалидные данные
+      [32m✔ отклоняет nodeId не строку [90m(1.3858ms)[39m[39m
+      [32m✔ отклоняет отсутствие nodeId [90m(0.2778ms)[39m[39m
+      [32m✔ отклоняет неправильный idSourceType [90m(0.357ms)[39m[39m
+    [32m✔ Невалидные данные [90m(2.2062ms)[39m[39m
+    ▶ Граничные случаи
+      [32m✔ разные nodeId → разные имена функций [90m(0.5456ms)[39m[39m
+    [32m✔ Граничные случаи [90m(0.6504ms)[39m[39m
+    ▶ Производительность
+      [32m✔ генерирует код быстрее 10ms [90m(0.235ms)[39m[39m
+      [32m✔ генерирует 1000 раз быстрее 200ms [90m(42.0212ms)[39m[39m
+    [32m✔ Производительность [90m(42.487ms)[39m[39m
+  [32m✔ generateBroadcastBot() [90m(80.7315ms)[39m[39m
+  ▶ collectBroadcastNodes()
+    [32m✔ собирает message-узлы с enableBroadcast=true [90m(0.7336ms)[39m[39m
+    [32m✔ разворачивает цепочку autoTransitionTo [90m(0.1808ms)[39m[39m
+    [32m✔ фильтрует по broadcastTargetNode [90m(0.2018ms)[39m[39m
+    [32m✔ возвращает пустой массив если нет подходящих узлов [90m(0.1112ms)[39m[39m
+  [32m✔ collectBroadcastNodes() [90m(1.4338ms)[39m[39m
+  ▶ broadcastBotParamsSchema
+    [32m✔ принимает минимальный набор полей [90m(0.1865ms)[39m[39m
+    [32m✔ дефолт idSourceType = bot_users [90m(0.1028ms)[39m[39m
+    [32m✔ принимает все значения idSourceType [90m(0.1719ms)[39m[39m
+    [32m✔ принимает broadcastNodes как массив [90m(0.1686ms)[39m[39m
+    [32m✔ использует ZodDefault для idSourceType [90m(0.1788ms)[39m[39m
+  [32m✔ broadcastBotParamsSchema [90m(0.9755ms)[39m[39m
+[32m✔ broadcast-bot.py.jinja2 [90m(83.7ms)[39m[39m
+▶ generateAutoTransition()
+  [32m✔ генерирует проверку is_fake_callback [90m(11.0165ms)[39m[39m
+  [32m✔ генерирует вызов handle_callback для существующего узла [90m(0.6998ms)[39m[39m
+  [32m✔ генерирует предупреждение для несуществующего узла [90m(0.3559ms)[39m[39m
+  [32m✔ генерирует logging.info с ID узлов [90m(0.259ms)[39m[39m
+  [32m✔ генерирует return в конце [90m(0.4336ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.4322ms)[39m[39m
+  [32m✔ заменяет дефис на подчёркивание в имени функции [90m(0.4926ms)[39m[39m
+[32m✔ generateAutoTransition() [90m(15.1845ms)[39m[39m
+▶ autoTransitionParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.398ms)[39m[39m
+  [32m✔ отклоняет отсутствие nodeId [90m(0.828ms)[39m[39m
+  [32m✔ отклоняет строку вместо boolean для targetExists [90m(0.4751ms)[39m[39m
+[32m✔ autoTransitionParamsSchema [90m(2.1174ms)[39m[39m
+▶ Производительность
+  [32m✔ generateAutoTransition: быстрее 10ms [90m(0.4334ms)[39m[39m
+[32m✔ Производительность [90m(0.5695ms)[39m[39m
+▶ generateAttachedMediaVars()
+  [32m✔ генерирует установку imageUrl переменной [90m(14.4588ms)[39m[39m
+  [32m✔ генерирует установку videoUrl переменной [90m(1.0756ms)[39m[39m
+  [32m✔ возвращает пустую строку без attachedMedia [90m(0.5388ms)[39m[39m
+  [32m✔ генерирует logging.info с nodeId [90m(0.4951ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.3344ms)[39m[39m
+[32m✔ generateAttachedMediaVars() [90m(18.1077ms)[39m[39m
+▶ attachedMediaVarsParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.3177ms)[39m[39m
+  [32m✔ использует пустой массив по умолчанию для attachedMedia [90m(1.4839ms)[39m[39m
+  [32m✔ отклоняет отсутствие nodeId [90m(0.9057ms)[39m[39m
+[32m✔ attachedMediaVarsParamsSchema [90m(3.0696ms)[39m[39m
+▶ Производительность
+  [32m✔ generateAttachedMediaVars: быстрее 10ms [90m(0.5397ms)[39m[39m
+[32m✔ Производительность [90m(0.8414ms)[39m[39m
+▶ generateAnimationHandler()
+  [32m✔ генерирует send_animation для URL [90m(30.8566ms)[39m[39m
+  [32m✔ генерирует FSInputFile для /uploads/ пути [90m(1.0145ms)[39m[39m
+  [32m✔ возвращает пустую строку без animationUrl [90m(0.5509ms)[39m[39m
+  [32m✔ применяет кастомный отступ [90m(0.8427ms)[39m[39m
+  [32m✔ передаёт caption=text и parse_mode [90m(2.3954ms)[39m[39m
+[32m✔ generateAnimationHandler() [90m(38.285ms)[39m[39m
+▶ animationHandlerParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.8936ms)[39m[39m
+  [32m✔ принимает пустой объект [90m(0.7085ms)[39m[39m
+  [32m✔ отклоняет числовой animationUrl [90m(2.4929ms)[39m[39m
+[32m✔ animationHandlerParamsSchema [90m(4.9626ms)[39m[39m
+▶ Производительность
+  [32m✔ generateAnimationHandler: быстрее 10ms [90m(1.045ms)[39m[39m
+[32m✔ Производительность [90m(1.6353ms)[39m[39m
+▶ generateAdminRightsHandler()
+  ▶ command handler
+    [32m✔ генерирует command handler с правильной командой [90m(22.3087ms)[39m[39m
+    [32m✔ кастомная команда [90m(1.0135ms)[39m[39m
+    [32m✔ проверяет права вызывающего пользователя [90m(0.8582ms)[39m[39m
+    [32m✔ определяет target_user_id через reply, mention, ID [90m(1.0442ms)[39m[39m
+  [32m✔ command handler [90m(26.3131ms)[39m[39m
+  ▶ callback handler
+    [32m✔ генерирует callback handler с nodeId [90m(2.9705ms)[39m[39m
+    [32m✔ проверяет права бота [90m(0.919ms)[39m[39m
+    [32m✔ содержит messageText [90m(0.5798ms)[39m[39m
+  [32m✔ callback handler [90m(5.0251ms)[39m[39m
+  ▶ keyboard builder
+    [32m✔ генерирует функцию создания клавиатуры [90m(0.5197ms)[39m[39m
+    [32m✔ содержит все 11 прав администратора [90m(0.6552ms)[39m[39m
+    [32m✔ генерирует get_admin_rights функцию [90m(0.6707ms)[39m[39m
+  [32m✔ keyboard builder [90m(2.1427ms)[39m[39m
+  ▶ toggle handlers
+    [32m✔ генерирует toggle handler для каждого права [90m(0.5869ms)[39m[39m
+    [32m✔ toggle handler парсит callback_data [90m(0.7661ms)[39m[39m
+    [32m✔ toggle handler вызывает promote_chat_member [90m(1.4322ms)[39m[39m
+  [32m✔ toggle handlers [90m(3.257ms)[39m[39m
+  ▶ refresh handler
+    [32m✔ генерирует refresh handler [90m(0.9653ms)[39m[39m
+  [32m✔ refresh handler [90m(1.2395ms)[39m[39m
+  ▶ safe_name изоляция
+    [32m✔ разные узлы не конфликтуют по именам функций [90m(1.076ms)[39m[39m
+  [32m✔ safe_name изоляция [90m(1.2006ms)[39m[39m
+[32m✔ generateAdminRightsHandler() [90m(40.185ms)[39m[39m
+▶ adminRightsParamsSchema
+  [32m✔ принимает валидные параметры [90m(0.2047ms)[39m[39m
+  [32m✔ применяет defaults для messageText и command [90m(0.1931ms)[39m[39m
+  [32m✔ отклоняет отсутствие nodeId [90m(0.5228ms)[39m[39m
+[32m✔ adminRightsParamsSchema [90m(1.0566ms)[39m[39m
+▶ Производительность
+  [32m✔ generateAdminRightsHandler: быстрее 20ms [90m(0.4641ms)[39m[39m
+[32m✔ Производительность [90m(0.5423ms)[39m[39m

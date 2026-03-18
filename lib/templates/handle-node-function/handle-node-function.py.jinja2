@@ -83,10 +83,12 @@ async def handle_node_{{ node.safeName }}(message: types.Message):
         logging.info("ℹ️ Используется основное сообщение узла")
 
     # Получаем переменные из базы данных
+    {%- if node.hasUserIdsVariable %}
     user_ids_record = await get_user_ids_from_db(user_id)
     if user_ids_record:
         all_user_vars["user_ids"] = user_ids_record.get("user_ids", [])
         all_user_vars["user_ids_count"] = user_ids_record.get("count", 0)
+    {%- endif %}
 
     # Заменяем переменные в тексте
     user_data[user_id] = user_data.get(user_id, {})

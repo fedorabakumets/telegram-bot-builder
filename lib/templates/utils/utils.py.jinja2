@@ -6,26 +6,21 @@
 #}
 
 # Утилитарные функции
-from aiogram import types
+
+{%- if adminOnly %}
 
 async def is_admin(user_id: int) -> bool:
     return user_id in ADMIN_IDS
 
+{%- endif %}
+{%- if isPrivateOnly %}
 
 async def is_private_chat(message: types.Message) -> bool:
     return message.chat.type == "private"
 
+{%- endif %}
 
 def get_user_variables(user_id):
-    """Получает все переменные пользователя из локального хранилища
-
-    Args:
-        user_id (int): ID пользователя Telegram
-
-    Returns:
-        dict: Словарь с переменными пользователя или пустой словарь если пользователь не найден
-    """
-    # Возвращаем переменные пользователя из локального хранилища или пустой словарь
     return user_data.get(user_id, {})
 
 
@@ -54,17 +49,13 @@ async def init_user_variables(user_id: int, from_user) -> str:
 
 
 {%- if userDatabaseEnabled %}
+
 async def check_auth(user_id: int) -> bool:
-    # Проверяем наличие пользователя в БД или локальном хранилище
     if db_pool:
         user = await get_user_from_db(user_id)
         return user is not None
     return user_id in user_data
 
-
-# Функции для сохранения в таблицы БД
-# Здесь будут функции для сохранения в таблицы
-# generateSaveHelperFunctions будет добавлен отдельно
 {%- else %}
 async def check_auth(user_id: int) -> bool:
     return user_id in user_data
@@ -100,6 +91,13 @@ async def init_all_user_vars(user_id: int) -> dict:
     return all_vars
 
 
+{%- if not userDatabaseEnabled %}
+async def save_message_to_api(user_id, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
+    """Заглушка save_message_to_api когда БД отключена"""
+    return None
+{%- endif %}
+
+
 def replace_variables_in_text(text: str, variables: dict, filters: dict = None) -> str:
     """Заменяет переменные вида {var_name} в тексте на их значения
 
@@ -120,30 +118,3 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
     return result
 
 
-{%- if userDatabaseEnabled %}
-async def save_message_to_api(user_id, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
-    """Сохраняет сообщение в базу данных напрямую через asyncpg"""
-    try:
-        if not db_pool:
-            return None
-        import json as _json
-        message_data_json = _json.dumps(message_data or {}, ensure_ascii=False)
-        async with db_pool.acquire() as conn:
-            result = await conn.fetchrow(
-                """
-                INSERT INTO bot_messages (project_id, user_id, message_type, message_text, node_id, message_data, created_at)
-                VALUES ($1, $2, $3, $4, $5, $6, NOW())
-                RETURNING id, user_id, message_type, created_at
-                """,
-                PROJECT_ID, str(user_id), message_type, message_text, node_id, message_data_json
-            )
-            logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result['id']})")
-            return {"id": result['id'], "user_id": result['user_id'], "message_type": result['message_type']}
-    except Exception as e:
-        logging.error(f"❌ Ошибка сохранения сообщения в БД: {e}")
-    return None
-{%- else %}
-async def save_message_to_api(user_id, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
-    """Заглушка save_message_to_api когда БД отключена"""
-    return None
-{%- endif %}

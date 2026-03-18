@@ -1,53 +1,57 @@
 {#
-  Обёртка для types.Message.answer с автоматическим логированием
+  Класс Middleware для логирования исходящих сообщений бота (answer/send_message/send_photo)
+  Использует aiogram BaseMiddleware вместо monkey-patching
 #}
 
-# Обертка для message.answer с сохранением
-original_answer = types.Message.answer
-async def answer_with_logging(self, text, *args, node_id=None, **kwargs):
-    """Обертка для message.answer с автоматическим сохранением и логированием"""
-    result = await original_answer(self, text, *args, **kwargs)
+class BotOutgoingLoggingMiddleware(BaseMiddleware):
+    """Middleware для логирования исходящих сообщений через перехват answer()"""
 
-    message_data_obj = {"message_id": result.message_id if result else None}
-    if "reply_markup" in kwargs:
-        try:
-            reply_markup = kwargs["reply_markup"]
-            buttons_data = []
-            if hasattr(reply_markup, "inline_keyboard"):
-                for row in reply_markup.inline_keyboard:
-                    for btn in row:
-                        button_info = {"text": btn.text}
-                        if hasattr(btn, "url") and btn.url:
-                            button_info["url"] = btn.url
-                        if hasattr(btn, "callback_data") and btn.callback_data:
-                            button_info["callback_data"] = btn.callback_data
-                        buttons_data.append(button_info)
-                if buttons_data:
-                    message_data_obj["buttons"] = buttons_data
-                    message_data_obj["keyboard_type"] = "inline"
-            elif hasattr(reply_markup, "keyboard"):
-                for row in reply_markup.keyboard:
-                    for btn in row:
-                        button_info = {"text": btn.text}
-                        if hasattr(btn, "request_contact") and btn.request_contact:
-                            button_info["request_contact"] = True
-                        if hasattr(btn, "request_location") and btn.request_location:
-                            button_info["request_location"] = True
-                        buttons_data.append(button_info)
-                if buttons_data:
-                    message_data_obj["buttons"] = buttons_data
-                    message_data_obj["keyboard_type"] = "reply"
-        except Exception as e:
-            logging.warning(f"Не удалось извлечь кнопки: {e}")
+    async def __call__(self, handler, event: types.Message, data: dict):
+        # Оборачиваем answer для логирования
+        original_answer = event.answer
 
-    await save_message_to_api(
-        user_id=str(self.chat.id),
-        message_type="bot",
-        message_text=text if isinstance(text, str) else str(text),
-        node_id=node_id,
-        message_data=message_data_obj
-    )
-    return result
+        async def answer_with_logging(text, *args, node_id=None, **kwargs):
+            result = await original_answer(text, *args, **kwargs)
+            message_data_obj = {"message_id": result.message_id if result else None}
+            if "reply_markup" in kwargs:
+                try:
+                    reply_markup = kwargs["reply_markup"]
+                    buttons_data = []
+                    if hasattr(reply_markup, "inline_keyboard"):
+                        for row in reply_markup.inline_keyboard:
+                            for btn in row:
+                                button_info = {"text": btn.text}
+                                if hasattr(btn, "url") and btn.url:
+                                    button_info["url"] = btn.url
+                                if hasattr(btn, "callback_data") and btn.callback_data:
+                                    button_info["callback_data"] = btn.callback_data
+                                buttons_data.append(button_info)
+                        if buttons_data:
+                            message_data_obj["buttons"] = buttons_data
+                            message_data_obj["keyboard_type"] = "inline"
+                    elif hasattr(reply_markup, "keyboard"):
+                        for row in reply_markup.keyboard:
+                            for btn in row:
+                                button_info = {"text": btn.text}
+                                if hasattr(btn, "request_contact") and btn.request_contact:
+                                    button_info["request_contact"] = True
+                                if hasattr(btn, "request_location") and btn.request_location:
+                                    button_info["request_location"] = True
+                                buttons_data.append(button_info)
+                        if buttons_data:
+                            message_data_obj["buttons"] = buttons_data
+                            message_data_obj["keyboard_type"] = "reply"
+                except Exception as e:
+                    logging.warning(f"Не удалось извлечь кнопки: {e}")
+            await save_message_to_api(
+                user_id=str(event.chat.id),
+                message_type="bot",
+                message_text=text if isinstance(text, str) else str(text),
+                node_id=node_id,
+                message_data=message_data_obj,
+            )
+            return result
 
-types.Message.answer = answer_with_logging
+        event.answer = answer_with_logging
+        return await handler(event, data)
 

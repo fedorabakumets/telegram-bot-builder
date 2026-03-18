@@ -119,5 +119,6 @@ export function generateStartHandler(
     audioUrl: node.data?.audioUrl || '',
     attachedMedia: node.data?.attachedMedia || [],
     userDatabaseEnabled,
+    hasUserIdsVariable: /\{user_ids(?:_count)?\}/.test(node.data?.messageText || ''),
   });
 }

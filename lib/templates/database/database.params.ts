@@ -13,4 +13,6 @@ export interface DatabaseTemplateParams {
   hasUserIdsTable?: boolean;
   /** Есть таблица user_telegram_settings */
   hasTelegramSettingsTable?: boolean;
+  /** Нужны функции чтения/записи переменных пользователя */
+  hasUserDataAccess?: boolean;
 }

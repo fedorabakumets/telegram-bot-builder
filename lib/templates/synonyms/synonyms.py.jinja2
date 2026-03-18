@@ -23,10 +23,9 @@
 #}
 
 # Обработчики синонимов
-{% for entry in synonymEntries %}
-# @@NODE_START:{{ entry.nodeId }}@@
-{% set sanitized_synonym = entry.synonym | replace(' ', '_') | safe_name %}
-{% set sanitized_node_id = entry.nodeId | safe_name %}
+{% for entry in synonymEntries -%}
+{%- set sanitized_synonym = entry.synonym | replace(' ', '_') | safe_name -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
 
 {# ── COMMAND / START синонимы ── #}
 {% if entry.nodeType in ['start', 'command'] %}
@@ -36,10 +35,7 @@
 @dp.message(lambda message: message.text and message.text.lower() == "{{ entry.synonym | lower }}")
 async def {{ fn }}_synonym_{{ sanitized_synonym }}_handler(message: types.Message):
     # Синоним для команды {{ cmd }}
-    if "{{ fn }}_handler" in globals():
-        await {{ fn }}_handler(message)
-    else:
-        await message.answer("Команда {{ cmd }} временно недоступна")
+    await {{ fn }}_handler(message)
 
 {# ── MESSAGE синонимы (MockCallback) ── #}
 {% elif entry.nodeType == 'message' %}
@@ -261,5 +257,4 @@ async def {{ entry.nodeType }}_{{ sanitized_node_id }}_synonym_{{ sanitized_syno
         logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")
 
 {% endif %}
-# @@NODE_END:{{ entry.nodeId }}@@
 {% endfor %}

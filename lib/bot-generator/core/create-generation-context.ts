@@ -14,6 +14,7 @@ import type { GenerationContext } from './generation-context';
 import { createGenerationState } from './generation-state';
 import { toEnhancedNodes } from './to-enhanced-node';
 import { collectMediaVariables } from './collect-media-variables';
+import { extractNodesAndConnections } from './extract-nodes-and-connections';
 
 /**
  * Извлекает все ID узлов из массива узлов
@@ -46,7 +47,9 @@ export function createGenerationContext(
   groups: BotGroup[],
   options: GenerationOptions
 ): GenerationContext {
-  const nodes = toEnhancedNodes(botData.nodes || []);
+  // Используем extractNodesAndConnections для поддержки как nodes[], так и sheets[]
+  const { nodes: rawNodes } = extractNodesAndConnections(botData as any);
+  const nodes = toEnhancedNodes(rawNodes);
   const allNodeIds = extractAllNodeIds(nodes);
   const mediaVariablesMap = collectMediaVariables(nodes);
   const state = createGenerationState(options);

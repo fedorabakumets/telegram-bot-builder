@@ -15,6 +15,8 @@ export const databaseParamsSchema = z.object({
   hasUserIdsTable: z.boolean().default(false),
   /** Есть таблица user_telegram_settings */
   hasTelegramSettingsTable: z.boolean().default(false),
+  /** Нужны функции чтения/записи переменных пользователя */
+  hasUserDataAccess: z.boolean().default(false),
 });
 
 /** Тип параметров базы данных (выведен из схемы) */
