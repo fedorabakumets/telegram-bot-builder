@@ -10,7 +10,7 @@ import type { EnhancedNode } from '../types/enhanced-node.types';
 import type { GenerationContext } from './generation-context';
 import { NODE_TYPES } from '../types';
 import { hasInlineButtons } from '../../templates/keyboard/keyboard.renderer';
-import { hasAutoTransitions, hasMediaNodes, hasUploadImageUrls, hasNodesRequiringSafeEditOrSend } from '../../templates/filters';
+import { hasAutoTransitions, hasMediaNodes, hasUploadImageUrls, hasNodesRequiringSafeEditOrSend, hasReplyKeyboardButtons, hasLocalMediaFiles, hasBotCommands } from '../../templates/filters';
 
 /**
  * Флаги возможностей, вычисленные из узлов бота
@@ -26,6 +26,10 @@ export interface FeatureFlags {
   hasDatetimeNodesResult: boolean;
   hasTimezoneNodesResult: boolean;
   hasNodesRequiringSafeEditOrSendResult: boolean;
+  // Флаги для оптимизации импортов
+  hasReplyKeyboardResult: boolean;
+  hasLocalMediaFilesResult: boolean;
+  hasBotCommandsResult: boolean;
 }
 
 /**

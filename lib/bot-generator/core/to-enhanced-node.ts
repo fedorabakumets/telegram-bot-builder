@@ -33,8 +33,19 @@ function normalizeButtons(buttons: any[]): Button[] {
 
 /**
  * Конвертирует Node из схемы в EnhancedNode
+ * Если узел некорректен (нет id или data), возвращает null
  */
-export function toEnhancedNode(node: Node): EnhancedNode {
+export function toEnhancedNode(node: Node): EnhancedNode | null {
+  // Пропускаем узлы без id
+  if (!node || !node.id) {
+    return null;
+  }
+
+  // Пропускаем узлы без data
+  if (!node.data) {
+    return null;
+  }
+
   return {
     ...node,
     data: {
@@ -47,11 +58,14 @@ export function toEnhancedNode(node: Node): EnhancedNode {
 
 /**
  * Конвертирует массив узлов из схемы в EnhancedNode[]
+ * Фильтрует некорректные узлы (без id или data)
  */
 export function toEnhancedNodes(nodes: Node[]): EnhancedNode[] {
   if (!nodes || !Array.isArray(nodes)) {
     return [];
   }
 
-  return nodes.map((node) => toEnhancedNode(node));
+  return nodes
+    .map((node) => toEnhancedNode(node))
+    .filter((node): node is EnhancedNode => node !== null);
 }

@@ -156,4 +156,55 @@ export function hasMediaNodes(nodes: Node[]): boolean {
   );
 }
 
+/**
+ * Проверяет наличие inline кнопок в проекте
+ */
+export function hasReplyKeyboardButtons(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.some(node => {
+    const data = node.data || {};
+    // Проверяем keyboardType
+    if (data.keyboardType === 'reply') return true;
+    // Проверяем кнопки
+    if (data.buttons && Array.isArray(data.buttons)) {
+      // Reply кнопки не имеют action или имеют специальные поля
+      return data.buttons.some((btn: any) => 
+        btn.requestContact || btn.requestLocation || btn.requestPoll
+      );
+    }
+    return false;
+  });
+}
+
+/**
+ * Проверяет наличие локальных файлов (FSInputFile)
+ */
+export function hasLocalMediaFiles(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.some(node => {
+    const data = node.data || {};
+    // Проверяем локальные пути (не начинаются с http)
+    const localPaths = ['/uploads/', './', '../', 'C:\\', '/var/', '/tmp/'];
+    const checkLocalPath = (url: string) => url && !url.startsWith('http') && 
+      localPaths.some(prefix => url.startsWith(prefix));
+    
+    return checkLocalPath(data.imageUrl) ||
+           checkLocalPath(data.videoUrl) ||
+           checkLocalPath(data.audioUrl) ||
+           checkLocalPath(data.documentUrl);
+  });
+}
+
+/**
+ * Проверяет наличие команд в BotCommand
+ */
+export function hasBotCommands(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.some(node => {
+    const data = node.data || {};
+    // showInMenu + description = команда для BotCommand
+    return data.showInMenu && data.description;
+  });
+}
+
 export type { InputCollectionCheckResult };
