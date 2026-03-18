@@ -17,8 +17,7 @@ import { generateCommandCallbackHandler } from './templates/handlers';
 import { Button } from './bot-generator/types';
 // Внутренние модули - использование экспорта бочек
 import { generateBotFatherCommands } from './commands';
-import { collectConditionalMessageButtons } from './bot-generator/Conditional/collectConditionalMessageButtons';
-import { generateConditionalButtonHandlerCode, hasConditionalValueButtons } from './bot-generator/Conditional/conditional-button-handler';
+
 import { generateDatabaseCode } from './templates/database/database-code.renderer';
 import { generateGroupsConfiguration } from './generate';
 import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, generateMain, generateImports, generateConfig, generateUtils } from './templates/typed-renderer';
@@ -28,7 +27,6 @@ import { generateNodeHandlers } from './generate/generate-node-handlers';
 import { filterInlineNodes } from './bot-generator/Keyboard/filterInlineNodes';
 import { hasInlineButtons } from './bot-generator/Keyboard/hasInlineButtons';
 import { identifyNodesRequiringMultiSelectLogic } from './bot-generator/Keyboard/identifyNodesRequiringMultiSelectLogic';
-import { processInlineButtonNodes } from './bot-generator/Keyboard/processInlineButtonNodes';
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers } from './templates/handlers';
 import { hasUrlButtons } from './bot-generator/user-input';
 import { generateInteractiveCallbackHandlers } from './templates/interactive-callback-handlers';
@@ -315,10 +313,8 @@ export function generatePythonCode(
   const allConditionalButtons = new Set<string>();
 
   // Добавляем узла из inline кнопок
-  processInlineButtonNodes(inlineNodes, allReferencedNodeIds);
 
   // Собираем кнопки из условных сообщений
-  collectConditionalMessageButtons(context.nodes || [], allConditionalButtons);
 
   // Добавляем целевые узла ввода
   addInputTargetNodes(inputTargetNodeIds, allReferencedNodeIds);
@@ -375,10 +371,6 @@ export function generatePythonCode(
   // Добавляем универсальный обработчик пользовательского ввода только если есть сбор данных
 
 
-  // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
-  if (hasConditionalValueButtons(context.nodes)) {
-    code += generateConditionalButtonHandlerCode();
-  }
 
   // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логированием
   const commandButtons = collectAllCommandCallbacksFromNodes(context.nodes || []);
