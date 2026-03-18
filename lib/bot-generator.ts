@@ -34,19 +34,18 @@ import { identifyNodesRequiringMultiSelectLogic } from './bot-generator/Keyboard
 import { processInlineButtonNodes } from './bot-generator/Keyboard/processInlineButtonNodes';
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers } from './templates/handlers';
 import { hasUrlButtons } from './bot-generator/user-input';
-import { generateMessageLoggingCode } from './bot-generator/logging/generate-message-logging';
+import { generateInteractiveCallbackHandlers } from './templates/interactive-callback-handlers';
+import { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
 import { generateGroupHandlers } from './bot-generator/MediaHandler/generateGroupHandlers';
 import { generateMediaFileFunctions } from './bot-generator/MediaHandler/generateMediaFileFunctions';
 import { generateSaveMediaToDb } from './bot-generator/MediaHandler/save-media-to-db';
 import { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
 import { hasUploadImageUrls } from './bot-generator/MediaHandler/hasUploadImageUrls';
-import { newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation } from './bot-generator/user-input';
-import { generateInteractiveCallbackHandlers } from './templates/interactive-callback-handlers';
+import { generateMessageLoggingCode } from './bot-generator/logging/generate-message-logging';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './bot-generator/scaffolding';
 import { addAutoTransitionNodes } from './bot-generator/utils/addAutoTransitionNodes';
 import { addInputTargetNodes } from './bot-generator/utils/addInputTargetNodes';
 import { collectInputTargetNodes } from './bot-generator/utils/collectInputTargetNodes';
-import { hasAutoTransitions } from './bot-generator/utils/hasAutoTransitions';
 import { hasNodesRequiringSafeEditOrSend } from './bot-generator/utils/hasNodesRequiringSafeEditOrSend';
 import { assertValidPython } from './bot-generator/validation';
 
@@ -377,7 +376,7 @@ export function generatePythonCode(
   // Это исправляет проблему когда reply-кнопки не сохраняли данные пользователя
 
   // Добавляем универсальный обработчик пользовательского ввода только если есть сбор данных
-  generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation();
+
 
   // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
   if (hasConditionalValueButtons(context.nodes)) {
@@ -505,21 +504,7 @@ export function generatePythonCode(
     }
   }
 
-  /**
-   * Генерирует универсальный обработчик пользовательского ввода
-   * @returns {string} Python код обработчика
-   */
-  function generateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation() {
-    code = newgenerateUniversalUserInputHandlerWithConditionalMessagesSkipButtonsValidationAndNavigation(
-      context.nodes,
-      code,
-      context.allNodeIds,
-      [],
-      () => {},
-      () => '',
-      () => {},
-      () => {}    );
-  }
+
 
 
 

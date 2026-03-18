@@ -8,7 +8,7 @@
  */
 
 import { processCodeWithAutoComments } from '../utils/generateGeneratedComment';
-import { generateDatabaseVariablesCode } from '../Broadcast/generate-database-variables-universal';
+import { generateDatabaseVariablesCode } from '../../templates/database/database-variables.renderer';
 // Примечание: generateInitAllUserVarsCall удалена после миграции на Jinja2
 // import { generateInitAllUserVarsCall } from './generate-init-all-user-vars';
 

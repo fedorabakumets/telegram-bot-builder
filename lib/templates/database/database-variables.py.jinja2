@@ -1,0 +1,65 @@
+{#
+  Шаблон получения переменных из таблиц БД (inline-код внутри функций)
+
+  @param {string} indent - Отступ для кода
+  @param {array} sources - Список источников переменных (отфильтрованных renderer'ом)
+    Каждый source: { table, description, fields: [{ column, variableName }], needed: bool }
+#}
+{{ indent }}# ┌─────────────────────────────────────────┐
+{{ indent }}# │    Переменные из таблиц базы данных     │
+{{ indent }}# └─────────────────────────────────────────┘
+{% for source in sources %}
+{% if not source.needed %}
+{{ indent }}# Таблица: {{ source.table }} — не требуется
+{% elif source.table == 'bot_users' %}
+{{ indent }}# Таблица: {{ source.table }}
+{{ indent }}# {{ source.description }}
+{{ indent }}# Переменные из bot_users инициализируются в init_user_variables()
+
+{% elif source.table == 'user_ids' %}
+{{ indent }}# Таблица: {{ source.table }}
+{{ indent }}# {{ source.description }}
+{{ indent }}try:
+{{ indent }}    async with db_pool.acquire() as conn:
+{{ indent }}        rows = await conn.fetch("SELECT user_id FROM user_ids ORDER BY created_at DESC")
+{{ indent }}        user_ids = [str(row["user_id"]) for row in rows]
+{{ indent }}        user_ids_count = len(rows)
+{{ indent }}        logging.info(f"✅ Получено {user_ids_count} ID из таблицы user_ids")
+{{ indent }}except Exception as e:
+{{ indent }}    logging.error(f"❌ Ошибка получения данных из user_ids: {e}")
+{{ indent }}    user_ids = []
+{{ indent }}    user_ids_count = 0
+
+{% elif source.table == 'user_telegram_settings' %}
+{{ indent }}# Таблица: {{ source.table }}
+{{ indent }}# {{ source.description }}
+{{ indent }}try:
+{{ indent }}    async with db_pool.acquire() as conn:
+{{ indent }}        # Загружаем настройки из общей базы ('default')
+{{ indent }}        row = await conn.fetchrow("SELECT * FROM user_telegram_settings WHERE user_id = 'default'")
+{{ indent }}        if row:
+{% for field in source.fields %}
+{{ indent }}            {{ field.variableName }} = row["{{ field.column }}"]
+{% endfor %}
+{{ indent }}        else:
+{% for field in source.fields %}
+{{ indent }}            {{ field.variableName }} = None
+{% endfor %}
+{{ indent }}        logging.info(f"✅ Получены настройки Telegram из user_telegram_settings")
+{{ indent }}except Exception as e:
+{{ indent }}    logging.error(f"❌ Ошибка получения настроек Telegram: {e}")
+{% for field in source.fields %}
+{{ indent }}    {{ field.variableName }} = None
+{% endfor %}
+
+{% endif %}
+{% endfor %}
+{{ indent }}# Добавляем переменные базы данных в all_user_vars
+{% for source in sources %}
+{% if source.needed and source.table != 'bot_users' %}
+{% for field in source.fields %}
+{{ indent }}all_user_vars["{{ field.variableName }}"] = {{ field.variableName }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{{ indent }}logging.info(f"🔧 Переменные из БД добавлены в all_user_vars")

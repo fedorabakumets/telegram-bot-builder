@@ -9,7 +9,7 @@
 
 import type { EnhancedNode } from '../bot-generator/types';
 import { generatorLogger } from '../bot-generator/core/generator-logger';
-import { generateDatabaseVariablesCode } from '../bot-generator/Broadcast/generate-database-variables-universal';
+import { generateDatabaseVariablesCode } from '../templates/database/database-variables.renderer';
 import { generateConditionalMessageLogic } from '../bot-generator/Conditional';
 import { generateUniversalVariableReplacement } from '../bot-generator/database/generateUniversalVariableReplacement';
 import { formatTextForPython, getParseMode, stripHtmlTags } from '../bot-generator/format';
