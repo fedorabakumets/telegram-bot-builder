@@ -1,4 +1,4 @@
-import { cn } from "@lib/bot-generator/utils";
+import { cn } from "@/utils/utils";
 
 /**
  * Компонент скелетона

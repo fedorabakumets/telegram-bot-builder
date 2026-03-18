@@ -12,7 +12,7 @@ import { KeyboardPresetSelector } from './keyboard-preset-selector';
 import { KeyboardLayoutActions } from './keyboard-layout-actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 
 /** Свойства компонента KeyboardLayoutEditor */
 export interface KeyboardLayoutEditorProps {

@@ -2,7 +2,7 @@ import * as React from "react"
 import * as TogglePrimitive from "@radix-ui/react-toggle"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from "@lib/bot-generator/utils"
+import { cn } from "@/utils/utils"
 
 /**
  * Варианты стилей для компонента Toggle

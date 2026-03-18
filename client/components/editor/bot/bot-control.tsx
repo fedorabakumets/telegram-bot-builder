@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { BotToken, type BotProject } from '@shared/schema';
-import { setCommentsEnabled, areCommentsEnabled } from '@lib/bot-generator/utils/generateGeneratedComment';
+import { setCommentsEnabled, areCommentsEnabled } from '@/utils/comments-settings';
 import { type BotInfo } from './BotProfileEditor';
 import { BotProfileSheet } from './BotProfileSheet';
 import { BotControlPanel } from './BotControlPanel';

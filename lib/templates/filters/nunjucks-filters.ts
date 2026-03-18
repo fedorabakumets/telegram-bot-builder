@@ -54,7 +54,9 @@ export function hasAutoTransitionsFilter(node: any): boolean {
 }
 
 /**
- * Проверяет наличие медиа только по data полям (для Nunjucks фильтра has_media)
+ * Проверяет наличие медиа только по data полям одного узла (для Nunjucks фильтра has_media).
+ * Работает на уровне одного узла, а не массива.
+ * Для проверки массива узлов используйте `hasMediaNodes` из node-predicates.ts.
  */
 export function hasMediaNodesByData(node: any): boolean {
   if (!node || !node.data) return false;

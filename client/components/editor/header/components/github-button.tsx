@@ -5,7 +5,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Github } from 'lucide-react';
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 
 /**
  * Свойства кнопки GitHub

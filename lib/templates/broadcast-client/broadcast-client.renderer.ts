@@ -7,6 +7,7 @@ import type { Node } from '@shared/schema';
 import type { BroadcastNode, BroadcastClientTemplateParams } from './broadcast-client.params';
 import { broadcastClientParamsSchema } from './broadcast-client.schema';
 import { renderPartialTemplate } from '../template-renderer';
+import { NODE_TYPES } from '../../bot-generator/types/node-type.constants';
 
 /**
  * Собирает BroadcastNode[] из графа узлов.
@@ -16,7 +17,7 @@ export function collectBroadcastNodes(nodes: Node[], broadcastNodeId: string): B
   const broadcastMessages = nodes.filter(n => {
     const d = n.data as any;
     return (
-      n.type === 'message' &&
+      n.type === NODE_TYPES.MESSAGE &&
       d?.enableBroadcast === true &&
       (!d?.broadcastTargetNode || d.broadcastTargetNode === 'all' || d.broadcastTargetNode === broadcastNodeId)
     );
@@ -45,7 +46,7 @@ export function collectBroadcastNodes(nodes: Node[], broadcastNodeId: string): B
     hasNew = false;
     for (const entry of chain.values()) {
       if (entry.autoTransitionTo && !chain.has(entry.autoTransitionTo)) {
-        const target = nodes.find(n => n.id === entry.autoTransitionTo && n.type === 'message');
+        const target = nodes.find(n => n.id === entry.autoTransitionTo && n.type === NODE_TYPES.MESSAGE);
         if (target) {
           const d = target.data as any;
           chain.set(target.id, {

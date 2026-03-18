@@ -29,10 +29,11 @@ export type { InputType } from './node-data.types';
 export type { EnhancedNode } from './enhanced-node.types';
 export type { EnhancedNodeArray } from './enhanced-node.types';
 
-export type { ButtonActionOverride } from './node-data-override.types';
-export type { ButtonOverride } from './node-data-override.types';
-export type { KeyboardTypeOverride } from './node-data-override.types';
-export type { FormatModeOverride } from './node-data-override.types';
+// Override-типы оставлены как алиасы для обратной совместимости
+export type { ButtonAction as ButtonActionOverride } from './button-types';
+export type { Button as ButtonOverride } from '@shared/schema';
+export type { KeyboardType as KeyboardTypeOverride } from './node-data.types';
+export type { FormatMode as FormatModeOverride } from './node-data.types';
 
 export type { GenerationOptions } from '../core/generation-options.types';
 export type { GenerationContext } from '../core/generation-context';
@@ -47,4 +48,4 @@ export {
   generateReadme,
   generateRequirementsTxt,
   generateEnvFile
-} from '../scaffolding';
+} from '../../scaffolding';

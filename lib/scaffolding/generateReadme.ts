@@ -1,30 +1,6 @@
 import { BotData } from '@shared/schema';
-import { generateBotFatherCommands } from "../../commands";
-
-/**
- * Извлекает все узлы из структуры бота (поддерживает sheets и nodes)
- */
-function extractNodes(botData: BotData): any[] {
-  // Если уже простая структура с nodes - возвращаем их
-  if (botData?.nodes && Array.isArray(botData.nodes)) {
-    return botData.nodes.filter(node => node !== null && node !== undefined);
-  }
-
-  // Если многолистовая структура с sheets - собираем все узлы
-  const botDataAny = botData as any;
-  if (botDataAny?.sheets && Array.isArray(botDataAny.sheets)) {
-    const allNodes: any[] = [];
-    botDataAny.sheets.forEach((sheet: any) => {
-      if (sheet?.nodes && Array.isArray(sheet.nodes)) {
-        allNodes.push(...sheet.nodes.filter((node: any) => node !== null && node !== undefined));
-      }
-    });
-    return allNodes;
-  }
-
-  // Если нет узлов вообще - возвращаем пустой массив
-  return [];
-}
+import { generateBotFatherCommands } from "../commands";
+import { extractNodesAndConnections } from '../bot-generator/core/extract-nodes-and-connections';
 
 export function generateReadme(
   botData: BotData,
@@ -33,7 +9,7 @@ export function generateReadme(
   tokenId?: number,
   customFileName?: string
 ): string {
-  const nodes = extractNodes(botData);
+  const { nodes } = extractNodesAndConnections(botData);
   const commandNodes = nodes.filter(node => (node.type === 'start' || node.type === 'command') && node.data?.command);
 
   // Определяем имя файла бота

@@ -9,6 +9,10 @@ import type { GenerationOptions } from './bot-generator/core/generation-options.
 // Ядро: логирование
 import { generatorLogger } from './bot-generator/core/generator-logger';
 
+// Флаги возможностей
+import { computeFeatureFlags, ALREADY_HANDLED_TYPES } from './bot-generator/core/feature-flags';
+import type { FeatureFlags } from './bot-generator/core/feature-flags';
+
 // Типы
 import { logFlowAnalysis } from './bot-generator/core';
 import { NODE_TYPES } from './bot-generator/types';
@@ -21,17 +25,13 @@ import { generateNodeHandlers } from './templates/node-handlers/node-handlers.di
 import { filterInlineNodes, hasInlineButtons, identifyNodesRequiringMultiSelectLogic } from './templates/keyboard/keyboard.renderer';
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers, generateCommandCallbackHandler } from './templates/handlers';
 import { generateInteractiveCallbackHandlers } from './templates/interactive-callback-handlers';
-import { hasAutoTransitions } from './templates/filters';
 import { generateGroupHandlers } from './templates/group-handlers/group-handlers.renderer';
 import { generateMediaFunctions } from './templates/media-functions/media-functions.renderer';
-import { hasMediaNodes } from './templates/filters';
-import { hasUploadImageUrls } from './templates/filters';
 import { generateMessageLoggingCode } from './templates/middleware/middleware.renderer';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';
 import { addAutoTransitionNodes } from './bot-generator/core/add-auto-transition-nodes';
 import { addInputTargetNodes } from './bot-generator/core/add-input-target-nodes';
 import { collectInputTargetNodes } from './bot-generator/core/collect-input-target-nodes';
-import { hasNodesRequiringSafeEditOrSend } from './templates/filters';
 import { assertValidPython } from './bot-generator/validation';
 import { collectAllCommandCallbacksFromNodes, findCommandNode } from './bot-generator/core/command-utils';
 
@@ -58,20 +58,6 @@ export interface GeneratePythonCodeOptions {
 // ---------------------------------------------------------------------------
 // Типы pipeline
 // ---------------------------------------------------------------------------
-
-/** Флаги возможностей, вычисленные из узлов */
-interface FeatureFlags {
-  hasInlineButtonsResult: boolean;
-  hasAutoTransitionsResult: boolean;
-  hasMediaNodesResult: boolean;
-  hasUploadImagesResult: boolean;
-  hasParseModeNodesResult: boolean;
-  hasMediaGroupsResult: boolean;
-  hasUrlImagesResult: boolean;
-  hasDatetimeNodesResult: boolean;
-  hasTimezoneNodesResult: boolean;
-  hasNodesRequiringSafeEditOrSendResult: boolean;
-}
 
 /** Секции сгенерированного кода */
 interface CodeSections {
@@ -125,122 +111,6 @@ function buildGenerationContext(
 
   const context = createGenerationContext(botData, botName, groups, genOptions);
   return { context, genOptions };
-}
-
-// ---------------------------------------------------------------------------
-// Pipeline шаг 2: computeFeatureFlags
-// ---------------------------------------------------------------------------
-
-/**
- * Вычисляет все флаги возможностей из контекста
- */
-function computeFeatureFlags(context: GenerationContext): FeatureFlags {
-  const nodes = context.nodes || [];
-
-  const hasInlineButtonsResult = hasInlineButtons(nodes);
-  const hasAutoTransitionsResult = hasAutoTransitions(nodes);
-  const hasMediaNodesResult = hasMediaNodes(nodes);
-  const hasUploadImagesResult = hasUploadImageUrls(nodes);
-
-  const hasParseModeNodesResult = nodes.some((node) => {
-    const data = node.data || {};
-
-    if (
-      data.formatMode &&
-      (data.formatMode.toLowerCase() === 'html' ||
-        data.formatMode.toLowerCase() === 'markdown')
-    ) {
-      return true;
-    }
-
-    if (data.markdown) return true;
-
-    if (
-      data.buttons &&
-      data.buttons.length > 0 &&
-      (data.formatMode === 'html' ||
-        data.formatMode === 'markdown' ||
-        data.markdown)
-    ) {
-      return true;
-    }
-
-    if (
-      (data.imageUrl || data.videoUrl || data.audioUrl || data.documentUrl) &&
-      data.mediaCaption
-    ) {
-      return true;
-    }
-
-    if (
-      data.collectUserInput &&
-      (data.formatMode === 'html' ||
-        data.formatMode === 'markdown' ||
-        data.markdown)
-    ) {
-      return true;
-    }
-
-    if (
-      data.enableConditionalMessages &&
-      (data.formatMode === 'html' ||
-        data.formatMode === 'markdown' ||
-        data.markdown)
-    ) {
-      return true;
-    }
-
-    return false;
-  });
-
-  const hasMediaGroupsResult = nodes.some(
-    (node) =>
-      node.data?.attachedMedia &&
-      Array.isArray(node.data.attachedMedia) &&
-      node.data.attachedMedia.length > 1
-  );
-
-  const hasUrlImagesResult = nodes.some(
-    (node) => node.data?.imageUrl && node.data.imageUrl.startsWith('http')
-  );
-
-  const hasDatetimeNodesResult = nodes.some(
-    (node) =>
-      node.type === NODE_TYPES.COMMAND ||
-      node.type === NODE_TYPES.MUTE_USER ||
-      node.type === NODE_TYPES.BAN_USER ||
-      node.type === NODE_TYPES.MESSAGE ||
-      node.type === NODE_TYPES.STICKER ||
-      node.type === NODE_TYPES.VOICE ||
-      node.type === NODE_TYPES.ANIMATION ||
-      node.type === NODE_TYPES.PHOTO ||
-      node.type === NODE_TYPES.VIDEO ||
-      node.type === NODE_TYPES.DOCUMENT ||
-      node.type === NODE_TYPES.AUDIO ||
-      node.type === NODE_TYPES.LOCATION ||
-      node.type === NODE_TYPES.CONTACT
-  );
-
-  const hasTimezoneNodesResult = nodes.some(
-    (node) =>
-      node.type === NODE_TYPES.PHOTO ||
-      (node.data && node.data.enablePhotoInput)
-  );
-
-  const hasNodesRequiringSafeEditOrSendResult = hasNodesRequiringSafeEditOrSend(nodes);
-
-  return {
-    hasInlineButtonsResult,
-    hasAutoTransitionsResult,
-    hasMediaNodesResult,
-    hasUploadImagesResult,
-    hasParseModeNodesResult,
-    hasMediaGroupsResult,
-    hasUrlImagesResult,
-    hasDatetimeNodesResult,
-    hasTimezoneNodesResult,
-    hasNodesRequiringSafeEditOrSendResult,
-  };
 }
 
 // ---------------------------------------------------------------------------
@@ -320,7 +190,6 @@ function generateCodeSections(
   addInputTargetNodes(inputTargetNodeIds, allReferencedNodeIds);
   addAutoTransitionNodes(nodes, allReferencedNodeIds);
 
-  const ALREADY_HANDLED_TYPES = new Set<string>([NODE_TYPES.START, NODE_TYPES.COMMAND, NODE_TYPES.MESSAGE]);
   nodes.forEach(node => {
     if (!ALREADY_HANDLED_TYPES.has(node.type)) {
       allReferencedNodeIds.add(node.id);
@@ -435,7 +304,7 @@ function generateCodeSections(
   });
 
   // --- multiselect handlers ---
-  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes as any[]);
+  const multiSelectNodes = identifyNodesRequiringMultiSelectLogic(nodes);
   const multiSelectNodesWithLayout = multiSelectNodes.map((node: any) => {
     const layout = node.data?.keyboardLayout;
     const hasKeyboardLayout = !!(layout && (layout.rows?.length > 0 || layout.autoLayout));

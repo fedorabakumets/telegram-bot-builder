@@ -8,7 +8,6 @@
  */
 
 import type { Button } from './button-types';
-import type { ButtonOverride } from './node-data-override.types';
 
 /**
  * Тип клавиатуры для узла
@@ -58,7 +57,7 @@ export type InputType =
  */
 export interface NodeData {
   /** Кнопки узла */
-  buttons?: Button[] | ButtonOverride[];
+  buttons?: Button[];
   /** Тип клавиатуры */
   keyboardType?: KeyboardType;
   /** Текст сообщения */

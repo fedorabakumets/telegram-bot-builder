@@ -161,18 +161,7 @@ export function renderPartialTemplate(
   try {
     const environment = initEnvironment();
     
-    // Для шаблонов в handlers/ используем полный путь
-    // Для остальных шаблонов пытаемся определить директорию автоматически
     let templatePath = partialName;
-
-    // Если путь содержит '/', используем его как есть
-    if (!partialName.includes('/')) {
-      const templateDirs = ['config', 'database', 'utils', 'main', 'header', 'middleware', 'universal-handlers', 'imports', 'command', 'start', 'keyboard', 'message', 'broadcast', 'broadcast-bot', 'broadcast-client', 'sticker', 'voice', 'safe-edit-or-send', 'synonyms', 'attached-media', 'user-handler', 'admin-rights', 'map', 'message-handler'];
-      const dir = templateDirs.find(d => partialName.startsWith(d));
-      if (dir) {
-        templatePath = `${dir}/${partialName}`;
-      }
-    }
 
     // Используем кеш скомпилированных шаблонов
     let template = templateCache.get(templatePath);

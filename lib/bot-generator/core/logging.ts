@@ -3,16 +3,11 @@
  * Функции для отладки и анализа процесса генерации кода
  */
 
-import { getGlobalLoggingEnabled } from './config';
-
 /**
  * Проверяет включено ли логирование отладки
  * @returns {boolean} Статус включения логирования
  */
 export const isLoggingEnabled = (): boolean => {
-  // Сначала проверяем глобальное логирование
-  if (getGlobalLoggingEnabled()) return true;
-
   // Проверяем localStorage (только в браузере)
   if (typeof window !== 'undefined') {
     return localStorage.getItem('botcraft-generator-logs') === 'true';

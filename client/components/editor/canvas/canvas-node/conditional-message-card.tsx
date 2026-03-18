@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 
 /**
  * Типы условий

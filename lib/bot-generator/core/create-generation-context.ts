@@ -14,7 +14,6 @@ import type { GenerationContext } from './generation-context';
 import { createGenerationState } from './generation-state';
 import { toEnhancedNodes } from './to-enhanced-node';
 import { collectMediaVariables } from './collect-media-variables';
-import { initCommentsState } from './generated-comment';
 
 /**
  * Извлекает все ID узлов из массива узлов
@@ -51,7 +50,6 @@ export function createGenerationContext(
   const allNodeIds = extractAllNodeIds(nodes);
   const mediaVariablesMap = collectMediaVariables(nodes);
   const state = createGenerationState(options);
-  initCommentsState(() => state.commentsEnabled);
 
   return {
     nodes,
@@ -86,7 +84,6 @@ export function createGenerationContextFromNodes(
   const allNodeIds = extractAllNodeIds(nodes);
   const mediaVariablesMap = collectMediaVariables(nodes);
   const state = createGenerationState(options);
-  initCommentsState(() => state.commentsEnabled);
 
   return {
     nodes,

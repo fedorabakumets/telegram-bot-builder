@@ -4,7 +4,7 @@
  */
 
 import { Menu } from 'lucide-react';
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 
 /**
  * Свойства кнопки открытия мобильной панели компонентов

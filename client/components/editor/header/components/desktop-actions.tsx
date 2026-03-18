@@ -11,7 +11,7 @@ import { DesktopToggleCodeButton } from './desktop-toggle-code-button';
 import { DesktopToggleCodeEditorButton } from './desktop-toggle-code-editor-button';
 import { DesktopLoadTemplateButton } from './desktop-load-template-button';
 import { DesktopSaveTemplateButton } from './desktop-save-template-button';
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 
 /**
  * Свойства компонента десктопных действий

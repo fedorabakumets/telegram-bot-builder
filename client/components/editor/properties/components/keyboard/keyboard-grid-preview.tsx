@@ -6,7 +6,7 @@
 import React from 'react';
 import { Button } from '@lib/bot-generator';
 import { KeyboardLayout } from '../../types/keyboard-layout';
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 
 /** Свойства компонента KeyboardGridPreview */
 export interface KeyboardGridPreviewProps {

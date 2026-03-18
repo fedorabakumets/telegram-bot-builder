@@ -4,14 +4,14 @@
  * @module bot-generator/core/command-utils
  */
 
-import type { BotNode, Button } from '../types';
+import type { Node, Button } from '@shared/schema';
 
 /**
  * Собирает все callback-идентификаторы команд из узлов бота
  * @param nodes - Массив узлов бота
  * @returns Уникальные callback идентификаторы команд
  */
-export function collectAllCommandCallbacksFromNodes(nodes: BotNode[]): Set<string> {
+export function collectAllCommandCallbacksFromNodes(nodes: Node[]): Set<string> {
   const commandButtons = new Set<string>();
 
   nodes.forEach(node => {
@@ -47,7 +47,7 @@ export function collectAllCommandCallbacksFromNodes(nodes: BotNode[]): Set<strin
  * @param nodes - Массив узлов бота
  * @returns Узел команды или null
  */
-export function findCommandNode(commandCallback: string, nodes: BotNode[]): BotNode | null {
+export function findCommandNode(commandCallback: string, nodes: Node[]): Node | null {
   const command = commandCallback.replace('cmd_', '');
   return nodes.find(
     n => n.data.command === `/${command}` || n.data.command === command

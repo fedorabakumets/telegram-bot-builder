@@ -3,7 +3,7 @@
  * @description Отображает информацию о пользователе и кнопку выхода
  */
 
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 import { UserAvatar } from './user-avatar';
 import { UserInfo } from './user-info';
 import { LogoutButton } from './logout-button';

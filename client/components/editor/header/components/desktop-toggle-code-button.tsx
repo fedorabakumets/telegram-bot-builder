@@ -5,7 +5,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Code } from 'lucide-react';
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 
 /**
  * Свойства десктопной кнопки переключения панели кода

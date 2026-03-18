@@ -3,7 +3,7 @@
  * @description Отображает иконку Telegram в градиентном контейнере
  */
 
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 
 /**
  * Свойства компонента логотипа

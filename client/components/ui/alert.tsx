@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from "@lib/bot-generator/utils"
+import { cn } from "@/utils/utils"
 
 /** Вариант стиля уведомления: "default" или "destructive" */
 type AlertVariant = "default" | "destructive";

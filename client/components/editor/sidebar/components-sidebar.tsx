@@ -1,5 +1,5 @@
 import { ComponentDefinition, BotProject } from '@shared/schema';
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';

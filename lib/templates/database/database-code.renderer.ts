@@ -5,6 +5,7 @@
 
 import { renderPartialTemplate } from '../template-renderer';
 import { generateDatabase } from './database.renderer';
+import { NODE_TYPES } from '../../bot-generator/types/node-type.constants';
 
 /**
  * Генерирует код базы данных + алиасы обработчиков команд
@@ -17,15 +18,15 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     return '';
   }
 
-  const hasMessageLogging = nodes.some(n => n.type === 'message' || n.type === 'command');
+  const hasMessageLogging = nodes.some(n => n.type === NODE_TYPES.MESSAGE || n.type === NODE_TYPES.COMMAND);
   const hasUserIdsTable = nodes.some(n => n.data?.buttons?.some((b: any) => b.action === 'goto'));
 
   let code = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging, hasUserIdsTable });
   code += '\n';
 
-  const hasStartNode = nodes.some(n => n.type === 'start');
+  const hasStartNode = nodes.some(n => n.type === NODE_TYPES.START);
   const commandNodes = nodes
-    .filter(n => n.type === 'command' && n.data?.command)
+    .filter(n => n.type === NODE_TYPES.COMMAND && n.data?.command)
     .map(n => ({
       command: n.data.command.replace('/', ''),
       functionName: n.data.command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_'),

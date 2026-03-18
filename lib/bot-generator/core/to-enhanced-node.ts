@@ -7,14 +7,13 @@
  * @module bot-generator/core/to-enhanced-node
  */
 
-import type { Node } from '@shared/schema';
+import type { Node, Button } from '@shared/schema';
 import type { EnhancedNode } from '../types/enhanced-node.types';
-import type { ButtonOverride } from '../types/node-data-override.types';
 
 /**
  * Нормализует кнопки узла для совместимости
  */
-function normalizeButtons(buttons: any[]): ButtonOverride[] {
+function normalizeButtons(buttons: any[]): Button[] {
   if (!buttons || !Array.isArray(buttons)) {
     return [];
   }

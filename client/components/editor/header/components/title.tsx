@@ -3,7 +3,7 @@
  * @description Отображает название проекта или бота с адаптивным размером текста
  */
 
-import { cn } from '@lib/bot-generator/utils';
+import { cn } from '@/utils/utils';
 import type { BotInfo } from '../types';
 
 /**

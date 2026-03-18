@@ -28,17 +28,11 @@ export function BotValidation({ botData }: BotValidationProps) {
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
 
   useEffect(() => {
-    async function loadValidation() {
-      try {
-        const { validateBotStructure } = await import('@lib/bot-generator/utils/validateBotStructure');
-        const result = validateBotStructure(botData);
-        setValidationResult(result || { isValid: false, errors: [] });
-      } catch (error) {
-        console.error('Ошибка валидации:', error);
-        setValidationResult({ isValid: false, errors: ['Ошибка загрузки модуля валидации'] });
-      }
-    }
-    loadValidation();
+    const errors: string[] = [];
+    const nodes = (botData as any)?.nodes ?? [];
+    const hasStart = nodes.some((n: any) => n.type === 'start');
+    if (!hasStart) errors.push('Отсутствует стартовый узел (/start)');
+    setValidationResult({ isValid: errors.length === 0, errors });
   }, [botData]);
 
   // Не показываем ничего, если структура корректна

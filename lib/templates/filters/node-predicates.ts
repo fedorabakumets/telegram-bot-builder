@@ -2,16 +2,15 @@
  * @fileoverview Предикаты узлов — функции проверки свойств массивов узлов
  */
 
-import type { BotNode } from '../../bot-generator/types';
+import type { Node } from '@shared/schema';
 import { NODE_TYPES } from '../../bot-generator/types';
 import type { InputCollectionCheckResult } from '../../bot-generator/types/input-collection-check-result';
-import type { Node } from '@shared/schema';
 import type { Button } from '@shared/schema';
 
 /**
  * Проверяет наличие автопереходов в массиве узлов
  */
-export function hasAutoTransitions(nodes: BotNode[]): boolean {
+export function hasAutoTransitions(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes
     .filter(node => node !== null && node !== undefined)
@@ -44,7 +43,7 @@ export function hasCommandButtons(nodes: Node[]): boolean {
 /**
  * Проверяет узлы на наличие сбора пользовательского ввода за ОДИН проход
  */
-export function hasInputCollection(nodes: BotNode[]): InputCollectionCheckResult {
+export function hasInputCollection(nodes: Node[]): InputCollectionCheckResult {
   if (!nodes || nodes.length === 0) {
     return {
       hasCollectInput: false,
@@ -104,12 +103,13 @@ export function hasInputCollection(nodes: BotNode[]): InputCollectionCheckResult
 /**
  * Проверяет наличие узлов, требующих функцию safe_edit_or_send
  */
-export function hasNodesRequiringSafeEditOrSend(nodes: BotNode[]): boolean {
+export function hasNodesRequiringSafeEditOrSend(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes.some(node => {
     const nodeTypesRequiringSafeEditOrSend = [
-      'admin_rights', 'ban_user', 'unban_user', 'mute_user',
-      'unmute_user', 'kick_user', 'promote_user', 'demote_user'
+      NODE_TYPES.ADMIN_RIGHTS, NODE_TYPES.BAN_USER, NODE_TYPES.UNBAN_USER,
+      NODE_TYPES.MUTE_USER, NODE_TYPES.UNMUTE_USER, NODE_TYPES.KICK_USER,
+      NODE_TYPES.PROMOTE_USER, NODE_TYPES.DEMOTE_USER,
     ];
     const hasMultipleSelection = node.data && node.data.allowMultipleSelection === true;
     return nodeTypesRequiringSafeEditOrSend.includes(node.type) || hasMultipleSelection;
@@ -119,7 +119,7 @@ export function hasNodesRequiringSafeEditOrSend(nodes: BotNode[]): boolean {
 /**
  * Проверяет наличие узлов с imageUrl/videoUrl/audioUrl/documentUrl начинающимся на '/uploads/'
  */
-export function hasUploadImageUrls(nodes: BotNode[]): boolean {
+export function hasUploadImageUrls(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes.some(node =>
     node &&
@@ -135,7 +135,7 @@ export function hasUploadImageUrls(nodes: BotNode[]): boolean {
 /**
  * Проверяет наличие медиа-узлов по типам узлов И по data полям
  */
-export function hasMediaNodes(nodes: BotNode[]): boolean {
+export function hasMediaNodes(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes.some(node =>
     node &&

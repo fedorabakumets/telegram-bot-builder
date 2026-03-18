@@ -7,7 +7,7 @@
  * @module bot-generator/types/generation.types
  */
 
-import type { BotNode } from './bot-node-types';
+import type { Node } from '@shared/schema';
 import type { Button } from './button-types';
 export type { GenerationOptions } from '../core/generation-options.types';
 export type { GenerationContext } from '../core/generation-context';
@@ -16,16 +16,10 @@ export type { PythonValidationResult } from '../validation/validate-generated-py
 
 /**
  * Параметры для генерации импортов
- * 
- * @example
- * const params: ImportGeneratorOptions = {
- *   nodes: [...],
- *   userDatabaseEnabled: true
- * };
  */
 export interface ImportGeneratorOptions {
   /** Массив узлов бота */
-  nodes: BotNode[];
+  nodes: Node[];
   /** Включена ли база данных пользователей */
   userDatabaseEnabled: boolean;
   /** Есть ли inline кнопки */

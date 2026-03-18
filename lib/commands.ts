@@ -7,7 +7,7 @@
  * @module commands
  */
 
-import type { BotNode } from './bot-generator/types';
+import type { Node as BotNode } from '@shared/schema';
 import { NODE_TYPES } from './bot-generator/types';
 
 /**

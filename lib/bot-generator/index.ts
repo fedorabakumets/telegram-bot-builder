@@ -12,7 +12,6 @@ export { generatePythonCode, type GeneratePythonCodeOptions } from '../bot-gener
 
 // Ядро: конфигурация и логирование
 export { isLoggingEnabled, logFlowAnalysis } from './core';
-export { setGlobalLoggingEnabled, getGlobalLoggingEnabled } from './core';
 
 // Ядро: централизованное логирование
 export { createLogger, generatorLogger } from './core/generator-logger';
