@@ -21,6 +21,7 @@ import { useProjectsQuery } from './hooks/use-projects-query';
 import { useCreateProjectMutation } from './hooks/use-create-project-mutation';
 import { useDeleteProjectMutation } from './hooks/use-delete-project-mutation';
 import { useSidebarSheetDrag } from './hooks/use-sidebar-sheet-drag';
+import { useProjectEditing } from './hooks/use-project-editing';
 import { createTouchHandlers, registerGlobalTouchHandlers } from './components/sidebar-touch-handlers';
 import { ProjectCard } from './components/project-card';
 import { ComponentsTab } from './components/components-tab';
@@ -83,6 +84,15 @@ export function ComponentsSidebar({
     cancelEditing: cancelEditingSheet,
     setEditingName,
   } = useSidebarEditing();
+
+  // Хук управления редактированием проекта
+  const {
+    editingState: projectEditingState,
+    startEditing: startEditingProject,
+    saveEditing: saveEditingProject,
+    cancelEditing: cancelEditingProject,
+    setEditingName: setProjectEditingName,
+  } = useProjectEditing();
 
   // Хук управления категориями
   const {
@@ -195,6 +205,41 @@ export function ComponentsSidebar({
 
   const handleCancelEditingSheet = () => {
     cancelEditingSheet();
+  };
+
+  // Обработчики inline редактирования проекта
+  const handleStartEditingProject = (projectId: number, currentName: string) => {
+    startEditingProject(projectId, currentName);
+  };
+
+  const handleSaveProjectName = async () => {
+    const { projectId, newName } = saveEditingProject();
+    if (projectId && newName.trim() && currentProjectId === projectId) {
+      try {
+        const project = projects.find(p => p.id === projectId);
+        if (project) {
+          await apiRequest('PUT', `/api/projects/${projectId}`, {
+            ...project,
+            name: newName.trim()
+          });
+          await queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+          toast({
+            title: "✅ Проект переименован",
+            description: `"${project.name}" → "${newName.trim()}"`,
+          });
+        }
+      } catch (error: any) {
+        toast({
+          title: "❌ Ошибка",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleCancelEditingProject = () => {
+    cancelEditingProject();
   };
 
   // Создаем контент панели
@@ -349,6 +394,11 @@ export function ComponentsSidebar({
                     onSaveSheetName={handleSaveSheetName}
                     onCancelEditSheetName={handleCancelEditingSheet}
                     onEditingSheetNameChange={setEditingName}
+                    projectEditingState={projectEditingState}
+                    onStartEditingProject={handleStartEditingProject}
+                    onSaveProjectName={handleSaveProjectName}
+                    onCancelEditProjectName={handleCancelEditingProject}
+                    onEditingProjectNameChange={setProjectEditingName}
                     allProjects={projects}
                     onMoveSheetToProject={async (sourceProjectId, targetProjectId, sheetId) => {
                       const sourceProject = projects.find(p => p.id === sourceProjectId);

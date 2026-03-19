@@ -56,6 +56,16 @@ export interface EditingState {
 }
 
 /**
+ * Состояние редактирования имени проекта
+ */
+export interface EditingProjectState {
+  /** Идентификатор редактируемого проекта */
+  editingProjectId: number | null;
+  /** Текущее имя редактируемого проекта */
+  editingProjectName: string;
+}
+
+/**
  * Пропсы компонента ProjectCard
  */
 export interface ProjectCardProps {
@@ -107,6 +117,16 @@ export interface ProjectCardProps {
   onCancelEditSheetName: () => void;
   /** Обработчик изменения имени листа при редактировании */
   onEditingSheetNameChange: (name: string) => void;
+  /** Состояние редактирования проекта */
+  projectEditingState?: EditingProjectState;
+  /** Обработчик начала редактирования имени проекта */
+  onStartEditingProject?: (projectId: number, name: string) => void;
+  /** Обработчик сохранения имени проекта */
+  onSaveProjectName?: () => void;
+  /** Обработчик отмены редактирования имени проекта */
+  onCancelEditProjectName?: () => void;
+  /** Обработчик изменения имени проекта при редактировании */
+  onEditingProjectNameChange?: (name: string) => void;
   /** Список всех проектов для dropdown перемещения */
   allProjects?: BotProject[];
   /** Обработчик перемещения листа в другой проект */
@@ -149,6 +169,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onSaveSheetName,
   onCancelEditSheetName,
   onEditingSheetNameChange,
+  projectEditingState,
+  onStartEditingProject,
+  onSaveProjectName,
+  onCancelEditProjectName,
+  onEditingProjectNameChange,
   allProjects = [],
   onMoveSheetToProject,
 }) => {
@@ -162,6 +187,24 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const sheetsInfo = getSheetsInfo(project);
   const nodeCount = getNodeCount(project);
   const projectData = project.data as any;
+
+  /**
+   * Обработчик начала редактирования имени проекта
+   */
+  const handleEditProject = (projectId: number, name: string) => {
+    if (onStartEditingProject) {
+      onStartEditingProject(projectId, name);
+    }
+  };
+
+  /**
+   * Обработчик двойного клика для редактирования имени проекта
+   */
+  const handleProjectDoubleClick = () => {
+    if (onStartEditingProject) {
+      handleEditProject(project.id, project.name);
+    }
+  };
 
   /**
    * Обработчик клика по карточке проекта
@@ -266,9 +309,30 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           <GripVertical className="h-4 xs:h-4.5 w-4 xs:w-4.5" />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-xs xs:text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 break-words leading-tight line-clamp-2">
-            {project.name}
-          </h4>
+          {projectEditingState?.editingProjectId === project.id ? (
+            <Input
+              value={projectEditingState.editingProjectName}
+              onChange={(e) => onEditingProjectNameChange?.(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  onSaveProjectName?.();
+                } else if (e.key === 'Escape') {
+                  onCancelEditProjectName?.();
+                }
+              }}
+              onBlur={() => onSaveProjectName?.()}
+              autoFocus
+              className="text-xs xs:text-sm sm:text-base px-1.5 py-0.5 h-auto font-bold"
+            />
+          ) : (
+            <h4
+              className="text-xs xs:text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 break-words leading-tight line-clamp-2 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              onDoubleClick={handleProjectDoubleClick}
+              title="Двойной клик для редактирования названия"
+            >
+              {project.name}
+            </h4>
+          )}
           {project.description && (
             <p className="text-xs text-slate-600 dark:text-slate-400 break-words line-clamp-1 xs:line-clamp-2 leading-relaxed mt-1">
               {project.description}
