@@ -546,6 +546,7 @@ export default function Editor() {
     handleNodeTypeChange,
     handleNodeIdChange,
     handleNodeMove,
+    handleNodeMoveStart,
     handleNodeMoveEnd
   } = useNodeHandlers({
     nodes,
@@ -1047,6 +1048,7 @@ export default function Editor() {
             onNodeAdd={addNode}
             onNodeDelete={handleNodeDelete}
             onNodeMove={handleNodeMove}
+            onNodeMoveStart={handleNodeMoveStart}
             onNodeMoveEnd={handleNodeMoveEnd}
             onNodesUpdate={updateNodes}
             onUndo={undo}
@@ -1073,6 +1075,7 @@ export default function Editor() {
             onNodeSizesChange={handleNodeSizesChange}
             onActionLog={handleActionLog}
             actionHistory={actionHistory}
+            onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full">
@@ -1303,6 +1306,7 @@ export default function Editor() {
                   onNodeDelete={handleNodeDelete}
                   onNodeDuplicate={handleNodeDuplicate}
                   onNodeMove={handleNodeMove}
+                  onNodeMoveStart={handleNodeMoveStart}
                   onNodeMoveEnd={handleNodeMoveEnd}
                   onNodesUpdate={updateNodes}
                   onUndo={undo}
@@ -1325,6 +1329,7 @@ export default function Editor() {
                   onOpenMobileSidebar={handleOpenMobileSidebar}
                   onActionLog={handleActionLog}
                   actionHistory={actionHistory}
+                  onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">

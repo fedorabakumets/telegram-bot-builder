@@ -30,6 +30,8 @@ interface CanvasContentProps {
   onNodeDuplicate?: (nodeId: string) => void;
   /** Колбэк при перемещении узла */
   onNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
+  /** Колбэк в начале перемещения узла */
+  onNodeMoveStart?: (nodeId: string) => void;
   /** Колбэк в конце перемещения узла */
   onNodeMoveEnd?: (nodeId: string) => void;
   /** Установка флага перетаскивания узла */
@@ -54,6 +56,7 @@ export function CanvasContent({
   onNodeDelete,
   onNodeDuplicate,
   onNodeMove,
+  onNodeMoveStart,
   onNodeMoveEnd,
   setIsNodeBeingDragged,
   onSizeChange
@@ -92,6 +95,9 @@ export function CanvasContent({
           onDuplicate={onNodeDuplicate ? () => onNodeDuplicate(node.id) : undefined}
           onMove={(position) => {
             onNodeMove(node.id, position);
+          }}
+          onMoveStart={() => {
+            onNodeMoveStart?.(node.id);
           }}
           onMoveEnd={() => {
             onNodeMoveEnd?.(node.id);

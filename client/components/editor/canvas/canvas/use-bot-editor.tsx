@@ -40,6 +40,10 @@ export function useBotEditor(initialData?: BotData) {
   // Держим ref актуальным
   historyIndexRef.current = historyIndex;
 
+  /** Ref для синхронного доступа к nodes без stale closure */
+  const nodesRef = useRef(nodes);
+  nodesRef.current = nodes;
+
   /** Объект выбранного узла или null, если ничего не выбрано */
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
 
@@ -52,11 +56,11 @@ export function useBotEditor(initialData?: BotData) {
       return;
     }
 
+    // Читаем через ref чтобы получить актуальные nodes, а не stale closure
     const currentState: HistoryState = {
-      nodes: JSON.parse(JSON.stringify(nodes))
+      nodes: JSON.parse(JSON.stringify(nodesRef.current))
     };
 
-    // Используем ref для синхронного чтения актуального индекса
     const currentIndex = historyIndexRef.current;
 
     setHistory(prev => {
@@ -68,7 +72,7 @@ export function useBotEditor(initialData?: BotData) {
     const newIndex = currentIndex + 1;
     historyIndexRef.current = newIndex;
     setHistoryIndex(newIndex);
-  }, [nodes]);
+  }, []);
 
   /**
    * Отменяет последнее действие, возвращая состояние к предыдущему в истории

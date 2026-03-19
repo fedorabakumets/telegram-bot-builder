@@ -50,6 +50,8 @@ interface CanvasProps {
   onNodeDuplicate?: (nodeId: string) => void;
   /** Колбэк при перемещении узла */
   onNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
+  /** Колбэк в начале перемещения узла (для сохранения в историю) */
+  onNodeMoveStart?: (nodeId: string) => void;
   /** Колбэк в конце перемещения узла (для сохранения в историю) */
   onNodeMoveEnd?: (nodeId: string) => void;
   /** Колбэк при обновлении узлов */
@@ -115,6 +117,8 @@ interface CanvasProps {
   // История действий (передаётся из родителя)
   /** Массив истории действий */
   actionHistory?: Action[];
+  /** Колбэк для удаления записей из внешней истории по id */
+  onActionHistoryRemove?: (ids: Set<string>) => void;
 }
 
 export function Canvas({
@@ -127,6 +131,7 @@ export function Canvas({
   onNodeDelete,
   onNodeDuplicate,
   onNodeMove,
+  onNodeMoveStart,
   onNodeMoveEnd,
   onUndo,
   onRedo,
@@ -149,7 +154,8 @@ export function Canvas({
   canvasVisible,
   onNodeSizesChange,
   onActionLog,
-  actionHistory: externalActionHistory
+  actionHistory: externalActionHistory,
+  onActionHistoryRemove
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -200,14 +206,21 @@ export function Canvas({
 
   // Функция для отмены выбранных действий
   const handleUndoSelected = useCallback(() => {
-    if (selectedActionsForUndo.size > 0 && onUndo) {
-      // Отменяем столько раз, сколько выбранных действий
+    if (selectedActionsForUndo.size === 0) return;
+    if (onUndo) {
       for (let i = 0; i < selectedActionsForUndo.size; i++) {
         onUndo();
       }
-      setSelectedActionsForUndo(new Set());
     }
-  }, [selectedActionsForUndo, onUndo]);
+    // Удаляем выбранные записи из истории
+    if (onActionHistoryRemove) {
+      onActionHistoryRemove(selectedActionsForUndo);
+    } else {
+      // Локальная история
+      setLocalActionHistory(prev => prev.filter(a => !selectedActionsForUndo.has(a.id)));
+    }
+    setSelectedActionsForUndo(new Set());
+  }, [selectedActionsForUndo, onUndo, onActionHistoryRemove]);
 
   // Toggle selection for an action
   const toggleActionSelection = useCallback((actionId: string) => {
@@ -433,6 +446,30 @@ export function Canvas({
     }
     return { x: 400, y: 300 }; // fallback если canvas не найден
   }, [pan, zoom]);
+
+  // Вычисляет canvas-координаты для вставки: из lastClickPosition или центр видимой области
+  const getPastePosition = useCallback(() => {
+    if (canvasRef.current && lastClickPosition.x !== 100 && lastClickPosition.y !== 100) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const screenX = lastClickPosition.x - rect.left;
+      const screenY = lastClickPosition.y - rect.top;
+      // Правильная формула: (screen - pan) / zoom
+      const canvasX = (screenX - clickTransform.pan.x) / (clickTransform.zoom / 100);
+      const canvasY = (screenY - clickTransform.pan.y) / (clickTransform.zoom / 100);
+      // Проверяем что координаты в разумных пределах видимой области
+      const scrollContainer = canvasRef.current.parentElement;
+      const vw = scrollContainer ? scrollContainer.clientWidth : window.innerWidth;
+      const vh = scrollContainer ? scrollContainer.clientHeight : window.innerHeight;
+      const visibleMinX = -clickTransform.pan.x / (clickTransform.zoom / 100);
+      const visibleMinY = -clickTransform.pan.y / (clickTransform.zoom / 100);
+      const visibleMaxX = visibleMinX + vw / (clickTransform.zoom / 100);
+      const visibleMaxY = visibleMinY + vh / (clickTransform.zoom / 100);
+      if (canvasX >= visibleMinX && canvasX <= visibleMaxX && canvasY >= visibleMinY && canvasY <= visibleMaxY) {
+        return { x: canvasX, y: canvasY };
+      }
+    }
+    return getCenterPosition();
+  }, [lastClickPosition, clickTransform, getCenterPosition]);
 
 
   const fitToContent = useCallback(() => {
@@ -668,8 +705,7 @@ export function Canvas({
               e.preventDefault();
               e.stopPropagation();
               if (onPasteFromClipboard) {
-                const targetX = lastClickPosition.x / (clickTransform.zoom / 100) - clickTransform.pan.x;
-                const targetY = lastClickPosition.y / (clickTransform.zoom / 100) - clickTransform.pan.y;
+                const { x: targetX, y: targetY } = getPastePosition();
                 onPasteFromClipboard(targetX, targetY);
               }
               return;
@@ -753,8 +789,7 @@ export function Canvas({
             e.stopPropagation();
             // Ctrl+V без Shift - вставка из буфера
             if (onPasteFromClipboard) {
-              const targetX = lastClickPosition.x / (clickTransform.zoom / 100) - clickTransform.pan.x;
-              const targetY = lastClickPosition.y / (clickTransform.zoom / 100) - clickTransform.pan.y;
+              const { x: targetX, y: targetY } = getPastePosition();
               onPasteFromClipboard(targetX, targetY);
             }
             break;
@@ -781,7 +816,7 @@ export function Canvas({
       document.removeEventListener('gesturechange', handleGesture);
       document.removeEventListener('gestureend', handleGesture);
     };
-  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction]);
+  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction, getPastePosition, onPasteFromClipboard, onCopyToClipboard]);
 
 
 
@@ -984,6 +1019,7 @@ export function Canvas({
             onNodeDelete={onNodeDelete}
             onNodeDuplicate={onNodeDuplicate}
             onNodeMove={onNodeMove}
+            onNodeMoveStart={onNodeMoveStart}
             onNodeMoveEnd={onNodeMoveEnd}
             setIsNodeBeingDragged={setIsNodeBeingDragged}
             onSizeChange={handleNodeSizeChange}

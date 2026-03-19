@@ -59,22 +59,17 @@ export function ClipboardButtons({
 
   /**
    * Обработчик клика кнопки вставки
-   * Вычисляет координаты вставки так же, как и для Ctrl+V
+   * Вычисляет canvas-координаты из lastClickPosition или вставляет без координат (центр)
    */
   const handlePasteClick = () => {
-    if (onPasteFromClipboard && lastClickPosition && clickTransform) {
-      // Формула: client / zoom - pan (вычитаем отрицательный = добавляем)
-      const targetX = lastClickPosition.x / (clickTransform.zoom / 100) - clickTransform.pan.x;
-      const targetY = lastClickPosition.y / (clickTransform.zoom / 100) - clickTransform.pan.y;
-      console.log('📍 Вставка кнопкой:', {
-        targetX, targetY,
-        click: lastClickPosition,
-        clickTransform,
-        formula: `${lastClickPosition.x} / ${clickTransform.zoom / 100} - ${clickTransform.pan.x} = ${targetX}`
-      });
+    if (!onPasteFromClipboard) return;
+    if (lastClickPosition && clickTransform) {
+      // Правильная формула: (screen - pan) / zoom
+      const targetX = (lastClickPosition.x - clickTransform.pan.x) / (clickTransform.zoom / 100);
+      const targetY = (lastClickPosition.y - clickTransform.pan.y) / (clickTransform.zoom / 100);
       onPasteFromClipboard(targetX, targetY);
-    } else if (onPasteFromClipboard) {
-      // Fallback без координат
+    } else {
+      // Fallback — pasteFromClipboard сам использует центр видимой области
       onPasteFromClipboard();
     }
   };

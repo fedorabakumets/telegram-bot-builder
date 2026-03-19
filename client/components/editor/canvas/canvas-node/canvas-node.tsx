@@ -45,6 +45,7 @@ interface CanvasNodeProps {
   onDelete?: () => void;
   onDuplicate?: (() => void) | undefined;
   onMove?: (position: { x: number; y: number }) => void;
+  onMoveStart?: () => void;
   onMoveEnd?: () => void;
   zoom?: number;
   pan?: { x: number; y: number };
@@ -88,7 +89,7 @@ interface CanvasNodeProps {
  *
  * @returns {JSX.Element} Компонент узла на холсте
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onMove, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -126,6 +127,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         y: canvasY - node.position.y
       });
       setIsDragging(true);
+      // Сохраняем состояние ДО начала перемещения
+      onMoveStart?.();
       // Уведомляем глобальное состояние о начале перетаскивания
       if (setIsNodeBeingDragged) {
         setIsNodeBeingDragged(true);
@@ -245,6 +248,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     if (distance > 10 && !isTouchDragging) {
       setIsTouchDragging(true);
       setTouchMoved(true);
+      onMoveStart?.();
       if (setIsNodeBeingDragged) {
         setIsNodeBeingDragged(true);
       }

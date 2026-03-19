@@ -30,6 +30,8 @@ interface UseNodeHandlersResult {
   handleNodeIdChange: (oldId: string, newId: string) => void;
   /** Обработчик перемещения узла */
   handleNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
+  /** Обработчик начала перемещения узла (для сохранения в историю ДО изменений) */
+  handleNodeMoveStart: (nodeId: string) => void;
   /** Обработчик окончания перемещения узла */
   handleNodeMoveEnd: (nodeId: string) => void;
 }
@@ -80,12 +82,18 @@ export function useNodeHandlers({
       const currentLayout = updates.keyboardLayout || node?.data.keyboardLayout;
       const buttons = updates.buttons || node?.data.buttons || [];
       updates.keyboardLayout = migrateKeyboardLayout(buttons, currentLayout);
-      // НЕ вызываем fixAutoLayout, чтобы не перезаписывать ручные изменения пользователя
-      // updates.keyboardLayout = fixAutoLayout(updates.keyboardLayout, buttons.length);
     }
 
+    // Логируем только если хотя бы одно поле реально изменилось
     if (node) {
-      logNodeUpdate({ node, onActionLog, updatedFields });
+      const changedFields = updatedFields.filter(key => {
+        const oldVal = (node.data as any)[key];
+        const newVal = updates[key];
+        return JSON.stringify(oldVal) !== JSON.stringify(newVal);
+      });
+      if (changedFields.length > 0) {
+        logNodeUpdate({ node, onActionLog, updatedFields: changedFields });
+      }
     }
 
     saveToHistory();
@@ -191,19 +199,24 @@ export function useNodeHandlers({
     updateNode(nodeId, { position });
   }, [updateNode]);
 
+  // Сохраняем состояние ДО начала перемещения
+  const handleNodeMoveStart = useCallback((_nodeId: string) => {
+    saveToHistory();
+  }, [saveToHistory]);
+
   const handleNodeMoveEnd = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     if (node && onActionLog) {
       onActionLog('move_end', `Перемещён узел "${node.type}" (${node.id})`);
     }
-    saveToHistory();
-  }, [nodes, onActionLog, saveToHistory]);
+  }, [nodes, onActionLog]);
 
   return {
     handleNodeUpdateWithSheets,
     handleNodeTypeChange,
     handleNodeIdChange,
     handleNodeMove,
+    handleNodeMoveStart,
     handleNodeMoveEnd
   };
 }
