@@ -318,6 +318,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   return (
     <div
       draggable
+      data-project-id={project.id}
       onDragStart={handleProjectDragStart}
       onDragOver={(e) => {
         e.preventDefault();
@@ -327,6 +328,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       onDragLeave={onProjectDragLeave}
       onDrop={onProjectDrop}
       onClick={handleCardClick}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
       className={cn(
         'group p-2.5 xs:p-3 sm:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm overflow-hidden',
         isActive
