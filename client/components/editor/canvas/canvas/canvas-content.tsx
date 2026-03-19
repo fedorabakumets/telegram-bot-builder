@@ -1,10 +1,11 @@
 /**
  * @fileoverview Компонент содержимого холста
  *
- * Содержит узлы на холсте редактора.
+ * Содержит узлы на холсте редактора и SVG-слой соединений между ними.
  */
 
 import { CanvasNode } from '@/components/editor/canvas/canvas-node/canvas-node';
+import { ConnectionsLayer } from '@/components/editor/canvas/canvas-node/connections-layer';
 import { Node } from '@/types/bot';
 import { BotDataWithSheets } from '@shared/schema';
 
@@ -38,11 +39,13 @@ interface CanvasContentProps {
   setIsNodeBeingDragged?: (isDragging: boolean) => void;
   /** Колбэк при изменении размера узла */
   onSizeChange: (nodeId: string, size: { width: number; height: number }) => void;
+  /** Карта реальных размеров узлов (из ResizeObserver) */
+  nodeSizes: Map<string, { width: number; height: number }>;
 }
 
 /**
  * Компонент содержимого холста
- * 
+ *
  * @param props - Свойства компонента
  * @returns JSX элемент содержимого холста
  */
@@ -59,49 +62,47 @@ export function CanvasContent({
   onNodeMoveStart,
   onNodeMoveEnd,
   setIsNodeBeingDragged,
-  onSizeChange
+  onSizeChange,
+  nodeSizes,
 }: CanvasContentProps) {
   /**
    * Получение всех узлов со всех листов для отображения связей
    */
-  const getAllNodesFromAllSheets = () => {
+  const getAllNodesFromAllSheets = (): Node[] => {
     if (!botData?.sheets) return [];
     const allNodes: Node[] = [];
     botData.sheets.forEach(sheet => {
-      if (sheet.nodes) {
-        allNodes.push(...sheet.nodes);
-      }
+      if (sheet.nodes) allNodes.push(...sheet.nodes);
     });
     return allNodes;
   };
+
+  const allNodes = botData ? getAllNodesFromAllSheets() : nodes;
 
   return (
     <div
       className="relative origin-top-left transition-transform duration-200 ease-out"
       style={{
         transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
-        transformOrigin: '0 0'
+        transformOrigin: '0 0',
       }}
     >
-      {/* Nodes */}
+      {/* SVG-слой соединений — рисуется под нодами */}
+      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} />
+
+      {/* Узлы */}
       {nodes.map((node) => (
         <CanvasNode
           key={node.id}
           node={node}
-          allNodes={botData ? getAllNodesFromAllSheets() : nodes}
+          allNodes={allNodes}
           isSelected={selectedNodeId === node.id}
           onClick={() => onNodeSelect(node.id)}
           onDelete={() => onNodeDelete(node.id)}
           onDuplicate={onNodeDuplicate ? () => onNodeDuplicate(node.id) : undefined}
-          onMove={(position) => {
-            onNodeMove(node.id, position);
-          }}
-          onMoveStart={() => {
-            onNodeMoveStart?.(node.id);
-          }}
-          onMoveEnd={() => {
-            onNodeMoveEnd?.(node.id);
-          }}
+          onMove={(position) => onNodeMove(node.id, position)}
+          onMoveStart={() => onNodeMoveStart?.(node.id)}
+          onMoveEnd={() => onNodeMoveEnd?.(node.id)}
           zoom={zoom}
           pan={pan}
           setIsNodeBeingDragged={setIsNodeBeingDragged}

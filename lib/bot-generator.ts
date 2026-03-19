@@ -216,15 +216,21 @@ function generateCodeSections(
     }
   });
 
-  // Фильтрация: только реально существующие узлы
+  // Фильтрация: только реально существующие узлы, не обрабатываемые отдельно в nodeHandlers
   const existingNodeIds = new Set(nodes.map(node => node.id));
+  const nodeTypeById = new Map(nodes.map(node => [node.id, node.type]));
   const filteredReferencedNodeIds = new Set<string>();
   allReferencedNodeIds.forEach(nodeId => {
-    if (existingNodeIds.has(nodeId)) {
-      filteredReferencedNodeIds.add(nodeId);
-    } else {
+    if (!existingNodeIds.has(nodeId)) {
       generatorLogger.debug(`Удалён узел из allReferencedNodeIds: ${nodeId} (не найден в текущих узлах)`);
+      return;
     }
+    const nodeType = nodeTypeById.get(nodeId);
+    if (nodeType && ALREADY_HANDLED_TYPES.has(nodeType)) {
+      generatorLogger.debug(`Удалён узел из allReferencedNodeIds: ${nodeId} (тип ${nodeType} уже обрабатывается в nodeHandlers)`);
+      return;
+    }
+    filteredReferencedNodeIds.add(nodeId);
   });
   allReferencedNodeIds = filteredReferencedNodeIds;
 

@@ -39,16 +39,21 @@ function isNodeEnvironment(): boolean {
 let env: Environment | null = null;
 
 /**
- * Кеш скомпилированных шаблонов
+ * Кеш скомпилированных шаблонов.
+ * В dev режиме кеш отключён — шаблоны читаются с диска при каждом вызове,
+ * что позволяет подхватывать изменения .jinja2 файлов без перезапуска сервера.
  */
 const templateCache = new Map<string, any>();
+const isDev = process.env.NODE_ENV === 'development';
 
 /**
  * Инициализирует окружение Nunjucks
- * Вызывается один раз при первом использовании
+ * Вызывается один раз при первом использовании.
+ * В dev режиме пересоздаётся при каждом вызове renderPartialTemplate
+ * чтобы FileSystemLoader не кешировал пути к шаблонам.
  */
 function initEnvironment(): Environment {
-  if (env) return env;
+  if (env && !isDev) return env;
   
   // Проверяем что мы в Node.js
   if (!isNodeEnvironment()) {
@@ -163,7 +168,12 @@ export function renderPartialTemplate(
     
     let templatePath = partialName;
 
-    // Используем кеш скомпилированных шаблонов
+    // В dev режиме кеш отключён — всегда читаем с диска для hot-reload
+    if (isDev) {
+      return environment.getTemplate(templatePath).render(context);
+    }
+
+    // В production используем кеш скомпилированных шаблонов
     let template = templateCache.get(templatePath);
     if (!template) {
       const compiled = environment.getTemplate(templatePath);

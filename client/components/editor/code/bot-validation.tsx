@@ -29,7 +29,16 @@ export function BotValidation({ botData }: BotValidationProps) {
 
   useEffect(() => {
     const errors: string[] = [];
-    const nodes = (botData as any)?.nodes ?? [];
+    // Поддержка многолистовой структуры (sheets) и простой (nodes)
+    const data = botData as any;
+    let nodes: any[] = [];
+    if (Array.isArray(data?.nodes)) {
+      nodes = data.nodes;
+    } else if (Array.isArray(data?.sheets)) {
+      data.sheets.forEach((sheet: any) => {
+        if (Array.isArray(sheet.nodes)) nodes.push(...sheet.nodes);
+      });
+    }
     const hasStart = nodes.some((n: any) => n.type === 'start');
     if (!hasStart) errors.push('Отсутствует стартовый узел (/start)');
     setValidationResult({ isValid: errors.length === 0, errors });

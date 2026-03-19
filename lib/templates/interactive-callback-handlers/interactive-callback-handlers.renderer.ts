@@ -63,7 +63,7 @@ export function generateInteractiveCallbackHandlers(
     const targetNode = nodes.find((n: any) => n.id === nodeId);
     if (!targetNode) return;
 
-    processedCallbacks.add(`cb_${nodeId}`);
+    processedCallbacks.add(nodeId);
 
     const shortNodeId = String(nodeId).slice(-10).replace(/^_+/, '');
 

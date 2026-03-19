@@ -1023,6 +1023,7 @@ export function Canvas({
             onNodeMoveEnd={onNodeMoveEnd}
             setIsNodeBeingDragged={setIsNodeBeingDragged}
             onSizeChange={handleNodeSizeChange}
+            nodeSizes={nodeSizes}
           />
 
           {/* Drop Zone Hint */}
