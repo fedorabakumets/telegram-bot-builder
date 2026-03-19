@@ -4,7 +4,7 @@
  * @module components/editor/sidebar/components/project-card
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BotProject } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { cn } from '@/utils/utils';
@@ -135,6 +135,8 @@ export interface ProjectCardProps {
   allProjects?: BotProject[];
   /** Обработчик перемещения листа в другой проект */
   onMoveSheetToProject?: (sourceProjectId: number, targetProjectId: number, sheetId: string) => void;
+  /** Обработчик изменения порядка листов внутри проекта */
+  onSheetReorder?: (projectId: number, fromIndex: number, toIndex: number) => void;
   /** Обработчик начала touch перетаскивания проекта */
   onTouchStart?: (e: React.TouchEvent) => void;
   /** Обработчик движения touch перетаскивания проекта */
@@ -188,6 +190,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onEditingProjectNameChange,
   allProjects = [],
   onMoveSheetToProject,
+  onSheetReorder,
   onTouchStart,
   onTouchMove,
   onTouchEnd,
@@ -198,6 +201,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   void onSheetRename;
   void onSheetDragOver;
   void onSheetDrop;
+
+  const [dragOverSheetIndex, setDragOverSheetIndex] = useState<number | null>(null);
+  const [draggingSheetIndex, setDraggingSheetIndex] = useState<number | null>(null);
+  const dragSheetIndexRef = useRef<number | null>(null);
 
   const sheetsInfo = getSheetsInfo(project);
   const nodeCount = getNodeCount(project);
@@ -356,22 +363,29 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     };
   }, [onTouchStart, onTouchMove, onTouchEnd]);
 
+  const isEditingName = projectEditingState?.editingProjectId === project.id;
+
   return (
     <div
       ref={cardRef}
-      draggable
+      draggable={!isEditingName}
       data-project-id={project.id}
       onDragStart={handleProjectDragStart}
       onDragEnd={(e) => {
         onProjectDragEnd?.(e);
       }}
       onDragOver={(e) => {
+        // Если тащим лист внутри этой карточки — не перехватываем
+        if (dragSheetIndexRef.current !== null) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         onProjectDragOver(e);
       }}
       onDragLeave={onProjectDragLeave}
-      onDrop={onProjectDrop}
+      onDrop={(e) => {
+        if (dragSheetIndexRef.current !== null) return;
+        onProjectDrop(e);
+      }}
       onClick={handleCardClick}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
@@ -475,7 +489,34 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             const isDraggedSheet = dragState.draggedSheet?.sheetId === sheetId && dragState.draggedSheet?.projectId === project.id;
 
             return (
-              <div key={sheetId || index} className="flex items-center gap-1 sm:gap-1.5 group/sheet px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md hover:bg-muted/50 transition-colors">
+              <div
+                key={sheetId || index}
+                className={cn(
+                  'flex items-center gap-1 sm:gap-1.5 group/sheet px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md hover:bg-muted/50 transition-colors border-t-2',
+                  dragOverSheetIndex === index && draggingSheetIndex !== index
+                    ? 'border-blue-500'
+                    : 'border-transparent'
+                )}
+                onDragOver={(e) => {
+                  if (dragSheetIndexRef.current !== null) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDragOverSheetIndex(index);
+                  }
+                }}
+                onDragLeave={() => setDragOverSheetIndex(null)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const fromIndex = dragSheetIndexRef.current;
+                  if (fromIndex !== null && fromIndex !== index && onSheetReorder) {
+                    onSheetReorder(project.id, fromIndex, index);
+                  }
+                  setDragOverSheetIndex(null);
+                  setDraggingSheetIndex(null);
+                  dragSheetIndexRef.current = null;
+                }}
+              >
                 {isEditing ? (
                   <Input
                     value={editingState.editingSheetName}
@@ -496,10 +537,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                     draggable
                     onDragStart={(e) => {
                       if (sheetId) {
+                        e.stopPropagation();
+                        dragSheetIndexRef.current = index;
+                        setDraggingSheetIndex(index);
                         onSheetDragStart(e, sheetId);
                       }
                     }}
-                    onDragEnd={onSheetDragLeave}
+                    onDragEnd={(e) => {
+                      e.stopPropagation();
+                      dragSheetIndexRef.current = null;
+                      setDraggingSheetIndex(null);
+                      setDragOverSheetIndex(null);
+                      onSheetDragLeave();
+                    }}
                     className={cn(
                       'text-xs px-1.5 sm:px-2 py-0.5 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center text-center line-clamp-1',
                       isActiveSheet

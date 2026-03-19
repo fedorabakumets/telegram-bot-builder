@@ -231,6 +231,8 @@ export function ComponentsSidebar({
           // Обновляем кэш локально без рефетча — чтобы не менялся порядок
           const updated = projects.map(p => p.id === projectId ? { ...p, name: newName.trim() } : p);
           queryClient.setQueryData(['/api/projects'], updated);
+          // Обновляем кэш конкретного проекта (используется в шапке и других местах)
+          queryClient.setQueryData([`/api/projects/${projectId}`], { ...project, name: newName.trim() });
           toast({
             title: "✅ Проект переименован",
             description: `"${project.name}" → "${newName.trim()}"`,
@@ -457,6 +459,24 @@ export function ComponentsSidebar({
                           description: error.message,
                           variant: "destructive",
                         });
+                      }
+                    }}
+                    onSheetReorder={async (projectId: number, fromIndex: number, toIndex: number) => {
+                      const proj = projects.find(p => p.id === projectId);
+                      if (!proj) return;
+                      const data = proj.data as any;
+                      if (!data?.sheets) return;
+                      const sheets = [...data.sheets];
+                      const [moved] = sheets.splice(fromIndex, 1);
+                      sheets.splice(toIndex, 0, moved);
+                      const newData = { ...data, sheets };
+                      try {
+                        await apiRequest('PUT', `/api/projects/${projectId}`, { data: newData });
+                        const updatedProjects = projects.map(p => p.id === projectId ? { ...p, data: newData } : p);
+                        queryClient.setQueryData(['/api/projects'], updatedProjects);
+                        queryClient.setQueryData([`/api/projects/${projectId}`], { ...proj, data: newData });
+                      } catch (error: any) {
+                        toast({ title: "❌ Ошибка", description: error.message, variant: "destructive" });
                       }
                     }}
                   />
