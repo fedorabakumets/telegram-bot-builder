@@ -72,7 +72,7 @@ export function useTouchGestures({
   /**
    * Вычисление расстояния между двумя точками касания
    */
-  const getTouchDistance = useCallback((touches: React.TouchList) => {
+  const getTouchDistance = useCallback((touches: TouchList) => {
     if (touches.length < 2) return 0;
     const touch1 = touches[0];
     const touch2 = touches[1];
@@ -84,7 +84,7 @@ export function useTouchGestures({
   /**
    * Вычисление центра между двумя касаниями
    */
-  const getTouchCenter = useCallback((touches: React.TouchList) => {
+  const getTouchCenter = useCallback((touches: TouchList) => {
     if (touches.length < 2) return { x: touches[0].clientX, y: touches[0].clientY };
     return {
       x: (touches[0].clientX + touches[1].clientX) / 2,
@@ -93,9 +93,9 @@ export function useTouchGestures({
   }, []);
 
   /**
-   * Обработчик начала touch-события
+   * Обработчик начала touch-события (нативный, для { passive: false })
    */
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  const handleTouchStart = useCallback((e: TouchEvent) => {
     const target = e.target as HTMLElement;
     const isOnNode = target.closest('[data-canvas-node]');
 
@@ -123,9 +123,9 @@ export function useTouchGestures({
   }, [pan, zoom, isNodeBeingDragged, setIsTouchPanning, setTouchStart, setLastTouchPosition, setLastPinchDistance, setInitialPinchZoom, getTouchDistance]);
 
   /**
-   * Обработчик движения touch-события
+   * Обработчик движения touch-события (нативный, для { passive: false })
    */
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  const handleTouchMove = useCallback((e: TouchEvent) => {
     const target = e.target as HTMLElement;
     const isOnNode = target.closest('[data-canvas-node]');
 
@@ -187,9 +187,9 @@ export function useTouchGestures({
   ]);
 
   /**
-   * Обработчик завершения touch-события
+   * Обработчик завершения touch-события (нативный, для { passive: false })
    */
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
     e.preventDefault();
 
     if (e.touches.length === 0) {

@@ -24,6 +24,8 @@ interface CanvasToolbarProps {
   zoom: number;
   /** История действий */
   actionHistory: Action[];
+  /** Доступность отмены действия */
+  canUndo?: boolean;
   /** Доступность повтора действия */
   canRedo?: boolean;
   /** Флаг процесса сохранения */
@@ -94,6 +96,7 @@ export function CanvasToolbar({
   nodes,
   zoom,
   actionHistory,
+  canUndo,
   canRedo,
   isSaving,
   selectedNodeId,
@@ -125,7 +128,7 @@ export function CanvasToolbar({
   handleUndoSelected
 }: CanvasToolbarProps) {
   return (
-    <div className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{ left: 0, right: 0 }}>
+    <div data-canvas-toolbar className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{ left: 0, right: 0 }}>
       <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20 pointer-events-auto">
         <div className="flex items-center canvas-controls overflow-x-auto w-full gap-2 text-sm">
           <div className="flex items-center flex-shrink-0 gap-2">
@@ -144,7 +147,7 @@ export function CanvasToolbar({
 
             {/* Кнопки отмены/повтора */}
             <UndoRedoButtons
-              canUndo={actionHistory.length > 0}
+              canUndo={canUndo ?? actionHistory.length > 0}
               canRedo={canRedo}
               onUndo={onUndo}
               onRedo={onRedo}

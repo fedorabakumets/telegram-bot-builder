@@ -180,7 +180,6 @@ export function Canvas({
 
   // Функция для добавления действия в историю
   const addAction = useCallback((type: Action['type'], description: string) => {
-    console.log('📝 addAction called:', type, description);
     // Если есть внешний обработчик - используем его (централизованное управление)
     if (onActionLog) {
       onActionLog(type, description);
@@ -194,7 +193,6 @@ export function Canvas({
           timestamp: Date.now()
         };
         const updated = [newAction, ...prev].slice(0, 50);
-        console.log('📝 actionHistory updated, now has', updated.length, 'actions');
         return updated;
       });
     }
@@ -427,14 +425,12 @@ export function Canvas({
       const centerY = (containerHeight / 2 - pan.y) / (zoom / 100);
 
       const position = {
-        x: Math.max(50, centerX - 160), // -160 чтобы центрировать узел (половина ширины узла)
-        y: Math.max(50, centerY - 50)   // -50 чтобы центрировать узел (половина высоты узла)
+        x: Math.max(50, centerX - 160),
+        y: Math.max(50, centerY - 50)
       };
 
-      console.log('getCenterPosition:', { containerWidth, containerHeight, pan, zoom, centerX, centerY, position });
       return position;
     }
-    console.log('getCenterPosition: using fallback');
     return { x: 400, y: 300 }; // fallback если canvas не найден
   }, [pan, zoom]);
 
@@ -652,16 +648,8 @@ export function Canvas({
               e.preventDefault();
               e.stopPropagation();
               if (onPasteFromClipboard) {
-                // pan.x может быть отрицательным (когда холст сдвинут вправо)
-                // Формула: client / zoom - pan (вычитаем отрицательный = добавляем)
                 const targetX = lastClickPosition.x / (clickTransform.zoom / 100) - clickTransform.pan.x;
                 const targetY = lastClickPosition.y / (clickTransform.zoom / 100) - clickTransform.pan.y;
-                console.log('📍 Вставка:', {
-                  targetX, targetY,
-                  click: lastClickPosition,
-                  clickTransform,
-                  formula: `${lastClickPosition.x} / ${clickTransform.zoom / 100} - ${clickTransform.pan.x} = ${targetX}`
-                });
                 onPasteFromClipboard(targetX, targetY);
               }
               return;
@@ -949,10 +937,8 @@ export function Canvas({
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     // Сохраняем позицию клика и текущий transform для последующей вставки
-    const clickPos = { x: e.clientX, y: e.clientY };
-    setLastClickPosition(clickPos);
+    setLastClickPosition({ x: e.clientX, y: e.clientY });
     setClickTransform({ pan: { x: pan.x, y: pan.y }, zoom });
-    console.log('🖱️ Клик сохранён:', clickPos, 'transform:', { pan: { x: pan.x, y: pan.y }, zoom });
     
     if (e.target === e.currentTarget) {
       onNodeSelect('');

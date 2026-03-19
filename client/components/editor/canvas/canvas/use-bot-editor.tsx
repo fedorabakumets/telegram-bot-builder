@@ -35,6 +35,10 @@ export function useBotEditor(initialData?: BotData) {
   const [historyIndex, setHistoryIndex] = useState(-1);
   /** Флаг для предотвращения сохранения в историю при операциях undo/redo */
   const isRedoUndoActionRef = useRef(false);
+  /** Ref для синхронного доступа к historyIndex без stale closure */
+  const historyIndexRef = useRef(historyIndex);
+  // Держим ref актуальным
+  historyIndexRef.current = historyIndex;
 
   /** Объект выбранного узла или null, если ничего не выбрано */
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
@@ -52,24 +56,32 @@ export function useBotEditor(initialData?: BotData) {
       nodes: JSON.parse(JSON.stringify(nodes))
     };
 
+    // Используем ref для синхронного чтения актуального индекса
+    const currentIndex = historyIndexRef.current;
+
     setHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1);
+      const newHistory = prev.slice(0, currentIndex + 1);
       newHistory.push(currentState);
       return newHistory.slice(-50);
     });
 
-    setHistoryIndex(prev => prev + 1);
-  }, [nodes, historyIndex]);
+    const newIndex = currentIndex + 1;
+    historyIndexRef.current = newIndex;
+    setHistoryIndex(newIndex);
+  }, [nodes]);
 
   /**
    * Отменяет последнее действие, возвращая состояние к предыдущему в истории
    */
   const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      const prevIndex = historyIndex - 1;
+    const currentIndex = historyIndexRef.current;
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
       const prevState = history[prevIndex];
+      if (!prevState) return;
 
       isRedoUndoActionRef.current = true;
+      historyIndexRef.current = prevIndex;
       setHistoryIndex(prevIndex);
       setSelectedNodeId(null);
       setNodes(prevState.nodes);
@@ -78,17 +90,20 @@ export function useBotEditor(initialData?: BotData) {
         isRedoUndoActionRef.current = false;
       }, 100);
     }
-  }, [history, historyIndex]);
+  }, [history]);
 
   /**
    * Повторяет отмененное действие, переходя к следующему состоянию в истории
    */
   const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const nextIndex = historyIndex + 1;
+    const currentIndex = historyIndexRef.current;
+    if (currentIndex < history.length - 1) {
+      const nextIndex = currentIndex + 1;
       const nextState = history[nextIndex];
+      if (!nextState) return;
 
       isRedoUndoActionRef.current = true;
+      historyIndexRef.current = nextIndex;
       setHistoryIndex(nextIndex);
       setSelectedNodeId(null);
       setNodes(nextState.nodes);
@@ -97,7 +112,7 @@ export function useBotEditor(initialData?: BotData) {
         isRedoUndoActionRef.current = false;
       }, 100);
     }
-  }, [history, historyIndex]);
+  }, [history]);
 
   /** Проверяет, доступна ли операция отмены */
   const canUndo = historyIndex > 0;
@@ -113,6 +128,7 @@ export function useBotEditor(initialData?: BotData) {
         nodes: JSON.parse(JSON.stringify(nodes))
       };
       setHistory([initialState]);
+      historyIndexRef.current = 0;
       setHistoryIndex(0);
     }
   }, [nodes, history.length]);
@@ -381,7 +397,8 @@ export function useBotEditor(initialData?: BotData) {
    * @returns Объект с текущими узлами
    */
   const getBotData = useCallback((): BotData => ({
-    nodes
+    nodes,
+    connections: []
   }), [nodes]);
 
   /**
