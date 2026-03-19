@@ -4,5 +4,4 @@
  */
 
 export * from './media-file-section-header';
-export * from './media-file-section-content';
 export * from './media-file-section';

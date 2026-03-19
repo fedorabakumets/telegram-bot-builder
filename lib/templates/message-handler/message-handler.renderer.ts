@@ -21,7 +21,7 @@ export function generateMessageHandler(params: MessageHandlerTemplateParams): st
  */
 export function nodeToMessageHandlerParams(node: Node): MessageHandlerTemplateParams {
   const safeName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
-  const rawSynonyms = node.data.synonyms;
+  const rawSynonyms = node.data.synonyms as any;
 
   const synonyms: string[] = Array.isArray(rawSynonyms)
     ? rawSynonyms.map((s: string) => s.trim().toLowerCase()).filter(Boolean)

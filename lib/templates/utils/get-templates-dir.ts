@@ -7,7 +7,7 @@
  * Получает абсолютный путь к директории шаблонов
  */
 export function getTemplatesDir(): string {
-  if (typeof window !== 'undefined') {
+  if (typeof (globalThis as any).window !== 'undefined') {
     return '/lib/templates';
   }
   return process.cwd() + '/lib/templates';

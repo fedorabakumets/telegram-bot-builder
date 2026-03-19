@@ -4,22 +4,8 @@
  */
 
 import type { ConditionalRule } from '../utils/conditional-utils';
-
-/**
- * Конфликт правил условных сообщений
- */
-export interface RuleConflict {
-  /** Индекс правила в массиве */
-  ruleIndex: number;
-  /** Тип конфликта */
-  conflictType: 'duplicate' | 'contradiction' | 'unreachable' | 'missing_variables' | 'missing_value';
-  /** Описание проблемы */
-  description: string;
-  /** Серьёзность: warning или error */
-  severity: 'warning' | 'error';
-  /** Рекомендация по исправлению */
-  suggestion: string;
-}
+export type { RuleConflict } from '../utils/conditional-utils';
+export type { ProjectVariable } from '../utils/variables-utils';
 
 /**
  * Пропсы для компонента карточки условного сообщения
@@ -32,33 +18,17 @@ export interface ConditionalMessageCardProps {
   /** ID узла */
   nodeId: string;
   /** Доступные вопросы */
-  availableQuestions: ProjectVariable[];
+  availableQuestions: import('../utils/variables-utils').ProjectVariable[];
   /** Текстовые переменные */
-  textVariables: ProjectVariable[];
+  textVariables: import('../utils/variables-utils').ProjectVariable[];
   /** Функция обновления узла */
   onNodeUpdate: (nodeId: string, updates: Partial<NodeData>) => void;
   /** Конфликты правила */
-  ruleConflicts: RuleConflict[];
+  ruleConflicts: import('../utils/conditional-utils').RuleConflict[];
   /** Есть ли ошибки */
   hasErrors: boolean;
   /** Есть ли предупреждения */
   hasWarnings: boolean;
-}
-
-/**
- * Переменная проекта
- */
-export interface ProjectVariable {
-  /** Имя переменной */
-  name: string;
-  /** ID узла источника */
-  nodeId: string;
-  /** Тип узла источника */
-  nodeType: string;
-  /** Описание переменной */
-  description?: string;
-  /** Тип медиа: "photo", "video", "audio", "document" */
-  mediaType?: string;
 }
 
 /**

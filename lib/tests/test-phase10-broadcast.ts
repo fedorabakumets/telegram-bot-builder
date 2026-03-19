@@ -46,11 +46,6 @@ function addBroadcast(data: Record<string, unknown>) {
   return p;
 }
 
-/** Добавляет broadcast-узел Client API */
-function addBroadcastClient(data: Record<string, unknown>) {
-  return addBroadcast({ broadcastApiType: 'client', ...data });
-}
-
 /** Добавляет broadcast-узел + message-узлы с enableBroadcast */
 function addBroadcastWithMessages(
   broadcastData: Record<string, unknown>,

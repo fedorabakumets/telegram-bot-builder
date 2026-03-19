@@ -22,6 +22,7 @@ function normalizeButtons(buttons: any[]): Button[] {
     id: btn.id || `btn_${Date.now()}`,
     text: btn.text || 'Button',
     action: btn.action || 'goto',
+    buttonType: btn.buttonType ?? 'normal',
     target: btn.target,
     url: btn.url,
     skipDataCollection: btn.skipDataCollection ?? false,

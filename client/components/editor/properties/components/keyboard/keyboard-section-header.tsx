@@ -23,7 +23,6 @@ interface KeyboardSectionHeaderProps {
  * @returns {JSX.Element} Заголовок секции
  */
 export function KeyboardSectionHeader({
-  selectedNode,
   isOpen,
   onToggle
 }: KeyboardSectionHeaderProps) {

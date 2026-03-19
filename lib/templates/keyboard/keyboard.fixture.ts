@@ -3,14 +3,15 @@
  * @module templates/keyboard/keyboard.fixture
  */
 
-import type { KeyboardTemplateParams } from './keyboard.params';
+import type { KeyboardTemplateParams, ButtonWithShortId } from './keyboard.params';
 
 /** Хелпер: создаёт кнопку с обязательными полями по умолчанию */
-function btn(text: string, action: string, opts: Record<string, any> = {}) {
+function btn(text: string, action: ButtonWithShortId['action'], opts: Partial<ButtonWithShortId> = {}): ButtonWithShortId {
   return {
+    id: opts.id ?? `btn_${text.replace(/\s+/g, '_').toLowerCase().slice(0, 10)}`,
     text,
     action,
-    buttonType: 'normal' as const,
+    buttonType: 'normal',
     skipDataCollection: false,
     hideAfterClick: false,
     ...opts,

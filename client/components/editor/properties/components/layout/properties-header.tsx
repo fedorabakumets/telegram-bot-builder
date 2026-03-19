@@ -51,7 +51,15 @@ const nodeTypeNames: Record<Node['type'], string> = {
   promote_user: 'Назначить администратором',
   demote_user: 'Снять с администратора',
   admin_rights: 'Права администратора',
-  broadcast: '📢 Рассылка'
+  broadcast: '📢 Рассылка',
+  photo: 'Фото',
+  video: 'Видео',
+  audio: 'Аудио',
+  document: 'Документ',
+  keyboard: 'Клавиатура',
+  input: 'Ввод',
+  condition: 'Условие',
+  client_auth: 'Авторизация Client API'
 };
 
 /**
@@ -77,7 +85,15 @@ const nodeIcons: Record<Node['type'], string> = {
   promote_user: 'fas fa-user-shield',
   demote_user: 'fas fa-user-minus',
   admin_rights: 'fas fa-crown',
-  broadcast: 'fas fa-bullhorn'
+  broadcast: 'fas fa-bullhorn',
+  photo: 'fas fa-image',
+  video: 'fas fa-video',
+  audio: 'fas fa-music',
+  document: 'fas fa-file',
+  keyboard: 'fas fa-keyboard',
+  input: 'fas fa-keyboard',
+  condition: 'fas fa-code-branch',
+  client_auth: 'fas fa-key'
 };
 
 /**
@@ -103,7 +119,15 @@ const nodeColors: Record<Node['type'], string> = {
   promote_user: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
   demote_user: 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400',
   admin_rights: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-  broadcast: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
+  broadcast: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+  photo: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+  video: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+  audio: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+  document: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
+  keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+  input: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
+  condition: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+  client_auth: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
 };
 
 /**

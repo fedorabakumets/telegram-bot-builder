@@ -5,7 +5,7 @@
 
 import type { MediaSaveVarsTemplateParams } from './media-save-vars.params';
 import { mediaSaveVarsParamsSchema } from './media-save-vars.schema';
-import { renderPartialTemplate } from '../template-renderer';
+import { renderPartialTemplate } from '../../template-renderer';
 
 /**
  * Генерирует Python-код сохранения медиа-переменных.

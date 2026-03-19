@@ -174,7 +174,6 @@ export function useUploadMultipleMedia(projectId: number) {
       defaultDescription,
       isPublic,
       onProgress,
-      onFileProgress
     }: MultipleMediaUploadParams): Promise<MultipleUploadResult> => {
       const formData = new FormData();
 

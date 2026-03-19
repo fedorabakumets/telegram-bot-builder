@@ -31,7 +31,7 @@ interface UsePropertiesPanelMemoReturn {
   /** Конфликты правил */
   detectRuleConflicts: RuleConflict[];
   /** Функция автоматического исправления приоритетов */
-  autoFixPriorities: (conditionalMessages: any[]) => void;
+  autoFixPriorities: (conditionalMessages?: any[]) => void;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
 }
@@ -89,7 +89,7 @@ export function usePropertiesPanelMemo({
     return detectConflicts(selectedNode.data.conditionalMessages);
   }, [selectedNode?.data.conditionalMessages]);
 
-  const autoFixPriorities = (conditionalMessages: any[]): void => {
+  const autoFixPriorities = (conditionalMessages?: any[]): void => {
     if (!conditionalMessages) return;
     // Логика исправления приоритетов
   };

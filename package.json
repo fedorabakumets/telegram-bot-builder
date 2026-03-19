@@ -106,6 +106,7 @@
     "test:navigation": "node run-tests.js --pattern navigation",
     "test:parse-mode": "node run-tests.js --pattern parse-mode",
     "test:skip-data-collection": "node run-tests.js --pattern skip-data-collection",
+    "test:phases": "node run-tests.js --pattern test-phase",
     "test:phase1": "node run-tests.js --pattern test-phase1-text-formatting",
     "test:phase2": "node run-tests.js --pattern test-phase2-commands",
     "test:phase3": "node run-tests.js --pattern test-phase3-keyboards",

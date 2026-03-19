@@ -23,7 +23,7 @@ export interface CoordinateExtractionResult {
 /**
  * Temporary stub for extracting coordinates from URL
  */
-export function extractCoordinatesFromUrl(url: string): CoordinateExtractionResult {
+export function extractCoordinatesFromUrl(_url: string): CoordinateExtractionResult {
   // TODO: Implement coordinate extraction from various map services
   console.warn('extractCoordinatesFromUrl not implemented yet');
   return {
@@ -35,7 +35,7 @@ export function extractCoordinatesFromUrl(url: string): CoordinateExtractionResu
 /**
  * Temporary stub for getting location info
  */
-export async function getLocationInfo(latitude: number, longitude: number): Promise<LocationInfo | null> {
+export async function getLocationInfo(_latitude: number, _longitude: number): Promise<LocationInfo | null> {
   // TODO: Implement reverse geocoding
   console.warn('getLocationInfo not implemented yet');
   return null;

@@ -68,10 +68,10 @@ export function nodeToUserInputParams(node: Node): UserInputTemplateParams {
     skipButtons: (node.data.buttons || [])
       .filter((btn: any) => btn.skipDataCollection === true && btn.target)
       .map((btn: any) => ({ text: btn.text, target: btn.target })),
-    validationType: (node.data.validationType as UserInputTemplateParams['validationType']) ?? 'none',
+    validationType: ((node.data as any).validationType as UserInputTemplateParams['validationType']) ?? 'none',
     minLength: node.data.minLength ?? 0,
     maxLength: node.data.maxLength ?? 0,
-    retryMessage: node.data.retryMessage || 'Пожалуйста, попробуйте еще раз.',
+    retryMessage: (node.data as any).retryMessage || 'Пожалуйста, попробуйте еще раз.',
     successMessage: node.data.successMessage || '',
     saveToDatabase: node.data.saveToDatabase ?? true,
   };

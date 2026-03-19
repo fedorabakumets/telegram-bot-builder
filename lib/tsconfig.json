@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2020"],
+    "baseUrl": "..",
+    "paths": {
+      "@lib/*": ["lib/*"],
+      "@shared/*": ["shared/*"]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "**/*.test.ts", "**/*.fixture.ts"]
+}

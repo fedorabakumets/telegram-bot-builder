@@ -112,7 +112,7 @@ export function hasNodesRequiringSafeEditOrSend(nodes: Node[]): boolean {
       NODE_TYPES.PROMOTE_USER, NODE_TYPES.DEMOTE_USER,
     ];
     const hasMultipleSelection = node.data && node.data.allowMultipleSelection === true;
-    return nodeTypesRequiringSafeEditOrSend.includes(node.type) || hasMultipleSelection;
+    return nodeTypesRequiringSafeEditOrSend.includes(node.type as any) || hasMultipleSelection;
   });
 }
 
@@ -188,10 +188,10 @@ export function hasLocalMediaFiles(nodes: Node[]): boolean {
     const checkLocalPath = (url: string) => url && !url.startsWith('http') && 
       localPaths.some(prefix => url.startsWith(prefix));
     
-    return checkLocalPath(data.imageUrl) ||
-           checkLocalPath(data.videoUrl) ||
-           checkLocalPath(data.audioUrl) ||
-           checkLocalPath(data.documentUrl);
+    return checkLocalPath(data.imageUrl || '') ||
+           checkLocalPath(data.videoUrl || '') ||
+           checkLocalPath(data.audioUrl || '') ||
+           checkLocalPath(data.documentUrl || '');
   });
 }
 

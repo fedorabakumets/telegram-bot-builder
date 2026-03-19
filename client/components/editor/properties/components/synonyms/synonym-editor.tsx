@@ -14,6 +14,7 @@ export interface SynonymEditorProps {
   onUpdate: (synonyms: string[]) => void;
   placeholder?: string;
   description?: string;
+  title?: string;
   allNodesFromAllSheets?: Array<{ node: Node; sheetName: string }>;
   currentNodeId?: string;
 }
@@ -30,7 +31,7 @@ export function SynonymEditor({
   description,
   allNodesFromAllSheets = [],
   currentNodeId
-}: Omit<SynonymEditorProps, 'title'>): JSX.Element {
+}: SynonymEditorProps): JSX.Element {
   const checkDuplicate = (value: string, currentIndex: number): boolean => {
     if (!value.trim()) return false;
     const normalizedValue = value.trim().toLowerCase();

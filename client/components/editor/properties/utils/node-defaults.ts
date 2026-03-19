@@ -245,6 +245,42 @@ export function getNodeDefaults(type: Node['type']): any {
       confirmationText: 'Отправить рассылку всем пользователям?',
       successMessage: '✅ Рассылка отправлена!',
       errorMessage: '❌ Ошибка рассылки'
+    },
+    photo: {
+      messageText: '',
+      keyboardType: 'none',
+      buttons: []
+    },
+    video: {
+      messageText: '',
+      keyboardType: 'none',
+      buttons: []
+    },
+    audio: {
+      messageText: '',
+      keyboardType: 'none',
+      buttons: []
+    },
+    document: {
+      messageText: '',
+      keyboardType: 'none',
+      buttons: []
+    },
+    keyboard: {
+      keyboardType: 'inline',
+      buttons: []
+    },
+    input: {
+      inputType: 'text',
+      collectUserInput: true
+    },
+    condition: {
+      enableConditionalMessages: true,
+      conditionalMessages: []
+    },
+    client_auth: {
+      sessionName: 'user_session',
+      sessionCreated: false
     }
   };
   return defaults[type] || {};

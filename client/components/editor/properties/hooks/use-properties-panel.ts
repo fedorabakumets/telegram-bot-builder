@@ -6,7 +6,6 @@
  * @module hooks/use-properties-panel
  */
 
-import { useMemo } from 'react';
 import type { Node } from '@shared/schema';
 import { usePropertiesPanelState } from './use-properties-panel-state';
 import { usePropertiesPanelMemo } from './use-properties-panel-memo';
@@ -86,7 +85,7 @@ interface UsePropertiesPanelReturn {
     /** Удаление медиа переменной */
     handleMediaVariableRemove: (name: string) => void;
     /** Автоисправление приоритетов */
-    autoFixPriorities: () => void;
+    autoFixPriorities: (conditionalMessages?: any[]) => void;
   };
 }
 
@@ -130,7 +129,7 @@ export function usePropertiesPanel({
     setIsAutoTransitionOpen: stateHooks.setIsAutoTransitionOpen,
     setIsKeyboardSectionOpen: stateHooks.setIsKeyboardSectionOpen,
     setIsConditionalMessagesSectionOpen: stateHooks.setIsConditionalMessagesSectionOpen ?? (() => {}),
-    setIsUserInputSectionOpen: stateHooks.isUserInputSectionOpen ?? (() => {}),
+    setIsUserInputSectionOpen: stateHooks.setIsUserInputSectionOpen ?? (() => {}),
     setDisplayNodeId: stateHooks.setDisplayNodeId
   };
 

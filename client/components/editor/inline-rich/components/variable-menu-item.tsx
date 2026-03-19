@@ -5,9 +5,8 @@
  */
 
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { getMediaIcon, getBadgeText, getNodeInfo } from './variable-display-utils';
-import type { Variable } from '../../../inline-rich/types';
+import { getMediaIcon, getNodeInfo } from './variable-display-utils';
+import type { Variable } from '../types';
 
 /** Пропсы компонента VariableMenuItem */
 interface VariableMenuItemProps {

@@ -13,7 +13,7 @@ import { ResponseOptionsList } from '../common/response-options-list';
 import { InputNavigationGrid } from '../navigation/input-navigation-grid';
 // Временно скрыто: import { AppendVariableToggle } from '../variables/append-variable-toggle';
 import { extractVariables } from '../../utils/variables-utils';
-import type { Node } from '@schema';
+import type { Node } from '@shared/schema';
 import type { Variable } from '../../../inline-rich/types';
 import { useEffect, useMemo } from 'react';
 

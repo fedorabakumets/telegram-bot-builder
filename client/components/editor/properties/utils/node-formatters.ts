@@ -27,7 +27,9 @@ function getNodeTypeLabel(type: Node['type']): string {
     pin_message: 'Закрепить', unpin_message: 'Открепить', delete_message: 'Удалить',
     ban_user: 'Заблокировать', unban_user: 'Разблокировать', mute_user: 'Заглушить',
     unmute_user: 'Включить звук', kick_user: 'Исключить', promote_user: 'Повысить',
-    demote_user: 'Понизить', admin_rights: 'Права админа', broadcast: 'Рассылка'
+    demote_user: 'Понизить', admin_rights: 'Права админа', broadcast: 'Рассылка',
+    photo: 'Фото', video: 'Видео', audio: 'Аудио', document: 'Документ',
+    keyboard: 'Клавиатура', input: 'Ввод', condition: 'Условие', client_auth: 'Авторизация'
   };
   return types[type] || type;
 }

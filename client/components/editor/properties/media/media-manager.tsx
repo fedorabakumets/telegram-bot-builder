@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMediaFiles, useUploadMedia, useDeleteMedia, useUpdateMedia, useIncrementUsage } from "@/components/editor/properties/hooks/use-media";
 import { CameraCapture } from "./camera-capture";
 import type { MediaFile, InsertMediaFile } from "@shared/schema";
-import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Play, Volume2, FileText, Image, AlertCircle, CheckCircle2, Camera, FolderOpen, Zap, Plus } from "lucide-react";
+import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Play, Volume2, FileText, Image, AlertCircle, CheckCircle2, Camera, FolderOpen, Zap } from "lucide-react";
 
 /**
  * Свойства компонента MediaManager
@@ -120,7 +120,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
   /**
    * Все файлы проекта
    */
-  const { data: allFiles, isLoading, error } = useMediaFiles(projectId);
+  const { data: allFiles, isLoading } = useMediaFiles(projectId);
 
   /**
    * Фото файлы проекта

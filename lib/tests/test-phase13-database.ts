@@ -425,7 +425,6 @@ console.log('── Блок E: hasTelegramSettingsTable ───────�
 const TG_VARS = ['tg_phone', 'tg_api_id', 'tg_api_hash', 'tg_session', 'tg_is_active'];
 
 for (const [idx, tgVar] of TG_VARS.entries()) {
-  const letter = String.fromCharCode(48 + idx + 1); // '1'..'5'
   test(`E0${idx + 1}`, `collectUserInput + inputVariable='${tgVar}' → ЕСТЬ user_telegram_settings`, () => {
     const p = makeCleanProject([{
       id: 'start1', type: 'start', position: { x: 0, y: 0 },

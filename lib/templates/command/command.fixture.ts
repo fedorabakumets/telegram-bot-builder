@@ -107,9 +107,9 @@ export const validParamsWithKeyboard: CommandTemplateParams = {
   fallbackMessage: '',
   keyboardType: 'inline',
   buttons: [
-    { text: '📊 Статистика', action: 'goto', target: 'stats', id: 'btn_stats' },
-    { text: '⚙️ Настройки', action: 'goto', target: 'settings', id: 'btn_settings' },
-    { text: '🌐 Сайт', action: 'url', target: 'https://example.com', id: 'btn_site' },
+    { text: '📊 Статистика', action: 'goto', target: 'stats', id: 'btn_stats', buttonType: 'normal' as const, skipDataCollection: false, hideAfterClick: false },
+    { text: '⚙️ Настройки', action: 'goto', target: 'settings', id: 'btn_settings', buttonType: 'normal' as const, skipDataCollection: false, hideAfterClick: false },
+    { text: '🌐 Сайт', action: 'url', target: 'https://example.com', id: 'btn_site', buttonType: 'normal' as const, skipDataCollection: false, hideAfterClick: false },
   ],
   formatMode: 'none',
   imageUrl: '',
@@ -134,8 +134,8 @@ export const validParamsWithSynonyms: CommandTemplateParams = {
   fallbackMessage: '',
   keyboardType: 'reply',
   buttons: [
-    { text: '📖 О боте', action: 'goto', target: 'about', id: 'btn_about' },
-    { text: '📞 Контакты', action: 'goto', target: 'contacts', id: 'btn_contacts' },
+    { text: '📖 О боте', action: 'goto', target: 'about', id: 'btn_about', buttonType: 'normal' as const, skipDataCollection: false, hideAfterClick: false },
+    { text: '📞 Контакты', action: 'goto', target: 'contacts', id: 'btn_contacts', buttonType: 'normal' as const, skipDataCollection: false, hideAfterClick: false },
   ],
   formatMode: 'none',
   imageUrl: '',

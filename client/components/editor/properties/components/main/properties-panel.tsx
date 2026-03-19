@@ -33,6 +33,8 @@ import { MultipleSelectionSettings } from '../questions/multiple-selection-setti
 import { ButtonCard } from '../button-card/button-card';
 // Временно скрыто: import { EmptyConditionalState } from '../conditional/empty-conditional-state';
 // Временно скрыто: import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
+import { EmptyConditionalState } from '../conditional/empty-conditional-state';
+import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
 import { VoiceConfiguration } from '../configuration/voice-configuration';
 import { AnimationConfiguration } from '../configuration/animation-configuration';
@@ -301,7 +303,6 @@ export function PropertiesPanel({
           {selectedNode.type === 'client_auth' && (
             <ClientAuthProperties
               node={selectedNode}
-              onUpdate={onNodeUpdate}
             />
           )}
 
@@ -414,6 +415,7 @@ export function PropertiesPanel({
                               text: '✅ Готово',
                               action: 'complete' as const,
                               target: '',
+                              buttonType: 'complete' as const,
                               skipDataCollection: false,
                               hideAfterClick: false
                             });

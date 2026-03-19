@@ -26,10 +26,7 @@ interface ButtonCardHeaderProps {
  * @returns {JSX.Element} Заголовок карточки
  */
 export function ButtonCardHeader({
-  allowMultipleSelection,
   onDelete,
-  nodeId,
-  onButtonUpdate
 }: ButtonCardHeaderProps) {
   return (
     <div className="flex items-center justify-end gap-2">

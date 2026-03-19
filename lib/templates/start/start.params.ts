@@ -113,4 +113,6 @@ export interface StartTemplateParams {
   // --- Синонимы ---
   /** Синонимы команды /start */
   synonyms?: string[];
+  /** Есть ли переменная {user_ids} в тексте */
+  hasUserIdsVariable?: boolean;
 }

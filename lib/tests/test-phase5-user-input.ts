@@ -43,13 +43,6 @@ function makeBtn(overrides: Record<string, unknown> = {}) {
   };
 }
 
-/** Патчит start-узел (nodes[0]) */
-function patchStart(patch: Record<string, unknown>) {
-  const p = clone(BASE);
-  Object.assign(p.sheets[0].nodes[0].data, patch);
-  return p;
-}
-
 /** Патчит message-узел (nodes[1]) */
 function patchMsg(patch: Record<string, unknown>) {
   const p = clone(BASE);

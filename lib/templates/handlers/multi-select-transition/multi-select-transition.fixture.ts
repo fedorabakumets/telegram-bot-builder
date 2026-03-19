@@ -23,6 +23,7 @@ export const multiSelectTransitionFixture: MultiSelectTransitionTemplateParams =
     {
       id: 'node1',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         keyboardType: 'inline',
         allowMultipleSelection: true,
@@ -32,12 +33,13 @@ export const multiSelectTransitionFixture: MultiSelectTransitionTemplateParams =
     {
       id: 'node2',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         keyboardType: 'none',
         messageText: 'Спасибо за выбор!',
       },
     },
-  ] as Node[],
+  ] as unknown as Node[],
   connections: [],
   indentLevel: '        ',
 };
@@ -56,6 +58,7 @@ export const commandTargetFixture: MultiSelectTransitionTemplateParams = {
     {
       id: 'node1',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         allowMultipleSelection: true,
       },
@@ -63,11 +66,12 @@ export const commandTargetFixture: MultiSelectTransitionTemplateParams = {
     {
       id: 'node2',
       type: 'command',
+      position: { x: 0, y: 0 },
       data: {
         command: 'menu',
       },
     },
-  ] as Node[],
+  ] as unknown as Node[],
   connections: [],
   indentLevel: '        ',
 };
@@ -87,6 +91,7 @@ export const connectionsFixture: MultiSelectTransitionTemplateParams = {
     {
       id: 'node1',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         allowMultipleSelection: true,
       },
@@ -94,12 +99,13 @@ export const connectionsFixture: MultiSelectTransitionTemplateParams = {
     {
       id: 'node2',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         keyboardType: 'none',
         messageText: 'Переход по соединению',
       },
     },
-  ] as Node[],
+  ] as unknown as Node[],
   connections: [{ source: 'node1', target: 'node2' }],
   indentLevel: '        ',
 };
@@ -118,11 +124,12 @@ export const missingTargetFixture: MultiSelectTransitionTemplateParams = {
     {
       id: 'node1',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         allowMultipleSelection: true,
       },
     },
-  ] as Node[],
+  ] as unknown as Node[],
   connections: [],
   indentLevel: '        ',
 };

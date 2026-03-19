@@ -24,13 +24,6 @@ function mutateStartNode(patch: Record<string, unknown>) {
   return project;
 }
 
-/** Мутирует data второго узла (message) */
-function mutateMessageNode(patch: Record<string, unknown>) {
-  const project = deepClone(BASE_PROJECT);
-  Object.assign(project.sheets[0].nodes[1].data, patch);
-  return project;
-}
-
 function generate(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `TestBot_${label}`,

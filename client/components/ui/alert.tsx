@@ -3,9 +3,6 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/utils/utils"
 
-/** Вариант стиля уведомления: "default" или "destructive" */
-type AlertVariant = "default" | "destructive";
-
 /**
  * Варианты стилей для компонента Alert
  *

@@ -27,12 +27,6 @@ function patchNode(nodeIndex: number, patch: Record<string, unknown>) {
   return p;
 }
 
-function addNode(type: string, id: string, data: Record<string, unknown>) {
-  const p = clone(BASE);
-  p.sheets[0].nodes.push({ id, type, position: { x: 0, y: 0 }, data });
-  return p;
-}
-
 function makeBtn(overrides: Record<string, unknown> = {}) {
   return {
     id: `btn_${Math.random().toString(36).slice(2, 8)}`,

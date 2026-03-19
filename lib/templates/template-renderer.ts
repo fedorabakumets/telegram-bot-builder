@@ -30,7 +30,7 @@ import { getTemplatesDir } from './utils/get-templates-dir';
  * Проверяет что код выполняется в Node.js среде
  */
 function isNodeEnvironment(): boolean {
-  return typeof window === 'undefined' && typeof process !== 'undefined';
+  return typeof (globalThis as any).window === 'undefined' && typeof process !== 'undefined';
 }
 
 /**
@@ -41,7 +41,7 @@ let env: Environment | null = null;
 /**
  * Кеш скомпилированных шаблонов
  */
-const templateCache = new Map<string, ReturnType<Environment['getTemplate']>>();
+const templateCache = new Map<string, any>();
 
 /**
  * Инициализирует окружение Nunjucks
@@ -166,8 +166,9 @@ export function renderPartialTemplate(
     // Используем кеш скомпилированных шаблонов
     let template = templateCache.get(templatePath);
     if (!template) {
-      template = environment.getTemplate(templatePath);
-      templateCache.set(templatePath, template);
+      const compiled = environment.getTemplate(templatePath);
+      templateCache.set(templatePath, compiled);
+      return compiled.render(context);
     }
     return template.render(context);
   } catch (error: any) {

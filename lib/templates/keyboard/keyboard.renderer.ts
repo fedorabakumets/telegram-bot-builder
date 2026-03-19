@@ -91,7 +91,7 @@ export function generateKeyboard(params: KeyboardTemplateParams): string {
  */
 export function processInlineButtonNodes(inlineNodes: EnhancedNode[], allReferencedNodeIds: Set<string>): void {
   inlineNodes.forEach(node => {
-    node.data.buttons.forEach((button: { action: string; target: string }) => {
+    node.data.buttons.forEach((button: { action: string; target?: string }) => {
       if (button.action === 'goto' && button.target) {
         allReferencedNodeIds.add(button.target);
       }

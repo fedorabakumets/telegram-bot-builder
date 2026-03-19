@@ -12,6 +12,7 @@ export const replyButtonHandlersFixture: ReplyButtonHandlersTemplateParams = {
     {
       id: 'node1',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         keyboardType: 'reply',
         messageText: 'Выберите опцию:',
@@ -36,6 +37,7 @@ export const replyButtonHandlersFixture: ReplyButtonHandlersTemplateParams = {
     {
       id: 'node2',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         keyboardType: 'none',
         messageText: 'Вы выбрали опцию 1',
@@ -44,12 +46,13 @@ export const replyButtonHandlersFixture: ReplyButtonHandlersTemplateParams = {
     {
       id: 'node3',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         keyboardType: 'none',
         messageText: 'Вы выбрали опцию 2',
       },
     },
-  ] as Node[],
+  ] as unknown as Node[],
   indentLevel: '',
 };
 
@@ -65,13 +68,14 @@ export const noReplyNodesFixture: ReplyButtonHandlersTemplateParams = {
     {
       id: 'node1',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         keyboardType: 'inline',
         messageText: 'Тест',
         buttons: [],
       },
     },
-  ] as Node[],
+  ] as unknown as Node[],
   indentLevel: '',
 };
 
@@ -81,6 +85,7 @@ export const multiSelectFixture: ReplyButtonHandlersTemplateParams = {
     {
       id: 'node1',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         keyboardType: 'reply',
         messageText: 'Выберите интересы:',
@@ -109,11 +114,12 @@ export const multiSelectFixture: ReplyButtonHandlersTemplateParams = {
     {
       id: 'node2',
       type: 'message',
+      position: { x: 0, y: 0 },
       data: {
         keyboardType: 'none',
         messageText: 'Выбор завершен',
       },
     },
-  ] as Node[],
+  ] as unknown as Node[],
   indentLevel: '',
 };

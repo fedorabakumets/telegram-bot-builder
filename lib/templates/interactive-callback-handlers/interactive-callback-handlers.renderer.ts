@@ -29,10 +29,7 @@ export function generateInteractiveCallbackHandlers(
     allReferencedNodeIds,
     allConditionalButtons,
     nodes,
-    allNodeIds,
     connections,
-    userDatabaseEnabled,
-    mediaVariablesMap,
     processNodeButtonsAndGenerateHandlers,
   } = params;
 

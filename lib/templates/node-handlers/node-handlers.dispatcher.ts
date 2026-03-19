@@ -84,8 +84,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         minLength: node.data?.minLength ?? 0,
         maxLength: node.data?.maxLength ?? 0,
         appendVariable: node.data?.appendVariable ?? false,
-        validationType: node.data?.validationType || 'none',
-        retryMessage: node.data?.retryMessage || 'Пожалуйста, попробуйте еще раз.',
+        validationType: (node.data as any)?.validationType || 'none',
+        retryMessage: (node.data as any)?.retryMessage || 'Пожалуйста, попробуйте еще раз.',
         successMessage: node.data?.successMessage || '',
         saveToDatabase: node.data?.saveToDatabase ?? true,
         photoInputVariable: node.data?.photoInputVariable || '',
@@ -102,7 +102,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         conditionalMessages: node.data?.conditionalMessages || [],
         fallbackMessage: node.data?.fallbackMessage,
         synonymEntries: collectSynonymEntries([node]),
-        hasUserIdsVariable: hasUserIdsVar(node.data?.messageText),
+        hasUserIdsVariable: hasUserIdsVar(node.data?.messageText || ''),
         hasHideAfterClickIncoming: nodes.some((n: Node) =>
           (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === node.id)
         ),
@@ -214,9 +214,9 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   });
 
   // Применяем автоматическое добавление комментариев ко всему коду, если включена генерация комментариев
-  const processedCode = enableComments
-    ? processCodeWithAutoComments(codeLines, 'generate-node-handlers.ts')
-    : codeLines;
+  if (enableComments) {
+    processCodeWithAutoComments(codeLines, 'generate-node-handlers.ts');
+  }
 
   // Собираем финальный код из обработанных строк
   return codeLines.join('\n');

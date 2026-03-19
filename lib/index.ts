@@ -16,19 +16,19 @@ export * from './bot-generator/core/add-auto-transition-nodes';
 export * from './bot-generator/core/extract-node-data';
 
 // Conditional logic
-export * from './bot-generator/Conditional';
+// export * from './bot-generator/Conditional'; // module does not exist
 
 // Formatting utilities
 export * from './templates/filters';
 
 // Feature detection
 export { hasCommandButtons } from './templates/filters';
-export { hasConditionalButtons } from './bot-generator/Conditional/hasConditionalButtons';
+// hasConditionalButtons does not exist yet
 // hasInlineButtons и hasMultiSelectNodes экспортируются из './bot-generator/Keyboard'
-export { hasMediaNodes } from './bot-generator/MediaHandler/hasMediaNodes';
+export { hasMediaNodes } from './templates/filters';
 export { hasAutoTransitions } from './templates/filters';
 export { hasInputCollection } from './templates/filters';
-export { hasLocationFeatures } from './bot-generator/map-utils/hasLocationFeatures';
+// hasLocationFeatures does not exist yet
 export { hasNodesRequiringSafeEditOrSend } from './templates/filters';
 
 // Keyboard generators - после миграции на Jinja2
@@ -39,13 +39,13 @@ export * from './templates/keyboard/keyboard.renderer';
 export * from './bot-generator/map-utils';
 
 // Media handlers
-export * from './bot-generator/MediaHandler';
+// export * from './bot-generator/MediaHandler'; // module does not exist
 
 // Message handlers
 export * from './templates/message-handler';
 
 // Project scaffolding
-export * from './bot-generator/scaffolding';
+export * from './scaffolding';
 
 // User management handlers — перенесено в templates/user-handler (Jinja2)
 export { generateUserHandler, generateUserHandlerFromNode, nodeToUserHandlerParams } from './templates/user-handler';

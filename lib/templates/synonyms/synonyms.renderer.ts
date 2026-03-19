@@ -47,7 +47,7 @@ export function collectSynonymEntries(nodes: Node[]): SynonymEntry[] {
           disableNotification: node.data.disableNotification,
         });
 
-      } else if (USER_MANAGEMENT_TYPES.has(node.type)) {
+      } else if (USER_MANAGEMENT_TYPES.has(node.type as any)) {
         entries.push({
           ...base,
           reason: node.data.reason,

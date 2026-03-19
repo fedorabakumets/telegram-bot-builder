@@ -6,7 +6,6 @@
 
 import { MediaVariablesSection } from './media-variables-section';
 import { MessageTextSection } from '../message/message-text-section';
-import { MediaFileSection } from '../media-file/media-file-section';
 import { isManagementNode } from '../../utils/node-constants';
 import type { Node } from '@shared/schema';
 import type { ProjectVariable } from '../../utils/variables-utils';
@@ -54,13 +53,10 @@ export function MessageContentSection({
   mediaVariables,
   attachedMediaVariables,
   isMessageTextOpen,
-  isMediaSectionOpen,
   onMessageTextToggle,
-  onMediaSectionToggle,
   onNodeUpdate,
   onMediaVariableRemove,
   onMediaVariableSelect,
-  projectId
 }: MessageContentSectionProps) {
   if (isManagementNode(selectedNode.type)) {
     return null;

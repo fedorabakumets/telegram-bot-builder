@@ -9,8 +9,8 @@
  */
 export const isLoggingEnabled = (): boolean => {
   // Проверяем localStorage (только в браузере)
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('botcraft-generator-logs') === 'true';
+  if (typeof (globalThis as any).window !== 'undefined') {
+    return (globalThis as any).window.localStorage?.getItem('botcraft-generator-logs') === 'true';
   }
   return false;
 };

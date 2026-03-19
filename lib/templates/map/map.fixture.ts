@@ -38,7 +38,7 @@ export const validParamsRequestLocation: MapTemplateParams = {
   userDatabaseEnabled: true,
   keyboardType: 'reply',
   buttons: [
-    { text: '📍 Отправить геолокацию', action: 'location', target: 'location', id: 'btn_location' },
+    { text: '📍 Отправить геолокацию', action: 'location', target: 'location', id: 'btn_location', buttonType: 'normal' as const, skipDataCollection: false, hideAfterClick: false },
   ],
   enableAutoTransition: false,
   autoTransitionTo: '',
@@ -103,8 +103,8 @@ export const validParamsWithInlineKeyboard: MapTemplateParams = {
   userDatabaseEnabled: false,
   keyboardType: 'inline',
   buttons: [
-    { text: '🗺 Открыть в Яндекс.Картах', action: 'url', target: 'https://yandex.ru/maps', id: 'btn_yandex' },
-    { text: '🗺 Открыть в Google Maps', action: 'url', target: 'https://maps.google.com', id: 'btn_google' },
+    { text: '🗺 Открыть в Яндекс.Картах', action: 'url', target: 'https://yandex.ru/maps', id: 'btn_yandex', buttonType: 'normal' as const, skipDataCollection: false, hideAfterClick: false },
+    { text: '🗺 Открыть в Google Maps', action: 'url', target: 'https://maps.google.com', id: 'btn_google', buttonType: 'normal' as const, skipDataCollection: false, hideAfterClick: false },
   ],
   enableAutoTransition: false,
   autoTransitionTo: '',

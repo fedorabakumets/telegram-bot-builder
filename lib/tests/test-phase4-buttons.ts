@@ -45,13 +45,6 @@ function patchStart(patch: Record<string, unknown>) {
   return p;
 }
 
-/** Патчит message-узел */
-function patchMsg(patch: Record<string, unknown>) {
-  const p = clone(BASE);
-  Object.assign(p.sheets[0].nodes[1].data, patch);
-  return p;
-}
-
 function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `Phase4_${label}`,

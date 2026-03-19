@@ -3,7 +3,6 @@
  * @module components/editor/properties/components/keyboard/keyboard-preset-selector
  */
 
-import React from 'react';
 import {
   Select,
   SelectContent,

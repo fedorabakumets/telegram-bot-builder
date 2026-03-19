@@ -38,16 +38,14 @@ interface KeyboardTypeSelectorProps {
  * @param {KeyboardTypeSelectorProps} props - Пропсы компонента
  * @returns {JSX.Element} Селектор типа клавиатуры
  */
-export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: KeyboardTypeSelectorProps) {
-  const handleKeyboardChange = (checked: boolean, type: string) => {
+export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTypeSelectorProps) {
+  const handleKeyboardChange = (checked: boolean, type: 'reply' | 'inline' | 'none') => {
     const updates: Partial<Node['data']> = {};
     
     if (checked) {
-      // Включаем клавиатуру
       updates.keyboardType = type;
     } else {
-      // Выключаем клавиатуру
-      updates.keyboardType = KEYBOARD_TYPES.NONE;
+      updates.keyboardType = KEYBOARD_TYPES.NONE as 'none';
     }
     
     onNodeUpdate(selectedNode.id, updates);
@@ -62,7 +60,7 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: K
         </label>
         <Switch
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE}
-          onCheckedChange={(checked) => handleKeyboardChange(checked, KEYBOARD_TYPES.INLINE)}
+          onCheckedChange={(checked) => handleKeyboardChange(checked, KEYBOARD_TYPES.INLINE as 'inline')}
         />
       </div>
       {/* Reply Keyboard */}
@@ -72,7 +70,7 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, onToggle }: K
         </label>
         <Switch
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
-          onCheckedChange={(checked) => handleKeyboardChange(checked, KEYBOARD_TYPES.REPLY)}
+          onCheckedChange={(checked) => handleKeyboardChange(checked, KEYBOARD_TYPES.REPLY as 'reply')}
         />
       </div>
     </div>

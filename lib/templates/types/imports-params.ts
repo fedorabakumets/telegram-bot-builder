@@ -25,4 +25,10 @@ export interface ImportsTemplateParams {
   hasDatetimeNodes: boolean;
   /** Есть ли узлы требующие timezone */
   hasTimezoneNodes: boolean;
+  /** Есть ли reply клавиатуры (нужен ReplyKeyboardBuilder, KeyboardButton) */
+  hasReplyKeyboard?: boolean;
+  /** Есть ли локальные медиа файлы (нужен FSInputFile) */
+  hasLocalMediaFiles?: boolean;
+  /** Есть ли команды бота */
+  hasBotCommands?: boolean;
 }

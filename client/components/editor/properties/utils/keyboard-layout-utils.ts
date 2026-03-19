@@ -58,13 +58,11 @@ export function moveButton(layout: KeyboardLayout, buttonId: string, toRow: numb
   
   // Находим и удаляем кнопку из старого места
   let fromRow = -1;
-  let fromIndex = -1;
   
   for (let r = 0; r < newRows.length; r++) {
     const idx = newRows[r].buttonIds.indexOf(buttonId);
     if (idx !== -1) {
       fromRow = r;
-      fromIndex = idx;
       newRows[r].buttonIds.splice(idx, 1);
       break;
     }

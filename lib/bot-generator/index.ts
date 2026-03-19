@@ -59,7 +59,7 @@ export {
   generateReadme,
   generateRequirementsTxt,
   generateEnvFile
-} from './scaffolding';
+} from '../scaffolding';
 
 // Утилиты конвертации и валидации
 export { toEnhancedNode, toEnhancedNodes } from './core/to-enhanced-node';

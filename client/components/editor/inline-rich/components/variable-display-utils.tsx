@@ -5,7 +5,7 @@
  */
 
 import { Image, Video, Music, FileText } from 'lucide-react';
-import type { Variable } from '../../../inline-rich/types';
+import type { Variable } from '../types';
 
 /**
  * Получает иконку для медиа-переменной
