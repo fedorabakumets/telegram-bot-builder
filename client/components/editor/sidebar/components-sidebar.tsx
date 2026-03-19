@@ -23,7 +23,7 @@ import { useDeleteProjectMutation } from './hooks/use-delete-project-mutation';
 import { useSidebarSheetDrag } from './hooks/use-sidebar-sheet-drag';
 import { useProjectEditing } from './hooks/use-project-editing';
 import { createTouchHandlers, registerGlobalTouchHandlers } from './components/sidebar-touch-handlers';
-import { ProjectCard } from './components/project-card';
+import { ProjectCardWrapper } from './components/project-card-wrapper';
 import { ComponentsTab } from './components/components-tab';
 import { SidebarHeader } from './components/sidebar-header';
 import { ImportDialog } from './components/import-dialog';
@@ -341,9 +341,13 @@ export function ComponentsSidebar({
             ) : (
               <div className="space-y-3">
                 {projects.map((project: BotProject) => (
-                  <ProjectCard
+                  <ProjectCardWrapper
                     key={project.id}
                     project={project}
+                    queryClient={queryClient}
+                    setDraggedProject={setDraggedProject}
+                    setDragOverProject={setDragOverProject}
+                    toast={toast}
                     isActive={currentProjectId === project.id}
                     currentProjectId={currentProjectId}
                     activeSheetId={activeSheetId}
@@ -359,8 +363,8 @@ export function ComponentsSidebar({
                       draggedSheet: sheetDragState.draggedSheet,
                       dragOverSheet: sheetDragState.dragOverSheet,
                     }}
-                    onProjectDragStart={(e) => handleProjectDragStart(e, { project, setDraggedSheet, setDraggedProject })}
-                    onProjectDragOver={(e) => {
+                    onProjectDragStart={(e: React.DragEvent) => handleProjectDragStart(e, { project, setDraggedSheet, setDraggedProject })}
+                    onProjectDragOver={(e: React.DragEvent) => {
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
                       handleProjectDragOver(e, project.id, setDragOverProject);
@@ -373,7 +377,7 @@ export function ComponentsSidebar({
                       handleProjectDragLeave(setDragOverProject);
                       setDragOverSheet(null);
                     }}
-                    onProjectDrop={(e) => {
+                    onProjectDrop={(e: React.DragEvent) => {
                       console.log('🎯 Drop on project:', sheetDragState.draggedSheet, projectDragState.draggedProject);
                       if (sheetDragState.draggedSheet) {
                         handleSheetDropOnProject(e, project.id);
@@ -381,7 +385,7 @@ export function ComponentsSidebar({
                         handleProjectDrop(e, { draggedProject: projectDragState.draggedProject, targetProject: project, queryClient, setDraggedProject, setDragOverProject, toast });
                       }
                     }}
-                    onSheetDragStart={(e, sheetId) => {
+                    onSheetDragStart={(e: React.DragEvent, sheetId: string) => {
                       if (sheetId) handleSheetDragStart(e, sheetId, project.id);
                     }}
                     onSheetDragOver={() => {}}
@@ -400,7 +404,7 @@ export function ComponentsSidebar({
                     onCancelEditProjectName={handleCancelEditingProject}
                     onEditingProjectNameChange={setProjectEditingName}
                     allProjects={projects}
-                    onMoveSheetToProject={async (sourceProjectId, targetProjectId, sheetId) => {
+                    onMoveSheetToProject={async (sourceProjectId: number, targetProjectId: number, sheetId: string) => {
                       const sourceProject = projects.find(p => p.id === sourceProjectId);
                       const targetProject = projects.find(p => p.id === targetProjectId);
                       if (!sourceProject || !targetProject) return;

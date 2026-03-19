@@ -4,6 +4,8 @@
  * @module components/editor/sidebar/tests/unit/hooks/use-project-editing.test
  */
 
+/// <reference types="vitest/globals" />
+
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { useProjectEditing } from '../../../hooks/use-project-editing';

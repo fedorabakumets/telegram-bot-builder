@@ -3,6 +3,8 @@
  * Проверяют корректность touch-обработчиков для перетаскивания проектов
  */
 
+/// <reference types="vitest/globals" />
+
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useProjectTouch } from '../../../hooks/use-project-touch';
