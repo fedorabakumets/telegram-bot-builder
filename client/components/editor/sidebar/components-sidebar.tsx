@@ -1,7 +1,7 @@
 import { ComponentDefinition, BotProject } from '@shared/schema';
 import { cn } from '@/utils/utils';
 import { useEffect, useRef } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { parsePythonCodeToJson } from '@lib/bot-generator/format';
 import {
@@ -24,6 +24,7 @@ import { useSidebarImport } from './hooks/use-sidebar-import';
 import { useSidebarTouch } from './hooks/use-sidebar-touch';
 import { useProjectsQuery } from './hooks/use-projects-query';
 import { useCreateProjectMutation } from './hooks/use-create-project-mutation';
+import { useDeleteProjectMutation } from './hooks/use-delete-project-mutation';
 import { createTouchHandlers, registerGlobalTouchHandlers } from './components/sidebar-touch-handlers';
 
 import { Button } from '@/components/ui/button';
@@ -150,61 +151,8 @@ export function ComponentsSidebar({
   // Хук для создания проекта
   const { createProject, isPending: isCreatingProject } = useCreateProjectMutation();
 
-  /**
-   * Мутация для удаления проекта с оптимистичными обновлениями
-   * Использует optimistic updates для мгновенного отклика UI
-   */
-  const deleteProjectMutation = useMutation({
-    mutationFn: (projectId: number) => apiRequest('DELETE', `/api/projects/${projectId}`),
-    onMutate: async (projectId: number) => {
-      // Отменяем текущие запросы для предотвращения race condition
-      await queryClient.cancelQueries({ queryKey: ['/api/projects'] });
-      await queryClient.cancelQueries({ queryKey: ['/api/projects/list'] });
-      await queryClient.cancelQueries({ queryKey: [`/api/projects/${projectId}`] });
-
-      // Сохраняем предыдущие значения для отката
-      const previousProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']);
-      const previousList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']);
-
-      // Оптимистично удаляем проект из кеша
-      if (previousProjects) {
-        const updatedProjects = previousProjects.filter(p => p.id !== projectId);
-        queryClient.setQueryData<BotProject[]>(['/api/projects'], updatedProjects);
-      }
-
-      if (previousList) {
-        const updatedList = previousList.filter(p => p.id !== projectId);
-        queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], updatedList);
-      }
-
-      // Удаляем из кеша конкретный проект
-      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}`] });
-
-      // Возвращаем контекст для отката
-      return { previousProjects, previousList };
-    },
-    onSuccess: async () => {
-      toast({
-        title: "Проект удален",
-        description: "Проект успешно удален",
-      });
-    },
-    onError: (_, __, context) => {
-      // Откатываем изменения при ошибке
-      if (context?.previousProjects) {
-        queryClient.setQueryData(['/api/projects'], context.previousProjects);
-      }
-      if (context?.previousList) {
-        queryClient.setQueryData(['/api/projects/list'], context.previousList);
-      }
-
-      toast({
-        title: "Ошибка удаления",
-        description: "Не удалось удалить проект",
-        variant: "destructive",
-      });
-    }
-  });
+  // Хук для удаления проекта
+  const { deleteProject } = useDeleteProjectMutation();
 
   /**
    * Обработчик создания нового проекта
@@ -601,7 +549,7 @@ export function ComponentsSidebar({
   const handleDeleteProject = (projectId: number) => {
     const project = projects.find(p => p.id === projectId);
     if (project && confirm(`Вы уверены, что хотите удалить проект "${project.name}"? Это действие нельзя отменить.`)) {
-      deleteProjectMutation.mutate(project.id);
+      deleteProject(project.id);
     }
   };
 
