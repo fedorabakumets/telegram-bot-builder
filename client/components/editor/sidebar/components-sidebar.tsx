@@ -1,7 +1,7 @@
 import { ComponentDefinition, BotProject } from '@shared/schema';
 import { cn } from '@/utils/utils';
 import { useEffect, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { parsePythonCodeToJson } from '@lib/bot-generator/format';
 import {
@@ -22,6 +22,7 @@ import { useSidebarEditing } from './hooks/use-sidebar-editing';
 import { useSidebarCategories } from './hooks/use-sidebar-categories';
 import { useSidebarImport } from './hooks/use-sidebar-import';
 import { useSidebarTouch } from './hooks/use-sidebar-touch';
+import { useProjectsQuery } from './hooks/use-projects-query';
 import { createTouchHandlers, registerGlobalTouchHandlers } from './components/sidebar-touch-handlers';
 
 import { Button } from '@/components/ui/button';
@@ -143,11 +144,7 @@ export function ComponentsSidebar({
    * Загрузка списка проектов с сервера
    * Данные всегда считаются устаревшими для немедленного обновления
    */
-  const { data: projects = [], isLoading } = useQuery<BotProject[]>({
-    queryKey: ['/api/projects'],
-    queryFn: () => apiRequest('GET', '/api/projects'),
-    staleTime: 0, // Данные всегда считаются устаревшими для немедленного обновления при рефетче
-  });
+  const { projects, isLoading } = useProjectsQuery();
 
   /**
    * Мутация для создания нового проекта
