@@ -90,7 +90,12 @@ export function ComponentsTab({
                   <div
                     key={component.id}
                     draggable
-                    onDragStart={() => onComponentDrag(component)}
+                    onDragStart={(e) => {
+                      e.dataTransfer.effectAllowed = 'copy';
+                      e.dataTransfer.setData('application/json', JSON.stringify(component));
+                      e.dataTransfer.setData('text/plain', component.type);
+                      onComponentDrag(component);
+                    }}
                     onTouchStart={(e) => onTouchStart(e, component)}
                     onTouchMove={onTouchMove}
                     onTouchEnd={onTouchEnd}

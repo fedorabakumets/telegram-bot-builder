@@ -312,14 +312,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       return;
     }
 
-    // Проверяем, есть ли выделение текста
-    const selection = window.getSelection();
-    if (selection && selection.toString().length > 0) {
-      // Если текст уже выделен, не начинаем drag-and-drop
-      e.preventDefault();
-      return;
-    }
-
     // Вызываем родительский обработчик (он установит dataTransfer и draggedProject)
     onProjectDragStart(e);
   };
