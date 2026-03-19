@@ -16,7 +16,7 @@ global.fetch = vi.fn();
 // Полифилл для TouchEvent в jsdom
 // jsdom не поддерживает TouchEvent по умолчанию
 if (typeof global.TouchEvent === 'undefined') {
-  global.TouchEvent = class TouchEvent extends Event {
+  (global as any).TouchEvent = class TouchEvent extends Event {
     touches: any[] = [];
     changedTouches: any[] = [];
     targetTouches: any[] = [];

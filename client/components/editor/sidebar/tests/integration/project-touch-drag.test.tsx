@@ -161,6 +161,23 @@ const createTouchEvent = (
   return event;
 };
 
+/**
+ * Эмуляция touch события через dispatchEvent
+ * @param element - Элемент для отправки события
+ * @param type - Тип события
+ * @param clientX - Координата X
+ * @param clientY - Координата Y
+ */
+const simulateTouch = (
+  element: Element,
+  type: string,
+  clientX: number,
+  clientY: number
+) => {
+  const touchEvent = createTouchEvent(type, clientX, clientY, element);
+  element.dispatchEvent(touchEvent);
+};
+
 describe('ProjectTouchDrag', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -195,16 +212,14 @@ describe('ProjectTouchDrag', () => {
     const card = container.querySelector('[data-project-id="1"]') as HTMLElement;
     expect(card).toBeInTheDocument();
 
-    // Эмулируем начало касания
-    const touchStartEvent = createTouchEvent('touchstart', 100, 100, card);
-    fireEvent(card, touchStartEvent);
+    // Эмулируем начало касания через dispatchEvent
+    simulateTouch(card, 'touchstart', 100, 100);
 
     // Проверяем, что проект начал перетаскиваться
     expect(setDraggedProject).toHaveBeenCalledWith(project1);
 
     // Эмулируем движение касания (перемещаем на проект 2)
-    const touchMoveEvent = createTouchEvent('touchmove', 150, 150, card);
-    fireEvent(card, touchMoveEvent);
+    simulateTouch(card, 'touchmove', 150, 150);
 
     // Проверяем визуальные эффекты (opacity и transform)
     expect(card.style.opacity).toBe('0.5');
@@ -225,8 +240,7 @@ describe('ProjectTouchDrag', () => {
     const originalElementFromPoint = document.elementFromPoint;
     document.elementFromPoint = vi.fn(() => project2Card);
 
-    const touchEndEvent = createTouchEvent('touchend', 150, 150, card);
-    fireEvent(card, touchEndEvent);
+    simulateTouch(card, 'touchend', 150, 150);
 
     // Восстанавливаем elementFromPoint
     document.elementFromPoint = originalElementFromPoint;

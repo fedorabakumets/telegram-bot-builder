@@ -315,76 +315,43 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     onProjectDragStart(e);
   };
 
-  // Ref для доступа к DOM элементу карточки
+  // Реф для хранения элемента карточки
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Регистрируем DOM обработчики touch событий для поддержки тестов
-  // Используем обработчики на элементе для надёжности
+  // Регистрируем обработчики touch событий напрямую для поддержки тестов
+  // В тестах fireEvent с кастомными событиями не всегда корректно работает с React обработчиками
   useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
+    const element = cardRef.current;
+    if (!element || !onTouchStart || !onTouchMove || !onTouchEnd) return;
 
-    // Обработчик touchstart
-    const handleTouchStart = (e: Event) => {
-      if (onTouchStart) {
-        const touchEvent = e as TouchEvent;
-        // Создаём совместимый объект события для React
-        const reactEvent = {
-          ...touchEvent,
-          currentTarget: card,
-          target: touchEvent.target,
-          preventDefault: () => touchEvent.preventDefault(),
-          stopPropagation: () => touchEvent.stopPropagation(),
-          touches: (touchEvent as any).touches || [],
-          changedTouches: (touchEvent as any).changedTouches || [],
-        } as unknown as React.TouchEvent;
-        onTouchStart(reactEvent);
-      }
+    // Обработчики для кастомных событий (используются в тестах)
+    const handleCustomTouchStart = (e: Event) => {
+      const touchEvent = e as TouchEvent;
+      const reactEvent = touchEvent as unknown as React.TouchEvent;
+      onTouchStart(reactEvent);
     };
 
-    // Обработчик touchmove
-    const handleTouchMove = (e: Event) => {
-      if (onTouchMove) {
-        const touchEvent = e as TouchEvent;
-        const reactEvent = {
-          ...touchEvent,
-          currentTarget: card,
-          target: touchEvent.target,
-          preventDefault: () => touchEvent.preventDefault(),
-          stopPropagation: () => touchEvent.stopPropagation(),
-          touches: (touchEvent as any).touches || [],
-          changedTouches: (touchEvent as any).changedTouches || [],
-        } as unknown as React.TouchEvent;
-        onTouchMove(reactEvent);
-      }
+    const handleCustomTouchMove = (e: Event) => {
+      const touchEvent = e as TouchEvent;
+      const reactEvent = touchEvent as unknown as React.TouchEvent;
+      onTouchMove(reactEvent);
     };
 
-    // Обработчик touchend
-    const handleTouchEnd = (e: Event) => {
-      if (onTouchEnd) {
-        const touchEvent = e as TouchEvent;
-        const reactEvent = {
-          ...touchEvent,
-          currentTarget: card,
-          target: touchEvent.target,
-          preventDefault: () => touchEvent.preventDefault(),
-          stopPropagation: () => touchEvent.stopPropagation(),
-          touches: (touchEvent as any).touches || [],
-          changedTouches: (touchEvent as any).changedTouches || [],
-        } as unknown as React.TouchEvent;
-        onTouchEnd(reactEvent);
-      }
+    const handleCustomTouchEnd = (e: Event) => {
+      const touchEvent = e as TouchEvent;
+      const reactEvent = touchEvent as unknown as React.TouchEvent;
+      onTouchEnd(reactEvent);
     };
 
-    // Регистрируем обработчики на элементе
-    card.addEventListener('touchstart', handleTouchStart, { passive: false });
-    card.addEventListener('touchmove', handleTouchMove, { passive: false });
-    card.addEventListener('touchend', handleTouchEnd, { passive: false });
+    // Регистрируем обработчики для touch событий
+    element.addEventListener('touchstart', handleCustomTouchStart, { passive: true });
+    element.addEventListener('touchmove', handleCustomTouchMove, { passive: false });
+    element.addEventListener('touchend', handleCustomTouchEnd, { passive: true });
 
     return () => {
-      card.removeEventListener('touchstart', handleTouchStart);
-      card.removeEventListener('touchmove', handleTouchMove);
-      card.removeEventListener('touchend', handleTouchEnd);
+      element.removeEventListener('touchstart', handleCustomTouchStart);
+      element.removeEventListener('touchmove', handleCustomTouchMove);
+      element.removeEventListener('touchend', handleCustomTouchEnd);
     };
   }, [onTouchStart, onTouchMove, onTouchEnd]);
 
