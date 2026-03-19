@@ -386,11 +386,54 @@ export function ComponentsSidebar({
                       setDragOverSheet(null);
                     }}
                     onProjectDrop={(e: React.DragEvent) => {
-                      console.log('🎯 Drop on project:', sheetDragState.draggedSheet, projectDragState.draggedProject);
+                      const dragKind = e.dataTransfer.getData('application/x-drag-kind');
+
+                      const draggedProjectIdRaw =
+                        e.dataTransfer.getData('application/x-project-id') || e.dataTransfer.getData('text/plain');
+                      const draggedProjectId = Number(draggedProjectIdRaw);
+                      const draggedProjectFromDataTransfer = Number.isFinite(draggedProjectId)
+                        ? projects.find((p) => p.id === draggedProjectId) ?? null
+                        : null;
+
+                      const draggedProject = projectDragState.draggedProject ?? draggedProjectFromDataTransfer;
+
+                      console.log('🎯 Drop on project:', {
+                        dragKind,
+                        draggedSheet: sheetDragState.draggedSheet,
+                        draggedProject,
+                      });
+
+                      // Явно разделяем типы DnD через dataTransfer,
+                      // чтобы stale state не ломал выбор ветки
+                      if (dragKind === 'sheet') {
+                        handleSheetDropOnProject(e, project.id);
+                        return;
+                      }
+
+                      if (dragKind === 'project' && draggedProject) {
+                        handleProjectDrop(e, {
+                          draggedProject,
+                          targetProject: project,
+                          queryClient,
+                          setDraggedProject,
+                          setDragOverProject,
+                          toast,
+                        });
+                        return;
+                      }
+
+                      // Fallback для старых/нестандартных браузерных сценариев
                       if (sheetDragState.draggedSheet) {
                         handleSheetDropOnProject(e, project.id);
-                      } else if (projectDragState.draggedProject) {
-                        handleProjectDrop(e, { draggedProject: projectDragState.draggedProject, targetProject: project, queryClient, setDraggedProject, setDragOverProject, toast });
+                      } else if (draggedProject) {
+                        handleProjectDrop(e, {
+                          draggedProject,
+                          targetProject: project,
+                          queryClient,
+                          setDraggedProject,
+                          setDragOverProject,
+                          toast,
+                        });
                       }
                     }}
                     onSheetDragStart={(e: React.DragEvent, sheetId: string) => {

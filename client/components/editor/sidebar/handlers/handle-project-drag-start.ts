@@ -37,5 +37,7 @@ export const handleProjectDragStart = (
   setDraggedSheet(null);
   setDraggedProject(project);
   e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('application/x-drag-kind', 'project');
+  e.dataTransfer.setData('application/x-project-id', project.id.toString());
   e.dataTransfer.setData('text/plain', project.id.toString());
 };

@@ -84,6 +84,9 @@ export function useSidebarSheetDrag({
     e.stopPropagation();
     setDraggedSheet({ sheetId, projectId });
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('application/x-drag-kind', 'sheet');
+    e.dataTransfer.setData('application/x-sheet-id', sheetId);
+    e.dataTransfer.setData('application/x-source-project-id', projectId.toString());
     e.dataTransfer.setData('text/plain', sheetId);
   }, [setDraggedSheet]);
 
