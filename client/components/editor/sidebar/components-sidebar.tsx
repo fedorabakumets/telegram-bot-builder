@@ -4,9 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { parsePythonCodeToJson } from '@lib/bot-generator/format';
-import { textMessage } from './massive/messages';
-import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from './massive/commands';
-import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
 import {
   handleProjectDragStart,
   handleProjectDragOver,
@@ -17,6 +14,7 @@ import {
   getNodeCount,
   getSheetsInfo
 } from './handlers';
+import { componentCategories } from './constants';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,25 +92,6 @@ interface ComponentsSidebarProps {
   /** Колбэк для закрытия панели */
   onClose?: () => void;
 }
-
-/**
- * Группировка компонентов по категориям для удобной навигации
- * Разделяет компоненты на логические группы в интерфейсе
- */
-const componentCategories = [
-  {
-    title: 'Сообщения',
-    components: [textMessage]
-  },
-  {
-    title: 'Команды',
-    components: [startCommand, helpCommand, settingsCommand, menuCommand, customCommand]
-  },
-  {
-    title: 'Рассылка',
-    components: [broadcastNode]
-  }
-];
 
 /**
  * Компонент боковой панели с компонентами и управлением проектами
