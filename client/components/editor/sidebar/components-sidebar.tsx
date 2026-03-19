@@ -8,7 +8,7 @@ import {
   handleProjectDrop,
 } from './handlers';
 import { componentCategories } from './constants';
-import type { ComponentsSidebarProps } from './sidebar.types';
+import type { ComponentsSidebarProps } from './types';
 import { useSidebarTabs } from './hooks/use-sidebar-tabs';
 import { useSidebarDragState } from './hooks/use-sidebar-drag-state';
 import { useSidebarEditing } from './hooks/use-sidebar-editing';

@@ -5,16 +5,7 @@
  */
 
 import { useState, useCallback } from 'react';
-
-/**
- * Состояние редактирования листа
- */
-export interface EditingSheetState {
-  /** ID редактируемого листа */
-  editingSheetId: string | null;
-  /** Новое имя листа */
-  editingSheetName: string;
-}
+import type { EditingSheetState } from '../types';
 
 /**
  * Результат работы хука редактирования

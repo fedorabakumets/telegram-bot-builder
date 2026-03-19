@@ -6,9 +6,9 @@
 
 /// <reference types="vitest/globals" />
 
-import type { ComponentsSidebarProps } from '../../../sidebar.types';
+import type { ComponentsSidebarProps } from '../../../types';
 
-describe('sidebar.types', () => {
+describe('types', () => {
   describe('ComponentsSidebarProps', () => {
     it('должен экспортировать интерфейс ComponentsSidebarProps', () => {
       // Проверяем что тип существует (компиляция уже подтверждает это)

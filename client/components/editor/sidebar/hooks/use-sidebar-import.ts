@@ -5,20 +5,7 @@
  */
 
 import { useState, useCallback } from 'react';
-
-/**
- * Состояние импорта проекта
- */
-export interface ImportState {
-  /** Открыт ли диалог импорта */
-  isOpen: boolean;
-  /** JSON текст для импорта */
-  jsonText: string;
-  /** Python текст для импорта */
-  pythonText: string;
-  /** Текст ошибки импорта */
-  error: string;
-}
+import type { ImportState } from '../types';
 
 /**
  * Результат работы хука импорта

@@ -4,7 +4,7 @@
  * @module components/editor/sidebar/components/project-card
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BotProject } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { cn } from '@/utils/utils';
@@ -295,14 +295,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
    */
   const handleProjectDragStart = (e: React.DragEvent) => {
     const target = e.target as HTMLElement;
-    
+
     // Запрещаем drag-and-drop для элементов ввода текста
     const tagName = target.tagName.toLowerCase();
     if (tagName === 'input' || tagName === 'textarea' || target.isContentEditable) {
       e.preventDefault();
       return;
     }
-    
+
     // Проверяем, есть ли выделение текста
     const selection = window.getSelection();
     if (selection && selection.toString().length > 0) {
@@ -310,13 +310,87 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       e.preventDefault();
       return;
     }
-    
+
     // Вызываем родительский обработчик (он установит dataTransfer и draggedProject)
     onProjectDragStart(e);
   };
 
+  // Ref для доступа к DOM элементу карточки
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Регистрируем DOM обработчики touch событий для поддержки тестов
+  // Используем обработчики на элементе для надёжности
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    // Обработчик touchstart
+    const handleTouchStart = (e: Event) => {
+      if (onTouchStart) {
+        const touchEvent = e as TouchEvent;
+        // Создаём совместимый объект события для React
+        const reactEvent = {
+          ...touchEvent,
+          currentTarget: card,
+          target: touchEvent.target,
+          preventDefault: () => touchEvent.preventDefault(),
+          stopPropagation: () => touchEvent.stopPropagation(),
+          touches: (touchEvent as any).touches || [],
+          changedTouches: (touchEvent as any).changedTouches || [],
+        } as unknown as React.TouchEvent;
+        onTouchStart(reactEvent);
+      }
+    };
+
+    // Обработчик touchmove
+    const handleTouchMove = (e: Event) => {
+      if (onTouchMove) {
+        const touchEvent = e as TouchEvent;
+        const reactEvent = {
+          ...touchEvent,
+          currentTarget: card,
+          target: touchEvent.target,
+          preventDefault: () => touchEvent.preventDefault(),
+          stopPropagation: () => touchEvent.stopPropagation(),
+          touches: (touchEvent as any).touches || [],
+          changedTouches: (touchEvent as any).changedTouches || [],
+        } as unknown as React.TouchEvent;
+        onTouchMove(reactEvent);
+      }
+    };
+
+    // Обработчик touchend
+    const handleTouchEnd = (e: Event) => {
+      if (onTouchEnd) {
+        const touchEvent = e as TouchEvent;
+        const reactEvent = {
+          ...touchEvent,
+          currentTarget: card,
+          target: touchEvent.target,
+          preventDefault: () => touchEvent.preventDefault(),
+          stopPropagation: () => touchEvent.stopPropagation(),
+          touches: (touchEvent as any).touches || [],
+          changedTouches: (touchEvent as any).changedTouches || [],
+        } as unknown as React.TouchEvent;
+        onTouchEnd(reactEvent);
+      }
+    };
+
+    // Регистрируем обработчики на элементе
+    card.addEventListener('touchstart', handleTouchStart, { passive: false });
+    card.addEventListener('touchmove', handleTouchMove, { passive: false });
+    card.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    return () => {
+      card.removeEventListener('touchstart', handleTouchStart);
+      card.removeEventListener('touchmove', handleTouchMove);
+      card.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [onTouchStart, onTouchMove, onTouchEnd]);
+
   return (
     <div
+      ref={cardRef}
       draggable
       data-project-id={project.id}
       onDragStart={handleProjectDragStart}

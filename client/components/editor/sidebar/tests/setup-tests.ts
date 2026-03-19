@@ -13,6 +13,33 @@ import { vi } from 'vitest';
 // Глобальный мок для fetch
 global.fetch = vi.fn();
 
+// Полифилл для TouchEvent в jsdom
+// jsdom не поддерживает TouchEvent по умолчанию
+if (typeof global.TouchEvent === 'undefined') {
+  global.TouchEvent = class TouchEvent extends Event {
+    touches: any[] = [];
+    changedTouches: any[] = [];
+    targetTouches: any[] = [];
+    altKey: boolean = false;
+    ctrlKey: boolean = false;
+    shiftKey: boolean = false;
+    metaKey: boolean = false;
+
+    constructor(type: string, eventInitDict?: EventInit & {
+      touches?: any[];
+      changedTouches?: any[];
+      targetTouches?: any[];
+    }) {
+      super(type, eventInitDict);
+      if (eventInitDict) {
+        this.touches = eventInitDict.touches || [];
+        this.changedTouches = eventInitDict.changedTouches || [];
+        this.targetTouches = eventInitDict.targetTouches || [];
+      }
+    }
+  };
+}
+
 // Моки для window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

@@ -145,24 +145,6 @@ export interface ComponentPaletteProps {
 }
 
 /**
- * Пропсы для диалога импорта
- */
-export interface ImportDialogProps {
-  /** Открыт ли диалог */
-  isOpen: boolean;
-  /** Состояние импорта */
-  importState: ImportState;
-  /** Обработчик закрытия диалога */
-  onClose: () => void;
-  /** Обработчик изменения JSON текста */
-  onJsonTextChange: (text: string) => void;
-  /** Обработчик изменения Python текста */
-  onPythonTextChange: (text: string) => void;
-  /** Обработчик импорта */
-  onImport: () => void;
-}
-
-/**
  * Пропсы для управления листами
  */
 export interface SheetManagerProps {
@@ -204,10 +186,84 @@ export interface LayoutControlsProps {
 
 /**
  * Пропсы для основного компонента sidebar
+ * Включает все свойства для управления sidebar, проектами и листами
  */
 export interface ComponentsSidebarProps {
-  /** Текущая активная вкладка */
-  currentTab: 'elements' | 'projects';
-  /** Обработчик изменения вкладки */
-  onTabChange: (tab: 'elements' | 'projects') => void;
+  /** Колбэк при начале перетаскивания компонента */
+  onComponentDrag: (component: ComponentDefinition) => void;
+
+  /** Колбэк при добавлении компонента */
+  onComponentAdd?: (component: ComponentDefinition) => void;
+
+  /** Колбэк при выборе проекта */
+  onProjectSelect?: (projectId: number) => void;
+
+  /** Идентификатор текущего проекта */
+  currentProjectId?: number;
+
+  /** Идентификатор активного листа */
+  activeSheetId?: string | undefined;
+
+  /** Колбэк для переключения видимости холста */
+  onToggleCanvas?: () => void;
+
+  /** Колбэк для переключения видимости заголовка */
+  onToggleHeader?: () => void;
+
+  /** Колбэк для переключения видимости панели свойств */
+  onToggleProperties?: () => void;
+
+  /** Колбэк для показа полного макета */
+  onShowFullLayout?: () => void;
+
+  /** Колбэк для изменения конфигурации макета */
+  onLayoutChange?: (newConfig: any) => void;
+
+  /** Колбэк для перехода к проектам */
+  onGoToProjects?: () => void;
+
+  /** Колбэк для добавления листа */
+  onSheetAdd?: (name: string) => void;
+
+  /** Содержимое заголовка */
+  headerContent?: React.ReactNode;
+
+  /** Содержимое боковой панели */
+  sidebarContent?: React.ReactNode;
+
+  /** Содержимое холста */
+  canvasContent?: React.ReactNode;
+
+  /** Содержимое панели свойств */
+  propertiesContent?: React.ReactNode;
+
+  /** Видимость холста */
+  canvasVisible?: boolean;
+
+  /** Видимость заголовка */
+  headerVisible?: boolean;
+
+  /** Видимость панели свойств */
+  propertiesVisible?: boolean;
+
+  /** Показывать ли кнопки макета */
+  showLayoutButtons?: boolean;
+
+  /** Колбэк для удаления листа */
+  onSheetDelete?: (sheetId: string) => void;
+
+  /** Колбэк для переименования листа */
+  onSheetRename?: (sheetId: string, name: string) => void;
+
+  /** Колбэк для дублирования листа */
+  onSheetDuplicate?: (sheetId: string) => void;
+
+  /** Колбэк для выбора листа */
+  onSheetSelect?: (sheetId: string) => void;
+
+  /** Флаг мобильного режима */
+  isMobile?: boolean;
+
+  /** Колбэк для закрытия панели */
+  onClose?: () => void;
 }
