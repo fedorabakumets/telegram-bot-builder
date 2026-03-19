@@ -23,6 +23,7 @@ import { useSidebarCategories } from './hooks/use-sidebar-categories';
 import { useSidebarImport } from './hooks/use-sidebar-import';
 import { useSidebarTouch } from './hooks/use-sidebar-touch';
 import { useProjectsQuery } from './hooks/use-projects-query';
+import { useCreateProjectMutation } from './hooks/use-create-project-mutation';
 import { createTouchHandlers, registerGlobalTouchHandlers } from './components/sidebar-touch-handlers';
 
 import { Button } from '@/components/ui/button';
@@ -146,64 +147,8 @@ export function ComponentsSidebar({
    */
   const { projects, isLoading } = useProjectsQuery();
 
-  /**
-   * Мутация для создания нового проекта
-   * Создает проект с базовым /start узлом и обновляет кэш
-   */
-  const createProjectMutation = useMutation({
-    mutationFn: () => {
-      const projectCount = projects.length;
-      return apiRequest('POST', '/api/projects', {
-        name: `Новый бот ${projectCount + 1}`,
-        description: '',
-        data: {
-          nodes: [{
-            id: 'start',
-            type: 'start',
-            position: { x: 400, y: 300 }, // Центральная позиция для нового проекта
-            data: {
-              messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
-              keyboardType: 'none',
-              buttons: [],
-              command: '/start',
-              description: 'Запустить бота',
-              showInMenu: true,
-              isPrivateOnly: false,
-              requiresAuth: false,
-              adminOnly: false
-            }
-          }],
-          connections: []
-        }
-      });
-    },
-    onSuccess: async (newProject: BotProject) => {
-      // Немедленно обновляем кэш запросов с новым проектом
-      const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
-      queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
-
-      // Также обновляем кэш списка
-      const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
-      const { data, ...projectWithoutData } = newProject;
-      queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
-
-      toast({
-        title: "Проект создан",
-        description: `Проект "${newProject.name}" успешно создан`,
-      });
-      // Переключаемся на новый проект
-      if (onProjectSelect) {
-        onProjectSelect(newProject.id);
-      }
-    },
-    onError: () => {
-      toast({
-        title: "Ошибка создания",
-        description: "Не удалось создать проект",
-        variant: "destructive",
-      });
-    }
-  });
+  // Хук для создания проекта
+  const { createProject, isPending: isCreatingProject } = useCreateProjectMutation();
 
   /**
    * Мутация для удаления проекта с оптимистичными обновлениями
@@ -266,7 +211,7 @@ export function ComponentsSidebar({
    * Запускает мутацию создания проекта
    */
   const handleCreateProject = () => {
-    createProjectMutation.mutate();
+    createProject({ projectCount: projects.length, onProjectSelect });
   };
 
   /**
@@ -749,7 +694,7 @@ export function ComponentsSidebar({
                     variant="outline"
                     className="h-9 px-3 flex items-center gap-1.5 font-semibold text-xs bg-gradient-to-r from-green-500/10 to-green-400/5 hover:from-green-600/20 hover:to-green-500/15 border-green-400/30 dark:border-green-500/30 hover:border-green-500/50 dark:hover:border-green-400/50 text-green-700 dark:text-green-300 rounded-lg transition-all hover:shadow-md hover:shadow-green-500/20"
                     onClick={handleCreateProject}
-                    disabled={createProjectMutation.isPending}
+                    disabled={isCreatingProject}
                     title="Создать новый проект"
                     data-testid="button-create-project"
                   >
@@ -909,9 +854,9 @@ export function ComponentsSidebar({
                 </div>
                 <h4 className="text-sm font-medium text-foreground mb-2">Нет проектов</h4>
                 <p className="text-xs text-muted-foreground mb-4">Создайте первый проект для начала работы</p>
-                <Button size="default" onClick={handleCreateProject} disabled={createProjectMutation.isPending} className="h-10 px-6">
+                <Button size="default" onClick={handleCreateProject} disabled={isCreatingProject} className="h-10 px-6">
                   <Plus className="h-4 w-4 mr-2" />
-                  {createProjectMutation.isPending ? 'Создание...' : 'Создать проект'}
+                  {isCreatingProject ? 'Создание...' : 'Создать проект'}
                 </Button>
               </div>
             ) : (
