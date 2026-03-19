@@ -22,6 +22,7 @@ import { useSidebarEditing } from './hooks/use-sidebar-editing';
 import { useSidebarCategories } from './hooks/use-sidebar-categories';
 import { useSidebarImport } from './hooks/use-sidebar-import';
 import { useSidebarTouch } from './hooks/use-sidebar-touch';
+import { createTouchHandlers, registerGlobalTouchHandlers } from './components/sidebar-touch-handlers';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -103,12 +104,13 @@ export function ComponentsSidebar({
   } = useSidebarImport();
 
   // Хук управления touch
-  const {
-    touchState,
-    startTouch,
-    endTouch,
-    updateTouchPosition,
-  } = useSidebarTouch();
+  const touchHook = useSidebarTouch();
+
+  // Создаём touch-обработчики
+  const { handleTouchStart, handleTouchMove, handleTouchEnd } = createTouchHandlers({
+    touchHook,
+    onComponentDrag
+  });
 
   // Рефы для импорта файлов
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -130,140 +132,12 @@ export function ComponentsSidebar({
   };
 
   /**
-   * Обработчик начала касания для мобильных устройств
-   * Инициализирует touch-based drag-and-drop
-   * @param e - Событие касания
-   * @param component - Компонент для перетаскивания
-   */
-  const handleTouchStart = (e: React.TouchEvent, component: ComponentDefinition) => {
-    console.log('Touch start on component:', component.name);
-    e.preventDefault();
-    e.stopPropagation();
-
-    const touch = e.touches[0];
-    const element = e.currentTarget as HTMLElement;
-
-    startTouch(component, element);
-    onComponentDrag(component);
-
-    console.log('Touch drag started for:', component.name, {
-      touchPos: { x: touch.clientX, y: touch.clientY },
-      elementRect: element.getBoundingClientRect()
-    });
-  };
-
-  /**
-   * Обработчик движения касания
-   * Отслеживает перемещение пальца по экрану
-   * @param e - Событие движения касания
-   */
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchState.isDragging || !touchState.touchedComponent) return;
-    e.preventDefault();
-    e.stopPropagation();
-    updateTouchPosition(e.touches[0].clientX, e.touches[0].clientY);
-  };
-
-  /**
-   * Обработчик окончания касания
-   * Завершает touch-based drag-and-drop и проверяет попадание на холст
-   * @param e - Событие окончания касания
-   */
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchState.isDragging || !touchState.touchedComponent) {
-      console.log('Touch end ignored - not dragging or no component');
-      return;
-    }
-
-    console.log('Touch end for component:', touchState.touchedComponent.name);
-    const touch = e.changedTouches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-
-    console.log('Touch end position:', { x: touch.clientX, y: touch.clientY });
-    console.log('Element at touch point:', element);
-
-    // Проверяем, попали ли мы на холст или в область холста
-    const canvas = document.querySelector('[data-canvas-drop-zone]');
-    console.log('Canvas element found:', canvas);
-
-    if (canvas && element) {
-      const isInCanvas = canvas.contains(element) || element === canvas ||
-        element.closest('[data-canvas-drop-zone]') === canvas;
-
-      console.log('Is in canvas:', isInCanvas);
-
-      if (isInCanvas) {
-        const canvasRect = canvas.getBoundingClientRect();
-        const dropPosition = {
-          x: touch.clientX - canvasRect.left,
-          y: touch.clientY - canvasRect.top
-        };
-
-        const dropEvent = new CustomEvent('canvas-drop', {
-          detail: {
-            component: touchState.touchedComponent,
-            position: dropPosition
-          }
-        });
-        canvas.dispatchEvent(dropEvent);
-      }
-    }
-
-    endTouch();
-  };
-
-  /**
    * Глобальные touch обработчики для лучшей поддержки мобильных устройств
    * Обеспечивают корректную работу drag-and-drop на всем экране
    */
   useEffect(() => {
-    const handleGlobalTouchMove = (e: TouchEvent) => {
-      if (touchState.isDragging && touchState.touchedComponent) {
-        e.preventDefault();
-      }
-    };
-
-    const handleGlobalTouchEnd = (e: TouchEvent) => {
-      if (!touchState.isDragging || !touchState.touchedComponent) return;
-
-      const touch = e.changedTouches[0];
-      const element = document.elementFromPoint(touch.clientX, touch.clientY);
-      const canvas = document.querySelector('[data-canvas-drop-zone]');
-
-      if (canvas && element) {
-        const isInCanvas = canvas.contains(element) || element === canvas ||
-          element.closest('[data-canvas-drop-zone]') === canvas;
-
-        if (isInCanvas) {
-          const canvasRect = canvas.getBoundingClientRect();
-          const dropPosition = {
-            x: touch.clientX - canvasRect.left,
-            y: touch.clientY - canvasRect.top
-          };
-
-          const dropEvent = new CustomEvent('canvas-drop', {
-            detail: {
-              component: touchState.touchedComponent,
-              position: dropPosition
-            }
-          });
-          canvas.dispatchEvent(dropEvent);
-        }
-      }
-
-      endTouch();
-    };
-
-    if (touchState.isDragging) {
-      document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
-      document.addEventListener('touchend', handleGlobalTouchEnd, { passive: false });
-    }
-
-    return () => {
-      document.removeEventListener('touchmove', handleGlobalTouchMove);
-      document.removeEventListener('touchend', handleGlobalTouchEnd);
-    };
-  }, [touchState.isDragging, touchState.touchedComponent, endTouch]);
+    return registerGlobalTouchHandlers(touchHook.touchState, touchHook.endTouch);
+  }, [touchHook.touchState.isDragging, touchHook.touchState.touchedComponent, touchHook.endTouch]);
 
   /**
    * Загрузка списка проектов с сервера
@@ -1372,7 +1246,7 @@ export function ComponentsSidebar({
                       onTouchStart={(e) => handleTouchStart(e, component)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
-                      className={`component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30 hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40 rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select border border-border/30 hover:border-primary/30 ${touchState.touchedComponent?.id === component.id && touchState.isDragging ? 'opacity-50 scale-95' : ''
+                      className={`component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30 hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40 rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select border border-border/30 hover:border-primary/30 ${touchHook.touchState.touchedComponent?.id === component.id && touchHook.touchState.isDragging ? 'opacity-50 scale-95' : ''
                         }`}
                       data-testid={`component-${component.id}`}
                     >

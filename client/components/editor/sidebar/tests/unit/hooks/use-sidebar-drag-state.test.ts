@@ -4,7 +4,8 @@
  * @module components/editor/sidebar/tests/unit/hooks
  */
 
-import { describe, it, expect } from 'vitest';
+/// <reference types="vitest/globals" />
+
 import { renderHook, act } from '@testing-library/react';
 import { useSidebarDragState } from '../../../hooks/use-sidebar-drag-state';
 import type { BotProject } from '@shared/schema';

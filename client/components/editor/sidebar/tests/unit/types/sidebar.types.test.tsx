@@ -4,7 +4,8 @@
  * @module components/editor/sidebar/tests/unit/types
  */
 
-import { describe, it, expect } from 'vitest';
+/// <reference types="vitest/globals" />
+
 import type { ComponentsSidebarProps } from '../../../sidebar.types';
 
 describe('sidebar.types', () => {

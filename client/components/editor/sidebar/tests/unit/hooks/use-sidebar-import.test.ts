@@ -4,7 +4,8 @@
  * @module components/editor/sidebar/tests/unit/hooks
  */
 
-import { describe, it, expect } from 'vitest';
+/// <reference types="vitest/globals" />
+
 import { renderHook, act } from '@testing-library/react';
 import { useSidebarImport } from '../../../hooks/use-sidebar-import';
 
