@@ -61,7 +61,7 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
   }, [node.data.buttons]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 mb-1">
       <ButtonsPreviewHeader isMultiSelect={isMultiSelect} keyboardType={keyboardType} />
 
       {keyboardType === 'inline' ? (

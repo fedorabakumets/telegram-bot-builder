@@ -13,7 +13,9 @@
  * @property {() => void} [onDelete] - Обработчик удаления
  */
 interface NodeActionsProps {
-  onDuplicate?: () => void;
+  /** Обработчик дублирования с опциональной целевой позицией */
+  onDuplicate?: (targetPosition?: { x: number; y: number }) => void;
+  /** Обработчик удаления */
   onDelete?: () => void;
 }
 

@@ -33,7 +33,7 @@ export interface CanvasContentProps {
   /** Удалить узел */
   onNodeDelete: (id: string) => void;
   /** Дублировать узел */
-  onNodeDuplicate: (id: string) => void;
+  onNodeDuplicate: (id: string, targetPosition?: { x: number; y: number }) => void;
   /** Переместить узел */
   onNodeMove: (id: string, pos: { x: number; y: number }) => void;
   /** Конец перемещения узла */

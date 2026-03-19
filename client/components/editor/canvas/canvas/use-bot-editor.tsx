@@ -339,25 +339,25 @@ export function useBotEditor(initialData?: BotData) {
   }, [normalizeNodeData]);
 
   /**
-   * Создает копию узла с новым ID и смещенной позицией
+   * Создает копию узла с новым ID
    * @param nodeId - ID узла для дублирования
+   * @param targetPosition - Целевая позиция (если не передана — на месте оригинала)
    */
-  const duplicateNode = useCallback((nodeId: string) => {
+  const duplicateNode = useCallback((nodeId: string, targetPosition?: { x: number; y: number }) => {
     const nodeToDuplicate = nodes.find(node => node.id === nodeId);
     if (!nodeToDuplicate) return;
 
-    // Создаем копию узла с новым ID и смещенной позицией
     const duplicatedNode: Node = {
-      ...JSON.parse(JSON.stringify(nodeToDuplicate)), // Глубокое копирование
-      id: generateNewId(nodeId, 'copy'), // Новый уникальный ID
-      position: {
-        x: nodeToDuplicate.position.x + 50, // Смещение вправо
-        y: nodeToDuplicate.position.y + 50  // Смещение вниз
+      ...JSON.parse(JSON.stringify(nodeToDuplicate)),
+      id: generateNewId(nodeId, 'copy'),
+      position: targetPosition ?? {
+        x: nodeToDuplicate.position.x,
+        y: nodeToDuplicate.position.y
       }
     };
 
     setNodes(prev => [...prev, duplicatedNode]);
-    setSelectedNodeId(duplicatedNode.id); // Выбираем скопированный узел
+    setSelectedNodeId(duplicatedNode.id);
   }, [nodes]);
 
   /**
@@ -380,8 +380,8 @@ export function useBotEditor(initialData?: BotData) {
         ...JSON.parse(JSON.stringify(node)), // Глубокое копирование
         id: newId,
         position: {
-          x: node.position.x + 50, // Смещение вправо
-          y: node.position.y + 50  // Смещение вниз
+          x: node.position.x,
+          y: node.position.y
         }
       };
 

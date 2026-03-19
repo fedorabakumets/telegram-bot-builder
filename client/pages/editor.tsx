@@ -797,12 +797,21 @@ export default function Editor() {
     _deleteNode(nodeId);
   }, [_deleteNode, nodes, handleActionLog, saveToHistory]);
 
-  const handleNodeDuplicate = useCallback((nodeId: string) => {
+  /**
+   * Обёртка над duplicateNode с логированием в историю.
+   * Принимает опциональную целевую позицию и передаёт её в duplicateNode,
+   * чтобы дубль появлялся именно там, где пользователь кликнул правой кнопкой
+   * или где находится курсор при нажатии Ctrl+C / Ctrl+D.
+   *
+   * @param nodeId - ID узла для дублирования
+   * @param targetPosition - Целевая позиция в координатах канваса (опционально)
+   */
+  const handleNodeDuplicate = useCallback((nodeId: string, targetPosition?: { x: number; y: number }) => {
     const node = nodes.find(n => n.id === nodeId);
     handleActionLog('duplicate', `Дублирован узел "${node?.type || 'Unknown'}"`);
     // Сохраняем в историю ДО изменений
     saveToHistory();
-    _duplicateNode(nodeId);
+    _duplicateNode(nodeId, targetPosition);
   }, [_duplicateNode, nodes, handleActionLog, saveToHistory]);
 
   // Обработчики кнопок через хук

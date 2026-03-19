@@ -1,6 +1,8 @@
 import { Node } from '@/types/bot';
 import { cn } from '@/utils/utils';
 import { useState, useRef, useEffect } from 'react';
+import { NodeContextMenu } from './context-menu/node-context-menu';
+import { useNodeContextMenu } from './context-menu/use-node-context-menu';
 import { DicePreview } from './dice-preview';
 import { StickerPreview } from './sticker-preview';
 import { VoicePreview } from './voice-preview';
@@ -43,7 +45,16 @@ interface CanvasNodeProps {
   isSelected?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
-  onDuplicate?: (() => void) | undefined;
+  /** Обработчик дублирования узла с опциональной целевой позицией */
+  onDuplicate?: ((targetPosition?: { x: number; y: number }) => void) | undefined;
+  /**
+   * Обработчик дублирования узла через контекстное меню.
+   * Позиция вычисляется в canvas.tsx через getPastePosition() — ту же функцию,
+   * что использует Ctrl+V — поэтому дубль всегда попадает в точку последнего клика.
+   * Если передан этот проп, контекстное меню использует его вместо собственной
+   * формулы конвертации координат.
+   */
+  onDuplicateAtPosition?: () => void;
   onMove?: (position: { x: number; y: number }) => void;
   onMoveStart?: () => void;
   onMoveEnd?: () => void;
@@ -89,10 +100,11 @@ interface CanvasNodeProps {
  *
  * @returns {JSX.Element} Компонент узла на холсте
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
+  const { menu, open: openContextMenu, close: closeContextMenu } = useNodeContextMenu();
   
   // Touch состояние для мобильного перемещения элементов
   const [isTouchDragging, setIsTouchDragging] = useState(false);
@@ -371,6 +383,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       )}
       onClick={!isDragging ? onClick : undefined}
       onMouseDown={handleMouseDown}
+      onContextMenu={openContextMenu}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -392,14 +405,15 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
       {/* Node header */}
       <NodeHeader node={node} onMove={!!onMove} />
-      {/* Message preview */}
-      <MessagePreview node={node} />
 
       {/* Image attachment (старый формат - одиночное изображение) */}
       <ImageAttachment node={node} />
 
       {/* Media attachments (новый формат - несколько файлов) */}
       <MediaAttachmentsPreview node={node} />
+
+      {/* Message preview */}
+      <MessagePreview node={node} />
 
       {/* Media attachment indicator for non-image files */}
       {(node.type === 'message' || node.type === 'command' || node.type === 'start') && !node.data.imageUrl && !node.data.attachedMedia?.length && (node.data.videoUrl || node.data.audioUrl || node.data.documentUrl) && (
@@ -449,14 +463,42 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       <ButtonsPreview node={node} allNodes={allNodes} />
 
       {/* Футер с полным ID узла */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 py-2 rounded-b-2xl bg-gray-100/60 dark:bg-slate-800/80 border-t border-gray-200 dark:border-slate-700">
+      <div className="absolute bottom-0 left-0 right-0 px-4 py-2 rounded-b-2xl bg-slate-700/60 dark:bg-slate-800/90 border-t border-slate-600/40 dark:border-slate-600/60">
         <span
-          className="font-mono text-[10px] text-gray-500 dark:text-slate-400 select-all tracking-tight"
+          className="font-mono text-[10px] text-slate-300 dark:text-slate-300 select-all tracking-tight"
           title="ID узла"
         >
           #{node.id}
         </span>
       </div>
+
+      {/* Контекстное меню по правому клику */}
+      {menu.visible && (
+        <NodeContextMenu
+          position={menu.position}
+          onClose={closeContextMenu}
+          items={[
+            {
+              id: 'duplicate',
+              label: 'Дублировать',
+              icon: 'fas fa-copy',
+              onClick: () => {
+                /**
+                 * Используем onDuplicateAtPosition если он передан — позиция
+                 * вычисляется в canvas.tsx через getPastePosition(), ту же функцию
+                 * что использует Ctrl+V. Это гарантирует идентичное поведение.
+                 * Fallback на onDuplicate без позиции (дубль появится на месте оригинала).
+                 */
+                if (onDuplicateAtPosition) {
+                  onDuplicateAtPosition();
+                } else {
+                  onDuplicate?.();
+                }
+              }
+            }
+          ]}
+        />
+      )}
     </div>
   );
 }

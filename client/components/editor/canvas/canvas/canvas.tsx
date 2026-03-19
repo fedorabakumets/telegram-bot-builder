@@ -47,7 +47,7 @@ interface CanvasProps {
   /** Колбэк при удалении узла */
   onNodeDelete: (nodeId: string) => void;
   /** Колбэк при дублировании узла */
-  onNodeDuplicate?: (nodeId: string) => void;
+  onNodeDuplicate?: (nodeId: string, targetPosition?: { x: number; y: number }) => void;
   /** Колбэк при перемещении узла */
   onNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
   /** Колбэк в начале перемещения узла (для сохранения в историю) */
@@ -640,7 +640,10 @@ export function Canvas({
   });
 
   // Prevent context menu on right-click when using for panning
+  // Не блокируем если событие пришло с узла (у него есть data-canvas-node)
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-canvas-node]')) return;
     e.preventDefault();
   }, []);
 
@@ -767,7 +770,7 @@ export function Canvas({
             if (selectedNodeId && onNodeDuplicate) {
               const node = nodes.find(n => n.id === selectedNodeId);
               addAction('duplicate', `Дублирован узел "${node?.type || 'Unknown'}"`);
-              onNodeDuplicate(selectedNodeId);
+              onNodeDuplicate(selectedNodeId, getPastePosition());
             }
             break;
           case 'd':
@@ -778,7 +781,7 @@ export function Canvas({
             if (selectedNodeId && onNodeDuplicate) {
               const node = nodes.find(n => n.id === selectedNodeId);
               addAction('duplicate', `Дублирован узел "${node?.type || 'Unknown'}"`);
-              onNodeDuplicate(selectedNodeId);
+              onNodeDuplicate(selectedNodeId, getPastePosition());
             }
             break;
           case 'v':
@@ -1018,6 +1021,14 @@ export function Canvas({
             onNodeSelect={onNodeSelect}
             onNodeDelete={onNodeDelete}
             onNodeDuplicate={onNodeDuplicate}
+            onNodeDuplicateAtPosition={onNodeDuplicate ? (nodeId) => {
+              /**
+               * Дублирование через контекстное меню: позиция вычисляется через
+               * getPastePosition() — ту же функцию, что использует Ctrl+V.
+               * Это гарантирует одинаковое поведение обоих способов дублирования.
+               */
+              onNodeDuplicate(nodeId, getPastePosition());
+            } : undefined}
             onNodeMove={onNodeMove}
             onNodeMoveStart={onNodeMoveStart}
             onNodeMoveEnd={onNodeMoveEnd}

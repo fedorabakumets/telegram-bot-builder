@@ -28,7 +28,13 @@ interface CanvasContentProps {
   /** Колбэк при удалении узла */
   onNodeDelete: (nodeId: string) => void;
   /** Колбэк при дублировании узла */
-  onNodeDuplicate?: (nodeId: string) => void;
+  onNodeDuplicate?: (nodeId: string, targetPosition?: { x: number; y: number }) => void;
+  /**
+   * Колбэк для дублирования узла через контекстное меню.
+   * Позиция вычисляется в canvas.tsx через getPastePosition() — ту же функцию,
+   * что использует Ctrl+V — поэтому дубль всегда попадает в точку последнего клика.
+   */
+  onNodeDuplicateAtPosition?: (nodeId: string) => void;
   /** Колбэк при перемещении узла */
   onNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
   /** Колбэк в начале перемещения узла */
@@ -58,6 +64,7 @@ export function CanvasContent({
   onNodeSelect,
   onNodeDelete,
   onNodeDuplicate,
+  onNodeDuplicateAtPosition,
   onNodeMove,
   onNodeMoveStart,
   onNodeMoveEnd,
@@ -99,7 +106,8 @@ export function CanvasContent({
           isSelected={selectedNodeId === node.id}
           onClick={() => onNodeSelect(node.id)}
           onDelete={() => onNodeDelete(node.id)}
-          onDuplicate={onNodeDuplicate ? () => onNodeDuplicate(node.id) : undefined}
+          onDuplicate={onNodeDuplicate ? (targetPosition) => onNodeDuplicate(node.id, targetPosition) : undefined}
+          onDuplicateAtPosition={onNodeDuplicateAtPosition ? () => onNodeDuplicateAtPosition(node.id) : undefined}
           onMove={(position) => onNodeMove(node.id, position)}
           onMoveStart={() => onNodeMoveStart?.(node.id)}
           onMoveEnd={() => onNodeMoveEnd?.(node.id)}
