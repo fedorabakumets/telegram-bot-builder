@@ -8,6 +8,7 @@ import {
   handleProjectDragEnd,
   handleProjectDrop,
   handleProjectClick,
+  handleContainerDragLeave,
 } from './handlers';
 import { componentCategories } from './constants';
 import type { ComponentsSidebarProps } from './types';
@@ -341,7 +342,10 @@ export function ComponentsSidebar({
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div
+                className="space-y-3"
+                onDragLeave={() => handleContainerDragLeave(setDragOverProject, setDragOverSheet)}
+              >
                 {projects.map((project: BotProject) => (
                   <ProjectCardWrapper
                     key={project.id}
