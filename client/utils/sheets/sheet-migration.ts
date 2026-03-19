@@ -61,5 +61,5 @@ export function migrateLegacyData(legacyData: BotData): BotDataWithSheets {
  * @returns `true`, если данные соответствуют новому формату `BotDataWithSheets`, иначе `false`
  */
 export function isNewFormat(data: any): data is BotDataWithSheets {
-  return data && data.version === 2 && Array.isArray(data.sheets);
+  return Boolean(data && data.version === 2 && Array.isArray(data.sheets));
 }

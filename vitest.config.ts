@@ -14,9 +14,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: [
       './client/components/editor/database/dialog/tests/setup-tests.ts',
-      './client/components/editor/sidebar/tests/setup-tests.ts'
+      './client/utils/tests/setup-tests.ts'
     ],
     include: ['client/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules/**'],
     coverage: {
       reporter: ['text', 'json', 'html'],
       include: ['client/components/editor/**'],
