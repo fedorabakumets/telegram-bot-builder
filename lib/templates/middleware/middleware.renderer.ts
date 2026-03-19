@@ -25,6 +25,7 @@ export function generateMessageLoggingCode(
   code += renderPartialTemplate('middleware/answer-with-logging.py.jinja2', {});
   code += renderPartialTemplate('middleware/send-message-with-logging.py.jinja2', {});
   code += renderPartialTemplate('middleware/send-photo-with-logging.py.jinja2', {});
+  code += renderPartialTemplate('middleware/wrap-bot-answer.py.jinja2', {});
   return code;
 }
 

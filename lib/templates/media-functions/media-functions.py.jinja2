@@ -78,7 +78,7 @@ async def register_telegram_photo(message_id: int, file_id: str, bot_token: str,
             file_type=media_type,
             file_name=f"{media_type}_{file_id}",
             file_size=0,
-            mime_type=f"image/{media_type}" if media_type == "photo" else "application/octet-stream"
+            mime_type="image/jpeg" if media_type == "photo" else ("video/mp4" if media_type == "video" else ("audio/mpeg" if media_type == "audio" else "application/octet-stream"))
         )
         if media_result:
             await link_media_to_message(

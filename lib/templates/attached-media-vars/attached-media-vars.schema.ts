@@ -21,6 +21,8 @@ export const attachedMediaVarsParamsSchema = z.object({
   documentUrl: z.string().optional(),
   /** Уровень отступа */
   indentLevel: z.string().optional(),
+  /** Включить сохранение данных пользователя в БД */
+  userDatabaseEnabled: z.boolean().optional(),
 });
 
 export type AttachedMediaVarsParams = z.infer<typeof attachedMediaVarsParamsSchema>;

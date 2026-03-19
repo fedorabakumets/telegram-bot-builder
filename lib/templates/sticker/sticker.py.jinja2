@@ -39,6 +39,12 @@ async def handle_sticker_{{ nodeId|safe_name }}(message: types.Message):
             {%- if mediaCaption %}, caption=caption{%- endif %}
             {%- if disableNotification %}, disable_notification=True{%- endif %}
         )
+        await save_message_to_api(
+            user_id=str(user_id),
+            message_type="bot",
+            message_text="[Стикер]",
+            node_id="{{ nodeId }}"
+        )
         {%- elif stickerUrl %}
         async with aiohttp.ClientSession() as session:
             async with session.get(sticker_url) as resp:
@@ -48,12 +54,24 @@ async def handle_sticker_{{ nodeId|safe_name }}(message: types.Message):
                     {%- if mediaCaption %}, caption=caption{%- endif %}
                     {%- if disableNotification %}, disable_notification=True{%- endif %}
                 )
+                await save_message_to_api(
+                    user_id=str(user_id),
+                    message_type="bot",
+                    message_text="[Стикер]",
+                    node_id="{{ nodeId }}"
+                )
         {%- elif stickerSetName %}
         {# Отправка из набора стикеров #}
         await message.answer_sticker(
             sticker="{{ stickerSetName|e }}"
             {%- if mediaCaption %}, caption=caption{%- endif %}
             {%- if disableNotification %}, disable_notification=True{%- endif %}
+        )
+        await save_message_to_api(
+            user_id=str(user_id),
+            message_type="bot",
+            message_text="[Стикер]",
+            node_id="{{ nodeId }}"
         )
         {%- else %}
         await message.answer("Стикер не настроен")

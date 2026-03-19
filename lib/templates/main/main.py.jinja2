@@ -44,6 +44,7 @@ async def main():
         dp.message.outer_middleware(BotOutgoingLoggingMiddleware())
         _wrap_bot_send_message(bot)
         _wrap_bot_send_photo(bot)
+        _wrap_message_answer(bot)
         {%- if hasInlineButtons %}
         dp.callback_query.middleware(callback_query_logging_middleware)
         {%- endif %}

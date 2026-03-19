@@ -1,12 +1,13 @@
 {#
   Шаблон сохранения медиа-переменных в user_data
 
-  @param {string}  nodeId      — ID узла
-  @param {string}  imageUrl    — URL изображения (опционально)
-  @param {string}  videoUrl    — URL видео (опционально)
-  @param {string}  audioUrl    — URL аудио (опционально)
-  @param {string}  documentUrl — URL документа (опционально)
-  @param {string}  indentLevel — базовый отступ (по умолчанию '                ')
+  @param {string}  nodeId              — ID узла
+  @param {string}  imageUrl            — URL изображения (опционально)
+  @param {string}  videoUrl            — URL видео (опционально)
+  @param {string}  audioUrl            — URL аудио (опционально)
+  @param {string}  documentUrl         — URL документа (опционально)
+  @param {string}  indentLevel         — базовый отступ (по умолчанию '                ')
+  @param {boolean} userDatabaseEnabled — включить сохранение в БД
 #}
 {% set ind = indentLevel or '                ' %}
 {% if imageUrl and imageUrl != 'undefined' %}
@@ -14,26 +15,34 @@
 {{ ind }}user_id = message.from_user.id
 {{ ind }}user_data[user_id] = user_data.get(user_id, {})
 {{ ind }}user_data[user_id]["image_url_{{ nodeId }}"] = "{{ imageUrl }}"
+{% if userDatabaseEnabled %}
 {{ ind }}await update_user_data_in_db(user_id, "image_url_{{ nodeId }}", "{{ imageUrl }}")
+{% endif %}
 {% endif %}
 {% if documentUrl %}
 {{ ind }}# Сохраняем documentUrl в переменную document_url_{{ nodeId }}
 {{ ind }}user_id = message.from_user.id
 {{ ind }}user_data[user_id] = user_data.get(user_id, {})
 {{ ind }}user_data[user_id]["document_url_{{ nodeId }}"] = "{{ documentUrl }}"
+{% if userDatabaseEnabled %}
 {{ ind }}await update_user_data_in_db(user_id, "document_url_{{ nodeId }}", "{{ documentUrl }}")
+{% endif %}
 {% endif %}
 {% if videoUrl %}
 {{ ind }}# Сохраняем videoUrl в переменную video_url_{{ nodeId }}
 {{ ind }}user_id = message.from_user.id
 {{ ind }}user_data[user_id] = user_data.get(user_id, {})
 {{ ind }}user_data[user_id]["video_url_{{ nodeId }}"] = "{{ videoUrl }}"
+{% if userDatabaseEnabled %}
 {{ ind }}await update_user_data_in_db(user_id, "video_url_{{ nodeId }}", "{{ videoUrl }}")
+{% endif %}
 {% endif %}
 {% if audioUrl %}
 {{ ind }}# Сохраняем audioUrl в переменную audio_url_{{ nodeId }}
 {{ ind }}user_id = message.from_user.id
 {{ ind }}user_data[user_id] = user_data.get(user_id, {})
 {{ ind }}user_data[user_id]["audio_url_{{ nodeId }}"] = "{{ audioUrl }}"
+{% if userDatabaseEnabled %}
 {{ ind }}await update_user_data_in_db(user_id, "audio_url_{{ nodeId }}", "{{ audioUrl }}")
+{% endif %}
 {% endif %}

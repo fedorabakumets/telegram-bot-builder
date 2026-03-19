@@ -170,11 +170,23 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
 {%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
     {%- else %}
     {%- if formatMode == 'html' %}
+    {%- if userDatabaseEnabled %}
+    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="HTML")
+    {%- else %}
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+    {%- endif %}
     {%- elif formatMode == 'markdown' %}
+    {%- if userDatabaseEnabled %}
+    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="Markdown")
+    {%- else %}
     await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+    {%- endif %}
+    {%- else %}
+    {%- if userDatabaseEnabled %}
+    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard)
     {%- else %}
     await message.answer(text, reply_markup=keyboard)
+    {%- endif %}
     {%- endif %}
     {%- endif %}
 
@@ -209,11 +221,23 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
 {%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
     {%- else %}
     {%- if formatMode == 'html' %}
+    {%- if userDatabaseEnabled %}
+    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="HTML")
+    {%- else %}
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+    {%- endif %}
     {%- elif formatMode == 'markdown' %}
+    {%- if userDatabaseEnabled %}
+    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="Markdown")
+    {%- else %}
     await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+    {%- endif %}
+    {%- else %}
+    {%- if userDatabaseEnabled %}
+    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard)
     {%- else %}
     await message.answer(text, reply_markup=keyboard)
+    {%- endif %}
     {%- endif %}
     {%- endif %}
 

@@ -67,6 +67,12 @@ async def handle_voice_{{ nodeId|safe_name }}(message: types.Message):
                     {%- if disableNotification %}, disable_notification=True{%- endif %}
                 )
                 {%- endif %}
+                await save_message_to_api(
+                    user_id=str(user_id),
+                    message_type="bot",
+                    message_text="[Голосовое сообщение]",
+                    node_id="{{ nodeId }}"
+                )
     except Exception as e:
         logging.error(f"Ошибка отправки голосового сообщения: {e}")
         await message.answer("Произошла ошибка при отправке голосового сообщения")

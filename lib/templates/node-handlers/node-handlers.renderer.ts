@@ -35,18 +35,19 @@ export function resolveMediaUrls(data: any): {
     return { imageUrl, videoUrl, audioUrl, documentUrl, attachedMediaUrls: rawAttached as string[] };
   }
 
-  // attachedMedia — массив URL-строк: нормализуем
-  const urlStrings = (rawAttached as string[]).filter(u => typeof u === 'string' && u.startsWith('http'));
+  // attachedMedia — массив URL-строк: нормализуем (http и локальные /uploads/)
+  const urlStrings = (rawAttached as string[]).filter(u => typeof u === 'string' && (u.startsWith('http') || u.startsWith('/uploads/')));
   if (urlStrings.length === 0) {
     return { imageUrl, videoUrl, audioUrl, documentUrl, attachedMediaUrls: [] };
   }
 
   // Первый URL определяет основной тип (для caption + keyboard)
   const first = urlStrings[0].toLowerCase();
-  const isVideo = /\.(mp4|mov|avi|mkv|webm)(\?|$)/.test(first);
-  const isAudio = /\.(mp3|ogg|wav|m4a|flac)(\?|$)/.test(first);
-  const isDoc   = /\.(pdf|doc|docx|xls|xlsx|zip|rar|txt|csv)(\?|$)/.test(first);
-  const isPhoto = !isVideo && !isAudio && !isDoc;
+  const isPhoto = /\.(jpg|jpeg|png|webp)(\?|#|$)/.test(first);
+  const isVideo = /\.(mp4|mov|avi|mkv|webm|3gp|flv)(\?|#|$)/.test(first);
+  const isAudio = /\.(mp3|ogg|oga|wav|m4a|flac|aac)(\?|#|$)/.test(first);
+  // Всё что не фото/видео/аудио — документ (включая apk, exe, dmg и любые другие файлы)
+  const isDoc = !isPhoto && !isVideo && !isAudio;
 
   return {
     imageUrl:    isPhoto ? urlStrings[0] : '',

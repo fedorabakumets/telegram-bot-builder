@@ -45,7 +45,6 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
             : '***';
 
         console.log(`[Telegram API] Getting bot info for project ${projectId}, token: ${maskedToken}`);
-        console.log(`[Telegram API] Using undici ProxyAgent`);
 
         const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getMe?_t=${Date.now()}`;
         const startTime = Date.now();
@@ -67,11 +66,7 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
                 ? (fetchError.cause as Error)?.message || fetchError.cause 
                 : 'No cause';
             
-            console.error(`[Telegram API] Failed to get bot info for ${maskedToken}:`);
-            console.error(`  - Error: ${errorMessage}`);
-            console.error(`  - Cause: ${errorCause}`);
-            console.error(`  - Time: ${Date.now() - startTime}ms`);
-            console.error(`  - Possible reasons: Telegram API blocked, DNS failed, network issues`);
+            console.error(`[Telegram API] Failed to get bot info for ${maskedToken}: ${errorMessage} (${Date.now() - startTime}ms)`);
             
             res.status(500).json({
                 message: "Не удалось подключиться к Telegram API",
@@ -81,7 +76,7 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
             return;
         }
 
-        console.log(`[Telegram API] Response received in ${Date.now() - startTime}ms, status: ${response.status}`);
+        // response received
 
         const result = await response.json();
 
@@ -94,7 +89,7 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
             return;
         }
 
-        console.log(`[Telegram API] Bot info retrieved: @${result.result.username}`);
+        // bot info retrieved
         const botInfo = result.result;
 
         let photoUrl = null;
@@ -113,11 +108,11 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
                 });
 
                 const fileResult = await fileResponse.json();
-                console.log(`[Telegram API] Photo response: ${fileResponse.status} (${Date.now() - photoStartTime}ms)`);
+                // photo response received
 
                 if (fileResponse.ok && fileResult.result && fileResult.result.file_path) {
                     photoUrl = `https://api.telegram.org/file/bot${defaultToken.token}/${fileResult.result.file_path}`;
-                    console.log(`[Telegram API] Bot photo URL obtained`);
+                    // photo url obtained
                 }
             } catch (photoError) {
                 const photoErrorMessage = photoError instanceof Error ? photoError.message : 'Unknown error';

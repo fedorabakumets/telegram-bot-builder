@@ -1,0 +1,123 @@
+{#
+  Патчинг Message.answer / Message.answer_photo для логирования исходящих сообщений
+  Вызывается один раз при старте через _wrap_message_answer(bot)
+#}
+
+def _wrap_message_answer(bot_instance):
+    """Патчит Message.answer и Message.answer_photo для автоматического логирования исходящих"""
+    from aiogram.types import Message as _Message
+
+    _orig_answer = _Message.answer
+    _orig_answer_photo = _Message.answer_photo
+    _orig_answer_video = _Message.answer_video
+    _orig_answer_audio = _Message.answer_audio
+    _orig_answer_document = _Message.answer_document
+
+    async def _patched_answer(self, text, *args, node_id=None, **kwargs):
+        result = await _orig_answer(self, text, *args, **kwargs)
+        try:
+            user_id = str(self.chat.id)
+            message_data_obj = {"message_id": result.message_id if result else None}
+            if "reply_markup" in kwargs:
+                try:
+                    reply_markup = kwargs["reply_markup"]
+                    buttons_data = []
+                    if hasattr(reply_markup, "inline_keyboard"):
+                        for row in reply_markup.inline_keyboard:
+                            for btn in row:
+                                button_info = {"text": btn.text}
+                                if hasattr(btn, "callback_data") and btn.callback_data:
+                                    button_info["callback_data"] = btn.callback_data
+                                if hasattr(btn, "url") and btn.url:
+                                    button_info["url"] = btn.url
+                                buttons_data.append(button_info)
+                        if buttons_data:
+                            message_data_obj["buttons"] = buttons_data
+                            message_data_obj["keyboard_type"] = "inline"
+                    elif hasattr(reply_markup, "keyboard"):
+                        for row in reply_markup.keyboard:
+                            for btn in row:
+                                buttons_data.append({"text": btn.text})
+                        if buttons_data:
+                            message_data_obj["buttons"] = buttons_data
+                            message_data_obj["keyboard_type"] = "reply"
+                except Exception:
+                    pass
+            await save_message_to_api(
+                user_id=user_id,
+                message_type="bot",
+                message_text=text,
+                node_id=node_id,
+                message_data=message_data_obj,
+            )
+        except Exception as e:
+            logging.warning(f"Ошибка логирования message.answer: {e}")
+        return result
+
+    async def _patched_answer_photo(self, photo, *args, caption=None, node_id=None, **kwargs):
+        result = await _orig_answer_photo(self, photo, *args, caption=caption, **kwargs)
+        try:
+            user_id = str(self.chat.id)
+            message_data_obj = {"message_id": result.message_id if result else None}
+            if result and hasattr(result, "photo") and result.photo:
+                largest = result.photo[-1]
+                message_data_obj["photo"] = {"file_id": largest.file_id, "width": largest.width, "height": largest.height}
+            await save_message_to_api(
+                user_id=user_id,
+                message_type="bot",
+                message_text=caption or "[Фото]",
+                node_id=node_id,
+                message_data=message_data_obj,
+            )
+        except Exception as e:
+            logging.warning(f"Ошибка логирования message.answer_photo: {e}")
+        return result
+
+    async def _patched_answer_video(self, video, *args, caption=None, node_id=None, **kwargs):
+        result = await _orig_answer_video(self, video, *args, caption=caption, **kwargs)
+        try:
+            await save_message_to_api(
+                user_id=str(self.chat.id),
+                message_type="bot",
+                message_text=caption or "[Видео]",
+                node_id=node_id,
+                message_data={"message_id": result.message_id if result else None},
+            )
+        except Exception as e:
+            logging.warning(f"Ошибка логирования message.answer_video: {e}")
+        return result
+
+    async def _patched_answer_audio(self, audio, *args, caption=None, node_id=None, **kwargs):
+        result = await _orig_answer_audio(self, audio, *args, caption=caption, **kwargs)
+        try:
+            await save_message_to_api(
+                user_id=str(self.chat.id),
+                message_type="bot",
+                message_text=caption or "[Аудио]",
+                node_id=node_id,
+                message_data={"message_id": result.message_id if result else None},
+            )
+        except Exception as e:
+            logging.warning(f"Ошибка логирования message.answer_audio: {e}")
+        return result
+
+    async def _patched_answer_document(self, document, *args, caption=None, node_id=None, **kwargs):
+        result = await _orig_answer_document(self, document, *args, caption=caption, **kwargs)
+        try:
+            await save_message_to_api(
+                user_id=str(self.chat.id),
+                message_type="bot",
+                message_text=caption or "[Документ]",
+                node_id=node_id,
+                message_data={"message_id": result.message_id if result else None},
+            )
+        except Exception as e:
+            logging.warning(f"Ошибка логирования message.answer_document: {e}")
+        return result
+
+    _Message.answer = _patched_answer
+    _Message.answer_photo = _patched_answer_photo
+    _Message.answer_video = _patched_answer_video
+    _Message.answer_audio = _patched_answer_audio
+    _Message.answer_document = _patched_answer_document
+

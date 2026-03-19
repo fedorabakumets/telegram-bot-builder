@@ -142,14 +142,23 @@ async def start_handler(message: types.Message):
 {%- else %}
     {# Отправка сообщения без медиа #}
 {%- if formatMode == 'html' %}
-
-    await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
-{%- elif formatMode == 'markdown' %}
-
-    await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+{%- if userDatabaseEnabled %}
+    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="HTML")
 {%- else %}
-
+    await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+{%- endif %}
+{%- elif formatMode == 'markdown' %}
+{%- if userDatabaseEnabled %}
+    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="Markdown")
+{%- else %}
+    await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+{%- endif %}
+{%- else %}
+{%- if userDatabaseEnabled %}
+    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard)
+{%- else %}
     await message.answer(text, reply_markup=keyboard)
+{%- endif %}
 {%- endif %}
 {%- endif %}
 

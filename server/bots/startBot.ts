@@ -245,6 +245,8 @@ export async function startBot(projectId: number, token: string, tokenId: number
     assets.forEach((asset: string) => console.log(`     * ${asset}`));
 
     // Устанавливаем зависимости из requirements.txt перед запуском бота
+    const skipPipInstall = process.env.SKIP_PIP_INSTALL === 'true';
+    if (!skipPipInstall) {
     try {
       const { execSync } = await import('child_process');
       const botsDir = dirname(mainFile);
@@ -262,6 +264,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
       }
     } catch (pipError) {
       console.log('⚠️ Не удалось установить зависимости (продолжаем запуск):', pipError instanceof Error ? pipError.message : pipError);
+    }
     }
 
     // Запускаем бота
