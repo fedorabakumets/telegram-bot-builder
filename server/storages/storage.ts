@@ -58,6 +58,11 @@ export interface IStorage {
   updateBotProject(id: number, project: Partial<InsertBotProject>): Promise<BotProject | undefined>;
 
   /**
+   * Переупорядочивает проекты по переданному массиву ID
+   */
+  reorderBotProjects(projectIds: number[]): Promise<void>;
+
+  /**
    * Удалить проект бота
    * @param id - ID проекта
    * @returns true, если проект был удален, иначе false

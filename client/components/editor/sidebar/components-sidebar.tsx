@@ -184,12 +184,18 @@ export function ComponentsSidebar({
    * Запускает мутацию создания проекта
    */
   const handleCreateProject = () => {
-    createProject({ projectCount: projects.length, onProjectSelect });
+    createProject({ existingNames: projects.map(p => p.name), onProjectSelect });
   };
 
   const handleDeleteProject = (projectId: number) => {
     const project = projects.find(p => p.id === projectId);
     if (project && confirm(`Вы уверены, что хотите удалить проект "${project.name}"? Это действие нельзя отменить.`)) {
+      // Если удаляем активный проект — переключаемся на соседний
+      if (currentProjectId === projectId && onProjectSelect) {
+        const idx = projects.findIndex(p => p.id === projectId);
+        const next = projects[idx + 1] ?? projects[idx - 1];
+        if (next) onProjectSelect(next.id);
+      }
       deleteProject(project.id);
     }
   };
@@ -245,8 +251,7 @@ export function ComponentsSidebar({
     cancelEditingProject();
   };
 
-  // Создаем контент панели
-  const SidebarContent = () => (
+  const sidebarContent = (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Sidebar Header */}
       <SidebarHeader
@@ -481,13 +486,13 @@ export function ComponentsSidebar({
 
   // На мобильных устройствах возвращаем содержимое для использования в Sheet из editor.tsx
   if (isActuallyMobile || isMobile) {
-    return <SidebarContent />;
+    return <>{sidebarContent}</>;
   }
 
   // Десктопная версия
   return (
     <aside className="w-full bg-background h-full flex flex-col overflow-hidden">
-      <SidebarContent />
+      {sidebarContent}
     </aside>
   );
 }

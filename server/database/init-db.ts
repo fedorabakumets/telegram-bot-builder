@@ -402,8 +402,28 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при проверке/добавлении колонки primary_media_id:', error);
     }
 
-    // Миграция: добавление owner_id в bot_projects если его нет
+    // Миграция: добавление sort_order в bot_projects если его нет
     try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'bot_projects' AND column_name = 'sort_order';
+      `);
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Добавляем колонку sort_order в таблицу bot_projects...');
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_projects ADD COLUMN sort_order REAL DEFAULT 0;
+        `, "Миграция: добавление sort_order в bot_projects");
+        // Инициализируем sort_order по текущему id
+        await executeWithRetry(db, sql`
+          UPDATE bot_projects SET sort_order = id WHERE sort_order = 0;
+        `, "Инициализация sort_order");
+        console.log('✅ Колонка sort_order успешно добавлена в bot_projects');
+      }
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки sort_order в bot_projects:', error);
+    }
+
+    // Миграция: добавление owner_id в bot_projects если его нет    try {
       const columnCheck = await db.execute(sql`
         SELECT column_name
         FROM information_schema.columns

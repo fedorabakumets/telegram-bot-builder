@@ -17,6 +17,7 @@ import { getProjectNodesHandler } from "./projectRoutes/handlers/getProjectNodes
 import { getProjectNodeHandler } from "./projectRoutes/handlers/getProjectNodeHandler";
 import { createProjectHandler } from "./projectRoutes/handlers/createProjectHandler";
 import { updateProjectHandler } from "./projectRoutes/handlers/updateProjectHandler";
+import { reorderProjectsHandler } from "./projectRoutes/handlers/reorderProjectsHandler";
 import { exportProjectHandler } from "./projectRoutes/handlers/exportProjectHandler";
 import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tokenHandlers";
 import { updateCommentsSettingsHandler } from "./projectRoutes/handlers/settingsHandler";
@@ -40,6 +41,7 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
     app.get("/api/projects/:projectId/nodes", requireDbReady, getProjectNodesHandler);
     app.get("/api/projects/:projectId/nodes/:nodeId", requireDbReady, getProjectNodeHandler);
     app.post("/api/projects", requireDbReady, createProjectHandler);
+    app.put("/api/projects/reorder", requireDbReady, reorderProjectsHandler);
     app.put("/api/projects/:id", requireDbReady, updateProjectHandler);
 
     // Удаление проекта

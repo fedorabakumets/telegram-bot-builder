@@ -13,10 +13,24 @@ import type { BotProject } from '@shared/schema';
  * Параметры для создания проекта
  */
 export interface CreateProjectParams {
-  /** Количество существующих проектов для генерации имени */
+  /** Количество существующих проектов для генерации имени (устарело, используется existingNames) */
   projectCount?: number;
+  /** Существующие имена проектов для генерации уникального имени */
+  existingNames?: string[];
   /** Колбэк при выборе проекта после создания */
   onProjectSelect?: (projectId: number) => void;
+}
+
+/**
+ * Генерирует уникальное имя проекта, не совпадающее с существующими
+ */
+function generateUniqueName(existingNames: string[]): string {
+  const namesSet = new Set(existingNames);
+  let i = 1;
+  while (namesSet.has(`Новый бот ${i}`)) {
+    i++;
+  }
+  return `Новый бот ${i}`;
 }
 
 /**
@@ -61,9 +75,9 @@ export function useCreateProjectMutation(): UseCreateProjectMutationResult {
   const { toast } = useToast();
 
   const mutation = useMutation({
-    mutationFn: (projectCount: number) => {
+    mutationFn: (name: string) => {
       return apiRequest('POST', '/api/projects', {
-        name: `Новый бот ${projectCount + 1}`,
+        name,
         description: '',
         data: DEFAULT_PROJECT_DATA,
       });
@@ -86,11 +100,11 @@ export function useCreateProjectMutation(): UseCreateProjectMutationResult {
   });
 
   const createProject = (params?: CreateProjectParams) => {
-    const projectCount = params?.projectCount ?? 0;
+    const existingNames = params?.existingNames ?? [];
+    const name = generateUniqueName(existingNames);
     const onProjectSelect = params?.onProjectSelect;
-    
-    // Создаём новую мутацию с onProjectSelect
-    mutation.mutate(projectCount, {
+
+    mutation.mutate(name, {
       onSuccess: (newProject) => {
         // Вызываем оригинальный onSuccess через замыкание
         if (onProjectSelect) {

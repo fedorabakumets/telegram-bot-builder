@@ -27,7 +27,7 @@ export class DatabaseStorage implements IStorage {
    * @returns Массив проектов ботов
    */
   async getAllBotProjects(): Promise<BotProject[]> {
-    return await this.db.select().from(botProjects).orderBy(desc(botProjects.updatedAt));
+    return await this.db.select().from(botProjects).orderBy(asc(botProjects.sortOrder), desc(botProjects.updatedAt));
   }
 
   /**
@@ -59,6 +59,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(botProjects.id, id))
       .returning();
     return project || undefined;
+  }
+  async reorderBotProjects(projectIds: number[]): Promise<void> {
+    await Promise.all(
+      projectIds.map((id, index) =>
+        this.db.update(botProjects).set({ sortOrder: index }).where(eq(botProjects.id, id))
+      )
+    );
   }
 
   /**

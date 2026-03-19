@@ -3,7 +3,7 @@
  * @module shared/schema/tables/bot-projects
  */
 
-import { pgTable, text, serial, integer, jsonb, timestamp, bigint } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, timestamp, bigint, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -43,6 +43,8 @@ export const botProjects = pgTable("bot_projects", {
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления проекта */
   updatedAt: timestamp("updated_at").defaultNow(),
+  /** Порядок сортировки проекта в списке */
+  sortOrder: real("sort_order").default(0),
 });
 
 /** Схема для вставки данных проекта бота */
