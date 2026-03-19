@@ -22,6 +22,7 @@ import { useSidebarEditing } from './hooks/use-sidebar-editing';
 import { useSidebarCategories } from './hooks/use-sidebar-categories';
 import { useSidebarImport } from './hooks/use-sidebar-import';
 import { useSidebarTouch } from './hooks/use-sidebar-touch';
+import { useSidebarFileUpload } from './hooks/use-sidebar-file-upload';
 import { useProjectsQuery } from './hooks/use-projects-query';
 import { useCreateProjectMutation } from './hooks/use-create-project-mutation';
 import { useDeleteProjectMutation } from './hooks/use-delete-project-mutation';
@@ -124,6 +125,14 @@ export function ComponentsSidebar({
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Хук загрузки файлов
+  const { handleFileUpload, handlePythonFileUpload } = useSidebarFileUpload({
+    setImportJsonText,
+    setImportPythonText,
+    setImportError,
+    toast,
+  });
+
   /**
    * Обработчик начала перетаскивания компонента
    * Инициализирует drag-and-drop операцию для десктопных устройств
@@ -169,82 +178,6 @@ export function ComponentsSidebar({
    */
   const handleCreateProject = () => {
     createProject({ projectCount: projects.length, onProjectSelect });
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const content = event.target?.result as string;
-        setImportJsonText(content);
-        setImportError('');
-        toast({
-          title: "Файл загружен",
-          description: `Файл "${file.name}" успешно загружен. Нажмите "Импортировать" для создания проекта.`,
-        });
-      } catch (error) {
-        setImportError('Ошибка при чтении файла');
-        toast({
-          title: "Ошибка загрузки",
-          description: "Не удалось прочитать файл",
-          variant: "destructive",
-        });
-      }
-    };
-    reader.onerror = () => {
-      setImportError('Ошибка при чтении файла');
-      toast({
-        title: "Ошибка загрузки",
-        description: "Не удалось прочитать файл",
-        variant: "destructive",
-      });
-    };
-    reader.readAsText(file);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handlePythonFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const content = event.target?.result as string;
-        setImportPythonText(content);
-        setImportError('');
-        toast({
-          title: "Python файл загружен",
-          description: `Файл "${file.name}" успешно загружен. Нажмите "Импортировать" для создания проекта.`,
-        });
-      } catch (error) {
-        setImportError('Ошибка при чтении файла');
-        toast({
-          title: "Ошибка загрузки",
-          description: "Не удалось прочитать файл",
-          variant: "destructive",
-        });
-      }
-    };
-    reader.onerror = () => {
-      setImportError('Ошибка при чтении файла');
-      toast({
-        title: "Ошибка загрузки",
-        description: "Не удалось прочитать файл",
-        variant: "destructive",
-      });
-    };
-    reader.readAsText(file);
-
-    if (pythonFileInputRef.current) {
-      pythonFileInputRef.current.value = '';
-    }
   };
 
   const parsePythonBotToJson = (pythonCode: string) => {
