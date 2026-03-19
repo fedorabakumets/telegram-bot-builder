@@ -1,10 +1,11 @@
 /**
- * @fileoverview Обработчик сброса проекта на новый позицию
- * Переупорядочивает проекты в списке
+ * @fileoverview Обработчик сброса проекта на новую позицию
+ * Переупорядочивает проекты в списке с синхронизацией на сервере
  */
 import { BotProject } from '@shared/schema';
 import { QueryClient } from '@tanstack/react-query';
 import { Dispatch, SetStateAction } from 'react';
+import { apiRequest } from '@/queryClient';
 
 /** Параметры обработчика сброса проекта */
 interface ProjectDropParams {
@@ -27,7 +28,7 @@ interface ProjectDropParams {
  * @param e - Событие перетаскивания
  * @param params - Параметры обработчика
  */
-export const handleProjectDrop = (
+export const handleProjectDrop = async (
   e: React.DragEvent,
   { draggedProject, targetProject, queryClient, setDraggedProject, setDragOverProject, toast }: ProjectDropParams
 ) => {
@@ -63,15 +64,27 @@ export const handleProjectDrop = (
 
   console.log('✅ Новый порядок:', newProjects.map(p => p.name));
 
-  queryClient.setQueryData(['/api/projects'], newProjects);
+  try {
+    await apiRequest('PUT', '/api/projects/reorder', {
+      projectIds: newProjects.map(p => p.id)
+    });
 
-  const newList = newProjects.map(({ data, ...rest }) => rest);
-  queryClient.setQueryData(['/api/projects/list'], newList);
+    queryClient.setQueryData(['/api/projects'], newProjects);
 
-  toast({
-    title: '✅ Проекты переупорядочены',
-    description: `Проект "${draggedProject.name}" перемещен`,
-  });
+    const newList = newProjects.map(({ data, ...rest }) => rest);
+    queryClient.setQueryData(['/api/projects/list'], newList);
+
+    toast({
+      title: '✅ Проекты переупорядочены',
+      description: `Проект "${draggedProject.name}" перемещен`,
+    });
+  } catch (error: any) {
+    console.error('❌ Ошибка сохранения порядка:', error.message);
+    toast({
+      title: '❌ Ошибка',
+      description: 'Не удалось сохранить порядок проектов',
+    });
+  }
 
   setDraggedProject(null);
 };

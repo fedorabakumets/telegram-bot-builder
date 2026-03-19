@@ -95,13 +95,11 @@ export function useComponentDrag(): UseComponentDragResult {
   }, []);
 
   // Обработчик сброса проекта
-  const onProjectDrop = useCallback((e: React.DragEvent, targetProject: BotProject) => {
+  // Примечание: требует полной реализации с использованием handleProjectDrop
+  // В текущей версии используется в компонентах напрямую
+  const onProjectDrop = useCallback((_e: React.DragEvent, _targetProject: BotProject) => {
     // Обработчик будет вызван с полным контекстом в компоненте
-    handleProjectDragStart(e, {
-      project: targetProject,
-      setDraggedSheet,
-      setDraggedProject,
-    });
+    // Требуется передача queryClient, toast и других зависимостей
   }, []);
 
   // Обработчик начала перетаскивания листа

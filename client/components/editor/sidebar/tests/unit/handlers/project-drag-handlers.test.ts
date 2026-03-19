@@ -12,6 +12,11 @@ import { handleProjectDragLeave } from '../../../handlers/handle-project-drag-le
 import { handleProjectDrop } from '../../../handlers/handle-project-drop';
 import { BotProject } from '@shared/schema';
 import { QueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/queryClient';
+
+vi.mock('@/queryClient', () => ({
+  apiRequest: vi.fn(),
+}));
 
 describe('Project Drag-and-Drop Handlers', () => {
   const createMockProject = (id: number, name: string): BotProject => ({
@@ -131,7 +136,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       vi.clearAllMocks();
     });
 
-    it('должен предотвращать стандартное поведение', () => {
+    it('должен предотвращать стандартное поведение', async () => {
       const e = createMockDragEvent();
       const draggedProject = createMockProject(1, 'Dragged');
       const targetProject = createMockProject(2, 'Target');
@@ -139,8 +144,9 @@ describe('Project Drag-and-Drop Handlers', () => {
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
       const toast = vi.fn();
+      vi.mocked(apiRequest).mockResolvedValue({});
 
-      handleProjectDrop(e, {
+      await handleProjectDrop(e, {
         draggedProject,
         targetProject,
         queryClient,
@@ -153,7 +159,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       expect(e.stopPropagation).toHaveBeenCalled();
     });
 
-    it('должен сбрасывать dragOverProject', () => {
+    it('должен сбрасывать dragOverProject', async () => {
       const e = createMockDragEvent();
       const draggedProject = createMockProject(1, 'Dragged');
       const targetProject = createMockProject(2, 'Target');
@@ -161,8 +167,9 @@ describe('Project Drag-and-Drop Handlers', () => {
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
       const toast = vi.fn();
+      vi.mocked(apiRequest).mockResolvedValue({});
 
-      handleProjectDrop(e, {
+      await handleProjectDrop(e, {
         draggedProject,
         targetProject,
         queryClient,
@@ -174,7 +181,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       expect(setDragOverProject).toHaveBeenCalledWith(null);
     });
 
-    it('должен отменять операцию если draggedProject не установлен', () => {
+    it('должен отменять операцию если draggedProject не установлен', async () => {
       const e = createMockDragEvent();
       const targetProject = createMockProject(2, 'Target');
       const queryClient = createMockQueryClient([targetProject]);
@@ -182,7 +189,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const setDragOverProject = vi.fn();
       const toast = vi.fn();
 
-      handleProjectDrop(e, {
+      await handleProjectDrop(e, {
         draggedProject: null,
         targetProject,
         queryClient,
@@ -193,9 +200,10 @@ describe('Project Drag-and-Drop Handlers', () => {
 
       expect(setDraggedProject).toHaveBeenCalledWith(null);
       expect(toast).not.toHaveBeenCalled();
+      expect(apiRequest).not.toHaveBeenCalled();
     });
 
-    it('должен отменять операцию если перетаскивают тот же проект', () => {
+    it('должен отменять операцию если перетаскивают тот же проект', async () => {
       const e = createMockDragEvent();
       const project = createMockProject(1, 'Same');
       const queryClient = createMockQueryClient([project]);
@@ -203,7 +211,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const setDragOverProject = vi.fn();
       const toast = vi.fn();
 
-      handleProjectDrop(e, {
+      await handleProjectDrop(e, {
         draggedProject: project,
         targetProject: project,
         queryClient,
@@ -214,9 +222,10 @@ describe('Project Drag-and-Drop Handlers', () => {
 
       expect(setDraggedProject).toHaveBeenCalledWith(null);
       expect(toast).not.toHaveBeenCalled();
+      expect(apiRequest).not.toHaveBeenCalled();
     });
 
-    it('должен отменять операцию если проект не найден', () => {
+    it('должен отменять операцию если проект не найден', async () => {
       const e = createMockDragEvent();
       const draggedProject = createMockProject(999, 'Not Exists');
       const targetProject = createMockProject(1, 'Target');
@@ -225,7 +234,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const setDragOverProject = vi.fn();
       const toast = vi.fn();
 
-      handleProjectDrop(e, {
+      await handleProjectDrop(e, {
         draggedProject,
         targetProject,
         queryClient,
@@ -236,9 +245,10 @@ describe('Project Drag-and-Drop Handlers', () => {
 
       expect(setDraggedProject).toHaveBeenCalledWith(null);
       expect(toast).not.toHaveBeenCalled();
+      expect(apiRequest).not.toHaveBeenCalled();
     });
 
-    it('должен переупорядочивать проекты', () => {
+    it('должен переупорядочивать проекты и вызывать API', async () => {
       const e = createMockDragEvent();
       const project1 = createMockProject(1, 'First');
       const project2 = createMockProject(2, 'Second');
@@ -248,9 +258,10 @@ describe('Project Drag-and-Drop Handlers', () => {
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
       const toast = vi.fn();
+      vi.mocked(apiRequest).mockResolvedValue({});
 
       // Перемещаем project3 перед project1
-      handleProjectDrop(e, {
+      await handleProjectDrop(e, {
         draggedProject: project3,
         targetProject: project1,
         queryClient,
@@ -259,13 +270,16 @@ describe('Project Drag-and-Drop Handlers', () => {
         toast,
       });
 
+      expect(apiRequest).toHaveBeenCalledWith('PUT', '/api/projects/reorder', {
+        projectIds: [3, 1, 2],
+      });
       expect(queryClient.setQueryData).toHaveBeenCalledWith(
         ['/api/projects'],
         expect.arrayContaining([project3, project1, project2])
       );
     });
 
-    it('должен показывать уведомление об успехе', () => {
+    it('должен показывать уведомление об успехе', async () => {
       const e = createMockDragEvent();
       const project1 = createMockProject(1, 'First');
       const project2 = createMockProject(2, 'Second');
@@ -273,8 +287,9 @@ describe('Project Drag-and-Drop Handlers', () => {
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
       const toast = vi.fn();
+      vi.mocked(apiRequest).mockResolvedValue({});
 
-      handleProjectDrop(e, {
+      await handleProjectDrop(e, {
         draggedProject: project2,
         targetProject: project1,
         queryClient,
@@ -289,7 +304,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       });
     });
 
-    it('должен обновлять кеш queryClient', () => {
+    it('должен обновлять кеш queryClient', async () => {
       const e = createMockDragEvent();
       const project1 = createMockProject(1, 'First');
       const project2 = createMockProject(2, 'Second');
@@ -297,8 +312,9 @@ describe('Project Drag-and-Drop Handlers', () => {
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
       const toast = vi.fn();
+      vi.mocked(apiRequest).mockResolvedValue({});
 
-      handleProjectDrop(e, {
+      await handleProjectDrop(e, {
         draggedProject: project2,
         targetProject: project1,
         queryClient,
@@ -309,6 +325,31 @@ describe('Project Drag-and-Drop Handlers', () => {
 
       expect(queryClient.setQueryData).toHaveBeenCalledWith(['/api/projects'], expect.any(Array));
       expect(queryClient.setQueryData).toHaveBeenCalledWith(['/api/projects/list'], expect.any(Array));
+    });
+
+    it('должен показывать ошибку при неудачном API запросе', async () => {
+      const e = createMockDragEvent();
+      const project1 = createMockProject(1, 'First');
+      const project2 = createMockProject(2, 'Second');
+      const queryClient = createMockQueryClient([project1, project2]);
+      const setDraggedProject = vi.fn();
+      const setDragOverProject = vi.fn();
+      const toast = vi.fn();
+      vi.mocked(apiRequest).mockRejectedValue(new Error('Network error'));
+
+      await handleProjectDrop(e, {
+        draggedProject: project2,
+        targetProject: project1,
+        queryClient,
+        setDraggedProject,
+        setDragOverProject,
+        toast,
+      });
+
+      expect(toast).toHaveBeenCalledWith({
+        title: '❌ Ошибка',
+        description: 'Не удалось сохранить порядок проектов',
+      });
     });
   });
 });

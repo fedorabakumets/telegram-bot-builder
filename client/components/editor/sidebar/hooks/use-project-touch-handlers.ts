@@ -8,6 +8,7 @@ import { BotProject } from '@shared/schema';
 import { QueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
 import { useProjectTouch } from './use-project-touch';
+import { apiRequest } from '@/queryClient';
 
 /** Параметры хука useProjectTouchHandlers */
 export interface UseProjectTouchHandlersParams {
@@ -76,17 +77,17 @@ export function useProjectTouchHandlers({
 
   /** Обработчик движения касания с определением целевого проекта */
   const handleTouchMoveWithTarget = useCallback((e: React.TouchEvent) => {
-    if (!isDraggingRef.current) return;
+    if (!isDraggingRef.current || !draggedProjectRef.current) return;
 
     const touch = e.touches[0];
-    
+
     // Определяем элемент под пальцем
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     const dropTarget = element?.closest('[data-project-id]') as HTMLElement | null;
 
     if (dropTarget) {
       const targetProjectId = Number(dropTarget.getAttribute('data-project-id'));
-      if (targetProjectId && targetProjectId !== project.id) {
+      if (targetProjectId && targetProjectId !== draggedProjectRef.current.id) {
         setDragOverProject(targetProjectId);
       } else {
         setDragOverProject(null);
@@ -94,42 +95,41 @@ export function useProjectTouchHandlers({
     } else {
       setDragOverProject(null);
     }
-  }, [project.id, setDragOverProject]);
+  }, [setDragOverProject]);
 
   /** Обработчик окончания касания с переупорядочиванием */
-  const handleTouchEndWithReorder = useCallback((e: React.TouchEvent) => {
+  const handleTouchEndWithReorder = useCallback(async (e: React.TouchEvent) => {
     if (!isDraggingRef.current || !draggedProjectRef.current) {
       handleDragEnd();
       return;
     }
 
     const touch = e.changedTouches[0];
-    
+
     // Определяем элемент под пальцем
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     const dropTarget = element?.closest('[data-project-id]') as HTMLElement | null;
 
     if (dropTarget) {
       const targetProjectId = Number(dropTarget.getAttribute('data-project-id'));
-      
-      if (targetProjectId && targetProjectId !== project.id) {
-        const targetProject = queryClient.getQueryData<BotProject[]>(['/api/projects'])
-          ?.find(p => p.id === targetProjectId);
 
-        if (targetProject && draggedProjectRef.current) {
-          // Выполняем переупорядочивание
-          const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
-          const draggedIndex = currentProjects.findIndex(p => p.id === draggedProjectRef.current!.id);
-          const targetIndex = currentProjects.findIndex(p => p.id === targetProjectId);
+      if (targetProjectId && targetProjectId !== draggedProjectRef.current.id) {
+        const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
+        const draggedIndex = currentProjects.findIndex(p => p.id === draggedProjectRef.current!.id);
+        const targetIndex = currentProjects.findIndex(p => p.id === targetProjectId);
 
-          if (draggedIndex !== -1 && targetIndex !== -1) {
-            const newProjects = [...currentProjects];
-            const [movedProject] = newProjects.splice(draggedIndex, 1);
-            newProjects.splice(targetIndex, 0, movedProject);
+        if (draggedIndex !== -1 && targetIndex !== -1) {
+          const newProjects = [...currentProjects];
+          const [movedProject] = newProjects.splice(draggedIndex, 1);
+          newProjects.splice(targetIndex, 0, movedProject);
+
+          try {
+            await apiRequest('PUT', '/api/projects/reorder', {
+              projectIds: newProjects.map(p => p.id)
+            });
 
             queryClient.setQueryData(['/api/projects'], newProjects);
 
-            // Обновляем список проектов
             const newList = newProjects.map(({ data, ...rest }) => rest);
             queryClient.setQueryData(['/api/projects/list'], newList);
 
@@ -137,13 +137,19 @@ export function useProjectTouchHandlers({
               title: '✅ Проекты переупорядочены',
               description: `Проект "${draggedProjectRef.current.name}" перемещен`,
             });
+          } catch (error: any) {
+            console.error('❌ Ошибка сохранения порядка:', error.message);
+            toast({
+              title: '❌ Ошибка',
+              description: 'Не удалось сохранить порядок проектов',
+            });
           }
         }
       }
     }
 
     handleDragEnd();
-  }, [project.id, queryClient, toast, handleDragEnd]);
+  }, [queryClient, toast, handleDragEnd]);
 
   // Используем базовый хук useProjectTouch для визуальных эффектов
   const { handleTouchStart: baseTouchStart, handleTouchMove: baseTouchMove, handleTouchEnd: baseTouchEnd, isDragging } = useProjectTouch({
