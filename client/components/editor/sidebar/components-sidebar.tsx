@@ -25,6 +25,7 @@ import { useSidebarTouch } from './hooks/use-sidebar-touch';
 import { useProjectsQuery } from './hooks/use-projects-query';
 import { useCreateProjectMutation } from './hooks/use-create-project-mutation';
 import { useDeleteProjectMutation } from './hooks/use-delete-project-mutation';
+import { useSidebarSheetDrag } from './hooks/use-sidebar-sheet-drag';
 import { createTouchHandlers, registerGlobalTouchHandlers } from './components/sidebar-touch-handlers';
 
 import { Button } from '@/components/ui/button';
@@ -154,118 +155,20 @@ export function ComponentsSidebar({
   // Хук для удаления проекта
   const { deleteProject } = useDeleteProjectMutation();
 
+  // Хук для управления перетаскиванием листов
+  const { handleSheetDragStart, handleSheetDropOnProject } = useSidebarSheetDrag({
+    setDraggedSheet,
+    setDragOverSheet,
+    sheetDragState,
+    projects,
+  });
+
   /**
    * Обработчик создания нового проекта
    * Запускает мутацию создания проекта
    */
   const handleCreateProject = () => {
     createProject({ projectCount: projects.length, onProjectSelect });
-  };
-
-  /**
-   * Обработчик начала перетаскивания листа
-   * Инициализирует drag-and-drop для перемещения листов между проектами
-   * @param e - Событие перетаскивания
-   * @param sheetId - Идентификатор листа
-   * @param projectId - Идентификатор проекта
-   */
-  const handleSheetDragStart = (e: React.DragEvent, sheetId: string, projectId: number) => {
-    e.stopPropagation();
-    setDraggedSheet({ sheetId, projectId });
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', sheetId);
-  };
-
-  /**
-   * Обработчик сброса листа на проект
-   * Перемещает лист из одного проекта в другой
-   * @param e - Событие сброса
-   * @param targetProjectId - Идентификатор целевого проекта
-   */
-  const handleSheetDropOnProject = async (e: React.DragEvent, targetProjectId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverSheet(null);
-
-    const draggedSheet = sheetDragState.draggedSheet;
-    if (!draggedSheet) {
-      return;
-    }
-
-    // Если перемещаем в свой же проект - отменяем
-    if (draggedSheet.projectId === targetProjectId) {
-      setDraggedSheet(null);
-      return;
-    }
-
-    // Находим исходный и целевой проекты
-    const sourceProject = projects.find(p => p.id === draggedSheet.projectId);
-    const targetProject = projects.find(p => p.id === targetProjectId);
-
-    if (!sourceProject || !targetProject) {
-      setDraggedSheet(null);
-      return;
-    }
-
-    try {
-      const sourceData = sourceProject.data as any;
-      const targetData = targetProject.data as any;
-
-      // Проверяем что оба проекта в новом формате
-      if (!sourceData?.sheets || !targetData?.sheets) {
-        toast({
-          title: "❌ Ошибка",
-          description: "Оба проекта должны быть в новом формате с листами",
-          variant: "destructive",
-        });
-        setDraggedSheet(null);
-        return;
-      }
-
-      // Находим лист в исходном проекте
-      const sourceSheetIndex = sourceData.sheets.findIndex((s: any) => s.id === draggedSheet.sheetId);
-      if (sourceSheetIndex === -1) {
-        setDraggedSheet(null);
-        return;
-      }
-
-      const sheetToMove = sourceData.sheets[sourceSheetIndex];
-
-      // Добавляем лист в целевой проект
-      const newSheet = JSON.parse(JSON.stringify(sheetToMove)); // Deep copy
-      targetData.sheets.push(newSheet);
-
-      // Удаляем из исходного проекта
-      sourceData.sheets.splice(sourceSheetIndex, 1);
-
-      // Обновляем оба проекта на сервере
-      await Promise.all([
-        apiRequest('PUT', `/api/projects/${sourceProject.id}`, { data: sourceData }),
-        apiRequest('PUT', `/api/projects/${targetProject.id}`, { data: targetData })
-      ]);
-
-      // Обновляем кеш
-      const updatedProjects = projects.map(p => {
-        if (p.id === sourceProject.id) return { ...p, data: sourceData };
-        if (p.id === targetProject.id) return { ...p, data: targetData };
-        return p;
-      });
-      queryClient.setQueryData(['/api/projects'], updatedProjects);
-
-      toast({
-        title: "✅ Лист перемещен",
-        description: `"${sheetToMove.name}" перемещен в "${targetProject.name}"`,
-      });
-    } catch (error: any) {
-      console.error('Ошибка при перемещении листа:', error);
-      toast({
-        title: "❌ Ошибка перемещения",
-        description: error.message || "Не удалось переместить лист",
-        variant: "destructive",
-      });
-    } finally {
-      setDraggedSheet(null);
-    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
