@@ -22,6 +22,8 @@ export interface ProjectCardWrapperProps extends Omit<ProjectCardProps, 'onTouch
   toast: (options: { title: string; description: string }) => void;
   /** Обработчик завершения перетаскивания проекта */
   onProjectDragEnd?: () => void;
+  /** Обработчик клика по проекту для сброса drag-состояния */
+  onProjectClick?: () => void;
 }
 
 /**
@@ -36,6 +38,7 @@ export const ProjectCardWrapper: React.FC<ProjectCardWrapperProps> = ({
   toast,
   project,
   onProjectDragEnd,
+  onProjectClick,
   ...cardProps
 }) => {
   // Создаём touch-обработчики для проекта
@@ -55,6 +58,7 @@ export const ProjectCardWrapper: React.FC<ProjectCardWrapperProps> = ({
       onTouchMove={projectTouchHandlers.handleTouchMove}
       onTouchEnd={projectTouchHandlers.handleTouchEnd}
       onProjectDragEnd={onProjectDragEnd}
+      onProjectClick={onProjectClick}
     />
   );
 };

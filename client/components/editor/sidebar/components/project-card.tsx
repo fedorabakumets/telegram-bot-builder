@@ -95,6 +95,8 @@ export interface ProjectCardProps {
   onProjectDragStart: (e: React.DragEvent) => void;
   /** Обработчик завершения перетаскивания проекта */
   onProjectDragEnd?: (e: React.DragEvent) => void;
+  /** Обработчик клика по проекту */
+  onProjectClick?: () => void;
   /** Обработчик перетаскивания над проектом */
   onProjectDragOver: (e: React.DragEvent) => void;
   /** Обработчик ухода с проекта при перетаскивании */
@@ -164,6 +166,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   dragState,
   onProjectDragStart,
   onProjectDragEnd,
+  onProjectClick,
   onProjectDragOver,
   onProjectDragLeave,
   onProjectDrop,
@@ -220,9 +223,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
   /**
    * Обработчик клика по карточке проекта
-   * Вызывает колбэк выбора проекта
+   * Вызывает колбэк выбора проекта и сбрасывает drag-состояние
    */
   const handleCardClick = () => {
+    if (onProjectClick) {
+      onProjectClick();
+    }
     if (onProjectSelect) {
       onProjectSelect(project.id);
     }

@@ -7,6 +7,7 @@ import {
   handleProjectDragLeave,
   handleProjectDragEnd,
   handleProjectDrop,
+  handleProjectClick,
 } from './handlers';
 import { componentCategories } from './constants';
 import type { ComponentsSidebarProps } from './types';
@@ -366,6 +367,7 @@ export function ComponentsSidebar({
                     }}
                     onProjectDragStart={(e: React.DragEvent) => handleProjectDragStart(e, { project, setDraggedSheet, setDraggedProject })}
                     onProjectDragEnd={() => handleProjectDragEnd(setDraggedProject, setDragOverProject)}
+                    onProjectClick={() => handleProjectClick({ draggedProject: projectDragState.draggedProject, setDraggedProject, setDragOverProject })}
                     onProjectDragOver={(e: React.DragEvent) => {
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
