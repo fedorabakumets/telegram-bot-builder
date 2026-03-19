@@ -423,7 +423,8 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при проверке/добавлении колонки sort_order в bot_projects:', error);
     }
 
-    // Миграция: добавление owner_id в bot_projects если его нет    try {
+    // Миграция: добавление owner_id в bot_projects если его нет
+    try {
       const columnCheck = await db.execute(sql`
         SELECT column_name
         FROM information_schema.columns

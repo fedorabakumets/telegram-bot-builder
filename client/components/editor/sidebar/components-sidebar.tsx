@@ -223,15 +223,14 @@ export function ComponentsSidebar({
 
   const handleSaveProjectName = async () => {
     const { projectId, newName } = saveEditingProject();
-    if (projectId && newName.trim() && currentProjectId === projectId) {
+    if (projectId && newName.trim()) {
       try {
         const project = projects.find(p => p.id === projectId);
         if (project) {
-          await apiRequest('PUT', `/api/projects/${projectId}`, {
-            ...project,
-            name: newName.trim()
-          });
-          await queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+          await apiRequest('PUT', `/api/projects/${projectId}`, { name: newName.trim() });
+          // Обновляем кэш локально без рефетча — чтобы не менялся порядок
+          const updated = projects.map(p => p.id === projectId ? { ...p, name: newName.trim() } : p);
+          queryClient.setQueryData(['/api/projects'], updated);
           toast({
             title: "✅ Проект переименован",
             description: `"${project.name}" → "${newName.trim()}"`,
