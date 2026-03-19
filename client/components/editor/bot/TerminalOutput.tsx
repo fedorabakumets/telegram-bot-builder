@@ -17,7 +17,7 @@ interface TerminalLine {
 interface TerminalOutputProps {
   lines: TerminalLine[];
   containerRef: React.RefObject<HTMLDivElement>;
-  height: number;
+  height?: number;
   scale: number;
   terminalTextClass: string;
   stderrTextClass: string;
@@ -30,7 +30,7 @@ interface TerminalOutputProps {
 export function TerminalOutput({
   lines,
   containerRef,
-  height,
+  height = 300,
   scale,
   terminalTextClass,
   stderrTextClass,

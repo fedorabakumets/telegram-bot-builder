@@ -49,8 +49,8 @@ export type { Button } from "./schema/tables/button-schema";
 export { nodeSchema } from "./schema/tables/node-schema";
 export type { Node } from "./schema/tables/node-schema";
 
-export { sheetViewStateSchema, canvasSheetSchema, botDataWithSheetsSchema, botDataSchema, connectionSchema } from "./schema/tables/bot-sheets";
-export type { SheetViewState, CanvasSheet, BotDataWithSheets, BotData, Connection } from "./schema/tables/bot-sheets";
+export { sheetViewStateSchema, canvasSheetSchema, botDataWithSheetsSchema, botDataSchema } from "./schema/tables/bot-sheets";
+export type { SheetViewState, CanvasSheet, BotDataWithSheets, BotData } from "./schema/tables/bot-sheets";
 
 export { sendMessageSchema } from "./schema/tables/additional-schemas";
 export type { SendMessage, ComponentDefinition } from "./schema/tables/additional-schemas";

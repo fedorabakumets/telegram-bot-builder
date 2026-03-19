@@ -402,7 +402,6 @@ export function useBotEditor(initialData?: BotData) {
    */
   const getBotData = useCallback((): BotData => ({
     nodes,
-    connections: []
   }), [nodes]);
 
   /**

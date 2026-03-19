@@ -25,6 +25,10 @@ interface DesktopTableRowProps {
   visibleColumns?: number;
   /** ID проекта */
   projectId: number;
+  /** Открытие панели деталей пользователя */
+  onOpenUserDetailsPanel?: (user: UserBotData) => void;
+  /** Открытие диалоговой панели */
+  onOpenDialogPanel?: (user: UserBotData) => void;
 }
 
 /**

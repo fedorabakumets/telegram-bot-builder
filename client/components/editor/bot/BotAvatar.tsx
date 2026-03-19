@@ -33,7 +33,7 @@ export function BotAvatar({
   projectId
 }: BotAvatarProps) {
   // Загружаем данные бота из API для получения актуальной аватарки
-  const { data: botData } = useBotData(projectId || 0);
+  const { bot: botData } = useBotData(projectId || 0);
   
   // Используем botUserId или botId или загружаем из API
   const extractedBotUserId = botUserId || botId || botData?.userId;
@@ -59,7 +59,7 @@ export function BotAvatar({
       createdAt: null,
       lastInteraction: null,
       interactionCount: 0
-    };
+    } as any;
   }, [extractedPhotoUrl, extractedBotUserId, botName]);
 
   // Если есть projectId и botUserId, используем UserAvatar для загрузки аватарки из API

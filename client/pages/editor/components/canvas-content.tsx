@@ -105,8 +105,6 @@ export function CanvasContent(props: CanvasContentProps) {
     queryFn: () => apiRequest('GET', '/api/projects'),
   });
   const project = projects[0];
-  const projectId = project?.id || 0;
-  const projectName = project?.name || '';
 
   if (currentTab === 'editor') {
     return (
@@ -150,6 +148,8 @@ export function CanvasContent(props: CanvasContentProps) {
     return (
       <div className="h-full">
         <UserDatabasePanel
+          projectId={project?.id ?? 0}
+          projectName={project?.name ?? ''}
           onOpenDialogPanel={props.onOpenDialogPanel}
           onOpenUserDetailsPanel={props.onOpenUserDetailsPanel}
         />
@@ -160,7 +160,7 @@ export function CanvasContent(props: CanvasContentProps) {
   if (currentTab === 'groups') {
     return (
       <div className="h-full">
-        <GroupsPanel />
+        <GroupsPanel projectId={project?.id ?? 0} projectName={project?.name ?? ''} />
       </div>
     );
   }

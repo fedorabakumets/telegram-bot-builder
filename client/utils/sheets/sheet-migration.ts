@@ -27,7 +27,6 @@ export function migrateLegacyData(legacyData: BotData): BotDataWithSheets {
     id: nanoid(),
     name: 'Лист 1',
     nodes: nodes,
-    connections: [],
     viewState: {
       pan: { x: 0, y: 0 },
       zoom: 100

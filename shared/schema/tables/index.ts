@@ -48,8 +48,8 @@ export type { Button } from "./button-schema";
 export { nodeSchema } from "./node-schema";
 export type { Node } from "./node-schema";
 
-export { sheetViewStateSchema, canvasSheetSchema, botDataWithSheetsSchema, botDataSchema, connectionSchema } from "./bot-sheets";
-export type { SheetViewState, CanvasSheet, BotDataWithSheets, BotData, Connection } from "./bot-sheets";
+export { sheetViewStateSchema, canvasSheetSchema, botDataWithSheetsSchema, botDataSchema } from "./bot-sheets";
+export type { SheetViewState, CanvasSheet, BotDataWithSheets, BotData } from "./bot-sheets";
 
 export { sendMessageSchema } from "./additional-schemas";
 export type { SendMessage, ComponentDefinition } from "./additional-schemas";

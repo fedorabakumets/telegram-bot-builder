@@ -16,6 +16,4 @@ export type { QrStatusHeaderProps } from '../components/qr-status-header';
 export type { QrInfoTextProps } from '../components/qr-info-text';
 export type { QrStatusButtonProps } from '../components/qr-status-button';
 export type { QrActionButtonsProps } from '../components/qr-action-buttons';
-export type { StartStepViewProps } from '../components/start-step-view';
-export type { QrStepViewProps } from '../components/qr-step-view';
-export type { QrPasswordStepViewProps } from '../components/qr-password-step-view';
+export type { StartStepViewProps, QrStepViewProps, QrPasswordStepViewProps } from './telegram-auth-view-props';

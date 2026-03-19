@@ -58,8 +58,8 @@ export async function refreshQrToken(
     if (response.success && response.token && response.qrUrl) {
       setQrState((prev) => ({
         ...prev,
-        token: response.token,
-        url: response.qrUrl,
+        token: response.token!,
+        url: response.qrUrl!,
         countdown: response.expires ?? QR_TOKEN_EXPIRY,
       }));
 

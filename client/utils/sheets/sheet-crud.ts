@@ -29,7 +29,6 @@ export function createSheet(name: string, nodes: Node[] = []): CanvasSheet {
     id: nanoid(),
     name,
     nodes: defaultNodes,
-    connections: [],
     viewState: {
       pan: { x: 0, y: 0 },
       zoom: 100
@@ -69,7 +68,6 @@ export function duplicateSheet(originalSheet: CanvasSheet): CanvasSheet {
     id: nanoid(),
     name: `${originalSheet.name} (копия)`,
     nodes: updatedNodesWithReferences,
-    connections: [],
     viewState: { ...originalSheet.viewState },
     createdAt: new Date(),
     updatedAt: new Date()

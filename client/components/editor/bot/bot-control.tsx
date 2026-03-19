@@ -201,13 +201,13 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
       // Нужно получить projectId для токена
       // Используем напрямую API для получения информации о токене, чтобы избежать проблем с кэшем
       const allTokensFlat = allTokens.flat();
-      const token = allTokensFlat.find(t => t.id === tokenId);
+      const token = allTokensFlat.find((t: BotToken) => t.id === tokenId);
 
       // Если токен не найден в кэше, попробуем получить его напрямую
       if (!token) {
         // В этом случае мы можем получить токены всех проектов снова
         for (const projectTokens of allTokens) {
-          const foundToken = projectTokens.find(t => t.id === tokenId);
+          const foundToken = projectTokens.find((t: BotToken) => t.id === tokenId);
           if (foundToken) {
             const response = await apiRequest('PUT', `/api/projects/${foundToken.projectId}/tokens/${tokenId}/bot-info`, { field, value });
             return response;
@@ -271,7 +271,7 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
   // Получаем все токены в плоский массив с projectId
   const allTokensFlat = useMemo(() => 
     allTokens?.flatMap((tokens, idx) =>
-      tokens.map(token => ({ ...token, projectId: projects[idx]?.id }))
+      tokens.map((token: BotToken) => ({ ...token, projectId: projects[idx]?.id }))
     ) || [],
     [allTokens, projects]
   );
@@ -486,13 +486,13 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
       // Нужно получить projectId для токена
       // Используем напрямую API для получения информации о токене, чтобы избежать проблем с кэшем
       const allTokensFlat = allTokens.flat();
-      const token = allTokensFlat.find(t => t.id === tokenId);
+      const token = allTokensFlat.find((t: BotToken) => t.id === tokenId);
 
       // Если токен не найден в кэше, попробуем получить его напрямую
       if (!token) {
         // В этом случае мы можем получить токены всех проектов снова
         for (const projectTokens of allTokens) {
-          const foundToken = projectTokens.find(t => t.id === tokenId);
+          const foundToken = projectTokens.find((t: BotToken) => t.id === tokenId);
           if (foundToken) {
             return apiRequest('DELETE', `/api/projects/${foundToken.projectId}/tokens/${tokenId}`);
           }

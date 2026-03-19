@@ -10,7 +10,6 @@ import { ToggleCanvasButton } from './toggle-canvas-button';
 import { TogglePropertiesButton } from './toggle-properties-button';
 import { ToggleCodeButton } from './toggle-code-button';
 import { ToggleCodeEditorButton } from './toggle-code-editor-button';
-import { OpenFileExplorerButton } from './open-file-explorer-button';
 import { LoadTemplateButton } from './load-template-button';
 import { SaveTemplateButton } from './save-template-button';
 import { ThemeToggle } from './theme-toggle';

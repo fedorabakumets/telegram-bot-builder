@@ -189,7 +189,7 @@ export function ResponseMedia({
       return (
         <div className="rounded-lg overflow-hidden max-w-md">
           <img
-            src={valueStr}
+            src={normalizedValue}
             alt="Фото ответ"
             className="w-full h-auto rounded-lg border border-border"
             onError={() => setMediaError(true)}
@@ -198,7 +198,7 @@ export function ResponseMedia({
       );
     }
 
-    const photoUrl = getPhotoUrlFromMessages(valueStr);
+    const photoUrl = getPhotoUrlFromMessages(normalizedValue);
     if (photoUrl) {
       return (
         <div className="rounded-lg overflow-hidden max-w-md">

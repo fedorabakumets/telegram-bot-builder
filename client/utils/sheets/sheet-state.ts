@@ -141,11 +141,10 @@ export function validateData(data: BotDataWithSheets): string[] {
 export function toLegacyFormat(data: BotDataWithSheets): BotData {
   const activeSheet = getActiveSheet(data);
   if (!activeSheet) {
-    return { nodes: [], connections: [] };
+    return { nodes: [] };
   }
 
   return {
     nodes: activeSheet.nodes,
-    connections: activeSheet.connections || []
   };
 }
