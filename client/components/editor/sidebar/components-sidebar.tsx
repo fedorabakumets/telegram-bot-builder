@@ -5,6 +5,7 @@ import {
   handleProjectDragStart,
   handleProjectDragOver,
   handleProjectDragLeave,
+  handleProjectDragEnd,
   handleProjectDrop,
 } from './handlers';
 import { componentCategories } from './constants';
@@ -364,6 +365,7 @@ export function ComponentsSidebar({
                       dragOverSheet: sheetDragState.dragOverSheet,
                     }}
                     onProjectDragStart={(e: React.DragEvent) => handleProjectDragStart(e, { project, setDraggedSheet, setDraggedProject })}
+                    onProjectDragEnd={() => handleProjectDragEnd(setDraggedProject, setDragOverProject)}
                     onProjectDragOver={(e: React.DragEvent) => {
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';

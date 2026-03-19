@@ -93,6 +93,8 @@ export interface ProjectCardProps {
   dragState: DragState;
   /** Обработчик начала перетаскивания проекта */
   onProjectDragStart: (e: React.DragEvent) => void;
+  /** Обработчик завершения перетаскивания проекта */
+  onProjectDragEnd?: (e: React.DragEvent) => void;
   /** Обработчик перетаскивания над проектом */
   onProjectDragOver: (e: React.DragEvent) => void;
   /** Обработчик ухода с проекта при перетаскивании */
@@ -161,6 +163,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onSheetDelete,
   dragState,
   onProjectDragStart,
+  onProjectDragEnd,
   onProjectDragOver,
   onProjectDragLeave,
   onProjectDrop,
@@ -361,6 +364,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       draggable
       data-project-id={project.id}
       onDragStart={handleProjectDragStart}
+      onDragEnd={(e) => {
+        onProjectDragEnd?.(e);
+      }}
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';

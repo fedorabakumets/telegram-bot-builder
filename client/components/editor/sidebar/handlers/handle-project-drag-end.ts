@@ -1,7 +1,9 @@
 /**
  * @fileoverview Обработчик завершения перетаскивания проекта
- * Сбрасывает все состояния перетаскивания
+ * Сбрасывает состояние перетаскиваемого проекта
+ * @module components/editor/sidebar/handlers/handle-project-drag-end
  */
+
 import { Dispatch, SetStateAction } from 'react';
 
 /**
@@ -13,6 +15,7 @@ export const handleProjectDragEnd = (
   setDraggedProject: Dispatch<SetStateAction<any>>,
   setDragOverProject: Dispatch<SetStateAction<number | null>>
 ) => {
+  console.log('🏁 Завершение перетаскивания проекта');
   setDraggedProject(null);
   setDragOverProject(null);
 };
