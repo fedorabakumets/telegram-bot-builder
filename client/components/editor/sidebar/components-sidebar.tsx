@@ -3,7 +3,7 @@ import { cn } from '@/utils/utils';
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
-import { parsePythonCodeToJson } from '@lib/bot-generator/format';
+import { parsePythonBotToJson } from './utils/parse-python-bot-to-json';
 import {
   handleProjectDragStart,
   handleProjectDragOver,
@@ -178,28 +178,6 @@ export function ComponentsSidebar({
    */
   const handleCreateProject = () => {
     createProject({ projectCount: projects.length, onProjectSelect });
-  };
-
-  const parsePythonBotToJson = (pythonCode: string) => {
-    const { nodes, connections } = parsePythonCodeToJson(pythonCode);
-
-    const projectData = {
-      sheets: [
-        {
-          id: 'main',
-          name: 'Импортированный бот',
-          nodes: nodes,
-          connections: connections
-        }
-      ],
-      version: 2,
-      activeSheetId: 'main'
-    };
-
-    return {
-      data: projectData,
-      nodeCount: nodes.length
-    };
   };
 
   const handleImportProject = () => {
