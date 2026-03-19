@@ -24,14 +24,14 @@ import { useSidebarSheetDrag } from './hooks/use-sidebar-sheet-drag';
 import { createTouchHandlers, registerGlobalTouchHandlers } from './components/sidebar-touch-handlers';
 import { ProjectCard } from './components/project-card';
 import { ComponentsTab } from './components/components-tab';
+import { SidebarHeader } from './components/sidebar-header';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Home, Plus, X } from 'lucide-react';
+import { Home, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
-import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 
@@ -202,58 +202,19 @@ export function ComponentsSidebar({
   const SidebarContent = () => (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Sidebar Header */}
-      <div className="p-4 border-b border-border/30 bg-gradient-to-r from-slate-50/50 dark:from-slate-900/30 to-transparent">
-        <div className="flex items-center justify-between gap-2 mb-4">
-          <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300 bg-clip-text text-transparent">Компоненты</h2>
-          <div className="flex items-center gap-1">
-            {/* Кнопки макета отображаются когда только панель компонентов видна */}
-            {showLayoutButtons && (
-              <LayoutButtons
-                onToggleCanvas={onToggleCanvas}
-                onToggleHeader={onToggleHeader}
-                onToggleProperties={onToggleProperties}
-                onShowFullLayout={onShowFullLayout}
-                canvasVisible={canvasVisible}
-                headerVisible={headerVisible}
-                propertiesVisible={propertiesVisible}
-                className="scale-75 -mr-2"
-              />
-            )}
-            {onClose && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 flex-shrink-0"
-                onClick={onClose}
-                title="Закрыть панель компонентов"
-                data-testid="button-close-components-sidebar"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-        <div className="flex space-x-1 bg-gradient-to-r from-slate-200/40 to-slate-100/20 dark:from-slate-800/40 dark:to-slate-700/20 rounded-lg p-1 backdrop-blur-sm border border-slate-300/20 dark:border-slate-600/20">
-          <button
-            onClick={() => setCurrentTab('elements')}
-            className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${currentTab === 'elements'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30'
-                : 'text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-700/30'
-              }`}
-          >
-            Элементы
-          </button>
-          <button
-            onClick={() => setCurrentTab('projects')}
-            className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${currentTab === 'projects'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30'
-                : 'text-muted-foreground hover:text-foreground hover:bg-white/40 dark:hover:bg-slate-700/30'
-              }`}
-          >
-            Проекты
-          </button>
-        </div>
-      </div>
+      <SidebarHeader
+        currentTab={currentTab}
+        onTabChange={setCurrentTab}
+        showLayoutButtons={showLayoutButtons}
+        canvasVisible={canvasVisible}
+        headerVisible={headerVisible}
+        propertiesVisible={propertiesVisible}
+        onToggleCanvas={onToggleCanvas}
+        onToggleHeader={onToggleHeader}
+        onToggleProperties={onToggleProperties}
+        onShowFullLayout={onShowFullLayout}
+        onClose={onClose}
+      />
 
       {/* Components List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
