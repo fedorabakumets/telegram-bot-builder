@@ -2,16 +2,11 @@ import { ComponentDefinition, BotProject } from '@shared/schema';
 import { cn } from '@/utils/utils';
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { SheetsManager } from '@/utils/sheets-manager';
 import {
   handleProjectDragStart,
   handleProjectDragOver,
   handleProjectDragLeave,
   handleProjectDrop,
-  handleProjectDragEnd,
-  formatDate,
-  getNodeCount,
-  getSheetsInfo
 } from './handlers';
 import { componentCategories } from './constants';
 import type { ComponentsSidebarProps } from './sidebar.types';
@@ -28,16 +23,15 @@ import { useCreateProjectMutation } from './hooks/use-create-project-mutation';
 import { useDeleteProjectMutation } from './hooks/use-delete-project-mutation';
 import { useSidebarSheetDrag } from './hooks/use-sidebar-sheet-drag';
 import { createTouchHandlers, registerGlobalTouchHandlers } from './components/sidebar-touch-handlers';
+import { ProjectCard } from './components/project-card';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Home, Plus, Trash2, Calendar, GripVertical, FileText, Copy, Share2, ChevronDown, ChevronRight, X, Zap } from 'lucide-react';
+import { Home, Plus, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 
@@ -456,11 +450,26 @@ export function ComponentsSidebar({
             ) : (
               <div className="space-y-3">
                 {projects.map((project: BotProject) => (
-                  <div
+                  <ProjectCard
                     key={project.id}
-                    draggable
-                    onDragStart={(e) => handleProjectDragStart(e, { project, setDraggedSheet, setDraggedProject })}
-                    onDragOver={(e) => {
+                    project={project}
+                    isActive={currentProjectId === project.id}
+                    currentProjectId={currentProjectId}
+                    activeSheetId={activeSheetId}
+                    onProjectSelect={onProjectSelect}
+                    onProjectDelete={handleDeleteProject}
+                    onSheetSelect={onSheetSelect}
+                    onSheetRename={onSheetRename}
+                    onSheetDuplicate={onSheetDuplicate}
+                    onSheetDelete={onSheetDelete}
+                    dragState={{
+                      draggedProject: projectDragState.draggedProject,
+                      dragOverProject: projectDragState.dragOverProject,
+                      draggedSheet: sheetDragState.draggedSheet,
+                      dragOverSheet: sheetDragState.dragOverSheet,
+                    }}
+                    onProjectDragStart={(e) => handleProjectDragStart(e, { project, setDraggedSheet, setDraggedProject })}
+                    onProjectDragOver={(e) => {
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
                       handleProjectDragOver(e, project.id, setDragOverProject);
@@ -469,11 +478,11 @@ export function ComponentsSidebar({
                         setDragOverSheet(`project-${project.id}`);
                       }
                     }}
-                    onDragLeave={() => {
+                    onProjectDragLeave={() => {
                       handleProjectDragLeave(setDragOverProject);
                       setDragOverSheet(null);
                     }}
-                    onDrop={(e) => {
+                    onProjectDrop={(e) => {
                       console.log('🎯 Drop on project:', sheetDragState.draggedSheet, projectDragState.draggedProject);
                       if (sheetDragState.draggedSheet) {
                         handleSheetDropOnProject(e, project.id);
@@ -481,267 +490,64 @@ export function ComponentsSidebar({
                         handleProjectDrop(e, { draggedProject: projectDragState.draggedProject, targetProject: project, queryClient, setDraggedProject, setDragOverProject, toast });
                       }
                     }}
-                    onDragEnd={() => handleProjectDragEnd(setDraggedProject, setDragOverProject)}
-                    className={`group p-2.5 xs:p-3 sm:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm overflow-hidden ${currentProjectId === project.id
-                        ? 'bg-gradient-to-br from-blue-600/20 via-blue-500/10 to-cyan-600/15 dark:from-blue-600/30 dark:via-blue-500/20 dark:to-cyan-600/25 border-blue-500/50 dark:border-blue-400/50 shadow-lg shadow-blue-500/25'
-                        : 'bg-gradient-to-br from-slate-50/60 to-slate-100/40 dark:from-slate-900/50 dark:to-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:border-slate-300/60 dark:hover:border-slate-600/60 hover:bg-gradient-to-br hover:from-slate-100/80 hover:to-slate-100/50 dark:hover:from-slate-800/70 dark:hover:to-slate-700/50 hover:shadow-md hover:shadow-slate-500/20'
-                      } ${projectDragState.dragOverProject === project.id || sheetDragState.dragOverSheet === `project-${project.id}` ? 'border-blue-500 border-2 shadow-xl shadow-blue-500/50 bg-gradient-to-br from-blue-600/25 to-cyan-600/20 dark:from-blue-600/40 dark:to-cyan-600/30' : ''
-                      } ${projectDragState.draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
-                      }`}
-                    onClick={() => onProjectSelect && onProjectSelect(project.id)}
-                  >
-                    {/* Header Section */}
-                    <div className="flex gap-1.5 xs:gap-2 sm:gap-3 mb-2.5 xs:mb-3 sm:mb-4 items-start">
-                      <div className="hidden xs:flex cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 flex-shrink-0 mt-0.5">
-                        <GripVertical className="h-4 xs:h-4.5 w-4 xs:w-4.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-xs xs:text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 break-words leading-tight line-clamp-2">
-                          {project.name}
-                        </h4>
-                        {project.description && (
-                          <p className="text-xs text-slate-600 dark:text-slate-400 break-words line-clamp-1 xs:line-clamp-2 leading-relaxed mt-1">
-                            {project.description}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <span className={`text-xs px-1.5 xs:px-2 py-0.5 rounded-full whitespace-nowrap font-semibold flex-shrink-0 transition-all ${project.ownerId === null
-                            ? 'bg-blue-500/25 text-blue-700 dark:text-blue-300'
-                            : 'bg-green-500/25 text-green-700 dark:text-green-300'
-                          }`}>
-                          {project.ownerId === null ? '👥' : '👤'}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteProject(project.id);
-                          }}
-                          className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 p-0 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 rounded-md flex-shrink-0"
-                        >
-                          <Trash2 className="h-3 xs:h-3.5 w-3 xs:w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
+                    onSheetDragStart={(e, sheetId) => {
+                      if (sheetId) handleSheetDragStart(e, sheetId, project.id);
+                    }}
+                    onSheetDragOver={() => {}}
+                    onSheetDragLeave={() => {
+                      setDraggedSheet(null);
+                    }}
+                    onSheetDrop={() => {}}
+                    editingState={editingState}
+                    onStartEditingSheet={handleStartEditingSheet}
+                    onSaveSheetName={handleSaveSheetName}
+                    onCancelEditSheetName={handleCancelEditingSheet}
+                    onEditingSheetNameChange={setEditingName}
+                    allProjects={projects}
+                    onMoveSheetToProject={async (sourceProjectId, targetProjectId, sheetId) => {
+                      const sourceProject = projects.find(p => p.id === sourceProjectId);
+                      const targetProject = projects.find(p => p.id === targetProjectId);
+                      if (!sourceProject || !targetProject) return;
 
-                    {/* Metadata Section */}
-                    <div className="flex flex-col xs:flex-row gap-1.5 xs:gap-2 text-xs mb-2.5 xs:mb-3 sm:mb-4 flex-wrap">
-                      <span className="flex items-center gap-1 bg-blue-500/15 dark:bg-blue-600/20 px-2 xs:px-2.5 py-1 rounded-md border border-blue-400/30 dark:border-blue-500/30 font-semibold text-blue-700 dark:text-blue-300 whitespace-nowrap">
-                        <Zap className="h-3 w-3" />
-                        <span className="text-xs">{getNodeCount(project)}</span>
-                      </span>
-                      <span className="flex items-center gap-1 bg-purple-500/15 dark:bg-purple-600/20 px-2 xs:px-2.5 py-1 rounded-md border border-purple-400/30 dark:border-purple-500/30 font-semibold text-purple-700 dark:text-purple-300 whitespace-nowrap">
-                        <FileText className="h-3 w-3" />
-                        <span className="text-xs">{(() => { const info = getSheetsInfo(project); return info.count; })()}</span>
-                      </span>
-                      <span className="flex items-center gap-1 bg-slate-500/15 dark:bg-slate-600/20 px-2 xs:px-2.5 py-1 rounded-md border border-slate-400/30 dark:border-slate-500/30 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        <Calendar className="h-3 w-3" />
-                        <span className="text-xs">{formatDate(project.updatedAt).split(',')[0]}</span>
-                      </span>
-                    </div>
+                      const sourceData = sourceProject.data as any;
+                      const targetData = targetProject.data as any;
 
-                    {/* Sheets Section */}
-                    {(() => {
-                      const sheetsInfo = getSheetsInfo(project);
-                      return (
-                        <div className="space-y-1 xs:space-y-1.5">
-                          {sheetsInfo.names.length > 0 && (
-                            <div className="space-y-0.5 sm:space-y-1">
-                              {sheetsInfo.names.map((name: string, index: number) => {
-                                const projectData = project.data as any;
-                                const sheetId = SheetsManager.isNewFormat(projectData) ? projectData.sheets[index]?.id : null;
-                                const isActive = currentProjectId === project.id && sheetId === activeSheetId;
-                                const isEditing = editingState.editingSheetId !== null && sheetId !== null && editingState.editingSheetId === sheetId;
+                      if (!sourceData?.sheets || !targetData?.sheets) return;
 
-                                return (
-                                  <div key={index} className="flex items-center gap-1 sm:gap-1.5 group/sheet px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md hover:bg-muted/50 transition-colors">
-                                    {isEditing ? (
-                                      <Input
-                                        value={editingState.editingSheetName}
-                                        onChange={(e) => setEditingName(e.target.value)}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') {
-                                            handleSaveSheetName();
-                                          } else if (e.key === 'Escape') {
-                                            handleCancelEditingSheet();
-                                          }
-                                        }}
-                                        onBlur={handleSaveSheetName}
-                                        autoFocus
-                                        className="text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 h-5 sm:h-6 flex-1 font-medium"
-                                      />
-                                    ) : (
-                                      <div
-                                        draggable
-                                        onDragStart={(e) => {
-                                          if (sheetId) handleSheetDragStart(e, sheetId, project.id);
-                                        }}
-                                        onDragEnd={() => {
-                                          setDraggedSheet(null);
-                                        }}
-                                        className={`text-xs px-1.5 sm:px-2 py-0.5 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center text-center line-clamp-1 ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted/50 text-foreground hover:bg-muted'
-                                          } ${sheetDragState.draggedSheet?.sheetId === sheetId && sheetDragState.draggedSheet?.projectId === project.id ? 'opacity-50' : ''
-                                          }`}
-                                        onClick={() => {
-                                          if (currentProjectId === project.id && onSheetSelect && SheetsManager.isNewFormat(projectData)) {
-                                            const sheetId = projectData.sheets[index]?.id;
-                                            if (sheetId) {
-                                              onSheetSelect(sheetId);
-                                            }
-                                          }
-                                        }}
-                                        onDoubleClick={() => {
-                                          if (currentProjectId === project.id && SheetsManager.isNewFormat(projectData)) {
-                                            const sheetId = projectData.sheets[index]?.id;
-                                            if (sheetId) {
-                                              handleStartEditingSheet(sheetId, name);
-                                            }
-                                          }
-                                        }}
-                                        title={name}
-                                      >
-                                        <span className="truncate">{name || 'Без названия'}</span>
-                                      </div>
-                                    )}
+                      const sourceSheetIndex = sourceData.sheets.findIndex((s: any) => s.id === sheetId);
+                      if (sourceSheetIndex === -1) return;
 
-                                    {/* Кнопки управления листом */}
-                                    {currentProjectId === project.id && !isEditing && (
-                                      <div className="flex gap-0.5 sm:gap-1 opacity-0 group-hover/sheet:opacity-100 transition-opacity flex-shrink-0">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-5 sm:h-6 w-5 sm:w-6 p-0 hover:bg-green-500/20 text-green-600 dark:text-green-400 rounded transition-all"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (SheetsManager.isNewFormat(projectData)) {
-                                              const sheetId = projectData.sheets[index]?.id;
-                                              if (sheetId && onSheetDuplicate) {
-                                                onSheetDuplicate(sheetId);
-                                              }
-                                            }
-                                          }}
-                                          title="Дублировать лист"
-                                        >
-                                          <Copy className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
-                                        </Button>
+                      const sheetToMove = sourceData.sheets[sourceSheetIndex];
+                      const newSheet = JSON.parse(JSON.stringify(sheetToMove));
+                      targetData.sheets.push(newSheet);
+                      sourceData.sheets.splice(sourceSheetIndex, 1);
 
-                                        {projects.length > 1 && (
-                                          <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-5 sm:h-6 w-5 sm:w-6 p-0 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded transition-all"
-                                                title="Переместить в другой проект"
-                                              >
-                                                <Share2 className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
-                                              </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-56" side="top" sideOffset={5}>
-                                              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Переместить в</div>
-                                              {projects.map((otherProject) => {
-                                                if (otherProject.id === project.id) return null;
-                                                const targetInfo = getSheetsInfo(otherProject);
-                                                const targetNodeCount = getNodeCount(otherProject);
-                                                return (
-                                                  <DropdownMenuItem
-                                                    key={otherProject.id}
-                                                    onClick={async (e: React.MouseEvent) => {
-                                                      e.stopPropagation();
-                                                      const sourceData = projectData;
-                                                      const targetData = otherProject.data as any;
+                      try {
+                        await Promise.all([
+                          apiRequest('PUT', `/api/projects/${sourceProjectId}`, { data: sourceData }),
+                          apiRequest('PUT', `/api/projects/${targetProjectId}`, { data: targetData })
+                        ]);
 
-                                                      if (!sourceData?.sheets || !targetData?.sheets) return;
+                        const updatedProjects = projects.map(p => {
+                          if (p.id === sourceProjectId) return { ...p, data: sourceData };
+                          if (p.id === targetProjectId) return { ...p, data: targetData };
+                          return p;
+                        });
+                        queryClient.setQueryData(['/api/projects'], updatedProjects);
 
-                                                      const sourceSheetIndex = sourceData.sheets.findIndex((s: any) => s.id === sheetId);
-                                                      if (sourceSheetIndex === -1) return;
-
-                                                      const sheetToMove = sourceData.sheets[sourceSheetIndex];
-                                                      const newSheet = JSON.parse(JSON.stringify(sheetToMove));
-                                                      targetData.sheets.push(newSheet);
-                                                      sourceData.sheets.splice(sourceSheetIndex, 1);
-
-                                                      try {
-                                                        await Promise.all([
-                                                          apiRequest('PUT', `/api/projects/${project.id}`, { data: sourceData }),
-                                                          apiRequest('PUT', `/api/projects/${otherProject.id}`, { data: targetData })
-                                                        ]);
-
-                                                        const updatedProjects = projects.map(p => {
-                                                          if (p.id === project.id) return { ...p, data: sourceData };
-                                                          if (p.id === otherProject.id) return { ...p, data: targetData };
-                                                          return p;
-                                                        });
-                                                        queryClient.setQueryData(['/api/projects'], updatedProjects);
-
-                                                        toast({
-                                                          title: "✅ Лист перемещен",
-                                                          description: `"${sheetToMove.name}" → "${otherProject.name}"`,
-                                                        });
-                                                      } catch (error: any) {
-                                                        toast({
-                                                          title: "❌ Ошибка",
-                                                          description: error.message,
-                                                          variant: "destructive",
-                                                        });
-                                                      }
-                                                    }}
-                                                    className="flex flex-col gap-1.5 cursor-pointer py-2.5"
-                                                  >
-                                                    <div className="flex items-center justify-between gap-2">
-                                                      <span className="font-medium text-sm truncate">{otherProject.name}</span>
-                                                      {otherProject.ownerId === null && (
-                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300 font-medium flex-shrink-0">👥</span>
-                                                      )}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5">
-                                                      <span className="text-xs bg-blue-500/10 dark:bg-blue-600/15 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded flex items-center gap-1">
-                                                        <Zap className="h-2.5 w-2.5" />
-                                                        {targetNodeCount}
-                                                      </span>
-                                                      <span className="text-xs bg-purple-500/10 dark:bg-purple-600/15 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded flex items-center gap-1">
-                                                        <FileText className="h-2.5 w-2.5" />
-                                                        {targetInfo.count}
-                                                      </span>
-                                                    </div>
-                                                  </DropdownMenuItem>
-                                                );
-                                              })}
-                                            </DropdownMenuContent>
-                                          </DropdownMenu>
-                                        )}
-
-                                        {sheetsInfo.count > 1 && (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 sm:h-6 w-5 sm:w-6 p-0 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded transition-all"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              if (sheetId && SheetsManager.isNewFormat(projectData)) {
-                                                if (onSheetDelete) {
-                                                  onSheetDelete(sheetId);
-                                                }
-                                              }
-                                            }}
-                                            title="Удалить лист"
-                                          >
-                                            <Trash2 className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
-                                          </Button>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
+                        toast({
+                          title: "✅ Лист перемещен",
+                          description: `"${sheetToMove.name}" → "${targetProject.name}"`,
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: "❌ Ошибка",
+                          description: error.message,
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  />
                 ))}
               </div>
             )}
