@@ -29,12 +29,12 @@ interface ProjectDropParams {
  * @param params - Параметры обработчика
  */
 export const handleProjectDrop = async (
-  e: React.DragEvent,
-  { draggedProject, targetProject, queryClient, setDraggedProject, setDragOverProject, toast }: ProjectDropParams
+ e: React.DragEvent | null,
+ { draggedProject, targetProject, queryClient, setDraggedProject, setDragOverProject, toast }: ProjectDropParams
 ) => {
-  e.preventDefault();
-  e.stopPropagation();
-  setDragOverProject(null);
+ e?.preventDefault?.();
+ e?.stopPropagation?.();
+ setDragOverProject(null);
 
   console.log('🎯 Попытка перемещения:', draggedProject?.name, '→', targetProject.name);
 
