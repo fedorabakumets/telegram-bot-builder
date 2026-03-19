@@ -131,6 +131,12 @@ export interface ProjectCardProps {
   allProjects?: BotProject[];
   /** Обработчик перемещения листа в другой проект */
   onMoveSheetToProject?: (sourceProjectId: number, targetProjectId: number, sheetId: string) => void;
+  /** Обработчик начала touch перетаскивания проекта */
+  onTouchStart?: (e: React.TouchEvent) => void;
+  /** Обработчик движения touch перетаскивания проекта */
+  onTouchMove?: (e: React.TouchEvent) => void;
+  /** Обработчик окончания touch перетаскивания проекта */
+  onTouchEnd?: (e: React.TouchEvent) => void;
 }
 
 /**
@@ -176,6 +182,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onEditingProjectNameChange,
   allProjects = [],
   onMoveSheetToProject,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
 }) => {
   // Используем пропсы для совместимости интерфейса
   // onSheetRename вызывается через onSaveSheetName в родительском компоненте
@@ -280,10 +289,36 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     }
   };
 
+  /**
+   * Обработчик начала перетаскивания проекта
+   * Разрешает drag-and-drop, но не мешает выделению текста
+   */
+  const handleProjectDragStart = (e: React.DragEvent) => {
+    const target = e.target as HTMLElement;
+    
+    // Запрещаем drag-and-drop для элементов ввода текста
+    const tagName = target.tagName.toLowerCase();
+    if (tagName === 'input' || tagName === 'textarea' || target.isContentEditable) {
+      e.preventDefault();
+      return;
+    }
+    
+    // Проверяем, есть ли выделение текста
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) {
+      // Если текст уже выделен, не начинаем drag-and-drop
+      e.preventDefault();
+      return;
+    }
+    
+    // Вызываем родительский обработчик (он установит dataTransfer и draggedProject)
+    onProjectDragStart(e);
+  };
+
   return (
     <div
       draggable
-      onDragStart={onProjectDragStart}
+      onDragStart={handleProjectDragStart}
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
@@ -305,7 +340,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     >
       {/* Заголовок проекта */}
       <div className="flex gap-1.5 xs:gap-2 sm:gap-3 mb-2.5 xs:mb-3 sm:mb-4 items-start">
-        <div className="hidden xs:flex cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 flex-shrink-0 mt-0.5">
+        <div
+          data-grip="true"
+          className="hidden xs:flex cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 flex-shrink-0 mt-0.5"
+        >
           <GripVertical className="h-4 xs:h-4.5 w-4 xs:w-4.5" />
         </div>
         <div className="flex-1 min-w-0">

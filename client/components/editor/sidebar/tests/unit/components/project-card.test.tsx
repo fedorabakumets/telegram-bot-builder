@@ -83,6 +83,14 @@ const defaultProps = {
   onSaveSheetName: vi.fn(),
   onCancelEditSheetName: vi.fn(),
   onEditingSheetNameChange: vi.fn(),
+  projectEditingState: {
+    editingProjectId: null,
+    editingProjectName: '',
+  },
+  onStartEditingProject: vi.fn(),
+  onSaveProjectName: vi.fn(),
+  onCancelEditProjectName: vi.fn(),
+  onEditingProjectNameChange: vi.fn(),
   allProjects: mockAllProjects,
   onMoveSheetToProject: vi.fn(),
 };
@@ -222,6 +230,24 @@ describe('ProjectCard', () => {
     expect(onProjectDragStart).toHaveBeenCalled();
   });
 
+  it('не должен вызывать onProjectDragStart при перетаскивании input', () => {
+    const onProjectDragStart = vi.fn();
+    render(
+      <ProjectCard
+        {...defaultProps}
+        projectEditingState={{
+          editingProjectId: 1,
+          editingProjectName: 'Новое имя',
+        }}
+        onProjectDragStart={onProjectDragStart}
+      />
+    );
+
+    const input = screen.getByDisplayValue('Новое имя');
+    fireEvent.dragStart(input);
+    expect(onProjectDragStart).not.toHaveBeenCalled();
+  });
+
   it('должен применять стили при перетаскивании над проектом', () => {
     const { container } = render(
       <ProjectCard
@@ -322,8 +348,147 @@ describe('ProjectCard', () => {
 
     const sheetElement = screen.getByText('Лист 1').closest('.group\\/sheet');
     const buttonsContainer = sheetElement?.querySelector('.opacity-0');
-    
+
     // Кнопки должны быть с классом opacity-0 когда не hovered
     expect(buttonsContainer).toBeInTheDocument();
+  });
+
+  describe('Редактирование названия проекта', () => {
+    it('должен вызывать onStartEditingProject при двойном клике на название', () => {
+      const onStartEditingProject = vi.fn();
+      render(<ProjectCard {...defaultProps} onStartEditingProject={onStartEditingProject} />);
+
+      const projectName = screen.getByText('Тестовый проект');
+      fireEvent.doubleClick(projectName);
+
+      expect(onStartEditingProject).toHaveBeenCalledWith(1, 'Тестовый проект');
+    });
+
+    it('должен отображать Input в режиме редактирования проекта', () => {
+      render(
+        <ProjectCard
+          {...defaultProps}
+          projectEditingState={{
+            editingProjectId: 1,
+            editingProjectName: 'Новое название',
+          }}
+        />
+      );
+
+      const input = screen.getByDisplayValue('Новое название');
+      expect(input).toBeInTheDocument();
+    });
+
+    it('должен вызывать onSaveProjectName при нажатии Enter в режиме редактирования', () => {
+      const onSaveProjectName = vi.fn();
+      render(
+        <ProjectCard
+          {...defaultProps}
+          projectEditingState={{
+            editingProjectId: 1,
+            editingProjectName: 'Новое название',
+          }}
+          onSaveProjectName={onSaveProjectName}
+        />
+      );
+
+      const input = screen.getByDisplayValue('Новое название');
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      expect(onSaveProjectName).toHaveBeenCalled();
+    });
+
+    it('должен вызывать onCancelEditProjectName при нажатии Escape в режиме редактирования', () => {
+      const onCancelEditProjectName = vi.fn();
+      render(
+        <ProjectCard
+          {...defaultProps}
+          projectEditingState={{
+            editingProjectId: 1,
+            editingProjectName: 'Новое название',
+          }}
+          onCancelEditProjectName={onCancelEditProjectName}
+        />
+      );
+
+      const input = screen.getByDisplayValue('Новое название');
+      fireEvent.keyDown(input, { key: 'Escape' });
+
+      expect(onCancelEditProjectName).toHaveBeenCalled();
+    });
+
+    it('должен вызывать onEditingProjectNameChange при изменении input', () => {
+      const onEditingProjectNameChange = vi.fn();
+      render(
+        <ProjectCard
+          {...defaultProps}
+          projectEditingState={{
+            editingProjectId: 1,
+            editingProjectName: 'Старое название',
+          }}
+          onEditingProjectNameChange={onEditingProjectNameChange}
+        />
+      );
+
+      const input = screen.getByDisplayValue('Старое название');
+      fireEvent.change(input, { target: { value: 'Новое название проекта' } });
+
+      expect(onEditingProjectNameChange).toHaveBeenCalledWith('Новое название проекта');
+    });
+
+    it('должен вызывать onSaveProjectName при потере фокуса input', () => {
+      const onSaveProjectName = vi.fn();
+      render(
+        <ProjectCard
+          {...defaultProps}
+          projectEditingState={{
+            editingProjectId: 1,
+            editingProjectName: 'Новое название',
+          }}
+          onSaveProjectName={onSaveProjectName}
+        />
+      );
+
+      const input = screen.getByDisplayValue('Новое название');
+      fireEvent.blur(input);
+
+      expect(onSaveProjectName).toHaveBeenCalled();
+    });
+
+    it('должен иметь autofocus на input в режиме редактирования', () => {
+      render(
+        <ProjectCard
+          {...defaultProps}
+          projectEditingState={{
+            editingProjectId: 1,
+            editingProjectName: 'Новое название',
+          }}
+        />
+      );
+
+      const input = screen.getByDisplayValue('Новое название');
+      expect(input).toHaveFocus();
+    });
+
+    it('должен показывать подсказку о двойном клике для редактирования', () => {
+      render(<ProjectCard {...defaultProps} />);
+
+      const projectName = screen.getByText('Тестовый проект');
+      expect(projectName).toHaveAttribute('title', 'Двойной клик для редактирования названия');
+    });
+
+    it('должен иметь cursor-pointer на названии проекта', () => {
+      render(<ProjectCard {...defaultProps} />);
+
+      const projectName = screen.getByText('Тестовый проект');
+      expect(projectName).toHaveClass('cursor-pointer');
+    });
+
+    it('должен изменять цвет названия при наведении', () => {
+      render(<ProjectCard {...defaultProps} />);
+
+      const projectName = screen.getByText('Тестовый проект');
+      expect(projectName).toHaveClass('hover:text-blue-600');
+    });
   });
 });
