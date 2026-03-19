@@ -9,14 +9,8 @@ import { getSheetsInfo } from '../../../handlers/get-sheets-info';
 import { BotProject } from '@shared/schema';
 
 describe('getSheetsInfo', () => {
-  let mockConsoleLog: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
-    mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    mockConsoleLog.mockRestore();
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
   });
 
   describe('Старый формат данных', () => {

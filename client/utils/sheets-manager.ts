@@ -628,11 +628,12 @@ export class SheetsManager {
   static toLegacyFormat(data: BotDataWithSheets): BotData {
     const activeSheet = this.getActiveSheet(data);
     if (!activeSheet) {
-      return { nodes: [] };
+      return { nodes: [], connections: [] };
     }
 
     return {
-      nodes: activeSheet.nodes
+      nodes: activeSheet.nodes,
+      connections: activeSheet.connections || []
     };
   }
 }

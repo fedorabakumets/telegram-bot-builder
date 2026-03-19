@@ -4,7 +4,7 @@
  * @module components/editor/sidebar/hooks/useComponentDrag
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { BotProject } from '@shared/schema';
 import type { ProjectDragState, DraggedSheetInfo, SheetDragState } from '../types';
 import {
@@ -56,35 +56,42 @@ export function useComponentDrag(): UseComponentDragResult {
     dragOverSheet: null,
   });
 
+  // Деструктуризация setState функций для передачи в обработчики
+  const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
+  const [dragOverProject, setDragOverProject] = useState<number | null>(null);
+  const [draggedSheet, setDraggedSheet] = useState<DraggedSheetInfo | null>(null);
+  const [dragOverSheet, setDragOverSheet] = useState<string | null>(null);
+
+  // Синхронизация состояний
+  useEffect(() => {
+    setProjectDragState({ draggedProject, dragOverProject });
+  }, [draggedProject, dragOverProject]);
+
+  useEffect(() => {
+    setSheetDragState({ draggedSheet, dragOverSheet });
+  }, [draggedSheet, dragOverSheet]);
+
   // Обработчик начала перетаскивания проекта
   const onProjectDragStart = useCallback((e: React.DragEvent, project: BotProject) => {
-    setProjectDragState((prev) => ({
-      ...prev,
+    setProjectDragState({
       draggedProject: project,
-    }));
+      dragOverProject: null,
+    });
     handleProjectDragStart(e, {
       project,
-      setDraggedSheet: (sheet) => setSheetDragState((prev) => ({ ...prev, draggedSheet: sheet })),
-      setDraggedProject: (proj) => setProjectDragState((prev) => ({ ...prev, draggedProject: proj })),
+      setDraggedSheet,
+      setDraggedProject,
     });
   }, []);
 
   // Обработчик наведения на проект
   const onProjectDragOver = useCallback((e: React.DragEvent, projectId: number) => {
-    setProjectDragState((prev) => ({
-      ...prev,
-      dragOverProject: projectId,
-    }));
-    handleProjectDragOver(e, projectId, (id) => setProjectDragState((prev) => ({ ...prev, dragOverProject: id })));
+    handleProjectDragOver(e, projectId, setDragOverProject);
   }, []);
 
   // Обработчик ухода с проекта
   const onProjectDragLeave = useCallback(() => {
-    setProjectDragState((prev) => ({
-      ...prev,
-      dragOverProject: null,
-    }));
-    handleProjectDragLeave((id) => setProjectDragState((prev) => ({ ...prev, dragOverProject: id })));
+    handleProjectDragLeave(setDragOverProject);
   }, []);
 
   // Обработчик сброса проекта
@@ -92,44 +99,33 @@ export function useComponentDrag(): UseComponentDragResult {
     // Обработчик будет вызван с полным контекстом в компоненте
     handleProjectDragStart(e, {
       project: targetProject,
-      setDraggedSheet: (sheet) => setSheetDragState((prev) => ({ ...prev, draggedSheet: sheet })),
-      setDraggedProject: (proj) => setProjectDragState((prev) => ({ ...prev, draggedProject: proj })),
+      setDraggedSheet,
+      setDraggedProject,
     });
   }, []);
 
   // Обработчик начала перетаскивания листа
   const onSheetDragStart = useCallback((e: React.DragEvent, sheetId: string, projectId: number) => {
     e.stopPropagation();
-    setSheetDragState({
-      draggedSheet: { sheetId, projectId },
-      dragOverSheet: null,
-    });
+    setDraggedSheet({ sheetId, projectId });
   }, []);
 
   // Обработчик наведения на лист
   const onSheetDragOver = useCallback((e: React.DragEvent, sheetId: string) => {
     e.preventDefault();
-    setSheetDragState((prev) => ({
-      ...prev,
-      dragOverSheet: sheetId,
-    }));
+    setDragOverSheet(sheetId);
   }, []);
 
   // Обработчик ухода с листа
   const onSheetDragLeave = useCallback(() => {
-    setSheetDragState((prev) => ({
-      ...prev,
-      dragOverSheet: null,
-    }));
+    setDragOverSheet(null);
   }, []);
 
   // Обработчик сброса листа
   const onSheetDrop = useCallback((e: React.DragEvent, _targetSheetId: string) => {
     e.preventDefault();
-    setSheetDragState({
-      draggedSheet: null,
-      dragOverSheet: null,
-    });
+    setDraggedSheet(null);
+    setDragOverSheet(null);
     // Логика перемещения листа будет реализована в компоненте
   }, []);
 

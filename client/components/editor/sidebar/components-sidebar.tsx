@@ -1,6 +1,6 @@
 import { ComponentDefinition, BotProject } from '@shared/schema';
 import { cn } from '@/utils/utils';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { parsePythonCodeToJson } from '@lib/bot-generator/format';
@@ -15,6 +15,13 @@ import {
   getSheetsInfo
 } from './handlers';
 import { componentCategories } from './constants';
+import type { ComponentsSidebarProps } from './sidebar.types';
+import { useSidebarTabs } from './hooks/use-sidebar-tabs';
+import { useSidebarDragState } from './hooks/use-sidebar-drag-state';
+import { useSidebarEditing } from './hooks/use-sidebar-editing';
+import { useSidebarCategories } from './hooks/use-sidebar-categories';
+import { useSidebarImport } from './hooks/use-sidebar-import';
+import { useSidebarTouch } from './hooks/use-sidebar-touch';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,71 +34,6 @@ import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
-
-/**
- * Свойства компонента боковой панели с компонентами
- * @interface ComponentsSidebarProps
- */
-interface ComponentsSidebarProps {
-  /** Колбэк при начале перетаскивания компонента */
-  onComponentDrag: (component: ComponentDefinition) => void;
-  /** Колбэк при добавлении компонента */
-  onComponentAdd?: (component: ComponentDefinition) => void;
-  /** Колбэк при выборе проекта */
-  onProjectSelect?: (projectId: number) => void;
-  /** Идентификатор текущего проекта */
-  currentProjectId?: number;
-  /** Идентификатор активного листа */
-  activeSheetId?: string | undefined;
-
-  // Новые пропсы для управления макетом
-  /** Колбэк для переключения видимости холста */
-  onToggleCanvas?: () => void;
-  /** Колбэк для переключения видимости заголовка */
-  onToggleHeader?: () => void;
-  /** Колбэк для переключения видимости панели свойств */
-  onToggleProperties?: () => void;
-  /** Колбэк для показа полного макета */
-  onShowFullLayout?: () => void;
-  /** Колбэк для изменения конфигурации макета */
-  onLayoutChange?: (newConfig: any) => void;
-  /** Колбэк для перехода к проектам */
-  onGoToProjects?: () => void;
-  /** Колбэк для добавления листа */
-  onSheetAdd?: (name: string) => void;
-  /** Содержимое заголовка */
-  headerContent?: React.ReactNode;
-  /** Содержимое боковой панели */
-  sidebarContent?: React.ReactNode;
-  /** Содержимое холста */
-  canvasContent?: React.ReactNode;
-  /** Содержимое панели свойств */
-  propertiesContent?: React.ReactNode;
-  /** Видимость холста */
-  canvasVisible?: boolean;
-  /** Видимость заголовка */
-  headerVisible?: boolean;
-  /** Видимость панели свойств */
-  propertiesVisible?: boolean;
-  /** Показывать ли кнопки макета */
-  showLayoutButtons?: boolean;
-
-  // Пропсы для управления листами
-  /** Колбэк для удаления листа */
-  onSheetDelete?: (sheetId: string) => void;
-  /** Колбэк для переименования листа */
-  onSheetRename?: (sheetId: string, name: string) => void;
-  /** Колбэк для дублирования листа */
-  onSheetDuplicate?: (sheetId: string) => void;
-  /** Колбэк для выбора листа */
-  onSheetSelect?: (sheetId: string) => void;
-
-  // Мобильный режим
-  /** Флаг мобильного режима */
-  isMobile?: boolean;
-  /** Колбэк для закрытия панели */
-  onClose?: () => void;
-}
 
 /**
  * Компонент боковой панели с компонентами и управлением проектами
@@ -121,55 +63,60 @@ export function ComponentsSidebar({
   isMobile = false,
   onClose
 }: ComponentsSidebarProps) {
-  // Состояние для управления вкладками и интерфейсом
-  const [currentTab, setCurrentTab] = useState<'elements' | 'projects'>('elements');
+  // Хук управления вкладками
+  const { currentTab, setCurrentTab } = useSidebarTabs();
 
-  // Состояние для drag-and-drop проектов и листов
-  const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
-  const [dragOverProject, setDragOverProject] = useState<number | null>(null);
-  const [draggedSheet, setDraggedSheet] = useState<{ sheetId: string; projectId: number } | null>(null);
-  const [dragOverSheet, setDragOverSheet] = useState<string | null>(null);
+  // Хук управления drag-and-drop
+  const {
+    projectDragState,
+    sheetDragState,
+    setDraggedProject,
+    setDragOverProject,
+    setDraggedSheet,
+    setDragOverSheet,
+  } = useSidebarDragState();
 
-  // Состояние для inline редактирования листов
-  const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
-  const [editingSheetName, setEditingSheetName] = useState('');
+  // Хук управления редактированием
+  const {
+    editingState,
+    startEditing: startEditingSheet,
+    saveEditing: saveEditingSheet,
+    cancelEditing: cancelEditingSheet,
+    setEditingName,
+  } = useSidebarEditing();
 
-  // Состояние для сворачивания/раскрытия категорий
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  // Хук управления категориями
+  const {
+    collapsedCategories,
+    toggleCategory,
+  } = useSidebarCategories();
 
-  // Импорт проекта
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [importJsonText, setImportJsonText] = useState('');
-  const [importPythonText, setImportPythonText] = useState('');
-  const [importError, setImportError] = useState('');
+  // Хук управления импортом
+  const {
+    importState,
+    openDialog: openImportDialog,
+    closeDialog: closeImportDialog,
+    setJsonText: setImportJsonText,
+    setPythonText: setImportPythonText,
+    setError: setImportError,
+    clearImport,
+  } = useSidebarImport();
+
+  // Хук управления touch
+  const {
+    touchState,
+    startTouch,
+    endTouch,
+    updateTouchPosition,
+  } = useSidebarTouch();
+
+  // Рефы для импорта файлов
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pythonFileInputRef = useRef<HTMLInputElement>(null);
-
-  // Touch события для мобильных устройств
-  const [touchedComponent, setTouchedComponent] = useState<ComponentDefinition | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [touchStartElement, setTouchStartElement] = useState<HTMLElement | null>(null);
 
   const isActuallyMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
-  /**
-   * Функция для переключения видимости категории компонентов
-   * Управляет сворачиванием и разворачиванием категорий в списке
-   * @param categoryTitle - Название категории для переключения
-   */
-  const toggleCategory = (categoryTitle: string) => {
-    setCollapsedCategories(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(categoryTitle)) {
-        newSet.delete(categoryTitle);
-      } else {
-        newSet.add(categoryTitle);
-      }
-      return newSet;
-    });
-  };
 
   /**
    * Обработчик начала перетаскивания компонента
@@ -196,21 +143,12 @@ export function ComponentsSidebar({
     const touch = e.touches[0];
     const element = e.currentTarget as HTMLElement;
 
-    setTouchedComponent(component);
-    setIsDragging(true);
-    setTouchStartElement(element);
-
-    const rect = element.getBoundingClientRect();
+    startTouch(component, element);
     onComponentDrag(component);
-
-    // Добавляем визуальную обратную связь
-    element.style.opacity = '0.7';
-    element.style.transform = 'scale(0.95)';
-    element.style.transition = 'all 0.2s ease';
 
     console.log('Touch drag started for:', component.name, {
       touchPos: { x: touch.clientX, y: touch.clientY },
-      elementRect: rect
+      elementRect: element.getBoundingClientRect()
     });
   };
 
@@ -220,10 +158,10 @@ export function ComponentsSidebar({
    * @param e - Событие движения касания
    */
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !touchedComponent) return;
+    if (!touchState.isDragging || !touchState.touchedComponent) return;
     e.preventDefault();
     e.stopPropagation();
-    console.log('Touch move:', { x: e.touches[0].clientX, y: e.touches[0].clientY });
+    updateTouchPosition(e.touches[0].clientX, e.touches[0].clientY);
   };
 
   /**
@@ -232,29 +170,23 @@ export function ComponentsSidebar({
    * @param e - Событие окончания касания
    */
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!isDragging || !touchedComponent) {
+    if (!touchState.isDragging || !touchState.touchedComponent) {
       console.log('Touch end ignored - not dragging or no component');
       return;
     }
 
-    console.log('Touch end for component:', touchedComponent.name);
+    console.log('Touch end for component:', touchState.touchedComponent.name);
     const touch = e.changedTouches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
 
     console.log('Touch end position:', { x: touch.clientX, y: touch.clientY });
     console.log('Element at touch point:', element);
 
-    // Возвращаем стили элемента
-    const currentTarget = e.currentTarget as HTMLElement;
-    currentTarget.style.opacity = '';
-    currentTarget.style.transform = '';
-
     // Проверяем, попали ли мы на холст или в область холста
     const canvas = document.querySelector('[data-canvas-drop-zone]');
     console.log('Canvas element found:', canvas);
 
     if (canvas && element) {
-      // Проверяем если элемент находится внутри canvas или является самим canvas
       const isInCanvas = canvas.contains(element) || element === canvas ||
         element.closest('[data-canvas-drop-zone]') === canvas;
 
@@ -267,10 +199,9 @@ export function ComponentsSidebar({
           y: touch.clientY - canvasRect.top
         };
 
-        // Создаем синтетическое событие drop
         const dropEvent = new CustomEvent('canvas-drop', {
           detail: {
-            component: touchedComponent,
+            component: touchState.touchedComponent,
             position: dropPosition
           }
         });
@@ -278,9 +209,7 @@ export function ComponentsSidebar({
       }
     }
 
-    setTouchedComponent(null);
-    setIsDragging(false);
-    setTouchStartElement(null);
+    endTouch();
   };
 
   /**
@@ -288,36 +217,17 @@ export function ComponentsSidebar({
    * Обеспечивают корректную работу drag-and-drop на всем экране
    */
   useEffect(() => {
-    /**
-     * Обработчик глобального движения касания
-     * Предотвращает скролл страницы во время перетаскивания
-     * @param e - Событие касания
-     */
     const handleGlobalTouchMove = (e: TouchEvent) => {
-      if (isDragging && touchedComponent) {
+      if (touchState.isDragging && touchState.touchedComponent) {
         e.preventDefault();
       }
     };
 
-    /**
-     * Обработчик глобального окончания касания
-     * Завершает перетаскивание независимо от того, где закончилось касание
-     * @param e - Событие касания
-     */
     const handleGlobalTouchEnd = (e: TouchEvent) => {
-      if (!isDragging || !touchedComponent) return;
+      if (!touchState.isDragging || !touchState.touchedComponent) return;
 
       const touch = e.changedTouches[0];
       const element = document.elementFromPoint(touch.clientX, touch.clientY);
-
-      // Восстанавливаем стили элемента
-      if (touchStartElement) {
-        touchStartElement.style.opacity = '';
-        touchStartElement.style.transform = '';
-        touchStartElement.style.transition = '';
-      }
-
-      // Проверяем, попали ли мы на холст
       const canvas = document.querySelector('[data-canvas-drop-zone]');
 
       if (canvas && element) {
@@ -333,7 +243,7 @@ export function ComponentsSidebar({
 
           const dropEvent = new CustomEvent('canvas-drop', {
             detail: {
-              component: touchedComponent,
+              component: touchState.touchedComponent,
               position: dropPosition
             }
           });
@@ -341,12 +251,10 @@ export function ComponentsSidebar({
         }
       }
 
-      setTouchedComponent(null);
-      setIsDragging(false);
-      setTouchStartElement(null);
+      endTouch();
     };
 
-    if (isDragging) {
+    if (touchState.isDragging) {
       document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
       document.addEventListener('touchend', handleGlobalTouchEnd, { passive: false });
     }
@@ -355,7 +263,7 @@ export function ComponentsSidebar({
       document.removeEventListener('touchmove', handleGlobalTouchMove);
       document.removeEventListener('touchend', handleGlobalTouchEnd);
     };
-  }, [isDragging, touchedComponent, touchStartElement]);
+  }, [touchState.isDragging, touchState.touchedComponent, endTouch]);
 
   /**
    * Загрузка списка проектов с сервера
@@ -515,6 +423,7 @@ export function ComponentsSidebar({
     e.stopPropagation();
     setDragOverSheet(null);
 
+    const draggedSheet = sheetDragState.draggedSheet;
     if (!draggedSheet) {
       return;
     }
@@ -628,7 +537,6 @@ export function ComponentsSidebar({
     };
     reader.readAsText(file);
 
-    // Очищаем input, чтобы можно было загрузить файл с тем же именем снова
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -673,10 +581,8 @@ export function ComponentsSidebar({
   };
 
   const parsePythonBotToJson = (pythonCode: string) => {
-    // Используем функцию парсинга из bot-generator.ts (обратная операция к generatePythonCode)
     const { nodes, connections } = parsePythonCodeToJson(pythonCode);
 
-    // Создаём структуру проекта с листом (sheets), точно как extractNodesAndConnections
     const projectData = {
       sheets: [
         {
@@ -700,14 +606,11 @@ export function ComponentsSidebar({
     try {
       setImportError('');
 
-      // Если импортируем Python код бота
-      if (importPythonText.trim()) {
+      if (importState.pythonText.trim()) {
         try {
-          // Проверяем, это ли Python код бота
-          if (importPythonText.includes('@@NODE_START:') && importPythonText.includes('@@NODE_END:')) {
+          if (importState.pythonText.includes('@@NODE_START:') && importState.pythonText.includes('@@NODE_END:')) {
             try {
-              // Это Python код бота - парсим его в JSON
-              const result = parsePythonBotToJson(importPythonText);
+              const result = parsePythonBotToJson(importState.pythonText);
               const projectName = `Python Bot ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
               const projectDescription = `Импортирован из Python кода (${result.nodeCount} узлов)`;
 
@@ -716,10 +619,8 @@ export function ComponentsSidebar({
                 description: projectDescription,
                 data: result.data
               }).then(() => {
-                setIsImportDialogOpen(false);
-                setImportPythonText('');
-                setImportJsonText('');
-                setImportError('');
+                closeImportDialog();
+                clearImport();
                 toast({
                   title: "✅ Успешно импортировано!",
                   description: `Python бот загружен (${result.nodeCount} узлов)`,
@@ -748,8 +649,7 @@ export function ComponentsSidebar({
             }
             return;
           } else {
-            // Может быть JSON в файле - пробуем парсить
-            const jsonData = JSON.parse(importPythonText);
+            const jsonData = JSON.parse(importState.pythonText);
 
             let projectData: any;
             let projectName: string;
@@ -780,10 +680,8 @@ export function ComponentsSidebar({
               description: projectDescription,
               data: projectData
             }).then(() => {
-              setIsImportDialogOpen(false);
-              setImportPythonText('');
-              setImportJsonText('');
-              setImportError('');
+              closeImportDialog();
+              clearImport();
               queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
               queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
               setTimeout(() => {
@@ -811,31 +709,26 @@ export function ComponentsSidebar({
       }
 
       // Импорт JSON
-      const parsedData = JSON.parse(importJsonText);
+      const parsedData = JSON.parse(importState.jsonText);
 
       let projectData: any;
       let projectName: string;
       let projectDescription: string;
 
-      // Проверяем формат JSON
-      // Формат 1: полный проект {name, description, data}
       if (parsedData.name && parsedData.data) {
         projectName = parsedData.name;
         projectDescription = parsedData.description || '';
         projectData = parsedData.data;
       }
-      // Формат 2: только данные проекта {sheets, version, activeSheetId}
       else if (parsedData.sheets && (parsedData.version || parsedData.activeSheetId)) {
         projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
         projectDescription = '';
         projectData = parsedData;
 
-        // Убедимся, что все листы имеют версию
         if (!projectData.version) {
           projectData.version = 2;
         }
       }
-      // Формат 3: старый формат с узлами
       else if (parsedData.nodes) {
         projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
         projectDescription = '';
@@ -845,19 +738,15 @@ export function ComponentsSidebar({
         throw new Error('Неподдерживаемый формат JSON. Должен содержать поле "sheets", "nodes" или "data"');
       }
 
-      // Создаём проект с импортированными данными
       apiRequest('POST', '/api/projects', {
         name: projectName,
         description: projectDescription,
         data: projectData
       }).then((newProject: BotProject) => {
-        // Сначала закрываем диалог
-        setIsImportDialogOpen(false);
-        setImportJsonText('');
+        closeImportDialog();
+        clearImport();
 
-        // Небольшая задержка перед обновлением проекта, чтобы диалог успел закрыться
         setTimeout(() => {
-          // Обновляем кеш
           const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
           queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
 
@@ -870,7 +759,6 @@ export function ComponentsSidebar({
             description: `Проект "${newProject.name}" успешно импортирован. Проект готов к редактированию!`,
           });
 
-          // Переключаемся на новый проект
           if (onProjectSelect) {
             onProjectSelect(newProject.id);
           }
@@ -903,21 +791,18 @@ export function ComponentsSidebar({
 
   // Обработчики inline редактирования листов
   const handleStartEditingSheet = (sheetId: string, currentName: string) => {
-    setEditingSheetId(sheetId);
-    setEditingSheetName(currentName);
+    startEditingSheet(sheetId, currentName);
   };
 
   const handleSaveSheetName = () => {
-    if (editingSheetId && editingSheetName.trim() && onSheetRename) {
-      onSheetRename(editingSheetId, editingSheetName.trim());
+    const { sheetId, newName } = saveEditingSheet();
+    if (sheetId && newName.trim() && onSheetRename) {
+      onSheetRename(sheetId, newName.trim());
     }
-    setEditingSheetId(null);
-    setEditingSheetName('');
   };
 
   const handleCancelEditingSheet = () => {
-    setEditingSheetId(null);
-    setEditingSheetName('');
+    cancelEditingSheet();
   };
 
   // Создаем контент панели
@@ -1005,7 +890,7 @@ export function ComponentsSidebar({
                     variant="outline"
                     className="h-9 px-3 flex items-center gap-1.5 font-semibold text-xs bg-gradient-to-r from-blue-500/10 to-blue-400/5 hover:from-blue-600/20 hover:to-blue-500/15 border-blue-400/30 dark:border-blue-500/30 hover:border-blue-500/50 dark:hover:border-blue-400/50 text-blue-700 dark:text-blue-300 rounded-lg transition-all hover:shadow-md hover:shadow-blue-500/20"
                     onClick={() => {
-                      setIsImportDialogOpen(true);
+                      openImportDialog();
                       setImportJsonText('');
                       setImportError('');
                     }}
@@ -1021,7 +906,7 @@ export function ComponentsSidebar({
             </div>
 
             {/* Диалог импорта проекта */}
-            <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+            <Dialog open={importState.isOpen} onOpenChange={(open) => open ? openImportDialog() : closeImportDialog()}>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Импортировать проект</DialogTitle>
@@ -1030,14 +915,14 @@ export function ComponentsSidebar({
                 <div className="space-y-4">
                   {/* Три раздела: JSON текст, JSON файл и Python код */}
                   <div className="grid grid-cols-1 gap-4">
-                    {/* Вставка JSON т��кста */}
+                    {/* Вставка JSON текста */}
                     <div>
                       <label className="text-sm font-medium mb-2 flex items-center gap-2">
                         <i className="fas fa-paste text-blue-500" />
                         Вставьте JSON проекта
                       </label>
                       <Textarea
-                        value={importJsonText}
+                        value={importState.jsonText}
                         onChange={(e) => {
                           setImportJsonText(e.target.value);
                           setImportPythonText('');
@@ -1106,9 +991,9 @@ export function ComponentsSidebar({
                     </div>
                   </div>
 
-                  {importError && (
+                  {importState.error && (
                     <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3">
-                      <p className="text-sm text-destructive">{importError}</p>
+                      <p className="text-sm text-destructive">{importState.error}</p>
                     </div>
                   )}
 
@@ -1116,7 +1001,7 @@ export function ComponentsSidebar({
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setIsImportDialogOpen(false);
+                        closeImportDialog();
                         setImportJsonText('');
                         setImportPythonText('');
                         setImportError('');
@@ -1127,7 +1012,7 @@ export function ComponentsSidebar({
                     </Button>
                     <Button
                       onClick={handleImportProject}
-                      disabled={!importJsonText.trim() && !importPythonText.trim()}
+                      disabled={!importState.jsonText.trim() && !importState.pythonText.trim()}
                       data-testid="button-confirm-import"
                     >
                       <i className="fas fa-check mr-2" />
@@ -1169,7 +1054,7 @@ export function ComponentsSidebar({
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
                       handleProjectDragOver(e, project.id, setDragOverProject);
-                      if (draggedSheet) {
+                      if (sheetDragState.draggedSheet) {
                         console.log('🎯 Sheet over project:', project.id);
                         setDragOverSheet(`project-${project.id}`);
                       }
@@ -1179,19 +1064,19 @@ export function ComponentsSidebar({
                       setDragOverSheet(null);
                     }}
                     onDrop={(e) => {
-                      console.log('🎯 Drop on project:', draggedSheet, draggedProject);
-                      if (draggedSheet) {
+                      console.log('🎯 Drop on project:', sheetDragState.draggedSheet, projectDragState.draggedProject);
+                      if (sheetDragState.draggedSheet) {
                         handleSheetDropOnProject(e, project.id);
-                      } else if (draggedProject) {
-                        handleProjectDrop(e, { draggedProject, targetProject: project, queryClient, setDraggedProject, setDragOverProject, toast });
+                      } else if (projectDragState.draggedProject) {
+                        handleProjectDrop(e, { draggedProject: projectDragState.draggedProject, targetProject: project, queryClient, setDraggedProject, setDragOverProject, toast });
                       }
                     }}
                     onDragEnd={() => handleProjectDragEnd(setDraggedProject, setDragOverProject)}
                     className={`group p-2.5 xs:p-3 sm:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm overflow-hidden ${currentProjectId === project.id
                         ? 'bg-gradient-to-br from-blue-600/20 via-blue-500/10 to-cyan-600/15 dark:from-blue-600/30 dark:via-blue-500/20 dark:to-cyan-600/25 border-blue-500/50 dark:border-blue-400/50 shadow-lg shadow-blue-500/25'
                         : 'bg-gradient-to-br from-slate-50/60 to-slate-100/40 dark:from-slate-900/50 dark:to-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:border-slate-300/60 dark:hover:border-slate-600/60 hover:bg-gradient-to-br hover:from-slate-100/80 hover:to-slate-100/50 dark:hover:from-slate-800/70 dark:hover:to-slate-700/50 hover:shadow-md hover:shadow-slate-500/20'
-                      } ${dragOverProject === project.id || dragOverSheet === `project-${project.id}` ? 'border-blue-500 border-2 shadow-xl shadow-blue-500/50 bg-gradient-to-br from-blue-600/25 to-cyan-600/20 dark:from-blue-600/40 dark:to-cyan-600/30' : ''
-                      } ${draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
+                      } ${projectDragState.dragOverProject === project.id || sheetDragState.dragOverSheet === `project-${project.id}` ? 'border-blue-500 border-2 shadow-xl shadow-blue-500/50 bg-gradient-to-br from-blue-600/25 to-cyan-600/20 dark:from-blue-600/40 dark:to-cyan-600/30' : ''
+                      } ${projectDragState.draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
                       }`}
                     onClick={() => onProjectSelect && onProjectSelect(project.id)}
                   >
@@ -1258,14 +1143,14 @@ export function ComponentsSidebar({
                                 const projectData = project.data as any;
                                 const sheetId = SheetsManager.isNewFormat(projectData) ? projectData.sheets[index]?.id : null;
                                 const isActive = currentProjectId === project.id && sheetId === activeSheetId;
-                                const isEditing = editingSheetId !== null && sheetId !== null && editingSheetId === sheetId;
+                                const isEditing = editingState.editingSheetId !== null && sheetId !== null && editingState.editingSheetId === sheetId;
 
                                 return (
                                   <div key={index} className="flex items-center gap-1 sm:gap-1.5 group/sheet px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md hover:bg-muted/50 transition-colors">
                                     {isEditing ? (
                                       <Input
-                                        value={editingSheetName}
-                                        onChange={(e) => setEditingSheetName(e.target.value)}
+                                        value={editingState.editingSheetName}
+                                        onChange={(e) => setEditingName(e.target.value)}
                                         onKeyDown={(e) => {
                                           if (e.key === 'Enter') {
                                             handleSaveSheetName();
@@ -1287,7 +1172,7 @@ export function ComponentsSidebar({
                                           setDraggedSheet(null);
                                         }}
                                         className={`text-xs px-1.5 sm:px-2 py-0.5 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center text-center line-clamp-1 ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted/50 text-foreground hover:bg-muted'
-                                          } ${draggedSheet?.sheetId === sheetId && draggedSheet?.projectId === project.id ? 'opacity-50' : ''
+                                          } ${sheetDragState.draggedSheet?.sheetId === sheetId && sheetDragState.draggedSheet?.projectId === project.id ? 'opacity-50' : ''
                                           }`}
                                         onClick={() => {
                                           if (currentProjectId === project.id && onSheetSelect && SheetsManager.isNewFormat(projectData)) {
@@ -1487,7 +1372,7 @@ export function ComponentsSidebar({
                       onTouchStart={(e) => handleTouchStart(e, component)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
-                      className={`component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30 hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40 rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select border border-border/30 hover:border-primary/30 ${touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
+                      className={`component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30 hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40 rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select border border-border/30 hover:border-primary/30 ${touchState.touchedComponent?.id === component.id && touchState.isDragging ? 'opacity-50 scale-95' : ''
                         }`}
                       data-testid={`component-${component.id}`}
                     >

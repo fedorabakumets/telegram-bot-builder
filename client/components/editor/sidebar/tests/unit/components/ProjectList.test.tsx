@@ -13,13 +13,23 @@ import { BotProject } from '@shared/schema';
 /**
  * Моковые данные для тестов
  */
-const createMockProject = (id: number, name: string, created_at = '2024-01-01T00:00:00Z'): BotProject => ({
+const createMockProject = (id: number, name: string, createdAt = '2024-01-01T00:00:00Z'): BotProject => ({
   id,
   name,
   description: `Description for ${name}`,
-  created_at,
-  updated_at: created_at,
-} as BotProject);
+  data: {},
+  createdAt: new Date(createdAt),
+  updatedAt: new Date(createdAt),
+  ownerId: null,
+  botToken: null,
+  userDatabaseEnabled: null,
+  lastExportedGoogleSheetId: null,
+  lastExportedGoogleSheetUrl: null,
+  lastExportedAt: null,
+  lastExportedStructureSheetId: null,
+  lastExportedStructureSheetUrl: null,
+  lastExportedStructureAt: null,
+});
 
 const mockProjects: BotProject[] = [
   createMockProject(1, 'Project 1'),
