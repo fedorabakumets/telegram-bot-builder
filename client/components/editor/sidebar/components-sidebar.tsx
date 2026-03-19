@@ -2,10 +2,13 @@ import { BotProject } from '@shared/schema';
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
- handleProjectDragStart,
+  handleProjectDragStart,
   handleProjectDragOver,
+  handleProjectDragLeave,
   handleProjectDragEnd,
   handleProjectDrop,
+  handleProjectClick,
+  handleContainerDragLeave,
 } from './handlers';
 import { componentCategories } from './constants';
 import type { ComponentsSidebarProps } from './types';
@@ -120,12 +123,9 @@ export function ComponentsSidebar({
     onComponentDrag
   });
 
- // Рефы для импорта файлов
- const fileInputRef = useRef<HTMLInputElement>(null);
- const pythonFileInputRef = useRef<HTMLInputElement>(null);
-
- // Флаг успешного drop проекта (чтобы не дублировать reorder в dragend fallback)
- const projectDropHandledRef = useRef(false);
+  // Рефы для импорта файлов
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pythonFileInputRef = useRef<HTMLInputElement>(null);
 
   const isActuallyMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -344,9 +344,7 @@ export function ComponentsSidebar({
             ) : (
               <div
                 className="space-y-3"
-                // Не сбрасываем drag состояние на уровне контейнера:
-                // dragleave контейнера срабатывает при переходах между дочерними карточками
-                // и ломает определение целевого проекта для reorder.
+                onDragLeave={() => handleContainerDragLeave(setDragOverProject, setDragOverSheet)}
               >
                 {projects.map((project: BotProject) => (
                   <ProjectCardWrapper
@@ -371,38 +369,9 @@ export function ComponentsSidebar({
                       draggedSheet: sheetDragState.draggedSheet,
                       dragOverSheet: sheetDragState.dragOverSheet,
                     }}
- onProjectDragStart={(e: React.DragEvent) => {
- projectDropHandledRef.current = false;
- handleProjectDragStart(e, { project, setDraggedSheet, setDraggedProject });
- }}
- onProjectDragEnd={async () => {
- // Fallback: если браузер/DOM не прислал drop, но была цель наведения — выполняем reorder здесь
- if (
- !projectDropHandledRef.current &&
- projectDragState.draggedProject &&
- projectDragState.dragOverProject &&
- projectDragState.draggedProject.id !== projectDragState.dragOverProject
- ) {
- const targetProject = projects.find((p) => p.id === projectDragState.dragOverProject);
-
- if (targetProject) {
- await handleProjectDrop(null, {
- draggedProject: projectDragState.draggedProject,
- targetProject,
- queryClient,
- setDraggedProject,
- setDragOverProject,
- toast,
- });
- return;
- }
- }
-
- handleProjectDragEnd(setDraggedProject, setDragOverProject);
- }}
- onProjectClick={() => {
- // Не сбрасываем drag по клику карточки: это ломает сценарии, где браузер не отдает корректный drop
- }}
+                    onProjectDragStart={(e: React.DragEvent) => handleProjectDragStart(e, { project, setDraggedSheet, setDraggedProject })}
+                    onProjectDragEnd={() => handleProjectDragEnd(setDraggedProject, setDragOverProject)}
+                    onProjectClick={() => handleProjectClick({ draggedProject: projectDragState.draggedProject, setDraggedProject, setDragOverProject })}
                     onProjectDragOver={(e: React.DragEvent) => {
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
@@ -413,62 +382,16 @@ export function ComponentsSidebar({
                       }
                     }}
                     onProjectDragLeave={() => {
-                      // Не сбрасываем dragOverProject здесь: nested children вызывают ложные dragleave
-                      // и теряется цель для reorder fallback в onProjectDragEnd.
+                      handleProjectDragLeave(setDragOverProject);
                       setDragOverSheet(null);
                     }}
                     onProjectDrop={(e: React.DragEvent) => {
-                      const dragKind = e.dataTransfer.getData('application/x-drag-kind');
-
-                      const draggedProjectIdRaw =
-                        e.dataTransfer.getData('application/x-project-id') || e.dataTransfer.getData('text/plain');
-                      const draggedProjectId = Number(draggedProjectIdRaw);
-                      const draggedProjectFromDataTransfer = Number.isFinite(draggedProjectId)
-                        ? projects.find((p) => p.id === draggedProjectId) ?? null
-                        : null;
-
-                      const draggedProject = projectDragState.draggedProject ?? draggedProjectFromDataTransfer;
-
-                      console.log('🎯 Drop on project:', {
-                        dragKind,
-                        draggedSheet: sheetDragState.draggedSheet,
-                        draggedProject,
-                      });
-
-                      // Явно разделяем типы DnD через dataTransfer,
-                      // чтобы stale state не ломал выбор ветки
- if (dragKind === 'sheet') {
- handleSheetDropOnProject(e, project.id);
- return;
- }
-
- if (dragKind === 'project' && draggedProject) {
- projectDropHandledRef.current = true;
- handleProjectDrop(e, {
- draggedProject,
- targetProject: project,
- queryClient,
- setDraggedProject,
- setDragOverProject,
- toast,
- });
- return;
- }
-
-                      // Fallback для старых/нестандартных браузерных сценариев
+                      console.log('🎯 Drop on project:', sheetDragState.draggedSheet, projectDragState.draggedProject);
                       if (sheetDragState.draggedSheet) {
                         handleSheetDropOnProject(e, project.id);
- } else if (draggedProject) {
- projectDropHandledRef.current = true;
- handleProjectDrop(e, {
- draggedProject,
- targetProject: project,
- queryClient,
- setDraggedProject,
- setDragOverProject,
- toast,
- });
- }
+                      } else if (projectDragState.draggedProject) {
+                        handleProjectDrop(e, { draggedProject: projectDragState.draggedProject, targetProject: project, queryClient, setDraggedProject, setDragOverProject, toast });
+                      }
                     }}
                     onSheetDragStart={(e: React.DragEvent, sheetId: string) => {
                       if (sheetId) handleSheetDragStart(e, sheetId, project.id);
