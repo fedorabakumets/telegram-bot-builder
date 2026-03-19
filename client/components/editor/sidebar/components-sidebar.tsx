@@ -3,7 +3,6 @@ import { cn } from '@/utils/utils';
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
-import { parsePythonBotToJson } from './utils/parse-python-bot-to-json';
 import {
   handleProjectDragStart,
   handleProjectDragOver,
@@ -21,6 +20,7 @@ import { useSidebarDragState } from './hooks/use-sidebar-drag-state';
 import { useSidebarEditing } from './hooks/use-sidebar-editing';
 import { useSidebarCategories } from './hooks/use-sidebar-categories';
 import { useSidebarImport } from './hooks/use-sidebar-import';
+import { useSidebarImportHandler } from './hooks/use-sidebar-import-handler';
 import { useSidebarTouch } from './hooks/use-sidebar-touch';
 import { useSidebarFileUpload } from './hooks/use-sidebar-file-upload';
 import { useProjectsQuery } from './hooks/use-projects-query';
@@ -158,6 +158,18 @@ export function ComponentsSidebar({
    */
   const { projects, isLoading } = useProjectsQuery();
 
+  // Хук обработки импорта проектов
+  const { handleImportProject } = useSidebarImportHandler({
+    queryClient,
+    toast,
+    onProjectSelect,
+    importState,
+    clearImport,
+    closeImportDialog,
+    setImportError,
+    projects,
+  });
+
   // Хук для создания проекта
   const { createProject, isPending: isCreatingProject } = useCreateProjectMutation();
 
@@ -178,186 +190,6 @@ export function ComponentsSidebar({
    */
   const handleCreateProject = () => {
     createProject({ projectCount: projects.length, onProjectSelect });
-  };
-
-  const handleImportProject = () => {
-    try {
-      setImportError('');
-
-      if (importState.pythonText.trim()) {
-        try {
-          if (importState.pythonText.includes('@@NODE_START:') && importState.pythonText.includes('@@NODE_END:')) {
-            try {
-              const result = parsePythonBotToJson(importState.pythonText);
-              const projectName = `Python Bot ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
-              const projectDescription = `Импортирован из Python кода (${result.nodeCount} узлов)`;
-
-              apiRequest('POST', '/api/projects', {
-                name: projectName,
-                description: projectDescription,
-                data: result.data
-              }).then(() => {
-                closeImportDialog();
-                clearImport();
-                toast({
-                  title: "✅ Успешно импортировано!",
-                  description: `Python бот загружен (${result.nodeCount} узлов)`,
-                  variant: "default",
-                });
-                queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-                queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
-                setTimeout(() => {
-                  queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-                }, 300);
-              }).catch((apiError: any) => {
-                setImportError(apiError.message || 'Ошибка при создании проекта');
-                toast({
-                  title: "❌ Ошибка создания проекта",
-                  description: apiError.message || 'Не удалось создать проект',
-                  variant: "destructive",
-                });
-              });
-            } catch (error: any) {
-              setImportError(error.message || 'Ошибка при импорте проекта');
-              toast({
-                title: "❌ Ошибка импорта",
-                description: error.message || 'Не удалось создать проект',
-                variant: "destructive",
-              });
-            }
-            return;
-          } else {
-            const jsonData = JSON.parse(importState.pythonText);
-
-            let projectData: any;
-            let projectName: string;
-            let projectDescription: string;
-
-            if (jsonData.name && jsonData.data) {
-              projectName = jsonData.name;
-              projectDescription = jsonData.description || '';
-              projectData = jsonData.data;
-            } else if (jsonData.sheets && (jsonData.version || jsonData.activeSheetId)) {
-              projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
-              projectDescription = '';
-              projectData = jsonData;
-
-              if (!projectData.version) {
-                projectData.version = 2;
-              }
-            } else if (jsonData.nodes) {
-              projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
-              projectDescription = '';
-              projectData = jsonData;
-            } else {
-              throw new Error('Неподдерживаемый формат');
-            }
-
-            apiRequest('POST', '/api/projects', {
-              name: projectName,
-              description: projectDescription,
-              data: projectData
-            }).then(() => {
-              closeImportDialog();
-              clearImport();
-              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
-              setTimeout(() => {
-                queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-              }, 300);
-            }).catch((error: any) => {
-              setImportError(error.message || 'Ошибка при импорте проекта');
-              toast({
-                title: "Ошибка импорта",
-                description: error.message,
-                variant: "destructive",
-              });
-            });
-            return;
-          }
-        } catch (error: any) {
-          setImportError('Файл должен содержать либо Python код бота (с @@NODE_START@@), либо валидный JSON');
-          toast({
-            title: "Ошибка парсинга",
-            description: "Неподдерживаемый формат файла",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-
-      // Импорт JSON
-      const parsedData = JSON.parse(importState.jsonText);
-
-      let projectData: any;
-      let projectName: string;
-      let projectDescription: string;
-
-      if (parsedData.name && parsedData.data) {
-        projectName = parsedData.name;
-        projectDescription = parsedData.description || '';
-        projectData = parsedData.data;
-      }
-      else if (parsedData.sheets && (parsedData.version || parsedData.activeSheetId)) {
-        projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
-        projectDescription = '';
-        projectData = parsedData;
-
-        if (!projectData.version) {
-          projectData.version = 2;
-        }
-      }
-      else if (parsedData.nodes) {
-        projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
-        projectDescription = '';
-        projectData = parsedData;
-      }
-      else {
-        throw new Error('Неподдерживаемый формат JSON. Должен содержать поле "sheets", "nodes" или "data"');
-      }
-
-      apiRequest('POST', '/api/projects', {
-        name: projectName,
-        description: projectDescription,
-        data: projectData
-      }).then((newProject: BotProject) => {
-        closeImportDialog();
-        clearImport();
-
-        setTimeout(() => {
-          const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
-          queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
-
-          const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
-          const { data, ...projectWithoutData } = newProject;
-          queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
-
-          toast({
-            title: "Проект импортирован",
-            description: `Проект "${newProject.name}" успешно импортирован. Проект готов к редактированию!`,
-          });
-
-          if (onProjectSelect) {
-            onProjectSelect(newProject.id);
-          }
-        }, 300);
-      }).catch((error) => {
-        setImportError(`Ошибка импорта: ${error.message}`);
-        toast({
-          title: "Ошибка импорта",
-          description: error.message,
-          variant: "destructive",
-        });
-      });
-    } catch (error: any) {
-      const errorMsg = error instanceof SyntaxError ? 'Неверный JSON формат' : error.message;
-      setImportError(errorMsg);
-      toast({
-        title: "Ошибка валидации",
-        description: errorMsg,
-        variant: "destructive",
-      });
-    }
   };
 
   const handleDeleteProject = (projectId: number) => {
