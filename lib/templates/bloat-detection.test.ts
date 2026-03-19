@@ -211,7 +211,8 @@ describe('bloat-detection — дублирование функций', () => {
       userDatabaseEnabled: true,
     });
 
-    const topLevelFunctions = [
+    // Функции, которые всегда должны присутствовать ровно один раз
+    const alwaysPresentFunctions = [
       'async def init_database(',
       'async def save_user_to_db(',
       'async def get_user_from_db(',
@@ -219,16 +220,29 @@ describe('bloat-detection — дублирование функций', () => {
       'async def init_user_variables(',
       'async def init_all_user_vars(',
       'def replace_variables_in_text(',
-      'async def is_admin(',
-      'async def is_private_chat(',
     ];
 
-    for (const fn of topLevelFunctions) {
+    for (const fn of alwaysPresentFunctions) {
       const count = countOccurrences(code, fn);
       assert.strictEqual(
         count,
         1,
         `"${fn}" должна встречаться ровно 1 раз, найдено: ${count}`
+      );
+    }
+
+    // is_admin и is_private_chat генерируются только при adminOnly/isPrivateOnly=true
+    // в минимальном боте их нет — проверяем что нет дублирования (0 или 1 раз)
+    const conditionalFunctions = [
+      'async def is_admin(',
+      'async def is_private_chat(',
+    ];
+
+    for (const fn of conditionalFunctions) {
+      const count = countOccurrences(code, fn);
+      assert.ok(
+        count <= 1,
+        `"${fn}" не должна дублироваться, найдено: ${count}`
       );
     }
   });

@@ -12,7 +12,7 @@ import { spec } from 'node:test/reporters';
 import { glob } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, mkdirSync } from 'node:fs';
 import { PassThrough } from 'node:stream';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -114,7 +114,9 @@ async function runTests() {
   console.log('Запуск тестов...\n');
 
   // Создаём поток для записи в файл
-  const logStream = createWriteStream('test-output.txt', { encoding: 'utf8' });
+  const outputDir = join(__dirname, 'test-results');
+  mkdirSync(outputDir, { recursive: true });
+  const logStream = createWriteStream(join(outputDir, 'output.txt'), { encoding: 'utf8' });
 
   // PassThrough stream для дублирования вывода
   const teeStream = new PassThrough();
@@ -157,7 +159,7 @@ async function runTests() {
 
     testRun.on('end', () => {
       console.log('\n✅ Все тесты завершены');
-      console.log('📄 Результаты сохранены в test-output.txt');
+      console.log('📄 Результаты сохранены в test-results/output.txt');
       logStream.close();
       teeStream.end();
       resolve(undefined);

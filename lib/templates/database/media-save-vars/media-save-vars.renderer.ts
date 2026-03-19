@@ -14,7 +14,7 @@ import { renderPartialTemplate } from '../../template-renderer';
  */
 export function generateMediaSaveVars(params: MediaSaveVarsTemplateParams): string {
   const validated = mediaSaveVarsParamsSchema.parse(params);
-  return renderPartialTemplate('media-save-vars/media-save-vars.py.jinja2', validated);
+  return renderPartialTemplate('database/media-save-vars/media-save-vars.py.jinja2', validated);
 }
 
 /** Строит параметры из данных узла */

@@ -78,6 +78,10 @@ config/google-auth/token.json
 # Python virtual environment
 .venv/
 
+# Test output
+test-results/
+test-output.txt
+
 # Archive folder (backup files)
 archive/
 
