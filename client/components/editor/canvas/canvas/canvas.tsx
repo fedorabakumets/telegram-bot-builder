@@ -519,8 +519,8 @@ export function Canvas({
     }
   }, [nodes, botData]);
 
-  // Handle wheel zoom
-  const handleWheel = useCallback((e: React.WheelEvent) => {
+  // Handle wheel zoom (native handler, registered with { passive: false })
+  const handleWheel = useCallback((e: WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       const delta = e.deltaY;
@@ -604,6 +604,24 @@ export function Canvas({
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
   }, []);
+
+  // Attach wheel and touch handlers as non-passive so preventDefault() works
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    el.addEventListener('touchstart', handleTouchStart, { passive: false });
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    el.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchmove', handleTouchMove);
+      el.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -708,7 +726,6 @@ export function Canvas({
             e.preventDefault();
             e.stopPropagation();
             // Ctrl+C без Shift - дублирование узла
-            console.log('📋 Ctrl+C pressed:', { selectedNodeId, hasOnNodeDuplicate: !!onNodeDuplicate });
             if (selectedNodeId && onNodeDuplicate) {
               const node = nodes.find(n => n.id === selectedNodeId);
               addAction('duplicate', `Дублирован узел "${node?.type || 'Unknown'}"`);
@@ -734,16 +751,8 @@ export function Canvas({
             e.stopPropagation();
             // Ctrl+V без Shift - вставка из буфера
             if (onPasteFromClipboard) {
-              // pan.x может быть отрицательным (когда холст сдвинут вправо)
-              // Формула: client / zoom - pan (вычитаем отрицательный = добавляем)
               const targetX = lastClickPosition.x / (clickTransform.zoom / 100) - clickTransform.pan.x;
               const targetY = lastClickPosition.y / (clickTransform.zoom / 100) - clickTransform.pan.y;
-              console.log('📍 Вставка:', {
-                targetX, targetY,
-                click: lastClickPosition,
-                clickTransform,
-                formula: `${lastClickPosition.x} / ${clickTransform.zoom / 100} - ${clickTransform.pan.x} = ${targetX}`
-              });
               onPasteFromClipboard(targetX, targetY);
             }
             break;
@@ -867,33 +876,20 @@ export function Canvas({
 
   // Обработчик canvas-drop события для touch устройств  
   const handleCanvasDrop = useCallback((e: CustomEvent) => {
-    console.log('Canvas drop event received:', e.detail);
     const { component, position } = e.detail;
 
     if (!component) {
-      console.error('Invalid drop data: no component');
       return;
     }
 
     let nodePosition;
 
     if (position) {
-      // Transform screen coordinates to canvas coordinates
       const canvasX = (position.x - pan.x) / (zoom / 100);
       const canvasY = (position.y - pan.y) / (zoom / 100);
-
-      console.log('Drop position calculation:', {
-        screenPos: position,
-        pan,
-        zoom,
-        canvasPos: { x: canvasX, y: canvasY }
-      });
-
       nodePosition = { x: Math.max(0, canvasX - 80), y: Math.max(0, canvasY - 25) };
     } else {
-      // Если нет позиции drop, используем центр видимой области
       nodePosition = getCenterPosition();
-      console.log('Using center position:', nodePosition);
     }
 
     const newNode: Node = {
@@ -910,7 +906,6 @@ export function Canvas({
       }
     };
 
-    console.log('Creating new node:', newNode);
     addAction('add', `Добавлен узел "${component.type}"`);
     onNodeAdd(newNode);
   }, [onNodeAdd, pan, zoom, getCenterPosition, addAction]);
@@ -971,14 +966,10 @@ export function Canvas({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={handleCanvasClick}
-          onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onContextMenu={handleContextMenu}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
         >
           {/* Transformable Canvas Content */}
           <CanvasContent
@@ -992,7 +983,6 @@ export function Canvas({
             onNodeDuplicate={onNodeDuplicate}
             onNodeMove={onNodeMove}
             onNodeMoveEnd={onNodeMoveEnd}
-            onActionLog={(type, description) => addAction(type, description)}
             setIsNodeBeingDragged={setIsNodeBeingDragged}
             onSizeChange={handleNodeSizeChange}
           />
