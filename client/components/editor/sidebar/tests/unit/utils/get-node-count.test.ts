@@ -5,20 +5,18 @@
 
 /// <reference types="vitest/globals" />
 
-import { beforeEach, afterEach, vi } from 'vitest';
 import { getNodeCount } from '../../../handlers/get-node-count';
 import { BotProject } from '@shared/schema';
 
 describe('getNodeCount', () => {
-  let originalConsoleLog: typeof console.log;
+  let mockConsoleLog: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    originalConsoleLog = console.log;
-    console.log = vi.fn();
+    mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    console.log = originalConsoleLog;
+    mockConsoleLog.mockRestore();
   });
 
   describe('Старый формат данных', () => {
@@ -66,6 +64,7 @@ describe('getNodeCount', () => {
       const project = {
         name: 'Multi-Sheet Project',
         data: {
+          version: 2,
           sheets: [
             {
               name: 'Sheet 1',
@@ -92,6 +91,7 @@ describe('getNodeCount', () => {
       const project = {
         name: 'Project',
         data: {
+          version: 2,
           sheets: [
             { name: 'Sheet 1', nodes: [] },
             { name: 'Sheet 2', nodes: [{ id: 'node1', type: 'message' }] }
@@ -107,6 +107,7 @@ describe('getNodeCount', () => {
       const project = {
         name: 'Project',
         data: {
+          version: 2,
           sheets: [
             { name: 'Sheet 1' },
             { name: 'Sheet 2', nodes: [{ id: 'node1', type: 'message' }] }
@@ -121,7 +122,10 @@ describe('getNodeCount', () => {
     it('должен возвращать 0 для пустого массива sheets', () => {
       const project = {
         name: 'Project',
-        data: { sheets: [] }
+        data: {
+          version: 2,
+          sheets: []
+        }
       } as BotProject;
 
       const result = getNodeCount(project);

@@ -5,7 +5,6 @@
 
 /// <reference types="vitest/globals" />
 
-import { vi, beforeEach } from 'vitest';
 import type { DragEvent } from 'react';
 import { handleProjectDragStart } from '../../../handlers/handle-project-drag-start';
 import { handleProjectDragOver } from '../../../handlers/handle-project-drag-over';
@@ -120,12 +119,13 @@ describe('Project Drag-and-Drop Handlers', () => {
   });
 
   describe('handleProjectDrop', () => {
-    const createMockQueryClient = (projects: BotProject[]) => ({
-      getQueryData: vi.fn().mockReturnValue(projects),
-      setQueryData: vi.fn(),
-    } as unknown as QueryClient);
-
-    const createMockToast = () => vi.fn();
+    const createMockQueryClient = (projects: BotProject[]) => {
+      const mockQueryClient = {
+        getQueryData: vi.fn().mockReturnValue(projects),
+        setQueryData: vi.fn(),
+      } as unknown as QueryClient;
+      return mockQueryClient;
+    };
 
     beforeEach(() => {
       vi.clearAllMocks();
@@ -138,7 +138,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const queryClient = createMockQueryClient([draggedProject, targetProject]);
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
-      const toast = createMockToast();
+      const toast = vi.fn();
 
       handleProjectDrop(e, {
         draggedProject,
@@ -160,7 +160,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const queryClient = createMockQueryClient([draggedProject, targetProject]);
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
-      const toast = createMockToast();
+      const toast = vi.fn();
 
       handleProjectDrop(e, {
         draggedProject,
@@ -180,7 +180,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const queryClient = createMockQueryClient([targetProject]);
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
-      const toast = createMockToast();
+      const toast = vi.fn();
 
       handleProjectDrop(e, {
         draggedProject: null,
@@ -201,7 +201,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const queryClient = createMockQueryClient([project]);
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
-      const toast = createMockToast();
+      const toast = vi.fn();
 
       handleProjectDrop(e, {
         draggedProject: project,
@@ -223,7 +223,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const queryClient = createMockQueryClient([targetProject]);
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
-      const toast = createMockToast();
+      const toast = vi.fn();
 
       handleProjectDrop(e, {
         draggedProject,
@@ -247,7 +247,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const queryClient = createMockQueryClient(projects);
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
-      const toast = createMockToast();
+      const toast = vi.fn();
 
       // Перемещаем project3 перед project1
       handleProjectDrop(e, {
@@ -272,7 +272,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const queryClient = createMockQueryClient([project1, project2]);
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
-      const toast = createMockToast();
+      const toast = vi.fn();
 
       handleProjectDrop(e, {
         draggedProject: project2,
@@ -296,7 +296,7 @@ describe('Project Drag-and-Drop Handlers', () => {
       const queryClient = createMockQueryClient([project1, project2]);
       const setDraggedProject = vi.fn();
       const setDragOverProject = vi.fn();
-      const toast = createMockToast();
+      const toast = vi.fn();
 
       handleProjectDrop(e, {
         draggedProject: project2,

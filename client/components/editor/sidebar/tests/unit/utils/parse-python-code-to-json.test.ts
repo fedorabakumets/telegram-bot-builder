@@ -344,4 +344,201 @@ async def node3(message: Message):
       expect(result.nodes[2].position.x).toBe(610); // 50 + 280 * 2
     });
   });
+
+  describe('Парсинг различных типов узлов', () => {
+    it('должен определять узел с документом', () => {
+      const code = `
+# @@NODE_START:doc_node@@
+@dp.message(F.document)
+async def doc_node(message: Message):
+    await message.answer(text="Документ")
+# @@NODE_END:doc_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].type).toBe('document');
+    });
+
+    it('должен определять узел с анимацией', () => {
+      const code = `
+# @@NODE_START:anim_node@@
+@dp.message(F.animation)
+async def anim_node(message: Message):
+    await message.answer(text="Анимация")
+# @@NODE_END:anim_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].type).toBe('animation');
+    });
+
+    it('должен определять узел с аудио', () => {
+      const code = `
+# @@NODE_START:audio_node@@
+@dp.message(F.audio)
+async def audio_node(message: Message):
+    await message.answer(text="Аудио")
+# @@NODE_END:audio_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].type).toBe('audio');
+    });
+
+    it('должен определять узел со стикером', () => {
+      const code = `
+# @@NODE_START:sticker_node@@
+@dp.message(F.sticker)
+async def sticker_node(message: Message):
+    await message.answer(text="Стикер")
+# @@NODE_END:sticker_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].type).toBe('sticker');
+    });
+  });
+
+  describe('Парсинг настроек ввода', () => {
+    it('должен определять collect_user_input', () => {
+      const code = `
+# @@NODE_START:input_node@@
+@dp.message()
+async def input_node(message: Message, state: FSMContext, collect_user_input=True):
+    await message.answer(text="Ввод")
+# @@NODE_END:input_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].data.collectUserInput).toBe(true);
+    });
+
+    it('должен определять waiting_for_input', () => {
+      const code = `
+# @@NODE_START:wait_node@@
+@dp.message()
+async def wait_node(message: Message, waiting_for_input=True):
+    await message.answer(text="Ожидание")
+# @@NODE_END:wait_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].data.waitForTextInput).toBe(true);
+    });
+  });
+
+  describe('Парсинг форматирования', () => {
+    it('должен определять HTML parse_mode', () => {
+      const code = `
+# @@NODE_START:html_node@@
+@dp.message()
+async def html_node(message: Message):
+    await message.answer(text="<b>HTML</b>", parse_mode=ParseMode.HTML)
+# @@NODE_END:html_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].data.formatMode).toBe('html');
+    });
+
+    it('должен определять Markdown parse_mode', () => {
+      const code = `
+# @@NODE_START:md_node@@
+@dp.message()
+async def md_node(message: Message):
+    await message.answer(text="*Markdown*", parse_mode=ParseMode.MARKDOWN)
+# @@NODE_END:md_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].data.formatMode).toBe('markdown');
+    });
+
+    it('должен определять отсутствие форматирования', () => {
+      const code = `
+# @@NODE_START:text_node@@
+@dp.message()
+async def text_node(message: Message):
+    await message.answer(text="Текст")
+# @@NODE_END:text_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].data.formatMode).toBe('none');
+    });
+  });
+
+  describe('Парсинг showInMenu', () => {
+    it('должен устанавливать showInMenu: true для start по умолчанию', () => {
+      const code = `
+# @@NODE_START:start@@
+@dp.message()
+async def start(message: Message):
+    await message.answer(text="Start")
+# @@NODE_END:start@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].data.showInMenu).toBe(true);
+    });
+
+    it('должен устанавливать showInMenu: false если указано', () => {
+      const code = `
+# @@NODE_START:hidden@@
+@dp.message(showInMenu=False)
+async def hidden(message: Message):
+    await message.answer(text="Hidden")
+# @@NODE_END:hidden@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].data.showInMenu).toBe(false);
+    });
+  });
+
+  describe('Краевые случаи', () => {
+    it('должен обрабатывать пустой код', () => {
+      const result = parsePythonCodeToJson('');
+      expect(result.nodes).toHaveLength(0);
+      expect(result.connections).toHaveLength(0);
+    });
+
+    it('должен обрабатывать код без узлов', () => {
+      const code = `
+# Это просто комментарий
+def some_function():
+    pass
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes).toHaveLength(0);
+    });
+
+    it('должен обрабатывать узел без текста сообщения', () => {
+      const code = `
+# @@NODE_START:empty_node@@
+@dp.message()
+async def empty_node(message: Message):
+    pass
+# @@NODE_END:empty_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].data.messageText).toContain('Узел empty_node');
+    });
+
+    it('должен обрабатывать экранированные символы в тексте', () => {
+      const code = `
+# @@NODE_START:escape_node@@
+@dp.message()
+async def escape_node(message: Message):
+    await message.answer(text="Привет\\\\nМир")
+# @@NODE_END:escape_node@@
+      `.trim();
+
+      const result = parsePythonCodeToJson(code);
+      expect(result.nodes[0].data.messageText).toContain('Привет');
+    });
+  });
 });

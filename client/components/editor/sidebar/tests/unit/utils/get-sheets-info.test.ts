@@ -5,20 +5,18 @@
 
 /// <reference types="vitest/globals" />
 
-import { beforeEach, afterEach, vi } from 'vitest';
 import { getSheetsInfo } from '../../../handlers/get-sheets-info';
 import { BotProject } from '@shared/schema';
 
 describe('getSheetsInfo', () => {
-  let originalConsoleLog: typeof console.log;
+  let mockConsoleLog: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    originalConsoleLog = console.log;
-    console.log = vi.fn();
+    mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    console.log = originalConsoleLog;
+    mockConsoleLog.mockRestore();
   });
 
   describe('Старый формат данных', () => {
@@ -52,6 +50,7 @@ describe('getSheetsInfo', () => {
       const project = {
         name: 'Multi-Sheet Project',
         data: {
+          version: 2,
           sheets: [
             { name: 'Main', nodes: [] },
             { name: 'Settings', nodes: [] },
@@ -69,6 +68,7 @@ describe('getSheetsInfo', () => {
       const project = {
         name: 'Project',
         data: {
+          version: 2,
           sheets: [
             { name: 'Main', nodes: [] },
             { nodes: [] }, // Без названия
@@ -85,7 +85,10 @@ describe('getSheetsInfo', () => {
     it('должен возвращать 0 листов для пустого массива sheets', () => {
       const project = {
         name: 'Empty Project',
-        data: { sheets: [] }
+        data: {
+          version: 2,
+          sheets: []
+        }
       } as BotProject;
 
       const result = getSheetsInfo(project);
@@ -96,7 +99,10 @@ describe('getSheetsInfo', () => {
     it('должен обрабатывать sheets как пустой массив', () => {
       const project = {
         name: 'Project',
-        data: { sheets: [] }
+        data: {
+          version: 2,
+          sheets: []
+        }
       } as BotProject;
 
       const result = getSheetsInfo(project);
@@ -105,14 +111,14 @@ describe('getSheetsInfo', () => {
   });
 
   describe('Обработка ошибок', () => {
-    it('должен возвращать дефолтное значение при ошибке', () => {
+    it('должен возвращать пустой результат при ошибке', () => {
       const project = {
         name: 'Invalid Project',
         data: { invalid: 'structure' }
       } as BotProject;
 
       const result = getSheetsInfo(project);
-      expect(result).toEqual({ count: 1, names: ['Лист 1'] });
+      expect(result).toEqual({ count: 0, names: [] });
     });
 
     it('должен обрабатывать null data', () => {

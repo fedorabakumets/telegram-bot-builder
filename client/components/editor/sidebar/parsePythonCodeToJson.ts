@@ -91,7 +91,7 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
     let command = '';
     let description = '';
     // Поддерживаем оба формата: commands=['start'] и commands=["start"]
-    const commandMatch = /commands?\s*=\s*[\[({]['"]([^'"]+)['"]\])}]/.exec(nodeContent);
+    const commandMatch = /commands?\s*=\s*[\[({]['"]([^'"]+)['"][\])}]/.exec(nodeContent);
     if (commandMatch) {
       command = commandMatch[1].startsWith('/') ? commandMatch[1] : '/' + commandMatch[1];
     }
