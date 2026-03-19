@@ -437,87 +437,89 @@ export function Canvas({
 
   const fitToContent = useCallback(() => {
     if (nodes.length === 0) return;
+    if (!canvasRef.current) return;
 
     // Вычисляем границы всех узлов
+    // Приоритет: nodeSizes (из ResizeObserver) → DOM измерение → fallback
     const nodeBounds = nodes.reduce((bounds, node) => {
-      const left = node.position.x;
-      const right = node.position.x + 320; // Approximate node width
-      const top = node.position.y;
-      const bottom = node.position.y + 100; // Approximate node height
+      let w = 320;
+      let h = 200;
+
+      const measured = nodeSizes.get(node.id);
+      if (measured) {
+        w = measured.width;
+        h = measured.height;
+      } else {
+        // Пробуем измерить из DOM напрямую
+        const allNodeEls = canvasRef.current?.querySelectorAll<HTMLElement>('[data-canvas-node]');
+        if (allNodeEls) {
+          // Ищем узел по индексу (порядок совпадает с nodes array)
+          const idx = nodes.indexOf(node);
+          const el = allNodeEls[idx];
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            const zoom100 = 1 / (zoom / 100);
+            w = rect.width * zoom100;
+            h = rect.height * zoom100;
+          }
+        }
+      }
 
       return {
-        left: Math.min(bounds.left, left),
-        right: Math.max(bounds.right, right),
-        top: Math.min(bounds.top, top),
-        bottom: Math.max(bounds.bottom, bottom)
+        left: Math.min(bounds.left, node.position.x),
+        right: Math.max(bounds.right, node.position.x + w),
+        top: Math.min(bounds.top, node.position.y),
+        bottom: Math.max(bounds.bottom, node.position.y + h)
       };
     }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
 
-    // Проверяем валидность границ
     if (!isFinite(nodeBounds.left) || !isFinite(nodeBounds.right) ||
-      !isFinite(nodeBounds.top) || !isFinite(nodeBounds.bottom)) {
-      return;
-    }
+      !isFinite(nodeBounds.top) || !isFinite(nodeBounds.bottom)) return;
 
     const contentWidth = nodeBounds.right - nodeBounds.left;
     const contentHeight = nodeBounds.bottom - nodeBounds.top;
+    if (contentWidth <= 0 || contentHeight <= 0) return;
 
-    // Проверяем размеры контента
-    if (contentWidth <= 0 || contentHeight <= 0) {
-      return;
-    }
+    // Берём размеры из main — он занимает всю видимую область
+    const mainEl = canvasRef.current.closest('main');
+    if (!mainEl) return;
+    const mainRect = mainEl.getBoundingClientRect();
+    const containerWidth = mainRect.width;
+    const containerHeight = mainRect.height;
 
-    if (canvasRef.current) {
-      // Получаем размеры видимой области (родительского контейнера с overflow)
-      const scrollContainer = canvasRef.current.parentElement;
-      let containerWidth = scrollContainer ? scrollContainer.clientWidth - 64 : window.innerWidth - 64;
-      let containerHeight = scrollContainer ? scrollContainer.clientHeight - 64 : window.innerHeight - 64;
+    // Измеряем реальные высоты toolbar и sheets через data-атрибуты
+    const toolbarEl = mainEl.querySelector<HTMLElement>('[data-canvas-toolbar]');
+    const sheetsEl = mainEl.querySelector<HTMLElement>('[data-canvas-sheets]');
+    const toolbarHeight = toolbarEl ? toolbarEl.getBoundingClientRect().height : 60;
+    const sheetsHeight = sheetsEl ? sheetsEl.getBoundingClientRect().height : 0;
 
-      // Вычитаем высоту toolbar (вверху)
-      const toolbarHeight = 64; // ~64px для toolbar
-      containerHeight -= toolbarHeight;
+    // Видимая область между toolbar и sheets
+    const visibleWidth = containerWidth;
+    const visibleHeight = containerHeight - toolbarHeight - sheetsHeight;
 
-      // Вычитаем высоту панели листов (внизу) - примерно 60px
-      const sheetsHeight = botData?.sheets && botData.sheets.length > 0 ? 60 : 0;
-      containerHeight -= sheetsHeight;
+    if (visibleWidth <= 0 || visibleHeight <= 0) return;
 
-      // Проверяем размеры контейнера
-      if (containerWidth <= 0 || containerHeight <= 0) {
-        return;
-      }
+    // Масштаб с 10% отступами
+    const scaleX = (visibleWidth * 0.9) / contentWidth;
+    const scaleY = (visibleHeight * 0.9) / contentHeight;
+    const newZoom = Math.max(Math.min(Math.min(scaleX, scaleY) * 100, 100), 20);
 
-      // Вычисляем масштаб с отступами
-      const scaleX = (containerWidth * 0.9) / contentWidth;
-      const scaleY = (containerHeight * 0.9) / contentHeight;
-      const scale = Math.min(scaleX, scaleY, 1); // Ограничиваем максимум 100%
+    // Центр контента в canvas-координатах
+    const centerX = (nodeBounds.left + nodeBounds.right) / 2;
+    const centerY = (nodeBounds.top + nodeBounds.bottom) / 2;
 
-      // Ограничиваем zoom разумными пределами
-      const newZoom = Math.max(Math.min(scale * 100, 100), 20); // min 20%, max 100%
+    // Центр видимой области в экранных координатах
+    const screenCenterX = visibleWidth / 2;
+    const screenCenterY = toolbarHeight + visibleHeight / 2;
 
-      // Вычисляем центр контента
-      const centerX = (nodeBounds.left + nodeBounds.right) / 2;
-      const centerY = (nodeBounds.top + nodeBounds.bottom) / 2;
-      const containerCenterX = containerWidth / 2;
-      // Центрируем в доступном пространстве между toolbar и sheets panel
-      const containerCenterY = containerHeight / 2;
+    const newPanX = screenCenterX - centerX * (newZoom / 100);
+    const newPanY = screenCenterY - centerY * (newZoom / 100);
 
-      // Вычисляем новые значения pan
-      const newPanX = containerCenterX - centerX * (newZoom / 100);
-      const newPanY = containerCenterY - centerY * (newZoom / 100);
+    if (!isFinite(newPanX) || !isFinite(newPanY)) return;
 
-      // Проверяем валидность pan значений
-      if (!isFinite(newPanX) || !isFinite(newPanY)) {
-        return;
-      }
-
-      // Применяем изменения
-      setZoom(newZoom);
-      setPan({
-        x: newPanX,
-        y: newPanY
-      });
-    }
-  }, [nodes, botData]);
+    setZoom(newZoom);
+    setPan({ x: newPanX, y: newPanY });
+  }, [nodes, nodeSizes, zoom]);
 
   // Handle wheel zoom (native handler, registered with { passive: false })
   const handleWheel = useCallback((e: WheelEvent) => {
@@ -1039,7 +1041,7 @@ export function Canvas({
 
       {/* Компонент листов холста - фиксированная панель внизу */}
       {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && (
-        <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto">
+        <div data-canvas-sheets className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto">
           <CanvasSheets
             sheets={botData.sheets}
             activeSheetId={botData.activeSheetId || botData.sheets[0]?.id || null}

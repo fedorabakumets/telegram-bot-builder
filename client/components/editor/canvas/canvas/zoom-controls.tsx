@@ -5,6 +5,7 @@
  * выпадающий список выбора масштаба и кнопку "Уместить всё".
  */
 
+import { useRef, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 /**
@@ -45,6 +46,36 @@ const BUTTON_DISABLED_CLASSES = 'opacity-30 cursor-not-allowed';
 const ICON_CLASSES = 'text-slate-600 dark:text-slate-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors';
 
 /**
+ * Хук для поддержки долгого нажатия с повторением действия
+ */
+function useLongPress(callback: () => void, delay = 400, interval = 80) {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const start = useCallback(() => {
+    callback(); // сразу одно срабатывание
+    timeoutRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(callback, interval);
+    }, delay);
+  }, [callback, delay, interval]);
+
+  const stop = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    timeoutRef.current = null;
+    intervalRef.current = null;
+  }, []);
+
+  return {
+    onMouseDown: start,
+    onMouseUp: stop,
+    onMouseLeave: stop,
+    onTouchStart: (e: React.TouchEvent) => { e.preventDefault(); start(); },
+    onTouchEnd: stop,
+  };
+}
+
+/**
  * Компонент кнопок управления масштабом холста
  * 
  * @param props - Свойства компонента
@@ -61,11 +92,14 @@ export function ZoomControls({
   onFitToContent,
   onZoomLevelChange
 }: ZoomControlsProps) {
+  const zoomOutPress = useLongPress(onZoomOut);
+  const zoomInPress = useLongPress(onZoomIn);
+
   return (
     <>
       {/* Кнопка уменьшения масштаба */}
       <button
-        onClick={onZoomOut}
+        {...(canZoomOut ? zoomOutPress : {})}
         disabled={!canZoomOut}
         className={`${BUTTON_BASE_CLASSES} ${BUTTON_INACTIVE_CLASSES} ${!canZoomOut ? BUTTON_DISABLED_CLASSES : ''}`}
         title="Уменьшить масштаб (Ctrl + -)"
@@ -163,7 +197,7 @@ export function ZoomControls({
 
       {/* Кнопка увеличения масштаба */}
       <button
-        onClick={onZoomIn}
+        {...(canZoomIn ? zoomInPress : {})}
         disabled={!canZoomIn}
         className={`${BUTTON_BASE_CLASSES} ${BUTTON_INACTIVE_CLASSES} ${!canZoomIn ? BUTTON_DISABLED_CLASSES : ''} flex items-center justify-center`}
         title="Увеличить масштаб (Ctrl + +)"
