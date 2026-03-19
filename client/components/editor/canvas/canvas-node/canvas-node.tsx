@@ -364,7 +364,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       ref={nodeRef}
       data-canvas-node="true"
       className={cn(
-        "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl border-2 p-6 pb-8 w-80 relative select-none group",
+        "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl border-2 p-6 pb-10 w-80 relative select-none group",
         isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-shadow duration-300",
         isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
         onMove ? "cursor-grab" : "cursor-pointer"
@@ -449,9 +449,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       <ButtonsPreview node={node} allNodes={allNodes} />
 
       {/* Футер с полным ID узла */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 py-1.5 rounded-b-2xl bg-gray-50/80 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-700/50">
+      <div className="absolute bottom-0 left-0 right-0 px-4 py-2 rounded-b-2xl bg-gray-100/60 dark:bg-slate-800/80 border-t border-gray-200 dark:border-slate-700">
         <span
-          className="font-mono text-[10px] text-gray-400 dark:text-slate-500 select-all"
+          className="font-mono text-[10px] text-gray-500 dark:text-slate-400 select-all tracking-tight"
           title="ID узла"
         >
           #{node.id}
