@@ -113,6 +113,8 @@ const defaultNodeData = {
   maxLength: undefined,
   placeholder: undefined,
   defaultValue: undefined,
+  appendVariable: false,
+  variableFilters: {},
   enableUserActions: false,
   actionTrigger: undefined,
   triggerText: undefined,
@@ -182,7 +184,20 @@ const defaultNodeData = {
   adminChatId: undefined,
   adminChatIdSource: 'current_chat' as const,
   adminChatVariableName: undefined,
-  attachedMedia: []
+  attachedMedia: [],
+  text: undefined,
+  action: undefined,
+  waitForTextInput: undefined,
+  idSourceType: 'bot_users' as const,
+  broadcastApiType: 'bot' as const,
+  broadcastTargetNode: undefined,
+  enableBroadcast: false,
+  enableConfirmation: false,
+  confirmationText: undefined,
+  successMessage: undefined,
+  errorMessage: undefined,
+  sessionName: 'user_session',
+  sessionCreated: false,
 };
 
 /**
@@ -218,6 +233,7 @@ export class SheetsManager {
       id: nanoid(),
       name: 'Лист 1',
       nodes: nodes,
+      connections: [],
       viewState: {
         pan: { x: 0, y: 0 },
         zoom: 100
@@ -279,6 +295,7 @@ export class SheetsManager {
       id: nanoid(),
       name,
       nodes: defaultNodes,
+      connections: [],
       viewState: {
         pan: { x: 0, y: 0 },
         zoom: 100
@@ -422,6 +439,7 @@ export class SheetsManager {
       id: nanoid(),
       name: `${originalSheet.name} (копия)`,
       nodes: updatedNodesWithReferences,
+      connections: [],
       viewState: { ...originalSheet.viewState },
       createdAt: new Date(),
       updatedAt: new Date()

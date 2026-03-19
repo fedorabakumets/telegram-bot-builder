@@ -98,7 +98,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
               <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {formatDate(project.created_at)}
+                  {formatDate(project.createdAt)}
                 </span>
                 <span>{nodeCount} узлов</span>
                 {sheetsInfo.count > 1 && (

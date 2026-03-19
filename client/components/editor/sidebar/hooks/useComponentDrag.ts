@@ -11,7 +11,6 @@ import {
   handleProjectDragStart,
   handleProjectDragOver,
   handleProjectDragLeave,
-  handleProjectDrop,
 } from '../handlers';
 
 /**
@@ -59,33 +58,33 @@ export function useComponentDrag(): UseComponentDragResult {
 
   // Обработчик начала перетаскивания проекта
   const onProjectDragStart = useCallback((e: React.DragEvent, project: BotProject) => {
-    setProjectDragState(prev => ({
+    setProjectDragState((prev) => ({
       ...prev,
       draggedProject: project,
     }));
     handleProjectDragStart(e, {
       project,
-      setDraggedSheet: (sheet) => setSheetDragState(prev => ({ ...prev, draggedSheet: sheet })),
-      setDraggedProject: (proj) => setProjectDragState(prev => ({ ...prev, draggedProject: proj })),
+      setDraggedSheet: (sheet) => setSheetDragState((prev) => ({ ...prev, draggedSheet: sheet })),
+      setDraggedProject: (proj) => setProjectDragState((prev) => ({ ...prev, draggedProject: proj })),
     });
   }, []);
 
   // Обработчик наведения на проект
   const onProjectDragOver = useCallback((e: React.DragEvent, projectId: number) => {
-    setProjectDragState(prev => ({
+    setProjectDragState((prev) => ({
       ...prev,
       dragOverProject: projectId,
     }));
-    handleProjectDragOver(e, projectId, (id) => setProjectDragState(prev => ({ ...prev, dragOverProject: id })));
+    handleProjectDragOver(e, projectId, (id) => setProjectDragState((prev) => ({ ...prev, dragOverProject: id })));
   }, []);
 
   // Обработчик ухода с проекта
   const onProjectDragLeave = useCallback(() => {
-    setProjectDragState(prev => ({
+    setProjectDragState((prev) => ({
       ...prev,
       dragOverProject: null,
     }));
-    handleProjectDragLeave((id) => setProjectDragState(prev => ({ ...prev, dragOverProject: id })));
+    handleProjectDragLeave((id) => setProjectDragState((prev) => ({ ...prev, dragOverProject: id })));
   }, []);
 
   // Обработчик сброса проекта
@@ -93,13 +92,14 @@ export function useComponentDrag(): UseComponentDragResult {
     // Обработчик будет вызван с полным контекстом в компоненте
     handleProjectDragStart(e, {
       project: targetProject,
-      setDraggedSheet: (sheet) => setSheetDragState(prev => ({ ...prev, draggedSheet: sheet })),
-      setDraggedProject: (proj) => setProjectDragState(prev => ({ ...prev, draggedProject: proj })),
+      setDraggedSheet: (sheet) => setSheetDragState((prev) => ({ ...prev, draggedSheet: sheet })),
+      setDraggedProject: (proj) => setProjectDragState((prev) => ({ ...prev, draggedProject: proj })),
     });
   }, []);
 
   // Обработчик начала перетаскивания листа
   const onSheetDragStart = useCallback((e: React.DragEvent, sheetId: string, projectId: number) => {
+    e.stopPropagation();
     setSheetDragState({
       draggedSheet: { sheetId, projectId },
       dragOverSheet: null,
@@ -109,7 +109,7 @@ export function useComponentDrag(): UseComponentDragResult {
   // Обработчик наведения на лист
   const onSheetDragOver = useCallback((e: React.DragEvent, sheetId: string) => {
     e.preventDefault();
-    setSheetDragState(prev => ({
+    setSheetDragState((prev) => ({
       ...prev,
       dragOverSheet: sheetId,
     }));
@@ -117,14 +117,14 @@ export function useComponentDrag(): UseComponentDragResult {
 
   // Обработчик ухода с листа
   const onSheetDragLeave = useCallback(() => {
-    setSheetDragState(prev => ({
+    setSheetDragState((prev) => ({
       ...prev,
       dragOverSheet: null,
     }));
   }, []);
 
   // Обработчик сброса листа
-  const onSheetDrop = useCallback((e: React.DragEvent, targetSheetId: string) => {
+  const onSheetDrop = useCallback((e: React.DragEvent, _targetSheetId: string) => {
     e.preventDefault();
     setSheetDragState({
       draggedSheet: null,
