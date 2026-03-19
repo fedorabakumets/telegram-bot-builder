@@ -6,7 +6,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { BotProject } from '@shared/schema';
-import { SheetsManager } from '@/utils/sheets-manager';
+import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { cn } from '@/utils/utils';
 import { formatDate } from '../handlers/format-date';
 import { getNodeCount } from '../handlers/get-node-count';

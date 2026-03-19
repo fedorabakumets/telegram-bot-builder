@@ -17,7 +17,7 @@ import { TelegramAuth } from '@/components/editor/telegram-client/telegram-auth'
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import type { BotProject } from '@shared/schema';
-import { SheetsManager } from '@/utils/sheets-manager';
+import { SheetsManager } from '@/utils/sheets/sheets-manager';
 
 const createProjectSchema = z.object({
   name: z.string().min(1, 'Название проекта обязательно'),

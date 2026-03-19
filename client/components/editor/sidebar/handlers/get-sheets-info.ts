@@ -3,7 +3,7 @@
  * Возвращает количество и названия листов
  */
 import { BotProject } from '@shared/schema';
-import { SheetsManager } from '@/utils/sheets-manager';
+import { SheetsManager } from '@/utils/sheets/sheets-manager';
 
 /** Результат получения информации о листах */
 export interface SheetsInfo {

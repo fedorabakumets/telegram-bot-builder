@@ -6,7 +6,7 @@ import { CanvasContent } from './canvas-content';
 
 import { Node, ComponentDefinition } from '@/types/bot';
 import { BotDataWithSheets } from '@shared/schema';
-import { SheetsManager } from '@/utils/sheets-manager';
+import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { nanoid } from 'nanoid';
 
 /**

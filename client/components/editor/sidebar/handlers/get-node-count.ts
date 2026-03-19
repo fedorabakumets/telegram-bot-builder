@@ -3,7 +3,7 @@
  * Поддерживает старый и новый формат с листами
  */
 import { BotProject } from '@shared/schema';
-import { SheetsManager } from '@/utils/sheets-manager';
+import { SheetsManager } from '@/utils/sheets/sheets-manager';
 
 /**
  * Подсчитывает количество узлов в проекте

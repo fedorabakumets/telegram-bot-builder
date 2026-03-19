@@ -54,7 +54,7 @@ import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
-import { SheetsManager } from '@/utils/sheets-manager';
+import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { BotData, BotDataWithSheets, BotProject, UserBotData } from '@shared/schema';
 import type { ComponentDefinition, Node } from '@shared/schema';
 import { nanoid } from 'nanoid';

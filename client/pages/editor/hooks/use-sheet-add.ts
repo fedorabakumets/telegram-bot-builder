@@ -9,7 +9,7 @@
 
 import { useCallback } from 'react';
 import type { BotDataWithSheets } from '@shared/schema';
-import { SheetsManager } from '@/utils/sheets-manager';
+import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { logSheetAdd } from '@/components/editor/properties';
 import type { ToasterToast } from '@/hooks/use-toast';
 
