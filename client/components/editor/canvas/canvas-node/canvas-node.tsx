@@ -19,9 +19,7 @@ import { NodeHeader } from './node-header';
 import { ConditionalMessagesIndicator } from './conditional-messages-indicator';
 import { ButtonsPreview } from './buttons-preview';
 import { ClientAuthCard } from './client-auth-card';
-import { KeyboardAttachedBlock, KEYBOARD_BLOCK_GAP } from './keyboard-attached-block';
-import { KeyboardConnector } from './keyboard-connector';
-import { useNodeHeight } from './use-node-height';
+
 /**
  * Интерфейс свойств компонента CanvasNode
  *
@@ -95,9 +93,6 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
-  const keyboardBlockRef = useRef<HTMLDivElement>(null);
-  const mainCardHeight = useNodeHeight(nodeRef);
-  const keyboardBlockHeight = useNodeHeight(keyboardBlockRef);
   
   // Touch состояние для мобильного перемещения элементов
   const [isTouchDragging, setIsTouchDragging] = useState(false);
@@ -345,21 +340,13 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   }, [isTouchDragging]);
 
   // ResizeObserver для измерения реальных размеров узла
-  // Репортим суммарную высоту: основная карточка + зазор + блок клавиатуры (если есть)
   useEffect(() => {
     if (!onSizeChange || !nodeRef.current) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const { width } = entry.contentRect;
-        const cardH = entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height;
-        const kbH = keyboardBlockRef.current
-          ? (keyboardBlockRef.current.getBoundingClientRect().height || 0)
-          : 0;
-        const totalHeight = kbH > 0
-          ? cardH + KEYBOARD_BLOCK_GAP + kbH
-          : cardH;
-        onSizeChange(node.id, { width, height: totalHeight });
+        const { width, height } = entry.contentRect;
+        onSizeChange(node.id, { width, height });
       }
     });
 
@@ -368,19 +355,11 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     return () => {
       resizeObserver.disconnect();
     };
-  }, [node.id, onSizeChange, keyboardBlockHeight]);
+  }, [node.id, onSizeChange]);
 
   const isDragActive = isDragging || isTouchDragging;
 
-  /** Ширина карточки ноды (w-80 = 320px) */
-  const CARD_WIDTH = 320;
-  const hasKeyboardBlock =
-    (node.data.buttons?.length ?? 0) > 0 &&
-    node.data.keyboardType !== 'none' &&
-    !!node.data.keyboardType;
-
   return (
-    <>
     <div
       ref={nodeRef}
       data-canvas-node="true"
@@ -466,8 +445,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         <TextInputIndicator node={node} />
       )}
 
-      {/* Buttons preview — скрыт если показывается прикреплённый блок клавиатуры */}
-      {!hasKeyboardBlock && <ButtonsPreview node={node} allNodes={allNodes} />}
+      {/* Buttons preview */}
+      <ButtonsPreview node={node} allNodes={allNodes} />
 
       {/* Футер с полным ID узла */}
       <div className="absolute bottom-0 left-0 right-0 px-4 py-1.5 rounded-b-2xl bg-gray-50/80 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-700/50">
@@ -479,25 +458,5 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         </span>
       </div>
     </div>
-
-    {/* Соединительная линия и прикреплённый блок клавиатуры */}
-    {hasKeyboardBlock && mainCardHeight > 0 && (
-      <>
-        <KeyboardConnector
-          x={node.position.x + CARD_WIDTH / 2}
-          y1={node.position.y + mainCardHeight}
-          y2={node.position.y + mainCardHeight + KEYBOARD_BLOCK_GAP}
-        />
-        <KeyboardAttachedBlock
-          ref={keyboardBlockRef}
-          node={node}
-          allNodes={allNodes}
-          mainCardHeight={mainCardHeight}
-          isSelected={isSelected}
-          onClick={!isDragging ? onClick : undefined}
-        />
-      </>
-    )}
-    </>
   );
 }
