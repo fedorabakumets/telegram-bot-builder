@@ -54,3 +54,9 @@ global.IntersectionObserver = class IntersectionObserver {
   rootMargin = '';
   thresholds = [];
 };
+
+// Мок для document.elementFromPoint
+Object.defineProperty(document, 'elementFromPoint', {
+  writable: true,
+  value: vi.fn(() => null),
+});
