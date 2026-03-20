@@ -196,8 +196,31 @@ export function useNodeHandlers({
   }, [botDataWithSheets, setBotDataWithSheets, selectedNodeId, setSelectedNodeId, nodes, onActionLog, saveToHistory]);
 
   const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
+    // Обновляем в старой системе
     updateNode(nodeId, { position });
-  }, [updateNode]);
+
+    // Синхронизируем позицию с новой системой листов
+    if (botDataWithSheets && botDataWithSheets.activeSheetId) {
+      const updatedSheets = botDataWithSheets.sheets.map(sheet => {
+        if (sheet.id === botDataWithSheets.activeSheetId) {
+          return {
+            ...sheet,
+            nodes: sheet.nodes.map(node =>
+              node.id === nodeId
+                ? { ...node, position }
+                : node
+            )
+          };
+        }
+        return sheet;
+      });
+
+      setBotDataWithSheets({
+        ...botDataWithSheets,
+        sheets: updatedSheets
+      });
+    }
+  }, [updateNode, botDataWithSheets, setBotDataWithSheets]);
 
   // Сохраняем состояние ДО начала перемещения
   const handleNodeMoveStart = useCallback((_nodeId: string) => {

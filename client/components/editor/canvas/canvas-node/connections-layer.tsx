@@ -103,6 +103,9 @@ interface ConnectionsLayerProps {
  * @param toH - Высота целевого узла
  * @returns строка SVG path
  */
+/** На сколько px не доходим до края узла — ровно refX маркера, чтобы кончик стрелки лёг на край */
+const MARKER_OFFSET = 9;
+
 function buildSmartPath(
   fromNode: { position: { x: number; y: number } },
   toNode: { position: { x: number; y: number } },
@@ -125,7 +128,7 @@ function buildSmartPath(
       // цель справа: выход из правой стороны → вход в левую
       const x1 = fromNode.position.x + fromW;
       const y1 = fromCY;
-      const x2 = toNode.position.x;
+      const x2 = toNode.position.x - MARKER_OFFSET;
       const y2 = toCY;
       const curve = Math.max(40, Math.abs(dx) * 0.4);
       return `M ${x1},${y1} C ${x1 + curve},${y1} ${x2 - curve},${y2} ${x2},${y2}`;
@@ -133,7 +136,7 @@ function buildSmartPath(
       // цель слева: выход из левой стороны → вход в правую
       const x1 = fromNode.position.x;
       const y1 = fromCY;
-      const x2 = toNode.position.x + toW;
+      const x2 = toNode.position.x + toW + MARKER_OFFSET;
       const y2 = toCY;
       const curve = Math.max(40, Math.abs(dx) * 0.4);
       return `M ${x1},${y1} C ${x1 - curve},${y1} ${x2 + curve},${y2} ${x2},${y2}`;
@@ -145,7 +148,7 @@ function buildSmartPath(
     const x1 = fromCX;
     const y1 = fromNode.position.y + fromH;
     const x2 = toCX;
-    const y2 = toNode.position.y;
+    const y2 = toNode.position.y - MARKER_OFFSET;
     const curve = Math.max(60, Math.abs(dy) * 0.5);
     return `M ${x1},${y1} C ${x1},${y1 + curve} ${x2},${y2 - curve} ${x2},${y2}`;
   } else {
@@ -153,7 +156,7 @@ function buildSmartPath(
     const x1 = fromCX;
     const y1 = fromNode.position.y;
     const x2 = toCX;
-    const y2 = toNode.position.y + toH;
+    const y2 = toNode.position.y + toH + MARKER_OFFSET;
     const curve = Math.max(60, Math.abs(dy) * 0.5);
     return `M ${x1},${y1} C ${x1},${y1 - curve} ${x2},${y2 + curve} ${x2},${y2}`;
   }
