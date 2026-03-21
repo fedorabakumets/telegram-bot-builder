@@ -40,10 +40,7 @@ export function AdminOnlySetting({ selectedNode, onNodeUpdate }: AdminOnlySettin
           Только администраторы
         </Label>
         <div className="text-xs text-destructive-600 dark:text-destructive-400 mt-0.5">Доступна только админам и владельцу</div>
-        <div className="flex items-center gap-1 mt-1">
-          <i className="fas fa-exclamation-triangle text-amber-500 text-xs"></i>
-          <span className="text-xs text-amber-600 dark:text-amber-400">Временно не работает</span>
-        </div>
+
       </div>
       <div className="flex-shrink-0">
         <Switch
