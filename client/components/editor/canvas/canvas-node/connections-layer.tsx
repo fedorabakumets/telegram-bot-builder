@@ -2,7 +2,10 @@
  * @fileoverview SVG-слой соединений между узлами на холсте
  *
  * Отрисовывает линии переходов между узлами в виде кубических кривых Безье
- * со стрелками на конце. Поддерживает четыре типа соединений:
+ * со стрелками на конце. Линия всегда выходит из правого порта (OutputPort)
+ * исходного узла и входит в левый бок целевого узла.
+ *
+ * Поддерживает четыре типа соединений:
  * - auto-transition (зелёный пунктир) — автопереход
  * - button-goto (синий пунктир) — переход по inline-кнопке
  * - input-target (фиолетовый пунктир) — переход после ввода пользователя
@@ -99,22 +102,22 @@ interface ConnectionsLayerProps {
   nodeSizes: Map<string, { width: number; height: number }>;
 }
 
+/** На сколько px не доходим до края узла — ровно refX маркера, чтобы кончик стрелки лёг на край */
+const MARKER_OFFSET = 9;
+
 /**
- * Вычисляет SVG path кубической кривой Безье между двумя узлами
- * с умной маршрутизацией: если цель сбоку — соединяем боковые стороны,
- * если снизу/сверху — верх/низ.
+ * Вычисляет SVG path кубической кривой Безье между двумя узлами.
+ * Линия всегда выходит из правого бока исходного узла (позиция OutputPort)
+ * и входит в левый бок целевого узла.
  *
  * @param fromNode - Исходный узел
  * @param toNode - Целевой узел
  * @param fromW - Ширина исходного узла
  * @param fromH - Высота исходного узла
- * @param toW - Ширина целевого узла
+ * @param toW - Ширина целевого узла (не используется, оставлен для совместимости сигнатуры)
  * @param toH - Высота целевого узла
  * @returns строка SVG path
  */
-/** На сколько px не доходим до края узла — ровно refX маркера, чтобы кончик стрелки лёг на край */
-const MARKER_OFFSET = 9;
-
 function buildSmartPath(
   fromNode: { position: { x: number; y: number } },
   toNode: { position: { x: number; y: number } },
@@ -123,52 +126,19 @@ function buildSmartPath(
   toW: number,
   toH: number,
 ): string {
-  const fromCX = fromNode.position.x + fromW / 2;
-  const fromCY = fromNode.position.y + fromH / 2;
-  const toCX = toNode.position.x + toW / 2;
-  const toCY = toNode.position.y + toH / 2;
+  // Выход всегда из правого бока исходного узла (позиция OutputPort)
+  const x1 = fromNode.position.x + fromW;
+  const y1 = fromNode.position.y + fromH / 2;
 
-  const dx = toCX - fromCX;
-  const dy = toCY - fromCY;
+  // Вход всегда в левый бок целевого узла
+  const x2 = toNode.position.x - MARKER_OFFSET;
+  const y2 = toNode.position.y + toH / 2;
 
-  // Если горизонтальное смещение доминирует — соединяем боковые стороны
-  if (Math.abs(dx) > Math.abs(dy)) {
-    if (dx > 0) {
-      // цель справа: выход из правой стороны → вход в левую
-      const x1 = fromNode.position.x + fromW;
-      const y1 = fromCY;
-      const x2 = toNode.position.x - MARKER_OFFSET;
-      const y2 = toCY;
-      const curve = Math.max(40, Math.abs(dx) * 0.4);
-      return `M ${x1},${y1} C ${x1 + curve},${y1} ${x2 - curve},${y2} ${x2},${y2}`;
-    } else {
-      // цель слева: выход из левой стороны → вход в правую
-      const x1 = fromNode.position.x;
-      const y1 = fromCY;
-      const x2 = toNode.position.x + toW + MARKER_OFFSET;
-      const y2 = toCY;
-      const curve = Math.max(40, Math.abs(dx) * 0.4);
-      return `M ${x1},${y1} C ${x1 - curve},${y1} ${x2 + curve},${y2} ${x2},${y2}`;
-    }
-  }
+  // Горизонтальные контрольные точки Безье — пропорционально расстоянию
+  const dx = Math.abs(x2 - x1);
+  const curve = Math.max(60, dx * 0.5);
 
-  // Вертикальное: выход снизу → вход сверху (или наоборот)
-  if (dy > 0) {
-    const x1 = fromCX;
-    const y1 = fromNode.position.y + fromH;
-    const x2 = toCX;
-    const y2 = toNode.position.y - MARKER_OFFSET;
-    const curve = Math.max(60, Math.abs(dy) * 0.5);
-    return `M ${x1},${y1} C ${x1},${y1 + curve} ${x2},${y2 - curve} ${x2},${y2}`;
-  } else {
-    // цель выше: выход сверху → вход снизу
-    const x1 = fromCX;
-    const y1 = fromNode.position.y;
-    const x2 = toCX;
-    const y2 = toNode.position.y + toH + MARKER_OFFSET;
-    const curve = Math.max(60, Math.abs(dy) * 0.5);
-    return `M ${x1},${y1} C ${x1},${y1 - curve} ${x2},${y2 + curve} ${x2},${y2}`;
-  }
+  return `M ${x1},${y1} C ${x1 + curve},${y1} ${x2 - curve},${y2} ${x2},${y2}`;
 }
 
 /**
@@ -234,8 +204,8 @@ function collectConnections(nodes: Node[]): Connection[] {
 /**
  * Компонент SVG-слоя соединений
  *
- * Рисует линии переходов между узлами. Линия выходит из нижней середины
- * исходного узла и входит в верхнюю середину целевого узла.
+ * Рисует линии переходов между узлами. Линия всегда выходит из правого порта
+ * (OutputPort) исходного узла и входит в левый бок целевого узла.
  *
  * @param props - Свойства компонента
  * @returns SVG элемент с линиями соединений или null если нет соединений
