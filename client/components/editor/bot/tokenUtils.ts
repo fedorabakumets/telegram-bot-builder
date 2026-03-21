@@ -7,15 +7,12 @@
  */
 
 /**
- * Маскировка токена (показываем только последние 4 символа)
+ * Маскировка токена — полностью скрывает значение
  * @param token - Токен для маскировки
- * @returns Маскированный токен
+ * @returns Строка из звёздочек той же длины
  */
 export function maskToken(token: string): string {
-  if (token.length <= 4) {
-    return token;
-  }
-  return '*'.repeat(token.length - 4) + token.slice(-4);
+  return '*'.repeat(token.length);
 }
 
 /**
