@@ -59,7 +59,9 @@ const nodeTypeNames: Record<Node['type'], string> = {
   keyboard: 'Клавиатура',
   input: 'Ввод',
   condition: 'Условие',
-  client_auth: 'Авторизация Client API'
+  client_auth: 'Авторизация Client API',
+  command_trigger: 'Триггер команды',
+  text_trigger: 'Текстовый триггер',
 };
 
 /**
@@ -93,7 +95,9 @@ const nodeIcons: Record<Node['type'], string> = {
   keyboard: 'fas fa-keyboard',
   input: 'fas fa-keyboard',
   condition: 'fas fa-code-branch',
-  client_auth: 'fas fa-key'
+  client_auth: 'fas fa-key',
+  command_trigger: 'fas fa-bolt',
+  text_trigger: 'fas fa-comment-dots',
 };
 
 /**
@@ -127,7 +131,9 @@ const nodeColors: Record<Node['type'], string> = {
   keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
   input: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
   condition: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-  client_auth: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+  client_auth: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+  command_trigger: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
+  text_trigger: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
 /**
