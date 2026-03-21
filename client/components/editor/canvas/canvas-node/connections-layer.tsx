@@ -2,10 +2,11 @@
  * @fileoverview SVG-слой соединений между узлами на холсте
  *
  * Отрисовывает линии переходов между узлами в виде кубических кривых Безье
- * со стрелками на конце. Поддерживает три типа соединений:
+ * со стрелками на конце. Поддерживает четыре типа соединений:
  * - auto-transition (зелёный пунктир) — автопереход
- * - button-goto (синий сплошной) — переход по inline-кнопке
+ * - button-goto (синий пунктир) — переход по inline-кнопке
  * - input-target (фиолетовый пунктир) — переход после ввода пользователя
+ * - trigger-next (жёлтый сплошной) — переход из узла command_trigger
  *
  * Слой абсолютно позиционирован и не перехватывает события мыши.
  *
@@ -19,9 +20,9 @@ const SVG_SIZE = 20000;
 
 /**
  * Тип соединения между узлами
- * "auto-transition" | "button-goto" | "input-target"
+ * "auto-transition" | "button-goto" | "input-target" | "trigger-next"
  */
-type ConnectionType = 'auto-transition' | 'button-goto' | 'input-target';
+type ConnectionType = 'auto-transition' | 'button-goto' | 'input-target' | 'trigger-next';
 
 /**
  * Одно соединение между двумя узлами
@@ -77,6 +78,14 @@ const CONNECTION_STYLES: Record<ConnectionType, ConnectionStyle> = {
     dashArray: '8 5',
     opacity: 0.8,
     markerId: 'arrow-input',
+  },
+  /** Соединение триггера команды с целевым узлом — жёлтый сплошной */
+  'trigger-next': {
+    color: '#eab308',
+    strokeWidth: 2,
+    dashArray: '',
+    opacity: 0.8,
+    markerId: 'arrow-trigger',
   },
 };
 
@@ -208,6 +217,14 @@ function collectConnections(nodes: Node[]): Connection[] {
         toId: inputTargetNodeId,
         type: 'input-target',
       });
+    }
+
+    // 4. Соединение триггера команды с целевым узлом
+    if (node.type === 'command_trigger' && node.data?.autoTransitionTo) {
+      const toId = node.data.autoTransitionTo as string;
+      if (existingIds.has(toId)) {
+        connections.push({ fromId: node.id, toId, type: 'trigger-next' });
+      }
     }
   });
 

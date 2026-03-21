@@ -5,6 +5,9 @@
  * для узла типа command_trigger в панели свойств редактора.
  * Каждый узел — одна команда. Для нескольких команд
  * используйте несколько узлов на холсте.
+ *
+ * Поле «Следующий узел» задаёт `autoTransitionTo` — ID узла,
+ * к которому будет нарисовано жёлтое соединение на холсте.
  * @module components/editor/properties/components/trigger/CommandTriggerConfiguration
  */
 
@@ -71,6 +74,17 @@ export function CommandTriggerConfiguration({ selectedNode, onNodeUpdate }: Comm
         <Switch
           checked={selectedNode.data?.isPrivateOnly ?? false}
           onCheckedChange={v => onNodeUpdate(selectedNode.id, { isPrivateOnly: v })}
+        />
+      </div>
+
+      {/* Следующий узел — задаёт выходное соединение (жёлтая линия на холсте) */}
+      <div className="space-y-2">
+        <Label>Следующий узел (ID)</Label>
+        <Input
+          value={selectedNode.data?.autoTransitionTo || ''}
+          onChange={e => onNodeUpdate(selectedNode.id, { autoTransitionTo: e.target.value })}
+          placeholder="ID следующего узла"
+          className="font-mono"
         />
       </div>
     </div>
