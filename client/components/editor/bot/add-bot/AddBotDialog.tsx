@@ -99,7 +99,7 @@ export function AddBotDialog({
 
   return (
     <Dialog open={showAddBot} onOpenChange={setShowAddBot}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90dvh] overflow-y-auto">
         <AddBotDialogHeader />
 
         <div className="space-y-4 sm:space-y-5 py-2">

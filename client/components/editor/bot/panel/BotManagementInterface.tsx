@@ -30,7 +30,7 @@ export function BotManagementInterface({ projects, allTokens }: BotManagementInt
   const { setProjectForNewBot, setShowAddBot, allBotInfos } = useBotControl();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {projects.map((project, projectIndex) => {
         const projectTokens = allTokens[projectIndex] || [];
         const projectBotInfo = allBotInfos[projectIndex];

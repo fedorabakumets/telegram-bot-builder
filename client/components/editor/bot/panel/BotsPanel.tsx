@@ -79,7 +79,7 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
   };
 
   return (
-    <div className="h-full overflow-auto p-4 sm:p-6">
+    <div className="h-full overflow-auto p-3 sm:p-4 lg:p-6">
       <BotControl
         projectId={projectId}
         projectName={projectName}

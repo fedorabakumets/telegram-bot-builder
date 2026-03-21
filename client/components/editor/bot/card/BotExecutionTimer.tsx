@@ -32,7 +32,7 @@ export function BotExecutionTimer({
 }: BotExecutionTimerProps) {
   const botStatus = allBotStatuses.find(s => s.instance?.tokenId === tokenId);
   return (
-    <div className="sm:col-span-2 flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border bg-gradient-to-r from-amber-500/8 to-orange-500/8 border-amber-500/30 dark:from-amber-500/10 dark:to-orange-500/10 dark:border-amber-500/40" data-testid="timer-display-bot-card">
+    <div className="col-span-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border bg-gradient-to-r from-amber-500/8 to-orange-500/8 border-amber-500/30 dark:from-amber-500/10 dark:to-orange-500/10 dark:border-amber-500/40" data-testid="timer-display-bot-card">
       <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-xs sm:text-sm font-semibold text-amber-700 dark:text-amber-300">Запущен</p>

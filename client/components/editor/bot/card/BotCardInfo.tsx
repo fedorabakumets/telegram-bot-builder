@@ -123,13 +123,19 @@ export function BotCardInfo({
           )
         )}
 
-        <p className="text-xs text-muted-foreground">
-          Добавлен: {new Date(token.createdAt!).toLocaleDateString('ru-RU')}
+        <p className="text-xs text-muted-foreground space-y-0.5 sm:space-y-0">
+          <span className="block sm:inline">
+            Добавлен: {new Date(token.createdAt!).toLocaleDateString('ru-RU')}
+          </span>
           {token.lastUsedAt && (
-            <> • Последний: {new Date(token.lastUsedAt).toLocaleDateString('ru-RU')}</>
+            <span className="block sm:inline sm:before:content-['_•_']">
+              Последний: {new Date(token.lastUsedAt).toLocaleDateString('ru-RU')}
+            </span>
           )}
           {token.trackExecutionTime === 1 && (
-            <> • {formatExecutionTime(token.totalExecutionSeconds || 0)}</>
+            <span className="block sm:inline sm:before:content-['_•_']">
+              {formatExecutionTime(token.totalExecutionSeconds || 0)}
+            </span>
           )}
         </p>
       </div>

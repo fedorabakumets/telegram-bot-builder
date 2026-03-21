@@ -75,7 +75,7 @@ export function BotActions({
       <Button
         variant="ghost"
         size="sm"
-        className="h-8 w-8 p-0"
+        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
         onClick={onEditProfile}
         disabled={isProfileLoading}
         title={editLabel}

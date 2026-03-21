@@ -27,7 +27,7 @@ export function BotControlPanelHeader({ onConnectBot }: BotControlPanelHeaderPro
           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
             <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground">
             Боты
           </h2>
         </div>

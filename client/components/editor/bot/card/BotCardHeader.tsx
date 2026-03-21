@@ -100,14 +100,29 @@ export function BotCardHeader({
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-      <BotAvatar
-        botName={displayName}
-        photoUrl={projectBotInfo?.photoUrl || token.botPhotoUrl}
-        botId={projectBotInfo?.id?.toString()}
-        projectId={projectId}
-        size={64}
-        className="flex-shrink-0"
-      />
+      <div className="flex items-start justify-between sm:contents">
+        <BotAvatar
+          botName={displayName}
+          photoUrl={projectBotInfo?.photoUrl || token.botPhotoUrl}
+          botId={projectBotInfo?.id?.toString()}
+          projectId={projectId}
+          size={64}
+          className="flex-shrink-0"
+        />
+        {/* На мобильных кнопки рядом с аватаркой */}
+        <div className="sm:hidden">
+          <BotActions
+            isBotRunning={isBotRunning}
+            startBotMutation={startBotMutation}
+            stopBotMutation={stopBotMutation}
+            deleteBotMutation={deleteBotMutation}
+            onEditProfile={onEditProfile}
+            isProfileLoading={isProfileLoading}
+            tokenId={tokenId}
+            projectId={projectId}
+          />
+        </div>
+      </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -163,16 +178,19 @@ export function BotCardHeader({
         </div>
       </div>
 
-      <BotActions
-        isBotRunning={isBotRunning}
-        startBotMutation={startBotMutation}
-        stopBotMutation={stopBotMutation}
-        deleteBotMutation={deleteBotMutation}
-        onEditProfile={onEditProfile}
-        isProfileLoading={isProfileLoading}
-        tokenId={tokenId}
-        projectId={projectId}
-      />
+      {/* На десктопе кнопки справа */}
+      <div className="hidden sm:flex">
+        <BotActions
+          isBotRunning={isBotRunning}
+          startBotMutation={startBotMutation}
+          stopBotMutation={stopBotMutation}
+          deleteBotMutation={deleteBotMutation}
+          onEditProfile={onEditProfile}
+          isProfileLoading={isProfileLoading}
+          tokenId={tokenId}
+          projectId={projectId}
+        />
+      </div>
     </div>
   );
 }

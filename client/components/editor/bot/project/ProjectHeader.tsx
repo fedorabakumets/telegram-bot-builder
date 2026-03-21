@@ -20,13 +20,13 @@ interface ProjectHeaderProps {
  */
 export function ProjectHeader({ projectName, botsCount }: ProjectHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <h3 className="text-xl font-semibold text-foreground">{projectName}</h3>
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">
-          Ботов: {botsCount}
-        </span>
-      </div>
+    <div className="flex items-center justify-between gap-2">
+      <h3 className="text-lg sm:text-xl font-semibold text-foreground truncate min-w-0">
+        {projectName}
+      </h3>
+      <span className="text-sm text-muted-foreground flex-shrink-0">
+        Ботов: {botsCount}
+      </span>
     </div>
   );
 }
