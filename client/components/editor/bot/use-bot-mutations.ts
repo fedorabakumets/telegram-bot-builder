@@ -1,0 +1,198 @@
+/**
+ * @fileoverview Хук для мутаций управления ботами
+ *
+ * Инкапсулирует все useMutation вызовы для панели управления ботами:
+ * - startBot — запуск бота
+ * - stopBot — остановка бота
+ * - deleteBot — удаление токена
+ * - toggleDatabase — переключение базы данных
+ * - createBot — создание токена
+ * - parseBotInfo — получение информации о боте по токену
+ * - updateBotInfo — обновление поля информации о боте
+ *
+ * @module use-bot-mutations
+ */
+
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/queryClient';
+import { BotToken } from '@shared/schema';
+
+/**
+ * Параметры хука мутаций ботов
+ */
+interface UseBotMutationsParams {
+  /** ID текущего проекта */
+  projectId: number;
+  /** Все токены в плоском массиве */
+  allTokensFlat: (BotToken & { projectId: number })[];
+  /** Callback при запуске бота */
+  onBotStarted?: (projectId: number, tokenId: number, botName: string) => void;
+  /** Callback при остановке бота */
+  onBotStopped?: (projectId: number, tokenId: number) => void;
+  /** Токен нового бота (для parseBotInfo → createBot) */
+  newBotToken: string;
+  /** ID проекта для нового бота */
+  projectForNewBot: number | null;
+  /** Количество уже существующих токенов */
+  existingTokensCount: number;
+  /** Callback после успешного добавления бота */
+  onBotAdded: () => void;
+}
+
+/**
+ * Хук для всех мутаций управления ботами
+ */
+export function useBotMutations({
+  projectId,
+  allTokensFlat,
+  onBotStarted,
+  onBotStopped,
+  newBotToken,
+  projectForNewBot,
+  existingTokensCount,
+  onBotAdded,
+}: UseBotMutationsParams) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isParsingBot, setIsParsingBot] = useState(false);
+
+  /** Вспомогательная функция: найти токен по ID */
+  const findToken = (tokenId: number) =>
+    allTokensFlat.find(t => t.id === tokenId);
+
+  const startBotMutation = useMutation({
+    mutationFn: ({ tokenId, projectId: pid }: { tokenId: number; projectId: number }) =>
+      apiRequest('POST', `/api/projects/${pid}/bot/start`, { tokenId }),
+    onSuccess: (_, vars) => {
+      toast({ title: 'Бот запущен', description: 'Бот успешно запущен и готов к работе.' });
+      queryClient.invalidateQueries({ queryKey: [`/api/tokens/${vars.tokenId}/bot-status`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/bot/info`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/tokens`] });
+      const token = findToken(vars.tokenId);
+      if (token && onBotStarted) {
+        onBotStarted(vars.projectId, vars.tokenId, token.name || `Бот ${vars.tokenId}`);
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Ошибка запуска', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const stopBotMutation = useMutation({
+    mutationFn: ({ tokenId, projectId: pid }: { tokenId: number; projectId: number }) =>
+      apiRequest('POST', `/api/projects/${pid}/bot/stop`, { tokenId }),
+    onSuccess: (_, vars) => {
+      toast({ title: 'Бот остановлен', description: 'Бот успешно остановлен.' });
+      queryClient.invalidateQueries({ queryKey: [`/api/tokens/${vars.tokenId}/bot-status`] });
+      if (onBotStopped) onBotStopped(vars.projectId, vars.tokenId);
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Ошибка остановки', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const deleteBotMutation = useMutation({
+    mutationFn: async (tokenId: number) => {
+      const token = findToken(tokenId);
+      if (!token) throw new Error('Токен не найден');
+      return apiRequest('DELETE', `/api/projects/${token.projectId}/tokens/${tokenId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects/tokens'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects/bot/info'] });
+      toast({ title: 'Бот удалён' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Ошибка при удалении бота', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const toggleDatabaseMutation = useMutation({
+    mutationFn: (enabled: boolean) =>
+      apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
+    onSuccess: (_, enabled) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+      toast({
+        title: enabled ? 'База данных включена' : 'База данных выключена',
+        description: enabled
+          ? 'Функции работы с базой данных будут генерироваться в коде бота.'
+          : 'Функции работы с базой данных НЕ будут генерироваться в коде бота.',
+      });
+    },
+    onError: () => {
+      toast({ title: 'Ошибка', description: 'Не удалось изменить настройку базы данных', variant: 'destructive' });
+    },
+  });
+
+  const createBotMutation = useMutation({
+    mutationFn: (botData: BotToken & { projectId: number }) =>
+      apiRequest('POST', `/api/projects/${botData.projectId}/tokens`, botData),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/tokens`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/bot/info`] });
+      toast({ title: 'Бот успешно добавлен', description: 'Информация о боте автоматически получена из Telegram' });
+      onBotAdded();
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Ошибка при добавлении бота', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const parseBotInfoMutation = useMutation({
+    mutationFn: async ({ token, projectId: pid }: { token: string; projectId: number }) => {
+      setIsParsingBot(true);
+      try {
+        return await apiRequest('POST', `/api/projects/${pid}/tokens/parse`, { token });
+      } finally {
+        setIsParsingBot(false);
+      }
+    },
+    onSuccess: (botInfo) => {
+      if (!projectForNewBot) return;
+      createBotMutation.mutate({
+        name: botInfo.botFirstName
+          ? `${botInfo.botFirstName}${botInfo.botUsername ? ` (@${botInfo.botUsername})` : ''}`
+          : `@${botInfo.botUsername}`,
+        token: newBotToken.trim(),
+        description: botInfo.botShortDescription,
+        isDefault: existingTokensCount === 0 ? 1 : 0,
+        isActive: 1,
+        ...botInfo,
+        projectId: projectForNewBot,
+      } as BotToken & { projectId: number });
+    },
+    onError: (error: Error) => {
+      setIsParsingBot(false);
+      toast({ title: 'Ошибка получения информации о боте', description: error.message || 'Проверьте правильность токена', variant: 'destructive' });
+    },
+  });
+
+  const updateBotInfoMutation = useMutation({
+    mutationFn: async ({ tokenId, field, value }: { tokenId: number; field: string; value: string }) => {
+      const token = findToken(tokenId);
+      if (!token) throw new Error('Токен не найден');
+      return apiRequest('PUT', `/api/projects/${token.projectId}/tokens/${tokenId}/bot-info`, { field, value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects/tokens'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects/bot/info'] });
+      toast({ title: 'Информация о боте обновлена' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Ошибка обновления', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  return {
+    startBotMutation,
+    stopBotMutation,
+    deleteBotMutation,
+    toggleDatabaseMutation,
+    createBotMutation,
+    parseBotInfoMutation,
+    updateBotInfoMutation,
+    isParsingBot,
+  };
+}

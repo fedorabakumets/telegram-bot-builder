@@ -1,7 +1,7 @@
 /**
  * @fileoverview Информация карточки бота
  *
- * Компонент отображает:
+ * Отображает:
  * - Описание бота (с inline-редактированием)
  * - Токен бота
  * - Краткое описание
@@ -15,17 +15,31 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { TokenDisplayEdit } from './TokenDisplayEdit';
 import { formatExecutionTime } from './bot-control-utils';
+import type { BotToken, BotProject } from '@shared/schema';
+import type { EditingField } from './bot-types';
 
+/**
+ * Свойства компонента информации карточки бота
+ */
 interface BotCardInfoProps {
-  token: any;
-  project: any;
-  editingField: { tokenId: number; field: string } | null;
+  /** Данные токена бота */
+  token: BotToken;
+  /** Проект бота */
+  project: BotProject;
+  /** Редактируемое поле */
+  editingField: EditingField | null;
+  /** Значение редактируемого поля */
   editValue: string;
+  /** Обновить значение редактируемого поля */
   setEditValue: (value: string) => void;
+  /** Сохранить изменения */
   handleSaveEdit: () => void;
+  /** Отменить редактирование */
   handleCancelEdit: () => void;
+  /** Начать редактирование поля */
   handleStartEdit: (tokenId: number, field: string, currentValue: string) => void;
-  queryClient: any;
+  /** QueryClient для инвалидации кэша */
+  queryClient: { invalidateQueries: (opts: { queryKey: unknown[] }) => void };
 }
 
 /**
@@ -40,20 +54,22 @@ export function BotCardInfo({
   handleSaveEdit,
   handleCancelEdit,
   handleStartEdit,
-  queryClient
+  queryClient,
 }: BotCardInfoProps) {
+  const description = token.botDescription || token.description;
+  const isEditingDesc = editingField?.tokenId === token.id && editingField?.field === 'description';
+  const isEditingShort = editingField?.tokenId === token.id && editingField?.field === 'shortDescription';
+
   return (
     <div className="flex-1 min-w-0">
-      {(token.botDescription || token.description) && (
-        editingField?.tokenId === token.id && editingField?.field === 'description' ? (
+      {description && (
+        isEditingDesc ? (
           <Textarea
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSaveEdit();
-              } else if (e.key === 'Escape') handleCancelEdit();
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); }
+              else if (e.key === 'Escape') handleCancelEdit();
             }}
             onBlur={handleSaveEdit}
             autoFocus
@@ -64,11 +80,11 @@ export function BotCardInfo({
         ) : (
           <p
             className="text-xs sm:text-sm text-muted-foreground line-clamp-2 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-            onDoubleClick={() => handleStartEdit(token.id, 'description', token.botDescription || token.description || '')}
+            onDoubleClick={() => handleStartEdit(token.id, 'description', description)}
             title="Double-click to edit"
             data-testid="text-bot-description"
           >
-            {token.botDescription || token.description}
+            {description}
           </p>
         )
       )}
@@ -83,7 +99,7 @@ export function BotCardInfo({
       />
 
       {token.botShortDescription && token.botShortDescription !== token.botDescription && (
-        editingField?.tokenId === token.id && editingField?.field === 'shortDescription' ? (
+        isEditingShort ? (
           <Input
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}

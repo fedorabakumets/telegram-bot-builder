@@ -1,12 +1,12 @@
 /**
  * @fileoverview Панель управления ботами
  *
- * Главный компонент, объединяющий все части панели управления:
- * - Заголовок
- * - Состояние загрузки
- * - Состояние отсутствия проектов
- * - Контент с ботами
- * - Диалог добавления бота
+ * Главный компонент панели управления ботами.
+ * Данные редактирования и мутации берёт из BotControlContext.
+ * Принимает только данные, недоступные в контексте:
+ * - состояние загрузки проектов
+ * - список проектов и токенов
+ * - состояние диалога добавления бота
  *
  * @module BotControlPanel
  */
@@ -16,64 +16,42 @@ import { BotControlPanelLoading } from './BotControlPanelLoading';
 import { BotControlPanelEmpty } from './BotControlPanelEmpty';
 import { BotManagementInterface } from './BotManagementInterface';
 import { AddBotDialog } from './AddBotDialog';
+import { useBotControl } from './bot-control-context';
+import type { BotProject, BotToken } from '@shared/schema';
 
+/**
+ * Свойства панели управления ботами
+ */
 interface BotControlPanelProps {
-  setShowAddBot: (show: boolean) => void;
+  /** Загружаются ли проекты */
   projectsLoading: boolean;
-  projects: any[];
-  allTokens: any[][];
-  allBotInfos: any[];
-  setProjectForNewBot: (projectId: number | null) => void;
-  allBotStatuses: any[];
-  editingField: { tokenId: number; field: string } | null;
-  editValue: string;
-  setEditValue: (value: string) => void;
-  handleSaveEdit: () => void;
-  handleCancelEdit: () => void;
-  handleStartEdit: (tokenId: number, field: string, currentValue: string) => void;
-  getStatusBadge: (token: any) => JSX.Element;
-  queryClient: any;
-  startBotMutation: any;
-  stopBotMutation: any;
-  deleteBotMutation: any;
-  toggleDatabaseMutation: any;
-  currentElapsedSeconds: Record<number, number>;
+  /** Список проектов */
+  projects: BotProject[];
+  /** Токены по каждому проекту */
+  allTokens: BotToken[][];
+  /** Показывать ли диалог добавления бота */
   showAddBot: boolean;
+  /** ID проекта для нового бота */
   projectForNewBot: number | null;
+  /** Токен нового бота */
   newBotToken: string;
+  /** Обновить токен нового бота */
   setNewBotToken: (token: string) => void;
+  /** Идёт ли парсинг информации о боте */
   isParsingBot: boolean;
-  createBotMutation: any;
+  /** Мутация создания бота */
+  createBotMutation: { isPending: boolean };
+  /** Обработчик добавления бота */
   handleAddBot: () => void;
-  setSelectedProject: (project: any) => void;
-  setSelectedBotInfo: (info: any) => void;
-  setIsProfileSheetOpen: (open: boolean) => void;
 }
 
 /**
  * Панель управления ботами
  */
 export function BotControlPanel({
-  setShowAddBot,
   projectsLoading,
   projects,
   allTokens,
-  allBotInfos,
-  setProjectForNewBot,
-  allBotStatuses,
-  editingField,
-  editValue,
-  setEditValue,
-  handleSaveEdit,
-  handleCancelEdit,
-  handleStartEdit,
-  getStatusBadge,
-  queryClient,
-  startBotMutation,
-  stopBotMutation,
-  deleteBotMutation,
-  toggleDatabaseMutation,
-  currentElapsedSeconds,
   showAddBot,
   projectForNewBot,
   newBotToken,
@@ -81,10 +59,9 @@ export function BotControlPanel({
   isParsingBot,
   createBotMutation,
   handleAddBot,
-  setSelectedProject,
-  setSelectedBotInfo,
-  setIsProfileSheetOpen
 }: BotControlPanelProps) {
+  const { setShowAddBot, setProjectForNewBot } = useBotControl();
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <BotControlPanelHeader onConnectBot={() => setShowAddBot(true)} />
@@ -97,26 +74,6 @@ export function BotControlPanel({
         <BotManagementInterface
           projects={projects}
           allTokens={allTokens}
-          allBotInfos={allBotInfos}
-          setProjectForNewBot={setProjectForNewBot}
-          setShowAddBot={setShowAddBot}
-          allBotStatuses={allBotStatuses}
-          editingField={editingField}
-          editValue={editValue}
-          setEditValue={setEditValue}
-          handleSaveEdit={handleSaveEdit}
-          handleCancelEdit={handleCancelEdit}
-          handleStartEdit={handleStartEdit}
-          getStatusBadge={getStatusBadge}
-          queryClient={queryClient}
-          startBotMutation={startBotMutation}
-          stopBotMutation={stopBotMutation}
-          deleteBotMutation={deleteBotMutation}
-          toggleDatabaseMutation={toggleDatabaseMutation}
-          currentElapsedSeconds={currentElapsedSeconds}
-          setSelectedProject={setSelectedProject}
-          setSelectedBotInfo={setSelectedBotInfo}
-          setIsProfileSheetOpen={setIsProfileSheetOpen}
         />
       )}
 

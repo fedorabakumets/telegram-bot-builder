@@ -15,6 +15,7 @@
 import { BotDatabaseToggle } from './BotDatabaseToggle';
 import { BotExecutionTimer } from './BotExecutionTimer';
 import { BotAdminIds } from './BotAdminIds';
+import type { BotStatusResponse } from './bot-types';
 
 interface BotSettingsGridProps {
   /** ID проекта */
@@ -28,7 +29,7 @@ interface BotSettingsGridProps {
   /** Текущее время работы ботов в секундах (ключ — tokenId) */
   currentElapsedSeconds: Record<number, number>;
   /** Статусы всех ботов */
-  allBotStatuses: unknown[];
+  allBotStatuses: BotStatusResponse[];
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: {
     isPending: boolean;

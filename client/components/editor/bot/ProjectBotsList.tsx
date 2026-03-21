@@ -1,65 +1,41 @@
 /**
  * @fileoverview Список ботов проекта
  *
- * Компонент отображает карточки всех ботов в проекте.
+ * Отображает карточки всех ботов в проекте.
+ * Данные редактирования и мутации берёт из BotControlContext.
  *
  * @module ProjectBotsList
  */
 
 import { BotCard } from './BotCard';
+import { useBotControl } from './bot-control-context';
+import type { BotProject, BotToken } from '@shared/schema';
+import type { BotInfo } from './BotProfileEditor';
 
+/**
+ * Свойства списка ботов проекта
+ */
 interface ProjectBotsListProps {
-  project: any;
-  projectTokens: any[];
-  projectBotInfo: any;
-  allBotStatuses: any[];
-  editingField: { tokenId: number; field: string } | null;
-  editValue: string;
-  setEditValue: (value: string) => void;
-  handleSaveEdit: () => void;
-  handleCancelEdit: () => void;
-  handleStartEdit: (tokenId: number, field: string, currentValue: string) => void;
-  getStatusBadge: (token: any) => JSX.Element;
-  startBotMutation: any;
-  stopBotMutation: any;
-  deleteBotMutation: any;
-  setSelectedProject: (project: any) => void;
-  setSelectedBotInfo: (info: any) => void;
-  setIsProfileSheetOpen: (open: boolean) => void;
-  currentElapsedSeconds: Record<number, number>;
-  toggleDatabaseMutation: any;
-  queryClient: any;
+  /** Проект */
+  project: BotProject;
+  /** Токены проекта */
+  projectTokens: BotToken[];
+  /** Информация о боте из Telegram API */
+  projectBotInfo: BotInfo | undefined;
 }
 
 /**
  * Список ботов проекта
  */
-export function ProjectBotsList({
-  project,
-  projectTokens,
-  projectBotInfo,
-  allBotStatuses,
-  editingField,
-  editValue,
-  setEditValue,
-  handleSaveEdit,
-  handleCancelEdit,
-  handleStartEdit,
-  getStatusBadge,
-  startBotMutation,
-  stopBotMutation,
-  deleteBotMutation,
-  setSelectedProject,
-  setSelectedBotInfo,
-  setIsProfileSheetOpen,
-  currentElapsedSeconds,
-  toggleDatabaseMutation,
-  queryClient
-}: ProjectBotsListProps) {
+export function ProjectBotsList({ project, projectTokens, projectBotInfo }: ProjectBotsListProps) {
+  const { allBotStatuses } = useBotControl();
+
   return (
     <div className="grid gap-4">
       {projectTokens.map((token) => {
-        const tokenStatus = allBotStatuses.find(status => status.instance && status.instance.tokenId === token.id);
+        const tokenStatus = allBotStatuses.find(
+          s => s.instance?.tokenId === token.id,
+        );
         const isThisTokenRunning = tokenStatus?.status === 'running';
 
         return (
@@ -69,23 +45,6 @@ export function ProjectBotsList({
             project={project}
             projectBotInfo={projectBotInfo}
             isThisTokenRunning={isThisTokenRunning}
-            editingField={editingField}
-            editValue={editValue}
-            setEditValue={setEditValue}
-            handleSaveEdit={handleSaveEdit}
-            handleCancelEdit={handleCancelEdit}
-            handleStartEdit={handleStartEdit}
-            getStatusBadge={getStatusBadge}
-            startBotMutation={startBotMutation}
-            stopBotMutation={stopBotMutation}
-            deleteBotMutation={deleteBotMutation}
-            setSelectedProject={setSelectedProject}
-            setSelectedBotInfo={setSelectedBotInfo}
-            setIsProfileSheetOpen={setIsProfileSheetOpen}
-            currentElapsedSeconds={currentElapsedSeconds}
-            allBotStatuses={allBotStatuses}
-            toggleDatabaseMutation={toggleDatabaseMutation}
-            queryClient={queryClient}
           />
         );
       })}

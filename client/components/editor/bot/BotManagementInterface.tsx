@@ -1,9 +1,8 @@
 /**
  * @fileoverview Интерфейс управления ботами
  *
- * Компонент отображает интерфейс управления ботами для всех проектов:
- * - Заголовки проектов
- * - Списки ботов или состояние отсутствия ботов
+ * Отображает список проектов с их ботами.
+ * Все данные редактирования и мутации берёт из BotControlContext.
  *
  * @module BotManagementInterface
  */
@@ -11,59 +10,25 @@
 import { ProjectHeader } from './ProjectHeader';
 import { EmptyBotsState } from './EmptyBotsState';
 import { ProjectBotsList } from './ProjectBotsList';
+import { useBotControl } from './bot-control-context';
+import type { BotProject, BotToken } from '@shared/schema';
 
+/**
+ * Свойства интерфейса управления ботами
+ */
 interface BotManagementInterfaceProps {
-  projects: any[];
-  allTokens: any[][];
-  allBotInfos: any[];
-  setProjectForNewBot: (projectId: number | null) => void;
-  setShowAddBot: (show: boolean) => void;
-  allBotStatuses: any[];
-  editingField: { tokenId: number; field: string } | null;
-  editValue: string;
-  setEditValue: (value: string) => void;
-  handleSaveEdit: () => void;
-  handleCancelEdit: () => void;
-  handleStartEdit: (tokenId: number, field: string, currentValue: string) => void;
-  getStatusBadge: (token: any) => JSX.Element;
-  startBotMutation: any;
-  stopBotMutation: any;
-  deleteBotMutation: any;
-  toggleDatabaseMutation: any;
-  currentElapsedSeconds: Record<number, number>;
-  setSelectedProject: (project: any) => void;
-  setSelectedBotInfo: (info: any) => void;
-  setIsProfileSheetOpen: (open: boolean) => void;
-  queryClient: any;
+  /** Список проектов */
+  projects: BotProject[];
+  /** Токены по каждому проекту (индекс совпадает с projects) */
+  allTokens: BotToken[][];
 }
 
 /**
  * Интерфейс управления ботами
  */
-export function BotManagementInterface({
-  projects,
-  allTokens,
-  allBotInfos,
-  setProjectForNewBot,
-  setShowAddBot,
-  allBotStatuses,
-  editingField,
-  editValue,
-  setEditValue,
-  handleSaveEdit,
-  handleCancelEdit,
-  handleStartEdit,
-  getStatusBadge,
-  startBotMutation,
-  stopBotMutation,
-  deleteBotMutation,
-  toggleDatabaseMutation,
-  currentElapsedSeconds,
-  setSelectedProject,
-  setSelectedBotInfo,
-  setIsProfileSheetOpen,
-  queryClient
-}: BotManagementInterfaceProps) {
+export function BotManagementInterface({ projects, allTokens }: BotManagementInterfaceProps) {
+  const { setProjectForNewBot, setShowAddBot, allBotInfos } = useBotControl();
+
   return (
     <div className="space-y-8">
       {projects.map((project, projectIndex) => {
@@ -89,23 +54,6 @@ export function BotManagementInterface({
                 project={project}
                 projectTokens={projectTokens}
                 projectBotInfo={projectBotInfo}
-                allBotStatuses={allBotStatuses}
-                editingField={editingField}
-                editValue={editValue}
-                setEditValue={setEditValue}
-                handleSaveEdit={handleSaveEdit}
-                handleCancelEdit={handleCancelEdit}
-                handleStartEdit={handleStartEdit}
-                getStatusBadge={getStatusBadge}
-                startBotMutation={startBotMutation}
-                stopBotMutation={stopBotMutation}
-                deleteBotMutation={deleteBotMutation}
-                setSelectedProject={setSelectedProject}
-                setSelectedBotInfo={setSelectedBotInfo}
-                setIsProfileSheetOpen={setIsProfileSheetOpen}
-                currentElapsedSeconds={currentElapsedSeconds}
-                toggleDatabaseMutation={toggleDatabaseMutation}
-                queryClient={queryClient}
               />
             )}
           </div>

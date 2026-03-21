@@ -1,11 +1,12 @@
 /**
  * @fileoverview Карточка бота
  *
- * Компонент объединяет все части карточки бота:
+ * Объединяет все части карточки бота:
  * - Заголовок с аватаркой и именем
  * - Информация о боте
- * - Кнопки действий
  * - Сетка настроек
+ *
+ * Данные редактирования и мутации берёт из BotControlContext.
  *
  * @module BotCard
  */
@@ -14,57 +15,48 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BotCardHeader } from './BotCardHeader';
 import { BotCardInfo } from './BotCardInfo';
 import { BotSettingsGrid } from './BotSettingsGrid';
+import { useBotControl } from './bot-control-context';
+import type { BotProject, BotToken } from '@shared/schema';
+import type { BotInfo } from './BotProfileEditor';
 
+/**
+ * Свойства карточки бота
+ */
 interface BotCardProps {
-  token: any;
-  project: any;
-  projectBotInfo: any;
+  /** Данные токена бота */
+  token: BotToken;
+  /** Проект бота */
+  project: BotProject;
+  /** Информация о боте из Telegram API */
+  projectBotInfo: BotInfo | undefined;
+  /** Запущен ли этот бот */
   isThisTokenRunning: boolean;
-  editingField: { tokenId: number; field: string } | null;
-  editValue: string;
-  setEditValue: (value: string) => void;
-  handleSaveEdit: () => void;
-  handleCancelEdit: () => void;
-  handleStartEdit: (tokenId: number, field: string, currentValue: string) => void;
-  getStatusBadge: (token: any) => JSX.Element;
-  startBotMutation: any;
-  stopBotMutation: any;
-  deleteBotMutation: any;
-  setSelectedProject: (project: any) => void;
-  setSelectedBotInfo: (info: any) => void;
-  setIsProfileSheetOpen: (open: boolean) => void;
-  currentElapsedSeconds: Record<number, number>;
-  allBotStatuses: any[];
-  toggleDatabaseMutation: any;
-  queryClient: any;
 }
 
 /**
  * Карточка бота
  */
-export function BotCard({
-  token,
-  project,
-  projectBotInfo,
-  isThisTokenRunning,
-  editingField,
-  editValue,
-  setEditValue,
-  handleSaveEdit,
-  handleCancelEdit,
-  handleStartEdit,
-  getStatusBadge,
-  startBotMutation,
-  stopBotMutation,
-  deleteBotMutation,
-  setSelectedProject,
-  setSelectedBotInfo,
-  setIsProfileSheetOpen,
-  currentElapsedSeconds,
-  allBotStatuses,
-  toggleDatabaseMutation,
-  queryClient
-}: BotCardProps) {
+export function BotCard({ token, project, projectBotInfo, isThisTokenRunning }: BotCardProps) {
+  const {
+    editingField,
+    editValue,
+    setEditValue,
+    handleSaveEdit,
+    handleCancelEdit,
+    handleStartEdit,
+    getStatusBadge,
+    startBotMutation,
+    stopBotMutation,
+    deleteBotMutation,
+    toggleDatabaseMutation,
+    currentElapsedSeconds,
+    allBotStatuses,
+    setSelectedProject,
+    setSelectedBotInfo,
+    setIsProfileSheetOpen,
+    queryClient,
+  } = useBotControl();
+
   return (
     <Card className="group/card overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md dark:hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card via-card to-card/95 hover:border-border/50">
       <CardContent className="p-4 sm:p-5 space-y-4">
@@ -84,7 +76,7 @@ export function BotCard({
           deleteBotMutation={deleteBotMutation}
           onEditProfile={() => {
             setSelectedProject(project);
-            setSelectedBotInfo(projectBotInfo);
+            setSelectedBotInfo(projectBotInfo ?? null);
             setIsProfileSheetOpen(true);
           }}
           isProfileLoading={!projectBotInfo}

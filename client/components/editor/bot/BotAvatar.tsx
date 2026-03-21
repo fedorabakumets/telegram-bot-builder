@@ -1,7 +1,10 @@
 /**
  * @fileoverview Компонент аватарки бота
  *
- * Использует компонент UserAvatar из диалоговой панели для консистентности.
+ * Отображает аватарку бота с несколькими стратегиями:
+ * 1. Если есть projectId и botId — загружает через UserAvatar (с кэшем staleTime=60s)
+ * 2. Если есть photoUrl — показывает изображение напрямую
+ * 3. Fallback — инициалы или иконка бота
  *
  * @module BotAvatar
  */
@@ -9,14 +12,25 @@
 import { useMemo } from 'react';
 import { UserAvatar } from '../database/dialog/components/user-avatar';
 import { useBotData } from '../database/dialog/hooks/use-bot-data';
+import type { UserBotData } from '@shared/schema';
 
+/**
+ * Свойства аватарки бота
+ */
 interface BotAvatarProps {
+  /** URL фото профиля */
   photoUrl?: string | null;
+  /** Имя бота (для инициалов) */
   botName: string;
+  /** Telegram userId бота */
   botUserId?: string;
+  /** Telegram ID бота (альтернатива botUserId) */
   botId?: string | null;
+  /** Размер в пикселях */
   size?: number;
+  /** Дополнительный CSS-класс */
   className?: string;
+  /** ID проекта для загрузки аватарки через API */
   projectId?: number;
 }
 
@@ -29,24 +43,21 @@ export function BotAvatar({
   botUserId,
   botId,
   size = 40,
-  className = "",
-  projectId
+  className = '',
+  projectId,
 }: BotAvatarProps) {
-  // Загружаем данные бота из API для получения актуальной аватарки
+  // Загружаем данные бота только если есть projectId (staleTime=60s задан в useBotData)
   const { bot: botData } = useBotData(projectId || 0);
-  
-  // Используем botUserId или botId или загружаем из API
-  const extractedBotUserId = botUserId || botId || botData?.userId;
-  const extractedPhotoUrl = photoUrl || botData?.avatarUrl;
 
-  // Создаём стабильный объект user в формате UserBotData для совместимости с UserAvatar
-  // Используем useMemo для предотвращения пересоздания при каждом рендере
-  const botUser = useMemo(() => {
-    if (!extractedPhotoUrl && !extractedBotUserId) return null;
-    
+  const resolvedUserId = botUserId || botId || botData?.userId;
+  const resolvedPhotoUrl = photoUrl || botData?.avatarUrl;
+
+  // Формируем объект UserBotData для UserAvatar
+  const botUser = useMemo((): UserBotData | null => {
+    if (!resolvedPhotoUrl && !resolvedUserId) return null;
     return {
-      avatarUrl: extractedPhotoUrl || undefined,
-      userId: extractedBotUserId,
+      avatarUrl: resolvedPhotoUrl || undefined,
+      userId: resolvedUserId,
       userName: botName,
       firstName: botName,
       lastName: null,
@@ -58,40 +69,33 @@ export function BotAvatar({
       registeredAt: null,
       createdAt: null,
       lastInteraction: null,
-      interactionCount: 0
-    } as any;
-  }, [extractedPhotoUrl, extractedBotUserId, botName]);
+      interactionCount: 0,
+    } as UserBotData;
+  }, [resolvedPhotoUrl, resolvedUserId, botName]);
 
-  // Если есть projectId и botUserId, используем UserAvatar для загрузки аватарки из API
-  if (projectId && extractedBotUserId && botUser) {
+  // Если есть projectId и userId — используем UserAvatar
+  if (projectId && resolvedUserId && botUser) {
     return (
-      <UserAvatar
-        messageType="bot"
-        user={botUser}
-        projectId={projectId}
-        size={size}
-      />
+      <div className={`flex-shrink-0 ${className}`} style={{ width: size, height: size }}>
+        <UserAvatar
+          messageType="bot"
+          user={botUser}
+          projectId={projectId}
+          size={size}
+        />
+      </div>
     );
   }
 
-  // Fallback на старый стиль отображения
-  const initials = botName
-    .split(' ')
-    .map(word => word.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
-  const showImage = photoUrl && !extractedBotUserId;
-
-  if (showImage) {
+  // Fallback: прямое изображение
+  if (resolvedPhotoUrl) {
     return (
       <div
         className={`relative rounded-lg overflow-hidden flex-shrink-0 ${className}`}
         style={{ width: size, height: size }}
       >
         <img
-          src={photoUrl}
+          src={resolvedPhotoUrl}
           alt={`${botName} avatar`}
           className="w-full h-full object-cover"
         />
@@ -99,16 +103,21 @@ export function BotAvatar({
     );
   }
 
+  // Fallback: инициалы или иконка
+  const initials = botName
+    .split(' ')
+    .map(w => w.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <div
       className={`bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
       style={{ width: size, height: size }}
     >
       {initials ? (
-        <span
-          className="text-white font-semibold"
-          style={{ fontSize: size * 0.4 }}
-        >
+        <span className="text-white font-semibold" style={{ fontSize: size * 0.4 }}>
           {initials}
         </span>
       ) : (
@@ -123,6 +132,7 @@ export function BotAvatar({
           strokeLinecap="round"
           strokeLinejoin="round"
           className="text-white"
+          aria-hidden="true"
         >
           <path d="M12 8V4H8" />
           <rect width="16" height="12" x="4" y="8" rx="2" />

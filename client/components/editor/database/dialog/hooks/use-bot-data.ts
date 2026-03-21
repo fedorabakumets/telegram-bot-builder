@@ -15,6 +15,7 @@ export function useBotData(projectId: number) {
   const { data: bot, isLoading } = useQuery<UserBotData | null>({
     queryKey: [`/api/projects/${projectId}/bot/data`],
     enabled: !!projectId,
+    staleTime: 60_000,
     select: (data) => {
       // Защита: если данные не объект или null, возвращаем null
       if (!data || typeof data !== 'object') {

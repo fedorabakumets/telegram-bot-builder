@@ -1,30 +1,47 @@
 /**
  * @fileoverview Правая панель с терминалами ботов
  *
- * Компонент отображает панель с вкладками терминалов
- * и активным терминалом.
+ * Отображает вкладки терминалов и активный терминал.
+ * Реализует lazy mount: терминал монтируется только при первом
+ * переключении на него, что предотвращает лишние WebSocket-соединения.
  *
  * @module bot/TerminalPanel
  */
 
-import { Terminal as TerminalComponent, type TerminalHandle } from './Terminal';
+import { useRef, useState, useCallback } from 'react';
 import { BotTerminal } from './BotTerminal';
 import { TerminalTabs } from './TerminalTabs';
 import { useActiveTerminals } from './ActiveTerminalsContext';
-import { useRef, useState } from 'react';
+import type { TerminalHandle } from './Terminal';
 
 /**
- * Панель терминалов
+ * Панель терминалов с lazy mount
  */
 export function TerminalPanel() {
   const { activeTerminalId, terminals } = useActiveTerminals();
   const terminalRef = useRef<TerminalHandle>(null);
-  const [visibleTerminals, setVisibleTerminals] = useState<Record<string, boolean>>({});
 
-  const handleTerminalSelect = (projectId: number, tokenId: number) => {
+  /**
+   * Множество ключей терминалов, которые уже были смонтированы хотя бы раз.
+   * Используем Set для O(1) проверки.
+   */
+  const [mountedTabs, setMountedTabs] = useState<Set<string>>(() => {
+    // Монтируем активный терминал сразу при инициализации
+    const initial = new Set<string>();
+    if (activeTerminalId) initial.add(activeTerminalId);
+    return initial;
+  });
+
+  /** Обработчик выбора вкладки — добавляем ключ в mountedTabs */
+  const handleTerminalSelect = useCallback((projectId: number, tokenId: number) => {
     const key = `${projectId}_${tokenId}`;
-    setVisibleTerminals(prev => ({ ...prev, [key]: true }));
-  };
+    setMountedTabs(prev => {
+      if (prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  }, []);
 
   if (terminals.length === 0) {
     return (
@@ -37,10 +54,6 @@ export function TerminalPanel() {
     );
   }
 
-  const [projectIdStr, tokenIdStr] = (activeTerminalId || '').split('_');
-  const activeProjectId = parseInt(projectIdStr);
-  const activeTokenId = parseInt(tokenIdStr);
-
   return (
     <div className="h-full flex flex-col">
       <TerminalTabs onTerminalSelect={handleTerminalSelect} />
@@ -48,9 +61,9 @@ export function TerminalPanel() {
         {terminals.map(terminal => {
           const key = `${terminal.projectId}_${terminal.tokenId}`;
           const isActive = key === activeTerminalId;
-          const isVisible = visibleTerminals[key] || isActive;
 
-          if (!isVisible) return null;
+          // Монтируем только если вкладка уже была открыта хотя бы раз
+          if (!mountedTabs.has(key) && !isActive) return null;
 
           return (
             <div
