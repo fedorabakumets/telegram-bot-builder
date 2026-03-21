@@ -4,6 +4,8 @@
  * На десктопе (md+): горизонтальный resizable split — боты слева, терминал справа.
  * На мобильных (< md): вкладки "Боты" / "Терминал" с переключением.
  * Вкладка терминала показывается только если есть активные терминалы.
+ * Контейнер контента вкладок использует min-h-0, чтобы flex-child корректно
+ * сжимался и не создавал лишнего пространства на мобильных устройствах.
  *
  * @module bot/BotLayout
  */
@@ -86,7 +88,7 @@ export function BotLayout({ projectId, projectName }: BotLayoutProps) {
         </div>
 
         {/* Контент вкладок */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <div className={mobileTab === 'bots' ? 'h-full' : 'hidden'}>
             <BotsPanel projectId={projectId} projectName={projectName} />
           </div>

@@ -1,6 +1,8 @@
 /**
  * @fileoverview Компонент вертикального макета (верх/низ + центр)
- * @description Макет с верхней панелью и основным контентом
+ * @description Макет с верхней панелью и основным контентом.
+ * Главная панель использует overflow-hidden, чтобы дочерние компоненты
+ * (например, BotLayout) сами управляли прокруткой и не получали лишних отступов.
  */
 
 import React, { ReactNode } from 'react';
@@ -44,7 +46,7 @@ export function TopBottomLayout(props: TopBottomLayoutProps): React.JSX.Element 
         maxSize={30}
         className="p-0 m-0"
       >
-        <div className="h-full bg-background overflow-auto">
+        <div className="h-full bg-background overflow-hidden">
           {topContent}
         </div>
       </ResizablePanel>
@@ -55,7 +57,7 @@ export function TopBottomLayout(props: TopBottomLayoutProps): React.JSX.Element 
         defaultSize={isMobile ? 93 : 100 - topSize}
         className="p-0 m-0"
       >
-        <div className="h-full bg-background overflow-auto">
+        <div className="h-full bg-background overflow-hidden">
           {centerContent || bottomContent}
         </div>
       </ResizablePanel>
