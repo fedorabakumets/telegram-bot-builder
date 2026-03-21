@@ -106,13 +106,21 @@ interface ConnectionsLayerProps {
 const MARKER_OFFSET = 9;
 
 /**
- * Смещение от contentRect.width до центра кружка-порта OutputPort.
+ * Смещение от contentRect до центра кружка-порта OutputPort.
+ *
  * ResizeObserver возвращает contentRect (без padding и border).
- * Узел: padding-x = p-6 = 24px×2 = 48px, border = 2px×2 = 4px.
- * OutputPort: right=-8px, width=16px → центр на +(-8+8)=0 от правого border-box края.
- * Итого: contentRect.width + 48(padding) + 4(border) + 0(port center) = contentRect.width + 52.
+ * Узел: padding = p-6 (24px) + pb-10 (40px) top/bottom, border = 2px×2.
+ * border-box height = contentRect.height + 24 + 40 + 4 = contentRect.height + 68.
+ * Центр кружка по Y = node.top + borderBoxHeight / 2 = node.top + (fromH + 68) / 2.
+ *
+ * По X: border-box width = contentRect.width + 48(padding) + 4(border) = contentRect.width + 52.
+ * OutputPort: right=-8, width=16 → центр на правом border-box краю = contentRect.width + 52.
+ * Но right=-8 означает правый край кружка на -8 от правого края wrapper.
+ * Центр кружка = contentRect.width + 52 - 8 + 8 = contentRect.width + 52.
  */
-const PORT_CENTER_OFFSET = 52;
+const PORT_X_OFFSET = 52;
+/** Половина суммы padding-top(24) + padding-bottom(40) + border(4) = 68/2 = 34 */
+const PORT_Y_HALF_EXTRA = 34;
 
 /**
  * Вычисляет SVG path кубической кривой Безье между двумя узлами.
@@ -135,13 +143,15 @@ function buildSmartPath(
   toW: number,
   toH: number,
 ): string {
-  // Выход из центра кружка-порта OutputPort (right: -8, width: 16 → центр на fromW + PORT_CENTER_OFFSET)
-  const x1 = fromNode.position.x + fromW + PORT_CENTER_OFFSET;
-  const y1 = fromNode.position.y + fromH / 2;
+  // Выход из центра кружка-порта OutputPort
+  // X: правый border-box край = contentRect.width + padding(48) + border(4) = fromW + 52
+  // Y: центр wrapper по высоте с учётом padding/border = fromH/2 + 34
+  const x1 = fromNode.position.x + fromW + PORT_X_OFFSET;
+  const y1 = fromNode.position.y + fromH / 2 + PORT_Y_HALF_EXTRA;
 
-  // Вход всегда в левый бок целевого узла
+  // Вход в левый бок целевого узла (середина по высоте border-box)
   const x2 = toNode.position.x - MARKER_OFFSET;
-  const y2 = toNode.position.y + toH / 2;
+  const y2 = toNode.position.y + toH / 2 + PORT_Y_HALF_EXTRA;
 
   // Горизонтальные контрольные точки Безье — пропорционально расстоянию
   const dx = Math.abs(x2 - x1);
