@@ -400,9 +400,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         left: node.position.x,
         top: node.position.y,
         zIndex: isDragActive ? 1000 : isSelected ? 100 : 10,
-        willChange: isDragActive ? 'transform' : 'auto',
-        transition: isDragActive ? 'none' : 'box-shadow 0.2s ease',
-        contain: isDragActive ? 'layout style' : 'none',
+        overflow: 'visible',
       }}
     >
       {/* Кнопки действий — снаружи основного div, позиционируются относительно wrapper */}
