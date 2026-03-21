@@ -106,6 +106,14 @@ interface ConnectionsLayerProps {
 const MARKER_OFFSET = 9;
 
 /**
+ * Смещение центра кружка-порта OutputPort от правого края узла.
+ * OutputPort: right=-8, width=16 → центр = fromW + (-8) + 16/2 = fromW + 0.
+ * Но border-box узла шире contentRect на 4px (border-2 с двух сторон),
+ * поэтому добавляем +4 чтобы попасть точно в центр кружка.
+ */
+const PORT_CENTER_OFFSET = 8;
+
+/**
  * Вычисляет SVG path кубической кривой Безье между двумя узлами.
  * Линия всегда выходит из правого бока исходного узла (позиция OutputPort)
  * и входит в левый бок целевого узла.
@@ -126,8 +134,8 @@ function buildSmartPath(
   toW: number,
   toH: number,
 ): string {
-  // Выход всегда из правого бока исходного узла (позиция OutputPort)
-  const x1 = fromNode.position.x + fromW;
+  // Выход из центра кружка-порта OutputPort (right: -8, width: 16 → центр на fromW + PORT_CENTER_OFFSET)
+  const x1 = fromNode.position.x + fromW + PORT_CENTER_OFFSET;
   const y1 = fromNode.position.y + fromH / 2;
 
   // Вход всегда в левый бок целевого узла
