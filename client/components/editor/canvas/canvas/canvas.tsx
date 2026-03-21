@@ -220,8 +220,6 @@ export function Canvas({
     draftConnection,
     hoveredTargetNodeId,
     handlePortMouseDown,
-    handleDragMouseMove,
-    handleDragMouseUp,
   } = useConnectionDrag({
     nodes,
     zoom,
@@ -640,17 +638,11 @@ export function Canvas({
         y: lastPanPosition.y + deltaY
       });
     }
-    if (draftConnection) {
-      handleDragMouseMove(e);
-    }
-  }, [isPanning, panStart, lastPanPosition, draftConnection, handleDragMouseMove]);
+  }, [isPanning, panStart, lastPanPosition]);
 
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+  const handleMouseUp = useCallback(() => {
     setIsPanning(false);
-    if (draftConnection) {
-      handleDragMouseUp(e);
-    }
-  }, [draftConnection, handleDragMouseUp]);
+  }, []);
 
   // Обработчики touch-жестов для мобильных устройств
   const { handleTouchStart, handleTouchMove, handleTouchEnd } = useTouchGestures({
