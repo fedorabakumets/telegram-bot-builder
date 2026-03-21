@@ -11,7 +11,7 @@
  * @module BotControl
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,7 @@ import { BotToken, type BotProject } from '@shared/schema';
 import { type BotInfo } from './BotProfileEditor';
 import { BotProfileSheet } from './BotProfileSheet';
 import { BotControlPanel } from './BotControlPanel';
+import { BotControlProvider } from './bot-control-context';
 
 
 /**
@@ -33,43 +34,8 @@ interface BotControlProps {
   onBotStopped?: (projectId: number, tokenId: number) => void;
 }
 
-/**
- * Интерфейс экземпляра бота
- * @interface BotInstance
- */
-interface BotInstance {
-  /** Уникальный идентификатор экземпляра */
-  id: number;
-  /** Идентификатор проекта */
-  projectId: number;
-  /** Идентификатор токена */
-  tokenId: number;
-  /** Статус бота */
-  status: 'running' | 'stopped' | 'error';
-  /** Токен бота */
-  token: string;
-  /** Идентификатор процесса */
-  processId?: string;
-  /** Время запуска */
-  startedAt: Date;
-  /** Время остановки */
-  stoppedAt?: Date;
-  /** Сообщение об ошибке */
-  errorMessage?: string;
-}
-
-/**
- * Ответ API со статусом бота
- * @interface BotStatusResponse
- */
-interface BotStatusResponse {
-  /** Статус бота */
-  status: 'running' | 'stopped' | 'error';
-  /** Экземпляр бота или null */
-  instance: BotInstance | null;
-}
-
-// Используем тип BotToken из shared/schema.ts
+// Типы BotInstance и BotStatusResponse вынесены в bot-types.ts
+import type { BotStatusResponse } from './bot-types';
 
 /**
  * Основной компонент управления ботом
@@ -110,6 +76,8 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
   // Состояние таймеров для работающих ботов (по одному на каждый токен)
   /** Текущее время работы ботов в секундах (по ключу tokenId) */
   const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState<Record<number, number>>({});
+  /** Ref для хранения ID запущенных ботов без попадания в зависимости useEffect */
+  const runningBotsRef = useRef<BotStatusResponse[]>([]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -229,62 +197,43 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
   // Объединяем статусы ботов
   const allBotStatuses = botStatusQueriesResults.map(query => query.data).filter(Boolean) as BotStatusResponse[];
 
-  // Состояние для отслеживания выбранного токена
-  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+  // Синхронизируем ref с актуальными статусами (без лишних ре-рендеров)
+  runningBotsRef.current = allBotStatuses;
 
-  // Обновляем выбранный токен при изменении статусов ботов
+
+  // Timer effect — обновляем таймеры для каждого запущенного бота.
+  // Используем runningBotsRef чтобы не пересоздавать интервал при каждом тике.
   useEffect(() => {
-    // Находим запущенный бот и устанавливаем его токен как выбранный
-    const runningBot = allBotStatuses.find(status => status?.status === 'running' && status.instance);
-    if (runningBot && runningBot.instance) {
-      setSelectedTokenId(runningBot.instance.tokenId);
-    }
-  }, [allBotStatuses]);
-
-
-  // Timer effect - обновляем таймеры для каждого запущенного бота
-  useEffect(() => {
-    // Находим запущенные боты из статусов
-    const runningBots = allBotStatuses.filter(status => status?.status === 'running' && status.instance?.startedAt);
-
-    // Обновляем таймеры для каждого запущенного бота
     const interval = setInterval(() => {
-      const newElapsedSeconds: Record<number, number> = {};
+      const running = runningBotsRef.current.filter(
+        s => s?.status === 'running' && s.instance?.startedAt,
+      );
 
-      runningBots.forEach(bot => {
+      if (running.length === 0) return;
+
+      const newElapsed: Record<number, number> = {};
+      running.forEach(bot => {
         if (bot.instance) {
-          const startTime = new Date(bot.instance.startedAt).getTime();
-          const now = Date.now();
-          const elapsedMs = now - startTime;
-          const elapsedSeconds = Math.floor(elapsedMs / 1000);
-
-          newElapsedSeconds[bot.instance.tokenId] = elapsedSeconds;
+          const elapsed = Math.floor(
+            (Date.now() - new Date(bot.instance.startedAt).getTime()) / 1000,
+          );
+          newElapsed[bot.instance.tokenId] = elapsed;
         }
       });
 
-      setCurrentElapsedSeconds(prev => ({
-        ...prev,
-        ...newElapsedSeconds
-      }));
-    }, 1000); // Обновляем каждую секунду
-
-    // Очищаем таймеры для остановленных ботов
-    const stoppedBotIds = Object.keys(currentElapsedSeconds)
-      .map(Number)
-      .filter(tokenId => !runningBots.some(bot =>
-        bot.instance && bot.instance.tokenId === tokenId
-      ));
-
-    if (stoppedBotIds.length > 0) {
       setCurrentElapsedSeconds(prev => {
-        const newState = {...prev};
-        stoppedBotIds.forEach(id => delete newState[id]);
-        return newState;
+        // Удаляем остановленные боты
+        const runningIds = new Set(running.map(b => b.instance!.tokenId));
+        const cleaned: Record<number, number> = {};
+        runningIds.forEach(id => {
+          cleaned[id] = newElapsed[id] ?? prev[id] ?? 0;
+        });
+        return cleaned;
       });
-    }
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [allBotStatuses, currentElapsedSeconds]);
+  }, [allBotStatuses]); // пересоздаём только при смене набора ботов
 
   // Эффект для обновления статуса при возвращении на вкладку
   useEffect(() => {
@@ -468,9 +417,6 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
       // Обновляем список токенов чтобы показать актуальное имя бота
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${variables.projectId}/tokens`] });
 
-      // Устанавливаем запущенный токен как активный для WebSocket
-      setSelectedTokenId(variables.tokenId);
-      
       // Уведомляем о запуске бота
       const token = allTokensFlat.find(t => t.id === variables.tokenId);
       if (token && onBotStarted) {
@@ -496,11 +442,6 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
       // Инвалидируем статус для конкретного токена
       queryClient.invalidateQueries({ queryKey: [`/api/tokens/${variables.tokenId}/bot-status`] });
 
-      // Если останавливаем текущий активный токен, сбрасываем его
-      if (selectedTokenId === variables.tokenId) {
-        setSelectedTokenId(null);
-      }
-      
       // Уведомляем об остановке бота
       if (onBotStopped) {
         onBotStopped(variables.projectId, variables.tokenId);
@@ -567,7 +508,28 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
   };
 
   return (
-    <>
+    <BotControlProvider value={{
+      allBotStatuses,
+      allBotInfos,
+      currentElapsedSeconds,
+      editingField,
+      editValue,
+      setEditValue,
+      handleStartEdit,
+      handleSaveEdit,
+      handleCancelEdit,
+      getStatusBadge,
+      startBotMutation,
+      stopBotMutation,
+      deleteBotMutation,
+      toggleDatabaseMutation,
+      setSelectedProject,
+      setSelectedBotInfo,
+      setIsProfileSheetOpen,
+      queryClient,
+      setShowAddBot,
+      setProjectForNewBot,
+    }}>
       <BotControlPanel
         setShowAddBot={setShowAddBot}
         projectsLoading={projectsLoading}
@@ -611,6 +573,6 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
         isOpen={isProfileSheetOpen}
         onClose={() => setIsProfileSheetOpen(false)}
       />
-    </>
+    </BotControlProvider>
   );
 }

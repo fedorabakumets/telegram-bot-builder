@@ -18,25 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { Edit2, X, Check } from 'lucide-react';
 
-// Типы, определенные в основном файле bot-control.tsx
-export type BotInfo = {
-  id: number;
-  is_bot: boolean;
-  first_name: string;
-  username: string;
-  can_join_groups: boolean;
-  can_read_all_group_messages: boolean;
-  supports_inline_queries: boolean;
-  description?: string;
-  short_description?: string;
-  photoUrl?: string;
-  photo?: {
-    small_file_id: string;
-    small_file_unique_id: string;
-    big_file_id: string;
-    big_file_unique_id: string;
-  };
-};
+// Тип BotInfo вынесен в bot-types.ts и реэкспортируется отсюда для обратной совместимости
+export type { BotInfo } from './bot-types';
 
 /**
  * Компонент для редактирования профиля бота

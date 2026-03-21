@@ -11,10 +11,19 @@ import { Switch } from '@/components/ui/switch';
 import { Database } from 'lucide-react';
 
 interface BotDatabaseToggleProps {
+  /** ID проекта */
   projectId: number;
+  /** ID токена */
   tokenId: number;
+  /** Включена ли база данных (1 — да, 0/null — нет) */
   userDatabaseEnabled: number | null;
-  toggleDatabaseMutation: any;
+  /** Мутация переключения базы данных */
+  toggleDatabaseMutation: {
+    isPending: boolean;
+    mutate: (enabled: boolean) => void;
+  };
+  /** Дополнительный CSS-класс для управления col-span */
+  className?: string;
 }
 
 /**
@@ -24,12 +33,13 @@ export function BotDatabaseToggle({
   projectId,
   tokenId,
   userDatabaseEnabled,
-  toggleDatabaseMutation
+  toggleDatabaseMutation,
+  className = '',
 }: BotDatabaseToggleProps) {
   const isEnabled = userDatabaseEnabled === 1;
 
   return (
-    <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${
+    <div className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${className} ${
       isEnabled ? 'bg-green-500/8 border-green-500/30 dark:bg-green-500/10 dark:border-green-500/40' 
       : 'bg-red-500/8 border-red-500/30 dark:bg-red-500/10 dark:border-red-500/40'
     }`} data-testid="database-toggle-container-bot-card">

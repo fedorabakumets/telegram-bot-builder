@@ -14,7 +14,7 @@
 import { BotControlPanelHeader } from './BotControlPanelHeader';
 import { BotControlPanelLoading } from './BotControlPanelLoading';
 import { BotControlPanelEmpty } from './BotControlPanelEmpty';
-import { BotControlPanelContent } from './BotControlPanelContent';
+import { BotManagementInterface } from './BotManagementInterface';
 import { AddBotDialog } from './AddBotDialog';
 
 interface BotControlPanelProps {
@@ -94,7 +94,7 @@ export function BotControlPanel({
       ) : projects.length === 0 ? (
         <BotControlPanelEmpty />
       ) : (
-        <BotControlPanelContent
+        <BotManagementInterface
           projects={projects}
           allTokens={allTokens}
           allBotInfos={allBotInfos}

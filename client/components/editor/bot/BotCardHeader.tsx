@@ -3,7 +3,7 @@
  *
  * Компонент отображает:
  * - Аватарку бота
- * - Имя бота (с inline-редактированием)
+ * - Имя бота (с inline-редактированием и подсказкой карандаша)
  * - Username бота
  * - Статус бота
  * - Кнопки действий
@@ -12,26 +12,68 @@
  */
 
 import { Input } from '@/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Pencil } from 'lucide-react';
 import { BotAvatar } from './BotAvatar';
 import { BotActions } from './BotActions';
 
 interface BotCardHeaderProps {
-  token: any;
-  projectBotInfo: any;
+  /** Данные токена бота */
+  token: {
+    id: number;
+    botFirstName?: string;
+    name?: string;
+    botUsername?: string;
+    botPhotoUrl?: string;
+  };
+  /** Информация о боте из Telegram API */
+  projectBotInfo: { photoUrl?: string; id?: number } | null | undefined;
+  /** Редактируемое поле */
   editingField: { tokenId: number; field: string } | null;
+  /** Значение редактируемого поля */
   editValue: string;
+  /** Обновить значение редактируемого поля */
   setEditValue: (value: string) => void;
+  /** Сохранить изменения */
   handleSaveEdit: () => void;
+  /** Отменить редактирование */
   handleCancelEdit: () => void;
+  /** Начать редактирование поля */
   handleStartEdit: (tokenId: number, field: string, currentValue: string) => void;
-  getStatusBadge: (token: any) => JSX.Element;
+  /** Получить бейдж статуса */
+  getStatusBadge: (token: unknown) => JSX.Element;
+  /** Запущен ли бот */
   isBotRunning: boolean;
-  startBotMutation: any;
-  stopBotMutation: any;
-  deleteBotMutation: any;
+  /** Мутация запуска бота */
+  startBotMutation: {
+    isPending: boolean;
+    variables?: { tokenId: number; projectId: number };
+    mutate: (vars: { tokenId: number; projectId: number }) => void;
+  };
+  /** Мутация остановки бота */
+  stopBotMutation: {
+    isPending: boolean;
+    variables?: { tokenId: number; projectId: number };
+    mutate: (vars: { tokenId: number; projectId: number }) => void;
+  };
+  /** Мутация удаления бота */
+  deleteBotMutation: {
+    isPending: boolean;
+    variables?: number;
+    mutate: (tokenId: number) => void;
+  };
+  /** Обработчик открытия редактора профиля */
   onEditProfile: () => void;
+  /** Загружается ли профиль */
   isProfileLoading: boolean;
+  /** ID токена */
   tokenId: number;
+  /** ID проекта */
   projectId: number;
 }
 
@@ -55,12 +97,16 @@ export function BotCardHeader({
   onEditProfile,
   isProfileLoading,
   tokenId,
-  projectId
+  projectId,
 }: BotCardHeaderProps) {
+  const isEditingName =
+    editingField?.tokenId === token.id && editingField?.field === 'name';
+  const displayName = token.botFirstName || token.name || '';
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
       <BotAvatar
-        botName={token.botFirstName || token.name}
+        botName={displayName}
         photoUrl={projectBotInfo?.photoUrl || token.botPhotoUrl}
         botId={projectBotInfo?.id?.toString()}
         projectId={projectId}
@@ -70,7 +116,7 @@ export function BotCardHeader({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
-          {editingField?.tokenId === token.id && editingField?.field === 'name' ? (
+          {isEditingName ? (
             <Input
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
@@ -80,21 +126,40 @@ export function BotCardHeader({
               }}
               onBlur={handleSaveEdit}
               autoFocus
+              aria-label="Редактировать имя бота"
               className="font-bold text-base sm:text-lg h-auto px-2 py-1 flex-1 min-w-0"
               data-testid="input-bot-name-edit"
             />
           ) : (
-            <h3
-              className="font-bold text-base sm:text-lg cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors truncate"
-              onDoubleClick={() => handleStartEdit(token.id, 'name', token.botFirstName || token.name)}
-              title="Double-click to edit"
-              data-testid="text-bot-name"
-            >
-              {token.botFirstName || token.name}
-            </h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="group/name flex items-center gap-1 font-bold text-base sm:text-lg cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors truncate text-left"
+                    onDoubleClick={() =>
+                      handleStartEdit(token.id, 'name', displayName)
+                    }
+                    aria-label={`Имя бота: ${displayName}. Двойной клик для редактирования`}
+                    data-testid="text-bot-name"
+                  >
+                    {displayName}
+                    <Pencil
+                      className="w-3 h-3 text-muted-foreground opacity-0 group-hover/name:opacity-60 transition-opacity flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Двойной клик для редактирования имени
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           {token.botUsername && (
-            <span className="text-xs sm:text-sm text-muted-foreground truncate">@{token.botUsername}</span>
+            <span className="text-xs sm:text-sm text-muted-foreground truncate">
+              @{token.botUsername}
+            </span>
           )}
         </div>
 
