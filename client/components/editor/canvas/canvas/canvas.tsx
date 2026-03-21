@@ -3,6 +3,7 @@ import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useTouchGestures } from './use-touch-gestures';
 import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
+import { useConnectionDrag } from './use-connection-drag';
 
 import { Node, ComponentDefinition } from '@/types/bot';
 import { BotDataWithSheets } from '@shared/schema';
@@ -133,6 +134,7 @@ export function Canvas({
   onNodeMove,
   onNodeMoveStart,
   onNodeMoveEnd,
+  onNodesUpdate,
   onUndo,
   onRedo,
   canUndo,
@@ -203,6 +205,31 @@ export function Canvas({
       });
     }
   }, [onActionLog]);
+
+  /**
+   * Обновляет один узел в массиве и вызывает onNodesUpdate.
+   * Используется хуком useConnectionDrag при завершении drag-to-connect.
+   */
+  const handleNodeUpdate = useCallback((nodeId: string, updater: (node: Node) => Node) => {
+    const updatedNodes = nodes.map(n => n.id === nodeId ? updater(n) : n);
+    onNodesUpdate?.(updatedNodes);
+    addAction('connect', `Создано соединение от узла ${nodeId}`);
+  }, [nodes, onNodesUpdate, addAction]);
+
+  const {
+    draftConnection,
+    hoveredTargetNodeId,
+    handlePortMouseDown,
+    handleDragMouseMove,
+    handleDragMouseUp,
+  } = useConnectionDrag({
+    nodes,
+    zoom,
+    pan,
+    canvasRef,
+    nodeSizes,
+    onNodeUpdate: handleNodeUpdate,
+  });
 
   // Функция для отмены выбранных действий
   const handleUndoSelected = useCallback(() => {
@@ -613,11 +640,17 @@ export function Canvas({
         y: lastPanPosition.y + deltaY
       });
     }
-  }, [isPanning, panStart, lastPanPosition]);
+    if (draftConnection) {
+      handleDragMouseMove(e);
+    }
+  }, [isPanning, panStart, lastPanPosition, draftConnection, handleDragMouseMove]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
     setIsPanning(false);
-  }, []);
+    if (draftConnection) {
+      handleDragMouseUp(e);
+    }
+  }, [draftConnection, handleDragMouseUp]);
 
   // Обработчики touch-жестов для мобильных устройств
   const { handleTouchStart, handleTouchMove, handleTouchEnd } = useTouchGestures({
@@ -1035,9 +1068,10 @@ export function Canvas({
             setIsNodeBeingDragged={setIsNodeBeingDragged}
             onSizeChange={handleNodeSizeChange}
             nodeSizes={nodeSizes}
+            onPortMouseDown={handlePortMouseDown}
+            draftConnection={draftConnection}
+            hoveredTargetNodeId={hoveredTargetNodeId}
           />
-
-          {/* Drop Zone Hint */}
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-400/20 dark:via-purple-400/20 dark:to-pink-400/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-blue-200/50 dark:border-blue-600/30 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/20">

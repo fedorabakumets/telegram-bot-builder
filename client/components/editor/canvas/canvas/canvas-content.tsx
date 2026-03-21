@@ -6,9 +6,11 @@
 
 import { CanvasNode } from '@/components/editor/canvas/canvas-node/canvas-node';
 import { ConnectionsLayer } from '@/components/editor/canvas/canvas-node/connections-layer';
+import { DraftConnectionLayer } from '@/components/editor/canvas/canvas-node/draft-connection-layer';
 import { Node } from '@/types/bot';
 import { BotDataWithSheets } from '@shared/schema';
 import { PortType } from '../canvas-node/port-colors';
+import { DraftConnection } from './use-connection-drag';
 
 /**
  * Свойства компонента содержимого холста
@@ -50,6 +52,10 @@ interface CanvasContentProps {
   nodeSizes: Map<string, { width: number; height: number }>;
   /** Обработчик начала перетаскивания от порта выхода */
   onPortMouseDown?: (e: React.MouseEvent, nodeId: string, portType: PortType, buttonId?: string) => void;
+  /** Текущее временное соединение при drag-to-connect */
+  draftConnection?: DraftConnection | null;
+  /** ID узла под курсором при drag-to-connect (для подсветки цели) */
+  hoveredTargetNodeId?: string | null;
 }
 
 /**
@@ -75,6 +81,8 @@ export function CanvasContent({
   onSizeChange,
   nodeSizes,
   onPortMouseDown,
+  draftConnection,
+  hoveredTargetNodeId,
 }: CanvasContentProps) {
   /**
    * Получение всех узлов со всех листов для отображения связей
@@ -101,6 +109,9 @@ export function CanvasContent({
       {/* SVG-слой соединений — рисуется под нодами */}
       <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} />
 
+      {/* SVG-слой временного соединения при drag-to-connect */}
+      <DraftConnectionLayer draftConnection={draftConnection ?? null} />
+
       {/* Узлы */}
       {nodes.map((node) => (
         <CanvasNode
@@ -120,6 +131,7 @@ export function CanvasContent({
           setIsNodeBeingDragged={setIsNodeBeingDragged}
           onSizeChange={onSizeChange}
           onPortMouseDown={onPortMouseDown}
+          isConnectionTarget={hoveredTargetNodeId === node.id}
         />
       ))}
     </div>

@@ -72,6 +72,8 @@ interface CanvasNodeProps {
     portType: PortType,
     buttonId?: string
   ) => void;
+  /** Подсветка узла как допустимой цели при drag-to-connect */
+  isConnectionTarget?: boolean;
 }
 
 /**
@@ -110,7 +112,7 @@ interface CanvasNodeProps {
  *
  * @returns {JSX.Element} Компонент узла на холсте
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref для dragOffset — позволяет читать актуальное значение в handleMouseMove
@@ -405,6 +407,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl border-2 p-6 pb-10 w-80 relative select-none group",
         isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-shadow duration-300",
         isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
+        isConnectionTarget ? "ring-4 ring-green-400/60 border-green-400 shadow-green-400/20" : "",
         onMove ? "cursor-grab" : "cursor-pointer"
       )}
       onClick={!isDragging ? onClick : undefined}
