@@ -54,7 +54,7 @@ export function OutputPort({ portType, buttonId, onPortMouseDown, isActive }: Ou
       data-port-type={portType}
       data-button-id={buttonId}
       onMouseDown={handleMouseDown}
-      className={`transition-opacity duration-150 cursor-crosshair z-20 hover:scale-125 transition-transform ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+      className={`transition-all duration-150 cursor-crosshair z-20 hover:scale-125 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
       style={{
         position: 'absolute',
         right: -8,
