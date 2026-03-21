@@ -106,12 +106,13 @@ interface ConnectionsLayerProps {
 const MARKER_OFFSET = 9;
 
 /**
- * Смещение центра кружка-порта OutputPort от правого края узла.
- * OutputPort: right=-8, width=16 → центр = fromW + (-8) + 16/2 = fromW + 0.
- * Но border-box узла шире contentRect на 4px (border-2 с двух сторон),
- * поэтому добавляем +4 чтобы попасть точно в центр кружка.
+ * Смещение от contentRect.width до центра кружка-порта OutputPort.
+ * ResizeObserver возвращает contentRect (без padding и border).
+ * Узел: padding-x = p-6 = 24px×2 = 48px, border = 2px×2 = 4px.
+ * OutputPort: right=-8px, width=16px → центр на +(-8+8)=0 от правого border-box края.
+ * Итого: contentRect.width + 48(padding) + 4(border) + 0(port center) = contentRect.width + 52.
  */
-const PORT_CENTER_OFFSET = 8;
+const PORT_CENTER_OFFSET = 52;
 
 /**
  * Вычисляет SVG path кубической кривой Безье между двумя узлами.
