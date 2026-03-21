@@ -92,7 +92,7 @@ export function NodeTypeConfigurations({
 
   if (nodeType === 'ban_user' || nodeType === 'unban_user' || nodeType === 'mute_user' ||
       nodeType === 'unmute_user' || nodeType === 'kick_user' || nodeType === 'promote_user' ||
-      nodeType === 'demote_user' || nodeType === 'admin_rights') {
+      nodeType === 'demote_user') {
     return <UserManagementConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
   }
 

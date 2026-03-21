@@ -121,7 +121,7 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
     hasTimezoneNodesResult: nodes.some(
       (node) =>
         node.type === NODE_TYPES.MUTE_USER ||
-        (node.data && node.data.enablePhotoInput)
+        node.type === NODE_TYPES.BAN_USER
     ),
     hasNodesRequiringSafeEditOrSendResult: hasNodesRequiringSafeEditOrSend(nodes),
     // Флаги для оптимизации импортов

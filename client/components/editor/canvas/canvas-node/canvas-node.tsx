@@ -103,6 +103,10 @@ interface CanvasNodeProps {
 export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  // Ref для dragOffset — позволяет читать актуальное значение в handleMouseMove
+  // без добавления dragOffset в зависимости useEffect (иначе обработчики
+  // пересоздавались бы при каждом mousemove, вызывая пропуск событий).
+  const dragOffsetRef = useRef(dragOffset);
   const nodeRef = useRef<HTMLDivElement>(null);
   const { menu, open: openContextMenu, close: closeContextMenu } = useNodeContextMenu();
   
@@ -138,6 +142,10 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         x: canvasX - node.position.x,
         y: canvasY - node.position.y
       });
+      dragOffsetRef.current = {
+        x: canvasX - node.position.x,
+        y: canvasY - node.position.y
+      };
       setIsDragging(true);
       // Сохраняем состояние ДО начала перемещения
       onMoveStart?.();
@@ -167,8 +175,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       
       // Преобразуем экранные координаты в координаты канваса с учетом зума и панорамирования
       const zoomFactor = zoom / 100;
-      const canvasX = (screenX - pan.x) / zoomFactor - dragOffset.x;
-      const canvasY = (screenY - pan.y) / zoomFactor - dragOffset.y;
+      const canvasX = (screenX - pan.x) / zoomFactor - dragOffsetRef.current.x;
+      const canvasY = (screenY - pan.y) / zoomFactor - dragOffsetRef.current.y;
       
       // Привязка к сетке (20px grid в канвасных координатах)
       const gridSize = 20;
@@ -335,7 +343,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       };
     }
     return () => {};
-  }, [isDragging, dragOffset, onMove]);
+  }, [isDragging, onMove]);
 
   // Touch события уже обрабатываются в handleTouchMove, не нужно добавлять глобальные слушатели
   useEffect(() => {

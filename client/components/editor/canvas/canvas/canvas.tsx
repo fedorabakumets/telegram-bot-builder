@@ -208,9 +208,9 @@ export function Canvas({
   const handleUndoSelected = useCallback(() => {
     if (selectedActionsForUndo.size === 0) return;
     if (onUndo) {
-      for (let i = 0; i < selectedActionsForUndo.size; i++) {
-        onUndo();
-      }
+      // onUndo() не принимает параметр количества шагов, а React батчит синхронные вызовы,
+      // поэтому цикл вызовов применял бы только первый undo. Вызываем один раз.
+      onUndo();
     }
     // Удаляем выбранные записи из истории
     if (onActionHistoryRemove) {

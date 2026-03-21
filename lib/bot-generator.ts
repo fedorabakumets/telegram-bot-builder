@@ -247,7 +247,11 @@ function generateCodeSections(
     connections: [],
     userDatabaseEnabled,
     mediaVariablesMap: new Map(),
-    processNodeButtonsAndGenerateHandlers: (_processedCallbacks) => {},
+    processNodeButtonsAndGenerateHandlers: (_processedCallbacks) => {
+      // TODO: implement — должен генерировать обработчики для inline-кнопок inlineNodes
+      // и добавлять их ID в processedCallbacks, чтобы они не дублировались
+      // в цикле allReferencedNodeIds внутри generateInteractiveCallbackHandlers.
+    },
   });
 
   // --- reply button handlers ---
