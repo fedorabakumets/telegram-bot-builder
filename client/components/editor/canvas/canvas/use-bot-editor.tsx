@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Button, BotData } from '@shared/schema';
 import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 import { generateNewId } from './utils/extract-base-id';
+import { migrateSynonymsToTextTriggers } from './utils/migrate-synonyms';
 
 /**
  * Интерфейс для состояния истории изменений
@@ -327,10 +328,13 @@ export function useBotEditor(initialData?: BotData) {
     // Нормализуем узлы перед применением компоновки
     const normalizedNodes = (botData.nodes || []).map(normalizeNodeData);
 
+    // Миграция устаревших синонимов в узлы text_trigger
+    const migratedNodes = migrateSynonymsToTextTriggers(normalizedNodes);
+
     // Применяем иерархическую компоновку только если не отключена
     const finalNodes = skipLayout
-      ? normalizedNodes
-      : applyTemplateLayout(normalizedNodes, [], templateName, nodeSizes);
+      ? migratedNodes
+      : applyTemplateLayout(migratedNodes, [], templateName, nodeSizes);
 
     setNodes(finalNodes);
     setSelectedNodeId(null); // Сбрасываем выбранный узел
