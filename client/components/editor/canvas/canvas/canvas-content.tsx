@@ -132,6 +132,7 @@ export function CanvasContent({
           onSizeChange={onSizeChange}
           onPortMouseDown={onPortMouseDown}
           isConnectionTarget={hoveredTargetNodeId === node.id}
+          isConnectionSource={draftConnection?.fromNodeId === node.id}
         />
       ))}
     </div>

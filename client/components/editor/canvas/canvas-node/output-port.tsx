@@ -24,6 +24,8 @@ interface OutputPortProps {
    * portCenter — экранные координаты центра кружка-порта.
    */
   onPortMouseDown?: (e: React.MouseEvent, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => void;
+  /** Принудительно показывать порт (например во время drag) */
+  isActive?: boolean;
 }
 
 /**
@@ -36,14 +38,12 @@ interface OutputPortProps {
  * @param props - Пропсы компонента
  * @returns JSX-элемент порта
  */
-export function OutputPort({ portType, buttonId, onPortMouseDown }: OutputPortProps) {
+export function OutputPort({ portType, buttonId, onPortMouseDown, isActive }: OutputPortProps) {
   const color = PORT_COLORS[portType];
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Останавливаем всплытие чтобы не запустить drag узла
     e.stopPropagation();
     e.preventDefault();
-    // Вычисляем центр кружка-порта в экранных координатах
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const portCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
     onPortMouseDown?.(e, portType, buttonId, portCenter);
@@ -54,7 +54,7 @@ export function OutputPort({ portType, buttonId, onPortMouseDown }: OutputPortPr
       data-port-type={portType}
       data-button-id={buttonId}
       onMouseDown={handleMouseDown}
-      className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 cursor-crosshair z-20 hover:scale-125 transition-transform"
+      className={`transition-opacity duration-150 cursor-crosshair z-20 hover:scale-125 transition-transform ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
       style={{
         position: 'absolute',
         right: -8,

@@ -73,6 +73,8 @@ interface CanvasNodeProps {
     buttonId?: string,
     portCenter?: { x: number; y: number }
   ) => void;
+  /** Узел является источником активного drag-соединения (держит порты видимыми) */
+  isConnectionSource?: boolean;
   /** Подсветка узла как допустимой цели при drag-to-connect */
   isConnectionTarget?: boolean;
 }
@@ -113,7 +115,7 @@ interface CanvasNodeProps {
  *
  * @returns {JSX.Element} Компонент узла на холсте
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref для dragOffset — позволяет читать актуальное значение в handleMouseMove
@@ -493,14 +495,14 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       )}
 
       {/* Buttons preview */}
-      <ButtonsPreview node={node} allNodes={allNodes} onPortMouseDown={handlePortMouseDown} />
+      <ButtonsPreview node={node} allNodes={allNodes} onPortMouseDown={handlePortMouseDown} isConnectionSource={isConnectionSource} />
 
       {/* Порты выхода соединений */}
       {node.type === 'command_trigger' && (
-        <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} />
+        <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       )}
       {node.type !== 'command_trigger' && (
-        <OutputPort portType="auto-transition" onPortMouseDown={handlePortMouseDown} />
+        <OutputPort portType="auto-transition" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       )}
 
       {/* Футер с полным ID узла */}      <div className="absolute bottom-0 left-0 right-0 px-4 py-2 rounded-b-2xl bg-slate-700/60 dark:bg-slate-800/90 border-t border-slate-600/40 dark:border-slate-600/60">
