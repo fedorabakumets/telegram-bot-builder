@@ -4,3 +4,4 @@
  */
 
 export { commandTrigger } from './command-trigger';
+export { textTrigger } from './text-trigger';

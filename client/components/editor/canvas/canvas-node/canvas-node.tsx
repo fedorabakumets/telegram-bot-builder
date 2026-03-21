@@ -24,6 +24,7 @@ import { ConditionalMessagesIndicator } from './conditional-messages-indicator';
 import { ButtonsPreview } from './buttons-preview';
 import { ClientAuthCard } from './client-auth-card';
 import { CommandTriggerPreview } from './command-trigger-preview';
+import { TextTriggerPreview } from './text-trigger-preview';
 
 /**
  * Интерфейс свойств компонента CanvasNode
@@ -407,7 +408,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       <NodeActions onDuplicate={onDuplicate} onDelete={onDelete} />
 
       {/* Порт выхода — снаружи основного div, позиционируется относительно wrapper */}
-      {node.type === 'command_trigger' ? (
+      {(node.type === 'command_trigger' || node.type === 'text_trigger') ? (
         <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : (
         <OutputPort portType="auto-transition" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
@@ -475,6 +476,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Command Trigger Preview */}
         {node.type === 'command_trigger' && <CommandTriggerPreview node={node} />}
+
+        {/* Text Trigger Preview */}
+        {node.type === 'text_trigger' && <TextTriggerPreview node={node} />}
 
         {/* Poll preview */}
         {(node.type as any) === 'poll' && <PollPreview node={node} />}

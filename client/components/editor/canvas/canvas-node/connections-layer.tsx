@@ -208,8 +208,8 @@ function collectConnections(nodes: Node[]): Connection[] {
       });
     }
 
-    // 4. Соединение триггера команды с целевым узлом
-    if (node.type === 'command_trigger' && node.data?.autoTransitionTo) {
+    // 4. Соединение триггера команды или текстового триггера с целевым узлом
+    if ((node.type === 'command_trigger' || node.type === 'text_trigger') && node.data?.autoTransitionTo) {
       const toId = node.data.autoTransitionTo as string;
       if (existingIds.has(toId)) {
         connections.push({ fromId: node.id, toId, type: 'trigger-next' });

@@ -10,8 +10,8 @@ import { buttonSchema } from "./button-schema";
 export const nodeSchema = z.object({
   /** Уникальный идентификатор узла */
   id: z.string(),
-  /** Тип узла: "start", "message", "command", "command_trigger", "sticker", "voice" и др. */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth']),
+  /** Тип узла: "start", "message", "command", "command_trigger", "text_trigger", "sticker", "voice" и др. */
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -467,6 +467,10 @@ export const nodeSchema = z.object({
     sessionName: z.string().default('user_session').optional(),
     /** Сессия создана */
     sessionCreated: z.boolean().default(false).optional(),
+    /** Список текстов для текстового триггера */
+    textSynonyms: z.array(z.string()).default([]),
+    /** Режим совпадения текстового триггера: "exact" — точное, "contains" — содержит */
+    textMatchType: z.enum(['exact', 'contains']).default('exact'),
   }),
 });
 

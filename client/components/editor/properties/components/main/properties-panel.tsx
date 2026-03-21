@@ -15,6 +15,7 @@ import { AdminRightsInfo } from '../configuration/admin-rights-info';
 import { InfoBlock } from '@/components/ui/info-block';
 import { CommandAdvancedSettingsWrapper } from './command-advanced-settings-wrapper';
 import { CommandTriggerConfiguration } from '../trigger/CommandTriggerConfiguration';
+import { TextTriggerConfiguration } from '../trigger/TextTriggerConfiguration';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
 import { BasicSettingsSection } from './basic-settings-section';
@@ -308,8 +309,14 @@ export function PropertiesPanel({
           )}
 
           {/* Trigger Section - только для узлов-триггеров */}
-          {isTriggerNode(selectedNode.type) && (
+          {isTriggerNode(selectedNode.type) && selectedNode.type === 'command_trigger' && (
             <CommandTriggerConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+            />
+          )}
+          {isTriggerNode(selectedNode.type) && selectedNode.type === 'text_trigger' && (
+            <TextTriggerConfiguration
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
             />

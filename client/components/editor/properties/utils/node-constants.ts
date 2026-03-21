@@ -53,9 +53,11 @@ export function isManagementNode(nodeType: Node['type']): boolean {
  * Триггеры являются точками входа в сценарий бота.
  * Они не отправляют сообщений и не имеют контента:
  * - command_trigger — срабатывает по команде (/start, /help и т.д.)
+ * - text_trigger — срабатывает по тексту сообщения пользователя
  */
 export const TRIGGER_NODE_TYPES = [
   'command_trigger',
+  'text_trigger',
 ] as const;
 
 /**
