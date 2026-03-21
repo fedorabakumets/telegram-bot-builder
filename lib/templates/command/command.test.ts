@@ -149,6 +149,15 @@ describe('command.py.jinja2 шаблон', () => {
         assert.ok(!result.includes('check_auth'));
       });
 
+      it('должен добавлять isPrivateOnly проверку в callback-обработчик', () => {
+        const result = generateCommand({
+          ...validParamsBasic,
+          isPrivateOnly: true,
+        });
+        // callback-обработчик тоже должен проверять тип чата
+        assert.ok(result.includes("chat.type != 'private'") || result.includes('is_private_chat'));
+      });
+
       it('должен включать только adminOnly проверку', () => {
         const result = generateCommand({
           ...validParamsBasic,

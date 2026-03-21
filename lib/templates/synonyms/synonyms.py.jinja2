@@ -20,6 +20,7 @@
     - canDeleteMessages: bool  — право удалять сообщения (для promote_user)
     - canInviteUsers: bool     — право приглашать (для promote_user)
     - canPinMessages: bool     — право закреплять (для promote_user)
+    - isPrivateOnly: bool      — только приватные чаты (для command/message)
 #}
 
 # Обработчики синонимов
@@ -35,6 +36,11 @@
 @dp.message(lambda message: message.text and message.text.lower() == "{{ entry.synonym | lower }}")
 async def {{ fn }}_synonym_{{ sanitized_synonym }}_handler(message: types.Message):
     # Синоним для команды {{ cmd }}
+    {%- if entry.isPrivateOnly %}
+    if message.chat.type != 'private':
+        await message.answer("❌ Эта команда доступна только в приватных чатах")
+        return
+    {%- endif %}
     await {{ fn }}_handler(message)
 
 {# ── MESSAGE синонимы (MockCallback) ── #}
@@ -45,6 +51,11 @@ async def message_{{ sanitized_node_id }}_synonym_{{ sanitized_synonym }}_handle
     # Синоним для сообщения {{ entry.nodeId }}
     user_id = message.from_user.id
     logging.info(f"Пользователь {user_id} написал синоним '{{ entry.synonym }}' для узла {{ entry.nodeId }}")
+    {%- if entry.isPrivateOnly %}
+    if message.chat.type != 'private':
+        await message.answer("❌ Эта команда доступна только в приватных чатах")
+        return
+    {%- endif %}
 
     class MockCallback:
         def __init__(self, data, user, msg):

@@ -26,6 +26,7 @@
     1. @dp.message(Command("...")) — для текстовой команды
     2. @dp.callback_query(lambda c: c.data == "{{ nodeId }}") — для кнопок
        с action="goto" и target="{{ nodeId }}" (переход на узел команды)
+  @note isPrivateOnly применяется к обоим обработчикам: message и callback
 #}
 
 {# Генерация основной команды #}
@@ -287,6 +288,12 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await callback_query.answer()
     except Exception:
         pass
+
+    {%- if isPrivateOnly %}
+    if callback_query.message.chat.type != 'private':
+        await callback_query.answer("❌ Эта команда доступна только в приватных чатах", show_alert=True)
+        return
+    {%- endif %}
 
     user_id = callback_query.from_user.id
     logging.info(f"🔵 Callback переход к команде {{ command }} (узел {{ nodeId }}) для пользователя {user_id}")
