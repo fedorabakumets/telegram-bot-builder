@@ -101,5 +101,7 @@ export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: T
     );
   }
 
-  return <TokenDisplay token={token} onDoubleClick={() => startEditing(token)} />;
+  // Передаём пустую строку — токен на сервере замаскирован,
+  // пользователь вводит новый токен с нуля
+  return <TokenDisplay token={token} onDoubleClick={() => startEditing('')} />;
 }
