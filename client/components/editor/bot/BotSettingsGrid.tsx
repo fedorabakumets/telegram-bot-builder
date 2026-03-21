@@ -12,6 +12,7 @@
 import { BotDatabaseToggle } from './BotDatabaseToggle';
 import { BotCommentsToggle } from './BotCommentsToggle';
 import { BotExecutionTimer } from './BotExecutionTimer';
+import { BotAdminIds } from './BotAdminIds';
 
 interface BotSettingsGridProps {
   projectId: number;
@@ -58,6 +59,7 @@ export function BotSettingsGrid({
           allBotStatuses={allBotStatuses}
         />
       )}
+      <BotAdminIds projectId={projectId} />
     </div>
   );
 }

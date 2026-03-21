@@ -24,6 +24,7 @@ import { updateCommentsSettingsHandler } from "./projectRoutes/handlers/settings
 import { exportToGoogleSheetsHandler, exportStructureToGoogleSheetsHandler } from "./projectRoutes/handlers/googleSheetsHandlers";
 import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
 import { handleGenerateCode } from "./projects/generateCode";
+import { getAdminIdsHandler, updateAdminIdsHandler } from "./projectRoutes/handlers/adminIdsHandler";
 
 /**
  * Настраивает маршруты управления проектами
@@ -59,6 +60,10 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
     // Настройки генерации комментариев
     app.post("/api/settings/comments-generation", updateCommentsSettingsHandler);
+
+    // Управление ID администраторов бота
+    app.get("/api/projects/:id/admin-ids", getAdminIdsHandler);
+    app.put("/api/projects/:id/admin-ids", updateAdminIdsHandler);
 
     // Экспорт в Google Таблицы
     app.post("/api/projects/:id/export-to-google-sheets", requireDbReady, exportToGoogleSheetsHandler);
