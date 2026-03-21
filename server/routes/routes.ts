@@ -538,14 +538,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const tokens = await storage.getBotTokensByProject(projectId);
 
-      // Hide actual token values for security but include botId
       const safeTokens = tokens.map(token => {
         const botId = token.token ? token.token.split(':')[0] : null;
-        return {
-          ...token,
-          token: `${token.token.substring(0, 10)}...`,
-          botId
-        };
+        return { ...token, botId };
       });
 
       res.json(safeTokens);
@@ -868,13 +863,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const token = await storage.createBotToken(tokenData);
 
-      // Hide actual token value for security
-      const safeToken = {
-        ...token,
-        token: `${token.token.substring(0, 10)}...`
-      };
-
-      res.status(201).json(safeToken);
+      res.status(201).json(token);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
@@ -907,13 +896,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "Token not found" });
       }
 
-      // Hide actual token value for security
-      const safeToken = {
-        ...token,
-        token: `${token.token.substring(0, 10)}...`
-      };
-
-      res.json(safeToken);
+      res.json(token);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
@@ -953,13 +936,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "Token not found" });
       }
 
-      // Hide actual token value for security
-      const safeToken = {
-        ...updatedToken,
-        token: `${updatedToken.token.substring(0, 10)}...`
-      };
-
-      res.json(safeToken);
+      res.json(updatedToken);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
@@ -1053,13 +1030,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.json({ hasDefault: false, token: null });
       }
 
-      // Hide actual token value for security
-      const safeToken = {
-        ...token,
-        token: `${token.token.substring(0, 10)}...`
-      };
-
-      res.json({ hasDefault: true, token: safeToken });
+      res.json({ hasDefault: true, token });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch default token" });
     }
