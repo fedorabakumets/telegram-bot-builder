@@ -3,6 +3,7 @@ import { Node, Button, BotData } from '@shared/schema';
 import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 import { generateNewId } from './utils/extract-base-id';
 import { migrateSynonymsToTextTriggers } from './utils/migrate-synonyms';
+import { migrateCommandsToCommandTriggers } from './utils/migrate-command-triggers';
 
 /**
  * Интерфейс для состояния истории изменений
@@ -331,10 +332,13 @@ export function useBotEditor(initialData?: BotData) {
     // Миграция устаревших синонимов в узлы text_trigger
     const migratedNodes = migrateSynonymsToTextTriggers(normalizedNodes);
 
+    // Миграция узлов start/command в command_trigger узлы
+    const migratedWithCommands = migrateCommandsToCommandTriggers(migratedNodes);
+
     // Применяем иерархическую компоновку только если не отключена
     const finalNodes = skipLayout
-      ? migratedNodes
-      : applyTemplateLayout(migratedNodes, [], templateName, nodeSizes);
+      ? migratedWithCommands
+      : applyTemplateLayout(migratedWithCommands, [], templateName, nodeSizes);
 
     setNodes(finalNodes);
     setSelectedNodeId(null); // Сбрасываем выбранный узел
