@@ -14,6 +14,7 @@ import { isManagementNode, isTriggerNode } from '../../utils/node-constants';
 import { AdminRightsInfo } from '../configuration/admin-rights-info';
 import { InfoBlock } from '@/components/ui/info-block';
 import { CommandAdvancedSettingsWrapper } from './command-advanced-settings-wrapper';
+import { CommandTriggerConfiguration } from '../trigger/CommandTriggerConfiguration';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
 import { BasicSettingsSection } from './basic-settings-section';
@@ -303,6 +304,14 @@ export function PropertiesPanel({
           {selectedNode.type === 'client_auth' && (
             <ClientAuthProperties
               node={selectedNode}
+            />
+          )}
+
+          {/* Trigger Section - только для узлов-триггеров */}
+          {isTriggerNode(selectedNode.type) && (
+            <CommandTriggerConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
             />
           )}
 
