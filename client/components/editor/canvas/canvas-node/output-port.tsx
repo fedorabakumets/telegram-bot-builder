@@ -38,7 +38,7 @@ interface OutputPortProps {
  * @param props - Пропсы компонента
  * @returns JSX-элемент порта
  */
-export function OutputPort({ portType, buttonId, onPortMouseDown, isActive }: OutputPortProps) {
+export function OutputPort({ portType, buttonId, onPortMouseDown }: OutputPortProps) {
   const color = PORT_COLORS[portType];
 
   const handleMouseDown = (e: React.MouseEvent) => {
