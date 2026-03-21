@@ -366,18 +366,40 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     return () => {};
   }, [isTouchDragging]);
 
-  // ResizeObserver для измерения реальных размеров узла
+  /**
+   * ResizeObserver для измерения border-box размеров wrapper-div узла.
+   *
+   * Наблюдаем за wrapper-div (родитель nodeRef), а не за внутренним div,
+   * чтобы получить полную border-box высоту включая padding и border.
+   * Это позволяет вычислять центр OutputPort как node.position.y + height / 2
+   * без каких-либо дополнительных смещений.
+   */
   useEffect(() => {
     if (!onSizeChange || !nodeRef.current) return;
 
+    // wrapper-div — родитель внутреннего div (nodeRef)
+    const wrapperEl = nodeRef.current.parentElement;
+    if (!wrapperEl) return;
+
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const { width, height } = entry.contentRect;
+        let width: number;
+        let height: number;
+        // Используем borderBoxSize если доступен (современные браузеры)
+        if (entry.borderBoxSize && entry.borderBoxSize.length > 0) {
+          width = entry.borderBoxSize[0].inlineSize;
+          height = entry.borderBoxSize[0].blockSize;
+        } else {
+          // Фолбэк через getBoundingClientRect для старых браузеров
+          const rect = (entry.target as HTMLElement).getBoundingClientRect();
+          width = rect.width;
+          height = rect.height;
+        }
         onSizeChange(node.id, { width, height });
       }
     });
 
-    resizeObserver.observe(nodeRef.current);
+    resizeObserver.observe(wrapperEl);
 
     return () => {
       resizeObserver.disconnect();

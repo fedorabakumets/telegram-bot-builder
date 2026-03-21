@@ -106,41 +106,39 @@ interface ConnectionsLayerProps {
 const MARKER_OFFSET = 9;
 
 /**
- * Смещение от contentRect до центра кружка-порта OutputPort.
+ * Смещение по X от правого края contentRect до центра кружка-порта OutputPort.
  *
- * ResizeObserver возвращает contentRect (без padding и border).
- * Узел: padding = p-6 (24px) + pb-10 (40px) top/bottom, border = 2px×2.
- * border-box height = contentRect.height + 24 + 40 + 4 = contentRect.height + 68.
- * Центр кружка по Y = node.top + borderBoxHeight / 2 = node.top + (fromH + 68) / 2.
- *
- * По X: border-box width = contentRect.width + 48(padding) + 4(border) = contentRect.width + 52.
- * OutputPort: right=-8, width=16 → центр на правом border-box краю = contentRect.width + 52.
- * Но right=-8 означает правый край кружка на -8 от правого края wrapper.
- * Центр кружка = contentRect.width + 52 - 8 + 8 = contentRect.width + 52.
+ * Теперь nodeSizes хранит border-box размеры wrapper-div.
+ * OutputPort позиционируется на wrapper-div: right=-8, width=16 → центр на правом краю wrapper.
+ * Центр кружка по X = node.position.x + wrapperWidth (правый край wrapper).
+ * Но right=-8 означает: правый край кружка = правый край wrapper + 8.
+ * Центр кружка = правый край wrapper + 8 - 8 = правый край wrapper = node.position.x + wrapperWidth.
+ * Смещение от правого края wrapper до центра кружка = 0, но визуально порт чуть выступает.
+ * Используем 0 — border-box width уже включает всё.
  */
-const PORT_X_OFFSET = 52;
-/** Половина суммы padding-top(24) + padding-bottom(40) + border(4) = 68/2 = 34 */
-const PORT_Y_HALF_EXTRA = 34;
+const PORT_X_OFFSET = 0;
 
 /**
- * Смещения для компактных триггеров (p-3, w-52):
- * border-box width = contentRect.width + 24 + border(4) = contentRect.width + 28
- * PORT_Y_HALF_EXTRA = (12 + 12 + 4) / 2 = 14
+ * Смещение по X для компактных триггеров.
+ * Аналогично PORT_X_OFFSET = 0, так как теперь используем border-box.
  */
-const TRIGGER_PORT_X_OFFSET = 28;
-const TRIGGER_PORT_Y_HALF_EXTRA = 14;
+const TRIGGER_PORT_X_OFFSET = 0;
 
 /**
  * Вычисляет SVG path кубической кривой Безье между двумя узлами.
- * Линия всегда выходит из правого бока исходного узла (позиция OutputPort)
+ * Линия выходит из центра кружка-порта OutputPort (правый бок исходного узла)
  * и входит в левый бок целевого узла.
+ *
+ * Поскольку nodeSizes теперь хранит border-box размеры wrapper-div,
+ * центр порта по Y = node.position.y + height / 2 — никаких дополнительных
+ * смещений не требуется.
  *
  * @param fromNode - Исходный узел
  * @param toNode - Целевой узел
- * @param fromW - Ширина исходного узла
- * @param fromH - Высота исходного узла
- * @param toW - Ширина целевого узла (не используется, оставлен для совместимости сигнатуры)
- * @param toH - Высота целевого узла
+ * @param fromW - border-box ширина исходного узла
+ * @param fromH - border-box высота исходного узла
+ * @param toW - border-box ширина целевого узла (не используется, оставлен для совместимости)
+ * @param toH - border-box высота целевого узла
  * @returns строка SVG path
  */
 function buildSmartPath(
@@ -151,18 +149,17 @@ function buildSmartPath(
   toW: number,
   toH: number,
 ): string {
-  // Для компактных триггеров используем уменьшенные смещения
+  // Для компактных триггеров и обычных узлов X-смещение одинаково (border-box)
   const isTrigger = fromNode.type === 'command_trigger' || fromNode.type === 'text_trigger';
   const xOffset = isTrigger ? TRIGGER_PORT_X_OFFSET : PORT_X_OFFSET;
-  const yHalfExtra = isTrigger ? TRIGGER_PORT_Y_HALF_EXTRA : PORT_Y_HALF_EXTRA;
 
-  // Выход из центра кружка-порта OutputPort
+  // Центр порта по Y = середина border-box высоты wrapper-div
   const x1 = fromNode.position.x + fromW + xOffset;
-  const y1 = fromNode.position.y + fromH / 2 + yHalfExtra;
+  const y1 = fromNode.position.y + fromH / 2;
 
-  // Вход в левый бок целевого узла (середина по высоте border-box)
+  // Вход в левый бок целевого узла (середина по border-box высоте)
   const x2 = toNode.position.x - MARKER_OFFSET;
-  const y2 = toNode.position.y + toH / 2 + PORT_Y_HALF_EXTRA;
+  const y2 = toNode.position.y + toH / 2;
 
   // Горизонтальные контрольные точки Безье — пропорционально расстоянию
   const dx = Math.abs(x2 - x1);
@@ -243,8 +240,8 @@ function collectConnections(nodes: Node[]): Connection[] {
 export function ConnectionsLayer({ nodes, nodeSizes }: ConnectionsLayerProps) {
   /** Ширина узла по умолчанию если ResizeObserver ещё не сработал */
   const DEFAULT_WIDTH = 320;
-  /** Высота узла по умолчанию */
-  const DEFAULT_HEIGHT = 200;
+  /** border-box высота узла по умолчанию (до первого срабатывания ResizeObserver) */
+  const DEFAULT_HEIGHT = 120;
 
   const connections = collectConnections(nodes);
   if (connections.length === 0) return null;
