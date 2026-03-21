@@ -5,12 +5,15 @@ import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand 
 import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage } from "./messages";
 import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from "./user-management";
 import { pinMessage, unpinMessage, deleteMessage } from "./content-management";
+import { commandTrigger, textTrigger } from "./triggers";
 
 /**
  * Массив определений компонентов для конструктора бота
  * Содержит все доступные типы узлов с их настройками по умолчанию
  */
 export const components: ComponentDefinition[] = [
+  commandTrigger,
+  textTrigger,
   textMessage,
   stickerMessage,
   voiceMessage,
