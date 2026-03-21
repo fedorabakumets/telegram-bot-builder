@@ -15,12 +15,37 @@
 | `requiresAuth` | `boolean` | `false` | Требуется авторизация |
 | `userDatabaseEnabled` | `boolean` | `false` | База данных включена |
 | `allowMultipleSelection` | `boolean` | `false` | Множественный выбор разрешён |
+| `multiSelectVariable` | `string` | - | Переменная для хранения выборов |
 | `keyboardType` | `'inline' \| 'reply' \| 'none'` | `'none'` | Тип клавиатуры |
+| `keyboardLayout` | `any` | - | Раскладка клавиатуры |
+| `buttons` | `Button[]` | `[]` | Кнопки |
+| `oneTimeKeyboard` | `boolean` | `false` | Скрыть клавиатуру после использования |
+| `resizeKeyboard` | `boolean` | - | Изменить размер клавиатуры |
 | `formatMode` | `'html' \| 'markdown' \| 'none'` | `'none'` | Режим форматирования |
 | `enableAutoTransition` | `boolean` | `false` | Автопереход включён |
 | `autoTransitionTo` | `string` | - | Цель автоперехода |
+| `collectUserInput` | `boolean` | `false` | Сбор пользовательского ввода |
+| `enableTextInput` | `boolean` | `false` | Включить текстовый ввод |
+| `enablePhotoInput` | `boolean` | `false` | Включить ввод фото |
+| `enableVideoInput` | `boolean` | `false` | Включить ввод видео |
+| `enableAudioInput` | `boolean` | `false` | Включить ввод аудио |
+| `enableDocumentInput` | `boolean` | `false` | Включить ввод документов |
+| `inputVariable` | `string` | - | Переменная для сохранения ввода |
+| `inputTargetNodeId` | `string` | - | Целевой узел после ввода |
+| `minLength` | `number` | `0` | Минимальная длина ввода |
+| `maxLength` | `number` | `0` | Максимальная длина ввода |
+| `appendVariable` | `boolean` | `false` | Добавлять к существующей переменной |
 | `imageUrl` | `string` | - | URL изображения |
+| `documentUrl` | `string` | - | URL документа |
+| `videoUrl` | `string` | - | URL видео |
+| `audioUrl` | `string` | - | URL аудио |
 | `attachedMedia` | `string[]` | `[]` | Прикреплённые медиа |
+| `enableConditionalMessages` | `boolean` | `false` | Условные сообщения включены |
+| `conditionalMessages` | `any[]` | `[]` | Массив условных сообщений |
+| `fallbackMessage` | `string` | - | Запасное сообщение |
+| `synonymEntries` | `SynonymEntry[]` | `[]` | Записи синонимов |
+| `hasHideAfterClickIncoming` | `boolean` | `false` | Входящие кнопки с hideAfterClick |
+| `hasUserIdsVariable` | `boolean` | `false` | Текст использует переменную user_ids |
 
 ## Использование
 
@@ -101,12 +126,14 @@ async def handle_callback_main_menu(callback_query: types.CallbackQuery):
     text = replace_variables_in_text(text, all_user_vars, {})
 
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Профиль", callback_data="btn_profile"))
-    builder.add(InlineKeyboardButton(text="Настройки", callback_data="btn_settings"))
+    builder.add(InlineKeyboardButton(text="Профиль", callback_data="profile"))
+    builder.add(InlineKeyboardButton(text="Настройки", callback_data="settings"))
     keyboard = builder.as_markup()
 
     await callback_query.message.answer(text, reply_markup=keyboard)
 ```
+
+> Примечание: `callback_data` генерируется из поля `target` кнопки, а не `id`. При `isPrivateOnly=true` в обработчик добавляется проверка `is_private_chat` перед обработкой.
 
 ### Сообщение с автопереходом
 

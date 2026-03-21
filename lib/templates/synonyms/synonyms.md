@@ -21,6 +21,7 @@
 | originalCommand | string | Оригинальная команда (например `/start`) | только для command/start |
 | messageText | string | Текст ответного сообщения | нет (есть дефолт) |
 | disableNotification | boolean | Отключить уведомление при закреплении | нет (для pin_message) |
+| isPrivateOnly | boolean | Только приватные чаты (для command/message) | нет |
 
 ### SynonymNodeType
 
@@ -37,15 +38,16 @@ type SynonymNodeType =
 
 ### 1. command / start
 
-Делегирует вызов оригинальному обработчику через `globals()`:
+Делегирует вызов оригинальному обработчику напрямую. Синонимы работают во всех типах чатов (без фильтра по типу чата). При `isPrivateOnly=true` добавляется проверка:
 
 ```python
 @dp.message(lambda message: message.text and message.text.lower() == "привет")
 async def start_synonym_привет_handler(message: types.Message):
-    if "start_handler" in globals():
-        await start_handler(message)
-    else:
-        await message.answer("Команда /start временно недоступна")
+    # Синоним для команды /start
+    if message.chat.type != 'private':
+        await message.answer("❌ Эта команда доступна только в приватных чатах")
+        return
+    await start_handler(message)
 ```
 
 ### 2. message

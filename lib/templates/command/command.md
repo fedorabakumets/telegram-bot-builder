@@ -210,8 +210,8 @@ async def menu_handler(message: types.Message):
 
     # Клавиатура
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📊 Статистика", callback_data="btn_stats"))
-    builder.add(InlineKeyboardButton(text="⚙️ Настройки", callback_data="btn_settings"))
+    builder.add(InlineKeyboardButton(text="📊 Статистика", callback_data="stats"))
+    builder.add(InlineKeyboardButton(text="⚙️ Настройки", callback_data="settings"))
     builder.add(InlineKeyboardButton(text="🌐 Сайт", url="https://example.com"))
     keyboard = builder.as_markup()
 
@@ -220,13 +220,42 @@ async def menu_handler(message: types.Message):
 
 ### Вывод 4: Обработчики синонимов
 
-```python
-@dp.message(lambda message: message.text and message.text.lower() == "привет" and message.chat.type in ['group', 'supergroup'])
-async def start_synonym_1_handler(message: types.Message):
-    """Обработчик синоима 'привет' для команды /start"""
-    logging.info(f"Синоним 'привет' вызван пользователем {message.from_user.id}")
+Синонимы для command/start работают во всех типах чатов (без фильтра по типу чата). При `isPrivateOnly=true` добавляется проверка приватного чата:
 
-    # ... та же логика что и в основной команде
+```python
+@dp.message(lambda message: message.text and message.text.lower() == "привет")
+async def start_synonym_привет_handler(message: types.Message):
+    # Синоним для команды /start
+    await start_handler(message)
+```
+
+### Вывод 5: Второй обработчик handle_callback_*
+
+Шаблон генерирует второй обработчик `handle_callback_<nodeId>` для goto-переходов (кнопки с `action="goto"` и `target=nodeId`). Поддерживает флаг `isPrivateOnly`:
+
+```python
+@dp.callback_query(lambda c: c.data == "cmd_4" or c.data.startswith("cmd_4_btn_"))
+async def handle_callback_cmd_4(callback_query: types.CallbackQuery):
+    """Обработчик callback перехода к команде /menu (узел cmd_4)"""
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    # isPrivateOnly проверка (если включена)
+    if callback_query.message.chat.type != 'private':
+        await callback_query.answer("❌ Эта команда доступна только в приватных чатах", show_alert=True)
+        return
+
+    user_id = callback_query.from_user.id
+    logging.info(f"🔵 Callback переход к команде /menu (узел cmd_4) для пользователя {user_id}")
+
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.answer = callback_query.message.answer
+
+    await menu_handler(fake_message)
 ```
 
 ## Логика условий
@@ -271,6 +300,7 @@ npm test -- command.test.ts
 - Условные сообщения (3 теста)
 - Клавиатуры (3 теста)
 - Синонимы (3 теста)
+- Callback-обработчик handle_callback_* (3 теста)
 - Невалидные данные (4 теста)
 - Валидация схемы (5 тестов)
 - Производительность (2 теста)

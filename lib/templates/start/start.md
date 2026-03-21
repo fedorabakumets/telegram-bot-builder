@@ -224,13 +224,31 @@ async def start_handler(message: types.Message):
 
 ### Вывод 5: Обработчики синонимов
 
-```python
-@dp.message(lambda message: message.text and message.text.lower() == "привет" and message.chat.type in ['group', 'supergroup'])
-async def start_synonym_1_handler(message: types.Message):
-    """Обработчик синоима 'привет' для команды /start"""
-    logging.info(f"Синоним 'привет' вызван пользователем {message.from_user.id}")
+Синонимы для /start работают во всех типах чатов (без фильтра по типу чата). При `isPrivateOnly=true` добавляется проверка приватного чата:
 
-    # ... та же логика что и в основной команде
+```python
+@dp.message(lambda message: message.text and message.text.lower() == "привет")
+async def start_synonym_привет_handler(message: types.Message):
+    # Синоним для команды /start
+    await start_handler(message)
+```
+
+### Вывод 6: Второй обработчик handle_callback_start
+
+Шаблон всегда генерирует второй обработчик `handle_callback_start` для кнопок "Назад в меню" (`callback_data="start"`):
+
+```python
+@dp.callback_query(lambda c: c.data == "start")
+async def handle_callback_start(callback_query: types.CallbackQuery):
+    """Обработчик callback кнопки с переходом на /start"""
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    user_id = callback_query.from_user.id
+    # ... сохранение пользователя, формирование текста и клавиатуры ...
+    await bot.send_message(callback_query.message.chat.id, text, reply_markup=keyboard)
 ```
 
 ## Логика условий
@@ -280,6 +298,7 @@ npm test -- start.test.ts
 - Множественный выбор (3 теста)
 - Автопереходы (2 теста)
 - Синонимы (3 теста)
+- Callback-обработчик handle_callback_start (3 теста)
 - Невалидные данные (4 теста)
 - Валидация схемы (5 тестов)
 - Производительность (2 теста)
