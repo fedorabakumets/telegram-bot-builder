@@ -79,7 +79,11 @@ export function useConnectionDrag({
 
   /** Конвертирует экранные координаты в canvas-координаты */
   const screenToCanvas = useCallback((screenX: number, screenY: number) => {
-    const rect = canvasRef.current?.getBoundingClientRect();
+    // Используем родительский overflow-контейнер (viewport холста), а не сам грид.
+    // Грид имеет размер 2000vw×2000vh и его getBoundingClientRect().left/top
+    // смещается при скролле, что даёт неверные координаты.
+    const container = canvasRef.current?.parentElement ?? canvasRef.current;
+    const rect = container?.getBoundingClientRect();
     if (!rect) return { x: screenX, y: screenY };
     const x = (screenX - rect.left - pan.x) / (zoom / 100);
     const y = (screenY - rect.top - pan.y) / (zoom / 100);
@@ -117,13 +121,13 @@ export function useConnectionDrag({
 
     if (node) {
       const size = nodeSizes.get(nodeId) ?? { width: 320, height: 200 };
-      if (portType === 'button-goto' && buttonId && portCenter) {
-        // Для кнопок используем переданный portCenter (конвертируем из экранных в canvas)
+      if (portCenter) {
+        // Всегда используем точный центр кружка из getBoundingClientRect
         const converted = screenToCanvas(portCenter.x, portCenter.y);
         startX = converted.x;
         startY = converted.y;
       } else {
-        // Для trigger-next и auto-transition — правый край узла, середина по высоте
+        // Fallback: правый край узла, середина по высоте
         startX = node.position.x + size.width;
         startY = node.position.y + size.height / 2;
       }
