@@ -1,8 +1,8 @@
 /**
  * @fileoverview Хук для управления ID администраторов бота
  *
- * Предоставляет функции для чтения и сохранения ADMIN_IDS
- * через API эндпоинт /api/projects/:id/admin-ids
+ * Загружает и сохраняет ADMIN_IDS через API.
+ * Конвертирует строку через запятую ↔ массив строк.
  *
  * @module use-admin-ids
  */
@@ -15,15 +15,23 @@ import { apiRequest } from '@/queryClient';
  * Результат хука useAdminIds
  */
 interface UseAdminIdsResult {
-  /** Текущее значение поля ввода */
-  value: string;
-  /** Обновить значение поля */
-  setValue: (v: string) => void;
+  /** Список ID администраторов */
+  ids: string[];
+  /** Заменить весь список */
+  setIds: (ids: string[]) => void;
   /** Идёт ли сохранение */
   isSaving: boolean;
-  /** Сохранить значение через API */
+  /** Сохранить список через API */
   save: () => Promise<void>;
 }
+
+/** Разбить строку через запятую в массив, отфильтровав пустые */
+const parseIds = (raw: string): string[] =>
+  raw.split(',').map((s) => s.trim()).filter(Boolean);
+
+/** Собрать массив в строку через запятую */
+const joinIds = (ids: string[]): string =>
+  ids.filter(Boolean).join(',');
 
 /**
  * Хук для чтения и сохранения ADMIN_IDS бота
@@ -31,20 +39,25 @@ interface UseAdminIdsResult {
  * @param projectId - ID проекта бота
  */
 export function useAdminIds(projectId: number): UseAdminIdsResult {
-  const [value, setValue] = useState('');
+  const [ids, setIds] = useState<string[]>(['']);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     apiRequest('GET', `/api/projects/${projectId}/admin-ids`)
-      .then((data: { adminIds: string }) => setValue(data.adminIds ?? ''))
-      .catch(() => setValue(''));
+      .then((data: { adminIds: string }) => {
+        const parsed = parseIds(data.adminIds ?? '');
+        setIds(parsed.length ? parsed : ['']);
+      })
+      .catch(() => setIds(['']));
   }, [projectId]);
 
   const save = async () => {
     setIsSaving(true);
     try {
-      await apiRequest('PUT', `/api/projects/${projectId}/admin-ids`, { adminIds: value });
+      await apiRequest('PUT', `/api/projects/${projectId}/admin-ids`, {
+        adminIds: joinIds(ids),
+      });
       toast({ title: 'Сохранено', description: 'Список администраторов обновлён' });
     } catch {
       toast({ title: 'Ошибка', description: 'Не удалось сохранить ADMIN_IDS', variant: 'destructive' });
@@ -53,5 +66,5 @@ export function useAdminIds(projectId: number): UseAdminIdsResult {
     }
   };
 
-  return { value, setValue, isSaving, save };
+  return { ids, setIds, isSaving, save };
 }
