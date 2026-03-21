@@ -6,10 +6,12 @@
 
 import { SectionHeader } from '../layout/section-header';
 import { SynonymEditor } from '../synonyms/synonym-editor';
+import { CommandEditor } from '../synonyms/CommandEditor';
 import { CommandSectionComplete } from '../commands/command-section-complete';
 import { ManagementCommandSection } from '../commands/management-command-section';
 import { NodeTypeConfigurations } from './node-type-configurations';
 import { useSynonymSync } from '../synonyms/use-synonym-sync';
+import { useCommandSync } from '../synonyms/use-command-sync';
 import type { Node } from '@shared/schema';
 
 /** Пропсы компонента */
@@ -105,6 +107,13 @@ export function BasicSettingsSection({
     onNodeAdd,
     onNodeDelete,
   });
+
+  const { commandTriggers, handleCommandAdd, handleCommandDelete } = useCommandSync({
+    node: selectedNode,
+    allNodes,
+    onNodeAdd,
+    onNodeDelete,
+  });
   return (
     <div className="w-full bg-gradient-to-br from-violet-50/40 to-purple-50/20 dark:from-violet-950/30 dark:to-purple-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-violet-200/40 dark:border-violet-800/40 backdrop-blur-sm">
       <SectionHeader
@@ -142,6 +151,21 @@ export function BasicSettingsSection({
                 onUpdate={handleSynonymsUpdate}
                 description="Дополнительные текстовые варианты для вызова этого экрана. Например: старт, привет, начать"
                 placeholder="Например: старт, привет, начать"
+              />
+            </div>
+          )}
+
+          {/* Команды — для всех узлов кроме рассылки и триггеров */}
+          {selectedNode.type !== 'broadcast' && (
+            <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-yellow-50/40 to-orange-50/20 dark:from-yellow-950/30 dark:to-orange-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-yellow-200/40 dark:border-yellow-800/40 backdrop-blur-sm">
+              <div className="flex items-center gap-2 mb-1">
+                <i className="fas fa-bolt text-yellow-500 dark:text-yellow-400 text-sm"></i>
+                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">Команды</span>
+              </div>
+              <CommandEditor
+                commandTriggers={commandTriggers}
+                onCommandAdd={handleCommandAdd}
+                onCommandDelete={handleCommandDelete}
               />
             </div>
           )}
