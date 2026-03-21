@@ -17,10 +17,17 @@ import { useTokenEdit } from './useTokenEdit';
 import { TokenDisplay } from './TokenDisplay';
 import { TokenEditInput } from './TokenEditInput';
 
+/**
+ * Свойства компонента отображения и редактирования токена
+ */
 interface TokenDisplayEditProps {
+  /** Текущий токен бота */
   token: string;
+  /** ID токена */
   tokenId: number;
+  /** ID проекта */
   projectId: number;
+  /** Колбэк после успешного обновления токена */
   onTokenUpdate: () => void;
 }
 
@@ -28,7 +35,7 @@ interface TokenDisplayEditProps {
  * Компонент для отображения и редактирования токена бота
  */
 export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: TokenDisplayEditProps) {
-  const { isEditing, tokenValue, isValidating, error, startEditing, setTokenValue, validateToken } = useTokenEdit();
+  const { isEditing, tokenValue, isValidating, error, startEditing, stopEditing, setTokenValue, validateToken } = useTokenEdit();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -37,41 +44,29 @@ export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: T
    */
   const handleSave = async () => {
     if (tokenValue === token) {
+      stopEditing();
       return;
     }
 
     const isValid = await validateToken(tokenValue);
-
-    if (!isValid) {
-      return;
-    }
+    if (!isValid) return;
 
     try {
-      // Обновить токен в системе
-      await apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}`, {
-        token: tokenValue
-      });
+      await apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}`, { token: tokenValue });
+      await apiRequest('POST', `/api/projects/${projectId}/bot/stop`, { tokenId });
 
-      // Остановить бота с предыдущим токеном
-      await apiRequest('POST', `/api/projects/${projectId}/bot/stop`, {
-        tokenId: tokenId
-      });
-
-      // Инвалидировать кэш
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
 
-      toast({
-        title: "Токен обновлен",
-        description: "Токен бота успешно изменен"
-      });
+      toast({ title: 'Токен обновлен', description: 'Токен бота успешно изменён' });
 
+      stopEditing();
       onTokenUpdate();
     } catch (err: any) {
       toast({
-        title: "Ошибка",
-        description: err.message || "Ошибка при обновлении токена",
-        variant: "destructive"
+        title: 'Ошибка',
+        description: err.message || 'Ошибка при обновлении токена',
+        variant: 'destructive',
       });
     }
   };
@@ -81,17 +76,15 @@ export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: T
    */
   const handleCancel = () => {
     setTokenValue(token);
+    stopEditing();
   };
 
   /**
    * Обработчик нажатия клавиш
    */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSave();
-    } else if (e.key === 'Escape') {
-      handleCancel();
-    }
+    if (e.key === 'Enter') handleSave();
+    else if (e.key === 'Escape') handleCancel();
   };
 
   if (isEditing) {
@@ -100,7 +93,8 @@ export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: T
         value={tokenValue}
         onChange={setTokenValue}
         onKeyDown={handleKeyDown}
-        onBlur={handleSave}
+        onSave={handleSave}
+        onCancel={handleCancel}
         isValidating={isValidating}
         error={error}
       />

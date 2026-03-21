@@ -9,14 +9,27 @@
 import { useState } from 'react';
 import { validateBotToken } from './tokenUtils';
 
+/**
+ * Результат хука редактирования токена
+ */
 interface UseTokenEditResult {
+  /** Флаг режима редактирования */
   isEditing: boolean;
+  /** Текущее значение токена */
   tokenValue: string;
+  /** Флаг процесса валидации */
   isValidating: boolean;
+  /** Текст ошибки или null */
   error: string | null;
+  /** Начать редактирование */
   startEditing: (currentToken: string) => void;
+  /** Остановить редактирование */
+  stopEditing: () => void;
+  /** Установить значение токена */
   setTokenValue: (value: string) => void;
+  /** Очистить ошибку */
   clearError: () => void;
+  /** Валидировать токен */
   validateToken: (token: string) => Promise<boolean>;
 }
 
@@ -40,7 +53,15 @@ export function useTokenEdit(): UseTokenEditResult {
   };
 
   /**
-   * Валидация токена
+   * Остановка редактирования — сбрасывает isEditing в false
+   */
+  const stopEditing = () => {
+    setIsEditing(false);
+    setError(null);
+  };
+
+  /**
+   * Валидация токена через Telegram API
    */
   const validateToken = async (token: string): Promise<boolean> => {
     setIsValidating(true);
@@ -62,8 +83,9 @@ export function useTokenEdit(): UseTokenEditResult {
     isValidating,
     error,
     startEditing,
+    stopEditing,
     setTokenValue,
     clearError: () => setError(null),
-    validateToken
+    validateToken,
   };
 }
