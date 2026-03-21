@@ -30,8 +30,6 @@ interface BotManagementInterfaceProps {
   stopBotMutation: any;
   deleteBotMutation: any;
   toggleDatabaseMutation: any;
-  handleToggleCommentsGeneration: (enabled: boolean) => void;
-  commentsGenerationEnabled: boolean;
   currentElapsedSeconds: Record<number, number>;
   setSelectedProject: (project: any) => void;
   setSelectedBotInfo: (info: any) => void;
@@ -60,8 +58,6 @@ export function BotManagementInterface({
   stopBotMutation,
   deleteBotMutation,
   toggleDatabaseMutation,
-  handleToggleCommentsGeneration,
-  commentsGenerationEnabled,
   currentElapsedSeconds,
   setSelectedProject,
   setSelectedBotInfo,
@@ -107,8 +103,6 @@ export function BotManagementInterface({
                 setSelectedProject={setSelectedProject}
                 setSelectedBotInfo={setSelectedBotInfo}
                 setIsProfileSheetOpen={setIsProfileSheetOpen}
-                handleToggleCommentsGeneration={handleToggleCommentsGeneration}
-                commentsGenerationEnabled={commentsGenerationEnabled}
                 currentElapsedSeconds={currentElapsedSeconds}
                 toggleDatabaseMutation={toggleDatabaseMutation}
                 queryClient={queryClient}

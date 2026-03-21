@@ -17,7 +17,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { BotToken, type BotProject } from '@shared/schema';
-import { setCommentsEnabled, areCommentsEnabled } from '@/utils/comments-settings';
 import { type BotInfo } from './BotProfileEditor';
 import { BotProfileSheet } from './BotProfileSheet';
 import { BotControlPanel } from './BotControlPanel';
@@ -112,69 +111,8 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
   /** Текущее время работы ботов в секундах (по ключу tokenId) */
   const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState<Record<number, number>>({});
 
-  // Состояние для переключения генерации комментариев
-  /** Включена ли генерация комментариев */
-  const [commentsGenerationEnabled, setCommentsGenerationEnabled] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const storedValue = localStorage.getItem('botcraft-comments-generation');
-      if (storedValue !== null) {
-        return storedValue === 'true';
-      }
-      // Если значение не найдено в localStorage, используем значение из утилиты
-      const initialValue = areCommentsEnabled();
-      // Обновляем localStorage значением из утилиты
-      localStorage.setItem('botcraft-comments-generation', String(initialValue));
-      return initialValue;
-    }
-    return true; // По умолчанию включено
-  });
-
-
-  /**
-   * Обработчик переключения генерации комментариев
-   * @param enabled - Включить или выключить генерацию комментариев
-   */
-  const handleToggleCommentsGeneration = async (enabled: boolean) => {
-    setCommentsGenerationEnabled(enabled);
-    localStorage.setItem('botcraft-comments-generation', String(enabled));
-
-    // Обновляем глобальный переключатель в utils
-    setCommentsEnabled(enabled);
-
-    // Отправляем обновление на сервер
-    try {
-      await apiRequest('POST', '/api/settings/comments-generation', { enabled });
-      
-      toast({
-        title: enabled ? 'Генерация комментариев включена' : 'Генерация комментариев отключена',
-        description: enabled ? 'Теперь в сгенерированном коде будут добавляться комментарии' : 'Комментарии больше не будут добавляться в сгенерированный код',
-      });
-    } catch (error) {
-      console.error('Ошибка обновления настроек генерации комментариев на сервере:', error);
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить настройки генерации комментариев на сервере',
-        variant: 'destructive'
-      });
-      // Восстанавливаем предыдущее значение только в UI и localStorage, но не в глобальном состоянии
-      setCommentsGenerationEnabled(!enabled);
-      localStorage.setItem('botcraft-comments-generation', String(!enabled));
-    }
-  };
-
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Синхронизируем состояние переключателя с глобальным значением из утилиты при загрузке
-  useEffect(() => {
-    const storedValue = localStorage.getItem('botcraft-comments-generation');
-    if (storedValue === null) {
-      // Если значение не найдено в localStorage, используем значение из утилиты
-      const initialValue = areCommentsEnabled();
-      setCommentsGenerationEnabled(initialValue);
-      localStorage.setItem('botcraft-comments-generation', String(initialValue));
-    }
-  }, []);
 
   // Получаем все проекты
   const { data: projects = [], isLoading: projectsLoading } = useQuery<BotProject[]>({
@@ -650,10 +588,7 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
         stopBotMutation={stopBotMutation}
         deleteBotMutation={deleteBotMutation}
         toggleDatabaseMutation={toggleDatabaseMutation}
-        handleToggleCommentsGeneration={handleToggleCommentsGeneration}
-        commentsGenerationEnabled={commentsGenerationEnabled}
-        currentElapsedSeconds={currentElapsedSeconds}
-        showAddBot={showAddBot}
+        currentElapsedSeconds={currentElapsedSeconds}        showAddBot={showAddBot}
         projectForNewBot={projectForNewBot}
         newBotToken={newBotToken}
         setNewBotToken={setNewBotToken}

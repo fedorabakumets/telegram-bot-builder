@@ -26,8 +26,6 @@ interface ProjectBotsListProps {
   setSelectedProject: (project: any) => void;
   setSelectedBotInfo: (info: any) => void;
   setIsProfileSheetOpen: (open: boolean) => void;
-  commentsGenerationEnabled: boolean;
-  handleToggleCommentsGeneration: (enabled: boolean) => void;
   currentElapsedSeconds: Record<number, number>;
   toggleDatabaseMutation: any;
   queryClient: any;
@@ -54,8 +52,6 @@ export function ProjectBotsList({
   setSelectedProject,
   setSelectedBotInfo,
   setIsProfileSheetOpen,
-  commentsGenerationEnabled,
-  handleToggleCommentsGeneration,
   currentElapsedSeconds,
   toggleDatabaseMutation,
   queryClient
@@ -86,8 +82,6 @@ export function ProjectBotsList({
             setSelectedProject={setSelectedProject}
             setSelectedBotInfo={setSelectedBotInfo}
             setIsProfileSheetOpen={setIsProfileSheetOpen}
-            commentsGenerationEnabled={commentsGenerationEnabled}
-            handleToggleCommentsGeneration={handleToggleCommentsGeneration}
             currentElapsedSeconds={currentElapsedSeconds}
             allBotStatuses={allBotStatuses}
             toggleDatabaseMutation={toggleDatabaseMutation}

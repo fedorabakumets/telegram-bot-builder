@@ -27,8 +27,6 @@ interface BotControlPanelContentProps {
   stopBotMutation: any;
   deleteBotMutation: any;
   toggleDatabaseMutation: any;
-  handleToggleCommentsGeneration: (enabled: boolean) => void;
-  commentsGenerationEnabled: boolean;
   currentElapsedSeconds: Record<number, number>;
   setSelectedProject: (project: any) => void;
   setSelectedBotInfo: (info: any) => void;
@@ -57,8 +55,6 @@ export function BotControlPanelContent({
   stopBotMutation,
   deleteBotMutation,
   toggleDatabaseMutation,
-  handleToggleCommentsGeneration,
-  commentsGenerationEnabled,
   currentElapsedSeconds,
   setSelectedProject,
   setSelectedBotInfo,
@@ -84,8 +80,6 @@ export function BotControlPanelContent({
       stopBotMutation={stopBotMutation}
       deleteBotMutation={deleteBotMutation}
       toggleDatabaseMutation={toggleDatabaseMutation}
-      handleToggleCommentsGeneration={handleToggleCommentsGeneration}
-      commentsGenerationEnabled={commentsGenerationEnabled}
       currentElapsedSeconds={currentElapsedSeconds}
       setSelectedProject={setSelectedProject}
       setSelectedBotInfo={setSelectedBotInfo}

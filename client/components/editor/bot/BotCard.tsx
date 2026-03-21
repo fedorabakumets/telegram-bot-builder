@@ -33,8 +33,6 @@ interface BotCardProps {
   setSelectedProject: (project: any) => void;
   setSelectedBotInfo: (info: any) => void;
   setIsProfileSheetOpen: (open: boolean) => void;
-  commentsGenerationEnabled: boolean;
-  handleToggleCommentsGeneration: (enabled: boolean) => void;
   currentElapsedSeconds: Record<number, number>;
   allBotStatuses: any[];
   toggleDatabaseMutation: any;
@@ -62,8 +60,6 @@ export function BotCard({
   setSelectedProject,
   setSelectedBotInfo,
   setIsProfileSheetOpen,
-  commentsGenerationEnabled,
-  handleToggleCommentsGeneration,
   currentElapsedSeconds,
   allBotStatuses,
   toggleDatabaseMutation,
@@ -112,12 +108,10 @@ export function BotCard({
           projectId={project.id}
           tokenId={token.id}
           userDatabaseEnabled={project.userDatabaseEnabled}
-          commentsGenerationEnabled={commentsGenerationEnabled}
           isBotRunning={isThisTokenRunning}
           currentElapsedSeconds={currentElapsedSeconds}
           allBotStatuses={allBotStatuses}
           toggleDatabaseMutation={toggleDatabaseMutation}
-          handleToggleCommentsGeneration={handleToggleCommentsGeneration}
         />
       </CardContent>
     </Card>
