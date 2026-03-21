@@ -51,7 +51,7 @@ interface CanvasContentProps {
   /** Карта реальных размеров узлов (из ResizeObserver) */
   nodeSizes: Map<string, { width: number; height: number }>;
   /** Обработчик начала перетаскивания от порта выхода */
-  onPortMouseDown?: (e: React.MouseEvent, nodeId: string, portType: PortType, buttonId?: string) => void;
+  onPortMouseDown?: (e: React.MouseEvent, nodeId: string, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => void;
   /** Текущее временное соединение при drag-to-connect */
   draftConnection?: DraftConnection | null;
   /** ID узла под курсором при drag-to-connect (для подсветки цели) */

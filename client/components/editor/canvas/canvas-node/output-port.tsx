@@ -19,8 +19,11 @@ interface OutputPortProps {
   portType: PortType;
   /** ID кнопки — только для portType="button-goto" */
   buttonId?: string;
-  /** Обработчик начала перетаскивания соединения от порта */
-  onPortMouseDown?: (e: React.MouseEvent, portType: PortType, buttonId?: string) => void;
+  /**
+   * Обработчик начала перетаскивания соединения от порта.
+   * portCenter — экранные координаты центра кружка-порта.
+   */
+  onPortMouseDown?: (e: React.MouseEvent, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => void;
 }
 
 /**
@@ -40,7 +43,10 @@ export function OutputPort({ portType, buttonId, onPortMouseDown }: OutputPortPr
     // Останавливаем всплытие чтобы не запустить drag узла
     e.stopPropagation();
     e.preventDefault();
-    onPortMouseDown?.(e, portType, buttonId);
+    // Вычисляем центр кружка-порта в экранных координатах
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const portCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    onPortMouseDown?.(e, portType, buttonId, portCenter);
   };
 
   return (

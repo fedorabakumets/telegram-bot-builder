@@ -70,7 +70,8 @@ interface CanvasNodeProps {
     e: React.MouseEvent,
     nodeId: string,
     portType: PortType,
-    buttonId?: string
+    buttonId?: string,
+    portCenter?: { x: number; y: number }
   ) => void;
   /** Подсветка узла как допустимой цели при drag-to-connect */
   isConnectionTarget?: boolean;
@@ -126,8 +127,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
    * Обработчик начала перетаскивания от порта выхода.
    * Пробрасывает nodeId в колбэк родителя.
    */
-  const handlePortMouseDown = (e: React.MouseEvent, portType: PortType, buttonId?: string) => {
-    onPortMouseDown?.(e, node.id, portType, buttonId);
+  const handlePortMouseDown = (e: React.MouseEvent, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => {
+    onPortMouseDown?.(e, node.id, portType, buttonId, portCenter);
   };
   
   // Touch состояние для мобильного перемещения элементов

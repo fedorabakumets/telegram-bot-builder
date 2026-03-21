@@ -58,7 +58,7 @@ interface UseConnectionDragResult {
   /** ID узла под курсором (подсветка цели) */
   hoveredTargetNodeId: string | null;
   /** Обработчик mousedown на порту */
-  handlePortMouseDown: (e: React.MouseEvent, nodeId: string, portType: PortType, buttonId?: string) => void;
+  handlePortMouseDown: (e: React.MouseEvent, nodeId: string, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => void;
   /** Обработчик mousemove на canvas */
   handleDragMouseMove: (e: React.MouseEvent) => void;
   /** Обработчик mouseup на canvas */
@@ -104,10 +104,15 @@ export function useConnectionDrag({
     nodeId: string,
     portType: PortType,
     buttonId?: string,
+    portCenter?: { x: number; y: number },
   ) => {
     e.stopPropagation();
     e.preventDefault();
-    const { x, y } = screenToCanvas(e.clientX, e.clientY);
+    // Используем центр кружка-порта переданный из OutputPort,
+    // а не позицию курсора — иначе линия начинается там где кликнули
+    const screenX = portCenter?.x ?? e.clientX;
+    const screenY = portCenter?.y ?? e.clientY;
+    const { x, y } = screenToCanvas(screenX, screenY);
     const draft: DraftConnection = {
       fromNodeId: nodeId,
       portType,

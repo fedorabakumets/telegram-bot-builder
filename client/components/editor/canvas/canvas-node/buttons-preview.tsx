@@ -30,7 +30,7 @@ interface ButtonsPreviewProps {
   /** Все узлы для поиска целевых */
   allNodes?: Node[];
   /** Обработчик начала перетаскивания от порта кнопки */
-  onPortMouseDown?: (e: React.MouseEvent, portType: PortType, buttonId?: string) => void;
+  onPortMouseDown?: (e: React.MouseEvent, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => void;
 }
 
 /**
