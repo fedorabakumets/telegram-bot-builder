@@ -46,3 +46,27 @@ export const MANAGEMENT_NODE_TYPES = [
 export function isManagementNode(nodeType: Node['type']): boolean {
   return MANAGEMENT_NODE_TYPES.includes(nodeType as typeof MANAGEMENT_NODE_TYPES[number]);
 }
+
+/**
+ * Список типов узлов-триггеров
+ *
+ * Триггеры являются точками входа в сценарий бота.
+ * Они не отправляют сообщений и не имеют контента:
+ * - command_trigger — срабатывает по команде (/start, /help и т.д.)
+ */
+export const TRIGGER_NODE_TYPES = [
+  'command_trigger',
+] as const;
+
+/**
+ * Проверяет, является ли узел триггером
+ *
+ * Триггеры не имеют секций текста, медиа, клавиатуры,
+ * условных сообщений, сбора ответов и автоперехода.
+ *
+ * @param {Node['type']} nodeType - Тип узла для проверки
+ * @returns {boolean} true, если узел является триггером
+ */
+export function isTriggerNode(nodeType: Node['type']): boolean {
+  return TRIGGER_NODE_TYPES.includes(nodeType as typeof TRIGGER_NODE_TYPES[number]);
+}
