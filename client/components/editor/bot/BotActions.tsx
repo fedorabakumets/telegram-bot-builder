@@ -3,7 +3,7 @@
  *
  * Отображает кнопки управления ботом:
  * - Редактирование профиля
- * - Запуск/остановка бота
+ * - Запуск/остановка бота (размер sm, h-8, text-xs)
  * - Удаление бота (через меню)
  *
  * @module BotActions
@@ -91,9 +91,9 @@ export function BotActions({
           onClick={() => startBotMutation.mutate({ tokenId, projectId })}
           disabled={startBotMutation.isPending && isStartingThisBot}
           aria-label={startBotMutation.isPending && isStartingThisBot ? 'Запуск бота...' : 'Запустить бота'}
-          className="h-9 gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm bg-green-600 hover:bg-green-700"
+          className="h-8 gap-1 sm:gap-2 px-2 sm:px-3 text-xs bg-green-600 hover:bg-green-700"
         >
-          <Play className="w-3.5 h-3.5" aria-hidden="true" />
+          <Play className="w-3 h-3" aria-hidden="true" />
           <span className="hidden sm:inline">
             {startBotMutation.isPending && isStartingThisBot ? 'Запуск...' : 'Запустить'}
           </span>
@@ -108,7 +108,7 @@ export function BotActions({
           onClick={() => stopBotMutation.mutate({ tokenId, projectId })}
           disabled={stopBotMutation.isPending && isStoppingThisBot}
           aria-label={stopBotMutation.isPending && isStoppingThisBot ? 'Остановка бота...' : 'Остановить бота'}
-          className="h-9 gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm"
+          className="h-8 gap-1 sm:gap-2 px-2 sm:px-3 text-xs"
         >
           <Square className="w-3.5 h-3.5" aria-hidden="true" />
           <span className="hidden sm:inline">

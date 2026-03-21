@@ -1,13 +1,17 @@
 /**
- * @fileoverview Заголовок проекта
+ * @fileoverview Заголовок проекта в панели ботов
  *
- * Компонент отображает название проекта и количество ботов.
+ * Отображает название проекта (font-semibold, text-foreground)
+ * и счётчик ботов (text-muted-foreground, text-sm).
  *
  * @module ProjectHeader
  */
 
+/** Свойства заголовка проекта */
 interface ProjectHeaderProps {
+  /** Название проекта */
   projectName: string;
+  /** Количество ботов в проекте */
   botsCount: number;
 }
 

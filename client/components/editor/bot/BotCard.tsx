@@ -3,7 +3,8 @@
  *
  * Объединяет все части карточки бота:
  * - Заголовок с аватаркой и именем
- * - Информация о боте
+ * - Визуальный разделитель
+ * - Информация о боте (токен, даты)
  * - Сетка настроек
  *
  * Данные редактирования и мутации берёт из BotControlContext.
@@ -12,6 +13,7 @@
  */
 
 import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { BotCardHeader } from './BotCardHeader';
 import { BotCardInfo } from './BotCardInfo';
 import { BotSettingsGrid } from './BotSettingsGrid';
@@ -59,7 +61,7 @@ export function BotCard({ token, project, projectBotInfo, isThisTokenRunning }: 
 
   return (
     <Card className="group/card overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md dark:hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card via-card to-card/95 hover:border-border/50">
-      <CardContent className="p-4 sm:p-5 space-y-4">
+      <CardContent className="p-4 sm:p-5 space-y-3">
         <BotCardHeader
           token={token}
           projectBotInfo={projectBotInfo}
@@ -83,6 +85,8 @@ export function BotCard({ token, project, projectBotInfo, isThisTokenRunning }: 
           tokenId={token.id}
           projectId={project.id}
         />
+
+        <Separator className="opacity-40" />
 
         <BotCardInfo
           token={token}

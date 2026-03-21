@@ -162,7 +162,11 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
         </Badge>
       );
     }
-    if (token.isDefault) return <Badge variant="secondary">По умолчанию</Badge>;
+    if (token.isDefault) return (
+      <Badge variant="outline" className="border-border text-foreground/80 bg-muted/40">
+        По умолчанию
+      </Badge>
+    );
     return <Badge variant="outline">Готов</Badge>;
   };
 

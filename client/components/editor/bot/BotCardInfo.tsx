@@ -3,10 +3,8 @@
  *
  * Отображает:
  * - Описание бота (с inline-редактированием)
- * - Токен бота
+ * - Токен бота и даты — в лёгком контейнере bg-muted/30
  * - Краткое описание
- * - Даты создания и последнего использования
- * - Время выполнения
  *
  * @module BotCardInfo
  */
@@ -89,50 +87,52 @@ export function BotCardInfo({
         )
       )}
 
-      <TokenDisplayEdit
-        token={token.token}
-        tokenId={token.id}
-        projectId={project.id}
-        onTokenUpdate={() => {
-          queryClient.invalidateQueries({ queryKey: [`/api/projects/${project.id}/bot/info`] });
-        }}
-      />
+      <div className="rounded-md bg-muted/30 px-3 py-2 space-y-1">
+        <TokenDisplayEdit
+          token={token.token}
+          tokenId={token.id}
+          projectId={project.id}
+          onTokenUpdate={() => {
+            queryClient.invalidateQueries({ queryKey: [`/api/projects/${project.id}/bot/info`] });
+          }}
+        />
 
-      {token.botShortDescription && token.botShortDescription !== token.botDescription && (
-        isEditingShort ? (
-          <Input
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSaveEdit();
-              else if (e.key === 'Escape') handleCancelEdit();
-            }}
-            onBlur={handleSaveEdit}
-            autoFocus
-            className="text-xs h-auto px-2 py-1 mb-1"
-            data-testid="input-bot-short-description-edit"
-          />
-        ) : (
-          <p
-            className="text-xs text-muted-foreground line-clamp-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
-            onDoubleClick={() => handleStartEdit(token.id, 'shortDescription', token.botShortDescription || '')}
-            title="Double-click to edit"
-            data-testid="text-bot-short-description"
-          >
-            {token.botShortDescription}
-          </p>
-        )
-      )}
+        {token.botShortDescription && token.botShortDescription !== token.botDescription && (
+          isEditingShort ? (
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveEdit();
+                else if (e.key === 'Escape') handleCancelEdit();
+              }}
+              onBlur={handleSaveEdit}
+              autoFocus
+              className="text-xs h-auto px-2 py-1"
+              data-testid="input-bot-short-description-edit"
+            />
+          ) : (
+            <p
+              className="text-xs text-muted-foreground line-clamp-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+              onDoubleClick={() => handleStartEdit(token.id, 'shortDescription', token.botShortDescription || '')}
+              title="Double-click to edit"
+              data-testid="text-bot-short-description"
+            >
+              {token.botShortDescription}
+            </p>
+          )
+        )}
 
-      <p className="text-xs text-muted-foreground mt-1">
-        Добавлен: {new Date(token.createdAt!).toLocaleDateString('ru-RU')}
-        {token.lastUsedAt && (
-          <> • Последний: {new Date(token.lastUsedAt).toLocaleDateString('ru-RU')}</>
-        )}
-        {token.trackExecutionTime === 1 && (
-          <> • {formatExecutionTime(token.totalExecutionSeconds || 0)}</>
-        )}
-      </p>
+        <p className="text-xs text-muted-foreground">
+          Добавлен: {new Date(token.createdAt!).toLocaleDateString('ru-RU')}
+          {token.lastUsedAt && (
+            <> • Последний: {new Date(token.lastUsedAt).toLocaleDateString('ru-RU')}</>
+          )}
+          {token.trackExecutionTime === 1 && (
+            <> • {formatExecutionTime(token.totalExecutionSeconds || 0)}</>
+          )}
+        </p>
+      </div>
     </div>
   );
 }
