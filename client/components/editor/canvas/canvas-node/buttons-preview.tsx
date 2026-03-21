@@ -13,6 +13,8 @@ import { OptionButton } from './option-button';
 import { DoneButton } from './done-button';
 import { KeyboardGrid } from '../keyboard-grid';
 import { useMemo } from 'react';
+import { OutputPort } from './output-port';
+import { PortType } from './port-colors';
 
 /**
  * Интерфейс свойств компонента ButtonsPreview
@@ -20,10 +22,15 @@ import { useMemo } from 'react';
  * @interface ButtonsPreviewProps
  * @property {Node} node - Узел с кнопками
  * @property {Node[]} [allNodes] - Все узлы для поиска целевых
+ * @property {Function} [onPortMouseDown] - Обработчик начала перетаскивания от порта кнопки
  */
 interface ButtonsPreviewProps {
+  /** Узел с кнопками */
   node: Node;
+  /** Все узлы для поиска целевых */
   allNodes?: Node[];
+  /** Обработчик начала перетаскивания от порта кнопки */
+  onPortMouseDown?: (e: React.MouseEvent, portType: PortType, buttonId?: string) => void;
 }
 
 /**
@@ -38,7 +45,7 @@ interface ButtonsPreviewProps {
  *
  * @returns {JSX.Element | null} Компонент превью или null если нет кнопок
  */
-export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
+export function ButtonsPreview({ node, allNodes, onPortMouseDown }: ButtonsPreviewProps) {
   if (!node.data.buttons || node.data.buttons.length === 0 || node.data.keyboardType === 'none') {
     return null;
   }
@@ -72,7 +79,14 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
           renderButton={(button) => {
             if (button.action === 'complete') return <DoneButton button={button} />;
             if (button.action === 'selection') return <OptionButton button={button} />;
-            return <InlineButton button={button} allNodes={allNodes} />;
+            return (
+              <div className="relative">
+                <InlineButton button={button} allNodes={allNodes} />
+                {button.action === 'goto' && (
+                  <OutputPort portType="button-goto" buttonId={button.id} onPortMouseDown={onPortMouseDown} />
+                )}
+              </div>
+            );
           }}
         />
       ) : (
@@ -80,7 +94,14 @@ export function ButtonsPreview({ node, allNodes }: ButtonsPreviewProps) {
           buttons={node.data.buttons}
           keyboardLayout={node.data.keyboardLayout}
           buttonClassName=""
-          renderButton={(button) => <ReplyButton button={button} allNodes={allNodes} />}
+          renderButton={(button) => (
+            <div className="relative">
+              <ReplyButton button={button} allNodes={allNodes} />
+              {button.action === 'goto' && (
+                <OutputPort portType="button-goto" buttonId={button.id} onPortMouseDown={onPortMouseDown} />
+              )}
+            </div>
+          )}
         />
       )}
     </div>

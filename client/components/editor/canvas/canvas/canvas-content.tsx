@@ -8,6 +8,7 @@ import { CanvasNode } from '@/components/editor/canvas/canvas-node/canvas-node';
 import { ConnectionsLayer } from '@/components/editor/canvas/canvas-node/connections-layer';
 import { Node } from '@/types/bot';
 import { BotDataWithSheets } from '@shared/schema';
+import { PortType } from '../canvas-node/port-colors';
 
 /**
  * Свойства компонента содержимого холста
@@ -47,6 +48,8 @@ interface CanvasContentProps {
   onSizeChange: (nodeId: string, size: { width: number; height: number }) => void;
   /** Карта реальных размеров узлов (из ResizeObserver) */
   nodeSizes: Map<string, { width: number; height: number }>;
+  /** Обработчик начала перетаскивания от порта выхода */
+  onPortMouseDown?: (e: React.MouseEvent, nodeId: string, portType: PortType, buttonId?: string) => void;
 }
 
 /**
@@ -71,6 +74,7 @@ export function CanvasContent({
   setIsNodeBeingDragged,
   onSizeChange,
   nodeSizes,
+  onPortMouseDown,
 }: CanvasContentProps) {
   /**
    * Получение всех узлов со всех листов для отображения связей
@@ -115,6 +119,7 @@ export function CanvasContent({
           pan={pan}
           setIsNodeBeingDragged={setIsNodeBeingDragged}
           onSizeChange={onSizeChange}
+          onPortMouseDown={onPortMouseDown}
         />
       ))}
     </div>
