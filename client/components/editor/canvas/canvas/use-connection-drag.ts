@@ -108,23 +108,44 @@ export function useConnectionDrag({
   ) => {
     e.stopPropagation();
     e.preventDefault();
-    // Используем центр кружка-порта переданный из OutputPort,
-    // а не позицию курсора — иначе линия начинается там где кликнули
-    const screenX = portCenter?.x ?? e.clientX;
-    const screenY = portCenter?.y ?? e.clientY;
-    const { x, y } = screenToCanvas(screenX, screenY);
+
+    // Вычисляем startX/startY из canvas-координат узла + позиции порта.
+    // Это надёжнее чем getBoundingClientRect, который зависит от скролла и zoom.
+    const node = nodes.find(n => n.id === nodeId);
+    let startX: number;
+    let startY: number;
+
+    if (node) {
+      const size = nodeSizes.get(nodeId) ?? { width: 320, height: 200 };
+      if (portType === 'button-goto' && buttonId && portCenter) {
+        // Для кнопок используем переданный portCenter (конвертируем из экранных в canvas)
+        const converted = screenToCanvas(portCenter.x, portCenter.y);
+        startX = converted.x;
+        startY = converted.y;
+      } else {
+        // Для trigger-next и auto-transition — правый край узла, середина по высоте
+        startX = node.position.x + size.width;
+        startY = node.position.y + size.height / 2;
+      }
+    } else {
+      // Fallback: конвертируем позицию курсора
+      const converted = screenToCanvas(e.clientX, e.clientY);
+      startX = converted.x;
+      startY = converted.y;
+    }
+
     const draft: DraftConnection = {
       fromNodeId: nodeId,
       portType,
       buttonId,
-      startX: x,
-      startY: y,
-      currentX: x,
-      currentY: y,
+      startX,
+      startY,
+      currentX: startX,
+      currentY: startY,
     };
     draftRef.current = draft;
     setDraftConnection(draft);
-  }, [screenToCanvas]);
+  }, [nodes, nodeSizes, screenToCanvas]);
 
   const handleDragMouseMove = useCallback((e: React.MouseEvent) => {
     if (!draftRef.current) return;
