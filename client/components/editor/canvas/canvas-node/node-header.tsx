@@ -79,6 +79,12 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
         return <BroadcastHeader />;
       case 'client_auth':
         return <ClientAuthHeader />;
+      case 'command_trigger':
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            ⚡ {node.data?.command || '/start'}
+          </span>
+        );
       default:
         return null;
     }

@@ -5,6 +5,7 @@
  */
 
 import type { Node } from '@shared/schema';
+import { CommandTriggerConfiguration } from '../trigger/CommandTriggerConfiguration';
 
 /** Пропсы компонента конфигурации узлов */
 interface NodeTypeConfigurationsProps {
@@ -98,6 +99,10 @@ export function NodeTypeConfigurations({
 
   if (nodeType === 'admin_rights') {
     return <AdminRightsInfo />;
+  }
+
+  if (nodeType === 'command_trigger') {
+    return <CommandTriggerConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
   }
 
   return null;

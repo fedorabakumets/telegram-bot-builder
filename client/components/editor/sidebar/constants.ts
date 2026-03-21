@@ -8,6 +8,7 @@ import { ComponentDefinition } from '@shared/schema';
 import { textMessage } from './massive/messages';
 import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
+import { commandTrigger } from './massive/triggers';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -19,6 +20,10 @@ export const componentCategories: Array<{
   /** Компоненты в категории */
   components: ComponentDefinition[];
 }> = [
+  {
+    title: 'Триггеры',
+    components: [commandTrigger]
+  },
   {
     title: 'Сообщения',
     components: [textMessage]

@@ -21,6 +21,7 @@ import { NodeHeader } from './node-header';
 import { ConditionalMessagesIndicator } from './conditional-messages-indicator';
 import { ButtonsPreview } from './buttons-preview';
 import { ClientAuthCard } from './client-auth-card';
+import { CommandTriggerPreview } from './command-trigger-preview';
 
 /**
  * Интерфейс свойств компонента CanvasNode
@@ -447,6 +448,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
       {/* Client Auth Card */}
       {node.type === 'client_auth' && <ClientAuthCard node={node} />}
+
+      {/* Command Trigger Preview */}
+      {node.type === 'command_trigger' && <CommandTriggerPreview node={node} />}
 
       {/* Poll preview */}
       {(node.type as any) === 'poll' && <PollPreview node={node} />}

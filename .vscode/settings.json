@@ -8,5 +8,6 @@
   "json.schemaDownload.enable": false,
   "files.associations": {
     "package.json": "json"
-  }
+  },
+  "typescript.autoClosingTags": false
 }
