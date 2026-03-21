@@ -925,6 +925,8 @@ export default function Editor() {
       onButtonAdd={handleButtonAdd}
       onButtonUpdate={handleButtonUpdate}
       onButtonDelete={handleButtonDelete}
+      onNodeAdd={addNode}
+      onNodeDelete={handleNodeDelete}
       onClose={handleToggleProperties}
       onActionLog={handleActionLog}
       onSaveProject={handleSaveProject}
@@ -1384,6 +1386,8 @@ export default function Editor() {
                 onButtonAdd={handleButtonAdd}
                 onButtonUpdate={handleButtonUpdate}
                 onButtonDelete={handleButtonDelete}
+                onNodeAdd={addNode}
+                onNodeDelete={handleNodeDelete}
                 onActionLog={handleActionLog}
               />
             ) : null

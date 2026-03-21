@@ -9,6 +9,7 @@ import { SynonymEditor } from '../synonyms/synonym-editor';
 import { CommandSectionComplete } from '../commands/command-section-complete';
 import { ManagementCommandSection } from '../commands/management-command-section';
 import { NodeTypeConfigurations } from './node-type-configurations';
+import { useSynonymSync } from '../synonyms/use-synonym-sync';
 import type { Node } from '@shared/schema';
 
 /** Пропсы компонента */
@@ -41,6 +42,12 @@ interface BasicSettingsSectionProps {
   onCommandInput: (value: string) => void;
   /** Функция установки флага подсказок */
   onShowSuggestions: (show: boolean) => void;
+  /** Все узлы текущего листа (для поиска связанных text_trigger) */
+  allNodes?: Node[];
+  /** Добавить узел на холст */
+  onNodeAdd?: (node: Node) => void;
+  /** Удалить узел с холста */
+  onNodeDelete?: (nodeId: string) => void;
   /** Компоненты конфигурации узлов */
   StickerConfiguration: any;
   VoiceConfiguration: any;
@@ -76,6 +83,9 @@ export function BasicSettingsSection({
   onNodeIdChange,
   onCommandInput,
   onShowSuggestions,
+  allNodes = [],
+  onNodeAdd,
+  onNodeDelete,
   StickerConfiguration,
   VoiceConfiguration,
   AnimationConfiguration,
@@ -88,6 +98,13 @@ export function BasicSettingsSection({
   UserManagementConfiguration,
   AdminRightsInfo
 }: BasicSettingsSectionProps) {
+  const { handleSynonymsUpdate } = useSynonymSync({
+    selectedNode,
+    allNodes,
+    onNodeUpdate,
+    onNodeAdd,
+    onNodeDelete,
+  });
   return (
     <div className="w-full bg-gradient-to-br from-violet-50/40 to-purple-50/20 dark:from-violet-950/30 dark:to-purple-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-violet-200/40 dark:border-violet-800/40 backdrop-blur-sm">
       <SectionHeader
@@ -122,7 +139,7 @@ export function BasicSettingsSection({
             <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-green-50/20 dark:from-emerald-950/30 dark:to-green-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm">
               <SynonymEditor
                 synonyms={selectedNode.data.synonyms || []}
-                onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
+                onUpdate={handleSynonymsUpdate}
                 description="Дополнительные текстовые варианты для вызова этого экрана. Например: старт, привет, начать"
                 placeholder="Например: старт, привет, начать"
               />

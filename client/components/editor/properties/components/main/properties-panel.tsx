@@ -73,6 +73,10 @@ interface PropertiesPanelProps {
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
   /** Функция удаления кнопки узла */
   onButtonDelete: (nodeId: string, buttonId: string) => void;
+  /** Добавить узел на холст (для синхронизации синонимов) */
+  onNodeAdd?: (node: Node) => void;
+  /** Удалить узел с холста (для синхронизации синонимов) */
+  onNodeDelete?: (nodeId: string) => void;
   /** Все листы проекта для поддержки межлистовых соединений */
   allSheets?: any[] | undefined;
   /** ID текущего листа */
@@ -117,6 +121,8 @@ export function PropertiesPanel({
   onButtonAdd,
   onButtonUpdate,
   onButtonDelete,
+  onNodeAdd,
+  onNodeDelete,
   allSheets = [],
   currentSheetId,
   onClose,
@@ -279,6 +285,9 @@ export function PropertiesPanel({
               onNodeIdChange={onNodeIdChange}
               onCommandInput={setCommandInput}
               onShowSuggestions={setShowCommandSuggestions}
+              allNodes={allNodes}
+              onNodeAdd={onNodeAdd}
+              onNodeDelete={onNodeDelete}
               StickerConfiguration={StickerConfiguration}
               VoiceConfiguration={VoiceConfiguration}
               AnimationConfiguration={AnimationConfiguration}
