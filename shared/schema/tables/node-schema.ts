@@ -63,9 +63,15 @@ export const nodeSchema = z.object({
     markdown: z.boolean().default(false),
     /** Режим форматирования текста: "html", "markdown", "none" */
     formatMode: z.enum(['html', 'markdown', 'none']).default('none'),
-    /** Синонимы команды или сообщения для текстового совпадения */
+    /**
+     * @deprecated Синонимы команды — устаревшее поле.
+     * Вместо синонимов используйте отдельные узлы command_trigger на холсте.
+     */
     synonyms: z.array(z.string()).default([]),
-    /** Режим совпадения синонимов: "exact" — точное, "contains" — содержит, "fuzzy" — нечёткое */
+    /**
+     * @deprecated Режим совпадения синонимов — устаревшее поле.
+     * Используется только совместно с устаревшим полем synonyms.
+     */
     matchMode: z.enum(['exact', 'contains', 'fuzzy']).default('exact').optional(),
     /** Доступна только в приватных чатах */
     isPrivateOnly: z.boolean().default(false),

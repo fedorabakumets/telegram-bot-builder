@@ -1,19 +1,17 @@
 /**
  * @fileoverview Панель свойств узла триггера команды
  *
- * Позволяет редактировать команду, описание, синонимы и флаги
+ * Позволяет редактировать команду, описание и флаги
  * для узла типа command_trigger в панели свойств редактора.
+ * Каждый узел — одна команда. Для нескольких команд
+ * используйте несколько узлов на холсте.
  * @module components/editor/properties/components/trigger/CommandTriggerConfiguration
  */
 
-import { useState } from 'react';
 import type { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { X, Plus } from 'lucide-react';
 
 /**
  * Пропсы компонента CommandTriggerConfiguration
@@ -29,30 +27,12 @@ interface CommandTriggerConfigurationProps {
  * Компонент настройки узла триггера команды
  *
  * Отображает поля: команда, описание для BotFather,
- * флаги "показывать в меню" и "только приватные чаты",
- * а также редактор синонимов с добавлением по Enter.
+ * флаги "показывать в меню" и "только приватные чаты".
  *
  * @param props - Пропсы компонента
  * @returns JSX-элемент панели настроек триггера
  */
 export function CommandTriggerConfiguration({ selectedNode, onNodeUpdate }: CommandTriggerConfigurationProps) {
-  /** Текущее значение поля ввода нового синонима */
-  const [newSynonym, setNewSynonym] = useState('');
-
-  /** Список синонимов из данных узла */
-  const synonyms: string[] = (selectedNode.data?.synonyms as string[]) || [];
-
-  const addSynonym = () => {
-    const trimmed = newSynonym.trim().toLowerCase();
-    if (!trimmed || synonyms.includes(trimmed)) return;
-    onNodeUpdate(selectedNode.id, { synonyms: [...synonyms, trimmed] });
-    setNewSynonym('');
-  };
-
-  const removeSynonym = (s: string) => {
-    onNodeUpdate(selectedNode.id, { synonyms: synonyms.filter(x => x !== s) });
-  };
-
   return (
     <div className="space-y-4 p-4">
       {/* Команда */}
@@ -92,34 +72,6 @@ export function CommandTriggerConfiguration({ selectedNode, onNodeUpdate }: Comm
           checked={selectedNode.data?.isPrivateOnly ?? false}
           onCheckedChange={v => onNodeUpdate(selectedNode.id, { isPrivateOnly: v })}
         />
-      </div>
-
-      {/* Синонимы */}
-      <div className="space-y-2">
-        <Label>Синонимы</Label>
-        <div className="flex gap-2">
-          <Input
-            value={newSynonym}
-            onChange={e => setNewSynonym(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && addSynonym()}
-            placeholder="начать, старт, go..."
-          />
-          <Button size="sm" variant="outline" onClick={addSynonym}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        {synonyms.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {synonyms.map(s => (
-              <Badge key={s} variant="secondary" className="gap-1">
-                {s}
-                <button onClick={() => removeSynonym(s)} className="hover:text-destructive">
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
