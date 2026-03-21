@@ -181,19 +181,19 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {%- set effectiveKeyboard = 'ReplyKeyboardRemove()' if (hasHideAfterClickIncoming and keyboardType == 'none') else 'keyboard' %}
     {%- if formatMode == 'html' %}
     {%- if userDatabaseEnabled %}
-    await bot.send_message(user_id, text, node_id="{{ nodeId }}", reply_markup={{ effectiveKeyboard }}, parse_mode="HTML")
+    await bot.send_message(callback_query.message.chat.id, text, node_id="{{ nodeId }}", reply_markup={{ effectiveKeyboard }}, parse_mode="HTML")
     {%- else %}
     await callback_query.message.answer(text, reply_markup={{ effectiveKeyboard }}, parse_mode="HTML")
     {%- endif %}
     {%- elif formatMode == 'markdown' %}
     {%- if userDatabaseEnabled %}
-    await bot.send_message(user_id, text, node_id="{{ nodeId }}", reply_markup={{ effectiveKeyboard }}, parse_mode="Markdown")
+    await bot.send_message(callback_query.message.chat.id, text, node_id="{{ nodeId }}", reply_markup={{ effectiveKeyboard }}, parse_mode="Markdown")
     {%- else %}
     await callback_query.message.answer(text, reply_markup={{ effectiveKeyboard }}, parse_mode="Markdown")
     {%- endif %}
     {%- else %}
     {%- if userDatabaseEnabled %}
-    await bot.send_message(user_id, text, node_id="{{ nodeId }}", reply_markup={{ effectiveKeyboard }})
+    await bot.send_message(callback_query.message.chat.id, text, node_id="{{ nodeId }}", reply_markup={{ effectiveKeyboard }})
     {%- else %}
     await callback_query.message.answer(text, reply_markup={{ effectiveKeyboard }})
     {%- endif %}

@@ -148,19 +148,19 @@ async def start_handler(message: types.Message):
     {# Отправка сообщения без медиа #}
 {%- if formatMode == 'html' %}
 {%- if userDatabaseEnabled %}
-    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="HTML")
+    await bot.send_message(message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="HTML")
 {%- else %}
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
 {%- endif %}
 {%- elif formatMode == 'markdown' %}
 {%- if userDatabaseEnabled %}
-    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="Markdown")
+    await bot.send_message(message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="Markdown")
 {%- else %}
     await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
 {%- endif %}
 {%- else %}
 {%- if userDatabaseEnabled %}
-    await bot.send_message(message.from_user.id, text, node_id="{{ nodeId }}", reply_markup=keyboard)
+    await bot.send_message(message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard)
 {%- else %}
     await message.answer(text, reply_markup=keyboard)
 {%- endif %}
@@ -244,10 +244,10 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
 {%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
 {%- else %}
 {%- if formatMode == 'html' %}
-    await bot.send_message(user_id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="HTML")
+    await bot.send_message(callback_query.message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="HTML")
 {%- elif formatMode == 'markdown' %}
-    await bot.send_message(user_id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="Markdown")
+    await bot.send_message(callback_query.message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="Markdown")
 {%- else %}
-    await bot.send_message(user_id, text, node_id="{{ nodeId }}", reply_markup=keyboard)
+    await bot.send_message(callback_query.message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard)
 {%- endif %}
 {%- endif %}
