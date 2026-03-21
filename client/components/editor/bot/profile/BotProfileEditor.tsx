@@ -20,6 +20,7 @@ import { Edit2, X, Check } from 'lucide-react';
 
 // Тип BotInfo вынесен в bot-types.ts и реэкспортируется отсюда для обратной совместимости
 export type { BotInfo } from '../bot-types';
+import type { BotInfo } from '../bot-types';
 
 /**
  * Компонент для редактирования профиля бота

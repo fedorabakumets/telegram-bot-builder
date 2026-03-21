@@ -9,7 +9,7 @@
 
 import { createContext, useContext, ReactNode } from 'react';
 import type { BotStatusResponse, BotInfo, EditingField } from './bot-types';
-import type { BotToken } from '@shared/schema';
+import type { BotToken, BotProject } from '@shared/schema';
 
 /**
  * Значение контекста управления ботами
@@ -36,7 +36,7 @@ interface BotControlContextValue {
   handleCancelEdit: () => void;
 
   /** Получить бейдж статуса для токена */
-  getStatusBadge: (token: unknown) => JSX.Element;
+  getStatusBadge: (token: Pick<BotToken, 'id' | 'isDefault'>) => JSX.Element;
 
   /** Мутация запуска бота */
   startBotMutation: {
@@ -63,9 +63,9 @@ interface BotControlContextValue {
   };
 
   /** Установить выбранный проект для редактирования профиля */
-  setSelectedProject: (project: unknown) => void;
+  setSelectedProject: (project: BotProject | null) => void;
   /** Установить информацию о боте для редактирования профиля */
-  setSelectedBotInfo: (info: unknown) => void;
+  setSelectedBotInfo: (info: BotInfo | null) => void;
   /** Открыть/закрыть панель профиля */
   setIsProfileSheetOpen: (open: boolean) => void;
 

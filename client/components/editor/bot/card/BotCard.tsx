@@ -17,9 +17,9 @@ import { Separator } from '@/components/ui/separator';
 import { BotCardHeader } from './BotCardHeader';
 import { BotCardInfo } from './BotCardInfo';
 import { BotSettingsGrid } from './BotSettingsGrid';
-import { useBotControl } from './bot-control-context';
+import { useBotControl } from '../bot-control-context';
 import type { BotProject, BotToken } from '@shared/schema';
-import type { BotInfo } from './BotProfileEditor';
+import type { BotInfo } from '../profile/BotProfileEditor';
 
 /**
  * Свойства карточки бота

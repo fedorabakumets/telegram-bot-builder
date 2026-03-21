@@ -41,8 +41,8 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   // Хук темы
   const themeClasses = useTerminalTheme();
 
-  // Хук изменения размера
-  const { dimensions, startResize } = useTerminalResize({ fullSize: true });
+  // Хук изменения размера (используется для будущего ресайза)
+  useTerminalResize({ fullSize: true });
 
   // Хук масштаба
   const { scale, adjustScale } = useTerminalScale();

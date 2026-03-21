@@ -30,12 +30,11 @@ interface BotDatabaseToggleProps {
  * Переключатель базы данных пользователей
  */
 export function BotDatabaseToggle({
-  projectId,
   tokenId,
   userDatabaseEnabled,
   toggleDatabaseMutation,
   className = '',
-}: BotDatabaseToggleProps) {
+}: Omit<BotDatabaseToggleProps, 'projectId'> & { projectId?: number }) {
   const isEnabled = userDatabaseEnabled === 1;
 
   return (

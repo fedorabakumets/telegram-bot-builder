@@ -7,9 +7,9 @@
  * @module BotManagementInterface
  */
 
-import { ProjectHeader } from '../ProjectHeader';
+import { ProjectHeader } from '../project/ProjectHeader';
 import { EmptyBotsState } from './EmptyBotsState';
-import { ProjectBotsList } from '../ProjectBotsList';
+import { ProjectBotsList } from '../project/ProjectBotsList';
 import { useBotControl } from '../bot-control-context';
 import type { BotProject, BotToken } from '@shared/schema';
 

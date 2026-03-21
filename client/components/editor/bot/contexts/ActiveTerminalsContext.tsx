@@ -12,7 +12,7 @@ import { createContext, useContext, useState, useCallback, ReactNode } from 'rea
 /**
  * Информация о терминале бота
  */
-interface TerminalInfo {
+export interface TerminalInfo {
   /** Идентификатор проекта */
   projectId: number;
   /** Идентификатор токена */

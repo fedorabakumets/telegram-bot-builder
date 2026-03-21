@@ -8,8 +8,8 @@
  */
 
 import { useState } from 'react';
-import { useTokenUpdate } from '../useTokenUpdate';
-import { TokenEditInput } from '../TokenEditInput';
+import { useTokenUpdate } from '../token/useTokenUpdate';
+import { TokenEditInput } from '../token/TokenEditInput';
 
 /**
  * Свойства компонента редактирования токена

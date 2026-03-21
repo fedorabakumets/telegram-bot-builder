@@ -25,7 +25,7 @@ interface BotTerminalProps {
  * @param tokenId - Идентификатор токена бота
  * @param isBotRunning - Флаг, указывающий, запущен ли бот
  */
-export function BotTerminal({ projectId, tokenId, isBotRunning }: BotTerminalProps) {
+export function BotTerminal({ projectId, tokenId }: Omit<BotTerminalProps, 'isBotRunning'> & { isBotRunning?: boolean }) {
   const terminalRef = useRef<TerminalHandle>(null);
 
   // WebSocket для получения вывода бота

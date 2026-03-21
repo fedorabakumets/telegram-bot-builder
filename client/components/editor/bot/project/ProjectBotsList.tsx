@@ -7,10 +7,10 @@
  * @module ProjectBotsList
  */
 
-import { BotCard } from './BotCard';
+import { BotCard } from '../card/BotCard';
 import { useBotControl } from '../bot-control-context';
 import type { BotProject, BotToken } from '@shared/schema';
-import type { BotInfo } from '../BotProfileEditor';
+import type { BotInfo } from '../profile/BotProfileEditor';
 
 /**
  * Свойства списка ботов проекта

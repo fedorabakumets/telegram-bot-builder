@@ -12,12 +12,12 @@
 
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { AddBotDialogHeader } from '../AddBotDialogHeader';
-import { AddBotProjectSelect } from '../AddBotProjectSelect';
-import { AddBotHelpBox } from '../AddBotHelpBox';
-import { AddBotTokenInput } from '../AddBotTokenInput';
-import { AddBotTokenSelect } from '../AddBotTokenSelect';
-import { AddBotDialogActions } from '../AddBotDialogActions';
+import { AddBotDialogHeader } from './AddBotDialogHeader';
+import { AddBotProjectSelect } from './AddBotProjectSelect';
+import { AddBotHelpBox } from './AddBotHelpBox';
+import { AddBotTokenInput } from './AddBotTokenInput';
+import { AddBotTokenSelect } from './AddBotTokenSelect';
+import { AddBotDialogActions } from './AddBotDialogActions';
 import type { BotToken } from '@shared/schema';
 
 /**

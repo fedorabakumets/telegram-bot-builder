@@ -56,13 +56,13 @@ export function BotAvatar({
   const botUser = useMemo((): UserBotData | null => {
     if (!resolvedPhotoUrl && !resolvedUserId) return null;
     return {
-      avatarUrl: resolvedPhotoUrl || undefined,
-      userId: resolvedUserId,
+      avatarUrl: resolvedPhotoUrl ?? null,
+      userId: resolvedUserId ?? null,
       userName: botName,
       firstName: botName,
       lastName: null,
       userData: null,
-      isActive: true,
+      isActive: 1,
       isPremium: false,
       isBlocked: false,
       isBot: true,
@@ -70,7 +70,7 @@ export function BotAvatar({
       createdAt: null,
       lastInteraction: null,
       interactionCount: 0,
-    } as UserBotData;
+    } as unknown as UserBotData;
   }, [resolvedPhotoUrl, resolvedUserId, botName]);
 
   // Если есть projectId и userId — используем UserAvatar

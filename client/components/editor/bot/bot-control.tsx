@@ -13,7 +13,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
-import { BotToken } from '@shared/schema';
+import { BotToken, BotProject } from '@shared/schema';
 import { type BotInfo } from './profile/BotProfileEditor';
 import { BotProfileSheet } from './profile/BotProfileSheet';
 import { BotControlPanel } from './panel/BotControlPanel';
@@ -39,7 +39,7 @@ interface BotControlProps {
 /**
  * Основной компонент управления ботами
  */
-export function BotControl({ projectId, projectName, onBotStarted, onBotStopped }: BotControlProps) {
+export function BotControl({ projectId, onBotStarted, onBotStopped }: Omit<BotControlProps, 'projectName'> & { projectName?: string }) {
   const [showAddBot, setShowAddBot] = useState(false);
   const [newBotToken, setNewBotToken] = useState('');
   const [projectForNewBot, setProjectForNewBot] = useState<number | null>(null);
@@ -48,7 +48,7 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
   const [editValue, setEditValue] = useState('');
 
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<{ id: number; name: string; createdAt: Date | null; updatedAt: Date | null; ownerId: number | null; description: string | null; botToken: string | null; userDatabaseEnabled: number | null } | null>(null);
+  const [selectedProject, setSelectedProject] = useState<BotProject | null>(null);
   const [selectedBotInfo, setSelectedBotInfo] = useState<BotInfo | null>(null);
 
   const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState<Record<number, number>>({});
@@ -157,7 +157,7 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
     }
   };
 
-  const getStatusBadge = (token: BotToken) => {
+  const getStatusBadge = (token: Pick<BotToken, 'id' | 'isDefault'>) => {
     const status = allBotStatuses.find(s => s.instance?.tokenId === token.id);
     if (status?.status === 'running') {
       return (

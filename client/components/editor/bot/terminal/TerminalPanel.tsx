@@ -8,18 +8,17 @@
  * @module bot/TerminalPanel
  */
 
-import { useRef, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { BotTerminal } from './BotTerminal';
 import { TerminalTabs } from './TerminalTabs';
-import { useActiveTerminals } from '../ActiveTerminalsContext';
-import type { TerminalHandle } from './Terminal';
+import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
+import type { TerminalInfo } from '../contexts/ActiveTerminalsContext';
 
 /**
  * Панель терминалов с lazy mount
  */
 export function TerminalPanel() {
   const { activeTerminalId, terminals } = useActiveTerminals();
-  const terminalRef = useRef<TerminalHandle>(null);
 
   /**
    * Множество ключей терминалов, которые уже были смонтированы хотя бы раз.
@@ -58,7 +57,7 @@ export function TerminalPanel() {
     <div className="h-full flex flex-col">
       <TerminalTabs onTerminalSelect={handleTerminalSelect} />
       <div className="flex-1 overflow-hidden p-2">
-        {terminals.map(terminal => {
+        {terminals.map((terminal: TerminalInfo) => {
           const key = `${terminal.projectId}_${terminal.tokenId}`;
           const isActive = key === activeTerminalId;
 
