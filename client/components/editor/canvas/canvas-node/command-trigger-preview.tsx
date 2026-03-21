@@ -1,8 +1,8 @@
 /**
  * @fileoverview Preview-компонент узла триггера команды для холста
  *
- * Отображает только саму команду (например /start) на карточке узла.
- * Каждый узел — одна команда, синонимы не используются.
+ * Отображает только саму команду (например /start) без иконки и обёртки —
+ * компактный вид для карточки узла command_trigger на холсте.
  * @module components/editor/canvas/canvas-node/command-trigger-preview
  */
 
@@ -19,6 +19,8 @@ interface CommandTriggerPreviewProps {
 /**
  * Preview-компонент для узла триггера команды
  *
+ * Показывает только команду моноширинным шрифтом без лишних обёрток.
+ *
  * @param props - Пропсы компонента
  * @returns JSX-элемент с отображением команды
  */
@@ -27,14 +29,10 @@ export function CommandTriggerPreview({ node }: CommandTriggerPreviewProps) {
   const command = node.data?.command || '/start';
 
   return (
-    <div className="mt-2">
-      {/* Команда */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-        <i className="fas fa-terminal text-yellow-600 dark:text-yellow-400 text-xs" />
-        <span className="font-mono text-sm font-semibold text-yellow-700 dark:text-yellow-300">
-          {command}
-        </span>
-      </div>
+    <div className="flex items-center">
+      <span className="font-mono text-sm font-semibold text-yellow-300">
+        {command}
+      </span>
     </div>
   );
 }

@@ -123,6 +123,14 @@ const PORT_X_OFFSET = 52;
 const PORT_Y_HALF_EXTRA = 34;
 
 /**
+ * Смещения для компактных триггеров (p-3, w-52):
+ * border-box width = contentRect.width + 24 + border(4) = contentRect.width + 28
+ * PORT_Y_HALF_EXTRA = (12 + 12 + 4) / 2 = 14
+ */
+const TRIGGER_PORT_X_OFFSET = 28;
+const TRIGGER_PORT_Y_HALF_EXTRA = 14;
+
+/**
  * Вычисляет SVG path кубической кривой Безье между двумя узлами.
  * Линия всегда выходит из правого бока исходного узла (позиция OutputPort)
  * и входит в левый бок целевого узла.
@@ -136,18 +144,21 @@ const PORT_Y_HALF_EXTRA = 34;
  * @returns строка SVG path
  */
 function buildSmartPath(
-  fromNode: { position: { x: number; y: number } },
-  toNode: { position: { x: number; y: number } },
+  fromNode: { position: { x: number; y: number }; type?: string },
+  toNode: { position: { x: number; y: number }; type?: string },
   fromW: number,
   fromH: number,
   toW: number,
   toH: number,
 ): string {
+  // Для компактных триггеров используем уменьшенные смещения
+  const isTrigger = fromNode.type === 'command_trigger' || fromNode.type === 'text_trigger';
+  const xOffset = isTrigger ? TRIGGER_PORT_X_OFFSET : PORT_X_OFFSET;
+  const yHalfExtra = isTrigger ? TRIGGER_PORT_Y_HALF_EXTRA : PORT_Y_HALF_EXTRA;
+
   // Выход из центра кружка-порта OutputPort
-  // X: правый border-box край = contentRect.width + padding(48) + border(4) = fromW + 52
-  // Y: центр wrapper по высоте с учётом padding/border = fromH/2 + 34
-  const x1 = fromNode.position.x + fromW + PORT_X_OFFSET;
-  const y1 = fromNode.position.y + fromH / 2 + PORT_Y_HALF_EXTRA;
+  const x1 = fromNode.position.x + fromW + xOffset;
+  const y1 = fromNode.position.y + fromH / 2 + yHalfExtra;
 
   // Вход в левый бок целевого узла (середина по высоте border-box)
   const x2 = toNode.position.x - MARKER_OFFSET;

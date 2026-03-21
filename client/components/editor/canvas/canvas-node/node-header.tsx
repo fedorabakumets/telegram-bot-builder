@@ -13,7 +13,6 @@ import { UserManagementHeader } from './user-management-header';
 import { AdminRightsHeaderSmall } from './admin-rights-header-small';
 import { BroadcastHeader } from './broadcast-header';
 import { ClientAuthHeader } from './client-auth-header';
-import { SynonymsList } from './synonyms-list';
 import { nodeIcons } from './node-icons';
 import { nodeColors } from './node-colors';
 
@@ -117,7 +116,7 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             {node.data.description}
           </p>
         )}
-        <SynonymsList node={node} />
+
       </div>
     </div>
   );

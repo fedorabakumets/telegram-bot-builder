@@ -405,7 +405,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       }}
     >
       {/* Кнопки действий — снаружи основного div, позиционируются относительно wrapper */}
-      <NodeActions onDuplicate={onDuplicate} onDelete={onDelete} />
+      <NodeActions onDuplicate={onDuplicate} onDelete={onDelete} isSelected={isSelected} />
 
       {/* Порт выхода — снаружи основного div, позиционируется относительно wrapper */}
       {(node.type === 'command_trigger' || node.type === 'text_trigger') ? (
@@ -419,7 +419,13 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         ref={nodeRef}
         data-canvas-node="true"
         className={cn(
-          "bg-white/90 dark:bg-slate-900/90 rounded-2xl border-2 p-6 pb-10 w-80 relative select-none",
+          "bg-white/90 dark:bg-slate-900/90 rounded-2xl border-2 relative select-none",
+          // Компактный размер для триггеров
+          node.type === 'command_trigger' || node.type === 'text_trigger'
+            ? "p-3 w-52"
+            : node.type === 'message'
+            ? "p-4 pb-10 w-80"
+            : "p-6 pb-10 w-80",
           isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-shadow duration-300",
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
           isConnectionTarget ? "ring-4 ring-green-400/60 border-green-400 shadow-green-400/20" : "",
@@ -439,8 +445,10 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           WebkitBackfaceVisibility: 'hidden' as any,
         }}
       >
-        {/* Заголовок узла */}
-        <NodeHeader node={node} onMove={!!onMove} />
+        {/* Заголовок узла — скрыт для триггеров и узла сообщения */}
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'message' && (
+          <NodeHeader node={node} onMove={!!onMove} />
+        )}
 
         {/* Image attachment (старый формат - одиночное изображение) */}
         <ImageAttachment node={node} />
