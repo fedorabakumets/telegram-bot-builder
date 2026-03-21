@@ -102,9 +102,12 @@ export function useBotMutations({
       if (!token) throw new Error('Токен не найден');
       return apiRequest('DELETE', `/api/projects/${token.projectId}/tokens/${tokenId}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects/tokens'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/projects/bot/info'] });
+    onSuccess: (_, tokenId) => {
+      const token = findToken(tokenId);
+      if (token) {
+        queryClient.invalidateQueries({ queryKey: [`/api/projects/${token.projectId}/tokens`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/projects/${token.projectId}/bot/info`] });
+      }
       toast({ title: 'Бот удалён' });
     },
     onError: (error: Error) => {
@@ -178,9 +181,12 @@ export function useBotMutations({
       if (!token) throw new Error('Токен не найден');
       return apiRequest('PUT', `/api/projects/${token.projectId}/tokens/${tokenId}/bot-info`, { field, value });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects/tokens'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/projects/bot/info'] });
+    onSuccess: (_, vars) => {
+      const token = findToken(vars.tokenId);
+      if (token) {
+        queryClient.invalidateQueries({ queryKey: [`/api/projects/${token.projectId}/tokens`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/projects/${token.projectId}/bot/info`] });
+      }
       toast({ title: 'Информация о боте обновлена' });
     },
     onError: (error: Error) => {
