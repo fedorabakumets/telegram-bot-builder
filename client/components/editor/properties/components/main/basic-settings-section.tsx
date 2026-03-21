@@ -12,6 +12,7 @@ import { ManagementCommandSection } from '../commands/management-command-section
 import { NodeTypeConfigurations } from './node-type-configurations';
 import { useSynonymSync } from '../synonyms/use-synonym-sync';
 import { useCommandSync } from '../synonyms/use-command-sync';
+import { useNodeCommandTriggerSync } from '../synonyms/use-node-command-trigger-sync';
 import type { Node } from '@shared/schema';
 
 /** Пропсы компонента */
@@ -114,6 +115,13 @@ export function BasicSettingsSection({
     onNodeAdd,
     onNodeDelete,
   });
+
+  // Синхронизация command_trigger для узлов start/command
+  useNodeCommandTriggerSync(
+    (selectedNode.type === 'start' || selectedNode.type === 'command')
+      ? { node: selectedNode, allNodes, onNodeAdd, onNodeDelete, onNodeUpdate }
+      : { node: selectedNode, allNodes }
+  );
   return (
     <div className="w-full bg-gradient-to-br from-violet-50/40 to-purple-50/20 dark:from-violet-950/30 dark:to-purple-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-violet-200/40 dark:border-violet-800/40 backdrop-blur-sm">
       <SectionHeader
