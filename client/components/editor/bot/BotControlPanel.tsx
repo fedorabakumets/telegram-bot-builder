@@ -42,7 +42,7 @@ interface BotControlPanelProps {
   /** Мутация создания бота */
   createBotMutation: { isPending: boolean };
   /** Обработчик добавления бота */
-  handleAddBot: () => void;
+  handleAddBot: (selectedTokenId?: number | null) => void;
 }
 
 /**
@@ -60,7 +60,7 @@ export function BotControlPanel({
   createBotMutation,
   handleAddBot,
 }: BotControlPanelProps) {
-  const { setShowAddBot, setProjectForNewBot } = useBotControl();
+  const { setShowAddBot, setProjectForNewBot, allTokensFlat } = useBotControl();
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -88,6 +88,7 @@ export function BotControlPanel({
         isParsingBot={isParsingBot}
         createBotMutation={createBotMutation}
         handleAddBot={handleAddBot}
+        allTokensFlat={allTokensFlat}
       />
     </div>
   );

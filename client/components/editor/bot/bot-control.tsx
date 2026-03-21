@@ -75,6 +75,7 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
     createBotMutation,
     parseBotInfoMutation,
     updateBotInfoMutation,
+    attachExistingTokenMutation,
     isParsingBot,
   } = useBotMutations({
     projectId,
@@ -84,6 +85,7 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
     newBotToken,
     projectForNewBot,
     existingTokensCount: allTokensFlat.length,
+    allTokensFlatFull: allTokensFlat,
     onBotAdded: () => {
       setShowAddBot(false);
       setNewBotToken('');
@@ -145,9 +147,14 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
     setEditValue('');
   };
 
-  const handleAddBot = () => {
-    if (!newBotToken.trim() || !projectForNewBot) return;
-    parseBotInfoMutation.mutate({ token: newBotToken.trim(), projectId: projectForNewBot });
+  const handleAddBot = (selectedTokenId?: number | null) => {
+    if (!projectForNewBot) return;
+    if (selectedTokenId) {
+      attachExistingTokenMutation.mutate({ tokenId: selectedTokenId, targetProjectId: projectForNewBot });
+    } else {
+      if (!newBotToken.trim()) return;
+      parseBotInfoMutation.mutate({ token: newBotToken.trim(), projectId: projectForNewBot });
+    }
   };
 
   const getStatusBadge = (token: BotToken) => {
@@ -192,6 +199,7 @@ export function BotControl({ projectId, projectName, onBotStarted, onBotStopped 
       queryClient,
       setShowAddBot,
       setProjectForNewBot,
+      allTokensFlat,
     }}>
       <BotControlPanel
         projectsLoading={projectsLoading}

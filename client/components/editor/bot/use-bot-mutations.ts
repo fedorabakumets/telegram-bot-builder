@@ -39,6 +39,8 @@ interface UseBotMutationsParams {
   existingTokensCount: number;
   /** Callback после успешного добавления бота */
   onBotAdded: () => void;
+  /** Все токены в плоском массиве (для режима "существующий") */
+  allTokensFlatFull: (BotToken & { projectId: number })[];
 }
 
 /**
@@ -53,6 +55,7 @@ export function useBotMutations({
   projectForNewBot,
   existingTokensCount,
   onBotAdded,
+  allTokensFlatFull,
 }: UseBotMutationsParams) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -185,6 +188,30 @@ export function useBotMutations({
     },
   });
 
+  /** Мутация привязки существующего токена к новому проекту */
+  const attachExistingTokenMutation = useMutation({
+    mutationFn: async ({ tokenId, targetProjectId }: { tokenId: number; targetProjectId: number }) => {
+      const source = allTokensFlatFull.find(t => t.id === tokenId);
+      if (!source) throw new Error('Токен не найден');
+      const { projectId: _pid, ...tokenData } = source;
+      return apiRequest('POST', `/api/projects/${targetProjectId}/tokens`, {
+        ...tokenData,
+        isDefault: 0,
+        isActive: 1,
+        projectId: targetProjectId,
+      });
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.targetProjectId}/tokens`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.targetProjectId}/bot/info`] });
+      toast({ title: 'Бот успешно добавлен', description: 'Существующий токен привязан к проекту' });
+      onBotAdded();
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Ошибка при добавлении бота', description: error.message, variant: 'destructive' });
+    },
+  });
+
   return {
     startBotMutation,
     stopBotMutation,
@@ -193,6 +220,7 @@ export function useBotMutations({
     createBotMutation,
     parseBotInfoMutation,
     updateBotInfoMutation,
+    attachExistingTokenMutation,
     isParsingBot,
   };
 }

@@ -9,6 +9,7 @@
 
 import { createContext, useContext, ReactNode } from 'react';
 import type { BotStatusResponse, BotInfo, EditingField } from './bot-types';
+import type { BotToken } from '@shared/schema';
 
 /**
  * Значение контекста управления ботами
@@ -77,6 +78,8 @@ interface BotControlContextValue {
   setShowAddBot: (show: boolean) => void;
   /** Установить проект для нового бота */
   setProjectForNewBot: (projectId: number | null) => void;
+  /** Все токены в плоском массиве (для выбора существующего) */
+  allTokensFlat: (BotToken & { projectId: number })[];
 }
 
 const BotControlContext = createContext<BotControlContextValue | null>(null);

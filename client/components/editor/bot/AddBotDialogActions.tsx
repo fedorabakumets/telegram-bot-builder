@@ -2,19 +2,33 @@
  * @fileoverview Кнопки действий диалога добавления бота
  *
  * Компонент отображает кнопки отмены и добавления бота.
+ * Поддерживает оба режима: ввод нового токена и выбор существующего.
  *
  * @module AddBotDialogActions
  */
 
 import { Button } from '@/components/ui/button';
 
+/**
+ * Свойства кнопок действий диалога
+ */
 interface AddBotDialogActionsProps {
+  /** Идёт ли парсинг информации о боте */
   isParsingBot: boolean;
+  /** Мутация создания бота */
   createBotMutation: any;
+  /** Введённый токен (для режима "новый") */
   newBotToken: string;
+  /** ID выбранного проекта */
   projectForNewBot: number | null;
+  /** Обработчик добавления бота */
   handleAddBot: () => void;
+  /** Обработчик отмены */
   onCancel: () => void;
+  /** Текущий режим добавления токена */
+  tokenMode: 'new' | 'existing';
+  /** ID выбранного существующего токена */
+  selectedTokenId: number | null;
 }
 
 /**
@@ -26,16 +40,23 @@ export function AddBotDialogActions({
   newBotToken,
   projectForNewBot,
   handleAddBot,
-  onCancel
+  onCancel,
+  tokenMode,
+  selectedTokenId,
 }: AddBotDialogActionsProps) {
-  const isDisabled = isParsingBot || createBotMutation.isPending || !newBotToken.trim() || !projectForNewBot;
+  const isBusy = isParsingBot || createBotMutation.isPending;
+
+  const isDisabled =
+    isBusy ||
+    !projectForNewBot ||
+    (tokenMode === 'new' ? !newBotToken.trim() : !selectedTokenId);
 
   return (
     <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end pt-2">
       <Button
         variant="outline"
         onClick={onCancel}
-        disabled={isParsingBot || createBotMutation.isPending}
+        disabled={isBusy}
         className="text-sm sm:text-base"
         data-testid="button-cancel-add-bot"
       >
