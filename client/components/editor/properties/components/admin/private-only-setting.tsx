@@ -24,8 +24,7 @@ interface PrivateOnlySettingProps {
 /**
  * Компонент настройки ограничения только для приватных чатов
  * 
- * Отображает переключатель с информацией о том, что функция
- * временно не работает.
+ * Отображает переключатель для ограничения команды только личными сообщениями.
  * 
  * @param {PrivateOnlySettingProps} props - Пропсы компонента
  * @returns {JSX.Element} Компонент настройки приватных чатов
@@ -40,10 +39,6 @@ export function PrivateOnlySetting({ selectedNode, onNodeUpdate }: PrivateOnlySe
           <span className="truncate inline xs:hidden">Приватные чаты</span>
         </Label>
         <div className="text-xs text-warning-600 dark:text-warning-400 mt-0.5">Работает только в личных сообщениях</div>
-        <div className="flex items-center gap-1 mt-1">
-          <i className="fas fa-exclamation-triangle text-amber-500 text-xs"></i>
-          <span className="text-xs text-amber-600 dark:text-amber-400">Временно не работает</span>
-        </div>
       </div>
       <div className="flex-shrink-0">
         <Switch
