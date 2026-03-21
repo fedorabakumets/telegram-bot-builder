@@ -39,4 +39,5 @@ export const nodeIcons: Record<string, string> = {
   broadcast: 'fas fa-bullhorn',
   client_auth: 'fas fa-user-shield',
   command_trigger: 'fas fa-bolt',
+  text_trigger: 'fas fa-comment-dots',
 };

@@ -85,6 +85,12 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             ⚡ {node.data?.command || '/start'}
           </span>
         );
+      case 'text_trigger':
+        return (
+          <span className="font-semibold text-blue-700 dark:text-blue-300">
+            Текстовый триггер
+          </span>
+        );
       default:
         return null;
     }
