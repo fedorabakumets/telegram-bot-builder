@@ -12,7 +12,13 @@ import { generateUserInput, nodeToUserInputParams } from '../user-input/user-inp
 import type { Node } from '@shared/schema';
 
 /**
- * Генерация Python обработчика команды /start с валидацией параметров
+ * Генерация Python обработчика команды /start с валидацией параметров.
+ *
+ * Генерирует два обработчика:
+ * - `@dp.message(CommandStart())` — для команды /start
+ * - `@dp.callback_query(lambda c: c.data == "start")` — для кнопок
+ *   с `action: "goto"` и `target: "start"` (например, "⬅ Назад в меню")
+ *
  * @param params - Параметры обработчика /start
  * @returns Сгенерированный Python код обработчика
  */

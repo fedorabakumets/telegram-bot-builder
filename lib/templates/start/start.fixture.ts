@@ -161,6 +161,33 @@ export const validParamsWithInlineKeyboard: StartTemplateParams = {
   attachedMedia: [],
 };
 
+/** Валидные параметры: с кнопкой "Назад в меню" (target="start") */
+export const validParamsWithBackToMenuButton: StartTemplateParams = {
+  nodeId: 'start_7',
+  messageText: '🏠 Главное меню',
+  isPrivateOnly: false,
+  adminOnly: false,
+  requiresAuth: false,
+  userDatabaseEnabled: false,
+  synonyms: [],
+  allowMultipleSelection: false,
+  multiSelectVariable: '',
+  buttons: [
+    { text: '📊 Раздел', action: 'goto', target: 'section_1', id: 'btn_section', buttonType: 'normal' as const, skipDataCollection: false, hideAfterClick: false },
+    { text: '⬅ Назад в меню', action: 'goto', target: 'start', id: 'btn_back', buttonType: 'normal' as const, skipDataCollection: false, hideAfterClick: false },
+  ],
+  keyboardType: 'inline',
+  enableAutoTransition: false,
+  autoTransitionTo: '',
+  collectUserInput: false,
+  formatMode: 'none',
+  imageUrl: '',
+  documentUrl: '',
+  videoUrl: '',
+  audioUrl: '',
+  attachedMedia: [],
+};
+
 /** Невалидные параметры: неправильный тип */
 export const invalidParamsWrongType = {
   nodeId: 123, // должно быть string

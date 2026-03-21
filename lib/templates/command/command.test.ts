@@ -113,6 +113,23 @@ describe('command.py.jinja2 шаблон', () => {
         assert.ok(result.includes('url=') || result.includes('https://example.com') || result.includes('btn_site'));
       });
 
+      it('должен генерировать handle_callback для кнопок с goto → nodeId команды', () => {
+        const result = generateCommand(validParamsBasic);
+
+        assert.ok(
+          result.includes('handle_callback_cmd_1'),
+          'Должен быть обработчик handle_callback_cmd_1'
+        );
+        assert.ok(
+          result.includes('c.data == "cmd_1"'),
+          'Должен быть декоратор с проверкой callback_data == "cmd_1"'
+        );
+        assert.ok(
+          result.includes('@dp.callback_query(lambda c: c.data == "cmd_1"'),
+          'Должен быть полный декоратор @dp.callback_query'
+        );
+      });
+
       it('должен генерировать fallback сообщение', () => {
         const result = generateCommand(validParamsWithConditionals);
 
@@ -183,7 +200,7 @@ describe('command.py.jinja2 шаблон', () => {
         const result = generateCommand(validParamsWithKeyboard);
 
         assert.ok(result.includes('InlineKeyboardBuilder') || result.includes('callback_data'));
-        assert.ok(result.includes('btn_stats') || result.includes('btn_settings'));
+        assert.ok(result.includes('stats') || result.includes('settings'));
       });
 
       it('должен генерировать inline клавиатуру с url', () => {
@@ -387,11 +404,11 @@ describe('command.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 19 полей', () => {
+      it('должен иметь 22 поля', () => {
         const shape = commandParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 19);
+        assert.strictEqual(fields.length, 22);
       });
 
       it('должен использовать ZodOptional для messageText', () => {

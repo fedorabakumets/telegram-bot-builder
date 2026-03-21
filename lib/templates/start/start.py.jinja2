@@ -22,6 +22,11 @@
   @param {string} videoUrl - URL видео
   @param {string} audioUrl - URL аудио
   @param {array} attachedMedia - Прикреплённые медиа переменные
+
+  @note Шаблон генерирует ДВА обработчика:
+    1. @dp.message(CommandStart()) — для команды /start
+    2. @dp.callback_query(lambda c: c.data == "start") — для кнопок
+       с action="goto" и target="start" (например, "⬅ Назад в меню")
 #}
 
 {# Основная команда /start #}
@@ -197,4 +202,52 @@ async def start_handler(message: types.Message):
 
 {%- if collectUserInput and userInputBlock %}
 {{ userInputBlock }}
+{%- endif %}
+
+{# Callback-обработчик для кнопок "Назад в меню" (callback_data="start") #}
+@dp.callback_query(lambda c: c.data == "start")
+async def handle_callback_start(callback_query: types.CallbackQuery):
+    """Обработчик callback кнопки с переходом на /start"""
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    user_id = callback_query.from_user.id
+    username = callback_query.from_user.username
+    first_name = callback_query.from_user.first_name
+    last_name = callback_query.from_user.last_name
+
+{%- if userDatabaseEnabled %}
+    await save_user_to_db(user_id, username, first_name, last_name)
+    user_name = await init_user_variables(user_id, callback_query.from_user)
+    await update_user_data_in_db(user_id, "user_name", user_name)
+    await update_user_data_in_db(user_id, "first_name", first_name)
+    await update_user_data_in_db(user_id, "last_name", last_name)
+    await update_user_data_in_db(user_id, "username", username)
+{%- endif %}
+
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["username"] = username
+    user_data[user_id]["first_name"] = first_name
+    user_data[user_id]["last_name"] = last_name
+
+    text = {{ messageText|format_python_text }}
+
+    all_user_vars = await init_all_user_vars(user_id)
+    text = replace_variables_in_text(text, all_user_vars, {})
+
+{%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
+
+{%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
+{%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
+{%- else %}
+{%- if formatMode == 'html' %}
+    await bot.send_message(user_id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="HTML")
+{%- elif formatMode == 'markdown' %}
+    await bot.send_message(user_id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="Markdown")
+{%- else %}
+    await bot.send_message(user_id, text, node_id="{{ nodeId }}", reply_markup=keyboard)
+{%- endif %}
 {%- endif %}

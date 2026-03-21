@@ -12,7 +12,13 @@ export type KeyboardType = 'inline' | 'reply' | 'none';
 /** Режим форматирования */
 export type FormatMode = 'html' | 'markdown' | 'none';
 
-/** Параметры для генерации обработчика команды /start */
+/** Параметры для генерации обработчика команды /start.
+ *
+ * Шаблон генерирует два обработчика:
+ * - `@dp.message(CommandStart())` — для команды /start
+ * - `@dp.callback_query(lambda c: c.data == "start")` — для кнопок
+ *   с `action: "goto"` и `target: "start"` (например, "⬅ Назад в меню")
+ */
 export interface StartTemplateParams {
   // --- Идентификация ---
   /** Уникальный идентификатор узла */

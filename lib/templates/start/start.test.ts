@@ -13,6 +13,7 @@ import {
   validParamsWithAutoTransition,
   validParamsWithSynonyms,
   validParamsWithInlineKeyboard,
+  validParamsWithBackToMenuButton,
   invalidParamsWrongType,
   invalidParamsMissingField,
 } from './start.fixture';
@@ -96,6 +97,23 @@ describe('start.py.jinja2 шаблон', () => {
         const result = generateStart(validParamsWithInlineKeyboard);
 
         assert.ok(result.includes('url="https://example.com"'));
+      });
+
+      it('должен генерировать handle_callback_start для кнопок с target="start"', () => {
+        const result = generateStart(validParamsWithBackToMenuButton);
+
+        assert.ok(
+          result.includes('handle_callback_start'),
+          'Должен быть обработчик handle_callback_start'
+        );
+        assert.ok(
+          result.includes('c.data == "start"'),
+          'Должен быть декоратор с проверкой callback_data == "start"'
+        );
+        assert.ok(
+          result.includes('@dp.callback_query(lambda c: c.data == "start")'),
+          'Должен быть полный декоратор @dp.callback_query'
+        );
       });
 
       it('должен генерировать сохранение пользователя в БД', () => {
@@ -476,11 +494,11 @@ describe('start.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 20 полей', () => {
+      it('должен иметь 23 поля', () => {
         const shape = startParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 22);
+        assert.strictEqual(fields.length, 23);
       });
 
       it('должен использовать ZodOptional для messageText', () => {

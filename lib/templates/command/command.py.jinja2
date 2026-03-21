@@ -21,6 +21,11 @@
   @param {string} videoUrl - URL видео
   @param {string} audioUrl - URL аудио
   @param {array} attachedMedia - Прикреплённые медиа переменные
+
+  @note Шаблон генерирует ДВА обработчика:
+    1. @dp.message(Command("...")) — для текстовой команды
+    2. @dp.callback_query(lambda c: c.data == "{{ nodeId }}") — для кнопок
+       с action="goto" и target="{{ nodeId }}" (переход на узел команды)
 #}
 
 {# Генерация основной команды #}
@@ -273,3 +278,25 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
 {%- if synonymEntries and synonymEntries|length > 0 %}
 {% include 'synonyms/synonyms.py.jinja2' %}
 {%- endif %}
+
+{# Callback-обработчик для кнопок с goto → nodeId команды #}
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}" or c.data.startswith("{{ nodeId }}_btn_"))
+async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery):
+    """Обработчик callback перехода к команде {{ command }} (узел {{ nodeId }})"""
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    user_id = callback_query.from_user.id
+    logging.info(f"🔵 Callback переход к команде {{ command }} (узел {{ nodeId }}) для пользователя {user_id}")
+
+    # Создаём fake message для вызова основного обработчика команды
+    from types import SimpleNamespace
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.date = callback_query.message.date
+    fake_message.answer = callback_query.message.answer
+
+    await {{ command|replace('/start', 'start')|replace('/help', 'help')|replace('/', '')|safe_name }}_handler(fake_message)
