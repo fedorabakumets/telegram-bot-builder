@@ -9,7 +9,7 @@
  * @module useTerminalMethods
  */
 
-import { useBotLogs } from '@/components/editor/bot/bot-logs-context';
+import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
 import { TerminalLine, TerminalHandle } from './terminalTypes';
 
 interface UseTerminalMethodsParams {

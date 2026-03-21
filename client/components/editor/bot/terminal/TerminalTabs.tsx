@@ -7,7 +7,7 @@
  */
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useActiveTerminals } from './ActiveTerminalsContext';
+import { useActiveTerminals } from '../ActiveTerminalsContext';
 import { Terminal, Bot } from 'lucide-react';
 
 /**

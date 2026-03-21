@@ -22,8 +22,8 @@ import { ThemeProvider } from "@/components/editor/header/utils/theme-provider";
 import { ServerStatus } from "@/components/server-status";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { BotLogsProvider } from "./components/editor/bot/bot-logs-context";
-import { ActiveTerminalsProvider } from "./components/editor/bot/ActiveTerminalsContext";
+import { BotLogsProvider } from "./components/editor/bot/contexts/bot-logs-context";
+import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/ActiveTerminalsContext";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));

@@ -9,7 +9,7 @@
 
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { BotsPanel } from './BotsPanel';
-import { TerminalPanel } from './TerminalPanel';
+import { TerminalPanel } from '../terminal/TerminalPanel';
 
 interface BotLayoutProps {
   projectId: number;

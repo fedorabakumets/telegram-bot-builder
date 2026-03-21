@@ -13,9 +13,9 @@
 import { apiRequest } from '@/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTokenEdit } from './useTokenEdit';
+import { useTokenEdit } from '../useTokenEdit';
 import { TokenDisplay } from './TokenDisplay';
-import { TokenEditInput } from './TokenEditInput';
+import { TokenEditInput } from '../TokenEditInput';
 
 /**
  * Свойства компонента отображения и редактирования токена

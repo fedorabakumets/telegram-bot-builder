@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Pencil } from 'lucide-react';
 import { BotAvatar } from './BotAvatar';
-import { BotActions } from './BotActions';
+import { BotActions } from '../BotActions';
 
 interface BotCardHeaderProps {
   /** Данные токена бота */

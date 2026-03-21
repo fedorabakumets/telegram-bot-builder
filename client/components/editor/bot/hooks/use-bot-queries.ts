@@ -14,8 +14,8 @@ import { useMemo } from 'react';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { apiRequest } from '@/queryClient';
 import { type BotProject, BotToken } from '@shared/schema';
-import type { BotStatusResponse } from './bot-types';
-import type { BotInfo } from './BotProfileEditor';
+import type { BotStatusResponse } from '../bot-types';
+import type { BotInfo } from '../profile/BotProfileEditor';
 
 /**
  * Результат хука запросов ботов

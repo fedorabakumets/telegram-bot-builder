@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CodeFormat } from '@/components/editor/code/useCodeGeneratorServer';
 import { useToast } from '@/hooks/use-toast';
-import { useUpdateProjectName } from '@/components/editor/bot/use-update-project-name';
+import { useUpdateProjectName } from '@/components/editor/bot/project/use-update-project-name';
 import { BotData, BotProject } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';

@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { useBotLogs } from '@/components/editor/bot/bot-logs-context';
+import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
 import { TerminalLine } from './terminalTypes';
 
 interface UseTerminalLinesResult {

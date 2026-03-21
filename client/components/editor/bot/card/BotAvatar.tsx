@@ -10,8 +10,8 @@
  */
 
 import { useMemo } from 'react';
-import { UserAvatar } from '../database/dialog/components/user-avatar';
-import { useBotData } from '../database/dialog/hooks/use-bot-data';
+import { UserAvatar } from '../../database/dialog/components/user-avatar';
+import { useBotData } from '../../database/dialog/hooks/use-bot-data';
 import type { UserBotData } from '@shared/schema';
 
 /**

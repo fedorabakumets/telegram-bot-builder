@@ -11,7 +11,7 @@
 import { useRef, useState, useCallback } from 'react';
 import { BotTerminal } from './BotTerminal';
 import { TerminalTabs } from './TerminalTabs';
-import { useActiveTerminals } from './ActiveTerminalsContext';
+import { useActiveTerminals } from '../ActiveTerminalsContext';
 import type { TerminalHandle } from './Terminal';
 
 /**

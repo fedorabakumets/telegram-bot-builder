@@ -11,12 +11,12 @@
  * @module BotControlPanel
  */
 
-import { BotControlPanelHeader } from './BotControlPanelHeader';
-import { BotControlPanelLoading } from './BotControlPanelLoading';
-import { BotControlPanelEmpty } from './BotControlPanelEmpty';
-import { BotManagementInterface } from './BotManagementInterface';
-import { AddBotDialog } from './AddBotDialog';
-import { useBotControl } from './bot-control-context';
+import { BotControlPanelHeader } from '../BotControlPanelHeader';
+import { BotControlPanelLoading } from '../BotControlPanelLoading';
+import { BotControlPanelEmpty } from '../BotControlPanelEmpty';
+import { BotManagementInterface } from '../BotManagementInterface';
+import { AddBotDialog } from '../add-bot/AddBotDialog';
+import { useBotControl } from '../bot-control-context';
 import type { BotProject, BotToken } from '@shared/schema';
 
 /**

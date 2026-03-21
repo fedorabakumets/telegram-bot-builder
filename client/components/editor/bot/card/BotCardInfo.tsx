@@ -11,10 +11,10 @@
 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { TokenDisplayEdit } from './TokenDisplayEdit';
-import { formatExecutionTime } from './bot-control-utils';
+import { TokenDisplayEdit } from '../token/TokenDisplayEdit';
+import { formatExecutionTime } from '../contexts/bot-control-utils';
 import type { BotToken, BotProject } from '@shared/schema';
-import type { EditingField } from './bot-types';
+import type { EditingField } from '../bot-types';
 
 /**
  * Свойства компонента информации карточки бота

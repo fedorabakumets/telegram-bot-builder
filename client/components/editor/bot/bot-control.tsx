@@ -14,12 +14,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { BotToken } from '@shared/schema';
-import { type BotInfo } from './BotProfileEditor';
-import { BotProfileSheet } from './BotProfileSheet';
-import { BotControlPanel } from './BotControlPanel';
+import { type BotInfo } from './profile/BotProfileEditor';
+import { BotProfileSheet } from './profile/BotProfileSheet';
+import { BotControlPanel } from './panel/BotControlPanel';
 import { BotControlProvider } from './bot-control-context';
-import { useBotQueries } from './use-bot-queries';
-import { useBotMutations } from './use-bot-mutations';
+import { useBotQueries } from './hooks/use-bot-queries';
+import { useBotMutations } from './hooks/use-bot-mutations';
 import type { BotStatusResponse } from './bot-types';
 
 /**

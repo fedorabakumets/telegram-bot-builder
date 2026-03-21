@@ -7,9 +7,9 @@
  * @module bot/BotsPanel
  */
 
-import { useActiveTerminals } from './ActiveTerminalsContext';
-import { BotControl } from './bot-control';
-import { useBotLogs } from './bot-logs-context';
+import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
+import { BotControl } from '../bot-control';
+import { useBotLogs } from '../contexts/bot-logs-context';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { apiRequest } from '@/queryClient';

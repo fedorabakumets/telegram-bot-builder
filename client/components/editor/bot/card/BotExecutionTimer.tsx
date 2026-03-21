@@ -7,8 +7,8 @@
  */
 
 import { Clock } from 'lucide-react';
-import { formatExecutionTime } from './bot-control-utils';
-import type { BotStatusResponse } from './bot-types';
+import { formatExecutionTime } from '../contexts/bot-control-utils';
+import type { BotStatusResponse } from '../bot-types';
 
 /**
  * Свойства таймера выполнения бота

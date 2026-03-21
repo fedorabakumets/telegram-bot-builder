@@ -15,7 +15,7 @@
 import { BotDatabaseToggle } from './BotDatabaseToggle';
 import { BotExecutionTimer } from './BotExecutionTimer';
 import { BotAdminIds } from './BotAdminIds';
-import type { BotStatusResponse } from './bot-types';
+import type { BotStatusResponse } from '../bot-types';
 
 interface BotSettingsGridProps {
   /** ID проекта */

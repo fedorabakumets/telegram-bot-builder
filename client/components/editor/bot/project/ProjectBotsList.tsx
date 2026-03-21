@@ -8,9 +8,9 @@
  */
 
 import { BotCard } from './BotCard';
-import { useBotControl } from './bot-control-context';
+import { useBotControl } from '../bot-control-context';
 import type { BotProject, BotToken } from '@shared/schema';
-import type { BotInfo } from './BotProfileEditor';
+import type { BotInfo } from '../BotProfileEditor';
 
 /**
  * Свойства списка ботов проекта
