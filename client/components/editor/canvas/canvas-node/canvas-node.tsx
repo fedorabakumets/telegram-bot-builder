@@ -10,9 +10,7 @@ import { StickerPreview } from './sticker-preview';
 import { VoicePreview } from './voice-preview';
 import { ContactPreview } from './contact-preview';
 import { PollPreview } from './poll-preview';
-import { AutoTransitionIndicator } from './auto-transition-indicator';
-import { LocationPreview } from './location-preview';
-import { MediaAttachmentIndicator } from './media-attachment-indicator';
+import { LocationPreview } from './location-preview';import { MediaAttachmentIndicator } from './media-attachment-indicator';
 import { TextInputIndicator } from './text-input-indicator';
 import { MessagePreview } from './message-preview';
 import { ImageAttachment } from './image-attachment';
@@ -515,11 +513,6 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Dice preview */}
         {(node.type as any) === 'dice' && <DicePreview node={node} />}
-
-        {/* Auto Transition Indicator */}
-        {node.data.enableAutoTransition && node.data.autoTransitionTo && !node.data.buttons?.length && (
-          <AutoTransitionIndicator node={node} allNodes={allNodes} />
-        )}
 
         {/* Conditional Messages Indicator */}
         <ConditionalMessagesIndicator node={node} allNodes={allNodes} />

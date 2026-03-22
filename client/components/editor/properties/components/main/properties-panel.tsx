@@ -28,7 +28,6 @@ import { ConditionalMessagesToggle } from '../conditional-message-card/condition
 import { ConditionalMessagesInfoBlock } from '../conditional-message-card/conditional-messages-info-block';
 import { ConditionalMessagesActions } from '../conditional-message-card/conditional-messages-actions';
 import { UserInputSettingsSection } from './user-input-settings-section';
-import { AutoTransitionWrapper } from './auto-transition-wrapper';
 import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
 import { KeyboardLayoutEditor } from '../keyboard/keyboard-layout-editor';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
@@ -135,7 +134,6 @@ export function PropertiesPanel({
   const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false);
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(false);
-  const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(false);
   const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(false);
   const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(false);
   const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(false);
@@ -167,12 +165,6 @@ export function PropertiesPanel({
     const hasButtons = selectedNode.data.buttons?.length > 0;
     if ((hasKeyboard || hasButtons) && !isKeyboardSectionOpen) {
       setIsKeyboardSectionOpen(true);
-    }
-
-    // Секция автоперехода
-    const hasAutoTransition = selectedNode.data.enableAutoTransition && selectedNode.data.autoTransitionTo;
-    if (hasAutoTransition && !isAutoTransitionOpen) {
-      setIsAutoTransitionOpen(true);
     }
 
     // Секция условных сообщений
@@ -577,19 +569,6 @@ export function PropertiesPanel({
             onToggle={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}
             onNodeUpdate={onNodeUpdate}
             formatNodeDisplay={formatNodeDisplay}
-          />
-        )}
-
-        {/* Auto Transition Section - скрыто для узлов управления и триггеров */}
-        {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && (
-          <AutoTransitionWrapper
-            selectedNode={selectedNode}
-            getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-            onNodeUpdate={onNodeUpdate}
-            isOpen={isAutoTransitionOpen}
-            onToggle={() => setIsAutoTransitionOpen(!isAutoTransitionOpen)}
-            keyboardType={selectedNode.data.keyboardType}
-            collectUserInput={selectedNode.data.collectUserInput}
           />
         )}
 
