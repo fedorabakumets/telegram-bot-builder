@@ -30,7 +30,7 @@ import { getTemplatesDir } from './utils/get-templates-dir';
  * Проверяет что код выполняется в Node.js среде
  */
 function isNodeEnvironment(): boolean {
-  return typeof (globalThis as any).window === 'undefined' && typeof process !== 'undefined';
+  return typeof process !== 'undefined' && !!process.versions?.node && typeof (globalThis as any).document === 'undefined';
 }
 
 /**

@@ -12,6 +12,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    environmentMatchGlobs: [
+      ['lib/**', 'node'],
+    ],
     setupFiles: [
       './client/components/editor/database/dialog/tests/setup-tests.ts',
       './client/utils/tests/setup-tests.ts'
