@@ -77,7 +77,7 @@ export function ConditionBranchItem({ branch, onChange, onDelete }: ConditionBra
           <Input
             value={branch.value}
             onChange={e => onChange(branch.id, 'value', e.target.value)}
-            placeholder="Значение"
+            placeholder="введите значение"
             className="text-sm h-7 flex-1"
           />
         </div>

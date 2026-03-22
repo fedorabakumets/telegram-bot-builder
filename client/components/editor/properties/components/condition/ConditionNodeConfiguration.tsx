@@ -68,18 +68,18 @@ export function ConditionNodeConfiguration({ selectedNode, onNodeUpdate }: Condi
     <div className="space-y-4 p-4">
       {/* Переменная */}
       <div className="space-y-2">
-        <Label>Переменная для проверки</Label>
+        <Label>Что проверяем?</Label>
         <Input
           value={variable}
           onChange={e => onNodeUpdate(selectedNode.id, { variable: e.target.value })}
-          placeholder="{{user_name}}"
+          placeholder="например: {{ответ}}, {{имя}}, {{возраст}}"
           className="font-mono"
         />
       </div>
 
       {/* Ветки */}
       <div className="space-y-2">
-        <Label>Ветки условия</Label>
+        <Label>Куда идти дальше</Label>
         <div className="space-y-2">
           {branches.map(branch => (
             <ConditionBranchItem
@@ -98,7 +98,7 @@ export function ConditionNodeConfiguration({ selectedNode, onNodeUpdate }: Condi
           onClick={handleAddBranch}
         >
           <i className="fas fa-plus mr-2 text-xs" />
-          Добавить ветку
+          Добавить путь
         </Button>
       </div>
     </div>
