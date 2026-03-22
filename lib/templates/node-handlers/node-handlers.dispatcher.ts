@@ -21,6 +21,8 @@ import { generateUserHandlerFromNode } from '../user-handler';
 import { generateAnimationHandler } from '../animation-handler/animation-handler.renderer';
 import { generateAdminRightsFromNode } from '../admin-rights/admin-rights.renderer';
 import { collectSynonymEntries } from '../synonyms/synonyms.renderer';
+import { generateCommandTriggerHandlers } from '../command-trigger/command-trigger.renderer';
+import { generateTextTriggerHandlers } from '../text-trigger/text-trigger.renderer';
 
 /**
  * Проверяет, использует ли текст переменные {user_ids} или {user_ids_count}
@@ -193,9 +195,28 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     codeLines.push(`# @@NODE_END:${startNode.id}@@`);
   }
 
+  // --- Обработчики командных триггеров ---
+  const commandTriggerCode = generateCommandTriggerHandlers(nodes);
+  if (commandTriggerCode) {
+    codeLines.push('\n# Обработчики командных триггеров');
+    commandTriggerCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
+  // --- Обработчики текстовых триггеров ---
+  const textTriggerCode = generateTextTriggerHandlers(nodes);
+  if (textTriggerCode) {
+    codeLines.push('\n# Обработчики текстовых триггеров');
+    textTriggerCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   nodes.forEach((node: Node) => {
     // Пропускаем узлы типа 'start', так как они уже обработаны выше
     if (node.type === NODE_TYPES.START) {
+      return;
+    }
+
+    // Пропускаем триггеры — они уже обработаны выше
+    if (node.type === 'command_trigger' || node.type === 'text_trigger') {
       return;
     }
 
