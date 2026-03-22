@@ -104,34 +104,34 @@
 {{ ind4 }}target_node_id = option_target
 {{ ind4 }}try:
 {{ ind5 }}# Вызываем обработчик для целевого узла
+{{ ind5 }}_goto_handled = False
 {% for node in nodes %}
 {{ ind5 }}{% if loop.first %}if{% else %}elif{% endif %} target_node_id == "{{ node.id }}":
+{{ ind6 }}_goto_handled = True
 {{ ind6 }}await handle_callback_{{ node.safeName }}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
 {% endfor %}
-{% if nodes | length > 0 %}
-{{ ind5 }}else:
+{{ ind5 }}if not _goto_handled:
 {{ ind6 }}logging.warning(f"Неизвестный целевой узел: {target_node_id}")
-{% endif %}
 {{ ind4 }}except Exception as e:
 {{ ind5 }}logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")
-{{ ind3 }}else:
+{{ ind3 }}elif option_action not in ["command", "goto"]:
 {{ ind4 }}# Fallback к старой системе next_node_id если нет action
 {{ ind4 }}next_node_id = config.get("next_node_id")
 {{ ind4 }}if next_node_id:
 {{ ind5 }}try:
 {{ ind6 }}# Вызываем обработчик для следующего узла
+{{ ind6 }}_next_handled = False
 {% for node in nodes %}
 {{ ind6 }}{% if loop.first %}if{% else %}elif{% endif %} next_node_id == "{{ node.id }}":
+{{ ind6 }}    _next_handled = True
 {{ ind6 }}    await handle_callback_{{ node.safeName }}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
 {% endfor %}
-{% if nodes | length > 0 %}
-{{ ind6 }}else:
+{{ ind6 }}if not _next_handled:
 {{ ind6 }}    logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-{% endif %}
 {{ ind5 }}except Exception as e:
 {{ ind6 }}logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 {{ ind3 }}return
-{{ ind2 }}else:
+{{ ind2 }}if not selected_option:
 {{ ind3 }}# Неверный выбор - показываем доступные варианты
 {{ ind3 }}available_options = [option["text"] for option in config.get("options", [])]
 {{ ind3 }}options_text = "\n".join([f"• {opt}" for opt in available_options])
@@ -170,14 +170,14 @@
 {{ ind6 }}    message=message,
 {{ ind6 }}    answer=lambda *args, **kwargs: asyncio.sleep(0)
 {{ ind6 }})
+{{ ind6 }}_skip_media_handled = False
 {% for node in nodes %}
 {{ ind6 }}{% if loop.first %}if{% else %}elif{% endif %} skip_target == "{{ node.id }}":
+{{ ind6 }}    _skip_media_handled = True
 {{ ind6 }}    await handle_callback_{{ node.safeName }}(fake_callback)
 {% endfor %}
-{% if nodes | length > 0 %}
-{{ ind6 }}else:
+{{ ind6 }}if not _skip_media_handled:
 {{ ind6 }}    logging.warning(f"Неизвестный целевой узел skipDataCollection медиа: {skip_target}")
-{% endif %}
 {{ ind5 }}except Exception as e:
 {{ ind6 }}logging.error(f"Ошибка при переходе к узлу skipDataCollection медиа {skip_target}: {e}")
 {{ ind4 }}return
@@ -258,6 +258,8 @@
 {{ ind4 }}# Вызываем обработчик целевого узла
 {{ ind4 }}await call_skip_target_handler(fake_callback, skip_target)
 {{ ind4 }}logging.info(f"✅ Переход skipDataCollection выполнен: {skip_target}")
+{% else %}
+{{ ind4 }}logging.warning(f"Нет узлов для перехода skipDataCollection: {skip_target}")
 {% endif %}
 {{ ind3 }}except Exception as e:
 {{ ind4 }}logging.error(f"Ошибка при переходе skipDataCollection к узлу {skip_target}: {e}")
@@ -285,7 +287,7 @@
 {{ ind6 }}        db_user_data = {}
 {{ ind6 }}elif not isinstance(db_user_data, dict):
 {{ ind6 }}    db_user_data = {}
-{{ ind5 }}else:
+{{ ind5 }}if not (row and row["user_data"]):
 {{ ind6 }}db_user_data = {}
 {{ ind5 }}# Replace mode: заменяем значение
 {{ ind5 }}db_user_data[variable_name] = response_data
@@ -294,9 +296,9 @@
 {{ ind6 }}json.dumps(db_user_data, ensure_ascii=False), user_id
 {{ ind5 }})
 {{ ind5 }}logging.info(f"✅ Сохранено в bot_users: {variable_name} = {response_data}")
-{{ ind4 }}except Exception as e:
-{{ ind5 }}logging.error(f"❌ Ошибка сохранения в bot_users: {e}")
-{{ ind2 }}else:
+{{ ind3 }}except Exception as e:
+{{ ind4 }}logging.error(f"❌ Ошибка сохранения в bot_users: {e}")
+{{ ind2 }}if not db_pool:
 {{ ind3 }}# Локальное хранилище
 {{ ind3 }}if user_id not in user_data:
 {{ ind4 }}user_data[user_id] = {}
@@ -312,8 +314,10 @@
 {{ ind5 }}current_node_id = next_node_id
 {{ ind5 }}next_node_id = None  # Сбрасываем, будет установлен при автопереходе
 {{ ind5 }}# Проверяем навигацию к узлам
+{{ ind5 }}_node_handled = False
 {% for node in nodes %}
 {{ ind5 }}{% if loop.first %}if{% else %}elif{% endif %} current_node_id == "{{ node.id }}":
+{{ ind6 }}_node_handled = True
 {{ ind6 }}# Переход к узлу {{ node.id }}
 {% if node.type == 'message' %}
 {{ ind6 }}text = {{ node.data.messageText | default('""') | tojson }}
@@ -333,10 +337,8 @@
 {{ ind6 }}pass
 {% endif %}
 {% endfor %}
-{% if nodes | length > 0 %}
-{{ ind5 }}else:
+{{ ind5 }}if not _node_handled:
 {{ ind6 }}logging.warning(f"Неизвестный узел для навигации: {current_node_id}")
 {{ ind6 }}break
-{% endif %}
 {{ ind3 }}except Exception as e:
 {{ ind4 }}logging.error(f"Ошибка при переходе к узлу: {e}")

@@ -24,5 +24,11 @@ export function generateUniversalHandlers(params: UniversalHandlersTemplateParam
     ...params,
     userDatabaseEnabled: params.userDatabaseEnabled ?? false,
   });
-  return renderPartialTemplate('universal-handlers/universal-handlers.py.jinja2', validated);
+  return renderPartialTemplate('universal-handlers/universal-handlers.py.jinja2', {
+    ...validated,
+    nodes: params.nodes ?? [],
+    commandNodes: params.commandNodes ?? [],
+    hasUrlButtons: params.hasUrlButtons ?? false,
+    allNodeIds: params.allNodeIds ?? [],
+  });
 }

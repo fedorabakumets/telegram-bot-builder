@@ -323,8 +323,39 @@ function generateCodeSections(
   );
 
   // --- universal handlers ---
+  const commandNodes = nodes
+    .filter(node =>
+      node.type === NODE_TYPES.START ||
+      node.type === NODE_TYPES.COMMAND ||
+      node.type === 'command_trigger'
+    )
+    .map(node => ({
+      id: node.id,
+      safeName: node.id.replace(/[^a-zA-Z0-9_]/g, '_'),
+      type: node.type,
+      data: node.data,
+    }));
+
+  const nodesForHandlers = nodes.map(node => ({
+    id: node.id,
+    safeName: node.id.replace(/[^a-zA-Z0-9_]/g, '_'),
+    type: node.type,
+    data: node.data,
+  }));
+
+  const hasUrlButtonsFlag = nodes.some(node =>
+    Array.isArray(node.data?.buttons) &&
+    node.data.buttons.some((b: any) => b.action === 'url' || b.url)
+  );
+
   const universalHandlers = emitOnce(state, COMPONENT_NAMES.UNIVERSAL_HANDLERS, () =>
-    generateUniversalHandlers({ userDatabaseEnabled })
+    generateUniversalHandlers({
+      userDatabaseEnabled,
+      nodes: nodesForHandlers,
+      commandNodes,
+      hasUrlButtons: hasUrlButtonsFlag,
+      allNodeIds: context.allNodeIds,
+    })
   );
 
   // --- main ---

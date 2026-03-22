@@ -141,7 +141,7 @@
 {{ indent }}_btn_text = {{ btn.text|format_python_text }}
 {{ indent }}builder.add(KeyboardButton(text=("✅ " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "") + _btn_text))
 {%- else %}
-{{ indent }}builder.add(KeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})) if {{ btn.text|has_variable }} else {{ btn.text|format_python_text }}))
+{{ indent }}builder.add(KeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {}))))
 {%- endif %}
 {%- endfor %}
 {%- if adjustStr %}

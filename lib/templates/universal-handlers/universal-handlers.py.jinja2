@@ -3,14 +3,24 @@
 
   @fileoverview Fallback обработчики для необработанных сообщений
   @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей
+  @param {array}   nodes               - Все узлы бота
+  @param {array}   commandNodes        - Узлы с командами (start/command)
+  @param {boolean} hasUrlButtons       - Есть ли URL кнопки в проекте
+  @param {array}   allNodeIds          - Все ID узлов
 #}
+
+{% set indentLevel = '    ' %}
 
 @dp.message(F.text)
 async def fallback_text_handler(message: types.Message):
     """
     Fallback обработчик для всех текстовых сообщений без специфичного обработчика.
     """
-    logging.info(f"📩 Получено необработанное текстовое сообщение от {message.from_user.id}: {message.text}")
+    user_id = message.from_user.id
+    user_text = message.text
+{% include 'handle-user-input/handle-user-input.py.jinja2' %}
+    if not (user_id in user_data and "waiting_for_input" in user_data.get(user_id, {})):
+        logging.info(f"📩 Получено необработанное текстовое сообщение от {message.from_user.id}: {message.text}")
 
 
 @dp.message(F.photo)

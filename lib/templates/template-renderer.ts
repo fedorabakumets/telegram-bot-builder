@@ -87,6 +87,12 @@ function initEnvironment(): Environment {
   env.addFilter('join', joinFilter);
   env.addFilter('lower', lowerFilter);
   env.addFilter('escape', escapeFilter);
+  env.addFilter('tojson', (val: any, indent?: number) => {
+    if (indent !== undefined) {
+      return JSON.stringify(val, null, indent);
+    }
+    return JSON.stringify(val);
+  });
 
   return env;
 }
