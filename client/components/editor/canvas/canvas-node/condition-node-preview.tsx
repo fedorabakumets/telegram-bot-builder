@@ -97,10 +97,11 @@ export function ConditionNodePreview({
               }`}
               style={{ overflow: 'visible' }}
             >
-              <span className="font-medium truncate max-w-[120px]">{branch.label}</span>
-              {!isElse && (
-                <span className="ml-1 text-[10px] opacity-60 font-mono shrink-0">
-                  {getBranchOperatorLabel(branch)}
+              {isElse ? (
+                <span className="font-medium">Иначе</span>
+              ) : (
+                <span className="font-medium truncate max-w-[140px]">
+                  {getBranchOperatorLabel(branch) || branch.label}
                 </span>
               )}
               {/* Выходной порт ветки */}
