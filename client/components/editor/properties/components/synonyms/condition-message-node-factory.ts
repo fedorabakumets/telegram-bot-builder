@@ -90,9 +90,10 @@ export function createMessageNodeForCondition(
  *
  * Если у условия включено кастомное сообщение — берётся его текст,
  * иначе — основной текст исходного узла.
+ * Поля сбора ответов всегда берутся из исходного узла.
  *
  * @param {any} cond - Объект условия
- * @param {Node} [sourceNode] - Исходный узел (для текста по умолчанию)
+ * @param {Node} [sourceNode] - Исходный узел (для текста и полей сбора ответов)
  * @returns {Partial<any>} Поля для обновления через onNodeUpdate
  */
 export function getMessageNodeUpdates(cond: any, sourceNode?: Node): Partial<any> {
@@ -100,12 +101,34 @@ export function getMessageNodeUpdates(cond: any, sourceNode?: Node): Partial<any
     ? cond.messageText
     : ((sourceNode?.data as any)?.messageText || cond.messageText || '');
 
+  const src = (sourceNode?.data as any) || {};
+
   return {
     messageText: resolvedText,
-    formatMode: cond.formatMode || 'text',
-    keyboardType: cond.keyboardType || 'none',
-    buttons: cond.buttons || [],
-    collectUserInput: cond.collectUserInput || false,
-    enableTextInput: cond.enableTextInput || false,
+    formatMode: cond.formatMode || src.formatMode || 'text',
+    keyboardType: cond.keyboardType || src.keyboardType || 'none',
+    buttons: cond.buttons?.length ? cond.buttons : (src.buttons || []),
+    attachedMedia: src.attachedMedia || [],
+    oneTimeKeyboard: src.oneTimeKeyboard ?? false,
+    resizeKeyboard: src.resizeKeyboard ?? true,
+    markdown: src.markdown ?? false,
+    /** Поля сбора ответов — синхронизируются из исходного узла */
+    collectUserInput: src.collectUserInput ?? false,
+    enableTextInput: src.enableTextInput,
+    enablePhotoInput: src.enablePhotoInput,
+    enableVideoInput: src.enableVideoInput,
+    enableAudioInput: src.enableAudioInput,
+    enableDocumentInput: src.enableDocumentInput,
+    saveToDatabase: src.saveToDatabase ?? false,
+    inputVariable: src.inputVariable,
+    inputPrompt: src.inputPrompt,
+    inputTargetNodeId: src.inputTargetNodeId,
+    allowSkip: src.allowSkip ?? false,
+    appendVariable: src.appendVariable ?? false,
+    variableFilters: src.variableFilters || {},
+    photoInputVariable: src.photoInputVariable,
+    videoInputVariable: src.videoInputVariable,
+    audioInputVariable: src.audioInputVariable,
+    documentInputVariable: src.documentInputVariable,
   };
 }
