@@ -45,7 +45,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback: types.CallbackQuery):
 {%- if requiresAuth %}
 
     if not await check_auth(callback.from_user.id):
-        await callback.message.answer("❌ Необходимо войти в систему для выполнения этой команды")
+        await callback.message.answer("❌ Сначала запустите бота: /start")
         return
 {%- endif %}
 

@@ -65,7 +65,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {%- endif %}
     {%- if requiresAuth %}
     if not await check_auth(user_id):
-        await callback_query.answer("❌ Необходимо войти в систему", show_alert=True)
+        await callback_query.answer("❌ Сначала запустите бота: /start", show_alert=True)
         return
     {%- endif %}
     {# Сохранение информации о пользователе #}

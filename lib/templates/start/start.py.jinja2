@@ -51,7 +51,7 @@ async def start_handler(message: types.Message):
 {%- if requiresAuth %}
 
     if not await check_auth(message.from_user.id):
-        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")
+        await message.answer("❌ Сначала запустите бота: /start")
         return
 {%- endif %}
 

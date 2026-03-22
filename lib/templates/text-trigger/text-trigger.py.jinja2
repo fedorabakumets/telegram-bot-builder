@@ -42,7 +42,7 @@ async def text_trigger_{{ sanitized_node_id }}_{{ sanitized_synonym }}_handler(m
     {%- endif %}
     {%- if entry.requiresAuth %}
     if not await check_auth(user_id):
-        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")
+        await message.answer("❌ Сначала запустите бота: /start")
         return
     {%- endif %}
 
