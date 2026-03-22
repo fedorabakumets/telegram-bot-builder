@@ -24,8 +24,6 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout)
     ]
 )
-# Отключаем propagate у aiogram чтобы избежать дублирования строк в stdout
-logging.getLogger("aiogram").propagate = False
 
 {# Подавление логирования asyncpg (настраивается через .env) #}
 # Подавление всех сообщений от asyncpg (настраивается через .env)
