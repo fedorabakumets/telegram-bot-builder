@@ -20,8 +20,8 @@ export const menuCommand: CommandPreset = {
   messageData: {
     text: '📋 Главное меню',
     buttons: [
-      { text: '📝 Пункт 1', callbackData: 'item1' },
-      { text: '📝 Пункт 2', callbackData: 'item2' },
+      { text: '📝 Пункт 1' },
+      { text: '📝 Пункт 2' },
     ],
   },
 };

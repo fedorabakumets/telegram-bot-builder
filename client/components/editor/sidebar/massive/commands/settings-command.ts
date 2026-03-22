@@ -20,8 +20,8 @@ export const settingsCommand: CommandPreset = {
   messageData: {
     text: '⚙️ Настройки',
     buttons: [
-      { text: '🔔 Уведомления', callbackData: 'notifications' },
-      { text: '🌐 Язык', callbackData: 'language' },
+      { text: '🔔 Уведомления' },
+      { text: '🌐 Язык' },
     ],
   },
 };
