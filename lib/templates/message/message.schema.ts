@@ -15,7 +15,7 @@ export const messageParamsSchema = z.object({
   /** Текст сообщения */
   messageText: z.string().optional().default(''),
   /** Режим форматирования */
-  formatMode: z.enum(['html', 'markdown', 'none', 'text']).transform(v => v === 'text' ? 'none' : v).pipe(z.enum(['html', 'markdown', 'none'])).catch('none').optional().default('none'),
+  formatMode: z.string().optional().transform(v => (['html', 'markdown', 'none'].includes(v as string) ? v : 'none') as 'html' | 'markdown' | 'none').default('none'),
 
   // --- Доступ ---
   /** Только приватные чаты */
