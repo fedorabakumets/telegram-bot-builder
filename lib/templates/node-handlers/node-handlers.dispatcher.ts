@@ -23,6 +23,7 @@ import { generateAdminRightsFromNode } from '../admin-rights/admin-rights.render
 import { collectSynonymEntries } from '../synonyms/synonyms.renderer';
 import { generateCommandTriggerHandlers } from '../command-trigger/command-trigger.renderer';
 import { generateTextTriggerHandlers } from '../text-trigger/text-trigger.renderer';
+import { generateConditionHandlers } from '../condition/condition.renderer';
 
 /**
  * Проверяет, использует ли текст переменные {user_ids} или {user_ids_count}
@@ -209,6 +210,13 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     textTriggerCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Обработчики узлов условия ---
+  const conditionCode = generateConditionHandlers(nodes);
+  if (conditionCode) {
+    codeLines.push('\n# Обработчики узлов условия');
+    conditionCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   nodes.forEach((node: Node) => {
     // Пропускаем узлы типа 'start', так как они уже обработаны выше
     if (node.type === NODE_TYPES.START) {
@@ -219,6 +227,9 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     if (node.type === 'command_trigger' || node.type === 'text_trigger') {
       return;
     }
+
+    // Пропускаем condition-узлы — они уже обработаны выше
+    if (node.type === 'condition') return;
 
     codeLines.push(`\n# @@NODE_START:${node.id}@@\n`);
 

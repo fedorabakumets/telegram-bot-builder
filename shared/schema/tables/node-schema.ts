@@ -480,7 +480,7 @@ export const nodeSchema = z.object({
       /** Отображаемое название ветки */
       label: z.string(),
       /** Оператор сравнения: "==", "!=", "contains", "else" */
-      operator: z.enum(['==', '!=', 'contains', 'else']),
+      operator: z.enum(['filled', 'empty', 'equals', 'else']),
       /** Значение для сравнения */
       value: z.string(),
       /** ID целевого узла для перехода по этой ветке */
