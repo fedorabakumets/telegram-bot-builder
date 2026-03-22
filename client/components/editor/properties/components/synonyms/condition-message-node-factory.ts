@@ -44,7 +44,10 @@ export function createMessageNodeForCondition(
     },
     data: {
       messageText: resolvedText,
-      formatMode: cond.formatMode || src.formatMode || 'text',
+      /** formatMode: допустимые значения 'html' | 'markdown' | 'none' — 'text' не валидно */
+      formatMode: (['html', 'markdown', 'none'].includes(cond.formatMode) ? cond.formatMode
+        : ['html', 'markdown', 'none'].includes(src.formatMode) ? src.formatMode
+        : 'none'),
       keyboardType: cond.keyboardType || src.keyboardType || 'none',
       buttons: cond.buttons?.length ? cond.buttons : (src.buttons || []),
       /** Ссылка на ID условия — используется для поиска узла по условию */
@@ -105,7 +108,10 @@ export function getMessageNodeUpdates(cond: any, sourceNode?: Node): Partial<any
 
   return {
     messageText: resolvedText,
-    formatMode: cond.formatMode || src.formatMode || 'text',
+    /** formatMode: допустимые значения 'html' | 'markdown' | 'none' — 'text' не валидно */
+    formatMode: (['html', 'markdown', 'none'].includes(cond.formatMode) ? cond.formatMode
+      : ['html', 'markdown', 'none'].includes(src.formatMode) ? src.formatMode
+      : 'none'),
     keyboardType: cond.keyboardType || src.keyboardType || 'none',
     buttons: cond.buttons?.length ? cond.buttons : (src.buttons || []),
     attachedMedia: src.attachedMedia || [],
