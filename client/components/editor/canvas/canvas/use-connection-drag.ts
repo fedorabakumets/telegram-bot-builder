@@ -168,7 +168,13 @@ export function useConnectionDrag({
             const buttons = (updated.data.buttons || []).map((btn: any) =>
               btn.id === draft.buttonId ? { ...btn, target: targetId } : btn
             );
-            updated.data = { ...updated.data, buttons };
+            // condition-узел хранит переходы в branches
+            const branches = (updated.data.branches || []).map((b: any) =>
+              b.id === draft.buttonId ? { ...b, target: targetId } : b
+            );
+            updated.data = { ...updated.data, buttons, branches };
+          } else if (draft.portType === 'input-target') {
+            updated.data = { ...updated.data, inputTargetNodeId: targetId };
           }
           return updated;
         });
