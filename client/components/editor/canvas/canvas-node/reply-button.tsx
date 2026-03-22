@@ -37,7 +37,7 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
     : null;
   const targetNodeDisplay = targetNode?.data?.messageText?.slice(0, 30) || 
                            targetNode?.data?.command || 
-                           (button.action === 'goto' ? button.target?.slice(0, 8) : '');
+                           (button.action === 'goto' ? (button.target?.slice(0, 8) ?? '') : '');
 
   return (
     <div className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:border-gray-300 dark:hover:border-gray-600 transition-colors p-3">
