@@ -24,9 +24,9 @@ const SVG_SIZE = 20000;
 
 /**
  * Тип соединения между узлами
- * "auto-transition" | "button-goto" | "input-target" | "trigger-next"
+ * "auto-transition" | "button-goto" | "input-target" | "trigger-next" | "condition-source"
  */
-type ConnectionType = 'auto-transition' | 'button-goto' | 'input-target' | 'trigger-next';
+type ConnectionType = 'auto-transition' | 'button-goto' | 'input-target' | 'trigger-next' | 'condition-source';
 
 /**
  * Одно соединение между двумя узлами
@@ -92,6 +92,14 @@ const CONNECTION_STYLES: Record<ConnectionType, ConnectionStyle> = {
     dashArray: '',
     opacity: 0.8,
     markerId: 'arrow-trigger',
+  },
+  /** Соединение исходного узла с узлом condition — оранжевый пунктир */
+  'condition-source': {
+    color: '#f97316',
+    strokeWidth: 2,
+    dashArray: '6 4',
+    opacity: 0.7,
+    markerId: 'arrow-condition',
   },
 };
 
@@ -243,6 +251,18 @@ function collectConnections(nodes: Node[]): Connection[] {
           });
         }
       });
+    }
+
+    // 6. Соединение исходного узла с узлом condition (sourceNodeId → condition)
+    if (node.type === 'condition') {
+      const sourceNodeId = (node.data as any)?.sourceNodeId;
+      if (sourceNodeId && existingIds.has(sourceNodeId)) {
+        connections.push({
+          fromId: sourceNodeId,
+          toId: node.id,
+          type: 'condition-source',
+        });
+      }
     }
   });
 
