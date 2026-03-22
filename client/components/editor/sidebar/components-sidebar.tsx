@@ -10,7 +10,7 @@ import {
   handleProjectClick,
   handleContainerDragLeave,
 } from './handlers';
-import { componentCategories } from './constants';
+import { componentCategories, commandPresets } from './constants';
 import type { ComponentsSidebarProps } from './types';
 import { useSidebarTabs } from './hooks/use-sidebar-tabs';
 import { useSidebarDragState } from './hooks/use-sidebar-drag-state';
@@ -489,6 +489,7 @@ export function ComponentsSidebar({
         {currentTab === 'elements' && (
           <ComponentsTab
             categories={componentCategories}
+            commandPresets={commandPresets}
             collapsedCategories={collapsedCategories}
             touchState={touchHook.touchState}
             onToggleCategory={toggleCategory}

@@ -6,7 +6,8 @@
 
 import { ComponentDefinition } from '@shared/schema';
 import { textMessage } from './massive/messages';
-import { startCommand, helpCommand, settingsCommand, menuCommand, customCommand } from './massive/commands';
+import { allCommandPresets } from './massive/commands';
+import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
 import { commandTrigger, textTrigger } from './massive/triggers';
 
@@ -29,11 +30,10 @@ export const componentCategories: Array<{
     components: [textMessage]
   },
   {
-    title: 'Команды',
-    components: [startCommand, helpCommand, settingsCommand, menuCommand, customCommand]
-  },
-  {
     title: 'Рассылка',
     components: [broadcastNode]
   }
 ];
+
+/** Пресеты команд — отдельная секция, создающая пары command_trigger + message */
+export const commandPresets: CommandPreset[] = allCommandPresets;

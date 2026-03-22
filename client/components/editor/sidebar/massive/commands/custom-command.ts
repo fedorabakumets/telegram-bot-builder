@@ -1,21 +1,23 @@
 /**
- * @fileoverview Определение триггера произвольной команды
+ * @fileoverview Пресет произвольной команды
  * @module components/editor/sidebar/massive/commands/custom-command
  */
-import { ComponentDefinition } from "@shared/schema";
+import type { CommandPreset } from './command-preset.types';
 
-/** Триггер произвольной команды */
-export const customCommand: ComponentDefinition = {
+/** Пресет произвольной команды — создаёт command_trigger + message на холсте */
+export const customCommand: CommandPreset = {
   id: 'custom-command',
   name: 'Команда',
   description: 'Произвольная команда',
   icon: 'fas fa-terminal',
   color: 'bg-yellow-100 text-yellow-600',
-  type: 'command_trigger',
-  defaultData: {
+  type: 'command_preset',
+  triggerData: {
     command: '/команда',
     description: 'Описание команды',
     showInMenu: true,
-    isPrivateOnly: false,
-  }
+  },
+  messageData: {
+    text: 'Ответ на команду',
+  },
 };

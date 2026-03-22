@@ -6,6 +6,7 @@ import { CanvasContent } from './canvas-content';
 import { useConnectionDrag } from './use-connection-drag';
 
 import { Node, ComponentDefinition } from '@/types/bot';
+import type { CommandPreset } from '@/components/editor/sidebar/massive/commands';
 import { BotDataWithSheets } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { nanoid } from 'nanoid';
@@ -892,34 +893,69 @@ export function Canvas({
     e.preventDefault();
     setIsDragOver(false);
 
+    const rect = canvasRef.current?.getBoundingClientRect();
+
+    /** Вычисляет позицию дропа в координатах холста */
+    const getDropPosition = () => {
+      if (rect) {
+        const screenX = e.clientX - rect.left - 160;
+        const screenY = e.clientY - rect.top - 50;
+        const canvasX = (screenX - pan.x) / (zoom / 100);
+        const canvasY = (screenY - pan.y) / (zoom / 100);
+        if (canvasX > 20 && canvasY > 20 && canvasX < 10000 && canvasY < 10000) {
+          return { x: Math.max(50, canvasX), y: Math.max(50, canvasY) };
+        }
+      }
+      return getCenterPosition();
+    };
+
+    // Проверяем сначала command_preset
+    const presetData = e.dataTransfer.getData('application/command-preset');
+    if (presetData) {
+      const preset = JSON.parse(presetData) as CommandPreset;
+      const dropPosition = getDropPosition();
+      const triggerId = nanoid();
+      const messageId = nanoid();
+
+      // Создаём command_trigger
+      onNodeAdd({
+        id: triggerId,
+        type: 'command_trigger',
+        position: dropPosition,
+        data: {
+          command: preset.triggerData.command,
+          description: preset.triggerData.description || '',
+          showInMenu: preset.triggerData.showInMenu ?? true,
+          isPrivateOnly: preset.triggerData.isPrivateOnly ?? false,
+          autoTransitionTo: messageId,
+        },
+      });
+
+      // Создаём message рядом (+320px по X)
+      onNodeAdd({
+        id: messageId,
+        type: 'message',
+        position: { x: dropPosition.x + 320, y: dropPosition.y },
+        data: {
+          text: preset.messageData.text,
+          buttons: (preset.messageData.buttons || []).map(btn => ({
+            id: nanoid(),
+            text: btn.text,
+            callbackData: btn.callbackData || '',
+            type: 'callback',
+          })),
+        },
+      });
+
+      addAction('add', `Добавлена команда "${preset.triggerData.command}" с ответом`);
+      return;
+    }
+
     const componentData = e.dataTransfer.getData('application/json');
     if (!componentData) return;
 
     const component: ComponentDefinition = JSON.parse(componentData);
-    const rect = canvasRef.current?.getBoundingClientRect();
-
-    let nodePosition;
-
-    if (rect) {
-      // Transform screen coordinates to canvas coordinates
-      const screenX = e.clientX - rect.left - 160; // Adjust for node width  
-      const screenY = e.clientY - rect.top - 50;   // Adjust for node height
-
-      // Apply inverse transformation to get canvas coordinates
-      const canvasX = (screenX - pan.x) / (zoom / 100);
-      const canvasY = (screenY - pan.y) / (zoom / 100);
-
-      // Если координаты разумные (не слишком близко к краю), используем их
-      if (canvasX > 20 && canvasY > 20 && canvasX < 10000 && canvasY < 10000) {
-        nodePosition = { x: Math.max(50, canvasX), y: Math.max(50, canvasY) };
-      } else {
-        // Иначе используем центр видимой области
-        nodePosition = getCenterPosition();
-      }
-    } else {
-      // Если не удалось получить rect, используем центр
-      nodePosition = getCenterPosition();
-    }
+    const nodePosition = getDropPosition();
 
     const newNode: Node = {
       id: nanoid(),

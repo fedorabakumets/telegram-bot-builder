@@ -1,21 +1,27 @@
 /**
- * @fileoverview Определение триггера команды /settings
+ * @fileoverview Пресет команды /settings — настройки бота
  * @module components/editor/sidebar/massive/commands/settings-command
  */
-import { ComponentDefinition } from "@shared/schema";
+import type { CommandPreset } from './command-preset.types';
 
-/** Триггер команды /settings — настройки бота */
-export const settingsCommand: ComponentDefinition = {
+/** Пресет команды /settings — создаёт command_trigger + message на холсте */
+export const settingsCommand: CommandPreset = {
   id: 'settings-command',
   name: '/settings',
   description: 'Настройки бота',
   icon: 'fas fa-cog',
   color: 'bg-gray-100 text-gray-600',
-  type: 'command_trigger',
-  defaultData: {
+  type: 'command_preset',
+  triggerData: {
     command: '/settings',
     description: 'Настройки',
     showInMenu: true,
-    isPrivateOnly: false,
-  }
+  },
+  messageData: {
+    text: '⚙️ Настройки',
+    buttons: [
+      { text: '🔔 Уведомления', callbackData: 'notifications' },
+      { text: '🌐 Язык', callbackData: 'language' },
+    ],
+  },
 };

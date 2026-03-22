@@ -1,21 +1,23 @@
 /**
- * @fileoverview Определение триггера команды /help
+ * @fileoverview Пресет команды /help — справка по боту
  * @module components/editor/sidebar/massive/commands/help-command
  */
-import { ComponentDefinition } from "@shared/schema";
+import type { CommandPreset } from './command-preset.types';
 
-/** Триггер команды /help — справка по боту */
-export const helpCommand: ComponentDefinition = {
+/** Пресет команды /help — создаёт command_trigger + message на холсте */
+export const helpCommand: CommandPreset = {
   id: 'help-command',
   name: '/help',
   description: 'Справка по боту',
   icon: 'fas fa-question-circle',
   color: 'bg-blue-100 text-blue-600',
-  type: 'command_trigger',
-  defaultData: {
+  type: 'command_preset',
+  triggerData: {
     command: '/help',
     description: 'Справка по боту',
     showInMenu: true,
-    isPrivateOnly: false,
-  }
+  },
+  messageData: {
+    text: '❓ Справка\n\nДоступные команды:\n/start — Запустить бота\n/help — Эта справка',
+  },
 };

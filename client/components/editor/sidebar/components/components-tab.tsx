@@ -1,11 +1,13 @@
 /**
  * @fileoverview Компонент вкладки компонентов для sidebar редактора ботов
  * Отображает список категорий компонентов с поддержкой сворачивания/разворачивания
- * и drag-and-drop для мобильных и десктопных устройств
+ * и drag-and-drop для мобильных и десктопных устройств.
+ * Поддерживает как обычные ComponentDefinition, так и CommandPreset (пресеты команд).
  * @module components/editor/sidebar/components/components-tab
  */
 
 import { ComponentDefinition } from '@shared/schema';
+import type { CommandPreset } from '../massive/commands';
 import { cn } from '@/utils/utils';
 import { Plus, ChevronDown, ChevronRight } from 'lucide-react';
 
@@ -13,6 +15,8 @@ import { Plus, ChevronDown, ChevronRight } from 'lucide-react';
 export interface ComponentsTabProps {
   /** Массив категорий компонентов */
   categories: Array<{ title: string, components: ComponentDefinition[] }>;
+  /** Пресеты команд (command_trigger + message) */
+  commandPresets?: CommandPreset[];
   /** Множество свёрнутых категорий */
   collapsedCategories: Set<string>;
   /** Состояние touch-перетаскивания */
@@ -45,6 +49,7 @@ export interface ComponentsTabProps {
  */
 export function ComponentsTab({
   categories,
+  commandPresets,
   collapsedCategories,
   touchState,
   onToggleCategory,
@@ -54,6 +59,9 @@ export function ComponentsTab({
   onComponentDrag,
   onComponentAdd,
 }: ComponentsTabProps) {
+  /** Заголовок секции команд */
+  const COMMANDS_TITLE = 'Команды';
+
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
       {categories.map((category) => {
@@ -157,6 +165,76 @@ export function ComponentsTab({
           </div>
         );
       })}
+
+      {/* Секция пресетов команд */}
+      {commandPresets && commandPresets.length > 0 && (
+        <div className="space-y-2 sm:space-y-3">
+          {/* Заголовок секции команд */}
+          <button
+            onClick={() => onToggleCategory(COMMANDS_TITLE)}
+            className="w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-slate-100/80 to-slate-50/40 dark:from-slate-800/60 dark:to-slate-900/40 hover:from-slate-200/60 hover:to-slate-100/30 dark:hover:from-slate-700/50 dark:hover:to-slate-800/30 transition-all duration-200 group border border-slate-200/40 dark:border-slate-700/40 hover:border-primary/30"
+            data-testid={`category-${COMMANDS_TITLE}`}
+          >
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <span className="truncate">{COMMANDS_TITLE}</span>
+              <span className="text-xs normal-case bg-muted/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-full font-semibold text-muted-foreground whitespace-nowrap flex-shrink-0 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                {commandPresets.length}
+              </span>
+            </div>
+            <div className="flex-shrink-0 p-1 rounded-md group-hover:bg-muted/50 transition-colors">
+              {collapsedCategories.has(COMMANDS_TITLE) ? (
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              ) : (
+                <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              )}
+            </div>
+          </button>
+
+          {/* Карточки пресетов команд */}
+          {!collapsedCategories.has(COMMANDS_TITLE) && (
+            <div className="space-y-1.5 sm:space-y-2 transition-all duration-200 ease-in-out">
+              {commandPresets.map((preset) => (
+                <div
+                  key={preset.id}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.effectAllowed = 'copy';
+                    e.dataTransfer.setData('application/command-preset', JSON.stringify(preset));
+                    e.dataTransfer.setData('text/plain', 'command_preset');
+                  }}
+                  className={cn(
+                    "component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3",
+                    "bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30",
+                    "hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40",
+                    "rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select",
+                    "border border-border/30 hover:border-primary/30"
+                  )}
+                  data-testid={`command-preset-${preset.id}`}
+                >
+                  {/* Иконка пресета */}
+                  <div className={cn(
+                    "w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0",
+                    "transition-transform group-hover/item:scale-110",
+                    preset.color
+                  )}>
+                    <i className={`${preset.icon} text-xs sm:text-sm`}></i>
+                  </div>
+
+                  {/* Название и описание */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                      {preset.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {preset.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
