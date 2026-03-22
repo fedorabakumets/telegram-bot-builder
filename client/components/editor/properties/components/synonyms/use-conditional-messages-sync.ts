@@ -209,21 +209,33 @@ export function useConditionalMessagesSync({
   /**
    * Инициализация: при выборе узла с уже включёнными условными сообщениями
    * создаём недостающие узлы на холсте.
+   * Срабатывает только при смене selectedNode.id.
    */
   useEffect(() => {
     if (!selectedNode?.data.enableConditionalMessages || !onNodeAdd) return;
 
-    const existing = findConditionNode();
+    /** Ищем condition-узел в актуальном allNodes */
+    const existing = allNodes.find(n =>
+      n.type === 'condition' &&
+      (n.data as any).sourceNodeId === selectedNode.id
+    );
+
     if (!existing) {
+      /** Condition-узла нет совсем — создаём */
       const conditions = selectedNode.data.conditionalMessages || [];
-      createConditionNodes(conditions).forEach(n => onNodeAdd(n));
+      if (conditions.length > 0) {
+        createConditionNodes(conditions).forEach(n => onNodeAdd(n));
+      }
       return;
     }
 
-    // Condition-узел есть — проверяем message-узлы
+    /** Condition-узел есть — проверяем только отсутствующие message-узлы */
     const conditions: any[] = selectedNode.data.conditionalMessages || [];
     conditions.forEach((cond, index) => {
-      if (!findMessageNodeForCond(cond.id)) {
+      const msgExists = allNodes.some(n =>
+        n.type === 'message' && (n.data as any).condSourceId === cond.id
+      );
+      if (!msgExists) {
         onNodeAdd(createMessageNodeForCondition(cond, existing.id, selectedNode, index));
       }
     });
