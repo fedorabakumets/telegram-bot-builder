@@ -30,12 +30,18 @@ interface UseNodeCommandTriggerSyncProps {
 }
 
 /**
- * Находит command_trigger узел, связанный с данным узлом через autoTransitionTo
+ * Находит command_trigger узел, связанный с данным узлом.
+ * Проверяет по sourceNodeId (стабильное поле), autoTransitionTo (старые узлы),
+ * и по совпадению команды (крайний fallback для узлов без sourceNodeId).
  */
-function findLinkedCommandTrigger(allNodes: Node[], nodeId: string): Node | undefined {
-  return allNodes.find(
-    n => n.type === 'command_trigger' && (n.data as any).autoTransitionTo === nodeId
-  );
+function findLinkedCommandTrigger(allNodes: Node[], nodeId: string, command?: string): Node | undefined {
+  return allNodes.find(n => {
+    if (n.type !== 'command_trigger') return false;
+    const d = n.data as any;
+    return d.sourceNodeId === nodeId
+      || d.autoTransitionTo === nodeId
+      || (command && d.command === command && !d.sourceNodeId);
+  });
 }
 
 /**
@@ -154,7 +160,7 @@ export function useNodeCommandTriggerSync({
   useEffect(() => {
     if (!onNodeAdd || !onNodeDelete) return;
 
-    const existing = findLinkedCommandTrigger(allNodes, node.id);
+    const existing = findLinkedCommandTrigger(allNodes, node.id, command);
 
     if (!command.trim()) {
       // Команда пустая — удаляем триггер если есть
