@@ -235,7 +235,7 @@ export function PropertiesPanel({
   // Синхронизация условных сообщений с узлом condition на холсте
   const { handleConditionalMessagesToggle, handleConditionalMessagesUpdate } =
     useConditionalMessagesSync({
-      selectedNode: selectedNode!,
+      selectedNode,
       allNodes,
       onNodeUpdate,
       onNodeAdd,

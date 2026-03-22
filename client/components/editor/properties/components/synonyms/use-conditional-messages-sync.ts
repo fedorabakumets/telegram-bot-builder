@@ -17,8 +17,8 @@ import type { ConditionBranch } from '@shared/types/condition-node';
  * Пропсы хука useConditionalMessagesSync
  */
 interface UseConditionalMessagesSyncProps {
-  /** Текущий узел (source) */
-  selectedNode: Node;
+  /** Текущий узел (source), может быть null когда узел не выбран */
+  selectedNode: Node | null;
   /** Все узлы листа */
   allNodes: Node[];
   /** Обновить данные узла */
@@ -84,16 +84,18 @@ export function useConditionalMessagesSync({
    * Находит узел condition, связанный с текущим узлом
    */
   const findConditionNode = useCallback((): Node | undefined => {
+    if (!selectedNode) return undefined;
     return allNodes.find(n =>
       n.type === 'condition' &&
       (n.data as any).sourceNodeId === selectedNode.id
     );
-  }, [allNodes, selectedNode.id]);
+  }, [allNodes, selectedNode]);
 
   /**
    * Создаёт новый узел condition для текущего узла
    */
-  const createConditionNode = useCallback((conditions: any[]): Node => {
+  const createConditionNode = useCallback((conditions: any[]): Node | null => {
+    if (!selectedNode) return null;
     return {
       id: `cond-sync-${nanoid(8)}`,
       type: 'condition',
@@ -116,6 +118,7 @@ export function useConditionalMessagesSync({
    * @param {boolean} enabled - Новое значение переключателя
    */
   const handleConditionalMessagesToggle = useCallback((enabled: boolean) => {
+    if (!selectedNode) return;
     onNodeUpdate(selectedNode.id, { enableConditionalMessages: enabled });
 
     if (enabled) {
@@ -123,7 +126,8 @@ export function useConditionalMessagesSync({
       const existing = findConditionNode();
       if (!existing) {
         const conditions = selectedNode.data.conditionalMessages || [];
-        onNodeAdd(createConditionNode(conditions));
+        const node = createConditionNode(conditions);
+        if (node) onNodeAdd(node);
       }
     } else {
       if (!onNodeDelete) return;
@@ -139,6 +143,7 @@ export function useConditionalMessagesSync({
    * @param {any[]} conditions - Новый список условий
    */
   const handleConditionalMessagesUpdate = useCallback((conditions: any[]) => {
+    if (!selectedNode) return;
     onNodeUpdate(selectedNode.id, { conditionalMessages: conditions });
 
     if (!onNodeAdd || !onNodeDelete) return;
@@ -149,7 +154,8 @@ export function useConditionalMessagesSync({
     if (existing) {
       onNodeUpdate(existing.id, { branches });
     } else if (selectedNode.data.enableConditionalMessages) {
-      onNodeAdd(createConditionNode(conditions));
+      const node = createConditionNode(conditions);
+      if (node) onNodeAdd(node);
     }
   }, [selectedNode, onNodeUpdate, onNodeAdd, onNodeDelete, findConditionNode, createConditionNode]);
 
