@@ -48,6 +48,9 @@ function getBranchOperatorLabel(branch: ConditionBranch): string {
     default:       return '';
   }
 }
+
+/**
+ * Превью узла условия на холсте.
  *
  * Показывает заголовок с иконкой, переменную и список веток.
  * Каждая ветка имеет выходной порт справа.
