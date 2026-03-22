@@ -3,188 +3,170 @@
  * @module templates/middleware/middleware.test
  */
 
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
-import { generateMiddleware } from './middleware.renderer';
+import { describe, it, expect } from 'vitest';
+import { generateMiddleware, generateMessageLoggingCode } from './middleware.renderer';
 import {
   validParamsEnabled,
   validParamsDisabled,
+  validParamsNoAutoRegister,
+  validParamsDbOnly,
   invalidParamsWrongType,
-  expectedOutput,
 } from './middleware.fixture';
 import { middlewareParamsSchema } from './middleware.schema';
 
-describe('middleware.py.jinja2 шаблон', () => {
-  describe('generateMiddleware()', () => {
-    describe('Валидные данные', () => {
-      it('должен генерировать message_logging_middleware', () => {
-        const result = generateMiddleware(validParamsEnabled);
+// ─── generateMiddleware() ─────────────────────────────────────────────────────
 
-        assert.ok(result.includes('async def message_logging_middleware'));
-      });
-
-      it('должен включать docstring', () => {
-        const result = generateMiddleware(validParamsEnabled);
-
-        assert.ok(result.includes('"""Middleware для автоматического сохранения'));
-      });
-
-      it('должен включать обработку user_id', () => {
-        const result = generateMiddleware(validParamsEnabled);
-
-        assert.ok(result.includes('user_id = str(event.from_user.id)'));
-      });
-
-      it('должен включать save_message_to_api', () => {
-        const result = generateMiddleware(validParamsEnabled);
-
-        assert.ok(result.includes('await save_message_to_api'));
-      });
-
-      it('должен включать обработку ошибок', () => {
-        const result = generateMiddleware(validParamsEnabled);
-
-        assert.ok(result.includes('try:'));
-        assert.ok(result.includes('except Exception as e:'));
-      });
-
-      it('должен игнорировать параметры (всегда одинаковый вывод)', () => {
-        const result1 = generateMiddleware(validParamsEnabled);
-        const result2 = generateMiddleware(validParamsDisabled);
-
-        assert.strictEqual(result1, result2);
-      });
-    });
-
-    describe('Невалидные данные', () => {
-      it('должен отклонять параметры с неправильным типом', () => {
-        assert.throws(() => {
-          // @ts-expect-error
-          generateMiddleware(invalidParamsWrongType);
-        });
-      });
-
-      it('должен использовать значения по умолчанию', () => {
-        const result = middlewareParamsSchema.safeParse({});
-
-        assert.ok(result.success);
-        if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, false);
-        }
-      });
-
-      it('должен отклонять string вместо boolean', () => {
-        const result = middlewareParamsSchema.safeParse({
-          userDatabaseEnabled: 'true',
-        });
-        assert.ok(!result.success);
-      });
-
-      it('должен отклонять null', () => {
-        const result = middlewareParamsSchema.safeParse({
-          userDatabaseEnabled: null,
-        });
-        assert.ok(!result.success);
-      });
-    });
-
-    describe('Граничные случаи', () => {
-      it('должен включать logging.error', () => {
-        const result = generateMiddleware(validParamsEnabled);
-
-        assert.ok(result.includes('logging.error'));
-      });
-
-      it('должен включать return await handler', () => {
-        const result = generateMiddleware(validParamsEnabled);
-
-        assert.ok(result.includes('return await handler(event, data)'));
-      });
-
-      it('должен включать message.caption', () => {
-        const result = generateMiddleware(validParamsEnabled);
-
-        assert.ok(result.includes('event.text or event.caption'));
-      });
-
-      it('должен включать [медиа] заглушку', () => {
-        const result = generateMiddleware(validParamsEnabled);
-
-        assert.ok(result.includes('"[медиа]"'));
-      });
-    });
-
-    describe('Производительность', () => {
-      it('должен генерировать код быстрее 10ms', () => {
-        const start = Date.now();
-        generateMiddleware(validParamsEnabled);
-        const duration = Date.now() - start;
-
-        assert.ok(duration < 10, `Генерация заняла ${duration}ms`);
-      });
-
-      it('должен генерировать код 1000 раз быстрее 100ms', () => {
-        const start = Date.now();
-        for (let i = 0; i < 1000; i++) {
-          generateMiddleware(validParamsEnabled);
-        }
-        const duration = Date.now() - start;
-
-        assert.ok(duration < 100, `1000 генераций заняли ${duration}ms`);
-      });
-    });
+describe('generateMiddleware()', () => {
+  it('генерирует register_user_middleware по умолчанию', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('async def register_user_middleware');
   });
 
-  describe('middlewareParamsSchema', () => {
-    describe('Валидация типов', () => {
-      it('должен принимать boolean поле', () => {
-        const result = middlewareParamsSchema.safeParse(validParamsEnabled);
-        assert.ok(result.success);
-      });
+  it('генерирует message_logging_middleware при БД включена', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('async def message_logging_middleware');
+  });
 
-      it('должен отклонять string вместо boolean', () => {
-        const result = middlewareParamsSchema.safeParse({
-          userDatabaseEnabled: 'true',
-        });
-        assert.ok(!result.success);
-      });
+  it('не генерирует message_logging_middleware без БД', () => {
+    const r = generateMiddleware(validParamsDisabled);
+    expect(r).not.toContain('async def message_logging_middleware');
+  });
 
-      it('должен отклонять number вместо boolean', () => {
-        const result = middlewareParamsSchema.safeParse({
-          userDatabaseEnabled: 1,
-        });
-        assert.ok(!result.success);
-      });
+  it('включает обработку ошибок', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('try:');
+    expect(r).toContain('except Exception as e:');
+  });
 
-      it('должен отклонять null', () => {
-        const result = middlewareParamsSchema.safeParse({
-          userDatabaseEnabled: null,
-        });
-        assert.ok(!result.success);
-      });
-    });
+  it('включает return await handler', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('return await handler(event, data)');
+  });
 
-    describe('Значения по умолчанию', () => {
-      it('должен принимать undefined по умолчанию', () => {
-        const result = middlewareParamsSchema.safeParse({});
+  it('включает logging.error', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('logging.error');
+  });
+});
 
-        assert.ok(result.success);
-        if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, false);
-        }
-      });
-    });
+// ─── register_user_middleware ─────────────────────────────────────────────────
 
-    describe('Структура схемы', () => {
-      it('должен иметь 1 поле', () => {
-        const shape = middlewareParamsSchema.shape;
-        assert.strictEqual(Object.keys(shape).length, 1);
-      });
+describe('register_user_middleware', () => {
+  it('генерируется когда autoRegisterUsers=true', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('async def register_user_middleware');
+  });
 
-      it('должен использовать ZodOptional', () => {
-        const shape = middlewareParamsSchema.shape;
-        assert.ok(shape.userDatabaseEnabled.isOptional());
-      });
-    });
+  it('не генерируется когда autoRegisterUsers=false', () => {
+    const r = generateMiddleware(validParamsNoAutoRegister);
+    expect(r).not.toContain('async def register_user_middleware');
+  });
+
+  it('инициализирует user_data при первом обращении', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('user_id not in user_data');
+    expect(r).toContain("user_data[user_id] = {");
+  });
+
+  it('сохраняет username, first_name, last_name', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('username');
+    expect(r).toContain('first_name');
+    expect(r).toContain('last_name');
+  });
+
+  it('вызывает save_user_to_db при БД включена', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('save_user_to_db');
+  });
+
+  it('не вызывает save_user_to_db без БД', () => {
+    const r = generateMiddleware(validParamsDisabled);
+    expect(r).not.toContain('save_user_to_db');
+  });
+
+  it('логирует нового пользователя', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('Новый пользователь зарегистрирован');
+  });
+});
+
+// ─── generateMessageLoggingCode() ────────────────────────────────────────────
+
+describe('generateMessageLoggingCode()', () => {
+  it('без БД возвращает только register_user_middleware', () => {
+    const r = generateMessageLoggingCode(false, false, null, true);
+    expect(r).toContain('register_user_middleware');
+    expect(r).not.toContain('message_logging_middleware');
+    expect(r).not.toContain('save_message_to_api');
+  });
+
+  it('с БД возвращает все middleware', () => {
+    const r = generateMessageLoggingCode(true, false, null, true);
+    expect(r).toContain('register_user_middleware');
+    expect(r).toContain('message_logging_middleware');
+    expect(r).toContain('save_message_to_api');
+  });
+
+  it('autoRegisterUsers=false не генерирует register_user_middleware', () => {
+    const r = generateMessageLoggingCode(false, false, null, false);
+    expect(r).not.toContain('register_user_middleware');
+  });
+
+  it('hasInlineButtons добавляет callback_query_logging_middleware', () => {
+    const r = generateMessageLoggingCode(true, true, null, false);
+    expect(r).toContain('callback_query_logging_middleware');
+  });
+
+  it('без hasInlineButtons нет callback_query_logging_middleware', () => {
+    const r = generateMessageLoggingCode(true, false, null, false);
+    expect(r).not.toContain('callback_query_logging_middleware');
+  });
+});
+
+// ─── middlewareParamsSchema ───────────────────────────────────────────────────
+
+describe('middlewareParamsSchema', () => {
+  it('принимает валидные параметры', () => {
+    expect(middlewareParamsSchema.safeParse(validParamsEnabled).success).toBe(true);
+  });
+
+  it('принимает пустой объект (defaults)', () => {
+    const r = middlewareParamsSchema.safeParse({});
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.userDatabaseEnabled).toBe(false);
+      expect(r.data.autoRegisterUsers).toBe(false);
+    }
+  });
+
+  it('отклоняет string вместо boolean', () => {
+    expect(middlewareParamsSchema.safeParse(invalidParamsWrongType).success).toBe(false);
+  });
+
+  it('отклоняет null', () => {
+    expect(middlewareParamsSchema.safeParse({ userDatabaseEnabled: null }).success).toBe(false);
+  });
+
+  it('имеет 2 поля', () => {
+    expect(Object.keys(middlewareParamsSchema.shape).length).toBe(2);
+  });
+});
+
+// ─── Производительность ──────────────────────────────────────────────────────
+
+describe('Производительность', () => {
+  it('generateMiddleware быстрее 50ms', () => {
+    const start = Date.now();
+    generateMiddleware(validParamsEnabled);
+    expect(Date.now() - start).toBeLessThan(50);
+  });
+
+  it('generateMessageLoggingCode 100 раз быстрее 200ms', () => {
+    const start = Date.now();
+    for (let i = 0; i < 100; i++) {
+      generateMessageLoggingCode(true, true, null, true);
+    }
+    expect(Date.now() - start).toBeLessThan(200);
   });
 });

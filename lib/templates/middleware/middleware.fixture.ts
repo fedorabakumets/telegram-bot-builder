@@ -5,14 +5,28 @@
 
 import type { MiddlewareTemplateParams } from './middleware.params';
 
-/** Валидные параметры: БД включена */
+/** Валидные параметры: БД включена, авторегистрация включена */
 export const validParamsEnabled: MiddlewareTemplateParams = {
   userDatabaseEnabled: true,
+  autoRegisterUsers: true,
 };
 
-/** Валидные параметры: БД выключена */
+/** Валидные параметры: БД выключена, авторегистрация включена */
 export const validParamsDisabled: MiddlewareTemplateParams = {
   userDatabaseEnabled: false,
+  autoRegisterUsers: true,
+};
+
+/** Валидные параметры: авторегистрация выключена */
+export const validParamsNoAutoRegister: MiddlewareTemplateParams = {
+  userDatabaseEnabled: false,
+  autoRegisterUsers: false,
+};
+
+/** Валидные параметры: только БД без авторегистрации */
+export const validParamsDbOnly: MiddlewareTemplateParams = {
+  userDatabaseEnabled: true,
+  autoRegisterUsers: false,
 };
 
 /** Невалидные параметры: неправильный тип */
@@ -22,22 +36,3 @@ export const invalidParamsWrongType = {
 
 /** Невалидные параметры: отсутствует поле */
 export const invalidParamsMissingField = {};
-
-/** Ожидаемый вывод: middleware */
-export const expectedOutput = `
-async def message_logging_middleware(handler, event: types.Message, data: dict):
-    """Middleware для автоматического сохранения входящих сообщений"""
-    try:
-        user_id = str(event.from_user.id)
-        message_text = event.text or event.caption or "[медиа]"
-
-        await save_message_to_api(
-            user_id=user_id,
-            message_type="user",
-            message_text=message_text,
-        )
-    except Exception as e:
-        logging.error(f"Ошибка в middleware сохранения сообщений: {e}")
-
-    return await handler(event, data)
-`.trim();

@@ -31,6 +31,7 @@ async def register_user_middleware(handler, event: types.Message, data: dict):
 
 {% endif %}
 
+{% if userDatabaseEnabled %}
 # Middleware для сохранения входящих сообщений
 async def message_logging_middleware(handler, event: types.Message, data: dict):
     """Middleware для автоматического сохранения входящих сообщений от пользователей"""
@@ -69,6 +70,8 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
 
     # Продолжаем обработку сообщения
     return await handler(event, data)
+
+{% endif %}
 
 {% if hasInlineButtons %}
 # Middleware для сохранения нажатий на кнопки

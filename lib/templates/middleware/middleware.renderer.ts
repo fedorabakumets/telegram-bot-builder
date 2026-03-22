@@ -1,13 +1,27 @@
 /**
- * @fileoverview Renderer для генерации кода логирования сообщений
+ * @fileoverview Renderer для генерации кода middleware Telegram бота
+ *
+ * Генерирует:
+ * - `register_user_middleware` — авторегистрация пользователей при первом обращении
+ * - `message_logging_middleware` — логирование входящих сообщений (только при БД)
+ * - `callback_query_logging_middleware` — логирование нажатий кнопок (только при БД + inline)
+ *
  * @module templates/middleware/middleware.renderer
  */
 
 import { renderPartialTemplate } from '../template-renderer';
 
 /**
- * Генерирует код логирования: middleware, обёртки send/answer, save_message_to_api
- * @alias generateMiddleware
+ * Генерирует код middleware: авторегистрация пользователей, логирование сообщений,
+ * обёртки send/answer и save_message_to_api.
+ *
+ * `register_user_middleware` генерируется независимо от `userDatabaseEnabled` —
+ * он нужен для инициализации `user_data` при любом входящем сообщении.
+ *
+ * @param userDatabaseEnabled - Включить логирование через БД
+ * @param hasInlineButtonsValue - Генерировать callback_query_logging_middleware
+ * @param projectId - ID проекта для save_message_to_api
+ * @param autoRegisterUsers - Генерировать register_user_middleware (по умолчанию true)
  */
 export function generateMessageLoggingCode(
   userDatabaseEnabled: boolean,
@@ -24,19 +38,20 @@ export function generateMessageLoggingCode(
     autoRegisterUsers,
   });
 
-  if (!userDatabaseEnabled) return code;
+  if (userDatabaseEnabled) {
+    code += renderPartialTemplate('middleware/save-message-to-api.py.jinja2', { projectId });
+    code += renderPartialTemplate('middleware/answer-with-logging.py.jinja2', {});
+    code += renderPartialTemplate('middleware/send-message-with-logging.py.jinja2', {});
+    code += renderPartialTemplate('middleware/send-photo-with-logging.py.jinja2', {});
+    code += renderPartialTemplate('middleware/wrap-bot-answer.py.jinja2', {});
+  }
 
-  code += renderPartialTemplate('middleware/save-message-to-api.py.jinja2', { projectId });
-  code += renderPartialTemplate('middleware/answer-with-logging.py.jinja2', {});
-  code += renderPartialTemplate('middleware/send-message-with-logging.py.jinja2', {});
-  code += renderPartialTemplate('middleware/send-photo-with-logging.py.jinja2', {});
-  code += renderPartialTemplate('middleware/wrap-bot-answer.py.jinja2', {});
   return code;
 }
 
 /**
  * Обёртка для обратной совместимости с тестами
  */
-export function generateMiddleware(params: { userDatabaseEnabled: boolean }): string {
-  return generateMessageLoggingCode(params.userDatabaseEnabled, false, null);
+export function generateMiddleware(params: { userDatabaseEnabled: boolean; autoRegisterUsers?: boolean }): string {
+  return generateMessageLoggingCode(params.userDatabaseEnabled, false, null, params.autoRegisterUsers ?? true);
 }
