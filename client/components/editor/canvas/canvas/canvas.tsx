@@ -252,6 +252,12 @@ export function Canvas({
           data.buttons = buttons.map((btn: any) =>
             btn.action === 'goto' && btn.target === toId ? { ...btn, target: undefined } : btn
           );
+          const branches = (data.branches as any[] | undefined) ?? [];
+          if (branches.length > 0) {
+            data.branches = branches.map((b: any) =>
+              b.target === toId ? { ...b, target: undefined } : b
+            );
+          }
         } else if (type === 'input-target') {
           delete data.inputTargetNodeId;
         }
