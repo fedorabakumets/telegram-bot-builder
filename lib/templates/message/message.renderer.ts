@@ -27,22 +27,24 @@ import type { Node } from '@shared/schema';
  */
 export function generateMessage(params: MessageTemplateParams): string {
   const VALID_FORMAT_MODES = ['html', 'markdown', 'none'] as const;
-  const validated = messageParamsSchema.parse({
-    userDatabaseEnabled: params.userDatabaseEnabled ?? false,
-    keyboardType: params.keyboardType ?? 'none',
-    formatMode: VALID_FORMAT_MODES.includes(params.formatMode as any) ? params.formatMode : 'none',
-    requiresAuth: params.requiresAuth ?? false,
-    isPrivateOnly: params.isPrivateOnly ?? false,
-    adminOnly: params.adminOnly ?? false,
-    enableAutoTransition: params.enableAutoTransition ?? false,
-    allowMultipleSelection: params.allowMultipleSelection ?? false,
-    collectUserInput: params.collectUserInput ?? false,
-    enableConditionalMessages: params.enableConditionalMessages ?? false,
-    oneTimeKeyboard: params.oneTimeKeyboard ?? false,
-    resizeKeyboard: params.resizeKeyboard ?? true,
+  /** Нормализуем params до передачи в схему — убираем невалидные значения */
+  const normalizedParams = {
     ...params,
-    // Перезаписываем после ...params чтобы нормализация не была перекрыта
     formatMode: VALID_FORMAT_MODES.includes(params.formatMode as any) ? params.formatMode : 'none',
+  };
+  const validated = messageParamsSchema.parse({
+    ...normalizedParams,
+    userDatabaseEnabled: normalizedParams.userDatabaseEnabled ?? false,
+    keyboardType: normalizedParams.keyboardType ?? 'none',
+    requiresAuth: normalizedParams.requiresAuth ?? false,
+    isPrivateOnly: normalizedParams.isPrivateOnly ?? false,
+    adminOnly: normalizedParams.adminOnly ?? false,
+    enableAutoTransition: normalizedParams.enableAutoTransition ?? false,
+    allowMultipleSelection: normalizedParams.allowMultipleSelection ?? false,
+    collectUserInput: normalizedParams.collectUserInput ?? false,
+    enableConditionalMessages: normalizedParams.enableConditionalMessages ?? false,
+    oneTimeKeyboard: normalizedParams.oneTimeKeyboard ?? false,
+    resizeKeyboard: normalizedParams.resizeKeyboard ?? true,
   });
 
   // Вычисляем блок waiting_for_input если нужен сбор ввода
