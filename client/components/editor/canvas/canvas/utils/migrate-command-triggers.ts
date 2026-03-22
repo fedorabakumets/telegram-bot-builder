@@ -16,8 +16,13 @@ import { nanoid } from 'nanoid';
  * Мигрирует узлы start/command в command_trigger узлы при загрузке листа.
  *
  * Для каждого узла типа `start` или `command` с непустым `data.command`:
- * - проверяет, не существует ли уже `command_trigger` с `autoTransitionTo === node.id`
+ * - проверяет, не существует ли уже `command_trigger` с `sourceNodeId === node.id`
  * - если не существует — создаёт `command_trigger` левее исходного узла на 360px
+ *
+ * Проверка ведётся по полю `sourceNodeId`, а не `autoTransitionTo`, потому что
+ * после миграции условных сообщений (`migrateConditionalMessagesToConditionNodes`)
+ * поле `autoTransitionTo` у триггера может быть перенаправлено на `condition`-узел,
+ * и проверка по `autoTransitionTo === node.id` ложно не находила бы существующий триггер.
  *
  * @param nodes - Массив узлов листа
  * @returns Новый массив узлов с добавленными command_trigger (исходные узлы не изменены)
@@ -33,9 +38,11 @@ export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
     if (!command.trim()) continue;
 
     // Проверяем: уже есть command_trigger для этого узла?
+    // Используем sourceNodeId — стабильный идентификатор исходного узла,
+    // который не меняется при последующих миграциях (в отличие от autoTransitionTo).
     const alreadyExists = nodes.some(n =>
       n.type === 'command_trigger' &&
-      (n.data as any).autoTransitionTo === node.id
+      (n.data as any).sourceNodeId === node.id
     );
 
     if (alreadyExists) continue;
@@ -53,6 +60,9 @@ export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
         showInMenu: true,
         isPrivateOnly: false,
         autoTransitionTo: node.id,
+        /** Стабильная ссылка на исходный узел — используется для проверки дублирования.
+         *  Не меняется при последующих миграциях (в отличие от autoTransitionTo). */
+        sourceNodeId: node.id,
         synonyms: [],
         buttons: [],
         keyboardType: 'none',
