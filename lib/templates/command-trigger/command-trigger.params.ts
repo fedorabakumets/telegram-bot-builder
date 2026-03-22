@@ -23,6 +23,12 @@ export interface CommandTriggerEntry {
   targetNodeId: string;
   /** Тип целевого узла */
   targetNodeType: string;
+  /** Текст сообщения для отправки */
+  messageText?: string;
+  /** Режим форматирования: 'html', 'markdown', 'none' */
+  formatMode?: 'html' | 'markdown' | 'none';
+  /** Использует ли текст переменные пользователя */
+  hasVariables?: boolean;
 }
 
 /** Параметры для генерации всех обработчиков командных триггеров */

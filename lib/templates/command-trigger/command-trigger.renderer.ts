@@ -34,6 +34,17 @@ export function collectCommandTriggerEntries(nodes: Node[]): CommandTriggerEntry
     const targetNode = nodeMap.get(targetNodeId);
     const targetNodeType = targetNode?.type ?? 'message';
 
+    const rawFormatMode: string = (node.data as any).formatMode ?? 'none';
+    const markdown: boolean = !!(node.data as any).markdown;
+    // formatMode побеждает над legacy markdown:true
+    let formatMode: 'html' | 'markdown' | 'none' = 'none';
+    if (rawFormatMode === 'html') formatMode = 'html';
+    else if (rawFormatMode === 'markdown') formatMode = 'markdown';
+    else if (markdown) formatMode = 'markdown'; // legacy fallback
+
+    const messageText: string = (node.data as any).messageText ?? '';
+    const hasVariables = /\{[^}]+\}/.test(messageText);
+
     entries.push({
       nodeId: node.id,
       command,
@@ -44,6 +55,9 @@ export function collectCommandTriggerEntries(nodes: Node[]): CommandTriggerEntry
       requiresAuth: node.data.requiresAuth,
       targetNodeId,
       targetNodeType,
+      messageText,
+      formatMode,
+      hasVariables,
     });
   }
 

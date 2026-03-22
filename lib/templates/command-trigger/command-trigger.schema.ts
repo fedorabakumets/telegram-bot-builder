@@ -19,6 +19,12 @@ export const commandTriggerEntrySchema = z.object({
   requiresAuth: z.boolean().optional(),
   targetNodeId: z.string().min(1),
   targetNodeType: z.string().min(1),
+  /** Текст сообщения */
+  messageText: z.string().optional().default(''),
+  /** Режим форматирования */
+  formatMode: z.enum(['html', 'markdown', 'none']).optional().default('none'),
+  /** Содержит ли текст переменные */
+  hasVariables: z.boolean().optional().default(false),
 });
 
 /** Zod схема параметров шаблона */

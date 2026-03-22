@@ -12,6 +12,9 @@
     - isPrivateOnly: bool     — только приватные чаты
     - adminOnly: bool         — только администраторы (вызывает is_admin())
     - requiresAuth: bool      — требуется авторизация (вызывает check_auth())
+    - messageText: string     — текст сообщения (опционально)
+    - formatMode: string      — режим форматирования: 'html', 'markdown', 'none'
+    - hasVariables: bool      — содержит ли текст переменные {var}
 #}
 
 # Обработчики командных триггеров
@@ -41,6 +44,35 @@ async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message
         return
     {%- endif %}
 
+    {%- if entry.messageText is defined and entry.messageText != '' %}
+    # Сохранение информации о пользователе
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["username"] = username
+    user_data[user_id]["first_name"] = first_name
+    user_data[user_id]["last_name"] = last_name
+
+    # Текст сообщения
+    text = {{ entry.messageText | format_python_text }}
+
+    {%- if entry.hasVariables %}
+    # Замена переменных в тексте
+    all_user_vars = await init_all_user_vars(user_id)
+    text = replace_variables_in_text(text, all_user_vars, {})
+    {%- endif %}
+
+    {%- if entry.formatMode == 'html' %}
+    await message.answer(text, parse_mode="HTML")
+    {%- elif entry.formatMode == 'markdown' %}
+    await message.answer(text, parse_mode="Markdown")
+    {%- else %}
+    await message.answer(text)
+    {%- endif %}
+    {%- else %}
+
     class MockCallback:
         def __init__(self, data, user, msg):
             self.data = data
@@ -59,5 +91,6 @@ async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message
 
     mock_callback = MockCallback("{{ entry.targetNodeId }}", message.from_user, message)
     await handle_callback_{{ sanitized_target_id }}(mock_callback)
+    {%- endif %}
 
 {% endfor %}
