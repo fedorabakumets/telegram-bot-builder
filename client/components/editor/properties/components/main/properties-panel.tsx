@@ -6,7 +6,6 @@ import { useConditionalMessagesSync } from '../synonyms/use-conditional-messages
 import { EmptyState } from '../layout/empty-state';
 import { getNodeDefaults } from '../../utils/node-defaults';
 import { collectAllNodesFromSheets } from '../../utils/node-utils';
-import { detectRuleConflicts as detectConflicts, autoFixRulePriorities, RuleConflict } from '../../utils/conditional-utils';
 import { collectAvailableQuestions, extractVariables } from '../../utils/variables-utils';
 import { useMediaVariables } from '../../hooks/use-media-variables';
 import { useNodeCommandValidation } from '../../hooks/use-node-command-validation';
@@ -25,19 +24,11 @@ import { MessageContentSection } from './message-content-section';
 import { MediaFileSection } from '../media-file/media-file-section';
 import { KeyboardSectionHeader } from '../keyboard/keyboard-section-header';
 import { KeyboardButtonsSection } from '../keyboard/keyboard-buttons-section';
-import { ConditionalMessagesHeader } from '../conditional-message-card/conditional-messages-header';
-import { ConditionalMessagesToggle } from '../conditional-message-card/conditional-messages-toggle';
-import { ConditionalMessagesInfoBlock } from '../conditional-message-card/conditional-messages-info-block';
-import { ConditionalMessagesActions } from '../conditional-message-card/conditional-messages-actions';
 import { UserInputSettingsSection } from './user-input-settings-section';
 import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
 import { KeyboardLayoutEditor } from '../keyboard/keyboard-layout-editor';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import { ButtonCard } from '../button-card/button-card';
-// Временно скрыто: import { EmptyConditionalState } from '../conditional/empty-conditional-state';
-// Временно скрыто: import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
-import { EmptyConditionalState } from '../conditional/empty-conditional-state';
-import { ConditionalMessageCard } from '../conditional-message-card/conditional-message-card';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
 import { VoiceConfiguration } from '../configuration/voice-configuration';
 import { AnimationConfiguration } from '../configuration/animation-configuration';
@@ -137,7 +128,6 @@ export function PropertiesPanel({
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(false);
   const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(false);
-  const [isConditionalMessagesSectionOpen, setIsConditionalMessagesSectionOpen] = useState(false);
   const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(false);
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
 
@@ -167,12 +157,6 @@ export function PropertiesPanel({
     const hasButtons = selectedNode.data.buttons?.length > 0;
     if ((hasKeyboard || hasButtons) && !isKeyboardSectionOpen) {
       setIsKeyboardSectionOpen(true);
-    }
-
-    // Секция условных сообщений
-    const hasConditionalMessages = selectedNode.data.enableConditionalMessages && selectedNode.data.conditionalMessages?.length > 0;
-    if (hasConditionalMessages && !isConditionalMessagesSectionOpen) {
-      setIsConditionalMessagesSectionOpen(true);
     }
 
     // Секция ввода пользователя
@@ -212,23 +196,6 @@ export function PropertiesPanel({
     mediaVariables,
     onNodeUpdate
   );
-
-  /**
-   * Мемоизированная проверка конфликтов условных сообщений
-   */
-  const detectRuleConflicts = useMemo((): RuleConflict[] => {
-    if (!selectedNode?.data.conditionalMessages) return [];
-    return detectConflicts(selectedNode.data.conditionalMessages);
-  }, [selectedNode?.data.conditionalMessages]);
-
-  /**
-   * Автоматическое исправление приоритетов правил
-   */
-  const autoFixPriorities = (): void => {
-    if (!selectedNode?.data.conditionalMessages) return;
-    const fixedRules = autoFixRulePriorities(selectedNode.data.conditionalMessages) as any;
-    onNodeUpdate(selectedNode.id, { conditionalMessages: fixedRules });
-  };
 
   const commandValidation = useNodeCommandValidation({ selectedNode });
 
@@ -502,91 +469,6 @@ export function PropertiesPanel({
                       }}
                     />
                   )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Conditional Messages Section */}
-        {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
-          <div className="w-full bg-gradient-to-br from-purple-50/40 to-indigo-50/20 dark:from-purple-950/30 dark:to-indigo-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-purple-200/40 dark:border-purple-800/40 backdrop-blur-sm">
-            <ConditionalMessagesHeader
-              selectedNode={selectedNode}
-              isOpen={isConditionalMessagesSectionOpen}
-              onToggle={() => setIsConditionalMessagesSectionOpen(!isConditionalMessagesSectionOpen)}
-            />
-
-            <ConditionalMessagesToggle
-              selectedNode={selectedNode}
-              onNodeUpdate={(nodeId, updates) => {
-                if ('enableConditionalMessages' in updates) {
-                  handleConditionalMessagesToggle(updates.enableConditionalMessages as boolean);
-                  if (updates.enableConditionalMessages) setIsConditionalMessagesSectionOpen(true);
-                } else {
-                  onNodeUpdate(nodeId, updates);
-                }
-              }}
-              onToggle={() => setIsConditionalMessagesSectionOpen(true)}
-            />
-
-            {isConditionalMessagesSectionOpen && (
-              <div className="space-y-3 sm:space-y-4">
-                {selectedNode.data.enableConditionalMessages && (
-                  <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-purple-50/40 to-indigo-50/20 dark:from-purple-950/15 dark:to-indigo-950/10 border border-purple-200/40 dark:border-purple-800/30 rounded-lg sm:rounded-xl p-3 sm:p-4 transition-all duration-200 hover:border-purple-300/60 dark:hover:border-purple-700/60">
-
-                    <ConditionalMessagesInfoBlock />
-
-                    <div className="space-y-2 sm:space-y-3">
-                      <ConditionalMessagesActions
-                        autoFixPriorities={autoFixPriorities}
-                        onAddCondition={(newCondition) => {
-                          const currentConditions = selectedNode.data.conditionalMessages || [];
-                          handleConditionalMessagesUpdate([...currentConditions, newCondition]);
-                        }}
-                      />
-
-                      <div className="space-y-2 sm:space-y-3">
-                        {(selectedNode.data.conditionalMessages || [])
-                          .sort((a, b) => (b.priority || 0) - (a.priority || 0))
-                          .map((condition, index) => {
-                            const ruleConflicts = detectRuleConflicts.filter((c: RuleConflict) => c.ruleIndex === index);
-                            const hasErrors = ruleConflicts.some((c: RuleConflict) => c.severity === 'error');
-                            const hasWarnings = ruleConflicts.some((c: RuleConflict) => c.severity === 'warning');
-
-                            return (
-                              <ConditionalMessageCard
-                                key={condition.id}
-                                index={index}
-                                condition={condition}
-                                selectedNode={selectedNode}
-                                availableQuestions={availableQuestions}
-                                textVariables={textVariables}
-                                getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-                                formatNodeDisplay={formatNodeDisplay}
-                                onNodeUpdate={(nodeId, updates) => {
-                                  if ('conditionalMessages' in updates) {
-                                    handleConditionalMessagesUpdate(updates.conditionalMessages as any[]);
-                                  } else {
-                                    onNodeUpdate(nodeId, updates);
-                                  }
-                                }}
-                                ruleConflicts={ruleConflicts}
-                                hasErrors={hasErrors}
-                                hasWarnings={hasWarnings}
-                              />
-                            );
-                          })}
-
-                        {(selectedNode.data.conditionalMessages || []).length === 0 && (
-                          <EmptyConditionalState
-                            selectedNode={selectedNode}
-                            onNodeUpdate={onNodeUpdate}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
