@@ -521,6 +521,17 @@ export default function Editor() {
   // Вычисляем selectedNode из selectedNodeId и nodes
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
 
+  // Реактивно открываем/закрываем панель свойств при выборе/снятии выбора узла
+  useEffect(() => {
+    if (currentTab !== 'editor') return;
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el =>
+        el.id === 'properties' ? { ...el, visible: !!selectedNodeId } : el
+      )
+    }));
+  }, [selectedNodeId, currentTab]);
+
   // Reset hasLocalChanges when activeProject changes
   useEffect(() => {
     if (activeProject?.id !== lastLoadedProjectId && lastLoadedProjectId !== null) {
@@ -632,11 +643,11 @@ export default function Editor() {
         // Восстанавливаем все основные элементы интерфейса
         if (el.type === 'canvas') return { ...el, visible: true };
         if (el.id === 'sidebar') return { ...el, visible: true };
-        if (el.id === 'properties') return { ...el, visible: true };
+        if (el.id === 'properties') return { ...el, visible: !!selectedNodeId };
         return el;
       })
     }));
-  }, [setFlexibleLayoutConfig]);
+  }, [setFlexibleLayoutConfig, selectedNodeId]);
 
   // Навигация по вкладкам через хук
   const { handleTabChange } = useTabNavigation({

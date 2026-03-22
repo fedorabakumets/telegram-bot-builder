@@ -32,7 +32,7 @@ interface UseLayoutManagerResult {
  */
 function createBaseConfig(isMobile: boolean, currentTab: string): SimpleLayoutConfig {
   const headerSize = isMobile ? 2.5 : 3;
-  // Показываем sidebar и properties только на вкладке editor
+  // Показываем sidebar только на вкладке editor; properties скрыт по умолчанию
   const showPanels = currentTab === 'editor';
   // Скрываем canvas на вкладке export (Код)
   const showCanvas = currentTab !== 'export';
@@ -44,7 +44,7 @@ function createBaseConfig(isMobile: boolean, currentTab: string): SimpleLayoutCo
       { id: 'header', type: 'header', name: 'Шапка', position: 'top', size: headerSize, visible: true },
       { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', position: 'left', size: 20, visible: showPanels },
       { id: 'canvas', type: 'canvas', name: 'Холст', position: 'center', size: 30, visible: showCanvas },
-      { id: 'properties', type: 'properties', name: 'Свойства', position: 'right', size: 25, visible: showPanels },
+      { id: 'properties', type: 'properties', name: 'Свойства', position: 'right', size: 25, visible: false },
       { id: 'code', type: 'code', name: 'Код', position: 'left', size: 25, visible: showCodePanels },
       { id: 'codeEditor', type: 'codeEditor', name: 'Редактор кода', position: 'center', size: 40, visible: showCodePanels },
       { id: 'dialog', type: 'dialog', name: 'Диалог', position: 'right', size: 25, visible: currentTab === 'users' },
