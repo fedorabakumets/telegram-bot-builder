@@ -798,6 +798,33 @@ export default function Editor() {
   }, [_deleteNode, nodes, handleActionLog, saveToHistory]);
 
   /**
+   * Удаляет соединение между узлами с сохранением в историю.
+   */
+  const handleConnectionDelete = useCallback((fromId: string, toId: string, type: string) => {
+    saveToHistory();
+    const updatedNodes = nodes.map(n => {
+      if (n.id !== fromId) return n;
+      const data = { ...n.data } as Record<string, unknown>;
+      if (type === 'trigger-next') {
+        delete data.autoTransitionTo;
+      } else if (type === 'auto-transition') {
+        data.enableAutoTransition = false;
+        delete data.autoTransitionTo;
+      } else if (type === 'button-goto') {
+        const buttons = (data.buttons as any[] | undefined) ?? [];
+        data.buttons = buttons.map((btn: any) =>
+          btn.action === 'goto' && btn.target === toId ? { ...btn, target: undefined } : btn
+        );
+      } else if (type === 'input-target') {
+        delete data.inputTargetNodeId;
+      }
+      return { ...n, data };
+    });
+    updateNodes(updatedNodes);
+    handleActionLog('disconnect', 'Удалено соединение');
+  }, [nodes, updateNodes, saveToHistory, handleActionLog]);
+
+  /**
    * Обёртка над duplicateNode с логированием в историю.
    * Принимает опциональную целевую позицию и передаёт её в duplicateNode,
    * чтобы дубль появлялся именно там, где пользователь кликнул правой кнопкой
@@ -1088,6 +1115,7 @@ export default function Editor() {
             onActionLog={handleActionLog}
             actionHistory={actionHistory}
             onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
+            onConnectionDelete={handleConnectionDelete}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full">
@@ -1342,6 +1370,7 @@ export default function Editor() {
                   onActionLog={handleActionLog}
                   actionHistory={actionHistory}
                   onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
+                  onConnectionDelete={handleConnectionDelete}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">

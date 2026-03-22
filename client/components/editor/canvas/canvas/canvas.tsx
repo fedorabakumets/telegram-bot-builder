@@ -121,6 +121,8 @@ interface CanvasProps {
   actionHistory?: Action[];
   /** Колбэк для удаления записей из внешней истории по id */
   onActionHistoryRemove?: (ids: Set<string>) => void;
+  /** Колбэк удаления соединения (вызывается из ConnectionsLayer) */
+  onConnectionDelete?: (fromId: string, toId: string, type: string) => void;
 }
 
 export function Canvas({
@@ -158,7 +160,8 @@ export function Canvas({
   onNodeSizesChange,
   onActionLog,
   actionHistory: externalActionHistory,
-  onActionHistoryRemove
+  onActionHistoryRemove,
+  onConnectionDelete: onConnectionDeleteProp,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -219,9 +222,15 @@ export function Canvas({
 
   /**
    * Удаляет соединение между двумя узлами.
-   * Очищает соответствующее поле в данных исходного узла.
+   * Если передан внешний onConnectionDelete — делегируем ему (он вызовет saveToHistory).
+   * Иначе — очищаем соответствующее поле в данных исходного узла напрямую.
    */
   const handleConnectionDelete = useCallback((fromId: string, toId: string, type: string) => {
+    if (onConnectionDeleteProp) {
+      onConnectionDeleteProp(fromId, toId, type);
+      return;
+    }
+
     const updatedNodes = nodes.map(n => {
       if (n.id !== fromId) return n;
       const data = { ...n.data } as Record<string, unknown>;
@@ -244,7 +253,7 @@ export function Canvas({
     });
     onNodesUpdate?.(updatedNodes);
     addAction('disconnect', `Удалено соединение`);
-  }, [nodes, onNodesUpdate, addAction]);
+  }, [onConnectionDeleteProp, nodes, onNodesUpdate, addAction]);
 
   const {
     draftConnection,
