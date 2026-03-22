@@ -6,29 +6,32 @@
 #}
 
 # Обработчики узлов условия
-{% for entry in conditionEntries -%}
-{%- set sanitized_node_id = entry.nodeId | safe_name -%}
-
+{% for entry in conditionEntries %}
+{%- set sanitized_node_id = entry.nodeId | safe_name %}
 async def handle_callback_{{ sanitized_node_id }}(callback_query):
     # Узел условия {{ entry.nodeId }}, переменная: {{ entry.variable }}
     user_id = callback_query.from_user.id
     val = get_user_variable(user_id, "{{ entry.variable }}")
     logging.info(f"Узел условия {{ entry.nodeId }}: переменная '{{ entry.variable }}' = {val}")
-    {% for branch in entry.branches -%}
-    {%- set sanitized_target = branch.target | safe_name if branch.target else '' -%}
-    {%- if loop.first and branch.operator != 'else' %}
-    if {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}val == "{{ branch.value }}"{% endif %}:
-        # Ветка: {{ branch.operator }}{% if branch.value %} == "{{ branch.value }}"{% endif %}
-        {% if branch.target %}await handle_callback_{{ sanitized_target }}(callback_query){% else %}pass{% endif %}
-    {%- elif branch.operator == 'else' %}
+{%- if not entry.hasConditionalBranch %}
+    if True:
+        pass
+{% endif %}
+{% for branch in entry.branches %}
+{%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
+{%- if branch.operator == 'else' %}
     else:
         # Ветка по умолчанию
-        {% if branch.target %}await handle_callback_{{ sanitized_target }}(callback_query){% else %}pass{% endif %}
-    {%- else %}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- elif branch.isFirstConditional %}
+    if {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}val == "{{ branch.value }}"{% endif %}:
+        # Ветка: {{ branch.operator }}{% if branch.value %} == "{{ branch.value }}"{% endif %}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- else %}
     elif {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}val == "{{ branch.value }}"{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} == "{{ branch.value }}"{% endif %}
-        {% if branch.target %}await handle_callback_{{ sanitized_target }}(callback_query){% else %}pass{% endif %}
-    {%- endif %}
-    {%- endfor %}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- endif %}
+{%- endfor %}
 
 {% endfor %}

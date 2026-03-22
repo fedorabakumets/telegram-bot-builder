@@ -41,6 +41,7 @@ export const ALREADY_HANDLED_TYPES = new Set<string>([
   NODE_TYPES.MESSAGE,
   'command_trigger',
   'text_trigger',
+  'condition',
 ]);
 
 /**

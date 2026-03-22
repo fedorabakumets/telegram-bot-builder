@@ -29,16 +29,35 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     const branches: any[] = (node.data as any).branches ?? [];
     if (branches.length === 0) continue;
 
+    const validOperators = new Set(['filled', 'empty', 'equals', 'else']);
+    // Определяем первую не-else ветку для корректного if/elif
+    let firstConditionalSeen = false;
+    const mappedBranches = branches
+      .filter(b => validOperators.has(b.operator))
+      .map(b => {
+        const isFirstConditional = b.operator !== 'else' && !firstConditionalSeen;
+        if (isFirstConditional) firstConditionalSeen = true;
+        return {
+          id: b.id ?? '',
+          operator: b.operator,
+          value: (b.value ?? '')
+            .replace(/\\/g, '\\\\')
+            .replace(/"/g, '\\"')
+            .replace(/\n/g, '\\n')
+            .replace(/\r/g, ''),
+          target: b.target,
+          isFirstConditional,
+        };
+      });
+
+    if (mappedBranches.length === 0) continue;
+
     entries.push({
       nodeId: node.id,
       variable,
-      branches: branches.map(b => ({
-        id: b.id ?? '',
-        operator: b.operator,
-        value: b.value ?? '',
-        target: b.target,
-      })),
-    });
+      branches: mappedBranches,
+      hasConditionalBranch: mappedBranches.some(b => b.operator !== 'else'),
+    } as any);
   }
 
   return entries;
@@ -56,14 +75,15 @@ export function generateConditionHandlers(input: Node[] | ConditionTemplateParam
   if (Array.isArray(input)) {
     const entries = collectConditionEntries(input);
     if (entries.length === 0) return '';
-    const validated = conditionParamsSchema.parse({ entries });
+    // Валидируем базовую структуру, но используем оригинальные entries (с isFirstConditional)
+    conditionParamsSchema.parse({ entries });
     return renderPartialTemplate('condition/condition.py.jinja2', {
-      conditionEntries: validated.entries,
+      conditionEntries: entries,
     });
   }
   if (input.entries.length === 0) return '';
-  const validated = conditionParamsSchema.parse(input);
+  conditionParamsSchema.parse(input);
   return renderPartialTemplate('condition/condition.py.jinja2', {
-    conditionEntries: validated.entries,
+    conditionEntries: input.entries,
   });
 }

@@ -8,7 +8,7 @@ import { z } from 'zod';
 /** Zod-схема одной ветки условия */
 export const conditionBranchEntrySchema = z.object({
   /** Уникальный идентификатор ветки */
-  id: z.string().min(1),
+  id: z.string(),
   /** Оператор ветки */
   operator: z.enum(['filled', 'empty', 'equals', 'else']),
   /** Значение для сравнения (для оператора "equals") */
