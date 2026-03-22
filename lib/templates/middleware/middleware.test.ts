@@ -75,6 +75,13 @@ describe('register_user_middleware', () => {
     expect(r).toContain('last_name');
   });
 
+  it('сохраняет language_code, is_premium, is_bot', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('language_code');
+    expect(r).toContain('is_premium');
+    expect(r).toContain('is_bot');
+  });
+
   it('вызывает save_user_to_db при БД включена', () => {
     const r = generateMiddleware(validParamsEnabled);
     expect(r).toContain('save_user_to_db');

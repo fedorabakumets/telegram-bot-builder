@@ -2,130 +2,85 @@
 
 ## Описание
 
-Генерирует Python утилитарные функции для Telegram бота: is_admin, is_private_chat, get_user_variables, check_auth.
+Генерирует Python утилитарные функции для Telegram бота:
+- `init_user_variables` — инициализация данных пользователя при регистрации
+- `init_all_user_vars` — сбор всех переменных для подстановки в текст
+- `get_user_variables` — чтение переменных из локального хранилища
+- `check_auth` — проверка авторизации
+- `is_admin` — проверка прав администратора (условно)
+- `is_private_chat` — проверка типа чата (условно)
+- `replace_variables_in_text` — подстановка `{переменная}` в текст
 
 ## Параметры
 
 | Параметр | Тип | По умолчанию | Описание |
 |----------|-----|--------------|----------|
-| `userDatabaseEnabled` | `boolean` | `false` | Включена ли база данных пользователей |
+| `userDatabaseEnabled` | `boolean` | `false` | Включена ли база данных |
+| `adminOnly` | `boolean` | `false` | Генерировать `is_admin()` |
+| `isPrivateOnly` | `boolean` | `false` | Генерировать `is_private_chat()` |
 
-## Использование
+## Переменные пользователя
 
-### Базовое
+`init_user_variables(user_id, from_user)` сохраняет в `user_data`:
 
-```typescript
-import { generateUtils } from './utils-template.renderer';
+| Переменная | Источник | Доступна в тексте |
+|---|---|---|
+| `{user_id}` | `from_user.id` | ✅ |
+| `{username}` | `from_user.username` | ✅ |
+| `{first_name}` | `from_user.first_name` | ✅ |
+| `{last_name}` | `from_user.last_name` | ✅ |
+| `{user_name}` | username или first_name или user_id | ✅ |
+| `{language_code}` | `from_user.language_code` | ✅ |
+| `{is_premium}` | `from_user.is_premium` | ✅ |
+| `{is_bot}` | `from_user.is_bot` | ✅ |
 
-const code = generateUtils({
-  userDatabaseEnabled: true,
-});
-```
+## init_user_variables vs init_all_user_vars
 
-## Примеры вывода
+| | `init_user_variables` | `init_all_user_vars` |
+|---|---|---|
+| Когда вызывается | При регистрации (один раз) | Перед каждой отправкой сообщения |
+| Что делает | Записывает данные из `from_user` | Читает все переменные для подстановки |
+| Побочный эффект | Заполняет `user_data[user_id]` | Нет |
+| Источники | Объект `from_user` из апдейта | `user_data` + БД (если включена) |
 
-### База данных включена
+## check_auth
 
-**Вход:**
-```typescript
-{ userDatabaseEnabled: true }
-```
-
-**Выход:**
 ```python
-# Утилитарные функции
-from aiogram import types
-
-async def is_admin(user_id: int) -> bool:
-    return user_id in ADMIN_IDS
-
-async def is_private_chat(message: types.Message) -> bool:
-    return message.chat.type == "private"
-
-def get_user_variables(user_id):
-    """Получает все переменные пользователя из локального хранилища"""
-    return user_data.get(user_id, {})
-
+# С БД
 async def check_auth(user_id: int) -> bool:
-    # Проверяем наличие пользователя в БД или локальном хранилище
     if db_pool:
         user = await get_user_from_db(user_id)
         return user is not None
     return user_id in user_data
-```
 
-### База данных выключена
-
-**Вход:**
-```typescript
-{ userDatabaseEnabled: false }
-```
-
-**Выход:**
-```python
-# Утилитарные функции
-from aiogram import types
-
-async def is_admin(user_id: int) -> bool:
-    return user_id in ADMIN_IDS
-
-async def is_private_chat(message: types.Message) -> bool:
-    return message.chat.type == "private"
-
-def get_user_variables(user_id):
-    """Получает все переменные пользователя из локального хранилища"""
-    return user_data.get(user_id, {})
-
+# Без БД
 async def check_auth(user_id: int) -> bool:
     return user_id in user_data
 ```
 
-## Логика условий
-
-### check_auth с БД
-```typescript
-if (userDatabaseEnabled === true) {
-  // Проверка через get_user_from_db
-} else {
-  // Проверка через user_data
-}
-```
+При `requiresAuth=true` на узле — пользователь получает `"❌ Сначала запустите бота: /start"` если не зарегистрирован.
 
 ## Тесты
 
-### Запуск тестов
-
 ```bash
-npm test -- utils-template.test.ts
+npx vitest run --config vitest.lib.config.ts lib/templates/utils
 ```
-
-## Зависимости
-
-### Внешние
-- `zod` — валидация параметров
-- `nunjucks` — рендеринг шаблона
-
-### Внутренние
-- `../template-renderer` — функция рендеринга
-- `./utils-template.params` — типы параметров
-- `./utils-template.schema` — Zod схема
 
 ## Файлы
 
 ```
 utils/
-├── utils.py.jinja2           # Шаблон (40 строк)
-├── utils-template.params.ts  # Типы (12 строк)
-├── utils-template.schema.ts  # Zod схема (14 строк)
-├── utils-template.renderer.ts# Функция рендеринга (24 строк)
-├── utils-template.fixture.ts # Тестовые данные (80 строк)
-├── utils-template.test.ts    # Тесты (180 строк)
-├── utils-template.md         # Документация
-├── get-templates-dir.ts      # Утилита (существующая)
-└── index.ts                  # Публичный экспорт
+├── utils.py.jinja2             # Шаблон
+├── utils-template.params.ts    # Типы параметров
+├── utils-template.schema.ts    # Zod схема
+├── utils-template.renderer.ts  # Функция генерации
+├── utils-template.fixture.ts   # Тестовые данные
+├── utils-template.test.ts      # Тесты (vitest)
+├── utils-template.md           # Документация
+└── index.ts                    # Публичный экспорт
 ```
 
 ## См. также
 
-- [`config.py.jinja2`](../config/config.md)
-- [`database.py.jinja2`](../database/database.md)
+- [`middleware.py.jinja2`](../middleware/) — `register_user_middleware` использует те же поля
+- [`start.py.jinja2`](../start/) — вызывает `init_user_variables` при регистрации

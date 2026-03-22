@@ -30,7 +30,7 @@ const code = generateMessageLoggingCode(true, true, projectId, true);
 
 При первом обращении любого пользователя (через любой триггер, команду или кнопку):
 1. Проверяет `user_id not in user_data`
-2. Инициализирует `user_data[user_id]` с `username`, `first_name`, `last_name`
+2. Инициализирует `user_data[user_id]` с `username`, `first_name`, `last_name`, `user_name`, `user_id`, `language_code`, `is_premium`, `is_bot`
 3. Если `userDatabaseEnabled` — вызывает `save_user_to_db()`
 4. Логирует событие
 
@@ -52,6 +52,11 @@ async def register_user_middleware(handler, event: types.Message, data: dict):
                     'username': user.username or '',
                     'first_name': user.first_name or '',
                     'last_name': user.last_name or '',
+                    'user_name': user.username or user.first_name or str(user_id),
+                    'user_id': user_id,
+                    'language_code': user.language_code or '',
+                    'is_premium': user.is_premium or False,
+                    'is_bot': user.is_bot or False,
                 }
                 logging.info(f"Новый пользователь зарегистрирован: {user_id}")
     except Exception as e:

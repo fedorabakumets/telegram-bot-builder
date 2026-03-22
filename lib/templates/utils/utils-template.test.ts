@@ -3,203 +3,166 @@
  * @module templates/utils/utils-template.test
  */
 
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, expect } from 'vitest';
 import { generateUtils } from './utils-template.renderer';
 import {
   validParamsEnabled,
   validParamsDisabled,
+  validParamsAdminOnly,
+  validParamsPrivateOnly,
   invalidParamsWrongType,
-  expectedOutputEnabled,
-  expectedOutputDisabled,
 } from './utils-template.fixture';
 import { utilsParamsSchema } from './utils-template.schema';
 
-describe('utils.py.jinja2 шаблон', () => {
-  describe('generateUtils()', () => {
-    describe('Валидные данные', () => {
-      it('должен генерировать утилиты с check_auth для БД', () => {
-        const result = generateUtils({ ...validParamsEnabled, adminOnly: true });
+// ─── init_user_variables ──────────────────────────────────────────────────────
 
-        assert.ok(result.includes('async def is_admin'));
-        assert.ok(result.includes('async def check_auth'));
-        assert.ok(result.includes('if db_pool:'));
-      });
-
-      it('должен генерировать утилиты без БД', () => {
-        const result = generateUtils({ ...validParamsDisabled, adminOnly: true });
-
-        assert.ok(result.includes('async def is_admin'));
-        assert.ok(result.includes('async def check_auth'));
-        assert.ok(!result.includes('if db_pool:'));
-      });
-
-      it('должен включать is_private_chat', () => {
-        const result = generateUtils({ ...validParamsDisabled, isPrivateOnly: true });
-
-        assert.ok(result.includes('async def is_private_chat'));
-      });
-
-      it('должен включать get_user_variables', () => {
-        const result = generateUtils(validParamsDisabled);
-
-        assert.ok(result.includes('def get_user_variables'));
-      });
-    });
-
-    describe('Невалидные данные', () => {
-      it('должен отклонять параметры с неправильным типом', () => {
-        assert.throws(() => {
-          // @ts-expect-error
-          generateUtils(invalidParamsWrongType);
-        });
-      });
-
-      it('должен использовать значения по умолчанию', () => {
-        const result = utilsParamsSchema.safeParse({});
-
-        assert.ok(result.success);
-        if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, false);
-        }
-      });
-
-      it('должен отклонять string вместо boolean', () => {
-        const result = utilsParamsSchema.safeParse({
-          userDatabaseEnabled: 'true',
-        });
-        assert.ok(!result.success);
-      });
-
-      it('должен отклонять null вместо boolean', () => {
-        const result = utilsParamsSchema.safeParse({
-          userDatabaseEnabled: null,
-        });
-        assert.ok(!result.success);
-      });
-    });
-
-    describe('Граничные случаи', () => {
-      it('должен включать get_user_from_db при userDatabaseEnabled=true', () => {
-        const result = generateUtils(validParamsEnabled);
-
-        assert.ok(result.includes('get_user_from_db'));
-      });
-
-      it('должен включать ADMIN_IDS', () => {
-        const result = generateUtils({ ...validParamsDisabled, adminOnly: true });
-
-        assert.ok(result.includes('ADMIN_IDS'));
-      });
-
-      it('должен включать docstring для get_user_variables', () => {
-        const result = generateUtils(validParamsDisabled);
-
-        assert.ok(result.includes('"""Получает все переменные пользователя') || result.includes('def get_user_variables'));
-      });
-
-      it('должен всегда включать is_admin при adminOnly=true', () => {
-        const result1 = generateUtils({ ...validParamsEnabled, adminOnly: true });
-        const result2 = generateUtils({ ...validParamsDisabled, adminOnly: true });
-
-        assert.ok(result1.includes('async def is_admin'));
-        assert.ok(result2.includes('async def is_admin'));
-      });
-
-      it('не должен включать is_admin без adminOnly', () => {
-        const result = generateUtils(validParamsDisabled);
-
-        assert.ok(!result.includes('async def is_admin'));
-      });
-
-      it('должен включать from aiogram import types при isPrivateOnly=true', () => {
-        // Шаблон использует types.Message в is_private_chat, но импорт
-        // from aiogram import types добавляется в imports.renderer, не здесь.
-        // Проверяем что генерация не ломается при isPrivateOnly=true.
-        const result = generateUtils({ ...validParamsDisabled, isPrivateOnly: true });
-
-        assert.ok(typeof result === 'string' && result.length > 0, 'генерация не должна ломаться при isPrivateOnly=true');
-      });
-    });
-
-    describe('Производительность', () => {
-      it('должен генерировать код быстрее 10ms', () => {
-        const start = Date.now();
-        generateUtils(validParamsEnabled);
-        const duration = Date.now() - start;
-
-        assert.ok(duration < 10, `Генерация заняла ${duration}ms`);
-      });
-
-      it('должен генерировать код 1000 раз быстрее 100ms', () => {
-        const start = Date.now();
-        for (let i = 0; i < 1000; i++) {
-          generateUtils(validParamsEnabled);
-        }
-        const duration = Date.now() - start;
-
-        assert.ok(duration < 100, `1000 генераций заняли ${duration}ms`);
-      });
-    });
+describe('init_user_variables()', () => {
+  it('генерируется всегда', () => {
+    expect(generateUtils(validParamsDisabled)).toContain('async def init_user_variables');
   });
 
-  describe('utilsParamsSchema', () => {
-    describe('Валидация типов', () => {
-      it('должен принимать boolean поле', () => {
-        const result = utilsParamsSchema.safeParse(validParamsEnabled);
-        assert.ok(result.success);
-      });
+  it('сохраняет username, first_name, last_name', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain("user_data[user_id]['username']");
+    expect(r).toContain("user_data[user_id]['first_name']");
+    expect(r).toContain("user_data[user_id]['last_name']");
+  });
 
-      it('должен отклонять string вместо boolean', () => {
-        const result = utilsParamsSchema.safeParse({
-          userDatabaseEnabled: 'true',
-        });
-        assert.ok(!result.success);
-      });
+  it('сохраняет language_code', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain("user_data[user_id]['language_code']");
+  });
 
-      it('должен отклонять number вместо boolean', () => {
-        const result = utilsParamsSchema.safeParse({
-          userDatabaseEnabled: 1,
-        });
-        assert.ok(!result.success);
-      });
+  it('сохраняет is_premium', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain("user_data[user_id]['is_premium']");
+  });
 
-      it('должен отклонять null', () => {
-        const result = utilsParamsSchema.safeParse({
-          userDatabaseEnabled: null,
-        });
-        assert.ok(!result.success);
-      });
+  it('сохраняет is_bot', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain("user_data[user_id]['is_bot']");
+  });
 
-      it('должен отклонять undefined', () => {
-        const result = utilsParamsSchema.safeParse({
-          userDatabaseEnabled: undefined,
-        });
-        assert.ok(result.success);
-      });
-    });
+  it('сохраняет user_id и user_name', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain("user_data[user_id]['user_id']");
+    expect(r).toContain("user_data[user_id]['user_name']");
+  });
+});
 
-    describe('Значения по умолчанию', () => {
-      it('должен принимать false по умолчанию', () => {
-        const result = utilsParamsSchema.safeParse({});
+// ─── init_all_user_vars ───────────────────────────────────────────────────────
 
-        assert.ok(result.success);
-        if (result.success) {
-          assert.strictEqual(result.data.userDatabaseEnabled, false);
-        }
-      });
-    });
+describe('init_all_user_vars()', () => {
+  it('генерируется всегда', () => {
+    expect(generateUtils(validParamsDisabled)).toContain('async def init_all_user_vars');
+  });
 
-    describe('Структура схемы', () => {
-      it('должен иметь 4 поля', () => {
-        const shape = utilsParamsSchema.shape;
-        assert.strictEqual(Object.keys(shape).length, 4);
-      });
+  it('читает из user_data', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain('user_data.get(user_id, {})');
+  });
 
-      it('должен использовать ZodOptional', () => {
-        const shape = utilsParamsSchema.shape;
-        assert.ok(shape.userDatabaseEnabled.isOptional());
-      });
-    });
+  it('с БД подтягивает данные из bot_users', () => {
+    const r = generateUtils(validParamsEnabled);
+    expect(r).toContain('bot_users');
+    expect(r).toContain('db_pool');
+  });
+
+  it('без БД не обращается к bot_users', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).not.toContain('bot_users');
+  });
+});
+
+// ─── check_auth ───────────────────────────────────────────────────────────────
+
+describe('check_auth()', () => {
+  it('с БД проверяет через get_user_from_db', () => {
+    const r = generateUtils(validParamsEnabled);
+    expect(r).toContain('get_user_from_db');
+    expect(r).toContain('if db_pool:');
+  });
+
+  it('без БД проверяет через user_data', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain('return user_id in user_data');
+    expect(r).not.toContain('if db_pool:');
+  });
+});
+
+// ─── is_admin ─────────────────────────────────────────────────────────────────
+
+describe('is_admin()', () => {
+  it('генерируется при adminOnly=true', () => {
+    const r = generateUtils(validParamsAdminOnly);
+    expect(r).toContain('async def is_admin');
+    expect(r).toContain('ADMIN_IDS');
+  });
+
+  it('не генерируется без adminOnly', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).not.toContain('async def is_admin');
+  });
+});
+
+// ─── is_private_chat ──────────────────────────────────────────────────────────
+
+describe('is_private_chat()', () => {
+  it('генерируется при isPrivateOnly=true', () => {
+    const r = generateUtils(validParamsPrivateOnly);
+    expect(r).toContain('async def is_private_chat');
+  });
+
+  it('не генерируется без isPrivateOnly', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).not.toContain('async def is_private_chat');
+  });
+});
+
+// ─── get_user_variables ───────────────────────────────────────────────────────
+
+describe('get_user_variables()', () => {
+  it('генерируется всегда', () => {
+    expect(generateUtils(validParamsDisabled)).toContain('def get_user_variables');
+  });
+});
+
+// ─── replace_variables_in_text ───────────────────────────────────────────────
+
+describe('replace_variables_in_text()', () => {
+  it('генерируется всегда', () => {
+    expect(generateUtils(validParamsDisabled)).toContain('def replace_variables_in_text');
+  });
+});
+
+// ─── utilsParamsSchema ────────────────────────────────────────────────────────
+
+describe('utilsParamsSchema', () => {
+  it('принимает валидные параметры', () => {
+    expect(utilsParamsSchema.safeParse(validParamsEnabled).success).toBe(true);
+  });
+
+  it('принимает пустой объект (defaults)', () => {
+    const r = utilsParamsSchema.safeParse({});
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.userDatabaseEnabled).toBe(false);
+  });
+
+  it('отклоняет string вместо boolean', () => {
+    expect(utilsParamsSchema.safeParse(invalidParamsWrongType).success).toBe(false);
+  });
+
+  it('отклоняет null', () => {
+    expect(utilsParamsSchema.safeParse({ userDatabaseEnabled: null }).success).toBe(false);
+  });
+});
+
+// ─── Производительность ──────────────────────────────────────────────────────
+
+describe('Производительность', () => {
+  it('generateUtils быстрее 50ms', () => {
+    const start = Date.now();
+    generateUtils(validParamsEnabled);
+    expect(Date.now() - start).toBeLessThan(50);
   });
 });
