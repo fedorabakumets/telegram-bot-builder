@@ -90,6 +90,20 @@ export function ConditionBranchItem({ branch, onChange, onDelete }: ConditionBra
           )}
         </div>
       )}
+
+      {/* Поле ID целевого узла — отображается для всех веток, включая "else" */}
+      <div className="space-y-1">
+        <Input
+          value={branch.target || ''}
+          onChange={e => onChange(branch.id, 'target', e.target.value)}
+          placeholder="ID узла для перехода"
+          className="text-xs font-mono h-7"
+        />
+        {/* Подсказка для пользователя */}
+        <p className="text-xs text-gray-400 dark:text-gray-500">
+          Укажите ID узла или перетащите соединение
+        </p>
+      </div>
     </div>
   );
 }
