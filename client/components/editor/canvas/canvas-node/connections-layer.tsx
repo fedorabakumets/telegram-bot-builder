@@ -248,6 +248,8 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete }: Conne
 
   /** Ключ соединения под курсором */
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+  /** Позиция курсора на линии */
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
 
   const connections = collectConnections(nodes);
   if (connections.length === 0) return null;
@@ -306,21 +308,9 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete }: Conne
         const connKey = `${fromId}->${toId}-${type}-${idx}`;
         const isHovered = hoveredKey === connKey;
 
-        // Середина кривой Безье (t=0.5) для позиции кнопки удаления
-        const x1 = fromNode.position.x + fromW;
-        const y1 = fromNode.position.y + fromH / 2;
-        const x2 = toNode.position.x - MARKER_OFFSET;
-        const y2 = toNode.position.y + toH / 2;
-        const dx = Math.abs(x2 - x1);
-        const curve = Math.max(60, dx * 0.5);
-        const cx1 = x1 + curve;
-        const cy1 = y1;
-        const cx2 = x2 - curve;
-        const cy2 = y2;
-        // Точка на кривой при t=0.5
-        const t = 0.5;
-        const midX = (1-t)**3*x1 + 3*(1-t)**2*t*cx1 + 3*(1-t)*t**2*cx2 + t**3*x2;
-        const midY = (1-t)**3*y1 + 3*(1-t)**2*t*cy1 + 3*(1-t)*t**2*cy2 + t**3*y2;
+        // Кнопка удаления рисуется там где курсор мыши
+        const btnX = mousePos?.x ?? 0;
+        const btnY = mousePos?.y ?? 0;
 
         return (
           <g key={connKey}>
@@ -351,15 +341,25 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete }: Conne
               strokeWidth={16}
               style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
               onMouseEnter={() => setHoveredKey(connKey)}
-              onMouseLeave={() => setHoveredKey(null)}
+              onMouseMove={(e) => {
+                // Получаем координаты в SVG-пространстве
+                const svg = (e.currentTarget as SVGPathElement).ownerSVGElement;
+                if (!svg) return;
+                const pt = svg.createSVGPoint();
+                pt.x = e.clientX;
+                pt.y = e.clientY;
+                const svgPt = pt.matrixTransform(svg.getScreenCTM()!.inverse());
+                setMousePos({ x: svgPt.x, y: svgPt.y });
+              }}
+              onMouseLeave={() => { setHoveredKey(null); setMousePos(null); }}
             />
-            {/* Кнопка удаления по центру линии */}
-            {isHovered && onConnectionDelete && (
+            {/* Кнопка удаления рядом с курсором */}
+            {isHovered && mousePos && onConnectionDelete && (
               <g
-                transform={`translate(${midX}, ${midY})`}
+                transform={`translate(${btnX}, ${btnY})`}
                 style={{ pointerEvents: 'all', cursor: 'pointer' }}
                 onMouseEnter={() => setHoveredKey(connKey)}
-                onMouseLeave={() => setHoveredKey(null)}
+                onMouseLeave={() => { setHoveredKey(null); setMousePos(null); }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onConnectionDelete(fromId, toId, type);
