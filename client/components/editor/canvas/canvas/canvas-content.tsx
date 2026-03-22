@@ -103,23 +103,19 @@ export function CanvasContent({
   const allNodes = botData ? getAllNodesFromAllSheets() : nodes;
 
   /**
-   * Карта Y-смещений портов кнопок относительно верха узла.
-   * buttonId → yOffset (в canvas-координатах, без учёта zoom)
+   * Карта позиций портов кнопок относительно верха/левого края узла.
+   * buttonId → { x, y } в canvas-координатах (layout, без transform)
    */
-  const [buttonPortYOffsets, setButtonPortYOffsets] = useState<Map<string, number>>(new Map());
+  const [buttonPortYOffsets, setButtonPortYOffsets] = useState<Map<string, { x: number; y: number }>>(new Map());
 
   /**
    * Обработчик монтирования порта кнопки.
-   * Вызывается из OutputPort через ButtonsPreview → CanvasNode.
-   * yOffset уже в canvas-координатах (вычислен через offsetTop, без transform).
-   *
-   * @param buttonId - ID кнопки
-   * @param yOffset - Y-смещение центра порта от верха wrapper-div в canvas-координатах
+   * offset уже в canvas-координатах (вычислен через offsetLeft/offsetTop, без transform).
    */
-  const handleButtonPortMount = useCallback((buttonId: string, yOffset: number) => {
+  const handleButtonPortMount = useCallback((buttonId: string, offset: { x: number; y: number }) => {
     setButtonPortYOffsets(prev => {
       const next = new Map(prev);
-      next.set(buttonId, yOffset);
+      next.set(buttonId, offset);
       return next;
     });
   }, []);

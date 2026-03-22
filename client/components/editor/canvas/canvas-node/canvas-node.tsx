@@ -78,10 +78,9 @@ interface CanvasNodeProps {
   isConnectionTarget?: boolean;
   /**
    * Колбэк, вызываемый при монтировании порта кнопки.
-   * Передаёт buttonId и Y-смещение центра порта в экранных пикселях
-   * относительно wrapper-div узла.
+   * Передаёт buttonId и позицию центра порта относительно wrapper-div узла.
    */
-  onButtonPortMount?: (buttonId: string, yOffset: number) => void;
+  onButtonPortMount?: (buttonId: string, offset: { x: number; y: number }) => void;
 }
 
 /**

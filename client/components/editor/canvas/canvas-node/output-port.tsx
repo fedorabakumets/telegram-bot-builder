@@ -28,10 +28,10 @@ interface OutputPortProps {
   isActive?: boolean;
   /**
    * Колбэк, вызываемый после монтирования порта.
-   * Передаёт buttonId и Y-смещение центра порта от верха ближайшего [data-canvas-node] wrapper-div.
+   * Передаёт buttonId и позицию центра порта относительно wrapper-div узла.
    * Используется для точного позиционирования линий соединений button-goto.
    */
-  onMount?: (buttonId: string, yOffset: number) => void;
+  onMount?: (buttonId: string, offset: { x: number; y: number }) => void;
 }
 
 /**
@@ -53,37 +53,33 @@ export function OutputPort({ portType, buttonId, onPortMouseDown, onMount }: Out
   const portRef = useRef<HTMLDivElement>(null);
 
   /**
-   * После монтирования вычисляем Y-смещение центра порта от верха wrapper-div узла.
-   * Используем offsetTop вместо getBoundingClientRect — offsetTop не зависит от
-   * CSS transform (zoom/pan) и возвращает позицию в layout-координатах.
+   * После монтирования вычисляем позицию центра порта относительно wrapper-div узла.
+   * Используем offsetLeft/offsetTop — не зависят от CSS transform (zoom/pan).
    */
   useLayoutEffect(() => {
     if (!onMount || !buttonId || !portRef.current) return;
 
     const portEl = portRef.current;
 
-    // Ищем ближайший [data-canvas-node] — внутренний div узла
     const nodeInnerEl = portEl.closest<HTMLElement>('[data-canvas-node]');
     if (!nodeInnerEl) return;
 
-    // wrapper-div — родитель nodeInnerEl (именно его top = node.position.y)
-    const wrapperEl = nodeInnerEl.parentElement;
-    if (!wrapperEl) return;
+    // Суммируем offsetLeft/offsetTop по цепочке от порта до nodeInnerEl
+    let xOffset = portEl.offsetLeft + portEl.offsetWidth; // правый край порта
+    let yOffset = portEl.offsetTop + portEl.offsetHeight / 2; // центр порта по Y
+    let el: HTMLElement | null = portEl.offsetParent as HTMLElement | null;
 
-    // Суммируем offsetTop по цепочке от порта до nodeInnerEl
-    // (nodeInnerEl — первый positioned ancestor, он же offsetParent для порта)
-    let yOffset = portEl.offsetHeight / 2; // центр порта
-    let el: HTMLElement | null = portEl;
     while (el && el !== nodeInnerEl) {
+      xOffset += el.offsetLeft;
       yOffset += el.offsetTop;
       el = el.offsetParent as HTMLElement | null;
     }
 
-    // Добавляем offsetTop самого nodeInnerEl относительно wrapperEl
-    // (nodeInnerEl имеет position: relative, wrapperEl — position: absolute)
+    // Добавляем смещение самого nodeInnerEl относительно wrapperEl
+    xOffset += nodeInnerEl.offsetLeft;
     yOffset += nodeInnerEl.offsetTop;
 
-    onMount(buttonId, yOffset);
+    onMount(buttonId, { x: xOffset, y: yOffset });
   }, [buttonId, onMount]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
