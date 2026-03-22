@@ -14,7 +14,6 @@
 import type { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 
 /**
  * Пропсы компонента CommandTriggerConfiguration
@@ -56,24 +55,6 @@ export function CommandTriggerConfiguration({ selectedNode, onNodeUpdate }: Comm
           value={selectedNode.data?.description || ''}
           onChange={e => onNodeUpdate(selectedNode.id, { description: e.target.value })}
           placeholder="Описание команды"
-        />
-      </div>
-
-      {/* Показывать в меню */}
-      <div className="flex items-center justify-between">
-        <Label>Показывать в меню</Label>
-        <Switch
-          checked={selectedNode.data?.showInMenu ?? true}
-          onCheckedChange={v => onNodeUpdate(selectedNode.id, { showInMenu: v })}
-        />
-      </div>
-
-      {/* Только приватные чаты */}
-      <div className="flex items-center justify-between">
-        <Label>Только приватные чаты</Label>
-        <Switch
-          checked={selectedNode.data?.isPrivateOnly ?? false}
-          onCheckedChange={v => onNodeUpdate(selectedNode.id, { isPrivateOnly: v })}
         />
       </div>
 
