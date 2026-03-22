@@ -108,6 +108,12 @@ export function useConditionalMessagesSync({
   const createConditionNodes = useCallback((conditions: any[]): Node[] => {
     if (!selectedNode) return [];
 
+    /** Переменная из первого условия */
+    const firstCond = conditions[0];
+    const primaryVariable = (firstCond?.variableNames && firstCond.variableNames[0])
+      || firstCond?.variableName
+      || '';
+
     const conditionNode: Node = {
       id: `cond-sync-${nanoid(8)}`,
       type: 'condition',
@@ -116,7 +122,7 @@ export function useConditionalMessagesSync({
         y: selectedNode.position.y - 100,
       },
       data: {
-        variable: '',
+        variable: primaryVariable,
         branches: buildBranches(conditions),
         sourceNodeId: selectedNode.id,
       } as any,

@@ -84,6 +84,12 @@ export function migrateConditionalMessagesToConditionNodes(nodes: Node[]): Node[
     const elseBranch: ConditionBranch = { id: 'else', label: 'Иначе', operator: 'else', value: '', target: node.id };
     branches.push(elseBranch);
 
+    /** Переменная из первого условия — используется как основная переменная узла condition */
+    const firstCond = conditionalMessages[0];
+    const primaryVariable = (firstCond?.variableNames && firstCond.variableNames[0])
+      || firstCond?.variableName
+      || '';
+
     /** Узел condition */
     const conditionNode: Node = {
       id: conditionNodeId,
@@ -93,7 +99,7 @@ export function migrateConditionalMessagesToConditionNodes(nodes: Node[]): Node[
         y: node.position.y - 100,
       },
       data: {
-        variable: '',
+        variable: primaryVariable,
         branches,
         sourceNodeId: node.id,
       } as any,
