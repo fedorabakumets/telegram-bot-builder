@@ -10,6 +10,7 @@ import { allCommandPresets } from './massive/commands';
 import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
 import { commandTrigger, textTrigger } from './massive/triggers';
+import { conditionNode } from './massive/logic';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -32,6 +33,10 @@ export const componentCategories: Array<{
   {
     title: 'Рассылка',
     components: [broadcastNode]
+  },
+  {
+    title: 'Логика',
+    components: [conditionNode]
   }
 ];
 
