@@ -51,6 +51,7 @@ export function ButtonActionSelector({
         <SelectContent className="bg-gradient-to-br from-teal-50/95 to-cyan-50/95 dark:from-slate-900/95 dark:to-slate-800/95 border border-teal-200/50 dark:border-teal-800/50 shadow-xl">
           <SelectItem value="goto"><ButtonActionOption action="goto" /></SelectItem>
           <SelectItem value="url"><ButtonActionOption action="url" /></SelectItem>
+          <SelectItem value="default"><ButtonActionOption action="default" /></SelectItem>
           {allowMultipleSelection && (
             <SelectItem value="selection"><ButtonActionOption action="selection" /></SelectItem>
           )}

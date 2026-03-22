@@ -5,7 +5,7 @@
  */
 
 /** Тип действия кнопки */
-export type ButtonActionType = 'goto' | 'url' | 'selection' | 'complete';
+export type ButtonActionType = 'goto' | 'url' | 'selection' | 'complete' | 'default';
 
 /** Пропсы для рендеринга опции действия */
 interface ButtonActionOptionProps {
@@ -20,7 +20,8 @@ export const ACTION_CONFIG: Record<ButtonActionType, { icon: string; color: stri
   goto: { icon: 'fa-right-long', color: 'text-teal-600 dark:text-teal-400', label: 'Перейти к экрану' },
   url: { icon: 'fa-link', color: 'text-blue-600 dark:text-blue-400', label: 'Открыть ссылку' },
   selection: { icon: 'fa-check-square', color: 'text-green-600 dark:text-green-400', label: 'Выбор опции' },
-  complete: { icon: 'fa-flag-checkered', color: 'text-purple-600 dark:text-purple-400', label: 'Кнопка завершения' }
+  complete: { icon: 'fa-flag-checkered', color: 'text-purple-600 dark:text-purple-400', label: 'Кнопка завершения' },
+  default: { icon: 'fa-circle-dot', color: 'text-slate-500 dark:text-slate-400', label: 'Обычная кнопка' },
 };
 
 /**

@@ -932,20 +932,26 @@ export function Canvas({
       });
 
       // Создаём message рядом (+320px по X)
+      const buttons = (preset.messageData.buttons || []).map(btn => ({
+        id: nanoid(),
+        text: btn.text,
+        action: 'default' as const,
+        buttonType: 'normal' as const,
+        skipDataCollection: false,
+        hideAfterClick: false,
+      }));
+
       onNodeAdd({
         id: messageId,
         type: 'message',
         position: { x: dropPosition.x + 320, y: dropPosition.y },
         data: {
-          text: preset.messageData.text,
-          buttons: (preset.messageData.buttons || []).map(btn => ({
-            id: nanoid(),
-            text: btn.text,
-            action: 'default' as const,
-            buttonType: 'normal' as const,
-            skipDataCollection: false,
-            hideAfterClick: false,
-          })),
+          messageText: preset.messageData.text,
+          keyboardType: buttons.length > 0 ? 'inline' : 'none',
+          buttons,
+          markdown: false,
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
         },
       });
 
