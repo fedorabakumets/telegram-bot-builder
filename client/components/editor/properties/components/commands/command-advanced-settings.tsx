@@ -43,8 +43,9 @@ interface CommandAdvancedSettingsProps {
  * - Только приватные чаты
  * - Только администраторы
  *
- * Для text_trigger включает только:
+ * Для text_trigger включает:
  * - Только приватные чаты
+ * - Только администраторы
  *
  * @param {CommandAdvancedSettingsProps} props - Пропсы компонента
  * @returns {JSX.Element | null} Расширенные настройки команд или null для неподдерживаемых типов
@@ -59,8 +60,8 @@ export function CommandAdvancedSettings({
     return null;
   }
 
-  /** Флаг: показывать ли настройки меню и adminOnly (только для command-подобных узлов) */
-  const showCommandSettings = selectedNode.type !== 'text_trigger';
+  /** Флаг: показывать ли настройку "Показать в меню" (только для command-подобных узлов) */
+  const showMenuSetting = selectedNode.type !== 'text_trigger';
 
   return (
     <div className="bg-gradient-to-br from-cyan-50/40 to-blue-50/20 dark:from-cyan-950/30 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-cyan-200/40 dark:border-cyan-800/40 backdrop-blur-sm">
@@ -77,13 +78,11 @@ export function CommandAdvancedSettings({
 
       {isOpen && (
         <div className="space-y-3 sm:space-y-4">
-          {showCommandSettings && (
+          {showMenuSetting && (
             <ShowInMenuSetting selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
           )}
           <PrivateOnlySetting selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
-          {showCommandSettings && (
-            <AdminOnlySetting selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
-          )}
+          <AdminOnlySetting selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
         </div>
       )}
     </div>
