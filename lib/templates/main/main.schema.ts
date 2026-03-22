@@ -16,6 +16,8 @@ export const mainParamsSchema = z.object({
     command: z.string(),
     description: z.string(),
   })).optional().default([]),
+  /** Автоматически регистрировать пользователей при первом обращении */
+  autoRegisterUsers: z.boolean().optional().default(false),
 });
 
 /** Тип параметров запуска (выведен из схемы) */

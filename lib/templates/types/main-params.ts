@@ -11,4 +11,6 @@ export interface MainTemplateParams {
   menuCommands?: Array<{ command: string; description: string }>;
   /** Есть ли inline кнопки (для callback middleware) */
   hasInlineButtons?: boolean;
+  /** Автоматически регистрировать пользователей при первом обращении */
+  autoRegisterUsers?: boolean;
 }

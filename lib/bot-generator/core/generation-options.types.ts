@@ -28,6 +28,8 @@ export interface GenerationOptions {
   enableGroupHandlers?: boolean;
   /** ID проекта для генерации */
   projectId?: number | null;
+  /** Автоматически регистрировать пользователей при первом обращении */
+  autoRegisterUsers?: boolean;
 }
 
 /**
@@ -42,6 +44,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   userDatabaseEnabled: false,
   enableGroupHandlers: false,
   projectId: null,
+  autoRegisterUsers: false,
 } as const;
 
 /**

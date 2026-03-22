@@ -815,6 +815,82 @@ test('L10', "imageUrl = '/uploads/photo.jpg' (локальный) + DB → си�
 });
 
 // ════════════════════════════════════════════════════════════════════════════
+// БЛОК M: register_user_middleware (autoRegisterUsers)
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок M: register_user_middleware ──────────────────────────────');
+
+function genAutoReg(project: unknown, label: string, withDB = false): string {
+  return generatePythonCode(project as any, {
+    botName: `Phase16AR_${label}`,
+    userDatabaseEnabled: withDB,
+    autoRegisterUsers: true,
+    enableComments: false,
+  });
+}
+
+test('M01', 'autoRegisterUsers: true → ЕСТЬ register_user_middleware', () => {
+  const code = genAutoReg(makeSimpleProject(), 'm01');
+  ok(code.includes('register_user_middleware'), 'register_user_middleware должен быть в коде');
+});
+
+test('M02', 'autoRegisterUsers: false (по умолчанию) → НЕТ register_user_middleware', () => {
+  const code = gen(makeSimpleProject(), 'm02');
+  ok(!code.includes('register_user_middleware'), 'register_user_middleware НЕ должен быть без autoRegisterUsers');
+});
+
+test('M03', 'autoRegisterUsers: true → register_user_middleware содержит language_code', () => {
+  const code = genAutoReg(makeSimpleProject(), 'm03');
+  ok(code.includes('language_code'), 'language_code должен быть в register_user_middleware');
+});
+
+test('M04', 'autoRegisterUsers: true → register_user_middleware содержит is_premium', () => {
+  const code = genAutoReg(makeSimpleProject(), 'm04');
+  ok(code.includes('is_premium'), 'is_premium должен быть в register_user_middleware');
+});
+
+test('M05', 'autoRegisterUsers: true → register_user_middleware содержит is_bot', () => {
+  const code = genAutoReg(makeSimpleProject(), 'm05');
+  ok(code.includes('is_bot'), 'is_bot должен быть в register_user_middleware');
+});
+
+test('M06', 'autoRegisterUsers: true → регистрируется через dp.message.middleware', () => {
+  const code = genAutoReg(makeSimpleProject(), 'm06');
+  ok(code.includes('dp.message.middleware(register_user_middleware)'), 'dp.message.middleware(register_user_middleware) должен быть в main()');
+});
+
+test('M07', 'autoRegisterUsers: true + userDatabaseEnabled: true → вызывает save_user_to_db', () => {
+  const code = genAutoReg(makeSimpleProject(), 'm07', true);
+  ok(code.includes('save_user_to_db'), 'save_user_to_db должен вызываться при autoRegisterUsers + DB');
+});
+
+test('M08', 'autoRegisterUsers: true + userDatabaseEnabled: false → НЕТ save_user_to_db в middleware', () => {
+  const code = genAutoReg(makeSimpleProject(), 'm08', false);
+  // save_user_to_db не должен быть в коде вообще (нет БД)
+  ok(!code.includes('save_user_to_db'), 'save_user_to_db НЕ должен быть без DB');
+});
+
+test('M09', 'autoRegisterUsers: true → содержит user_id not in user_data', () => {
+  const code = genAutoReg(makeSimpleProject(), 'm09');
+  ok(code.includes('user_id not in user_data'), 'проверка user_id not in user_data должна быть');
+});
+
+test('M10', 'autoRegisterUsers: true → синтаксис Python OK', () => {
+  const code = genAutoReg(makeSimpleProject(), 'm10');
+  syntax(code, 'm10');
+});
+
+test('M11', 'autoRegisterUsers: true + userDatabaseEnabled: true → синтаксис Python OK', () => {
+  const code = genAutoReg(makeSimpleProject(), 'm11', true);
+  syntax(code, 'm11');
+});
+
+test('M12', 'autoRegisterUsers: true + inline → синтаксис Python OK', () => {
+  const code = genAutoReg(makeInlineProject(), 'm12');
+  syntax(code, 'm12');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // ИТОГИ
 // ════════════════════════════════════════════════════════════════════════════
 

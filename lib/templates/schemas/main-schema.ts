@@ -13,6 +13,8 @@ export const mainParamsSchema = z.object({
     description: z.string(),
   })).optional().default([]),
   hasInlineButtons: z.boolean().optional().default(false),
+  /** Автоматически регистрировать пользователей при первом обращении */
+  autoRegisterUsers: z.boolean().optional().default(false),
 });
 
 /** Тип параметров запуска бота (выведен из схемы) */

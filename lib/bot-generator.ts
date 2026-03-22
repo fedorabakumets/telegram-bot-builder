@@ -53,6 +53,8 @@ export interface GeneratePythonCodeOptions {
   enableGroupHandlers?: boolean;
   /** Включить комментарии */
   enableComments?: boolean;
+  /** Автоматически регистрировать пользователей при первом обращении */
+  autoRegisterUsers?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -99,6 +101,7 @@ function buildGenerationContext(
     enableLogging = false,
     enableGroupHandlers = false,
     enableComments = true,
+    autoRegisterUsers = false,
   } = options;
 
   const genOptions: GenerationOptions = {
@@ -107,6 +110,7 @@ function buildGenerationContext(
     userDatabaseEnabled,
     enableGroupHandlers,
     projectId,
+    autoRegisterUsers,
   };
 
   const context = createGenerationContext(botData, botName, groups, genOptions);
@@ -167,12 +171,14 @@ function generateCodeSections(
   );
 
   // --- logging middleware (включает save_message_to_api) ---
+  const autoRegisterUsers = !!context.options.autoRegisterUsers;
   const loggingCode = emitOnce(state, COMPONENT_NAMES.MIDDLEWARE, () =>
-    userDatabaseEnabled
+    (userDatabaseEnabled || autoRegisterUsers)
       ? generateMessageLoggingCode(
           userDatabaseEnabled,
           hasInlineButtons(nodes),
-          context.projectId
+          context.projectId,
+          autoRegisterUsers
         )
       : ''
   );
@@ -336,6 +342,7 @@ function generateCodeSections(
         command: (node.data.command || '').replace('/', ''),
         description: node.data.description || 'Команда бота',
       })),
+      autoRegisterUsers: !!context.options.autoRegisterUsers,
     })
   );
 

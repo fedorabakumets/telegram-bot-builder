@@ -275,9 +275,9 @@ test('C07', 'message: requiresAuth:true → синтаксис OK', () => {
   syntax(code, 'c07');
 });
 
-test('C08', 'start: requiresAuth:true → сообщение об ошибке в коде', () => {
+test('C08', 'start: requiresAuth:true → сообщение об ошибке содержит /start', () => {
   const code = gen(patchStart({ requiresAuth: true }), 'c08');
-  ok(code.includes('войти') || code.includes('систему') || code.includes('auth'), 'сообщение об ошибке должно быть');
+  ok(code.includes('/start') || code.includes('запустите'), 'сообщение об ошибке должно содержать /start');
 });
 
 // ════════════════════════════════════════════════════════════════════════════

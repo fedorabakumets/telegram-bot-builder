@@ -11,4 +11,6 @@ export interface MainTemplateParams {
   hasInlineButtons?: boolean;
   /** Список команд меню для BotFather */
   menuCommands?: Array<{ command: string; description: string }>;
+  /** Автоматически регистрировать пользователей при первом обращении */
+  autoRegisterUsers?: boolean;
 }
