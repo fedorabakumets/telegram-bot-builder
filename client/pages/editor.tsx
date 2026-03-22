@@ -1116,6 +1116,7 @@ export default function Editor() {
             actionHistory={actionHistory}
             onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
             onConnectionDelete={handleConnectionDelete}
+            onConnectionCreate={saveToHistory}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full">
@@ -1371,6 +1372,7 @@ export default function Editor() {
                   actionHistory={actionHistory}
                   onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
                   onConnectionDelete={handleConnectionDelete}
+                  onConnectionCreate={saveToHistory}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">

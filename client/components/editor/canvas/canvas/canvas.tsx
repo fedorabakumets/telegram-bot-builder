@@ -123,6 +123,8 @@ interface CanvasProps {
   onActionHistoryRemove?: (ids: Set<string>) => void;
   /** Колбэк удаления соединения (вызывается из ConnectionsLayer) */
   onConnectionDelete?: (fromId: string, toId: string, type: string) => void;
+  /** Колбэк перед созданием соединения — для сохранения в историю */
+  onConnectionCreate?: () => void;
 }
 
 export function Canvas({
@@ -162,8 +164,12 @@ export function Canvas({
   actionHistory: externalActionHistory,
   onActionHistoryRemove,
   onConnectionDelete: onConnectionDeleteProp,
+  onConnectionCreate,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
+  /** Ref для onConnectionCreate чтобы handleNodeUpdate не устаревал */
+  const onConnectionCreateRef = useRef(onConnectionCreate);
+  useEffect(() => { onConnectionCreateRef.current = onConnectionCreate; }, [onConnectionCreate]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -215,6 +221,7 @@ export function Canvas({
    * Используется хуком useConnectionDrag при завершении drag-to-connect.
    */
   const handleNodeUpdate = useCallback((nodeId: string, updater: (node: Node) => Node) => {
+    onConnectionCreateRef.current?.();
     const updatedNodes = nodes.map(n => n.id === nodeId ? updater(n) : n);
     onNodesUpdate?.(updatedNodes);
     addAction('connect', `Создано соединение от узла ${nodeId}`);
