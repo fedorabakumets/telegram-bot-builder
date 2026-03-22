@@ -12,16 +12,21 @@ import { renderPartialTemplate } from '../template-renderer';
 export function generateMessageLoggingCode(
   userDatabaseEnabled: boolean,
   hasInlineButtonsValue: boolean,
-  projectId: number | null
+  projectId: number | null,
+  autoRegisterUsers: boolean = true
 ): string {
-  if (!userDatabaseEnabled) return '';
-
   let code = '';
-  code += renderPartialTemplate('middleware/save-message-to-api.py.jinja2', { projectId });
+
+  // register_user_middleware генерируется всегда (не зависит от БД)
   code += renderPartialTemplate('middleware/middleware.py.jinja2', {
     userDatabaseEnabled,
     hasInlineButtons: hasInlineButtonsValue,
+    autoRegisterUsers,
   });
+
+  if (!userDatabaseEnabled) return code;
+
+  code += renderPartialTemplate('middleware/save-message-to-api.py.jinja2', { projectId });
   code += renderPartialTemplate('middleware/answer-with-logging.py.jinja2', {});
   code += renderPartialTemplate('middleware/send-message-with-logging.py.jinja2', {});
   code += renderPartialTemplate('middleware/send-photo-with-logging.py.jinja2', {});

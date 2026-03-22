@@ -50,6 +50,8 @@ async def main():
         {%- endif %}
         {%- endif %}
 
+        dp.message.middleware(register_user_middleware)
+
         print("🚀 Бот запущен и готов к работе!")
         await dp.start_polling(bot)
     except KeyboardInterrupt:

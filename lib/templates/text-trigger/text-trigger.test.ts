@@ -86,7 +86,7 @@ describe('generateTextTriggers()', () => {
   it('requiresAuth добавляет проверку авторизации', () => {
     const r = generateTextTriggers(validParamsRequiresAuth);
     expect(r).toContain('check_auth(user_id)');
-    expect(r).toContain('войти в систему');
+    expect(r).toContain('/start');
   });
 
   it('без adminOnly нет проверки прав', () => {

@@ -9,6 +9,8 @@ import { z } from 'zod';
 export const middlewareParamsSchema = z.object({
   /** Включена ли база данных пользователей */
   userDatabaseEnabled: z.boolean().optional().default(false),
+  /** Автоматически регистрировать пользователей при первом обращении */
+  autoRegisterUsers: z.boolean().optional().default(false),
 });
 
 /** Тип параметров middleware (выведен из схемы) */

@@ -7,4 +7,6 @@
 export interface MiddlewareTemplateParams {
   /** Включена ли база данных пользователей */
   userDatabaseEnabled?: boolean;
+  /** Автоматически регистрировать пользователей при первом обращении */
+  autoRegisterUsers?: boolean;
 }
