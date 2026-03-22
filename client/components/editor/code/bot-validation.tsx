@@ -39,7 +39,10 @@ export function BotValidation({ botData }: BotValidationProps) {
         if (Array.isArray(sheet.nodes)) nodes.push(...sheet.nodes);
       });
     }
-    const hasStart = nodes.some((n: any) => n.type === 'start');
+    const hasStart = nodes.some((n: any) =>
+      n.type === 'start' ||
+      (n.type === 'command_trigger' && (n.data?.command === '/start' || n.data?.command === 'start'))
+    );
     if (!hasStart) errors.push('Отсутствует стартовый узел (/start)');
     setValidationResult({ isValid: errors.length === 0, errors });
   }, [botData]);
