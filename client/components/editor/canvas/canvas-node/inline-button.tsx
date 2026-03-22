@@ -35,9 +35,9 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
   const targetNode = button.action === 'goto' && button.target 
     ? allNodes?.find(n => n.id === button.target) 
     : null;
-  const targetNodeDisplay = targetNode?.data?.messageText?.slice(0, 30) || 
+  const targetNodeDisplay: string = targetNode?.data?.messageText?.slice(0, 30) || 
                            targetNode?.data?.command || 
-                           (button.action === 'goto' ? button.target?.slice(0, 8) : '');
+                           (button.action === 'goto' ? (button.target?.slice(0, 8) ?? '') : '') || '';
 
   return (
     <div className="group relative">
