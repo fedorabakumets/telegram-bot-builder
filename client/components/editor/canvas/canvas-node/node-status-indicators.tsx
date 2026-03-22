@@ -47,13 +47,6 @@ export function NodeStatusIndicators({ node }: NodeStatusIndicatorsProps) {
 
   return (
     <div className="absolute -top-1 -right-1 flex items-center space-x-1">
-      {/* Conditional messages indicator */}
-      {node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0 && (
-        <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900" title={`Условные сообщения: ${node.data.conditionalMessages.length}`}>
-          <i className="fas fa-code-branch text-white text-xs"></i>
-        </div>
-      )}
-
       {/* Main status indicator */}
       {hasRequiredFields ? (
         <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">

@@ -18,7 +18,6 @@ import { MediaAttachmentsPreview } from './media-attachments-preview';
 import { NodeActions } from './node-actions';
 import { AdminRightsPreview } from './admin-rights-preview';
 import { NodeHeader } from './node-header';
-import { ConditionalMessagesIndicator } from './conditional-messages-indicator';
 import { ButtonsPreview } from './buttons-preview';
 import { ClientAuthCard } from './client-auth-card';
 import { CommandTriggerPreview } from './command-trigger-preview';
@@ -532,9 +531,6 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Dice preview */}
         {(node.type as any) === 'dice' && <DicePreview node={node} />}
-
-        {/* Conditional Messages Indicator */}
-        <ConditionalMessagesIndicator node={node} allNodes={allNodes} />
 
         {/* Text Input Indicator */}
         {node.data.keyboardType === 'none' && (node.data as any).enableTextInput && (
