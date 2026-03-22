@@ -340,7 +340,11 @@ function generateCodeSections(
       hasInlineButtons: hasInlineButtons(nodes),
       menuCommands: menuCommands.map(node => ({
         command: (node.data.command || '').replace('/', ''),
-        description: node.data.description || 'Команда бота',
+        description: (node.data.description || 'Команда бота')
+          .replace(/\\/g, '\\\\')
+          .replace(/"/g, '\\"')
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, ''),
       })),
       autoRegisterUsers: !!context.options.autoRegisterUsers,
     })
