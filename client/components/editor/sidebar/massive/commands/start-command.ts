@@ -20,8 +20,8 @@ export const startCommand: CommandPreset = {
   messageData: {
     text: '👋 Привет! Я бот. Чем могу помочь?',
     buttons: [
-      { text: '📋 Меню', callbackData: 'menu' },
-      { text: '❓ Помощь', callbackData: 'help' },
+      { text: '📋 Меню' },
+      { text: '❓ Помощь' },
     ],
   },
 };

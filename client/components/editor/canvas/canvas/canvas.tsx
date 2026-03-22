@@ -941,8 +941,10 @@ export function Canvas({
           buttons: (preset.messageData.buttons || []).map(btn => ({
             id: nanoid(),
             text: btn.text,
-            callbackData: btn.callbackData || '',
-            type: 'callback',
+            action: 'default' as const,
+            buttonType: 'normal' as const,
+            skipDataCollection: false,
+            hideAfterClick: false,
           })),
         },
       });

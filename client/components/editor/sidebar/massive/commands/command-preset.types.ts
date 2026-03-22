@@ -27,6 +27,6 @@ export interface CommandPreset {
   /** Данные для message узла */
   messageData: {
     text: string;
-    buttons?: Array<{ text: string; callbackData?: string }>;
+    buttons?: Array<{ text: string }>;
   };
 }
