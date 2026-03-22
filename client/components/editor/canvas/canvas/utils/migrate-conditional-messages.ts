@@ -84,10 +84,13 @@ export function migrateConditionalMessagesToConditionNodes(nodes: Node[]): Node[
     const elseBranch: ConditionBranch = { id: 'else', label: 'Иначе', operator: 'else', value: '', target: node.id };
     branches.push(elseBranch);
 
-    /** Переменная из первого условия — используется как основная переменная узла condition */
+    /** Переменная из первого условия — используется как основная переменная узла condition.
+     *  Если в условии нет явной переменной — берём inputVariable исходного узла
+     *  (поле "Сохранить в: ..." из секции текстового ввода). */
     const firstCond = conditionalMessages[0];
     const primaryVariable = (firstCond?.variableNames && firstCond.variableNames[0])
       || firstCond?.variableName
+      || data.inputVariable
       || '';
 
     /** Узел condition */
