@@ -532,8 +532,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         {/* Dice preview */}
         {(node.type as any) === 'dice' && <DicePreview node={node} />}
 
-        {/* Text Input Indicator */}
-        {node.data.keyboardType === 'none' && (node.data as any).enableTextInput && (
+        {/* Text Input Indicator — показываем если включён текстовый ввод, независимо от клавиатуры */}
+        {(node.data as any).enableTextInput && (
           <TextInputIndicator node={node} />
         )}
 
