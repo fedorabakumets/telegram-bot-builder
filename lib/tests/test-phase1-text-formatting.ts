@@ -49,6 +49,91 @@ import { generatePythonCode } from '../bot-generator.ts';
 // ─── Константы ───────────────────────────────────────────────────────────────
 
 const PROJECT_PATH = 'bots/импортированный_проект_1723_60_53/project.json';
+
+// Создаём папку и базовый project.json если не существует
+if (!fs.existsSync(PROJECT_PATH)) {
+  fs.mkdirSync('bots/импортированный_проект_1723_60_53', { recursive: true });
+  const baseProject = {
+    version: 2,
+    activeSheetId: 'sheet-phase1',
+    sheets: [{
+      id: 'sheet-phase1',
+      name: 'Основной поток',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      viewState: { zoom: 1, position: { x: 0, y: 0 } },
+      nodes: [
+        {
+          id: 'cmd-trigger-phase1',
+          type: 'command_trigger',
+          position: { x: 20, y: 100 },
+          data: {
+            command: '/start',
+            description: 'Запустить бота',
+            showInMenu: true,
+            isPrivateOnly: false,
+            adminOnly: false,
+            requiresAuth: false,
+            messageText: 'Привет!',
+            formatMode: 'none',
+            markdown: false,
+            autoTransitionTo: 'msg-phase1',
+            buttons: [],
+            keyboardType: 'none',
+            resizeKeyboard: true,
+            oneTimeKeyboard: false,
+            enableStatistics: true,
+            collectUserInput: false,
+            enableConditionalMessages: false,
+            conditionalMessages: [],
+            enableTextInput: false,
+            enablePhotoInput: false,
+            enableVideoInput: false,
+            enableAudioInput: false,
+            enableDocumentInput: false,
+            inputVariable: '',
+            photoInputVariable: '',
+            videoInputVariable: '',
+            audioInputVariable: '',
+            documentInputVariable: '',
+          },
+        },
+        {
+          id: 'msg-phase1',
+          type: 'message',
+          position: { x: 420, y: 100 },
+          data: {
+            messageText: 'Сообщение',
+            formatMode: 'none',
+            markdown: false,
+            buttons: [],
+            keyboardType: 'none',
+            resizeKeyboard: true,
+            oneTimeKeyboard: false,
+            enableStatistics: true,
+            collectUserInput: false,
+            enableConditionalMessages: false,
+            conditionalMessages: [],
+            enableAutoTransition: false,
+            attachedMedia: [],
+            enableTextInput: false,
+            enablePhotoInput: false,
+            enableVideoInput: false,
+            enableAudioInput: false,
+            enableDocumentInput: false,
+            inputVariable: '',
+            photoInputVariable: '',
+            videoInputVariable: '',
+            audioInputVariable: '',
+            documentInputVariable: '',
+          },
+        },
+      ],
+    }],
+  };
+  fs.writeFileSync(PROJECT_PATH, JSON.stringify(baseProject, null, 2), 'utf-8');
+}
+
 const BASE_PROJECT = JSON.parse(fs.readFileSync(PROJECT_PATH, 'utf-8'));
 
 // ─── Утилиты ─────────────────────────────────────────────────────────────────
