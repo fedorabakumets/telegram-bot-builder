@@ -1,0 +1,1170 @@
+{
+  "sheets": [
+    {
+      "id": "7M6nlViNpSV9TybK-nW2O",
+      "name": "Основной поток",
+      "nodes": [
+        {
+          "_y": 100,
+          "id": "start",
+          "data": {
+            "buttons": [],
+            "command": "/start",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "description": "Запустить бота",
+            "messageText": "Сколько тебе лет?",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "inputVariable": "age",
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "enableTextInput": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "collectUserInput": true,
+            "enableStatistics": true,
+            "inputTargetNodeId": "f90r9k3FSLu2Tjn74cBn_",
+            "conditionalMessages": [
+              {
+                "id": "condition-1763692642023",
+                "buttons": [
+                  {
+                    "id": "b5XNyuzu_-YIFk3yfUfpj",
+                    "url": "",
+                    "text": "{age}",
+                    "action": "goto",
+                    "target": "f90r9k3FSLu2Tjn74cBn_",
+                    "buttonType": "normal",
+                    "skipDataCollection": false
+                  }
+                ],
+                "priority": 10,
+                "condition": "user_data_exists",
+                "formatMode": "text",
+                "messageText": "\n",
+                "keyboardType": "reply",
+                "variableName": "age",
+                "logicOperator": "AND",
+                "variableNames": [
+                  "age"
+                ],
+                "waitForTextInput": true,
+                "nextNodeAfterInput": "f90r9k3FSLu2Tjn74cBn_"
+              }
+            ],
+            "enableConditionalMessages": true
+          },
+          "type": "start",
+          "position": {
+            "x": 620,
+            "y": 260
+          }
+        },
+        {
+          "_y": 300,
+          "id": "f90r9k3FSLu2Tjn74cBn_",
+          "data": {
+            "buttons": [
+              {
+                "id": "iIkbMb2jlZRJOxGHMNl1a",
+                "text": "Я девушка",
+                "action": "goto",
+                "target": "RFTgm4KzC6dI39AMTPcmo",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              },
+              {
+                "id": "0dBjAkcTa9rEsjEP48XzB",
+                "text": "Я парень",
+                "action": "goto",
+                "target": "RFTgm4KzC6dI39AMTPcmo",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Теперь определимся с полом",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "inputVariable": "gender",
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "iIkbMb2jlZRJOxGHMNl1a",
+                    "0dBjAkcTa9rEsjEP48XzB"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "collectUserInput": true,
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 1040,
+            "y": 1060
+          }
+        },
+        {
+          "_y": 500,
+          "id": "RFTgm4KzC6dI39AMTPcmo",
+          "data": {
+            "buttons": [
+              {
+                "id": "6bA3YPgWd20pCqPAeyuLe",
+                "text": "Девушки",
+                "action": "goto",
+                "target": "sIh3xXKEtb_TtrhHqZQzX",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              },
+              {
+                "id": "hI7nsCdodrcUnft1SXYpg",
+                "text": "Парни",
+                "action": "goto",
+                "target": "sIh3xXKEtb_TtrhHqZQzX",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              },
+              {
+                "id": "VhOGaPeyFpFV9a7QDBfzo",
+                "text": "Все равно",
+                "action": "goto",
+                "target": "sIh3xXKEtb_TtrhHqZQzX",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Кто тебе интересен?",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "inputVariable": "sex",
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "collectUserInput": true,
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 900,
+            "y": 1200
+          }
+        },
+        {
+          "_y": 700,
+          "id": "sIh3xXKEtb_TtrhHqZQzX",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Из какого ты города?",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "inputVariable": "city",
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "enableTextInput": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "collectUserInput": true,
+            "enableStatistics": true,
+            "inputTargetNodeId": "tS2XGL2Mn4LkE63SnxhPy",
+            "conditionalMessages": [
+              {
+                "id": "cond-city-1",
+                "buttons": [
+                  {
+                    "id": "btn-city-yes",
+                    "text": "{city}",
+                    "action": "goto",
+                    "target": "tS2XGL2Mn4LkE63SnxhPy",
+                    "buttonType": "normal",
+                    "skipDataCollection": false
+                  }
+                ],
+                "priority": 10,
+                "condition": "user_data_exists",
+                "formatMode": "text",
+                "messageText": "\n",
+                "keyboardType": "reply",
+                "variableName": "city",
+                "logicOperator": "AND",
+                "variableNames": [
+                  "city"
+                ],
+                "waitForTextInput": true,
+                "nextNodeAfterInput": "tS2XGL2Mn4LkE63SnxhPy"
+              }
+            ],
+            "enableConditionalMessages": true
+          },
+          "type": "message",
+          "position": {
+            "x": 460,
+            "y": 980
+          }
+        },
+        {
+          "_y": 900,
+          "id": "tS2XGL2Mn4LkE63SnxhPy",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Как мне тебя называть?",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "inputVariable": "name",
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "enableTextInput": true,
+            "oneTimeKeyboard": false,
+            "collectUserInput": true,
+            "enableStatistics": true,
+            "inputTargetNodeId": "lBPy3gcGVLla0NGdSYb35",
+            "conditionalMessages": [
+              {
+                "id": "cond-name-1",
+                "buttons": [
+                  {
+                    "id": "9Qihav_1tM43MLvkUr1y1",
+                    "url": "",
+                    "text": "{name}",
+                    "action": "goto",
+                    "target": "lBPy3gcGVLla0NGdSYb35",
+                    "buttonType": "normal",
+                    "skipDataCollection": false
+                  }
+                ],
+                "priority": 10,
+                "condition": "user_data_exists",
+                "formatMode": "text",
+                "messageText": "\n",
+                "keyboardType": "reply",
+                "variableName": "name",
+                "logicOperator": "AND",
+                "variableNames": [
+                  "name"
+                ],
+                "waitForTextInput": true,
+                "nextNodeAfterInput": "lBPy3gcGVLla0NGdSYb35"
+              }
+            ],
+            "enableConditionalMessages": true
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 900
+          }
+        },
+        {
+          "_y": 1100,
+          "id": "lBPy3gcGVLla0NGdSYb35",
+          "data": {
+            "buttons": [
+              {
+                "id": "g9KWWguVciHEUMMeyZ-WN",
+                "text": "Пропустить",
+                "action": "goto",
+                "target": "Y9zLRp1BLpVhm-HcsNkJV",
+                "buttonType": "normal",
+                "skipDataCollection": true
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Расскажи о себе и кого хочешь найти, чем предлагаешь заняться. Это поможет лучше подобрать тебе компанию.",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "inputVariable": "info",
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "enableTextInput": true,
+            "oneTimeKeyboard": false,
+            "collectUserInput": true,
+            "enableStatistics": true,
+            "inputTargetNodeId": "Y9zLRp1BLpVhm-HcsNkJV",
+            "conditionalMessages": [
+              {
+                "id": "cond-info-1",
+                "buttons": [
+                  {
+                    "id": "btn-info-skip",
+                    "text": "Оставить текущий текст",
+                    "action": "goto",
+                    "target": "Y9zLRp1BLpVhm-HcsNkJV",
+                    "buttonType": "normal",
+                    "skipDataCollection": true
+                  }
+                ],
+                "priority": 10,
+                "condition": "user_data_exists",
+                "formatMode": "text",
+                "messageText": "\n",
+                "keyboardType": "reply",
+                "variableName": "info",
+                "logicOperator": "AND",
+                "variableNames": [
+                  "info"
+                ],
+                "waitForTextInput": true,
+                "nextNodeAfterInput": "vxPv7G4n0QGyhnv4ucOM5"
+              }
+            ],
+            "enableConditionalMessages": true
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 1100
+          }
+        },
+        {
+          "_y": 1300,
+          "id": "Y9zLRp1BLpVhm-HcsNkJV",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Теперь пришли фото или запиши видео 👍 (до 15 сек), его будут видеть другие пользователи",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "collectUserInput": true,
+            "enablePhotoInput": true,
+            "enableStatistics": true,
+            "inputTargetNodeId": "vxPv7G4n0QGyhnv4ucOM5",
+            "photoInputVariable": "photo",
+            "conditionalMessages": [
+              {
+                "id": "cond-photo-1",
+                "buttons": [
+                  {
+                    "id": "btn-photo-keep",
+                    "text": "Оставить текущее",
+                    "action": "goto",
+                    "target": "vxPv7G4n0QGyhnv4ucOM5",
+                    "buttonType": "normal",
+                    "skipDataCollection": true
+                  }
+                ],
+                "priority": 10,
+                "condition": "user_data_exists",
+                "formatMode": "text",
+                "messageText": "\n",
+                "keyboardType": "reply",
+                "variableName": "photo",
+                "logicOperator": "AND",
+                "variableNames": [
+                  "photo"
+                ],
+                "waitForTextInput": false
+              }
+            ],
+            "enableConditionalMessages": true
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 1300
+          }
+        },
+        {
+          "_y": 1500,
+          "id": "vxPv7G4n0QGyhnv4ucOM5",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Так выглядит твоя анкета:",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "autoTransitionTo": "8xSJaWAJNz7Hz_54mjFTF",
+            "enableStatistics": true,
+            "enableAutoTransition": true
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 1500
+          }
+        },
+        {
+          "_y": 1700,
+          "id": "8xSJaWAJNz7Hz_54mjFTF",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "\n{name}, {age}, {city} - {info}\n",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "photo"
+            ],
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "autoTransitionTo": "KE-8sR9elPEefApjXtBxC",
+            "enableStatistics": true,
+            "enableAutoTransition": true,
+            "enableConditionalMessages": false
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 1700
+          }
+        },
+        {
+          "_y": 1900,
+          "id": "KE-8sR9elPEefApjXtBxC",
+          "data": {
+            "buttons": [
+              {
+                "id": "Y6DFar0NH2ejdlKLTFgwC",
+                "text": "Да",
+                "action": "goto",
+                "target": "yrsc8v81qQa5oQx538Dzn",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              },
+              {
+                "id": "e1ZTOjUMpLqjln0LWH3JD",
+                "text": "Изменить анкету",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Все верно?",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 1900
+          }
+        },
+        {
+          "_y": 2100,
+          "id": "yrsc8v81qQa5oQx538Dzn",
+          "data": {
+            "buttons": [
+              {
+                "id": "kfzexViyPfMpgOffuWXY3",
+                "text": "1",
+                "action": "goto",
+                "target": "",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              },
+              {
+                "id": "YqVio9545knVkcQWVLbgT",
+                "text": "2",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              },
+              {
+                "id": "vMzKMEg84JLzu6EEnrQ5W",
+                "text": "3",
+                "action": "goto",
+                "target": "Y9zLRp1BLpVhm-HcsNkJV",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              },
+              {
+                "id": "En0QBjOLWkcEpIGLqy6EQ",
+                "text": "4",
+                "action": "goto",
+                "target": "lBPy3gcGVLla0NGdSYb35",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "1. Смотреть анкеты.\n2. Заполнить анкету заново.\n3. Изменить фото/видео.\n4. Изменить текст анкеты.",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 100,
+            "y": 2100
+          }
+        },
+        {
+          "_y": 2300,
+          "id": "cmd-trigger-btM3GPHg",
+          "data": {
+            "buttons": [],
+            "command": "/start",
+            "mapZoom": 15,
+            "options": [],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "allowSkip": false,
+            "inputType": "text",
+            "formatMode": "none",
+            "mapService": "custom",
+            "showInMenu": true,
+            "canBanUsers": false,
+            "description": "Запустить бота",
+            "isAnonymous": false,
+            "messageText": "",
+            "canAddAdmins": false,
+            "canSendPolls": true,
+            "is_anonymous": false,
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "responseType": "text",
+            "silentAction": false,
+            "textSynonyms": [],
+            "userIdSource": "last_message",
+            "attachedMedia": [],
+            "canChangeInfo": false,
+            "inputRequired": true,
+            "isPrivateOnly": false,
+            "textMatchType": "exact",
+            "appendVariable": false,
+            "canInviteUsers": false,
+            "canPinMessages": false,
+            "resizeKeyboard": true,
+            "saveToDatabase": false,
+            "showDirections": false,
+            "anonymousVoting": true,
+            "canInviteUsers2": true,
+            "canManageTopics": false,
+            "canPinMessages2": true,
+            "canSendMessages": true,
+            "can_change_info": false,
+            "can_manage_chat": false,
+            "inputButtonType": "inline",
+            "messageIdSource": "last_message",
+            "oneTimeKeyboard": false,
+            "responseOptions": [],
+            "variableFilters": {},
+            "autoTransitionTo": "cond-sync-sRFCxWRD",
+            "can_edit_stories": false,
+            "can_invite_users": false,
+            "can_pin_messages": false,
+            "can_post_stories": false,
+            "collectUserInput": false,
+            "customParameters": [],
+            "enableStatistics": true,
+            "adminChatIdSource": "current_chat",
+            "adminUserIdSource": "last_message",
+            "canDeleteMessages": false,
+            "canPromoteMembers": false,
+            "can_edit_messages": false,
+            "can_manage_topics": false,
+            "can_post_messages": false,
+            "enableUserActions": false,
+            "canChangeGroupInfo": true,
+            "canRestrictMembers": false,
+            "can_delete_stories": false,
+            "generateMapPreview": true,
+            "canManageVideoChats": false,
+            "can_delete_messages": false,
+            "can_promote_members": false,
+            "conditionalMessages": [],
+            "canSendMediaMessages": true,
+            "canSendOtherMessages": true,
+            "can_restrict_members": false,
+            "enableAutoTransition": false,
+            "allowsMultipleAnswers": false,
+            "canAddWebPagePreviews": true,
+            "allowMultipleSelection": false,
+            "can_manage_video_chats": false,
+            "enableConditionalMessages": false
+          },
+          "type": "command_trigger",
+          "position": {
+            "x": 20,
+            "y": 420
+          }
+        },
+        {
+          "id": "cond-sync-sRFCxWRD",
+          "data": {
+            "buttons": [],
+            "branches": [
+              {
+                "id": "condition-1763692642023",
+                "label": "age",
+                "value": "",
+                "target": "msg-cond-condition-1763692642023",
+                "operator": "filled"
+              },
+              {
+                "id": "else",
+                "label": "Иначе",
+                "value": "",
+                "target": "start",
+                "operator": "else"
+              }
+            ],
+            "variable": "age",
+            "sourceNodeId": "start",
+            "messageText": "",
+            "keyboardType": "none",
+            "oneTimeKeyboard": false,
+            "resizeKeyboard": true,
+            "markdown": false,
+            "isPrivateOnly": false,
+            "adminOnly": false,
+            "requiresAuth": false,
+            "showInMenu": true,
+            "enableStatistics": true
+          },
+          "type": "condition",
+          "position": {
+            "x": 400,
+            "y": 0
+          }
+        },
+        {
+          "id": "msg-cond-condition-1763692642023",
+          "data": {
+            "buttons": [
+              {
+                "id": "b5XNyuzu_-YIFk3yfUfpj",
+                "url": "",
+                "text": "{age}",
+                "action": "goto",
+                "target": "f90r9k3FSLu2Tjn74cBn_",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              }
+            ],
+            "options": [],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "allowSkip": false,
+            "formatMode": "text",
+            "messageText": "Сколько тебе лет?",
+            "condSourceId": "condition-1763692642023",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "attachedMedia": [],
+            "isPrivateOnly": false,
+            "appendVariable": false,
+            "resizeKeyboard": true,
+            "saveToDatabase": false,
+            "enableTextInput": false,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "collectUserInput": false,
+            "customParameters": [],
+            "enableStatistics": true,
+            "conditionalMessages": [],
+            "enableAutoTransition": false,
+            "enableConditionalMessages": false,
+            "showInMenu": true
+          },
+          "type": "message",
+          "position": {
+            "x": 750,
+            "y": 0
+          }
+        },
+        {
+          "id": "cond-sync-588gBZps",
+          "data": {
+            "branches": [
+              {
+                "id": "cond-city-1",
+                "label": "city",
+                "value": "",
+                "target": "msg-cond-cond-city-1",
+                "operator": "filled"
+              },
+              {
+                "id": "else",
+                "label": "Иначе",
+                "value": "",
+                "target": "sIh3xXKEtb_TtrhHqZQzX",
+                "operator": "else"
+              }
+            ],
+            "variable": "city",
+            "sourceNodeId": "sIh3xXKEtb_TtrhHqZQzX",
+            "buttons": [],
+            "messageText": "",
+            "keyboardType": "none",
+            "oneTimeKeyboard": false,
+            "resizeKeyboard": true,
+            "markdown": false,
+            "isPrivateOnly": false,
+            "adminOnly": false,
+            "requiresAuth": false,
+            "showInMenu": true,
+            "enableStatistics": true
+          },
+          "type": "condition",
+          "position": {
+            "x": 820,
+            "y": 1060
+          }
+        },
+        {
+          "id": "msg-cond-cond-city-1",
+          "data": {
+            "buttons": [
+              {
+                "id": "btn-city-yes",
+                "text": "{city}",
+                "action": "goto",
+                "target": "tS2XGL2Mn4LkE63SnxhPy",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              }
+            ],
+            "options": [],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "allowSkip": false,
+            "formatMode": "text",
+            "messageText": "Из какого ты города?",
+            "condSourceId": "cond-city-1",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "attachedMedia": [],
+            "isPrivateOnly": false,
+            "appendVariable": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "btn-city-yes"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "saveToDatabase": false,
+            "enableTextInput": false,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "collectUserInput": false,
+            "customParameters": [],
+            "enableStatistics": true,
+            "conditionalMessages": [],
+            "enableAutoTransition": false,
+            "enableConditionalMessages": false,
+            "showInMenu": true
+          },
+          "type": "message",
+          "position": {
+            "x": 1060,
+            "y": 820
+          }
+        },
+        {
+          "id": "cond-sync-wknX0H7u",
+          "data": {
+            "branches": [
+              {
+                "id": "cond-name-1",
+                "label": "name",
+                "value": "",
+                "target": "msg-cond-cond-name-1",
+                "operator": "filled"
+              },
+              {
+                "id": "else",
+                "label": "Иначе",
+                "value": "",
+                "target": "tS2XGL2Mn4LkE63SnxhPy",
+                "operator": "else"
+              }
+            ],
+            "variable": "name",
+            "sourceNodeId": "tS2XGL2Mn4LkE63SnxhPy",
+            "buttons": [],
+            "messageText": "",
+            "keyboardType": "none",
+            "oneTimeKeyboard": false,
+            "resizeKeyboard": true,
+            "markdown": false,
+            "isPrivateOnly": false,
+            "adminOnly": false,
+            "requiresAuth": false,
+            "showInMenu": true,
+            "enableStatistics": true
+          },
+          "type": "condition",
+          "position": {
+            "x": 500,
+            "y": 1120
+          }
+        },
+        {
+          "id": "msg-cond-cond-name-1",
+          "data": {
+            "buttons": [
+              {
+                "id": "9Qihav_1tM43MLvkUr1y1",
+                "url": "",
+                "text": "{name}",
+                "action": "goto",
+                "target": "lBPy3gcGVLla0NGdSYb35",
+                "buttonType": "normal",
+                "skipDataCollection": false
+              }
+            ],
+            "options": [],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "allowSkip": false,
+            "formatMode": "text",
+            "messageText": "Как мне тебя называть?",
+            "condSourceId": "cond-name-1",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "attachedMedia": [],
+            "isPrivateOnly": false,
+            "appendVariable": false,
+            "resizeKeyboard": true,
+            "saveToDatabase": false,
+            "enableTextInput": false,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "collectUserInput": false,
+            "customParameters": [],
+            "enableStatistics": true,
+            "conditionalMessages": [],
+            "enableAutoTransition": false,
+            "enableConditionalMessages": false,
+            "showInMenu": true
+          },
+          "type": "message",
+          "position": {
+            "x": 800,
+            "y": 1000
+          }
+        },
+        {
+          "id": "cond-sync-e6RTHasE",
+          "data": {
+            "branches": [
+              {
+                "id": "cond-info-1",
+                "label": "info",
+                "value": "",
+                "target": "msg-cond-cond-info-1",
+                "operator": "filled"
+              },
+              {
+                "id": "else",
+                "label": "Иначе",
+                "value": "",
+                "target": "lBPy3gcGVLla0NGdSYb35",
+                "operator": "else"
+              }
+            ],
+            "variable": "info",
+            "sourceNodeId": "lBPy3gcGVLla0NGdSYb35",
+            "buttons": [],
+            "messageText": "",
+            "keyboardType": "none",
+            "oneTimeKeyboard": false,
+            "resizeKeyboard": true,
+            "markdown": false,
+            "isPrivateOnly": false,
+            "adminOnly": false,
+            "requiresAuth": false,
+            "showInMenu": true,
+            "enableStatistics": true
+          },
+          "type": "condition",
+          "position": {
+            "x": 400,
+            "y": 1000
+          }
+        },
+        {
+          "id": "msg-cond-cond-info-1",
+          "data": {
+            "buttons": [
+              {
+                "id": "btn-info-skip",
+                "text": "Оставить текущий текст",
+                "action": "goto",
+                "target": "Y9zLRp1BLpVhm-HcsNkJV",
+                "buttonType": "normal",
+                "skipDataCollection": true
+              }
+            ],
+            "options": [],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "allowSkip": false,
+            "formatMode": "text",
+            "messageText": "Расскажи о себе и кого хочешь найти, чем предлагаешь заняться. Это поможет лучше подобрать тебе компанию.",
+            "condSourceId": "cond-info-1",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "attachedMedia": [],
+            "isPrivateOnly": false,
+            "appendVariable": false,
+            "resizeKeyboard": true,
+            "saveToDatabase": false,
+            "enableTextInput": false,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "collectUserInput": false,
+            "customParameters": [],
+            "enableStatistics": true,
+            "conditionalMessages": [],
+            "enableAutoTransition": false,
+            "enableConditionalMessages": false,
+            "showInMenu": true
+          },
+          "type": "message",
+          "position": {
+            "x": 750,
+            "y": 1000
+          }
+        },
+        {
+          "id": "cond-sync-HGi1qwVo",
+          "data": {
+            "branches": [
+              {
+                "id": "cond-photo-1",
+                "label": "photo",
+                "value": "",
+                "target": "msg-cond-cond-photo-1",
+                "operator": "filled"
+              },
+              {
+                "id": "else",
+                "label": "Иначе",
+                "value": "",
+                "target": "Y9zLRp1BLpVhm-HcsNkJV",
+                "operator": "else"
+              }
+            ],
+            "variable": "photo",
+            "sourceNodeId": "Y9zLRp1BLpVhm-HcsNkJV",
+            "buttons": [],
+            "messageText": "",
+            "keyboardType": "none",
+            "oneTimeKeyboard": false,
+            "resizeKeyboard": true,
+            "markdown": false,
+            "isPrivateOnly": false,
+            "adminOnly": false,
+            "requiresAuth": false,
+            "showInMenu": true,
+            "enableStatistics": true
+          },
+          "type": "condition",
+          "position": {
+            "x": 400,
+            "y": 1200
+          }
+        },
+        {
+          "id": "msg-cond-cond-photo-1",
+          "data": {
+            "buttons": [
+              {
+                "id": "btn-photo-keep",
+                "text": "Оставить текущее",
+                "action": "goto",
+                "target": "vxPv7G4n0QGyhnv4ucOM5",
+                "buttonType": "normal",
+                "skipDataCollection": true
+              }
+            ],
+            "options": [],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "allowSkip": false,
+            "formatMode": "text",
+            "messageText": "Теперь пришли фото или запиши видео 👍 (до 15 сек), его будут видеть другие пользователи",
+            "condSourceId": "cond-photo-1",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "attachedMedia": [],
+            "isPrivateOnly": false,
+            "appendVariable": false,
+            "resizeKeyboard": true,
+            "saveToDatabase": false,
+            "enableTextInput": false,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "collectUserInput": false,
+            "customParameters": [],
+            "enableStatistics": true,
+            "conditionalMessages": [],
+            "enableAutoTransition": false,
+            "enableConditionalMessages": false,
+            "showInMenu": true
+          },
+          "type": "message",
+          "position": {
+            "x": 750,
+            "y": 1200
+          }
+        },
+        {
+          "id": "cmd-trigger-MIMTfGCE",
+          "type": "command_trigger",
+          "position": {
+            "x": 260,
+            "y": 260
+          },
+          "data": {
+            "command": "/start",
+            "description": "Запустить бота",
+            "showInMenu": true,
+            "isPrivateOnly": false,
+            "autoTransitionTo": "start",
+            "sourceNodeId": "start",
+            "synonyms": [],
+            "buttons": [],
+            "keyboardType": "none",
+            "oneTimeKeyboard": false,
+            "resizeKeyboard": true,
+            "markdown": false,
+            "formatMode": "none",
+            "adminOnly": false,
+            "requiresAuth": false,
+            "enableStatistics": true,
+            "enableAutoTransition": false,
+            "collectUserInput": false,
+            "saveToDatabase": false,
+            "allowSkip": false,
+            "appendVariable": false,
+            "variableFilters": {},
+            "enableUserActions": false,
+            "silentAction": false,
+            "allowsMultipleAnswers": false,
+            "anonymousVoting": true,
+            "allowMultipleSelection": false,
+            "inputRequired": true,
+            "responseType": "text",
+            "responseOptions": [],
+            "conditionalMessages": [],
+            "enableConditionalMessages": false,
+            "customParameters": [],
+            "options": [],
+            "attachedMedia": [],
+            "messageIdSource": "last_message",
+            "userIdSource": "last_message",
+            "mapService": "custom",
+            "mapZoom": 15,
+            "showDirections": false,
+            "generateMapPreview": true,
+            "inputType": "text",
+            "inputButtonType": "inline",
+            "canChangeInfo": false,
+            "canDeleteMessages": false,
+            "canBanUsers": false,
+            "canInviteUsers": false,
+            "canPinMessages": false,
+            "canAddAdmins": false,
+            "canRestrictMembers": false,
+            "canPromoteMembers": false,
+            "canManageVideoChats": false,
+            "canManageTopics": false,
+            "isAnonymous": false,
+            "canSendMessages": true,
+            "canSendMediaMessages": true,
+            "canSendPolls": true,
+            "canSendOtherMessages": true,
+            "canAddWebPagePreviews": true,
+            "canChangeGroupInfo": true,
+            "canInviteUsers2": true,
+            "canPinMessages2": true,
+            "adminUserIdSource": "last_message",
+            "can_manage_chat": false,
+            "can_post_messages": false,
+            "can_edit_messages": false,
+            "can_delete_messages": false,
+            "can_post_stories": false,
+            "can_edit_stories": false,
+            "can_delete_stories": false,
+            "can_manage_video_chats": false,
+            "can_restrict_members": false,
+            "can_promote_members": false,
+            "can_change_info": false,
+            "can_invite_users": false,
+            "can_pin_messages": false,
+            "can_manage_topics": false,
+            "is_anonymous": false,
+            "adminChatIdSource": "current_chat",
+            "textSynonyms": [],
+            "textMatchType": "exact"
+          }
+        }
+      ],
+      "createdAt": "2026-03-22T18:38:54.948Z",
+      "updatedAt": "2026-03-22T19:49:01.686Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "version": 2,
+  "activeSheetId": "7M6nlViNpSV9TybK-nW2O"
+}

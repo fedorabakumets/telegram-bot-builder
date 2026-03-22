@@ -38,12 +38,15 @@ export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
     if (!command.trim()) continue;
 
     // Проверяем: уже есть command_trigger для этого узла?
-    // Используем sourceNodeId — стабильный идентификатор исходного узла,
-    // который не меняется при последующих миграциях (в отличие от autoTransitionTo).
-    const alreadyExists = nodes.some(n =>
-      n.type === 'command_trigger' &&
-      (n.data as any).sourceNodeId === node.id
-    );
+    // Проверяем по sourceNodeId (новые узлы), по autoTransitionTo (старые сохранённые узлы
+    // до добавления sourceNodeId), и по совпадению команды (крайний fallback).
+    const alreadyExists = nodes.some(n => {
+      if (n.type !== 'command_trigger') return false;
+      const d = n.data as any;
+      return d.sourceNodeId === node.id
+        || d.autoTransitionTo === node.id
+        || (d.command === command && !d.sourceNodeId);
+    });
 
     if (alreadyExists) continue;
 
