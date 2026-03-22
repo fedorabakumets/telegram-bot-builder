@@ -108,10 +108,11 @@ export function useConditionalMessagesSync({
   const createConditionNodes = useCallback((conditions: any[]): Node[] => {
     if (!selectedNode) return [];
 
-    /** Переменная из первого условия */
+    /** Переменная из первого условия, fallback на inputVariable исходного узла */
     const firstCond = conditions[0];
     const primaryVariable = (firstCond?.variableNames && firstCond.variableNames[0])
       || firstCond?.variableName
+      || (selectedNode.data as any).inputVariable
       || '';
 
     const conditionNode: Node = {
@@ -174,7 +175,14 @@ export function useConditionalMessagesSync({
 
     const existing = findConditionNode();
     if (existing) {
-      onNodeUpdate(existing.id, { branches: buildBranches(conditions) });
+      /** Пересчитываем переменную — может измениться если изменились условия */
+      const firstCond = conditions[0];
+      const primaryVariable = (firstCond?.variableNames && firstCond.variableNames[0])
+        || firstCond?.variableName
+        || (selectedNode.data as any).inputVariable
+        || (existing.data as any).variable
+        || '';
+      onNodeUpdate(existing.id, { branches: buildBranches(conditions), variable: primaryVariable });
     } else if (selectedNode.data.enableConditionalMessages) {
       createConditionNodes(conditions).forEach(n => onNodeAdd(n));
       return;

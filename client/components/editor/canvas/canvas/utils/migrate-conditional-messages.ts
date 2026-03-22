@@ -66,10 +66,29 @@ export function migrateConditionalMessagesToConditionNodes(nodes: Node[]): Node[
     if (conditionalMessages.length === 0) continue;
 
     // Проверяем: уже есть узел condition для этого исходного узла?
-    const alreadyExists = nodes.some(
+    const existingConditionIndex = result.findIndex(
       n => n.type === 'condition' && (n.data as any).sourceNodeId === node.id
     );
-    if (alreadyExists) continue;
+
+    if (existingConditionIndex >= 0) {
+      /** Узел уже существует — обновляем variable если она пустая */
+      const existingCond = result[existingConditionIndex];
+      const existingVariable = (existingCond.data as any).variable || '';
+      if (!existingVariable) {
+        const firstCond = conditionalMessages[0];
+        const primaryVariable = (firstCond?.variableNames && firstCond.variableNames[0])
+          || firstCond?.variableName
+          || data.inputVariable
+          || '';
+        if (primaryVariable) {
+          result[existingConditionIndex] = {
+            ...existingCond,
+            data: { ...(existingCond.data as any), variable: primaryVariable },
+          };
+        }
+      }
+      continue;
+    }
 
     /** ID нового узла condition */
     const conditionNodeId = `cond-sync-${nanoid(8)}`;
