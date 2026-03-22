@@ -4,7 +4,7 @@
  * Управляет видимостью элементов гибкого макета.
  */
 
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useRef } from 'react';
 import type { SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 
 /** Результат работы хука управления макетом */
@@ -104,14 +104,18 @@ export function useLayoutManager(
     };
   }, [isMobile, currentTab, manualVisibility]);
 
+  // Ref для доступа к актуальной конфигурации внутри setFlexibleLayoutConfig
+  const flexibleLayoutConfigRef = useRef(flexibleLayoutConfig);
+  flexibleLayoutConfigRef.current = flexibleLayoutConfig;
+
   const setFlexibleLayoutConfig = useCallback((updater: React.SetStateAction<SimpleLayoutConfig>) => {
     setManualVisibility(prev => {
       const newMap = new Map(prev);
-      const config = typeof updater === 'function' ? updater({
-        elements: [],
-        compactMode: false,
-        showGrid: true
-      }) : updater;
+      
+      // Если updater — функция, вызываем её с текущей конфигурацией через ref
+      const config = typeof updater === 'function'
+        ? updater(flexibleLayoutConfigRef.current)
+        : updater;
       
       config.elements.forEach(el => {
         // Сохраняем только ручные изменения видимости
