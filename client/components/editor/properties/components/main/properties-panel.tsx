@@ -340,6 +340,7 @@ export function PropertiesPanel({
           {isConditionNode(selectedNode.type) && (
             <ConditionNodeConfiguration
               selectedNode={selectedNode}
+              allNodes={allNodes}
               onNodeUpdate={onNodeUpdate}
             />
           )}
