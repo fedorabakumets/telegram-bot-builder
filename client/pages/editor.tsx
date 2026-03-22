@@ -35,7 +35,7 @@ import {
 import { SaveTemplateModal } from '@/components/editor/header/components/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 
 import { DialogPanel } from '@/components/editor/database/dialog/dialog-panel';
@@ -522,7 +522,8 @@ export default function Editor() {
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
 
   // Реактивно открываем/закрываем панель свойств при выборе/снятии выбора узла
-  useEffect(() => {
+  // useLayoutEffect — синхронно до отрисовки, чтобы не было мигания пустой панели
+  useLayoutEffect(() => {
     if (currentTab !== 'editor') return;
     setFlexibleLayoutConfig(prev => ({
       ...prev,
