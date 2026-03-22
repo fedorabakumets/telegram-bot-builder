@@ -5,6 +5,7 @@ import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMess
 import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from "./user-management";
 import { pinMessage, unpinMessage, deleteMessage } from "./content-management";
 import { commandTrigger, textTrigger } from "./triggers";
+import { conditionNode } from "./logic";
 
 /**
  * Массив определений компонентов для конструктора бота
@@ -30,5 +31,6 @@ export const components: ComponentDefinition[] = [
   demoteUser,
   adminRights,
   broadcastNode,
-  clientAuthNode
+  clientAuthNode,
+  conditionNode,
 ];

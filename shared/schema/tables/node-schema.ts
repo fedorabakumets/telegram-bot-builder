@@ -471,6 +471,21 @@ export const nodeSchema = z.object({
     textSynonyms: z.array(z.string()).default([]),
     /** Режим совпадения текстового триггера: "exact" — точное, "contains" — содержит */
     textMatchType: z.enum(['exact', 'contains']).default('exact'),
+    /** Переменная для проверки в узле условия, например "{{user_name}}" */
+    variable: z.string().optional(),
+    /** Ветки узла условия */
+    branches: z.array(z.object({
+      /** Уникальный идентификатор ветки */
+      id: z.string(),
+      /** Отображаемое название ветки */
+      label: z.string(),
+      /** Оператор сравнения: "==", "!=", "contains", "else" */
+      operator: z.enum(['==', '!=', 'contains', 'else']),
+      /** Значение для сравнения */
+      value: z.string(),
+      /** ID целевого узла для перехода по этой ветке */
+      target: z.string().optional(),
+    })).default([]),
   }),
 });
 

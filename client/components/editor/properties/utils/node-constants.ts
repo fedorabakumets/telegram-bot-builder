@@ -72,3 +72,16 @@ export const TRIGGER_NODE_TYPES = [
 export function isTriggerNode(nodeType: Node['type']): boolean {
   return TRIGGER_NODE_TYPES.includes(nodeType as typeof TRIGGER_NODE_TYPES[number]);
 }
+
+/**
+ * Проверяет, является ли узел узлом условия
+ *
+ * Узел условия имеет собственную панель свойств и не отображает
+ * стандартные секции текста, медиа, клавиатуры и т.д.
+ *
+ * @param {Node['type']} nodeType - Тип узла для проверки
+ * @returns {boolean} true, если узел является узлом условия
+ */
+export function isConditionNode(nodeType: Node['type']): boolean {
+  return nodeType === 'condition';
+}

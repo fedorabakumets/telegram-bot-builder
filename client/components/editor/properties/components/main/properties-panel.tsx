@@ -10,12 +10,13 @@ import { collectAvailableQuestions, extractVariables } from '../../utils/variabl
 import { useMediaVariables } from '../../hooks/use-media-variables';
 import { useNodeCommandValidation } from '../../hooks/use-node-command-validation';
 import { formatNodeDisplay } from '../../utils/node-formatters';
-import { isManagementNode, isTriggerNode } from '../../utils/node-constants';
+import { isManagementNode, isTriggerNode, isConditionNode } from '../../utils/node-constants';
 import { AdminRightsInfo } from '../configuration/admin-rights-info';
 import { InfoBlock } from '@/components/ui/info-block';
 import { CommandAdvancedSettingsWrapper } from './command-advanced-settings-wrapper';
 import { CommandTriggerConfiguration } from '../trigger/CommandTriggerConfiguration';
 import { TextTriggerConfiguration } from '../trigger/TextTriggerConfiguration';
+import { ConditionNodeConfiguration } from '../condition/ConditionNodeConfiguration';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
 import { BasicSettingsSection } from './basic-settings-section';
@@ -261,8 +262,8 @@ export function PropertiesPanel({
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-0">
 
-          {/* Basic Settings Section - скрыто для узла рассылка, client_auth и триггеров */}
-          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && !isTriggerNode(selectedNode.type) && (
+          {/* Basic Settings Section - скрыто для узла рассылка, client_auth, триггеров и условия */}
+          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <BasicSettingsSection
               selectedNode={selectedNode}
               projectId={projectId}
@@ -324,8 +325,16 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Message Content - скрыто для узлов управления и триггеров */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && (
+          {/* Condition Section — только для узла условия */}
+          {isConditionNode(selectedNode.type) && (
+            <ConditionNodeConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+            />
+          )}
+
+          {/* Message Content - скрыто для узлов управления, триггеров и условия */}
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <MessageContentSection
               selectedNode={selectedNode}
               allNodes={allNodes}
@@ -343,8 +352,8 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Media File Section - скрыто для узлов управления и триггеров */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && (
+          {/* Media File Section - скрыто для узлов управления, триггеров и условия */}
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <MediaFileSection
               projectId={projectId}
               selectedNode={selectedNode}
@@ -354,8 +363,8 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Keyboard Section - скрыто для узлов управления и триггеров */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && (
+          {/* Keyboard Section - скрыто для узлов управления, триггеров и условия */}
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <div className="w-full bg-gradient-to-br from-amber-50/40 to-yellow-50/20 dark:from-amber-950/30 dark:to-yellow-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-amber-200/40 dark:border-amber-800/40 backdrop-blur-sm">
               <KeyboardSectionHeader
                 selectedNode={selectedNode}
@@ -487,7 +496,7 @@ export function PropertiesPanel({
         )}
 
         {/* Conditional Messages Section */}
-        {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && (
+        {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
           <div className="w-full bg-gradient-to-br from-purple-50/40 to-indigo-50/20 dark:from-purple-950/30 dark:to-indigo-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-purple-200/40 dark:border-purple-800/40 backdrop-blur-sm">
             <ConditionalMessagesHeader
               selectedNode={selectedNode}
@@ -560,8 +569,8 @@ export function PropertiesPanel({
           </div>
         )}
 
-        {/* Universal User Input Collection - скрыто для узлов управления и триггеров */}
-        {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && (
+        {/* Universal User Input Collection - скрыто для узлов управления, триггеров и условия */}
+        {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
           <UserInputSettingsSection
             selectedNode={selectedNode}
             getAllNodesFromAllSheets={getAllNodesFromAllSheets}

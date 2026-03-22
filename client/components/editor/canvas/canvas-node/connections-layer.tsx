@@ -228,6 +228,22 @@ function collectConnections(nodes: Node[]): Connection[] {
         connections.push({ fromId: node.id, toId, type: 'trigger-next' });
       }
     }
+
+    // 5. Ветки узла условия
+    if (node.type === 'condition') {
+      const branches: any[] = (node.data as any)?.branches || [];
+      branches.forEach((branch: any) => {
+        if (branch.target && existingIds.has(branch.target)) {
+          connections.push({
+            fromId: node.id,
+            toId: branch.target,
+            type: 'button-goto',
+            label: branch.label,
+            buttonId: branch.id,
+          });
+        }
+      });
+    }
   });
 
   return connections;
