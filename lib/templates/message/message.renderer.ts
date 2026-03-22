@@ -26,11 +26,12 @@ import type { Node } from '@shared/schema';
  * ```
  */
 export function generateMessage(params: MessageTemplateParams): string {
+  const VALID_FORMAT_MODES = ['html', 'markdown', 'none'] as const;
   const validated = messageParamsSchema.parse({
     ...params,
     userDatabaseEnabled: params.userDatabaseEnabled ?? false,
     keyboardType: params.keyboardType ?? 'none',
-    formatMode: params.formatMode ?? 'none',
+    formatMode: VALID_FORMAT_MODES.includes(params.formatMode as any) ? params.formatMode : 'none',
     requiresAuth: params.requiresAuth ?? false,
     isPrivateOnly: params.isPrivateOnly ?? false,
     adminOnly: params.adminOnly ?? false,
