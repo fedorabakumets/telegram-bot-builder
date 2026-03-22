@@ -19,6 +19,10 @@ const textTriggerEntrySchema = z.object({
   targetNodeType: z.string(),
   /** Только приватные чаты */
   isPrivateOnly: z.boolean().optional(),
+  /** Только для администраторов */
+  adminOnly: z.boolean().optional(),
+  /** Требуется авторизация пользователя */
+  requiresAuth: z.boolean().optional(),
 });
 
 /** Схема параметров шаблона текстовых триггеров */

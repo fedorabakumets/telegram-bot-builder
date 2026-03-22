@@ -147,3 +147,51 @@ export const nodesWithNullAndMixed: Node[] = [
   }),
   makeNode('msg_1', 'message', {}),
 ];
+
+// ─── Фикстуры для adminOnly и requiresAuth ────────────────────────────────────
+
+/** Триггер с adminOnly */
+export const validParamsAdminOnly: CommandTriggerTemplateParams = {
+  entries: [
+    {
+      nodeId: 'trigger_admin',
+      command: '/admin',
+      targetNodeId: 'msg_admin',
+      targetNodeType: 'message',
+      adminOnly: true,
+    },
+  ],
+};
+
+/** Триггер с requiresAuth */
+export const validParamsRequiresAuth: CommandTriggerTemplateParams = {
+  entries: [
+    {
+      nodeId: 'trigger_profile',
+      command: '/profile',
+      targetNodeId: 'msg_profile',
+      targetNodeType: 'message',
+      requiresAuth: true,
+    },
+  ],
+};
+
+/** Узлы с adminOnly */
+export const nodesWithAdminOnly: Node[] = [
+  makeNode('trigger_admin', 'command_trigger', {
+    command: '/admin',
+    autoTransitionTo: 'msg_admin',
+    adminOnly: true,
+  }),
+  makeNode('msg_admin', 'message', {}),
+];
+
+/** Узлы с requiresAuth */
+export const nodesWithRequiresAuth: Node[] = [
+  makeNode('trigger_profile', 'command_trigger', {
+    command: '/profile',
+    autoTransitionTo: 'msg_profile',
+    requiresAuth: true,
+  }),
+  makeNode('msg_profile', 'message', {}),
+];

@@ -21,6 +21,10 @@ import {
   nodesWithEmptyCommand,
   nodesWithoutCommandTriggers,
   nodesWithNullAndMixed,
+  validParamsAdminOnly,
+  validParamsRequiresAuth,
+  nodesWithAdminOnly,
+  nodesWithRequiresAuth,
 } from './command-trigger.fixture';
 import { commandTriggerParamsSchema } from './command-trigger.schema';
 
@@ -51,6 +55,29 @@ describe('generateCommandTriggers()', () => {
   it('без isPrivateOnly нет проверки типа чата', () => {
     const r = generateCommandTriggers(validParamsSingle);
     expect(r).not.toContain("message.chat.type != 'private'");
+  });
+
+  it('adminOnly добавляет проверку прав администратора', () => {
+    const r = generateCommandTriggers(validParamsAdminOnly);
+    expect(r).toContain('get_chat_member');
+    expect(r).toContain("'administrator', 'creator'");
+    expect(r).toContain('Эта команда доступна только администраторам');
+  });
+
+  it('requiresAuth добавляет проверку авторизации', () => {
+    const r = generateCommandTriggers(validParamsRequiresAuth);
+    expect(r).toContain('is_user_authorized');
+    expect(r).toContain('необходимо авторизоваться');
+  });
+
+  it('без adminOnly нет проверки прав', () => {
+    const r = generateCommandTriggers(validParamsSingle);
+    expect(r).not.toContain('get_chat_member');
+  });
+
+  it('без requiresAuth нет проверки авторизации', () => {
+    const r = generateCommandTriggers(validParamsSingle);
+    expect(r).not.toContain('is_user_authorized');
   });
 
   it('генерирует MockCallback и вызов handle_callback', () => {
@@ -147,6 +174,16 @@ describe('collectCommandTriggerEntries()', () => {
 
   it('возвращает пустой массив для пустого входа', () => {
     expect(collectCommandTriggerEntries([])).toEqual([]);
+  });
+
+  it('передаёт adminOnly из узла', () => {
+    const entries = collectCommandTriggerEntries(nodesWithAdminOnly);
+    expect(entries[0].adminOnly).toBe(true);
+  });
+
+  it('передаёт requiresAuth из узла', () => {
+    const entries = collectCommandTriggerEntries(nodesWithRequiresAuth);
+    expect(entries[0].requiresAuth).toBe(true);
   });
 });
 

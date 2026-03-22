@@ -24,6 +24,10 @@ import {
   nodesWithEmptySynonyms,
   nodesWithoutTriggers,
   nodesWithNullAndMixed,
+  validParamsAdminOnly,
+  validParamsRequiresAuth,
+  nodesWithAdminOnly,
+  nodesWithRequiresAuth,
 } from './text-trigger.fixture';
 import { textTriggerParamsSchema } from './text-trigger.schema';
 
@@ -71,6 +75,29 @@ describe('generateTextTriggers()', () => {
   it('без isPrivateOnly нет проверки типа чата', () => {
     const r = generateTextTriggers(validParamsExact);
     expect(r).not.toContain("message.chat.type != 'private'");
+  });
+
+  it('adminOnly добавляет проверку прав администратора', () => {
+    const r = generateTextTriggers(validParamsAdminOnly);
+    expect(r).toContain('get_chat_member');
+    expect(r).toContain("'administrator', 'creator'");
+    expect(r).toContain('Эта команда доступна только администраторам');
+  });
+
+  it('requiresAuth добавляет проверку авторизации', () => {
+    const r = generateTextTriggers(validParamsRequiresAuth);
+    expect(r).toContain('is_user_authorized');
+    expect(r).toContain('необходимо авторизоваться');
+  });
+
+  it('без adminOnly нет проверки прав', () => {
+    const r = generateTextTriggers(validParamsExact);
+    expect(r).not.toContain('get_chat_member');
+  });
+
+  it('без requiresAuth нет проверки авторизации', () => {
+    const r = generateTextTriggers(validParamsExact);
+    expect(r).not.toContain('is_user_authorized');
   });
 
   it('смешанные exact и contains генерируются вместе', () => {
@@ -163,6 +190,16 @@ describe('collectTextTriggerEntries()', () => {
 
   it('возвращает пустой массив для пустого входа', () => {
     expect(collectTextTriggerEntries([])).toEqual([]);
+  });
+
+  it('передаёт adminOnly из узла', () => {
+    const entries = collectTextTriggerEntries(nodesWithAdminOnly);
+    expect(entries[0].adminOnly).toBe(true);
+  });
+
+  it('передаёт requiresAuth из узла', () => {
+    const entries = collectTextTriggerEntries(nodesWithRequiresAuth);
+    expect(entries[0].requiresAuth).toBe(true);
   });
 });
 

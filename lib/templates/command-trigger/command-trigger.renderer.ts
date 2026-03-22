@@ -40,6 +40,8 @@ export function collectCommandTriggerEntries(nodes: Node[]): CommandTriggerEntry
       description: (node.data as any).description,
       showInMenu: (node.data as any).showInMenu,
       isPrivateOnly: node.data.isPrivateOnly,
+      adminOnly: node.data.adminOnly,
+      requiresAuth: node.data.requiresAuth,
       targetNodeId,
       targetNodeType,
     });

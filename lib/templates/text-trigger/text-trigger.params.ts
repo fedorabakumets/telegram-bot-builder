@@ -17,6 +17,10 @@ export interface TextTriggerEntry {
   targetNodeType: string;
   /** Только приватные чаты */
   isPrivateOnly?: boolean;
+  /** Только для администраторов */
+  adminOnly?: boolean;
+  /** Требуется авторизация пользователя */
+  requiresAuth?: boolean;
 }
 
 /** Параметры для генерации всех обработчиков текстовых триггеров */

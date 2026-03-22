@@ -171,3 +171,55 @@ export const nodesWithNullAndMixed: Node[] = [
   }),
   makeNode('msg_1', 'message', {}),
 ];
+
+// ─── Фикстуры для adminOnly и requiresAuth ────────────────────────────────────
+
+/** Триггер с adminOnly */
+export const validParamsAdminOnly: TextTriggerTemplateParams = {
+  entries: [
+    {
+      nodeId: 'trigger_admin',
+      synonyms: ['админ'],
+      matchType: 'exact',
+      targetNodeId: 'msg_admin',
+      targetNodeType: 'message',
+      adminOnly: true,
+    },
+  ],
+};
+
+/** Триггер с requiresAuth */
+export const validParamsRequiresAuth: TextTriggerTemplateParams = {
+  entries: [
+    {
+      nodeId: 'trigger_auth',
+      synonyms: ['профиль'],
+      matchType: 'exact',
+      targetNodeId: 'msg_profile',
+      targetNodeType: 'message',
+      requiresAuth: true,
+    },
+  ],
+};
+
+/** Узлы с adminOnly */
+export const nodesWithAdminOnly: Node[] = [
+  makeNode('trigger_admin', 'text_trigger', {
+    textSynonyms: ['админ'],
+    textMatchType: 'exact',
+    autoTransitionTo: 'msg_admin',
+    adminOnly: true,
+  }),
+  makeNode('msg_admin', 'message', {}),
+];
+
+/** Узлы с requiresAuth */
+export const nodesWithRequiresAuth: Node[] = [
+  makeNode('trigger_auth', 'text_trigger', {
+    textSynonyms: ['профиль'],
+    textMatchType: 'exact',
+    autoTransitionTo: 'msg_profile',
+    requiresAuth: true,
+  }),
+  makeNode('msg_profile', 'message', {}),
+];

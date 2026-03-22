@@ -41,6 +41,8 @@ export function collectTextTriggerEntries(nodes: Node[]): TextTriggerEntry[] {
       targetNodeId,
       targetNodeType,
       isPrivateOnly: node.data.isPrivateOnly,
+      adminOnly: node.data.adminOnly,
+      requiresAuth: node.data.requiresAuth,
     });
   }
 

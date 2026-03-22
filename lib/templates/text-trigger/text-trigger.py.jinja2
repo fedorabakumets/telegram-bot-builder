@@ -33,6 +33,19 @@ async def text_trigger_{{ sanitized_node_id }}_{{ sanitized_synonym }}_handler(m
         await message.answer("❌ Эта команда доступна только в приватных чатах")
         return
     {%- endif %}
+    {%- if entry.adminOnly %}
+    # Проверка прав администратора
+    chat_member = await bot.get_chat_member(message.chat.id, user_id)
+    if chat_member.status not in ['administrator', 'creator']:
+        await message.answer("❌ Эта команда доступна только администраторам")
+        return
+    {%- endif %}
+    {%- if entry.requiresAuth %}
+    # Проверка авторизации пользователя
+    if not await is_user_authorized(user_id):
+        await message.answer("❌ Для использования этой команды необходимо авторизоваться")
+        return
+    {%- endif %}
 
     class MockCallback:
         def __init__(self, data, user, msg):

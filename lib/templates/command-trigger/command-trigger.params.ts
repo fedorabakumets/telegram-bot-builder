@@ -15,6 +15,10 @@ export interface CommandTriggerEntry {
   showInMenu?: boolean;
   /** Только приватные чаты */
   isPrivateOnly?: boolean;
+  /** Только для администраторов */
+  adminOnly?: boolean;
+  /** Требуется авторизация пользователя */
+  requiresAuth?: boolean;
   /** ID целевого узла — узел, к которому ведёт этот триггер */
   targetNodeId: string;
   /** Тип целевого узла */
