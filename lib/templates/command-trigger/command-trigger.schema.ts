@@ -17,6 +17,7 @@ export const commandTriggerEntrySchema = z.object({
   adminOnly: z.boolean().optional(),
   /** Требуется авторизация пользователя */
   requiresAuth: z.boolean().optional(),
+  synonyms: z.array(z.string()).optional().default([]),
   targetNodeId: z.string().min(1),
   targetNodeType: z.string().min(1),
   /** Текст сообщения */

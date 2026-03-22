@@ -19,6 +19,8 @@ export interface CommandTriggerEntry {
   adminOnly?: boolean;
   /** Требуется авторизация пользователя */
   requiresAuth?: boolean;
+  /** Список текстовых синонимов для команды */
+  synonyms?: string[];
   /** ID целевого узла — узел, к которому ведёт этот триггер */
   targetNodeId: string;
   /** Тип целевого узла */

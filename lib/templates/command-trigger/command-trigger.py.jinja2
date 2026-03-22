@@ -7,6 +7,7 @@
     - command: string         — команда, например "/start"
     - description: string     — описание команды
     - showInMenu: bool        — показывать в меню
+    - synonyms: string[]      — список текстовых синонимов
     - targetNodeId: string    — ID целевого узла
     - targetNodeType: string  — тип целевого узла
     - isPrivateOnly: bool     — только приватные чаты
@@ -63,4 +64,50 @@ async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message
     mock_callback = MockCallback("{{ entry.targetNodeId }}", message.from_user, message)
     await handle_callback_{{ sanitized_target_id }}(mock_callback)
 
+{%- if entry.synonyms and entry.synonyms | length > 0 %}
+{% for synonym in entry.synonyms -%}
+{%- set sanitized_synonym = synonym | replace(' ', '_') | safe_name -%}
+
+@dp.message(F.text == "{{ synonym }}")
+async def text_synonym_trigger_{{ sanitized_node_id }}_{{ sanitized_synonym }}_handler(message: types.Message):
+    # Синоним '{{ synonym }}' для командного триггера {{ entry.nodeId }}
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} написал синоним '{{ synonym }}' — триггер узла {{ entry.nodeId }}")
+    {%- if entry.isPrivateOnly %}
+    if message.chat.type != 'private':
+        await message.answer("❌ Эта команда доступна только в приватных чатах")
+        return
+    {%- endif %}
+    {%- if entry.adminOnly %}
+    if not await is_admin(user_id):
+        await message.answer("❌ У вас нет прав для выполнения этой команды")
+        return
+    {%- endif %}
+    {%- if entry.requiresAuth %}
+    if not await check_auth(user_id):
+        await message.answer("❌ Сначала запустите бота: /start")
+        return
+    {%- endif %}
+
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+
+        async def answer(self):
+            pass
+
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+
+    mock_callback = MockCallback("{{ entry.targetNodeId }}", message.from_user, message)
+    await handle_callback_{{ sanitized_target_id }}(mock_callback)
+
+{% endfor %}
+{%- endif %}
 {% endfor %}

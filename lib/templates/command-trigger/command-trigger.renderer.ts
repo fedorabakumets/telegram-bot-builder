@@ -53,6 +53,9 @@ export function collectCommandTriggerEntries(nodes: Node[]): CommandTriggerEntry
       isPrivateOnly: node.data.isPrivateOnly,
       adminOnly: node.data.adminOnly,
       requiresAuth: node.data.requiresAuth,
+      synonyms: ((node.data as any).synonyms as string[] | undefined)
+        ?.map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0) ?? [],
       targetNodeId,
       targetNodeType,
       messageText,

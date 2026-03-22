@@ -329,7 +329,7 @@ function generateCodeSections(
 
   // --- main ---
   const menuCommands = nodes.filter(node =>
-    (node.type === NODE_TYPES.START || node.type === NODE_TYPES.COMMAND) &&
+    (node.type === NODE_TYPES.START || node.type === NODE_TYPES.COMMAND || node.type === 'command_trigger') &&
     node.data.showInMenu &&
     node.data.command
   );
