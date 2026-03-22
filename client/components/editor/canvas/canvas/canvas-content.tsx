@@ -111,20 +111,18 @@ export function CanvasContent({
   /**
    * Обработчик монтирования порта кнопки.
    * Вызывается из OutputPort через ButtonsPreview → CanvasNode.
-   * Обновляет карту Y-смещений портов кнопок в canvas-координатах.
+   * yOffset уже в canvas-координатах (вычислен через offsetTop, без transform).
    *
    * @param buttonId - ID кнопки
-   * @param screenYOffset - Y-смещение центра порта от верха wrapper-div в экранных пикселях
+   * @param yOffset - Y-смещение центра порта от верха wrapper-div в canvas-координатах
    */
-  const handleButtonPortMount = useCallback((buttonId: string, screenYOffset: number) => {
-    // Переводим экранные пиксели в canvas-координаты (делим на zoom)
-    const canvasYOffset = screenYOffset / (zoom / 100);
+  const handleButtonPortMount = useCallback((buttonId: string, yOffset: number) => {
     setButtonPortYOffsets(prev => {
       const next = new Map(prev);
-      next.set(buttonId, canvasYOffset);
+      next.set(buttonId, yOffset);
       return next;
     });
-  }, [zoom]);
+  }, []);
 
   return (
     <div

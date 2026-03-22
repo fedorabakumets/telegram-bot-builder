@@ -54,8 +54,8 @@ export function OutputPort({ portType, buttonId, onPortMouseDown, onMount }: Out
 
   /**
    * После монтирования вычисляем Y-смещение центра порта от верха wrapper-div узла.
-   * Используем useLayoutEffect чтобы гарантировать что DOM уже отрисован и
-   * getBoundingClientRect вернёт актуальные координаты.
+   * Используем offsetTop вместо getBoundingClientRect — offsetTop не зависит от
+   * CSS transform (zoom/pan) и возвращает позицию в layout-координатах.
    */
   useLayoutEffect(() => {
     if (!onMount || !buttonId || !portRef.current) return;
@@ -70,13 +70,18 @@ export function OutputPort({ portType, buttonId, onPortMouseDown, onMount }: Out
     const wrapperEl = nodeInnerEl.parentElement;
     if (!wrapperEl) return;
 
-    const portRect = portEl.getBoundingClientRect();
-    const wrapperRect = wrapperEl.getBoundingClientRect();
+    // Суммируем offsetTop по цепочке от порта до nodeInnerEl
+    // (nodeInnerEl — первый positioned ancestor, он же offsetParent для порта)
+    let yOffset = portEl.offsetHeight / 2; // центр порта
+    let el: HTMLElement | null = portEl;
+    while (el && el !== nodeInnerEl) {
+      yOffset += el.offsetTop;
+      el = el.offsetParent as HTMLElement | null;
+    }
 
-    // Y-смещение центра порта от верха wrapper-div в экранных пикселях.
-    // Делить на zoom не нужно — canvas-content.tsx передаёт zoom отдельно.
-    // Здесь возвращаем экранные пиксели, а CanvasContent делит на zoom.
-    const yOffset = portRect.top + portRect.height / 2 - wrapperRect.top;
+    // Добавляем offsetTop самого nodeInnerEl относительно wrapperEl
+    // (nodeInnerEl имеет position: relative, wrapperEl — position: absolute)
+    yOffset += nodeInnerEl.offsetTop;
 
     onMount(buttonId, yOffset);
   }, [buttonId, onMount]);
