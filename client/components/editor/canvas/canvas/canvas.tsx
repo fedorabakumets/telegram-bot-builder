@@ -239,24 +239,31 @@ export function Canvas({
     }
 
     const updatedNodes = nodes.map(n => {
-      if (n.id !== fromId) return n;
       const data = { ...n.data } as Record<string, unknown>;
 
-      if (type === 'trigger-next') {
-        delete data.autoTransitionTo;
-      } else if (type === 'auto-transition') {
-        data.enableAutoTransition = false;
-        delete data.autoTransitionTo;
-      } else if (type === 'button-goto') {
-        const buttons = (data.buttons as any[] | undefined) ?? [];
-        data.buttons = buttons.map((btn: any) =>
-          btn.action === 'goto' && btn.target === toId ? { ...btn, target: undefined } : btn
-        );
-      } else if (type === 'input-target') {
-        delete data.inputTargetNodeId;
+      if (n.id === fromId) {
+        if (type === 'trigger-next') {
+          delete data.autoTransitionTo;
+        } else if (type === 'auto-transition') {
+          data.enableAutoTransition = false;
+          delete data.autoTransitionTo;
+        } else if (type === 'button-goto') {
+          const buttons = (data.buttons as any[] | undefined) ?? [];
+          data.buttons = buttons.map((btn: any) =>
+            btn.action === 'goto' && btn.target === toId ? { ...btn, target: undefined } : btn
+          );
+        } else if (type === 'input-target') {
+          delete data.inputTargetNodeId;
+        }
+        return { ...n, data };
       }
 
-      return { ...n, data };
+      if (n.id === toId && type === 'condition-source') {
+        delete data.sourceNodeId;
+        return { ...n, data };
+      }
+
+      return n;
     });
     onNodesUpdate?.(updatedNodes);
     addAction('disconnect', `Удалено соединение`);
