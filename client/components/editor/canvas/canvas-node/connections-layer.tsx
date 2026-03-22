@@ -40,6 +40,8 @@ interface Connection {
   type: ConnectionType;
   /** Метка (текст кнопки или название) — опционально */
   label?: string;
+  /** ID кнопки — только для button-goto */
+  buttonId?: string;
 }
 
 /**
@@ -103,6 +105,8 @@ interface ConnectionsLayerProps {
   nodeSizes: Map<string, { width: number; height: number }>;
   /** Колбэк удаления соединения */
   onConnectionDelete?: (fromId: string, toId: string, type: ConnectionType) => void;
+  /** Y-смещения портов кнопок от верха узла (buttonId → yOffset в canvas-координатах) */
+  buttonPortYOffsets?: Map<string, number>;
 }
 
 /** На сколько px не доходим до края узла — ровно refX маркера, чтобы кончик стрелки лёг на край */
@@ -132,16 +136,13 @@ const TRIGGER_PORT_X_OFFSET = 0;
  * Линия выходит из центра кружка-порта OutputPort (правый бок исходного узла)
  * и входит в левый бок целевого узла.
  *
- * Поскольку nodeSizes теперь хранит border-box размеры wrapper-div,
- * центр порта по Y = node.position.y + height / 2 — никаких дополнительных
- * смещений не требуется.
- *
  * @param fromNode - Исходный узел
  * @param toNode - Целевой узел
  * @param fromW - border-box ширина исходного узла
  * @param fromH - border-box высота исходного узла
  * @param toW - border-box ширина целевого узла (не используется, оставлен для совместимости)
  * @param toH - border-box высота целевого узла
+ * @param fromYOverride - Переопределение Y-координаты начала линии (для портов кнопок)
  * @returns строка SVG path
  */
 function buildSmartPath(
@@ -151,14 +152,17 @@ function buildSmartPath(
   fromH: number,
   toW: number,
   toH: number,
+  fromYOverride?: number,
 ): string {
   // Для компактных триггеров и обычных узлов X-смещение одинаково (border-box)
   const isTrigger = fromNode.type === 'command_trigger' || fromNode.type === 'text_trigger';
   const xOffset = isTrigger ? TRIGGER_PORT_X_OFFSET : PORT_X_OFFSET;
 
-  // Центр порта по Y = середина border-box высоты wrapper-div
   const x1 = fromNode.position.x + fromW + xOffset;
-  const y1 = fromNode.position.y + fromH / 2;
+  // Если передан override (порт кнопки) — используем его, иначе центр узла
+  const y1 = fromYOverride !== undefined
+    ? fromNode.position.y + fromYOverride
+    : fromNode.position.y + fromH / 2;
 
   // Вход в левый бок целевого узла (середина по border-box высоте)
   const x2 = toNode.position.x - MARKER_OFFSET;
@@ -204,6 +208,7 @@ function collectConnections(nodes: Node[]): Connection[] {
             toId: btn.target,
             type: 'button-goto',
             label: btn.text,
+            buttonId: btn.id,
           });
         }
       }
@@ -240,7 +245,7 @@ function collectConnections(nodes: Node[]): Connection[] {
  * @param props - Свойства компонента
  * @returns SVG элемент с линиями соединений или null если нет соединений
  */
-export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete }: ConnectionsLayerProps) {
+export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonPortYOffsets }: ConnectionsLayerProps) {
   /** Ширина узла по умолчанию если ResizeObserver ещё не сработал */
   const DEFAULT_WIDTH = 320;
   /** border-box высота узла по умолчанию (до первого срабатывания ResizeObserver) */
@@ -290,7 +295,7 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete }: Conne
         ))}
       </defs>
 
-      {connections.map(({ fromId, toId, type }, idx) => {
+      {connections.map(({ fromId, toId, type, buttonId }, idx) => {
         const fromNode = nodeById.get(fromId);
         const toNode = nodeById.get(toId);
         if (!fromNode || !toNode) return null;
@@ -303,7 +308,12 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete }: Conne
         const toW = toSize?.width ?? DEFAULT_WIDTH;
         const toH = toSize?.height ?? DEFAULT_HEIGHT;
 
-        const d = buildSmartPath(fromNode, toNode, fromW, fromH, toW, toH);
+        // Для button-goto используем Y-позицию конкретного порта кнопки
+        const fromYOverride = (type === 'button-goto' && buttonId)
+          ? buttonPortYOffsets?.get(buttonId)
+          : undefined;
+
+        const d = buildSmartPath(fromNode, toNode, fromW, fromH, toW, toH, fromYOverride);
         const style = CONNECTION_STYLES[type];
         const connKey = `${fromId}->${toId}-${type}-${idx}`;
         const isHovered = hoveredKey === connKey;

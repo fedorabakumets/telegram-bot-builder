@@ -11,6 +11,7 @@ import { Node } from '@/types/bot';
 import { BotDataWithSheets } from '@shared/schema';
 import { PortType } from '../canvas-node/port-colors';
 import { DraftConnection } from './use-connection-drag';
+import { useRef, useEffect, useState, useCallback } from 'react';
 
 /**
  * Свойства компонента содержимого холста
@@ -101,8 +102,63 @@ export function CanvasContent({
 
   const allNodes = botData ? getAllNodesFromAllSheets() : nodes;
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Карта Y-смещений портов кнопок относительно верха узла.
+   * buttonId → yOffset (в canvas-координатах, без учёта zoom)
+   */
+  const [buttonPortYOffsets, setButtonPortYOffsets] = useState<Map<string, number>>(new Map());
+
+  /**
+   * Пересчитывает Y-смещения всех портов кнопок.
+   * Ищет элементы [data-button-id] внутри контейнера и вычисляет
+   * их Y-позицию относительно ближайшего wrapper-div узла ([data-canvas-node]).
+   */
+  const recalcButtonPortOffsets = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const portEls = container.querySelectorAll<HTMLElement>('[data-button-id]');
+    const newMap = new Map<string, number>();
+
+    portEls.forEach(portEl => {
+      const buttonId = portEl.getAttribute('data-button-id');
+      if (!buttonId) return;
+
+      // Ищем ближайший [data-canvas-node] — внутренний div узла
+      const nodeInnerEl = portEl.closest<HTMLElement>('[data-canvas-node]');
+      if (!nodeInnerEl) return;
+
+      // wrapper-div — родитель nodeInnerEl (именно его top используется как node.position.y)
+      const wrapperEl = nodeInnerEl.parentElement;
+      if (!wrapperEl) return;
+
+      const portRect = portEl.getBoundingClientRect();
+      const wrapperRect = wrapperEl.getBoundingClientRect();
+
+      // Y-смещение центра порта от верха wrapper-div (в экранных пикселях)
+      const screenYOffset = (portRect.top + portRect.height / 2) - wrapperRect.top;
+
+      // Переводим в canvas-координаты (делим на zoom)
+      const canvasYOffset = screenYOffset / (zoom / 100);
+
+      newMap.set(buttonId, canvasYOffset);
+    });
+
+    setButtonPortYOffsets(newMap);
+  }, [zoom]);
+
+  // Пересчитываем при изменении узлов или размеров
+  useEffect(() => {
+    // requestAnimationFrame гарантирует что DOM уже обновился после рендера
+    const raf = requestAnimationFrame(recalcButtonPortOffsets);
+    return () => cancelAnimationFrame(raf);
+  }, [nodes, nodeSizes, recalcButtonPortOffsets]);
+
   return (
     <div
+      ref={containerRef}
       className="relative origin-top-left transition-transform duration-200 ease-out"
       style={{
         transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
@@ -110,7 +166,7 @@ export function CanvasContent({
       }}
     >
       {/* SVG-слой соединений — рисуется под нодами */}
-      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} />
+      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} />
 
       {/* SVG-слой временного соединения при drag-to-connect */}
       <DraftConnectionLayer draftConnection={draftConnection ?? null} />
