@@ -25,11 +25,14 @@ interface ConditionBranchItemProps {
 
 /** Метки операторов для отображения в селекте */
 const OPERATOR_LABELS: Record<ConditionOperator, string> = {
-  '==': 'равно',
-  '!=': 'не равно',
-  'contains': 'содержит',
-  'else': 'иначе',
+  'filled': 'заполнено',
+  'empty': 'не заполнено',
+  'equals': 'равно',
+  'else': 'во всех остальных случаях',
 };
+
+/** Операторы, доступные для выбора пользователем (без "else" — он добавляется автоматически) */
+const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals'];
 
 /**
  * Компонент редактирования одной ветки условия
@@ -39,6 +42,8 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
  */
 export function ConditionBranchItem({ branch, onChange, onDelete }: ConditionBranchItemProps) {
   const isElse = branch.operator === 'else';
+  /** Для "filled" и "empty" поле значения не нужно — проверяется только факт наличия */
+  const needsValue = branch.operator === 'equals';
 
   return (
     <div className={`rounded-lg border p-3 space-y-2 ${isElse ? 'border-gray-200 bg-gray-50 dark:bg-slate-800/40 dark:border-slate-700' : 'border-violet-200 bg-violet-50/50 dark:bg-violet-900/10 dark:border-violet-800/40'}`}>
@@ -62,7 +67,7 @@ export function ConditionBranchItem({ branch, onChange, onDelete }: ConditionBra
         )}
       </div>
 
-      {/* Оператор и значение — только для не-else веток */}
+      {/* Оператор — только для не-else веток */}
       {!isElse && (
         <div className="flex items-center gap-2">
           <select
@@ -70,16 +75,19 @@ export function ConditionBranchItem({ branch, onChange, onDelete }: ConditionBra
             onChange={e => onChange(branch.id, 'operator', e.target.value)}
             className="text-xs rounded-md border border-input bg-background px-2 py-1 h-7 focus:outline-none focus:ring-1 focus:ring-ring"
           >
-            {(['==', '!=', 'contains'] as ConditionOperator[]).map(op => (
+            {SELECTABLE_OPERATORS.map(op => (
               <option key={op} value={op}>{OPERATOR_LABELS[op]}</option>
             ))}
           </select>
-          <Input
-            value={branch.value}
-            onChange={e => onChange(branch.id, 'value', e.target.value)}
-            placeholder="введите значение"
-            className="text-sm h-7 flex-1"
-          />
+          {/* Поле значения показывается только для оператора "equals" */}
+          {needsValue && (
+            <Input
+              value={branch.value}
+              onChange={e => onChange(branch.id, 'value', e.target.value)}
+              placeholder="введите значение"
+              className="text-sm h-7 flex-1"
+            />
+          )}
         </div>
       )}
     </div>

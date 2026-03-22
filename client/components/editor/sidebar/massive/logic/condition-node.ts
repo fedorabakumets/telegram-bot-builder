@@ -24,7 +24,7 @@ export const conditionNode: ComponentDefinition = {
     variable: '',
     /** Ветки условия */
     branches: [
-      { id: 'branch_yes', label: 'Да', operator: '==', value: '' },
+      { id: 'branch_filled', label: 'Да, заполнено', operator: 'filled', value: '' },
       { id: 'else', label: 'Нет', operator: 'else', value: '' },
     ],
   },

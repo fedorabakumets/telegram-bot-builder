@@ -8,13 +8,13 @@
  */
 
 /**
- * Оператор сравнения для ветки условия
- * - "==" — равно
- * - "!=" — не равно
- * - "contains" — содержит
- * - "else" — ветка по умолчанию (иначе)
+ * Оператор для ветки условия — понятный обычному пользователю
+ * - "filled"  — переменная заполнена (не пустая)
+ * - "empty"   — переменная не заполнена (пустая)
+ * - "equals"  — переменная равна указанному значению
+ * - "else"    — во всех остальных случаях (ветка по умолчанию)
  */
-export type ConditionOperator = '==' | '!=' | 'contains' | 'else';
+export type ConditionOperator = 'filled' | 'empty' | 'equals' | 'else';
 
 /**
  * Одна ветка узла условия
@@ -24,7 +24,7 @@ export interface ConditionBranch {
   id: string;
   /** Отображаемое название ветки */
   label: string;
-  /** Оператор сравнения: "==", "!=", "contains", "else" */
+  /** Оператор: "filled" | "empty" | "equals" | "else" */
   operator: ConditionOperator;
   /** Значение для сравнения (пусто для ветки "else") */
   value: string;

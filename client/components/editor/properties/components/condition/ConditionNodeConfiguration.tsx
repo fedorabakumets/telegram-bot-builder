@@ -55,7 +55,7 @@ export function ConditionNodeConfiguration({ selectedNode, onNodeUpdate }: Condi
     const newBranch: ConditionBranch = {
       id: `branch_${Date.now()}`,
       label: `Ветка ${branches.filter(b => b.operator !== 'else').length + 1}`,
-      operator: '==',
+      operator: 'filled',
       value: '',
     };
     const updated = elseIndex >= 0
@@ -68,18 +68,21 @@ export function ConditionNodeConfiguration({ selectedNode, onNodeUpdate }: Condi
     <div className="space-y-4 p-4">
       {/* Переменная */}
       <div className="space-y-2">
-        <Label>Что проверяем?</Label>
+        <Label>Переменная</Label>
         <Input
           value={variable}
           onChange={e => onNodeUpdate(selectedNode.id, { variable: e.target.value })}
-          placeholder="например: {{ответ}}, {{имя}}, {{возраст}}"
+          placeholder="{{name}}, {{возраст}}, {{город}}"
           className="font-mono"
         />
+        {/* Подсказка под полем */}
+        <p className="text-xs text-gray-400 dark:text-gray-500">
+          Укажите переменную, которую хотите проверить
+        </p>
       </div>
 
       {/* Ветки */}
       <div className="space-y-2">
-        <Label>Куда идти дальше</Label>
         <div className="space-y-2">
           {branches.map(branch => (
             <ConditionBranchItem

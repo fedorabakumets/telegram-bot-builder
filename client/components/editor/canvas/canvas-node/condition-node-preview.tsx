@@ -33,7 +33,21 @@ interface ConditionNodePreviewProps {
 }
 
 /**
- * Превью узла условия на холсте
+ * Возвращает человекочитаемое описание оператора ветки для превью на холсте.
+ * - filled → "заполнено"
+ * - empty  → "не заполнено"
+ * - equals → "= <значение>"
+ * - else   → пустая строка (не показываем)
+ */
+function getBranchOperatorLabel(branch: ConditionBranch): string {
+  switch (branch.operator) {
+    case 'filled': return 'заполнено';
+    case 'empty':  return 'не заполнено';
+    case 'equals': return `= ${branch.value}`;
+    case 'else':   return '';
+    default:       return '';
+  }
+}
  *
  * Показывает заголовок с иконкой, переменную и список веток.
  * Каждая ветка имеет выходной порт справа.
@@ -83,7 +97,7 @@ export function ConditionNodePreview({
               <span className="font-medium truncate max-w-[120px]">{branch.label}</span>
               {!isElse && (
                 <span className="ml-1 text-[10px] opacity-60 font-mono shrink-0">
-                  {branch.operator} {branch.value}
+                  {getBranchOperatorLabel(branch)}
                 </span>
               )}
               {/* Выходной порт ветки */}
