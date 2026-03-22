@@ -1,29 +1,18 @@
 /**
- * @fileoverview Компонент одной ветки узла условия в панели свойств
- *
- * Отображает поля редактирования для одной ветки:
- * лейбл, оператор, значение и кнопку удаления.
- * Ветка "Иначе" (operator === "else") не удаляется и не имеет поля значения.
- *
- * @module components/editor/properties/components/condition/ConditionBranchItem
+ * @fileoverview Компонент одной ветки узла условия в панели свойств.
+ * Для ветки else отображает статичный текст "Иначе" вместо поля лейбла.
+ * Кнопка удаления и поле лейбла убраны.
  */
-
 import { Input } from '@/components/ui/input';
 import type { ConditionBranch, ConditionOperator } from '@shared/types/condition-node';
 
-/**
- * Пропсы компонента ConditionBranchItem
- */
 interface ConditionBranchItemProps {
-  /** Данные ветки */
   branch: ConditionBranch;
-  /** Обработчик изменения поля ветки */
   onChange: (id: string, field: keyof ConditionBranch, value: string) => void;
-  /** Обработчик удаления ветки */
   onDelete: (id: string) => void;
 }
 
-/** Метки операторов для отображения в селекте */
+/** Метки операторов для отображения в выпадающем списке */
 const OPERATOR_LABELS: Record<ConditionOperator, string> = {
   'filled': 'заполнено',
   'empty': 'не заполнено',
@@ -31,44 +20,24 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
   'else': 'во всех остальных случаях',
 };
 
-/** Операторы, доступные для выбора пользователем (без "else" — он добавляется автоматически) */
+/** Операторы, доступные для выбора пользователем */
 const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals'];
 
 /**
- * Компонент редактирования одной ветки условия
- *
- * @param props - Пропсы компонента
- * @returns JSX-элемент ветки
+ * Компонент отдельной ветки условия.
+ * Для ветки else показывает статичный текст "Иначе".
+ * Для остальных веток отображает выбор оператора и поле значения.
  */
 export function ConditionBranchItem({ branch, onChange, onDelete }: ConditionBranchItemProps) {
   const isElse = branch.operator === 'else';
-  /** Для "filled" и "empty" поле значения не нужно — проверяется только факт наличия */
   const needsValue = branch.operator === 'equals';
 
   return (
     <div className={`rounded-lg border p-3 space-y-2 ${isElse ? 'border-gray-200 bg-gray-50 dark:bg-slate-800/40 dark:border-slate-700' : 'border-violet-200 bg-violet-50/50 dark:bg-violet-900/10 dark:border-violet-800/40'}`}>
-      {/* Лейбл ветки */}
-      <div className="flex items-center gap-2">
-        <Input
-          value={branch.label}
-          onChange={e => onChange(branch.id, 'label', e.target.value)}
-          placeholder="Название ветки"
-          className="text-sm h-7"
-        />
-        {!isElse && (
-          <button
-            type="button"
-            onClick={() => onDelete(branch.id)}
-            className="shrink-0 text-gray-400 hover:text-red-500 transition-colors"
-            aria-label="Удалить ветку"
-          >
-            <i className="fas fa-trash text-xs" />
-          </button>
-        )}
-      </div>
-
-      {/* Оператор — только для не-else веток */}
-      {!isElse && (
+      {/* Заголовок ветки: статичный текст для else, иначе — выбор оператора */}
+      {isElse ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Иначе</p>
+      ) : (
         <div className="flex items-center gap-2">
           <select
             value={branch.operator}
@@ -79,7 +48,6 @@ export function ConditionBranchItem({ branch, onChange, onDelete }: ConditionBra
               <option key={op} value={op}>{OPERATOR_LABELS[op]}</option>
             ))}
           </select>
-          {/* Поле значения показывается только для оператора "equals" */}
           {needsValue && (
             <Input
               value={branch.value}
@@ -91,7 +59,7 @@ export function ConditionBranchItem({ branch, onChange, onDelete }: ConditionBra
         </div>
       )}
 
-      {/* Поле ID целевого узла — отображается для всех веток, включая "else" */}
+      {/* Поле ID целевого узла для перехода */}
       <div className="space-y-1">
         <Input
           value={branch.target || ''}
@@ -99,7 +67,6 @@ export function ConditionBranchItem({ branch, onChange, onDelete }: ConditionBra
           placeholder="ID узла для перехода"
           className="text-xs font-mono h-7"
         />
-        {/* Подсказка для пользователя */}
         <p className="text-xs text-gray-400 dark:text-gray-500">
           Укажите ID узла или перетащите соединение
         </p>
