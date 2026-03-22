@@ -8,7 +8,7 @@
  * @module properties/components/synonyms/use-conditional-messages-sync
  */
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Node } from '@shared/schema';
 import { nanoid } from 'nanoid';
 import type { ConditionBranch } from '@shared/types/condition-node';
@@ -159,5 +159,23 @@ export function useConditionalMessagesSync({
     }
   }, [selectedNode, onNodeUpdate, onNodeAdd, onNodeDelete, findConditionNode, createConditionNode]);
 
+  /**
+   * Инициализация: при выборе узла с уже включёнными условными сообщениями
+   * создаём узел condition если его ещё нет на холсте.
+   */
+  useEffect(() => {
+    if (!selectedNode) return;
+    if (!selectedNode.data.enableConditionalMessages) return;
+    if (!onNodeAdd) return;
+    const existing = findConditionNode();
+    if (!existing) {
+      const conditions = selectedNode.data.conditionalMessages || [];
+      const node = createConditionNode(conditions);
+      if (node) onNodeAdd(node);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode?.id]);
+
   return { handleConditionalMessagesToggle, handleConditionalMessagesUpdate };
 }
+
