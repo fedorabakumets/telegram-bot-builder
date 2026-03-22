@@ -1,0 +1,51 @@
+{#
+  Шаблон обработчиков командных триггеров
+
+  @fileoverview Генерирует Python код для обработки командных триггеров (command_trigger узлов)
+  @param {array} commandTriggerEntries - Массив объектов CommandTriggerEntry:
+    - nodeId: string          — ID узла command_trigger
+    - command: string         — команда, например "/start"
+    - description: string     — описание команды
+    - showInMenu: bool        — показывать в меню
+    - targetNodeId: string    — ID целевого узла
+    - targetNodeType: string  — тип целевого узла
+    - isPrivateOnly: bool     — только приватные чаты
+#}
+
+# Обработчики командных триггеров
+{% for entry in commandTriggerEntries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+{%- set cmd = entry.command | replace('/', '') -%}
+
+@dp.message(Command("{{ cmd }}"))
+async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message):
+    # Командный триггер для узла {{ entry.nodeId }}, команда: {{ entry.command }}
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} вызвал команду '{{ entry.command }}' — триггер узла {{ entry.nodeId }}")
+    {%- if entry.isPrivateOnly %}
+    if message.chat.type != 'private':
+        await message.answer("❌ Эта команда доступна только в приватных чатах")
+        return
+    {%- endif %}
+
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+
+        async def answer(self):
+            pass
+
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+
+    mock_callback = MockCallback("{{ entry.targetNodeId }}", message.from_user, message)
+    await handle_callback_{{ sanitized_target_id }}(mock_callback)
+
+{% endfor %}

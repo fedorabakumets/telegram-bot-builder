@@ -132,6 +132,7 @@ export function PropertiesPanel({
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
   const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(false);
+  const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false);
   const [isMessageTextOpen, setIsMessageTextOpen] = useState(true);
   const [isMediaSectionOpen, setIsMediaSectionOpen] = useState(false);
   const [isAutoTransitionOpen, setIsAutoTransitionOpen] = useState(false);
@@ -596,8 +597,8 @@ export function PropertiesPanel({
         <CommandAdvancedSettingsWrapper
           selectedNode={selectedNode}
           onNodeUpdate={onNodeUpdate}
-          isOpen={isBasicSettingsOpen}
-          onToggle={() => setIsBasicSettingsOpen(!isBasicSettingsOpen)}
+          isOpen={isAdvancedSettingsOpen}
+          onToggle={() => setIsAdvancedSettingsOpen(!isAdvancedSettingsOpen)}
         />
 
         </div>
