@@ -1,6 +1,7 @@
 import { Node, Button } from '@shared/schema';
 import { getCommandSuggestions, STANDARD_COMMANDS } from '@lib/commands';
 import { useState, useMemo, useEffect } from 'react';
+import { useConditionalMessagesSync } from '../synonyms/use-conditional-messages-sync';
 
 import { EmptyState } from '../layout/empty-state';
 import { getNodeDefaults } from '../../utils/node-defaults';
@@ -230,6 +231,16 @@ export function PropertiesPanel({
   };
 
   const commandValidation = useNodeCommandValidation({ selectedNode });
+
+  // Синхронизация условных сообщений с узлом condition на холсте
+  const { handleConditionalMessagesToggle, handleConditionalMessagesUpdate } =
+    useConditionalMessagesSync({
+      selectedNode: selectedNode!,
+      allNodes,
+      onNodeUpdate,
+      onNodeAdd,
+      onNodeDelete,
+    });
 
   // Автодополнение команд
   const commandSuggestions = useMemo(() => {
@@ -506,7 +517,14 @@ export function PropertiesPanel({
 
             <ConditionalMessagesToggle
               selectedNode={selectedNode}
-              onNodeUpdate={onNodeUpdate}
+              onNodeUpdate={(nodeId, updates) => {
+                if ('enableConditionalMessages' in updates) {
+                  handleConditionalMessagesToggle(updates.enableConditionalMessages as boolean);
+                  if (updates.enableConditionalMessages) setIsConditionalMessagesSectionOpen(true);
+                } else {
+                  onNodeUpdate(nodeId, updates);
+                }
+              }}
               onToggle={() => setIsConditionalMessagesSectionOpen(true)}
             />
 
@@ -522,9 +540,7 @@ export function PropertiesPanel({
                         autoFixPriorities={autoFixPriorities}
                         onAddCondition={(newCondition) => {
                           const currentConditions = selectedNode.data.conditionalMessages || [];
-                          onNodeUpdate(selectedNode.id, {
-                            conditionalMessages: [...currentConditions, newCondition]
-                          });
+                          handleConditionalMessagesUpdate([...currentConditions, newCondition]);
                         }}
                       />
 
@@ -546,7 +562,13 @@ export function PropertiesPanel({
                                 textVariables={textVariables}
                                 getAllNodesFromAllSheets={getAllNodesFromAllSheets}
                                 formatNodeDisplay={formatNodeDisplay}
-                                onNodeUpdate={onNodeUpdate}
+                                onNodeUpdate={(nodeId, updates) => {
+                                  if ('conditionalMessages' in updates) {
+                                    handleConditionalMessagesUpdate(updates.conditionalMessages as any[]);
+                                  } else {
+                                    onNodeUpdate(nodeId, updates);
+                                  }
+                                }}
                                 ruleConflicts={ruleConflicts}
                                 hasErrors={hasErrors}
                                 hasWarnings={hasWarnings}
