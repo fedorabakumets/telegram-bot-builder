@@ -28,7 +28,42 @@ import { nanoid } from 'nanoid';
  * @returns Новый массив узлов с добавленными command_trigger (исходные узлы не изменены)
  */
 export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
-  const result: Node[] = [...nodes];
+  /**
+   * Дедупликация: если для одной команды есть несколько command_trigger узлов —
+   * оставляем только тот у которого autoTransitionTo указывает НЕ на start/command узел
+   * (т.е. уже перенаправлен на condition), либо первый найденный.
+   */
+  const startCommandIds = new Set(
+    nodes.filter(n => n.type === 'start' || n.type === 'command').map(n => n.id)
+  );
+  const seenCommands = new Map<string, string>(); // command → id первого триггера
+  const deduped = nodes.filter(n => {
+    if (n.type !== 'command_trigger') return true;
+    const cmd: string = (n.data as any).command || '';
+    if (!cmd) return true;
+    const autoTo: string = (n.data as any).autoTransitionTo || '';
+    // Предпочитаем триггер у которого autoTransitionTo НЕ ведёт на start/command узел
+    if (!seenCommands.has(cmd)) {
+      seenCommands.set(cmd, n.id);
+      return true;
+    }
+    // Уже есть триггер для этой команды — оставляем "лучший"
+    const existingId = seenCommands.get(cmd)!;
+    const existing = nodes.find(x => x.id === existingId)!;
+    const existingAutoTo: string = (existing.data as any).autoTransitionTo || '';
+    // Если текущий ведёт на condition (не на start/command) — он лучше
+    if (!startCommandIds.has(autoTo) && startCommandIds.has(existingAutoTo)) {
+      seenCommands.set(cmd, n.id);
+      // Удаляем старый из результата — заменяем текущим
+      return true;
+    }
+    return false;
+  });
+  // Убираем вытесненные дубли
+  const keepIds = new Set(seenCommands.values());
+  const result: Node[] = deduped.filter(n =>
+    n.type !== 'command_trigger' || keepIds.has(n.id)
+  );
   const newTriggers: Node[] = [];
 
   for (const node of nodes) {
@@ -40,7 +75,7 @@ export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
     // Проверяем: уже есть command_trigger для этого узла?
     // Проверяем по sourceNodeId (новые узлы), по autoTransitionTo (старые сохранённые узлы
     // до добавления sourceNodeId), и по совпадению команды (крайний fallback).
-    const alreadyExists = nodes.some(n => {
+    const alreadyExists = result.some(n => {
       if (n.type !== 'command_trigger') return false;
       const d = n.data as any;
       return d.sourceNodeId === node.id
