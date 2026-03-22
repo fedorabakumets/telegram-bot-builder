@@ -94,7 +94,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         videoInputVariable: node.data?.videoInputVariable || '',
         audioInputVariable: node.data?.audioInputVariable || '',
         documentInputVariable: node.data?.documentInputVariable || '',
-        formatMode: (node.data?.formatMode && node.data.formatMode !== 'none') ? node.data.formatMode : (node.data?.markdown ? 'markdown' : 'none'),
+        formatMode: (['html', 'markdown'].includes(node.data?.formatMode)) ? node.data.formatMode : (node.data?.markdown ? 'markdown' : 'none'),
         imageUrl: media.imageUrl,
         documentUrl: media.documentUrl,
         videoUrl: media.videoUrl,
