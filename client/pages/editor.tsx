@@ -542,16 +542,31 @@ export default function Editor() {
 
   // Обработчик обновления данных листов
   const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
-    setBotDataWithSheets(updatedData);
-
     // Синхронизируем активный лист с системой редактора
     const activeSheet = SheetsManager.getActiveSheet(updatedData);
     if (activeSheet) {
-      // Всегда применяем автоиерархию при обновлении данных листов для правильного отображения
-      const shouldSkipLayout = false; // Автоиерархия необходима для корректного расположения узлов
-      setBotData({ nodes: activeSheet.nodes }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
+      // Применяем миграции и получаем итоговые узлы
+      const migratedNodes = setBotData({ nodes: activeSheet.nodes }, undefined, currentNodeSizes, false);
+
+      // Сохраняем мигрированные узлы обратно в botDataWithSheets
+      // чтобы при следующем вызове handleBotDataUpdate не было дублей
+      if (migratedNodes && migratedNodes.length !== activeSheet.nodes.length) {
+        const updatedWithMigrated = {
+          ...updatedData,
+          sheets: updatedData.sheets.map(sheet =>
+            sheet.id === activeSheet.id
+              ? { ...sheet, nodes: migratedNodes }
+              : sheet
+          ),
+        };
+        setBotDataWithSheets(updatedWithMigrated);
+      } else {
+        setBotDataWithSheets(updatedData);
+      }
+    } else {
+      setBotDataWithSheets(updatedData);
     }
-  }, [setBotData, currentNodeSizes, isMobile, nodes.length]);
+  }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
 
   // Обработчики узлов через хук
   const {

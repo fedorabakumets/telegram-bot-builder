@@ -347,7 +347,8 @@ export function useBotEditor(initialData?: BotData) {
     setNodes(finalNodes);
     setSelectedNodeId(null); // Сбрасываем выбранный узел
 
-    // setBotData завершен
+    // Возвращаем итоговый массив мигрированных узлов для предотвращения дублирования
+    return finalNodes;
   }, [normalizeNodeData]);
 
   /**
