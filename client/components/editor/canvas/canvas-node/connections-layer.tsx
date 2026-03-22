@@ -313,7 +313,12 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete }: Conne
         const btnY = mousePos?.y ?? 0;
 
         return (
-          <g key={connKey}>
+          <g
+            key={connKey}
+            style={{ pointerEvents: 'all' }}
+            onMouseEnter={() => setHoveredKey(connKey)}
+            onMouseLeave={() => { setHoveredKey(null); setMousePos(null); }}
+          >
             {/* Тень для глубины */}
             <path
               d={d}
@@ -340,9 +345,7 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete }: Conne
               stroke="transparent"
               strokeWidth={16}
               style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
-              onMouseEnter={() => setHoveredKey(connKey)}
               onMouseMove={(e) => {
-                // Получаем координаты в SVG-пространстве
                 const svg = (e.currentTarget as SVGPathElement).ownerSVGElement;
                 if (!svg) return;
                 const pt = svg.createSVGPoint();
@@ -351,23 +354,18 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete }: Conne
                 const svgPt = pt.matrixTransform(svg.getScreenCTM()!.inverse());
                 setMousePos({ x: svgPt.x, y: svgPt.y });
               }}
-              onMouseLeave={() => { setHoveredKey(null); setMousePos(null); }}
             />
             {/* Кнопка удаления рядом с курсором */}
             {isHovered && mousePos && onConnectionDelete && (
               <g
-                transform={`translate(${btnX}, ${btnY})`}
+                transform={`translate(${mousePos.x}, ${mousePos.y})`}
                 style={{ pointerEvents: 'all', cursor: 'pointer' }}
-                onMouseEnter={() => setHoveredKey(connKey)}
-                onMouseLeave={() => { setHoveredKey(null); setMousePos(null); }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onConnectionDelete(fromId, toId, type);
                 }}
               >
-                {/* Фон кнопки */}
                 <circle r={10} fill="white" stroke={style.color} strokeWidth={1.5} />
-                {/* Крестик */}
                 <line x1={-4} y1={-4} x2={4} y2={4} stroke="#ef4444" strokeWidth={2} strokeLinecap="round" />
                 <line x1={4} y1={-4} x2={-4} y2={4} stroke="#ef4444" strokeWidth={2} strokeLinecap="round" />
               </g>
