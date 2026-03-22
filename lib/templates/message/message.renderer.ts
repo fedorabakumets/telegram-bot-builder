@@ -28,7 +28,6 @@ import type { Node } from '@shared/schema';
 export function generateMessage(params: MessageTemplateParams): string {
   const VALID_FORMAT_MODES = ['html', 'markdown', 'none'] as const;
   const validated = messageParamsSchema.parse({
-    ...params,
     userDatabaseEnabled: params.userDatabaseEnabled ?? false,
     keyboardType: params.keyboardType ?? 'none',
     formatMode: VALID_FORMAT_MODES.includes(params.formatMode as any) ? params.formatMode : 'none',
@@ -41,6 +40,9 @@ export function generateMessage(params: MessageTemplateParams): string {
     enableConditionalMessages: params.enableConditionalMessages ?? false,
     oneTimeKeyboard: params.oneTimeKeyboard ?? false,
     resizeKeyboard: params.resizeKeyboard ?? true,
+    ...params,
+    // Перезаписываем после ...params чтобы нормализация не была перекрыта
+    formatMode: VALID_FORMAT_MODES.includes(params.formatMode as any) ? params.formatMode : 'none',
   });
 
   // Вычисляем блок waiting_for_input если нужен сбор ввода
