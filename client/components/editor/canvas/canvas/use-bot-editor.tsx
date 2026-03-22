@@ -4,6 +4,7 @@ import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 import { generateNewId } from './utils/extract-base-id';
 import { migrateSynonymsToTextTriggers } from './utils/migrate-synonyms';
 import { migrateCommandsToCommandTriggers } from './utils/migrate-command-triggers';
+import { migrateLegacyNodeTypes } from './utils/migrate-legacy-node-types';
 import { migrateConditionalMessagesToConditionNodes } from './utils/migrate-conditional-messages';
 
 /**
@@ -336,8 +337,11 @@ export function useBotEditor(initialData?: BotData) {
     // Миграция узлов start/command в command_trigger узлы
     const migratedWithCommands = migrateCommandsToCommandTriggers(migratedNodes);
 
+    // Преобразуем устаревшие типы start/command → message
+    const migratedWithTypes = migrateLegacyNodeTypes(migratedWithCommands);
+
     // Миграция узлов с условными сообщениями в узлы condition
-    const migratedWithConditions = migrateConditionalMessagesToConditionNodes(migratedWithCommands);
+    const migratedWithConditions = migrateConditionalMessagesToConditionNodes(migratedWithTypes);
 
     // Применяем иерархическую компоновку только если не отключена
     const finalNodes = skipLayout
