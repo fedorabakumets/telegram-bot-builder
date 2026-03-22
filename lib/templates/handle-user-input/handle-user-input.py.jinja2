@@ -270,7 +270,13 @@
 {{ ind2 }}timestamp = get_moscow_time()
 {{ ind2 }}response_data = user_text
 {{ ind2 }}
-{{ ind2 }}# Сохранение в bot_users.user_data
+{{ ind2 }}# Всегда сохраняем в локальное хранилище (для condition и других узлов)
+{{ ind2 }}if user_id not in user_data:
+{{ ind3 }}user_data[user_id] = {}
+{{ ind2 }}user_data[user_id][variable_name] = response_data
+{{ ind2 }}logging.info(f"✅ Сохранено в user_data: {variable_name} = {response_data}")
+{{ ind2 }}
+{{ ind2 }}# Дополнительно сохраняем в БД если доступна
 {{ ind2 }}if db_pool:
 {{ ind3 }}try:
 {{ ind4 }}async with db_pool.acquire() as conn:
@@ -289,7 +295,6 @@
 {{ ind6 }}    db_user_data = {}
 {{ ind5 }}if not (row and row["user_data"]):
 {{ ind6 }}db_user_data = {}
-{{ ind5 }}# Replace mode: заменяем значение
 {{ ind5 }}db_user_data[variable_name] = response_data
 {{ ind5 }}await conn.execute(
 {{ ind6 }}"UPDATE bot_users SET user_data = $1 WHERE user_id = $2",
@@ -298,12 +303,6 @@
 {{ ind5 }}logging.info(f"✅ Сохранено в bot_users: {variable_name} = {response_data}")
 {{ ind3 }}except Exception as e:
 {{ ind4 }}logging.error(f"❌ Ошибка сохранения в bot_users: {e}")
-{{ ind2 }}if not db_pool:
-{{ ind3 }}# Локальное хранилище
-{{ ind3 }}if user_id not in user_data:
-{{ ind4 }}user_data[user_id] = {}
-{{ ind3 }}user_data[user_id][variable_name] = response_data
-{{ ind3 }}logging.info(f"✅ Сохранено в user_data: {variable_name} = {response_data}")
 {{ ind2 }}
 {{ ind2 }}# Навигация к следующему узлу
 {{ ind2 }}if next_node_id:

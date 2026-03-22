@@ -11,7 +11,8 @@
 async def handle_callback_{{ sanitized_node_id }}(callback_query):
     # Узел условия {{ entry.nodeId }}, переменная: {{ entry.variable }}
     user_id = callback_query.from_user.id
-    val = get_user_variables(user_id).get("{{ entry.variable }}", "")
+    _all_vars = await init_all_user_vars(user_id)
+    val = _all_vars.get("{{ entry.variable }}", "")
     logging.info(f"Узел условия {{ entry.nodeId }}: переменная '{{ entry.variable }}' = {val}")
 {%- if not entry.hasConditionalBranch %}
     if True:
