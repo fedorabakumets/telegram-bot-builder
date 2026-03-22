@@ -11,11 +11,12 @@
  * - input-target (фиолетовый пунктир) — переход после ввода пользователя
  * - trigger-next (жёлтый сплошной) — переход из узла command_trigger
  *
- * Слой абсолютно позиционирован и не перехватывает события мыши.
+ * При наведении на линию появляется кнопка удаления соединения.
  *
  * @module ConnectionsLayer
  */
 
+import { useState } from 'react';
 import { Node } from '@/types/bot';
 
 /** Размер SVG-холста — достаточно большой чтобы покрыть любой граф */
@@ -100,6 +101,8 @@ interface ConnectionsLayerProps {
   nodes: Node[];
   /** Карта реальных размеров узлов (из ResizeObserver) */
   nodeSizes: Map<string, { width: number; height: number }>;
+  /** Колбэк удаления соединения */
+  onConnectionDelete?: (fromId: string, toId: string, type: ConnectionType) => void;
 }
 
 /** На сколько px не доходим до края узла — ровно refX маркера, чтобы кончик стрелки лёг на край */
@@ -231,17 +234,20 @@ function collectConnections(nodes: Node[]): Connection[] {
 /**
  * Компонент SVG-слоя соединений
  *
- * Рисует линии переходов между узлами. Линия всегда выходит из правого порта
- * (OutputPort) исходного узла и входит в левый бок целевого узла.
+ * Рисует линии переходов между узлами. При наведении на линию
+ * появляется кнопка удаления соединения.
  *
  * @param props - Свойства компонента
  * @returns SVG элемент с линиями соединений или null если нет соединений
  */
-export function ConnectionsLayer({ nodes, nodeSizes }: ConnectionsLayerProps) {
+export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete }: ConnectionsLayerProps) {
   /** Ширина узла по умолчанию если ResizeObserver ещё не сработал */
   const DEFAULT_WIDTH = 320;
   /** border-box высота узла по умолчанию (до первого срабатывания ResizeObserver) */
   const DEFAULT_HEIGHT = 120;
+
+  /** Ключ соединения под курсором */
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
   const connections = collectConnections(nodes);
   if (connections.length === 0) return null;
@@ -297,9 +303,27 @@ export function ConnectionsLayer({ nodes, nodeSizes }: ConnectionsLayerProps) {
 
         const d = buildSmartPath(fromNode, toNode, fromW, fromH, toW, toH);
         const style = CONNECTION_STYLES[type];
+        const connKey = `${fromId}->${toId}-${type}-${idx}`;
+        const isHovered = hoveredKey === connKey;
+
+        // Середина кривой Безье (t=0.5) для позиции кнопки удаления
+        const x1 = fromNode.position.x + fromW;
+        const y1 = fromNode.position.y + fromH / 2;
+        const x2 = toNode.position.x - MARKER_OFFSET;
+        const y2 = toNode.position.y + toH / 2;
+        const dx = Math.abs(x2 - x1);
+        const curve = Math.max(60, dx * 0.5);
+        const cx1 = x1 + curve;
+        const cy1 = y1;
+        const cx2 = x2 - curve;
+        const cy2 = y2;
+        // Точка на кривой при t=0.5
+        const t = 0.5;
+        const midX = (1-t)**3*x1 + 3*(1-t)**2*t*cx1 + 3*(1-t)*t**2*cx2 + t**3*x2;
+        const midY = (1-t)**3*y1 + 3*(1-t)**2*t*cy1 + 3*(1-t)*t**2*cy2 + t**3*y2;
 
         return (
-          <g key={`${fromId}->${toId}-${type}-${idx}`}>
+          <g key={connKey}>
             {/* Тень для глубины */}
             <path
               d={d}
@@ -314,11 +338,40 @@ export function ConnectionsLayer({ nodes, nodeSizes }: ConnectionsLayerProps) {
               d={d}
               fill="none"
               stroke={style.color}
-              strokeWidth={style.strokeWidth}
-              strokeOpacity={style.opacity}
+              strokeWidth={isHovered ? style.strokeWidth + 1 : style.strokeWidth}
+              strokeOpacity={isHovered ? 1 : style.opacity}
               strokeDasharray={style.dashArray || undefined}
               markerEnd={`url(#${style.markerId})`}
             />
+            {/* Невидимая широкая зона для hover */}
+            <path
+              d={d}
+              fill="none"
+              stroke="transparent"
+              strokeWidth={16}
+              style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
+              onMouseEnter={() => setHoveredKey(connKey)}
+              onMouseLeave={() => setHoveredKey(null)}
+            />
+            {/* Кнопка удаления по центру линии */}
+            {isHovered && onConnectionDelete && (
+              <g
+                transform={`translate(${midX}, ${midY})`}
+                style={{ pointerEvents: 'all', cursor: 'pointer' }}
+                onMouseEnter={() => setHoveredKey(connKey)}
+                onMouseLeave={() => setHoveredKey(null)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onConnectionDelete(fromId, toId, type);
+                }}
+              >
+                {/* Фон кнопки */}
+                <circle r={10} fill="white" stroke={style.color} strokeWidth={1.5} />
+                {/* Крестик */}
+                <line x1={-4} y1={-4} x2={4} y2={4} stroke="#ef4444" strokeWidth={2} strokeLinecap="round" />
+                <line x1={4} y1={-4} x2={-4} y2={4} stroke="#ef4444" strokeWidth={2} strokeLinecap="round" />
+              </g>
+            )}
           </g>
         );
       })}

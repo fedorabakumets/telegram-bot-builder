@@ -217,6 +217,35 @@ export function Canvas({
     addAction('connect', `Создано соединение от узла ${nodeId}`);
   }, [nodes, onNodesUpdate, addAction]);
 
+  /**
+   * Удаляет соединение между двумя узлами.
+   * Очищает соответствующее поле в данных исходного узла.
+   */
+  const handleConnectionDelete = useCallback((fromId: string, toId: string, type: string) => {
+    const updatedNodes = nodes.map(n => {
+      if (n.id !== fromId) return n;
+      const data = { ...n.data } as Record<string, unknown>;
+
+      if (type === 'trigger-next') {
+        delete data.autoTransitionTo;
+      } else if (type === 'auto-transition') {
+        data.enableAutoTransition = false;
+        delete data.autoTransitionTo;
+      } else if (type === 'button-goto') {
+        const buttons = (data.buttons as any[] | undefined) ?? [];
+        data.buttons = buttons.map((btn: any) =>
+          btn.action === 'goto' && btn.target === toId ? { ...btn, target: undefined } : btn
+        );
+      } else if (type === 'input-target') {
+        delete data.inputTargetNodeId;
+      }
+
+      return { ...n, data };
+    });
+    onNodesUpdate?.(updatedNodes);
+    addAction('disconnect', `Удалено соединение`);
+  }, [nodes, onNodesUpdate, addAction]);
+
   const {
     draftConnection,
     hoveredTargetNodeId,
@@ -1107,6 +1136,7 @@ export function Canvas({
             onPortMouseDown={handlePortMouseDown}
             draftConnection={draftConnection}
             hoveredTargetNodeId={hoveredTargetNodeId}
+            onConnectionDelete={handleConnectionDelete}
           />
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">

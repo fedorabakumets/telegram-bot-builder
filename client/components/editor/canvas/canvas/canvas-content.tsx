@@ -56,6 +56,8 @@ interface CanvasContentProps {
   draftConnection?: DraftConnection | null;
   /** ID узла под курсором при drag-to-connect (для подсветки цели) */
   hoveredTargetNodeId?: string | null;
+  /** Колбэк удаления соединения */
+  onConnectionDelete?: (fromId: string, toId: string, type: string) => void;
 }
 
 /**
@@ -83,6 +85,7 @@ export function CanvasContent({
   onPortMouseDown,
   draftConnection,
   hoveredTargetNodeId,
+  onConnectionDelete,
 }: CanvasContentProps) {
   /**
    * Получение всех узлов со всех листов для отображения связей
@@ -107,7 +110,7 @@ export function CanvasContent({
       }}
     >
       {/* SVG-слой соединений — рисуется под нодами */}
-      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} />
+      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} />
 
       {/* SVG-слой временного соединения при drag-to-connect */}
       <DraftConnectionLayer draftConnection={draftConnection ?? null} />
