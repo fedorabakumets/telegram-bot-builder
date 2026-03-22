@@ -1,29 +1,21 @@
 /**
- * @fileoverview Определение компонента команды /help
- * Справка по боту
+ * @fileoverview Определение триггера команды /help
+ * @module components/editor/sidebar/massive/commands/help-command
  */
 import { ComponentDefinition } from "@shared/schema";
 
-/** Команда /help для справки по боту */
+/** Триггер команды /help — справка по боту */
 export const helpCommand: ComponentDefinition = {
   id: 'help-command',
-  name: '/help команда',
+  name: '/help',
   description: 'Справка по боту',
   icon: 'fas fa-question-circle',
   color: 'bg-blue-100 text-blue-600',
-  type: 'command',
+  type: 'command_trigger',
   defaultData: {
     command: '/help',
     description: 'Справка по боту',
-    messageText: '🤖 Доступные команды:\n\n/start - Начать работу\n/help - Эта справка\n/settings - Настройки',
-    keyboardType: 'none',
-    buttons: [],
-    markdown: true,
-    oneTimeKeyboard: false,
-    resizeKeyboard: true,
     showInMenu: true,
     isPrivateOnly: false,
-    requiresAuth: false,
-    adminOnly: false
   }
 };

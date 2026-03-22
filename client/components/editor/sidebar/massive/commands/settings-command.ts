@@ -1,32 +1,21 @@
 /**
- * @fileoverview Определение компонента команды /settings
- * Настройки бота
+ * @fileoverview Определение триггера команды /settings
+ * @module components/editor/sidebar/massive/commands/settings-command
  */
 import { ComponentDefinition } from "@shared/schema";
 
-/** Команда /settings для настроек бота */
+/** Триггер команды /settings — настройки бота */
 export const settingsCommand: ComponentDefinition = {
   id: 'settings-command',
-  name: '/settings команда',
+  name: '/settings',
   description: 'Настройки бота',
   icon: 'fas fa-cog',
   color: 'bg-gray-100 text-gray-600',
-  type: 'command',
+  type: 'command_trigger',
   defaultData: {
     command: '/settings',
-    description: 'Настройки бота',
-    messageText: '⚙️ Настройки бота:',
-    keyboardType: 'inline',
-    buttons: [
-      { id: 'btn-1', text: '📋 Язык', action: 'goto', buttonType: 'normal' as const, target: '/language' },
-      { id: 'btn-2', text: '🔔 Уведомления', action: 'goto', buttonType: 'normal' as const, target: '/notifications' }
-    ],
-    markdown: true,
-    oneTimeKeyboard: false,
-    resizeKeyboard: true,
+    description: 'Настройки',
     showInMenu: true,
     isPrivateOnly: false,
-    requiresAuth: false,
-    adminOnly: false
   }
 };
