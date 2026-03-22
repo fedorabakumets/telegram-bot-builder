@@ -25,7 +25,15 @@ export function collectTextTriggerEntries(nodes: Node[]): TextTriggerEntry[] {
   for (const node of validNodes) {
     if (node.type !== 'text_trigger') continue;
 
-    const synonyms: string[] = node.data.textSynonyms ?? [];
+    const synonyms: string[] = (node.data.textSynonyms ?? [])
+      .filter((s: string) => s.trim().length > 0)
+      .map((s: string) =>
+        s
+          .replace(/\\/g, '\\\\')
+          .replace(/"/g, '\\"')
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '')
+      );
     if (synonyms.length === 0) continue;
 
     const targetNodeId: string = node.data.autoTransitionTo ?? '';
