@@ -79,25 +79,24 @@ describe('generateTextTriggers()', () => {
 
   it('adminOnly добавляет проверку прав администратора', () => {
     const r = generateTextTriggers(validParamsAdminOnly);
-    expect(r).toContain('get_chat_member');
-    expect(r).toContain("'administrator', 'creator'");
-    expect(r).toContain('Эта команда доступна только администраторам');
+    expect(r).toContain('is_admin(user_id)');
+    expect(r).toContain('У вас нет прав для выполнения этой команды');
   });
 
   it('requiresAuth добавляет проверку авторизации', () => {
     const r = generateTextTriggers(validParamsRequiresAuth);
-    expect(r).toContain('is_user_authorized');
-    expect(r).toContain('необходимо авторизоваться');
+    expect(r).toContain('check_auth(user_id)');
+    expect(r).toContain('войти в систему');
   });
 
   it('без adminOnly нет проверки прав', () => {
     const r = generateTextTriggers(validParamsExact);
-    expect(r).not.toContain('get_chat_member');
+    expect(r).not.toContain('is_admin(');
   });
 
   it('без requiresAuth нет проверки авторизации', () => {
     const r = generateTextTriggers(validParamsExact);
-    expect(r).not.toContain('is_user_authorized');
+    expect(r).not.toContain('check_auth(');
   });
 
   it('смешанные exact и contains генерируются вместе', () => {

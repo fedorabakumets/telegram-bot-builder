@@ -9,6 +9,8 @@
     - targetNodeId: string    — ID целевого узла 
     - targetNodeType: string  — тип целевого узла
     - isPrivateOnly: bool     — только приватные чаты
+    - adminOnly: bool         — только администраторы (вызывает is_admin())
+    - requiresAuth: bool      — требуется авторизация (вызывает check_auth())
 #}
 
 # Обработчики текстовых триггеров
@@ -34,16 +36,13 @@ async def text_trigger_{{ sanitized_node_id }}_{{ sanitized_synonym }}_handler(m
         return
     {%- endif %}
     {%- if entry.adminOnly %}
-    # Проверка прав администратора
-    chat_member = await bot.get_chat_member(message.chat.id, user_id)
-    if chat_member.status not in ['administrator', 'creator']:
-        await message.answer("❌ Эта команда доступна только администраторам")
+    if not await is_admin(user_id):
+        await message.answer("❌ У вас нет прав для выполнения этой команды")
         return
     {%- endif %}
     {%- if entry.requiresAuth %}
-    # Проверка авторизации пользователя
-    if not await is_user_authorized(user_id):
-        await message.answer("❌ Для использования этой команды необходимо авторизоваться")
+    if not await check_auth(user_id):
+        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")
         return
     {%- endif %}
 
