@@ -1,5 +1,5 @@
 /**
- * @fileoverview Конфигурация Vitest для тестирования компонентов
+ * @fileoverview Конфигурация Vitest для тестирования компонентов и шаблонов
  * @module vitest.config
  */
 
@@ -8,7 +8,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react() as any],
   test: {
     globals: true,
     environment: 'jsdom',
@@ -16,11 +16,14 @@ export default defineConfig({
       './client/components/editor/database/dialog/tests/setup-tests.ts',
       './client/utils/tests/setup-tests.ts'
     ],
-    include: ['client/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: [
+      'client/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      'lib/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+    ],
     exclude: ['node_modules/**'],
     coverage: {
       reporter: ['text', 'json', 'html'],
-      include: ['client/components/editor/**'],
+      include: ['client/components/editor/**', 'lib/**'],
       exclude: ['client/components/editor/**/tests/**'],
     },
   },

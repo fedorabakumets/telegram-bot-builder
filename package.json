@@ -240,7 +240,7 @@
     "@types/ws": "^8.18.1",
     "@vercel/node": "^5.5.27",
     "@vitejs/plugin-react": "^4.6.0",
-    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "@vitest/ui": "^1.6.0",
     "autoprefixer": "^10.4.23",
     "c8": "^11.0.0",
@@ -253,7 +253,7 @@
     "typescript": "^5.9.3",
     "vite": "^6.2.0",
     "vite-tsconfig-paths": "^6.1.0",
-    "vitest": "^1.6.0"
+    "vitest": "^2.1.9"
   },
   "optionalDependencies": {
     "bufferutil": "^4.1.0"
