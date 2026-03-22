@@ -178,7 +178,7 @@ export function useConditionalMessagesSync({
     conditions.forEach((cond, index) => {
       const msgNode = findMessageNodeForCond(cond.id);
       if (msgNode) {
-        onNodeUpdate(msgNode.id, getMessageNodeUpdates(cond));
+        onNodeUpdate(msgNode.id, getMessageNodeUpdates(cond, selectedNode));
       } else if (selectedNode.data.enableConditionalMessages) {
         onNodeAdd(createMessageNodeForCondition(cond, existing?.id ?? '', selectedNode, index));
       }
