@@ -45,6 +45,9 @@ async def init_user_variables(user_id: int, from_user) -> str:
     user_data[user_id]['last_name'] = last_name
     user_data[user_id]['user_name'] = user_name
     user_data[user_id]['user_id'] = user_id
+    user_data[user_id]['language_code'] = getattr(from_user, 'language_code', None) or ''
+    user_data[user_id]['is_premium'] = getattr(from_user, 'is_premium', None) or False
+    user_data[user_id]['is_bot'] = getattr(from_user, 'is_bot', None) or False
     return user_name
 
 

@@ -19,6 +19,11 @@ async def register_user_middleware(handler, event: types.Message, data: dict):
                     'username': user.username or '',
                     'first_name': user.first_name or '',
                     'last_name': user.last_name or '',
+                    'user_name': user.username or user.first_name or str(user_id),
+                    'user_id': user_id,
+                    'language_code': user.language_code or '',
+                    'is_premium': user.is_premium or False,
+                    'is_bot': user.is_bot or False,
                 }
 {%- if userDatabaseEnabled %}
                 await save_user_to_db(user_id, user.username, user.first_name, user.last_name)

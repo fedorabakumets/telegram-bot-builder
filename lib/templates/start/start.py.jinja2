@@ -80,6 +80,9 @@ async def start_handler(message: types.Message):
     user_data[user_id]["username"] = username
     user_data[user_id]["first_name"] = first_name
     user_data[user_id]["last_name"] = last_name
+    user_data[user_id]["language_code"] = message.from_user.language_code or ''
+    user_data[user_id]["is_premium"] = message.from_user.is_premium or False
+    user_data[user_id]["is_bot"] = message.from_user.is_bot or False
 
 {%- if allowMultipleSelection %}
 
@@ -232,6 +235,9 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
     user_data[user_id]["username"] = username
     user_data[user_id]["first_name"] = first_name
     user_data[user_id]["last_name"] = last_name
+    user_data[user_id]["language_code"] = callback_query.from_user.language_code or ''
+    user_data[user_id]["is_premium"] = callback_query.from_user.is_premium or False
+    user_data[user_id]["is_bot"] = callback_query.from_user.is_bot or False
 
     text = {{ messageText|format_python_text }}
 
