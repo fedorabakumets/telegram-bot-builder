@@ -76,6 +76,12 @@ interface CanvasNodeProps {
   isConnectionSource?: boolean;
   /** Подсветка узла как допустимой цели при drag-to-connect */
   isConnectionTarget?: boolean;
+  /**
+   * Колбэк, вызываемый при монтировании порта кнопки.
+   * Передаёт buttonId и Y-смещение центра порта в экранных пикселях
+   * относительно wrapper-div узла.
+   */
+  onButtonPortMount?: (buttonId: string, yOffset: number) => void;
 }
 
 /**
@@ -94,7 +100,7 @@ interface CanvasNodeProps {
  * @param {CanvasNodeProps} props - Свойства компонента
  * @returns {JSX.Element} Компонент узла на холсте
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, onButtonPortMount }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref для dragOffset — позволяет читать актуальное значение в handleMouseMove
@@ -523,7 +529,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         )}
 
         {/* Buttons preview */}
-        <ButtonsPreview node={node} allNodes={allNodes} onPortMouseDown={handlePortMouseDown} isConnectionSource={isConnectionSource} />
+        <ButtonsPreview node={node} allNodes={allNodes} onPortMouseDown={handlePortMouseDown} isConnectionSource={isConnectionSource} onButtonPortMount={onButtonPortMount} />
 
         {/* Футер с полным ID узла — скрыт для триггеров */}
         {node.type !== 'command_trigger' && node.type !== 'text_trigger' && (

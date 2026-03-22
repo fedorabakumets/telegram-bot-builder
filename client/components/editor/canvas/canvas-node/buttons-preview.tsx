@@ -23,6 +23,7 @@ import { PortType } from './port-colors';
  * @property {Node} node - Узел с кнопками
  * @property {Node[]} [allNodes] - Все узлы для поиска целевых
  * @property {Function} [onPortMouseDown] - Обработчик начала перетаскивания от порта кнопки
+ * @property {Function} [onButtonPortMount] - Колбэк монтирования порта кнопки с Y-смещением
  */
 interface ButtonsPreviewProps {
   /** Узел с кнопками */
@@ -33,6 +34,13 @@ interface ButtonsPreviewProps {
   onPortMouseDown?: (e: React.MouseEvent, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => void;
   /** Узел является источником активного drag — держит порты видимыми */
   isConnectionSource?: boolean;
+  /**
+   * Колбэк, вызываемый при монтировании порта кнопки.
+   * Передаёт buttonId и Y-смещение центра порта в экранных пикселях
+   * относительно wrapper-div узла. CanvasContent делит на zoom для перевода
+   * в canvas-координаты.
+   */
+  onButtonPortMount?: (buttonId: string, yOffset: number) => void;
 }
 
 /**
@@ -47,7 +55,7 @@ interface ButtonsPreviewProps {
  *
  * @returns {JSX.Element | null} Компонент превью или null если нет кнопок
  */
-export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSource }: ButtonsPreviewProps) {
+export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSource, onButtonPortMount }: ButtonsPreviewProps) {
   if (!node.data.buttons || node.data.buttons.length === 0 || node.data.keyboardType === 'none') {
     return null;
   }
@@ -85,7 +93,7 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
               <div className="relative">
                 <InlineButton button={button} allNodes={allNodes} />
                 {button.action === 'goto' && (
-                  <OutputPort portType="button-goto" buttonId={button.id} onPortMouseDown={onPortMouseDown} isActive={isConnectionSource} />
+                  <OutputPort portType="button-goto" buttonId={button.id} onPortMouseDown={onPortMouseDown} isActive={isConnectionSource} onMount={onButtonPortMount} />
                 )}
               </div>
             );
@@ -100,7 +108,7 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
             <div className="relative">
               <ReplyButton button={button} allNodes={allNodes} />
               {button.action === 'goto' && (
-                <OutputPort portType="button-goto" buttonId={button.id} onPortMouseDown={onPortMouseDown} isActive={isConnectionSource} />
+                <OutputPort portType="button-goto" buttonId={button.id} onPortMouseDown={onPortMouseDown} isActive={isConnectionSource} onMount={onButtonPortMount} />
               )}
             </div>
           )}

@@ -198,9 +198,9 @@ function collectConnections(nodes: Node[]): Connection[] {
     const buttons: any[] = node.data?.buttons || [];
     buttons.forEach((btn: any) => {
       if (btn.action === 'goto' && btn.target && existingIds.has(btn.target)) {
-        // Дедупликация: одна линия на пару (from → to) для button-goto
+        // Дедупликация: одна линия на кнопку (по buttonId), а не на пару (from → to)
         const alreadyExists = connections.some(
-          c => c.fromId === node.id && c.toId === btn.target && c.type === 'button-goto'
+          c => c.fromId === node.id && c.toId === btn.target && c.type === 'button-goto' && c.buttonId === btn.id
         );
         if (!alreadyExists) {
           connections.push({
