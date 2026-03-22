@@ -77,8 +77,11 @@ export function migrateConditionalMessagesToConditionNodes(nodes: Node[]): Node[
     /** Ветки из условий */
     const branches: ConditionBranch[] = conditionalMessages.map(mapConditionToBranch);
 
-    /** Ветка else добавляется последней */
-    const elseBranch: ConditionBranch = { id: 'else', label: 'Иначе', operator: 'else', value: '' };
+    /**
+     * Ветка else указывает на исходный узел — он отправляется,
+     * если ни одно из условий не выполнено
+     */
+    const elseBranch: ConditionBranch = { id: 'else', label: 'Иначе', operator: 'else', value: '', target: node.id };
     branches.push(elseBranch);
 
     /** Узел condition */
@@ -97,6 +100,23 @@ export function migrateConditionalMessagesToConditionNodes(nodes: Node[]): Node[
     };
 
     newNodes.push(conditionNode);
+
+    /**
+     * Перенаправляем триггеры: узлы, ведущие к исходному узлу (autoTransitionTo === node.id),
+     * теперь должны вести к condition-узлу, чтобы сначала выполнялось ветвление
+     */
+    for (let i = 0; i < result.length; i++) {
+      const n = result[i];
+      if ((n.data as any)?.autoTransitionTo === node.id) {
+        result[i] = {
+          ...n,
+          data: {
+            ...(n.data as any),
+            autoTransitionTo: conditionNodeId,
+          },
+        };
+      }
+    }
 
     // Создаём узлы message для каждого условия
     conditionalMessages.forEach((cond, index) => {
