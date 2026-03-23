@@ -5,7 +5,7 @@
 
 import type { SkipDataCollectionTemplateParams } from './skip-data-collection.params';
 import { skipDataCollectionParamsSchema } from './skip-data-collection.schema';
-import { renderPartialTemplate } from '../template-renderer';
+import { renderPartialTemplate } from '../../template-renderer';
 
 /**
  * Генерирует Python-код проверки skipDataCollection.

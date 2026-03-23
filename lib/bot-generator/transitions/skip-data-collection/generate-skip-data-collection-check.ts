@@ -4,7 +4,7 @@
  * @module bot-generator/transitions/skip-data-collection/generate-skip-data-collection-check
  */
 
-import { generateSkipDataCollectionCheck as _generate } from '../../../templates/skip-data-collection';
+import { generateSkipDataCollectionCheck as _generate } from '../../../templates/keyboard-handlers/skip-data-collection';
 
 export function generateSkipDataCollectionCheck(
   variableName: string,

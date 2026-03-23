@@ -8,11 +8,11 @@
  */
 
 import type { InteractiveCallbackHandlersTemplateParams } from './interactive-callback-handlers.params';
-import { generateCallbackHandlerInit, buildCallbackHandlerInitParams } from '../callback-handler-init';
-import { generateAutoTransition } from '../auto-transition';
-import { calculateAutoTransitionTarget } from '../auto-transition';
-import { generateAttachedMediaVars } from '../attached-media-vars';
-import { isLoggingEnabled } from '../../bot-generator/core/logging';
+import { generateCallbackHandlerInit, buildCallbackHandlerInitParams } from '../../callback-handler-init';
+import { generateAutoTransition } from '../../auto-transition';
+import { calculateAutoTransitionTarget } from '../../auto-transition';
+import { generateAttachedMediaVars } from '../../attached-media-vars';
+import { isLoggingEnabled } from '../../../bot-generator/core/logging';
 
 /**
  * Генерирует интерактивные callback-обработчики для inline кнопок,

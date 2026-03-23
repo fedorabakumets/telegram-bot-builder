@@ -5,7 +5,7 @@
 
 import type { MultiSelectCheckTemplateParams, MultiSelectNode } from './multiselect-check.params';
 import { multiSelectCheckParamsSchema } from './multiselect-check.schema';
-import { renderPartialTemplate } from '../template-renderer';
+import { renderPartialTemplate } from '../../template-renderer';
 
 /** Предобработанный узел для шаблона */
 interface PreparedMultiSelectNode {

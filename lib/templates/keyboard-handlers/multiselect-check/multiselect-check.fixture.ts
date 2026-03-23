@@ -3,7 +3,7 @@
  * @module templates/multiselect-check/multiselect-check.fixture
  */
 
-import type { MultiSelectCheckTemplateParams } from './multiselect-check.params';
+import type { MultiSelectCheckTemplateParams } from '../../multiselect-check/multiselect-check.params';
 
 export const nodesWithMultiSelect = [
   {

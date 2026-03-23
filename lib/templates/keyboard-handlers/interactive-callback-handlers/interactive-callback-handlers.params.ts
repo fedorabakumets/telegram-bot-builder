@@ -3,7 +3,7 @@
  * @module templates/interactive-callback-handlers/interactive-callback-handlers.params
  */
 
-import type { EnhancedNode } from '../../bot-generator/types/enhanced-node.types';
+import type { EnhancedNode } from '../../../bot-generator/types/enhanced-node.types';
 
 /** Параметры для генерации интерактивных callback-обработчиков */
 export interface InteractiveCallbackHandlersTemplateParams {

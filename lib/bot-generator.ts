@@ -24,7 +24,7 @@ import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, gene
 import { generateNodeHandlers } from './templates/node-handlers/node-handlers.dispatcher';
 import { filterInlineNodes, hasInlineButtons, identifyNodesRequiringMultiSelectLogic } from './templates/keyboard/keyboard.renderer';
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers, generateCommandCallbackHandler } from './templates/handlers';
-import { generateInteractiveCallbackHandlers } from './templates/interactive-callback-handlers';
+import { generateInteractiveCallbackHandlers } from './templates/keyboard-handlers/interactive-callback-handlers';
 import { generateGroupHandlers } from './templates/group-handlers/group-handlers.renderer';
 import { generateMediaFunctions } from './templates/media-functions/media-functions.renderer';
 import { generateMessageLoggingCode } from './templates/middleware/middleware.renderer';

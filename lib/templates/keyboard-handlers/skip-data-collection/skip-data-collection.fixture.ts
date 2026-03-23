@@ -3,7 +3,7 @@
  * @module templates/skip-data-collection/skip-data-collection.fixture
  */
 
-import type { SkipDataCollectionTemplateParams } from './skip-data-collection.params';
+import type { SkipDataCollectionTemplateParams } from '../../skip-data-collection/skip-data-collection.params';
 
 /** Валидные параметры: базовые */
 export const validParamsBasic: SkipDataCollectionTemplateParams = {

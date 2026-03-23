@@ -8,7 +8,7 @@
 
 import type { ConditionalMessagesTemplateParams } from './conditional-messages.params';
 import { conditionalMessagesParamsSchema } from './conditional-messages.schema';
-import { renderPartialTemplate } from '../template-renderer';
+import { renderPartialTemplate } from '../../template-renderer';
 
 /**
  * Генерирует Python-код простой проверки условных сообщений (только выбор текста).

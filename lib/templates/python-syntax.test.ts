@@ -885,7 +885,7 @@ describe('generateConditionalMessages', () => {
 
     if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
 
-    const { generateConditionalMessages } = await import('./conditional-messages/conditional-messages.renderer');
+    const { generateConditionalMessages } = await import('./keyboard-handlers/conditional-messages/conditional-messages.renderer');
     const code = generateConditionalMessages({
       conditionalMessages: [
         { variableName: 'user_role', condition: 'user_role', messageText: 'Привет, администратор!' },
@@ -1020,7 +1020,7 @@ describe('generateSkipDataCollection', () => {
 
     if (!hasPython) { console.warn('⚠️ Python не найден, тест пропущен'); return; }
 
-    const { generateSkipDataCollectionCheck } = await import('./skip-data-collection/skip-data-collection.renderer');
+    const { generateSkipDataCollectionCheck } = await import('./keyboard-handlers/skip-data-collection/skip-data-collection.renderer');
     const code = generateSkipDataCollectionCheck({ variableName: 'user_name', variableValue: 'message.text' });
     assertValidPythonSyntax(code, 'generateSkipDataCollection');
   });
