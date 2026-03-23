@@ -55,11 +55,30 @@ export const validParamsEquals: ConditionTemplateParams = {
   ],
 };
 
+/**
+ * Узел условия с ветками contains / else
+ * Проверяет, содержит ли email домен
+ */
+export const validParamsContains: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_email',
+      variable: 'user_email',
+      branches: [
+        { id: 'b1', operator: 'contains', value: 'gmail', target: 'msg_gmail' },
+        { id: 'b2', operator: 'contains', value: 'yahoo', target: 'msg_yahoo' },
+        { id: 'b3', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
 /** Несколько узлов условия */
 export const validParamsMultiple: ConditionTemplateParams = {
   entries: [
     ...validParamsFilledEmpty.entries,
     ...validParamsEquals.entries,
+    ...validParamsContains.entries,
   ],
 };
 
@@ -125,4 +144,17 @@ export const nodesWithNullAndMixed: Node[] = [
     ],
   }),
   makeNode('msg_greet', 'message', {}),
+];
+
+/** Один condition-узел с ветками contains / else */
+export const nodesWithConditionContains: Node[] = [
+  makeNode('condition_check_email', 'condition', {
+    variable: 'user_email',
+    branches: [
+      { id: 'b1', label: 'Gmail', operator: 'contains', value: 'gmail', target: 'msg_gmail' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_gmail', 'message', {}),
+  makeNode('msg_other', 'message', {}),
 ];

@@ -12,9 +12,11 @@ import {
   validParamsEmpty,
   validParamsFilledEmpty,
   validParamsEquals,
+  validParamsContains,
   validParamsMultiple,
   nodesWithConditionFilledEmpty,
   nodesWithConditionEquals,
+  nodesWithConditionContains,
   nodesWithMissingVariable,
   nodesWithNoBranches,
   nodesWithoutCondition,
@@ -44,11 +46,20 @@ describe('collectConditionEntries()', () => {
     expect(entries[0].branches[2].operator).toBe('else');
   });
 
-  it('корректно собирает узел с ветками equals/else', () => {
+  it('корректно собирает узел с ветками equals / else', () => {
     const entries = collectConditionEntries(nodesWithConditionEquals);
     expect(entries).toHaveLength(1);
     expect(entries[0].branches[0].operator).toBe('equals');
     expect(entries[0].branches[0].value).toBe('admin');
+  });
+
+  it('корректно собирает узел с ветками contains / else', () => {
+    const entries = collectConditionEntries(nodesWithConditionContains);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].nodeId).toBe('condition_check_email');
+    expect(entries[0].variable).toBe('user_email');
+    expect(entries[0].branches[0].operator).toBe('contains');
+    expect(entries[0].branches[0].value).toBe('gmail');
   });
 
   it('пропускает узел без variable', () => {
@@ -109,6 +120,11 @@ describe('generateConditionHandlers() из Node[]', () => {
     expect(r).toContain('val == "admin"');
   });
 
+  it('генерирует проверку подстроки для оператора contains', () => {
+    const r = generateConditionHandlers(nodesWithConditionContains);
+    expect(r).toContain('"gmail" in val');
+  });
+
   it('содержит logging.info', () => {
     const r = generateConditionHandlers(nodesWithConditionFilledEmpty);
     expect(r).toContain('logging.info');
@@ -134,10 +150,16 @@ describe('generateConditionHandlers() из ConditionTemplateParams', () => {
     expect(r).toContain('val == "moderator"');
   });
 
+  it('генерирует код для contains', () => {
+    const r = generateConditionHandlers(validParamsContains);
+    expect(r).toContain('"gmail" in val');
+    expect(r).toContain('"yahoo" in val');
+  });
+
   it('несколько узлов → несколько функций', () => {
     const r = generateConditionHandlers(validParamsMultiple);
     const count = (r.match(/async def handle_callback_/g) || []).length;
-    expect(count).toBe(2);
+    expect(count).toBe(3);
   });
 });
 
@@ -154,6 +176,10 @@ describe('conditionParamsSchema', () => {
 
   it('принимает оператор equals', () => {
     expect(conditionParamsSchema.safeParse(validParamsEquals).success).toBe(true);
+  });
+
+  it('принимает оператор contains', () => {
+    expect(conditionParamsSchema.safeParse(validParamsContains).success).toBe(true);
   });
 
   it('отклоняет неизвестный оператор', () => {
