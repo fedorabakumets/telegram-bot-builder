@@ -68,6 +68,16 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
   // Получаем токен или значение по умолчанию
   const defaultToken = tokenData?.hasToken && tokenData?.token ? tokenData.token : 'YOUR_BOT_TOKEN_HERE';
 
+  // Загружаем ADMIN_IDS проекта
+  const { data: adminIdsData } = useQuery({
+    queryKey: [`/api/projects/${projectId}/admin-ids`],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/admin-ids`),
+    enabled: !!projectId,
+    staleTime: 60000,
+  });
+
+  const defaultAdminIds = adminIdsData?.adminIds || '123456789';
+
   const [codeContent, setCodeContent] = useState<CodeGeneratorState>({
     python: '',
     json: '',
@@ -84,7 +94,8 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
     botDataStr: JSON.stringify(botData),
     projectName,
     userDatabaseEnabled,
-    tokenDataStr: JSON.stringify(tokenData)
+    tokenDataStr: JSON.stringify(tokenData),
+    adminIdsStr: JSON.stringify(adminIdsData)
   });
 
   // Синхронизируем ref с состоянием
@@ -197,9 +208,9 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
         case 'env':
           if (!botGenerator) {
             const { generateEnvFile } = await import('@lib/bot-generator');
-            return generateEnvFile(defaultToken, "123456789", projectId || 1);
+            return generateEnvFile(defaultToken, defaultAdminIds, projectId || 1);
           }
-          return botGenerator.generateEnvFile(defaultToken, "123456789", projectId || 1);
+          return botGenerator.generateEnvFile(defaultToken, defaultAdminIds, projectId || 1);
         default:
           return '';
       }
@@ -207,7 +218,7 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
       console.error('Ошибка генерации кода:', error);
       return `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`;
     }
-  }, [botData, projectName, userDatabaseEnabled, projectId, tokenData]);
+  }, [botData, projectName, userDatabaseEnabled, projectId, tokenData, adminIdsData]);
 
   /**
    * Функция для загрузки содержимого для выбранного формата
@@ -219,10 +230,12 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
     const prev = prevDataRef.current;
     const currentBotDataStr = JSON.stringify(botData);
     const currentTokenDataStr = JSON.stringify(tokenData);
+    const currentAdminIdsStr = JSON.stringify(adminIdsData);
     const dataChanged = prev.botDataStr !== currentBotDataStr ||
       prev.projectName !== projectName ||
       prev.userDatabaseEnabled !== userDatabaseEnabled ||
-      prev.tokenDataStr !== currentTokenDataStr;
+      prev.tokenDataStr !== currentTokenDataStr ||
+      prev.adminIdsStr !== currentAdminIdsStr;
 
     if (dataChanged) {
       setCodeContent({
@@ -238,7 +251,8 @@ export function useCodeGenerator(botData: BotData, projectName: string, userData
         botDataStr: currentBotDataStr,
         projectName,
         userDatabaseEnabled,
-        tokenDataStr: currentTokenDataStr
+        tokenDataStr: currentTokenDataStr,
+        adminIdsStr: currentAdminIdsStr
       };
     }
 

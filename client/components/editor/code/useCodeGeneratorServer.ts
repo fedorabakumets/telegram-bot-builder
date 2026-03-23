@@ -42,6 +42,16 @@ export function useCodeGeneratorServer(
 
   const defaultToken = tokenData?.hasToken && tokenData?.token ? tokenData.token : 'YOUR_BOT_TOKEN_HERE';
 
+  // Загружаем ADMIN_IDS проекта
+  const { data: adminIdsData } = useQuery({
+    queryKey: [`/api/projects/${projectId}/admin-ids`],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/admin-ids`),
+    enabled: !!projectId,
+    staleTime: 60000,
+  });
+
+  const defaultAdminIds = adminIdsData?.adminIds || '123456789';
+
   const [codeContent, setCodeContent] = useState<CodeGeneratorState>({
     python: '',
     json: '',
@@ -98,7 +108,7 @@ export function useCodeGeneratorServer(
         case 'dockerfile':
           return botGenerator.generateDockerfile();
         case 'env':
-          return botGenerator.generateEnvFile(defaultToken, "123456789", projectId || 1);
+          return botGenerator.generateEnvFile(defaultToken, defaultAdminIds, projectId || 1);
         default:
           return '';
       }
