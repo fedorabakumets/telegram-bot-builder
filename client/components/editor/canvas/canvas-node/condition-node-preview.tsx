@@ -41,12 +41,15 @@ interface ConditionNodePreviewProps {
  */
 function getBranchOperatorLabel(branch: ConditionBranch): string {
   switch (branch.operator) {
-    case 'filled': return 'заполнено';
-    case 'empty':  return 'не заполнено';
-    case 'equals': return `= ${branch.value}`;
-    case 'contains': return `содержит ${branch.value}`;
-    case 'else':   return '';
-    default:       return '';
+    case 'filled':       return 'заполнено';
+    case 'empty':        return 'не заполнено';
+    case 'equals':       return `= ${branch.value}`;
+    case 'contains':     return `содержит ${branch.value}`;
+    case 'greater_than': return `> ${branch.value}`;
+    case 'less_than':    return `< ${branch.value}`;
+    case 'between':      return `${branch.value} — ${branch.value2 || '...'}`;
+    case 'else':         return '';
+    default:             return '';
   }
 }
 

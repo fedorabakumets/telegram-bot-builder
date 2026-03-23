@@ -15,6 +15,11 @@
  * Блок L: Структура Python кода
  * Блок M: Производительность
  * Блок N: Отсутствие лишнего кода
+ * Блок O: Оператор contains
+ * Блок P: Оператор greater_than
+ * Блок Q: Оператор less_than
+ * Блок R: Оператор between
+ * Блок S: Числовые операторы — граничные случаи
  */
 
 import fs from 'fs';
@@ -81,6 +86,10 @@ function makeStartNode(id = 'start1') {
 
 function makeBranch(operator: string, value = '', target?: string) {
   return { id: `br_${operator}_${Math.random().toString(36).slice(2, 6)}`, label: operator, operator, value, target };
+}
+
+function makeBranchBetween(value: string, value2: string, target?: string) {
+  return { id: `br_between_${Math.random().toString(36).slice(2, 6)}`, label: 'between', operator: 'between', value, value2, target };
 }
 
 // ─── Шапка ───────────────────────────────────────────────────────────────────
@@ -1222,6 +1231,328 @@ test('O08', 'filled + contains + else → корректная цепочка if
   ok(code.includes('elif "да" in val:'), 'elif "да" in val: должен быть');
   ok(code.includes('else:'), 'else: должен быть');
   syntax(code, 'o08');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК P: Оператор greater_than
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок P: Оператор greater_than ─────────────────────────────────');
+
+test('P01', 'greater_than → генерируется _num_val > N', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('greater_than', '18')])]);
+  const code = gen(p, 'p01');
+  ok(code.includes('_num_val > 18'), '_num_val > 18 должен быть в коде');
+});
+
+test('P02', 'greater_than как первая ветка → if _num_val is not None and _num_val > N:', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('greater_than', '18')])]);
+  const code = gen(p, 'p02');
+  ok(code.includes('if _num_val is not None and _num_val > 18:'), 'if _num_val is not None and _num_val > 18: должен быть в коде');
+});
+
+test('P03', 'greater_than как вторая ветка → elif _num_val is not None and _num_val > N:', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [
+    makeBranch('greater_than', '65'),
+    makeBranch('greater_than', '18'),
+  ])]);
+  const code = gen(p, 'p03');
+  ok(code.includes('elif _num_val is not None and _num_val > 18:'), 'elif _num_val is not None and _num_val > 18: должен быть в коде');
+});
+
+test('P04', 'greater_than + target → await handle_callback_<target>', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'age', [makeBranch('greater_than', '18', 'msg_adult')]),
+    makeMessageNode('msg_adult'),
+  ]);
+  const code = gen(p, 'p04');
+  ok(code.includes('await handle_callback_msg_adult(callback_query)'), 'await handle_callback_msg_adult должен быть в коде');
+});
+
+test('P05', 'greater_than без target → pass', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('greater_than', '18')])]);
+  const code = gen(p, 'p05');
+  ok(code.includes('pass'), 'pass должен быть в коде');
+});
+
+test('P06', 'greater_than → генерируется блок try: _num_val = float(val)', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('greater_than', '18')])]);
+  const code = gen(p, 'p06');
+  ok(code.includes('_num_val = float(val)'), '_num_val = float(val) должен быть в коде');
+  ok(code.includes('except (ValueError, TypeError)'), 'except (ValueError, TypeError) должен быть в коде');
+});
+
+test('P07', 'greater_than → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('greater_than', '18'), makeBranch('else')])]);
+  syntax(gen(p, 'p07'), 'p07');
+});
+
+test('P08', 'greater_than с дробным значением (18.5) → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('greater_than', '18.5'), makeBranch('else')])]);
+  syntax(gen(p, 'p08'), 'p08');
+});
+
+test('P09', 'greater_than + else → корректная цепочка', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [
+    makeBranch('greater_than', '18', 'msg_adult'),
+    makeBranch('else', '', 'msg_child'),
+  ]), makeMessageNode('msg_adult'), makeMessageNode('msg_child')]);
+  const code = gen(p, 'p09');
+  ok(code.includes('if _num_val is not None and _num_val > 18:'), 'if должен быть');
+  ok(code.includes('else:'), 'else: должен быть');
+  syntax(code, 'p09');
+});
+
+test('P10', 'несколько greater_than → несколько elif', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'score', [
+    makeBranch('greater_than', '90'),
+    makeBranch('greater_than', '70'),
+    makeBranch('greater_than', '50'),
+    makeBranch('else'),
+  ])]);
+  const code = gen(p, 'p10');
+  ok(code.includes('if _num_val is not None and _num_val > 90:'), 'if > 90 должен быть');
+  ok(code.includes('elif _num_val is not None and _num_val > 70:'), 'elif > 70 должен быть');
+  ok(code.includes('elif _num_val is not None and _num_val > 50:'), 'elif > 50 должен быть');
+  syntax(code, 'p10');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК Q: Оператор less_than
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок Q: Оператор less_than ────────────────────────────────────');
+
+test('Q01', 'less_than → генерируется _num_val < N', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('less_than', '18')])]);
+  const code = gen(p, 'q01');
+  ok(code.includes('_num_val < 18'), '_num_val < 18 должен быть в коде');
+});
+
+test('Q02', 'less_than как первая ветка → if _num_val is not None and _num_val < N:', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('less_than', '18')])]);
+  const code = gen(p, 'q02');
+  ok(code.includes('if _num_val is not None and _num_val < 18:'), 'if _num_val is not None and _num_val < 18: должен быть в коде');
+});
+
+test('Q03', 'less_than как вторая ветка → elif', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [
+    makeBranch('less_than', '10'),
+    makeBranch('less_than', '18'),
+  ])]);
+  const code = gen(p, 'q03');
+  ok(code.includes('elif _num_val is not None and _num_val < 18:'), 'elif _num_val is not None and _num_val < 18: должен быть в коде');
+});
+
+test('Q04', 'less_than + target → await handle_callback_<target>', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'age', [makeBranch('less_than', '18', 'msg_child')]),
+    makeMessageNode('msg_child'),
+  ]);
+  const code = gen(p, 'q04');
+  ok(code.includes('await handle_callback_msg_child(callback_query)'), 'await handle_callback_msg_child должен быть в коде');
+});
+
+test('Q05', 'less_than без target → pass', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('less_than', '18')])]);
+  const code = gen(p, 'q05');
+  ok(code.includes('pass'), 'pass должен быть в коде');
+});
+
+test('Q06', 'less_than → генерируется блок try: _num_val = float(val)', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('less_than', '18')])]);
+  const code = gen(p, 'q06');
+  ok(code.includes('_num_val = float(val)'), '_num_val = float(val) должен быть в коде');
+  ok(code.includes('except (ValueError, TypeError)'), 'except (ValueError, TypeError) должен быть в коде');
+});
+
+test('Q07', 'less_than → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('less_than', '18'), makeBranch('else')])]);
+  syntax(gen(p, 'q07'), 'q07');
+});
+
+test('Q08', 'less_than с отрицательным значением (-5) → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'temp', [makeBranch('less_than', '-5'), makeBranch('else')])]);
+  syntax(gen(p, 'q08'), 'q08');
+});
+
+test('Q09', 'greater_than + less_than + else → корректная цепочка', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [
+    makeBranch('greater_than', '65'),
+    makeBranch('less_than', '18'),
+    makeBranch('else'),
+  ])]);
+  const code = gen(p, 'q09');
+  ok(code.includes('if _num_val is not None and _num_val > 65:'), 'if > 65 должен быть');
+  ok(code.includes('elif _num_val is not None and _num_val < 18:'), 'elif < 18 должен быть');
+  ok(code.includes('else:'), 'else: должен быть');
+  syntax(code, 'q09');
+});
+
+test('Q10', 'less_than с нулём (0) → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'balance', [makeBranch('less_than', '0'), makeBranch('else')])]);
+  syntax(gen(p, 'q10'), 'q10');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК R: Оператор between
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок R: Оператор between ──────────────────────────────────────');
+
+test('R01', 'between → генерируется N1 <= _num_val <= N2', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranchBetween('18', '65')])]);
+  const code = gen(p, 'r01');
+  ok(code.includes('18 <= _num_val <= 65'), '18 <= _num_val <= 65 должен быть в коде');
+});
+
+test('R02', 'between как первая ветка → if _num_val is not None and N1 <= _num_val <= N2:', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranchBetween('18', '65')])]);
+  const code = gen(p, 'r02');
+  ok(code.includes('if _num_val is not None and 18 <= _num_val <= 65:'), 'if с between должен быть в коде');
+});
+
+test('R03', 'between как вторая ветка → elif', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [
+    makeBranch('greater_than', '100'),
+    makeBranchBetween('18', '65'),
+  ])]);
+  const code = gen(p, 'r03');
+  ok(code.includes('elif _num_val is not None and 18 <= _num_val <= 65:'), 'elif с between должен быть в коде');
+});
+
+test('R04', 'between + target → await handle_callback_<target>', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'age', [makeBranchBetween('18', '65', 'msg_working')]),
+    makeMessageNode('msg_working'),
+  ]);
+  const code = gen(p, 'r04');
+  ok(code.includes('await handle_callback_msg_working(callback_query)'), 'await handle_callback_msg_working должен быть в коде');
+});
+
+test('R05', 'between без target → pass', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranchBetween('18', '65')])]);
+  const code = gen(p, 'r05');
+  ok(code.includes('pass'), 'pass должен быть в коде');
+});
+
+test('R06', 'between → генерируется блок try: _num_val = float(val)', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranchBetween('18', '65')])]);
+  const code = gen(p, 'r06');
+  ok(code.includes('_num_val = float(val)'), '_num_val = float(val) должен быть в коде');
+  ok(code.includes('except (ValueError, TypeError)'), 'except (ValueError, TypeError) должен быть в коде');
+});
+
+test('R07', 'between → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranchBetween('18', '65'), makeBranch('else')])]);
+  syntax(gen(p, 'r07'), 'r07');
+});
+
+test('R08', 'between с дробными значениями (0.5, 99.9) → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'score', [makeBranchBetween('0.5', '99.9'), makeBranch('else')])]);
+  syntax(gen(p, 'r08'), 'r08');
+});
+
+test('R09', 'between + else → корректная цепочка', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [
+    makeBranchBetween('18', '65', 'msg_working'),
+    makeBranch('else', '', 'msg_other'),
+  ]), makeMessageNode('msg_working'), makeMessageNode('msg_other')]);
+  const code = gen(p, 'r09');
+  ok(code.includes('if _num_val is not None and 18 <= _num_val <= 65:'), 'if between должен быть');
+  ok(code.includes('else:'), 'else: должен быть');
+  syntax(code, 'r09');
+});
+
+test('R10', 'greater_than + between + less_than + else → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'score', [
+    makeBranch('greater_than', '90'),
+    makeBranchBetween('50', '90'),
+    makeBranch('less_than', '50'),
+    makeBranch('else'),
+  ])]);
+  syntax(gen(p, 'r10'), 'r10');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК S: Числовые операторы — граничные случаи
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок S: Числовые операторы — граничные случаи ────────────────');
+
+test('S01', 'greater_than без числового значения (пустая строка) → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('greater_than', ''), makeBranch('else')])]);
+  syntax(gen(p, 's01'), 's01');
+});
+
+test('S02', 'less_than с нечисловым value → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranch('less_than', 'abc'), makeBranch('else')])]);
+  syntax(gen(p, 's02'), 's02');
+});
+
+test('S03', 'between с одинаковыми границами → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'age', [makeBranchBetween('18', '18'), makeBranch('else')])]);
+  syntax(gen(p, 's03'), 's03');
+});
+
+test('S04', 'только числовые ветки без else → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'score', [
+    makeBranch('greater_than', '90'),
+    makeBranch('less_than', '50'),
+    makeBranchBetween('50', '90'),
+  ])]);
+  syntax(gen(p, 's04'), 's04');
+});
+
+test('S05', '_num_val вычисляется один раз (не дублируется в коде)', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'score', [
+    makeBranch('greater_than', '90'),
+    makeBranch('less_than', '50'),
+    makeBranchBetween('50', '90'),
+    makeBranch('else'),
+  ])]);
+  const code = gen(p, 's05');
+  // Найти тело функции cond1
+  const condIdx = code.indexOf('async def handle_callback_cond1');
+  const nextDefIdx = code.indexOf('async def ', condIdx + 1);
+  const funcBody = nextDefIdx > 0 ? code.substring(condIdx, nextDefIdx) : code.substring(condIdx);
+  const floatCount = (funcBody.match(/_num_val = float\(val\)/g) || []).length;
+  const tryCount = (funcBody.match(/try:/g) || []).length;
+  ok(floatCount === 1, `_num_val = float(val) должен быть ровно 1 раз в функции, найдено: ${floatCount}`);
+  ok(tryCount === 1, `try: должен быть ровно 1 раз в функции, найдено: ${tryCount}`);
+});
+
+test('S06', 'смешанные операторы (filled + greater_than + equals + else) → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'x', [
+    makeBranch('filled'),
+    makeBranch('greater_than', '100'),
+    makeBranch('equals', 'special'),
+    makeBranch('else'),
+  ])]);
+  syntax(gen(p, 's06'), 's06');
+});
+
+test('S07', '5 числовых веток → синтаксис OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'score', [
+    makeBranch('greater_than', '90'),
+    makeBranch('greater_than', '80'),
+    makeBranch('greater_than', '70'),
+    makeBranch('greater_than', '60'),
+    makeBranch('less_than', '60'),
+    makeBranch('else'),
+  ])]);
+  syntax(gen(p, 's07'), 's07');
+});
+
+test('S08', 'числовые операторы + большой граф → синтаксис OK', () => {
+  const messages = Array.from({ length: 10 }, (_, i) => makeMessageNode(`msg${i + 1}`, `Ответ ${i + 1}`));
+  const cond = makeConditionNode('cond1', 'score', [
+    makeBranch('greater_than', '90', 'msg1'),
+    makeBranchBetween('70', '90', 'msg2'),
+    makeBranch('less_than', '70', 'msg3'),
+    makeBranch('else', '', 'msg4'),
+  ]);
+  syntax(gen(makeCleanProject([cond, ...messages]), 's08'), 's08');
 });
 
 // ════════════════════════════════════════════════════════════════════════════

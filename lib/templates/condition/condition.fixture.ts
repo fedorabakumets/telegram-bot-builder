@@ -158,3 +158,104 @@ export const nodesWithConditionContains: Node[] = [
   makeNode('msg_gmail', 'message', {}),
   makeNode('msg_other', 'message', {}),
 ];
+
+// ─── Фикстуры для числовых операторов ────────────────────────────────────────
+
+/**
+ * Узел условия с ветками greater_than / else
+ */
+export const validParamsGreaterThan: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_age_gt',
+      variable: 'user_age',
+      branches: [
+        { id: 'b1', operator: 'greater_than', value: '18', target: 'msg_adult' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_child' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Узел условия с ветками less_than / else
+ */
+export const validParamsLessThan: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_age_lt',
+      variable: 'user_age',
+      branches: [
+        { id: 'b1', operator: 'less_than', value: '18', target: 'msg_child' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_adult' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Узел условия с ветками between / else
+ */
+export const validParamsBetween: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_age_between',
+      variable: 'user_age',
+      branches: [
+        { id: 'b1', operator: 'between', value: '18', value2: '65', target: 'msg_working' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/** Один condition-узел с ветками greater_than / else */
+export const nodesWithConditionGreaterThan: Node[] = [
+  makeNode('condition_check_age_gt', 'condition', {
+    variable: 'user_age',
+    branches: [
+      { id: 'b1', label: 'Больше 18', operator: 'greater_than', value: '18', target: 'msg_adult' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_child' },
+    ],
+  }),
+  makeNode('msg_adult', 'message', {}),
+  makeNode('msg_child', 'message', {}),
+];
+
+/** Один condition-узел с ветками less_than / else */
+export const nodesWithConditionLessThan: Node[] = [
+  makeNode('condition_check_age_lt', 'condition', {
+    variable: 'user_age',
+    branches: [
+      { id: 'b1', label: 'Меньше 18', operator: 'less_than', value: '18', target: 'msg_child' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_adult' },
+    ],
+  }),
+  makeNode('msg_child', 'message', {}),
+  makeNode('msg_adult', 'message', {}),
+];
+
+/** Один condition-узел с ветками between / else */
+export const nodesWithConditionBetween: Node[] = [
+  makeNode('condition_check_age_between', 'condition', {
+    variable: 'user_age',
+    branches: [
+      { id: 'b1', label: 'Рабочий возраст', operator: 'between', value: '18', value2: '65', target: 'msg_working' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_working', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];
+
+/** Несколько узлов условия — все 6 типов */
+export const validParamsMultipleAll: ConditionTemplateParams = {
+  entries: [
+    ...validParamsFilledEmpty.entries,
+    ...validParamsEquals.entries,
+    ...validParamsContains.entries,
+    ...validParamsGreaterThan.entries,
+    ...validParamsLessThan.entries,
+    ...validParamsBetween.entries,
+  ],
+};

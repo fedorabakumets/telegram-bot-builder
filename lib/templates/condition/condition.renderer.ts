@@ -29,7 +29,7 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     const branches: any[] = (node.data as any).branches ?? [];
     if (branches.length === 0) continue;
 
-    const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'else']);
+    const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'else']);
     // Определяем первую не-else ветку для корректного if/elif
     let firstConditionalSeen = false;
     const mappedBranches = branches
@@ -37,14 +37,16 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
       .map(b => {
         const isFirstConditional = b.operator !== 'else' && !firstConditionalSeen;
         if (isFirstConditional) firstConditionalSeen = true;
+        const sanitizeValue = (v: string) => (v ?? '')
+          .replace(/\\/g, '\\\\')
+          .replace(/"/g, '\\"')
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '');
         return {
           id: b.id ?? '',
           operator: b.operator,
-          value: (b.value ?? '')
-            .replace(/\\/g, '\\\\')
-            .replace(/"/g, '\\"')
-            .replace(/\n/g, '\\n')
-            .replace(/\r/g, ''),
+          value: sanitizeValue(b.value ?? ''),
+          value2: sanitizeValue(b.value2 ?? ''),
           target: b.target,
           isFirstConditional,
         };
@@ -52,15 +54,43 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
 
     if (mappedBranches.length === 0) continue;
 
+    const hasNumericBranch = mappedBranches.some(b =>
+      b.operator === 'greater_than' || b.operator === 'less_than' || b.operator === 'between'
+    );
+
     entries.push({
       nodeId: node.id,
       variable,
       branches: mappedBranches,
       hasConditionalBranch: mappedBranches.some(b => b.operator !== 'else'),
+      hasNumericBranch,
     } as any);
   }
 
   return entries;
+}
+
+/**
+ * Обогащает ветки entry флагами isFirstConditional, hasConditionalBranch, hasNumericBranch.
+ */
+function enrichEntries(entries: ConditionEntry[]): any[] {
+  return entries.map(entry => {
+    let firstConditionalSeen = false;
+    const mappedBranches = (entry.branches as any[]).map(b => {
+      const isFirstConditional = b.operator !== 'else' && !firstConditionalSeen;
+      if (isFirstConditional) firstConditionalSeen = true;
+      return { ...b, isFirstConditional };
+    });
+    const hasNumericBranch = mappedBranches.some(b =>
+      b.operator === 'greater_than' || b.operator === 'less_than' || b.operator === 'between'
+    );
+    return {
+      ...entry,
+      branches: mappedBranches,
+      hasConditionalBranch: mappedBranches.some(b => b.operator !== 'else'),
+      hasNumericBranch,
+    };
+  });
 }
 
 /**
@@ -84,6 +114,6 @@ export function generateConditionHandlers(input: Node[] | ConditionTemplateParam
   if (input.entries.length === 0) return '';
   conditionParamsSchema.parse(input);
   return renderPartialTemplate('condition/condition.py.jinja2', {
-    conditionEntries: input.entries,
+    conditionEntries: enrichEntries(input.entries),
   });
 }

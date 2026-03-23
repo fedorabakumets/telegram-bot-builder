@@ -15,7 +15,7 @@
  * - "contains" — переменная содержит указанную подстроку
  * - "else"    — во всех остальных случаях (ветка по умолчанию)
  */
-export type ConditionOperator = 'filled' | 'empty' | 'equals' | 'contains' | 'else';
+export type ConditionOperator = 'filled' | 'empty' | 'equals' | 'contains' | 'greater_than' | 'less_than' | 'between' | 'else';
 
 /**
  * Одна ветка узла условия
@@ -29,6 +29,8 @@ export interface ConditionBranch {
   operator: ConditionOperator;
   /** Значение для сравнения (пусто для ветки "else") */
   value: string;
+  /** Второе значение для оператора "between" (диапазон) */
+  value2?: string;
   /** ID целевого узла для перехода по этой ветке */
   target?: string;
 }

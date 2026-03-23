@@ -35,21 +35,27 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
   'empty': 'Если переменная не введена',
   'equals': 'Если переменная равна',
   'contains': 'Если переменная содержит',
+  'greater_than': 'Если переменная больше',
+  'less_than': 'Если переменная меньше',
+  'between': 'Если переменная в диапазоне',
   'else': 'Во всех остальных случаях',
 };
 
 /** Операторы, доступные для выбора пользователем */
-const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals', 'contains'];
+const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between'];
 
 /** Генерирует текст выбранного оператора с подстановкой имени переменной */
-function getSelectedLabel(operator: ConditionOperator, variable: string, value: string): string {
+function getSelectedLabel(operator: ConditionOperator, variable: string, value: string, value2?: string): string {
   const varName = variable.replace(/[{}]/g, '').trim() || 'переменная';
   switch (operator) {
-    case 'filled':  return `Если переменная "${varName}" введена`;
-    case 'empty':   return `Если переменная "${varName}" не введена`;
-    case 'equals':  return `Если переменная "${varName}" равна "${value || '...'}"`;
-    case 'contains': return `Если переменная "${varName}" содержит "${value || '...'}"`;
-    default:        return OPERATOR_LABELS[operator];
+    case 'filled':       return `Если переменная "${varName}" введена`;
+    case 'empty':        return `Если переменная "${varName}" не введена`;
+    case 'equals':       return `Если переменная "${varName}" равна "${value || '...'}"`;
+    case 'contains':     return `Если переменная "${varName}" содержит "${value || '...'}"`;
+    case 'greater_than': return `Если переменная "${varName}" > ${value || '...'}`;
+    case 'less_than':    return `Если переменная "${varName}" < ${value || '...'}`;
+    case 'between':      return `Если переменная "${varName}" от ${value || '...'} до ${value2 || '...'}`;
+    default:             return OPERATOR_LABELS[operator];
   }
 }
 
@@ -60,7 +66,8 @@ function getSelectedLabel(operator: ConditionOperator, variable: string, value: 
  */
 export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
   const isElse = branch.operator === 'else';
-  const needsValue = branch.operator === 'equals' || branch.operator === 'contains';
+  const needsValue = branch.operator === 'equals' || branch.operator === 'contains' || branch.operator === 'greater_than' || branch.operator === 'less_than' || branch.operator === 'between';
+  const isBetween = branch.operator === 'between';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
   const EXCLUDED_TYPES = new Set(['command_trigger', 'text_trigger', 'condition']);
   const availableTargets = getAllNodesFromAllSheets.filter(({ node }) => !EXCLUDED_TYPES.has(node.type));
@@ -83,12 +90,12 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
             onValueChange={(value) => onChange(branch.id, 'operator', value)}
           >
             <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 w-auto min-w-[120px]">
-              <SelectValue>{getSelectedLabel(branch.operator, variable, branch.value)}</SelectValue>
+              <SelectValue>{getSelectedLabel(branch.operator, variable, branch.value, branch.value2)}</SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
               {SELECTABLE_OPERATORS.map(op => (
                 <SelectItem key={op} value={op}>
-                  <span className="text-xs text-violet-700 dark:text-violet-300">{getSelectedLabel(op, variable, branch.value)}</span>
+                  <span className="text-xs text-violet-700 dark:text-violet-300">{getSelectedLabel(op, variable, branch.value, branch.value2)}</span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -97,7 +104,15 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
             <Input
               value={branch.value}
               onChange={e => onChange(branch.id, 'value', e.target.value)}
-              placeholder="введите значение"
+              placeholder={isBetween ? 'от' : 'введите значение'}
+              className="text-sm h-7 flex-1"
+            />
+          )}
+          {isBetween && (
+            <Input
+              value={branch.value2 ?? ''}
+              onChange={e => onChange(branch.id, 'value2', e.target.value)}
+              placeholder="до"
               className="text-sm h-7 flex-1"
             />
           )}

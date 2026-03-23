@@ -7,10 +7,12 @@
 export interface ConditionBranchEntry {
   /** Уникальный идентификатор ветки */
   id: string;
-  /** Оператор: "filled" | "empty" | "equals" | "contains" | "else" */
-  operator: 'filled' | 'empty' | 'equals' | 'contains' | 'else';
+  /** Оператор: "filled" | "empty" | "equals" | "contains" | "greater_than" | "less_than" | "between" | "else" */
+  operator: 'filled' | 'empty' | 'equals' | 'contains' | 'greater_than' | 'less_than' | 'between' | 'else';
   /** Значение для сравнения (только для оператора "equals") */
   value: string;
+  /** Второе значение для оператора "between" (диапазон) */
+  value2?: string;
   /** ID целевого узла для перехода */
   target?: string;
 }

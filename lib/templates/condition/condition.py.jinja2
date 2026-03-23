@@ -14,6 +14,12 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
     _all_vars = await init_all_user_vars(user_id)
     val = _all_vars.get("{{ entry.variable }}", "")
     logging.info(f"Узел условия {{ entry.nodeId }}: переменная '{{ entry.variable }}' = {val}")
+{%- if entry.hasNumericBranch %}
+    try:
+        _num_val = float(val)
+    except (ValueError, TypeError):
+        _num_val = None
+{%- endif %}
 {%- if not entry.hasConditionalBranch %}
     if True:
         pass
@@ -23,6 +29,30 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
 {%- if branch.operator == 'else' %}
     else:
         # Ветка по умолчанию
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- elif branch.operator == 'greater_than' and branch.isFirstConditional %}
+    if _num_val is not None and _num_val > {{ branch.value if branch.value else '0' }}:
+        # Ветка: greater_than {{ branch.value }}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- elif branch.operator == 'greater_than' %}
+    elif _num_val is not None and _num_val > {{ branch.value if branch.value else '0' }}:
+        # Ветка: greater_than {{ branch.value }}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- elif branch.operator == 'less_than' and branch.isFirstConditional %}
+    if _num_val is not None and _num_val < {{ branch.value if branch.value else '0' }}:
+        # Ветка: less_than {{ branch.value }}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- elif branch.operator == 'less_than' %}
+    elif _num_val is not None and _num_val < {{ branch.value if branch.value else '0' }}:
+        # Ветка: less_than {{ branch.value }}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- elif branch.operator == 'between' and branch.isFirstConditional %}
+    if _num_val is not None and {{ branch.value if branch.value else '0' }} <= _num_val <= {{ branch.value2 if branch.value2 else '0' }}:
+        # Ветка: between {{ branch.value }} {{ branch.value2 }}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- elif branch.operator == 'between' %}
+    elif _num_val is not None and {{ branch.value if branch.value else '0' }} <= _num_val <= {{ branch.value2 if branch.value2 else '0' }}:
+        # Ветка: between {{ branch.value }} {{ branch.value2 }}
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
 {%- elif branch.isFirstConditional %}
     if {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}val == "{{ branch.value }}"{% elif branch.operator == 'contains' %}"{{ branch.value }}" in val{% endif %}:

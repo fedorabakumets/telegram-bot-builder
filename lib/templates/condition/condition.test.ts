@@ -14,9 +14,15 @@ import {
   validParamsEquals,
   validParamsContains,
   validParamsMultiple,
+  validParamsGreaterThan,
+  validParamsLessThan,
+  validParamsBetween,
   nodesWithConditionFilledEmpty,
   nodesWithConditionEquals,
   nodesWithConditionContains,
+  nodesWithConditionGreaterThan,
+  nodesWithConditionLessThan,
+  nodesWithConditionBetween,
   nodesWithMissingVariable,
   nodesWithNoBranches,
   nodesWithoutCondition,
@@ -163,7 +169,55 @@ describe('generateConditionHandlers() из ConditionTemplateParams', () => {
   });
 });
 
-// ─── conditionParamsSchema ────────────────────────────────────────────────────
+// ─── generateConditionHandlers() — числовые операторы ────────────────────────
+
+describe('generateConditionHandlers() — числовые операторы', () => {
+  it('greater_than → генерирует _num_val > N', () => {
+    const r = generateConditionHandlers(nodesWithConditionGreaterThan);
+    expect(r).toContain('_num_val > 18');
+  });
+
+  it('greater_than → генерирует блок try/except для _num_val', () => {
+    const r = generateConditionHandlers(nodesWithConditionGreaterThan);
+    expect(r).toContain('_num_val = float(val)');
+    expect(r).toContain('except (ValueError, TypeError)');
+  });
+
+  it('less_than → генерирует _num_val < N', () => {
+    const r = generateConditionHandlers(nodesWithConditionLessThan);
+    expect(r).toContain('_num_val < 18');
+  });
+
+  it('less_than → генерирует блок try/except для _num_val', () => {
+    const r = generateConditionHandlers(nodesWithConditionLessThan);
+    expect(r).toContain('_num_val = float(val)');
+  });
+
+  it('between → генерирует N1 <= _num_val <= N2', () => {
+    const r = generateConditionHandlers(nodesWithConditionBetween);
+    expect(r).toContain('18 <= _num_val <= 65');
+  });
+
+  it('between → генерирует блок try/except для _num_val', () => {
+    const r = generateConditionHandlers(nodesWithConditionBetween);
+    expect(r).toContain('_num_val = float(val)');
+  });
+
+  it('greater_than params → генерирует _num_val > N', () => {
+    const r = generateConditionHandlers(validParamsGreaterThan);
+    expect(r).toContain('_num_val > 18');
+  });
+
+  it('less_than params → генерирует _num_val < N', () => {
+    const r = generateConditionHandlers(validParamsLessThan);
+    expect(r).toContain('_num_val < 18');
+  });
+
+  it('between params → генерирует N1 <= _num_val <= N2', () => {
+    const r = generateConditionHandlers(validParamsBetween);
+    expect(r).toContain('18 <= _num_val <= 65');
+  });
+});
 
 describe('conditionParamsSchema', () => {
   it('принимает валидные параметры', () => {
@@ -180,6 +234,18 @@ describe('conditionParamsSchema', () => {
 
   it('принимает оператор contains', () => {
     expect(conditionParamsSchema.safeParse(validParamsContains).success).toBe(true);
+  });
+
+  it('принимает оператор greater_than', () => {
+    expect(conditionParamsSchema.safeParse(validParamsGreaterThan).success).toBe(true);
+  });
+
+  it('принимает оператор less_than', () => {
+    expect(conditionParamsSchema.safeParse(validParamsLessThan).success).toBe(true);
+  });
+
+  it('принимает оператор between', () => {
+    expect(conditionParamsSchema.safeParse(validParamsBetween).success).toBe(true);
   });
 
   it('отклоняет неизвестный оператор', () => {
