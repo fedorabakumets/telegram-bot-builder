@@ -4,7 +4,7 @@
  */
 
 import { replyButtonHandlersParamsSchema, type ReplyButtonHandlersParams } from './reply-button-handlers.schema';
-import { renderPartialTemplate } from '../../template-renderer';
+import { renderPartialTemplate } from '../../../template-renderer';
 
 /**
  * Генерация обработчиков reply кнопок через Jinja2 шаблон
@@ -17,7 +17,7 @@ export function generateReplyButtonHandlers(params: ReplyButtonHandlersParams): 
   const validatedParams = replyButtonHandlersParamsSchema.parse(params);
 
   // Рендеринг шаблона
-  return renderPartialTemplate('handlers/reply-button-handlers/reply-button-handlers.py.jinja2', {
+  return renderPartialTemplate('keyboard-handlers/handlers/reply-button-handlers/reply-button-handlers.py.jinja2', {
     nodes: validatedParams.nodes,
     indentLevel: validatedParams.indentLevel,
   });

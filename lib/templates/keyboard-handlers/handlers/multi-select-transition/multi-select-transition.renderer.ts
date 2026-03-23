@@ -4,7 +4,7 @@
  */
 
 import { multiSelectTransitionParamsSchema, type MultiSelectTransitionParams } from './multi-select-transition.schema';
-import { renderPartialTemplate } from '../../template-renderer';
+import { renderPartialTemplate } from '../../../template-renderer';
 
 /**
  * Генерация логики переходов multi-select через Jinja2 шаблон
@@ -17,7 +17,7 @@ export function generateMultiSelectTransition(params: MultiSelectTransitionParam
   const validatedParams = multiSelectTransitionParamsSchema.parse(params);
 
   // Рендеринг шаблона
-  return renderPartialTemplate('handlers/multi-select-transition/multi-select-transition.py.jinja2', {
+  return renderPartialTemplate('keyboard-handlers/handlers/multi-select-transition/multi-select-transition.py.jinja2', {
     multiSelectNodes: validatedParams.multiSelectNodes,
     nodes: validatedParams.nodes,
     connections: validatedParams.connections || [],

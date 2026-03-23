@@ -5,7 +5,7 @@
 
 import type { MultiSelectButtonHandlerTemplateParams } from './multi-select-button-handler.params';
 import { multiSelectButtonHandlerParamsSchema } from './multi-select-button-handler.schema';
-import { renderPartialTemplate } from '../../template-renderer';
+import { renderPartialTemplate } from '../../../template-renderer';
 
 /**
  * Генерация Python кода обработчика multi-select button с валидацией параметров
@@ -25,5 +25,5 @@ import { renderPartialTemplate } from '../../template-renderer';
  */
 export function generateMultiSelectButtonHandler(params: MultiSelectButtonHandlerTemplateParams): string {
   const validated = multiSelectButtonHandlerParamsSchema.parse(params);
-  return renderPartialTemplate('handlers/multi-select-button-handler/multi-select-button-handler.py.jinja2', validated);
+  return renderPartialTemplate('keyboard-handlers/handlers/multi-select-button-handler/multi-select-button-handler.py.jinja2', validated);
 }

@@ -5,7 +5,7 @@
 
 import type { MultiSelectDoneTemplateParams } from './multi-select-done.params';
 import { multiSelectDoneParamsSchema } from './multi-select-done.schema';
-import { renderPartialTemplate } from '../../template-renderer';
+import { renderPartialTemplate } from '../../../template-renderer';
 
 /**
  * Генерация Python кода обработчика multi-select done с валидацией параметров
@@ -30,5 +30,5 @@ import { renderPartialTemplate } from '../../template-renderer';
  */
 export function generateMultiSelectDone(params: MultiSelectDoneTemplateParams): string {
   const validated = multiSelectDoneParamsSchema.parse(params);
-  return renderPartialTemplate('handlers/multi-select-done/multi-select-done.py.jinja2', validated);
+  return renderPartialTemplate('keyboard-handlers/handlers/multi-select-done/multi-select-done.py.jinja2', validated);
 }

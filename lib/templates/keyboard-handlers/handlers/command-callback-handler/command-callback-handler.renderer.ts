@@ -5,7 +5,7 @@
 
 import { commandCallbackHandlerParamsSchema } from './command-callback-handler.schema';
 import type { CommandCallbackHandlerTemplateParams } from './command-callback-handler.params';
-import { renderPartialTemplate } from '../../template-renderer';
+import { renderPartialTemplate } from '../../../template-renderer';
 
 /**
  * Генерация обработчика командной callback кнопки через Jinja2 шаблон
@@ -22,7 +22,7 @@ export function generateCommandCallbackHandler(params: CommandCallbackHandlerTem
   }
 
   // Рендеринг шаблона
-  return renderPartialTemplate('handlers/command-callback-handler/command-callback-handler.py.jinja2', {
+  return renderPartialTemplate('keyboard-handlers/handlers/command-callback-handler/command-callback-handler.py.jinja2', {
     callbackData: validated.data.callbackData,
     safeFunctionName: validated.data.callbackData.replace(/[^a-zA-Z0-9_]/g, '_'),
     button: validated.data.button,

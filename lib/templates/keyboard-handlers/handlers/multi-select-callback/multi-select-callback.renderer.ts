@@ -5,7 +5,7 @@
 
 import type { MultiSelectCallbackTemplateParams } from './multi-select-callback.params';
 import { multiSelectCallbackParamsSchema } from './multi-select-callback.schema';
-import { renderPartialTemplate } from '../../template-renderer';
+import { renderPartialTemplate } from '../../../template-renderer';
 
 /**
  * Генерация Python кода обработчика multi-select callback с валидацией параметров
@@ -30,5 +30,5 @@ import { renderPartialTemplate } from '../../template-renderer';
  */
 export function generateMultiSelectCallback(params: MultiSelectCallbackTemplateParams): string {
   const validated = multiSelectCallbackParamsSchema.parse(params);
-  return renderPartialTemplate('handlers/multi-select-callback/multi-select-callback.py.jinja2', validated);
+  return renderPartialTemplate('keyboard-handlers/handlers/multi-select-callback/multi-select-callback.py.jinja2', validated);
 }

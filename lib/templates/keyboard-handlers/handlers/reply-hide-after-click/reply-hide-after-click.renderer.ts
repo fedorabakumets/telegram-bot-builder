@@ -4,7 +4,7 @@
  */
 
 import { replyHideAfterClickParamsSchema, type ReplyHideAfterClickParams } from './reply-hide-after-click.schema';
-import { renderPartialTemplate } from '../../template-renderer';
+import { renderPartialTemplate } from '../../../template-renderer';
 
 /**
  * Генерация кода обработки hideAfterClick через Jinja2 шаблон
@@ -17,7 +17,7 @@ export function generateReplyHideAfterClick(params: ReplyHideAfterClickParams): 
   const validatedParams = replyHideAfterClickParamsSchema.parse(params);
 
   // Рендеринг шаблона
-  return renderPartialTemplate('handlers/reply-hide-after-click/reply-hide-after-click.py.jinja2', {
+  return renderPartialTemplate('keyboard-handlers/handlers/reply-hide-after-click/reply-hide-after-click.py.jinja2', {
     nodes: validatedParams.nodes,
     indentLevel: validatedParams.indentLevel,
   });

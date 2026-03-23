@@ -612,7 +612,7 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         return;
       }
 
-      const { generateCommandCallbackHandler } = await import('./handlers/command-callback-handler/command-callback-handler.renderer');
+      const { generateCommandCallbackHandler } = await import('./keyboard-handlers/handlers/command-callback-handler/command-callback-handler.renderer');
 
       // Реальный nodeId из бага: cmd_1KvQin0bE6-tRu9mm8xK_
       const code = generateCommandCallbackHandler({
@@ -632,7 +632,7 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         return;
       }
 
-      const { generateCommandCallbackHandler } = await import('./handlers/command-callback-handler/command-callback-handler.renderer');
+      const { generateCommandCallbackHandler } = await import('./keyboard-handlers/handlers/command-callback-handler/command-callback-handler.renderer');
 
       const code = generateCommandCallbackHandler({
         callbackData: 'cmd_node.id@v2+extra',
@@ -651,7 +651,7 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         return;
       }
 
-      const { generateCommandCallbackHandler } = await import('./handlers/command-callback-handler/command-callback-handler.renderer');
+      const { generateCommandCallbackHandler } = await import('./keyboard-handlers/handlers/command-callback-handler/command-callback-handler.renderer');
 
       const code = generateCommandCallbackHandler({
         callbackData: '1abc-def',

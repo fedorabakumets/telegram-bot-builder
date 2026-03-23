@@ -5,7 +5,7 @@
 
 import type { ButtonResponseTemplateParams } from './button-response.params';
 import { buttonResponseParamsSchema } from './button-response.schema';
-import { renderPartialTemplate } from '../../template-renderer';
+import { renderPartialTemplate } from '../../../template-renderer';
 
 /**
  * Генерация Python кода обработчика button-response с валидацией параметров
@@ -32,5 +32,5 @@ import { renderPartialTemplate } from '../../template-renderer';
  */
 export function generateButtonResponse(params: ButtonResponseTemplateParams): string {
   const validated = buttonResponseParamsSchema.parse(params);
-  return renderPartialTemplate('handlers/button-response/button-response.py.jinja2', validated);
+  return renderPartialTemplate('keyboard-handlers/handlers/button-response/button-response.py.jinja2', validated);
 }

@@ -5,7 +5,7 @@
 
 import type { MultiSelectReplyTemplateParams } from './multi-select-reply.params';
 import { multiSelectReplyParamsSchema } from './multi-select-reply.schema';
-import { renderPartialTemplate } from '../../template-renderer';
+import { renderPartialTemplate } from '../../../template-renderer';
 
 /**
  * Генерация Python кода обработчика multi-select reply с валидацией параметров
@@ -32,5 +32,5 @@ import { renderPartialTemplate } from '../../template-renderer';
  */
 export function generateMultiSelectReply(params: MultiSelectReplyTemplateParams): string {
   const validated = multiSelectReplyParamsSchema.parse(params);
-  return renderPartialTemplate('handlers/multi-select-reply/multi-select-reply.py.jinja2', validated);
+  return renderPartialTemplate('keyboard-handlers/handlers/multi-select-reply/multi-select-reply.py.jinja2', validated);
 }
