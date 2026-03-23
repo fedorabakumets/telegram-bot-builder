@@ -27,9 +27,9 @@ interface ConditionBranchItemProps {
 
 /** Метки операторов для отображения в выпадающем списке */
 const OPERATOR_LABELS: Record<ConditionOperator, string> = {
-  'filled': 'заполнено',
-  'empty': 'не заполнено',
-  'equals': 'равно',
+  'filled': 'переменная введена',
+  'empty': 'переменная не введена',
+  'equals': 'переменная равна',
   'else': 'во всех остальных случаях',
 };
 
@@ -58,7 +58,7 @@ export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, o
     <div className={`rounded-lg border p-3 space-y-2 ${isElse ? 'border-gray-200 bg-gray-50 dark:bg-slate-800/40 dark:border-slate-700' : 'border-violet-200 bg-violet-50/50 dark:bg-violet-900/10 dark:border-violet-800/40'}`}>
       {/* Заголовок ветки: статичный текст для else, иначе — выбор оператора */}
       {isElse ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Иначе</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Во всех остальных случаях</p>
       ) : (
         <div className="flex items-center gap-2">
           <Select
