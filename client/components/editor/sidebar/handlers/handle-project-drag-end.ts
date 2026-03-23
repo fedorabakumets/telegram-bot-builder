@@ -15,7 +15,6 @@ export const handleProjectDragEnd = (
   setDraggedProject: Dispatch<SetStateAction<any>>,
   setDragOverProject: Dispatch<SetStateAction<number | null>>
 ) => {
-  console.log('🏁 Завершение перетаскивания проекта');
   setDraggedProject(null);
   setDragOverProject(null);
 };

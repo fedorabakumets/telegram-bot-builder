@@ -36,24 +36,17 @@ export const handleProjectDrop = async (
   e.stopPropagation();
   setDragOverProject(null);
 
-  console.log('🎯 Попытка перемещения:', draggedProject?.name, '→', targetProject.name);
-
   if (!draggedProject || draggedProject.id === targetProject.id) {
-    console.log('❌ Отмена: проект не выбран или это тот же проект');
     setDraggedProject(null);
     return;
   }
 
   const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
-  console.log('📋 Текущие проекты:', currentProjects.map(p => p.name));
 
   const draggedIndex = currentProjects.findIndex(p => p.id === draggedProject.id);
   const targetIndex = currentProjects.findIndex(p => p.id === targetProject.id);
 
-  console.log(`📍 Индексы: перемещаемый=${draggedIndex}, целевой=${targetIndex}`);
-
   if (draggedIndex === -1 || targetIndex === -1) {
-    console.log('❌ Отмена: проект не найден');
     setDraggedProject(null);
     return;
   }
@@ -61,8 +54,6 @@ export const handleProjectDrop = async (
   const newProjects = [...currentProjects];
   const [movedProject] = newProjects.splice(draggedIndex, 1);
   newProjects.splice(targetIndex, 0, movedProject);
-
-  console.log('✅ Новый порядок:', newProjects.map(p => p.name));
 
   try {
     await apiRequest('PUT', '/api/projects/reorder', {

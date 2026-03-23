@@ -29,7 +29,6 @@ export const handleProjectClick = ({
 }: ProjectClickParams) => {
   // Сбрасываем drag-состояние при клике
   if (draggedProject) {
-    console.log('🏁 Сброс drag-состояния при клике');
     setDraggedProject(null);
     setDragOverProject(null);
   }

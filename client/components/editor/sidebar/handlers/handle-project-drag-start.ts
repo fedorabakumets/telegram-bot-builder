@@ -33,7 +33,6 @@ export const handleProjectDragStart = (
   { project, setDraggedSheet, setDraggedProject }: ProjectDragStartParams
 ) => {
   e.stopPropagation();
-  console.log('🎯 Начало перемещения проекта:', project.name);
   setDraggedSheet(null);
   setDraggedProject(project);
   e.dataTransfer.effectAllowed = 'move';

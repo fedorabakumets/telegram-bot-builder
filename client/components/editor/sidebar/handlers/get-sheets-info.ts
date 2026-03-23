@@ -29,15 +29,12 @@ export const getSheetsInfo = (project: BotProject): SheetsInfo => {
         count: sheets.length,
         names: sheets.map((sheet: any) => sheet.name || 'Лист без названия')
       };
-      console.log(`[${project.name}] Информация о листах:`, sheetsInfo);
       return sheetsInfo;
     } else {
-      // Старый формат - проверяем, есть ли данные
       const data = project.data as { nodes?: any[] };
       if (!data.nodes || !Array.isArray(data.nodes)) {
         return { count: 0, names: [] };
       }
-      console.log(`[${project.name}] Старый формат - один основной лист`);
       return { count: 1, names: ['Лист 1'] };
     }
   } catch (error) {

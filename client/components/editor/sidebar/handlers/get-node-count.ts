@@ -21,13 +21,11 @@ export const getNodeCount = (project: BotProject): number => {
         if (!sheet.nodes || !Array.isArray(sheet.nodes)) return total;
         return total + sheet.nodes.length;
       }, 0);
-      console.log(`[${project.name}] Формат с листами. Листов: ${sheets.length}, Узлов: ${nodeCount}`);
       return nodeCount;
     } else {
       const data = project.data as { nodes?: any[] };
       if (!data.nodes || !Array.isArray(data.nodes)) return 0;
       const nodeCount = data.nodes.length;
-      console.log(`[${project.name}] Старый формат. Узлов: ${nodeCount}`);
       return nodeCount;
     }
   } catch (error) {

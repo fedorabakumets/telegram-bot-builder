@@ -93,10 +93,8 @@ export function useSidebarTouch(): UseSidebarTouchResult {
    * @param x - Координата X
    * @param y - Координата Y
    */
-  const updateTouchPosition = useCallback((x: number, y: number) => {
+  const updateTouchPosition = useCallback((_x: number, _y: number) => {
     // Логика обновления позиции может быть добавлена здесь
-    // Сейчас используется только для отслеживания
-    console.log('Touch move:', { x, y });
   }, []);
 
   /**

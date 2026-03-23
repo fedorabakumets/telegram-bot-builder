@@ -52,20 +52,13 @@ export function createTouchHandlers({
    * @param component - Компонент для перетаскивания
    */
   const handleTouchStart = (e: React.TouchEvent, component: ComponentDefinition) => {
-    console.log('Touch start on component:', component.name);
     e.preventDefault();
     e.stopPropagation();
 
-    const touch = e.touches[0];
     const element = e.currentTarget as HTMLElement;
 
     startTouch(component, element);
     onComponentDrag(component);
-
-    console.log('Touch drag started for:', component.name, {
-      touchPos: { x: touch.clientX, y: touch.clientY },
-      elementRect: element.getBoundingClientRect()
-    });
   };
 
   /**
@@ -87,26 +80,17 @@ export function createTouchHandlers({
    */
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!touchState.isDragging || !touchState.touchedComponent) {
-      console.log('Touch end ignored - not dragging or no component');
       return;
     }
 
-    console.log('Touch end for component:', touchState.touchedComponent.name);
     const touch = e.changedTouches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
 
-    console.log('Touch end position:', { x: touch.clientX, y: touch.clientY });
-    console.log('Element at touch point:', element);
-
-    // Проверяем, попали ли мы на холст или в область холста
     const canvas = document.querySelector('[data-canvas-drop-zone]');
-    console.log('Canvas element found:', canvas);
 
     if (canvas && element) {
       const isInCanvas = canvas.contains(element) || element === canvas ||
         element.closest('[data-canvas-drop-zone]') === canvas;
-
-      console.log('Is in canvas:', isInCanvas);
 
       if (isInCanvas) {
         const canvasRect = canvas.getBoundingClientRect();

@@ -15,7 +15,6 @@ export const handleContainerDragLeave = (
   setDragOverProject: Dispatch<SetStateAction<number | null>>,
   setDragOverSheet: Dispatch<SetStateAction<string | null>>
 ) => {
-  console.log('🏁 Уход из контейнера проектов, сброс эффекта');
   setDragOverProject(null);
   setDragOverSheet(null);
 };
