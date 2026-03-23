@@ -9,7 +9,7 @@
  */
 
 import { useRef, useCallback } from 'react';
-import { ShieldCheck, Plus, X, Check } from 'lucide-react';
+import { ShieldCheck, Plus, X, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAdminIds } from './use-admin-ids';
@@ -30,7 +30,7 @@ function uid() {
  * Блок редактирования ID администраторов бота (динамический список)
  */
 export function BotAdminIds({ projectId }: BotAdminIdsProps) {
-  const { ids, setIds, isSaving, save } = useAdminIds(projectId);
+  const { ids, setIds, isSaving, isSaved, save } = useAdminIds(projectId);
 
   /**
    * Стабильные ключи для каждого элемента списка.
@@ -89,13 +89,20 @@ export function BotAdminIds({ projectId }: BotAdminIdsProps) {
         <Button
           size="icon"
           variant="ghost"
-          className="h-6 w-6 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
+          className={`h-6 w-6 hover:bg-purple-500/20 transition-colors ${
+            isSaved
+              ? 'text-green-500'
+              : 'text-purple-600 dark:text-purple-400'
+          }`}
           onClick={save}
           disabled={isSaving}
           aria-label="Сохранить список администраторов"
           title="Сохранить"
         >
-          <Check className="w-3.5 h-3.5" aria-hidden="true" />
+          {isSaving
+            ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+            : <Check className="w-3.5 h-3.5" aria-hidden="true" />
+          }
         </Button>
       </div>
 

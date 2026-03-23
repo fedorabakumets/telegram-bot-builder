@@ -21,6 +21,8 @@ interface UseAdminIdsResult {
   setIds: (ids: string[]) => void;
   /** Идёт ли сохранение */
   isSaving: boolean;
+  /** Только что сохранено (сбрасывается через 2 сек) */
+  isSaved: boolean;
   /** Сохранить список через API */
   save: () => Promise<void>;
 }
@@ -41,6 +43,7 @@ const joinIds = (ids: string[]): string =>
 export function useAdminIds(projectId: number): UseAdminIdsResult {
   const [ids, setIds] = useState<string[]>(['']);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -59,6 +62,16 @@ export function useAdminIds(projectId: number): UseAdminIdsResult {
         adminIds: joinIds(ids),
       });
       toast({ title: 'Сохранено', description: 'Список администраторов обновлён' });
+      setIsSaved(true);
+      // Re-fetch to confirm saved state
+      apiRequest('GET', `/api/projects/${projectId}/admin-ids`)
+        .then((data: { adminIds: string }) => {
+          const parsed = parseIds(data.adminIds ?? '');
+          setIds(parsed.length ? parsed : ['']);
+        })
+        .catch(() => {});
+      // Reset saved indicator after 2 seconds
+      setTimeout(() => setIsSaved(false), 2000);
     } catch {
       toast({ title: 'Ошибка', description: 'Не удалось сохранить ADMIN_IDS', variant: 'destructive' });
     } finally {
@@ -66,5 +79,5 @@ export function useAdminIds(projectId: number): UseAdminIdsResult {
     }
   };
 
-  return { ids, setIds, isSaving, save };
+  return { ids, setIds, isSaving, isSaved, save };
 }
