@@ -120,10 +120,27 @@ export async function createCompleteBotFiles(
   // 6. .env файл с токеном бота и ADMIN_IDS
   const { storage } = await import("../storages/storage");
   const tokenRecord = await storage.getBotToken(tokenId);
+
+  // Сохраняем существующий ADMIN_IDS если .env уже есть
+  let existingAdminIds = '123456789';
+  const existingEnvPath = join(botDir, '.env');
+  if (existsSync(existingEnvPath)) {
+    try {
+      const { readFileSync } = await import('node:fs');
+      const existingEnv = readFileSync(existingEnvPath, 'utf8');
+      const match = existingEnv.match(/^ADMIN_IDS=(.+)$/m);
+      if (match && match[1].trim()) {
+        existingAdminIds = match[1].trim();
+      }
+    } catch {
+      // ignore, use default
+    }
+  }
+
   const envContent = generateEnvFile(
     tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
-    "123456789", // ADMIN_IDS по умолчанию
-    projectId // ID проекта
+    existingAdminIds,
+    projectId
   );
   const envPath = join(botDir, '.env');
   writeFileSync(envPath, envContent, 'utf8');
