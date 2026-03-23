@@ -13,6 +13,8 @@ import { formatNodeDisplay } from '../../utils/node-formatters';
 interface ConditionBranchItemProps {
   /** Ветка условия */
   branch: ConditionBranch;
+  /** Имя переменной из родительского узла (для заголовка ветки) */
+  variable: string;
   /** Связанный message-узел для этой ветки (null для ветки else) */
   messageNode: Node | null;
   /** Обработчик изменения поля ветки */
@@ -37,11 +39,28 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
 const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals'];
 
 /**
+ * Генерирует человекочитаемый заголовок ветки условия.
+ * @param operator - оператор ветки
+ * @param variable - имя переменной (например "{{возраст}}" или "возраст")
+ * @param value - значение для сравнения (только для equals)
+ */
+function getBranchLabel(operator: ConditionOperator, variable: string, value: string): string {
+  const varName = variable.replace(/[{}]/g, '').trim() || 'переменная';
+  switch (operator) {
+    case 'filled':  return `${varName} введён`;
+    case 'empty':   return `${varName} не введён`;
+    case 'equals':  return `${varName} равен "${value || '...'}"`;
+    case 'else':    return 'иначе';
+    default:        return varName;
+  }
+}
+
+/**
  * Компонент отдельной ветки условия.
  * Для ветки else показывает статичный текст "Иначе".
  * Для остальных веток отображает выбор оператора, поле значения и текст сообщения.
  */
-export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
+export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
   const isElse = branch.operator === 'else';
   const needsValue = branch.operator === 'equals';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
@@ -57,9 +76,13 @@ export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, o
   return (
     <div className={`rounded-lg border p-3 space-y-2 ${isElse ? 'border-gray-200 bg-gray-50 dark:bg-slate-800/40 dark:border-slate-700' : 'border-violet-200 bg-violet-50/50 dark:bg-violet-900/10 dark:border-violet-800/40'}`}>
       {/* Заголовок ветки: статичный текст для else, иначе — выбор оператора */}
-      {isElse ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Иначе</p>
-      ) : (
+      {/* Читаемый заголовок ветки */}
+      <p className="text-xs font-semibold text-violet-700 dark:text-violet-300 uppercase tracking-wide">
+        {getBranchLabel(branch.operator, variable, branch.value)}
+      </p>
+
+      {/* Редактирование оператора — только для не-else веток */}
+      {!isElse && (
         <div className="flex items-center gap-2">
           <select
             value={branch.operator}
