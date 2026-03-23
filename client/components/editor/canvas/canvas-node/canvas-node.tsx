@@ -193,16 +193,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       const snappedX = Math.round(canvasX / gridSize) * gridSize;
       const snappedY = Math.round(canvasY / gridSize) * gridSize;
 
-      // Ограничиваем позицию в пределах canvas с отступами (в канвасных координатах)
-      const minX = 20;
-      const minY = 20;
-      const maxX = Math.max(minX, (canvas.clientWidth / zoomFactor) - 340);
-      const maxY = Math.max(minY, Math.min(snappedY, (canvas.clientHeight / zoomFactor) - 220));
-
-      const boundedX = Math.max(minX, Math.min(snappedX, maxX));
-      const boundedY = Math.max(minY, Math.min(snappedY, maxY));
-
-      onMove({ x: boundedX, y: boundedY });
+      onMove({ x: snappedX, y: snappedY });
     }
   };
 
@@ -304,15 +295,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     const snappedX = Math.round(canvasX / gridSize) * gridSize;
     const snappedY = Math.round(canvasY / gridSize) * gridSize;
 
-    const minX = 20;
-    const minY = 20;
-    const maxX = Math.max(minX, (canvas.clientWidth / zoomFactor) - 340);
-    const maxY = Math.max(minY, (canvas.clientHeight / zoomFactor) - 220);
-
-    const boundedX = Math.max(minX, Math.min(snappedX, maxX));
-    const boundedY = Math.max(minY, Math.min(snappedY, maxY));
-
-    onMove({ x: boundedX, y: boundedY });
+    onMove({ x: snappedX, y: snappedY });
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
