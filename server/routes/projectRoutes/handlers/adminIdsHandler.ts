@@ -72,8 +72,9 @@ export async function getAdminIdsHandler(req: Request, res: Response): Promise<v
     }
 
     const content = readFileSync(envPath, 'utf8');
-    const match = content.match(/^ADMIN_IDS=(.*)$/m);
-    res.json({ adminIds: match ? match[1].trim() : '' });
+    const match = content.match(/^ADMIN_IDS=([\s\S]*?)(?=\n[A-Z_]+=|\n#|\s*$)/m);
+    const raw = match ? match[1].replace(/\s+/g, ' ').trim() : '';
+    res.json({ adminIds: raw });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка чтения ADMIN_IDS', error: String(error) });
   }
@@ -96,7 +97,8 @@ export async function updateAdminIdsHandler(req: Request, res: Response): Promis
     let content = readFileSync(envPath, 'utf8');
 
     if (/^ADMIN_IDS=/m.test(content)) {
-      content = content.replace(/^ADMIN_IDS=.*$/m, `ADMIN_IDS=${adminIds}`);
+      // Replace ADMIN_IDS= and everything until the next env var line, comment, or blank line
+      content = content.replace(/^ADMIN_IDS=.*(\n[ \t]+.*)*$/m, `ADMIN_IDS=${adminIds}`);
     } else {
       content += `\nADMIN_IDS=${adminIds}`;
     }
