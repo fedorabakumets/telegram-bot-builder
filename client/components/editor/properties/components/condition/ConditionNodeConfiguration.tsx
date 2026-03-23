@@ -3,10 +3,11 @@
  * Содержит поле ввода переменной и список веток без возможности добавления новых.
  */
 import type { Node } from '@shared/schema';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { ConditionBranch } from '@shared/types/condition-node';
 import { ConditionBranchItem } from './ConditionBranchItem';
+import type { Variable } from '../../../inline-rich/types';
+import { VariableNameInput } from '../variables/variable-name-input';
 
 interface ConditionNodeConfigurationProps {
   /** Выбранный узел condition */
@@ -15,6 +16,8 @@ interface ConditionNodeConfigurationProps {
   allNodes: Node[];
   /** Все узлы из всех листов для выбора цели перехода */
   getAllNodesFromAllSheets: Array<{ node: Node; sheetName: string }>;
+  /** Доступные переменные для выбора */
+  textVariables: Variable[];
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
 }
@@ -23,7 +26,7 @@ interface ConditionNodeConfigurationProps {
  * Компонент конфигурации узла условия.
  * Отображает поле переменной и список веток без кнопки добавления.
  */
-export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodesFromAllSheets, onNodeUpdate }: ConditionNodeConfigurationProps) {
+export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodesFromAllSheets, textVariables, onNodeUpdate }: ConditionNodeConfigurationProps) {
   const data = selectedNode.data as any;
   const variable: string = data?.variable || '';
   const branches: ConditionBranch[] = data?.branches || [];
@@ -52,11 +55,11 @@ export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodes
       {/* Поле ввода переменной */}
       <div className="space-y-2">
         <Label>Переменная</Label>
-        <Input
+        <VariableNameInput
           value={variable}
-          onChange={e => onNodeUpdate(selectedNode.id, { variable: e.target.value })}
+          availableVariables={textVariables}
+          onChange={(val) => onNodeUpdate(selectedNode.id, { variable: val })}
           placeholder="{{name}}, {{возраст}}, {{город}}"
-          className="font-mono"
         />
         <p className="text-xs text-gray-400 dark:text-gray-500">
           Укажите переменную, которую хотите проверить
