@@ -396,3 +396,159 @@ export const nodesWithConditionMixedSystem: Node[] = [
   makeNode('msg_filled', 'message', {}),
   makeNode('msg_other', 'message', {}),
 ];
+
+// ─── Фикстуры для is_admin, is_premium, is_bot ───────────────────────────────
+
+/**
+ * Узел условия только с веткой is_admin (без переменной)
+ */
+export const validParamsIsAdmin: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_admin',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_admin', value: '', target: 'msg_admin' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Узел условия только с веткой is_premium (без переменной)
+ */
+export const validParamsIsPremium: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_premium',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_premium', value: '', target: 'msg_premium' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Узел условия только с веткой is_bot (без переменной)
+ */
+export const validParamsIsBot: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_bot',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_bot', value: '', target: 'msg_bot' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Узел условия с is_admin + is_premium + is_bot + else
+ */
+export const validParamsUserFlagsAll: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_user_flags',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_admin', value: '', target: 'msg_admin' },
+        { id: 'b2', operator: 'is_premium', value: '', target: 'msg_premium' },
+        { id: 'b3', operator: 'is_bot', value: '', target: 'msg_bot' },
+        { id: 'b4', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Смешанный: is_admin + equals (переменная задана)
+ */
+export const validParamsMixedAdminAndVar: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_mixed_admin',
+      variable: 'user_role',
+      branches: [
+        { id: 'b1', operator: 'is_admin', value: '', target: 'msg_admin' },
+        { id: 'b2', operator: 'equals', value: 'vip', target: 'msg_vip' },
+        { id: 'b3', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/** Node-фикстура: только is_admin без переменной */
+export const nodesWithConditionIsAdmin: Node[] = [
+  makeNode('condition_check_admin', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Администратор', operator: 'is_admin', value: '', target: 'msg_admin' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_admin', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];
+
+/** Node-фикстура: только is_premium без переменной */
+export const nodesWithConditionIsPremium: Node[] = [
+  makeNode('condition_check_premium', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Premium', operator: 'is_premium', value: '', target: 'msg_premium' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_premium', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];
+
+/** Node-фикстура: только is_bot без переменной */
+export const nodesWithConditionIsBot: Node[] = [
+  makeNode('condition_check_bot', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Бот', operator: 'is_bot', value: '', target: 'msg_bot' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_bot', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];
+
+/** Node-фикстура: is_admin + is_premium + is_bot + else */
+export const nodesWithConditionUserFlagsAll: Node[] = [
+  makeNode('condition_check_user_flags', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Администратор', operator: 'is_admin', value: '', target: 'msg_admin' },
+      { id: 'b2', label: 'Premium', operator: 'is_premium', value: '', target: 'msg_premium' },
+      { id: 'b3', label: 'Бот', operator: 'is_bot', value: '', target: 'msg_bot' },
+      { id: 'b4', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_admin', 'message', {}),
+  makeNode('msg_premium', 'message', {}),
+  makeNode('msg_bot', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];
+
+/** Node-фикстура: is_admin + filled + else (смешанный) */
+export const nodesWithConditionMixedAdmin: Node[] = [
+  makeNode('condition_mixed_admin', 'condition', {
+    variable: 'user_role',
+    branches: [
+      { id: 'b1', label: 'Администратор', operator: 'is_admin', value: '', target: 'msg_admin' },
+      { id: 'b2', label: 'Заполнено', operator: 'filled', value: '', target: 'msg_filled' },
+      { id: 'b3', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_admin', 'message', {}),
+  makeNode('msg_filled', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];

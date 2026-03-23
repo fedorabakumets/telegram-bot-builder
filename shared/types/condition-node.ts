@@ -15,7 +15,7 @@
  * - "contains" — переменная содержит указанную подстроку
  * - "else"    — во всех остальных случаях (ветка по умолчанию)
  */
-export type ConditionOperator = 'filled' | 'empty' | 'equals' | 'contains' | 'greater_than' | 'less_than' | 'between' | 'is_private' | 'is_group' | 'is_channel' | 'else';
+export type ConditionOperator = 'filled' | 'empty' | 'equals' | 'contains' | 'greater_than' | 'less_than' | 'between' | 'is_private' | 'is_group' | 'is_channel' | 'is_admin' | 'is_premium' | 'is_bot' | 'else';
 
 /**
  * Одна ветка узла условия

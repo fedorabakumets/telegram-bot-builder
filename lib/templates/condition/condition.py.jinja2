@@ -5,7 +5,7 @@
   @param {array} conditionEntries - Массив объектов ConditionEntry
 
   Порядок веток в сгенерированном коде:
-  0. Системные операторы (is_private, is_group, is_channel)
+  0. Системные операторы (is_private, is_group, is_channel, is_admin, is_premium, is_bot)
   1. Числовые операторы (greater_than, less_than, between) — всегда первыми среди переменных
   2. Строковые операторы (equals, contains, filled, empty)
   3. else — всегда последней
@@ -35,16 +35,16 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
     if True:
         pass
 {% endif %}
-{#- Проход 0: системные операторы (is_private, is_group, is_channel) #}
+{#- Проход 0: системные операторы (is_private, is_group, is_channel, is_admin, is_premium, is_bot) #}
 {%- for branch in entry.branches %}
-{%- if branch.operator == 'is_private' or branch.operator == 'is_group' or branch.operator == 'is_channel' %}
+{%- if branch.operator == 'is_private' or branch.operator == 'is_group' or branch.operator == 'is_channel' or branch.operator == 'is_admin' or branch.operator == 'is_premium' or branch.operator == 'is_bot' %}
 {%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
 {%- if branch.isFirstSystem %}
-    if {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% endif %}:
+    if {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% elif branch.operator == 'is_admin' %}callback_query.from_user.id in ADMIN_IDS{% elif branch.operator == 'is_premium' %}getattr(callback_query.from_user, 'is_premium', False){% elif branch.operator == 'is_bot' %}getattr(callback_query.from_user, 'is_bot', False){% endif %}:
         # Ветка: {{ branch.operator }}
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
 {%- else %}
-    elif {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% endif %}:
+    elif {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% elif branch.operator == 'is_admin' %}callback_query.from_user.id in ADMIN_IDS{% elif branch.operator == 'is_premium' %}getattr(callback_query.from_user, 'is_premium', False){% elif branch.operator == 'is_bot' %}getattr(callback_query.from_user, 'is_bot', False){% endif %}:
         # Ветка: {{ branch.operator }}
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
 {%- endif %}

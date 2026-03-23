@@ -8,7 +8,7 @@ import type { ConditionEntry, ConditionTemplateParams } from './condition.params
 import { conditionParamsSchema } from './condition.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
-const SYSTEM_OPS = new Set(['is_private', 'is_group', 'is_channel']);
+const SYSTEM_OPS = new Set(['is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot']);
 const NUMERIC_OPS = new Set(['greater_than', 'less_than', 'between']);
 const STRING_OPS = new Set(['filled', 'empty', 'equals', 'contains']);
 
@@ -31,7 +31,7 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     const branches: any[] = (node.data as any).branches ?? [];
     if (branches.length === 0) continue;
 
-    const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'is_private', 'is_group', 'is_channel', 'else']);
+    const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'else']);
     const filteredBranches = branches.filter(b => validOperators.has(b.operator));
 
     const hasSystemBranch = filteredBranches.some(b => SYSTEM_OPS.has(b.operator));

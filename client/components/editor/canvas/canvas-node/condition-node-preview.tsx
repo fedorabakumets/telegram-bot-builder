@@ -51,6 +51,9 @@ function getBranchOperatorLabel(branch: ConditionBranch): string {
     case 'is_private':   return 'приватный чат';
     case 'is_group':     return 'групповой чат';
     case 'is_channel':   return 'канал';
+    case 'is_admin':     return 'администратор бота';
+    case 'is_premium':   return 'Telegram Premium';
+    case 'is_bot':       return 'бот';
     case 'else':         return '';
     default:             return '';
   }

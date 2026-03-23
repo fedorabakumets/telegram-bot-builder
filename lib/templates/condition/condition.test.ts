@@ -414,3 +414,153 @@ describe('conditionParamsSchema — системные операторы', () =
     expect(conditionParamsSchema.safeParse(validParamsMixedSystemAndVar).success).toBe(true);
   });
 });
+
+// ─── Импорт фикстур для is_admin, is_premium, is_bot ─────────────────────────
+import {
+  validParamsIsAdmin,
+  validParamsIsPremium,
+  validParamsIsBot,
+  validParamsUserFlagsAll,
+  validParamsMixedAdminAndVar,
+  nodesWithConditionIsAdmin,
+  nodesWithConditionIsPremium,
+  nodesWithConditionIsBot,
+  nodesWithConditionUserFlagsAll,
+  nodesWithConditionMixedAdmin,
+} from './condition.fixture';
+
+// ─── generateConditionHandlers() — is_admin, is_premium, is_bot ──────────────
+
+describe('generateConditionHandlers() — is_admin / is_premium / is_bot', () => {
+  it('is_admin без переменной — генерирует async def без _all_vars', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsAdmin);
+    expect(r).toContain('async def handle_callback_condition_check_admin');
+    expect(r).not.toContain('_all_vars');
+    expect(r).not.toContain('init_all_user_vars');
+  });
+
+  it('is_admin — генерирует проверку callback_query.from_user.id in ADMIN_IDS', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsAdmin);
+    expect(r).toContain('callback_query.from_user.id in ADMIN_IDS');
+  });
+
+  it('is_premium — генерирует getattr(callback_query.from_user, \'is_premium\', False)', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsPremium);
+    expect(r).toContain("getattr(callback_query.from_user, 'is_premium', False)");
+  });
+
+  it('is_bot — генерирует getattr(callback_query.from_user, \'is_bot\', False)', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsBot);
+    expect(r).toContain("getattr(callback_query.from_user, 'is_bot', False)");
+  });
+
+  it('is_admin + else — корректный if/else', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsAdmin);
+    expect(r).toContain('if callback_query.from_user.id in ADMIN_IDS');
+    expect(r).toContain('else:');
+    const ifIdx = r.indexOf('if callback_query.from_user.id in ADMIN_IDS');
+    const elseIdx = r.indexOf('else:');
+    expect(ifIdx).toBeLessThan(elseIdx);
+  });
+
+  it('is_premium + else — корректный if/else', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsPremium);
+    expect(r).toContain("if getattr(callback_query.from_user, 'is_premium', False)");
+    expect(r).toContain('else:');
+  });
+
+  it('is_bot + else — корректный if/else', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsBot);
+    expect(r).toContain("if getattr(callback_query.from_user, 'is_bot', False)");
+    expect(r).toContain('else:');
+  });
+
+  it('is_admin + is_premium + is_bot + else — корректный if/elif/elif/else', () => {
+    const r = generateConditionHandlers(nodesWithConditionUserFlagsAll);
+    expect(r).toContain('if callback_query.from_user.id in ADMIN_IDS');
+    expect(r).toContain("elif getattr(callback_query.from_user, 'is_premium', False)");
+    expect(r).toContain("elif getattr(callback_query.from_user, 'is_bot', False)");
+    expect(r).toContain('else:');
+  });
+
+  it('is_admin + is_premium + is_bot — первая if, остальные elif', () => {
+    const r = generateConditionHandlers(validParamsUserFlagsAll);
+    const ifIdx = r.indexOf('if callback_query.from_user.id in ADMIN_IDS');
+    const elifPremiumIdx = r.indexOf("elif getattr(callback_query.from_user, 'is_premium', False)");
+    const elifBotIdx = r.indexOf("elif getattr(callback_query.from_user, 'is_bot', False)");
+    expect(ifIdx).toBeGreaterThanOrEqual(0);
+    expect(elifPremiumIdx).toBeGreaterThan(ifIdx);
+    expect(elifBotIdx).toBeGreaterThan(elifPremiumIdx);
+  });
+
+  it('is_admin с target — генерирует await handle_callback_', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsAdmin);
+    expect(r).toContain('await handle_callback_msg_admin(callback_query)');
+  });
+
+  it('is_admin без target — генерирует pass', () => {
+    const params = {
+      entries: [{
+        nodeId: 'cond_no_target',
+        variable: '',
+        branches: [{ id: 'b1', operator: 'is_admin' as const, value: '' }],
+      }],
+    };
+    const r = generateConditionHandlers(params);
+    expect(r).toContain('pass');
+  });
+
+  it('смешанный is_admin + equals — оба прохода генерируются', () => {
+    const r = generateConditionHandlers(validParamsMixedAdminAndVar);
+    expect(r).toContain('callback_query.from_user.id in ADMIN_IDS');
+    expect(r).toContain('val == "vip"');
+    expect(r).toContain('_all_vars');
+  });
+
+  it('смешанный is_admin + filled + else — все ветки в коде', () => {
+    const r = generateConditionHandlers(nodesWithConditionMixedAdmin);
+    expect(r).toContain('callback_query.from_user.id in ADMIN_IDS');
+    expect(r).toContain('val');
+    expect(r).toContain('else:');
+  });
+
+  it('только is_admin — нет _all_vars в коде', () => {
+    const r = generateConditionHandlers(validParamsIsAdmin);
+    expect(r).not.toContain('_all_vars');
+    expect(r).not.toContain('init_all_user_vars');
+  });
+
+  it('только is_premium — нет _all_vars в коде', () => {
+    const r = generateConditionHandlers(validParamsIsPremium);
+    expect(r).not.toContain('_all_vars');
+  });
+
+  it('только is_bot — нет _all_vars в коде', () => {
+    const r = generateConditionHandlers(validParamsIsBot);
+    expect(r).not.toContain('_all_vars');
+  });
+});
+
+// ─── conditionParamsSchema — is_admin, is_premium, is_bot ────────────────────
+
+describe('conditionParamsSchema — is_admin / is_premium / is_bot', () => {
+  it('принимает оператор is_admin', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsAdmin).success).toBe(true);
+  });
+
+  it('принимает оператор is_premium', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsPremium).success).toBe(true);
+  });
+
+  it('принимает оператор is_bot', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsBot).success).toBe(true);
+  });
+
+  it('принимает все три флага вместе', () => {
+    expect(conditionParamsSchema.safeParse(validParamsUserFlagsAll).success).toBe(true);
+  });
+
+  it('принимает смешанные is_admin + переменные операторы', () => {
+    expect(conditionParamsSchema.safeParse(validParamsMixedAdminAndVar).success).toBe(true);
+  });
+});

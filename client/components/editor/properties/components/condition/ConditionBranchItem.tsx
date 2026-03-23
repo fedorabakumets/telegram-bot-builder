@@ -41,17 +41,20 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
   'is_private': 'Если приватный чат',
   'is_group': 'Если групповой чат',
   'is_channel': 'Если канал',
+  'is_admin': 'Если пользователь — администратор бота',
+  'is_premium': 'Если пользователь — Telegram Premium',
+  'is_bot': 'Если пользователь — бот',
   'else': 'Во всех остальных случаях',
 };
 
 /** Операторы, доступные для выбора пользователем */
 const SELECTABLE_OPERATORS: ConditionOperator[] = [
   'filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between',
-  'is_private', 'is_group', 'is_channel',
+  'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot',
 ];
 
 /** Системные операторы, не требующие переменной и значения */
-const SYSTEM_OPERATORS = new Set<ConditionOperator>(['is_private', 'is_group', 'is_channel']);
+const SYSTEM_OPERATORS = new Set<ConditionOperator>(['is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot']);
 
 /** Генерирует текст выбранного оператора с подстановкой имени переменной */
 function getSelectedLabel(operator: ConditionOperator, variable: string, value: string, value2?: string): string {
@@ -67,6 +70,9 @@ function getSelectedLabel(operator: ConditionOperator, variable: string, value: 
     case 'is_private':   return 'Если приватный чат';
     case 'is_group':     return 'Если групповой чат';
     case 'is_channel':   return 'Если канал';
+    case 'is_admin':     return 'Если пользователь — администратор бота';
+    case 'is_premium':   return 'Если пользователь — Telegram Premium';
+    case 'is_bot':       return 'Если пользователь — бот';
     default:             return OPERATOR_LABELS[operator];
   }
 }
