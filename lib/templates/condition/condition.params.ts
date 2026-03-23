@@ -7,8 +7,8 @@
 export interface ConditionBranchEntry {
   /** Уникальный идентификатор ветки */
   id: string;
-  /** Оператор: "filled" | "empty" | "equals" | "contains" | "greater_than" | "less_than" | "between" | "else" */
-  operator: 'filled' | 'empty' | 'equals' | 'contains' | 'greater_than' | 'less_than' | 'between' | 'else';
+  /** Оператор: "filled" | "empty" | "equals" | "contains" | "greater_than" | "less_than" | "between" | "is_private" | "is_group" | "is_channel" | "else" */
+  operator: 'filled' | 'empty' | 'equals' | 'contains' | 'greater_than' | 'less_than' | 'between' | 'is_private' | 'is_group' | 'is_channel' | 'else';
   /** Значение для сравнения (только для оператора "equals") */
   value: string;
   /** Второе значение для оператора "between" (диапазон) */

@@ -48,6 +48,9 @@ function getBranchOperatorLabel(branch: ConditionBranch): string {
     case 'greater_than': return `> ${branch.value}`;
     case 'less_than':    return `< ${branch.value}`;
     case 'between':      return `${branch.value} — ${branch.value2 || '...'}`;
+    case 'is_private':   return 'приватный чат';
+    case 'is_group':     return 'групповой чат';
+    case 'is_channel':   return 'канал';
     case 'else':         return '';
     default:             return '';
   }

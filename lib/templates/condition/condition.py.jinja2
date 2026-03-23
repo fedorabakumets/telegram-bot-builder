@@ -5,7 +5,8 @@
   @param {array} conditionEntries - Массив объектов ConditionEntry
 
   Порядок веток в сгенерированном коде:
-  1. Числовые операторы (greater_than, less_than, between) — всегда первыми
+  0. Системные операторы (is_private, is_group, is_channel)
+  1. Числовые операторы (greater_than, less_than, between) — всегда первыми среди переменных
   2. Строковые операторы (equals, contains, filled, empty)
   3. else — всегда последней
 #}
@@ -14,11 +15,16 @@
 {% for entry in conditionEntries %}
 {%- set sanitized_node_id = entry.nodeId | safe_name %}
 async def handle_callback_{{ sanitized_node_id }}(callback_query):
-    # Узел условия {{ entry.nodeId }}, переменная: {{ entry.variable }}
+    # Узел условия {{ entry.nodeId }}{% if entry.variable %}, переменная: {{ entry.variable }}{% endif %}
+
     user_id = callback_query.from_user.id
+{%- if not entry.skipVarLookup %}
     _all_vars = await init_all_user_vars(user_id)
     val = _all_vars.get("{{ entry.variable }}", "")
     logging.info(f"Узел условия {{ entry.nodeId }}: переменная '{{ entry.variable }}' = {val}")
+{%- else %}
+    logging.info(f"Узел условия {{ entry.nodeId }}: проверка типа чата")
+{%- endif %}
 {%- if entry.hasNumericBranch %}
     try:
         _num_val = float(val)
@@ -29,6 +35,21 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
     if True:
         pass
 {% endif %}
+{#- Проход 0: системные операторы (is_private, is_group, is_channel) #}
+{%- for branch in entry.branches %}
+{%- if branch.operator == 'is_private' or branch.operator == 'is_group' or branch.operator == 'is_channel' %}
+{%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
+{%- if branch.isFirstSystem %}
+    if {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% endif %}:
+        # Ветка: {{ branch.operator }}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- else %}
+    elif {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% endif %}:
+        # Ветка: {{ branch.operator }}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- endif %}
+{%- endif %}
+{%- endfor %}
 {#- Проход 1: числовые операторы (greater_than, less_than, between) #}
 {%- for branch in entry.branches %}
 {%- if branch.operator == 'greater_than' or branch.operator == 'less_than' or branch.operator == 'between' %}
@@ -48,7 +69,7 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
 {%- for branch in entry.branches %}
 {%- if branch.operator == 'filled' or branch.operator == 'empty' or branch.operator == 'equals' or branch.operator == 'contains' %}
 {%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
-{%- if branch.isFirstString and not entry.hasNumericBranch %}
+{%- if branch.isFirstString and not entry.hasNumericBranch and not entry.hasSystemBranch %}
     if {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}val == "{{ branch.value }}"{% elif branch.operator == 'contains' %}"{{ branch.value }}" in val{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} == "{{ branch.value }}"{% endif %}
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}

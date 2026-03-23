@@ -38,11 +38,20 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
   'greater_than': 'Если переменная больше',
   'less_than': 'Если переменная меньше',
   'between': 'Если переменная в диапазоне',
+  'is_private': 'Если приватный чат',
+  'is_group': 'Если групповой чат',
+  'is_channel': 'Если канал',
   'else': 'Во всех остальных случаях',
 };
 
 /** Операторы, доступные для выбора пользователем */
-const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between'];
+const SELECTABLE_OPERATORS: ConditionOperator[] = [
+  'filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between',
+  'is_private', 'is_group', 'is_channel',
+];
+
+/** Системные операторы, не требующие переменной и значения */
+const SYSTEM_OPERATORS = new Set<ConditionOperator>(['is_private', 'is_group', 'is_channel']);
 
 /** Генерирует текст выбранного оператора с подстановкой имени переменной */
 function getSelectedLabel(operator: ConditionOperator, variable: string, value: string, value2?: string): string {
@@ -55,6 +64,9 @@ function getSelectedLabel(operator: ConditionOperator, variable: string, value: 
     case 'greater_than': return `Если переменная "${varName}" > ${value || '...'}`;
     case 'less_than':    return `Если переменная "${varName}" < ${value || '...'}`;
     case 'between':      return `Если переменная "${varName}" от ${value || '...'} до ${value2 || '...'}`;
+    case 'is_private':   return 'Если приватный чат';
+    case 'is_group':     return 'Если групповой чат';
+    case 'is_channel':   return 'Если канал';
     default:             return OPERATOR_LABELS[operator];
   }
 }
@@ -66,7 +78,8 @@ function getSelectedLabel(operator: ConditionOperator, variable: string, value: 
  */
 export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
   const isElse = branch.operator === 'else';
-  const needsValue = branch.operator === 'equals' || branch.operator === 'contains' || branch.operator === 'greater_than' || branch.operator === 'less_than' || branch.operator === 'between';
+  const isSystem = SYSTEM_OPERATORS.has(branch.operator);
+  const needsValue = !isSystem && (branch.operator === 'equals' || branch.operator === 'contains' || branch.operator === 'greater_than' || branch.operator === 'less_than' || branch.operator === 'between');
   const isBetween = branch.operator === 'between';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
   const EXCLUDED_TYPES = new Set(['command_trigger', 'text_trigger', 'condition']);

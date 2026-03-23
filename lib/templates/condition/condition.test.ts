@@ -270,3 +270,147 @@ describe('conditionParamsSchema', () => {
     expect(conditionParamsSchema.safeParse(bad).success).toBe(false);
   });
 });
+
+// ─── Импорт фикстур для системных операторов ─────────────────────────────────
+import {
+  validParamsIsPrivate,
+  validParamsSystemMultiple,
+  validParamsIsChannel,
+  validParamsIsGroup,
+  validParamsMixedSystemAndVar,
+  nodesWithConditionIsPrivate,
+  nodesWithConditionSystemMultiple,
+  nodesWithConditionIsChannel,
+  nodesWithConditionMixedSystem,
+} from './condition.fixture';
+
+// ─── generateConditionHandlers() — системные операторы ───────────────────────
+
+describe('generateConditionHandlers() — системные операторы', () => {
+  it('is_private без переменной — генерирует async def без _all_vars', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsPrivate);
+    expect(r).toContain('async def handle_callback_condition_check_private');
+    expect(r).not.toContain('_all_vars');
+    expect(r).not.toContain('init_all_user_vars');
+  });
+
+  it('is_private — генерирует проверку chat.type == private', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsPrivate);
+    expect(r).toContain("callback_query.message.chat.type == 'private'");
+  });
+
+  it('is_group — генерирует проверку in (group, supergroup)', () => {
+    const r = generateConditionHandlers(validParamsIsGroup);
+    expect(r).toContain("callback_query.message.chat.type in ('group', 'supergroup')");
+  });
+
+  it('is_channel — генерирует проверку chat.type == channel', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsChannel);
+    expect(r).toContain("callback_query.message.chat.type == 'channel'");
+  });
+
+  it('is_private + is_group + else — корректный if/elif/else', () => {
+    const r = generateConditionHandlers(nodesWithConditionSystemMultiple);
+    expect(r).toContain("if callback_query.message.chat.type == 'private'");
+    expect(r).toContain("elif callback_query.message.chat.type in ('group', 'supergroup')");
+    expect(r).toContain('else:');
+  });
+
+  it('несколько системных веток — первая if, остальные elif', () => {
+    const r = generateConditionHandlers(validParamsSystemMultiple);
+    const ifIdx = r.indexOf("if callback_query.message.chat.type == 'private'");
+    const elifIdx = r.indexOf("elif callback_query.message.chat.type in ('group', 'supergroup')");
+    expect(ifIdx).toBeGreaterThanOrEqual(0);
+    expect(elifIdx).toBeGreaterThan(ifIdx);
+  });
+
+  it('системная ветка с target — генерирует await handle_callback_', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsPrivate);
+    expect(r).toContain('await handle_callback_msg_private(callback_query)');
+  });
+
+  it('системная ветка без target — генерирует pass', () => {
+    const r = generateConditionHandlers(validParamsIsPrivate);
+    // validParamsIsPrivate has target, so test without target
+    const params = {
+      entries: [{
+        nodeId: 'cond_no_target',
+        variable: '',
+        branches: [{ id: 'b1', operator: 'is_private' as const, value: '' }],
+      }],
+    };
+    const r2 = generateConditionHandlers(params);
+    expect(r2).toContain('pass');
+  });
+
+  it('смешанный is_private + equals — оба прохода генерируются', () => {
+    const r = generateConditionHandlers(validParamsMixedSystemAndVar);
+    expect(r).toContain("callback_query.message.chat.type == 'private'");
+    expect(r).toContain('val == "admin"');
+    expect(r).toContain('_all_vars');
+  });
+
+  it('смешанный is_private + filled + else — все ветки в коде', () => {
+    const r = generateConditionHandlers(nodesWithConditionMixedSystem);
+    expect(r).toContain("callback_query.message.chat.type == 'private'");
+    expect(r).toContain('val');
+    expect(r).toContain('else:');
+  });
+
+  it('только системные ветки — нет _all_vars в коде', () => {
+    const r = generateConditionHandlers(validParamsSystemMultiple);
+    expect(r).not.toContain('_all_vars');
+    expect(r).not.toContain('init_all_user_vars');
+  });
+
+  it('узел без переменной и без системных веток — пропускается', () => {
+    const params = {
+      entries: [{
+        nodeId: 'cond_skip',
+        variable: '',
+        branches: [{ id: 'b1', operator: 'filled' as const, value: '' }],
+      }],
+    };
+    // collectConditionEntries should skip this
+    const r = generateConditionHandlers(params);
+    // When passed as params directly, schema validation will fail on empty variable for non-system
+    // But via nodes it should be skipped
+    const nodes = [{
+      id: 'cond_skip',
+      type: 'condition',
+      position: { x: 0, y: 0 },
+      data: { variable: '', branches: [{ id: 'b1', operator: 'filled', value: '' }] },
+    }] as any;
+    const r2 = generateConditionHandlers(nodes);
+    expect(r2).not.toContain('handle_callback_cond_skip');
+  });
+
+  it('else после системных веток — корректный else:', () => {
+    const r = generateConditionHandlers(validParamsIsChannel);
+    expect(r).toContain("callback_query.message.chat.type == 'channel'");
+    expect(r).toContain('else:');
+    const channelIdx = r.indexOf("callback_query.message.chat.type == 'channel'");
+    const elseIdx = r.indexOf('else:');
+    expect(channelIdx).toBeLessThan(elseIdx);
+  });
+});
+
+// ─── conditionParamsSchema — системные операторы ─────────────────────────────
+
+describe('conditionParamsSchema — системные операторы', () => {
+  it('принимает оператор is_private', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsPrivate).success).toBe(true);
+  });
+
+  it('принимает оператор is_group', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsGroup).success).toBe(true);
+  });
+
+  it('принимает оператор is_channel', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsChannel).success).toBe(true);
+  });
+
+  it('принимает смешанные системные + переменные операторы', () => {
+    expect(conditionParamsSchema.safeParse(validParamsMixedSystemAndVar).success).toBe(true);
+  });
+});

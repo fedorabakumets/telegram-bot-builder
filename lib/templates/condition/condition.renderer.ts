@@ -8,10 +8,14 @@ import type { ConditionEntry, ConditionTemplateParams } from './condition.params
 import { conditionParamsSchema } from './condition.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
+const SYSTEM_OPS = new Set(['is_private', 'is_group', 'is_channel']);
+const NUMERIC_OPS = new Set(['greater_than', 'less_than', 'between']);
+const STRING_OPS = new Set(['filled', 'empty', 'equals', 'contains']);
+
 /**
  * Собирает ConditionEntry[] из массива узлов графа.
  * Находит все узлы с type === 'condition', у которых есть variable
- * и хотя бы одна ветка.
+ * или хотя бы одна системная ветка (is_private, is_group, is_channel).
  *
  * @param nodes - Массив узлов холста
  * @returns Массив ConditionEntry для генерации обработчиков
@@ -24,47 +28,51 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     if (node.type !== 'condition') continue;
 
     const variable: string = (node.data as any).variable ?? '';
-    if (!variable.trim()) continue;
-
     const branches: any[] = (node.data as any).branches ?? [];
     if (branches.length === 0) continue;
 
-    const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'else']);
-    const numericOps = new Set(['greater_than', 'less_than', 'between']);
-    const stringOps = new Set(['filled', 'empty', 'equals', 'contains']);
-    // Определяем первые ветки в каждой группе для корректного if/elif
+    const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'is_private', 'is_group', 'is_channel', 'else']);
+    const filteredBranches = branches.filter(b => validOperators.has(b.operator));
+
+    const hasSystemBranch = filteredBranches.some(b => SYSTEM_OPS.has(b.operator));
+
+    // Skip if no variable AND no system branches
+    if (!variable.trim() && !hasSystemBranch) continue;
+
     let firstNumericSeen = false;
     let firstStringSeen = false;
-    const mappedBranches = branches
-      .filter(b => validOperators.has(b.operator))
-      .map(b => {
-        const isFirstNumeric = numericOps.has(b.operator) && !firstNumericSeen;
-        if (isFirstNumeric) firstNumericSeen = true;
-        const isFirstString = stringOps.has(b.operator) && !firstStringSeen;
-        if (isFirstString) firstStringSeen = true;
-        const sanitizeValue = (v: string) => (v ?? '')
-          .replace(/\\/g, '\\\\')
-          .replace(/"/g, '\\"')
-          .replace(/\n/g, '\\n')
-          .replace(/\r/g, '');
-        return {
-          id: b.id ?? '',
-          operator: b.operator,
-          value: sanitizeValue(b.value ?? ''),
-          value2: sanitizeValue(b.value2 ?? ''),
-          target: b.target,
-          isFirstNumeric,
-          isFirstString,
-          // legacy: для обратной совместимости с тестами
-          isFirstConditional: isFirstNumeric || isFirstString,
-        };
-      });
+    let firstSystemSeen = false;
+
+    const mappedBranches = filteredBranches.map(b => {
+      const isFirstNumeric = NUMERIC_OPS.has(b.operator) && !firstNumericSeen;
+      if (isFirstNumeric) firstNumericSeen = true;
+      const isFirstString = STRING_OPS.has(b.operator) && !firstStringSeen;
+      if (isFirstString) firstStringSeen = true;
+      const isFirstSystem = SYSTEM_OPS.has(b.operator) && !firstSystemSeen;
+      if (isFirstSystem) firstSystemSeen = true;
+
+      const sanitizeValue = (v: string) => (v ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '');
+      return {
+        id: b.id ?? '',
+        operator: b.operator,
+        value: sanitizeValue(b.value ?? ''),
+        value2: sanitizeValue(b.value2 ?? ''),
+        target: b.target,
+        isFirstNumeric,
+        isFirstString,
+        isFirstSystem,
+        isFirstConditional: isFirstNumeric || isFirstString,
+      };
+    });
 
     if (mappedBranches.length === 0) continue;
 
-    const hasNumericBranch = mappedBranches.some(b =>
-      b.operator === 'greater_than' || b.operator === 'less_than' || b.operator === 'between'
-    );
+    const hasNumericBranch = mappedBranches.some(b => NUMERIC_OPS.has(b.operator));
+    const skipVarLookup = hasSystemBranch && !variable.trim();
 
     entries.push({
       nodeId: node.id,
@@ -72,6 +80,8 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
       branches: mappedBranches,
       hasConditionalBranch: mappedBranches.some(b => b.operator !== 'else'),
       hasNumericBranch,
+      hasSystemBranch,
+      skipVarLookup,
     } as any);
   }
 
@@ -79,34 +89,41 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
 }
 
 /**
- * Обогащает ветки entry флагами isFirstConditional, hasConditionalBranch, hasNumericBranch.
+ * Обогащает ветки entry флагами isFirstConditional, hasConditionalBranch, hasNumericBranch, hasSystemBranch.
  */
 function enrichEntries(entries: ConditionEntry[]): any[] {
-  const numericOps = new Set(['greater_than', 'less_than', 'between']);
-  const stringOps = new Set(['filled', 'empty', 'equals', 'contains']);
   return entries.map(entry => {
     let firstNumericSeen = false;
     let firstStringSeen = false;
+    let firstSystemSeen = false;
+
     const mappedBranches = (entry.branches as any[]).map(b => {
-      const isFirstNumeric = numericOps.has(b.operator) && !firstNumericSeen;
+      const isFirstNumeric = NUMERIC_OPS.has(b.operator) && !firstNumericSeen;
       if (isFirstNumeric) firstNumericSeen = true;
-      const isFirstString = stringOps.has(b.operator) && !firstStringSeen;
+      const isFirstString = STRING_OPS.has(b.operator) && !firstStringSeen;
       if (isFirstString) firstStringSeen = true;
+      const isFirstSystem = SYSTEM_OPS.has(b.operator) && !firstSystemSeen;
+      if (isFirstSystem) firstSystemSeen = true;
       return {
         ...b,
         isFirstNumeric,
         isFirstString,
+        isFirstSystem,
         isFirstConditional: isFirstNumeric || isFirstString,
       };
     });
-    const hasNumericBranch = mappedBranches.some(b =>
-      b.operator === 'greater_than' || b.operator === 'less_than' || b.operator === 'between'
-    );
+
+    const hasNumericBranch = mappedBranches.some(b => NUMERIC_OPS.has(b.operator));
+    const hasSystemBranch = mappedBranches.some(b => SYSTEM_OPS.has(b.operator));
+    const skipVarLookup = hasSystemBranch && !entry.variable.trim();
+
     return {
       ...entry,
       branches: mappedBranches,
       hasConditionalBranch: mappedBranches.some(b => b.operator !== 'else'),
       hasNumericBranch,
+      hasSystemBranch,
+      skipVarLookup,
     };
   });
 }
@@ -123,7 +140,6 @@ export function generateConditionHandlers(input: Node[] | ConditionTemplateParam
   if (Array.isArray(input)) {
     const entries = collectConditionEntries(input);
     if (entries.length === 0) return '';
-    // Валидируем базовую структуру, но используем оригинальные entries (с isFirstConditional)
     conditionParamsSchema.parse({ entries });
     return renderPartialTemplate('condition/condition.py.jinja2', {
       conditionEntries: entries,

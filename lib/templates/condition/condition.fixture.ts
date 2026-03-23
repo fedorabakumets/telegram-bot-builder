@@ -259,3 +259,140 @@ export const validParamsMultipleAll: ConditionTemplateParams = {
     ...validParamsBetween.entries,
   ],
 };
+
+// ─── Фикстуры для системных операторов ───────────────────────────────────────
+
+/**
+ * Узел условия только с веткой is_private (без переменной)
+ */
+export const validParamsIsPrivate: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_private',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_private', value: '', target: 'msg_private' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Узел условия с is_private + is_group + else
+ */
+export const validParamsSystemMultiple: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_chat_type',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_private', value: '', target: 'msg_private' },
+        { id: 'b2', operator: 'is_group', value: '', target: 'msg_group' },
+        { id: 'b3', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Узел условия с is_channel
+ */
+export const validParamsIsChannel: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_channel',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_channel', value: '', target: 'msg_channel' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Узел условия с is_group
+ */
+export const validParamsIsGroup: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_group',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_group', value: '', target: 'msg_group' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Смешанный узел: is_private + equals (переменная задана)
+ */
+export const validParamsMixedSystemAndVar: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_mixed',
+      variable: 'user_role',
+      branches: [
+        { id: 'b1', operator: 'is_private', value: '', target: 'msg_private' },
+        { id: 'b2', operator: 'equals', value: 'admin', target: 'msg_admin' },
+        { id: 'b3', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/** Node-фикстура: только is_private без переменной */
+export const nodesWithConditionIsPrivate: Node[] = [
+  makeNode('condition_check_private', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Приватный', operator: 'is_private', value: '', target: 'msg_private' },
+    ],
+  }),
+  makeNode('msg_private', 'message', {}),
+];
+
+/** Node-фикстура: is_private + is_group + else */
+export const nodesWithConditionSystemMultiple: Node[] = [
+  makeNode('condition_check_chat_type', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Приватный', operator: 'is_private', value: '', target: 'msg_private' },
+      { id: 'b2', label: 'Группа', operator: 'is_group', value: '', target: 'msg_group' },
+      { id: 'b3', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_private', 'message', {}),
+  makeNode('msg_group', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];
+
+/** Node-фикстура: is_channel */
+export const nodesWithConditionIsChannel: Node[] = [
+  makeNode('condition_check_channel', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Канал', operator: 'is_channel', value: '', target: 'msg_channel' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_channel', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];
+
+/** Node-фикстура: смешанный is_private + filled + else */
+export const nodesWithConditionMixedSystem: Node[] = [
+  makeNode('condition_mixed', 'condition', {
+    variable: 'user_role',
+    branches: [
+      { id: 'b1', label: 'Приватный', operator: 'is_private', value: '', target: 'msg_private' },
+      { id: 'b2', label: 'Заполнено', operator: 'filled', value: '', target: 'msg_filled' },
+      { id: 'b3', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_private', 'message', {}),
+  makeNode('msg_filled', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];

@@ -33,6 +33,9 @@ export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodes
   const variable: string = data?.variable || '';
   const branches: ConditionBranch[] = data?.branches || [];
 
+  const SYSTEM_OPERATORS = new Set(['is_private', 'is_group', 'is_channel', 'else']);
+  const allBranchesSystemic = branches.length > 0 && branches.every(b => SYSTEM_OPERATORS.has(b.operator));
+
   /**
    * Обновляет поле ветки по её идентификатору.
    * @param id - идентификатор ветки
@@ -69,7 +72,8 @@ export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodes
 
   return (
     <div className="space-y-4 p-4">
-      {/* Поле ввода переменной */}
+      {/* Поле ввода переменной — скрыто если все ветки системные */}
+      {!allBranchesSystemic && (
       <div className="space-y-2">
         <Label>Переменная</Label>
         <VariableNameInput
@@ -82,6 +86,7 @@ export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodes
           Укажите переменную, которую хотите проверить
         </p>
       </div>
+      )}
 
       {/* Список веток условия */}
       <div className="space-y-2">

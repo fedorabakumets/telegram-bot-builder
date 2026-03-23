@@ -10,7 +10,7 @@ export const conditionBranchEntrySchema = z.object({
   /** Уникальный идентификатор ветки */
   id: z.string(),
   /** Оператор ветки */
-  operator: z.enum(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'else']),
+  operator: z.enum(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'is_private', 'is_group', 'is_channel', 'else']),
   /** Значение для сравнения (для оператора "equals") */
   value: z.string(),
   /** Второе значение для оператора "between" */
@@ -23,8 +23,8 @@ export const conditionBranchEntrySchema = z.object({
 export const conditionEntrySchema = z.object({
   /** ID узла condition */
   nodeId: z.string().min(1),
-  /** Переменная для проверки */
-  variable: z.string().min(1),
+  /** Переменная для проверки (может быть пустой для системных операторов) */
+  variable: z.string(),
   /** Ветки условия */
   branches: z.array(conditionBranchEntrySchema).min(1),
 });

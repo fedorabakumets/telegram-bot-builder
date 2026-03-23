@@ -8,16 +8,72 @@
 
 ## Поддерживаемые операторы
 
-| Оператор       | Условие Python                                     | Описание                              |
-|----------------|----------------------------------------------------|---------------------------------------|
-| `filled`       | `if val`                                           | Переменная заполнена (не пустая)      |
-| `empty`        | `if not val`                                       | Переменная не заполнена (пустая)      |
-| `equals`       | `if val == "значение"`                             | Переменная равна указанному значению  |
-| `contains`     | `if "значение" in val`                             | Переменная содержит подстроку         |
-| `greater_than` | `if _num_val is not None and _num_val > N`         | Переменная больше числа N             |
-| `less_than`    | `if _num_val is not None and _num_val < N`         | Переменная меньше числа N             |
-| `between`      | `if _num_val is not None and N1 <= _num_val <= N2` | Переменная в диапазоне [N1, N2]       |
-| `else`         | `else:`                                            | Ветка по умолчанию (fallback)         |
+| Оператор       | Условие Python                                                        | Описание                              |
+|----------------|-----------------------------------------------------------------------|---------------------------------------|
+| `filled`       | `if val`                                                              | Переменная заполнена (не пустая)      |
+| `empty`        | `if not val`                                                          | Переменная не заполнена (пустая)      |
+| `equals`       | `if val == "значение"`                                                | Переменная равна указанному значению  |
+| `contains`     | `if "значение" in val`                                                | Переменная содержит подстроку         |
+| `greater_than` | `if _num_val is not None and _num_val > N`                            | Переменная больше числа N             |
+| `less_than`    | `if _num_val is not None and _num_val < N`                            | Переменная меньше числа N             |
+| `between`      | `if _num_val is not None and N1 <= _num_val <= N2`                    | Переменная в диапазоне [N1, N2]       |
+| `is_private`   | `if callback_query.message.chat.type == 'private'`                   | Приватный чат                         |
+| `is_group`     | `if callback_query.message.chat.type in ('group', 'supergroup')`     | Групповой чат (включая супергруппы)   |
+| `is_channel`   | `if callback_query.message.chat.type == 'channel'`                   | Канал                                 |
+| `else`         | `else:`                                                               | Ветка по умолчанию (fallback)         |
+
+## Системные операторы
+
+Операторы `is_private`, `is_group`, `is_channel` — **системные**: они проверяют тип чата напрямую из контекста сообщения, без обращения к переменным пользователя.
+
+### Особенности
+
+- **Не требуют переменной**: если все ветки узла являются системными (плюс `else`), поле "Переменная" в редакторе скрывается автоматически.
+- **Не используют `_all_vars`**: код не вызывает `init_all_user_vars` и не читает переменные из базы данных.
+- **Порядок генерации**: системные ветки идут первыми (проход 0), затем числовые (проход 1), строковые (проход 2), `else` (проход 3).
+
+### Пример — только системные ветки
+
+```python
+async def handle_callback_condition_check_chat(callback_query):
+    # Узел условия condition_check_chat
+    user_id = callback_query.from_user.id
+    logging.info(f"Узел условия condition_check_chat: проверка типа чата")
+    if callback_query.message.chat.type == 'private':
+        # Ветка: is_private
+        await handle_callback_msg_private(callback_query)
+    elif callback_query.message.chat.type in ('group', 'supergroup'):
+        # Ветка: is_group
+        await handle_callback_msg_group(callback_query)
+    else:
+        # Ветка по умолчанию
+        await handle_callback_msg_other(callback_query)
+```
+
+### Пример — смешанный узел (системные + переменная)
+
+```python
+async def handle_callback_condition_mixed(callback_query):
+    # Узел условия condition_mixed, переменная: user_role
+    user_id = callback_query.from_user.id
+    _all_vars = await init_all_user_vars(user_id)
+    val = _all_vars.get("user_role", "")
+    logging.info(f"Узел условия condition_mixed: переменная 'user_role' = {val}")
+    if callback_query.message.chat.type == 'private':
+        # Ветка: is_private
+        await handle_callback_msg_private(callback_query)
+    elif val == "admin":
+        # Ветка: equals == "admin"
+        await handle_callback_msg_admin(callback_query)
+    else:
+        # Ветка по умолчанию
+        await handle_callback_msg_other(callback_query)
+```
+
+### Поведение поля "Переменная" в редакторе
+
+- Если **все** ветки (кроме `else`) являются системными — поле "Переменная" скрывается.
+- Если есть хотя бы одна не-системная ветка — поле "Переменная" отображается.
 
 ## Пример входных данных
 
