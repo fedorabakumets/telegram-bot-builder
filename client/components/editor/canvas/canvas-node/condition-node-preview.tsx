@@ -39,15 +39,16 @@ interface ConditionNodePreviewProps {
  * - equals → "= <значение>"
  * - else   → пустая строка (не показываем)
  */
-function getBranchOperatorLabel(branch: ConditionBranch): string {
+function getBranchOperatorLabel(branch: ConditionBranch, variable: string): string {
+  const varName = variable.replace(/[{}]/g, '').trim() || 'переменная';
   switch (branch.operator) {
-    case 'filled':       return 'заполнено';
-    case 'empty':        return 'не заполнено';
-    case 'equals':       return `= ${branch.value}`;
-    case 'contains':     return `содержит ${branch.value}`;
-    case 'greater_than': return `> ${branch.value}`;
-    case 'less_than':    return `< ${branch.value}`;
-    case 'between':      return `${branch.value} — ${branch.value2 || '...'}`;
+    case 'filled':       return `Если "${varName}" введена`;
+    case 'empty':        return `Если "${varName}" не введена`;
+    case 'equals':       return `Если "${varName}" = "${branch.value || '...'}"`;
+    case 'contains':     return `Если "${varName}" содержит "${branch.value || '...'}"`;
+    case 'greater_than': return `Если "${varName}" > ${branch.value || '...'}`;
+    case 'less_than':    return `Если "${varName}" < ${branch.value || '...'}`;
+    case 'between':      return `Если "${varName}" от ${branch.value || '...'} до ${branch.value2 || '...'}`;
     case 'is_private':   return 'Если приватный чат';
     case 'is_group':     return 'Если групповой чат';
     case 'is_channel':   return 'Если канал';
@@ -113,7 +114,7 @@ export function ConditionNodePreview({
                 <span className="font-medium">Иначе</span>
               ) : (
                 <span className="font-medium truncate max-w-[140px]">
-                  {getBranchOperatorLabel(branch) || branch.label}
+                  {getBranchOperatorLabel(branch, variable) || branch.label}
                 </span>
               )}
               {/* Выходной порт ветки */}
