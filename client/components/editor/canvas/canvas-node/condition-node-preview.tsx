@@ -48,12 +48,12 @@ function getBranchOperatorLabel(branch: ConditionBranch): string {
     case 'greater_than': return `> ${branch.value}`;
     case 'less_than':    return `< ${branch.value}`;
     case 'between':      return `${branch.value} — ${branch.value2 || '...'}`;
-    case 'is_private':   return 'приватный чат';
-    case 'is_group':     return 'групповой чат';
-    case 'is_channel':   return 'канал';
-    case 'is_admin':     return 'администратор бота';
-    case 'is_premium':   return 'Telegram Premium';
-    case 'is_bot':       return 'бот';
+    case 'is_private':   return 'Если приватный чат';
+    case 'is_group':     return 'Если групповой чат';
+    case 'is_channel':   return 'Если канал';
+    case 'is_admin':     return 'Если администратор бота';
+    case 'is_premium':   return 'Если Telegram Premium';
+    case 'is_bot':       return 'Если бот';
     case 'else':         return '';
     default:             return '';
   }
@@ -88,10 +88,12 @@ export function ConditionNodePreview({
         <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm">Условие</span>
       </div>
 
-      {/* Переменная */}
-      <div className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-slate-800 rounded px-2 py-1">
-        {variable ? variable : <span className="italic text-gray-400">переменная не задана</span>}
-      </div>
+      {/* Переменная — только если задана */}
+      {variable && (
+        <div className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-slate-800 rounded px-2 py-1">
+          {variable}
+        </div>
+      )}
 
       {/* Ветки */}
       <div className="space-y-1 mt-2">
