@@ -1,13 +1,10 @@
 /**
  * @fileoverview Компонент расширенных настроек для команд и триггеров
  *
- * Содержит настройки отображения в меню
- * и ограничения доступа для администраторов.
+ * Содержит настройку отображения в меню.
  *
  * Поддерживаемые типы узлов:
- * - start / command       → showInMenu + adminOnly
- * - command_trigger       → showInMenu + adminOnly
- * - text_trigger          → только adminOnly
+ * - start / command / command_trigger → showInMenu
  *
  * @module CommandAdvancedSettings
  */
@@ -15,10 +12,9 @@
 import { Node } from '@shared/schema';
 import { SectionHeader } from '../layout/section-header';
 import { ShowInMenuSetting } from '../admin/show-in-menu-setting';
-import { AdminOnlySetting } from '../admin/admin-only-setting';
 
 /** Типы узлов, для которых отображаются расширенные настройки */
-const SUPPORTED_NODE_TYPES = ['start', 'command', 'command_trigger', 'text_trigger'] as const;
+const SUPPORTED_NODE_TYPES = ['start', 'command', 'command_trigger'] as const;
 
 /**
  * Пропсы компонента расширенных настроек команд
@@ -39,10 +35,6 @@ interface CommandAdvancedSettingsProps {
  *
  * Для start/command/command_trigger включает:
  * - Показать в меню @BotFather
- * - Только администраторы
- *
- * Для text_trigger включает:
- * - Только администраторы
  *
  * @param {CommandAdvancedSettingsProps} props - Пропсы компонента
  * @returns {JSX.Element | null} Расширенные настройки команд или null для неподдерживаемых типов
@@ -57,14 +49,11 @@ export function CommandAdvancedSettings({
     return null;
   }
 
-  /** Флаг: показывать ли настройку "Показать в меню" (только для command-подобных узлов) */
-  const showMenuSetting = selectedNode.type !== 'text_trigger';
-
   return (
     <div className="bg-gradient-to-br from-cyan-50/40 to-blue-50/20 dark:from-cyan-950/30 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-cyan-200/40 dark:border-cyan-800/40 backdrop-blur-sm">
       <SectionHeader
         title="Расширенные настройки"
-        description="Меню, приватность и права администратора"
+        description="Меню и настройки команды"
         isOpen={isOpen}
         onToggle={onToggle}
         icon="gear"
@@ -75,10 +64,7 @@ export function CommandAdvancedSettings({
 
       {isOpen && (
         <div className="space-y-3 sm:space-y-4">
-          {showMenuSetting && (
-            <ShowInMenuSetting selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
-          )}
-          <AdminOnlySetting selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
+          <ShowInMenuSetting selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
         </div>
       )}
     </div>
