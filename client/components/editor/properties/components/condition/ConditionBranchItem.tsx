@@ -100,7 +100,18 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
     <div className={`rounded-lg border p-3 space-y-2 ${isElse ? 'border-gray-200 bg-gray-50 dark:bg-slate-800/40 dark:border-slate-700' : 'border-violet-200 bg-violet-50/50 dark:bg-violet-900/10 dark:border-violet-800/40'}`}>
       {/* Заголовок ветки: статичный текст для else, иначе — выбор оператора */}
       {isElse ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Во всех остальных случаях</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Во всех остальных случаях</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(branch.id)}
+            className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
+            title="Удалить ветку"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       ) : (
         <div className="flex items-center gap-2">
           <Select
