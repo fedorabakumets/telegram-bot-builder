@@ -3,6 +3,11 @@
 
   @fileoverview Генерирует Python-код для ветвления потока по значению переменной пользователя
   @param {array} conditionEntries - Массив объектов ConditionEntry
+
+  Порядок веток в сгенерированном коде:
+  1. Числовые операторы (greater_than, less_than, between) — всегда первыми
+  2. Строковые операторы (equals, contains, filled, empty)
+  3. else — всегда последней
 #}
 
 # Обработчики узлов условия
@@ -24,43 +29,42 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
     if True:
         pass
 {% endif %}
-{% for branch in entry.branches %}
+{#- Проход 1: числовые операторы (greater_than, less_than, between) #}
+{%- for branch in entry.branches %}
+{%- if branch.operator == 'greater_than' or branch.operator == 'less_than' or branch.operator == 'between' %}
 {%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
-{%- if branch.operator == 'else' %}
-    else:
-        # Ветка по умолчанию
+{%- if branch.isFirstNumeric %}
+    if {% if branch.operator == 'greater_than' %}_num_val is not None and _num_val > {{ branch.value if branch.value else '0' }}{% elif branch.operator == 'less_than' %}_num_val is not None and _num_val < {{ branch.value if branch.value else '0' }}{% elif branch.operator == 'between' %}_num_val is not None and {{ branch.value if branch.value else '0' }} <= _num_val <= {{ branch.value2 if branch.value2 else '0' }}{% endif %}:
+        # Ветка: {{ branch.operator }}{% if branch.value %} {{ branch.value }}{% endif %}{% if branch.value2 %} {{ branch.value2 }}{% endif %}
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
-{%- elif branch.operator == 'greater_than' and branch.isFirstConditional %}
-    if _num_val is not None and _num_val > {{ branch.value if branch.value else '0' }}:
-        # Ветка: greater_than {{ branch.value }}
+{%- else %}
+    elif {% if branch.operator == 'greater_than' %}_num_val is not None and _num_val > {{ branch.value if branch.value else '0' }}{% elif branch.operator == 'less_than' %}_num_val is not None and _num_val < {{ branch.value if branch.value else '0' }}{% elif branch.operator == 'between' %}_num_val is not None and {{ branch.value if branch.value else '0' }} <= _num_val <= {{ branch.value2 if branch.value2 else '0' }}{% endif %}:
+        # Ветка: {{ branch.operator }}{% if branch.value %} {{ branch.value }}{% endif %}{% if branch.value2 %} {{ branch.value2 }}{% endif %}
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
-{%- elif branch.operator == 'greater_than' %}
-    elif _num_val is not None and _num_val > {{ branch.value if branch.value else '0' }}:
-        # Ветка: greater_than {{ branch.value }}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
-{%- elif branch.operator == 'less_than' and branch.isFirstConditional %}
-    if _num_val is not None and _num_val < {{ branch.value if branch.value else '0' }}:
-        # Ветка: less_than {{ branch.value }}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
-{%- elif branch.operator == 'less_than' %}
-    elif _num_val is not None and _num_val < {{ branch.value if branch.value else '0' }}:
-        # Ветка: less_than {{ branch.value }}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
-{%- elif branch.operator == 'between' and branch.isFirstConditional %}
-    if _num_val is not None and {{ branch.value if branch.value else '0' }} <= _num_val <= {{ branch.value2 if branch.value2 else '0' }}:
-        # Ветка: between {{ branch.value }} {{ branch.value2 }}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
-{%- elif branch.operator == 'between' %}
-    elif _num_val is not None and {{ branch.value if branch.value else '0' }} <= _num_val <= {{ branch.value2 if branch.value2 else '0' }}:
-        # Ветка: between {{ branch.value }} {{ branch.value2 }}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
-{%- elif branch.isFirstConditional %}
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+{#- Проход 2: строковые операторы (filled, empty, equals, contains) #}
+{%- for branch in entry.branches %}
+{%- if branch.operator == 'filled' or branch.operator == 'empty' or branch.operator == 'equals' or branch.operator == 'contains' %}
+{%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
+{%- if branch.isFirstString and not entry.hasNumericBranch %}
     if {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}val == "{{ branch.value }}"{% elif branch.operator == 'contains' %}"{{ branch.value }}" in val{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} == "{{ branch.value }}"{% endif %}
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
 {%- else %}
     elif {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}val == "{{ branch.value }}"{% elif branch.operator == 'contains' %}"{{ branch.value }}" in val{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} == "{{ branch.value }}"{% endif %}
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+{#- Проход 3: else #}
+{%- for branch in entry.branches %}
+{%- if branch.operator == 'else' %}
+{%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
+    else:
+        # Ветка по умолчанию
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
 {%- endif %}
 {%- endfor %}

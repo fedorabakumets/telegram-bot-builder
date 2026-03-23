@@ -30,13 +30,18 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     if (branches.length === 0) continue;
 
     const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'else']);
-    // Определяем первую не-else ветку для корректного if/elif
-    let firstConditionalSeen = false;
+    const numericOps = new Set(['greater_than', 'less_than', 'between']);
+    const stringOps = new Set(['filled', 'empty', 'equals', 'contains']);
+    // Определяем первые ветки в каждой группе для корректного if/elif
+    let firstNumericSeen = false;
+    let firstStringSeen = false;
     const mappedBranches = branches
       .filter(b => validOperators.has(b.operator))
       .map(b => {
-        const isFirstConditional = b.operator !== 'else' && !firstConditionalSeen;
-        if (isFirstConditional) firstConditionalSeen = true;
+        const isFirstNumeric = numericOps.has(b.operator) && !firstNumericSeen;
+        if (isFirstNumeric) firstNumericSeen = true;
+        const isFirstString = stringOps.has(b.operator) && !firstStringSeen;
+        if (isFirstString) firstStringSeen = true;
         const sanitizeValue = (v: string) => (v ?? '')
           .replace(/\\/g, '\\\\')
           .replace(/"/g, '\\"')
@@ -48,7 +53,10 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
           value: sanitizeValue(b.value ?? ''),
           value2: sanitizeValue(b.value2 ?? ''),
           target: b.target,
-          isFirstConditional,
+          isFirstNumeric,
+          isFirstString,
+          // legacy: для обратной совместимости с тестами
+          isFirstConditional: isFirstNumeric || isFirstString,
         };
       });
 
@@ -74,12 +82,22 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
  * Обогащает ветки entry флагами isFirstConditional, hasConditionalBranch, hasNumericBranch.
  */
 function enrichEntries(entries: ConditionEntry[]): any[] {
+  const numericOps = new Set(['greater_than', 'less_than', 'between']);
+  const stringOps = new Set(['filled', 'empty', 'equals', 'contains']);
   return entries.map(entry => {
-    let firstConditionalSeen = false;
+    let firstNumericSeen = false;
+    let firstStringSeen = false;
     const mappedBranches = (entry.branches as any[]).map(b => {
-      const isFirstConditional = b.operator !== 'else' && !firstConditionalSeen;
-      if (isFirstConditional) firstConditionalSeen = true;
-      return { ...b, isFirstConditional };
+      const isFirstNumeric = numericOps.has(b.operator) && !firstNumericSeen;
+      if (isFirstNumeric) firstNumericSeen = true;
+      const isFirstString = stringOps.has(b.operator) && !firstStringSeen;
+      if (isFirstString) firstStringSeen = true;
+      return {
+        ...b,
+        isFirstNumeric,
+        isFirstString,
+        isFirstConditional: isFirstNumeric || isFirstString,
+      };
     });
     const hasNumericBranch = mappedBranches.some(b =>
       b.operator === 'greater_than' || b.operator === 'less_than' || b.operator === 'between'
