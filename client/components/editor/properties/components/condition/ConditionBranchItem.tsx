@@ -45,10 +45,10 @@ const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals', 
 function getSelectedLabel(operator: ConditionOperator, variable: string, value: string): string {
   const varName = variable.replace(/[{}]/g, '').trim() || 'переменная';
   switch (operator) {
-    case 'filled':  return `Если "${varName}" введена`;
-    case 'empty':   return `Если "${varName}" не введена`;
-    case 'equals':  return `Если "${varName}" равна "${value || '...'}"`;
-    case 'contains': return `Если "${varName}" содержит "${value || '...'}"`;
+    case 'filled':  return `Если переменная "${varName}" введена`;
+    case 'empty':   return `Если переменная "${varName}" не введена`;
+    case 'equals':  return `Если переменная "${varName}" равна "${value || '...'}"`;
+    case 'contains': return `Если переменная "${varName}" содержит "${value || '...'}"`;
     default:        return OPERATOR_LABELS[operator];
   }
 }
