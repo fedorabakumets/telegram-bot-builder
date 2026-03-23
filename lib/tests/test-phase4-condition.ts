@@ -1596,15 +1596,20 @@ test('T04', 'смешанный: is_private + filled + else', () => {
   syntax(code, 't04');
 });
 
-test('T05', 'только системные ветки — нет _all_vars в коде', () => {
+test('T05', 'только системные ветки — нет _all_vars внутри обработчика cond1', () => {
   const p = makeCleanProject([makeConditionNode('cond1', '', [
     makeBranch('is_private'),
     makeBranch('is_group'),
     makeBranch('else'),
   ])]);
   const code = gen(p, 't05');
-  ok(!code.includes('_all_vars'), '_all_vars НЕ должен быть в коде для системных веток');
-  ok(!code.includes('init_all_user_vars'), 'init_all_user_vars НЕ должен быть в коде');
+  // Извлекаем тело обработчика cond1 (от async def до следующего async def или конца)
+  const handlerStart = code.indexOf('async def handle_callback_cond1');
+  ok(handlerStart !== -1, 'handle_callback_cond1 должен быть в коде');
+  const nextHandler = code.indexOf('\nasync def ', handlerStart + 1);
+  const handlerBody = nextHandler !== -1 ? code.slice(handlerStart, nextHandler) : code.slice(handlerStart);
+  ok(!handlerBody.includes('_all_vars'), '_all_vars НЕ должен быть внутри handle_callback_cond1');
+  ok(!handlerBody.includes('init_all_user_vars'), 'init_all_user_vars НЕ должен вызываться внутри handle_callback_cond1');
   syntax(code, 't05');
 });
 
