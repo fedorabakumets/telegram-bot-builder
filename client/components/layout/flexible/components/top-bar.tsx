@@ -26,7 +26,7 @@ export function TopBar(props: TopBarProps): React.JSX.Element | null {
   if (!children) return null;
 
   return (
-    <div className="bg-background" style={{ minHeight: `${size}rem` }}>
+    <div className="bg-background flex-shrink-0">
       {children}
     </div>
   );
