@@ -64,8 +64,8 @@ function getSelectedLabel(operator: ConditionOperator, variable: string, value: 
     case 'empty':        return `Если переменная "${varName}" не введена`;
     case 'equals':       return `Если переменная "${varName}" равна "${value || '...'}"`;
     case 'contains':     return `Если переменная "${varName}" содержит "${value || '...'}"`;
-    case 'greater_than': return `Если переменная "${varName}" > ${value || '...'}`;
-    case 'less_than':    return `Если переменная "${varName}" < ${value || '...'}`;
+    case 'greater_than': return `Если переменная "${varName}" больше ${value || '...'}`;
+    case 'less_than':    return `Если переменная "${varName}" меньше ${value || '...'}`;
     case 'between':      return `Если переменная "${varName}" от ${value || '...'} до ${value2 || '...'}`;
     case 'is_private':   return 'Если приватный чат';
     case 'is_group':     return 'Если групповой чат';

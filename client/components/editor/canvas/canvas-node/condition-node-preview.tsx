@@ -46,8 +46,8 @@ function getBranchOperatorLabel(branch: ConditionBranch, variable: string): stri
     case 'empty':        return `Если "${varName}" не введена`;
     case 'equals':       return `Если "${varName}" = "${branch.value || '...'}"`;
     case 'contains':     return `Если "${varName}" содержит "${branch.value || '...'}"`;
-    case 'greater_than': return `Если "${varName}" > ${branch.value || '...'}`;
-    case 'less_than':    return `Если "${varName}" < ${branch.value || '...'}`;
+    case 'greater_than': return `Если "${varName}" больше ${branch.value || '...'}`;
+    case 'less_than':    return `Если "${varName}" меньше ${branch.value || '...'}`;
     case 'between':      return `Если "${varName}" от ${branch.value || '...'} до ${branch.value2 || '...'}`;
     case 'is_private':   return 'Если приватный чат';
     case 'is_group':     return 'Если групповой чат';
