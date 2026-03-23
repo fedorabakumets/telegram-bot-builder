@@ -31,11 +31,27 @@ async function findBotEnvPath(projectId: number): Promise<string | null> {
   if (!existsSync(botsDir)) return null;
 
   const dirs = readdirSync(botsDir, { withFileTypes: true });
+
+  // Сначала ищем по суффиксу _projectId_tokenId
   for (const dir of dirs) {
     if (!dir.isDirectory()) continue;
     if (dir.name.endsWith(`_${projectId}_${tokenId}`)) {
       const envPath = join(botsDir, dir.name, '.env');
       if (existsSync(envPath)) return envPath;
+    }
+  }
+
+  // Fallback: ищем папку, в .env которой есть BOT_TOKEN совпадающий с токеном проекта
+  const token = tokens[0].token;
+  for (const dir of dirs) {
+    if (!dir.isDirectory()) continue;
+    const envPath = join(botsDir, dir.name, '.env');
+    if (!existsSync(envPath)) continue;
+    try {
+      const content = readFileSync(envPath, 'utf8');
+      if (content.includes(token)) return envPath;
+    } catch {
+      // ignore
     }
   }
 
