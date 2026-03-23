@@ -104,9 +104,9 @@ describe('generateConditionHandlers() из Node[]', () => {
     expect(r).toContain('handle_callback_');
   });
 
-  it('сгенерированный код содержит get_user_variable', () => {
+  it('сгенерированный код содержит init_all_user_vars', () => {
     const r = generateConditionHandlers(nodesWithConditionFilledEmpty);
-    expect(r).toContain('get_user_variable');
+    expect(r).toContain('init_all_user_vars');
   });
 
   it('содержит имя переменной из узла', () => {
@@ -147,7 +147,7 @@ describe('generateConditionHandlers() из ConditionTemplateParams', () => {
   it('генерирует код для filled/empty/else', () => {
     const r = generateConditionHandlers(validParamsFilledEmpty);
     expect(r).toContain('handle_callback_condition_check_name');
-    expect(r).toContain('get_user_variable');
+    expect(r).toContain('init_all_user_vars');
   });
 
   it('генерирует код для equals', () => {
