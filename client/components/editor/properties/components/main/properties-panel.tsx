@@ -308,6 +308,7 @@ export function PropertiesPanel({
             <ConditionNodeConfiguration
               selectedNode={selectedNode}
               allNodes={allNodes}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
               onNodeUpdate={onNodeUpdate}
             />
           )}

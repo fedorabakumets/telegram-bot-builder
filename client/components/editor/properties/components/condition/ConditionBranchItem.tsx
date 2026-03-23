@@ -5,8 +5,10 @@
  */
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Node } from '@shared/schema';
 import type { ConditionBranch, ConditionOperator } from '@shared/types/condition-node';
+import { formatNodeDisplay } from '../../utils/node-formatters';
 
 interface ConditionBranchItemProps {
   /** Ветка условия */
@@ -19,6 +21,8 @@ interface ConditionBranchItemProps {
   onDelete: (id: string) => void;
   /** Обработчик обновления данных узла (для message-узла) */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
+  /** Все узлы из всех листов для выбора цели перехода */
+  getAllNodesFromAllSheets: Array<{ node: Node; sheetName: string }>;
 }
 
 /** Метки операторов для отображения в выпадающем списке */
@@ -37,7 +41,7 @@ const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals'];
  * Для ветки else показывает статичный текст "Иначе".
  * Для остальных веток отображает выбор оператора, поле значения и текст сообщения.
  */
-export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, onNodeUpdate }: ConditionBranchItemProps) {
+export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
   const isElse = branch.operator === 'else';
   const needsValue = branch.operator === 'equals';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
@@ -77,15 +81,34 @@ export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, o
 
       {/* Поле ID целевого узла для перехода */}
       <div className="space-y-1">
+        <Select
+          value={branch.target || ''}
+          onValueChange={(value) => onChange(branch.id, 'target', value)}
+        >
+          <SelectTrigger className="w-full text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 hover:bg-white/80 dark:hover:bg-slate-900/60 focus:border-sky-500 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-400/30 dark:focus:ring-sky-600/30 transition-all duration-200 rounded-lg text-sky-900 dark:text-sky-50">
+            <SelectValue placeholder="⊘ Не выбрано" />
+          </SelectTrigger>
+          <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-sky-200/50 dark:border-sky-800/50 shadow-xl max-h-48 overflow-y-auto">
+            {getAllNodesFromAllSheets.map(({ node, sheetName }) => (
+              <SelectItem key={node.id} value={node.id}>
+                <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
+                  {formatNodeDisplay(node, sheetName)}
+                </span>
+              </SelectItem>
+            ))}
+            {getAllNodesFromAllSheets.length === 0 && (
+              <SelectItem value="no-nodes" disabled>
+                <span className="text-muted-foreground text-xs">Нет доступных узлов</span>
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
         <Input
           value={branch.target || ''}
           onChange={e => onChange(branch.id, 'target', e.target.value)}
-          placeholder="ID узла для перехода"
-          className="text-xs font-mono h-7"
+          className="text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 text-sky-900 dark:text-sky-50 placeholder:text-sky-500/50 dark:placeholder:text-sky-400/50 focus:border-sky-500 focus:ring-2 focus:ring-sky-400/30"
+          placeholder="Или введите ID узла вручную"
         />
-        <p className="text-xs text-gray-400 dark:text-gray-500">
-          Укажите ID узла или перетащите соединение
-        </p>
       </div>
 
       {/* Текст сообщения ветки — редактирует связанный message-узел */}

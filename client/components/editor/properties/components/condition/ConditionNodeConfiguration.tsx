@@ -13,6 +13,8 @@ interface ConditionNodeConfigurationProps {
   selectedNode: Node;
   /** Все узлы листа — нужны для редактирования message-узлов веток */
   allNodes: Node[];
+  /** Все узлы из всех листов для выбора цели перехода */
+  getAllNodesFromAllSheets: Array<{ node: Node; sheetName: string }>;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
 }
@@ -21,7 +23,7 @@ interface ConditionNodeConfigurationProps {
  * Компонент конфигурации узла условия.
  * Отображает поле переменной и список веток без кнопки добавления.
  */
-export function ConditionNodeConfiguration({ selectedNode, allNodes, onNodeUpdate }: ConditionNodeConfigurationProps) {
+export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodesFromAllSheets, onNodeUpdate }: ConditionNodeConfigurationProps) {
   const data = selectedNode.data as any;
   const variable: string = data?.variable || '';
   const branches: ConditionBranch[] = data?.branches || [];
@@ -76,6 +78,7 @@ export function ConditionNodeConfiguration({ selectedNode, allNodes, onNodeUpdat
               onChange={handleBranchChange}
               onDelete={handleBranchDelete}
               onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
             />
           );
         })}
