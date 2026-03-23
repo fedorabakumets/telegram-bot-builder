@@ -12,6 +12,7 @@ import { Node } from '@/types/bot';
 import { OutputPort } from './output-port';
 import { PortType } from './port-colors';
 import type { ConditionBranch } from '@shared/types/condition-node';
+import { getSelectedLabel } from '../../properties/components/condition/ConditionBranchItem';
 
 /**
  * Пропсы компонента ConditionNodePreview
@@ -34,30 +35,10 @@ interface ConditionNodePreviewProps {
 
 /**
  * Возвращает человекочитаемое описание оператора ветки для превью на холсте.
- * - filled → "заполнено"
- * - empty  → "не заполнено"
- * - equals → "= <значение>"
- * - else   → пустая строка (не показываем)
+ * Использует ту же функцию getSelectedLabel, что и панель свойств.
  */
 function getBranchOperatorLabel(branch: ConditionBranch, variable: string): string {
-  const varName = variable.replace(/[{}]/g, '').trim() || 'переменная';
-  switch (branch.operator) {
-    case 'filled':       return `Если "${varName}" введена`;
-    case 'empty':        return `Если "${varName}" не введена`;
-    case 'equals':       return `Если "${varName}" = "${branch.value || '...'}"`;
-    case 'contains':     return `Если "${varName}" содержит "${branch.value || '...'}"`;
-    case 'greater_than': return `Если "${varName}" больше ${branch.value || '...'}`;
-    case 'less_than':    return `Если "${varName}" меньше ${branch.value || '...'}`;
-    case 'between':      return `Если "${varName}" от ${branch.value || '...'} до ${branch.value2 || '...'}`;
-    case 'is_private':   return 'Если приватный чат';
-    case 'is_group':     return 'Если групповой чат';
-    case 'is_channel':   return 'Если канал';
-    case 'is_admin':     return 'Если администратор бота';
-    case 'is_premium':   return 'Если Telegram Premium';
-    case 'is_bot':       return 'Если бот';
-    case 'else':         return '';
-    default:             return '';
-  }
+  return getSelectedLabel(branch.operator, variable, branch.value ?? '', branch.value2);
 }
 
 /**

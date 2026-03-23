@@ -57,7 +57,7 @@ const SELECTABLE_OPERATORS: ConditionOperator[] = [
 const SYSTEM_OPERATORS = new Set<ConditionOperator>(['is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot']);
 
 /** Генерирует текст выбранного оператора с подстановкой имени переменной */
-function getSelectedLabel(operator: ConditionOperator, variable: string, value: string, value2?: string): string {
+export function getSelectedLabel(operator: ConditionOperator, variable: string, value: string, value2?: string): string {
   const varName = variable.replace(/[{}]/g, '').trim() || 'переменная';
   switch (operator) {
     case 'filled':       return `Если переменная "${varName}" введена`;
