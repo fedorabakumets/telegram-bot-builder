@@ -77,7 +77,6 @@ export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodes
             <ConditionBranchItem
               key={branch.id}
               branch={branch}
-              variable={variable}
               messageNode={messageNode}
               onChange={handleBranchChange}
               onDelete={handleBranchDelete}

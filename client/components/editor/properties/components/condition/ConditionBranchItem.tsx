@@ -13,8 +13,6 @@ import { formatNodeDisplay } from '../../utils/node-formatters';
 interface ConditionBranchItemProps {
   /** Ветка условия */
   branch: ConditionBranch;
-  /** Имя переменной из родительского узла (для заголовка ветки) */
-  variable: string;
   /** Связанный message-узел для этой ветки (null для ветки else) */
   messageNode: Node | null;
   /** Обработчик изменения поля ветки */
@@ -39,28 +37,11 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
 const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals'];
 
 /**
- * Генерирует человекочитаемый заголовок ветки условия.
- * @param operator - оператор ветки
- * @param variable - имя переменной (например "{{возраст}}" или "возраст")
- * @param value - значение для сравнения (только для equals)
- */
-function getBranchLabel(operator: ConditionOperator, variable: string, value: string): string {
-  const varName = variable.replace(/[{}]/g, '').trim() || 'переменная';
-  switch (operator) {
-    case 'filled':  return `${varName} введён`;
-    case 'empty':   return `${varName} не введён`;
-    case 'equals':  return `${varName} равен "${value || '...'}"`;
-    case 'else':    return 'иначе';
-    default:        return varName;
-  }
-}
-
-/**
  * Компонент отдельной ветки условия.
  * Для ветки else показывает статичный текст "Иначе".
  * Для остальных веток отображает выбор оператора, поле значения и текст сообщения.
  */
-export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
+export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
   const isElse = branch.operator === 'else';
   const needsValue = branch.operator === 'equals';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
@@ -76,23 +57,24 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
   return (
     <div className={`rounded-lg border p-3 space-y-2 ${isElse ? 'border-gray-200 bg-gray-50 dark:bg-slate-800/40 dark:border-slate-700' : 'border-violet-200 bg-violet-50/50 dark:bg-violet-900/10 dark:border-violet-800/40'}`}>
       {/* Заголовок ветки: статичный текст для else, иначе — выбор оператора */}
-      {/* Читаемый заголовок ветки */}
-      <p className="text-xs font-semibold text-violet-700 dark:text-violet-300 uppercase tracking-wide">
-        {getBranchLabel(branch.operator, variable, branch.value)}
-      </p>
-
       {/* Редактирование оператора — только для не-else веток */}
       {!isElse && (
         <div className="flex items-center gap-2">
-          <select
+          <Select
             value={branch.operator}
-            onChange={e => onChange(branch.id, 'operator', e.target.value)}
-            className="text-xs rounded-md border border-input bg-background px-2 py-1 h-7 focus:outline-none focus:ring-1 focus:ring-ring"
+            onValueChange={(value) => onChange(branch.id, 'operator', value)}
           >
-            {SELECTABLE_OPERATORS.map(op => (
-              <option key={op} value={op}>{OPERATOR_LABELS[op]}</option>
-            ))}
-          </select>
+            <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 w-auto min-w-[120px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
+              {SELECTABLE_OPERATORS.map(op => (
+                <SelectItem key={op} value={op}>
+                  <span className="text-xs text-violet-700 dark:text-violet-300">{OPERATOR_LABELS[op]}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {needsValue && (
             <Input
               value={branch.value}
