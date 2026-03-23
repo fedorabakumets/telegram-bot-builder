@@ -20,11 +20,33 @@
 | `is_private`   | `if callback_query.message.chat.type == 'private'`                   | Приватный чат                         |
 | `is_group`     | `if callback_query.message.chat.type in ('group', 'supergroup')`     | Групповой чат (включая супергруппы)   |
 | `is_channel`   | `if callback_query.message.chat.type == 'channel'`                   | Канал                                 |
+| `is_admin`     | `if callback_query.from_user.id in ADMIN_IDS`                        | Пользователь — администратор бота     |
+| `is_premium`   | `if getattr(callback_query.from_user, 'is_premium', False)`          | Пользователь — Telegram Premium       |
+| `is_bot`       | `if getattr(callback_query.from_user, 'is_bot', False)`              | Пользователь — бот                    |
 | `else`         | `else:`                                                               | Ветка по умолчанию (fallback)         |
 
 ## Системные операторы
 
-Операторы `is_private`, `is_group`, `is_channel` — **системные**: они проверяют тип чата напрямую из контекста сообщения, без обращения к переменным пользователя.
+Операторы `is_private`, `is_group`, `is_channel`, `is_admin`, `is_premium`, `is_bot` — **системные**: они проверяют свойства пользователя или тип чата напрямую из контекста сообщения, без обращения к переменным пользователя.
+
+### Операторы типа чата
+
+| Оператор     | Проверяет                                      |
+|--------------|------------------------------------------------|
+| `is_private` | `chat.type == 'private'`                       |
+| `is_group`   | `chat.type in ('group', 'supergroup')`         |
+| `is_channel` | `chat.type == 'channel'`                       |
+
+### Операторы флагов пользователя
+
+| Оператор     | Проверяет                                                        |
+|--------------|------------------------------------------------------------------|
+| `is_admin`   | `callback_query.from_user.id in ADMIN_IDS`                       |
+| `is_premium` | `getattr(callback_query.from_user, 'is_premium', False)`         |
+| `is_bot`     | `getattr(callback_query.from_user, 'is_bot', False)`             |
+
+`is_admin` использует список `ADMIN_IDS`, который задаётся при инициализации бота.  
+`is_premium` и `is_bot` используют `getattr` с дефолтом `False` — Telegram не всегда передаёт эти поля.
 
 ### Особенности
 
@@ -32,7 +54,7 @@
 - **Не используют `_all_vars`**: код не вызывает `init_all_user_vars` и не читает переменные из базы данных.
 - **Порядок генерации**: системные ветки идут первыми (проход 0), затем числовые (проход 1), строковые (проход 2), `else` (проход 3).
 
-### Пример — только системные ветки
+### Пример — только системные ветки (тип чата)
 
 ```python
 async def handle_callback_condition_check_chat(callback_query):
@@ -45,6 +67,27 @@ async def handle_callback_condition_check_chat(callback_query):
     elif callback_query.message.chat.type in ('group', 'supergroup'):
         # Ветка: is_group
         await handle_callback_msg_group(callback_query)
+    else:
+        # Ветка по умолчанию
+        await handle_callback_msg_other(callback_query)
+```
+
+### Пример — флаги пользователя (is_admin, is_premium, is_bot)
+
+```python
+async def handle_callback_condition_check_user(callback_query):
+    # Узел условия condition_check_user
+    user_id = callback_query.from_user.id
+    logging.info(f"Узел условия condition_check_user: проверка типа чата")
+    if callback_query.from_user.id in ADMIN_IDS:
+        # Ветка: is_admin
+        await handle_callback_msg_admin(callback_query)
+    elif getattr(callback_query.from_user, 'is_premium', False):
+        # Ветка: is_premium
+        await handle_callback_msg_premium(callback_query)
+    elif getattr(callback_query.from_user, 'is_bot', False):
+        # Ветка: is_bot
+        await handle_callback_msg_bot(callback_query)
     else:
         # Ветка по умолчанию
         await handle_callback_msg_other(callback_query)
