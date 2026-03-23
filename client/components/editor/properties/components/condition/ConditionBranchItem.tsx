@@ -45,7 +45,8 @@ export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, o
   const isElse = branch.operator === 'else';
   const needsValue = branch.operator === 'equals';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
-  const availableTargets = getAllNodesFromAllSheets.filter(({ node }) => node.type !== 'command_trigger');
+  const EXCLUDED_TYPES = new Set(['command_trigger', 'text_trigger', 'condition']);
+  const availableTargets = getAllNodesFromAllSheets.filter(({ node }) => !EXCLUDED_TYPES.has(node.type));
 
   /** Обновляет текст сообщения в связанном message-узле */
   const handleMessageTextChange = (value: string) => {
