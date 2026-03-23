@@ -59,13 +59,21 @@ async function findBotEnvPath(projectId: number): Promise<string | null> {
 }
 
 /**
- * Читает значение ADMIN_IDS из .env файла бота
+ * Читает значение ADMIN_IDS из БД (с fallback на .env файл)
  */
 export async function getAdminIdsHandler(req: Request, res: Response): Promise<void> {
   try {
     const projectId = parseInt(req.params.id);
-    const envPath = await findBotEnvPath(projectId);
 
+    // Сначала читаем из БД
+    const project = await storage.getBotProject(projectId);
+    if (project?.adminIds?.trim()) {
+      res.json({ adminIds: project.adminIds.trim() });
+      return;
+    }
+
+    // Fallback: читаем из .env файла
+    const envPath = await findBotEnvPath(projectId);
     if (!envPath) {
       res.json({ adminIds: '' });
       return;
@@ -81,29 +89,28 @@ export async function getAdminIdsHandler(req: Request, res: Response): Promise<v
 }
 
 /**
- * Обновляет значение ADMIN_IDS в .env файле бота
+ * Обновляет значение ADMIN_IDS в БД и .env файле бота
  */
 export async function updateAdminIdsHandler(req: Request, res: Response): Promise<void> {
   try {
     const projectId = parseInt(req.params.id);
     const { adminIds } = req.body as { adminIds: string };
 
+    // 1. Сохраняем в БД
+    await storage.updateBotProject(projectId, { adminIds });
+
+    // 2. Также пишем в .env файл (если он существует)
     const envPath = await findBotEnvPath(projectId);
-    if (!envPath) {
-      res.status(404).json({ message: 'Файл .env бота не найден. Сначала запустите бота.' });
-      return;
+    if (envPath) {
+      let content = readFileSync(envPath, 'utf8');
+      if (/^ADMIN_IDS=/m.test(content)) {
+        content = content.replace(/^ADMIN_IDS=.*(\n[ \t]+.*)*$/m, `ADMIN_IDS=${adminIds}`);
+      } else {
+        content += `\nADMIN_IDS=${adminIds}`;
+      }
+      writeFileSync(envPath, content, 'utf8');
     }
 
-    let content = readFileSync(envPath, 'utf8');
-
-    if (/^ADMIN_IDS=/m.test(content)) {
-      // Replace ADMIN_IDS= and everything until the next env var line, comment, or blank line
-      content = content.replace(/^ADMIN_IDS=.*(\n[ \t]+.*)*$/m, `ADMIN_IDS=${adminIds}`);
-    } else {
-      content += `\nADMIN_IDS=${adminIds}`;
-    }
-
-    writeFileSync(envPath, content, 'utf8');
     res.json({ success: true, adminIds });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка обновления ADMIN_IDS', error: String(error) });

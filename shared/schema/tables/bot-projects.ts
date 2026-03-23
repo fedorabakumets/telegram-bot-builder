@@ -45,6 +45,8 @@ export const botProjects = pgTable("bot_projects", {
   updatedAt: timestamp("updated_at").defaultNow(),
   /** Порядок сортировки проекта в списке */
   sortOrder: real("sort_order").default(0),
+  /** ID администраторов бота (через запятую) */
+  adminIds: text("admin_ids").default(""),
 });
 
 /** Схема для вставки данных проекта бота */

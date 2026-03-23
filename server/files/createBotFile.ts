@@ -121,19 +121,25 @@ export async function createCompleteBotFiles(
   const { storage } = await import("../storages/storage");
   const tokenRecord = await storage.getBotToken(tokenId);
 
-  // Сохраняем существующий ADMIN_IDS если .env уже есть
-  let existingAdminIds = '123456789';
-  const existingEnvPath = join(botDir, '.env');
-  if (existsSync(existingEnvPath)) {
-    try {
-      const { readFileSync } = await import('node:fs');
-      const existingEnv = readFileSync(existingEnvPath, 'utf8');
-      const match = existingEnv.match(/^ADMIN_IDS=(.+)$/m);
-      if (match && match[1].trim()) {
-        existingAdminIds = match[1].trim();
+  // Читаем ADMIN_IDS из БД
+  const project = await storage.getBotProject(projectId);
+  const dbAdminIds = project?.adminIds?.trim();
+
+  // Fallback: читаем из существующего .env если в БД пусто
+  let existingAdminIds = dbAdminIds || '123456789';
+  if (!dbAdminIds) {
+    const existingEnvPath = join(botDir, '.env');
+    if (existsSync(existingEnvPath)) {
+      try {
+        const { readFileSync } = await import('node:fs');
+        const existingEnv = readFileSync(existingEnvPath, 'utf8');
+        const match = existingEnv.match(/^ADMIN_IDS=(.+)$/m);
+        if (match && match[1].trim()) {
+          existingAdminIds = match[1].trim();
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore, use default
     }
   }
 
