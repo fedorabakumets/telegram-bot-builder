@@ -5,6 +5,8 @@
  */
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Node } from '@shared/schema';
 import type { ConditionBranch, ConditionOperator } from '@shared/types/condition-node';
@@ -97,6 +99,15 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
               className="text-sm h-7 flex-1"
             />
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(branch.id)}
+            className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 ml-auto shrink-0"
+            title="Удалить ветку"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         </div>
       )}
 
