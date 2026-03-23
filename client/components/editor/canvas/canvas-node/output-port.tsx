@@ -32,6 +32,11 @@ interface OutputPortProps {
    * Используется для точного позиционирования линий соединений button-goto.
    */
   onMount?: (buttonId: string, offset: { x: number; y: number }) => void;
+  /**
+   * Ключ для принудительного пересчёта позиции порта.
+   * Меняется когда структура родительского узла изменилась (например добавлена ветка).
+   */
+  layoutKey?: string | number;
 }
 
 /**
@@ -48,7 +53,7 @@ interface OutputPortProps {
  * @param props - Пропсы компонента
  * @returns JSX-элемент порта
  */
-export function OutputPort({ portType, buttonId, onPortMouseDown, onMount }: OutputPortProps) {
+export function OutputPort({ portType, buttonId, onPortMouseDown, onMount, layoutKey }: OutputPortProps) {
   const color = PORT_COLORS[portType];
   const portRef = useRef<HTMLDivElement>(null);
 
@@ -80,7 +85,7 @@ export function OutputPort({ portType, buttonId, onPortMouseDown, onMount }: Out
     yOffset += nodeInnerEl.offsetTop;
 
     onMount(buttonId, { x: xOffset, y: yOffset });
-  }, [buttonId, onMount]);
+  }, [buttonId, onMount, layoutKey]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();

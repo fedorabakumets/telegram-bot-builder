@@ -44,6 +44,7 @@ function getBranchOperatorLabel(branch: ConditionBranch): string {
     case 'filled': return 'заполнено';
     case 'empty':  return 'не заполнено';
     case 'equals': return `= ${branch.value}`;
+    case 'contains': return `содержит ${branch.value}`;
     case 'else':   return '';
     default:       return '';
   }
@@ -112,6 +113,7 @@ export function ConditionNodePreview({
                   onPortMouseDown={onPortMouseDown}
                   isActive={isConnectionSource}
                   onMount={onButtonPortMount}
+                  layoutKey={branches.length}
                 />
               </div>
             </div>
