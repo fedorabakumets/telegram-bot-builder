@@ -88,7 +88,7 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
             <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
               {SELECTABLE_OPERATORS.map(op => (
                 <SelectItem key={op} value={op}>
-                  <span className="text-xs text-violet-700 dark:text-violet-300">{OPERATOR_LABELS[op]}</span>
+                  <span className="text-xs text-violet-700 dark:text-violet-300">{getSelectedLabel(op, variable, branch.value)}</span>
                 </SelectItem>
               ))}
             </SelectContent>
