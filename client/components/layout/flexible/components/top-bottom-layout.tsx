@@ -6,11 +6,6 @@
  */
 
 import React, { ReactNode } from 'react';
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from '@/components/ui/resizable';
 
 /**
  * Пропсы компонента TopBottomLayout
@@ -37,30 +32,13 @@ export function TopBottomLayout(props: TopBottomLayoutProps): React.JSX.Element 
   const { topContent, centerContent, bottomContent, topSize, isMobile } = props;
 
   return (
-    <ResizablePanelGroup direction="vertical" className="h-full gap-0">
-      <ResizablePanel
-        id="top-panel"
-        order={1}
-        defaultSize={isMobile ? 7 : topSize}
-        minSize={isMobile ? 7 : 15}
-        maxSize={30}
-        className="p-0 m-0"
-      >
-        <div className="h-full bg-background overflow-hidden">
-          {topContent}
-        </div>
-      </ResizablePanel>
-      <ResizableHandle className="!hidden" style={{ height: 0, margin: 0, padding: 0 }} />
-      <ResizablePanel
-        id="main-panel"
-        order={2}
-        defaultSize={isMobile ? 93 : 100 - topSize}
-        className="p-0 m-0"
-      >
-        <div className="h-full bg-background overflow-hidden">
-          {centerContent || bottomContent}
-        </div>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 bg-background overflow-hidden">
+        {topContent}
+      </div>
+      <div className="flex-1 min-h-0 bg-background overflow-hidden">
+        {centerContent || bottomContent}
+      </div>
+    </div>
   );
 }
