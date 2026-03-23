@@ -24,14 +24,9 @@ export function generateEnvFile(
   envLines.push('# Токен вашего бота (получите у @BotFather)');
   envLines.push(`BOT_TOKEN=${botToken}`);
   envLines.push('');
-  envLines.push('# ID администраторов бота (каждый с новой строки)');
-  envLines.push('ADMIN_IDS=');
-  
-  // Разбиваем ID по запятой и добавляем каждый с новой строки
-  const ids = adminIds.split(',').map(id => id.trim());
-  ids.forEach(id => {
-    envLines.push(`  ${id}`);
-  });
+  envLines.push('# ID администраторов бота (через запятую)');
+  const ids = adminIds.split(',').map(id => id.trim()).filter(Boolean);
+  envLines.push(`ADMIN_IDS=${ids.join(',')}`);
   envLines.push('');
   envLines.push('# ID проекта');
   envLines.push(`PROJECT_ID=${projectId}`);
