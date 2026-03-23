@@ -25,7 +25,9 @@ export function updateNodeReferencesInData(data: any, nodeIdMap: Map<string, str
     'next_node_id',
     'nextNodeId',
     'autoNavigateTarget',
-    'fallbackTarget'
+    'fallbackTarget',
+    'autoTransitionTo',
+    'sourceNodeId'
   ];
 
   for (const field of nodeRefFields) {
@@ -95,6 +97,17 @@ export function updateNodeReferencesInData(data: any, nodeIdMap: Map<string, str
     if (updatedData.inputConfig.next_node_id && nodeIdMap.has(updatedData.inputConfig.next_node_id)) {
       updatedData.inputConfig.next_node_id = nodeIdMap.get(updatedData.inputConfig.next_node_id);
     }
+  }
+
+  // Обновляем ветки condition-узла
+  if (updatedData?.branches && Array.isArray(updatedData.branches)) {
+    updatedData.branches = updatedData.branches.map((branch: any) => {
+      const updatedBranch = { ...branch };
+      if (updatedBranch.target && nodeIdMap.has(updatedBranch.target)) {
+        updatedBranch.target = nodeIdMap.get(updatedBranch.target);
+      }
+      return updatedBranch;
+    });
   }
 
   return updatedData;

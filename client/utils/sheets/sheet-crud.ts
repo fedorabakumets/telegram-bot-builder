@@ -59,7 +59,34 @@ export function duplicateSheet(originalSheet: CanvasSheet): CanvasSheet {
     originalSheet.nodes.map((node, index) => [node.id, duplicatedNodes[index].id])
   );
 
-  const updatedNodesWithReferences = duplicatedNodes.map(node => ({
+  // Создаём карту старых branch.id → новых branch.id для condition-узлов
+  const branchIdMap = new Map<string, string>();
+  const nodesWithUpdatedBranches = duplicatedNodes.map(node => {
+    if (node.data?.branches && Array.isArray(node.data.branches)) {
+      const updatedBranches = node.data.branches.map((branch: any) => {
+        const newBranchId = nanoid();
+        if (branch.id) {
+          branchIdMap.set(branch.id, newBranchId);
+        }
+        return { ...branch, id: newBranchId };
+      });
+      return { ...node, data: { ...node.data, branches: updatedBranches } };
+    }
+    return node;
+  });
+
+  // Обновляем condSourceId в message-узлах через branchIdMap
+  const nodesWithUpdatedCondSource = nodesWithUpdatedBranches.map(node => {
+    if (node.data?.condSourceId && branchIdMap.has(node.data.condSourceId)) {
+      return {
+        ...node,
+        data: { ...node.data, condSourceId: branchIdMap.get(node.data.condSourceId) }
+      };
+    }
+    return node;
+  });
+
+  const updatedNodesWithReferences = nodesWithUpdatedCondSource.map(node => ({
     ...node,
     data: updateNodeReferencesInData(node.data, nodeIdMap)
   }));
