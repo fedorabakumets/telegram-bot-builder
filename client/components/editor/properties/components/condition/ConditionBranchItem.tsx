@@ -50,7 +50,7 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
 /** Операторы, доступные для выбора пользователем */
 const SELECTABLE_OPERATORS: ConditionOperator[] = [
   'filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between',
-  'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot',
+  'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'else',
 ];
 
 /** Системные операторы, не требующие переменной и значения */
@@ -83,7 +83,6 @@ function getSelectedLabel(operator: ConditionOperator, variable: string, value: 
  * Для остальных веток отображает выбор оператора, поле значения и текст сообщения.
  */
 export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
-  const isElse = branch.operator === 'else';
   const isSystem = SYSTEM_OPERATORS.has(branch.operator);
   const needsValue = !isSystem && (branch.operator === 'equals' || branch.operator === 'contains' || branch.operator === 'greater_than' || branch.operator === 'less_than' || branch.operator === 'between');
   const isBetween = branch.operator === 'between';
@@ -97,65 +96,50 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
   };
 
   return (
-    <div className={`rounded-lg border p-3 space-y-2 ${isElse ? 'border-gray-200 bg-gray-50 dark:bg-slate-800/40 dark:border-slate-700' : 'border-violet-200 bg-violet-50/50 dark:bg-violet-900/10 dark:border-violet-800/40'}`}>
-      {/* Заголовок ветки: статичный текст для else, иначе — выбор оператора */}
-      {isElse ? (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Во всех остальных случаях</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(branch.id)}
-            className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
-            title="Удалить ветку"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2">
-          <Select
-            value={branch.operator}
-            onValueChange={(value) => onChange(branch.id, 'operator', value)}
-          >
-            <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 w-auto min-w-[120px]">
-              <SelectValue>{getSelectedLabel(branch.operator, variable, branch.value, branch.value2)}</SelectValue>
-            </SelectTrigger>
-            <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
-              {SELECTABLE_OPERATORS.map(op => (
-                <SelectItem key={op} value={op}>
-                  <span className="text-xs text-violet-700 dark:text-violet-300">{getSelectedLabel(op, variable, branch.value, branch.value2)}</span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {needsValue && (
-            <Input
-              value={branch.value}
-              onChange={e => onChange(branch.id, 'value', e.target.value)}
-              placeholder={isBetween ? 'от' : 'введите значение'}
-              className="text-sm h-7 flex-1"
-            />
-          )}
-          {isBetween && (
-            <Input
-              value={branch.value2 ?? ''}
-              onChange={e => onChange(branch.id, 'value2', e.target.value)}
-              placeholder="до"
-              className="text-sm h-7 flex-1"
-            />
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(branch.id)}
-            className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 ml-auto shrink-0"
-            title="Удалить ветку"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      )}
+    <div className="rounded-lg border p-3 space-y-2 border-violet-200 bg-violet-50/50 dark:bg-violet-900/10 dark:border-violet-800/40">
+      {/* Заголовок ветки: выбор оператора для всех веток включая else */}
+      <div className="flex items-center gap-2">
+        <Select
+          value={branch.operator}
+          onValueChange={(value) => onChange(branch.id, 'operator', value)}
+        >
+          <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 w-auto min-w-[120px]">
+            <SelectValue>{getSelectedLabel(branch.operator, variable, branch.value, branch.value2)}</SelectValue>
+          </SelectTrigger>
+          <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
+            {SELECTABLE_OPERATORS.map(op => (
+              <SelectItem key={op} value={op}>
+                <span className="text-xs text-violet-700 dark:text-violet-300">{getSelectedLabel(op, variable, branch.value, branch.value2)}</span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {needsValue && (
+          <Input
+            value={branch.value}
+            onChange={e => onChange(branch.id, 'value', e.target.value)}
+            placeholder={isBetween ? 'от' : 'введите значение'}
+            className="text-sm h-7 flex-1"
+          />
+        )}
+        {isBetween && (
+          <Input
+            value={branch.value2 ?? ''}
+            onChange={e => onChange(branch.id, 'value2', e.target.value)}
+            placeholder="до"
+            className="text-sm h-7 flex-1"
+          />
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDelete(branch.id)}
+          className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 ml-auto shrink-0"
+          title="Удалить ветку"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
 
       {/* Поле ID целевого узла для перехода */}
       <div className="space-y-1">
