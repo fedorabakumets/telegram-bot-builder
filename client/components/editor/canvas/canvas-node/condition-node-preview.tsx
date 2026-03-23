@@ -113,7 +113,7 @@ export function ConditionNodePreview({
               {isElse ? (
                 <span className="font-medium">Иначе</span>
               ) : (
-                <span className="font-medium truncate max-w-[140px]">
+                <span className="font-medium break-words pr-4">
                   {getBranchOperatorLabel(branch, variable) || branch.label}
                 </span>
               )}
