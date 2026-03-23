@@ -45,6 +45,7 @@ export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, o
   const isElse = branch.operator === 'else';
   const needsValue = branch.operator === 'equals';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
+  const availableTargets = getAllNodesFromAllSheets.filter(({ node }) => node.type !== 'command_trigger');
 
   /** Обновляет текст сообщения в связанном message-узле */
   const handleMessageTextChange = (value: string) => {
@@ -89,14 +90,14 @@ export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, o
             <SelectValue placeholder="⊘ Не выбрано" />
           </SelectTrigger>
           <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-sky-200/50 dark:border-sky-800/50 shadow-xl max-h-48 overflow-y-auto">
-            {getAllNodesFromAllSheets.map(({ node, sheetName }) => (
+            {availableTargets.map(({ node, sheetName }) => (
               <SelectItem key={node.id} value={node.id}>
                 <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
                   {formatNodeDisplay(node, sheetName)}
                 </span>
               </SelectItem>
             ))}
-            {getAllNodesFromAllSheets.length === 0 && (
+            {availableTargets.length === 0 && (
               <SelectItem value="no-nodes" disabled>
                 <span className="text-muted-foreground text-xs">Нет доступных узлов</span>
               </SelectItem>
