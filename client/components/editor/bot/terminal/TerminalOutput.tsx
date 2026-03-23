@@ -30,7 +30,7 @@ interface TerminalOutputProps {
 export function TerminalOutput({
   lines,
   containerRef,
-  height = 300,
+  height,
   scale,
   terminalTextClass,
   stderrTextClass,
@@ -39,11 +39,8 @@ export function TerminalOutput({
   return (
     <div
       ref={containerRef}
-      className="overflow-y-auto p-4 whitespace-pre-wrap break-all flex flex-col"
+      className="overflow-y-auto p-4 whitespace-pre-wrap break-all flex flex-col h-full w-full"
       style={{
-        height: `${height - 80}px`,
-        width: '100%',
-        minHeight: '0',
         fontSize: `${scale}em`,
         lineHeight: `${1.2 * scale}`
       }}

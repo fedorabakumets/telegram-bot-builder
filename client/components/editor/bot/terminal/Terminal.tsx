@@ -81,7 +81,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         buttonTextColorClass={themeClasses.buttonTextColorClass}
         buttonHoverClass={themeClasses.buttonHoverClass}
       />
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-hidden min-h-0">
         <TerminalOutput
           lines={lines}
           containerRef={outputContainerRef}
