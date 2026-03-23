@@ -88,8 +88,7 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
   const needsValue = !isSystem && (branch.operator === 'equals' || branch.operator === 'contains' || branch.operator === 'greater_than' || branch.operator === 'less_than' || branch.operator === 'between');
   const isBetween = branch.operator === 'between';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
-  const EXCLUDED_TYPES = new Set(['command_trigger', 'text_trigger', 'condition']);
-  const availableTargets = getAllNodesFromAllSheets.filter(({ node }) => !EXCLUDED_TYPES.has(node.type));
+  const availableTargets = getAllNodesFromAllSheets;
 
   /** Обновляет текст сообщения в связанном message-узле */
   const handleMessageTextChange = (value: string) => {
