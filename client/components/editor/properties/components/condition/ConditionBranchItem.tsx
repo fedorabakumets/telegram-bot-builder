@@ -13,6 +13,8 @@ import { formatNodeDisplay } from '../../utils/node-formatters';
 interface ConditionBranchItemProps {
   /** Ветка условия */
   branch: ConditionBranch;
+  /** Имя переменной из родительского узла (для заголовка ветки) */
+  variable: string;
   /** Связанный message-узел для этой ветки (null для ветки else) */
   messageNode: Node | null;
   /** Обработчик изменения поля ветки */
@@ -36,12 +38,23 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
 /** Операторы, доступные для выбора пользователем */
 const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals'];
 
+/** Генерирует текст выбранного оператора с подстановкой имени переменной */
+function getSelectedLabel(operator: ConditionOperator, variable: string, value: string): string {
+  const varName = variable.replace(/[{}]/g, '').trim() || 'переменная';
+  switch (operator) {
+    case 'filled':  return `Если "${varName}" введена`;
+    case 'empty':   return `Если "${varName}" не введена`;
+    case 'equals':  return `Если "${varName}" равна "${value || '...'}"`;
+    default:        return OPERATOR_LABELS[operator];
+  }
+}
+
 /**
  * Компонент отдельной ветки условия.
  * Для ветки else показывает статичный текст "Иначе".
  * Для остальных веток отображает выбор оператора, поле значения и текст сообщения.
  */
-export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
+export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
   const isElse = branch.operator === 'else';
   const needsValue = branch.operator === 'equals';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
@@ -66,7 +79,7 @@ export function ConditionBranchItem({ branch, messageNode, onChange, onDelete, o
             onValueChange={(value) => onChange(branch.id, 'operator', value)}
           >
             <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 w-auto min-w-[120px]">
-              <SelectValue />
+              <SelectValue>{getSelectedLabel(branch.operator, variable, branch.value)}</SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
               {SELECTABLE_OPERATORS.map(op => (
