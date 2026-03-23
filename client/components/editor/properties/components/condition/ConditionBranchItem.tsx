@@ -34,11 +34,12 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
   'filled': 'Если переменная введена',
   'empty': 'Если переменная не введена',
   'equals': 'Если переменная равна',
+  'contains': 'Если переменная содержит',
   'else': 'Во всех остальных случаях',
 };
 
 /** Операторы, доступные для выбора пользователем */
-const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals'];
+const SELECTABLE_OPERATORS: ConditionOperator[] = ['filled', 'empty', 'equals', 'contains'];
 
 /** Генерирует текст выбранного оператора с подстановкой имени переменной */
 function getSelectedLabel(operator: ConditionOperator, variable: string, value: string): string {
@@ -47,6 +48,7 @@ function getSelectedLabel(operator: ConditionOperator, variable: string, value: 
     case 'filled':  return `Если "${varName}" введена`;
     case 'empty':   return `Если "${varName}" не введена`;
     case 'equals':  return `Если "${varName}" равна "${value || '...'}"`;
+    case 'contains': return `Если "${varName}" содержит "${value || '...'}"`;
     default:        return OPERATOR_LABELS[operator];
   }
 }
@@ -58,7 +60,7 @@ function getSelectedLabel(operator: ConditionOperator, variable: string, value: 
  */
 export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
   const isElse = branch.operator === 'else';
-  const needsValue = branch.operator === 'equals';
+  const needsValue = branch.operator === 'equals' || branch.operator === 'contains';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
   const EXCLUDED_TYPES = new Set(['command_trigger', 'text_trigger', 'condition']);
   const availableTargets = getAllNodesFromAllSheets.filter(({ node }) => !EXCLUDED_TYPES.has(node.type));

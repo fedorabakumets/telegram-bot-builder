@@ -29,7 +29,7 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     const branches: any[] = (node.data as any).branches ?? [];
     if (branches.length === 0) continue;
 
-    const validOperators = new Set(['filled', 'empty', 'equals', 'else']);
+    const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'else']);
     // Определяем первую не-else ветку для корректного if/elif
     let firstConditionalSeen = false;
     const mappedBranches = branches

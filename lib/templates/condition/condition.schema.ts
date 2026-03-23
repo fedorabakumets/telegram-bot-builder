@@ -10,7 +10,7 @@ export const conditionBranchEntrySchema = z.object({
   /** Уникальный идентификатор ветки */
   id: z.string(),
   /** Оператор ветки */
-  operator: z.enum(['filled', 'empty', 'equals', 'else']),
+  operator: z.enum(['filled', 'empty', 'equals', 'contains', 'else']),
   /** Значение для сравнения (для оператора "equals") */
   value: z.string(),
   /** ID целевого узла */

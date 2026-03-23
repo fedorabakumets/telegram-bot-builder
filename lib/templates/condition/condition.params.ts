@@ -7,8 +7,8 @@
 export interface ConditionBranchEntry {
   /** Уникальный идентификатор ветки */
   id: string;
-  /** Оператор: "filled" | "empty" | "equals" | "else" */
-  operator: 'filled' | 'empty' | 'equals' | 'else';
+  /** Оператор: "filled" | "empty" | "equals" | "contains" | "else" */
+  operator: 'filled' | 'empty' | 'equals' | 'contains' | 'else';
   /** Значение для сравнения (только для оператора "equals") */
   value: string;
   /** ID целевого узла для перехода */
