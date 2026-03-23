@@ -4,6 +4,8 @@
  */
 import type { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import type { ConditionBranch } from '@shared/types/condition-node';
 import { ConditionBranchItem } from './ConditionBranchItem';
 import type { Variable } from '../../../inline-rich/types';
@@ -50,6 +52,21 @@ export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodes
     onNodeUpdate(selectedNode.id, { branches: branches.filter(b => b.id !== id) });
   };
 
+  /** Добавляет новую ветку с оператором filled перед веткой else */
+  const handleBranchAdd = () => {
+    const newBranch: ConditionBranch = {
+      id: `branch_${Date.now()}`,
+      label: '',
+      operator: 'filled',
+      value: '',
+    };
+    const elseIndex = branches.findIndex(b => b.operator === 'else');
+    const updated = elseIndex >= 0
+      ? [...branches.slice(0, elseIndex), newBranch, ...branches.slice(elseIndex)]
+      : [...branches, newBranch];
+    onNodeUpdate(selectedNode.id, { branches: updated });
+  };
+
   return (
     <div className="space-y-4 p-4">
       {/* Поле ввода переменной */}
@@ -86,6 +103,15 @@ export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodes
             />
           );
         })}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleBranchAdd}
+          className="w-full border-dashed border-violet-300 dark:border-violet-700 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:border-violet-400"
+        >
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          Добавить условие
+        </Button>
       </div>
     </div>
   );
