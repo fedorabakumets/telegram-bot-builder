@@ -9,7 +9,6 @@ import {
   validParamsEnabled,
   validParamsDisabled,
   validParamsAdminOnly,
-  validParamsPrivateOnly,
   invalidParamsWrongType,
 } from './utils-template.fixture';
 import { utilsParamsSchema } from './utils-template.schema';
@@ -102,20 +101,6 @@ describe('is_admin()', () => {
   it('не генерируется без adminOnly', () => {
     const r = generateUtils(validParamsDisabled);
     expect(r).not.toContain('async def is_admin');
-  });
-});
-
-// ─── is_private_chat ──────────────────────────────────────────────────────────
-
-describe('is_private_chat()', () => {
-  it('генерируется при isPrivateOnly=true', () => {
-    const r = generateUtils(validParamsPrivateOnly);
-    expect(r).toContain('async def is_private_chat');
-  });
-
-  it('не генерируется без isPrivateOnly', () => {
-    const r = generateUtils(validParamsDisabled);
-    expect(r).not.toContain('async def is_private_chat');
   });
 });
 

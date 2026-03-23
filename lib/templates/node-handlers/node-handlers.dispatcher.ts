@@ -63,7 +63,6 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
       return generateMessage({
         nodeId: node.id,
         messageText: node.data?.messageText || '',
-        isPrivateOnly: node.data?.isPrivateOnly || false,
         adminOnly: node.data?.adminOnly || false,
         requiresAuth: node.data?.requiresAuth || false,
         userDatabaseEnabled,
@@ -154,7 +153,6 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         markdown: false,
         formatMode: 'none',
         synonyms: [],
-        isPrivateOnly: false,
         adminOnly: false,
         requiresAuth: false,
         showInMenu: true,

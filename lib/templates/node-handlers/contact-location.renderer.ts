@@ -19,11 +19,6 @@ export function generateContactHandler(node: Node): string {
   code += `async def ${functionName}(message: types.Message):\n`;
   code += `    logging.info(f"Команда контакта ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
 
-  if (node.data.isPrivateOnly) {
-    code += '    if not await is_private_chat(message):\n';
-    code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
-    code += '        return\n';
-  }
   if (node.data.adminOnly) {
     code += '    if not await is_admin(message.from_user.id):\n';
     code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
@@ -82,11 +77,6 @@ export function generateLocationHandler(node: Node): string {
   code += `async def ${functionName}(message: types.Message):\n`;
   code += `    logging.info(f"Команда геолокации ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
 
-  if (node.data.isPrivateOnly) {
-    code += '    if not await is_private_chat(message):\n';
-    code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
-    code += '        return\n';
-  }
   if (node.data.adminOnly) {
     code += '    if not await is_admin(message.from_user.id):\n';
     code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';

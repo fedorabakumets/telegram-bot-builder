@@ -78,20 +78,6 @@ export const validParamsMixed: TextTriggerTemplateParams = {
   ],
 };
 
-/** Триггер с isPrivateOnly */
-export const validParamsPrivateOnly: TextTriggerTemplateParams = {
-  entries: [
-    {
-      nodeId: 'trigger_private',
-      synonyms: ['секрет'],
-      matchType: 'exact',
-      targetNodeId: 'msg_secret',
-      targetNodeType: 'message',
-      isPrivateOnly: true,
-    },
-  ],
-};
-
 /** Невалидные параметры — неверный matchType */
 export const invalidParamsWrongMatchType = {
   entries: [

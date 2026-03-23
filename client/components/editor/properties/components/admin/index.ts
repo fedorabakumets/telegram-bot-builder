@@ -5,5 +5,4 @@
 
 export * from './admin-only-setting';
 export * from './admin-rights-editor';
-export * from './private-only-setting';
 export * from './show-in-menu-setting';

@@ -18,8 +18,6 @@ export const startParamsSchema = z.object({
   formatMode: z.enum(['html', 'markdown', 'none', 'text']).transform(v => v === 'text' ? 'none' : v).pipe(z.enum(['html', 'markdown', 'none'])).catch('none').optional(),
 
   // --- Доступ ---
-  /** Только приватные чаты */
-  isPrivateOnly: z.boolean().optional(),
   /** Только администраторы */
   adminOnly: z.boolean().optional(),
   /** Требуется авторизация */

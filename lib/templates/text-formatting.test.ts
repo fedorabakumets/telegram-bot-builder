@@ -14,7 +14,6 @@ import { generateCommand } from './command/command.renderer';
 
 const baseStart = {
   nodeId: 'start_1',
-  isPrivateOnly: false,
   adminOnly: false,
   requiresAuth: false,
   userDatabaseEnabled: false,
@@ -42,7 +41,6 @@ const baseMessage = {
 const baseCommand = {
   nodeId: 'cmd_1',
   command: '/help',
-  isPrivateOnly: false,
   adminOnly: false,
   requiresAuth: false,
   userDatabaseEnabled: false,

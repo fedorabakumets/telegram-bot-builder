@@ -65,13 +65,6 @@ describe('message.py.jinja2 шаблон', () => {
     });
 
     describe('Проверки безопасности', () => {
-      it('должен генерировать isPrivateOnly проверку', () => {
-        const result = generateMessage(validParamsWithSecurity);
-
-        assert.ok(result.includes('is_private_chat'));
-        assert.ok(result.includes('❌ Эта команда доступна только в приватных чатах'));
-      });
-
       it('должен генерировать adminOnly проверку', () => {
         const result = generateMessage(validParamsWithSecurity);
 

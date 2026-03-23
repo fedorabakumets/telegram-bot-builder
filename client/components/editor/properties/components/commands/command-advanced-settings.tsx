@@ -1,13 +1,13 @@
 /**
  * @fileoverview Компонент расширенных настроек для команд и триггеров
  *
- * Содержит настройки отображения в меню, приватности
+ * Содержит настройки отображения в меню
  * и ограничения доступа для администраторов.
  *
  * Поддерживаемые типы узлов:
- * - start / command       → showInMenu + isPrivateOnly + adminOnly
- * - command_trigger       → showInMenu + isPrivateOnly + adminOnly
- * - text_trigger          → только isPrivateOnly
+ * - start / command       → showInMenu + adminOnly
+ * - command_trigger       → showInMenu + adminOnly
+ * - text_trigger          → только adminOnly
  *
  * @module CommandAdvancedSettings
  */
@@ -15,7 +15,6 @@
 import { Node } from '@shared/schema';
 import { SectionHeader } from '../layout/section-header';
 import { ShowInMenuSetting } from '../admin/show-in-menu-setting';
-import { PrivateOnlySetting } from '../admin/private-only-setting';
 import { AdminOnlySetting } from '../admin/admin-only-setting';
 
 /** Типы узлов, для которых отображаются расширенные настройки */
@@ -40,11 +39,9 @@ interface CommandAdvancedSettingsProps {
  *
  * Для start/command/command_trigger включает:
  * - Показать в меню @BotFather
- * - Только приватные чаты
  * - Только администраторы
  *
  * Для text_trigger включает:
- * - Только приватные чаты
  * - Только администраторы
  *
  * @param {CommandAdvancedSettingsProps} props - Пропсы компонента
@@ -81,7 +78,6 @@ export function CommandAdvancedSettings({
           {showMenuSetting && (
             <ShowInMenuSetting selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
           )}
-          <PrivateOnlySetting selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
           <AdminOnlySetting selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
         </div>
       )}

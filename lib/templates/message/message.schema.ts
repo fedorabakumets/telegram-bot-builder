@@ -18,8 +18,6 @@ export const messageParamsSchema = z.object({
   formatMode: z.string().optional().transform(v => (['html', 'markdown', 'none'].includes(v as string) ? v : 'none') as 'html' | 'markdown' | 'none').default('none'),
 
   // --- Доступ ---
-  /** Только приватные чаты */
-  isPrivateOnly: z.boolean().optional().default(false),
   /** Только администраторы */
   adminOnly: z.boolean().optional().default(false),
   /** Требуется авторизация */

@@ -9,7 +9,6 @@ import type { StartTemplateParams } from './start.params';
 export const validParamsBasic: StartTemplateParams = {
   nodeId: 'start_1',
   messageText: '👋 Добро пожаловать в наш бот!\n\nВыберите раздел меню:',
-  isPrivateOnly: false,
   adminOnly: false,
   requiresAuth: false,
   userDatabaseEnabled: false,
@@ -33,7 +32,6 @@ export const validParamsBasic: StartTemplateParams = {
 export const validParamsWithChecks: StartTemplateParams = {
   nodeId: 'start_2',
   messageText: '🔒 Привет, администратор!',
-  isPrivateOnly: true,
   adminOnly: true,
   requiresAuth: true,
   userDatabaseEnabled: true,
@@ -57,7 +55,6 @@ export const validParamsWithChecks: StartTemplateParams = {
 export const validParamsWithMultipleSelection: StartTemplateParams = {
   nodeId: 'start_3',
   messageText: '📋 Выберите ваши интересы:',
-  isPrivateOnly: false,
   adminOnly: false,
   requiresAuth: false,
   userDatabaseEnabled: true,
@@ -86,7 +83,6 @@ export const validParamsWithMultipleSelection: StartTemplateParams = {
 export const validParamsWithAutoTransition: StartTemplateParams = {
   nodeId: 'start_4',
   messageText: '🚀 Запускаю бота...',
-  isPrivateOnly: false,
   adminOnly: false,
   requiresAuth: false,
   userDatabaseEnabled: true,
@@ -110,7 +106,6 @@ export const validParamsWithAutoTransition: StartTemplateParams = {
 export const validParamsWithSynonyms: StartTemplateParams = {
   nodeId: 'start_5',
   messageText: '👋 Привет! Рад вас видеть!',
-  isPrivateOnly: false,
   adminOnly: false,
   requiresAuth: false,
   userDatabaseEnabled: true,
@@ -137,7 +132,6 @@ export const validParamsWithSynonyms: StartTemplateParams = {
 export const validParamsWithInlineKeyboard: StartTemplateParams = {
   nodeId: 'start_6',
   messageText: '📋 Главное меню',
-  isPrivateOnly: false,
   adminOnly: false,
   requiresAuth: false,
   userDatabaseEnabled: false,
@@ -165,7 +159,6 @@ export const validParamsWithInlineKeyboard: StartTemplateParams = {
 export const validParamsWithBackToMenuButton: StartTemplateParams = {
   nodeId: 'start_7',
   messageText: '🏠 Главное меню',
-  isPrivateOnly: false,
   adminOnly: false,
   requiresAuth: false,
   userDatabaseEnabled: false,

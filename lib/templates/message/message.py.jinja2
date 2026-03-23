@@ -4,7 +4,6 @@
   @fileoverview Генерирует Python код для обработки узла типа message
   @param {string} nodeId - Уникальный идентификатор узла
   @param {string} messageText - Текст сообщения
-  @param {boolean} isPrivateOnly - Только приватные чаты
   @param {boolean} adminOnly - Только администраторы
   @param {boolean} requiresAuth - Требуется авторизация
   @param {boolean} userDatabaseEnabled - База данных пользователей включена
@@ -53,11 +52,6 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {%- endif %}
 
     {# Проверки безопасности #}
-    {%- if isPrivateOnly %}
-    if not await is_private_chat(callback_query.message):
-        await callback_query.answer("❌ Эта команда доступна только в приватных чатах", show_alert=True)
-        return
-    {%- endif %}
     {%- if adminOnly %}
     if not await is_admin(user_id):
         await callback_query.answer("❌ У вас нет прав для выполнения этой команды", show_alert=True)

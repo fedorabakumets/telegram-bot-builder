@@ -227,7 +227,6 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
       const code = generateStart({
         nodeId: 'start_1',
         messageText: '👋 Добро пожаловать!',
-        isPrivateOnly: false,
         adminOnly: false,
         requiresAuth: false,
         userDatabaseEnabled: true,
@@ -263,7 +262,6 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         nodeId: 'cmd_1',
         command: '/help',
         messageText: '🤖 Доступные команды:',
-        isPrivateOnly: false,
         adminOnly: false,
         requiresAuth: false,
         userDatabaseEnabled: true,
@@ -299,7 +297,6 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
       const code = generateMessage({
         nodeId: 'msg_1',
         messageText: 'Привет!',
-        isPrivateOnly: false,
         adminOnly: false,
         requiresAuth: false,
         userDatabaseEnabled: true,
@@ -334,7 +331,6 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
       const code = generateMessage({
         nodeId: 'msg_1',
         messageText: 'Привет!',
-        isPrivateOnly: false,
         adminOnly: false,
         requiresAuth: false,
         userDatabaseEnabled: true,
@@ -716,14 +712,14 @@ describe('PythonSyntaxValidation - интеграционные тесты', () 
         generateDatabase({ userDatabaseEnabled: true }),
         generateUtils({ userDatabaseEnabled: true }),
         generateMiddleware({ userDatabaseEnabled: true }),
-        generateStart({ nodeId: 'start_1', messageText: 'Привет!', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], allowMultipleSelection: false, multiSelectVariable: '', keyboardType: 'inline', buttons: [{
+        generateStart({ nodeId: 'start_1', messageText: 'Привет!', adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], allowMultipleSelection: false, multiSelectVariable: '', keyboardType: 'inline', buttons: [{
           text: 'OK', action: 'goto', target: 'msg_1', id: 'btn_ok',
           buttonType: 'complete',
           skipDataCollection: false,
           hideAfterClick: false
         }], formatMode: 'html' }),
-        generateCommand({ nodeId: 'cmd_1', command: '/help', messageText: 'Помощь', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '', keyboardType: 'inline', buttons: [], formatMode: 'html' }),
-        generateMessage({ nodeId: 'msg_1', messageText: 'Сообщение', isPrivateOnly: false, adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, enableAutoTransition: false, autoTransitionTo: undefined, keyboardType: 'inline', buttons: [], formatMode: 'none', enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '' }),
+        generateCommand({ nodeId: 'cmd_1', command: '/help', messageText: 'Помощь', adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, synonyms: [], enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '', keyboardType: 'inline', buttons: [], formatMode: 'html' }),
+        generateMessage({ nodeId: 'msg_1', messageText: 'Сообщение', adminOnly: false, requiresAuth: false, userDatabaseEnabled: true, enableAutoTransition: false, autoTransitionTo: undefined, keyboardType: 'inline', buttons: [], formatMode: 'none', enableConditionalMessages: false, conditionalMessages: [], fallbackMessage: '' }),
         generateMain({ userDatabaseEnabled: true, hasInlineButtons: false, menuCommands: [{ command: 'start', description: 'Запустить бота' }] }),
       ];
 

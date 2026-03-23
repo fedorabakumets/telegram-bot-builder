@@ -15,8 +15,6 @@ export interface TextTriggerEntry {
   targetNodeId: string;
   /** Тип целевого узла */
   targetNodeType: string;
-  /** Только приватные чаты */
-  isPrivateOnly?: boolean;
   /** Только для администраторов */
   adminOnly?: boolean;
   /** Требуется авторизация пользователя */

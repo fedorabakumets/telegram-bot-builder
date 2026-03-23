@@ -9,8 +9,6 @@ export interface UtilsTemplateParams {
   userDatabaseEnabled: boolean;
   /** Есть узлы с adminOnly */
   adminOnly?: boolean;
-  /** Есть узлы с isPrivateOnly */
-  isPrivateOnly?: boolean;
   /** Есть узлы с requiresAuth */
   requiresAuth?: boolean;
 }

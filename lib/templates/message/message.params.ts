@@ -25,8 +25,6 @@ export interface MessageTemplateParams {
   formatMode?: FormatMode;
 
   // --- Доступ ---
-  /** Только приватные чаты */
-  isPrivateOnly?: boolean;
   /** Только администраторы */
   adminOnly?: boolean;
   /** Требуется авторизация */

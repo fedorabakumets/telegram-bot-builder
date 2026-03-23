@@ -4,7 +4,6 @@
   @fileoverview Генерирует Python код для обработки команды /start
   @param {string} nodeId - Уникальный идентификатор узла
   @param {string} messageText - Текст сообщения
-  @param {boolean} isPrivateOnly - Только приватные чаты
   @param {boolean} adminOnly - Только администраторы
   @param {boolean} requiresAuth - Требуется авторизация
   @param {boolean} userDatabaseEnabled - База данных пользователей включена
@@ -36,12 +35,6 @@ async def start_handler(message: types.Message):
     logging.info(f"Команда /start вызвана пользователем {message.from_user.id}")
 
 {# Проверки безопасности #}
-{%- if isPrivateOnly %}
-
-    if not await is_private_chat(message):
-        await message.answer("❌ Эта команда доступна только в приватных чатах")
-        return
-{%- endif %}
 {%- if adminOnly %}
 
     if not await is_admin(message.from_user.id):

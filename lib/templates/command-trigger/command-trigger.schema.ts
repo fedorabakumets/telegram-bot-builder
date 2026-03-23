@@ -10,7 +10,6 @@ export const commandTriggerEntrySchema = z.object({
   command: z.string().min(1),
   description: z.string().optional(),
   showInMenu: z.boolean().optional(),
-  isPrivateOnly: z.boolean().optional(),
   adminOnly: z.boolean().optional(),
   requiresAuth: z.boolean().optional(),
   targetNodeId: z.string().min(1),

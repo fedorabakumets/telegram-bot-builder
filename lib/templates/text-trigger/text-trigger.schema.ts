@@ -17,8 +17,6 @@ const textTriggerEntrySchema = z.object({
   targetNodeId: z.string(),
   /** Тип целевого узла */
   targetNodeType: z.string(),
-  /** Только приватные чаты */
-  isPrivateOnly: z.boolean().optional(),
   /** Только для администраторов */
   adminOnly: z.boolean().optional(),
   /** Требуется авторизация пользователя */

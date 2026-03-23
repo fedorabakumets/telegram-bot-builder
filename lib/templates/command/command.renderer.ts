@@ -17,7 +17,6 @@ import { computeAdjustStr } from '../keyboard/keyboard.renderer';
 export function generateCommand(params: CommandTemplateParams): string {
   const validated = commandParamsSchema.parse({
     ...params,
-    isPrivateOnly: params.isPrivateOnly ?? false,
     keyboardType: params.keyboardType ?? 'none',
     formatMode: params.formatMode ?? 'none',
     buttons: params.buttons ?? [],

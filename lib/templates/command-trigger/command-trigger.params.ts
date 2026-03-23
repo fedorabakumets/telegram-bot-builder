@@ -13,8 +13,6 @@ export interface CommandTriggerEntry {
   description?: string;
   /** Показывать команду в меню бота */
   showInMenu?: boolean;
-  /** Только приватные чаты */
-  isPrivateOnly?: boolean;
   /** Только для администраторов */
   adminOnly?: boolean;
   /** Требуется авторизация пользователя */

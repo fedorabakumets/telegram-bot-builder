@@ -141,17 +141,6 @@ describe('start.py.jinja2 шаблон', () => {
     });
 
     describe('Проверки безопасности', () => {
-      it('должен включать только isPrivateOnly проверку', () => {
-        const result = generateStart({
-          ...validParamsBasic,
-          isPrivateOnly: true,
-        });
-
-        assert.ok(result.includes('is_private_chat'));
-        assert.ok(!result.includes('is_admin'));
-        assert.ok(!result.includes('check_auth'));
-      });
-
       it('должен включать только adminOnly проверку', () => {
         const result = generateStart({
           ...validParamsBasic,
@@ -291,7 +280,6 @@ describe('start.py.jinja2 шаблон', () => {
         assert.ok(result.success);
         if (result.success) {
           assert.strictEqual(result.data.messageText, undefined);
-          assert.strictEqual(result.data.isPrivateOnly, undefined);
           assert.strictEqual(result.data.adminOnly, undefined);
           assert.strictEqual(result.data.requiresAuth, undefined);
           assert.strictEqual(result.data.keyboardType, undefined);
@@ -453,7 +441,7 @@ describe('start.py.jinja2 шаблон', () => {
         const result = startParamsSchema.safeParse({
           nodeId: 'test',
           messageText: 'Привет!',
-          isPrivateOnly: 'true',
+          adminOnly: 'true',
         });
         assert.ok(!result.success);
       });
@@ -514,11 +502,6 @@ describe('start.py.jinja2 шаблон', () => {
       it('должен использовать ZodOptional для formatMode', () => {
         const shape = startParamsSchema.shape;
         assert.ok(shape.formatMode.isOptional());
-      });
-
-      it('должен использовать ZodOptional для isPrivateOnly', () => {
-        const shape = startParamsSchema.shape;
-        assert.ok(shape.isPrivateOnly.isOptional());
       });
 
       it('должен использовать ZodOptional для synonyms', () => {

@@ -8,7 +8,6 @@
     - showInMenu: bool        — показывать в меню
     - targetNodeId: string    — ID целевого узла
     - targetNodeType: string  — тип целевого узла
-    - isPrivateOnly: bool     — только приватные чаты
     - adminOnly: bool         — только администраторы
     - requiresAuth: bool      — требуется авторизация
 #}
@@ -23,11 +22,6 @@
 async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message):
     user_id = message.from_user.id
     logging.info(f"Пользователь {user_id} вызвал команду '{{ entry.command }}' — триггер узла {{ entry.nodeId }}")
-    {%- if entry.isPrivateOnly %}
-    if message.chat.type != 'private':
-        await message.answer("❌ Эта команда доступна только в приватных чатах")
-        return
-    {%- endif %}
     {%- if entry.adminOnly %}
     if not await is_admin(user_id):
         await message.answer("❌ У вас нет прав для выполнения этой команды")

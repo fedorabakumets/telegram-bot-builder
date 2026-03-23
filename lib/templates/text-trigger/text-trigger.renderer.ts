@@ -48,7 +48,6 @@ export function collectTextTriggerEntries(nodes: Node[]): TextTriggerEntry[] {
       matchType: (node.data.textMatchType as 'exact' | 'contains') ?? 'exact',
       targetNodeId,
       targetNodeType,
-      isPrivateOnly: node.data.isPrivateOnly,
       adminOnly: node.data.adminOnly,
       requiresAuth: node.data.requiresAuth,
     });

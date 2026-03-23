@@ -138,26 +138,6 @@ describe('command.py.jinja2 шаблон', () => {
     });
 
     describe('Проверки безопасности', () => {
-      it('должен включать только isPrivateOnly проверку', () => {
-        const result = generateCommand({
-          ...validParamsBasic,
-          isPrivateOnly: true,
-        });
-
-        assert.ok(result.includes('is_private_chat'));
-        assert.ok(!result.includes('is_admin'));
-        assert.ok(!result.includes('check_auth'));
-      });
-
-      it('должен добавлять isPrivateOnly проверку в callback-обработчик', () => {
-        const result = generateCommand({
-          ...validParamsBasic,
-          isPrivateOnly: true,
-        });
-        // callback-обработчик тоже должен проверять тип чата
-        assert.ok(result.includes("chat.type != 'private'") || result.includes('is_private_chat'));
-      });
-
       it('должен включать только adminOnly проверку', () => {
         const result = generateCommand({
           ...validParamsBasic,
@@ -301,7 +281,6 @@ describe('command.py.jinja2 шаблон', () => {
         assert.ok(result.success);
         if (result.success) {
           assert.strictEqual(result.data.messageText, undefined);
-          assert.strictEqual(result.data.isPrivateOnly, undefined);
           assert.strictEqual(result.data.adminOnly, undefined);
           assert.strictEqual(result.data.requiresAuth, undefined);
           assert.strictEqual(result.data.keyboardType, undefined);
@@ -372,7 +351,7 @@ describe('command.py.jinja2 шаблон', () => {
         const result = commandParamsSchema.safeParse({
           nodeId: 'test',
           command: '/help',
-          isPrivateOnly: 'true',
+          adminOnly: 'true',
         });
         assert.ok(!result.success);
       });
@@ -433,11 +412,6 @@ describe('command.py.jinja2 шаблон', () => {
       it('должен использовать ZodOptional для formatMode', () => {
         const shape = commandParamsSchema.shape;
         assert.ok(shape.formatMode.isOptional());
-      });
-
-      it('должен использовать ZodOptional для isPrivateOnly', () => {
-        const shape = commandParamsSchema.shape;
-        assert.ok(shape.isPrivateOnly.isOptional());
       });
 
       it('должен использовать ZodOptional для synonyms', () => {

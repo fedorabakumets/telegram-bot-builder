@@ -832,7 +832,7 @@ test('J05', 'text_trigger → condition → message → синтаксис OK', 
   const p = makeCleanProject([
     {
       id: 'tt1', type: 'text_trigger', position: { x: 0, y: 0 },
-      data: { textSynonyms: ['привет'], textMatchType: 'exact', isPrivateOnly: false, adminOnly: false, requiresAuth: false, autoTransitionTo: 'cond1', buttons: [], keyboardType: 'none' },
+      data: { textSynonyms: ['привет'], textMatchType: 'exact', adminOnly: false, requiresAuth: false, autoTransitionTo: 'cond1', buttons: [], keyboardType: 'none' },
     },
     makeConditionNode('cond1', 'x', [makeBranch('filled', '', 'msg1'), makeBranch('else')]),
     makeMessageNode('msg1'),

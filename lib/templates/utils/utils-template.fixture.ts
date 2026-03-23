@@ -21,12 +21,6 @@ export const validParamsAdminOnly: UtilsTemplateParams = {
   adminOnly: true,
 };
 
-/** Валидные параметры: isPrivateOnly включён */
-export const validParamsPrivateOnly: UtilsTemplateParams = {
-  userDatabaseEnabled: false,
-  isPrivateOnly: true,
-};
-
 /** Невалидные параметры: неправильный тип */
 export const invalidParamsWrongType = {
   userDatabaseEnabled: 'true',

@@ -33,9 +33,6 @@ export function generateReadme(
     if (node.data.adminOnly) {
       readme += '  - 🔒 Только для администраторов\n';
     }
-    if (node.data.isPrivateOnly) {
-      readme += '  - 👤 Только в приватных чатах\n';
-    }
     if (node.data.requiresAuth) {
       readme += '  - 🔐 Требует авторизации\n';
     }

@@ -9,7 +9,6 @@ import { z } from 'zod';
 export const utilsParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().optional().default(false),
   adminOnly: z.boolean().optional().default(false),
-  isPrivateOnly: z.boolean().optional().default(false),
   requiresAuth: z.boolean().optional().default(false),
 });
 

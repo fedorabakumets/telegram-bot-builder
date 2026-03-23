@@ -112,7 +112,6 @@ export function generateCommandHandler(
     nodeId: node.id,
     command: node.data?.command || '/help',
     messageText: node.data?.messageText || '',
-    isPrivateOnly: node.data?.isPrivateOnly || false,
     adminOnly: node.data?.adminOnly || false,
     requiresAuth: node.data?.requiresAuth || false,
     synonyms: node.data?.synonyms || [],
@@ -150,7 +149,6 @@ export function generateStartHandler(
   return generateStartTemplate({
     nodeId: node.id,
     messageText: node.data?.messageText || '',
-    isPrivateOnly: node.data?.isPrivateOnly || false,
     adminOnly: node.data?.adminOnly || false,
     requiresAuth: node.data?.requiresAuth || false,
     synonyms: node.data?.synonyms || [],

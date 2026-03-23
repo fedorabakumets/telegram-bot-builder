@@ -25,7 +25,6 @@ import type { Node } from '@shared/schema';
 export function generateStart(params: StartTemplateParams): string {
   const validated = startParamsSchema.parse({
     ...params,
-    isPrivateOnly: params.isPrivateOnly ?? false,
     keyboardType: params.keyboardType ?? 'none',
     formatMode: params.formatMode ?? 'none',
   });

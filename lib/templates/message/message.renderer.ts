@@ -37,7 +37,6 @@ export function generateMessage(params: MessageTemplateParams): string {
     userDatabaseEnabled: normalizedParams.userDatabaseEnabled ?? false,
     keyboardType: normalizedParams.keyboardType ?? 'none',
     requiresAuth: normalizedParams.requiresAuth ?? false,
-    isPrivateOnly: normalizedParams.isPrivateOnly ?? false,
     adminOnly: normalizedParams.adminOnly ?? false,
     enableAutoTransition: normalizedParams.enableAutoTransition ?? false,
     allowMultipleSelection: normalizedParams.allowMultipleSelection ?? false,

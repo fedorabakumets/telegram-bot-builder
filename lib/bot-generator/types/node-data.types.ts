@@ -158,8 +158,6 @@ export interface NodeData {
   continueButtonText?: string;
 
   // --- Доступ ---
-  /** Только приватный чат */
-  isPrivateOnly?: boolean;
   /** Только для администраторов */
   adminOnly?: boolean;
   /** Требует авторизации */

@@ -15,7 +15,6 @@ import {
   validParamsContains,
   validParamsMultipleSynonyms,
   validParamsMixed,
-  validParamsPrivateOnly,
   invalidParamsWrongMatchType,
   nodesWithExactTrigger,
   nodesWithContainsTrigger,
@@ -64,17 +63,6 @@ describe('generateTextTriggers()', () => {
     expect(r).toContain('class MockCallback:');
     expect(r).toContain('mock_callback = MockCallback');
     expect(r).toContain('await handle_callback_msg_hello(mock_callback)');
-  });
-
-  it('isPrivateOnly добавляет проверку типа чата', () => {
-    const r = generateTextTriggers(validParamsPrivateOnly);
-    expect(r).toContain("message.chat.type != 'private'");
-    expect(r).toContain('Эта команда доступна только в приватных чатах');
-  });
-
-  it('без isPrivateOnly нет проверки типа чата', () => {
-    const r = generateTextTriggers(validParamsExact);
-    expect(r).not.toContain("message.chat.type != 'private'");
   });
 
   it('adminOnly добавляет проверку прав администратора', () => {

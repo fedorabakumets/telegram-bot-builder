@@ -71,7 +71,6 @@ if (!fs.existsSync(PROJECT_PATH)) {
             command: '/start',
             description: 'Запустить бота',
             showInMenu: true,
-            isPrivateOnly: false,
             adminOnly: false,
             requiresAuth: false,
             messageText: 'Привет!',

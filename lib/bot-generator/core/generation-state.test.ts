@@ -118,7 +118,6 @@ function makeMinimalBotData(): BotData {
           messageText: 'Привет!',
           buttons: [],
           keyboardType: 'inline',
-          isPrivateOnly: false,
           adminOnly: false,
           requiresAuth: false,
           synonyms: [],

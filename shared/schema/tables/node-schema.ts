@@ -73,8 +73,6 @@ export const nodeSchema = z.object({
      * Используется только совместно с устаревшим полем synonyms.
      */
     matchMode: z.enum(['exact', 'contains', 'fuzzy']).default('exact').optional(),
-    /** Доступна только в приватных чатах */
-    isPrivateOnly: z.boolean().default(false),
     /** Доступна только администраторам */
     adminOnly: z.boolean().default(false),
     /** Требуется авторизация пользователя */
