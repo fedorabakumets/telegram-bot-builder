@@ -54,7 +54,8 @@ export function MediaFileSection({
 
   // Извлекаем медиа-переменные из всех узлов
   const mediaVariables = useMemo((): Variable[] => {
-    const { mediaVariables: vars } = extractVariables(getAllNodesFromAllSheets);
+    const nodes = getAllNodesFromAllSheets.map((n: any) => n.node ?? n);
+    const { mediaVariables: vars } = extractVariables(nodes);
     return vars as Variable[];
   }, [getAllNodesFromAllSheets]);
 
