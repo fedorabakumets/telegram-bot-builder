@@ -78,6 +78,12 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
         return <BroadcastHeader />;
       case 'client_auth':
         return <ClientAuthHeader />;
+      case 'media':
+        return (
+          <span className="font-semibold text-fuchsia-700 dark:text-fuchsia-300">
+            Медиафайл
+          </span>
+        );
       case 'command_trigger':
         return (
           <span className="font-semibold text-yellow-700 dark:text-yellow-300">
