@@ -40,4 +40,5 @@ export const nodeIcons: Record<string, string> = {
   client_auth: 'fas fa-user-shield',
   command_trigger: 'fas fa-bolt',
   text_trigger: 'fas fa-comment-dots',
+  media: 'fas fa-photo-video',
 };

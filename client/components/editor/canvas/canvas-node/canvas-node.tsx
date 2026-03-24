@@ -23,6 +23,7 @@ import { ClientAuthCard } from './client-auth-card';
 import { CommandTriggerPreview } from './command-trigger-preview';
 import { TextTriggerPreview } from './text-trigger-preview';
 import { ConditionNodePreview } from './condition-node-preview';
+import { MediaNodePreview } from './media-node-preview';
 
 /**
  * Интерфейс свойств компонента CanvasNode
@@ -480,6 +481,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Voice message preview */}
         {node.type === 'voice' && <VoicePreview node={node} />}
+
+        {/* Media node preview */}
+        {node.type === 'media' && <MediaNodePreview attachedMedia={node.data.attachedMedia || []} />}
 
         {/* Location preview */}
         {node.type === 'location' && <LocationPreview node={node} />}

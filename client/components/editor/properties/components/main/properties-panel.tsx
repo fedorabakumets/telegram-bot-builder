@@ -41,6 +41,7 @@ import { FoursquareIntegrationSection } from '../configuration/foursquare-integr
 import { MapServicesSection } from '../configuration/map-services-section';
 import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
 import { ClientAuthProperties } from '../client-auth/client-auth-properties';
+import { MediaNodeProperties } from './media-node-properties';
 
 /**
  * Интерфейс пропсов для панели свойств узлов
@@ -240,8 +241,8 @@ export function PropertiesPanel({
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-0">
 
-          {/* Basic Settings Section - скрыто для узла рассылка, client_auth, триггеров и условия */}
-          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+          {/* Basic Settings Section - скрыто для узла рассылка, client_auth, триггеров, условия и медиа-ноды */}
+          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <BasicSettingsSection
               selectedNode={selectedNode}
               projectId={projectId}
@@ -289,6 +290,16 @@ export function PropertiesPanel({
             />
           )}
 
+          {/* Media Section - только для медиа-ноды */}
+          {selectedNode.type === 'media' && (
+            <MediaNodeProperties
+              projectId={projectId}
+              selectedNode={selectedNode}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              onNodeUpdate={onNodeUpdate}
+            />
+          )}
+
           {/* Trigger Section - только для узлов-триггеров */}
           {isTriggerNode(selectedNode.type) && selectedNode.type === 'command_trigger' && (
             <CommandTriggerConfiguration
@@ -314,8 +325,8 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Message Content - скрыто для узлов управления, триггеров и условия */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+          {/* Message Content - скрыто для узлов управления, триггеров, условия и медиа-ноды */}
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
             <MessageContentSection
               selectedNode={selectedNode}
               allNodes={allNodes}
@@ -333,8 +344,8 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Media File Section - скрыто для узлов управления, триггеров и условия */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+          {/* Media File Section - скрыто для узлов управления, триггеров, условия и медиа-ноды */}
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
             <MediaFileSection
               projectId={projectId}
               selectedNode={selectedNode}
@@ -345,8 +356,8 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Keyboard Section - скрыто для узлов управления, триггеров и условия */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+          {/* Keyboard Section - скрыто для узлов управления, триггеров, условия и медиа-ноды */}
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
             <div className="w-full bg-gradient-to-br from-amber-50/40 to-yellow-50/20 dark:from-amber-950/30 dark:to-yellow-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-amber-200/40 dark:border-amber-800/40 backdrop-blur-sm">
               <KeyboardSectionHeader
                 selectedNode={selectedNode}
@@ -477,8 +488,8 @@ export function PropertiesPanel({
           </div>
         )}
 
-        {/* Universal User Input Collection - скрыто для узлов управления, триггеров и условия */}
-        {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+        {/* Universal User Input Collection - скрыто для узлов управления, триггеров, условия и медиа-ноды */}
+        {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
           <UserInputSettingsSection
             selectedNode={selectedNode}
             getAllNodesFromAllSheets={getAllNodesFromAllSheets}
