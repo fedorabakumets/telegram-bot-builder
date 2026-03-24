@@ -62,6 +62,7 @@ const nodeTypeNames: Record<Node['type'], string> = {
   client_auth: 'Авторизация Client API',
   command_trigger: 'Триггер команды',
   text_trigger: 'Текстовый триггер',
+  media: 'Медиафайл',
 };
 
 /**
@@ -98,6 +99,7 @@ const nodeIcons: Record<Node['type'], string> = {
   client_auth: 'fas fa-key',
   command_trigger: 'fas fa-bolt',
   text_trigger: 'fas fa-comment-dots',
+  media: 'fas fa-photo-video',
 };
 
 /**
@@ -134,6 +136,7 @@ const nodeColors: Record<Node['type'], string> = {
   client_auth: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
   command_trigger: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
   text_trigger: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+  media: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
 };
 
 /**
@@ -212,6 +215,7 @@ export function PropertiesHeader({
                       <SelectItem value="demote_user">👤 Снять с администратора</SelectItem>
                       <SelectItem value="admin_rights">⚡ Права администратора</SelectItem>
                       <SelectItem value="broadcast">📢 Рассылка</SelectItem>
+                      <SelectItem value="media">🖼️ Медиафайл</SelectItem>
                     </SelectContent>
                   </Select>
                   <button
