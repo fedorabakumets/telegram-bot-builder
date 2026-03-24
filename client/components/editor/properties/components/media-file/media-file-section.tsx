@@ -5,9 +5,13 @@
  * Показывает предупреждение при смешивании документов с другими типами медиа.
  */
 
+import { useMemo } from 'react';
 import { MediaFileSectionHeader } from './media-file-section-header';
 import { MultiMediaSelector } from '../../media/multi-media-selector';
 import { InfoBlock } from '@/components/ui/info-block';
+import { VariableSelector } from '../variables/variable-selector';
+import { extractVariables } from '../../utils/variables-utils';
+import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы секции медиафайлов */
 interface MediaFileSectionProps {
@@ -16,6 +20,7 @@ interface MediaFileSectionProps {
   isOpen: boolean;
   onToggle: () => void;
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
+  getAllNodesFromAllSheets?: any[];
 }
 
 /** Определение типа медиа по URL */
@@ -35,7 +40,8 @@ export function MediaFileSection({
   selectedNode,
   isOpen,
   onToggle,
-  onNodeUpdate
+  onNodeUpdate,
+  getAllNodesFromAllSheets = []
 }: MediaFileSectionProps) {
   const attachedFiles = selectedNode.data.attachedMedia || [];
 
@@ -45,6 +51,17 @@ export function MediaFileSection({
     ['image', 'video', 'audio'].includes(getMediaTypeByUrl(url))
   );
   const showMixedWarning = hasDocuments && hasOtherMedia;
+
+  // Извлекаем медиа-переменные из всех узлов
+  const mediaVariables = useMemo((): Variable[] => {
+    const { mediaVariables: vars } = extractVariables(getAllNodesFromAllSheets);
+    return vars as Variable[];
+  }, [getAllNodesFromAllSheets]);
+
+  const handleVariableSelect = (varName: string) => {
+    const current: string[] = selectedNode.data.attachedMedia || [];
+    onNodeUpdate(selectedNode.id, { attachedMedia: [...current, `{${varName}}`] });
+  };
 
   return (
     <div className="bg-gradient-to-br from-pink-50/40 to-rose-50/20 dark:from-pink-950/30 dark:to-rose-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-pink-200/40 dark:border-pink-800/40 backdrop-blur-sm">
@@ -58,6 +75,20 @@ export function MediaFileSection({
               title="⚠️ Документы отправятся отдельным сообщением"
               description="Telegram не позволяет смешивать документы с фото/видео/аудио. Бот отправит их двумя отдельными группами."
             />
+          )}
+
+          {mediaVariables.length > 0 && (
+            <div className="flex justify-end">
+              <VariableSelector
+                availableVariables={mediaVariables}
+                onSelect={handleVariableSelect}
+                trigger={
+                  <button className="text-xs px-2.5 py-1 rounded-lg border border-rose-300/60 dark:border-rose-700/60 bg-rose-50/60 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 hover:bg-rose-100/80 dark:hover:bg-rose-800/30 transition-colors">
+                    + Переменная
+                  </button>
+                }
+              />
+            </div>
           )}
 
           <MultiMediaSelector

@@ -341,6 +341,7 @@ export function PropertiesPanel({
               isOpen={isMediaSectionOpen}
               onToggle={() => setIsMediaSectionOpen(!isMediaSectionOpen)}
               onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
             />
           )}
 
