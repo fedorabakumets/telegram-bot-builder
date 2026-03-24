@@ -66,7 +66,7 @@ async def handle_photo_input(message: types.Message):
         "value": photo_file_id,
         "type": "photo",
         "photoUrl": media_result["url"] if media_result else None,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now().isoformat()
     }
     user_data[user_id][photo_variable] = photo_data
 
@@ -151,7 +151,7 @@ async def handle_video_input(message: types.Message):
         "value": video_file_id,
         "type": "video",
         "videoUrl": media_result["url"] if media_result else None,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now().isoformat()
     }
     user_data[user_id][video_variable] = video_data
 
@@ -243,7 +243,7 @@ async def handle_audio_input(message: types.Message):
         "value": audio_file_id,
         "type": "audio",
         "audioUrl": media_result["url"] if media_result else None,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now().isoformat()
     }
     user_data[user_id][audio_variable] = audio_data
 
@@ -328,7 +328,7 @@ async def handle_document_input(message: types.Message):
         "value": document_file_id,
         "type": "document",
         "documentUrl": media_result["url"] if media_result else None,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now().isoformat()
     }
     user_data[user_id][document_variable] = document_data
 

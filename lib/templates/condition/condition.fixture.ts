@@ -115,7 +115,7 @@ export const nodesWithConditionEquals: Node[] = [
 export const nodesWithMissingVariable: Node[] = [
   makeNode('condition_bad', 'condition', {
     variable: '',
-    branches: [{ id: 'b1', label: 'Иначе', operator: 'else', value: '' }],
+    branches: [{ id: 'b1', label: 'Заполнено', operator: 'filled', value: '' }],
   }),
 ];
 
@@ -549,6 +549,112 @@ export const nodesWithConditionMixedAdmin: Node[] = [
     ],
   }),
   makeNode('msg_admin', 'message', {}),
+  makeNode('msg_filled', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];
+
+/**
+ * Узел условия только с веткой is_subscribed
+ */
+export const validParamsIsSubscribed: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_subscription',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_subscribed', value: '@my_channel', target: 'msg_subscribed' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Узел условия только с веткой is_not_subscribed
+ */
+export const validParamsIsNotSubscribed: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_not_subscription',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_not_subscribed', value: 'my_channel', target: 'msg_not_subscribed' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Узел условия со ссылкой t.me в ветке подписки
+ */
+export const validParamsIsSubscribedLink: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_check_subscription_link',
+      variable: '',
+      branches: [
+        { id: 'b1', operator: 'is_subscribed', value: 'https://t.me/my_channel', target: 'msg_subscribed' },
+        { id: 'b2', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/**
+ * Смешанный узел: is_subscribed + equals + else
+ */
+export const validParamsMixedSubscribedAndVar: ConditionTemplateParams = {
+  entries: [
+    {
+      nodeId: 'condition_mixed_subscribed',
+      variable: 'user_role',
+      branches: [
+        { id: 'b1', operator: 'is_subscribed', value: '@vip_channel', target: 'msg_subscribed' },
+        { id: 'b2', operator: 'equals', value: 'vip', target: 'msg_vip' },
+        { id: 'b3', operator: 'else', value: '', target: 'msg_other' },
+      ],
+    },
+  ],
+};
+
+/** Node-фикстура: только is_subscribed без переменной */
+export const nodesWithConditionIsSubscribed: Node[] = [
+  makeNode('condition_check_subscription', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Подписан', operator: 'is_subscribed', value: '@my_channel', target: 'msg_subscribed' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_subscribed', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];
+
+/** Node-фикстура: только is_not_subscribed без переменной */
+export const nodesWithConditionIsNotSubscribed: Node[] = [
+  makeNode('condition_check_not_subscription', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Не подписан', operator: 'is_not_subscribed', value: 'my_channel', target: 'msg_not_subscribed' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_not_subscribed', 'message', {}),
+  makeNode('msg_other', 'message', {}),
+];
+
+/** Node-фикстура: is_subscribed + filled + else */
+export const nodesWithConditionMixedSubscription: Node[] = [
+  makeNode('condition_mixed_subscription', 'condition', {
+    variable: 'user_role',
+    branches: [
+      { id: 'b1', label: 'Подписан', operator: 'is_subscribed', value: 'https://t.me/vip_channel', target: 'msg_subscribed' },
+      { id: 'b2', label: 'Заполнено', operator: 'filled', value: '', target: 'msg_filled' },
+      { id: 'b3', label: 'Иначе', operator: 'else', value: '', target: 'msg_other' },
+    ],
+  }),
+  makeNode('msg_subscribed', 'message', {}),
   makeNode('msg_filled', 'message', {}),
   makeNode('msg_other', 'message', {}),
 ];

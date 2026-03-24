@@ -1308,6 +1308,40 @@ test('Q04', 'schema parse сохраняет system operator is_admin в conditi
   ok(conditionHandler.includes('await handle_callback_m2(callback_query)'), 'else branch должен вести в m2');
 });
 
+test('Q05', 'schema parse сохраняет is_subscribed в condition перед media', () => {
+  const project = parseProject(makeProject([
+    makeTriggerNode('t1', '/sub', 'cond_sub'),
+    makeConditionNode('cond_sub', '', [
+      makeConditionBranch('is_subscribed', 'm1', '@news_channel'),
+      makeConditionBranch('else', 'm2'),
+    ]),
+    makeMediaNode('m1', ['https://ex.com/subscribed.jpg']),
+    makeMediaNode('m2', ['https://ex.com/fallback.jpg']),
+  ]));
+  const code = gen(project, 'q05');
+  const conditionHandler = getHandlerBlock(code, 'cond_sub');
+  ok(conditionHandler.includes('await _is_user_subscribed("@news_channel")'), 'is_subscribed должен пережить schema parse');
+  ok(conditionHandler.includes('await handle_callback_m1(callback_query)'), 'subscription branch должен вести в m1');
+  ok(conditionHandler.includes('await handle_callback_m2(callback_query)'), 'else branch должен вести в m2');
+});
+
+test('Q06', 'condition is_not_subscribed → media генерирует валидный Python', () => {
+  const code = gen(makeProject([
+    makeTriggerNode('t1', '/nosub', 'cond_nosub'),
+    makeConditionNode('cond_nosub', '', [
+      makeConditionBranch('is_not_subscribed', 'm1', 'https://t.me/news_channel'),
+      makeConditionBranch('else', 'm2'),
+    ]),
+    makeMediaNode('m1', ['https://ex.com/need_subscribe.jpg']),
+    makeMediaNode('m2', ['https://ex.com/already_subscribed.jpg']),
+  ]), 'q06');
+  const conditionHandler = getHandlerBlock(code, 'cond_nosub');
+  ok(conditionHandler.includes('not await _is_user_subscribed("https://t.me/news_channel")'), 'is_not_subscribed должен быть в коде');
+  ok(conditionHandler.includes('return f"@{_slug}"'), 'нормализация ссылки должна быть в helper');
+  ok(conditionHandler.includes('await handle_callback_m1(callback_query)'), 'ветка is_not_subscribed должна вести в media');
+  syntax(code, 'q06');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 const total = results.length;

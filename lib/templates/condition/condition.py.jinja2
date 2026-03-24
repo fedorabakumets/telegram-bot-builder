@@ -5,7 +5,7 @@
   @param {array} conditionEntries - Массив объектов ConditionEntry
 
   Порядок веток в сгенерированном коде:
-  0. Системные операторы (is_private, is_group, is_channel, is_admin, is_premium, is_bot)
+  0. Системные операторы (is_private, is_group, is_channel, is_admin, is_premium, is_bot, is_subscribed, is_not_subscribed)
   1. Числовые операторы (greater_than, less_than, between) — всегда первыми среди переменных
   2. Строковые операторы (equals, contains, filled, empty)
   3. else — всегда последней
@@ -25,6 +25,56 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
 {%- else %}
     logging.info(f"Узел условия {{ entry.nodeId }}: проверка системного условия или pass-through переход")
 {%- endif %}
+{%- if entry.hasSubscriptionBranch %}
+    def _normalize_subscription_chat_ref(raw_ref):
+        _raw = str(raw_ref or "").strip()
+        if not _raw:
+            return ""
+
+        _lower = _raw.lower()
+        if _lower.startswith("https://") or _lower.startswith("http://") or _lower.startswith("t.me/") or _lower.startswith("telegram.me/") or _lower.startswith("www.t.me/") or _lower.startswith("www.telegram.me/"):
+            _clean = _raw
+            for _prefix in ("https://", "http://"):
+                if _clean.lower().startswith(_prefix):
+                    _clean = _clean[len(_prefix):]
+                    break
+            if _clean.lower().startswith("www."):
+                _clean = _clean[4:]
+            if _clean.lower().startswith("t.me/"):
+                _clean = _clean[5:]
+            elif _clean.lower().startswith("telegram.me/"):
+                _clean = _clean[12:]
+            _clean = _clean.split("?", 1)[0].split("#", 1)[0].strip("/")
+
+            if not _clean:
+                return ""
+            if _clean.startswith("+") or _clean.lower().startswith("joinchat/"):
+                return _raw
+
+            _slug = _clean.split("/")[-1].strip()
+            if _slug and _slug.replace("_", "").isalnum():
+                return f"@{_slug}"
+            return _raw
+
+        if _raw.startswith("@"):
+            _username = _raw[1:].strip()
+            return f"@{_username}" if _username and _username.replace("_", "").isalnum() else _raw
+
+        return f"@{_raw}" if _raw.replace("_", "").isalnum() else _raw
+
+    async def _is_user_subscribed(raw_ref):
+        _chat_ref = _normalize_subscription_chat_ref(raw_ref)
+        if not _chat_ref:
+            return False
+
+        try:
+            _member = await bot.get_chat_member(chat_id=_chat_ref, user_id=user_id)
+            _status = getattr(_member, "status", None)
+            return _status not in ("left", "kicked")
+        except Exception as e:
+            logging.warning(f"Узел условия {{ entry.nodeId }}: не удалось проверить подписку на {_chat_ref}: {e}")
+            return False
+{%- endif %}
 {%- if entry.hasNumericBranch %}
     try:
         _num_val = float(val)
@@ -41,16 +91,16 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
 {%- endif %}
 {%- endfor %}
 {% endif %}
-{#- Проход 0: системные операторы (is_private, is_group, is_channel, is_admin, is_premium, is_bot) #}
+{#- Проход 0: системные операторы (is_private, is_group, is_channel, is_admin, is_premium, is_bot, is_subscribed, is_not_subscribed) #}
 {%- for branch in entry.branches %}
-{%- if branch.operator == 'is_private' or branch.operator == 'is_group' or branch.operator == 'is_channel' or branch.operator == 'is_admin' or branch.operator == 'is_premium' or branch.operator == 'is_bot' %}
+{%- if branch.operator == 'is_private' or branch.operator == 'is_group' or branch.operator == 'is_channel' or branch.operator == 'is_admin' or branch.operator == 'is_premium' or branch.operator == 'is_bot' or branch.operator == 'is_subscribed' or branch.operator == 'is_not_subscribed' %}
 {%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
 {%- if branch.isFirstSystem %}
-    if {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% elif branch.operator == 'is_admin' %}callback_query.from_user.id in ADMIN_IDS{% elif branch.operator == 'is_premium' %}getattr(callback_query.from_user, 'is_premium', False){% elif branch.operator == 'is_bot' %}getattr(callback_query.from_user, 'is_bot', False){% endif %}:
+    if {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% elif branch.operator == 'is_admin' %}callback_query.from_user.id in ADMIN_IDS{% elif branch.operator == 'is_premium' %}getattr(callback_query.from_user, 'is_premium', False){% elif branch.operator == 'is_bot' %}getattr(callback_query.from_user, 'is_bot', False){% elif branch.operator == 'is_subscribed' %}await _is_user_subscribed("{{ branch.value }}"){% elif branch.operator == 'is_not_subscribed' %}not await _is_user_subscribed("{{ branch.value }}"){% endif %}:
         # Ветка: {{ branch.operator }}
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
 {%- else %}
-    elif {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% elif branch.operator == 'is_admin' %}callback_query.from_user.id in ADMIN_IDS{% elif branch.operator == 'is_premium' %}getattr(callback_query.from_user, 'is_premium', False){% elif branch.operator == 'is_bot' %}getattr(callback_query.from_user, 'is_bot', False){% endif %}:
+    elif {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% elif branch.operator == 'is_admin' %}callback_query.from_user.id in ADMIN_IDS{% elif branch.operator == 'is_premium' %}getattr(callback_query.from_user, 'is_premium', False){% elif branch.operator == 'is_bot' %}getattr(callback_query.from_user, 'is_bot', False){% elif branch.operator == 'is_subscribed' %}await _is_user_subscribed("{{ branch.value }}"){% elif branch.operator == 'is_not_subscribed' %}not await _is_user_subscribed("{{ branch.value }}"){% endif %}:
         # Ветка: {{ branch.operator }}
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
 {%- endif %}

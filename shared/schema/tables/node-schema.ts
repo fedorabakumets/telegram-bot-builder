@@ -492,6 +492,8 @@ export const nodeSchema = z.object({
         'is_admin',
         'is_premium',
         'is_bot',
+        'is_subscribed',
+        'is_not_subscribed',
         'else',
       ]),
       /** Значение для сравнения */

@@ -33,7 +33,8 @@ export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodes
   const variable: string = data?.variable || '';
   const branches: ConditionBranch[] = data?.branches || [];
 
-  const SYSTEM_OPERATORS = new Set(['is_private', 'is_group', 'is_channel', 'else']);
+  /** Системные операторы, которые не используют общую переменную узла. */
+  const SYSTEM_OPERATORS = new Set(['is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed', 'else']);
   const allBranchesSystemic = branches.length > 0 && branches.every(b => SYSTEM_OPERATORS.has(b.operator));
 
   /**

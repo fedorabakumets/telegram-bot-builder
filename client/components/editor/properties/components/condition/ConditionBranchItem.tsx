@@ -44,17 +44,52 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
   'is_admin': 'Если пользователь — администратор бота',
   'is_premium': 'Если пользователь — Telegram Premium',
   'is_bot': 'Если пользователь — бот',
+  'is_subscribed': 'Если пользователь подписан на канал',
+  'is_not_subscribed': 'Если пользователь не подписан на канал',
   'else': 'Во всех остальных случаях',
 };
 
 /** Операторы, доступные для выбора пользователем */
 const SELECTABLE_OPERATORS: ConditionOperator[] = [
   'filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between',
-  'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'else',
+  'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed', 'else',
 ];
 
 /** Системные операторы, не требующие переменной и значения */
-const SYSTEM_OPERATORS = new Set<ConditionOperator>(['is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot']);
+
+function normalizeSubscriptionValue(rawValue: string): string {
+  const trimmed = rawValue.trim();
+
+  if (!trimmed) return '';
+
+  const telegramLinkMatch = trimmed.match(/^(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/(.+)$/i);
+  if (telegramLinkMatch) {
+    const path = telegramLinkMatch[1].split(/[?#]/)[0].replace(/^\/+|\/+$/g, '');
+
+    if (!path) return '';
+    if (path.startsWith('+') || path.toLowerCase().startsWith('joinchat/')) {
+      return trimmed;
+    }
+
+    const slug = path.split('/').pop()?.trim();
+    if (slug && /^[a-zA-Z0-9_]+$/.test(slug)) {
+      return `@${slug}`;
+    }
+
+    return trimmed;
+  }
+
+  if (trimmed.startsWith('@')) {
+    const username = trimmed.slice(1).trim();
+    return /^[a-zA-Z0-9_]+$/.test(username) ? `@${username}` : trimmed;
+  }
+
+  if (/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+    return `@${trimmed}`;
+  }
+
+  return trimmed;
+}
 
 /** Генерирует текст выбранного оператора с подстановкой имени переменной */
 export function getSelectedLabel(operator: ConditionOperator, variable: string, value: string, value2?: string): string {
@@ -73,6 +108,8 @@ export function getSelectedLabel(operator: ConditionOperator, variable: string, 
     case 'is_admin':     return 'Если пользователь — администратор бота';
     case 'is_premium':   return 'Если пользователь — Telegram Premium';
     case 'is_bot':       return 'Если пользователь — бот';
+    case 'is_subscribed': return `Если пользователь подписан на канал "${value || '...'}"`;
+    case 'is_not_subscribed': return `Если пользователь не подписан на канал "${value || '...'}"`;
     default:             return OPERATOR_LABELS[operator];
   }
 }
@@ -83,9 +120,11 @@ export function getSelectedLabel(operator: ConditionOperator, variable: string, 
  * Для остальных веток отображает выбор оператора, поле значения и текст сообщения.
  */
 export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
-  const isSystem = SYSTEM_OPERATORS.has(branch.operator);
-  const needsValue = !isSystem && (branch.operator === 'equals' || branch.operator === 'contains' || branch.operator === 'greater_than' || branch.operator === 'less_than' || branch.operator === 'between');
+  /** Операторы, которым требуется одно текстовое значение. */
+  const singleValueOperators = new Set<ConditionOperator>(['equals', 'contains', 'greater_than', 'less_than', 'is_subscribed', 'is_not_subscribed']);
+  const needsValue = singleValueOperators.has(branch.operator) || branch.operator === 'between';
   const isBetween = branch.operator === 'between';
+  const isSubscriptionOperator = branch.operator === 'is_subscribed' || branch.operator === 'is_not_subscribed';
   const messageText: string = (messageNode?.data as any)?.messageText ?? '';
   const availableTargets = getAllNodesFromAllSheets;
 
@@ -95,15 +134,19 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
     onNodeUpdate(messageNode.id, { messageText: value });
   };
 
+  const handleSubscriptionValueChange = (value: string) => {
+    onChange(branch.id, 'value', normalizeSubscriptionValue(value));
+  };
+
   return (
     <div className="rounded-lg border p-3 space-y-2 border-violet-200 bg-violet-50/50 dark:bg-violet-900/10 dark:border-violet-800/40">
       {/* Заголовок ветки: выбор оператора для всех веток включая else */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-start gap-2">
         <Select
           value={branch.operator}
           onValueChange={(value) => onChange(branch.id, 'operator', value)}
         >
-          <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 w-auto min-w-[120px]">
+          <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 min-w-[120px] flex-1">
             <SelectValue>{getSelectedLabel(branch.operator, variable, branch.value, branch.value2)}</SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
@@ -114,11 +157,11 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
             ))}
           </SelectContent>
         </Select>
-        {needsValue && (
+        {!isSubscriptionOperator && needsValue && (
           <Input
             value={branch.value}
             onChange={e => onChange(branch.id, 'value', e.target.value)}
-            placeholder={isBetween ? 'от' : 'введите значение'}
+            placeholder={isBetween ? 'от' : isSubscriptionOperator ? 'ссылка, @name, name...' : 'введите значение'}
             className="text-sm h-7 flex-1"
           />
         )}
@@ -139,6 +182,19 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
+        {isSubscriptionOperator && needsValue && (
+          <div className="w-full basis-full space-y-1">
+            <Input
+              value={branch.value}
+              onChange={e => handleSubscriptionValueChange(e.target.value)}
+              placeholder="ссылка, @name, name..."
+              className="text-sm h-7 w-full"
+            />
+            <p className="text-xs text-violet-500/80 dark:text-violet-300/70">
+              Ссылка и имя автоматически приводятся к виду `@username`, остальные форматы сохраняются как есть
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Поле ID целевого узла для перехода */}

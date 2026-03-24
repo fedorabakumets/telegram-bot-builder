@@ -8,7 +8,7 @@ import type { ConditionEntry, ConditionTemplateParams } from './condition.params
 import { conditionParamsSchema } from './condition.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
-const SYSTEM_OPS = new Set(['is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot']);
+const SYSTEM_OPS = new Set(['is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed']);
 const NUMERIC_OPS = new Set(['greater_than', 'less_than', 'between']);
 const STRING_OPS = new Set(['filled', 'empty', 'equals', 'contains']);
 
@@ -31,7 +31,7 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     const branches: any[] = (node.data as any).branches ?? [];
     if (branches.length === 0) continue;
 
-    const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'else']);
+    const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed', 'else']);
     const filteredBranches = branches.filter(b => validOperators.has(b.operator));
 
     const hasSystemBranch = filteredBranches.some(b => SYSTEM_OPS.has(b.operator));
@@ -73,6 +73,7 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     if (mappedBranches.length === 0) continue;
 
     const hasNumericBranch = mappedBranches.some(b => NUMERIC_OPS.has(b.operator));
+    const hasSubscriptionBranch = mappedBranches.some(b => b.operator === 'is_subscribed' || b.operator === 'is_not_subscribed');
     const skipVarLookup = !variable.trim() && (hasSystemBranch || hasOnlyElseBranch);
 
     entries.push({
@@ -82,6 +83,7 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
       hasConditionalBranch: mappedBranches.some(b => b.operator !== 'else'),
       hasNumericBranch,
       hasSystemBranch,
+      hasSubscriptionBranch,
       skipVarLookup,
     } as any);
   }
@@ -116,6 +118,7 @@ function enrichEntries(entries: ConditionEntry[]): any[] {
 
     const hasNumericBranch = mappedBranches.some(b => NUMERIC_OPS.has(b.operator));
     const hasSystemBranch = mappedBranches.some(b => SYSTEM_OPS.has(b.operator));
+    const hasSubscriptionBranch = mappedBranches.some(b => b.operator === 'is_subscribed' || b.operator === 'is_not_subscribed');
     const hasOnlyElseBranch = mappedBranches.length > 0 && mappedBranches.every(b => b.operator === 'else');
     const skipVarLookup = !entry.variable.trim() && (hasSystemBranch || hasOnlyElseBranch);
 
@@ -125,6 +128,7 @@ function enrichEntries(entries: ConditionEntry[]): any[] {
       hasConditionalBranch: mappedBranches.some(b => b.operator !== 'else'),
       hasNumericBranch,
       hasSystemBranch,
+      hasSubscriptionBranch,
       skipVarLookup,
     };
   });

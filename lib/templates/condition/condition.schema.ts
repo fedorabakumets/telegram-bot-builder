@@ -10,7 +10,7 @@ export const conditionBranchEntrySchema = z.object({
   /** Уникальный идентификатор ветки */
   id: z.string(),
   /** Оператор ветки */
-  operator: z.enum(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'else']),
+  operator: z.enum(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed', 'else']),
   /** Значение для сравнения (для оператора "equals") */
   value: z.string(),
   /** Второе значение для оператора "between" */

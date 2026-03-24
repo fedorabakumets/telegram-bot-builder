@@ -27,6 +27,13 @@ import {
   nodesWithNoBranches,
   nodesWithoutCondition,
   nodesWithNullAndMixed,
+  validParamsIsSubscribed,
+  validParamsIsNotSubscribed,
+  validParamsIsSubscribedLink,
+  validParamsMixedSubscribedAndVar,
+  nodesWithConditionIsSubscribed,
+  nodesWithConditionIsNotSubscribed,
+  nodesWithConditionMixedSubscription,
 } from './condition.fixture';
 import { conditionParamsSchema } from './condition.schema';
 
@@ -429,6 +436,16 @@ import {
   nodesWithConditionMixedAdmin,
 } from './condition.fixture';
 
+import {
+  validParamsIsSubscribed as validParamsIsSubscribedSystem,
+  validParamsIsNotSubscribed as validParamsIsNotSubscribedSystem,
+  validParamsIsSubscribedLink as validParamsIsSubscribedLinkSystem,
+  validParamsMixedSubscribedAndVar as validParamsMixedSubscribedAndVarSystem,
+  nodesWithConditionIsSubscribed as nodesWithConditionIsSubscribedSystem,
+  nodesWithConditionIsNotSubscribed as nodesWithConditionIsNotSubscribedSystem,
+  nodesWithConditionMixedSubscription as nodesWithConditionMixedSubscriptionSystem,
+} from './condition.fixture';
+
 // ─── generateConditionHandlers() — is_admin, is_premium, is_bot ──────────────
 
 describe('generateConditionHandlers() — is_admin / is_premium / is_bot', () => {
@@ -562,5 +579,81 @@ describe('conditionParamsSchema — is_admin / is_premium / is_bot', () => {
 
   it('принимает смешанные is_admin + переменные операторы', () => {
     expect(conditionParamsSchema.safeParse(validParamsMixedAdminAndVar).success).toBe(true);
+  });
+});
+
+describe('generateConditionHandlers() — is_subscribed / is_not_subscribed', () => {
+  it('is_subscribed без переменной — генерирует async def без _all_vars', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsSubscribedSystem);
+    expect(r).toContain('async def handle_callback_condition_check_subscription');
+    expect(r).not.toContain('_all_vars');
+    expect(r).not.toContain('init_all_user_vars');
+  });
+
+  it('is_subscribed — генерирует helper с bot.get_chat_member', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsSubscribedSystem);
+    expect(r).toContain('async def _is_user_subscribed(raw_ref):');
+    expect(r).toContain('await bot.get_chat_member(chat_id=_chat_ref, user_id=user_id)');
+  });
+
+  it('is_subscribed — генерирует проверку await _is_user_subscribed("@my_channel")', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsSubscribedSystem);
+    expect(r).toContain('await _is_user_subscribed("@my_channel")');
+  });
+
+  it('is_not_subscribed — генерирует отрицательную проверку подписки', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsNotSubscribedSystem);
+    expect(r).toContain('not await _is_user_subscribed("my_channel")');
+  });
+
+  it('ссылка t.me — генерирует нормализацию к @username', () => {
+    const r = generateConditionHandlers(validParamsIsSubscribedLinkSystem);
+    expect(r).toContain('if _clean.lower().startswith("t.me/"):');
+    expect(r).toContain('return f"@{_slug}"');
+  });
+
+  it('смешанный is_subscribed + filled + else — содержит и helper, и val, и else', () => {
+    const r = generateConditionHandlers(nodesWithConditionMixedSubscriptionSystem);
+    expect(r).toContain('await _is_user_subscribed("https://t.me/vip_channel")');
+    expect(r).toContain('val');
+    expect(r).toContain('else:');
+    expect(r).toContain('_all_vars');
+  });
+
+  it('is_subscribed + else — корректный if/else', () => {
+    const r = generateConditionHandlers(validParamsIsSubscribedSystem);
+    expect(r).toContain('if await _is_user_subscribed("@my_channel")');
+    expect(r).toContain('else:');
+  });
+
+  it('is_not_subscribed + else — корректный if/else', () => {
+    const r = generateConditionHandlers(validParamsIsNotSubscribedSystem);
+    expect(r).toContain('if not await _is_user_subscribed("my_channel")');
+    expect(r).toContain('else:');
+  });
+
+  it('смешанный is_subscribed + equals — оба прохода генерируются', () => {
+    const r = generateConditionHandlers(validParamsMixedSubscribedAndVarSystem);
+    expect(r).toContain('await _is_user_subscribed("@vip_channel")');
+    expect(r).toContain('val == "vip"');
+    expect(r).toContain('_all_vars');
+  });
+});
+
+describe('conditionParamsSchema — is_subscribed / is_not_subscribed', () => {
+  it('принимает оператор is_subscribed', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsSubscribed).success).toBe(true);
+  });
+
+  it('принимает оператор is_not_subscribed', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsNotSubscribed).success).toBe(true);
+  });
+
+  it('принимает ссылку в value для is_subscribed', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsSubscribedLink).success).toBe(true);
+  });
+
+  it('принимает смешанные is_subscribed + переменные операторы', () => {
+    expect(conditionParamsSchema.safeParse(validParamsMixedSubscribedAndVar).success).toBe(true);
   });
 });
