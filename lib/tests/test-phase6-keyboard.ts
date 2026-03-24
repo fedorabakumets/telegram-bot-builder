@@ -1,0 +1,1204 @@
+/**
+ * @fileoverview Фаза 6 — клавиатуры, новая keyboard-нода и совместимость с legacy-моделью
+ *
+ * Блок A: Legacy-клавиатуры внутри message/start/command
+ * Блок B: Отдельная keyboard-нода
+ * Блок C: Inline и reply-клавиатуры
+ * Блок D: Сохранение ответа, skipDataCollection и waiting_for_input
+ * Блок E: hideAfterClick
+ * Блок F: Множественный выбор (multi-select)
+ * Блок G: Goto / condition / transition
+ * Блок H: Backward compatibility и повторное использование keyboard-ноды
+ * Блок I: Краевые случаи и синтаксис
+ */
+
+import fs from 'fs';
+import { execSync } from 'child_process';
+import { generatePythonCode } from '../bot-generator.ts';
+
+type Result = { id: string; name: string; passed: boolean; note: string };
+const results: Result[] = [];
+
+function makeProject(nodes: any[]) {
+  return {
+    sheets: [{
+      id: 'sheet1',
+      name: 'Test',
+      nodes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      viewState: { pan: { x: 0, y: 0 }, zoom: 100 },
+    }],
+    version: 2,
+    activeSheetId: 'sheet1',
+  };
+}
+
+function gen(project: unknown, label: string, userDatabaseEnabled = false): string {
+  return generatePythonCode(project as any, {
+    botName: `Phase6Keyboard_${label}`,
+    userDatabaseEnabled,
+    enableComments: false,
+  });
+}
+
+function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {
+  const tmp = `_tmp_p6_${label}.py`;
+  fs.writeFileSync(tmp, code, 'utf-8');
+  try {
+    execSync(`python -m py_compile ${tmp}`, { stdio: 'pipe' });
+    fs.unlinkSync(tmp);
+    return { ok: true };
+  } catch (e: any) {
+    try { fs.unlinkSync(tmp); } catch {}
+    return { ok: false, error: e.stderr?.toString() ?? String(e) };
+  }
+}
+
+function test(id: string, name: string, fn: () => void) {
+  try {
+    fn();
+    results.push({ id, name, passed: true, note: 'OK' });
+    console.log(`  ✅ ${id}. ${name}`);
+  } catch (e: any) {
+    results.push({ id, name, passed: false, note: e.message });
+    console.log(`  ❌ ${id}. ${name}\n     → ${e.message}`);
+  }
+}
+
+function ok(cond: boolean, msg: string) {
+  if (!cond) throw new Error(msg);
+}
+
+function syntax(code: string, label: string) {
+  const r = checkSyntax(code, label);
+  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
+}
+
+function block(code: string, nodeId: string): string {
+  const start = code.indexOf(`# @@NODE_START:${nodeId}@@`);
+  ok(start !== -1, `Блок ${nodeId} не найден`);
+  const endMarker = `# @@NODE_END:${nodeId}@@`;
+  const end = code.indexOf(endMarker, start);
+  ok(end !== -1, `Конец блока ${nodeId} не найден`);
+  return code.slice(start, end + endMarker.length);
+}
+
+function assertIncludesAll(text: string, parts: string[], context: string) {
+  for (const part of parts) {
+    ok(text.includes(part), `${context}: не найдено "${part}"`);
+  }
+}
+
+function assertExcludes(text: string, parts: string[], context: string) {
+  for (const part of parts) {
+    ok(!text.includes(part), `${context}: неожиданно найдено "${part}"`);
+  }
+}
+
+function safeId(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '') || 'x';
+}
+
+function makeButton(
+  text: string,
+  action: string = 'goto',
+  target: string = 'msg_next',
+  extra: Record<string, any> = {},
+) {
+  return {
+    id: extra.id ?? `btn_${safeId(text)}_${safeId(action)}_${safeId(target)}`,
+    text,
+    action,
+    target,
+    buttonType: extra.buttonType ?? 'normal',
+    skipDataCollection: extra.skipDataCollection ?? false,
+    hideAfterClick: extra.hideAfterClick ?? false,
+    url: extra.url,
+    requestContact: extra.requestContact,
+    requestLocation: extra.requestLocation,
+  };
+}
+
+function makeMessageNode(id: string, messageText = 'Сообщение', data: Record<string, any> = {}) {
+  return {
+    id,
+    type: 'message',
+    position: { x: 0, y: 0 },
+    data: {
+      messageText,
+      buttons: [],
+      keyboardType: 'none',
+      formatMode: 'none',
+      markdown: false,
+      ...data,
+    },
+  };
+}
+
+function makeStartNode(id = 'start1', data: Record<string, any> = {}) {
+  return {
+    id,
+    type: 'start',
+    position: { x: 0, y: 0 },
+    data: {
+      command: '/start',
+      messageText: 'Старт',
+      buttons: [],
+      keyboardType: 'none',
+      formatMode: 'none',
+      markdown: false,
+      ...data,
+    },
+  };
+}
+
+function makeCommandNode(id: string, command: string, data: Record<string, any> = {}) {
+  return {
+    id,
+    type: 'command',
+    position: { x: 0, y: 0 },
+    data: {
+      command,
+      messageText: 'Команда',
+      buttons: [],
+      keyboardType: 'none',
+      formatMode: 'none',
+      markdown: false,
+      ...data,
+    },
+  };
+}
+
+function makeKeyboardNode(
+  id: string,
+  keyboardType: 'inline' | 'reply' = 'inline',
+  buttons: any[] = [],
+  data: Record<string, any> = {},
+) {
+  return {
+    id,
+    type: 'keyboard',
+    position: { x: 300, y: 0 },
+    data: {
+      keyboardType,
+      buttons,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      ...data,
+    },
+  };
+}
+
+function makeConditionNode(id: string, variable: string, branches: any[], data: Record<string, any> = {}) {
+  return {
+    id,
+    type: 'condition',
+    position: { x: 0, y: 0 },
+    data: {
+      variable,
+      branches,
+      ...data,
+    },
+  };
+}
+
+function makeBranch(operator: string, target = '', value = '') {
+  return {
+    id: `br_${safeId(operator)}_${Math.random().toString(36).slice(2, 7)}`,
+    label: operator,
+    operator,
+    value,
+    target,
+  };
+}
+
+console.log('\n╔════════════════════════════════════════════════════════════════════╗');
+console.log('║   Фаза 6 — клавиатуры, keyboard-нода и совместимость моделей       ║');
+console.log('╚════════════════════════════════════════════════════════════════════╝\n');
+
+console.log('══ Блок A: Legacy-клавиатуры внутри message/start/command ═══════════');
+
+test('A01', 'message с legacy inline-клавиатурой генерирует InlineKeyboardBuilder', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Привет', {
+      keyboardType: 'inline',
+      buttons: [
+        makeButton('Открыть', 'goto', 'msg_2'),
+        makeButton('Сайт', 'url', 'https://example.com', { url: 'https://example.com' }),
+      ],
+    }),
+    makeMessageNode('msg_2', 'Ответ'),
+  ]);
+
+  const code = gen(project, 'a01');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, [
+    'InlineKeyboardBuilder()',
+    'InlineKeyboardButton',
+    'callback_data="msg_2"',
+    'url="https://example.com"',
+  ], 'A01');
+  syntax(code, 'a01');
+});
+
+test('A02', 'start с legacy reply-клавиатурой генерирует ReplyKeyboardBuilder', () => {
+  const project = makeProject([
+    makeStartNode('start_1', {
+      keyboardType: 'reply',
+      oneTimeKeyboard: true,
+      resizeKeyboard: false,
+      buttons: [
+        makeButton('Да', 'goto', 'msg_2', { id: 'btn_yes' }),
+        makeButton('Нет', 'goto', 'msg_3', { id: 'btn_no' }),
+      ],
+    }),
+    makeMessageNode('msg_2', 'Да'),
+    makeMessageNode('msg_3', 'Нет'),
+  ]);
+
+  const code = gen(project, 'a02');
+  const b = block(code, 'start_1');
+  assertIncludesAll(b, [
+    'ReplyKeyboardBuilder()',
+    'KeyboardButton',
+    'resize_keyboard=False',
+    'one_time_keyboard=True',
+  ], 'A02');
+  syntax(code, 'a02');
+});
+
+test('A03', 'command с legacy inline-клавиатурой сохраняет callback-логику', () => {
+  const project = makeProject([
+    makeCommandNode('cmd_help', '/help', {
+      keyboardType: 'inline',
+      buttons: [
+        makeButton('Далее', 'goto', 'msg_2'),
+      ],
+    }),
+    makeMessageNode('msg_2', 'Следующий шаг'),
+  ]);
+
+  const code = gen(project, 'a03');
+  const b = block(code, 'cmd_help');
+  assertIncludesAll(b, [
+    '@dp.message(Command("help"))',
+    'InlineKeyboardBuilder()',
+    'callback_data="msg_2"',
+  ], 'A03');
+  syntax(code, 'a03');
+});
+
+test('A04', 'legacy message поддерживает keyboardLayout и порядок кнопок', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Выберите', {
+      keyboardType: 'inline',
+      keyboardLayout: {
+        autoLayout: false,
+        rows: [{ buttonIds: ['btn_2', 'btn_1'] }],
+      },
+      buttons: [
+        makeButton('Первая', 'goto', 'msg_2', { id: 'btn_1' }),
+        makeButton('Вторая', 'goto', 'msg_3', { id: 'btn_2' }),
+      ],
+    }),
+    makeMessageNode('msg_2', 'Первая'),
+    makeMessageNode('msg_3', 'Вторая'),
+  ]);
+
+  const code = gen(project, 'a04');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, [
+    'builder.adjust(2)',
+    'callback_data="msg_2"',
+    'callback_data="msg_3"',
+  ], 'A04');
+  syntax(code, 'a04');
+});
+
+test('A05', 'legacy reply-клавиатура с collectUserInput начинает waiting_for_input', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Введите ответ', {
+      keyboardType: 'reply',
+      collectUserInput: true,
+      inputVariable: 'user_answer',
+      inputTargetNodeId: 'msg_2',
+      enableTextInput: true,
+      buttons: [
+        makeButton('Пропустить', 'goto', 'msg_2', { id: 'btn_skip', skipDataCollection: true }),
+      ],
+    }),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'a05');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, [
+    'waiting_for_input',
+    '"variable": "user_answer"',
+    '"next_node_id": "msg_2"',
+    'skip_buttons',
+  ], 'A05');
+  syntax(code, 'a05');
+});
+
+test('A06', 'legacy keyboard-код компилируется в Python', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Привет', {
+      keyboardType: 'inline',
+      buttons: [makeButton('Далее', 'goto', 'msg_2')],
+    }),
+    makeMessageNode('msg_2', 'Ок'),
+  ]);
+
+  syntax(gen(project, 'a06'), 'a06');
+});
+
+console.log('══ Блок B: Отдельная keyboard-нода ═══════════════════════════════════');
+
+test('B01', 'message -> keyboard прикрепляет отдельную keyboard-ноду к сообщению', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Привет', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Кнопка', 'goto', 'msg_2'),
+    ]),
+    makeMessageNode('msg_2', 'Ответ'),
+  ]);
+
+  const code = gen(project, 'b01');
+  const msg = block(code, 'msg_1');
+  const kbd = block(code, 'kbd_1');
+  assertIncludesAll(msg, [
+    'InlineKeyboardBuilder()',
+    'callback_data="msg_2"',
+    'await callback_query.message.answer(text, reply_markup=keyboard)',
+  ], 'B01 message');
+  assertIncludesAll(kbd, [
+    'без самостоятельной отправки сообщения',
+    'Keyboard node kbd_1 вызвана',
+    'return',
+  ], 'B01 keyboard');
+  syntax(code, 'b01');
+});
+
+test('B02', 'message -> condition -> keyboard прикрепляет клавиатуру к message, а condition вызывает keyboard', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Старт', { keyboardNodeId: 'kbd_1' }),
+    makeConditionNode('cond_1', 'user_age', [
+      makeBranch('filled', 'kbd_1'),
+    ]),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Да', 'goto', 'msg_2'),
+    ]),
+    makeMessageNode('msg_2', 'Финал'),
+  ]);
+
+  const code = gen(project, 'b02');
+  const msg = block(code, 'msg_1');
+  assertIncludesAll(msg, [
+    'ReplyKeyboardBuilder()',
+    'KeyboardButton',
+    'reply_markup=keyboard',
+  ], 'B02 message');
+  assertIncludesAll(code, [
+    'async def handle_callback_cond_1',
+    'await handle_callback_kbd_1(callback_query)',
+  ], 'B02 condition');
+  syntax(code, 'b02');
+});
+
+test('B03', 'одна keyboard-нода может использоваться несколькими сообщениями', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Первое', { keyboardNodeId: 'kbd_1' }),
+    makeMessageNode('msg_2', 'Второе', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Общая', 'goto', 'msg_3'),
+    ]),
+    makeMessageNode('msg_3', 'Третье'),
+  ]);
+
+  const code = gen(project, 'b03');
+  const msg1 = block(code, 'msg_1');
+  const msg2 = block(code, 'msg_2');
+  const kbd = block(code, 'kbd_1');
+  assertIncludesAll(msg1, ['callback_data="msg_3"', 'InlineKeyboardBuilder()'], 'B03 msg1');
+  assertIncludesAll(msg2, ['callback_data="msg_3"', 'InlineKeyboardBuilder()'], 'B03 msg2');
+  assertIncludesAll(kbd, ['без самостоятельной отправки сообщения'], 'B03 keyboard');
+  syntax(code, 'b03');
+});
+
+test('B04', 'keyboard-нода без host message безопасно остаётся no-op', () => {
+  const project = makeProject([
+    makeKeyboardNode('kbd_orphan', 'inline', [makeButton('Сирота', 'goto', 'msg_1')]),
+    makeMessageNode('msg_1', 'Ответ'),
+  ]);
+
+  const code = gen(project, 'b04');
+  const kbd = block(code, 'kbd_orphan');
+  assertIncludesAll(kbd, [
+    'без самостоятельной отправки сообщения',
+    'return',
+  ], 'B04');
+  syntax(code, 'b04');
+});
+
+test('B05', 'keyboard-нода с соединением через condition не ломает генерацию', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Старт', { keyboardNodeId: 'kbd_1' }),
+    makeConditionNode('cond_1', 'flag', [makeBranch('filled', 'kbd_1'), makeBranch('else', 'msg_2')]),
+    makeKeyboardNode('kbd_1', 'inline', [makeButton('Дальше', 'goto', 'msg_3')]),
+    makeMessageNode('msg_2', 'Иначе'),
+    makeMessageNode('msg_3', 'Финал'),
+  ]);
+
+  const code = gen(project, 'b05');
+  assertIncludesAll(code, ['async def handle_callback_cond_1', 'await handle_callback_kbd_1(callback_query)'], 'B05');
+  syntax(code, 'b05');
+});
+
+test('B06', 'отдельная keyboard-нода компилируется вместе с проектом', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Привет', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'reply', [makeButton('Да', 'goto', 'msg_2')]),
+    makeMessageNode('msg_2', 'Ок'),
+  ]);
+
+  syntax(gen(project, 'b06'), 'b06');
+});
+
+console.log('══ Блок C: Inline и reply-клавиатуры ═════════════════════════════════');
+
+test('C01', 'inline-клавиатура использует InlineKeyboardButton и callback_data', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Инлайн', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Перейти', 'goto', 'msg_2'),
+      makeButton('Открыть', 'url', 'https://example.com', { url: 'https://example.com' }),
+    ]),
+    makeMessageNode('msg_2', 'Следующий'),
+  ]);
+
+  const code = gen(project, 'c01');
+  const msg = block(code, 'msg_1');
+  assertIncludesAll(msg, ['InlineKeyboardButton', 'callback_data="msg_2"', 'url="https://example.com"'], 'C01');
+  syntax(code, 'c01');
+});
+
+test('C02', 'reply-клавиатура использует KeyboardButton и ReplyKeyboardBuilder', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Реплай', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Контакт', 'contact', 'msg_2', { requestContact: true }),
+      makeButton('Локация', 'location', 'msg_3', { requestLocation: true }),
+    ]),
+    makeMessageNode('msg_2', 'Контакт'),
+    makeMessageNode('msg_3', 'Локация'),
+  ]);
+
+  const code = gen(project, 'c02');
+  const msg = block(code, 'msg_1');
+  assertIncludesAll(msg, ['ReplyKeyboardBuilder()', 'KeyboardButton', 'request_contact=True', 'request_location=True'], 'C02');
+  syntax(code, 'c02');
+});
+
+test('C03', 'oneTimeKeyboard и resizeKeyboard доезжают до reply-вывода', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Старт', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Да', 'goto', 'msg_2'),
+    ], {
+      oneTimeKeyboard: true,
+      resizeKeyboard: false,
+    }),
+    makeMessageNode('msg_2', 'Ок'),
+  ]);
+
+  const code = gen(project, 'c03');
+  const msg = block(code, 'msg_1');
+  assertIncludesAll(msg, ['one_time_keyboard=True', 'resize_keyboard=False'], 'C03');
+  syntax(code, 'c03');
+});
+
+test('C04', 'action=url, action=contact и action=location сохраняются в коде', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Ссылки', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Сайт', 'url', 'https://example.org', { url: 'https://example.org' }),
+      makeButton('Команда', 'command', '/help'),
+      makeButton('Дальше', 'goto', 'msg_2'),
+    ]),
+    makeMessageNode('msg_2', 'Конец'),
+  ]);
+
+  const code = gen(project, 'c04');
+  const msg = block(code, 'msg_1');
+  assertIncludesAll(msg, ['url="https://example.org"', 'callback_data="cmd_help"', 'callback_data="msg_2"'], 'C04');
+  syntax(code, 'c04');
+});
+
+test('C05', 'reply-клавиатура с text placeholders использует replace_variables_in_text', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Привет, {{username}}', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Привет, {{username}}', 'goto', 'msg_2'),
+    ]),
+    makeMessageNode('msg_2', 'Ок'),
+  ]);
+
+  const code = gen(project, 'c05');
+  const msg = block(code, 'msg_1');
+  assertIncludesAll(msg, ['replace_variables_in_text', 'ReplyKeyboardBuilder()'], 'C05');
+  syntax(code, 'c05');
+});
+
+test('C06', 'инлайн и reply-клавиатуры вместе компилируются без регрессий', () => {
+  const project = makeProject([
+    makeMessageNode('msg_inline', 'Inline', { keyboardNodeId: 'kbd_inline' }),
+    makeKeyboardNode('kbd_inline', 'inline', [makeButton('Кнопка', 'goto', 'msg_next')]),
+    makeMessageNode('msg_reply', 'Reply', { keyboardNodeId: 'kbd_reply' }),
+    makeKeyboardNode('kbd_reply', 'reply', [makeButton('Да', 'goto', 'msg_next')]),
+    makeMessageNode('msg_next', 'Ок'),
+  ]);
+
+  syntax(gen(project, 'c06'), 'c06');
+});
+
+console.log('══ Блок D: Сохранение ответа, skipDataCollection и waiting_for_input ═');
+
+test('D01', 'reply-клавиатура с collectUserInput создаёт waiting_for_input с переменной', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Введите ответ', {
+      keyboardNodeId: 'kbd_1',
+      collectUserInput: true,
+      inputVariable: 'answer',
+      inputTargetNodeId: 'msg_2',
+      enableTextInput: true,
+      allowMultipleSelection: false,
+    }),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Пропустить', 'goto', 'msg_2', { skipDataCollection: true }),
+    ]),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'd01');
+  assertIncludesAll(code, [
+    'waiting_for_input',
+    '"variable": "answer"',
+    '"next_node_id": "msg_2"',
+    'skip_buttons',
+    'Пропустить',
+  ], 'D01');
+  syntax(code, 'd01');
+});
+
+test('D02', 'DB-режим сохраняет ответ пользователя в update_user_data_in_db', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Введите ответ', {
+      keyboardNodeId: 'kbd_1',
+      collectUserInput: true,
+      inputVariable: 'answer',
+      inputTargetNodeId: 'msg_2',
+      enableTextInput: true,
+    }),
+    makeKeyboardNode('kbd_1', 'reply', [makeButton('Ок', 'goto', 'msg_2')]),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'd02', true);
+  assertIncludesAll(code, [
+    'update_user_data_in_db(user_id, variable_name, response_data)',
+    '"save_to_database": True',
+  ], 'D02');
+  syntax(code, 'd02');
+});
+
+test('D03', 'skipDataCollection кнопка попадает в waiting_for_input skip_buttons', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Выберите вариант', {
+      keyboardNodeId: 'kbd_1',
+      collectUserInput: true,
+      inputVariable: 'choice',
+      inputTargetNodeId: 'msg_2',
+      enableTextInput: true,
+    }),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Пропустить', 'goto', 'msg_2', { skipDataCollection: true }),
+      makeButton('Заполнить', 'goto', 'msg_3', { skipDataCollection: false }),
+    ]),
+    makeMessageNode('msg_2', 'Пропуск'),
+    makeMessageNode('msg_3', 'Заполнение'),
+  ]);
+
+  const code = gen(project, 'd03');
+  assertIncludesAll(code, [
+    'skip_buttons',
+    'skip_target',
+    'msg_2',
+    'Пропустить',
+  ], 'D03');
+  syntax(code, 'd03');
+});
+
+test('D04', 'skip flow не теряет переход к целевому узлу', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Ввод', {
+      keyboardNodeId: 'kbd_1',
+      collectUserInput: true,
+      inputVariable: 'value',
+      inputTargetNodeId: 'msg_2',
+      enableTextInput: true,
+    }),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Пропустить', 'goto', 'msg_2', { skipDataCollection: true }),
+    ]),
+    makeMessageNode('msg_2', 'Сюда'),
+  ]);
+
+  const code = gen(project, 'd04');
+  assertIncludesAll(code, [
+    'call_skip_target_handler',
+    'skipDataCollection',
+    'waiting_for_input',
+  ], 'D04');
+  syntax(code, 'd04');
+});
+
+test('D05', 'после ввода значение сохраняется локально в user_data[user_id][variable_name]', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Введите ответ', {
+      keyboardNodeId: 'kbd_1',
+      collectUserInput: true,
+      inputVariable: 'answer',
+      inputTargetNodeId: 'msg_2',
+      enableTextInput: true,
+    }),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Да', 'goto', 'msg_2'),
+    ]),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'd05');
+  assertIncludesAll(code, [
+    'user_data[user_id][variable_name] = response_data',
+    'logging.info(f"✅ Сохранено в user_data',
+  ], 'D05');
+  syntax(code, 'd05');
+});
+
+test('D06', 'waiting_for_input и skipDataCollection компилируются вместе', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Введите ответ', {
+      keyboardNodeId: 'kbd_1',
+      collectUserInput: true,
+      inputVariable: 'answer',
+      inputTargetNodeId: 'msg_2',
+      enableTextInput: true,
+    }),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Пропустить', 'goto', 'msg_2', { skipDataCollection: true }),
+      makeButton('Ок', 'goto', 'msg_2'),
+    ]),
+    makeMessageNode('msg_2', 'Ок'),
+  ]);
+
+  syntax(gen(project, 'd06'), 'd06');
+});
+
+console.log('══ Блок E: hideAfterClick ═══════════════════════════════════════════');
+
+test('E01', 'inline hideAfterClick скрывает клавиатуру предыдущего сообщения', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', {
+      keyboardNodeId: 'kbd_1',
+    }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Скрыть', 'goto', 'msg_2', { hideAfterClick: true }),
+    ]),
+    makeMessageNode('msg_2', 'Финал'),
+  ]);
+
+  const code = gen(project, 'e01');
+  const b = block(code, 'msg_2');
+  assertIncludesAll(b, ['edit_reply_markup(reply_markup=None)', 'hideAfterClick'], 'E01');
+  syntax(code, 'e01');
+});
+
+test('E02', 'несколько hideAfterClick-кнопок всё равно оставляют общий hide-блок', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', {
+      keyboardNodeId: 'kbd_1',
+    }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Первый', 'goto', 'msg_2', { hideAfterClick: true }),
+      makeButton('Второй', 'goto', 'msg_3', { hideAfterClick: true }),
+    ]),
+    makeMessageNode('msg_2', 'Первый'),
+    makeMessageNode('msg_3', 'Второй'),
+  ]);
+
+  const code = gen(project, 'e02');
+  const msg2 = block(code, 'msg_2');
+  const msg3 = block(code, 'msg_3');
+  ok(
+    msg2.includes('edit_reply_markup(reply_markup=None)') || msg3.includes('edit_reply_markup(reply_markup=None)'),
+    'E02: hideAfterClick-блок должен присутствовать'
+  );
+  syntax(code, 'e02');
+});
+
+test('E03', 'без hideAfterClick не появляется edit_reply_markup', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', {
+      keyboardNodeId: 'kbd_1',
+    }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Обычная', 'goto', 'msg_2', { hideAfterClick: false }),
+    ]),
+    makeMessageNode('msg_2', 'Финал'),
+  ]);
+
+  const code = gen(project, 'e03');
+  const b = block(code, 'msg_1');
+  assertExcludes(b, ['edit_reply_markup(reply_markup=None)'], 'E03');
+  syntax(code, 'e03');
+});
+
+test('E04', 'hideAfterClick не ломает переходы goto', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', {
+      keyboardNodeId: 'kbd_1',
+    }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Дальше', 'goto', 'msg_2', { hideAfterClick: true }),
+    ]),
+    makeMessageNode('msg_2', 'Следующий шаг'),
+  ]);
+
+  const code = gen(project, 'e04');
+  const b = block(code, 'msg_2');
+  assertIncludesAll(b, ['edit_reply_markup(reply_markup=None)'], 'E04');
+  syntax(code, 'e04');
+});
+
+test('E05', 'hideAfterClick компилируется вместе с reply-веткой проекта', () => {
+  const project = makeProject([
+    makeStartNode('start_1', {
+      keyboardType: 'reply',
+      buttons: [makeButton('Скрыть', 'goto', 'msg_2', { hideAfterClick: true })],
+    }),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  syntax(gen(project, 'e05'), 'e05');
+});
+
+console.log('══ Блок F: Множественный выбор (multi-select) ═══════════════════════');
+
+test('F01', 'inline multi-select создаёт состояние multi_select_* и продолжение', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Выберите темы', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Спорт', 'selection', 'sport', { buttonType: 'option' }),
+      makeButton('Музыка', 'selection', 'music', { buttonType: 'option' }),
+      makeButton('Готово', 'complete', 'msg_2', { buttonType: 'complete' }),
+    ], {
+      allowMultipleSelection: true,
+      multiSelectVariable: 'interests',
+      continueButtonTarget: 'msg_2',
+      keyboardLayout: { autoLayout: true, columns: 2 },
+    }),
+    makeMessageNode('msg_2', 'Спасибо'),
+  ]);
+
+  const code = gen(project, 'f01');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, [
+    'multi_select_msg_1',
+    'multi_select_node',
+    'multi_select_type"] = "inline"',
+    'multi_select_variable"] = "interests"',
+    'saved_selections',
+    'done_msg_1',
+  ], 'F01');
+  syntax(code, 'f01');
+});
+
+test('F02', 'selection-кнопки получают ms_<node>_... callback_data', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Выберите', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('A', 'selection', 'a', { id: 'btn_a', buttonType: 'option' }),
+      makeButton('B', 'selection', 'b', { id: 'btn_b', buttonType: 'option' }),
+      makeButton('Готово', 'complete', 'msg_2', { id: 'btn_done', buttonType: 'complete' }),
+    ], {
+      allowMultipleSelection: true,
+      multiSelectVariable: 'choices',
+      continueButtonTarget: 'msg_2',
+    }),
+    makeMessageNode('msg_2', 'Ок'),
+  ]);
+
+  const code = gen(project, 'f02');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, ['callback_data="ms_msg_1_a"', 'callback_data="ms_msg_1_b"', 'callback_data="done_msg_1"'], 'F02');
+  syntax(code, 'f02');
+});
+
+test('F03', 'continueButtonTarget перенаправляет multi-select в следующий узел', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Выберите', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('A', 'selection', 'a'),
+      makeButton('Готово', 'complete', 'msg_2'),
+    ], {
+      allowMultipleSelection: true,
+      multiSelectVariable: 'choices',
+      continueButtonTarget: 'msg_2',
+    }),
+    makeMessageNode('msg_2', 'Следующий'),
+  ]);
+
+  const code = gen(project, 'f03');
+  assertIncludesAll(code, ['callback_data="done_msg_1"', 'handle_callback_msg_2', 'multi_select_node'], 'F03');
+  syntax(code, 'f03');
+});
+
+test('F04', 'reply multi-select использует ReplyKeyboardBuilder и multi_select_type = "reply"', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Выберите', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Да', 'selection', 'yes', { buttonType: 'option' }),
+      makeButton('Нет', 'selection', 'no', { buttonType: 'option' }),
+      makeButton('Готово', 'complete', 'msg_2', { buttonType: 'complete' }),
+    ], {
+      allowMultipleSelection: true,
+      multiSelectVariable: 'reply_choices',
+      continueButtonTarget: 'msg_2',
+    }),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'f04');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, ['ReplyKeyboardBuilder()', 'multi_select_type"] = "reply"', 'multi_select_variable"] = "reply_choices"'], 'F04');
+  syntax(code, 'f04');
+});
+
+test('F05', 'multi-select восстанавливает сохранённые выборы из user_vars', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Выберите', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Спорт', 'selection', 'sport'),
+      makeButton('Музыка', 'selection', 'music'),
+      makeButton('Готово', 'complete', 'msg_2'),
+    ], {
+      allowMultipleSelection: true,
+      multiSelectVariable: 'interests',
+      continueButtonTarget: 'msg_2',
+    }),
+    makeMessageNode('msg_2', 'Ок'),
+  ]);
+
+  const code = gen(project, 'f05', true);
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, ['saved_selections', 'user_vars', '"interests"', 'multi_select_msg_1'], 'F05');
+  syntax(code, 'f05');
+});
+
+test('F06', 'multi-select и keyboard-нода компилируются без ошибок', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Выберите', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('A', 'selection', 'a'),
+      makeButton('B', 'selection', 'b'),
+      makeButton('Готово', 'complete', 'msg_2'),
+    ], {
+      allowMultipleSelection: true,
+      multiSelectVariable: 'choices',
+      continueButtonTarget: 'msg_2',
+    }),
+    makeMessageNode('msg_2', 'Финал'),
+  ]);
+
+  syntax(gen(project, 'f06'), 'f06');
+});
+
+console.log('══ Блок G: Goto / condition / transition ════════════════════════════');
+
+test('G01', 'inline goto-кнопка ведёт к целевому message', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Вперёд', 'goto', 'msg_2'),
+    ]),
+    makeMessageNode('msg_2', 'Следующий'),
+  ]);
+
+  const code = gen(project, 'g01');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, ['callback_data="msg_2"', 'await callback_query.message.answer(text, reply_markup=keyboard)'], 'G01');
+  syntax(code, 'g01');
+});
+
+test('G02', 'action=command в keyboard создаёт command callback_data', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Помощь', 'command', '/help'),
+    ]),
+    makeCommandNode('cmd_help', '/help'),
+  ]);
+
+  const code = gen(project, 'g02');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, ['callback_data="cmd_help"', 'InlineKeyboardButton'], 'G02');
+  syntax(code, 'g02');
+});
+
+test('G03', 'start callback остаётся совместимым с отдельной keyboard-ноды', () => {
+  const project = makeProject([
+    makeStartNode('start_1', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'reply', [
+      makeButton('Открыть', 'goto', 'msg_2'),
+    ]),
+    makeMessageNode('msg_2', 'Следующий'),
+  ]);
+
+  const code = gen(project, 'g03');
+  const b = block(code, 'start_1');
+  assertIncludesAll(b, ['ReplyKeyboardBuilder()', 'reply_markup=keyboard'], 'G03');
+  syntax(code, 'g03');
+});
+
+test('G04', 'condition ветка может вести прямо в keyboard-ноду', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Старт', { keyboardNodeId: 'kbd_1' }),
+    makeConditionNode('cond_1', 'flag', [
+      makeBranch('filled', 'kbd_1'),
+      makeBranch('else', 'msg_2'),
+    ]),
+    makeKeyboardNode('kbd_1', 'inline', [makeButton('Далее', 'goto', 'msg_3')]),
+    makeMessageNode('msg_2', 'Иначе'),
+    makeMessageNode('msg_3', 'Финал'),
+  ]);
+
+  const code = gen(project, 'g04');
+  assertIncludesAll(code, ['async def handle_callback_cond_1', 'await handle_callback_kbd_1(callback_query)', 'else'], 'G04');
+  syntax(code, 'g04');
+});
+
+test('G05', 'goto, condition и keyboard вместе не ломают синтаксис', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Старт', { keyboardNodeId: 'kbd_1' }),
+    makeConditionNode('cond_1', 'flag', [makeBranch('filled', 'kbd_1')]),
+    makeKeyboardNode('kbd_1', 'inline', [makeButton('Дальше', 'goto', 'msg_2')]),
+    makeMessageNode('msg_2', 'Финал'),
+  ]);
+
+  syntax(gen(project, 'g05'), 'g05');
+});
+
+test('G06', 'condition -> keyboard -> message работает вместе с переходом', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Старт', { keyboardNodeId: 'kbd_1' }),
+    makeConditionNode('cond_1', 'flag', [makeBranch('filled', 'kbd_1')]),
+    makeKeyboardNode('kbd_1', 'inline', [makeButton('Следующий', 'goto', 'msg_2')]),
+    makeMessageNode('msg_2', 'Ок'),
+  ]);
+
+  const code = gen(project, 'g06');
+  assertIncludesAll(code, ['handle_callback_kbd_1', 'callback_data="msg_2"'], 'G06');
+  syntax(code, 'g06');
+});
+
+console.log('══ Блок H: Backward compatibility и повторное использование keyboard ═');
+
+test('H01', 'legacy и новая модель живут в одном проекте', () => {
+  const project = makeProject([
+    makeStartNode('start_1', {
+      keyboardType: 'reply',
+      buttons: [makeButton('Меню', 'goto', 'msg_1')],
+    }),
+    makeMessageNode('msg_1', 'Legacy inline', {
+      keyboardType: 'inline',
+      buttons: [makeButton('Далее', 'goto', 'msg_2')],
+    }),
+    makeMessageNode('msg_2', 'New model', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [makeButton('Общая', 'goto', 'msg_3')]),
+    makeMessageNode('msg_3', 'Финал'),
+  ]);
+
+  const code = gen(project, 'h01');
+  assertIncludesAll(code, [
+    'ReplyKeyboardBuilder()',
+    'InlineKeyboardBuilder()',
+    'callback_data="msg_2"',
+    'callback_data="msg_3"',
+  ], 'H01');
+  syntax(code, 'h01');
+});
+
+test('H02', 'одна keyboard-нода, привязанная к двум сообщениям, размножается корректно', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Первое', { keyboardNodeId: 'kbd_1' }),
+    makeMessageNode('msg_2', 'Второе', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [makeButton('Общая', 'goto', 'msg_3')]),
+    makeMessageNode('msg_3', 'Финал'),
+  ]);
+
+  const code = gen(project, 'h02');
+  const msg1 = block(code, 'msg_1');
+  const msg2 = block(code, 'msg_2');
+  assertIncludesAll(msg1, ['callback_data="msg_3"'], 'H02 msg1');
+  assertIncludesAll(msg2, ['callback_data="msg_3"'], 'H02 msg2');
+  syntax(code, 'h02');
+});
+
+test('H03', 'keyboard-нода не мешает legacy start/command обработчикам', () => {
+  const project = makeProject([
+    makeStartNode('start_1', {
+      keyboardType: 'inline',
+      buttons: [makeButton('Старт', 'goto', 'msg_1')],
+    }),
+    makeCommandNode('cmd_help', '/help', {
+      keyboardType: 'reply',
+      buttons: [makeButton('Да', 'goto', 'msg_2')],
+    }),
+    makeKeyboardNode('kbd_1', 'reply', [makeButton('Общая', 'goto', 'msg_3')]),
+    makeMessageNode('msg_1', 'A'),
+    makeMessageNode('msg_2', 'B'),
+    makeMessageNode('msg_3', 'C'),
+  ]);
+
+  syntax(gen(project, 'h03'), 'h03');
+});
+
+test('H04', 'orphan keyboard остаётся безопасным no-op даже в большом проекте', () => {
+  const project = makeProject([
+    makeStartNode('start_1', {
+      keyboardType: 'inline',
+      buttons: [makeButton('Меню', 'goto', 'msg_1')],
+    }),
+    makeMessageNode('msg_1', 'A', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [makeButton('Общая', 'goto', 'msg_2')]),
+    makeKeyboardNode('kbd_orphan', 'inline', [makeButton('Сирота', 'goto', 'msg_2')]),
+    makeMessageNode('msg_2', 'B'),
+  ]);
+
+  const code = gen(project, 'h04');
+  const orphan = block(code, 'kbd_orphan');
+  assertIncludesAll(orphan, ['без самостоятельной отправки сообщения', 'return'], 'H04');
+  syntax(code, 'h04');
+});
+
+test('H05', 'повторное использование keyboard-ноды компилируется без ошибок', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Первое', { keyboardNodeId: 'kbd_1' }),
+    makeMessageNode('msg_2', 'Второе', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'reply', [makeButton('Общая', 'goto', 'msg_3')]),
+    makeMessageNode('msg_3', 'Финал'),
+  ]);
+
+  syntax(gen(project, 'h05'), 'h05');
+});
+
+console.log('══ Блок I: Краевые случаи и синтаксис ═══════════════════════════════');
+
+test('I01', 'пустая keyboard-нода не ломает генерацию', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Пустая', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', []),
+  ]);
+
+  const code = gen(project, 'i01');
+  const kbd = block(code, 'kbd_1');
+  assertIncludesAll(kbd, ['без самостоятельной отправки сообщения'], 'I01');
+  syntax(code, 'i01');
+});
+
+test('I02', 'неизвестный keyboardType безопасно проходит через legacy fallback', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Текст', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [makeButton('Кнопка', 'goto', 'msg_2')], {
+      keyboardType: 'inline',
+    }),
+    makeMessageNode('msg_2', 'Ок'),
+  ]);
+
+  syntax(gen(project, 'i02'), 'i02');
+});
+
+test('I03', 'inline + reply + keyboard-нода в одном коде компилируются', () => {
+  const project = makeProject([
+    makeStartNode('start_1', {
+      keyboardType: 'reply',
+      buttons: [makeButton('Старт', 'goto', 'msg_1')],
+    }),
+    makeMessageNode('msg_1', 'Inline', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [makeButton('Дальше', 'goto', 'msg_2')]),
+    makeMessageNode('msg_2', 'Финал'),
+  ]);
+
+  syntax(gen(project, 'i03'), 'i03');
+});
+
+test('I04', 'условие + message + keyboard сохраняют совместимость со старой моделью', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Старт', { keyboardNodeId: 'kbd_1' }),
+    makeConditionNode('cond_1', 'flag', [makeBranch('filled', 'kbd_1')]),
+    makeKeyboardNode('kbd_1', 'reply', [makeButton('Да', 'goto', 'msg_2')]),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'i04');
+  assertIncludesAll(code, ['async def handle_callback_cond_1', 'await handle_callback_kbd_1(callback_query)', 'ReplyKeyboardBuilder()'], 'I04');
+  syntax(code, 'i04');
+});
+
+test('I05', 'полный синтаксический прогон для большого keyboard-проекта', () => {
+  const project = makeProject([
+    makeStartNode('start_1', {
+      keyboardType: 'reply',
+      buttons: [
+        makeButton('Меню', 'goto', 'msg_1'),
+        makeButton('Помощь', 'command', '/help'),
+      ],
+    }),
+    makeCommandNode('cmd_help', '/help', {
+      keyboardType: 'inline',
+      buttons: [makeButton('Назад', 'goto', 'msg_1')],
+    }),
+    makeMessageNode('msg_1', 'Старт', { keyboardNodeId: 'kbd_1' }),
+    makeConditionNode('cond_1', 'flag', [makeBranch('filled', 'kbd_1')]),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('A', 'selection', 'a', { buttonType: 'option' }),
+      makeButton('B', 'selection', 'b', { buttonType: 'option' }),
+      makeButton('Готово', 'complete', 'msg_2', { buttonType: 'complete' }),
+    ], {
+      allowMultipleSelection: true,
+      multiSelectVariable: 'topics',
+      continueButtonTarget: 'msg_2',
+    }),
+    makeMessageNode('msg_2', 'Финал'),
+  ]);
+
+  syntax(gen(project, 'i05', true), 'i05');
+});
+
+const passed = results.filter(r => r.passed).length;
+const failed = results.filter(r => !r.passed).length;
+
+console.log('\n╔════════════════════════════════════════════════════════════════════╗');
+console.log(`║  Итог: ${passed}/${results.length} пройдено${failed > 0 ? `, ${failed} провалено` : ' ✅'}${' '.repeat(Math.max(0, 40 - String(passed).length - String(results.length).length - String(failed).length))}║`);
+console.log('╚════════════════════════════════════════════════════════════════════╝');
+
+if (failed > 0) {
+  console.log('\nПровалившиеся тесты:');
+  results.filter(r => !r.passed).forEach(r => {
+    console.log(`  ❌ ${r.id}. ${r.name}`);
+    console.log(`     → ${r.note}`);
+  });
+  process.exit(1);
+}

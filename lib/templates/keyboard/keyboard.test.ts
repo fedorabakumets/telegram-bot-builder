@@ -90,6 +90,17 @@ describe('keyboard.py.jinja2 шаблон', () => {
         assert.ok(result.includes('KeyboardButton(text='));
       });
 
+      it('должен сохранять multi_select_variable для reply multi-select', () => {
+        const result = generateKeyboard({
+          ...validParamsReply,
+          allowMultipleSelection: true,
+          nodeId: 'node_1',
+          multiSelectVariable: 'reply_choices',
+        });
+
+        assert.ok(result.includes('multi_select_variable"] = "reply_choices"'));
+      });
+
       it('должен генерировать resize_keyboard=True по умолчанию', () => {
         const result = generateKeyboard(validParamsReply);
 

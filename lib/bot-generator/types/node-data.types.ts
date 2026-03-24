@@ -60,6 +60,8 @@ export interface NodeData {
   buttons?: Button[];
   /** Тип клавиатуры */
   keyboardType?: KeyboardType;
+  /** ID С‚РѕС‡РєРё РїСЂРёРІСЏР·РєРё keyboard-ноды РІ canvas-РјРѕРґРµР»Рё */
+  keyboardNodeId?: string;
   /** Текст сообщения */
   text?: string;
   /** Режим форматирования текста */

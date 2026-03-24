@@ -21,6 +21,7 @@
 | fallbackMessage | string | Запасное сообщение | '' |
 | keyboardType | 'inline' \| 'reply' \| 'none' | Тип клавиатуры | 'none' |
 | buttons | Button[] | Кнопки | [] |
+| keyboardNodeId | string | ID отдельной keyboard-ноды для привязки клавиатуры | - |
 | formatMode | 'html' \| 'markdown' \| 'none' | Режим форматирования | 'none' |
 | imageUrl | string | URL изображения | '' |
 | documentUrl | string | URL документа | '' |

@@ -19,6 +19,7 @@
 | multiSelectVariable | string | Переменная для хранения выбора | '' |
 | buttons | Button[] | Кнопки | [] |
 | keyboardType | 'inline' \| 'reply' \| 'none' | Тип клавиатуры | 'none' |
+| keyboardNodeId | string | ID отдельной keyboard-ноды для привязки клавиатуры | - |
 | enableAutoTransition | boolean | Автопереход включен | false |
 | autoTransitionTo | string | Цель автоперехода | '' |
 | collectUserInput | boolean | Сбор пользовательского ввода | false |

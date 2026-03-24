@@ -131,6 +131,7 @@
 {{ indent }}user_data[user_id]["multi_select_{{ nodeId }}"] = []
 {{ indent }}user_data[user_id]["multi_select_node"] = "{{ nodeId }}"
 {{ indent }}user_data[user_id]["multi_select_type"] = "reply"
+{{ indent }}user_data[user_id]["multi_select_variable"] = "{{ multiSelectVariable }}"
 {%- endif %}
 {%- for btn in buttons %}
 {%- if btn.action == 'contact' and btn.requestContact %}

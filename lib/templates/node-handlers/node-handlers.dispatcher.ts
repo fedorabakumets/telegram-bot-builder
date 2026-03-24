@@ -34,6 +34,32 @@ function hasUserIdsVar(text: string): boolean {
 }
 
 /**
+ * Генерирует безопасный no-op обработчик для keyboard-ноды.
+ *
+ * Keyboard-нода в новой модели используется только как отдельный узел привязки.
+ * На уровне генератора она не должна отправлять самостоятельное сообщение.
+ *
+ * @param node - Узел keyboard
+ * @returns Python-код обработчика keyboard-ноды
+ */
+function generateKeyboardHandler(node: Node): string {
+  const safeName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+
+  return [
+    `@dp.callback_query(lambda c: c.data == "${node.id}")`,
+    `async def handle_callback_${safeName}(callback_query: types.CallbackQuery):`,
+    `    """Обработчик keyboard-ноды ${node.id} без самостоятельной отправки сообщения."""`,
+    `    try:`,
+    `        user_id = callback_query.from_user.id`,
+    `        logging.info(f"⌨️ Keyboard node ${node.id} вызвана для пользователя {user_id}")`,
+    `    except Exception as e:`,
+    `        logging.error(f"❌ Ошибка в keyboard node ${node.id}: {e}")`,
+    `        return`,
+    `    return`,
+  ].join('\n');
+}
+
+/**
  * Генерирует обработчики для каждого узла
  *
  * Функция проходит по всем узлам графа и генерирует соответствующие обработчики
@@ -131,6 +157,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     demote_user: generateUserHandlerFromNode,
     admin_rights: generateAdminRightsFromNode,
     broadcast: (node) => generateBroadcastHandler(node, nodes, enableComments),
+    keyboard: generateKeyboardHandler,
     media: (node) => generateMediaNode({
       nodeId: node.id,
       attachedMedia: node.data?.attachedMedia || [],

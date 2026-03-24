@@ -15,6 +15,7 @@ import { createGenerationState } from './generation-state';
 import { toEnhancedNodes } from './to-enhanced-node';
 import { collectMediaVariables } from './collect-media-variables';
 import { extractNodesAndConnections } from './extract-nodes-and-connections';
+import { normalizeKeyboardBindings } from './normalize-keyboard-bindings';
 
 /**
  * Извлекает все ID узлов из массива узлов
@@ -48,8 +49,9 @@ export function createGenerationContext(
   options: GenerationOptions
 ): GenerationContext {
   // Используем extractNodesAndConnections для поддержки как nodes[], так и sheets[]
-  const { nodes: rawNodes } = extractNodesAndConnections(botData as any);
-  const nodes = toEnhancedNodes(rawNodes);
+  const { nodes: rawNodes, connections } = extractNodesAndConnections(botData as any);
+  const normalizedNodes = normalizeKeyboardBindings(rawNodes, connections);
+  const nodes = toEnhancedNodes(normalizedNodes);
   const allNodeIds = extractAllNodeIds(nodes);
   const mediaVariablesMap = collectMediaVariables(nodes);
   const state = createGenerationState(options);
@@ -82,14 +84,17 @@ export function createGenerationContextFromNodes(
   nodes: EnhancedNode[],
   botName: string,
   groups: BotGroup[] = [],
-  options: GenerationOptions = {}
+  options: GenerationOptions = {},
+  connections: Array<{ id: string; source: string; target: string }> = []
 ): GenerationContext {
-  const allNodeIds = extractAllNodeIds(nodes);
-  const mediaVariablesMap = collectMediaVariables(nodes);
+  const normalizedNodes = normalizeKeyboardBindings(nodes as any, connections as any);
+  const enhancedNodes = toEnhancedNodes(normalizedNodes as any);
+  const allNodeIds = extractAllNodeIds(enhancedNodes);
+  const mediaVariablesMap = collectMediaVariables(enhancedNodes);
   const state = createGenerationState(options);
 
   return {
-    nodes,
+    nodes: enhancedNodes,
     allNodeIds,
     mediaVariablesMap,
     botName,
