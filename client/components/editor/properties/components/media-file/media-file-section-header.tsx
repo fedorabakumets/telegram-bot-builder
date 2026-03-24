@@ -13,6 +13,8 @@ interface MediaFileSectionHeaderProps {
   isOpen: boolean;
   /** Функция переключения открытости */
   onToggle: () => void;
+  /** Показывать бейдж "Скоро обновление" (по умолчанию true) */
+  showComingSoon?: boolean;
 }
 
 /**
@@ -21,7 +23,7 @@ interface MediaFileSectionHeaderProps {
  * @param {MediaFileSectionHeaderProps} props - Пропсы компонента
  * @returns {JSX.Element} Заголовок секции медиа
  */
-export function MediaFileSectionHeader({ isOpen, onToggle }: MediaFileSectionHeaderProps) {
+export function MediaFileSectionHeader({ isOpen, onToggle, showComingSoon = true }: MediaFileSectionHeaderProps) {
   return (
     <SectionHeader
       title="Прикрепленный медиафайл"
@@ -33,7 +35,7 @@ export function MediaFileSectionHeader({ isOpen, onToggle }: MediaFileSectionHea
       iconColor="text-rose-600 dark:text-rose-400"
       titleGradient="bg-gradient-to-r from-rose-900 to-pink-800 dark:from-rose-100 dark:to-pink-200 bg-clip-text text-transparent"
       descriptionColor="text-rose-700/70 dark:text-rose-300/70"
-      extraContent={<ComingSoonBadge />}
+      extraContent={showComingSoon ? <ComingSoonBadge /> : undefined}
     />
   );
 }

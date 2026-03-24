@@ -21,6 +21,8 @@ interface MediaFileSectionProps {
   onToggle: () => void;
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
   getAllNodesFromAllSheets?: any[];
+  /** Показывать бейдж "Скоро обновление" (по умолчанию true) */
+  showComingSoon?: boolean;
 }
 
 /** Определение типа медиа по URL */
@@ -41,7 +43,8 @@ export function MediaFileSection({
   isOpen,
   onToggle,
   onNodeUpdate,
-  getAllNodesFromAllSheets = []
+  getAllNodesFromAllSheets = [],
+  showComingSoon = true
 }: MediaFileSectionProps) {
   const attachedFiles = selectedNode.data.attachedMedia || [];
 
@@ -66,7 +69,7 @@ export function MediaFileSection({
 
   return (
     <div className="bg-gradient-to-br from-pink-50/40 to-rose-50/20 dark:from-pink-950/30 dark:to-rose-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-pink-200/40 dark:border-pink-800/40 backdrop-blur-sm">
-      <MediaFileSectionHeader isOpen={isOpen} onToggle={onToggle} />
+      <MediaFileSectionHeader isOpen={isOpen} onToggle={onToggle} showComingSoon={showComingSoon} />
 
       {isOpen && (
         <div className="space-y-3">
