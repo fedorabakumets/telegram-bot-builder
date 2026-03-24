@@ -1,0 +1,77 @@
+{#
+  Шаблон обработчика медиа-ноды
+
+  @fileoverview Генерирует Python-код для отправки медиафайлов из массива attachedMedia.
+  Поддерживает одиночную отправку и медиагруппы, FSInputFile для /uploads/ путей,
+  автопереход и логирование.
+
+  @param {string}   nodeId               - уникальный идентификатор узла
+  @param {array}    attachedMedia        - массив URL медиафайлов
+  @param {boolean}  enableAutoTransition - включить автопереход
+  @param {string}   autoTransitionTo     - ID целевого узла автоперехода
+#}
+
+{#- Макрос: определяет тип медиа по расширению URL (Nunjucks: lower + in) -#}
+{%- macro get_media_type(url) -%}
+{%- set u = url | lower -%}
+{%- if '.jpg' in u or '.jpeg' in u or '.png' in u or '.gif' in u or '.webp' in u -%}photo
+{%- elif '.mp4' in u or '.avi' in u or '.mov' in u -%}video
+{%- elif '.mp3' in u or '.wav' in u or '.ogg' in u -%}audio
+{%- else -%}document
+{%- endif -%}
+{%- endmacro -%}
+
+{#- Макрос: определяет класс InputMedia по расширению URL -#}
+{%- macro get_input_media_class(url) -%}
+{%- set u = url | lower -%}
+{%- if '.jpg' in u or '.jpeg' in u or '.png' in u or '.gif' in u or '.webp' in u -%}InputMediaPhoto
+{%- elif '.mp4' in u or '.avi' in u or '.mov' in u -%}InputMediaVideo
+{%- elif '.mp3' in u or '.wav' in u or '.ogg' in u -%}InputMediaAudio
+{%- else -%}InputMediaDocument
+{%- endif -%}
+{%- endmacro -%}
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQuery):
+    """Обработчик медиа-ноды для узла {{ nodeId }}"""
+    is_fake_callback = getattr(callback_query, '_is_fake', False)
+    logging.info(f"Медиа-нода {{ nodeId }}: отправка медиафайлов")
+
+{%- if attachedMedia and attachedMedia | length == 1 %}
+{%- set url = attachedMedia[0] %}
+{%- set mtype = get_media_type(url) | trim %}
+    # Отправка одиночного медиафайла
+{%- if '/uploads/' in url %}
+    _file_path = get_upload_file_path("{{ url }}")
+    _media_file = FSInputFile(_file_path)
+    await callback_query.message.answer_{{ mtype }}(_media_file)
+{%- else %}
+    await callback_query.message.answer_{{ mtype }}("{{ url|e }}")
+{%- endif %}
+
+{%- elif attachedMedia and attachedMedia | length > 1 %}
+    # Отправка медиагруппы
+    _media_group = [
+{%- for url in attachedMedia %}
+{%- set cls = get_input_media_class(url) | trim %}
+{%- if '/uploads/' in url %}
+        {{ cls }}(media=FSInputFile(get_upload_file_path("{{ url }}"))),
+{%- else %}
+        {{ cls }}(media="{{ url|e }}"),
+{%- endif %}
+{%- endfor %}
+    ]
+    await callback_query.message.answer_media_group(_media_group)
+
+{%- else %}
+    # Нет медиафайлов для отправки
+    pass
+
+{%- endif %}
+
+{%- if enableAutoTransition and autoTransitionTo %}
+    # Автопереход к следующему узлу
+    logging.info(f"Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
+    fake_cb = FakeCallbackQuery(callback_query.message, "{{ autoTransitionTo }}")
+    await handle_callback_{{ autoTransitionTo|safe_name }}(fake_cb)
+{%- endif %}

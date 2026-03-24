@@ -152,6 +152,7 @@ export function hasMediaNodes(nodes: Node[]): boolean {
     node.data?.enableVideoInput ||
     node.data?.enableAudioInput ||
     node.data?.enableDocumentInput ||
+    node.type === NODE_TYPES.MEDIA ||
     (node.data?.attachedMedia && Array.isArray(node.data.attachedMedia) && node.data.attachedMedia.length > 0))
   );
 }

@@ -24,6 +24,7 @@ import { collectSynonymEntries } from '../synonyms/synonyms.renderer';
 import { generateCommandTriggerHandlers } from '../command-trigger/command-trigger.renderer';
 import { generateTextTriggerHandlers } from '../text-trigger/text-trigger.renderer';
 import { generateConditionHandlers } from '../condition/condition.renderer';
+import { generateMediaNode } from '../media-node';
 
 /**
  * Проверяет, использует ли текст переменные {user_ids} или {user_ids_count}
@@ -130,6 +131,12 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     demote_user: generateUserHandlerFromNode,
     admin_rights: generateAdminRightsFromNode,
     broadcast: (node) => generateBroadcastHandler(node, nodes, enableComments),
+    media: (node) => generateMediaNode({
+      nodeId: node.id,
+      attachedMedia: node.data?.attachedMedia || [],
+      enableAutoTransition: node.data?.enableAutoTransition || false,
+      autoTransitionTo: node.data?.autoTransitionTo,
+    }),
   };
 
   // Проверяем, есть ли узлы типа 'start' или синонимы для них
