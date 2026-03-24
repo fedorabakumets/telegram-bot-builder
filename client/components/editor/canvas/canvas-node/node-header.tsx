@@ -50,6 +50,8 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
         return <CommandBadge node={node} type="command" />;
       case 'message':
         return 'Сообщение';
+      case 'keyboard':
+        return 'Клавиатура';
       case 'sticker':
         return 'Стикер';
       case 'voice':

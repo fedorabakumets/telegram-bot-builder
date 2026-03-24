@@ -5,11 +5,12 @@
  * со стрелками на конце. Линия всегда выходит из правого порта (OutputPort)
  * исходного узла и входит в левый бок целевого узла.
  *
- * Поддерживает четыре типа соединений:
+ * Поддерживает пять типов соединений:
  * - auto-transition (зелёный пунктир) — автопереход
  * - button-goto (синий пунктир) — переход по inline-кнопке
  * - input-target (фиолетовый пунктир) — переход после ввода пользователя
  * - trigger-next (жёлтый сплошной) — переход из узла command_trigger
+ * - keyboard-link (янтарный сплошной) — связь message → keyboard
  *
  * При наведении на линию появляется кнопка удаления соединения.
  *
@@ -18,6 +19,11 @@
 
 import { useState } from 'react';
 import { Node } from '@/types/bot';
+import {
+  MESSAGE_KEYBOARD_PORT_OFFSET_Y,
+  KEYBOARD_LINK_PORT_TYPE,
+  getKeyboardNodeId,
+} from './keyboard-connection';
 
 /** Размер SVG-холста — достаточно большой чтобы покрыть любой граф */
 const SVG_SIZE = 20000;
@@ -26,7 +32,7 @@ const SVG_SIZE = 20000;
  * Тип соединения между узлами
  * "auto-transition" | "button-goto" | "input-target" | "trigger-next" | "condition-source"
  */
-type ConnectionType = 'auto-transition' | 'button-goto' | 'input-target' | 'trigger-next' | 'condition-source';
+type ConnectionType = 'auto-transition' | 'button-goto' | 'input-target' | 'trigger-next' | 'condition-source' | typeof KEYBOARD_LINK_PORT_TYPE;
 
 /**
  * Одно соединение между двумя узлами
@@ -93,6 +99,13 @@ const CONNECTION_STYLES: Record<ConnectionType, ConnectionStyle> = {
     opacity: 0.8,
     markerId: 'arrow-trigger',
   },
+  'keyboard-link': {
+    color: '#f59e0b',
+    strokeWidth: 2,
+    dashArray: '',
+    opacity: 0.8,
+    markerId: 'arrow-keyboard',
+  },
   /** Соединение исходного узла с узлом condition — оранжевый пунктир */
   'condition-source': {
     color: '#f97316',
@@ -156,7 +169,7 @@ function buildSmartPath(
   toNode: { position: { x: number; y: number }; type?: string },
   fromW: number,
   fromH: number,
-  toW: number,
+  _toW: number,
   toH: number,
   fromPortOffset?: { x: number; y: number },
 ): string {
@@ -264,6 +277,15 @@ function collectConnections(nodes: Node[]): Connection[] {
         });
       }
     }
+
+    // 7. Отдельная клавиатура у message-узла
+    if (node.type === 'message') {
+      const keyboardNodeId = getKeyboardNodeId(node.data);
+      const keyboardNode = keyboardNodeId ? nodes.find(n => n.id === keyboardNodeId && n.type === 'keyboard') : null;
+      if (keyboardNode) {
+        connections.push({ fromId: node.id, toId: keyboardNode.id, type: 'keyboard-link' });
+      }
+    }
   });
 
   return connections;
@@ -344,16 +366,14 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
         // Для button-goto используем точную позицию порта кнопки
         const fromPortOffset = (type === 'button-goto' && buttonId)
           ? buttonPortYOffsets?.get(buttonId)
+          : type === 'keyboard-link'
+            ? { x: fromW, y: MESSAGE_KEYBOARD_PORT_OFFSET_Y }
           : undefined;
 
         const d = buildSmartPath(fromNode, toNode, fromW, fromH, toW, toH, fromPortOffset);
         const style = CONNECTION_STYLES[type];
         const connKey = `${fromId}->${toId}-${type}-${idx}`;
         const isHovered = hoveredKey === connKey;
-
-        // Кнопка удаления рисуется там где курсор мыши
-        const btnX = mousePos?.x ?? 0;
-        const btnY = mousePos?.y ?? 0;
 
         return (
           <g

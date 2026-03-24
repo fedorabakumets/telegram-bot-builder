@@ -4,6 +4,7 @@ import { useTouchGestures } from './use-touch-gestures';
 import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
 import { useConnectionDrag } from './use-connection-drag';
+import { clearKeyboardNodeId } from '../canvas-node/keyboard-connection';
 
 import { Node, ComponentDefinition } from '@/types/bot';
 import type { CommandPreset } from '@/components/editor/sidebar/massive/commands';
@@ -260,6 +261,8 @@ export function Canvas({
           }
         } else if (type === 'input-target') {
           delete data.inputTargetNodeId;
+        } else if (type === 'keyboard-link') {
+          return { ...n, data: clearKeyboardNodeId(data) };
         }
         return { ...n, data };
       }
@@ -270,7 +273,7 @@ export function Canvas({
       }
 
       return n;
-    });
+    }) as Node[];
     onNodesUpdate?.(updatedNodes);
     addAction('disconnect', `Удалено соединение`);
   }, [onConnectionDeleteProp, nodes, onNodesUpdate, addAction]);
@@ -987,7 +990,7 @@ export function Canvas({
           isPrivateOnly: preset.triggerData.isPrivateOnly ?? false,
           autoTransitionTo: messageId,
         },
-      });
+      } as unknown as Node);
 
       // Создаём message рядом (+320px по X)
       const buttons = (preset.messageData.buttons || []).map(btn => ({
@@ -1011,7 +1014,7 @@ export function Canvas({
           oneTimeKeyboard: false,
           resizeKeyboard: true,
         },
-      });
+      } as unknown as Node);
 
       addAction('add', `Добавлена команда "${preset.triggerData.command}" с ответом`);
       return;

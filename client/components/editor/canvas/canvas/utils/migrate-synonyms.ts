@@ -144,7 +144,7 @@ export function migrateSynonymsToTextTriggers(nodes: Node[]): Node[] {
           can_manage_topics: false,
           is_anonymous: false,
           adminChatIdSource: 'current_chat',
-        },
+        } as any,
       };
 
       newTriggers.push(triggerNode);

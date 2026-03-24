@@ -4,7 +4,7 @@
  */
 
 import { nanoid } from 'nanoid';
-import { CanvasSheet, BotDataWithSheets, BotData } from '@shared/schema';
+import { CanvasSheet, BotDataWithSheets, BotData, Node } from '@shared/schema';
 import { defaultNodeData } from './default-node-data';
 
 /**
@@ -16,7 +16,7 @@ import { defaultNodeData } from './default-node-data';
  */
 export function migrateLegacyData(legacyData: BotData): BotDataWithSheets {
   const hasNodes = legacyData.nodes && legacyData.nodes.length > 0;
-  const nodes = hasNodes ? legacyData.nodes : [{
+  const nodes: Node[] = hasNodes ? legacyData.nodes : [{
     id: 'start',
     type: 'start' as const,
     position: { x: 100, y: 100 },

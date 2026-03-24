@@ -196,6 +196,7 @@ export function PropertiesHeader({
                     </SelectTrigger>
                     <SelectContent className="z-50 bg-gradient-to-br from-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-60 overflow-y-auto">
                       <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
+                      <SelectItem value="keyboard">⌨️ Клавиатура</SelectItem>
                       <SelectItem value="sticker">😀 Стикер</SelectItem>
                       <SelectItem value="voice">🎤 Голосовое сообщение</SelectItem>
                       <SelectItem value="animation">🎞️ GIF анимация</SelectItem>

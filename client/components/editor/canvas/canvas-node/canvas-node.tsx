@@ -3,6 +3,8 @@ import { cn } from '@/utils/utils';
 import { useState, useRef, useEffect } from 'react';
 import { OutputPort } from './output-port';
 import { PortType } from './port-colors';
+import { MESSAGE_KEYBOARD_PORT_OFFSET_Y } from './keyboard-connection';
+import { getCanvasViewportMetrics, screenPointToCanvasPoint } from '../canvas/utils/canvas-coordinate-utils';
 import { NodeContextMenu } from './context-menu/node-context-menu';
 import { useNodeContextMenu } from './context-menu/use-node-context-menu';
 import { DicePreview } from './dice-preview';
@@ -109,6 +111,23 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   const dragOffsetRef = useRef(dragOffset);
   const nodeRef = useRef<HTMLDivElement>(null);
   const { menu, open: openContextMenu, close: closeContextMenu } = useNodeContextMenu();
+
+  /**
+   * Переводит экранную точку в координаты canvas с учетом scroll контейнера.
+   *
+   * @param screenX - X в экранных координатах
+   * @param screenY - Y в экранных координатах
+   * @returns Точка в координатах canvas
+   */
+  const getCanvasPoint = (screenX: number, screenY: number) => {
+    const wrapperDiv = nodeRef.current?.parentElement;
+    const transformedContainer = wrapperDiv?.parentElement;
+    const canvas = transformedContainer?.parentElement;
+    const viewport = getCanvasViewportMetrics(canvas);
+    if (!viewport) return { x: screenX, y: screenY };
+    return screenPointToCanvasPoint(screenX, screenY, viewport, pan, zoom);
+  };
+  void getCanvasPoint;
 
   /**
    * Обработчик начала перетаскивания от порта выхода.
@@ -420,9 +439,17 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       {/* Узел condition имеет порты на каждой ветке — общий порт не нужен */}
       {(node.type === 'command_trigger' || node.type === 'text_trigger') ? (
         <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
-      ) : node.type !== 'condition' ? (
+      ) : node.type !== 'condition' && node.type !== 'keyboard' ? (
         <OutputPort portType="auto-transition" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : null}
+      {node.type === 'message' && (
+        <OutputPort
+          portType="keyboard-link"
+          onPortMouseDown={handlePortMouseDown}
+          isActive={isConnectionSource}
+          topOffset={MESSAGE_KEYBOARD_PORT_OFFSET_Y}
+        />
+      )}
 
       {/* Основной div узла — только визуальное содержимое */}
       <div

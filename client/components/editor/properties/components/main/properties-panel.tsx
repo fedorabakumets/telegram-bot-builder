@@ -27,6 +27,7 @@ import { KeyboardButtonsSection } from '../keyboard/keyboard-buttons-section';
 import { UserInputSettingsSection } from './user-input-settings-section';
 import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
 import { KeyboardLayoutEditor } from '../keyboard/keyboard-layout-editor';
+import { KeyboardNodeProperties } from '../keyboard/keyboard-node-properties';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import { ButtonCard } from '../button-card/button-card';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
@@ -220,6 +221,36 @@ export function PropertiesPanel({
     return <EmptyState onClose={onClose} />;
   }
 
+  if (selectedNode.type === 'keyboard') {
+    return (
+      <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
+        <PropertiesHeader
+          selectedNode={selectedNode}
+          onNodeTypeChange={onNodeTypeChange}
+          onClose={onClose}
+          displayNodeId={displayNodeId}
+        />
+        <div className="flex-1 overflow-y-auto">
+          <KeyboardNodeProperties
+            selectedNode={selectedNode}
+            textVariables={textVariables as Variable[]}
+            getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+            onNodeUpdate={onNodeUpdate}
+            onButtonAdd={onButtonAdd}
+            onButtonUpdate={onButtonUpdate}
+            onButtonDelete={onButtonDelete}
+          />
+        </div>
+        <PropertiesFooterWrapper
+          selectedNode={selectedNode}
+          onNodeUpdate={onNodeUpdate}
+          onActionLog={onActionLog}
+          onSaveProject={onSaveProject}
+        />
+      </aside>
+    );
+  }
+
   return (
     <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
       {/* Mobile Close Button */}
@@ -359,7 +390,7 @@ export function PropertiesPanel({
           )}
 
           {/* Keyboard Section - скрыто для узлов управления, триггеров, условия и медиа-ноды */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
+          {selectedNode.type !== 'message' && !isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
             <div className="w-full bg-gradient-to-br from-amber-50/40 to-yellow-50/20 dark:from-amber-950/30 dark:to-yellow-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-amber-200/40 dark:border-amber-800/40 backdrop-blur-sm">
               <KeyboardSectionHeader
                 selectedNode={selectedNode}

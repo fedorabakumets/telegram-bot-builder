@@ -22,6 +22,12 @@ export const defaultNodeData = {
   formatMode: 'none' as const,
   /** Синонимы для команды */
   synonyms: [],
+  /** Синонимы для текстового триггера */
+  textSynonyms: [],
+  /** Режим совпадения текстового триггера */
+  textMatchType: 'exact' as const,
+  /** Ветки условного узла */
+  branches: [],
   /** Только для личных сообщений */
   isPrivateOnly: false,
   /** Только для администраторов */

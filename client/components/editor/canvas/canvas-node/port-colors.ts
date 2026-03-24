@@ -12,8 +12,9 @@
  * - "trigger-next" — переход из узла command_trigger (жёлтый)
  * - "auto-transition" — автопереход (зелёный)
  * - "button-goto" — переход по кнопке goto (синий)
+ * - "keyboard-link" — отдельная связь message → keyboard (янтарный)
  */
-export type PortType = 'trigger-next' | 'auto-transition' | 'button-goto';
+export type PortType = 'trigger-next' | 'auto-transition' | 'button-goto' | 'keyboard-link';
 
 /**
  * Цвета портов по типу соединения
@@ -27,4 +28,6 @@ export const PORT_COLORS: Record<PortType, string> = {
   'auto-transition': '#22c55e',
   /** Синий — переход по кнопке goto */
   'button-goto': '#3b82f6',
+  /** Янтарный — связь message → keyboard */
+  'keyboard-link': '#f59e0b',
 };

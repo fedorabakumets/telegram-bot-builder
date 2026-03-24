@@ -56,6 +56,7 @@ import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
+import { clearKeyboardNodeId, getKeyboardNodeId } from '@/components/editor/canvas/canvas-node/keyboard-connection';
 import { BotData, BotDataWithSheets, BotProject, UserBotData } from '@shared/schema';
 import type { ComponentDefinition, Node } from '@shared/schema';
 import { nanoid } from 'nanoid';
@@ -497,7 +498,6 @@ export default function Editor() {
     setSelectedNodeId,
     addNode,
     updateNode,
-    deleteNode: _deleteNode,
     duplicateNode: _duplicateNode,
     updateNodeData,
     addButton,
@@ -821,8 +821,14 @@ export default function Editor() {
     handleActionLog('delete', `Удален узел "${node?.type || 'Unknown'}"`);
     // Сохраняем в историю ДО изменений
     saveToHistory();
-    _deleteNode(nodeId);
-  }, [_deleteNode, nodes, handleActionLog, saveToHistory]);
+    const updatedNodes = nodes
+      .map(n => getKeyboardNodeId(n.data) === nodeId
+        ? { ...n, data: clearKeyboardNodeId(n.data) }
+        : n)
+      .filter(n => n.id !== nodeId);
+    updateNodes(updatedNodes);
+    if (selectedNodeId === nodeId) setSelectedNodeId(null);
+  }, [nodes, handleActionLog, saveToHistory, updateNodes, selectedNodeId, setSelectedNodeId]);
 
   /**
    * Удаляет соединение между узлами с сохранением в историю.
@@ -852,6 +858,8 @@ export default function Editor() {
           }
         } else if (type === 'input-target') {
           delete data.inputTargetNodeId;
+        } else if (type === 'keyboard-link') {
+          return { ...n, data: clearKeyboardNodeId(data) };
         }
         return { ...n, data };
       }

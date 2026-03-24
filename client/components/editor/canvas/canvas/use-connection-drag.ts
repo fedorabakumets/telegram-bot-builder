@@ -11,6 +11,15 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Node } from '@/types/bot';
 import { PortType } from '../canvas-node/port-colors';
+import {
+  KEYBOARD_LINK_PORT_TYPE,
+  isKeyboardConnectionAllowed,
+  setKeyboardNodeId,
+} from '../canvas-node/keyboard-connection';
+import {
+  getCanvasViewportMetrics,
+  screenPointToCanvasPoint,
+} from './utils/canvas-coordinate-utils';
 
 /**
  * Состояние временного соединения при drag
@@ -108,19 +117,16 @@ export function useConnectionDrag({
     // Грид имеет размер 2000vw×2000vh и его getBoundingClientRect().left/top
     // смещается при скролле, что даёт неверные координаты.
     const container = canvasRef.current?.parentElement ?? canvasRef.current;
-    const rect = container?.getBoundingClientRect();
-    if (!rect) return { x: screenX, y: screenY };
-    const z = zoomRef.current;
-    const p = panRef.current;
-    const x = (screenX - rect.left - p.x) / (z / 100);
-    const y = (screenY - rect.top - p.y) / (z / 100);
-    return { x, y };
+    const viewport = getCanvasViewportMetrics(container);
+    if (!viewport) return { x: screenX, y: screenY };
+    return screenPointToCanvasPoint(screenX, screenY, viewport, panRef.current, zoomRef.current);
   }, [canvasRef]);
 
   /** Находит узел под canvas-координатами */
-  const findNodeAtPoint = useCallback((cx: number, cy: number, excludeId: string): string | null => {
+  const findNodeAtPoint = useCallback((cx: number, cy: number, excludeId: string, portType?: PortType): string | null => {
     for (const node of nodesRef.current) {
       if (node.id === excludeId) continue;
+      if (portType === KEYBOARD_LINK_PORT_TYPE && node.type !== 'keyboard') continue;
       const size = nodeSizesRef.current.get(node.id) ?? { width: 320, height: 200 };
       const { x, y } = node.position;
       if (cx >= x && cx <= x + size.width && cy >= y && cy <= y + size.height) {
@@ -145,7 +151,7 @@ export function useConnectionDrag({
       const updated = { ...draft, currentX: x, currentY: y };
       draftRef.current = updated;
       setDraftConnection({ ...updated });
-      setHoveredTargetNodeId(findNodeAtPoint(x, y, draft.fromNodeId));
+      setHoveredTargetNodeId(findNodeAtPoint(x, y, draft.fromNodeId, draft.portType));
     };
 
     const handleMouseUp = (e: MouseEvent) => {
@@ -153,11 +159,23 @@ export function useConnectionDrag({
       if (!draft) return;
 
       const { x, y } = screenToCanvas(e.clientX, e.clientY);
-      const targetId = findNodeAtPoint(x, y, draft.fromNodeId);
+      const targetId = findNodeAtPoint(x, y, draft.fromNodeId, draft.portType);
 
       if (targetId) {
+        const sourceNode = nodesRef.current.find(n => n.id === draft.fromNodeId);
+        const targetNode = nodesRef.current.find(n => n.id === targetId);
+
+        if (draft.portType === KEYBOARD_LINK_PORT_TYPE) {
+          if (!sourceNode || !targetNode || !isKeyboardConnectionAllowed(sourceNode.type, targetNode.type)) {
+            draftRef.current = null;
+            setDraftConnection(null);
+            setHoveredTargetNodeId(null);
+            return;
+          }
+        }
+
         onNodeUpdateRef.current(draft.fromNodeId, (node) => {
-          const updated = { ...node, data: { ...node.data } };
+          const updated = { ...node, data: { ...(node.data as Record<string, unknown>) } } as Node;
           if (draft.portType === 'trigger-next' || draft.portType === 'auto-transition') {
             updated.data = {
               ...updated.data,
@@ -173,8 +191,10 @@ export function useConnectionDrag({
               b.id === draft.buttonId ? { ...b, target: targetId } : b
             );
             updated.data = { ...updated.data, buttons, branches };
-          } else if (draft.portType === 'input-target') {
+          } else if (`${draft.portType}` === 'input-target') {
             updated.data = { ...updated.data, inputTargetNodeId: targetId };
+          } else if (draft.portType === KEYBOARD_LINK_PORT_TYPE) {
+            updated.data = setKeyboardNodeId(updated.data as Record<string, unknown>, targetId) as unknown as Node['data'];
           }
           return updated;
         });

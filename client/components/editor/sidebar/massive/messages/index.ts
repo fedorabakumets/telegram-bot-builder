@@ -8,3 +8,4 @@ export { voiceMessage } from './voice-message';
 export { locationMessage } from './location-message';
 export { contactMessage } from './contact-message';
 export { mediaMessage } from './media-message';
+export { keyboardMessage } from './keyboard';

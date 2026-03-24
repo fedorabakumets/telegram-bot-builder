@@ -15,10 +15,12 @@ import { PORT_COLORS, PortType } from './port-colors';
  * Пропсы компонента OutputPort
  */
 interface OutputPortProps {
-  /** Тип порта: "trigger-next", "auto-transition", "button-goto" */
+  /** Тип порта: "trigger-next", "auto-transition", "button-goto", "keyboard-link" */
   portType: PortType;
   /** ID кнопки — только для portType="button-goto" */
   buttonId?: string;
+  /** Вертикальное смещение порта внутри узла */
+  topOffset?: number;
   /**
    * Обработчик начала перетаскивания соединения от порта.
    * portCenter — экранные координаты центра кружка-порта.
@@ -53,7 +55,7 @@ interface OutputPortProps {
  * @param props - Пропсы компонента
  * @returns JSX-элемент порта
  */
-export function OutputPort({ portType, buttonId, onPortMouseDown, onMount, layoutKey }: OutputPortProps) {
+export function OutputPort({ portType, buttonId, topOffset, onPortMouseDown, onMount, layoutKey }: OutputPortProps) {
   const color = PORT_COLORS[portType];
   const portRef = useRef<HTMLDivElement>(null);
 
@@ -105,7 +107,7 @@ export function OutputPort({ portType, buttonId, onPortMouseDown, onMount, layou
       style={{
         position: 'absolute',
         right: -8,
-        top: '50%',
+        top: topOffset !== undefined ? `${topOffset}px` : '50%',
         transform: 'translateY(-50%)',
         width: 16,
         height: 16,
@@ -114,7 +116,7 @@ export function OutputPort({ portType, buttonId, onPortMouseDown, onMount, layou
         border: '2px solid white',
         boxShadow: `0 0 0 1px ${color}`,
       }}
-      title={`Соединение: ${portType}`}
+      title={`Соединение: ${portType === 'keyboard-link' ? 'Клавиатура' : portType}`}
     />
   );
 }

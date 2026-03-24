@@ -70,6 +70,7 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
       : undefined,
     [isMultiSelect, node.data.buttons]
   );
+  void completeButton;
 
   // Все кнопки включая кнопку завершения для отображения в сетке
   const allButtonsForGrid = useMemo(() => {

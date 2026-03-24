@@ -18,7 +18,7 @@ import { updateNodeReferencesInData } from './sheet-node-references';
  * @returns Новый объект листа `CanvasSheet`
  */
 export function createSheet(name: string, nodes: Node[] = []): CanvasSheet {
-  const defaultNodes = nodes.length === 0 ? [{
+  const defaultNodes: Node[] = nodes.length === 0 ? [{
     id: 'start',
     type: 'start' as const,
     position: { x: 100, y: 100 },
@@ -62,25 +62,27 @@ export function duplicateSheet(originalSheet: CanvasSheet): CanvasSheet {
   // Создаём карту старых branch.id → новых branch.id для condition-узлов
   const branchIdMap = new Map<string, string>();
   const nodesWithUpdatedBranches = duplicatedNodes.map(node => {
-    if (node.data?.branches && Array.isArray(node.data.branches)) {
-      const updatedBranches = node.data.branches.map((branch: any) => {
+    const data = node.data as any;
+    if (data?.branches && Array.isArray(data.branches)) {
+      const updatedBranches = data.branches.map((branch: any) => {
         const newBranchId = nanoid();
         if (branch.id) {
           branchIdMap.set(branch.id, newBranchId);
         }
         return { ...branch, id: newBranchId };
       });
-      return { ...node, data: { ...node.data, branches: updatedBranches } };
+      return { ...node, data: { ...data, branches: updatedBranches } };
     }
     return node;
   });
 
   // Обновляем condSourceId в message-узлах через branchIdMap
   const nodesWithUpdatedCondSource = nodesWithUpdatedBranches.map(node => {
-    if (node.data?.condSourceId && branchIdMap.has(node.data.condSourceId)) {
+    const data = node.data as any;
+    if (data?.condSourceId && branchIdMap.has(data.condSourceId)) {
       return {
         ...node,
-        data: { ...node.data, condSourceId: branchIdMap.get(node.data.condSourceId) }
+        data: { ...data, condSourceId: branchIdMap.get(data.condSourceId) }
       };
     }
     return node;
