@@ -27,6 +27,7 @@ import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelec
 import { generateInteractiveCallbackHandlers } from './templates/keyboard-handlers/interactive-callback-handlers';
 import { generateGroupHandlers } from './templates/group-handlers/group-handlers.renderer';
 import { generateMediaFunctions } from './templates/media-functions/media-functions.renderer';
+import { generateMediaInputHandlers } from './templates/media-input-handlers';
 import { generateMessageLoggingCode } from './templates/middleware/middleware.renderer';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';
 import { addAutoTransitionNodes } from './bot-generator/core/add-auto-transition-nodes';
@@ -35,6 +36,7 @@ import { collectInputTargetNodes } from './bot-generator/core/collect-input-targ
 import { assertValidPython } from './bot-generator/validation';
 import { collectAllCommandCallbacksFromNodes, findCommandNode } from './bot-generator/core/command-utils';
 import { emitOnce, COMPONENT_NAMES } from './bot-generator/core/generation-state';
+import { hasInputCollection } from './templates/filters';
 /**
  * Опции для генерации Python-кода бота
  */
@@ -77,6 +79,7 @@ interface CodeSections {
   buttonResponseHandlers: string;
   commandCallbackHandlers: string;
   groupHandlers: string;
+  mediaInputHandlers: string;
   universalHandlers: string;
   main: string;
   multiSelectHandlers: string;
@@ -321,6 +324,34 @@ function generateCodeSections(
       : ''
   );
 
+  const nodesForHandlers = nodes
+    .filter(node =>
+      node.type !== NODE_TYPES.START &&
+      node.type !== NODE_TYPES.COMMAND &&
+      node.type !== 'command_trigger' &&
+      node.type !== 'text_trigger'
+    )
+    .map(node => ({
+      id: node.id,
+      safeName: node.id.replace(/[^a-zA-Z0-9_]/g, '_'),
+      type: node.type,
+      data: node.data,
+    }));
+
+  const inputCollection = hasInputCollection(nodes);
+  const mediaInputNavigationCode = nodesForHandlers.length > 0
+    ? `${nodesForHandlers.map((node, index) => `${index === 0 ? 'if' : 'elif'} next_node_id == "${node.id}":\n    await handle_callback_${node.safeName}(types.CallbackQuery(id="media_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))`).join('\n')}\nelse:\n    logging.warning(f"Неизвестный следующий узел: {next_node_id}")`
+    : 'logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")';
+  const mediaInputHandlers = emitOnce(state, 'media_input_handlers', () =>
+    generateMediaInputHandlers({
+      hasPhotoInput: inputCollection.hasPhotoInput,
+      hasVideoInput: inputCollection.hasVideoInput,
+      hasAudioInput: inputCollection.hasAudioInput,
+      hasDocumentInput: inputCollection.hasDocumentInput,
+      navigationCode: mediaInputNavigationCode,
+    })
+  );
+
   // --- universal handlers ---
   const commandNodes = nodes
     .filter(node =>
@@ -334,13 +365,6 @@ function generateCodeSections(
       type: node.type,
       data: node.data,
     }));
-
-  const nodesForHandlers = nodes.map(node => ({
-    id: node.id,
-    safeName: node.id.replace(/[^a-zA-Z0-9_]/g, '_'),
-    type: node.type,
-    data: node.data,
-  }));
 
   const hasUrlButtonsFlag = nodes.some(node =>
     Array.isArray(node.data?.buttons) &&
@@ -470,6 +494,7 @@ function generateCodeSections(
     buttonResponseHandlers,
     commandCallbackHandlers,
     groupHandlers,
+    mediaInputHandlers,
     universalHandlers,
     main,
     multiSelectHandlers,
@@ -517,6 +542,7 @@ function assembleAndValidate(
     sections.buttonResponseHandlers,
     sections.commandCallbackHandlers,
     sections.groupHandlers,
+    sections.mediaInputHandlers,
     sections.universalHandlers,
     sections.multiSelectHandlers,
     sections.main,

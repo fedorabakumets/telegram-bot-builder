@@ -10,7 +10,7 @@ import type { EnhancedNode } from '../types/enhanced-node.types';
 import type { GenerationContext } from './generation-context';
 import { NODE_TYPES } from '../types';
 import { hasInlineButtons } from '../../templates/keyboard/keyboard.renderer';
-import { hasAutoTransitions, hasMediaNodes, hasUploadImageUrls, hasNodesRequiringSafeEditOrSend, hasReplyKeyboardButtons, hasLocalMediaFiles, hasBotCommands } from '../../templates/filters';
+import { hasAutoTransitions, hasMediaNodes, hasUploadImageUrls, hasNodesRequiringSafeEditOrSend, hasReplyKeyboardButtons, hasLocalMediaFiles, hasBotCommands, hasInputCollection } from '../../templates/filters';
 
 /**
  * Флаги возможностей, вычисленные из узлов бота
@@ -39,6 +39,7 @@ export const ALREADY_HANDLED_TYPES = new Set<string>([
   NODE_TYPES.START,
   NODE_TYPES.COMMAND,
   NODE_TYPES.MESSAGE,
+  'media',
   'command_trigger',
   'text_trigger',
   'condition',
@@ -100,6 +101,7 @@ function isParseModeNode(node: EnhancedNode): boolean {
  */
 export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
   const nodes = context.nodes || [];
+  const inputCollection = hasInputCollection(nodes);
 
   return {
     hasInlineButtonsResult: hasInlineButtons(nodes),
@@ -125,7 +127,7 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
       (node) =>
         node.type === NODE_TYPES.MUTE_USER ||
         node.type === NODE_TYPES.BAN_USER
-    ),
+    ) || !!context.options.enableGroupHandlers || inputCollection.hasPhotoInput || inputCollection.hasVideoInput || inputCollection.hasAudioInput || inputCollection.hasDocumentInput,
     hasNodesRequiringSafeEditOrSendResult: hasNodesRequiringSafeEditOrSend(nodes),
     // Флаги для оптимизации импортов
     hasReplyKeyboardResult: hasReplyKeyboardButtons(nodes),

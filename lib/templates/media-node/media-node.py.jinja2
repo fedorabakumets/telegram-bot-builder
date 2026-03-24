@@ -11,7 +11,7 @@
   @param {string}   autoTransitionTo     - ID целевого узла автоперехода
 #}
 
-{#- Макрос: определяет тип медиа по расширению URL (Nunjucks: lower + in) -#}
+{#- Макрос: определяет тип медиа по расширению URL -#}
 {%- macro get_media_type(url) -%}
 {%- set u = url | lower -%}
 {%- if '.jpg' in u or '.jpeg' in u or '.png' in u or '.gif' in u or '.webp' in u -%}photo
@@ -39,6 +39,55 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
 
 {%- if attachedMedia and attachedMedia | length == 1 %}
 {%- set url = attachedMedia[0] %}
+{%- if '{' in url and '}' in url %}
+    # Отправка медиа из пользовательской переменной
+    user_id = callback_query.from_user.id
+    all_user_vars = await init_all_user_vars(user_id)
+    _raw_media_ref = "{{ url|e }}"
+    _resolved_media = _raw_media_ref
+    _resolved_media_type = "document"
+    _has_resolved_media = False
+
+    if _raw_media_ref.startswith("{") and _raw_media_ref.endswith("}"):
+        _media_var_name = _raw_media_ref[1:-1]
+        _media_value = all_user_vars.get(_media_var_name)
+        if isinstance(_media_value, dict):
+            _resolved_media_type = _media_value.get("type", "document")
+            _resolved_media = (
+                _media_value.get("photoUrl")
+                or _media_value.get("videoUrl")
+                or _media_value.get("audioUrl")
+                or _media_value.get("documentUrl")
+                or _media_value.get("value")
+                or _raw_media_ref
+            )
+            _has_resolved_media = _resolved_media != _raw_media_ref
+        elif _media_value:
+            _resolved_media = _media_value
+            _media_name = _media_var_name.lower()
+            if "photo" in _media_name:
+                _resolved_media_type = "photo"
+            elif "video" in _media_name:
+                _resolved_media_type = "video"
+            elif "audio" in _media_name or "voice" in _media_name:
+                _resolved_media_type = "audio"
+            _has_resolved_media = True
+    else:
+        _has_resolved_media = True
+
+    if not _has_resolved_media:
+        logging.warning(f"Медиа-переменная {_raw_media_ref} не заполнена для узла {{ nodeId }}")
+        return
+
+    if _resolved_media_type == "photo":
+        await callback_query.message.answer_photo(_resolved_media)
+    elif _resolved_media_type == "video":
+        await callback_query.message.answer_video(_resolved_media)
+    elif _resolved_media_type == "audio":
+        await callback_query.message.answer_audio(_resolved_media)
+    else:
+        await callback_query.message.answer_document(_resolved_media)
+{%- else %}
 {%- set mtype = get_media_type(url) | trim %}
     # Отправка одиночного медиафайла
 {%- if '/uploads/' in url %}
@@ -47,6 +96,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     await callback_query.message.answer_{{ mtype }}(_media_file)
 {%- else %}
     await callback_query.message.answer_{{ mtype }}("{{ url|e }}")
+{%- endif %}
 {%- endif %}
 
 {%- elif attachedMedia and attachedMedia | length > 1 %}

@@ -39,7 +39,7 @@ describe('generateAttachedMediaVars()', () => {
 
   it('применяет кастомный отступ', () => {
     const result = generateAttachedMediaVars(validParamsWithIndent);
-    assert.ok(result.includes('    user_id = message.from_user.id'));
+    assert.ok(result.includes('    user_id = callback_query.from_user.id'));
   });
 });
 

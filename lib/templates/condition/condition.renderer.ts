@@ -35,9 +35,10 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     const filteredBranches = branches.filter(b => validOperators.has(b.operator));
 
     const hasSystemBranch = filteredBranches.some(b => SYSTEM_OPS.has(b.operator));
+    const hasOnlyElseBranch = filteredBranches.length > 0 && filteredBranches.every(b => b.operator === 'else');
 
-    // Skip if no variable AND no system branches
-    if (!variable.trim() && !hasSystemBranch) continue;
+    // Skip if no variable AND no system branches AND this is not a pass-through else-only node
+    if (!variable.trim() && !hasSystemBranch && !hasOnlyElseBranch) continue;
 
     let firstNumericSeen = false;
     let firstStringSeen = false;
@@ -72,7 +73,7 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     if (mappedBranches.length === 0) continue;
 
     const hasNumericBranch = mappedBranches.some(b => NUMERIC_OPS.has(b.operator));
-    const skipVarLookup = hasSystemBranch && !variable.trim();
+    const skipVarLookup = !variable.trim() && (hasSystemBranch || hasOnlyElseBranch);
 
     entries.push({
       nodeId: node.id,
@@ -115,7 +116,8 @@ function enrichEntries(entries: ConditionEntry[]): any[] {
 
     const hasNumericBranch = mappedBranches.some(b => NUMERIC_OPS.has(b.operator));
     const hasSystemBranch = mappedBranches.some(b => SYSTEM_OPS.has(b.operator));
-    const skipVarLookup = hasSystemBranch && !entry.variable.trim();
+    const hasOnlyElseBranch = mappedBranches.length > 0 && mappedBranches.every(b => b.operator === 'else');
+    const skipVarLookup = !entry.variable.trim() && (hasSystemBranch || hasOnlyElseBranch);
 
     return {
       ...entry,

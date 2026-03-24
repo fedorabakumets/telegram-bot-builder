@@ -13,7 +13,7 @@
 {% if attachedMedia and attachedMedia | length > 0 %}
 {% set ind = indentLevel or '                ' %}
 {{ ind }}# Устанавливаем переменные из attachedMedia
-{{ ind }}user_id = message.from_user.id
+{{ ind }}user_id = callback_query.from_user.id
 {{ ind }}if user_id not in user_data:
 {{ ind }}    user_data[user_id] = {}
 {% for mediaVar in attachedMedia %}

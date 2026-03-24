@@ -478,9 +478,25 @@ export const nodeSchema = z.object({
       /** Отображаемое название ветки */
       label: z.string(),
       /** Оператор сравнения: "==", "!=", "contains", "else" */
-      operator: z.enum(['filled', 'empty', 'equals', 'else']),
+      operator: z.enum([
+        'filled',
+        'empty',
+        'equals',
+        'contains',
+        'greater_than',
+        'less_than',
+        'between',
+        'is_private',
+        'is_group',
+        'is_channel',
+        'is_admin',
+        'is_premium',
+        'is_bot',
+        'else',
+      ]),
       /** Значение для сравнения */
       value: z.string(),
+      value2: z.string().optional(),
       /** ID целевого узла для перехода по этой ветке */
       target: z.string().optional(),
     })).default([]),

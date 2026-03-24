@@ -64,6 +64,16 @@ describe('media-node.py.jinja2 шаблон', () => {
       const result = generateMediaNode(fixtureOnePhoto);
       expect(result).not.toContain('answer_media_group');
     });
+
+    it('должен резолвить {photo} из пользовательской переменной как медиа, а не literal document', () => {
+      const result = generateMediaNode({ nodeId: 'n1', attachedMedia: ['{photo}'] });
+      expect(result).toContain('_media_value.get("photoUrl")');
+      expect(result).toContain('_media_value.get("value")');
+      expect(result).toContain('_has_resolved_media = False');
+      expect(result).toContain('if not _has_resolved_media:');
+      expect(result).toContain('logging.warning(f"Медиа-переменная {_raw_media_ref} не заполнена для узла n1")');
+      expect(result).toContain('await callback_query.message.answer_photo(_resolved_media)');
+    });
   });
 
   describe('Медиагруппа', () => {

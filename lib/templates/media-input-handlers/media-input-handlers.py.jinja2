@@ -20,11 +20,17 @@ async def handle_photo_input(message: types.Message):
         return
 
     waiting_config = user_data[user_id]["waiting_for_input"]
-    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "photo"):
+    waiting_modes = waiting_config.get("modes", []) if isinstance(waiting_config, dict) else []
+    if not (
+        isinstance(waiting_config, dict) and (
+            waiting_config.get("type") == "photo" or
+            (isinstance(waiting_modes, list) and "photo" in waiting_modes)
+        )
+    ):
         logging.info(f"Фото от пользователя {user_id} проигнорировано - ожидается другой тип ввода")
         return
 
-    photo_variable = waiting_config.get("variable", "user_photo")
+    photo_variable = waiting_config.get("photo_variable") or waiting_config.get("variable") or "user_photo"
     node_id = waiting_config.get("node_id", "unknown")
     next_node_id = waiting_config.get("next_node_id")
 
@@ -60,7 +66,7 @@ async def handle_photo_input(message: types.Message):
         "value": photo_file_id,
         "type": "photo",
         "photoUrl": media_result["url"] if media_result else None,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.utcnow().isoformat()
     }
     user_data[user_id][photo_variable] = photo_data
 
@@ -99,11 +105,17 @@ async def handle_video_input(message: types.Message):
         return
 
     waiting_config = user_data[user_id]["waiting_for_input"]
-    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "video"):
+    waiting_modes = waiting_config.get("modes", []) if isinstance(waiting_config, dict) else []
+    if not (
+        isinstance(waiting_config, dict) and (
+            waiting_config.get("type") == "video" or
+            (isinstance(waiting_modes, list) and "video" in waiting_modes)
+        )
+    ):
         logging.info(f"Видео от пользователя {user_id} проигнорировано - ожидается другой тип ввода")
         return
 
-    video_variable = waiting_config.get("variable", "user_video")
+    video_variable = waiting_config.get("video_variable") or waiting_config.get("variable") or "user_video"
     node_id = waiting_config.get("node_id", "unknown")
     next_node_id = waiting_config.get("next_node_id")
 
@@ -139,7 +151,7 @@ async def handle_video_input(message: types.Message):
         "value": video_file_id,
         "type": "video",
         "videoUrl": media_result["url"] if media_result else None,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.utcnow().isoformat()
     }
     user_data[user_id][video_variable] = video_data
 
@@ -178,11 +190,17 @@ async def handle_audio_input(message: types.Message):
         return
 
     waiting_config = user_data[user_id]["waiting_for_input"]
-    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "audio"):
+    waiting_modes = waiting_config.get("modes", []) if isinstance(waiting_config, dict) else []
+    if not (
+        isinstance(waiting_config, dict) and (
+            waiting_config.get("type") == "audio" or
+            (isinstance(waiting_modes, list) and "audio" in waiting_modes)
+        )
+    ):
         logging.info(f"Аудио от пользователя {user_id} проигнорировано - ожидается другой тип ввода")
         return
 
-    audio_variable = waiting_config.get("variable", "user_audio")
+    audio_variable = waiting_config.get("audio_variable") or waiting_config.get("variable") or "user_audio"
     node_id = waiting_config.get("node_id", "unknown")
     next_node_id = waiting_config.get("next_node_id")
 
@@ -225,7 +243,7 @@ async def handle_audio_input(message: types.Message):
         "value": audio_file_id,
         "type": "audio",
         "audioUrl": media_result["url"] if media_result else None,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.utcnow().isoformat()
     }
     user_data[user_id][audio_variable] = audio_data
 
@@ -264,11 +282,17 @@ async def handle_document_input(message: types.Message):
         return
 
     waiting_config = user_data[user_id]["waiting_for_input"]
-    if not (isinstance(waiting_config, dict) and waiting_config.get("type") == "document"):
+    waiting_modes = waiting_config.get("modes", []) if isinstance(waiting_config, dict) else []
+    if not (
+        isinstance(waiting_config, dict) and (
+            waiting_config.get("type") == "document" or
+            (isinstance(waiting_modes, list) and "document" in waiting_modes)
+        )
+    ):
         logging.info(f"Документ от пользователя {user_id} проигнорирован - ожидается другой тип ввода")
         return
 
-    document_variable = waiting_config.get("variable", "user_document")
+    document_variable = waiting_config.get("document_variable") or waiting_config.get("variable") or "user_document"
     node_id = waiting_config.get("node_id", "unknown")
     next_node_id = waiting_config.get("next_node_id")
 
@@ -304,7 +328,7 @@ async def handle_document_input(message: types.Message):
         "value": document_file_id,
         "type": "document",
         "documentUrl": media_result["url"] if media_result else None,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.utcnow().isoformat()
     }
     user_data[user_id][document_variable] = document_data
 

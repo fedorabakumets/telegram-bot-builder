@@ -23,7 +23,7 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
     val = _all_vars.get("{{ entry.variable }}", "")
     logging.info(f"Узел условия {{ entry.nodeId }}: переменная '{{ entry.variable }}' = {val}")
 {%- else %}
-    logging.info(f"Узел условия {{ entry.nodeId }}: проверка типа чата")
+    logging.info(f"Узел условия {{ entry.nodeId }}: проверка системного условия или pass-through переход")
 {%- endif %}
 {%- if entry.hasNumericBranch %}
     try:
@@ -32,8 +32,14 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
         _num_val = None
 {%- endif %}
 {%- if not entry.hasConditionalBranch %}
+{%- for branch in entry.branches %}
+{%- if branch.operator == 'else' %}
+{%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
     if True:
-        pass
+        # Ветка по умолчанию
+        {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
+{%- endif %}
+{%- endfor %}
 {% endif %}
 {#- Проход 0: системные операторы (is_private, is_group, is_channel, is_admin, is_premium, is_bot) #}
 {%- for branch in entry.branches %}
@@ -81,6 +87,7 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
 {%- endif %}
 {%- endfor %}
 {#- Проход 3: else #}
+{%- if entry.hasConditionalBranch %}
 {%- for branch in entry.branches %}
 {%- if branch.operator == 'else' %}
 {%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
@@ -89,5 +96,6 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
         {{ "await handle_callback_" + sanitized_target + "(callback_query)" if branch.target else "pass" }}
 {%- endif %}
 {%- endfor %}
+{%- endif %}
 
 {% endfor %}
