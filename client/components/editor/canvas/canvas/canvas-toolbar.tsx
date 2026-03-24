@@ -195,6 +195,17 @@ export function CanvasToolbar({
 
           {/* Справка */}
           <KeyboardShortcutsHelp />
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200/70 dark:border-slate-700/60 bg-white/70 dark:bg-slate-900/60 px-3 py-2 text-[11px] leading-none text-slate-600 dark:text-slate-300 shadow-sm">
+            <span className="font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Связи</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-700 dark:text-emerald-300">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              Переход
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300">
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              Привязка клавиатуры
+            </span>
+          </div>
         </div>
       </div>
     </div>

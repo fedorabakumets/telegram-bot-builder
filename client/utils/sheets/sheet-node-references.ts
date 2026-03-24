@@ -27,7 +27,8 @@ export function updateNodeReferencesInData(data: any, nodeIdMap: Map<string, str
     'autoNavigateTarget',
     'fallbackTarget',
     'autoTransitionTo',
-    'sourceNodeId'
+    'sourceNodeId',
+    'keyboardNodeId'
   ];
 
   for (const field of nodeRefFields) {

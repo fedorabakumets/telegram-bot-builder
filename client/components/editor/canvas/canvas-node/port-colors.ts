@@ -9,10 +9,10 @@
 
 /**
  * Тип порта выхода / тип соединения
- * - "trigger-next" — переход из узла command_trigger (жёлтый)
- * - "auto-transition" — автопереход (зелёный)
- * - "button-goto" — переход по кнопке goto (синий)
- * - "keyboard-link" — отдельная связь message → keyboard (янтарный)
+ * - "trigger-next" - переход из узла command_trigger (жёлтый)
+ * - "auto-transition" - автопереход (зелёный)
+ * - "button-goto" - переход по кнопке goto (синий)
+ * - "keyboard-link" - отдельная привязка keyboard к message (янтарный)
  */
 export type PortType = 'trigger-next' | 'auto-transition' | 'button-goto' | 'keyboard-link';
 
@@ -22,12 +22,12 @@ export type PortType = 'trigger-next' | 'auto-transition' | 'button-goto' | 'key
  * Используется в OutputPort (цвет кружка) и ConnectionsLayer (цвет линии).
  */
 export const PORT_COLORS: Record<PortType, string> = {
-  /** Жёлтый — переход из command_trigger */
+  /** Жёлтый - переход из command_trigger */
   'trigger-next': '#eab308',
-  /** Зелёный — автопереход */
+  /** Зелёный - автопереход */
   'auto-transition': '#22c55e',
-  /** Синий — переход по кнопке goto */
+  /** Синий - переход по кнопке goto */
   'button-goto': '#3b82f6',
-  /** Янтарный — связь message → keyboard */
+  /** Янтарный - привязка keyboard к message */
   'keyboard-link': '#f59e0b',
 };

@@ -3,7 +3,6 @@ import { cn } from '@/utils/utils';
 import { useState, useRef, useEffect } from 'react';
 import { OutputPort } from './output-port';
 import { PortType } from './port-colors';
-import { MESSAGE_KEYBOARD_PORT_OFFSET_Y } from './keyboard-connection';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from '../canvas/utils/canvas-coordinate-utils';
 import { NodeContextMenu } from './context-menu/node-context-menu';
 import { useNodeContextMenu } from './context-menu/use-node-context-menu';
@@ -442,14 +441,6 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       ) : node.type !== 'condition' && node.type !== 'keyboard' ? (
         <OutputPort portType="auto-transition" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : null}
-      {node.type === 'message' && (
-        <OutputPort
-          portType="keyboard-link"
-          onPortMouseDown={handlePortMouseDown}
-          isActive={isConnectionSource}
-          topOffset={MESSAGE_KEYBOARD_PORT_OFFSET_Y}
-        />
-      )}
 
       {/* Основной div узла — только визуальное содержимое */}
       <div

@@ -20,6 +20,7 @@ describe('keyboard connection helpers', () => {
   it('разрешает только связь message -> keyboard', () => {
     expect(isKeyboardConnectionAllowed('message', 'keyboard')).toBe(true);
     expect(isKeyboardConnectionAllowed('message', 'message')).toBe(false);
+    expect(isKeyboardConnectionAllowed('condition', 'keyboard')).toBe(false);
     expect(isKeyboardConnectionAllowed('keyboard', 'message')).toBe(false);
     expect(isKeyboardConnectionAllowed('command', 'keyboard')).toBe(false);
   });

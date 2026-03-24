@@ -181,6 +181,30 @@ describe('SheetsManager.duplicateSheet', () => {
     const copy = SheetsManager.duplicateSheet(sheet);
     expect(copy.nodes[0].id).not.toBe(sheet.nodes[0].id);
   });
+
+  it('переназначает keyboardNodeId на новый id при дублировании листа', () => {
+    const sheet = SheetsManager.createSheet('Оригинал', [
+      {
+        id: 'message_1',
+        type: 'message' as const,
+        position: { x: 100, y: 100 },
+        data: { keyboardNodeId: 'keyboard_1' } as any,
+      },
+      {
+        id: 'keyboard_1',
+        type: 'keyboard' as const,
+        position: { x: 300, y: 100 },
+        data: {} as any,
+      },
+    ]);
+
+    const copy = SheetsManager.duplicateSheet(sheet);
+    const duplicatedMessage = copy.nodes.find(node => node.type === 'message');
+    const duplicatedKeyboard = copy.nodes.find(node => node.type === 'keyboard');
+    const duplicatedMessageData = duplicatedMessage?.data as any;
+
+    expect(duplicatedMessageData.keyboardNodeId).toBe(duplicatedKeyboard?.id);
+  });
 });
 
 describe('SheetsManager.duplicateSheetInProject', () => {

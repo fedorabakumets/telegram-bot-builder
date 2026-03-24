@@ -11,11 +11,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Node } from '@/types/bot';
 import { PortType } from '../canvas-node/port-colors';
-import {
-  KEYBOARD_LINK_PORT_TYPE,
-  isKeyboardConnectionAllowed,
-  setKeyboardNodeId,
-} from '../canvas-node/keyboard-connection';
+import { setKeyboardNodeId } from '../canvas-node/keyboard-connection';
 import {
   getCanvasViewportMetrics,
   screenPointToCanvasPoint,
@@ -123,10 +119,9 @@ export function useConnectionDrag({
   }, [canvasRef]);
 
   /** Находит узел под canvas-координатами */
-  const findNodeAtPoint = useCallback((cx: number, cy: number, excludeId: string, portType?: PortType): string | null => {
+  const findNodeAtPoint = useCallback((cx: number, cy: number, excludeId: string, _portType?: PortType): string | null => {
     for (const node of nodesRef.current) {
       if (node.id === excludeId) continue;
-      if (portType === KEYBOARD_LINK_PORT_TYPE && node.type !== 'keyboard') continue;
       const size = nodeSizesRef.current.get(node.id) ?? { width: 320, height: 200 };
       const { x, y } = node.position;
       if (cx >= x && cx <= x + size.width && cy >= y && cy <= y + size.height) {
@@ -165,23 +160,23 @@ export function useConnectionDrag({
         const sourceNode = nodesRef.current.find(n => n.id === draft.fromNodeId);
         const targetNode = nodesRef.current.find(n => n.id === targetId);
 
-        if (draft.portType === KEYBOARD_LINK_PORT_TYPE) {
-          if (!sourceNode || !targetNode || !isKeyboardConnectionAllowed(sourceNode.type, targetNode.type)) {
-            draftRef.current = null;
-            setDraftConnection(null);
-            setHoveredTargetNodeId(null);
-            return;
-          }
-        }
-
         onNodeUpdateRef.current(draft.fromNodeId, (node) => {
           const updated = { ...node, data: { ...(node.data as Record<string, unknown>) } } as Node;
           if (draft.portType === 'trigger-next' || draft.portType === 'auto-transition') {
-            updated.data = {
-              ...updated.data,
-              autoTransitionTo: targetId,
-              ...(draft.portType === 'auto-transition' ? { enableAutoTransition: true } : {}),
-            };
+            /**
+             * Сообщение использует один общий порт.
+             * При дропе на keyboard создаём привязку клавиатуры,
+             * а при дропе на любой другой узел — обычный переход.
+             */
+            if (draft.portType === 'auto-transition' && sourceNode?.type === 'message' && targetNode?.type === 'keyboard') {
+              updated.data = setKeyboardNodeId(updated.data as Record<string, unknown>, targetId) as unknown as Node['data'];
+            } else {
+              updated.data = {
+                ...updated.data,
+                autoTransitionTo: targetId,
+                ...(draft.portType === 'auto-transition' ? { enableAutoTransition: true } : {}),
+              };
+            }
           } else if (draft.portType === 'button-goto' && draft.buttonId) {
             const buttons = (updated.data.buttons || []).map((btn: any) =>
               btn.id === draft.buttonId ? { ...btn, target: targetId } : btn
@@ -193,8 +188,6 @@ export function useConnectionDrag({
             updated.data = { ...updated.data, buttons, branches };
           } else if (`${draft.portType}` === 'input-target') {
             updated.data = { ...updated.data, inputTargetNodeId: targetId };
-          } else if (draft.portType === KEYBOARD_LINK_PORT_TYPE) {
-            updated.data = setKeyboardNodeId(updated.data as Record<string, unknown>, targetId) as unknown as Node['data'];
           }
           return updated;
         });

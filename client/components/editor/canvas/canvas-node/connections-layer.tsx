@@ -10,7 +10,7 @@
  * - button-goto (синий пунктир) — переход по inline-кнопке
  * - input-target (фиолетовый пунктир) — переход после ввода пользователя
  * - trigger-next (жёлтый сплошной) — переход из узла command_trigger
- * - keyboard-link (янтарный сплошной) — связь message → keyboard
+ * - keyboard-link (янтарный пунктир) — привязка message → keyboard
  *
  * При наведении на линию появляется кнопка удаления соединения.
  *
@@ -20,7 +20,6 @@
 import { useState } from 'react';
 import { Node } from '@/types/bot';
 import {
-  MESSAGE_KEYBOARD_PORT_OFFSET_Y,
   KEYBOARD_LINK_PORT_TYPE,
   getKeyboardNodeId,
 } from './keyboard-connection';
@@ -102,8 +101,8 @@ const CONNECTION_STYLES: Record<ConnectionType, ConnectionStyle> = {
   'keyboard-link': {
     color: '#f59e0b',
     strokeWidth: 2,
-    dashArray: '',
-    opacity: 0.8,
+    dashArray: '6 6',
+    opacity: 0.7,
     markerId: 'arrow-keyboard',
   },
   /** Соединение исходного узла с узлом condition — оранжевый пунктир */
@@ -366,8 +365,6 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
         // Для button-goto используем точную позицию порта кнопки
         const fromPortOffset = (type === 'button-goto' && buttonId)
           ? buttonPortYOffsets?.get(buttonId)
-          : type === 'keyboard-link'
-            ? { x: fromW, y: MESSAGE_KEYBOARD_PORT_OFFSET_Y }
           : undefined;
 
         const d = buildSmartPath(fromNode, toNode, fromW, fromH, toW, toH, fromPortOffset);
