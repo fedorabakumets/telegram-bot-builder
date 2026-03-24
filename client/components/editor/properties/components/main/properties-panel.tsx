@@ -6,7 +6,7 @@ import { useConditionalMessagesSync } from '../synonyms/use-conditional-messages
 import { EmptyState } from '../layout/empty-state';
 import { getNodeDefaults } from '../../utils/node-defaults';
 import { collectAllNodesFromSheets } from '../../utils/node-utils';
-import { collectAvailableQuestions, extractVariables } from '../../utils/variables-utils';
+import { extractVariables } from '../../utils/variables-utils';
 import { useMediaVariables } from '../../hooks/use-media-variables';
 import { useNodeCommandValidation } from '../../hooks/use-node-command-validation';
 import { formatNodeDisplay } from '../../utils/node-formatters';
@@ -42,6 +42,7 @@ import { MapServicesSection } from '../configuration/map-services-section';
 import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
 import { ClientAuthProperties } from '../client-auth/client-auth-properties';
 import { MediaNodeProperties } from './media-node-properties';
+import type { Variable } from '../../../inline-rich/types';
 
 /**
  * Интерфейс пропсов для панели свойств узлов
@@ -182,8 +183,6 @@ export function PropertiesPanel({
   /**
    * Мемоизированный список доступных вопросов
    */
-  const availableQuestions = useMemo(() => collectAvailableQuestions(allNodes), [allNodes]);
-
   /**
    * Мемоизированные текстовые и медиа переменные
    */
@@ -201,14 +200,13 @@ export function PropertiesPanel({
   const commandValidation = useNodeCommandValidation({ selectedNode });
 
   // Синхронизация условных сообщений с узлом condition на холсте
-  const { handleConditionalMessagesToggle, handleConditionalMessagesUpdate } =
-    useConditionalMessagesSync({
-      selectedNode,
-      allNodes,
-      onNodeUpdate,
-      onNodeAdd,
-      onNodeDelete,
-    });
+  useConditionalMessagesSync({
+    selectedNode,
+    allNodes,
+    onNodeUpdate,
+    onNodeAdd,
+    onNodeDelete,
+  });
 
   // Автодополнение команд
   const commandSuggestions = useMemo(() => {
@@ -305,12 +303,16 @@ export function PropertiesPanel({
             <CommandTriggerConfiguration
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
             />
           )}
           {isTriggerNode(selectedNode.type) && selectedNode.type === 'text_trigger' && (
             <TextTriggerConfiguration
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
             />
           )}
 
@@ -320,7 +322,7 @@ export function PropertiesPanel({
               selectedNode={selectedNode}
               allNodes={allNodes}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-              textVariables={textVariables}
+              textVariables={textVariables as Variable[]}
               onNodeUpdate={onNodeUpdate}
             />
           )}

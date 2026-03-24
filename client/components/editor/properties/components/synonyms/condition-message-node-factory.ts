@@ -24,7 +24,7 @@ import { Node } from '@shared/schema';
  */
 export function createMessageNodeForCondition(
   cond: any,
-  conditionNodeId: string,
+  _conditionNodeId: string,
   sourceNode: Node,
   index: number
 ): Node {

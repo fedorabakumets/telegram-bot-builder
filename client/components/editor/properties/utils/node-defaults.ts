@@ -111,6 +111,23 @@ export function getNodeDefaults(type: Node['type']): any {
       adminOnly: false,
       synonyms: []
     },
+    command_trigger: {
+      command: '/start',
+      description: '',
+      autoTransitionTo: '',
+      showInMenu: false,
+      isPrivateOnly: false,
+      requiresAuth: false,
+      adminOnly: false
+    },
+    text_trigger: {
+      textSynonyms: [],
+      textMatchType: 'exact',
+      autoTransitionTo: '',
+      isPrivateOnly: false,
+      requiresAuth: false,
+      adminOnly: false
+    },
     pin_message: {
       command: '/pin_message',
       synonyms: ['закрепить', 'прикрепить', 'зафиксировать'],
@@ -281,6 +298,13 @@ export function getNodeDefaults(type: Node['type']): any {
     client_auth: {
       sessionName: 'user_session',
       sessionCreated: false
+    },
+    media: {
+      mediaMode: 'single',
+      mediaItems: [],
+      attachedMedia: [],
+      enableAutoTransition: false,
+      autoTransitionTo: ''
     }
   };
   return defaults[type] || {};

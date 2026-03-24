@@ -14,6 +14,8 @@
 import type { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TriggerTargetSelector } from './TriggerTargetSelector';
+import { formatNodeDisplay as defaultFormatNodeDisplay } from '../../utils/node-formatters';
 
 /**
  * Пропсы компонента CommandTriggerConfiguration
@@ -23,6 +25,10 @@ interface CommandTriggerConfigurationProps {
   selectedNode: Node;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
+  /** Все узлы из всех листов для выбора перехода */
+  getAllNodesFromAllSheets?: Array<{ node: Node; sheetId?: string; sheetName?: string }>;
+  /** Форматирование названия узла в селекторе */
+  formatNodeDisplay?: (node: Node, sheetName?: string) => string;
 }
 
 /**
@@ -34,7 +40,12 @@ interface CommandTriggerConfigurationProps {
  * @param props - Пропсы компонента
  * @returns JSX-элемент панели настроек триггера
  */
-export function CommandTriggerConfiguration({ selectedNode, onNodeUpdate }: CommandTriggerConfigurationProps) {
+export function CommandTriggerConfiguration({
+  selectedNode,
+  onNodeUpdate,
+  getAllNodesFromAllSheets,
+  formatNodeDisplay = defaultFormatNodeDisplay,
+}: CommandTriggerConfigurationProps) {
   return (
     <div className="space-y-4 p-4">
       {/* Команда */}
@@ -59,15 +70,13 @@ export function CommandTriggerConfiguration({ selectedNode, onNodeUpdate }: Comm
       </div>
 
       {/* Следующий узел — задаёт выходное соединение (жёлтая линия на холсте) */}
-      <div className="space-y-2">
-        <Label>Следующий узел (ID)</Label>
-        <Input
-          value={selectedNode.data?.autoTransitionTo || ''}
-          onChange={e => onNodeUpdate(selectedNode.id, { autoTransitionTo: e.target.value })}
-          placeholder="ID следующего узла"
-          className="font-mono"
-        />
-      </div>
+      <TriggerTargetSelector
+        selectedNode={selectedNode}
+        autoTransitionTo={selectedNode.data?.autoTransitionTo || ''}
+        getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+        onNodeUpdate={onNodeUpdate}
+        formatNodeDisplay={formatNodeDisplay}
+      />
     </div>
   );
 }

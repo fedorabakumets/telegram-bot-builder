@@ -12,6 +12,7 @@ import type {
   UtilsTemplateParams,
   MainTemplateParams,
 } from './types';
+import type { UniversalHandlersTemplateParams } from './universal-handlers/universal-handlers.params';
 import {
   importsParamsSchema,
   configParamsSchema,
@@ -112,9 +113,15 @@ export function generateDatabase(params: DatabaseTemplateParams): string {
  * @param params - Параметры универсальных обработчиков
  * @returns Сгенерированный Python код обработчиков
  */
-export function generateUniversalHandlers(params: { userDatabaseEnabled?: boolean }): string {
+export function generateUniversalHandlers(params: UniversalHandlersTemplateParams): string {
   const validated = universalHandlersParamsSchema.parse(params);
-  return renderPartialTemplate('universal-handlers/universal-handlers.py.jinja2', validated);
+  return renderPartialTemplate('universal-handlers/universal-handlers.py.jinja2', {
+    ...validated,
+    nodes: params.nodes ?? [],
+    commandNodes: params.commandNodes ?? [],
+    hasUrlButtons: params.hasUrlButtons ?? false,
+    allNodeIds: params.allNodeIds ?? [],
+  });
 }
 
 /**
