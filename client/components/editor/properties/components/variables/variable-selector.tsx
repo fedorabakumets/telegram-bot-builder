@@ -30,8 +30,6 @@ export function VariableSelector({
   onSelect,
   trigger
 }: VariableSelectorProps) {
-  if (availableVariables.length === 0) return null;
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -51,13 +49,19 @@ export function VariableSelector({
           📌 Доступные переменные
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {availableVariables.map((variable, index) => (
-          <VariableMenuItem
-            key={`${variable.nodeId}-${variable.name}-${index}`}
-            variable={variable}
-            onSelect={onSelect}
-          />
-        ))}
+        {availableVariables.length === 0 ? (
+          <div className="px-3 py-4 text-xs text-muted-foreground text-center">
+            Нет переменных. Добавьте узел со сбором медиа-ввода.
+          </div>
+        ) : (
+          availableVariables.map((variable, index) => (
+            <VariableMenuItem
+              key={`${variable.nodeId}-${variable.name}-${index}`}
+              variable={variable}
+              onSelect={onSelect}
+            />
+          ))
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -78,8 +78,7 @@ export function MediaFileSection({
             />
           )}
 
-          {mediaVariables.length > 0 && (
-            <div className="flex justify-end">
+          <div className="flex justify-end">
               <VariableSelector
                 availableVariables={mediaVariables}
                 onSelect={handleVariableSelect}
@@ -90,7 +89,6 @@ export function MediaFileSection({
                 }
               />
             </div>
-          )}
 
           <MultiMediaSelector
             projectId={projectId}
