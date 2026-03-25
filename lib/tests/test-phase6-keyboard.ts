@@ -1029,15 +1029,19 @@ test('G07', 'auto-transition -> condition -> keyboard без keyboardNodeId вс
     makeMessageNode('msg_2', 'Финал'),
   ]);
 
-  const code = gen(project, 'g07');
+  const code = gen(project, 'g07', true);
   const host = block(code, 'msg_host');
   assertIncludesAll(host, [
+    'sent_message = await bot.send_message(callback_query.message.chat.id, text, node_id="msg_host", reply_markup=keyboard, message_thread_id=getattr(callback_query.message, "message_thread_id", None))',
     'InlineKeyboardBuilder()',
     'callback_data="msg_2"',
     'reply_markup=keyboard',
   ], 'G07 host');
   assertIncludesAll(code, [
     'await handle_callback_kbd_1(callback_query)',
+    'def __init__(self, message, from_user, target_node_id):',
+    'self.from_user = from_user',
+    'fake_callback = FakeCallbackQuery(sent_message or callback_query.message, callback_query.from_user, "cond_1")',
   ], 'G07 condition');
   syntax(code, 'g07');
 });

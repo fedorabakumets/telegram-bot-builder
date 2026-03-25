@@ -85,7 +85,9 @@ describe('message.py.jinja2 шаблон', () => {
         const result = generateMessage(validParamsWithAutoTransition);
 
         assert.ok(result.includes('class FakeCallbackQuery:'));
-        assert.ok(result.includes('fake_callback = FakeCallbackQuery'));
+        assert.ok(result.includes('def __init__(self, message, from_user, target_node_id):'));
+        assert.ok(result.includes('self.from_user = from_user'));
+        assert.ok(result.includes('fake_callback = FakeCallbackQuery(sent_message or callback_query.message, callback_query.from_user, "next_step")'));
       });
 
       it('должен генерировать вызов следующего обработчика', () => {

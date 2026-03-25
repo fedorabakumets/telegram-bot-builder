@@ -140,6 +140,30 @@ export const validParamsWithSynonyms: CommandTemplateParams = {
   attachedMedia: [],
 };
 
+/** Валидные параметры: с автопереходом */
+export const validParamsWithAutoTransition: CommandTemplateParams = {
+  nodeId: 'cmd_6',
+  command: '/next',
+  messageText: 'Переходим дальше...',
+  adminOnly: false,
+  requiresAuth: false,
+  userDatabaseEnabled: true,
+  synonyms: [],
+  enableConditionalMessages: false,
+  conditionalMessages: [],
+  fallbackMessage: '',
+  keyboardType: 'none',
+  buttons: [],
+  formatMode: 'none',
+  imageUrl: '',
+  documentUrl: '',
+  videoUrl: '',
+  audioUrl: '',
+  attachedMedia: [],
+  enableAutoTransition: true,
+  autoTransitionTo: 'after_cmd',
+};
+
 /** Невалидные параметры: неправильный тип */
 export const invalidParamsWrongType = {
   nodeId: 123, // должно быть string

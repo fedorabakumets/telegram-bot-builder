@@ -12,25 +12,6 @@ import { URL } from "node:url";
 import { storage } from "../../../storages/storage";
 
 /**
- * Преобразует многолистовую структуру в простую для генератора
- */
-function convertSheetsToSimpleBotData(data: any) {
-    if (data.nodes) {
-        return data;
-    }
-
-    if (data.sheets && Array.isArray(data.sheets)) {
-        let allNodes: any[] = [];
-        data.sheets.forEach((sheet: any) => {
-            if (sheet.nodes) allNodes.push(...sheet.nodes);
-        });
-        return { nodes: allNodes };
-    }
-
-    return { nodes: [] };
-}
-
-/**
  * Обрабатывает запрос на экспорт проекта
  *
  * @function exportProjectHandler
@@ -52,12 +33,11 @@ export async function exportProjectHandler(req: Request, res: Response): Promise
         modUrl.searchParams.set("t", Date.now().toString());
         const { generatePythonCode } = await import(modUrl.href);
 
-        const simpleBotData = convertSheetsToSimpleBotData(project.data);
         const userDatabaseEnabled = project.userDatabaseEnabled === 1;
         const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION === 'true';
 
         const pythonCode = generatePythonCode(
-            simpleBotData as any,
+            project.data as any,
             project.name,
             [],
             userDatabaseEnabled,

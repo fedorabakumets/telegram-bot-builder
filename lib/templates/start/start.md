@@ -204,13 +204,13 @@ async def start_handler(message: types.Message):
     logging.info(f"Команда /start вызвана пользователем {message.from_user.id}")
 
     text = "🚀 Запускаю бота..."
-    await message.answer(text, reply_markup=keyboard)
+    sent_message = await message.answer(text, reply_markup=keyboard)
 
     # ⚡ АВТОПЕРЕХОД к main_menu
     logging.info(f"⚡ Автопереход от узла start_4 к узлу main_menu")
     class FakeCallbackQuery:
-        def __init__(self, message, target_node_id):
-            self.from_user = message.from_user
+        def __init__(self, message, from_user, target_node_id):
+            self.from_user = from_user
             self.chat = message.chat
             self.data = target_node_id
             self.message = message
@@ -218,7 +218,7 @@ async def start_handler(message: types.Message):
         async def answer(self, *args, **kwargs):
             pass
 
-    fake_callback = FakeCallbackQuery(message, "main_menu")
+    fake_callback = FakeCallbackQuery(sent_message or message, message.from_user, "main_menu")
     await handle_callback_main_menu(fake_callback)
     return
 ```
@@ -268,7 +268,7 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
 
 ### Автопереходы
 
-1. Создаётся класс `FakeCallbackQuery` для эмуляции callback
+1. Создаётся класс `FakeCallbackQuery` для эмуляции callback и сохранения исходного пользователя
 2. Вызывается `handle_callback_<target>(fake_callback)`
 3. После автоперехода выполняется `return` для прекращения обработки
 

@@ -178,37 +178,10 @@ export async function startBot(projectId: number, token: string, tokenId: number
     console.log(`   project.userDatabaseEnabled:`, project.userDatabaseEnabled);
     console.log(`   typeof project.userDatabaseEnabled:`, typeof project.userDatabaseEnabled);
 
-    // Преобразуем многолистовую структуру в простую для генератора
-    const convertSheetsToSimpleBotData = (data: any) => {
-      // Если уже простая структура - возвращаем как есть
-      if (data.nodes) {
-        return data;
-      }
-
-      // Если многолистовая структура - собираем все узлы
-      if (data.sheets && Array.isArray(data.sheets)) {
-        let allNodes: any[] = [];
-
-        data.sheets.forEach((sheet: any) => {
-          if (sheet.nodes) allNodes.push(...sheet.nodes);
-        });
-
-        return {
-          nodes: allNodes
-        };
-      }
-
-      // Если нет узлов вообще - возвращаем пустую структуру
-      return {
-        nodes: []
-      };
-    };
-
     // Генерируем код бота через клиентский генератор (с cache busting)
     const modUrl = new URL("../../lib/bot-generator.ts", import.meta.url);
     modUrl.searchParams.set("t", Date.now().toString());
     const { generatePythonCode } = await import(modUrl.href);
-    const simpleBotData = convertSheetsToSimpleBotData(project.data);
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
     // Получаем настройки генерации комментариев из переменной окружения (по умолчанию выключено)
     const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION === 'true';
@@ -216,7 +189,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
     console.log(`🔧 Генерация кода бота:`);
     console.log(`   userDatabaseEnabled:`, userDatabaseEnabled);
     
-    const botCode = generatePythonCode(simpleBotData as any, {
+    const botCode = generatePythonCode(project.data as any, {
       botName: project.name,
       userDatabaseEnabled,
       projectId,

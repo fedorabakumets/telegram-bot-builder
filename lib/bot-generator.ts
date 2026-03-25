@@ -37,6 +37,7 @@ import { assertValidPython } from './bot-generator/validation';
 import { collectAllCommandCallbacksFromNodes, findCommandNode } from './bot-generator/core/command-utils';
 import { emitOnce, COMPONENT_NAMES } from './bot-generator/core/generation-state';
 import { hasInputCollection } from './templates/filters';
+import { collectConditionEntries } from './templates/condition/condition.renderer';
 /**
  * Опции для генерации Python-кода бота
  */
@@ -324,12 +325,17 @@ function generateCodeSections(
       : ''
   );
 
+  const validConditionNodeIds = new Set(
+    collectConditionEntries(nodes).map(entry => entry.nodeId)
+  );
+
   const nodesForHandlers = nodes
     .filter(node =>
       node.type !== NODE_TYPES.START &&
       node.type !== NODE_TYPES.COMMAND &&
       node.type !== 'command_trigger' &&
-      node.type !== 'text_trigger'
+      node.type !== 'text_trigger' &&
+      (node.type !== 'condition' || validConditionNodeIds.has(node.id))
     )
     .map(node => ({
       id: node.id,

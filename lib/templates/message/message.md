@@ -155,14 +155,14 @@ async def handle_callback_loading(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     
     text = "Загрузка..."
-    await callback_query.message.answer(text)
+    sent_message = await callback_query.message.answer(text)
     
     # ⚡ АВТОПЕРЕХОД к next_step
     logging.info(f"⚡ Автопереход от узла loading к узлу next_step")
     
     class FakeCallbackQuery:
-        def __init__(self, message, target_node_id):
-            self.from_user = message.from_user
+        def __init__(self, message, from_user, target_node_id):
+            self.from_user = from_user
             self.chat = message.chat
             self.data = target_node_id
             self.message = message
@@ -171,13 +171,13 @@ async def handle_callback_loading(callback_query: types.CallbackQuery):
         async def answer(self, *args, **kwargs):
             pass
     
-    fake_callback = FakeCallbackQuery(callback_query.message, "next_step")
+    fake_callback = FakeCallbackQuery(sent_message or callback_query.message, callback_query.from_user, "next_step")
     try:
         await handle_callback_next_step(fake_callback)
         logging.info(f"✅ Автопереход выполнен: loading -> next_step")
     except Exception as e:
         logging.error(f"Ошибка при автопереходе к узлу next_step: {e}")
-        await callback_query.message.answer("Переход завершен")
+        await (sent_message or callback_query.message).answer("Переход завершен")
     return
 ```
 
@@ -211,7 +211,7 @@ if (userDatabaseEnabled) {
 
 ```typescript
 if (enableAutoTransition && autoTransitionTo) {
-  // Сгенерировать FakeCallbackQuery и переход
+  // Сгенерировать FakeCallbackQuery и сохранить исходного пользователя
 }
 ```
 

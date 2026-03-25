@@ -192,7 +192,9 @@ describe('start.py.jinja2 шаблон', () => {
         const result = generateStart(validParamsWithAutoTransition);
 
         assert.ok(result.includes('class FakeCallbackQuery:'));
-        assert.ok(result.includes('fake_callback = FakeCallbackQuery'));
+        assert.ok(result.includes('def __init__(self, message, from_user, target_node_id):'));
+        assert.ok(result.includes('self.from_user = from_user'));
+        assert.ok(result.includes('fake_callback = FakeCallbackQuery(sent_message or message, message.from_user, "main_menu")'));
       });
 
       it('должен генерировать вызов handle_callback для автоперехода', () => {

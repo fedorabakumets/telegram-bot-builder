@@ -12,6 +12,7 @@ import {
   validParamsWithConditionals,
   validParamsWithKeyboard,
   validParamsWithSynonyms,
+  validParamsWithAutoTransition,
   invalidParamsWrongType,
   invalidParamsMissingField,
 } from './command.fixture';
@@ -227,6 +228,15 @@ describe('command.py.jinja2 шаблон', () => {
         });
 
         assert.ok(result.includes('is_admin'));
+      });
+
+      it('должен сохранять исходного пользователя в FakeCallbackQuery при автопереходе', () => {
+        const result = generateCommand(validParamsWithAutoTransition);
+
+        assert.ok(result.includes('class FakeCallbackQuery:'));
+        assert.ok(result.includes('def __init__(self, message, from_user, target_node_id):'));
+        assert.ok(result.includes('self.from_user = from_user'));
+        assert.ok(result.includes('fake_callback = FakeCallbackQuery(sent_message or message, message.from_user, "after_cmd")'));
       });
     });
 

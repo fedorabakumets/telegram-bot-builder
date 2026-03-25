@@ -57,38 +57,42 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       return;
     }
 
-    // Конвертируем многолистовую структуру в простую для генератора
-    const convertSheetsToSimpleBotData = (data: any) => {
-      if (data.nodes) return data;
-      if (data.sheets && Array.isArray(data.sheets)) {
-        let allNodes: any[] = [];
-        data.sheets.forEach((sheet: any) => {
-          if (sheet.nodes) allNodes.push(...sheet.nodes);
-        });
-        return { nodes: allNodes };
-      }
-      return { nodes: [] };
-    };
-
-    const simpleBotData = convertSheetsToSimpleBotData(project.data as any);
+    const botDataForGenerator = project.data as any;
 
     // Логирование для отладки
     console.log(`[Generate] Project ${projectId}:`);
     console.log(`  - project.data keys:`, Object.keys(project.data || {}));
     console.log(`  - Has sheets:`, Array.isArray((project.data as any)?.sheets));
     console.log(`  - Has nodes:`, Array.isArray((project.data as any)?.nodes));
-    console.log(`  - simpleBotData.nodes count:`, simpleBotData.nodes?.length || 0);
-    if (simpleBotData.nodes && simpleBotData.nodes.length > 0) {
+    console.log(`  - direct nodes count:`, botDataForGenerator.nodes?.length || 0);
+    console.log(
+      `  - sheet nodes count:`,
+      Array.isArray(botDataForGenerator.sheets)
+        ? botDataForGenerator.sheets.reduce((sum: number, sheet: any) => {
+            return sum + (Array.isArray(sheet?.nodes) ? sheet.nodes.length : 0);
+          }, 0)
+        : 0
+    );
+    if (Array.isArray(botDataForGenerator.nodes) && botDataForGenerator.nodes.length > 0) {
       console.log(`  - First node:`, {
-        id: simpleBotData.nodes[0].id,
-        type: simpleBotData.nodes[0].type,
-        hasData: !!simpleBotData.nodes[0].data
+        id: botDataForGenerator.nodes[0].id,
+        type: botDataForGenerator.nodes[0].type,
+        hasData: !!botDataForGenerator.nodes[0].data
       });
+    } else if (Array.isArray(botDataForGenerator.sheets) && botDataForGenerator.sheets.length > 0) {
+      const firstNode = botDataForGenerator.sheets.find((sheet: any) => Array.isArray(sheet?.nodes) && sheet.nodes.length > 0)?.nodes?.[0];
+      if (firstNode) {
+        console.log(`  - First sheet node:`, {
+          id: firstNode.id,
+          type: firstNode.type,
+          hasData: !!firstNode.data,
+        });
+      }
     }
 
     // Генерируем код
     const generatePythonCode = await loadGenerator();
-    const code = generatePythonCode(simpleBotData, {
+    const code = generatePythonCode(botDataForGenerator, {
       botName: project.name,
       userDatabaseEnabled,
       enableComments,

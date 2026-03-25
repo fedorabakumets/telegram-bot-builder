@@ -167,26 +167,27 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
     {%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
 
     {# Отправка медиафайлов или обычного сообщения #}
+    sent_message = None
     {%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
 {%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
     {%- else %}
     {%- if formatMode == 'html' %}
     {%- if userDatabaseEnabled %}
-    await bot.send_message(message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="HTML")
+    sent_message = await bot.send_message(message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="HTML", message_thread_id=getattr(message, "message_thread_id", None))
     {%- else %}
-    await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+    sent_message = await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
     {%- endif %}
     {%- elif formatMode == 'markdown' %}
     {%- if userDatabaseEnabled %}
-    await bot.send_message(message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="Markdown")
+    sent_message = await bot.send_message(message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, parse_mode="Markdown", message_thread_id=getattr(message, "message_thread_id", None))
     {%- else %}
-    await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
+    sent_message = await message.answer(text, reply_markup=keyboard, parse_mode="Markdown")
     {%- endif %}
     {%- else %}
     {%- if userDatabaseEnabled %}
-    await bot.send_message(message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard)
+    sent_message = await bot.send_message(message.chat.id, text, node_id="{{ nodeId }}", reply_markup=keyboard, message_thread_id=getattr(message, "message_thread_id", None))
     {%- else %}
-    await message.answer(text, reply_markup=keyboard)
+    sent_message = await message.answer(text, reply_markup=keyboard)
     {%- endif %}
     {%- endif %}
     {%- endif %}
@@ -247,8 +248,8 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
     # ⚡ АВТОПЕРЕХОД к {{ autoTransitionTo }}
     logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
     class FakeCallbackQuery:
-        def __init__(self, message, target_node_id):
-            self.from_user = message.from_user
+        def __init__(self, message, from_user, target_node_id):
+            self.from_user = from_user
             self.chat = message.chat
             self.date = message.date
             self.message_id = message.message_id
@@ -259,13 +260,13 @@ async def {{ command|replace('/start', 'start')|replace('/help', 'help')|replace
         async def answer(self, *args, **kwargs):
             pass
 
-    fake_callback = FakeCallbackQuery(message, "{{ autoTransitionTo }}")
+    fake_callback = FakeCallbackQuery(sent_message or message, message.from_user, "{{ autoTransitionTo }}")
     try:
         await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(fake_callback)
         logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
     except Exception as e:
         logging.error(f"Ошибка при автопереходе к узлу {{ autoTransitionTo }}: {e}")
-        await message.answer("Переход завершен")
+        await (sent_message or message).answer("Переход завершен")
     return
     {%- endif %}
     {%- endif %}
