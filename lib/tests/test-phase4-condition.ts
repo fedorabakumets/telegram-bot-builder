@@ -2113,6 +2113,28 @@ test('J10', 'message → condition → reply keyboard-нода → синтак�
   syntax(code, 'j10');
 });
 
+test('J11', 'auto-transition → condition → keyboard без keyboardNodeId всё равно прикрепляет клавиатуру к сообщению', () => {
+  const p = makeCleanProject([
+    makeMessageNode('msg_host', 'Старт', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'cond1',
+    }),
+    makeConditionNode('cond1', 'age', [
+      makeBranch('less_than', '18', 'kbd1'),
+      makeBranch('else', '', 'msg2'),
+    ]),
+    makeKeyboardNode('kbd1', 'inline', [
+      { id: 'btn_next', text: 'Далее', action: 'goto', target: 'msg2' },
+    ]),
+    makeMessageNode('msg2', 'Финал'),
+  ]);
+  const code = gen(p, 'j11');
+  ok(code.includes('await handle_callback_kbd1(callback_query)'), 'condition должен вести в keyboard-handler');
+  ok(code.includes('InlineKeyboardBuilder()'), 'InlineKeyboardBuilder должен быть в коде');
+  ok(code.includes('callback_data="msg2"'), 'кнопка goto должна оказаться в host message');
+  syntax(code, 'j11');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 const total  = results.length;

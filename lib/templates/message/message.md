@@ -19,7 +19,7 @@
 | `keyboardType` | `'inline' \| 'reply' \| 'none'` | `'none'` | Тип клавиатуры |
 | `keyboardLayout` | `any` | - | Раскладка клавиатуры |
 | `buttons` | `Button[]` | `[]` | Кнопки |
-| `keyboardNodeId` | `string` | - | ID отдельной `keyboard`-ноды, если клавиатура вынесена из сообщения |
+| `keyboardNodeId` | `string` | - | ID отдельной `keyboard`-ноды, если клавиатура вынесена из сообщения; при его отсутствии host может быть найден по графу переходов |
 | `oneTimeKeyboard` | `boolean` | `false` | Скрыть клавиатуру после использования |
 | `resizeKeyboard` | `boolean` | - | Изменить размер клавиатуры |
 | `formatMode` | `'html' \| 'markdown' \| 'none'` | `'none'` | Режим форматирования |

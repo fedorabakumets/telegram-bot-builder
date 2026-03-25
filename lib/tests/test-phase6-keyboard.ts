@@ -1013,6 +1013,35 @@ test('G06', 'condition -> keyboard -> message работает вместе с �
   syntax(code, 'g06');
 });
 
+test('G07', 'auto-transition -> condition -> keyboard без keyboardNodeId всё равно прикрепляет клавиатуру к host message', () => {
+  const project = makeProject([
+    makeMessageNode('msg_host', 'Старт', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'cond_1',
+    }),
+    makeConditionNode('cond_1', 'age', [
+      makeBranch('less_than', 'kbd_1', '18'),
+      makeBranch('else', 'msg_2'),
+    ]),
+    makeKeyboardNode('kbd_1', 'inline', [
+      makeButton('Далее', 'goto', 'msg_2'),
+    ]),
+    makeMessageNode('msg_2', 'Финал'),
+  ]);
+
+  const code = gen(project, 'g07');
+  const host = block(code, 'msg_host');
+  assertIncludesAll(host, [
+    'InlineKeyboardBuilder()',
+    'callback_data="msg_2"',
+    'reply_markup=keyboard',
+  ], 'G07 host');
+  assertIncludesAll(code, [
+    'await handle_callback_kbd_1(callback_query)',
+  ], 'G07 condition');
+  syntax(code, 'g07');
+});
+
 console.log('══ Блок H: Backward compatibility и повторное использование keyboard ═');
 
 test('H01', 'legacy и новая модель живут в одном проекте', () => {
