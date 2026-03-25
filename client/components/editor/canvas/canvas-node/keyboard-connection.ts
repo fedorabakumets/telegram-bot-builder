@@ -58,9 +58,11 @@ export function setKeyboardNodeId<T extends Record<string, unknown>>(
  * @param data - Данные узла
  * @returns Копия данных без `keyboardNodeId`
  */
-export function clearKeyboardNodeId(data: unknown): Record<string, unknown> {
+export function clearKeyboardNodeId<T extends Record<string, unknown>>(data: T): Omit<T, 'keyboardNodeId'>;
+export function clearKeyboardNodeId(data: unknown): Record<string, unknown>;
+export function clearKeyboardNodeId(data: unknown) {
   if (!data || typeof data !== 'object') return {};
-  if (!('keyboardNodeId' in data)) return data as Record<string, unknown>;
+  if (!('keyboardNodeId' in data)) return data;
   const { keyboardNodeId: _keyboardNodeId, ...rest } = data as Record<string, unknown> & {
     keyboardNodeId?: unknown;
   };

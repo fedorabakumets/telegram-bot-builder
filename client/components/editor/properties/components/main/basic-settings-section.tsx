@@ -101,7 +101,7 @@ export function BasicSettingsSection({
   UserManagementConfiguration,
   AdminRightsInfo
 }: BasicSettingsSectionProps) {
-  const { handleSynonymsUpdate } = useSynonymSync({
+  const { displaySynonyms, handleSynonymsUpdate } = useSynonymSync({
     selectedNode,
     allNodes,
     onNodeUpdate,
@@ -155,7 +155,7 @@ export function BasicSettingsSection({
           {selectedNode.type !== 'broadcast' && (
             <div className="space-y-3 sm:space-y-4 bg-gradient-to-br from-emerald-50/40 to-green-50/20 dark:from-emerald-950/30 dark:to-green-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-emerald-200/40 dark:border-emerald-800/40 backdrop-blur-sm">
               <SynonymEditor
-                synonyms={selectedNode.data.synonyms || []}
+                synonyms={displaySynonyms}
                 onUpdate={handleSynonymsUpdate}
                 description="Дополнительные текстовые варианты для вызова этого экрана. Например: старт, привет, начать"
                 placeholder="Например: старт, привет, начать"

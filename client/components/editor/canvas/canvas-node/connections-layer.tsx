@@ -314,6 +314,19 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
   if (connections.length === 0) return null;
 
   const nodeById = new Map(nodes.map(n => [n.id, n]));
+  const areAnchorsReady = connections.every(({ fromId, toId, type, buttonId }) => {
+    if (!nodeSizes.has(fromId) || !nodeSizes.has(toId)) {
+      return false;
+    }
+
+    if (type === 'button-goto' && buttonId && !buttonPortYOffsets?.has(buttonId)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  if (!areAnchorsReady) return null;
 
   return (
     <svg

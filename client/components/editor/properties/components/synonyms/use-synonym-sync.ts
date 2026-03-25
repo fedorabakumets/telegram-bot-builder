@@ -1,38 +1,25 @@
 /**
- * @fileoverview Хук синхронизации синонимов с узлами text_trigger на холсте
- *
- * При изменении массива synonyms у узла автоматически создаёт/удаляет/обновляет
- * соответствующие узлы text_trigger на холсте.
- *
- * @module properties/components/synonyms/use-synonym-sync
+ * @fileoverview Sync synonyms with text_trigger nodes on the canvas.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Node } from '@shared/schema';
 import { nanoid } from 'nanoid';
 
-/**
- * Пропсы хука useSynonymSync
- */
 interface UseSynonymSyncProps {
-  /** Текущий узел (source) */
   selectedNode: Node;
-  /** Все узлы листа */
   allNodes: Node[];
-  /** Обновить данные узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
-  /** Добавить узел на холст */
   onNodeAdd?: (node: Node) => void;
-  /** Удалить узел с холста */
   onNodeDelete?: (nodeId: string) => void;
 }
 
-/**
- * Хук синхронизации синонимов с text_trigger узлами
- *
- * @param props - Пропсы хука
- * @returns handleSynonymsUpdate — функция для передачи в SynonymEditor вместо прямого onUpdate
- */
+function getTextSynonyms(node: Node): string[] {
+  return Array.isArray((node.data as any).textSynonyms)
+    ? ((node.data as any).textSynonyms as string[])
+    : [];
+}
+
 export function useSynonymSync({
   selectedNode,
   allNodes,
@@ -40,28 +27,53 @@ export function useSynonymSync({
   onNodeAdd,
   onNodeDelete,
 }: UseSynonymSyncProps) {
+  const normalizeSynonym = useCallback((value: string) => value.trim().toLowerCase(), []);
 
-  /**
-   * Находит text_trigger узел связанный с данным синонимом и source-узлом
-   */
-  const findTriggerForSynonym = useCallback((synonym: string): Node | undefined => {
-    return allNodes.find(n =>
-      n.type === 'text_trigger' &&
-      (n.data as any).autoTransitionTo === selectedNode.id &&
-      Array.isArray((n.data as any).textSynonyms) &&
-      (n.data as any).textSynonyms.length === 1 &&
-      (n.data as any).textSynonyms[0] === synonym
+  const linkedTextTriggers = useMemo(() => {
+    return allNodes.filter(node =>
+      node.type === 'text_trigger' &&
+      (node.data as any).autoTransitionTo === selectedNode.id
     );
   }, [allNodes, selectedNode.id]);
 
-  /**
-   * Создаёт новый text_trigger узел для синонима
-   */
+  const displaySynonyms = useMemo(() => {
+    const result: string[] = [];
+    const seen = new Set<string>();
+
+    const pushUnique = (value: string) => {
+      const normalized = normalizeSynonym(value);
+      if (!value.length) {
+        result.push(value);
+        return;
+      }
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      result.push(value);
+    };
+
+    (selectedNode.data.synonyms || []).forEach(pushUnique);
+    linkedTextTriggers.forEach(trigger => {
+      getTextSynonyms(trigger).forEach(pushUnique);
+    });
+
+    return result;
+  }, [selectedNode.data.synonyms, linkedTextTriggers, normalizeSynonym]);
+
+  const findTriggerForSynonym = useCallback((synonym: string): Node | undefined => {
+    const normalizedSynonym = normalizeSynonym(synonym);
+
+    return allNodes.find(node =>
+      node.type === 'text_trigger' &&
+      (node.data as any).autoTransitionTo === selectedNode.id &&
+      getTextSynonyms(node).length === 1 &&
+      normalizeSynonym(getTextSynonyms(node)[0] || '') === normalizedSynonym
+    );
+  }, [allNodes, selectedNode.id, normalizeSynonym]);
+
   const createTriggerNode = useCallback((synonym: string): Node => {
-    // Считаем сколько уже есть триггеров для этого узла — смещаем по Y
-    const existingTriggers = allNodes.filter(n =>
-      n.type === 'text_trigger' &&
-      (n.data as any).autoTransitionTo === selectedNode.id
+    const existingTriggers = allNodes.filter(node =>
+      node.type === 'text_trigger' &&
+      (node.data as any).autoTransitionTo === selectedNode.id
     );
     const yOffset = existingTriggers.length * 120;
 
@@ -155,26 +167,46 @@ export function useSynonymSync({
     };
   }, [allNodes, selectedNode]);
 
-  /**
-   * Обработчик изменения массива синонимов.
-   * Вызывается вместо прямого onUpdate в SynonymEditor.
-   *
-   * Сравнивает старый и новый массив, синхронизирует text_trigger узлы.
-   */
   const handleSynonymsUpdate = useCallback((newSynonyms: string[]) => {
-    const oldSynonyms: string[] = selectedNode.data.synonyms || [];
+    const oldSynonyms = displaySynonyms;
 
-    // Обновляем данные узла
     onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
 
-    if (!onNodeAdd || !onNodeDelete) return;
+    if (!onNodeAdd || !onNodeDelete) {
+      return;
+    }
 
-    // Добавленные синонимы (есть в новом, нет в старом, непустые)
-    const added = newSynonyms.filter(s => s.trim() && !oldSynonyms.includes(s));
-    // Удалённые синонимы (есть в старом, нет в новом, непустые)
-    const removed = oldSynonyms.filter(s => s.trim() && !newSynonyms.includes(s));
+    const handledOld = new Set<string>();
+    const handledNew = new Set<string>();
 
-    // Создаём триггеры для новых синонимов
+    newSynonyms.forEach((newSynonym, index) => {
+      const oldSynonym = oldSynonyms[index];
+      if (oldSynonym === undefined || oldSynonym === newSynonym) return;
+
+      const oldNormalized = normalizeSynonym(oldSynonym);
+      const newNormalized = normalizeSynonym(newSynonym);
+      if (!oldNormalized || !newNormalized) return;
+
+      const trigger = findTriggerForSynonym(oldSynonym);
+      if (!trigger) return;
+
+      onNodeUpdate(trigger.id, { textSynonyms: [newSynonym] });
+      handledOld.add(oldNormalized);
+      handledNew.add(newNormalized);
+    });
+
+    const added = newSynonyms.filter(synonym => {
+      const normalized = normalizeSynonym(synonym);
+      if (!normalized || handledNew.has(normalized)) return false;
+      return !oldSynonyms.some(old => normalizeSynonym(old) === normalized);
+    });
+
+    const removed = oldSynonyms.filter(synonym => {
+      const normalized = normalizeSynonym(synonym);
+      if (!normalized || handledOld.has(normalized)) return false;
+      return !newSynonyms.some(next => normalizeSynonym(next) === normalized);
+    });
+
     for (const synonym of added) {
       const existing = findTriggerForSynonym(synonym);
       if (!existing) {
@@ -182,14 +214,22 @@ export function useSynonymSync({
       }
     }
 
-    // Удаляем триггеры для удалённых синонимов
     for (const synonym of removed) {
       const trigger = findTriggerForSynonym(synonym);
       if (trigger) {
         onNodeDelete(trigger.id);
       }
     }
-  }, [selectedNode, onNodeUpdate, onNodeAdd, onNodeDelete, findTriggerForSynonym, createTriggerNode]);
+  }, [
+    createTriggerNode,
+    displaySynonyms,
+    findTriggerForSynonym,
+    normalizeSynonym,
+    onNodeAdd,
+    onNodeDelete,
+    onNodeUpdate,
+    selectedNode.id,
+  ]);
 
-  return { handleSynonymsUpdate };
+  return { displaySynonyms, handleSynonymsUpdate };
 }

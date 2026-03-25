@@ -21,8 +21,7 @@ export function TextTriggerConfiguration({
   const textValue = texts[0] || '';
 
   const handleTextChange = (value: string) => {
-    const trimmed = value.trim();
-    onNodeUpdate(selectedNode.id, { textSynonyms: trimmed ? [trimmed] : [] });
+    onNodeUpdate(selectedNode.id, { textSynonyms: value ? [value] : [] });
   };
 
   return (

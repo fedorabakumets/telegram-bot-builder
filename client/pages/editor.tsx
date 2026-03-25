@@ -516,7 +516,7 @@ export default function Editor() {
     isNodeBeingDragged,
     setIsNodeBeingDragged,
     saveToHistory
-  } = useBotEditor(activeProject?.data as BotData);
+  } = useBotEditor();
 
   // Вычисляем selectedNode из selectedNodeId и nodes
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
@@ -527,11 +527,14 @@ export default function Editor() {
     if (currentTab !== 'editor') return;
     setFlexibleLayoutConfig(prev => ({
       ...prev,
-      elements: prev.elements.map(el =>
-        el.id === 'properties' ? { ...el, visible: !!selectedNodeId } : el
-      )
+      elements: prev.elements.map(el => {
+        if (el.id !== 'properties') return el;
+
+        const nextVisible = !!selectedNodeId;
+        return el.visible === nextVisible ? el : { ...el, visible: nextVisible };
+      })
     }));
-  }, [selectedNodeId, currentTab]);
+  }, [selectedNodeId, currentTab, setFlexibleLayoutConfig]);
 
   // Reset hasLocalChanges when activeProject changes
   useEffect(() => {
@@ -591,13 +594,15 @@ export default function Editor() {
   // Синхронизация nodes → botDataWithSheets для undo/redo
   useEffect(() => {
     if (!botDataWithSheets || !botDataWithSheets.activeSheetId) return;
+    const activeSheet = botDataWithSheets.sheets.find(sheet => sheet.id === botDataWithSheets.activeSheetId);
+    if (!activeSheet || activeSheet.nodes === nodes) return;
 
     // Обновляем узлы в активном листе при изменении nodes
     const updatedSheets = botDataWithSheets.sheets.map(sheet => {
       if (sheet.id === botDataWithSheets.activeSheetId) {
         return {
           ...sheet,
-          nodes: nodes
+          nodes
         };
       }
       return sheet;
@@ -607,7 +612,7 @@ export default function Editor() {
       ...botDataWithSheets,
       sheets: updatedSheets
     });
-  }, [nodes, botDataWithSheets?.activeSheetId]);
+  }, [nodes, botDataWithSheets, setBotDataWithSheets]);
 
   // Обновляем данные бота при смене проекта
   useEffect(() => {
@@ -657,9 +662,12 @@ export default function Editor() {
       ...prev,
       elements: prev.elements.map(el => {
         // Восстанавливаем все основные элементы интерфейса
-        if (el.type === 'canvas') return { ...el, visible: true };
-        if (el.id === 'sidebar') return { ...el, visible: true };
-        if (el.id === 'properties') return { ...el, visible: !!selectedNodeId };
+        if (el.type === 'canvas') return el.visible ? el : { ...el, visible: true };
+        if (el.id === 'sidebar') return el.visible ? el : { ...el, visible: true };
+        if (el.id === 'properties') {
+          const nextVisible = !!selectedNodeId;
+          return el.visible === nextVisible ? el : { ...el, visible: nextVisible };
+        }
         return el;
       })
     }));
@@ -836,7 +844,7 @@ export default function Editor() {
   const handleConnectionDelete = useCallback((fromId: string, toId: string, type: string) => {
     saveToHistory();
     const updatedNodes = nodes.map(n => {
-      const data = { ...n.data } as Record<string, unknown>;
+      const data = { ...n.data };
 
       if (n.id === fromId) {
         if (type === 'trigger-next') {
@@ -866,7 +874,7 @@ export default function Editor() {
 
       // condition-source хранится в condition-узле (toId) как sourceNodeId
       if (n.id === toId && type === 'condition-source') {
-        delete data.sourceNodeId;
+        delete (data as typeof data & { sourceNodeId?: string }).sourceNodeId;
         return { ...n, data };
       }
 

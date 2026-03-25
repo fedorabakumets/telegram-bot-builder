@@ -124,6 +124,20 @@ export function useLayoutManager(
         }
       });
       
+      if (newMap.size === prev.size) {
+        let hasChanges = false;
+        for (const [key, value] of newMap) {
+          if (prev.get(key) !== value) {
+            hasChanges = true;
+            break;
+          }
+        }
+
+        if (!hasChanges) {
+          return prev;
+        }
+      }
+
       return newMap;
     });
   }, []);
