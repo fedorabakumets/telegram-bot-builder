@@ -113,7 +113,7 @@ function makeMediaNode(id: string, media: string[], opts: {
   };
 }
 
-function makeMessageNode(id: string, text = 'Ответ'): any {
+function makeMessageNode(id: string, text = 'Ответ', data: Record<string, any> = {}): any {
   return {
     id,
     type: 'message',
@@ -124,6 +124,28 @@ function makeMessageNode(id: string, text = 'Ответ'): any {
       keyboardType: 'none',
       formatMode: 'none',
       markdown: false,
+      ...data,
+    },
+  };
+}
+
+/** Создаёт отдельную keyboard-ноду для media-сценариев. */
+function makeKeyboardNode(
+  id: string,
+  keyboardType: 'inline' | 'reply' = 'inline',
+  buttons: any[] = [],
+  data: Record<string, any> = {},
+): any {
+  return {
+    id,
+    type: 'keyboard',
+    position: { x: 650, y: 0 },
+    data: {
+      keyboardType,
+      buttons,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      ...data,
     },
   };
 }
@@ -757,6 +779,21 @@ test('H10', 'media + message с inline-кнопками → синтаксис O
     },
   ]);
   syntax(gen(p, 'h10'), 'h10');
+});
+
+test('H11', 'media → message + отдельная inline keyboard-нода → answer_photo и builder остаются рабочими', () => {
+  const p = makeProject([
+    makeMediaNode('m1', ['https://ex.com/a.jpg'], { enableAutoTransition: true, autoTransitionTo: 'msg1' }),
+    makeMessageNode('msg1', 'Выбери', { keyboardNodeId: 'kbd1' }),
+    makeKeyboardNode('kbd1', 'inline', [
+      { id: 'b1', text: 'Далее', action: 'goto', target: 'msg2' },
+    ]),
+    makeMessageNode('msg2', 'Готово'),
+  ]);
+  const code = gen(p, 'h11');
+  ok(code.includes('answer_photo'), 'answer_photo должен быть в коде');
+  ok(code.includes('InlineKeyboardBuilder()'), 'InlineKeyboardBuilder должен быть в коде');
+  syntax(code, 'h11');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

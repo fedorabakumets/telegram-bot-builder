@@ -19,6 +19,17 @@
    Проверяем button_response_config (reply клавиатура)
    ═══════════════════════════════════════════════════════════════ #}
 {{ ind }}# Проверяем, ожидаем ли мы кнопочный ответ через reply клавиатуру
+{{ ind }}async def call_skip_target_handler(fake_callback, target_node_id):
+{{ ind2 }}"""Переходит к целевому узлу по skipDataCollection без отсутствующих хелперов."""
+{{ ind2 }}_skip_handled = False
+{% for node in nodes %}
+{{ ind2 }}{% if loop.first %}if{% else %}elif{% endif %} target_node_id == "{{ node.id }}":
+{{ ind3 }}_skip_handled = True
+{{ ind3 }}await handle_callback_{{ node.safeName }}(fake_callback)
+{% endfor %}
+{{ ind2 }}if not _skip_handled:
+{{ ind3 }}logging.warning(f"Неизвестный целевой узел skipDataCollection: {target_node_id}")
+
 {{ ind }}if user_id in user_data and "button_response_config" in user_data[user_id]:
 {{ ind2 }}config = user_data[user_id]["button_response_config"]
 {{ ind2 }}user_text = message.text
@@ -95,7 +106,7 @@
 {% for cmdNode in commandNodes %}
 {{ ind4 }}{% if loop.first %}if{% else %}elif{% endif %} command == "{{ cmdNode.data.command }}":
 {{ ind5 }}try:
-{{ ind6 }}await {% if cmdNode.type == 'start' %}start_handler{% else %}{{ cmdNode.data.command | replace('/', '') | replace('-', '_') }}_handler{% endif %}(fake_message)
+{{ ind6 }}await {% if cmdNode.type == 'start' %}start_handler{% elif cmdNode.type == 'command_trigger' %}command_trigger_{{ cmdNode.safeName }}_handler{% else %}{{ cmdNode.data.command | replace('/', '') | replace('-', '_') }}_handler{% endif %}(fake_message)
 {{ ind5 }}except Exception as e:
 {{ ind6 }}logging.error(f"Ошибка при выполнении команды {{ cmdNode.data.command }}: {e}")
 {% endfor %}

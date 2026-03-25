@@ -540,6 +540,21 @@ test('35', 'messageText только из спецсимволов !@#$%^&*()', 
 
 // ─── Итог ─────────────────────────────────────────────────────────────────────
 
+test('36', 'legacy inline keyboard не ломает formatMode:"html"', () => {
+  const p = deepClone(BASE_PROJECT);
+  p.sheets[0].nodes[1].data.messageText = '<b>Сообщение с клавиатурой</b>';
+  p.sheets[0].nodes[1].data.formatMode = 'html';
+  p.sheets[0].nodes[1].data.keyboardType = 'inline';
+  p.sheets[0].nodes[1].data.buttons = [
+    { id: 'btn_kbd', text: 'Далее', action: 'goto', target: 'msg-phase1' },
+  ];
+  const code = gen(p, 't36');
+  assertSyntax(code, 't36');
+  assert(code.includes('parse_mode="HTML"'), 'parse_mode="HTML" должен быть при formatMode:"html"');
+  assert(code.includes('InlineKeyboardBuilder'), 'InlineKeyboardBuilder должен быть в коде');
+  assert(code.includes('callback_data="msg-phase1"'), 'callback_data="msg-phase1" должен быть в коде');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 

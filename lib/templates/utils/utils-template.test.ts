@@ -122,6 +122,14 @@ describe('replace_variables_in_text()', () => {
 
 // ─── utilsParamsSchema ────────────────────────────────────────────────────────
 
+describe('navigate_to_node()', () => {
+  it('генерируется всегда как общий helper навигации', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain('async def navigate_to_node');
+    expect(r).toContain('await message.answer');
+  });
+});
+
 describe('utilsParamsSchema', () => {
   it('принимает валидные параметры', () => {
     expect(utilsParamsSchema.safeParse(validParamsEnabled).success).toBe(true);

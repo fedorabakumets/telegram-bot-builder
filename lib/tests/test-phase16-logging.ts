@@ -80,6 +80,44 @@ function makeSimpleProject() {
   }]);
 }
 
+/** Создаёт message-узел для сценариев логирования с keyboardNodeId. */
+function makeMessageNode(id: string, messageText = 'Ответ', data: Record<string, any> = {}) {
+  return {
+    id,
+    type: 'message',
+    position: { x: 0, y: 200 },
+    data: {
+      messageText,
+      buttons: [],
+      keyboardType: 'none',
+      formatMode: 'none',
+      markdown: false,
+      ...data,
+    },
+  };
+}
+
+/** Создаёт отдельную keyboard-ноду для сценариев логирования. */
+function makeKeyboardNode(
+  id: string,
+  keyboardType: 'inline' | 'reply' = 'inline',
+  buttons: any[] = [],
+  data: Record<string, any> = {},
+) {
+  return {
+    id,
+    type: 'keyboard',
+    position: { x: 300, y: 200 },
+    data: {
+      keyboardType,
+      buttons,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      ...data,
+    },
+  };
+}
+
 // ─── Тесты ───────────────────────────────────────────────────────────────────
 
 console.log('\n╔══════════════════════════════════════════════════════════════╗');
@@ -893,6 +931,38 @@ test('M12', 'autoRegisterUsers: true + inline → синтаксис Python OK',
 // ════════════════════════════════════════════════════════════════════════════
 // ИТОГИ
 // ════════════════════════════════════════════════════════════════════════════
+
+test('K09', 'message + отдельная inline keyboard-нода + DB → callback_query_logging_middleware и синтаксис OK', () => {
+  const p = makeCleanProject([
+    { id: 'start1', type: 'start', position: { x: 0, y: 0 }, data: { command: '/start', messageText: 'Привет', keyboardType: 'none', buttons: [] } },
+    makeMessageNode('msg1', 'Выбери', { keyboardNodeId: 'kbd1' }),
+    makeKeyboardNode('kbd1', 'inline', [
+      { id: 'b1', text: 'Да', action: 'goto', target: 'msg2' },
+    ]),
+    makeMessageNode('msg2', 'Ответ'),
+  ]);
+  const code = genDB(p, 'k09');
+  syntax(code, 'k09');
+  ok(code.includes('callback_query_logging_middleware'), 'callback_query_logging_middleware должен быть');
+  ok(code.includes('InlineKeyboardBuilder'), 'InlineKeyboardBuilder должен быть');
+});
+
+test('K10', 'message + отдельная reply keyboard-нода + DB → callback_query_logging_middleware не нужен, синтаксис OK', () => {
+  const p = makeCleanProject([
+    { id: 'start1', type: 'start', position: { x: 0, y: 0 }, data: { command: '/start', messageText: 'Привет', keyboardType: 'none', buttons: [] } },
+    makeMessageNode('msg1', 'Выбери', { keyboardNodeId: 'kbd1' }),
+    makeKeyboardNode('kbd1', 'reply', [
+      { id: 'b1', text: 'Да', action: 'goto', target: 'msg2' },
+      { id: 'b2', text: 'Нет', action: 'goto', target: 'msg2' },
+    ]),
+    makeMessageNode('msg2', 'Ответ'),
+  ]);
+  const code = genDB(p, 'k10');
+  syntax(code, 'k10');
+  ok(!code.includes('callback_query_logging_middleware'), 'callback_query_logging_middleware не должен быть для reply keyboard-ноды');
+  ok(code.includes('ReplyKeyboardBuilder'), 'ReplyKeyboardBuilder должен быть');
+  ok(code.includes('KeyboardButton'), 'KeyboardButton должен быть');
+});
 
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

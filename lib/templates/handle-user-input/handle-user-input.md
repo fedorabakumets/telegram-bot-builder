@@ -34,3 +34,4 @@ const code = generateHandleUserInput({ indentLevel: '    ' });
 - `generate-waiting-cleanup.ts` — `del user_data[user_id]["waiting_for_input"]`
 - `generate-input-type-validation.ts` — валидация email/phone/number
 - `generate-text-length-validation.ts` — валидация min/max длины
+`call_skip_target_handler` генерируется внутри шаблона и не зависит от внешнего глобального helper.

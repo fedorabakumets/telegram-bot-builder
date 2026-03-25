@@ -84,3 +84,4 @@ utils/
 
 - [`middleware.py.jinja2`](../middleware/) — `register_user_middleware` использует те же поля
 - [`start.py.jinja2`](../start/) — вызывает `init_user_variables` при регистрации
+`navigate_to_node(message, node_id, text=None, reply_markup=None)` доступна всегда как общий helper навигации и используется для перехода между узлами.

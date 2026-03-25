@@ -69,12 +69,33 @@ function makeConditionNode(id: string, variable: string, branches: any[]) {
   };
 }
 
-function makeMessageNode(id: string, text = 'Ответ') {
+function makeMessageNode(id: string, text = 'Ответ', data: Record<string, any> = {}) {
   return {
     id,
     type: 'message',
     position: { x: 400, y: 0 },
-    data: { messageText: text, buttons: [], keyboardType: 'none', formatMode: 'none', markdown: false },
+    data: { messageText: text, buttons: [], keyboardType: 'none', formatMode: 'none', markdown: false, ...data },
+  };
+}
+
+/** Создаёт отдельную keyboard-ноду для сценариев condition -> keyboard. */
+function makeKeyboardNode(
+  id: string,
+  keyboardType: 'inline' | 'reply' = 'inline',
+  buttons: any[] = [],
+  data: Record<string, any> = {},
+) {
+  return {
+    id,
+    type: 'keyboard',
+    position: { x: 650, y: 0 },
+    data: {
+      keyboardType,
+      buttons,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      ...data,
+    },
   };
 }
 
@@ -2053,6 +2074,44 @@ test('V08', 'text_trigger → condition(is_subscribed/is_not_subscribed) → п�
 // ════════════════════════════════════════════════════════════════════════════
 // ИТОГИ
 // ════════════════════════════════════════════════════════════════════════════
+
+test('J09', 'message → condition → inline keyboard-нода → клавиатура прикрепляется к сообщению', () => {
+  const p = makeCleanProject([
+    makeMessageNode('msg_host', 'Старт', { keyboardNodeId: 'kbd1' }),
+    makeConditionNode('cond1', 'step', [
+      makeBranch('filled', '', 'kbd1'),
+      makeBranch('else', '', 'msg2'),
+    ]),
+    makeKeyboardNode('kbd1', 'inline', [
+      { id: 'btn_next', text: 'Далее', action: 'goto', target: 'msg2' },
+    ]),
+    makeMessageNode('msg2', 'Финал'),
+  ]);
+  const code = gen(p, 'j09');
+  ok(code.includes('async def handle_callback_cond1'), 'condition handler должен быть в коде');
+  ok(code.includes('await handle_callback_kbd1(callback_query)'), 'condition должен вести в keyboard-handler');
+  ok(code.includes('InlineKeyboardBuilder()'), 'InlineKeyboardBuilder должен быть в коде');
+  syntax(code, 'j09');
+});
+
+test('J10', 'message → condition → reply keyboard-нода → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeMessageNode('msg_host', 'Старт', { keyboardNodeId: 'kbd1' }),
+    makeConditionNode('cond1', 'step', [
+      makeBranch('filled', '', 'kbd1'),
+      makeBranch('else', '', 'msg2'),
+    ]),
+    makeKeyboardNode('kbd1', 'reply', [
+      { id: 'btn_yes', text: 'Да', action: 'goto', target: 'msg2' },
+      { id: 'btn_no', text: 'Нет', action: 'goto', target: 'msg2' },
+    ]),
+    makeMessageNode('msg2', 'Финал'),
+  ]);
+  const code = gen(p, 'j10');
+  ok(code.includes('ReplyKeyboardBuilder()'), 'ReplyKeyboardBuilder должен быть в коде');
+  ok(code.includes('KeyboardButton'), 'KeyboardButton должен быть в коде');
+  syntax(code, 'j10');
+});
 
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

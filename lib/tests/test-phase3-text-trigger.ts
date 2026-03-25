@@ -72,7 +72,8 @@ function makeTriggerNode(id: string, synonyms: string[], targetId: string, opts:
   };
 }
 
-function makeMessageNode(id: string, text = 'Ответ') {
+/** Создаёт message-узел с поддержкой дополнительных данных, включая keyboardNodeId. */
+function makeMessageNode(id: string, text = 'Ответ', data: Record<string, any> = {}) {
   return {
     id,
     type: 'message',
@@ -83,6 +84,28 @@ function makeMessageNode(id: string, text = 'Ответ') {
       keyboardType: 'none',
       formatMode: 'none',
       markdown: false,
+      ...data,
+    },
+  };
+}
+
+/** Создаёт отдельную keyboard-ноду для регрессионных тестов text_trigger. */
+function makeKeyboardNode(
+  id: string,
+  keyboardType: 'inline' | 'reply' = 'inline',
+  buttons: any[] = [],
+  data: Record<string, any> = {},
+) {
+  return {
+    id,
+    type: 'keyboard',
+    position: { x: 650, y: 0 },
+    data: {
+      keyboardType,
+      buttons,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      ...data,
     },
   };
 }
@@ -989,6 +1012,40 @@ test('N05', 'нет command_trigger кода в text_trigger обработчи�
 // ════════════════════════════════════════════════════════════════════════════
 // ИТОГИ
 // ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок O: keyboard-ноды в text_trigger ──────────────────────────');
+
+test('O01', 'text_trigger → message + inline keyboard-нода → InlineKeyboardBuilder и синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('txt_menu', ['меню'], 'msg1'),
+    makeMessageNode('msg1', 'Меню', { keyboardNodeId: 'kbd1' }),
+    makeKeyboardNode('kbd1', 'inline', [
+      { id: 'btn_next', text: 'Далее', action: 'goto', target: 'msg2' },
+    ]),
+    makeMessageNode('msg2', 'Следующий шаг'),
+  ]);
+  const code = gen(p, 'o01');
+  ok(code.includes('@dp.message(lambda'), '@dp.message(lambda должен быть в коде');
+  ok(code.includes('handle_callback_kbd1'), 'handle_callback_kbd1 должен быть в коде');
+  ok(code.includes('callback_data="msg2"'), 'callback_data="msg2" должен быть в коде');
+  syntax(code, 'o01');
+});
+
+test('O02', 'text_trigger → message + reply keyboard-нода → ReplyKeyboardBuilder и синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('txt_start', ['старт'], 'msg1'),
+    makeMessageNode('msg1', 'Выбери', { keyboardNodeId: 'kbd1' }),
+    makeKeyboardNode('kbd1', 'reply', [
+      { id: 'btn_yes', text: 'Да', action: 'goto', target: 'msg2' },
+      { id: 'btn_no', text: 'Нет', action: 'goto', target: 'msg2' },
+    ]),
+    makeMessageNode('msg2', 'Ответ'),
+  ]);
+  const code = gen(p, 'o02');
+  ok(code.includes('@dp.message(lambda'), '@dp.message(lambda должен быть в коде');
+  ok(code.includes('handle_callback_kbd1'), 'handle_callback_kbd1 должен быть в коде');
+  syntax(code, 'o02');
+});
 
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

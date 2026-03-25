@@ -1,8 +1,8 @@
 /**
- * @fileoverview Компонент панели инструментов холста
- * 
- * Содержит верхнюю панель с кнопками управления масштабом,
- * отмены/повтора, истории действий и другими инструментами.
+ * @fileoverview РљРѕРјРїРѕРЅРµРЅС‚ РїР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ С…РѕР»СЃС‚Р°
+ *
+ * РЎРѕРґРµСЂР¶РёС‚ РІРµСЂС…РЅСЋСЋ РїР°РЅРµР»СЊ СЃ РєРЅРѕРїРєР°РјРё СѓРїСЂР°РІР»РµРЅРёСЏ РјР°СЃС€С‚Р°Р±РѕРј,
+ * РѕС‚РјРµРЅС‹/РїРѕРІС‚РѕСЂР°, РёСЃС‚РѕСЂРёРё РґРµР№СЃС‚РІРёР№ Рё РґСЂСѓРіРёРјРё РёРЅСЃС‚СЂСѓРјРµРЅС‚Р°РјРё.
  */
 
 import { ZoomControls } from './zoom-controls';
@@ -15,82 +15,82 @@ import { KeyboardShortcutsHelp } from './keyboard-shortcuts-help';
 import { Action } from './canvas';
 
 /**
- * Свойства компонента панели инструментов
+ * РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р° РїР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ
  */
 interface CanvasToolbarProps {
-  /** Массив узлов на холсте */
+  /** РњР°СЃСЃРёРІ СѓР·Р»РѕРІ РЅР° С…РѕР»СЃС‚Рµ */
   nodes: any[];
-  /** Текущий масштаб в процентах */
+  /** РўРµРєСѓС‰РёР№ РјР°СЃС€С‚Р°Р± РІ РїСЂРѕС†РµРЅС‚Р°С… */
   zoom: number;
-  /** История действий */
+  /** РСЃС‚РѕСЂРёСЏ РґРµР№СЃС‚РІРёР№ */
   actionHistory: Action[];
-  /** Доступность отмены действия */
+  /** Р”РѕСЃС‚СѓРїРЅРѕСЃС‚СЊ РѕС‚РјРµРЅС‹ РґРµР№СЃС‚РІРёСЏ */
   canUndo?: boolean;
-  /** Доступность повтора действия */
+  /** Р”РѕСЃС‚СѓРїРЅРѕСЃС‚СЊ РїРѕРІС‚РѕСЂР° РґРµР№СЃС‚РІРёСЏ */
   canRedo?: boolean;
-  /** Флаг процесса сохранения */
+  /** Р¤Р»Р°Рі РїСЂРѕС†РµСЃСЃР° СЃРѕС…СЂР°РЅРµРЅРёСЏ */
   isSaving?: boolean;
-  /** Идентификатор выбранного узла */
+  /** РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РІС‹Р±СЂР°РЅРЅРѕРіРѕ СѓР·Р»Р° */
   selectedNodeId: string | null;
-  /** Наличие данных в буфере обмена */
+  /** РќР°Р»РёС‡РёРµ РґР°РЅРЅС‹С… РІ Р±СѓС„РµСЂРµ РѕР±РјРµРЅР° */
   hasClipboardData?: boolean;
-  /** Видимость заголовка */
+  /** Р’РёРґРёРјРѕСЃС‚СЊ Р·Р°РіРѕР»РѕРІРєР° */
   headerVisible?: boolean;
-  /** Видимость боковой панели */
+  /** Р’РёРґРёРјРѕСЃС‚СЊ Р±РѕРєРѕРІРѕР№ РїР°РЅРµР»Рё */
   sidebarVisible?: boolean;
-  /** Видимость холста */
+  /** Р’РёРґРёРјРѕСЃС‚СЊ С…РѕР»СЃС‚Р° */
   canvasVisible?: boolean;
-  /** Видимость панели свойств */
+  /** Р’РёРґРёРјРѕСЃС‚СЊ РїР°РЅРµР»Рё СЃРІРѕР№СЃС‚РІ */
   propertiesVisible?: boolean;
-  /** Колбэк уменьшения масштаба */
+  /** РљРѕР»Р±СЌРє СѓРјРµРЅСЊС€РµРЅРёСЏ РјР°СЃС€С‚Р°Р±Р° */
   onZoomOut: () => void;
-  /** Колбэк увеличения масштаба */
+  /** РљРѕР»Р±СЌРє СѓРІРµР»РёС‡РµРЅРёСЏ РјР°СЃС€С‚Р°Р±Р° */
   onZoomIn: () => void;
-  /** Колбэк сброса масштаба */
+  /** РљРѕР»Р±СЌРє СЃР±СЂРѕСЃР° РјР°СЃС€С‚Р°Р±Р° */
   onResetZoom: () => void;
-  /** Колбэк уместить всё */
+  /** РљРѕР»Р±СЌРє СѓРјРµСЃС‚РёС‚СЊ РІСЃС‘ */
   onFitToContent: () => void;
-  /** Колбэк установки уровня масштаба */
+  /** РљРѕР»Р±СЌРє СѓСЃС‚Р°РЅРѕРІРєРё СѓСЂРѕРІРЅСЏ РјР°СЃС€С‚Р°Р±Р° */
   onZoomLevelChange: (level: number) => void;
-  /** Колбэк отмены действия */
+  /** РљРѕР»Р±СЌРє РѕС‚РјРµРЅС‹ РґРµР№СЃС‚РІРёСЏ */
   onUndo?: () => void;
-  /** Колбэк повтора действия */
+  /** РљРѕР»Р±СЌРє РїРѕРІС‚РѕСЂР° РґРµР№СЃС‚РІРёСЏ */
   onRedo?: () => void;
-  /** Колбэк для сохранения */
+  /** РљРѕР»Р±СЌРє РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ */
   onSave?: () => void;
-  /** Колбэк для копирования в буфер обмена */
+  /** РљРѕР»Р±СЌРє РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ РІ Р±СѓС„РµСЂ РѕР±РјРµРЅР° */
   onCopyToClipboard?: (nodeIds: string[]) => void;
-  /** Колбэк для вставки из буфера обмена */
+  /** РљРѕР»Р±СЌРє РґР»СЏ РІСЃС‚Р°РІРєРё РёР· Р±СѓС„РµСЂР° РѕР±РјРµРЅР° */
   onPasteFromClipboard?: (offsetX?: number, offsetY?: number) => void;
-  /** Позиция последнего клика для вставки */
+  /** РџРѕР·РёС†РёСЏ РїРѕСЃР»РµРґРЅРµРіРѕ РєР»РёРєР° РґР»СЏ РІСЃС‚Р°РІРєРё */
   lastClickPosition?: { x: number; y: number };
-  /** Transform последнего клика (pan и zoom) */
+  /** Transform РїРѕСЃР»РµРґРЅРµРіРѕ РєР»РёРєР° (pan Рё zoom) */
   clickTransform?: { pan: { x: number; y: number }; zoom: number };
-  /** Колбэк переключения видимости заголовка */
+  /** РљРѕР»Р±СЌРє РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РІРёРґРёРјРѕСЃС‚Рё Р·Р°РіРѕР»РѕРІРєР° */
   onToggleHeader?: () => void;
-  /** Колбэк переключения видимости боковой панели */
+  /** РљРѕР»Р±СЌРє РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РІРёРґРёРјРѕСЃС‚Рё Р±РѕРєРѕРІРѕР№ РїР°РЅРµР»Рё */
   onToggleSidebar?: () => void;
-  /** Колбэк переключения видимости холста */
+  /** РљРѕР»Р±СЌРє РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РІРёРґРёРјРѕСЃС‚Рё С…РѕР»СЃС‚Р° */
   onToggleCanvas?: () => void;
-  /** Колбэк переключения видимости панели свойств */
+  /** РљРѕР»Р±СЌРє РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РІРёРґРёРјРѕСЃС‚Рё РїР°РЅРµР»Рё СЃРІРѕР№СЃС‚РІ */
   onToggleProperties?: () => void;
-  /** Колбэк начала выделения действия */
+  /** РљРѕР»Р±СЌРє РЅР°С‡Р°Р»Р° РІС‹РґРµР»РµРЅРёСЏ РґРµР№СЃС‚РІРёСЏ */
   handleMouseDownAction: (index: number) => void;
-  /** Колбэк выделения диапазона действий */
+  /** РљРѕР»Р±СЌРє РІС‹РґРµР»РµРЅРёСЏ РґРёР°РїР°Р·РѕРЅР° РґРµР№СЃС‚РІРёР№ */
   handleMouseOverAction: (index: number) => void;
-  /** Колбэк переключения выбора действия */
+  /** РљРѕР»Р±СЌРє РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РІС‹Р±РѕСЂР° РґРµР№СЃС‚РІРёСЏ */
   toggleActionSelection: (actionId: string) => void;
-  /** Выбранные действия для отмены */
+  /** Р’С‹Р±СЂР°РЅРЅС‹Рµ РґРµР№СЃС‚РІРёСЏ РґР»СЏ РѕС‚РјРµРЅС‹ */
   selectedActionsForUndo: Set<string>;
-  /** Колбэк отмены выбранных действий */
+  /** РљРѕР»Р±СЌРє РѕС‚РјРµРЅС‹ РІС‹Р±СЂР°РЅРЅС‹С… РґРµР№СЃС‚РІРёР№ */
   handleUndoSelected: () => void;
 }
 
 /**
- * Компонент панели инструментов холста
- * 
- * @param props - Свойства компонента
- * @returns JSX элемент панели инструментов
+ * РљРѕРјРїРѕРЅРµРЅС‚ РїР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ С…РѕР»СЃС‚Р°
+ *
+ * @param props - РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р°
+ * @returns JSX СЌР»РµРјРµРЅС‚ РїР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ
  */
 export function CanvasToolbar({
   nodes,
@@ -132,7 +132,7 @@ export function CanvasToolbar({
       <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20 pointer-events-auto">
         <div className="flex items-center canvas-controls overflow-x-auto w-full gap-2 text-sm">
           <div className="flex items-center flex-shrink-0 gap-2">
-            {/* Кнопки масштаба */}
+            {/* РљРЅРѕРїРєРё РјР°СЃС€С‚Р°Р±Р° */}
             <ZoomControls
               zoom={zoom}
               canZoomOut={zoom > 1}
@@ -145,7 +145,7 @@ export function CanvasToolbar({
               onZoomLevelChange={onZoomLevelChange}
             />
 
-            {/* Кнопки отмены/повтора */}
+            {/* РљРЅРѕРїРєРё РѕС‚РјРµРЅС‹/РїРѕРІС‚РѕСЂР° */}
             <UndoRedoButtons
               canUndo={canUndo ?? actionHistory.length > 0}
               canRedo={canRedo}
@@ -153,7 +153,7 @@ export function CanvasToolbar({
               onRedo={onRedo}
             />
 
-            {/* История действий */}
+            {/* РСЃС‚РѕСЂРёСЏ РґРµР№СЃС‚РІРёР№ */}
             <ActionHistory
               actionHistory={actionHistory}
               handleMouseDownAction={handleMouseDownAction}
@@ -165,7 +165,7 @@ export function CanvasToolbar({
 
             <SaveButton onSave={onSave} isSaving={isSaving} />
 
-            {/* Межпроектное копирование/вставка */}
+            {/* РњРµР¶РїСЂРѕРµРєС‚РЅРѕРµ РєРѕРїРёСЂРѕРІР°РЅРёРµ/РІСЃС‚Р°РІРєР° */}
             <ClipboardButtons
               onCopyToClipboard={onCopyToClipboard}
               onPasteFromClipboard={onPasteFromClipboard}
@@ -175,10 +175,10 @@ export function CanvasToolbar({
               hasClipboardData={hasClipboardData}
             />
 
-            {/* Разделитель */}
+            {/* Р Р°Р·РґРµР»РёС‚РµР»СЊ */}
             <div className="h-6 w-px bg-slate-300/50 dark:bg-slate-600/50" />
 
-            {/* Кнопки управления интерфейсом */}
+            {/* РљРЅРѕРїРєРё СѓРїСЂР°РІР»РµРЅРёСЏ РёРЅС‚РµСЂС„РµР№СЃРѕРј */}
             {headerVisible === false && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
               <InterfaceToggles
                 headerVisible={headerVisible}
@@ -193,19 +193,8 @@ export function CanvasToolbar({
             )}
           </div>
 
-          {/* Справка */}
+          {/* РЎРїСЂР°РІРєР° */}
           <KeyboardShortcutsHelp />
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200/70 dark:border-slate-700/60 bg-white/70 dark:bg-slate-900/60 px-3 py-2 text-[11px] leading-none text-slate-600 dark:text-slate-300 shadow-sm">
-            <span className="font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">Связи</span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-700 dark:text-emerald-300">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              Переход
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300">
-              <span className="h-2 w-2 rounded-full bg-amber-500" />
-              Привязка клавиатуры
-            </span>
-          </div>
         </div>
       </div>
     </div>

@@ -158,6 +158,36 @@ describe('generateHandleUserInput()', () => {
 
 // ─── handleUserInputParamsSchema ─────────────────────────────────────────────
 
+  describe('обработчики переходов', () => {
+    it('использует command_trigger_<safeName>_handler для command_trigger узлов', () => {
+      const r = generateHandleUserInput({
+        commandNodes: [
+          { id: 'start_1', safeName: 'start_1', type: 'start', data: { command: '/start' } },
+          { id: 'help_trigger_1', safeName: 'help_trigger_1', type: 'command_trigger', data: { command: '/help' } },
+          { id: 'help_cmd_1', safeName: 'help_cmd_1', type: 'command', data: { command: '/help' } },
+        ],
+      });
+
+      assert.ok(r.includes('await start_handler(fake_message)'));
+      assert.ok(r.includes('await command_trigger_help_trigger_1_handler(fake_message)'));
+      assert.ok(r.includes('await help_handler(fake_message)'));
+      assert.ok(!r.includes('await help_trigger_1_handler(fake_message)'));
+    });
+
+    it('генерирует локальный call_skip_target_handler', () => {
+      const r = generateHandleUserInput({
+        nodes: [
+          { id: 'node_a', safeName: 'node_a', type: 'message', data: { messageText: 'A' } },
+          { id: 'node_b', safeName: 'node_b', type: 'message', data: { messageText: 'B' } },
+        ],
+      });
+
+      assert.ok(r.includes('async def call_skip_target_handler'));
+      assert.ok(r.includes('await handle_callback_node_a(fake_callback)'));
+      assert.ok(r.includes('await handle_callback_node_b(fake_callback)'));
+    });
+  });
+
 describe('handleUserInputParamsSchema', () => {
   it('принимает пустой объект', () => {
     assert.ok(handleUserInputParamsSchema.safeParse({}).success);
