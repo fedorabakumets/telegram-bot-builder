@@ -36,7 +36,7 @@ type ConnectionType = 'auto-transition' | 'button-goto' | 'input-target' | 'trig
 /**
  * Одно соединение между двумя узлами
  */
-interface Connection {
+export interface Connection {
   /** Идентификатор исходного узла */
   fromId: string;
   /** Идентификатор целевого узла */
@@ -47,6 +47,11 @@ interface Connection {
   label?: string;
   /** ID кнопки — только для button-goto */
   buttonId?: string;
+}
+
+interface NodeSize {
+  width: number;
+  height: number;
 }
 
 /**
@@ -122,7 +127,7 @@ interface ConnectionsLayerProps {
   /** Все узлы текущего листа */
   nodes: Node[];
   /** Карта реальных размеров узлов (из ResizeObserver) */
-  nodeSizes: Map<string, { width: number; height: number }>;
+  nodeSizes: Map<string, NodeSize>;
   /** Колбэк удаления соединения */
   onConnectionDelete?: (fromId: string, toId: string, type: ConnectionType) => void;
   /** Y-смещения портов кнопок от верха узла (buttonId → { x, y } в canvas-координатах) */
@@ -290,6 +295,32 @@ function collectConnections(nodes: Node[]): Connection[] {
   return connections;
 }
 
+export function isConnectionRenderable(
+  connection: Connection,
+  nodeSizes: Map<string, NodeSize>,
+  buttonPortYOffsets?: Map<string, { x: number; y: number }>,
+): boolean {
+  const { fromId, toId, type, buttonId } = connection;
+
+  if (!nodeSizes.has(fromId) || !nodeSizes.has(toId)) {
+    return false;
+  }
+
+  if (type === 'button-goto' && buttonId && !buttonPortYOffsets?.has(buttonId)) {
+    return false;
+  }
+
+  return true;
+}
+
+export function getRenderableConnections(
+  connections: Connection[],
+  nodeSizes: Map<string, NodeSize>,
+  buttonPortYOffsets?: Map<string, { x: number; y: number }>,
+): Connection[] {
+  return connections.filter(connection => isConnectionRenderable(connection, nodeSizes, buttonPortYOffsets));
+}
+
 /**
  * Компонент SVG-слоя соединений
  *
@@ -314,19 +345,9 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
   if (connections.length === 0) return null;
 
   const nodeById = new Map(nodes.map(n => [n.id, n]));
-  const areAnchorsReady = connections.every(({ fromId, toId, type, buttonId }) => {
-    if (!nodeSizes.has(fromId) || !nodeSizes.has(toId)) {
-      return false;
-    }
+  const renderableConnections = getRenderableConnections(connections, nodeSizes, buttonPortYOffsets);
 
-    if (type === 'button-goto' && buttonId && !buttonPortYOffsets?.has(buttonId)) {
-      return false;
-    }
-
-    return true;
-  });
-
-  if (!areAnchorsReady) return null;
+  if (renderableConnections.length === 0) return null;
 
   return (
     <svg
@@ -362,7 +383,7 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
         ))}
       </defs>
 
-      {connections.map(({ fromId, toId, type, buttonId }, idx) => {
+      {renderableConnections.map(({ fromId, toId, type, buttonId }) => {
         const fromNode = nodeById.get(fromId);
         const toNode = nodeById.get(toId);
         if (!fromNode || !toNode) return null;
@@ -382,7 +403,7 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
 
         const d = buildSmartPath(fromNode, toNode, fromW, fromH, toW, toH, fromPortOffset);
         const style = CONNECTION_STYLES[type];
-        const connKey = `${fromId}->${toId}-${type}-${idx}`;
+        const connKey = `${fromId}->${toId}-${type}-${buttonId ?? 'default'}`;
         const isHovered = hoveredKey === connKey;
 
         return (
