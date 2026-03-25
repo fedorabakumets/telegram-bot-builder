@@ -260,6 +260,12 @@ test('C06', 'userDatabaseEnabled: true → ЕСТЬ FSInputFile обработк
   ok(code.includes('/uploads/'), '/uploads/ должен быть в коде');
 });
 
+test('C06a', 'userDatabaseEnabled: true → ЕСТЬ get_upload_file_path для _wrap_bot_send_photo даже без media-нод', () => {
+  const code = genDB(makeSimpleProject(), 'c06a');
+  ok(code.includes('def get_upload_file_path('), 'get_upload_file_path должен быть в коде при DB-logging');
+  ok(code.includes('send_photo_with_logging'), 'send_photo_with_logging должен быть в коде');
+});
+
 test('C07', 'userDatabaseEnabled: true → синтаксис OK', () => {
   const code = genDB(makeSimpleProject(), 'c07');
   syntax(code, 'c07');

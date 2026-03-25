@@ -201,7 +201,7 @@ function generateCodeSections(
 
   // --- media functions ---
   const mediaFunctions = emitOnce(state, COMPONENT_NAMES.MEDIA_FUNCTIONS, () =>
-    flags.hasMediaNodesResult || flags.hasUploadImagesResult
+    userDatabaseEnabled || flags.hasMediaNodesResult || flags.hasUploadImagesResult
       ? generateMediaFunctions()
       : ''
   );
