@@ -288,8 +288,13 @@ export function getNodeDefaults(type: Node['type']): any {
       buttons: []
     },
     input: {
-      inputType: 'text',
-      collectUserInput: true
+      inputType: 'any',
+      inputVariable: '',
+      inputTargetNodeId: '',
+      appendVariable: false,
+      saveToDatabase: false,
+      inputPrompt: 'Введите ответ',
+      inputRequired: true
     },
     condition: {
       enableConditionalMessages: true,

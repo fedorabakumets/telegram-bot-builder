@@ -35,6 +35,29 @@ function makeProject(nodeData: Record<string, any> = {}): BotDataWithSheets {
   };
 }
 
+function makeInputProject(nodeData: Record<string, any> = {}): BotDataWithSheets {
+  return {
+    version: 2,
+    activeSheetId: 'sheet_1',
+    sheets: [
+      {
+        id: 'sheet_1',
+        name: 'Лист 1',
+        nodes: [
+          {
+            id: 'node_1',
+            type: 'input',
+            position: { x: 0, y: 0 },
+            data: { ...nodeData } as any,
+          },
+        ],
+        connections: [],
+        viewState: { pan: { x: 0, y: 0 }, zoom: 100 },
+      },
+    ],
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Базовая нормализация
 // ---------------------------------------------------------------------------
@@ -73,6 +96,20 @@ describe('normalizeProjectData — базовые поля', () => {
     expect(data.videoInputVariable).toBe('');
     expect(data.audioInputVariable).toBe('');
     expect(data.documentInputVariable).toBe('');
+  });
+});
+
+describe('normalizeProjectData — input node defaults', () => {
+  it('добавляет дефолты для новой ноды сохранения ответа', () => {
+    const result = normalizeProjectData(makeInputProject());
+    const data = result.sheets[0].nodes[0].data;
+    expect(data.inputType).toBe('any');
+    expect(data.inputVariable).toBe('');
+    expect(data.inputTargetNodeId).toBe('');
+    expect(data.appendVariable).toBe(false);
+    expect(data.saveToDatabase).toBe(false);
+    expect(data.inputPrompt).toBe('Введите ответ');
+    expect(data.inputRequired).toBe(true);
   });
 });
 

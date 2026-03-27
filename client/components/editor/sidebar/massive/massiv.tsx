@@ -1,7 +1,7 @@
 import { ComponentDefinition } from "@shared/schema";
 import { broadcastNode } from "../../canvas/canvas-node/broadcast-node";
 import { clientAuthNode } from "../../canvas/canvas-node/client-auth-node";
-import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage, mediaMessage } from "./messages";
+import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage, mediaMessage, saveAnswerNode } from "./messages";
 import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from "./user-management";
 import { pinMessage, unpinMessage, deleteMessage } from "./content-management";
 import { commandTrigger, textTrigger } from "./triggers";
@@ -15,6 +15,7 @@ export const components: ComponentDefinition[] = [
   commandTrigger,
   textTrigger,
   textMessage,
+  saveAnswerNode,
   mediaMessage,
   stickerMessage,
   voiceMessage,

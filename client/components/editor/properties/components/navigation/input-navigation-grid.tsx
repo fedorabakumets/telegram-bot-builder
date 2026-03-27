@@ -69,7 +69,7 @@ export function InputNavigationGrid({
           <Select
             value={selectedNode.data.inputTargetNodeId || 'no-transition'}
             onValueChange={(value) => {
-              onNodeUpdate(selectedNode.id, { inputTargetNodeId: value === 'no-transition' ? undefined : value });
+              onNodeUpdate(selectedNode.id, { inputTargetNodeId: value === 'no-transition' ? '' : value });
             }}
           >
             <SelectTrigger className="text-xs sm:text-sm h-7 sm:h-8 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 dark:hover:border-violet-600/60 focus:border-violet-500 focus:ring-violet-400/30">
@@ -89,7 +89,7 @@ export function InputNavigationGrid({
           <Input
             value={selectedNode.data.inputTargetNodeId && selectedNode.data.inputTargetNodeId !== 'no-transition' ? selectedNode.data.inputTargetNodeId : ''}
             onChange={(e) => {
-              onNodeUpdate(selectedNode.id, { inputTargetNodeId: e.target.value || undefined });
+              onNodeUpdate(selectedNode.id, { inputTargetNodeId: e.target.value || '' });
             }}
             className="text-xs sm:text-sm h-7 sm:h-8 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 text-violet-900 dark:text-violet-50 placeholder:text-violet-500/50 focus:border-violet-500"
             placeholder="или ID вручную"

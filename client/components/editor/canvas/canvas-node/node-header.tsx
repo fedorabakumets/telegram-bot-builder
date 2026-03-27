@@ -52,6 +52,8 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
         return 'Сообщение';
       case 'keyboard':
         return 'Клавиатура';
+      case 'input':
+        return 'Сохранить ответ';
       case 'sticker':
         return 'Стикер';
       case 'voice':

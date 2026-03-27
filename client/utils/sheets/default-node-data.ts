@@ -145,7 +145,7 @@ export const defaultNodeData = {
   /** Имя файла */
   filename: undefined,
   /** Тип ввода: "text", "photo", "video", "audio", "document" */
-  inputType: 'text' as const,
+  inputType: 'any' as const,
   /** Тип ответа: "text", "buttons", "multi_select" */
   responseType: 'text' as const,
   /** Варианты ответа */
@@ -185,7 +185,7 @@ export const defaultNodeData = {
   /** Собирать ввод пользователя */
   collectUserInput: false,
   /** ID узла для перехода после ввода */
-  inputTargetNodeId: undefined,
+  inputTargetNodeId: '',
   /** Тип кнопок ввода: "inline", "reply" */
   inputButtonType: 'inline' as const,
   /** Включить автоматический переход */

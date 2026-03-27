@@ -40,7 +40,7 @@ function getNodeTypeLabel(type: Node['type']): string {
     audio: 'Аудио',
     document: 'Документ',
     keyboard: 'Клавиатура',
-    input: 'Ввод',
+    input: 'Сохранить ответ в переменную',
     condition: 'Условие',
     client_auth: 'Авторизация',
   };
@@ -59,6 +59,13 @@ function getNodeContent(node: Node): string {
 
   if (node.type === 'message') {
     return ((node.data as any).messageText || '').slice(0, 50);
+  }
+
+  if (node.type === 'input') {
+    const target = ((node.data as any).inputVariable || '').trim();
+    const source = ((node.data as any).inputType || 'any').trim();
+    const sourceLabel = source === 'any' ? 'Последний ответ' : source;
+    return (target ? `${sourceLabel} → ${target}` : `Источник: ${sourceLabel}`).slice(0, 50);
   }
 
   if (node.type === 'text_trigger') {

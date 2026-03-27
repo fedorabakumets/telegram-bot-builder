@@ -28,6 +28,7 @@ import { UserInputSettingsSection } from './user-input-settings-section';
 import { KeyboardTypeSelector } from '../keyboard/keyboard-type-selector';
 import { KeyboardLayoutEditor } from '../keyboard/keyboard-layout-editor';
 import { KeyboardNodeProperties } from '../keyboard/keyboard-node-properties';
+import { SaveAnswerProperties } from '../input/save-answer-properties';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import { ButtonCard } from '../button-card/button-card';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
@@ -239,6 +240,34 @@ export function PropertiesPanel({
             onButtonAdd={onButtonAdd}
             onButtonUpdate={onButtonUpdate}
             onButtonDelete={onButtonDelete}
+          />
+        </div>
+        <PropertiesFooterWrapper
+          selectedNode={selectedNode}
+          onNodeUpdate={onNodeUpdate}
+          onActionLog={onActionLog}
+          onSaveProject={onSaveProject}
+        />
+      </aside>
+    );
+  }
+
+  if (selectedNode.type === 'input') {
+    return (
+      <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
+        <PropertiesHeader
+          selectedNode={selectedNode}
+          onNodeTypeChange={onNodeTypeChange}
+          onClose={onClose}
+          displayNodeId={displayNodeId}
+        />
+        <div className="flex-1 overflow-y-auto p-4">
+          <SaveAnswerProperties
+            selectedNode={selectedNode}
+            onNodeUpdate={onNodeUpdate}
+            getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+            formatNodeDisplay={formatNodeDisplay}
+            textVariables={textVariables as Variable[]}
           />
         </div>
         <PropertiesFooterWrapper

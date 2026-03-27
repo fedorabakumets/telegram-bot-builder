@@ -210,6 +210,30 @@ export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWit
         node.data.documentInputVariable = '';
       }
 
+      if (node.type === 'input') {
+        if (!node.data.inputType) {
+          node.data.inputType = 'any';
+        }
+        if (node.data.inputVariable === undefined) {
+          node.data.inputVariable = '';
+        }
+        if (node.data.inputTargetNodeId === undefined) {
+          node.data.inputTargetNodeId = '';
+        }
+        if (node.data.appendVariable === undefined) {
+          node.data.appendVariable = false;
+        }
+        if (node.data.saveToDatabase === undefined) {
+          node.data.saveToDatabase = false;
+        }
+        if (node.data.inputPrompt === undefined) {
+          node.data.inputPrompt = 'Введите ответ';
+        }
+        if (node.data.inputRequired === undefined) {
+          node.data.inputRequired = true;
+        }
+      }
+
       // Возвращаем нормализованный узел
       return node;
     });

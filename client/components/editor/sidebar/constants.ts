@@ -5,7 +5,7 @@
  */
 
 import { ComponentDefinition } from '@shared/schema';
-import { textMessage, mediaMessage, keyboardMessage } from './massive/messages';
+import { textMessage, mediaMessage, keyboardMessage, saveAnswerNode } from './massive/messages';
 import { allCommandPresets } from './massive/commands';
 import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
@@ -29,6 +29,10 @@ export const componentCategories: Array<{
   {
     title: 'Сообщения',
     components: [textMessage, mediaMessage, keyboardMessage]
+  },
+  {
+    title: 'Ввод',
+    components: [saveAnswerNode]
   },
   {
     title: 'Рассылка',

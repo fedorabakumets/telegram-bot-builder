@@ -57,7 +57,7 @@ const nodeTypeNames: Record<Node['type'], string> = {
   audio: 'Аудио',
   document: 'Документ',
   keyboard: 'Клавиатура',
-  input: 'Ввод',
+  input: 'Сохранить ответ',
   condition: 'Условие',
   client_auth: 'Авторизация Client API',
   command_trigger: 'Триггер команды',
@@ -177,17 +177,32 @@ export function PropertiesHeader({
                     value={selectedNode.type}
                     onValueChange={(value) => {
                       if (onNodeTypeChange) {
-                        const newData = getNodeDefaults(value as Node['type']);
+                        const nextType = value as Node['type'];
+                        const newData = getNodeDefaults(nextType);
+
+                        if (nextType === 'input') {
+                          onNodeTypeChange(selectedNode.id, nextType, {
+                            ...newData,
+                            inputType: selectedNode.data.inputType ?? 'any',
+                            inputVariable: selectedNode.data.inputVariable ?? '',
+                            appendVariable: selectedNode.data.appendVariable ?? false,
+                            saveToDatabase: selectedNode.data.saveToDatabase ?? false,
+                            inputPrompt: selectedNode.data.inputPrompt ?? 'Введите ответ',
+                            inputRequired: selectedNode.data.inputRequired ?? true,
+                          });
+                          return;
+                        }
+
                         const preservedData = {
-                          messageText: selectedNode.data.messageText,
-                          keyboardType: selectedNode.data.keyboardType,
-                          buttons: selectedNode.data.buttons,
-                          markdown: selectedNode.data.markdown,
-                          oneTimeKeyboard: selectedNode.data.oneTimeKeyboard,
-                          resizeKeyboard: selectedNode.data.resizeKeyboard
+                          messageText: selectedNode.data.messageText ?? '',
+                          keyboardType: selectedNode.data.keyboardType ?? 'none',
+                          buttons: selectedNode.data.buttons ?? [],
+                          markdown: selectedNode.data.markdown ?? false,
+                          oneTimeKeyboard: selectedNode.data.oneTimeKeyboard ?? false,
+                          resizeKeyboard: selectedNode.data.resizeKeyboard ?? true
                         };
                         const finalData = { ...newData, ...preservedData };
-                        onNodeTypeChange(selectedNode.id, value as Node['type'], finalData);
+                        onNodeTypeChange(selectedNode.id, nextType, finalData);
                       }
                     }}
                   >
@@ -216,6 +231,7 @@ export function PropertiesHeader({
                       <SelectItem value="demote_user">👤 Снять с администратора</SelectItem>
                       <SelectItem value="admin_rights">⚡ Права администратора</SelectItem>
                       <SelectItem value="broadcast">📢 Рассылка</SelectItem>
+                      <SelectItem value="input">Сохранить ответ в переменную</SelectItem>
                       <SelectItem value="media">🖼️ Медиафайл</SelectItem>
                     </SelectContent>
                   </Select>

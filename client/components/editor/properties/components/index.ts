@@ -15,5 +15,6 @@ export * from './admin';
 export * from './navigation';
 export * from './synonyms';
 export * from './media';
+export * from './input';
 export * from './main';
 export * from './action-loggers';

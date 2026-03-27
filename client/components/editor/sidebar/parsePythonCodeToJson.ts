@@ -199,7 +199,7 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
         multiSelectVariable: '',
         continueButtonText: 'Готово',
         continueButtonTarget: '',
-        inputType: 'text',
+        inputType: 'any',
         inputTargetNodeId: '',
         photoInputVariable: '',
         videoInputVariable: '',

@@ -13,6 +13,7 @@ import { ContactPreview } from './contact-preview';
 import { PollPreview } from './poll-preview';
 import { LocationPreview } from './location-preview';import { MediaAttachmentIndicator } from './media-attachment-indicator';
 import { TextInputIndicator } from './text-input-indicator';
+import { SaveAnswerIndicator } from './save-answer-indicator';
 import { MessagePreview } from './message-preview';
 import { ImageAttachment } from './image-attachment';
 import { MediaAttachmentsPreview } from './media-attachments-preview';
@@ -544,8 +545,15 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           <TextInputIndicator node={node} />
         )}
 
+        {/* Save Answer Indicator — отдельный preview для новой input-ноды */}
+        {node.type === 'input' && (
+          <SaveAnswerIndicator node={node} />
+        )}
+
         {/* Buttons preview */}
-        <ButtonsPreview node={node} allNodes={allNodes} onPortMouseDown={handlePortMouseDown} isConnectionSource={isConnectionSource} onButtonPortMount={onButtonPortMount} />
+        {node.type !== 'input' && (
+          <ButtonsPreview node={node} allNodes={allNodes} onPortMouseDown={handlePortMouseDown} isConnectionSource={isConnectionSource} onButtonPortMount={onButtonPortMount} />
+        )}
 
         {/* Футер с полным ID узла — скрыт для триггеров и узла условия */}
         {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'condition' && (
