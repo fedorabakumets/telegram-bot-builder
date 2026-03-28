@@ -48,12 +48,6 @@ export function SaveAnswerIndicator({ node }: SaveAnswerIndicatorProps) {
               <i className="fas fa-sync-alt text-xs" />
               <span>Режим: {mode === 'append' ? 'добавление' : 'замена'}</span>
             </div>
-            {data.saveToDatabase && (
-              <div className="flex items-center gap-1">
-                <i className="fas fa-database text-xs" />
-                <span>Сохранение в БД включено</span>
-              </div>
-            )}
           </div>
         </div>
       </div>

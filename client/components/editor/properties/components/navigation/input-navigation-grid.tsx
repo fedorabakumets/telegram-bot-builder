@@ -41,7 +41,7 @@ export function InputNavigationGrid({
   availableVariables = []
 }: InputNavigationGridProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+    <div className="grid grid-cols-1 gap-3 sm:gap-4">
       {/* Variable Name */}
       <div className="flex flex-col p-3 sm:p-3.5 rounded-lg bg-gradient-to-br from-cyan-50/60 to-blue-50/40 dark:from-cyan-950/30 dark:to-blue-950/20 border border-cyan-200/40 dark:border-cyan-700/40 hover:shadow-sm transition-all duration-200">
         <Label className="text-xs sm:text-sm font-semibold text-cyan-700 dark:text-cyan-300 mb-2 flex items-center gap-1.5">

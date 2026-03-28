@@ -1,7 +1,6 @@
 import type { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { InputNavigationGrid } from '../navigation/input-navigation-grid';
 import type { Variable } from '../../../inline-rich/types';
 
@@ -89,22 +88,6 @@ export function SaveAnswerProperties({
             <SelectItem value="append">Добавить к существующему</SelectItem>
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-cyan-200/60 dark:border-cyan-800/50 bg-white/60 dark:bg-slate-950/20 px-3 py-3">
-        <div className="space-y-1">
-          <Label htmlFor="saveToDatabase" className="text-sm font-medium">
-            Сохранять в базу данных
-          </Label>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Флаг для будущей интеграции с хранилищем данных.
-          </p>
-        </div>
-        <Switch
-          id="saveToDatabase"
-          checked={!!data.saveToDatabase}
-          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { saveToDatabase: checked })}
-        />
       </div>
     </div>
   );

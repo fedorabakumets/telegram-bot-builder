@@ -479,7 +479,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         }}
       >
         {/* Заголовок узла — скрыт для триггеров, узла сообщения и узла условия */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && (
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (
           <NodeHeader node={node} onMove={!!onMove} />
         )}
 
