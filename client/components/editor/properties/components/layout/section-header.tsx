@@ -50,10 +50,12 @@ export function SectionHeader({
   extraContent
 }: SectionHeaderProps): JSX.Element {
   return (
-    <div className={`flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group ${className}`} onClick={onToggle}>
+    <div className={`flex items-start gap-2.5 sm:gap-3 w-full hover:opacity-75 transition-opacity duration-200 group ${className}`}>
       <button
+        type="button"
         className="flex items-start gap-2.5 sm:gap-3 w-full"
         title={isOpen ? 'Свернуть' : 'Развернуть'}
+        onClick={onToggle}
       >
         <div className={`w-8 sm:w-9 h-8 sm:h-9 rounded-lg bg-gradient-to-br ${iconGradient} flex items-center justify-center flex-shrink-0 pt-0.5`}>
           <i className={`fas fa-${icon} ${iconColor} text-sm sm:text-base`}></i>

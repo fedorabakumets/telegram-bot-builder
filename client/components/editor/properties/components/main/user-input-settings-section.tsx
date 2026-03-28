@@ -2,7 +2,7 @@
  * @fileoverview Секция настроек сбора ответов и управления связью `message` с `input`-узлом.
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { Node } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -58,6 +58,8 @@ export function UserInputSettingsSection({
   onNodeAdd,
 }: UserInputSettingsSectionProps) {
   const isMessageNode = selectedNode.type === 'message';
+  const wasMessageInputEnabledRef = useRef(false);
+  const wasRegularInputEnabledRef = useRef(false);
 
   const availableVariables = useMemo(() => {
     const nodes = getAllNodesFromAllSheets.map((entry) => entry.node);
@@ -78,19 +80,26 @@ export function UserInputSettingsSection({
   );
 
   useEffect(() => {
-    if (isMessageNode && (messageInputState?.isEnabled || messageInputState?.isLegacy) && !isOpen) {
-      onToggle();
+    if (isMessageNode) {
+      const isMessageInputEnabled = Boolean(messageInputState?.isEnabled);
+
+      if (isMessageInputEnabled && !wasMessageInputEnabledRef.current && !isOpen) {
+        onToggle();
+      }
+
+      wasMessageInputEnabledRef.current = isMessageInputEnabled;
       return;
     }
 
-    if (!isMessageNode && selectedNode.data.collectUserInput && !isOpen) {
+    if (selectedNode.data.collectUserInput && !wasRegularInputEnabledRef.current && !isOpen) {
       onToggle();
     }
+
+    wasRegularInputEnabledRef.current = Boolean(selectedNode.data.collectUserInput);
   }, [
     isMessageNode,
     isOpen,
     messageInputState?.isEnabled,
-    messageInputState?.isLegacy,
     onToggle,
     selectedNode.data.collectUserInput,
   ]);
@@ -136,7 +145,6 @@ export function UserInputSettingsSection({
       onNodeUpdate(selectedNode.id, {
         collectUserInput: false,
         enableAutoTransition: false,
-        autoTransitionTo: '',
       });
       return;
     }
@@ -227,7 +235,7 @@ export function UserInputSettingsSection({
           {isMessageNode && messageInputState?.isLinked && linkedSummary ? (
             <div className="space-y-2 rounded-xl border border-cyan-200/60 dark:border-cyan-800/50 bg-white/70 dark:bg-slate-950/30 px-3 py-3">
               <div className="text-xs font-medium text-cyan-700 dark:text-cyan-300">
-                Связь активна
+                {messageInputState?.isEnabled ? 'Связь активна' : 'Связь сохранена'}
               </div>
               <div className="grid gap-1 text-xs text-slate-600 dark:text-slate-300">
                 <div>ID: {linkedSummary.nodeId}</div>

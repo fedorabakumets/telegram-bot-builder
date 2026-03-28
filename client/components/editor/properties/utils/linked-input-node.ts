@@ -188,11 +188,13 @@ export function getMessageInputCollectionState(
   selectedNode: Node,
   nodes: NodeWithSheet[]
 ): MessageInputCollectionState {
+  const data = (selectedNode.data as any) || {};
   const linkedNode = getLinkedInputNode(selectedNode, nodes);
   const legacySummary = getLegacyInputSummary(selectedNode);
+  const hasActiveLinkedInput = Boolean(linkedNode && data.enableAutoTransition && data.autoTransitionTo);
   if (linkedNode) {
     return {
-      isEnabled: true,
+      isEnabled: Boolean(data.collectUserInput || hasActiveLinkedInput),
       isLinked: true,
       isLegacy: false,
       summary: getLinkedInputSummary(linkedNode),
@@ -200,7 +202,7 @@ export function getMessageInputCollectionState(
   }
 
   return {
-    isEnabled: Boolean((selectedNode.data as any).collectUserInput),
+    isEnabled: Boolean(data.collectUserInput),
     isLinked: false,
     isLegacy: Boolean(legacySummary),
     summary: legacySummary,

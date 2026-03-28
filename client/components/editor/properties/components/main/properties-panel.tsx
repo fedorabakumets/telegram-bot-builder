@@ -4,7 +4,7 @@
 
 import { Node, Button } from '@shared/schema';
 import { getCommandSuggestions, STANDARD_COMMANDS } from '@lib/commands';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useConditionalMessagesSync } from '../synonyms/use-conditional-messages-sync';
 import { hasLegacyMessageInput } from '../../utils/linked-input-node';
 
@@ -139,6 +139,8 @@ export function PropertiesPanel({
   const [isKeyboardSectionOpen, setIsKeyboardSectionOpen] = useState(false);
   const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(false);
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
+  const lastUserInputNodeIdRef = useRef<string | null>(selectedNode?.id || null);
+  const wasUserInputPresentRef = useRef(false);
 
   // РЎРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј displayNodeId СЃ selectedNode.id РїСЂРё РёР·РјРµРЅРµРЅРёРё СѓР·Р»Р°
   useEffect(() => {
@@ -150,6 +152,11 @@ export function PropertiesPanel({
   // Р Р°СЃРєСЂС‹РІР°РµРј СЃРµРєС†РёРё РїСЂРё РЅР°Р»РёС‡РёРё РєРѕРЅС‚РµРЅС‚Р°
   useEffect(() => {
     if (!selectedNode?.data) return;
+
+    if (lastUserInputNodeIdRef.current !== selectedNode.id) {
+      lastUserInputNodeIdRef.current = selectedNode.id;
+      wasUserInputPresentRef.current = false;
+    }
 
     // РЎРµРєС†РёСЏ РјРµРґРёР°С„Р°Р№Р»РѕРІ
     const hasMedia = selectedNode.data.attachedMedia?.length > 0 || 
@@ -180,9 +187,11 @@ export function PropertiesPanel({
                          selectedNode.data.enableVideoInput || 
                          selectedNode.data.enableAudioInput || 
                          selectedNode.data.enableDocumentInput;
-    if (hasUserInput && !isUserInputSectionOpen) {
+
+    if (hasUserInput && !wasUserInputPresentRef.current && !isUserInputSectionOpen) {
       setIsUserInputSectionOpen(true);
     }
+    wasUserInputPresentRef.current = hasUserInput;
   }, [selectedNode?.data, selectedNode?.id]);
 
   /**
@@ -560,17 +569,17 @@ export function PropertiesPanel({
         )}
 
         {/* Universal User Input Collection - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-        {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
-          <UserInputSettingsSection
-            selectedNode={selectedNode}
-            getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-            isOpen={isUserInputSectionOpen}
-            onToggle={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}
-            onNodeUpdate={onNodeUpdate}
-            formatNodeDisplay={formatNodeDisplay}
-            onNodeAdd={onNodeAdd}
-          />
-        )}
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
+            <UserInputSettingsSection
+              selectedNode={selectedNode}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              isOpen={isUserInputSectionOpen}
+              onToggle={() => setIsUserInputSectionOpen((prev) => !prev)}
+              onNodeUpdate={onNodeUpdate}
+              formatNodeDisplay={formatNodeDisplay}
+              onNodeAdd={onNodeAdd}
+            />
+          )}
 
         {/* Р Р°СЃС€РёСЂРµРЅРЅС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё */}
         <CommandAdvancedSettingsWrapper
