@@ -1,3 +1,7 @@
+﻿/**
+ * @fileoverview Рендер узлов холста редактора и их портов связи.
+ */
+
 import { Node } from '@/types/bot';
 import { cn } from '@/utils/utils';
 import { useState, useRef, useEffect } from 'react';
@@ -14,6 +18,7 @@ import { PollPreview } from './poll-preview';
 import { LocationPreview } from './location-preview';import { MediaAttachmentIndicator } from './media-attachment-indicator';
 import { TextInputIndicator } from './text-input-indicator';
 import { SaveAnswerIndicator } from './save-answer-indicator';
+import { MessageLinkedInputIndicator } from './message-linked-input-indicator';
 import { MessagePreview } from './message-preview';
 import { ImageAttachment } from './image-attachment';
 import { MediaAttachmentsPreview } from './media-attachments-preview';
@@ -28,21 +33,21 @@ import { ConditionNodePreview } from './condition-node-preview';
 import { MediaNodePreview } from './media-node-preview';
 
 /**
- * Интерфейс свойств компонента CanvasNode
+ * РРЅС‚РµСЂС„РµР№СЃ СЃРІРѕР№СЃС‚РІ РєРѕРјРїРѕРЅРµРЅС‚Р° CanvasNode
  *
  * @interface CanvasNodeProps
- * @property {Node} node - Узел, который будет отображен
- * @property {Node[]} [allNodes] - Все узлы на холсте (опционально)
- * @property {boolean} [isSelected] - Выделен ли узел (опционально)
- * @property {Function} [onClick] - Обработчик клика по узлу (опционально)
- * @property {Function} [onDelete] - Обработчик удаления узла (опционально)
- * @property {Function} [onDuplicate] - Обработчик дублирования узла (опционально)
- * @property {Function} [onMove] - Обработчик перемещения узла (опционально)
- * @property {Function} [onMoveEnd] - Обработчик завершения перемещения узла (опционально)
- * @property {number} [zoom] - Уровень масштабирования (по умолчанию 100)
- * @property {{x: number, y: number}} [pan] - Позиция панорамирования (по умолчанию {x: 0, y: 0})
- * @property {Function} [setIsNodeBeingDragged] - Обработчик установки состояния перетаскивания (опционально)
- * @property {Function} [onSizeChange] - Обработчик изменения размера узла (опционально)
+ * @property {Node} node - РЈР·РµР», РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ РѕС‚РѕР±СЂР°Р¶РµРЅ
+ * @property {Node[]} [allNodes] - Р’СЃРµ СѓР·Р»С‹ РЅР° С…РѕР»СЃС‚Рµ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
+ * @property {boolean} [isSelected] - Р’С‹РґРµР»РµРЅ Р»Рё СѓР·РµР» (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
+ * @property {Function} [onClick] - РћР±СЂР°Р±РѕС‚С‡РёРє РєР»РёРєР° РїРѕ СѓР·Р»Сѓ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
+ * @property {Function} [onDelete] - РћР±СЂР°Р±РѕС‚С‡РёРє СѓРґР°Р»РµРЅРёСЏ СѓР·Р»Р° (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
+ * @property {Function} [onDuplicate] - РћР±СЂР°Р±РѕС‚С‡РёРє РґСѓР±Р»РёСЂРѕРІР°РЅРёСЏ СѓР·Р»Р° (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
+ * @property {Function} [onMove] - РћР±СЂР°Р±РѕС‚С‡РёРє РїРµСЂРµРјРµС‰РµРЅРёСЏ СѓР·Р»Р° (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
+ * @property {Function} [onMoveEnd] - РћР±СЂР°Р±РѕС‚С‡РёРє Р·Р°РІРµСЂС€РµРЅРёСЏ РїРµСЂРµРјРµС‰РµРЅРёСЏ СѓР·Р»Р° (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
+ * @property {number} [zoom] - РЈСЂРѕРІРµРЅСЊ РјР°СЃС€С‚Р°Р±РёСЂРѕРІР°РЅРёСЏ (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ 100)
+ * @property {{x: number, y: number}} [pan] - РџРѕР·РёС†РёСЏ РїР°РЅРѕСЂР°РјРёСЂРѕРІР°РЅРёСЏ (РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ {x: 0, y: 0})
+ * @property {Function} [setIsNodeBeingDragged] - РћР±СЂР°Р±РѕС‚С‡РёРє СѓСЃС‚Р°РЅРѕРІРєРё СЃРѕСЃС‚РѕСЏРЅРёСЏ РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёСЏ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
+ * @property {Function} [onSizeChange] - РћР±СЂР°Р±РѕС‚С‡РёРє РёР·РјРµРЅРµРЅРёСЏ СЂР°Р·РјРµСЂР° СѓР·Р»Р° (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
  */
 interface CanvasNodeProps {
   node: Node;
@@ -50,14 +55,14 @@ interface CanvasNodeProps {
   isSelected?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
-  /** Обработчик дублирования узла с опциональной целевой позицией */
+  /** РћР±СЂР°Р±РѕС‚С‡РёРє РґСѓР±Р»РёСЂРѕРІР°РЅРёСЏ СѓР·Р»Р° СЃ РѕРїС†РёРѕРЅР°Р»СЊРЅРѕР№ С†РµР»РµРІРѕР№ РїРѕР·РёС†РёРµР№ */
   onDuplicate?: ((targetPosition?: { x: number; y: number }) => void) | undefined;
   /**
-   * Обработчик дублирования узла через контекстное меню.
-   * Позиция вычисляется в canvas.tsx через getPastePosition() — ту же функцию,
-   * что использует Ctrl+V — поэтому дубль всегда попадает в точку последнего клика.
-   * Если передан этот проп, контекстное меню использует его вместо собственной
-   * формулы конвертации координат.
+   * РћР±СЂР°Р±РѕС‚С‡РёРє РґСѓР±Р»РёСЂРѕРІР°РЅРёСЏ СѓР·Р»Р° С‡РµСЂРµР· РєРѕРЅС‚РµРєСЃС‚РЅРѕРµ РјРµРЅСЋ.
+   * РџРѕР·РёС†РёСЏ РІС‹С‡РёСЃР»СЏРµС‚СЃСЏ РІ canvas.tsx С‡РµСЂРµР· getPastePosition() вЂ” С‚Сѓ Р¶Рµ С„СѓРЅРєС†РёСЋ,
+   * С‡С‚Рѕ РёСЃРїРѕР»СЊР·СѓРµС‚ Ctrl+V вЂ” РїРѕСЌС‚РѕРјСѓ РґСѓР±Р»СЊ РІСЃРµРіРґР° РїРѕРїР°РґР°РµС‚ РІ С‚РѕС‡РєСѓ РїРѕСЃР»РµРґРЅРµРіРѕ РєР»РёРєР°.
+   * Р•СЃР»Рё РїРµСЂРµРґР°РЅ СЌС‚РѕС‚ РїСЂРѕРї, РєРѕРЅС‚РµРєСЃС‚РЅРѕРµ РјРµРЅСЋ РёСЃРїРѕР»СЊР·СѓРµС‚ РµРіРѕ РІРјРµСЃС‚Рѕ СЃРѕР±СЃС‚РІРµРЅРЅРѕР№
+   * С„РѕСЂРјСѓР»С‹ РєРѕРЅРІРµСЂС‚Р°С†РёРё РєРѕРѕСЂРґРёРЅР°С‚.
    */
   onDuplicateAtPosition?: () => void;
   onMove?: (position: { x: number; y: number }) => void;
@@ -67,7 +72,7 @@ interface CanvasNodeProps {
   pan?: { x: number; y: number };
   setIsNodeBeingDragged?: ((isDragging: boolean) => void) | undefined;
   onSizeChange?: (nodeId: string, size: { width: number; height: number }) => void;
-  /** Обработчик начала перетаскивания от порта выхода */
+  /** РћР±СЂР°Р±РѕС‚С‡РёРє РЅР°С‡Р°Р»Р° РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёСЏ РѕС‚ РїРѕСЂС‚Р° РІС‹С…РѕРґР° */
   onPortMouseDown?: (
     e: React.MouseEvent,
     nodeId: string,
@@ -75,49 +80,49 @@ interface CanvasNodeProps {
     buttonId?: string,
     portCenter?: { x: number; y: number }
   ) => void;
-  /** Узел является источником активного drag-соединения (держит порты видимыми) */
+  /** РЈР·РµР» СЏРІР»СЏРµС‚СЃСЏ РёСЃС‚РѕС‡РЅРёРєРѕРј Р°РєС‚РёРІРЅРѕРіРѕ drag-СЃРѕРµРґРёРЅРµРЅРёСЏ (РґРµСЂР¶РёС‚ РїРѕСЂС‚С‹ РІРёРґРёРјС‹РјРё) */
   isConnectionSource?: boolean;
-  /** Подсветка узла как допустимой цели при drag-to-connect */
+  /** РџРѕРґСЃРІРµС‚РєР° СѓР·Р»Р° РєР°Рє РґРѕРїСѓСЃС‚РёРјРѕР№ С†РµР»Рё РїСЂРё drag-to-connect */
   isConnectionTarget?: boolean;
   /**
-   * Колбэк, вызываемый при монтировании порта кнопки.
-   * Передаёт buttonId и позицию центра порта относительно wrapper-div узла.
+   * РљРѕР»Р±СЌРє, РІС‹Р·С‹РІР°РµРјС‹Р№ РїСЂРё РјРѕРЅС‚РёСЂРѕРІР°РЅРёРё РїРѕСЂС‚Р° РєРЅРѕРїРєРё.
+   * РџРµСЂРµРґР°С‘С‚ buttonId Рё РїРѕР·РёС†РёСЋ С†РµРЅС‚СЂР° РїРѕСЂС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper-div СѓР·Р»Р°.
    */
   onButtonPortMount?: (buttonId: string, offset: { x: number; y: number }) => void;
 }
 
 /**
- * Компонент узла на холсте
+ * РљРѕРјРїРѕРЅРµРЅС‚ СѓР·Р»Р° РЅР° С…РѕР»СЃС‚Рµ
  *
  * @component
- * @description Отображает узел на холсте с возможностью перемещения, выделения и взаимодействия.
+ * @description РћС‚РѕР±СЂР°Р¶Р°РµС‚ СѓР·РµР» РЅР° С…РѕР»СЃС‚Рµ СЃ РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊСЋ РїРµСЂРµРјРµС‰РµРЅРёСЏ, РІС‹РґРµР»РµРЅРёСЏ Рё РІР·Р°РёРјРѕРґРµР№СЃС‚РІРёСЏ.
  *
- * Структура рендера:
- * - Внешний wrapper-div: только position/left/top/zIndex — без overflow, без backdrop-filter.
- *   Это гарантирует, что абсолютно позиционированные дочерние элементы с отрицательными
- *   отступами (кнопки, порты) не обрезаются при добавлении ring/box-shadow на внутренний div.
- * - NodeActions и OutputPort рендерятся внутри wrapper, но снаружи основного div узла.
- * - Основной div узла: только визуальное содержимое + ring/shadow при выделении.
+ * РЎС‚СЂСѓРєС‚СѓСЂР° СЂРµРЅРґРµСЂР°:
+ * - Р’РЅРµС€РЅРёР№ wrapper-div: С‚РѕР»СЊРєРѕ position/left/top/zIndex вЂ” Р±РµР· overflow, Р±РµР· backdrop-filter.
+ *   Р­С‚Рѕ РіР°СЂР°РЅС‚РёСЂСѓРµС‚, С‡С‚Рѕ Р°Р±СЃРѕР»СЋС‚РЅРѕ РїРѕР·РёС†РёРѕРЅРёСЂРѕРІР°РЅРЅС‹Рµ РґРѕС‡РµСЂРЅРёРµ СЌР»РµРјРµРЅС‚С‹ СЃ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹РјРё
+ *   РѕС‚СЃС‚СѓРїР°РјРё (РєРЅРѕРїРєРё, РїРѕСЂС‚С‹) РЅРµ РѕР±СЂРµР·Р°СЋС‚СЃСЏ РїСЂРё РґРѕР±Р°РІР»РµРЅРёРё ring/box-shadow РЅР° РІРЅСѓС‚СЂРµРЅРЅРёР№ div.
+ * - NodeActions Рё OutputPort СЂРµРЅРґРµСЂСЏС‚СЃСЏ РІРЅСѓС‚СЂРё wrapper, РЅРѕ СЃРЅР°СЂСѓР¶Рё РѕСЃРЅРѕРІРЅРѕРіРѕ div СѓР·Р»Р°.
+ * - РћСЃРЅРѕРІРЅРѕР№ div СѓР·Р»Р°: С‚РѕР»СЊРєРѕ РІРёР·СѓР°Р»СЊРЅРѕРµ СЃРѕРґРµСЂР¶РёРјРѕРµ + ring/shadow РїСЂРё РІС‹РґРµР»РµРЅРёРё.
  *
- * @param {CanvasNodeProps} props - Свойства компонента
- * @returns {JSX.Element} Компонент узла на холсте
+ * @param {CanvasNodeProps} props - РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р°
+ * @returns {JSX.Element} РљРѕРјРїРѕРЅРµРЅС‚ СѓР·Р»Р° РЅР° С…РѕР»СЃС‚Рµ
  */
 export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, onButtonPortMount }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  // Ref для dragOffset — позволяет читать актуальное значение в handleMouseMove
-  // без добавления dragOffset в зависимости useEffect (иначе обработчики
-  // пересоздавались бы при каждом mousemove, вызывая пропуск событий).
+  // Ref РґР»СЏ dragOffset вЂ” РїРѕР·РІРѕР»СЏРµС‚ С‡РёС‚Р°С‚СЊ Р°РєС‚СѓР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РІ handleMouseMove
+  // Р±РµР· РґРѕР±Р°РІР»РµРЅРёСЏ dragOffset РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё useEffect (РёРЅР°С‡Рµ РѕР±СЂР°Р±РѕС‚С‡РёРєРё
+  // РїРµСЂРµСЃРѕР·РґР°РІР°Р»РёСЃСЊ Р±С‹ РїСЂРё РєР°Р¶РґРѕРј mousemove, РІС‹Р·С‹РІР°СЏ РїСЂРѕРїСѓСЃРє СЃРѕР±С‹С‚РёР№).
   const dragOffsetRef = useRef(dragOffset);
   const nodeRef = useRef<HTMLDivElement>(null);
   const { menu, open: openContextMenu, close: closeContextMenu } = useNodeContextMenu();
 
   /**
-   * Переводит экранную точку в координаты canvas с учетом scroll контейнера.
+   * РџРµСЂРµРІРѕРґРёС‚ СЌРєСЂР°РЅРЅСѓСЋ С‚РѕС‡РєСѓ РІ РєРѕРѕСЂРґРёРЅР°С‚С‹ canvas СЃ СѓС‡РµС‚РѕРј scroll РєРѕРЅС‚РµР№РЅРµСЂР°.
    *
-   * @param screenX - X в экранных координатах
-   * @param screenY - Y в экранных координатах
-   * @returns Точка в координатах canvas
+   * @param screenX - X РІ СЌРєСЂР°РЅРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…
+   * @param screenY - Y РІ СЌРєСЂР°РЅРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…
+   * @returns РўРѕС‡РєР° РІ РєРѕРѕСЂРґРёРЅР°С‚Р°С… canvas
    */
   const getCanvasPoint = (screenX: number, screenY: number) => {
     const wrapperDiv = nodeRef.current?.parentElement;
@@ -130,14 +135,14 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   void getCanvasPoint;
 
   /**
-   * Обработчик начала перетаскивания от порта выхода.
-   * Пробрасывает nodeId в колбэк родителя.
+   * РћР±СЂР°Р±РѕС‚С‡РёРє РЅР°С‡Р°Р»Р° РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёСЏ РѕС‚ РїРѕСЂС‚Р° РІС‹С…РѕРґР°.
+   * РџСЂРѕР±СЂР°СЃС‹РІР°РµС‚ nodeId РІ РєРѕР»Р±СЌРє СЂРѕРґРёС‚РµР»СЏ.
    */
   const handlePortMouseDown = (e: React.MouseEvent, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => {
     onPortMouseDown?.(e, node.id, portType, buttonId, portCenter);
   };
 
-  // Touch состояние для мобильного перемещения элементов
+  // Touch СЃРѕСЃС‚РѕСЏРЅРёРµ РґР»СЏ РјРѕР±РёР»СЊРЅРѕРіРѕ РїРµСЂРµРјРµС‰РµРЅРёСЏ СЌР»РµРјРµРЅС‚РѕРІ
   const [isTouchDragging, setIsTouchDragging] = useState(false);
   const [touchOffset, setTouchOffset] = useState({ x: 0, y: 0 });
   const [touchStartTime, setTouchStartTime] = useState(0);
@@ -147,11 +152,11 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!onMove) return;
 
-    // Не запускать драг если кликнули по кнопке удаления
+    // РќРµ Р·Р°РїСѓСЃРєР°С‚СЊ РґСЂР°Рі РµСЃР»Рё РєР»РёРєРЅСѓР»Рё РїРѕ РєРЅРѕРїРєРµ СѓРґР°Р»РµРЅРёСЏ
     if ((e.target as HTMLElement).closest('button')) return;
 
-    // Находим канвас (родительский элемент трансформируемого контейнера)
-    // nodeRef указывает на внутренний div: innerDiv -> wrapper -> transformedContainer -> canvas
+    // РќР°С…РѕРґРёРј РєР°РЅРІР°СЃ (СЂРѕРґРёС‚РµР»СЊСЃРєРёР№ СЌР»РµРјРµРЅС‚ С‚СЂР°РЅСЃС„РѕСЂРјРёСЂСѓРµРјРѕРіРѕ РєРѕРЅС‚РµР№РЅРµСЂР°)
+    // nodeRef СѓРєР°Р·С‹РІР°РµС‚ РЅР° РІРЅСѓС‚СЂРµРЅРЅРёР№ div: innerDiv -> wrapper -> transformedContainer -> canvas
     const wrapperDiv = nodeRef.current?.parentElement;
     const transformedContainer = wrapperDiv?.parentElement;
     const canvas = transformedContainer?.parentElement;
@@ -160,7 +165,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       const canvasRect = canvas.getBoundingClientRect();
       const zoomFactor = zoom / 100;
 
-      // Рассчитываем смещение в канвасных координатах
+      // Р Р°СЃСЃС‡РёС‚С‹РІР°РµРј СЃРјРµС‰РµРЅРёРµ РІ РєР°РЅРІР°СЃРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…
       const screenX = e.clientX - canvasRect.left;
       const screenY = e.clientY - canvasRect.top;
 
@@ -176,22 +181,22 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         y: canvasY - node.position.y
       };
       setIsDragging(true);
-      // Сохраняем состояние ДО начала перемещения
+      // РЎРѕС…СЂР°РЅСЏРµРј СЃРѕСЃС‚РѕСЏРЅРёРµ Р”Рћ РЅР°С‡Р°Р»Р° РїРµСЂРµРјРµС‰РµРЅРёСЏ
       onMoveStart?.();
-      // Уведомляем глобальное состояние о начале перетаскивания
+      // РЈРІРµРґРѕРјР»СЏРµРј РіР»РѕР±Р°Р»СЊРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ Рѕ РЅР°С‡Р°Р»Рµ РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёСЏ
       if (setIsNodeBeingDragged) {
         setIsNodeBeingDragged(true);
       }
     }
 
-    // Предотвращаем выделение текста при перетаскивании
+    // РџСЂРµРґРѕС‚РІСЂР°С‰Р°РµРј РІС‹РґРµР»РµРЅРёРµ С‚РµРєСЃС‚Р° РїСЂРё РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёРё
     e.preventDefault();
   };
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging || !onMove) return;
 
-    // Находим канвас (родительский элемент трансформируемого контейнера)
+    // РќР°С…РѕРґРёРј РєР°РЅРІР°СЃ (СЂРѕРґРёС‚РµР»СЊСЃРєРёР№ СЌР»РµРјРµРЅС‚ С‚СЂР°РЅСЃС„РѕСЂРјРёСЂСѓРµРјРѕРіРѕ РєРѕРЅС‚РµР№РЅРµСЂР°)
     const wrapperDiv = nodeRef.current?.parentElement;
     const transformedContainer = wrapperDiv?.parentElement;
     const canvas = transformedContainer?.parentElement;
@@ -199,16 +204,16 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     if (canvas && transformedContainer) {
       const canvasRect = canvas.getBoundingClientRect();
 
-      // Получаем экранные координаты мыши относительно канваса
+      // РџРѕР»СѓС‡Р°РµРј СЌРєСЂР°РЅРЅС‹Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹ РјС‹С€Рё РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєР°РЅРІР°СЃР°
       const screenX = e.clientX - canvasRect.left;
       const screenY = e.clientY - canvasRect.top;
 
-      // Преобразуем экранные координаты в координаты канваса с учетом зума и панорамирования
+      // РџСЂРµРѕР±СЂР°Р·СѓРµРј СЌРєСЂР°РЅРЅС‹Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹ РІ РєРѕРѕСЂРґРёРЅР°С‚С‹ РєР°РЅРІР°СЃР° СЃ СѓС‡РµС‚РѕРј Р·СѓРјР° Рё РїР°РЅРѕСЂР°РјРёСЂРѕРІР°РЅРёСЏ
       const zoomFactor = zoom / 100;
       const canvasX = (screenX - pan.x) / zoomFactor - dragOffsetRef.current.x;
       const canvasY = (screenY - pan.y) / zoomFactor - dragOffsetRef.current.y;
 
-      // Привязка к сетке (20px grid в канвасных координатах)
+      // РџСЂРёРІСЏР·РєР° Рє СЃРµС‚РєРµ (20px grid РІ РєР°РЅРІР°СЃРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…)
       const gridSize = 20;
       const snappedX = Math.round(canvasX / gridSize) * gridSize;
       const snappedY = Math.round(canvasY / gridSize) * gridSize;
@@ -218,37 +223,37 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   };
 
   const handleMouseUp = () => {
-    // Логируем перемещение только если узел реально перемещался
+    // Р›РѕРіРёСЂСѓРµРј РїРµСЂРµРјРµС‰РµРЅРёРµ С‚РѕР»СЊРєРѕ РµСЃР»Рё СѓР·РµР» СЂРµР°Р»СЊРЅРѕ РїРµСЂРµРјРµС‰Р°Р»СЃСЏ
     if (isDragging && onMoveEnd) {
       onMoveEnd();
     }
     setIsDragging(false);
-    // Уведомляем глобальное состояние об окончании перетаскивания
+    // РЈРІРµРґРѕРјР»СЏРµРј РіР»РѕР±Р°Р»СЊРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ РѕР± РѕРєРѕРЅС‡Р°РЅРёРё РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёСЏ
     if (setIsNodeBeingDragged) {
       setIsNodeBeingDragged(false);
     }
   };
 
-  // Touch обработчики для мобильного перемещения элементов
+  // Touch РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ РјРѕР±РёР»СЊРЅРѕРіРѕ РїРµСЂРµРјРµС‰РµРЅРёСЏ СЌР»РµРјРµРЅС‚РѕРІ
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Не запускать события если кликнули по кнопке
+    // РќРµ Р·Р°РїСѓСЃРєР°С‚СЊ СЃРѕР±С‹С‚РёСЏ РµСЃР»Рё РєР»РёРєРЅСѓР»Рё РїРѕ РєРЅРѕРїРєРµ
     if ((e.target as HTMLElement).closest('button')) return;
 
-    // Предотвращаем стандартное поведение браузера
+    // РџСЂРµРґРѕС‚РІСЂР°С‰Р°РµРј СЃС‚Р°РЅРґР°СЂС‚РЅРѕРµ РїРѕРІРµРґРµРЅРёРµ Р±СЂР°СѓР·РµСЂР°
     e.preventDefault();
-    e.stopPropagation(); // Останавливаем всплытие, чтобы не конфликтовать с панорамированием холста
+    e.stopPropagation(); // РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІСЃРїР»С‹С‚РёРµ, С‡С‚РѕР±С‹ РЅРµ РєРѕРЅС„Р»РёРєС‚РѕРІР°С‚СЊ СЃ РїР°РЅРѕСЂР°РјРёСЂРѕРІР°РЅРёРµРј С…РѕР»СЃС‚Р°
 
     const touch = e.touches[0];
     if (!touch) return;
 
-    // Записываем информацию о начале касания
+    // Р—Р°РїРёСЃС‹РІР°РµРј РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РЅР°С‡Р°Р»Рµ РєР°СЃР°РЅРёСЏ
     setTouchStartTime(Date.now());
     setTouchStartPos({ x: touch.clientX, y: touch.clientY });
     setTouchMoved(false);
 
-    // Подготавливаем для потенциального перетаскивания только если onMove доступен
+    // РџРѕРґРіРѕС‚Р°РІР»РёРІР°РµРј РґР»СЏ РїРѕС‚РµРЅС†РёР°Р»СЊРЅРѕРіРѕ РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёСЏ С‚РѕР»СЊРєРѕ РµСЃР»Рё onMove РґРѕСЃС‚СѓРїРµРЅ
     if (onMove) {
-      // Находим канвас (родительский элемент трансформируемого контейнера)
+      // РќР°С…РѕРґРёРј РєР°РЅРІР°СЃ (СЂРѕРґРёС‚РµР»СЊСЃРєРёР№ СЌР»РµРјРµРЅС‚ С‚СЂР°РЅСЃС„РѕСЂРјРёСЂСѓРµРјРѕРіРѕ РєРѕРЅС‚РµР№РЅРµСЂР°)
       const wrapperDiv = nodeRef.current?.parentElement;
       const transformedContainer = wrapperDiv?.parentElement;
       const canvas = transformedContainer?.parentElement;
@@ -257,7 +262,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         const canvasRect = canvas.getBoundingClientRect();
         const zoomFactor = zoom / 100;
 
-        // Рассчитываем смещение в канвасных координатах
+        // Р Р°СЃСЃС‡РёС‚С‹РІР°РµРј СЃРјРµС‰РµРЅРёРµ РІ РєР°РЅРІР°СЃРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…
         const screenX = touch.clientX - canvasRect.left;
         const screenY = touch.clientY - canvasRect.top;
 
@@ -279,12 +284,12 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     e.preventDefault();
     e.stopPropagation();
 
-    // Вычисляем расстояние от начальной точки касания
+    // Р’С‹С‡РёСЃР»СЏРµРј СЂР°СЃСЃС‚РѕСЏРЅРёРµ РѕС‚ РЅР°С‡Р°Р»СЊРЅРѕР№ С‚РѕС‡РєРё РєР°СЃР°РЅРёСЏ
     const deltaX = touch.clientX - touchStartPos.x;
     const deltaY = touch.clientY - touchStartPos.y;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // Начинаем перетаскивание только если движение больше 10 пикселей
+    // РќР°С‡РёРЅР°РµРј РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёРµ С‚РѕР»СЊРєРѕ РµСЃР»Рё РґРІРёР¶РµРЅРёРµ Р±РѕР»СЊС€Рµ 10 РїРёРєСЃРµР»РµР№
     if (distance > 10 && !isTouchDragging) {
       setIsTouchDragging(true);
       setTouchMoved(true);
@@ -296,7 +301,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
     if (!isTouchDragging) return;
 
-    // Быстрая перерисовка только позиции - без обновления других стилей
+    // Р‘С‹СЃС‚СЂР°СЏ РїРµСЂРµСЂРёСЃРѕРІРєР° С‚РѕР»СЊРєРѕ РїРѕР·РёС†РёРё - Р±РµР· РѕР±РЅРѕРІР»РµРЅРёСЏ РґСЂСѓРіРёС… СЃС‚РёР»РµР№
     const wrapperDiv = nodeRef.current?.parentElement;
     const transformedContainer = wrapperDiv?.parentElement;
     const canvas = transformedContainer?.parentElement;
@@ -340,7 +345,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     }
   };
 
-  // Добавляем и удаляем обработчики событий для mouse
+  // Р”РѕР±Р°РІР»СЏРµРј Рё СѓРґР°Р»СЏРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё СЃРѕР±С‹С‚РёР№ РґР»СЏ mouse
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -358,11 +363,11 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     return () => {};
   }, [isDragging, onMove]);
 
-  // Touch события уже обрабатываются в handleTouchMove, не нужно добавлять глобальные слушатели
+  // Touch СЃРѕР±С‹С‚РёСЏ СѓР¶Рµ РѕР±СЂР°Р±Р°С‚С‹РІР°СЋС‚СЃСЏ РІ handleTouchMove, РЅРµ РЅСѓР¶РЅРѕ РґРѕР±Р°РІР»СЏС‚СЊ РіР»РѕР±Р°Р»СЊРЅС‹Рµ СЃР»СѓС€Р°С‚РµР»Рё
   useEffect(() => {
     if (isTouchDragging) {
       document.body.style.userSelect = 'none';
-      document.body.style.touchAction = 'none'; // Предотвращаем прокрутку при перетаскивании
+      document.body.style.touchAction = 'none'; // РџСЂРµРґРѕС‚РІСЂР°С‰Р°РµРј РїСЂРѕРєСЂСѓС‚РєСѓ РїСЂРё РїРµСЂРµС‚Р°СЃРєРёРІР°РЅРёРё
 
       return () => {
         document.body.style.userSelect = '';
@@ -373,17 +378,17 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   }, [isTouchDragging]);
 
   /**
-   * ResizeObserver для измерения border-box размеров wrapper-div узла.
+   * ResizeObserver РґР»СЏ РёР·РјРµСЂРµРЅРёСЏ border-box СЂР°Р·РјРµСЂРѕРІ wrapper-div СѓР·Р»Р°.
    *
-   * Наблюдаем за wrapper-div (родитель nodeRef), а не за внутренним div,
-   * чтобы получить полную border-box высоту включая padding и border.
-   * Это позволяет вычислять центр OutputPort как node.position.y + height / 2
-   * без каких-либо дополнительных смещений.
+   * РќР°Р±Р»СЋРґР°РµРј Р·Р° wrapper-div (СЂРѕРґРёС‚РµР»СЊ nodeRef), Р° РЅРµ Р·Р° РІРЅСѓС‚СЂРµРЅРЅРёРј div,
+   * С‡С‚РѕР±С‹ РїРѕР»СѓС‡РёС‚СЊ РїРѕР»РЅСѓСЋ border-box РІС‹СЃРѕС‚Сѓ РІРєР»СЋС‡Р°СЏ padding Рё border.
+   * Р­С‚Рѕ РїРѕР·РІРѕР»СЏРµС‚ РІС‹С‡РёСЃР»СЏС‚СЊ С†РµРЅС‚СЂ OutputPort РєР°Рє node.position.y + height / 2
+   * Р±РµР· РєР°РєРёС…-Р»РёР±Рѕ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹С… СЃРјРµС‰РµРЅРёР№.
    */
   useEffect(() => {
     if (!onSizeChange || !nodeRef.current) return;
 
-    // wrapper-div — родитель внутреннего div (nodeRef)
+    // wrapper-div вЂ” СЂРѕРґРёС‚РµР»СЊ РІРЅСѓС‚СЂРµРЅРЅРµРіРѕ div (nodeRef)
     const wrapperEl = nodeRef.current.parentElement;
     if (!wrapperEl) return;
 
@@ -391,12 +396,12 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       for (const entry of entries) {
         let width: number;
         let height: number;
-        // Используем borderBoxSize если доступен (современные браузеры)
+        // РСЃРїРѕР»СЊР·СѓРµРј borderBoxSize РµСЃР»Рё РґРѕСЃС‚СѓРїРµРЅ (СЃРѕРІСЂРµРјРµРЅРЅС‹Рµ Р±СЂР°СѓР·РµСЂС‹)
         if (entry.borderBoxSize && entry.borderBoxSize.length > 0) {
           width = entry.borderBoxSize[0].inlineSize;
           height = entry.borderBoxSize[0].blockSize;
         } else {
-          // Фолбэк через getBoundingClientRect для старых браузеров
+          // Р¤РѕР»Р±СЌРє С‡РµСЂРµР· getBoundingClientRect РґР»СЏ СЃС‚Р°СЂС‹С… Р±СЂР°СѓР·РµСЂРѕРІ
           const rect = (entry.target as HTMLElement).getBoundingClientRect();
           width = rect.width;
           height = rect.height;
@@ -416,11 +421,11 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
   return (
     /**
-     * Внешний wrapper-div: только позиционирование.
-     * Не содержит overflow, backdrop-filter или transform с perspective —
-     * это предотвращает создание нового stacking context, который обрезал бы
-     * абсолютно позиционированные дочерние элементы с отрицательными отступами
-     * (кнопки NodeActions и кружок OutputPort).
+     * Р’РЅРµС€РЅРёР№ wrapper-div: С‚РѕР»СЊРєРѕ РїРѕР·РёС†РёРѕРЅРёСЂРѕРІР°РЅРёРµ.
+     * РќРµ СЃРѕРґРµСЂР¶РёС‚ overflow, backdrop-filter РёР»Рё transform СЃ perspective вЂ”
+     * СЌС‚Рѕ РїСЂРµРґРѕС‚РІСЂР°С‰Р°РµС‚ СЃРѕР·РґР°РЅРёРµ РЅРѕРІРѕРіРѕ stacking context, РєРѕС‚РѕСЂС‹Р№ РѕР±СЂРµР·Р°Р» Р±С‹
+     * Р°Р±СЃРѕР»СЋС‚РЅРѕ РїРѕР·РёС†РёРѕРЅРёСЂРѕРІР°РЅРЅС‹Рµ РґРѕС‡РµСЂРЅРёРµ СЌР»РµРјРµРЅС‚С‹ СЃ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹РјРё РѕС‚СЃС‚СѓРїР°РјРё
+     * (РєРЅРѕРїРєРё NodeActions Рё РєСЂСѓР¶РѕРє OutputPort).
      */
     <div
       className="group"
@@ -432,24 +437,24 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         overflow: 'visible',
       }}
     >
-      {/* Кнопки действий — снаружи основного div, позиционируются относительно wrapper */}
+      {/* РљРЅРѕРїРєРё РґРµР№СЃС‚РІРёР№ вЂ” СЃРЅР°СЂСѓР¶Рё РѕСЃРЅРѕРІРЅРѕРіРѕ div, РїРѕР·РёС†РёРѕРЅРёСЂСѓСЋС‚СЃСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper */}
       <NodeActions onDuplicate={onDuplicate} onDelete={onDelete} isSelected={isSelected} />
 
-      {/* Порт выхода — снаружи основного div, позиционируется относительно wrapper */}
-      {/* Узел condition имеет порты на каждой ветке — общий порт не нужен */}
+      {/* РџРѕСЂС‚ РІС‹С…РѕРґР° вЂ” СЃРЅР°СЂСѓР¶Рё РѕСЃРЅРѕРІРЅРѕРіРѕ div, РїРѕР·РёС†РёРѕРЅРёСЂСѓРµС‚СЃСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper */}
+      {/* РЈР·РµР» condition РёРјРµРµС‚ РїРѕСЂС‚С‹ РЅР° РєР°Р¶РґРѕР№ РІРµС‚РєРµ вЂ” РѕР±С‰РёР№ РїРѕСЂС‚ РЅРµ РЅСѓР¶РµРЅ */}
       {(node.type === 'command_trigger' || node.type === 'text_trigger') ? (
         <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : node.type !== 'condition' && node.type !== 'keyboard' ? (
         <OutputPort portType="auto-transition" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : null}
 
-      {/* Основной div узла — только визуальное содержимое */}
+      {/* РћСЃРЅРѕРІРЅРѕР№ div СѓР·Р»Р° вЂ” С‚РѕР»СЊРєРѕ РІРёР·СѓР°Р»СЊРЅРѕРµ СЃРѕРґРµСЂР¶РёРјРѕРµ */}
       <div
         ref={nodeRef}
         data-canvas-node="true"
         className={cn(
           "bg-white/90 dark:bg-slate-900/90 rounded-2xl border-2 relative select-none",
-          // Компактный размер для триггеров
+          // РљРѕРјРїР°РєС‚РЅС‹Р№ СЂР°Р·РјРµСЂ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ
           node.type === 'command_trigger' || node.type === 'text_trigger'
             ? "p-3 w-52"
             : node.type === 'condition'
@@ -478,15 +483,15 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           WebkitBackfaceVisibility: 'hidden' as any,
         }}
       >
-        {/* Заголовок узла — скрыт для триггеров, узла сообщения и узла условия */}
+        {/* Р—Р°РіРѕР»РѕРІРѕРє СѓР·Р»Р° вЂ” СЃРєСЂС‹С‚ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ, СѓР·Р»Р° СЃРѕРѕР±С‰РµРЅРёСЏ Рё СѓР·Р»Р° СѓСЃР»РѕРІРёСЏ */}
         {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (
           <NodeHeader node={node} onMove={!!onMove} />
         )}
 
-        {/* Image attachment (старый формат - одиночное изображение) */}
+        {/* Image attachment (СЃС‚Р°СЂС‹Р№ С„РѕСЂРјР°С‚ - РѕРґРёРЅРѕС‡РЅРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ) */}
         <ImageAttachment node={node} />
 
-        {/* Media attachments (новый формат - несколько файлов) */}
+        {/* Media attachments (РЅРѕРІС‹Р№ С„РѕСЂРјР°С‚ - РЅРµСЃРєРѕР»СЊРєРѕ С„Р°Р№Р»РѕРІ) */}
         <MediaAttachmentsPreview node={node} />
 
         {/* Message preview */}
@@ -540,12 +545,20 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         {/* Dice preview */}
         {(node.type as any) === 'dice' && <DicePreview node={node} />}
 
-        {/* Text Input Indicator — показываем если включён текстовый ввод, независимо от клавиатуры */}
+        {/* Text Input Indicator вЂ” РїРѕРєР°Р·С‹РІР°РµРј РµСЃР»Рё РІРєР»СЋС‡С‘РЅ С‚РµРєСЃС‚РѕРІС‹Р№ РІРІРѕРґ, РЅРµР·Р°РІРёСЃРёРјРѕ РѕС‚ РєР»Р°РІРёР°С‚СѓСЂС‹ */}
         {(node.data as any).enableTextInput && (
           <TextInputIndicator node={node} />
         )}
 
-        {/* Save Answer Indicator — отдельный preview для новой input-ноды */}
+        {/* Save Answer Indicator вЂ” РѕС‚РґРµР»СЊРЅС‹Р№ preview РґР»СЏ РЅРѕРІРѕР№ input-РЅРѕРґС‹ */}
+        {/**
+         * РРЅРґРёРєР°С‚РѕСЂ СЃРІСЏР·Р°РЅРЅРѕРіРѕ СѓР·Р»Р° СЃРѕС…СЂР°РЅРµРЅРёСЏ РѕС‚РІРµС‚Р° РґР»СЏ СЃРѕРѕР±С‰РµРЅРёСЏ.
+         * РќСѓР¶РµРЅ С‚РѕР»СЊРєРѕ РєР°Рє РєРѕРјРїР°РєС‚РЅР°СЏ РїРѕРґСЃРєР°Р·РєР°, РёСЃС‚РѕС‡РЅРёРє РёСЃС‚РёРЅС‹ РѕСЃС‚Р°С‘С‚СЃСЏ РІ `input`.
+         */}
+        {node.type === 'message' && (
+          <MessageLinkedInputIndicator node={node} allNodes={allNodes} />
+        )}
+
         {node.type === 'input' && (
           <SaveAnswerIndicator node={node} />
         )}
@@ -555,19 +568,19 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           <ButtonsPreview node={node} allNodes={allNodes} onPortMouseDown={handlePortMouseDown} isConnectionSource={isConnectionSource} onButtonPortMount={onButtonPortMount} />
         )}
 
-        {/* Футер с полным ID узла — скрыт для триггеров и узла условия */}
+        {/* Р¤СѓС‚РµСЂ СЃ РїРѕР»РЅС‹Рј ID СѓР·Р»Р° вЂ” СЃРєСЂС‹С‚ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ Рё СѓР·Р»Р° СѓСЃР»РѕРІРёСЏ */}
         {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'condition' && (
           <div className="absolute bottom-0 left-0 right-0 px-4 py-2 rounded-b-2xl bg-slate-700/60 dark:bg-slate-800/90 border-t border-slate-600/40 dark:border-slate-600/60">
             <span
               className="font-mono text-[10px] text-slate-300 dark:text-slate-300 select-all tracking-tight"
-              title="ID узла"
+              title="ID СѓР·Р»Р°"
             >
               #{node.id}
             </span>
           </div>
         )}
 
-        {/* Контекстное меню по правому клику */}
+        {/* РљРѕРЅС‚РµРєСЃС‚РЅРѕРµ РјРµРЅСЋ РїРѕ РїСЂР°РІРѕРјСѓ РєР»РёРєСѓ */}
         {menu.visible && (
           <NodeContextMenu
             position={menu.position}
@@ -575,14 +588,14 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
             items={[
               {
                 id: 'duplicate',
-                label: 'Дублировать',
+                label: 'Р”СѓР±Р»РёСЂРѕРІР°С‚СЊ',
                 icon: 'fas fa-copy',
                 onClick: () => {
                   /**
-                   * Используем onDuplicateAtPosition если он передан — позиция
-                   * вычисляется в canvas.tsx через getPastePosition(), ту же функцию
-                   * что использует Ctrl+V. Это гарантирует идентичное поведение.
-                   * Fallback на onDuplicate без позиции (дубль появится на месте оригинала).
+                   * РСЃРїРѕР»СЊР·СѓРµРј onDuplicateAtPosition РµСЃР»Рё РѕРЅ РїРµСЂРµРґР°РЅ вЂ” РїРѕР·РёС†РёСЏ
+                   * РІС‹С‡РёСЃР»СЏРµС‚СЃСЏ РІ canvas.tsx С‡РµСЂРµР· getPastePosition(), С‚Сѓ Р¶Рµ С„СѓРЅРєС†РёСЋ
+                   * С‡С‚Рѕ РёСЃРїРѕР»СЊР·СѓРµС‚ Ctrl+V. Р­С‚Рѕ РіР°СЂР°РЅС‚РёСЂСѓРµС‚ РёРґРµРЅС‚РёС‡РЅРѕРµ РїРѕРІРµРґРµРЅРёРµ.
+                   * Fallback РЅР° onDuplicate Р±РµР· РїРѕР·РёС†РёРё (РґСѓР±Р»СЊ РїРѕСЏРІРёС‚СЃСЏ РЅР° РјРµСЃС‚Рµ РѕСЂРёРіРёРЅР°Р»Р°).
                    */
                   if (onDuplicateAtPosition) {
                     onDuplicateAtPosition();
@@ -598,3 +611,4 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     </div>
   );
 }
+

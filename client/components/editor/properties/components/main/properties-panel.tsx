@@ -1,7 +1,12 @@
+﻿/**
+ * @fileoverview Панель свойств узлов редактора с нижней секцией linked-input для message.
+ */
+
 import { Node, Button } from '@shared/schema';
 import { getCommandSuggestions, STANDARD_COMMANDS } from '@lib/commands';
 import { useState, useMemo, useEffect } from 'react';
 import { useConditionalMessagesSync } from '../synonyms/use-conditional-messages-sync';
+import { hasLegacyMessageInput } from '../../utils/linked-input-node';
 
 import { EmptyState } from '../layout/empty-state';
 import { getNodeDefaults } from '../../utils/node-defaults';
@@ -47,65 +52,65 @@ import { MediaNodeProperties } from './media-node-properties';
 import type { Variable } from '../../../inline-rich/types';
 
 /**
- * Интерфейс пропсов для панели свойств узлов
+ * РРЅС‚РµСЂС„РµР№СЃ РїСЂРѕРїСЃРѕРІ РґР»СЏ РїР°РЅРµР»Рё СЃРІРѕР№СЃС‚РІ СѓР·Р»РѕРІ
  * @interface PropertiesPanelProps
  */
 interface PropertiesPanelProps {
-  /** ID проекта */
+  /** ID РїСЂРѕРµРєС‚Р° */
   projectId: number;
-  /** Выбранный узел для редактирования */
+  /** Р’С‹Р±СЂР°РЅРЅС‹Р№ СѓР·РµР» РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ */
   selectedNode: Node | null;
-  /** Все узлы текущего листа */
+  /** Р’СЃРµ СѓР·Р»С‹ С‚РµРєСѓС‰РµРіРѕ Р»РёСЃС‚Р° */
   allNodes?: Node[] | undefined;
-  /** Функция обновления данных узла */
+  /** Р¤СѓРЅРєС†РёСЏ РѕР±РЅРѕРІР»РµРЅРёСЏ РґР°РЅРЅС‹С… СѓР·Р»Р° */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
-  /** Функция изменения типа узла */
+  /** Р¤СѓРЅРєС†РёСЏ РёР·РјРµРЅРµРЅРёСЏ С‚РёРїР° СѓР·Р»Р° */
   onNodeTypeChange?: (nodeId: string, newType: Node['type'], newData: Partial<Node['data']>) => void;
-  /** Функция изменения ID узла */
+  /** Р¤СѓРЅРєС†РёСЏ РёР·РјРµРЅРµРЅРёСЏ ID СѓР·Р»Р° */
   onNodeIdChange?: (oldId: string, newId: string) => void;
-  /** Функция добавления кнопки к узлу */
+  /** Р¤СѓРЅРєС†РёСЏ РґРѕР±Р°РІР»РµРЅРёСЏ РєРЅРѕРїРєРё Рє СѓР·Р»Сѓ */
   onButtonAdd: (nodeId: string, button: Button) => void;
-  /** Функция обновления кнопки узла */
+  /** Р¤СѓРЅРєС†РёСЏ РѕР±РЅРѕРІР»РµРЅРёСЏ РєРЅРѕРїРєРё СѓР·Р»Р° */
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
-  /** Функция удаления кнопки узла */
+  /** Р¤СѓРЅРєС†РёСЏ СѓРґР°Р»РµРЅРёСЏ РєРЅРѕРїРєРё СѓР·Р»Р° */
   onButtonDelete: (nodeId: string, buttonId: string) => void;
-  /** Добавить узел на холст (для синхронизации синонимов) */
+  /** Р”РѕР±Р°РІРёС‚СЊ СѓР·РµР» РЅР° С…РѕР»СЃС‚ (РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё СЃРёРЅРѕРЅРёРјРѕРІ) */
   onNodeAdd?: (node: Node) => void;
-  /** Удалить узел с холста (для синхронизации синонимов) */
+  /** РЈРґР°Р»РёС‚СЊ СѓР·РµР» СЃ С…РѕР»СЃС‚Р° (РґР»СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё СЃРёРЅРѕРЅРёРјРѕРІ) */
   onNodeDelete?: (nodeId: string) => void;
-  /** Все листы проекта для поддержки межлистовых соединений */
+  /** Р’СЃРµ Р»РёСЃС‚С‹ РїСЂРѕРµРєС‚Р° РґР»СЏ РїРѕРґРґРµСЂР¶РєРё РјРµР¶Р»РёСЃС‚РѕРІС‹С… СЃРѕРµРґРёРЅРµРЅРёР№ */
   allSheets?: any[] | undefined;
-  /** ID текущего листа */
+  /** ID С‚РµРєСѓС‰РµРіРѕ Р»РёСЃС‚Р° */
   currentSheetId?: string | undefined;
-  /** Функция закрытия панели */
+  /** Р¤СѓРЅРєС†РёСЏ Р·Р°РєСЂС‹С‚РёСЏ РїР°РЅРµР»Рё */
   onClose?: (() => void) | undefined;
-  /** Функция логирования действий */
+  /** Р¤СѓРЅРєС†РёСЏ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ РґРµР№СЃС‚РІРёР№ */
   onActionLog?: (type: string, description: string) => void;
-  /** Функция сохранения проекта */
+  /** Р¤СѓРЅРєС†РёСЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ РїСЂРѕРµРєС‚Р° */
   onSaveProject?: () => void;
 }
 
 /**
- * Компонент панели свойств для редактирования узлов бота
+ * РљРѕРјРїРѕРЅРµРЅС‚ РїР°РЅРµР»Рё СЃРІРѕР№СЃС‚РІ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ СѓР·Р»РѕРІ Р±РѕС‚Р°
  * 
- * Основной компонент для настройки всех параметров узлов:
- * - Базовые настройки (тип, ID, команды)
- * - Текст сообщений с поддержкой переменных
- * - Медиафайлы (фото, видео, аудио, документы)
- * - Клавиатуры (inline и reply)
- * - Условные сообщения
- * - Автопереходы и таймеры
- * - Сбор пользовательских данных
+ * РћСЃРЅРѕРІРЅРѕР№ РєРѕРјРїРѕРЅРµРЅС‚ РґР»СЏ РЅР°СЃС‚СЂРѕР№РєРё РІСЃРµС… РїР°СЂР°РјРµС‚СЂРѕРІ СѓР·Р»РѕРІ:
+ * - Р‘Р°Р·РѕРІС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё (С‚РёРї, ID, РєРѕРјР°РЅРґС‹)
+ * - РўРµРєСЃС‚ СЃРѕРѕР±С‰РµРЅРёР№ СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РїРµСЂРµРјРµРЅРЅС‹С…
+ * - РњРµРґРёР°С„Р°Р№Р»С‹ (С„РѕС‚Рѕ, РІРёРґРµРѕ, Р°СѓРґРёРѕ, РґРѕРєСѓРјРµРЅС‚С‹)
+ * - РљР»Р°РІРёР°С‚СѓСЂС‹ (inline Рё reply)
+ * - РЈСЃР»РѕРІРЅС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ
+ * - РђРІС‚РѕРїРµСЂРµС…РѕРґС‹ Рё С‚Р°Р№РјРµСЂС‹
+ * - РЎР±РѕСЂ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёС… РґР°РЅРЅС‹С…
  * 
- * Поддерживает:
- * - Многолистовые проекты
- * - Межлистовые соединения
- * - Валидацию данных
- * - Предпросмотр переменных
- * - Адаптивный интерфейс
+ * РџРѕРґРґРµСЂР¶РёРІР°РµС‚:
+ * - РњРЅРѕРіРѕР»РёСЃС‚РѕРІС‹Рµ РїСЂРѕРµРєС‚С‹
+ * - РњРµР¶Р»РёСЃС‚РѕРІС‹Рµ СЃРѕРµРґРёРЅРµРЅРёСЏ
+ * - Р’Р°Р»РёРґР°С†РёСЋ РґР°РЅРЅС‹С…
+ * - РџСЂРµРґРїСЂРѕСЃРјРѕС‚СЂ РїРµСЂРµРјРµРЅРЅС‹С…
+ * - РђРґР°РїС‚РёРІРЅС‹Р№ РёРЅС‚РµСЂС„РµР№СЃ
  * 
- * @param {PropertiesPanelProps} props - Пропсы компонента
- * @returns {JSX.Element} Панель свойств узла
+ * @param {PropertiesPanelProps} props - РџСЂРѕРїСЃС‹ РєРѕРјРїРѕРЅРµРЅС‚Р°
+ * @returns {JSX.Element} РџР°РЅРµР»СЊ СЃРІРѕР№СЃС‚РІ СѓР·Р»Р°
  */
 export function PropertiesPanel({
   projectId,
@@ -135,18 +140,18 @@ export function PropertiesPanel({
   const [isUserInputSectionOpen, setIsUserInputSectionOpen] = useState(false);
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
 
-  // Синхронизируем displayNodeId с selectedNode.id при изменении узла
+  // РЎРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј displayNodeId СЃ selectedNode.id РїСЂРё РёР·РјРµРЅРµРЅРёРё СѓР·Р»Р°
   useEffect(() => {
     if (selectedNode?.id) {
       setDisplayNodeId(selectedNode.id);
     }
   }, [selectedNode?.id]);
 
-  // Раскрываем секции при наличии контента
+  // Р Р°СЃРєСЂС‹РІР°РµРј СЃРµРєС†РёРё РїСЂРё РЅР°Р»РёС‡РёРё РєРѕРЅС‚РµРЅС‚Р°
   useEffect(() => {
     if (!selectedNode?.data) return;
 
-    // Секция медиафайлов
+    // РЎРµРєС†РёСЏ РјРµРґРёР°С„Р°Р№Р»РѕРІ
     const hasMedia = selectedNode.data.attachedMedia?.length > 0 || 
                      selectedNode.data.imageUrl || 
                      selectedNode.data.videoUrl || 
@@ -156,15 +161,20 @@ export function PropertiesPanel({
       setIsMediaSectionOpen(true);
     }
 
-    // Секция клавиатуры
+    // РЎРµРєС†РёСЏ РєР»Р°РІРёР°С‚СѓСЂС‹
     const hasKeyboard = selectedNode.data.keyboardType && selectedNode.data.keyboardType !== 'none';
     const hasButtons = selectedNode.data.buttons?.length > 0;
     if ((hasKeyboard || hasButtons) && !isKeyboardSectionOpen) {
       setIsKeyboardSectionOpen(true);
     }
 
-    // Секция ввода пользователя
-    const hasUserInput = selectedNode.data.collectUserInput || 
+    // РЎРµРєС†РёСЏ РІРІРѕРґР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+    const hasMessageInput = selectedNode.type === 'message' && (
+      selectedNode.data.autoTransitionTo ||
+      hasLegacyMessageInput(selectedNode)
+    );
+    const hasUserInput = hasMessageInput ||
+                         selectedNode.data.collectUserInput || 
                          selectedNode.data.enableTextInput || 
                          selectedNode.data.enablePhotoInput || 
                          selectedNode.data.enableVideoInput || 
@@ -176,22 +186,22 @@ export function PropertiesPanel({
   }, [selectedNode?.data, selectedNode?.id]);
 
   /**
-   * Мемоизированный список всех узлов из всех листов
+   * РњРµРјРѕРёР·РёСЂРѕРІР°РЅРЅС‹Р№ СЃРїРёСЃРѕРє РІСЃРµС… СѓР·Р»РѕРІ РёР· РІСЃРµС… Р»РёСЃС‚РѕРІ
    */
   const getAllNodesFromAllSheets = useMemo(() =>
     collectAllNodesFromSheets(allSheets, allNodes, currentSheetId),
   [allSheets, allNodes, currentSheetId]);
 
   /**
-   * Мемоизированный список доступных вопросов
+   * РњРµРјРѕРёР·РёСЂРѕРІР°РЅРЅС‹Р№ СЃРїРёСЃРѕРє РґРѕСЃС‚СѓРїРЅС‹С… РІРѕРїСЂРѕСЃРѕРІ
    */
   /**
-   * Мемоизированные текстовые и медиа переменные
+   * РњРµРјРѕРёР·РёСЂРѕРІР°РЅРЅС‹Рµ С‚РµРєСЃС‚РѕРІС‹Рµ Рё РјРµРґРёР° РїРµСЂРµРјРµРЅРЅС‹Рµ
    */
   const { textVariables, mediaVariables } = useMemo(() => extractVariables(allNodes), [allNodes]);
 
   /**
-   * Хук для управления медиапеременными
+   * РҐСѓРє РґР»СЏ СѓРїСЂР°РІР»РµРЅРёСЏ РјРµРґРёР°РїРµСЂРµРјРµРЅРЅС‹РјРё
    */
   const { attachedMediaVariables, handleMediaVariableSelect, handleMediaVariableRemove } = useMediaVariables(
     selectedNode,
@@ -201,7 +211,7 @@ export function PropertiesPanel({
 
   const commandValidation = useNodeCommandValidation({ selectedNode });
 
-  // Синхронизация условных сообщений с узлом condition на холсте
+  // РЎРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ СѓСЃР»РѕРІРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№ СЃ СѓР·Р»РѕРј condition РЅР° С…РѕР»СЃС‚Рµ
   useConditionalMessagesSync({
     selectedNode,
     allNodes,
@@ -210,7 +220,7 @@ export function PropertiesPanel({
     onNodeDelete,
   });
 
-  // Автодополнение команд
+  // РђРІС‚РѕРґРѕРїРѕР»РЅРµРЅРёРµ РєРѕРјР°РЅРґ
   const commandSuggestions = useMemo(() => {
     if (commandInput.length > 0) {
       return getCommandSuggestions(commandInput);
@@ -284,7 +294,7 @@ export function PropertiesPanel({
     <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
       {/* Mobile Close Button */}
       <div className="md:hidden flex items-center justify-between p-3 border-b border-border bg-muted/50 sticky top-0 z-10">
-        <h3 className="font-semibold text-sm">Настройки элемента</h3>
+        <h3 className="font-semibold text-sm">РќР°СЃС‚СЂРѕР№РєРё СЌР»РµРјРµРЅС‚Р°</h3>
       </div>
 
       {/* Properties Header */}
@@ -299,7 +309,7 @@ export function PropertiesPanel({
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-0">
 
-          {/* Basic Settings Section - скрыто для узла рассылка, client_auth, триггеров, условия и медиа-ноды */}
+          {/* Basic Settings Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»Р° СЂР°СЃСЃС‹Р»РєР°, client_auth, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
           {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <BasicSettingsSection
               selectedNode={selectedNode}
@@ -333,7 +343,7 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Broadcast Section - только для узла рассылка */}
+          {/* Broadcast Section - С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»Р° СЂР°СЃСЃС‹Р»РєР° */}
           {selectedNode.type === 'broadcast' && (
             <BroadcastNodeProperties
               node={selectedNode}
@@ -341,14 +351,14 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Client Auth Section - только для узла авторизации Client API */}
+          {/* Client Auth Section - С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»Р° Р°РІС‚РѕСЂРёР·Р°С†РёРё Client API */}
           {selectedNode.type === 'client_auth' && (
             <ClientAuthProperties
               node={selectedNode}
             />
           )}
 
-          {/* Media Section - только для медиа-ноды */}
+          {/* Media Section - С‚РѕР»СЊРєРѕ РґР»СЏ РјРµРґРёР°-РЅРѕРґС‹ */}
           {selectedNode.type === 'media' && (
             <MediaNodeProperties
               projectId={projectId}
@@ -358,7 +368,7 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Trigger Section - только для узлов-триггеров */}
+          {/* Trigger Section - С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»РѕРІ-С‚СЂРёРіРіРµСЂРѕРІ */}
           {isTriggerNode(selectedNode.type) && selectedNode.type === 'command_trigger' && (
             <CommandTriggerConfiguration
               selectedNode={selectedNode}
@@ -376,7 +386,7 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Condition Section — только для узла условия */}
+          {/* Condition Section вЂ” С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»Р° СѓСЃР»РѕРІРёСЏ */}
           {isConditionNode(selectedNode.type) && (
             <ConditionNodeConfiguration
               selectedNode={selectedNode}
@@ -387,7 +397,7 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Message Content - скрыто для узлов управления, триггеров, условия и медиа-ноды */}
+          {/* Message Content - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
           {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
             <MessageContentSection
               selectedNode={selectedNode}
@@ -405,8 +415,7 @@ export function PropertiesPanel({
               projectId={projectId}
             />
           )}
-
-          {/* Media File Section - скрыто для узлов управления, триггеров, условия и медиа-ноды */}
+          {/* Media File Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
           {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
             <MediaFileSection
               projectId={projectId}
@@ -418,7 +427,7 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Keyboard Section - скрыто для узлов управления, триггеров, условия и медиа-ноды */}
+          {/* Keyboard Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
           {selectedNode.type !== 'message' && !isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
             <div className="w-full bg-gradient-to-br from-amber-50/40 to-yellow-50/20 dark:from-amber-950/30 dark:to-yellow-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-amber-200/40 dark:border-amber-800/40 backdrop-blur-sm">
               <KeyboardSectionHeader
@@ -427,7 +436,7 @@ export function PropertiesPanel({
                 onToggle={() => setIsKeyboardSectionOpen(!isKeyboardSectionOpen)}
               />
 
-              {/* Переключатели типа клавиатуры - всегда видны */}
+              {/* РџРµСЂРµРєР»СЋС‡Р°С‚РµР»Рё С‚РёРїР° РєР»Р°РІРёР°С‚СѓСЂС‹ - РІСЃРµРіРґР° РІРёРґРЅС‹ */}
               <KeyboardTypeSelector
                 selectedNode={selectedNode}
                 onNodeUpdate={onNodeUpdate}
@@ -439,8 +448,8 @@ export function PropertiesPanel({
                 <div className="mt-2">
                   <InfoBlock
                     variant="info"
-                    title="ℹ️ При включении клавиатуры"
-                    description="Только первый файл будет отображаться и отправляться. Остальные файлы сохранены. Нажмите 'Включить все файлы' чтобы использовать все медиа (клавиатура отключится)."
+                    title="в„№пёЏ РџСЂРё РІРєР»СЋС‡РµРЅРёРё РєР»Р°РІРёР°С‚СѓСЂС‹"
+                    description="РўРѕР»СЊРєРѕ РїРµСЂРІС‹Р№ С„Р°Р№Р» Р±СѓРґРµС‚ РѕС‚РѕР±СЂР°Р¶Р°С‚СЊСЃСЏ Рё РѕС‚РїСЂР°РІР»СЏС‚СЊСЃСЏ. РћСЃС‚Р°Р»СЊРЅС‹Рµ С„Р°Р№Р»С‹ СЃРѕС…СЂР°РЅРµРЅС‹. РќР°Р¶РјРёС‚Рµ 'Р’РєР»СЋС‡РёС‚СЊ РІСЃРµ С„Р°Р№Р»С‹' С‡С‚РѕР±С‹ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РІСЃРµ РјРµРґРёР° (РєР»Р°РІРёР°С‚СѓСЂР° РѕС‚РєР»СЋС‡РёС‚СЃСЏ)."
                   />
                 </div>
               )}
@@ -449,7 +458,7 @@ export function PropertiesPanel({
                 <div className="space-y-3 sm:space-y-4">
                   {selectedNode.data.keyboardType !== 'none' && (
                     <>
-                      {/* Множественный выбор */}
+                      {/* РњРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Р№ РІС‹Р±РѕСЂ */}
                       <div className="p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30">
                         <MultipleSelectionSettings
                           selectedNode={selectedNode}
@@ -458,13 +467,13 @@ export function PropertiesPanel({
                         />
                       </div>
 
-                      {/* Кнопки добавления */}
+                      {/* РљРЅРѕРїРєРё РґРѕР±Р°РІР»РµРЅРёСЏ */}
                       <KeyboardButtonsSection
                         selectedNode={selectedNode}
                         onButtonAdd={onButtonAdd}
                       />
 
-                      {/* Список кнопок */}
+                      {/* РЎРїРёСЃРѕРє РєРЅРѕРїРѕРє */}
                       {selectedNode.data.buttons && selectedNode.data.buttons.length > 0 && (
                         <div className="space-y-3">
                           {(selectedNode.data.buttons || []).map((button) => (
@@ -487,14 +496,14 @@ export function PropertiesPanel({
                   {selectedNode.data.keyboardType !== 'none' && selectedNode.data.buttons && selectedNode.data.buttons.length > 0 && (
                     <KeyboardLayoutEditor
                       buttons={(() => {
-                        // Добавляем виртуальную кнопку "Готово" для отображения
+                        // Р”РѕР±Р°РІР»СЏРµРј РІРёСЂС‚СѓР°Р»СЊРЅСѓСЋ РєРЅРѕРїРєСѓ "Р“РѕС‚РѕРІРѕ" РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ
                         const allButtons = [...selectedNode.data.buttons];
                         if (selectedNode.data.allowMultipleSelection) {
                           const hasCompleteButton = allButtons.some((b: any) => b.action === 'complete');
                           if (!hasCompleteButton) {
                             allButtons.push({
                               id: 'done-button',
-                              text: '✅ Готово',
+                              text: 'вњ… Р“РѕС‚РѕРІРѕ',
                               action: 'complete' as const,
                               target: '',
                               buttonType: 'complete' as const,
@@ -506,21 +515,21 @@ export function PropertiesPanel({
                         return allButtons;
                       })()}
                       initialLayout={(() => {
-                        // Если есть множественный выбор и нет кнопки complete, добавляем done-button в layout
+                        // Р•СЃР»Рё РµСЃС‚СЊ РјРЅРѕР¶РµСЃС‚РІРµРЅРЅС‹Р№ РІС‹Р±РѕСЂ Рё РЅРµС‚ РєРЅРѕРїРєРё complete, РґРѕР±Р°РІР»СЏРµРј done-button РІ layout
                         const layout = selectedNode.data.keyboardLayout;
                         if (!layout) return undefined;
 
                         if (selectedNode.data.allowMultipleSelection) {
                           const hasCompleteButton = selectedNode.data.buttons.some((b: any) => b.action === 'complete');
                           if (!hasCompleteButton) {
-                            // Добавляем done-button в последний ряд или создаём новый
+                            // Р”РѕР±Р°РІР»СЏРµРј done-button РІ РїРѕСЃР»РµРґРЅРёР№ СЂСЏРґ РёР»Рё СЃРѕР·РґР°С‘Рј РЅРѕРІС‹Р№
                             const layoutWithDone = { ...layout };
                             const allButtonIds = layoutWithDone.rows.flatMap(r => r.buttonIds);
 
-                            // Если done-button уже есть в layout, не добавляем
+                            // Р•СЃР»Рё done-button СѓР¶Рµ РµСЃС‚СЊ РІ layout, РЅРµ РґРѕР±Р°РІР»СЏРµРј
                             if (!allButtonIds.includes('done-button')) {
                               if (layout.autoLayout) {
-                                // В авто-режиме просто добавляем в конец
+                                // Р’ Р°РІС‚Рѕ-СЂРµР¶РёРјРµ РїСЂРѕСЃС‚Рѕ РґРѕР±Р°РІР»СЏРµРј РІ РєРѕРЅРµС†
                                 const lastRow = layoutWithDone.rows[layoutWithDone.rows.length - 1];
                                 if (lastRow && lastRow.buttonIds.length < layout.columns) {
                                   lastRow.buttonIds.push('done-button');
@@ -528,7 +537,7 @@ export function PropertiesPanel({
                                   layoutWithDone.rows.push({ buttonIds: ['done-button'] });
                                 }
                               } else {
-                                // В ручном режиме добавляем в отдельный ряд
+                                // Р’ СЂСѓС‡РЅРѕРј СЂРµР¶РёРјРµ РґРѕР±Р°РІР»СЏРµРј РІ РѕС‚РґРµР»СЊРЅС‹Р№ СЂСЏРґ
                                 layoutWithDone.rows.push({ buttonIds: ['done-button'] });
                               }
                             }
@@ -540,7 +549,7 @@ export function PropertiesPanel({
                         return layout;
                       })()}
                       onLayoutChange={(layout) => {
-                        // Сохраняем layout с done-button, чтобы он отображался на канвасе
+                        // РЎРѕС…СЂР°РЅСЏРµРј layout СЃ done-button, С‡С‚РѕР±С‹ РѕРЅ РѕС‚РѕР±СЂР°Р¶Р°Р»СЃСЏ РЅР° РєР°РЅРІР°СЃРµ
                         onNodeUpdate(selectedNode.id, { keyboardLayout: layout });
                       }}
                     />
@@ -550,7 +559,7 @@ export function PropertiesPanel({
           </div>
         )}
 
-        {/* Universal User Input Collection - скрыто для узлов управления, триггеров, условия и медиа-ноды */}
+        {/* Universal User Input Collection - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
         {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
           <UserInputSettingsSection
             selectedNode={selectedNode}
@@ -559,10 +568,11 @@ export function PropertiesPanel({
             onToggle={() => setIsUserInputSectionOpen(!isUserInputSectionOpen)}
             onNodeUpdate={onNodeUpdate}
             formatNodeDisplay={formatNodeDisplay}
+            onNodeAdd={onNodeAdd}
           />
         )}
 
-        {/* Расширенные настройки */}
+        {/* Р Р°СЃС€РёСЂРµРЅРЅС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё */}
         <CommandAdvancedSettingsWrapper
           selectedNode={selectedNode}
           onNodeUpdate={onNodeUpdate}
@@ -582,5 +592,8 @@ export function PropertiesPanel({
       </aside>
     );
   }
+
+
+
 
 

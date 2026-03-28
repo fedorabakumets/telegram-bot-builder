@@ -1,16 +1,44 @@
+/**
+ * @fileoverview Панель свойств для отдельного узла сохранения ответа пользователя.
+ */
+
 import type { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InputNavigationGrid } from '../navigation/input-navigation-grid';
 import type { Variable } from '../../../inline-rich/types';
 
+/**
+ * Свойства панели сохранения ответа.
+ */
 interface SaveAnswerPropertiesProps {
+  /** Выбранный узел сохранения ответа. */
   selectedNode: Node;
+  /** Обновление данных узла. */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
+  /** Все узлы всех листов для выбора следующего узла. */
   getAllNodesFromAllSheets: Array<{ node: Node; sheetName: string }>;
+  /** Форматирование подписи узла в списке. */
   formatNodeDisplay: (node: Node, sheetName: string) => string;
+  /** Доступные текстовые переменные. */
   textVariables: Variable[];
 }
+
+/**
+ * Допустимые значения источника ответа для выпадающего списка.
+ */
+type SaveAnswerSourceValue =
+  | 'any'
+  | 'text'
+  | 'photo'
+  | 'video'
+  | 'audio'
+  | 'document'
+  | 'location'
+  | 'contact'
+  | 'number'
+  | 'email'
+  | 'phone';
 
 export const SAVE_ANSWER_SOURCE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'any', label: 'Последний ответ' },
@@ -32,6 +60,7 @@ export function SaveAnswerProperties({
 }: SaveAnswerPropertiesProps) {
   const data = selectedNode.data as any;
   const mode = data.appendVariable ? 'append' : 'replace';
+  const inputType = (data.inputType || 'any') as SaveAnswerSourceValue;
 
   return (
     <div className="w-full bg-gradient-to-br from-cyan-50/40 to-sky-50/20 dark:from-cyan-950/30 dark:to-sky-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-cyan-200/40 dark:border-cyan-800/40 backdrop-blur-sm space-y-4">
@@ -50,8 +79,8 @@ export function SaveAnswerProperties({
       <div className="space-y-2">
         <Label htmlFor="inputType" className="text-sm font-medium">Источник ответа</Label>
         <Select
-          value={data.inputType || 'any'}
-          onValueChange={(value) => onNodeUpdate(selectedNode.id, { inputType: value })}
+          value={inputType}
+          onValueChange={(value) => onNodeUpdate(selectedNode.id, { inputType: value as SaveAnswerSourceValue })}
         >
           <SelectTrigger id="inputType" className="w-full">
             <SelectValue placeholder="Выберите источник ответа" />

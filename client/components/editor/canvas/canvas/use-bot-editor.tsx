@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Хук управления узлами редактора бота и миграциями при загрузке.
+ */
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Button, BotData } from '@shared/schema';
 import { applyTemplateLayout } from '@/utils/hierarchical-layout';
@@ -6,6 +10,7 @@ import { migrateSynonymsToTextTriggers } from './utils/migrate-synonyms';
 import { migrateCommandsToCommandTriggers } from './utils/migrate-command-triggers';
 import { migrateLegacyNodeTypes } from './utils/migrate-legacy-node-types';
 import { migrateConditionalMessagesToConditionNodes } from './utils/migrate-conditional-messages';
+import { migrateLegacyMessageInputToLinkedInputs } from './utils/migrate-message-input';
 
 /**
  * Интерфейс для состояния истории изменений
@@ -344,9 +349,11 @@ export function useBotEditor(initialData?: BotData) {
     const migratedWithConditions = migrateConditionalMessagesToConditionNodes(migratedWithTypes);
 
     // Применяем иерархическую компоновку только если не отключена
+    const migratedWithLinkedInputs = migrateLegacyMessageInputToLinkedInputs(migratedWithConditions);
+
     const finalNodes = skipLayout
-      ? migratedWithConditions
-      : applyTemplateLayout(migratedWithConditions, [], templateName, nodeSizes);
+      ? migratedWithLinkedInputs
+      : applyTemplateLayout(migratedWithLinkedInputs, [], templateName, nodeSizes);
 
     setNodes(finalNodes);
     setSelectedNodeId(null); // Сбрасываем выбранный узел
