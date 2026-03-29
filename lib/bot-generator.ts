@@ -370,6 +370,8 @@ function generateCodeSections(
       hasVideoInput: inputCollection.hasVideoInput,
       hasAudioInput: inputCollection.hasAudioInput,
       hasDocumentInput: inputCollection.hasDocumentInput,
+      hasLocationInput: inputCollection.hasLocationInput,
+      hasContactInput: inputCollection.hasContactInput,
       navigationCode: mediaInputNavigationCode,
     })
   );

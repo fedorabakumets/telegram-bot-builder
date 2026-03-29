@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 const inputValidationTypeSchema = z.enum(['none', 'email', 'phone', 'number']);
 const inputTypeSchema = z.enum(['text', 'button']);
+const inputSourceSchema = z.enum(['any', 'text', 'photo', 'video', 'audio', 'document', 'location', 'contact']);
 const skipButtonSchema = z.object({ text: z.string(), target: z.string() });
 
 export const userInputParamsSchema = z.object({
@@ -22,6 +23,9 @@ export const userInputParamsSchema = z.object({
   // --- Навигация ---
   inputTargetNodeId: z.string().optional().default(''),
 
+  // --- Источник ответа ---
+  inputSource: inputSourceSchema.optional(),
+
   // --- Тип ввода ---
   inputType: inputTypeSchema.optional().default('text'),
 
@@ -35,6 +39,10 @@ export const userInputParamsSchema = z.object({
   audioInputVariable: z.string().optional().default(''),
   enableDocumentInput: z.boolean().optional().default(false),
   documentInputVariable: z.string().optional().default(''),
+  enableLocationInput: z.boolean().optional().default(false),
+  locationInputVariable: z.string().optional().default(''),
+  enableContactInput: z.boolean().optional().default(false),
+  contactInputVariable: z.string().optional().default(''),
 
   // --- Кнопки пропуска ---
   skipButtons: z.array(skipButtonSchema).optional().default([]),
@@ -47,6 +55,8 @@ export const userInputParamsSchema = z.object({
   // --- Сообщения ---
   retryMessage: z.string().optional().default('Пожалуйста, попробуйте еще раз.'),
   successMessage: z.string().optional().default(''),
+  inputPrompt: z.string().optional().default(''),
+  inputRequired: z.boolean().optional().default(true),
 
   // --- Сохранение ---
   saveToDatabase: z.boolean().optional().default(true),

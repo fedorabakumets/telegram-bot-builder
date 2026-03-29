@@ -31,6 +31,8 @@ type GraphConnection = {
 /** Список типов узлов, которые могут владеть клавиатурой */
 const KEYBOARD_HOST_TYPES = new Set<string>([
   NODE_TYPES.MESSAGE,
+  NODE_TYPES.START,
+  NODE_TYPES.COMMAND,
 ]);
 
 /** Значения клавиатуры по умолчанию */

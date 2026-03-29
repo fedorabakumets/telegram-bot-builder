@@ -190,6 +190,22 @@ function makeKeyboardNode(
   };
 }
 
+function makeInputNode(id: string, data: Record<string, any> = {}) {
+  return {
+    id,
+    type: 'input',
+    position: { x: 300, y: 0 },
+    data: {
+      inputType: 'text',
+      inputVariable: 'user_input',
+      inputTargetNodeId: '',
+      appendVariable: false,
+      saveToDatabase: true,
+      ...data,
+    },
+  };
+}
+
 function makeConditionNode(id: string, variable: string, branches: any[], data: Record<string, any> = {}) {
   return {
     id,
@@ -704,6 +720,59 @@ test('D06', 'waiting_for_input и skipDataCollection компилируются 
   ]);
 
   syntax(gen(project, 'd06'), 'd06');
+});
+
+test('D07', 'отдельный input-узел генерирует dedicated handler и waiting_for_input', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Введите имя', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_1',
+    }),
+    makeInputNode('input_1', {
+      inputType: 'text',
+      inputVariable: 'user_name',
+      inputTargetNodeId: 'msg_2',
+    }),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'd07');
+  assertIncludesAll(code, [
+    'async def handle_callback_input_1',
+    '"waiting_for_input"',
+    '"variable": "user_name"',
+    '"next_node_id": "msg_2"',
+  ], 'D07');
+  syntax(code, 'd07');
+});
+
+test('D08', 'после текстового ответа можно перейти в следующий input-узел', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Введите первое значение', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_1',
+    }),
+    makeInputNode('input_1', {
+      inputType: 'text',
+      inputVariable: 'first_value',
+      inputTargetNodeId: 'input_2',
+    }),
+    makeInputNode('input_2', {
+      inputType: 'contact',
+      inputVariable: 'user_contact',
+      inputTargetNodeId: 'msg_2',
+    }),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'd08');
+  assertIncludesAll(code, [
+    'await handle_callback_input_2(fake_callback)',
+    'id="text_nav"',
+    '"type": "contact"',
+    '"contact_variable"',
+  ], 'D08');
+  syntax(code, 'd08');
 });
 
 console.log('══ Блок E: hideAfterClick ═══════════════════════════════════════════');

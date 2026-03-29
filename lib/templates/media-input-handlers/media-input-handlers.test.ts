@@ -14,6 +14,8 @@ describe('generateMediaInputHandlers()', () => {
       hasVideoInput: false,
       hasAudioInput: false,
       hasDocumentInput: false,
+      hasLocationInput: false,
+      hasContactInput: false,
       navigationCode: 'pass',
     });
 
@@ -26,6 +28,8 @@ describe('generateMediaInputHandlers()', () => {
       hasVideoInput: false,
       hasAudioInput: false,
       hasDocumentInput: false,
+      hasLocationInput: false,
+      hasContactInput: false,
       navigationCode: 'pass',
     });
 
@@ -38,6 +42,8 @@ describe('generateMediaInputHandlers()', () => {
       hasVideoInput: true,
       hasAudioInput: false,
       hasDocumentInput: false,
+      hasLocationInput: false,
+      hasContactInput: false,
       navigationCode: 'pass',
     });
 
@@ -50,6 +56,8 @@ describe('generateMediaInputHandlers()', () => {
       hasVideoInput: false,
       hasAudioInput: true,
       hasDocumentInput: false,
+      hasLocationInput: false,
+      hasContactInput: false,
       navigationCode: 'pass',
     });
 
@@ -62,10 +70,42 @@ describe('generateMediaInputHandlers()', () => {
       hasVideoInput: false,
       hasAudioInput: false,
       hasDocumentInput: true,
+      hasLocationInput: false,
+      hasContactInput: false,
       navigationCode: 'pass',
     });
 
     assert.ok(r.includes('waiting_config.get("document_variable") or waiting_config.get("variable") or "user_document"'));
+  });
+
+  it('использует location_variable из waiting_for_input для геолокации', () => {
+    const r = generateMediaInputHandlers({
+      hasPhotoInput: false,
+      hasVideoInput: false,
+      hasAudioInput: false,
+      hasDocumentInput: false,
+      hasLocationInput: true,
+      hasContactInput: false,
+      navigationCode: 'pass',
+    });
+
+    assert.ok(r.includes('@dp.message(F.location)'));
+    assert.ok(r.includes('waiting_config.get("location_variable") or waiting_config.get("variable") or "user_location"'));
+  });
+
+  it('использует contact_variable из waiting_for_input для контакта', () => {
+    const r = generateMediaInputHandlers({
+      hasPhotoInput: false,
+      hasVideoInput: false,
+      hasAudioInput: false,
+      hasDocumentInput: false,
+      hasLocationInput: false,
+      hasContactInput: true,
+      navigationCode: 'pass',
+    });
+
+    assert.ok(r.includes('@dp.message(F.contact)'));
+    assert.ok(r.includes('waiting_config.get("contact_variable") or waiting_config.get("variable") or "user_contact"'));
   });
 
   it('не генерирует код, если медиа-ввод нигде не включён', () => {
@@ -74,6 +114,8 @@ describe('generateMediaInputHandlers()', () => {
       hasVideoInput: false,
       hasAudioInput: false,
       hasDocumentInput: false,
+      hasLocationInput: false,
+      hasContactInput: false,
       navigationCode: 'pass',
     });
 

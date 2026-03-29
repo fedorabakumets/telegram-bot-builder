@@ -11,7 +11,14 @@ import { renderPartialTemplate } from '../template-renderer';
  * Заменяет photo-handler, audio-handler, video-handler, document-handler из MediaHandler.
  */
 export function generateMediaInputHandlers(params: MediaInputHandlersTemplateParams): string {
-  if (!params.hasPhotoInput && !params.hasVideoInput && !params.hasAudioInput && !params.hasDocumentInput) {
+  if (
+    !params.hasPhotoInput &&
+    !params.hasVideoInput &&
+    !params.hasAudioInput &&
+    !params.hasDocumentInput &&
+    !params.hasLocationInput &&
+    !params.hasContactInput
+  ) {
     return '';
   }
   return renderPartialTemplate('media-input-handlers/media-input-handlers.py.jinja2', params);

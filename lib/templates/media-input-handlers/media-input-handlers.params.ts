@@ -12,6 +12,10 @@ export interface MediaInputHandlersTemplateParams {
   hasAudioInput: boolean;
   /** Есть узлы с enableDocumentInput */
   hasDocumentInput: boolean;
+  /** Есть узлы с enableLocationInput */
+  hasLocationInput: boolean;
+  /** Есть узлы с enableContactInput */
+  hasContactInput: boolean;
   /** Код навигации к следующему узлу (вставляется в if next_node_id) */
   navigationCode: string;
 }

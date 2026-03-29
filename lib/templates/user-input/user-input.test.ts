@@ -5,7 +5,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { generateUserInput, generateUserInputFromNode, nodeToUserInputParams, nodeHasUserInput } from './user-input.renderer';
+import { generateUserInput, generateUserInputFromNode, generateUserInputNodeHandler, nodeToUserInputParams, nodeHasUserInput } from './user-input.renderer';
 import { userInputParamsSchema } from './user-input.schema';
 import {
   validParamsMinimal,
@@ -15,6 +15,9 @@ import {
   validParamsWithValidation,
   validParamsAppendMode,
   validParamsNoTarget,
+  validParamsDedicatedAnyInput,
+  validParamsDedicatedContactInput,
+  validParamsDedicatedLocationInput,
   validParamsButtonInput,
   validParamsButtonWithText,
   invalidParamsMissingNodeId,
@@ -24,6 +27,8 @@ import {
   nodeWithMultiMedia,
   nodeWithButtons,
   nodeWithoutCollectInput,
+  dedicatedInputNode,
+  dedicatedAnyInputNode,
   nodesWithMixedInput,
 } from './user-input.fixture';
 
@@ -100,6 +105,30 @@ describe('generateUserInput()', () => {
   it('video_variable добавляется при enableVideoInput', () => {
     const r = generateUserInput(validParamsMultiMedia);
     assert.ok(r.includes('"video_variable": "video_var"'));
+  });
+
+  it('inputSource=any включает все новые режимы dedicated input-узла', () => {
+    const r = generateUserInput(validParamsDedicatedAnyInput);
+    assert.ok(r.includes('"modes": ['));
+    assert.ok(r.includes('"text"'));
+    assert.ok(r.includes('"photo"'));
+    assert.ok(r.includes('"video"'));
+    assert.ok(r.includes('"audio"'));
+    assert.ok(r.includes('"document"'));
+    assert.ok(r.includes('"location"'));
+    assert.ok(r.includes('"contact"'));
+  });
+
+  it('contact_variable добавляется для inputSource=contact', () => {
+    const r = generateUserInput(validParamsDedicatedContactInput);
+    assert.ok(r.includes('"contact_variable": "user_contact_card"'));
+    assert.ok(r.includes('"type": "contact"'));
+  });
+
+  it('location_variable добавляется для inputSource=location', () => {
+    const r = generateUserInput(validParamsDedicatedLocationInput);
+    assert.ok(r.includes('"location_variable": "user_location_point"'));
+    assert.ok(r.includes('"type": "location"'));
   });
 
   it('содержит logging.info с именем переменной', () => {
@@ -201,6 +230,20 @@ describe('nodeToUserInputParams()', () => {
     assert.strictEqual(params.validationType, 'email');
   });
 
+  it('извлекает inputSource и contact mode из dedicated input-узла', () => {
+    const params = nodeToUserInputParams(dedicatedInputNode);
+    assert.strictEqual(params.inputSource, 'contact');
+    assert.strictEqual(params.enableContactInput, true);
+    assert.strictEqual(params.enableTextInput, false);
+  });
+
+  it('dedicated input any включает location и contact', () => {
+    const params = nodeToUserInputParams(dedicatedAnyInputNode);
+    assert.strictEqual(params.inputSource, 'any');
+    assert.strictEqual(params.enableLocationInput, true);
+    assert.strictEqual(params.enableContactInput, true);
+  });
+
   it('генерирует safeName из nodeId', () => {
     const params = nodeToUserInputParams(nodeWithTextInput);
     assert.strictEqual(params.safeName, 'msg_ask_name');
@@ -223,9 +266,13 @@ describe('nodeHasUserInput()', () => {
     assert.strictEqual(nodeHasUserInput(nodeWithoutCollectInput), false);
   });
 
+  it('возвращает true для dedicated input-узла', () => {
+    assert.strictEqual(nodeHasUserInput(dedicatedInputNode), true);
+  });
+
   it('фильтрует узлы с вводом из массива', () => {
     const inputNodes = nodesWithMixedInput.filter(nodeHasUserInput);
-    assert.strictEqual(inputNodes.length, 4);
+    assert.strictEqual(inputNodes.length, 5);
   });
 });
 
@@ -263,6 +310,23 @@ describe('generateUserInputFromNode()', () => {
     assert.ok(r.includes('"type": "button"'));
     assert.ok(r.includes('"skip_buttons"'));
     assert.ok(r.includes('Пропустить'));
+  });
+
+  it('генерирует waiting_for_input из dedicated input-узла', () => {
+    const r = generateUserInputFromNode(dedicatedInputNode);
+    assert.ok(r.includes('"type": "contact"'));
+    assert.ok(r.includes('"contact_variable": "user_contact"'));
+    assert.ok(r.includes('"next_node_id": "msg_done"'));
+  });
+});
+
+describe('generateUserInputNodeHandler()', () => {
+  it('генерирует callback-handler для dedicated input-узла', () => {
+    const r = generateUserInputNodeHandler(dedicatedInputNode);
+    assert.ok(r.includes('@dp.callback_query(lambda c: c.data == "input_contact_1")'));
+    assert.ok(r.includes('async def handle_callback_input_contact_1'));
+    assert.ok(r.includes('"waiting_for_input"'));
+    assert.ok(r.includes('"contact_variable": "user_contact"'));
   });
 });
 

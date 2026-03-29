@@ -9,6 +9,17 @@
 
 import type { EnhancedNode } from '../types/enhanced-node.types';
 
+const SUPPORTED_INPUT_TYPES = new Set([
+  'any',
+  'text',
+  'photo',
+  'video',
+  'audio',
+  'document',
+  'location',
+  'contact',
+]);
+
 /**
  * Результат валидации узла
  * 
@@ -82,9 +93,25 @@ export function validateEnhancedNode(node: EnhancedNode): ValidationResult {
       errors.push('Auto-transition enabled but no target specified');
     }
 
-    // Проверка ввода пользователя
+    // Проверка legacy-сбора ввода внутри message
     if (node.data.collectUserInput && !node.data.inputTargetNodeId) {
       warnings.push('User input collection enabled but no target specified');
+    }
+
+    // Проверка dedicated input-узла
+    if (node.type === 'input') {
+      if (!node.data.inputVariable || String(node.data.inputVariable).trim() === '') {
+        errors.push('Input node requires inputVariable');
+      }
+
+      const inputType = String(node.data.inputType || 'any');
+      if (!SUPPORTED_INPUT_TYPES.has(inputType)) {
+        errors.push(`Unsupported input type: ${inputType}`);
+      }
+
+      if (!node.data.inputTargetNodeId) {
+        warnings.push('Input node has no target specified after saving the answer');
+      }
     }
   }
 

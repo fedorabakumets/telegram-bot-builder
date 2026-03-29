@@ -24,4 +24,25 @@ describe('generateNodeHandlers', () => {
     assert.ok(result.includes('handle_callback_kbd_1'));
     assert.ok(result.includes('keyboard-ноды'));
   });
+
+  it('генерирует обработчик для отдельного input-узла', () => {
+    const result = generateNodeHandlers([
+      {
+        id: 'input_1',
+        type: 'input',
+        position: { x: 0, y: 0 },
+        data: {
+          inputType: 'text',
+          inputVariable: 'user_name',
+          inputTargetNodeId: 'msg_done',
+          appendVariable: false,
+          saveToDatabase: true,
+        },
+      } as any,
+    ], false, false);
+
+    assert.ok(result.includes('handle_callback_input_1'));
+    assert.ok(result.includes('"waiting_for_input"'));
+    assert.ok(result.includes('"variable": "user_name"'));
+  });
 });

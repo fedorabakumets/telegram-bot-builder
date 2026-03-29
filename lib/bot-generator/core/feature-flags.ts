@@ -37,6 +37,7 @@ export interface FeatureFlags {
  */
 export const ALREADY_HANDLED_TYPES = new Set<string>([
   NODE_TYPES.MESSAGE,
+  NODE_TYPES.INPUT,
   NODE_TYPES.KEYBOARD,
   'media',
   'command_trigger',
@@ -126,7 +127,7 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
       (node) =>
         node.type === NODE_TYPES.MUTE_USER ||
         node.type === NODE_TYPES.BAN_USER
-    ) || !!context.options.enableGroupHandlers || inputCollection.hasPhotoInput || inputCollection.hasVideoInput || inputCollection.hasAudioInput || inputCollection.hasDocumentInput,
+    ) || !!context.options.enableGroupHandlers || inputCollection.hasPhotoInput || inputCollection.hasVideoInput || inputCollection.hasAudioInput || inputCollection.hasDocumentInput || inputCollection.hasLocationInput || inputCollection.hasContactInput,
     hasNodesRequiringSafeEditOrSendResult: hasNodesRequiringSafeEditOrSend(nodes),
     // Флаги для оптимизации импортов
     hasReplyKeyboardResult: hasReplyKeyboardButtons(nodes),

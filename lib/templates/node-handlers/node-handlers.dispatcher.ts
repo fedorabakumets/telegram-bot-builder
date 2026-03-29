@@ -24,6 +24,7 @@ import { generateCommandTriggerHandlers } from '../command-trigger/command-trigg
 import { generateTextTriggerHandlers } from '../text-trigger/text-trigger.renderer';
 import { generateConditionHandlers } from '../condition/condition.renderer';
 import { generateMediaNode } from '../media-node';
+import { generateUserInputNodeHandler } from '../user-input';
 
 /**
  * Проверяет, использует ли текст переменные {user_ids} или {user_ids_count}
@@ -58,6 +59,35 @@ function generateKeyboardHandler(node: Node): string {
   ].join('\n');
 }
 
+function generateCommandEntryHandler(node: Node, callbackHandlerCode: string): string {
+  const safeName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  const rawCommand = String(node.data?.command || '').trim();
+  const commandName = rawCommand.replace(/^\//, '') || safeName;
+  const entryHandlerName = node.type === 'start' ? 'start_handler' : `${commandName}_handler`;
+
+  return [
+    callbackHandlerCode,
+    '',
+    `@dp.message(Command("${commandName}"))`,
+    `async def ${entryHandlerName}(message: types.Message):`,
+    `    """Точка входа для команды /${commandName}, перенаправляет в callback-обработчик узла ${node.id}."""`,
+    '    class FakeCallbackQuery:',
+    '        def __init__(self, message: types.Message, data: str):',
+    '            self.from_user = message.from_user',
+    '            self.message = message',
+    '            self.data = data',
+    '            self.chat = message.chat',
+    '            self.date = message.date',
+    '            self.message_id = message.message_id',
+    '',
+    '        async def answer(self, *args, **kwargs):',
+    '            return None',
+    '',
+    `    fake_callback = FakeCallbackQuery(message, "${node.id}")`,
+    `    await handle_callback_${safeName}(fake_callback)`,
+  ].join('\n');
+}
+
 /**
  * Генерирует обработчики для каждого узла
  *
@@ -81,10 +111,9 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   // Создаем массив всех ID узлов для генерации коротких ID (используется старыми обработчиками)
 
-  const nodeHandlers: Record<string, (node: Node) => string> = {
-    message: (node) => {
+  const buildMessageHandlerParams = (node: Node) => {
       const media = resolveMediaUrls(node.data);
-      return generateMessage({
+      return {
         nodeId: node.id,
         messageText: node.data?.messageText || '',
         adminOnly: node.data?.adminOnly || false,
@@ -132,8 +161,13 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         hasHideAfterClickIncoming: nodes.some((n: Node) =>
           (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === node.id)
         ),
-      });
-    },
+      };
+  };
+
+  const nodeHandlers: Record<string, (node: Node) => string> = {
+    message: (node) => generateMessage(buildMessageHandlerParams(node)),
+    start: (node) => generateCommandEntryHandler(node, generateMessage(buildMessageHandlerParams(node))),
+    command: (node) => generateCommandEntryHandler(node, generateMessage(buildMessageHandlerParams(node))),
     sticker: generateStickerHandler,
     voice: generateVoiceHandler,
     animation: (node) => generateAnimationHandler({
@@ -155,6 +189,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     admin_rights: generateAdminRightsFromNode,
     broadcast: (node) => generateBroadcastHandler(node, nodes, enableComments),
     keyboard: generateKeyboardHandler,
+    input: generateUserInputNodeHandler,
     media: (node) => generateMediaNode({
       nodeId: node.id,
       attachedMedia: node.data?.attachedMedia || [],

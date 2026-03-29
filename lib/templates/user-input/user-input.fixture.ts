@@ -105,6 +105,37 @@ export const validParamsNoTarget: UserInputTemplateParams = {
   saveToDatabase: false,
 };
 
+export const validParamsDedicatedAnyInput: UserInputTemplateParams = {
+  nodeId: 'input_any_1',
+  safeName: 'input_any_1',
+  inputVariable: 'user_response',
+  inputSource: 'any',
+  inputTargetNodeId: 'msg_done',
+  saveToDatabase: true,
+};
+
+export const validParamsDedicatedContactInput: UserInputTemplateParams = {
+  nodeId: 'input_contact_1',
+  safeName: 'input_contact_1',
+  inputVariable: 'user_contact',
+  inputSource: 'contact',
+  enableContactInput: true,
+  contactInputVariable: 'user_contact_card',
+  inputTargetNodeId: 'msg_done',
+  saveToDatabase: true,
+};
+
+export const validParamsDedicatedLocationInput: UserInputTemplateParams = {
+  nodeId: 'input_location_1',
+  safeName: 'input_location_1',
+  inputVariable: 'user_location',
+  inputSource: 'location',
+  enableLocationInput: true,
+  locationInputVariable: 'user_location_point',
+  inputTargetNodeId: 'msg_done',
+  saveToDatabase: true,
+};
+
 export const invalidParamsMissingNodeId = {
   safeName: 'test',
   inputVariable: 'var',
@@ -160,6 +191,22 @@ export const nodeWithoutCollectInput: Node = makeNode('msg_plain', 'message', {
   inputVariable: '',
 });
 
+export const dedicatedInputNode: Node = makeNode('input_contact_1', 'input', {
+  inputType: 'contact',
+  inputVariable: 'user_contact',
+  inputTargetNodeId: 'msg_done',
+  appendVariable: false,
+  saveToDatabase: true,
+});
+
+export const dedicatedAnyInputNode: Node = makeNode('input_any_1', 'input', {
+  inputType: 'any',
+  inputVariable: 'user_response',
+  inputTargetNodeId: 'msg_done',
+  appendVariable: false,
+  saveToDatabase: true,
+});
+
 export const nodeWithButtons: Node = makeNode('msg_ask_choice', 'message', {
   collectUserInput: true,
   inputVariable: 'user_choice',
@@ -178,5 +225,6 @@ export const nodesWithMixedInput: Node[] = [
   nodeWithEmailValidation,
   nodeWithPhotoInput,
   nodeWithButtons,
+  dedicatedInputNode,
   nodeWithoutCollectInput,
 ];

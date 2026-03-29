@@ -2,7 +2,7 @@
 
 ## Описание
 
-Шаблон генерирует Python-код установки состояния `waiting_for_input` для узлов с включённым сбором ответов (`collectUserInput: true`). Этот блок вставляется в конец функции `handle_node_*` и сигнализирует универсальному обработчику `handle_user_input` о том, что нужно ждать ответа пользователя.
+Шаблон генерирует Python-код установки состояния `waiting_for_input` для отдельного узла `type: 'input'`, а также для legacy-узлов `message` с `collectUserInput: true`. Для dedicated `input` он используется и как runtime-блок ожидания, и как источник callback-handler через `generateUserInputNodeHandler`.
 
 ## Параметры
 
@@ -13,6 +13,7 @@
 | inputVariable | string | Имя переменной для сохранения ответа | ✅ |
 | appendVariable | boolean | Режим добавления (не перезаписывать) | нет (false) |
 | inputTargetNodeId | string | ID следующего узла после ввода | нет |
+| inputSource | `any` \| `text` \| `photo` \| `video` \| `audio` \| `document` \| `location` \| `contact` | Источник ответа для отдельного `input`-узла | нет |
 | enableTextInput | boolean | Принимать текстовый ввод | нет (true) |
 | enablePhotoInput | boolean | Принимать фото | нет (false) |
 | photoInputVariable | string | Переменная для фото | нет |
@@ -22,6 +23,10 @@
 | audioInputVariable | string | Переменная для аудио | нет |
 | enableDocumentInput | boolean | Принимать документы | нет (false) |
 | documentInputVariable | string | Переменная для документов | нет |
+| enableLocationInput | boolean | Принимать геолокацию | нет (false) |
+| locationInputVariable | string | Переменная для геолокации | нет |
+| enableContactInput | boolean | Принимать контакт | нет (false) |
+| contactInputVariable | string | Переменная для контакта | нет |
 | validationType | `none` \| `email` \| `phone` \| `number` | Тип валидации | нет (none) |
 | minLength | number | Минимальная длина текста (0 = без ограничений) | нет (0) |
 | maxLength | number | Максимальная длина текста (0 = без ограничений) | нет (0) |
@@ -96,19 +101,36 @@ for (const node of inputNodes) {
 }
 ```
 
+### Отдельный input-узел
+
+```typescript
+generateUserInput({
+  nodeId: 'input_contact_1',
+  safeName: 'input_contact_1',
+  inputVariable: 'user_contact',
+  inputSource: 'contact',
+  enableContactInput: true,
+  contactInputVariable: 'user_contact_card',
+  inputTargetNodeId: 'msg_done',
+});
+```
+
 ## Связь с UI
 
-Секция "Сбор ответов" в панели свойств (`user-input-settings-section.tsx`) записывает в `node.data`:
+Новая UI-модель записывает настройки в отдельный `input`-узел (`node.type === 'input'`), но legacy-путь внутри `message` тоже поддерживается:
 
 | UI поле | node.data поле | Параметр шаблона |
 |---------|---------------|-----------------|
-| Включить | `collectUserInput` | — (флаг активации) |
+| Включить legacy-режим | `collectUserInput` | — (флаг активации) |
 | Переменная | `inputVariable` | `inputVariable` |
 | Следующий узел | `inputTargetNodeId` | `inputTargetNodeId` |
+| Источник ответа | `inputType`/`inputSource` | `inputSource` |
 | Медиафайлы (фото) | `enablePhotoInput` | `enablePhotoInput` |
 | Медиафайлы (видео) | `enableVideoInput` | `enableVideoInput` |
 | Медиафайлы (аудио) | `enableAudioInput` | `enableAudioInput` |
 | Документы | `enableDocumentInput` | `enableDocumentInput` |
+| Геолокация | `enableLocationInput` | `enableLocationInput` |
+| Контакт | `enableContactInput` | `enableContactInput` |
 
 ## Структура файлов
 

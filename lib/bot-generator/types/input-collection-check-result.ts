@@ -19,6 +19,10 @@ export interface InputCollectionCheckResult {
   hasAudioInput: boolean;
   /** Есть ли узлы с enableDocumentInput */
   hasDocumentInput: boolean;
+  /** Есть ли узлы с enableLocationInput */
+  hasLocationInput: boolean;
+  /** Есть ли узлы с enableContactInput */
+  hasContactInput: boolean;
   /** Есть ли условные сообщения с waitForTextInput */
   hasConditionalInput: boolean;
   /** Есть ли узлы с множественным выбором */

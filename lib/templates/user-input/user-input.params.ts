@@ -6,7 +6,18 @@
 /** Тип валидации вводимых данных */
 export type InputValidationType = 'none' | 'email' | 'phone' | 'number';
 
-/** Тип ожидаемого ввода */
+/** Тип ожидаемого источника ответа */
+export type InputSource =
+  | 'any'
+  | 'text'
+  | 'photo'
+  | 'video'
+  | 'audio'
+  | 'document'
+  | 'location'
+  | 'contact';
+
+/** Legacy-режим сбора ввода */
 export type InputType = 'text' | 'button';
 
 /** Параметры для генерации блока waiting_for_input */
@@ -25,6 +36,10 @@ export interface UserInputTemplateParams {
   // --- Навигация ---
   /** ID следующего узла после ввода */
   inputTargetNodeId?: string;
+
+  // --- Источник ответа ---
+  /** Источник ответа для отдельного input-узла */
+  inputSource?: InputSource;
 
   // --- Тип ввода ---
   /** Основной тип ввода: text (по умолчанию) или button */
@@ -49,6 +64,14 @@ export interface UserInputTemplateParams {
   enableDocumentInput?: boolean;
   /** Переменная для документов */
   documentInputVariable?: string;
+  /** Принимать геолокацию */
+  enableLocationInput?: boolean;
+  /** Переменная для геолокации */
+  locationInputVariable?: string;
+  /** Принимать контакт */
+  enableContactInput?: boolean;
+  /** Переменная для контакта */
+  contactInputVariable?: string;
 
   // --- Кнопки пропуска ---
   /** Кнопки skipDataCollection: [{text, target}] */
@@ -67,6 +90,10 @@ export interface UserInputTemplateParams {
   retryMessage?: string;
   /** Сообщение при успешном сохранении */
   successMessage?: string;
+  /** Текст подсказки для input-узла */
+  inputPrompt?: string;
+  /** Обязателен ли ответ */
+  inputRequired?: boolean;
 
   // --- Сохранение ---
   /** Сохранять в базу данных */

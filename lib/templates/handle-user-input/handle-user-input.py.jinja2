@@ -167,7 +167,7 @@
 {{ ind4 }}# Проверяем и очищаем waiting_for_input если тип соответствует медиа
 {{ ind4 }}if "waiting_for_input" in user_data[user_id]:
 {{ ind5 }}waiting_config = user_data[user_id]["waiting_for_input"]
-{{ ind5 }}if isinstance(waiting_config, dict) and waiting_config.get("type") in ["photo", "video", "audio", "document"]:
+{{ ind5 }}if isinstance(waiting_config, dict) and waiting_config.get("type") in ["photo", "video", "audio", "document", "location", "contact"]:
 {{ ind6 }}del user_data[user_id]["waiting_for_input"]
 {{ ind4 }}# Переходим к целевому узлу
 {{ ind4 }}if skip_target:
@@ -219,9 +219,10 @@
 {{ ind2 }}max_length = waiting_config.get("max_length", 0)
 {{ ind2 }}next_node_id = waiting_config.get("next_node_id")
 {{ ind2 }}appendVariable = waiting_config.get("appendVariable", False)
+{{ ind2 }}user_text = message.text
 {{ ind2 }}logging.info(f"DEBUG: input_type = {input_type}, variable_name = {variable_name}, next_node_id = {next_node_id}, appendVariable = {appendVariable}")
-{{ ind2 }}# Проверяем, является ли тип ввода медиа (фото, видео, аудио, документ)
-{{ ind2 }}if input_type in ["photo", "video", "audio", "document"]:
+{{ ind2 }}# Проверяем, является ли тип ввода не-текстовым и должен обрабатываться отдельным runtime-хендлером
+{{ ind2 }}if input_type in ["photo", "video", "audio", "document", "location", "contact"]:
 {{ ind3 }}logging.info(f"Текстовый ввод от пользователя {user_id} проигнорирован - ожидается медиа ({input_type})")
 {{ ind3 }}return
 {{ ind2 }}# Валидация длины
@@ -274,8 +275,6 @@
 {% endif %}
 {{ ind3 }}except Exception as e:
 {{ ind4 }}logging.error(f"Ошибка при переходе skipDataCollection к узлу {skip_target}: {e}")
-{{ ind2 }}
-{{ ind2 }}user_text = message.text
 {{ ind2 }}
 {{ ind2 }}# Подготовка данных для сохранения
 {{ ind2 }}timestamp = get_moscow_time()
@@ -344,7 +343,16 @@
 {% endif %}
 {{ ind6 }}break  # Нет автоперехода
 {% else %}
-{{ ind6 }}pass
+{{ ind6 }}fake_callback = SimpleNamespace(
+{{ ind6 }}    id="text_nav",
+{{ ind6 }}    from_user=message.from_user,
+{{ ind6 }}    chat_instance="",
+{{ ind6 }}    data=current_node_id,
+{{ ind6 }}    message=message,
+{{ ind6 }}    answer=lambda *args, **kwargs: asyncio.sleep(0)
+{{ ind6 }})
+{{ ind6 }}await handle_callback_{{ node.safeName }}(fake_callback)
+{{ ind6 }}break
 {% endif %}
 {% endfor %}
 {{ ind5 }}if not _node_handled:

@@ -45,7 +45,9 @@
         "photo_variable": "{{ photoInputVariable }}"{% endif %}{% if enableVideoInput and videoInputVariable %},
         "video_variable": "{{ videoInputVariable }}"{% endif %}{% if enableAudioInput and audioInputVariable %},
         "audio_variable": "{{ audioInputVariable }}"{% endif %}{% if enableDocumentInput and documentInputVariable %},
-        "document_variable": "{{ documentInputVariable }}"{% endif %}{% if skipButtons and skipButtons.length %},
+        "document_variable": "{{ documentInputVariable }}"{% endif %}{% if enableLocationInput and locationInputVariable %},
+        "location_variable": "{{ locationInputVariable }}"{% endif %}{% if enableContactInput and contactInputVariable %},
+        "contact_variable": "{{ contactInputVariable }}"{% endif %}{% if skipButtons and skipButtons.length %},
         "skip_buttons": {{ skipButtons | dump }}{% endif %}
 
     }

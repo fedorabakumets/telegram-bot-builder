@@ -72,7 +72,7 @@ describe('generateHandleUserInput()', () => {
   describe('проверка медиа-типа', () => {
     it('генерирует проверку медиа-типов', () => {
       const r = generateHandleUserInput(validParamsDefault);
-      assert.ok(r.includes('if input_type in ["photo", "video", "audio", "document"]:'));
+      assert.ok(r.includes('if input_type in ["photo", "video", "audio", "document", "location", "contact"]:'));
     });
 
     it('возвращает return при медиа-типе', () => {
@@ -185,6 +185,17 @@ describe('generateHandleUserInput()', () => {
       assert.ok(r.includes('async def call_skip_target_handler'));
       assert.ok(r.includes('await handle_callback_node_a(fake_callback)'));
       assert.ok(r.includes('await handle_callback_node_b(fake_callback)'));
+    });
+
+    it('переходит к dedicated input-узлу после текстового ответа через fake_callback', () => {
+      const r = generateHandleUserInput({
+        nodes: [
+          { id: 'input_1', safeName: 'input_1', type: 'input', data: { inputType: 'text' } },
+        ],
+      });
+
+      assert.ok(r.includes('id="text_nav"'));
+      assert.ok(r.includes('await handle_callback_input_1(fake_callback)'));
     });
   });
 

@@ -202,6 +202,14 @@ export interface NodeData {
   enableDocumentInput?: boolean;
   /** Переменная для документа */
   documentInputVariable?: string;
+  /** Включить ввод геолокации */
+  enableLocationInput?: boolean;
+  /** Переменная для геолокации */
+  locationInputVariable?: string;
+  /** Включить ввод контакта */
+  enableContactInput?: boolean;
+  /** Переменная для контакта */
+  contactInputVariable?: string;
   /** Тип валидации */
   validationType?: string;
   /** Минимальная длина */
@@ -212,6 +220,10 @@ export interface NodeData {
   retryMessage?: string;
   /** Сообщение при успехе */
   successMessage?: string;
+  /** Необязательный промпт для отдельного input-узла */
+  inputPrompt?: string;
+  /** Обязателен ли ответ */
+  inputRequired?: boolean;
   /** Сохранять в базу данных */
   saveToDatabase?: boolean;
   /** Тип ответа */

@@ -5,6 +5,8 @@
   @param {boolean} hasVideoInput   - Есть узлы с enableVideoInput
   @param {boolean} hasAudioInput   - Есть узлы с enableAudioInput
   @param {boolean} hasDocumentInput - Есть узлы с enableDocumentInput
+  @param {boolean} hasLocationInput - Есть узлы с enableLocationInput
+  @param {boolean} hasContactInput - Есть узлы с enableContactInput
   @param {string}  navigationCode  - Код навигации к следующему узлу
 #}
 
@@ -340,6 +342,141 @@ async def handle_document_input(message: types.Message):
 
     del user_data[user_id]["waiting_for_input"]
     logging.info(f"📄 Документ сохранен: {document_variable} = {document_file_id}")
+
+    if next_node_id:
+        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
+        try:
+            user_record = await get_user_from_db(user_id)
+            if user_record and "user_data" in user_record:
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = user_data.get(user_id, {})
+            {{ navigationCode | indent(12) }}
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    return
+{% endif %}
+
+{% if hasLocationInput %}
+# Обработчик получения геолокации от пользователя
+@dp.message(F.location)
+async def handle_location_input(message: types.Message):
+    user_id = message.from_user.id
+    logging.info(f"📍 Получена геолокация от пользователя {user_id}")
+
+    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:
+        logging.info(f"Геолокация от пользователя {user_id} проигнорирована - не ожидается ввод")
+        return
+
+    waiting_config = user_data[user_id]["waiting_for_input"]
+    waiting_modes = waiting_config.get("modes", []) if isinstance(waiting_config, dict) else []
+    if not (
+        isinstance(waiting_config, dict) and (
+            waiting_config.get("type") == "location" or
+            (isinstance(waiting_modes, list) and "location" in waiting_modes)
+        )
+    ):
+        logging.info(f"Геолокация от пользователя {user_id} проигнорирована - ожидается другой тип ввода")
+        return
+
+    location_variable = waiting_config.get("location_variable") or waiting_config.get("variable") or "user_location"
+    node_id = waiting_config.get("node_id", "unknown")
+    next_node_id = waiting_config.get("next_node_id")
+
+    location_data = {
+        "latitude": message.location.latitude,
+        "longitude": message.location.longitude,
+        "type": "location",
+        "timestamp": datetime.now().isoformat()
+    }
+
+    await save_message_to_api(
+        user_id=str(user_id),
+        message_type="user",
+        message_text="[Геолокация ответ]",
+        node_id=node_id,
+        message_data={"location": location_data, "is_location_answer": True}
+    )
+
+    user_data[user_id][location_variable] = location_data
+
+    saved_to_db = await update_user_data_in_db(user_id, location_variable, location_data)
+    if saved_to_db:
+        logging.info(f"✅ Геолокация сохранена в БД: {location_variable} (пользователь {user_id})")
+    else:
+        logging.warning("⚠️ Не удалось сохранить геолокацию в БД, данные сохранены локально")
+
+    del user_data[user_id]["waiting_for_input"]
+    logging.info(f"📍 Геолокация сохранена: {location_variable}")
+
+    if next_node_id:
+        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
+        try:
+            user_record = await get_user_from_db(user_id)
+            if user_record and "user_data" in user_record:
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = user_data.get(user_id, {})
+            {{ navigationCode | indent(12) }}
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    return
+{% endif %}
+
+{% if hasContactInput %}
+# Обработчик получения контакта от пользователя
+@dp.message(F.contact)
+async def handle_contact_input(message: types.Message):
+    user_id = message.from_user.id
+    logging.info(f"👤 Получен контакт от пользователя {user_id}")
+
+    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:
+        logging.info(f"Контакт от пользователя {user_id} проигнорирован - не ожидается ввод")
+        return
+
+    waiting_config = user_data[user_id]["waiting_for_input"]
+    waiting_modes = waiting_config.get("modes", []) if isinstance(waiting_config, dict) else []
+    if not (
+        isinstance(waiting_config, dict) and (
+            waiting_config.get("type") == "contact" or
+            (isinstance(waiting_modes, list) and "contact" in waiting_modes)
+        )
+    ):
+        logging.info(f"Контакт от пользователя {user_id} проигнорирован - ожидается другой тип ввода")
+        return
+
+    contact_variable = waiting_config.get("contact_variable") or waiting_config.get("variable") or "user_contact"
+    node_id = waiting_config.get("node_id", "unknown")
+    next_node_id = waiting_config.get("next_node_id")
+
+    contact_data = {
+        "phone_number": message.contact.phone_number,
+        "first_name": message.contact.first_name,
+        "last_name": message.contact.last_name,
+        "user_id": message.contact.user_id,
+        "vcard": message.contact.vcard,
+        "type": "contact",
+        "timestamp": datetime.now().isoformat()
+    }
+
+    await save_message_to_api(
+        user_id=str(user_id),
+        message_type="user",
+        message_text="[Контакт ответ]",
+        node_id=node_id,
+        message_data={"contact": contact_data, "is_contact_answer": True}
+    )
+
+    user_data[user_id][contact_variable] = contact_data
+
+    saved_to_db = await update_user_data_in_db(user_id, contact_variable, contact_data)
+    if saved_to_db:
+        logging.info(f"✅ Контакт сохранен в БД: {contact_variable} (пользователь {user_id})")
+    else:
+        logging.warning("⚠️ Не удалось сохранить контакт в БД, данные сохранены локально")
+
+    del user_data[user_id]["waiting_for_input"]
+    logging.info(f"👤 Контакт сохранен: {contact_variable}")
 
     if next_node_id:
         logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")

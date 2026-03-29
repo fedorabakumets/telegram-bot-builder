@@ -52,6 +52,8 @@ export function hasInputCollection(nodes: Node[]): InputCollectionCheckResult {
       hasVideoInput: false,
       hasAudioInput: false,
       hasDocumentInput: false,
+      hasLocationInput: false,
+      hasContactInput: false,
       hasConditionalInput: false,
       hasMultiSelect: false,
       hasAnyInput: false,
@@ -65,6 +67,8 @@ export function hasInputCollection(nodes: Node[]): InputCollectionCheckResult {
     hasVideoInput: false,
     hasAudioInput: false,
     hasDocumentInput: false,
+    hasLocationInput: false,
+    hasContactInput: false,
     hasConditionalInput: false,
     hasMultiSelect: false,
     hasAnyInput: false,
@@ -73,12 +77,16 @@ export function hasInputCollection(nodes: Node[]): InputCollectionCheckResult {
   for (const node of nodes) {
     if (!node) continue;
     const data = node.data || {};
-    if (data.collectUserInput) result.hasCollectInput = true;
-    if (data.enableTextInput) result.hasTextInput = true;
-    if (data.enablePhotoInput) result.hasPhotoInput = true;
-    if (data.enableVideoInput) result.hasVideoInput = true;
-    if (data.enableAudioInput) result.hasAudioInput = true;
-    if (data.enableDocumentInput) result.hasDocumentInput = true;
+    const inputSource = node.type === NODE_TYPES.INPUT ? data.inputType : undefined;
+
+    if (data.collectUserInput || node.type === NODE_TYPES.INPUT) result.hasCollectInput = true;
+    if (data.enableTextInput || inputSource === 'text' || inputSource === 'any') result.hasTextInput = true;
+    if (data.enablePhotoInput || inputSource === 'photo' || inputSource === 'any') result.hasPhotoInput = true;
+    if (data.enableVideoInput || inputSource === 'video' || inputSource === 'any') result.hasVideoInput = true;
+    if (data.enableAudioInput || inputSource === 'audio' || inputSource === 'any') result.hasAudioInput = true;
+    if (data.enableDocumentInput || inputSource === 'document' || inputSource === 'any') result.hasDocumentInput = true;
+    if ((data as any).enableLocationInput || inputSource === 'location' || inputSource === 'any') result.hasLocationInput = true;
+    if ((data as any).enableContactInput || inputSource === 'contact' || inputSource === 'any') result.hasContactInput = true;
     if (data.allowMultipleSelection === true) result.hasMultiSelect = true;
     if (data.enableAutoTransition && data.autoTransitionTo) result.hasCollectInput = true;
     const conditions = data.conditionalMessages;
@@ -94,6 +102,8 @@ export function hasInputCollection(nodes: Node[]): InputCollectionCheckResult {
     result.hasVideoInput ||
     result.hasAudioInput ||
     result.hasDocumentInput ||
+    result.hasLocationInput ||
+    result.hasContactInput ||
     result.hasConditionalInput ||
     result.hasMultiSelect;
 
@@ -152,6 +162,9 @@ export function hasMediaNodes(nodes: Node[]): boolean {
     node.data?.enableVideoInput ||
     node.data?.enableAudioInput ||
     node.data?.enableDocumentInput ||
+    (node.data as any)?.enableLocationInput ||
+    (node.data as any)?.enableContactInput ||
+    node.type === NODE_TYPES.INPUT ||
     node.type === NODE_TYPES.MEDIA ||
     (node.data?.attachedMedia && Array.isArray(node.data.attachedMedia) && node.data.attachedMedia.length > 0))
   );
