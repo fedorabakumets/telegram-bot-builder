@@ -52,7 +52,7 @@
 {{ ind5 }}chat_instance="",
 {{ ind5 }}data=skip_button_target,
 {{ ind5 }}message=message,
-{{ ind5 }}answer=lambda *args, **kwargs: asyncio.sleep(0)
+{{ ind5 }}answer=lambda *_args, **_kwargs: asyncio.sleep(0)
 {{ ind4 }})
 {% if nodes | length > 0 %}
 {% for node in nodes %}
@@ -119,7 +119,7 @@
 {{ ind6 }}chat_instance="",
 {{ ind6 }}data=next_node_id,
 {{ ind6 }}message=message,
-{{ ind6 }}answer=lambda *args, **kwargs: asyncio.sleep(0)
+{{ ind6 }}answer=lambda *_args, **_kwargs: asyncio.sleep(0)
 {{ ind5 }})
 {{ ind5 }}
 {% if nodes | length > 0 %}

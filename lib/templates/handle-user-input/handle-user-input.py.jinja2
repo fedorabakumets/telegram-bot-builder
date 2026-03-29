@@ -14,6 +14,7 @@
 {% set ind4 = ind3 ~ '    ' %}
 {% set ind5 = ind4 ~ '    ' %}
 {% set ind6 = ind5 ~ '    ' %}
+{% set ind7 = ind6 ~ '    ' %}
 
 {# ═══════════════════════════════════════════════════════════════
    Проверяем button_response_config (reply клавиатура)
@@ -179,7 +180,7 @@
 {{ ind6 }}    chat_instance="",
 {{ ind6 }}    data=skip_target,
 {{ ind6 }}    message=message,
-{{ ind6 }}    answer=lambda *args, **kwargs: asyncio.sleep(0)
+{{ ind6 }}    answer=lambda *_args, **_kwargs: asyncio.sleep(0)
 {{ ind6 }})
 {{ ind6 }}_skip_media_handled = False
 {% for node in nodes %}
@@ -264,7 +265,7 @@
 {{ ind5 }}chat_instance="",
 {{ ind5 }}data=skip_target,
 {{ ind5 }}message=message,
-{{ ind5 }}answer=lambda *args, **kwargs: asyncio.sleep(0)
+{{ ind5 }}answer=lambda *_args, **_kwargs: asyncio.sleep(0)
 {{ ind4 }})
 {% if nodes | length > 0 %}
 {{ ind4 }}# Вызываем обработчик целевого узла
@@ -324,39 +325,55 @@
 {{ ind5 }}next_node_id = None  # Сбрасываем, будет установлен при автопереходе
 {{ ind5 }}# Проверяем навигацию к узлам
 {{ ind5 }}_node_handled = False
-{% for node in nodes %}
-{{ ind5 }}{% if loop.first %}if{% else %}elif{% endif %} current_node_id == "{{ node.id }}":
+{% if commandNodes and commandNodes | length > 0 %}
+{{ ind5 }}# Командные узлы обрабатываются через их message-handler, а не через handle_callback_*
+{{ ind5 }}_command_message = SimpleNamespace(
+{{ ind5 }}    from_user=message.from_user,
+{{ ind5 }}    chat=message.chat,
+{{ ind5 }}    text=current_node_id,
+{{ ind5 }}    message_id=message.message_id
+{{ ind5 }})
+{% for cmdNode in commandNodes %}
+{{ ind5 }}{% if loop.first %}if{% else %}elif{% endif %} current_node_id == "{{ cmdNode.id }}":
 {{ ind6 }}_node_handled = True
-{{ ind6 }}# Переход к узлу {{ node.id }}
-{% if node.type == 'message' %}
-{{ ind6 }}text = {{ node.data.messageText | default('""') | tojson }}
-{{ ind6 }}user_data[user_id] = user_data.get(user_id, {})
-{% if node.data.buttons and node.data.buttons | length > 0 and node.data.keyboardType == 'inline' %}
-{{ ind6 }}builder = InlineKeyboardBuilder()
-{% for btn in node.data.buttons %}
-{{ ind6 }}builder.add(InlineKeyboardButton(text={{ btn.text | tojson }}, callback_data="{{ btn.id or btn.target or btn.text }}"))
-{% endfor %}
-{{ ind6 }}keyboard = builder.as_markup()
-{{ ind6 }}await navigate_to_node(message, current_node_id, text=text, reply_markup=keyboard)
-{% else %}
-{{ ind6 }}await navigate_to_node(message, current_node_id, text=text)
-{% endif %}
-{{ ind6 }}break  # Нет автоперехода
-{% else %}
-{{ ind6 }}fake_callback = SimpleNamespace(
-{{ ind6 }}    id="text_nav",
-{{ ind6 }}    from_user=message.from_user,
-{{ ind6 }}    chat_instance="",
-{{ ind6 }}    data=current_node_id,
-{{ ind6 }}    message=message,
-{{ ind6 }}    answer=lambda *args, **kwargs: asyncio.sleep(0)
-{{ ind6 }})
-{{ ind6 }}await handle_callback_{{ node.safeName }}(fake_callback)
+{{ ind6 }}await {% if cmdNode.type == 'start' %}start_handler{% elif cmdNode.type == 'command_trigger' %}command_trigger_{{ cmdNode.safeName }}_handler{% else %}{{ cmdNode.data.command | replace('/', '') | replace('-', '_') }}_handler{% endif %}(_command_message)
 {{ ind6 }}break
-{% endif %}
 {% endfor %}
+{% endif %}
 {{ ind5 }}if not _node_handled:
-{{ ind6 }}logging.warning(f"Неизвестный узел для навигации: {current_node_id}")
-{{ ind6 }}break
+{% for node in nodes %}
+{{ ind6 }}{% if loop.first %}if{% else %}elif{% endif %} current_node_id == "{{ node.id }}":
+{{ ind7 }}_node_handled = True
+{{ ind7 }}# Переход к узлу {{ node.id }}
+{% if node.type == 'message' %}
+{{ ind7 }}text = {{ node.data.messageText | default('""') | tojson }}
+{{ ind7 }}user_data[user_id] = user_data.get(user_id, {})
+{% if node.data.buttons and node.data.buttons | length > 0 and node.data.keyboardType == 'inline' %}
+{{ ind7 }}builder = InlineKeyboardBuilder()
+{% for btn in node.data.buttons %}
+{{ ind7 }}builder.add(InlineKeyboardButton(text={{ btn.text | tojson }}, callback_data="{{ btn.id or btn.target or btn.text }}"))
+{% endfor %}
+{{ ind7 }}keyboard = builder.as_markup()
+{{ ind7 }}await navigate_to_node(message, current_node_id, text=text, reply_markup=keyboard)
+{% else %}
+{{ ind7 }}await navigate_to_node(message, current_node_id, text=text)
+{% endif %}
+{{ ind7 }}break  # Нет автоперехода
+{% else %}
+{{ ind7 }}fake_callback = SimpleNamespace(
+{{ ind7 }}    id="text_nav",
+{{ ind7 }}    from_user=message.from_user,
+{{ ind7 }}    chat_instance="",
+{{ ind7 }}    data=current_node_id,
+{{ ind7 }}    message=message,
+{{ ind7 }}    answer=lambda *_args, **_kwargs: asyncio.sleep(0)
+{{ ind7 }})
+{{ ind7 }}await handle_callback_{{ node.safeName }}(fake_callback)
+{{ ind7 }}break
+{% endif %}
+{% endfor %}
+{{ ind6 }}if not _node_handled:
+{{ ind7 }}logging.warning(f"Неизвестный узел для навигации: {current_node_id}")
+{{ ind7 }}break
 {{ ind3 }}except Exception as e:
 {{ ind4 }}logging.error(f"Ошибка при переходе к узлу: {e}")

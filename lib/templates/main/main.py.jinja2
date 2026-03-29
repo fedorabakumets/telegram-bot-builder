@@ -22,7 +22,7 @@ async def main():
     """Главная функция запуска бота"""
     global db_pool
 
-    def signal_handler(signum, frame):
+    def signal_handler(signum, _frame):
         print(f"⚠️ Получен сигнал {signum}, начинаем корректное завершение...")
         import sys
         sys.exit(0)

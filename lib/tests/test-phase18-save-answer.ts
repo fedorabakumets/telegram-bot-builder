@@ -1665,6 +1665,28 @@ test('J01', 'private/group condition + legacy text collectUserInput + dedicated 
   syntax(code, 'j01');
 });
 
+test('J01b', 'dedicated input не должен дублироваться generic auto-transition callback-обработчиком', () => {
+  const project = makeFlowProject([
+    makeMessageNode('msg_age', 'Сколько тебе лет?', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_age',
+    }),
+    makeInputNode('input_age', {
+      inputType: 'text',
+      inputVariable: 'age',
+      inputTargetNodeId: 'msg_done',
+    }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+
+  const code = gen(project, 'j01b');
+  ok(countOccurrences(code, '@dp.callback_query(lambda c: c.data == "input_age")') === 1, 'J01b: dedicated input должен иметь один callback handler');
+  ok(countOccurrences(code, 'async def handle_callback_input_age') === 1, 'J01b: dedicated input handler не должен дублироваться');
+  ok(!code.includes('handle_callback_t_age'), 'J01b: generic short-id callback для input не должен генерироваться');
+  assertIncludesAll(block(code, 'input_age'), ['Активация input-узла input_age', '"waiting_for_input"'], 'J01b');
+  syntax(code, 'j01b');
+});
+
 test('J02', 'legacy photo collectUserInput ведёт в dedicated photo input и media node', () => {
   const project = makeFlowProject([
     makeMessageNode('msg_photo_prompt', 'Сообщение 1', {

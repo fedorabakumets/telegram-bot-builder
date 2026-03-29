@@ -14,6 +14,16 @@ import { calculateAutoTransitionTarget } from '../../auto-transition';
 import { generateAttachedMediaVars } from '../../attached-media-vars';
 import { isLoggingEnabled } from '../../../bot-generator/core/logging';
 
+const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
+  'message',
+  'input',
+  'keyboard',
+  'media',
+  'command_trigger',
+  'text_trigger',
+  'condition',
+]);
+
 /**
  * Генерирует интерактивные callback-обработчики для inline кнопок,
  * автопереходов и условных кнопок.
@@ -62,6 +72,7 @@ export function generateInteractiveCallbackHandlers(
 
     const targetNode = nodes.find((n: any) => n.id === nodeId);
     if (!targetNode) return;
+    if (NODE_TYPES_WITH_DEDICATED_HANDLERS.has(targetNode.type)) return;
 
     processedCallbacks.add(nodeId);
 

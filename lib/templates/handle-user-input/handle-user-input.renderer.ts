@@ -15,5 +15,6 @@ import { renderPartialTemplate } from '../template-renderer';
  */
 export function generateHandleUserInput(params: HandleUserInputTemplateParams = {}): string {
   const validated = handleUserInputParamsSchema.parse(params);
-  return renderPartialTemplate('handle-user-input/handle-user-input.py.jinja2', validated);
+  return renderPartialTemplate('handle-user-input/handle-user-input.py.jinja2', validated)
+    .replace(/\n{3,}/g, '\n\n');
 }

@@ -36,6 +36,7 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     .map(n => ({
       command: n.data.command.replace('/', ''),
       functionName: n.data.command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_'),
+      handlerName: `command_trigger_${String(n.id).replace(/[^a-zA-Z0-9_]/g, '_')}_handler`,
     }));
 
   code += renderPartialTemplate('database/alias-nodes.py.jinja2', { commandNodes });

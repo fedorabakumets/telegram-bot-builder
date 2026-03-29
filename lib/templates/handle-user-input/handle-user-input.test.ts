@@ -197,6 +197,20 @@ describe('generateHandleUserInput()', () => {
       assert.ok(r.includes('id="text_nav"'));
       assert.ok(r.includes('await handle_callback_input_1(fake_callback)'));
     });
+
+    it('переходит к command_trigger по next_node_id через command_trigger_<safeName>_handler', () => {
+      const r = generateHandleUserInput({
+        commandNodes: [
+          { id: 'cmd-trigger-start', safeName: 'cmd_trigger_start', type: 'command_trigger', data: { command: '/start' } },
+        ],
+      });
+
+      assert.ok(r.includes('if next_node_id:'));
+      assert.ok(r.includes('current_node_id = next_node_id'));
+      assert.ok(r.includes('current_node_id == "cmd-trigger-start"'));
+      assert.ok(r.includes('await command_trigger_cmd_trigger_start_handler(_command_message)'));
+      assert.ok(!r.includes('Неизвестный узел для навигации: {current_node_id}') || r.indexOf('await command_trigger_cmd_trigger_start_handler(_command_message)') < r.lastIndexOf('Неизвестный узел для навигации: {current_node_id}'));
+    });
   });
 
 describe('handleUserInputParamsSchema', () => {
