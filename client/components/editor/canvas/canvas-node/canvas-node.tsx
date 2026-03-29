@@ -462,7 +462,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
             : node.type === 'message'
             ? "p-4 pb-10 w-80"
             : node.type === 'keyboard'
-            ? "p-4 pb-10 w-80"
+            ? "p-4 w-80"
             : "p-6 pb-10 w-80",
           isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-shadow duration-300",
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
@@ -570,7 +570,13 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Р¤СѓС‚РµСЂ СЃ РїРѕР»РЅС‹Рј ID СѓР·Р»Р° вЂ” СЃРєСЂС‹С‚ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ Рё СѓР·Р»Р° СѓСЃР»РѕРІРёСЏ */}
         {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'condition' && (
-          <div className="absolute bottom-0 left-0 right-0 px-4 py-2 rounded-b-2xl bg-slate-700/60 dark:bg-slate-800/90 border-t border-slate-600/40 dark:border-slate-600/60">
+          <div
+            className={
+              node.type === 'keyboard'
+                ? "mt-3 -mx-4 -mb-4 px-4 py-2 rounded-b-2xl bg-slate-700/60 dark:bg-slate-800/90 border-t border-slate-600/40 dark:border-slate-600/60"
+                : "absolute bottom-0 left-0 right-0 px-4 py-2 rounded-b-2xl bg-slate-700/60 dark:bg-slate-800/90 border-t border-slate-600/40 dark:border-slate-600/60"
+            }
+          >
             <span
               className="font-mono text-[10px] text-slate-300 dark:text-slate-300 select-all tracking-tight"
               title="ID СѓР·Р»Р°"

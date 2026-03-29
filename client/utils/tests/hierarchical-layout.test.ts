@@ -144,8 +144,10 @@ describe('createHierarchicalLayout', () => {
     const messagePos = getPosition('msg_1');
     const keyboardPos = getPosition('kbd_1');
     const nextPos = getPosition('next_1');
+    const keyboardGap = keyboardPos.x - (messagePos.x + 140);
 
     expect(keyboardPos.x).toBeGreaterThan(messagePos.x);
+    expect(keyboardGap).toBeGreaterThanOrEqual(56);
     expect(Math.abs(keyboardPos.y - messagePos.y)).toBeLessThan(60);
     expect(nextPos.x).toBeGreaterThan(keyboardPos.x);
   });

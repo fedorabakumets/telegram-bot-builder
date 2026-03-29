@@ -822,8 +822,9 @@ function anchorKeyboardNodes(
 
     const hostSize = getNodeSize(hostId, opts);
     const keyboardSize = getNodeSize(keyboardId, opts);
-    // Увеличенный отступ чтобы keyboard не накладывался на input-узлы и другие элементы
-    const xOffset = Math.max(40, Math.round(opts.horizontalSpacing * 0.5));
+    // Держим keyboard визуально рядом с host, но оставляем более заметный зазор,
+    // чтобы узлы не выглядели "слипшимися".
+    const xOffset = Math.max(56, Math.round(opts.horizontalSpacing * 0.75));
     const yOffset = Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
 
     positions.set(keyboardId, {
