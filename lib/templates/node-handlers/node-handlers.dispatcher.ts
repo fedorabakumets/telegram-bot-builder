@@ -10,8 +10,7 @@
  */
 
 import { Node } from '@shared/schema';
-import { NODE_TYPES } from '../../bot-generator/types';
-import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, generateCommandHandler, generateStartHandler, resolveMediaUrls } from './node-handlers.renderer';
+import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, resolveMediaUrls } from './node-handlers.renderer';
 import { sortButtonsByLayout } from '../keyboard/keyboard.renderer';
 import { generateMessage } from '../message/message.renderer';
 import { generateContactHandler, generateLocationHandler } from './contact-location.renderer';
@@ -71,7 +70,7 @@ function generateKeyboardHandler(node: Node): string {
  * @returns Сгенерированный код обработчиков узлов
  *
  * @example
- * const nodes = [{ id: 'start', type: 'start' }, { id: 'help', type: 'command' }];
+ * const nodes = [{ id: 'welcome', type: 'message' }, { id: 'help-trigger', type: 'command_trigger' }];
  * const code = generateNodeHandlers(nodes, true, true);
  */
 export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean, enableComments: boolean = true): string {
@@ -83,8 +82,6 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   // Создаем массив всех ID узлов для генерации коротких ID (используется старыми обработчиками)
 
   const nodeHandlers: Record<string, (node: Node) => string> = {
-    start: (node) => generateStartHandler(node, userDatabaseEnabled),
-    command: (node) => generateCommandHandler(node, userDatabaseEnabled),
     message: (node) => {
       const media = resolveMediaUrls(node.data);
       return generateMessage({
@@ -166,68 +163,6 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     }),
   };
 
-  // Проверяем, есть ли узлы типа 'start' или синонимы для них
-  const hasStartNodeType = nodes.some((node: Node) => node.type === NODE_TYPES.START);
-  const hasStartSynonyms = nodes.some((node: Node) =>
-    node.type === NODE_TYPES.START && node.data?.synonyms && node.data.synonyms.length > 0
-  );
-
-  // Если есть узел типа 'start' или синонимы для него, обязательно генерируем start_handler
-  if (hasStartNodeType || hasStartSynonyms) {
-    const startNode = nodes.find((node: Node) => node.type === NODE_TYPES.START) || {
-      id: 'start',
-      type: 'start',
-      position: { x: 0, y: 0 },
-      data: {
-        options: [],
-        keyboardType: 'none',
-        buttons: [],
-        oneTimeKeyboard: false,
-        resizeKeyboard: true,
-        markdown: false,
-        formatMode: 'none',
-        synonyms: [],
-        adminOnly: false,
-        requiresAuth: false,
-        showInMenu: true,
-        enableStatistics: true,
-        customParameters: [],
-        messageIdSource: 'last_message',
-        disableNotification: false,
-        userIdSource: 'last_message',
-        mapService: 'custom',
-        mapZoom: 15,
-        showDirections: false,
-        generateMapPreview: true,
-        inputType: 'text',
-        responseType: 'text',
-        responseOptions: [],
-        allowMultipleSelection: false,
-        allowsMultipleAnswers: false,
-        anonymousVoting: true,
-        inputRequired: true,
-        enableConditionalMessages: false,
-        conditionalMessages: [],
-        collectUserInput: false,
-        inputButtonType: 'inline',
-        enableAutoTransition: false,
-        enableUserActions: false,
-        saveToDatabase: false,
-        allowSkip: false,
-      }
-    } as unknown as Node;
-    codeLines.push(`\n# @@NODE_START:${startNode.id}@@\n`);
-
-    const startHandler = nodeHandlers['start'];
-    if (startHandler) {
-      const handlerCode = startHandler(startNode);
-      // Разбиваем код обработчика на строки и добавляем в codeLines
-      handlerCode.split('\n').forEach(line => codeLines.push(line));
-    }
-
-    codeLines.push(`# @@NODE_END:${startNode.id}@@`);
-  }
-
   // --- Обработчики командных триггеров ---
   const commandTriggerCode = generateCommandTriggerHandlers(nodes);
   if (commandTriggerCode) {
@@ -250,11 +185,6 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   }
 
   nodes.forEach((node: Node) => {
-    // Пропускаем узлы типа 'start', так как они уже обработаны выше
-    if (node.type === NODE_TYPES.START) {
-      return;
-    }
-
     // Пропускаем триггеры — они уже обработаны выше
     if (node.type === 'command_trigger' || node.type === 'text_trigger') {
       return;

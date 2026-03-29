@@ -46,15 +46,6 @@
 {% endif %}
 {{ indent }}    return
 {% set hasContent = true %}
-{% elif targetNode.type == 'command' %}
-{% set safeCommandName = targetNode.data.command | default('unknown') | replace('[^a-zA-Z0-9_]', '_') %}
-{{ indent }}    await handle_command_{{ safeCommandName }}(callback_query.message)
-{% set hasContent = true %}
-{% elif targetNode.type == 'start' %}
-{{ indent }}    # Вызываем полный обработчик start для правильного отображения главного меню
-{{ indent }}    await handle_command_start(callback_query.message)
-{{ indent }}    return
-{% set hasContent = true %}
 {% else %}
 {{ indent }}    logging.warning(f"⚠️ Неизвестный тип узла: {{ targetNode.type }}")
 {{ indent }}    pass
@@ -90,9 +81,8 @@
 {{ indent }}    await callback_query.message.answer(text)
 {% endif %}
 {{ indent }}    return
-{% elif targetNode.type == 'command' %}
-{% set safeCommandName = targetNode.data.command | default('unknown') | replace('[^a-zA-Z0-9_]', '_') %}
-{{ indent }}    await handle_command_{{ safeCommandName }}(callback_query.message)
+{% else %}
+{{ indent }}    await handle_callback_{{ targetNode.id | replace('[^a-zA-Z0-9_]', '_') }}(callback_query)
 {% endif %}
 {% set hasContent = true %}
 {% endif %}

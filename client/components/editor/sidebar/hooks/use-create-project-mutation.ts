@@ -1,6 +1,7 @@
 /**
  * @fileoverview Хук для создания нового проекта
- * Предоставляет мутацию для создания проекта с базовым /start узлом
+ * Предоставляет мутацию для создания проекта со стартовым `message`
+ * и отдельным `command_trigger` для `/start`
  * @module components/editor/sidebar/hooks/use-create-project-mutation
  */
 
@@ -47,22 +48,31 @@ export interface UseCreateProjectMutationResult {
  * Данные для нового проекта по умолчанию
  */
 const DEFAULT_PROJECT_DATA = {
-  nodes: [{
-    id: 'start',
-    type: 'start' as const,
-    position: { x: 400, y: 300 },
-    data: {
-      messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
-      keyboardType: 'none' as const,
-      buttons: [],
-      command: '/start',
-      description: 'Запустить бота',
-      showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
+  nodes: [
+    {
+      id: 'start-message',
+      type: 'message' as const,
+      position: { x: 400, y: 300 },
+      data: {
+        messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
+        keyboardType: 'none' as const,
+        buttons: [],
+        showInMenu: true
+      }
+    },
+    {
+      id: 'start-command-trigger',
+      type: 'command_trigger' as const,
+      position: { x: 100, y: 300 },
+      data: {
+        command: '/start',
+        description: 'Запустить бота',
+        showInMenu: true,
+        autoTransitionTo: 'start-message',
+        sourceNodeId: 'start-message'
+      }
     }
-  }],
+  ],
   connections: []
 };
 

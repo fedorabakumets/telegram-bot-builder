@@ -302,16 +302,6 @@ export function useBotEditor(initialData?: BotData) {
       }
     }
 
-    // Специфичные поля для команд start и command
-    if (node.type === 'start' || node.type === 'command') {
-      if (!normalizedData.command) {
-        normalizedData.command = node.type === 'start' ? '/start' : '/command';
-      }
-      if (!normalizedData.description) {
-        normalizedData.description = node.type === 'start' ? 'Запустить бота' : 'Команда бота';
-      }
-    }
-
     return {
       ...node,
       data: normalizedData

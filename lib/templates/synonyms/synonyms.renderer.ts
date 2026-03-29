@@ -21,23 +21,13 @@ const USER_MANAGEMENT_TYPES = new Set([
 export function collectSynonymEntries(nodes: Node[]): SynonymEntry[] {
   const validNodes = nodes.filter(n => n != null && n.data?.synonyms?.length > 0);
 
-  const hasStartNode = nodes.some(n => n != null && n.type === NODE_TYPES.START);
-
   const entries: SynonymEntry[] = [];
 
   for (const node of validNodes) {
-    // Синонимы start-узла создаём только если start-узел существует в графе
-    if (node.type === NODE_TYPES.START && !hasStartNode) continue;
-
     for (const synonym of node.data.synonyms as string[]) {
       const base = { synonym, nodeId: node.id, nodeType: node.type as SynonymEntry['nodeType'] };
 
-      if (node.type === NODE_TYPES.START || node.type === NODE_TYPES.COMMAND) {
-        const originalCommand = node.data.command || (node.type === NODE_TYPES.START ? '/start' : '/help');
-        const functionName = originalCommand.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
-        entries.push({ ...base, functionName, originalCommand });
-
-      } else if (node.type === NODE_TYPES.MESSAGE) {
+      if (node.type === NODE_TYPES.MESSAGE) {
         entries.push(base);
 
       } else if (['pin_message', 'unpin_message', 'delete_message'].includes(node.type)) {

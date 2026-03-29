@@ -6,24 +6,42 @@
 import { nanoid } from 'nanoid';
 import { CanvasSheet, BotDataWithSheets, Node } from '@shared/schema';
 import { generateNewId } from '@/components/editor/canvas/canvas/utils/extract-base-id';
-import { defaultNodeData } from './default-node-data';
 import { updateNodeReferencesInData } from './sheet-node-references';
 
 /**
  * Создаёт новый лист с заданным именем и узлами.
- * Если узлы не переданы, создаётся стартовый узел по умолчанию.
+ * Если узлы не переданы, создаются стартовый `message` и отдельный `command_trigger` для `/start`.
  *
  * @param name - Название нового листа
  * @param nodes - Массив узлов для размещения на листе (по умолчанию пустой)
  * @returns Новый объект листа `CanvasSheet`
  */
 export function createSheet(name: string, nodes: Node[] = []): CanvasSheet {
-  const defaultNodes: Node[] = nodes.length === 0 ? [{
-    id: 'start',
-    type: 'start' as const,
-    position: { x: 100, y: 100 },
-    data: { ...defaultNodeData }
-  }] : nodes;
+  const defaultNodes: Node[] = nodes.length === 0 ? ([
+    {
+      id: 'start-message',
+      type: 'message' as const,
+      position: { x: 400, y: 300 },
+      data: {
+        messageText: 'Привет! Я ваш новый бот.',
+        keyboardType: 'none',
+        buttons: [],
+        showInMenu: true,
+      }
+    },
+    {
+      id: 'start-command-trigger',
+      type: 'command_trigger' as const,
+      position: { x: 100, y: 300 },
+      data: {
+        command: '/start',
+        description: 'Запустить бота',
+        showInMenu: true,
+        autoTransitionTo: 'start-message',
+        sourceNodeId: 'start-message',
+      }
+    }
+  ] as unknown as Node[]) : nodes;
 
   return {
     id: nanoid(),

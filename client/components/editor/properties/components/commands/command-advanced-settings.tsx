@@ -4,7 +4,7 @@
  * Содержит настройку отображения в меню.
  *
  * Поддерживаемые типы узлов:
- * - start / command / command_trigger → showInMenu
+ * - command_trigger → showInMenu
  *
  * @module CommandAdvancedSettings
  */
@@ -14,7 +14,7 @@ import { SectionHeader } from '../layout/section-header';
 import { ShowInMenuSetting } from '../admin/show-in-menu-setting';
 
 /** Типы узлов, для которых отображаются расширенные настройки */
-const SUPPORTED_NODE_TYPES = ['start', 'command', 'command_trigger'] as const;
+const SUPPORTED_NODE_TYPES = ['command_trigger'] as const;
 
 /**
  * Пропсы компонента расширенных настроек команд
@@ -33,7 +33,7 @@ interface CommandAdvancedSettingsProps {
 /**
  * Компонент расширенных настроек для команд и триггеров
  *
- * Для start/command/command_trigger включает:
+ * Для command_trigger включает:
  * - Показать в меню @BotFather
  *
  * @param {CommandAdvancedSettingsProps} props - Пропсы компонента

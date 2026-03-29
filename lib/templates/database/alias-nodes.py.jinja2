@@ -1,18 +1,11 @@
 {#
   Шаблон алиасов функций для callback обработчиков команд
 
-  @param {boolean} hasStartNode - Есть ли узел типа 'start'
-  @param {array} commandNodes - Список команд [{ command, functionName }]
+  @param {array} commandNodes - Список command_trigger [{ command, functionName }]
 #}
-# ┌─────────────────────────────────────────┐
-# │      Алиасы для обработчиков команд     │
-# └─────────────────────────────────────────┘
-{% if hasStartNode %}
-async def handle_command_start(message):
-    """Алиас для start_handler, используется в callback обработчиках"""
-    await start_handler(message)
-
-{% endif %}
+# ┌──────────────────────────────────────────────────────────────┐
+# │      Алиасы для обработчиков command_trigger                 │
+# └──────────────────────────────────────────────────────────────┘
 {% for cmd in commandNodes %}
 async def handle_command_{{ cmd.functionName }}(message):
     """Алиас для {{ cmd.functionName }}_handler, используется в callback обработчиках"""

@@ -45,8 +45,7 @@ export function useCommandValidation({
 
   const commandValidation = useMemo(() => {
     if (selectedNode && (
-      selectedNode.type === 'start' ||
-      selectedNode.type === 'command' ||
+      selectedNode.type === 'command_trigger' ||
       selectedNode.type === 'pin_message' ||
       selectedNode.type === 'unpin_message' ||
       selectedNode.type === 'delete_message' ||

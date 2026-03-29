@@ -229,6 +229,5 @@ if (enableAutoTransition && autoTransitionTo) {
 
 ## См. также
 
-- [`start.py.jinja2`](../start/start.md) — шаблон команды /start
-- [`command.py.jinja2`](../command/command.md) — шаблон команды
+- [`command-trigger.py.jinja2`](../command-trigger/command-trigger.md) — шаблон входа по команде
 - [`keyboard.py.jinja2`](../keyboard/keyboard.md) — шаблон клавиатуры

@@ -77,16 +77,31 @@ export default function Home() {
     mutationFn: (data: CreateProjectForm) => apiRequest('POST', '/api/projects', {
       ...data,
       data: {
-        nodes: [{
-          id: 'start',
-          type: 'start',
-          position: { x: 100, y: 100 },
-          data: {
-            messageText: 'Привет! Я ваш новый бот.',
-            keyboardType: 'none',
-            buttons: [],
+        nodes: [
+          {
+            id: 'start-message',
+            type: 'message',
+            position: { x: 400, y: 300 },
+            data: {
+              messageText: 'Привет! Я ваш новый бот.',
+              keyboardType: 'none',
+              buttons: [],
+              showInMenu: true,
+            }
+          },
+          {
+            id: 'start-command-trigger',
+            type: 'command_trigger',
+            position: { x: 100, y: 300 },
+            data: {
+              command: '/start',
+              description: 'Запустить бота',
+              showInMenu: true,
+              autoTransitionTo: 'start-message',
+              sourceNodeId: 'start-message',
+            }
           }
-        }],
+        ],
         connections: []
       }
     }),

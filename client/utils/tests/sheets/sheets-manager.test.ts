@@ -44,11 +44,12 @@ function makeProjectData(): BotDataWithSheets {
 // ---------------------------------------------------------------------------
 
 describe('SheetsManager.migrateLegacyData', () => {
-  it('создаёт стартовый узел если узлов нет', () => {
+  it('создаёт message и command_trigger если узлов нет', () => {
     const result = SheetsManager.migrateLegacyData(makeLegacyData(false));
     expect(result.sheets).toHaveLength(1);
-    expect(result.sheets[0].nodes).toHaveLength(1);
-    expect(result.sheets[0].nodes[0].id).toBe('start');
+    expect(result.sheets[0].nodes).toHaveLength(2);
+    expect(result.sheets[0].nodes[0].type).toBe('message');
+    expect(result.sheets[0].nodes[1].type).toBe('command_trigger');
   });
 
   it('сохраняет существующие узлы', () => {
@@ -97,10 +98,11 @@ describe('SheetsManager.createSheet', () => {
     expect(sheet.name).toBe('Тест');
   });
 
-  it('создаёт стартовый узел если узлы не переданы', () => {
+  it('создаёт message и command_trigger если узлы не переданы', () => {
     const sheet = SheetsManager.createSheet('Тест');
-    expect(sheet.nodes).toHaveLength(1);
-    expect(sheet.nodes[0].id).toBe('start');
+    expect(sheet.nodes).toHaveLength(2);
+    expect(sheet.nodes[0].type).toBe('message');
+    expect(sheet.nodes[1].type).toBe('command_trigger');
   });
 
   it('использует переданные узлы', () => {

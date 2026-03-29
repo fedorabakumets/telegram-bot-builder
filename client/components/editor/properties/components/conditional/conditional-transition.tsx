@@ -48,9 +48,9 @@ export function ConditionalTransition({ condition, selectedNode, getAllNodesFrom
             <SelectItem value="no-transition">Не переходить</SelectItem>
             {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({ node, sheetName }) => {
               const nodeContent =
-                node.type === 'command' ? node.data.command :
-                  node.type === 'message' ? ((node.data as any).messageText || '').slice(0, 50) :
-                    ((node.data as any).label || '').slice(0, 50);
+                node.type === 'message'
+                  ? ((node.data as any).messageText || '').slice(0, 50)
+                  : ((node.data as any).label || '').slice(0, 50);
               return (
                 <SelectItem key={node.id} value={node.id}>
                   <div className="flex items-center gap-2">

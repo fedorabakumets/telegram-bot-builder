@@ -7,7 +7,6 @@
 
 import { Node } from '@/types/bot';
 import { cn } from '@/utils/utils';
-import { CommandBadge } from './command-badge';
 import { ContentManagementHeader } from './content-management-header';
 import { UserManagementHeader } from './user-management-header';
 import { AdminRightsHeaderSmall } from './admin-rights-header-small';
@@ -45,9 +44,7 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
   const renderTitle = () => {
     switch (node.type) {
       case 'start':
-        return <CommandBadge node={node} type="start" />;
       case 'command':
-        return <CommandBadge node={node} type="command" />;
       case 'message':
         return 'Сообщение';
       case 'keyboard':
@@ -107,8 +104,8 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
 
   return (
     <div className="flex items-start mb-6 relative">
-      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mr-4 shadow-sm relative", nodeColors[node.type])}>
-        <i className={cn(nodeIcons[node.type], "text-lg")}></i>
+      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mr-4 shadow-sm relative", nodeColors[node.type] ?? nodeColors.message)}>
+        <i className={cn(nodeIcons[node.type] ?? nodeIcons.message, "text-lg")}></i>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">

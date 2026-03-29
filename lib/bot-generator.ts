@@ -1,5 +1,5 @@
 // Внешние зависимости
-import { BotData, BotGroup } from '@shared/schema';
+import { BotData, BotGroup, Node } from '@shared/schema';
 
 // Ядро: контекст и состояние
 import { createGenerationContext } from './bot-generator/core/create-generation-context';
@@ -34,10 +34,30 @@ import { addAutoTransitionNodes } from './bot-generator/core/add-auto-transition
 import { addInputTargetNodes } from './bot-generator/core/add-input-target-nodes';
 import { collectInputTargetNodes } from './bot-generator/core/collect-input-target-nodes';
 import { assertValidPython } from './bot-generator/validation';
-import { collectAllCommandCallbacksFromNodes, findCommandNode } from './bot-generator/core/command-utils';
+import { collectAllCommandCallbacksFromNodes } from './bot-generator/core/command-utils';
 import { emitOnce, COMPONENT_NAMES } from './bot-generator/core/generation-state';
 import { hasInputCollection } from './templates/filters';
 import { collectConditionEntries } from './templates/condition/condition.renderer';
+
+function collectCommandSourceNodes(nodes: Node[], menuOnly: boolean = false): Node[] {
+  const matchesMenuVisibility = (node: Node) => !menuOnly || node.data?.showInMenu !== false;
+  const result: Node[] = [];
+  const seen = new Set<string>();
+
+  const push = (node: Node) => {
+    const command = (node.data?.command || '').trim().toLowerCase();
+    if (!command || seen.has(command) || !matchesMenuVisibility(node)) {
+      return;
+    }
+    seen.add(command);
+    result.push(node);
+  };
+
+  nodes.filter(node => node.type === 'command_trigger' && node.data?.command).forEach(push);
+
+  return result;
+}
+
 /**
  * Опции для генерации Python-кода бота
  */
@@ -299,8 +319,6 @@ function generateCodeSections(
     commandCallbackHandlers += `# Найдено ${commandButtons.size} кнопок команд: ${Array.from(commandButtons).join(', ')}\n`;
 
     commandButtons.forEach(commandCallback => {
-      const commandNode = findCommandNode(commandCallback, nodes);
-      const commandNodeType = commandNode ? (commandNode.type as 'start' | 'command') : '';
       const command = commandCallback.replace('cmd_', '');
 
       commandCallbackHandlers += generateCommandCallbackHandler({
@@ -312,7 +330,7 @@ function generateCodeSections(
           text: `Команда /${command}`,
         },
         indentLevel: '',
-        commandNode: commandNodeType,
+        commandNode: '',
         command: command,
       });
     });
@@ -331,8 +349,6 @@ function generateCodeSections(
 
   const nodesForHandlers = nodes
     .filter(node =>
-      node.type !== NODE_TYPES.START &&
-      node.type !== NODE_TYPES.COMMAND &&
       node.type !== 'command_trigger' &&
       node.type !== 'text_trigger' &&
       (node.type !== 'condition' || validConditionNodeIds.has(node.id))
@@ -359,12 +375,7 @@ function generateCodeSections(
   );
 
   // --- universal handlers ---
-  const commandNodes = nodes
-    .filter(node =>
-      node.type === NODE_TYPES.START ||
-      node.type === NODE_TYPES.COMMAND ||
-      node.type === 'command_trigger'
-    )
+  const commandNodes = collectCommandSourceNodes(nodes)
     .map(node => ({
       id: node.id,
       safeName: node.id.replace(/[^a-zA-Z0-9_]/g, '_'),
@@ -388,9 +399,7 @@ function generateCodeSections(
   );
 
   // --- main ---
-  const menuCommands = nodes.filter(node =>
-    (node.type === NODE_TYPES.START || node.type === NODE_TYPES.COMMAND || node.type === 'command_trigger') &&
-    node.data.showInMenu &&
+  const menuCommands = collectCommandSourceNodes(nodes, true).filter(node =>
     node.data.command
   );
 

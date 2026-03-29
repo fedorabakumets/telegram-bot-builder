@@ -38,6 +38,21 @@ export function CommandTargetSection({
   onButtonUpdate,
 }: CommandTargetSectionProps) {
   const isInvalidCommand = button.target && !button.target.startsWith('/');
+  const commandSourceNodes: Node[] = [];
+  const seenCommands = new Set<string>();
+
+  const pushCommandNode = (node: Node) => {
+    const command = (node.data.command || '').trim().toLowerCase();
+    if (!command || seenCommands.has(command)) {
+      return;
+    }
+    seenCommands.add(command);
+    commandSourceNodes.push(node);
+  };
+
+  allNodes
+    .filter(node => node.type === 'command_trigger' && node.data.command)
+    .forEach(pushCommandNode);
 
   return (
     <div className="mt-2 space-y-2">
@@ -49,19 +64,20 @@ export function CommandTargetSection({
           <SelectValue placeholder="Выберите команду" />
         </SelectTrigger>
         <SelectContent className="bg-gradient-to-br from-orange-50/95 to-amber-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
-          {allNodes
-            .filter(node => (node.type === 'start' || node.type === 'command') && node.data.command)
-            .map((node) => (
-              <SelectItem key={node.id} value={node.data.command!}>
-                <div className="flex items-center space-x-2">
-                  <i className={`${node.type === 'start' ? 'fas fa-play' : 'fas fa-terminal'} text-xs`}></i>
-                  <span>{node.data.command}</span>
-                  {node.data.description && (
-                    <span className="text-gray-500">- {node.data.description}</span>
-                  )}
-                </div>
-              </SelectItem>
-            ))}
+          {commandSourceNodes.map((node) => (
+            <SelectItem key={node.id} value={node.data.command!}>
+              <div className="flex items-center space-x-2">
+                <i className="fas fa-bolt text-xs"></i>
+                <span>{node.data.command}</span>
+                <span className="text-gray-500">
+                  - источник команды
+                </span>
+                {node.data.description && (
+                  <span className="text-gray-500">- {node.data.description}</span>
+                )}
+              </div>
+            </SelectItem>
+          ))}
           {STANDARD_COMMANDS.map((cmd) => (
             <SelectItem key={cmd.command} value={cmd.command}>
               <div className="flex items-center space-x-2">

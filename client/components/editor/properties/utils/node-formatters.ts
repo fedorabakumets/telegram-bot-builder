@@ -11,9 +11,7 @@ export function formatNodeDisplay(node: Node, sheetName?: string): string {
 }
 
 function getNodeTypeLabel(type: Node['type']): string {
-  const types: Record<Node['type'], string> = {
-    start: 'Старт',
-    command: 'Команда',
+  const types: Partial<Record<Node['type'], string>> = {
     message: 'Сообщение',
     location: 'Геолокация',
     contact: 'Контакт',
@@ -49,11 +47,7 @@ function getNodeTypeLabel(type: Node['type']): string {
 }
 
 function getNodeContent(node: Node): string {
-  if (node.type === 'start') {
-    return ((node.data as any).messageText || node.data.command || '').slice(0, 50);
-  }
-
-  if (node.type === 'command' || node.type === 'command_trigger') {
+  if (node.type === 'command_trigger') {
     return (node.data.command || '').slice(0, 50);
   }
 

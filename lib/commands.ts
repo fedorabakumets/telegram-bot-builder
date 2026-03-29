@@ -8,7 +8,6 @@
  */
 
 import type { Node as BotNode } from '@shared/schema';
-import { NODE_TYPES } from './bot-generator/types';
 
 /**
  * Категория команды
@@ -209,7 +208,7 @@ export function parseCommandFromText(text: string): string | null {
  * 
  * @example
  * const commands = generateBotFatherCommands([
- *   { type: 'start', data: { command: '/start', description: 'Запуск' } }
+ *   { type: 'command_trigger', data: { command: '/start', description: 'Запуск' } }
  * ]);
  */
 export function generateBotFatherCommands(nodes: BotNode[]): string {
@@ -217,20 +216,27 @@ export function generateBotFatherCommands(nodes: BotNode[]): string {
     return '';
   }
 
-  const commandNodes = nodes.filter(node =>
-    node &&
-    (node.type === NODE_TYPES.START || node.type === NODE_TYPES.COMMAND) &&
-    node.data?.command &&
-    (node.data?.showInMenu !== false)
-  );
+  const commandSourceNodes = [
+    ...nodes.filter(node =>
+      node &&
+      node.type === 'command_trigger' &&
+      node.data?.command &&
+      (node.data?.showInMenu !== false)
+    ),
+  ].filter((node, index, array) => {
+    const command = (node.data?.command || '').trim().toLowerCase();
+    if (!command) return false;
+    const firstIndex = array.findIndex(candidate => (candidate.data?.command || '').trim().toLowerCase() === command);
+    return firstIndex === index;
+  });
 
-  if (commandNodes.length === 0) {
+  if (commandSourceNodes.length === 0) {
     return '';
   }
 
   let botFatherCommands = '';
 
-  commandNodes.forEach(node => {
+  commandSourceNodes.forEach(node => {
     const command = (node.data.command || '').replace('/', '');
     const description = node.data.description || 'Команда бота';
     botFatherCommands += `${command} - ${description}\n`;

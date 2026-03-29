@@ -36,8 +36,6 @@ export interface FeatureFlags {
  * Константа типов узлов, которые уже обрабатываются отдельно
  */
 export const ALREADY_HANDLED_TYPES = new Set<string>([
-  NODE_TYPES.START,
-  NODE_TYPES.COMMAND,
   NODE_TYPES.MESSAGE,
   NODE_TYPES.KEYBOARD,
   'media',

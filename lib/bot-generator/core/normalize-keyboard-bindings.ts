@@ -3,7 +3,7 @@
  *
  * Модуль переводит новую canvas-модель клавиатуры в совместимую с генератором форму:
  * - keyboard-нода остаётся в графе только как безопасный target;
- * - данные клавиатуры переносятся в ближайший message/start/command-контекст;
+ * - данные клавиатуры переносятся в ближайший message-контекст;
  * - старые встроенные клавиатуры продолжают работать без изменений.
  *
  * @module bot-generator/core/normalize-keyboard-bindings
@@ -30,8 +30,6 @@ type GraphConnection = {
 
 /** Список типов узлов, которые могут владеть клавиатурой */
 const KEYBOARD_HOST_TYPES = new Set<string>([
-  NODE_TYPES.START,
-  NODE_TYPES.COMMAND,
   NODE_TYPES.MESSAGE,
 ]);
 
@@ -102,7 +100,7 @@ function cloneNode(node: Node): Node {
  * Проверяет, содержит ли раскладка keyboard реальные настройки.
  *
  * Пустой объект от формы считаем отсутствием раскладки, чтобы не затирать
- * legacy-значения у message/start/command.
+ * legacy-значения у message.
  *
  * @param layout - Раскладка keyboard
  * @returns `true`, если раскладка осмысленная
@@ -123,7 +121,7 @@ function hasMeaningfulKeyboardLayout(layout: unknown): boolean {
 }
 
 /**
- * Ищет все message/start/command-узлы, которые явно ссылаются на keyboard-ноду через `keyboardNodeId`.
+ * Ищет все message-узлы, которые явно ссылаются на keyboard-ноду через `keyboardNodeId`.
  *
  * @param nodes - Все узлы графа
  * @param keyboardNodeId - ID keyboard-ноды
@@ -136,7 +134,7 @@ function findExplicitKeyboardHostIds(nodes: Node[], keyboardNodeId: string): str
 }
 
 /**
- * Ищет ближайший message/start/command-контекст, поднимаясь по графу назад.
+ * Ищет ближайший message-контекст, поднимаясь по графу назад.
  *
  * @param keyboardNodeId - ID keyboard-ноды
  * @param nodeMap - Карта узлов по ID
@@ -270,7 +268,7 @@ export function normalizeKeyboardBindings(nodes: Node[], connections: GraphConne
         })();
 
     if (hostIds.length === 0) {
-      generatorLogger.warn(`Не удалось привязать keyboard-ноду ${keyboardNodeId} к message/start/command, она будет проигнорирована`);
+      generatorLogger.warn(`Не удалось привязать keyboard-ноду ${keyboardNodeId} к message, она будет проигнорирована`);
       clearKeyboardNodeData(keyboardNode);
       continue;
     }

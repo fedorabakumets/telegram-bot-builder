@@ -498,7 +498,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         <MessagePreview node={node} />
 
         {/* Media attachment indicator for non-image files */}
-        {(node.type === 'message' || node.type === 'command' || node.type === 'start') && !node.data.imageUrl && !node.data.attachedMedia?.length && (node.data.videoUrl || node.data.audioUrl || node.data.documentUrl) && (
+        {node.type === 'message' && !node.data.imageUrl && !node.data.attachedMedia?.length && (node.data.videoUrl || node.data.audioUrl || node.data.documentUrl) && (
           <MediaAttachmentIndicator node={node} />
         )}
 

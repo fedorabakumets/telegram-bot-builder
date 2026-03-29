@@ -11,6 +11,10 @@ export const nodeSchema = z.object({
   /** Уникальный идентификатор узла */
   id: z.string(),
   /** Тип узла: "start", "message", "command", "command_trigger", "text_trigger", "sticker", "voice" и др. */
+  /**
+   * @deprecated Canonical content node is `message`.
+   * `start` and `command` are kept only for backward compatibility with legacy projects.
+   */
   type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media']),
   /** Позиция узла на холсте */
   position: z.object({
@@ -22,6 +26,7 @@ export const nodeSchema = z.object({
   /** Данные узла */
   data: z.object({
     /** Текст команды, например "/start" или "/help" */
+    /** @deprecated Legacy command text for `start`/`command` nodes. New projects should use `command_trigger`. */
     command: z.string().optional(),
     /** Описание команды для отображения в меню BotFather */
     description: z.string().optional(),
@@ -287,6 +292,8 @@ export const nodeSchema = z.object({
     enableAutoTransition: z.boolean().default(false),
     /** ID узла для автоматического перехода */
     autoTransitionTo: z.string().optional(),
+    /** @deprecated Stable link to the originating node for legacy/compatibility flows. Use `autoTransitionTo` for execution flow, `sourceNodeId` for identity. */
+    sourceNodeId: z.string().optional(),
     /** Минимальная длина текстового ввода */
     minLength: z.number().optional(),
     /** Максимальная длина текстового ввода */

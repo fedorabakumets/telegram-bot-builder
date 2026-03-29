@@ -55,13 +55,8 @@ export function TargetNodeSelector({
           <SelectValue placeholder="⊘ Не выбрано" />
         </SelectTrigger>
         <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
-          {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id && (n.node.type === 'start' || n.node.type === 'command'))
-            .map(({ node, sheetName }) => (
-              <SelectItem key={node.id} value={node.id}>
-                <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">{formatNodeDisplay(node, sheetName)}</span>
-              </SelectItem>
-            ))}
-          {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id && n.node.type !== 'start' && n.node.type !== 'command')
+          {getAllNodesFromAllSheets
+            .filter(n => n.node.id !== selectedNode.id)
             .map(({ node, sheetName }) => {
               const { name, icon } = getNodeInfo(node);
               return (

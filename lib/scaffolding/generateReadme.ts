@@ -10,7 +10,14 @@ export function generateReadme(
   customFileName?: string
 ): string {
   const { nodes } = extractNodesAndConnections(botData);
-  const commandNodes = nodes.filter(node => (node.type === 'start' || node.type === 'command') && node.data?.command);
+  const commandNodes = [
+    ...nodes.filter(node => node.type === 'command_trigger' && node.data?.command),
+  ].filter((node, index, array) => {
+    const command = (node.data?.command || '').trim().toLowerCase();
+    if (!command) return false;
+    const firstIndex = array.findIndex(candidate => (candidate.data?.command || '').trim().toLowerCase() === command);
+    return firstIndex === index;
+  });
 
   // Определяем имя файла бота
   const fileName = customFileName
@@ -87,7 +94,7 @@ export function generateReadme(
   readme += '- **Сообщений**: ' + nodes.filter(n => n && n.type === 'message').length + '\n';
   readme += '- **Кнопок**: ' + (nodes.reduce((sum: number, node: any) => sum + (node?.data?.buttons?.length || 0), 0) as number) + '\n';
   readme += '- **Клавиатур**: ' + nodes.filter(n => n && n.data?.keyboardType !== 'none').length + '\n';
-  readme += '- **В меню**: ' + nodes.filter(n => (n.type === 'start' || n.type === 'command') && n.data?.showInMenu).length + '\n\n';
+  readme += '- **В меню**: ' + commandNodes.filter(n => n.data?.showInMenu).length + '\n\n';
 
   readme += '## Лицензия\n\n';
   readme += 'Сгенерировано с помощью TelegramBot Builder\n';

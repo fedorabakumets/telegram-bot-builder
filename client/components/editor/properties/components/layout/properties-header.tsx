@@ -31,9 +31,7 @@ interface PropertiesHeaderProps {
 /**
  * Маппинг названий типов узлов
  */
-const nodeTypeNames: Record<Node['type'], string> = {
-  start: '/start команда',
-  command: 'Пользовательская команда',
+const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   message: 'Текстовое сообщение',
   sticker: 'Стикер',
   voice: 'Голосовое сообщение',
@@ -68,9 +66,7 @@ const nodeTypeNames: Record<Node['type'], string> = {
 /**
  * Маппинг иконок типов узлов
  */
-const nodeIcons: Record<Node['type'], string> = {
-  start: 'fas fa-play',
-  command: 'fas fa-terminal',
+const nodeIcons: Partial<Record<Node['type'], string>> = {
   message: 'fas fa-comment',
   sticker: 'fas fa-smile',
   voice: 'fas fa-microphone',
@@ -105,9 +101,7 @@ const nodeIcons: Record<Node['type'], string> = {
 /**
  * Маппинг цветов типов узлов
  */
-const nodeColors: Record<Node['type'], string> = {
-  start: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-  command: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+const nodeColors: Partial<Record<Node['type'], string>> = {
   message: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
   sticker: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
   voice: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -154,10 +148,23 @@ export function PropertiesHeader({
   const { toast } = useToast();
 
   const getNodeTitle = () => {
-    return (selectedNode.type === 'start' || selectedNode.type === 'command')
-      ? `${selectedNode.data.command || nodeTypeNames[selectedNode.type]}`
-      : nodeTypeNames[selectedNode.type];
+    if (selectedNode.type === 'command_trigger') {
+      return selectedNode.data.command || nodeTypeNames[selectedNode.type];
+    }
+
+    if (selectedNode.type === 'text_trigger') {
+      const text = Array.isArray((selectedNode.data as any).textSynonyms)
+        ? (selectedNode.data as any).textSynonyms[0]
+        : '';
+      return text || nodeTypeNames[selectedNode.type];
+    }
+
+    return selectedNode.data.messageText || nodeTypeNames[selectedNode.type] || 'Узел';
   };
+
+  const nodeTitle = getNodeTitle();
+  const nodeIcon = nodeIcons[selectedNode.type] || 'fas fa-circle';
+  const nodeColor = nodeColors[selectedNode.type] || 'bg-slate-100 text-slate-600';
 
   return (
     <div className="bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-950/40 dark:to-slate-900/30 border-b border-border/50 backdrop-blur-sm">
@@ -167,8 +174,8 @@ export function PropertiesHeader({
           {/* Header with Icon and Title */}
           <div className="flex items-center gap-3 sm:gap-3.5 justify-between">
             <div className="flex items-center gap-3 sm:gap-3.5 flex-1 min-w-0">
-              <div className={`w-10 sm:w-11 h-10 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm transition-all ${nodeColors[selectedNode.type]}`}>
-                <i className={`${nodeIcons[selectedNode.type]} text-base sm:text-lg`}></i>
+              <div className={`w-10 sm:w-11 h-10 sm:h-11 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm transition-all ${nodeColor}`}>
+                <i className={`${nodeIcon} text-base sm:text-lg`}></i>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Текущий элемент</p>
@@ -207,7 +214,7 @@ export function PropertiesHeader({
                     }}
                   >
                     <SelectTrigger className="w-1/2 h-9 text-xs sm:text-sm bg-transparent border-none shadow-none focus:ring-0 p-0 text-slate-900 dark:text-slate-100 font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent min-h-[36px]">
-                      {getNodeTitle()}
+                      {nodeTitle}
                     </SelectTrigger>
                     <SelectContent className="z-50 bg-gradient-to-br from-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-60 overflow-y-auto">
                       <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
@@ -217,8 +224,8 @@ export function PropertiesHeader({
                       <SelectItem value="animation">🎞️ GIF анимация</SelectItem>
                       <SelectItem value="location">📍 Геолокация</SelectItem>
                       <SelectItem value="contact">📞 Контакт</SelectItem>
-                      <SelectItem value="start">▶️ /start команда</SelectItem>
-                      <SelectItem value="command">🔧 Пользовательская команда</SelectItem>
+                      <SelectItem value="command_trigger">⚡ Триггер команды</SelectItem>
+                      <SelectItem value="text_trigger">💬 Текстовый триггер</SelectItem>
                       <SelectItem value="pin_message">📌 Закрепить сообщение</SelectItem>
                       <SelectItem value="unpin_message">📌❌ Открепить сообщение</SelectItem>
                       <SelectItem value="delete_message">🗑️ Удалить сообщение</SelectItem>
