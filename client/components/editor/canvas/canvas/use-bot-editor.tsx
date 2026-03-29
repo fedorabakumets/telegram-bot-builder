@@ -11,6 +11,7 @@ import { migrateCommandsToCommandTriggers } from './utils/migrate-command-trigge
 import { migrateLegacyNodeTypes } from './utils/migrate-legacy-node-types';
 import { migrateConditionalMessagesToConditionNodes } from './utils/migrate-conditional-messages';
 import { migrateLegacyMessageInputToLinkedInputs } from './utils/migrate-message-input';
+import { migrateMessageKeyboardsToNodes } from './utils/migrate-message-keyboards';
 
 /**
  * Интерфейс для состояния истории изменений
@@ -338,8 +339,11 @@ export function useBotEditor(initialData?: BotData) {
     // Миграция узлов с условными сообщениями в узлы condition
     const migratedWithConditions = migrateConditionalMessagesToConditionNodes(migratedWithTypes);
 
+    // Переносим legacy-кнопки message в отдельные keyboard-узлы новой canvas-модели
+    const migratedWithKeyboardNodes = migrateMessageKeyboardsToNodes(migratedWithConditions);
+
     // Применяем иерархическую компоновку только если не отключена
-    const migratedWithLinkedInputs = migrateLegacyMessageInputToLinkedInputs(migratedWithConditions);
+    const migratedWithLinkedInputs = migrateLegacyMessageInputToLinkedInputs(migratedWithKeyboardNodes);
 
     const finalNodes = skipLayout
       ? migratedWithLinkedInputs

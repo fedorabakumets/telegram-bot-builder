@@ -1,29 +1,83 @@
+/**
+ * @fileoverview Иерархическая раскладка canvas-графа с учетом ролей узлов и реальных связей.
+ *
+ * Алгоритм строит слои по основным связям сценария, затем отдельно учитывает
+ * `condition`, `input`, `media`, `broadcast` и `keyboard`, чтобы линии читались
+ * естественнее на canvas и не появлялись лишние прыжки по диагонали.
+ */
+
 import { Node } from '@/types/bot';
 import { getIsMobile } from '@/components/editor/header/hooks/use-mobile';
+import { getKeyboardNodeId } from '@/components/editor/canvas/canvas-node/keyboard-connection';
 
 /**
- * Опции иерархической компоновки
+ * Параметры иерархической раскладки.
  */
 interface HierarchicalLayoutOptions {
-  /** Высота одного уровня в иерархии */
+  /** Высота одного уровня раскладки, оставлена для совместимости с шаблонами. */
   levelHeight: number;
-  /** Ширина узла по умолчанию */
+  /** Ширина узла по умолчанию. */
   nodeWidth: number;
-  /** Высота узла по умолчанию */
+  /** Высота узла по умолчанию. */
   nodeHeight: number;
-  /** Горизонтальное расстояние между узлами */
+  /** Горизонтальный отступ между слоями. */
   horizontalSpacing: number;
-  /** Вертикальное расстояние между узлами */
+  /** Вертикальный отступ между узлами внутри слоя. */
   verticalSpacing: number;
-  /** Начальная X-координата */
+  /** Начальная координата X. */
   startX: number;
-  /** Начальная Y-координата */
+  /** Начальная координата Y. */
   startY: number;
-  /** Карта реальных размеров узлов */
+  /** Реальные размеры узлов, если они уже измерены на canvas. */
   nodeSizes?: Map<string, { width: number; height: number }> | undefined;
 }
 
-/** Стандартные параметры компоновки */
+/**
+ * Тип связи canvas, который влияет на раскладку.
+ */
+type LayoutConnectionType =
+  | 'auto-transition'
+  | 'button-goto'
+  | 'input-target'
+  | 'trigger-next'
+  | 'condition-source'
+  | 'keyboard-link';
+
+/**
+ * Упрощенное описание связи canvas для построения графа раскладки.
+ */
+interface LayoutConnection {
+  /** ID исходного узла. */
+  fromId: string;
+  /** ID целевого узла. */
+  toId: string;
+  /** Тип связи. */
+  type: LayoutConnectionType;
+  /** ID кнопки, если связь идет от inline-кнопки. */
+  buttonId?: string;
+}
+
+/**
+ * Структура графа, на которой строится раскладка.
+ */
+interface LayoutGraph {
+  /** Узлы текущего canvas по идентификатору. */
+  nodesById: Map<string, Node>;
+  /** Основные ориентированные связи, которые формируют слои. */
+  mainAdjacency: Map<string, Set<string>>;
+  /** Обратные основные связи для barycenter-сортировки. */
+  reverseMainAdjacency: Map<string, Set<string>>;
+  /** Привязка `keyboard` к хосту `message`. */
+  keyboardHostByKeyboardId: Map<string, string>;
+  /** Привязка `message` к связанному `keyboard`. */
+  keyboardByHostId: Map<string, string>;
+  /** Узлы, на которые ведут кнопки конкретного источника. */
+  buttonTargetsBySourceId: Map<string, Set<string>>;
+}
+
+/**
+ * Стандартные параметры раскладки.
+ */
 const DEFAULT_OPTIONS: HierarchicalLayoutOptions = {
   levelHeight: 100,
   nodeWidth: 320,
@@ -31,308 +85,874 @@ const DEFAULT_OPTIONS: HierarchicalLayoutOptions = {
   horizontalSpacing: 80,
   verticalSpacing: 60,
   startX: 50,
-  startY: 50
+  startY: 50,
 };
 
+/**
+ * Узлы, которые естественно являются входом сценария.
+ */
+const ROOT_TYPES = new Set(['start', 'command_trigger', 'text_trigger']);
+
+/**
+ * Узлы-сопровождающие, которые не должны вести себя как полноценный шаг сценария.
+ */
+const COMPANION_TYPES = new Set(['keyboard']);
+
+/**
+ * Узлы контента, которые не ломают основную цепочку сценария.
+ */
+const CONTENT_TYPES = new Set([
+  'message',
+  'media',
+  'broadcast',
+  'sticker',
+  'voice',
+  'location',
+  'contact',
+  'client_auth',
+  'admin_rights',
+  'command',
+]);
+
+/**
+ * Возвращает размер узла, учитывая реальные измерения canvas.
+ */
 function getNodeSize(nodeId: string, options: HierarchicalLayoutOptions): { width: number; height: number } {
-  const realSize = options.nodeSizes?.get(nodeId);
-  return realSize || { width: options.nodeWidth, height: options.nodeHeight };
+  return options.nodeSizes?.get(nodeId) || { width: options.nodeWidth, height: options.nodeHeight };
 }
 
 /**
- * Собирает все рёбра графа из данных узлов.
- * Учитывает: buttons[goto], autoTransitionTo, inputTargetNodeId, branches[target].
+ * Возвращает роль узла для сортировки внутри слоя.
  */
-function buildEdges(nodes: Node[]): Map<string, Set<string>> {
-  const adj = new Map<string, Set<string>>();
+function getNodeRole(node: Node): 'root' | 'content' | 'input' | 'condition' | 'keyboard' | 'other' {
+  if (ROOT_TYPES.has(node.type)) return 'root';
+  if (COMPANION_TYPES.has(node.type)) return 'keyboard';
+  if (node.type === 'condition') return 'condition';
+  if (node.type === 'input') return 'input';
+  if (CONTENT_TYPES.has(node.type)) return 'content';
+  return 'other';
+}
 
-  const addEdge = (from: string, to: string) => {
-    if (!from || !to || from === to) return;
-    if (!adj.has(from)) adj.set(from, new Set());
-    adj.get(from)!.add(to);
+/**
+ * Возвращает приоритет узла в пределах одного слоя.
+ */
+function getNodePriority(node: Node): number {
+  switch (getNodeRole(node)) {
+    case 'root':
+      return 0;
+    case 'content':
+      return 1;
+    case 'input':
+      return 2;
+    case 'condition':
+      return 3;
+    case 'keyboard':
+      return 4;
+    default:
+      return 5;
+  }
+}
+
+/**
+ * Добавляет ориентированное ребро в граф, если оба узла существуют.
+ */
+function addEdge(
+  adjacency: Map<string, Set<string>>,
+  reverseAdjacency: Map<string, Set<string>>,
+  from: string,
+  to: string,
+  existingIds: Set<string>,
+): void {
+  if (!from || !to || from === to) return;
+  if (!existingIds.has(from) || !existingIds.has(to)) return;
+
+  if (!adjacency.has(from)) adjacency.set(from, new Set());
+  if (!reverseAdjacency.has(to)) reverseAdjacency.set(to, new Set());
+  adjacency.get(from)!.add(to);
+  reverseAdjacency.get(to)!.add(from);
+}
+
+/**
+ * Проверяет, что значение похоже на объект.
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Возвращает массив кнопок из `data.buttons`.
+ */
+function getButtons(data: unknown): any[] {
+  if (!isRecord(data) || !Array.isArray(data.buttons)) return [];
+  return data.buttons;
+}
+
+/**
+ * Строит карту связей message -> keyboard по данным узлов.
+ */
+function buildKeyboardLinks(nodesById: Map<string, Node>): Map<string, string> {
+  const keyboardByHostId = new Map<string, string>();
+
+  for (const node of nodesById.values()) {
+    if (node.type !== 'message') continue;
+
+    const keyboardNodeId = getKeyboardNodeId(node.data as Record<string, unknown>);
+    if (!keyboardNodeId) continue;
+
+    const keyboardNode = nodesById.get(keyboardNodeId);
+    if (!keyboardNode || keyboardNode.type !== 'keyboard') continue;
+
+    keyboardByHostId.set(node.id, keyboardNode.id);
+  }
+
+  return keyboardByHostId;
+}
+
+/**
+ * Возвращает связи для раскладки, если canvas не передал их явно.
+ */
+function inferConnectionsFromNodes(
+  nodesById: Map<string, Node>,
+  keyboardByHostId: Map<string, string>,
+): LayoutConnection[] {
+  const connections: LayoutConnection[] = [];
+  const seen = new Set<string>();
+
+  const pushConnection = (connection: LayoutConnection) => {
+    const key = `${connection.fromId}->${connection.toId}:${connection.type}:${connection.buttonId ?? ''}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    connections.push(connection);
   };
 
-  for (const node of nodes) {
-    const d = node.data as any;
+  for (const node of nodesById.values()) {
+    const data = node.data as Record<string, unknown>;
+    const linkedKeyboardId = node.type === 'message' ? keyboardByHostId.get(node.id) ?? null : null;
+    const linkedKeyboard = linkedKeyboardId ? nodesById.get(linkedKeyboardId) : null;
+    const keyboardButtons = linkedKeyboard ? getButtons(linkedKeyboard.data) : [];
+    const nodeButtons = getButtons(data);
 
-    // Кнопки с action === 'goto'
-    if (Array.isArray(d?.buttons)) {
-      for (const btn of d.buttons) {
-        if (btn.action === 'goto' && btn.target) {
-          addEdge(node.id, btn.target);
+    if (node.type === 'message' && linkedKeyboard) {
+      pushConnection({
+        fromId: node.id,
+        toId: linkedKeyboard.id,
+        type: 'keyboard-link',
+      });
+    }
+
+    /**
+     * Если у сообщения есть отдельная keyboard-нода, то для layout важны
+     * не только сами keyboard-узлы, но и их кнопочные цели: это помогает
+     * центровать сообщение между ветками сценария, а не держать его над
+     * «пустой» keyboard-обвязкой.
+     */
+    if (node.type === 'message' && linkedKeyboard && keyboardButtons.length > 0) {
+      for (const button of keyboardButtons) {
+        if (button?.action === 'goto' && button?.target) {
+          pushConnection({
+            fromId: node.id,
+            toId: button.target,
+            type: 'button-goto',
+            buttonId: button.id,
+          });
         }
       }
     }
 
-    // Автопереход
-    if (d?.autoTransitionTo) {
-      addEdge(node.id, d.autoTransitionTo);
-    }
+    if (node.type === 'condition') {
+      const sourceNodeId = typeof data.sourceNodeId === 'string' ? data.sourceNodeId : '';
+      if (sourceNodeId) {
+        pushConnection({
+          fromId: sourceNodeId,
+          toId: node.id,
+          type: 'condition-source',
+        });
+      }
 
-    // Переход по вводу
-    if (d?.inputTargetNodeId) {
-      addEdge(node.id, d.inputTargetNodeId);
-    }
-
-    // Ветки condition-узла
-    if (Array.isArray(d?.branches)) {
-      for (const branch of d.branches) {
-        if (branch.target) {
-          addEdge(node.id, branch.target);
+      if (Array.isArray(data.branches)) {
+        for (const branch of data.branches as any[]) {
+          if (branch?.target) {
+            pushConnection({
+              fromId: node.id,
+              toId: branch.target,
+              type: 'button-goto',
+              buttonId: branch.id,
+            });
+          }
         }
       }
+    }
+
+    const buttonsToUse = node.type === 'message' && linkedKeyboard && keyboardButtons.length > 0
+      ? []
+      : nodeButtons;
+    const sourceId = node.id;
+
+    if (sourceId && Array.isArray(buttonsToUse)) {
+      for (const button of buttonsToUse) {
+        if (button?.action === 'goto' && button?.target) {
+          pushConnection({
+            fromId: sourceId,
+            toId: button.target,
+            type: 'button-goto',
+            buttonId: button.id,
+          });
+        }
+      }
+    }
+
+    if (typeof data.autoTransitionTo === 'string' && data.autoTransitionTo) {
+      pushConnection({
+        fromId: node.id,
+        toId: data.autoTransitionTo,
+        type: node.type === 'command_trigger' || node.type === 'text_trigger' ? 'trigger-next' : 'auto-transition',
+      });
+    }
+
+    if (typeof data.inputTargetNodeId === 'string' && data.inputTargetNodeId) {
+      pushConnection({
+        fromId: node.id,
+        toId: data.inputTargetNodeId,
+        type: 'input-target',
+      });
     }
   }
 
-  return adj;
+  return connections;
 }
 
 /**
- * Longest-path layering (Sugiyama step 2).
- * Каждый узел получает слой = максимальная длина пути от корня до него.
- * Возвращает Map<nodeId, layer>.
+ * Собирает граф, на котором потом строится раскладка.
  */
-function assignLayers(
+function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
+  const nodesById = new Map(nodes.map(node => [node.id, node]));
+  const existingIds = new Set(nodes.map(node => node.id));
+  const keyboardHostByKeyboardId = new Map<string, string>();
+  const keyboardByHostId = buildKeyboardLinks(nodesById);
+  const buttonTargetsBySourceId = new Map<string, Set<string>>();
+  const mainAdjacency = new Map<string, Set<string>>();
+  const reverseMainAdjacency = new Map<string, Set<string>>();
+
+  const registerKeyboardLink = (hostId: string, keyboardId: string) => {
+    const hostNode = nodesById.get(hostId);
+    const keyboardNode = nodesById.get(keyboardId);
+    if (!hostNode || !keyboardNode) return;
+    if (hostNode.type !== 'message' || keyboardNode.type !== 'keyboard') return;
+
+    keyboardByHostId.set(hostId, keyboardId);
+    keyboardHostByKeyboardId.set(keyboardId, hostId);
+  };
+
+  /**
+   * Регистрирует target кнопки для source-узла, чтобы message сильнее тянулся к своим веткам.
+   */
+  const registerButtonTarget = (sourceId: string, targetId: string) => {
+    if (!sourceId || !targetId || sourceId === targetId) return;
+    if (!nodesById.has(sourceId) || !nodesById.has(targetId)) return;
+
+    if (!buttonTargetsBySourceId.has(sourceId)) {
+      buttonTargetsBySourceId.set(sourceId, new Set());
+    }
+
+    buttonTargetsBySourceId.get(sourceId)!.add(targetId);
+  };
+
+  for (const [hostId, keyboardId] of keyboardByHostId) {
+    registerKeyboardLink(hostId, keyboardId);
+  }
+
+  const sourceConnections = connections.length > 0
+    ? (connections as LayoutConnection[])
+    : inferConnectionsFromNodes(nodesById, keyboardByHostId);
+
+  for (const connection of sourceConnections) {
+    if (!connection || connection.type !== 'keyboard-link') {
+      continue;
+    }
+
+    if (typeof connection.fromId !== 'string' || typeof connection.toId !== 'string') {
+      continue;
+    }
+
+    registerKeyboardLink(connection.fromId, connection.toId);
+  }
+
+  for (const connection of sourceConnections) {
+    if (!connection || typeof connection.fromId !== 'string' || typeof connection.toId !== 'string') {
+      continue;
+    }
+
+    if (connection.type === 'keyboard-link') {
+      continue;
+    }
+
+    const sourceNode = nodesById.get(connection.fromId);
+    const targetNode = nodesById.get(connection.toId);
+    if (!sourceNode || !targetNode) continue;
+
+    let sourceId = connection.fromId;
+    if (connection.type === 'button-goto' && keyboardHostByKeyboardId.has(sourceId)) {
+      sourceId = keyboardHostByKeyboardId.get(sourceId)!;
+    }
+
+    addEdge(mainAdjacency, reverseMainAdjacency, sourceId, connection.toId, existingIds);
+
+    if (connection.type === 'button-goto') {
+      registerButtonTarget(sourceId, connection.toId);
+    }
+  }
+
+  return {
+    nodesById,
+    mainAdjacency,
+    reverseMainAdjacency,
+    keyboardHostByKeyboardId,
+    keyboardByHostId,
+    buttonTargetsBySourceId,
+  };
+}
+
+/**
+ * Строит компоненты сильной связности, чтобы циклы не ломали слои.
+ */
+function buildStronglyConnectedComponents(
   nodes: Node[],
-  adj: Map<string, Set<string>>
-): Map<string, number> {
-  const nodeIds = new Set(nodes.map(n => n.id));
+  adjacency: Map<string, Set<string>>,
+): {
+  componentByNodeId: Map<string, number>;
+  components: string[][];
+  componentAdjacency: Map<number, Set<number>>;
+  componentReverseAdjacency: Map<number, Set<number>>;
+} {
+  const nodeIds = nodes.map(node => node.id);
+  const nodeSet = new Set(nodeIds);
+  const indexMap = new Map<string, number>();
+  const lowLinkMap = new Map<string, number>();
+  const stack: string[] = [];
+  const onStack = new Set<string>();
+  const components: string[][] = [];
+  let index = 0;
 
-  // Считаем входящие степени (только для узлов, присутствующих в наборе)
-  const inDegree = new Map<string, number>();
-  for (const id of nodeIds) inDegree.set(id, 0);
+  const visit = (nodeId: string) => {
+    indexMap.set(nodeId, index);
+    lowLinkMap.set(nodeId, index);
+    index += 1;
+    stack.push(nodeId);
+    onStack.add(nodeId);
 
-  for (const [from, targets] of adj) {
-    if (!nodeIds.has(from)) continue;
-    for (const to of targets) {
-      if (nodeIds.has(to)) {
-        inDegree.set(to, (inDegree.get(to) ?? 0) + 1);
+    for (const next of adjacency.get(nodeId) || []) {
+      if (!nodeSet.has(next)) continue;
+
+      if (!indexMap.has(next)) {
+        visit(next);
+        lowLinkMap.set(nodeId, Math.min(lowLinkMap.get(nodeId)!, lowLinkMap.get(next)!));
+      } else if (onStack.has(next)) {
+        lowLinkMap.set(nodeId, Math.min(lowLinkMap.get(nodeId)!, indexMap.get(next)!));
       }
     }
-  }
 
-  // Корневые узлы: нет входящих рёбер, или тип start/command_trigger/text_trigger
-  const rootTypes = new Set(['start', 'command_trigger', 'text_trigger']);
-  const layer = new Map<string, number>();
+    if (lowLinkMap.get(nodeId) === indexMap.get(nodeId)) {
+      const component: string[] = [];
+      let current = '';
+      do {
+        current = stack.pop()!;
+        onStack.delete(current);
+        component.push(current);
+      } while (current !== nodeId);
+      components.push(component);
+    }
+  };
 
-  const queue: string[] = [];
-  for (const node of nodes) {
-    if (inDegree.get(node.id) === 0 || rootTypes.has(node.type)) {
-      layer.set(node.id, 0);
-      queue.push(node.id);
+  for (const nodeId of nodeIds) {
+    if (!indexMap.has(nodeId)) {
+      visit(nodeId);
     }
   }
 
-  // Если корней нет — берём первый узел
-  if (queue.length === 0 && nodes.length > 0) {
-    layer.set(nodes[0].id, 0);
-    queue.push(nodes[0].id);
-  }
-
-  // BFS с longest-path: обновляем слой если нашли более длинный путь
-  const visited = new Set<string>();
-  const bfsQueue = [...queue];
-
-  while (bfsQueue.length > 0) {
-    const id = bfsQueue.shift()!;
-    if (visited.has(id)) continue;
-    visited.add(id);
-
-    const currentLayer = layer.get(id) ?? 0;
-    const children = adj.get(id);
-    if (!children) continue;
-
-    for (const childId of children) {
-      if (!nodeIds.has(childId)) continue;
-      const childLayer = layer.get(childId) ?? -1;
-      const newLayer = currentLayer + 1;
-      if (newLayer > childLayer) {
-        layer.set(childId, newLayer);
-        // Переобходим ребёнка, т.к. его слой изменился
-        visited.delete(childId);
-        bfsQueue.push(childId);
-      }
+  const componentByNodeId = new Map<string, number>();
+  components.forEach((component, componentId) => {
+    for (const nodeId of component) {
+      componentByNodeId.set(nodeId, componentId);
     }
-  }
-
-  // Узлы, которые не были достигнуты — назначаем слой 0
-  for (const node of nodes) {
-    if (!layer.has(node.id)) {
-      layer.set(node.id, 0);
-    }
-  }
-
-  return layer;
-}
-
-/**
- * Barycenter heuristic: сортирует узлы внутри слоя по средней Y-позиции родителей.
- */
-function sortLayerByBarycenter(
-  layerNodes: Node[],
-  prevLayerPositions: Map<string, number>,
-  adj: Map<string, Set<string>>
-): Node[] {
-  // Строим обратный граф для поиска родителей
-  const parents = new Map<string, string[]>();
-  for (const [from, targets] of adj) {
-    for (const to of targets) {
-      if (!parents.has(to)) parents.set(to, []);
-      parents.get(to)!.push(from);
-    }
-  }
-
-  const barycenters = layerNodes.map(node => {
-    const nodeParents = parents.get(node.id) ?? [];
-    const positions = nodeParents
-      .map(p => prevLayerPositions.get(p))
-      .filter((p): p is number => p !== undefined);
-
-    const avg = positions.length > 0
-      ? positions.reduce((s, v) => s + v, 0) / positions.length
-      : Infinity;
-
-    return { node, avg };
   });
 
-  barycenters.sort((a, b) => a.avg - b.avg);
-  return barycenters.map(b => b.node);
+  const componentAdjacency = new Map<number, Set<number>>();
+  const componentReverseAdjacency = new Map<number, Set<number>>();
+
+  for (const [from, targets] of adjacency) {
+    const fromComponent = componentByNodeId.get(from);
+    if (fromComponent === undefined) continue;
+
+    for (const to of targets) {
+      const toComponent = componentByNodeId.get(to);
+      if (toComponent === undefined || toComponent === fromComponent) continue;
+
+      if (!componentAdjacency.has(fromComponent)) componentAdjacency.set(fromComponent, new Set());
+      if (!componentReverseAdjacency.has(toComponent)) componentReverseAdjacency.set(toComponent, new Set());
+      componentAdjacency.get(fromComponent)!.add(toComponent);
+      componentReverseAdjacency.get(toComponent)!.add(fromComponent);
+    }
+  }
+
+  return {
+    componentByNodeId,
+    components,
+    componentAdjacency,
+    componentReverseAdjacency,
+  };
 }
 
 /**
- * Sugiyama-style layered layout для DAG.
- *
- * Шаги:
- * 1. Построение графа рёбер из данных узлов
- * 2. Longest-path layering
- * 3. Barycenter sorting внутри слоёв
- * 4. Расчёт позиций с учётом реальных размеров
- * 5. Изолированные узлы — справа
+ * Назначает слой каждой компоненте графа.
  */
-export function createHierarchicalLayout(
+function assignComponentLayers(
+  nodesById: Map<string, Node>,
+  componentByNodeId: Map<string, number>,
+  componentAdjacency: Map<number, Set<number>>,
+  componentReverseAdjacency: Map<number, Set<number>>,
+): Map<number, number> {
+  const componentLayers = new Map<number, number>();
+  const componentNodeIds = new Map<number, string[]>();
+
+  for (const [nodeId, componentId] of componentByNodeId) {
+    if (!componentNodeIds.has(componentId)) componentNodeIds.set(componentId, []);
+    componentNodeIds.get(componentId)!.push(nodeId);
+  }
+
+  const rootComponents = new Set<number>();
+  for (const [componentId, nodeIds] of componentNodeIds) {
+    if (nodeIds.some(nodeId => ROOT_TYPES.has(nodesById.get(nodeId)?.type ?? ''))) {
+      rootComponents.add(componentId);
+      componentLayers.set(componentId, 0);
+    }
+  }
+
+  const indegree = new Map<number, number>();
+  for (const componentId of componentNodeIds.keys()) {
+    indegree.set(componentId, componentReverseAdjacency.get(componentId)?.size ?? 0);
+  }
+
+  const queue: number[] = [];
+  for (const componentId of componentNodeIds.keys()) {
+    if ((indegree.get(componentId) ?? 0) === 0) {
+      queue.push(componentId);
+    }
+  }
+
+  if (queue.length === 0 && componentNodeIds.size > 0) {
+    queue.push(componentNodeIds.keys().next().value as number);
+  }
+
+  const topoOrder: number[] = [];
+  while (queue.length > 0) {
+    const componentId = queue.shift()!;
+    topoOrder.push(componentId);
+
+    for (const childId of componentAdjacency.get(componentId) || []) {
+      indegree.set(childId, (indegree.get(childId) ?? 0) - 1);
+      if ((indegree.get(childId) ?? 0) === 0) {
+        queue.push(childId);
+      }
+    }
+  }
+
+  for (const componentId of topoOrder) {
+    const currentLayer = componentLayers.get(componentId) ?? 0;
+    for (const childId of componentAdjacency.get(componentId) || []) {
+      const nextLayer = currentLayer + 1;
+      if (nextLayer > (componentLayers.get(childId) ?? 0)) {
+        componentLayers.set(childId, nextLayer);
+      }
+    }
+  }
+
+  for (const componentId of rootComponents) {
+    componentLayers.set(componentId, 0);
+  }
+
+  for (const componentId of componentNodeIds.keys()) {
+    if (!componentLayers.has(componentId)) {
+      componentLayers.set(componentId, 0);
+    }
+  }
+
+  return componentLayers;
+}
+
+/**
+ * Переводит слой компонентов обратно в слой конкретных узлов.
+ */
+function expandComponentLayers(
   nodes: Node[],
-  _connections: any[],
-  options: Partial<HierarchicalLayoutOptions> = {}
+  componentByNodeId: Map<string, number>,
+  componentLayers: Map<number, number>,
+  keyboardHostByKeyboardId: Map<string, string>,
+): Map<string, number> {
+  const layerMap = new Map<string, number>();
+
+  for (const node of nodes) {
+    const componentId = componentByNodeId.get(node.id);
+    layerMap.set(node.id, componentId === undefined ? 0 : (componentLayers.get(componentId) ?? 0));
+  }
+
+  for (const [keyboardId, hostId] of keyboardHostByKeyboardId) {
+    layerMap.set(keyboardId, (layerMap.get(hostId) ?? 0) + 1);
+  }
+
+  return layerMap;
+}
+
+/**
+ * Собирает центры соседних узлов, которые находятся в указанном слое.
+ */
+function collectAdjacentCenters(
+  nodeId: string,
+  targetLayerIndex: number,
+  centersByNodeId: Map<string, number>,
+  adjacency: Map<string, Set<string>>,
+  layerMap: Map<string, number>,
+): number[] {
+  const values: number[] = [];
+
+  for (const adjacentId of adjacency.get(nodeId) || []) {
+    if ((layerMap.get(adjacentId) ?? -1) !== targetLayerIndex) continue;
+    const center = centersByNodeId.get(adjacentId);
+    if (center !== undefined) values.push(center);
+  }
+
+  return values;
+}
+
+/**
+ * Собирает центры узлов, связанных с текущим узлом в любом направлении.
+ */
+function collectConnectedCenters(
+  nodeId: string,
+  centersByNodeId: Map<string, number>,
+  adjacency: Map<string, Set<string>>,
+): number[] {
+  const values: number[] = [];
+
+  for (const adjacentId of adjacency.get(nodeId) || []) {
+    const center = centersByNodeId.get(adjacentId);
+    if (center !== undefined) values.push(center);
+  }
+
+  return values;
+}
+
+/**
+ * Возвращает желаемый центр узла внутри слоя на основе соседей и кнопочных веток.
+ */
+function getDesiredCenter(
+  node: Node,
+  layerIndex: number,
+  centersByNodeId: Map<string, number>,
+  graph: LayoutGraph,
+  layerMap: Map<string, number>,
+): number {
+  if (graph.keyboardHostByKeyboardId.has(node.id)) {
+    const hostId = graph.keyboardHostByKeyboardId.get(node.id)!;
+    const hostCenter = centersByNodeId.get(hostId);
+    if (hostCenter !== undefined) return hostCenter;
+  }
+
+  if (node.type === 'message') {
+    const buttonTargets = graph.buttonTargetsBySourceId.get(node.id);
+    if (buttonTargets && buttonTargets.size > 0) {
+      const buttonCenters = [...buttonTargets]
+        .map(targetId => centersByNodeId.get(targetId))
+        .filter((center): center is number => center !== undefined);
+
+      if (buttonCenters.length > 0) {
+        /**
+         * Для message с кнопками главным ориентиром должны быть именно ветки кнопок,
+         * а не сам `keyboard`-блок или входящий trigger.
+         */
+        return buttonCenters.reduce((sum, value) => sum + value, 0) / buttonCenters.length;
+      }
+    }
+  }
+
+  const outgoingCenters = collectConnectedCenters(node.id, centersByNodeId, graph.mainAdjacency);
+  const incomingCenters = collectConnectedCenters(node.id, centersByNodeId, graph.reverseMainAdjacency);
+
+  const outgoingWeight = node.type === 'message' || node.type === 'condition' || ROOT_TYPES.has(node.type) ? 2 : 1;
+  const incomingWeight = node.type === 'condition' ? 2 : 1;
+
+  if (outgoingCenters.length > 0 || incomingCenters.length > 0) {
+    const weightedSum =
+      outgoingCenters.reduce((sum, value) => sum + value * outgoingWeight, 0) +
+      incomingCenters.reduce((sum, value) => sum + value * incomingWeight, 0);
+    const weightTotal = outgoingCenters.length * outgoingWeight + incomingCenters.length * incomingWeight;
+    if (weightTotal > 0) {
+      return weightedSum / weightTotal;
+    }
+  }
+
+  const parentLayerIndex = layerIndex - 1;
+  const childLayerIndex = layerIndex + 1;
+
+  const parentCenters = collectAdjacentCenters(node.id, parentLayerIndex, centersByNodeId, graph.reverseMainAdjacency, layerMap);
+  if (parentCenters.length > 0) {
+    return parentCenters.reduce((sum, value) => sum + value, 0) / parentCenters.length;
+  }
+
+  const childCenters = collectAdjacentCenters(node.id, childLayerIndex, centersByNodeId, graph.mainAdjacency, layerMap);
+  if (childCenters.length > 0) {
+    return childCenters.reduce((sum, value) => sum + value, 0) / childCenters.length;
+  }
+
+  return Number.POSITIVE_INFINITY;
+}
+
+/**
+ * Сортирует узлы внутри слоя по желаемому вертикальному центру.
+ */
+function sortLayerNodes(
+  layerNodes: Node[],
+  centersByNodeId: Map<string, number>,
+  graph: LayoutGraph,
+  layerMap: Map<string, number>,
+  layerIndex: number,
 ): Node[] {
-  const opts = { ...DEFAULT_OPTIONS, ...options };
+  return [...layerNodes].sort((a, b) => {
+    const aCenter = getDesiredCenter(a, layerIndex, centersByNodeId, graph, layerMap);
+    const bCenter = getDesiredCenter(b, layerIndex, centersByNodeId, graph, layerMap);
+    const aFallback = Number.isFinite(aCenter) ? aCenter : centersByNodeId.get(a.id) ?? Number.POSITIVE_INFINITY;
+    const bFallback = Number.isFinite(bCenter) ? bCenter : centersByNodeId.get(b.id) ?? Number.POSITIVE_INFINITY;
+    if (aFallback !== bFallback) return aFallback - bFallback;
+    const priorityDelta = getNodePriority(a) - getNodePriority(b);
+    if (priorityDelta !== 0) return priorityDelta;
+    return layerNodes.indexOf(a) - layerNodes.indexOf(b);
+  });
+}
 
-  if (nodes.length === 0) return nodes;
+/**
+ * Расставляет узлы слоя по желаемому центру с учетом минимального вертикального зазора.
+ */
+function placeLayerNodes(
+  layerNodes: Node[],
+  centersByNodeId: Map<string, number>,
+  graph: LayoutGraph,
+  layerMap: Map<string, number>,
+  layerIndex: number,
+  opts: HierarchicalLayoutOptions,
+): { orderedNodes: Node[]; centers: Map<string, number> } {
+  const orderedNodes = sortLayerNodes(layerNodes, centersByNodeId, graph, layerMap, layerIndex);
+  const centers = new Map<string, number>();
+  let cursorY = opts.startY;
 
-  // Шаг 1: Построение графа
-  const adj = buildEdges(nodes);
+  for (const node of orderedNodes) {
+    const size = getNodeSize(node.id, opts);
+    const desiredCenter = getDesiredCenter(node, layerIndex, centersByNodeId, graph, layerMap);
+    const targetY = Number.isFinite(desiredCenter)
+      ? desiredCenter - size.height / 2
+      : cursorY;
+    const y = Math.max(cursorY, Math.round(targetY));
+    centers.set(node.id, y + size.height / 2);
+    cursorY = y + size.height + opts.verticalSpacing;
+  }
 
-  // Шаг 2: Назначение слоёв
-  const layerMap = assignLayers(nodes, adj);
+  return { orderedNodes, centers };
+}
 
-  // Группируем узлы по слоям
+/**
+ * Выполняет несколько проходов barycenter-раскладки, чтобы уменьшить пересечения и скачки.
+ */
+function reduceLayerCrossings(
+  layers: Node[][],
+  graph: LayoutGraph,
+  layerMap: Map<string, number>,
+  opts: HierarchicalLayoutOptions,
+): { layers: Node[][]; centersByNodeId: Map<string, number> } {
+  let orderedLayers = layers.map(layer => [...layer]);
+  let centersByNodeId = new Map<string, number>();
+
+  for (let pass = 0; pass < 3; pass += 1) {
+    for (let layerIndex = 0; layerIndex < orderedLayers.length; layerIndex += 1) {
+      const placed = placeLayerNodes(
+        orderedLayers[layerIndex],
+        centersByNodeId,
+        graph,
+      layerMap,
+      layerIndex,
+      opts,
+    );
+      orderedLayers[layerIndex] = placed.orderedNodes;
+      for (const [nodeId, center] of placed.centers) {
+        centersByNodeId.set(nodeId, center);
+      }
+    }
+
+    for (let layerIndex = orderedLayers.length - 1; layerIndex >= 0; layerIndex -= 1) {
+      const placed = placeLayerNodes(
+        orderedLayers[layerIndex],
+        centersByNodeId,
+        graph,
+      layerMap,
+      layerIndex,
+      opts,
+    );
+      orderedLayers[layerIndex] = placed.orderedNodes;
+      for (const [nodeId, center] of placed.centers) {
+        centersByNodeId.set(nodeId, center);
+      }
+    }
+  }
+
+  return { layers: orderedLayers, centersByNodeId };
+}
+
+/**
+ * Якорит связанные keyboard-ноды рядом с их message-хостами.
+ */
+function anchorKeyboardNodes(
+  positions: Map<string, { x: number; y: number }>,
+  graph: LayoutGraph,
+  opts: HierarchicalLayoutOptions,
+): void {
+  for (const [keyboardId, hostId] of graph.keyboardHostByKeyboardId) {
+    const keyboardPosition = positions.get(keyboardId);
+    const hostPosition = positions.get(hostId);
+    const hostNode = graph.nodesById.get(hostId);
+    const keyboardNode = graph.nodesById.get(keyboardId);
+
+    if (!keyboardPosition || !hostPosition || !hostNode || !keyboardNode) continue;
+
+    const hostSize = getNodeSize(hostId, opts);
+    const keyboardSize = getNodeSize(keyboardId, opts);
+    const xOffset = Math.max(12, Math.round(opts.horizontalSpacing * 0.15));
+    const yOffset = Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
+
+    positions.set(keyboardId, {
+      x: hostPosition.x + hostSize.width + xOffset,
+      y: hostPosition.y + yOffset,
+    });
+  }
+}
+
+/**
+ * Группирует узлы по слоям.
+ */
+function buildLayers(nodes: Node[], layerMap: Map<string, number>): Node[][] {
   const maxLayer = Math.max(...layerMap.values());
   const layers: Node[][] = Array.from({ length: maxLayer + 1 }, () => []);
 
   for (const node of nodes) {
-    const l = layerMap.get(node.id) ?? 0;
-    layers[l].push(node);
+    const layerIndex = layerMap.get(node.id) ?? 0;
+    layers[layerIndex].push(node);
   }
 
-  // Шаг 3: Barycenter sorting — один проход слева направо
-  const prevLayerYCenters = new Map<string, number>();
+  return layers;
+}
 
-  for (let i = 0; i < layers.length; i++) {
-    if (i > 0 && layers[i].length > 1) {
-      layers[i] = sortLayerByBarycenter(layers[i], prevLayerYCenters, adj);
-    }
+/**
+ * Использует реальный граф сценария и строит более читаемую иерархическую раскладку.
+ */
+export function createHierarchicalLayout(
+  nodes: Node[],
+  connections: any[],
+  options: Partial<HierarchicalLayoutOptions> = {},
+): Node[] {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  if (nodes.length === 0) return nodes;
 
-    // Вычисляем предварительные Y-центры для следующего прохода
-    let y = opts.startY;
-    for (const node of layers[i]) {
-      const size = getNodeSize(node.id, opts);
-      prevLayerYCenters.set(node.id, y + size.height / 2);
-      y += size.height + opts.verticalSpacing;
-    }
-  }
+  const graph = buildLayoutGraph(nodes, connections);
+  const scc = buildStronglyConnectedComponents(nodes, graph.mainAdjacency);
+  const componentLayers = assignComponentLayers(
+    graph.nodesById,
+    scc.componentByNodeId,
+    scc.componentAdjacency,
+    scc.componentReverseAdjacency,
+  );
+  const layerMap = expandComponentLayers(nodes, scc.componentByNodeId, componentLayers, graph.keyboardHostByKeyboardId);
+  const layoutResult = reduceLayerCrossings(buildLayers(nodes, layerMap), graph, layerMap, opts);
+  const layers = layoutResult.layers;
+  const centersByNodeId = layoutResult.centersByNodeId;
+  const positions = new Map<string, { x: number; y: number }>();
 
-  // Шаг 4: Расчёт X-позиций слоёв (слой 0 слева, далее вправо)
-  const layerX: number[] = [];
   let currentX = opts.startX;
+  const layerX: number[] = [];
 
-  for (let i = 0; i < layers.length; i++) {
+  for (const layer of layers) {
     layerX.push(currentX);
-    const maxWidth = layers[i].length > 0
-      ? Math.max(...layers[i].map(n => getNodeSize(n.id, opts).width))
+    const maxWidth = layer.length > 0
+      ? Math.max(...layer.map(node => getNodeSize(node.id, opts).width))
       : opts.nodeWidth;
     currentX += maxWidth + opts.horizontalSpacing;
   }
 
-  // Шаг 5: Расчёт Y-позиций узлов внутри слоя
-  const positions = new Map<string, { x: number; y: number }>();
-
-  for (let i = 0; i < layers.length; i++) {
-    let y = opts.startY;
-    for (const node of layers[i]) {
-      positions.set(node.id, { x: layerX[i], y });
+  for (let layerIndex = 0; layerIndex < layers.length; layerIndex += 1) {
+    for (const node of layers[layerIndex]) {
       const size = getNodeSize(node.id, opts);
-      y += size.height + opts.verticalSpacing;
+      const center = centersByNodeId.get(node.id);
+      const topY = Number.isFinite(center)
+        ? Math.round((center ?? opts.startY) - size.height / 2)
+        : opts.startY;
+      positions.set(node.id, { x: layerX[layerIndex], y: topY });
     }
   }
 
-  // Шаг 6: Изолированные узлы (не попавшие ни в один слой — не должно быть, но на всякий случай)
-  const isolatedX = currentX;
+  anchorKeyboardNodes(positions, graph, opts);
+
+  const isolatedX = opts.startX + (layers.length + 1) * (opts.nodeWidth + opts.horizontalSpacing);
   let isolatedY = opts.startY;
 
-  const result: Node[] = nodes.map(node => {
-    let pos = positions.get(node.id);
-    if (!pos) {
-      const size = getNodeSize(node.id, opts);
-      pos = { x: isolatedX, y: isolatedY };
-      isolatedY += size.height + opts.verticalSpacing;
+  return nodes.map(node => {
+    const position = positions.get(node.id);
+    if (position) {
+      return { ...node, position };
     }
-    return { ...node, position: pos };
-  });
 
-  return result;
+    const size = getNodeSize(node.id, opts);
+    const fallbackPosition = { x: isolatedX, y: isolatedY };
+    isolatedY += size.height + opts.verticalSpacing;
+    return { ...node, position: fallbackPosition };
+  });
 }
 
 /**
- * Функция для специального расположения сценария VProgulke.
- * Не изменяется — специфична для одного шаблона.
+ * Специальная раскладка для шаблона vprogulke.
  */
 export function createVProgulkeHierarchicalLayout(nodes: Node[], _connections: any[]): Node[] {
   const specialPositions: Record<string, { x: number; y: number }> = {
-    'start': { x: 100, y: 50 },
-    'join_request': { x: 100, y: 250 },
-    'decline_response': { x: 450, y: 250 },
-    'gender_selection': { x: 100, y: 450 },
-    'name_input': { x: 450, y: 450 },
-    'age_input': { x: 800, y: 450 },
-    'metro_selection': { x: 100, y: 650 },
-    'interests_categories': { x: 450, y: 650 },
-    'hobby_interests': { x: 800, y: 650 },
-    'relationship_status': { x: 100, y: 850 },
-    'sexual_orientation': { x: 450, y: 850 },
-    'telegram_channel_ask': { x: 800, y: 850 },
-    'telegram_channel_input': { x: 100, y: 1050 },
-    'additional_info': { x: 450, y: 1050 },
-    'profile_complete': { x: 100, y: 1250 },
-    'chat_link': { x: 450, y: 1250 },
-    'show_profile': { x: 800, y: 1250 }
+    start: { x: 100, y: 50 },
+    join_request: { x: 100, y: 250 },
+    decline_response: { x: 450, y: 250 },
+    gender_selection: { x: 100, y: 450 },
+    name_input: { x: 450, y: 450 },
+    age_input: { x: 800, y: 450 },
+    metro_selection: { x: 100, y: 650 },
+    interests_categories: { x: 450, y: 650 },
+    hobby_interests: { x: 800, y: 650 },
+    relationship_status: { x: 100, y: 850 },
+    sexual_orientation: { x: 450, y: 850 },
+    telegram_channel_ask: { x: 800, y: 850 },
+    telegram_channel_input: { x: 100, y: 1050 },
+    additional_info: { x: 450, y: 1050 },
+    profile_complete: { x: 100, y: 1250 },
+    chat_link: { x: 450, y: 1250 },
+    show_profile: { x: 800, y: 1250 },
   };
 
   return nodes.map(node => ({
     ...node,
     position: specialPositions[node.id] || {
       x: Math.random() * 800 + 100,
-      y: Math.random() * 600 + 100
-    }
+      y: Math.random() * 600 + 100,
+    },
   }));
 }
 
 /**
- * Автоматически определяет тип сценария и применяет соответствующую компоновку.
+ * Выбирает подходящую раскладку для текущего шаблона.
  */
 export function applyTemplateLayout(
   nodes: Node[],
   connections: any[],
   templateName?: string,
-  nodeSizes?: Map<string, { width: number; height: number }>
+  nodeSizes?: Map<string, { width: number; height: number }>,
 ): Node[] {
   if (templateName?.toLowerCase().includes('vprogulke') || templateName?.toLowerCase().includes('знакомства')) {
     return createVProgulkeHierarchicalLayout(nodes, connections);
@@ -348,7 +968,7 @@ export function applyTemplateLayout(
     verticalSpacing: 50,
     startX: 50,
     startY: 50,
-    nodeSizes
+    nodeSizes,
   };
 
   const desktopOptions: Partial<HierarchicalLayoutOptions> = {
@@ -359,7 +979,7 @@ export function applyTemplateLayout(
     verticalSpacing: 80,
     startX: 100,
     startY: 100,
-    nodeSizes
+    nodeSizes,
   };
 
   return createHierarchicalLayout(nodes, connections, isMobile ? mobileOptions : desktopOptions);
