@@ -82,8 +82,8 @@ const DEFAULT_OPTIONS: HierarchicalLayoutOptions = {
   levelHeight: 100,
   nodeWidth: 320,
   nodeHeight: 120,
-  horizontalSpacing: 80,
-  verticalSpacing: 60,
+  horizontalSpacing: 100,
+  verticalSpacing: 80,
   startX: 50,
   startY: 50,
 };
@@ -822,7 +822,8 @@ function anchorKeyboardNodes(
 
     const hostSize = getNodeSize(hostId, opts);
     const keyboardSize = getNodeSize(keyboardId, opts);
-    const xOffset = Math.max(12, Math.round(opts.horizontalSpacing * 0.15));
+    // Увеличенный отступ чтобы keyboard не накладывался на input-узлы и другие элементы
+    const xOffset = Math.max(40, Math.round(opts.horizontalSpacing * 0.5));
     const yOffset = Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
 
     positions.set(keyboardId, {
