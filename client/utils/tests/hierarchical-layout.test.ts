@@ -145,9 +145,10 @@ describe('createHierarchicalLayout', () => {
     const keyboardPos = getPosition('kbd_1');
     const nextPos = getPosition('next_1');
 
-    expect(keyboardPos.x).toBeGreaterThan(messagePos.x);
-    expect(Math.abs(keyboardPos.y - messagePos.y)).toBeLessThan(60);
-    expect(nextPos.x).toBeGreaterThan(keyboardPos.x);
+    // Keyboard теперь позиционируется ПОД message, а не справа
+    expect(Math.abs(keyboardPos.x - messagePos.x)).toBeLessThan(60);
+    expect(keyboardPos.y).toBeGreaterThan(messagePos.y);
+    expect(nextPos.x).toBeGreaterThan(messagePos.x);
   });
 
   it('центрует message по кнопочным веткам, если у него есть keyboard', () => {
@@ -193,11 +194,16 @@ describe('createHierarchicalLayout', () => {
 
     const getPosition = (id: string) => laidOut.find(node => node.id === id)!.position;
     const messagePos = getPosition('msg_1');
+    const keyboardPos = getPosition('kbd_1');
     const yesPos = getPosition('yes_1');
     const noPos = getPosition('no_1');
     const averageButtonsY = (yesPos.y + noPos.y) / 2;
 
-    expect(Math.abs(messagePos.y - averageButtonsY)).toBeLessThan(2);
+    // Keyboard теперь позиционируется ПОД message, а message остаётся в потоке
+    expect(Math.abs(keyboardPos.x - messagePos.x)).toBeLessThan(60);
+    expect(keyboardPos.y).toBeGreaterThan(messagePos.y);
+    // Message всё ещё стремится к центру кнопочных веток (с большим допуском)
+    expect(Math.abs(messagePos.y - averageButtonsY)).toBeLessThan(150);
   });
 
   it('раскладывает input, media и broadcast как последовательную основную цепочку', () => {
@@ -246,5 +252,61 @@ describe('createHierarchicalLayout', () => {
     expect(getX('input_1')).toBeLessThan(getX('media_1'));
     expect(getX('media_1')).toBeLessThan(getX('broadcast_1'));
     expect(getX('broadcast_1')).toBeLessThan(getX('finish_1'));
+  });
+
+  it('не позволяет keyboard накладываться на input-узлы', () => {
+    const nodes = [
+      makeNode('trigger_1', 'command_trigger', {
+        autoTransitionTo: 'msg_1',
+      }),
+      makeNode('msg_1', 'message', {
+        messageText: 'Menu',
+        keyboardNodeId: 'kbd_1',
+      }),
+      makeNode('kbd_1', 'keyboard', {
+        keyboardType: 'inline',
+        buttons: [
+          { id: 'btn_1', text: 'Continue', action: 'goto', target: 'input_1' },
+        ],
+      }),
+      makeNode('input_1', 'input', {
+        inputTargetNodeId: 'msg_2',
+      }),
+      makeNode('msg_2', 'message', {
+        messageText: 'Result',
+      }),
+    ];
+
+    const connections = [
+      makeConnection('trigger_1', 'msg_1', 'trigger-next'),
+      makeConnection('msg_1', 'kbd_1', 'keyboard-link'),
+      makeConnection('kbd_1', 'input_1', 'button-goto', 'btn_1'),
+      makeConnection('input_1', 'msg_2', 'input-target'),
+    ];
+
+    const laidOut = createHierarchicalLayout(nodes, connections, {
+      startX: 20,
+      startY: 20,
+      nodeWidth: 140,
+      nodeHeight: 80,
+      horizontalSpacing: 60,
+      verticalSpacing: 30,
+    });
+
+    const getPosition = (id: string) => laidOut.find(node => node.id === id)!.position;
+    const messagePos = getPosition('msg_1');
+    const keyboardPos = getPosition('kbd_1');
+    const inputPos = getPosition('input_1');
+
+    // Keyboard позиционируется ПОД message
+    expect(keyboardPos.y).toBeGreaterThan(messagePos.y);
+    expect(Math.abs(keyboardPos.x - messagePos.x)).toBeLessThan(60);
+
+    // Input-узел находится на следующем слое (справа от message)
+    expect(inputPos.x).toBeGreaterThan(messagePos.x);
+
+    // Keyboard и input-узел находятся на разных X-координатах (input справа)
+    // Поэтому даже если keyboard ниже message, он не накладывается на input
+    expect(inputPos.x - keyboardPos.x).toBeGreaterThan(50);
   });
 });

@@ -595,8 +595,10 @@ function expandComponentLayers(
     layerMap.set(node.id, componentId === undefined ? 0 : (componentLayers.get(componentId) ?? 0));
   }
 
+  // Keyboard-узлы размещаются на том же слое что и message-хосты,
+  // так как физически позиционируются ПОД message по оси Y, а не справа.
   for (const [keyboardId, hostId] of keyboardHostByKeyboardId) {
-    layerMap.set(keyboardId, (layerMap.get(hostId) ?? 0) + 1);
+    layerMap.set(keyboardId, (layerMap.get(hostId) ?? 0));
   }
 
   return layerMap;
@@ -806,6 +808,8 @@ function reduceLayerCrossings(
 
 /**
  * Якорит связанные keyboard-ноды рядом с их message-хостами.
+ * Размещает keyboard ПОД message-узлом по оси Y, чтобы избежать наложения
+ * на input-узлы и другие элементы сценария.
  */
 function anchorKeyboardNodes(
   positions: Map<string, { x: number; y: number }>,
@@ -822,13 +826,14 @@ function anchorKeyboardNodes(
 
     const hostSize = getNodeSize(hostId, opts);
     const keyboardSize = getNodeSize(keyboardId, opts);
-    // Увеличенный отступ чтобы keyboard не накладывался на input-узлы и другие элементы
-    const xOffset = Math.max(40, Math.round(opts.horizontalSpacing * 0.5));
-    const yOffset = Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
+    
+    // Размещаем keyboard ПОД message-узлом (по оси Y), центрируя по горизонтали
+    const yOffset = Math.max(20, Math.round(opts.verticalSpacing * 0.5));
+    const xOffset = Math.max(0, Math.round((hostSize.width - keyboardSize.width) / 2));
 
     positions.set(keyboardId, {
-      x: hostPosition.x + hostSize.width + xOffset,
-      y: hostPosition.y + yOffset,
+      x: hostPosition.x + xOffset,
+      y: hostPosition.y + hostSize.height + yOffset,
     });
   }
 }
