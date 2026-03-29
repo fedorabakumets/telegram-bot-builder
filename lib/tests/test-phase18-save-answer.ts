@@ -228,6 +228,22 @@ function makeInputNode(id: string, data: Record<string, any> = {}) {
   };
 }
 
+function makeMediaNode(id: string, attachedMedia: string[] = [], data: Record<string, any> = {}) {
+  return {
+    id,
+    type: 'media',
+    position: { x: 300, y: 0 },
+    data: {
+      attachedMedia,
+      buttons: [],
+      keyboardType: 'none',
+      enableAutoTransition: false,
+      autoTransitionTo: '',
+      ...data,
+    },
+  };
+}
+
 function makeLegacyInputMessage(id: string, data: Record<string, any> = {}) {
   return makeMessageNode(id, 'Legacy answer', {
     collectUserInput: true,
@@ -1577,6 +1593,213 @@ test('I11', 'shared photo input может быть переиспользова
   ], 'I11');
   ok(countOccurrences(code, 'async def handle_callback_shared_photo_1') === 1, 'I11: photo handler должен быть один');
   syntax(code, 'i11');
+});
+
+console.log('══ Блок J: Реалистичный сценарий по мотивам project.json ═════════');
+
+test('J01', 'private/group condition + legacy text collectUserInput + dedicated text input повторяют реальный паттерн', () => {
+  const project = makeFlowProject([
+    makeStartNode('start_1', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'cond_scope_1',
+      keyboardType: 'reply',
+      buttons: [
+        makeButton('Ввод', 'goto', 'msg_private_age'),
+        makeButton('Группа', 'goto', 'msg_group_notice'),
+      ],
+    }),
+    makeConditionNode('cond_scope_1', '', [
+      { id: 'br_private', label: 'private', operator: 'is_private', value: '', target: 'msg_private_age' },
+      { id: 'br_group', label: 'group', operator: 'is_group', value: '', target: 'msg_group_notice' },
+    ]),
+    makeMessageNode('msg_private_age', 'Привет снова. Сколько тебе лет?', {
+      keyboardType: 'reply',
+      keyboardNodeId: 'kbd_private_age',
+      collectUserInput: true,
+      enableTextInput: true,
+      inputVariable: 'age',
+      inputTargetNodeId: 'input_age_1',
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_age_1',
+      buttons: [makeButton('Пропустить', 'goto', 'msg_done', { skipDataCollection: true })],
+    }),
+    makeKeyboardNode('kbd_private_age', 'reply', [
+      makeButton('16', 'goto', 'input_age_1'),
+      makeButton('18', 'goto', 'input_age_1'),
+    ], {
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+    }),
+    makeInputNode('input_age_1', {
+      inputType: 'text',
+      inputVariable: 'age',
+      inputPrompt: 'Введите ответ',
+      inputRequired: true,
+      inputTargetNodeId: '',
+    }),
+    makeMessageNode('msg_group_notice', 'Привет это команда не для группы', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'msg_done',
+    }),
+    makeMessageNode('msg_done', 'Финал'),
+  ]);
+
+  const code = gen(project, 'j01');
+  const legacy = block(code, 'msg_private_age');
+  const input = block(code, 'input_age_1');
+  assertIncludesAll(legacy, [
+    'ReplyKeyboardBuilder()',
+    'KeyboardButton',
+    'waiting_for_input',
+    '"variable": "age"',
+    '"next_node_id": "input_age_1"',
+  ], 'J01 legacy');
+  assertIncludesAll(input, [
+    '@dp.callback_query(lambda c: c.data == "input_age_1")',
+    '"waiting_for_input"',
+    '"variable": "age"',
+    '"type": "text"',
+    '"next_node_id": ""',
+  ], 'J01 input');
+  assertIncludesAll(code, ['async def handle_callback_cond_scope_1', 'await handle_callback_input_age_1(fake_callback)'], 'J01 flow');
+  syntax(code, 'j01');
+});
+
+test('J02', 'legacy photo collectUserInput ведёт в dedicated photo input и media node', () => {
+  const project = makeFlowProject([
+    makeMessageNode('msg_photo_prompt', 'Сообщение 1', {
+      keyboardType: 'reply',
+      keyboardNodeId: 'kbd_photo_prompt',
+      collectUserInput: true,
+      enablePhotoInput: true,
+      inputVariable: 'photo',
+      photoInputVariable: 'photo',
+      inputTargetNodeId: 'media_photo_1',
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_photo_1',
+      buttons: [makeButton('Фото', 'goto', 'input_photo_1')],
+    }),
+    makeKeyboardNode('kbd_photo_prompt', 'reply', [
+      makeButton('Фото', 'goto', 'input_photo_1'),
+    ]),
+    makeInputNode('input_photo_1', {
+      inputType: 'photo',
+      inputVariable: 'photo',
+      photoInputVariable: 'photo_file',
+      inputTargetNodeId: 'media_photo_1',
+    }),
+    makeMediaNode('media_photo_1', ['{photo}']),
+  ]);
+
+  const code = gen(project, 'j02');
+  const legacy = block(code, 'msg_photo_prompt');
+  const input = block(code, 'input_photo_1');
+  const media = block(code, 'media_photo_1');
+  assertIncludesAll(legacy, [
+    'ReplyKeyboardBuilder()',
+    'KeyboardButton',
+    'waiting_for_input',
+    '"variable": "photo"',
+    '"next_node_id": "media_photo_1"',
+    '"photo_variable": "photo"',
+  ], 'J02 legacy');
+  assertIncludesAll(input, [
+    '"type": "photo"',
+    '"photo_variable": "photo_file"',
+    '"next_node_id": "media_photo_1"',
+  ], 'J02 input');
+  assertIncludesAll(media, [
+    '@dp.callback_query(lambda c: c.data == "media_photo_1")',
+    'answer_photo',
+    'handle_callback_media_photo_1',
+  ], 'J02 media');
+  syntax(code, 'j02');
+});
+
+test('J03', 'большой mixed project по мотивам реального графа компилируется и сохраняет паттерны', () => {
+  const project = makeFlowProject([
+    makeStartNode('start_1', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'cond_scope_1',
+      keyboardType: 'reply',
+      buttons: [
+        makeButton('Да', 'goto', 'msg_private_age'),
+        makeButton('Нет', 'goto', 'msg_group_notice'),
+      ],
+    }),
+    makeCommandNode('cmd_help', '/help', {
+      keyboardType: 'inline',
+      buttons: [makeButton('Возраст', 'goto', 'msg_private_age')],
+      enableAutoTransition: true,
+      autoTransitionTo: 'cond_scope_1',
+    }),
+    makeConditionNode('cond_scope_1', '', [
+      { id: 'br_private', label: 'private', operator: 'is_private', value: '', target: 'msg_private_age' },
+      { id: 'br_group', label: 'group', operator: 'is_group', value: '', target: 'msg_group_notice' },
+    ]),
+    makeMessageNode('msg_private_age', 'Привет снова. Сколько тебе лет?', {
+      keyboardType: 'reply',
+      keyboardNodeId: 'kbd_private_age',
+      collectUserInput: true,
+      enableTextInput: true,
+      inputVariable: 'age',
+      inputTargetNodeId: 'input_age_1',
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_age_1',
+      buttons: [makeButton('Пропустить', 'goto', 'msg_done', { skipDataCollection: true })],
+    }),
+    makeKeyboardNode('kbd_private_age', 'reply', [
+      makeButton('16', 'goto', 'input_age_1'),
+      makeButton('18', 'goto', 'input_age_1'),
+    ]),
+    makeInputNode('input_age_1', {
+      inputType: 'text',
+      inputVariable: 'age',
+      inputTargetNodeId: '',
+    }),
+    makeMessageNode('msg_photo_prompt', 'Сообщение 1', {
+      keyboardType: 'reply',
+      keyboardNodeId: 'kbd_photo_prompt',
+      collectUserInput: true,
+      enablePhotoInput: true,
+      inputVariable: 'photo',
+      photoInputVariable: 'photo',
+      inputTargetNodeId: 'media_photo_1',
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_photo_1',
+      buttons: [makeButton('Фото', 'goto', 'input_photo_1')],
+    }),
+    makeKeyboardNode('kbd_photo_prompt', 'reply', [
+      makeButton('Фото', 'goto', 'input_photo_1'),
+    ]),
+    makeInputNode('input_photo_1', {
+      inputType: 'photo',
+      inputVariable: 'photo',
+      photoInputVariable: 'photo_file',
+      inputTargetNodeId: 'media_photo_1',
+    }),
+    makeMediaNode('media_photo_1', ['{photo}']),
+    makeMessageNode('msg_group_notice', 'Привет это команда не для группы', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'msg_done',
+    }),
+    makeMessageNode('msg_done', 'Финал'),
+  ]);
+
+  const code = gen(project, 'j03');
+  assertIncludesAll(code, [
+    'async def handle_callback_cond_scope_1',
+    'ReplyKeyboardBuilder()',
+    'InlineKeyboardBuilder()',
+    'handle_callback_input_age_1',
+    'handle_callback_input_photo_1',
+    'handle_callback_media_photo_1',
+    'waiting_for_input',
+  ], 'J03');
+  ok(countOccurrences(code, 'async def handle_callback_input_age_1') === 1, 'J03: input_age handler должен быть один');
+  ok(countOccurrences(code, 'async def handle_callback_input_photo_1') === 1, 'J03: input_photo handler должен быть один');
+  ok(countOccurrences(code, 'async def handle_callback_media_photo_1') === 1, 'J03: media handler должен быть один');
+  syntax(code, 'j03');
 });
 
 const passed = results.filter(r => r.passed).length;
