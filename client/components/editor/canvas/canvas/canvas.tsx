@@ -5,6 +5,7 @@ import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
 import { useConnectionDrag } from './use-connection-drag';
 import { clearKeyboardNodeId } from '../canvas-node/keyboard-connection';
+import { getCanvasViewportMetrics, screenPointToCanvasPoint } from './utils/canvas-coordinate-utils';
 
 import { Node, ComponentDefinition } from '@/types/bot';
 import type { CommandPreset } from '@/components/editor/sidebar/massive/commands';
@@ -954,18 +955,18 @@ export function Canvas({
     e.preventDefault();
     setIsDragOver(false);
 
-    const rect = canvasRef.current?.getBoundingClientRect();
-
     /** Вычисляет позицию дропа в координатах холста */
     const getDropPosition = () => {
-      if (rect) {
-        const screenX = e.clientX - rect.left - 160;
-        const screenY = e.clientY - rect.top - 50;
-        const canvasX = (screenX - pan.x) / (zoom / 100);
-        const canvasY = (screenY - pan.y) / (zoom / 100);
-        if (canvasX > 20 && canvasY > 20 && canvasX < 10000 && canvasY < 10000) {
-          return { x: Math.max(50, canvasX), y: Math.max(50, canvasY) };
-        }
+      const scrollContainer = canvasRef.current?.parentElement;
+      const viewport = getCanvasViewportMetrics(scrollContainer);
+      if (!viewport) return getCenterPosition();
+
+      const point = screenPointToCanvasPoint(e.clientX, e.clientY, viewport, pan, zoom);
+      if (point.x >= -10000 && point.y >= -10000 && point.x <= 10000 && point.y <= 10000) {
+        return {
+          x: point.x - 160,
+          y: point.y - 50,
+        };
       }
       return getCenterPosition();
     };
@@ -1054,10 +1055,23 @@ export function Canvas({
 
     let nodePosition;
 
-    if (position) {
-      const canvasX = (position.x - pan.x) / (zoom / 100);
-      const canvasY = (position.y - pan.y) / (zoom / 100);
-      nodePosition = { x: Math.max(0, canvasX - 80), y: Math.max(0, canvasY - 25) };
+    if (position && canvasRef.current) {
+      const scrollContainer = canvasRef.current.parentElement;
+      const viewport = getCanvasViewportMetrics(scrollContainer);
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+
+      if (viewport) {
+        const point = screenPointToCanvasPoint(
+          canvasRect.left + position.x,
+          canvasRect.top + position.y,
+          viewport,
+          pan,
+          zoom
+        );
+        nodePosition = { x: point.x - 160, y: point.y - 50 };
+      } else {
+        nodePosition = getCenterPosition();
+      }
     } else {
       nodePosition = getCenterPosition();
     }
