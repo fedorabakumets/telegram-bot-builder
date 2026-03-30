@@ -10,7 +10,7 @@ export function formatNodeDisplay(node: Node, sheetName?: string): string {
   return `${node.id} | ${content} | ${typeLabel} | ${sheetName}`;
 }
 
-function getNodeTypeLabel(type: Node['type']): string {
+export function getNodeTypeLabel(type: Node['type']): string {
   const types: Partial<Record<Node['type'], string>> = {
     message: 'Сообщение',
     location: 'Геолокация',

@@ -148,18 +148,7 @@ export function PropertiesHeader({
   const { toast } = useToast();
 
   const getNodeTitle = () => {
-    if (selectedNode.type === 'command_trigger') {
-      return selectedNode.data.command || nodeTypeNames[selectedNode.type];
-    }
-
-    if (selectedNode.type === 'text_trigger') {
-      const text = Array.isArray((selectedNode.data as any).textSynonyms)
-        ? (selectedNode.data as any).textSynonyms[0]
-        : '';
-      return text || nodeTypeNames[selectedNode.type];
-    }
-
-    return selectedNode.data.messageText || nodeTypeNames[selectedNode.type] || 'Узел';
+    return nodeTypeNames[selectedNode.type] || 'Узел';
   };
 
   const nodeTitle = getNodeTitle();

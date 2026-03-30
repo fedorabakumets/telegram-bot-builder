@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VariableNameInput } from '../variables/variable-name-input';
 import type { Variable } from '../../../inline-rich/types';
+import { getNodeTypeLabel } from '../../utils/node-formatters';
 
 /** Пропсы компонента InputNavigationGrid */
 interface InputNavigationGridProps {
@@ -40,6 +41,9 @@ export function InputNavigationGrid({
   formatNodeDisplay,
   availableVariables = []
 }: InputNavigationGridProps) {
+  const availableTargets = getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id);
+  const selectedTarget = availableTargets.find(({ node }) => node.id === (selectedNode.data.inputTargetNodeId || ''));
+
   return (
     <div className="grid grid-cols-1 gap-3 sm:gap-4">
       {/* Variable Name */}
@@ -73,11 +77,17 @@ export function InputNavigationGrid({
             }}
           >
             <SelectTrigger className="text-xs sm:text-sm h-7 sm:h-8 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 dark:hover:border-violet-600/60 focus:border-violet-500 focus:ring-violet-400/30">
-              <SelectValue placeholder="⊘ Выберите" />
+              <SelectValue placeholder="⊘ Выберите">
+                {selectedNode.data.inputTargetNodeId === 'no-transition'
+                  ? 'Без переходов'
+                  : selectedTarget
+                    ? getNodeTypeLabel(selectedTarget.node.type)
+                    : undefined}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
               <SelectItem value="no-transition">Без переходов</SelectItem>
-              {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({ node, sheetName }) => (
+              {availableTargets.map(({ node, sheetName }) => (
                 <SelectItem key={node.id} value={node.id}>
                   <span className="text-xs font-mono text-sky-700 dark:text-sky-300 truncate">
                     {formatNodeDisplay(node, sheetName)}

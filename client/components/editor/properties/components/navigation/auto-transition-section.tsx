@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { formatNodeDisplay } from '../../utils/node-formatters';
+import { formatNodeDisplay, getNodeTypeLabel } from '../../utils/node-formatters';
 import { useEffect } from 'react';
 
 /**
@@ -47,6 +47,9 @@ export function AutoTransitionSection({
   isOpen,
   onToggle
 }: AutoTransitionSectionProps) {
+  const availableTargets = getAllNodesFromAllSheets.filter(({ node }) => node.id !== selectedNode.id);
+  const selectedTarget = availableTargets.find(({ node }) => node.id === (selectedNode.data.autoTransitionTo || ''));
+
   // Раскрываем секцию при включении автоперехода
   useEffect(() => {
     if (selectedNode.data.enableAutoTransition && !isOpen && onToggle) {
@@ -110,12 +113,12 @@ export function AutoTransitionSection({
             onValueChange={(value) => onNodeUpdate(selectedNode.id, { autoTransitionTo: value })}
           >
             <SelectTrigger className="text-xs sm:text-sm h-9 sm:h-10 bg-white/70 dark:bg-slate-950/50 border border-teal-300/50 dark:border-teal-700/50 hover:border-teal-400/70 dark:hover:border-teal-600/70 focus:border-teal-500 focus:ring-teal-400/30 transition-colors duration-200 rounded-lg text-teal-900 dark:text-teal-50">
-              <SelectValue placeholder="Выберите узел из списка" />
+              <SelectValue placeholder="Выберите узел из списка">
+                {selectedTarget ? getNodeTypeLabel(selectedTarget.node.type) : undefined}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-teal-200/50 dark:border-teal-800/50 shadow-xl max-h-48 overflow-y-auto">
-              {getAllNodesFromAllSheets
-                .filter(({ node }) => node.id !== selectedNode.id)
-                .map(({ node, sheetId, sheetName }) => (
+              {availableTargets.map(({ node, sheetId, sheetName }) => (
                   <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
                     <span className="text-xs sm:text-sm font-mono text-sky-700 dark:text-sky-300 truncate">
                       {formatNodeDisplay(node, sheetName || 'Лист 1')}
@@ -123,7 +126,7 @@ export function AutoTransitionSection({
                   </SelectItem>
                 ))}
 
-              {(!getAllNodesFromAllSheets || getAllNodesFromAllSheets.filter(({ node }) => node.id !== selectedNode.id).length === 0) && (
+              {availableTargets.length === 0 && (
                 <SelectItem value="no-nodes" disabled>
                   Создайте другие узлы
                 </SelectItem>

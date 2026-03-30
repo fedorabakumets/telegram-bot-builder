@@ -2,7 +2,7 @@ import type { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { formatNodeDisplay as defaultFormatNodeDisplay } from '../../utils/node-formatters';
+import { formatNodeDisplay as defaultFormatNodeDisplay, getNodeTypeLabel } from '../../utils/node-formatters';
 
 interface TriggerTargetSelectorProps {
   selectedNode: Node;
@@ -20,6 +20,7 @@ export function TriggerTargetSelector({
   formatNodeDisplay = defaultFormatNodeDisplay,
 }: TriggerTargetSelectorProps) {
   const availableNodes = getAllNodesFromAllSheets.filter(({ node }) => node.id !== selectedNode.id);
+  const selectedTarget = availableNodes.find(({ node }) => node.id === (autoTransitionTo || ''));
 
   return (
     <div className="space-y-2">
@@ -29,7 +30,9 @@ export function TriggerTargetSelector({
         onValueChange={(value) => onNodeUpdate(selectedNode.id, { autoTransitionTo: value })}
       >
         <SelectTrigger className="text-sm bg-white/70 dark:bg-slate-950/60 border border-sky-300/40 dark:border-sky-700/40 hover:border-sky-400/60 dark:hover:border-sky-600/60 focus:border-sky-500 focus:ring-2 focus:ring-sky-400/30 rounded-lg text-sky-900 dark:text-sky-50">
-          <SelectValue placeholder="Не выбрано" />
+          <SelectValue placeholder="Не выбрано">
+            {selectedTarget ? getNodeTypeLabel(selectedTarget.node.type) : undefined}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="bg-gradient-to-br from-sky-50/95 to-blue-50/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-48 overflow-y-auto">
           {availableNodes.map(({ node, sheetId, sheetName }) => (
