@@ -438,7 +438,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       }}
     >
       {/* РљРЅРѕРїРєРё РґРµР№СЃС‚РІРёР№ вЂ” СЃРЅР°СЂСѓР¶Рё РѕСЃРЅРѕРІРЅРѕРіРѕ div, РїРѕР·РёС†РёРѕРЅРёСЂСѓСЋС‚СЃСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper */}
-      <NodeActions onDuplicate={onDuplicate} onDelete={onDelete} isSelected={isSelected} />
+      <NodeActions onDuplicate={onDuplicateAtPosition ?? onDuplicate} onDelete={onDelete} isSelected={isSelected} />
 
       {/* РџРѕСЂС‚ РІС‹С…РѕРґР° вЂ” СЃРЅР°СЂСѓР¶Рё РѕСЃРЅРѕРІРЅРѕРіРѕ div, РїРѕР·РёС†РёРѕРЅРёСЂСѓРµС‚СЃСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper */}
       {/* РЈР·РµР» condition РёРјРµРµС‚ РїРѕСЂС‚С‹ РЅР° РєР°Р¶РґРѕР№ РІРµС‚РєРµ вЂ” РѕР±С‰РёР№ РїРѕСЂС‚ РЅРµ РЅСѓР¶РµРЅ */}
@@ -579,7 +579,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           >
             <span
               className="font-mono text-[10px] text-slate-300 dark:text-slate-300 select-all tracking-tight"
-              title="ID СѓР·Р»Р°"
+              title="ID узла"
             >
               #{node.id}
             </span>
@@ -594,7 +594,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
             items={[
               {
                 id: 'duplicate',
-                label: 'Р”СѓР±Р»РёСЂРѕРІР°С‚СЊ',
+                label: 'Дублировать',
                 icon: 'fas fa-copy',
                 onClick: () => {
                   /**

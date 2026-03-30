@@ -1146,6 +1146,7 @@ export default function Editor() {
             onNodeSelect={setSelectedNodeId}
             onNodeAdd={addNode}
             onNodeDelete={handleNodeDelete}
+            onNodeDuplicate={handleNodeDuplicate}
             onNodeMove={handleNodeMove}
             onNodeMoveStart={handleNodeMoveStart}
             onNodeMoveEnd={handleNodeMoveEnd}
