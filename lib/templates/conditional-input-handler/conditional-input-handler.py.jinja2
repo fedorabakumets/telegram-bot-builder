@@ -30,6 +30,7 @@
 {{ ind2 }}user_text = message.text
 {{ ind2 }}
 {{ ind2 }}# ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true
+{% if hasSkipDataCollectionButtons %}
 {{ ind2 }}skip_buttons = config.get("skip_buttons", [])
 {{ ind2 }}skip_button_target = None
 {{ ind2 }}for skip_btn in skip_buttons:
@@ -69,6 +70,7 @@
 {% endif %}
 {{ ind3 }}except Exception as e:
 {{ ind4 }}logging.error(f"Ошибка при переходе к узлу кнопки skipDataCollection {skip_button_target}: {e}")
+{% endif %}
 {{ ind3 }}return
 {{ ind2 }}
 {{ ind2 }}# Сохраняем текстовый ввод для условного сообщения (обычный случай без skipDataCollection)

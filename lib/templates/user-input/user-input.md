@@ -34,6 +34,8 @@
 | successMessage | string | Сообщение при успешном сохранении | нет |
 | saveToDatabase | boolean | Сохранять в базу данных | нет (true) |
 
+Если в узле нет кнопок с `skipDataCollection=true`, шаблон `user-input` не добавляет поле `"skip_buttons"` в `waiting_for_input`. За счёт этого downstream runtime-шаблоны могут не генерировать лишний код пропуска.
+
 ## Генерируемый Python-код
 
 ```python

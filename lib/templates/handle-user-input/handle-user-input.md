@@ -12,6 +12,7 @@ Python-блок внутри `handle_user_input`, который:
 4. Валидирует длину текста (min/max)
 5. Валидирует тип ввода (`email` / `phone` / `number`)
 6. Очищает `waiting_for_input` после успешной обработки
+7. Генерирует runtime-ветку `skipDataCollection` только если в проекте есть хотя бы одна кнопка с `skipDataCollection=true`
 
 ## Параметры
 
@@ -34,4 +35,4 @@ const code = generateHandleUserInput({ indentLevel: '    ' });
 - `generate-waiting-cleanup.ts` — `del user_data[user_id]["waiting_for_input"]`
 - `generate-input-type-validation.ts` — валидация email/phone/number
 - `generate-text-length-validation.ts` — валидация min/max длины
-`call_skip_target_handler` генерируется внутри шаблона и не зависит от внешнего глобального helper.
+`call_skip_target_handler` генерируется только при наличии `skipDataCollection` кнопок и не зависит от внешнего глобального helper.

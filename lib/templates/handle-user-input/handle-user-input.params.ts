@@ -51,6 +51,8 @@ export interface HandleUserInputTemplateParams {
   allNodeIds?: string[];
   /** Есть ли URL кнопки в проекте */
   hasUrlButtons?: boolean;
+  /** Есть ли в проекте хотя бы одна кнопка с skipDataCollection=true */
+  hasSkipDataCollectionButtons?: boolean;
   /** Узлы с командами (start/command) */
   commandNodes?: NodeItem[];
 }

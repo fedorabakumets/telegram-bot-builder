@@ -23,6 +23,18 @@ import {
 } from './schemas';
 import { renderPartialTemplate } from './template-renderer';
 
+function hasSkipDataCollectionButtons(nodes: any[] = []): boolean {
+  const hasSkip = (buttons: any[] | undefined) =>
+    Array.isArray(buttons) && buttons.some(button => button?.skipDataCollection === true && !!button?.target);
+
+  return (nodes ?? []).some(node =>
+    hasSkip(node?.data?.buttons) ||
+    hasSkip(node?.data?.replyButtons) ||
+    hasSkip(node?.data?.inlineButtons) ||
+    (node?.data?.conditionalMessages ?? []).some((message: any) => hasSkip(message?.buttons))
+  );
+}
+
 // ============================================================================
 // ИМПОРТЫ
 // ============================================================================
@@ -120,6 +132,8 @@ export function generateUniversalHandlers(params: UniversalHandlersTemplateParam
     nodes: params.nodes ?? [],
     commandNodes: params.commandNodes ?? [],
     hasUrlButtons: params.hasUrlButtons ?? false,
+    hasSkipDataCollectionButtons:
+      validated.hasSkipDataCollectionButtons ?? hasSkipDataCollectionButtons(params.nodes ?? []),
     allNodeIds: params.allNodeIds ?? [],
   });
 }
@@ -129,6 +143,7 @@ export function generateUniversalHandlers(params: UniversalHandlersTemplateParam
  */
 const universalHandlersParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().optional().default(false),
+  hasSkipDataCollectionButtons: z.boolean().optional(),
 });
 
 // ============================================================================

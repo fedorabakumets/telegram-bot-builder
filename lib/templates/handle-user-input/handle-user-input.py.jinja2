@@ -20,6 +20,7 @@
    Проверяем button_response_config (reply клавиатура)
    ═══════════════════════════════════════════════════════════════ #}
 {{ ind }}# Проверяем, ожидаем ли мы кнопочный ответ через reply клавиатуру
+{% if hasSkipDataCollectionButtons %}
 {{ ind }}async def call_skip_target_handler(fake_callback, target_node_id):
 {{ ind2 }}"""Переходит к целевому узлу по skipDataCollection без отсутствующих хелперов."""
 {{ ind2 }}_skip_handled = False
@@ -31,6 +32,7 @@
 {{ ind2 }}if not _skip_handled:
 {{ ind3 }}logging.warning(f"Неизвестный целевой узел skipDataCollection: {target_node_id}")
 
+{% endif %}
 {{ ind }}if user_id in user_data and "button_response_config" in user_data[user_id]:
 {{ ind2 }}config = user_data[user_id]["button_response_config"]
 {{ ind2 }}user_text = message.text
@@ -155,6 +157,7 @@
    ═══════════════════════════════════════════════════════════════ #}
 {{ ind }}# ИСПРАВЛЕНИЕ: Проверяем pending_skip_buttons для медиа-узлов (фото/видео/аудио)
 {{ ind }}# Эта проверка нужна когда узел ожидает медиа, но пользователь нажал reply-кнопку с skipDataCollection
+{% if hasSkipDataCollectionButtons %}
 {{ ind }}if user_id in user_data and "pending_skip_buttons" in user_data[user_id]:
 {{ ind2 }}pending_buttons = user_data[user_id]["pending_skip_buttons"]
 {{ ind2 }}user_text = message.text
@@ -193,6 +196,7 @@
 {{ ind5 }}except Exception as e:
 {{ ind6 }}logging.error(f"Ошибка при переходе к узлу skipDataCollection медиа {skip_target}: {e}")
 {{ ind4 }}return
+{% endif %}
 {{ ind }}
 {# ═══════════════════════════════════════════════════════════════
    Проверяем waiting_for_input (универсальная система)
@@ -243,6 +247,7 @@
 {{ ind2 }}logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")
 {{ ind2 }}
 {{ ind2 }}# ИСПРАВЛЕНИЕ: Проверяем, является ли текст кнопкой с skipDataCollection=true
+{% if hasSkipDataCollectionButtons %}
 {{ ind2 }}skip_buttons = waiting_config.get("skip_buttons", [])
 {{ ind2 }}logging.info(f"DEBUG: skip_buttons = {skip_buttons}")
 {{ ind2 }}skip_target = None
@@ -278,6 +283,7 @@
 {{ ind4 }}logging.error(f"Ошибка при переходе skipDataCollection к узлу {skip_target}: {e}")
 {{ ind2 }}
 {{ ind2 }}# Подготовка данных для сохранения
+{% endif %}
 {{ ind2 }}timestamp = get_moscow_time()
 {{ ind2 }}response_data = user_text
 {{ ind2 }}

@@ -14,3 +14,19 @@ export const validParamsCustomIndent: HandleUserInputTemplateParams = {
 export const validParamsNoIndent: HandleUserInputTemplateParams = {
   indentLevel: '',
 };
+
+export const validParamsWithSkipButtons: HandleUserInputTemplateParams = {
+  nodes: [
+    {
+      id: 'msg_skip_source',
+      safeName: 'msg_skip_source',
+      type: 'message',
+      data: {
+        messageText: 'Выберите вариант',
+        buttons: [
+          { id: 'btn_skip', text: 'Пропустить', action: 'goto', target: 'msg_next', skipDataCollection: true },
+        ],
+      },
+    },
+  ],
+};

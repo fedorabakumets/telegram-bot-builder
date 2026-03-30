@@ -58,6 +58,18 @@ function collectCommandSourceNodes(nodes: Node[], menuOnly: boolean = false): No
   return result;
 }
 
+function hasSkipDataCollectionButtonsInProject(nodes: Node[]): boolean {
+  const hasSkip = (buttons: any[] | undefined) =>
+    Array.isArray(buttons) && buttons.some((button: any) => button?.skipDataCollection === true && !!button?.target);
+
+  return (nodes || []).some(node =>
+    hasSkip(node.data?.buttons) ||
+    hasSkip((node.data as any)?.replyButtons) ||
+    hasSkip((node.data as any)?.inlineButtons) ||
+    ((node.data as any)?.conditionalMessages ?? []).some((message: any) => hasSkip(message?.buttons))
+  );
+}
+
 /**
  * Опции для генерации Python-кода бота
  */
@@ -389,6 +401,7 @@ function generateCodeSections(
     Array.isArray(node.data?.buttons) &&
     node.data.buttons.some((b: any) => b.action === 'url' || b.url)
   );
+  const hasSkipDataCollectionButtonsFlag = hasSkipDataCollectionButtonsInProject(nodes);
 
   const universalHandlers = emitOnce(state, COMPONENT_NAMES.UNIVERSAL_HANDLERS, () =>
     generateUniversalHandlers({
@@ -396,6 +409,7 @@ function generateCodeSections(
       nodes: nodesForHandlers,
       commandNodes,
       hasUrlButtons: hasUrlButtonsFlag,
+      hasSkipDataCollectionButtons: hasSkipDataCollectionButtonsFlag,
       allNodeIds: context.allNodeIds,
     })
   );

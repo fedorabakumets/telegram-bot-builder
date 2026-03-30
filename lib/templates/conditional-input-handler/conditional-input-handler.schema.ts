@@ -58,6 +58,7 @@ export const conditionalInputHandlerParamsSchema = z.object({
   nodes: z.array(conditionalNavNodeSchema),
   allNodeIds: z.array(z.string()),
   indentLevel: z.string().optional(),
+  hasSkipDataCollectionButtons: z.boolean().optional(),
 });
 
 export type ConditionalInputHandlerParams = z.infer<typeof conditionalInputHandlerParamsSchema>;

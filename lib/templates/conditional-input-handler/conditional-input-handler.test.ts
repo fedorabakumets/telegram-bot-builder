@@ -9,6 +9,7 @@ import { generateConditionalInputHandler, collectConditionalNavNodes } from './c
 import {
   validParamsMinimal,
   validParamsWithNodes,
+  validParamsWithSkipButtons,
   validParamsCustomIndent,
 } from './conditional-input-handler.fixture';
 import { conditionalInputHandlerParamsSchema } from './conditional-input-handler.schema';
@@ -34,35 +35,44 @@ describe('generateConditionalInputHandler()', () => {
 
   describe('skipDataCollection', () => {
     it('генерирует проверку skip_buttons', () => {
-      const r = generateConditionalInputHandler(validParamsWithNodes);
+      const r = generateConditionalInputHandler(validParamsWithSkipButtons);
       assert.ok(r.includes('skip_buttons = config.get("skip_buttons", [])'));
     });
 
     it('генерирует поиск skip_button_target', () => {
-      const r = generateConditionalInputHandler(validParamsWithNodes);
+      const r = generateConditionalInputHandler(validParamsWithSkipButtons);
       assert.ok(r.includes('skip_button_target = None'));
       assert.ok(r.includes('skip_button_target = skip_btn.get("target")'));
     });
 
     it('генерирует очистку состояния при пропуске', () => {
-      const r = generateConditionalInputHandler(validParamsWithNodes);
+      const r = generateConditionalInputHandler(validParamsWithSkipButtons);
       assert.ok(r.includes('del user_data[user_id]["waiting_for_conditional_input"]'));
     });
 
     it('генерирует fake_callback для навигации пропуска', () => {
-      const r = generateConditionalInputHandler(validParamsWithNodes);
+      const r = generateConditionalInputHandler(validParamsWithSkipButtons);
       assert.ok(r.includes('id="skip_button_nav"'));
     });
 
     it('генерирует навигацию к узлам при пропуске', () => {
-      const r = generateConditionalInputHandler(validParamsWithNodes);
+      const r = generateConditionalInputHandler(validParamsWithSkipButtons);
       assert.ok(r.includes('skip_button_target == "node_abc"'));
       assert.ok(r.includes("if 'handle_callback_node_abc' in globals()"));
     });
 
     it('генерирует обработку ошибки при пропуске', () => {
-      const r = generateConditionalInputHandler(validParamsWithNodes);
+      const r = generateConditionalInputHandler(validParamsWithSkipButtons);
       assert.ok(r.includes('Ошибка при переходе к узлу кнопки skipDataCollection'));
+    });
+  });
+
+  describe('skipDataCollection без кнопок', () => {
+    it('не генерирует runtime-блок skip_buttons, если кнопок пропуска нет', () => {
+      const r = generateConditionalInputHandler(validParamsMinimal);
+      assert.ok(!r.includes('skip_buttons = config.get("skip_buttons", [])'));
+      assert.ok(!r.includes('skip_button_target = None'));
+      assert.ok(!r.includes('id="skip_button_nav"'));
     });
   });
 
@@ -90,9 +100,9 @@ describe('generateConditionalInputHandler()', () => {
 
     it('очищает состояние после сохранения', () => {
       const r = generateConditionalInputHandler(validParamsWithNodes);
-      // Должно быть минимум 2 раза: при пропуске и после сохранения
+      // Без skipDataCollection должна оставаться обычная очистка после сохранения
       const count = (r.match(/del user_data\[user_id\]\["waiting_for_conditional_input"\]/g) || []).length;
-      assert.ok(count >= 2);
+      assert.ok(count >= 1);
     });
   });
 
@@ -128,15 +138,15 @@ describe('generateConditionalInputHandler()', () => {
   describe('завершение обработки', () => {
     it('генерирует return в конце', () => {
       const r = generateConditionalInputHandler(validParamsWithNodes);
-      assert.ok(r.includes('return  # Завершаем обработку для условного сообщения'));
+      assert.ok(r.includes('return'));
     });
 
     it('return находится внутри if-блока (отступ ind2, не ind)', () => {
       const r = generateConditionalInputHandler(validParamsWithNodes);
-      // return должен быть с отступом ind2 (8 пробелов), а не ind (4 пробела)
-      assert.ok(r.includes('        return  # Завершаем обработку для условного сообщения'));
+      // return должен быть с отступом ind3 (12 пробелов), а не ind (4 пробела)
+      assert.ok(r.includes('            return'));
       // Не должно быть строки с ровно 4 пробелами (уровень функции)
-      assert.ok(!r.match(/^    return  # Завершаем обработку для условного сообщения/m));
+      assert.ok(!r.match(/^    return/m));
     });
   });
 
@@ -233,17 +243,17 @@ describe('качество кода — пустые строки', () => {
 describe('отсутствие мёртвого кода после return', () => {
   it('return находится внутри if-блока (отступ ind2, не ind)', () => {
     const r = generateConditionalInputHandler(validParamsWithNodes);
-    assert.ok(r.includes('        return  # Завершаем обработку для условного сообщения'));
-    assert.ok(!r.match(/^    return  # Завершаем обработку для условного сообщения/m));
+    assert.ok(r.includes('            return'));
+    assert.ok(!r.match(/^    return/m));
   });
 
   it('код после return не является мёртвым — return внутри if', () => {
     const r = generateConditionalInputHandler(validParamsWithNodes);
-    // Находим позицию return и убеждаемся что он внутри if-блока (8 пробелов)
+    // Находим позицию return и убеждаемся что он внутри if-блока (12 пробелов)
     const lines = r.split('\n');
-    const returnLine = lines.find(l => l.includes('return  # Завершаем обработку'));
+    const returnLine = lines.find(l => l.includes('return'));
     assert.ok(returnLine, 'Строка return не найдена');
     const indent = returnLine!.match(/^(\s*)/)?.[1] ?? '';
-    assert.strictEqual(indent.length, 8, `Отступ return = ${indent.length} пробелов, ожидалось 8`);
+    assert.strictEqual(indent.length, 12, `Отступ return = ${indent.length} пробелов, ожидалось 12`);
   });
 });

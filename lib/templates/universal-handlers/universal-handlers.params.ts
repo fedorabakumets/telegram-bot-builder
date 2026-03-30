@@ -15,6 +15,8 @@ export interface UniversalHandlersTemplateParams {
   commandNodes?: NodeItem[];
   /** Есть ли URL кнопки в проекте */
   hasUrlButtons?: boolean;
+  /** Есть ли в проекте хотя бы одна кнопка с skipDataCollection=true */
+  hasSkipDataCollectionButtons?: boolean;
   /** Все ID узлов */
   allNodeIds?: string[];
 }

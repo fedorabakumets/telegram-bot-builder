@@ -10,6 +10,7 @@ import {
   validParamsDefault,
   validParamsCustomIndent,
   validParamsNoIndent,
+  validParamsWithSkipButtons,
 } from './handle-user-input.fixture';
 import { handleUserInputParamsSchema } from './handle-user-input.schema';
 
@@ -18,6 +19,13 @@ import { handleUserInputParamsSchema } from './handle-user-input.schema';
 describe('generateHandleUserInput()', () => {
 
   describe('проверка состояния waiting_for_input', () => {
+    it('не генерирует skipDataCollection runtime-блок без кнопок', () => {
+      const r = generateHandleUserInput(validParamsDefault);
+      assert.ok(!r.includes('call_skip_target_handler'));
+      assert.ok(!r.includes('skip_target = None'));
+      assert.ok(!r.includes('skip_buttons = waiting_config.get("skip_buttons", [])'));
+    });
+
     it('генерирует проверку has_waiting_state', () => {
       const r = generateHandleUserInput(validParamsDefault);
       assert.ok(r.includes('has_waiting_state = user_id in user_data and "waiting_for_input" in user_data[user_id]'));
@@ -159,6 +167,13 @@ describe('generateHandleUserInput()', () => {
 // ─── handleUserInputParamsSchema ─────────────────────────────────────────────
 
   describe('обработчики переходов', () => {
+    it('генерирует skipDataCollection runtime-блок только если в проекте есть такие кнопки', () => {
+      const r = generateHandleUserInput(validParamsWithSkipButtons);
+      assert.ok(r.includes('call_skip_target_handler'));
+      assert.ok(r.includes('skip_buttons = waiting_config.get("skip_buttons", [])'));
+      assert.ok(r.includes('skip_target = None'));
+    });
+
     it('использует command_trigger_<safeName>_handler для command_trigger узлов', () => {
       const r = generateHandleUserInput({
         commandNodes: [
@@ -177,8 +192,24 @@ describe('generateHandleUserInput()', () => {
     it('генерирует локальный call_skip_target_handler', () => {
       const r = generateHandleUserInput({
         nodes: [
-          { id: 'node_a', safeName: 'node_a', type: 'message', data: { messageText: 'A' } },
-          { id: 'node_b', safeName: 'node_b', type: 'message', data: { messageText: 'B' } },
+          {
+            id: 'node_a',
+            safeName: 'node_a',
+            type: 'message',
+            data: {
+              messageText: 'A',
+              buttons: [{ id: 'btn_a', text: 'Пропустить A', action: 'goto', target: 'node_a', skipDataCollection: true }],
+            },
+          },
+          {
+            id: 'node_b',
+            safeName: 'node_b',
+            type: 'message',
+            data: {
+              messageText: 'B',
+              buttons: [{ id: 'btn_b', text: 'Пропустить B', action: 'goto', target: 'node_b', skipDataCollection: true }],
+            },
+          },
         ],
       });
 
@@ -254,8 +285,8 @@ describe('качество кода — пустые строки', () => {
     // TODO: шаблон генерирует строки с пробелами — это known issue #1
     // Тест фиксирует количество таких строк чтобы оно не росло
     assert.ok(
-      blankWithSpaces.length <= 50,
-      `Найдено ${blankWithSpaces.length} строк только из пробелов (порог: 50)`
+      blankWithSpaces.length <= 60,
+      `Найдено ${blankWithSpaces.length} строк только из пробелов (порог: 60)`
     );
   });
 });

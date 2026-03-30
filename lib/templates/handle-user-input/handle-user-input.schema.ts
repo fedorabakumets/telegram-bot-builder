@@ -48,6 +48,7 @@ export const handleUserInputParamsSchema = z.object({
   nodes: z.array(nodeItemSchema).optional().default([]),
   allNodeIds: z.array(z.string()).optional().default([]),
   hasUrlButtons: z.boolean().optional().default(false),
+  hasSkipDataCollectionButtons: z.boolean().optional(),
   commandNodes: z.array(nodeItemSchema).optional().default([]),
 });
 

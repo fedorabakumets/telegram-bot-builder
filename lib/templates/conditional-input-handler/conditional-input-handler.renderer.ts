@@ -7,6 +7,16 @@ import type { ConditionalInputHandlerTemplateParams, ConditionalNavNode } from '
 import { conditionalInputHandlerParamsSchema } from './conditional-input-handler.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
+function hasSkipDataCollectionButtons(nodes: ConditionalNavNode[] = []): boolean {
+  const hasSkip = (buttons: any[] | undefined) =>
+    Array.isArray(buttons) && buttons.some(button => button?.skipDataCollection === true && !!button?.target);
+
+  return (nodes ?? []).some(node =>
+    hasSkip(node?.data?.buttons) ||
+    (node?.data?.conditionalMessages ?? []).some((message: any) => hasSkip(message?.buttons))
+  );
+}
+
 /**
  * Генерирует Python-код обработчика waiting_for_conditional_input.
  *
@@ -18,7 +28,11 @@ import { renderPartialTemplate } from '../template-renderer';
  */
 export function generateConditionalInputHandler(params: ConditionalInputHandlerTemplateParams): string {
   const validated = conditionalInputHandlerParamsSchema.parse(params);
-  return renderPartialTemplate('conditional-input-handler/conditional-input-handler.py.jinja2', validated);
+  return renderPartialTemplate('conditional-input-handler/conditional-input-handler.py.jinja2', {
+    ...validated,
+    hasSkipDataCollectionButtons:
+      validated.hasSkipDataCollectionButtons ?? hasSkipDataCollectionButtons(validated.nodes),
+  });
 }
 
 /**

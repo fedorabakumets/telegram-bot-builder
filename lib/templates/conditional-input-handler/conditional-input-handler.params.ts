@@ -61,4 +61,6 @@ export interface ConditionalInputHandlerTemplateParams {
   allNodeIds: string[];
   /** Уровень отступа (по умолчанию '    ') */
   indentLevel?: string;
+  /** Есть ли в проекте хотя бы одна кнопка с skipDataCollection=true */
+  hasSkipDataCollectionButtons?: boolean;
 }

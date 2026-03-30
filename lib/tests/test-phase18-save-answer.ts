@@ -630,6 +630,29 @@ test('A06', 'dedicated input может выключать save_to_database', ()
   syntax(code, 'a06');
 });
 
+test('A06b', 'dedicated input без skipDataCollection не генерирует runtime-блок пропуска', () => {
+  const project = makeFlowProject([
+    makeMessageNode('msg_1', 'Старт', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_1',
+    }),
+    makeInputNode('input_1', {
+      inputType: 'text',
+      inputVariable: 'plain_answer',
+      inputTargetNodeId: 'msg_2',
+    }),
+    makeMessageNode('msg_2', 'Финал'),
+  ]);
+
+  const code = gen(project, 'a06b');
+  assertExcludes(code, [
+    'call_skip_target_handler',
+    'skip_buttons = waiting_config.get("skip_buttons", [])',
+    'skip_button_target',
+  ], 'A06b');
+  syntax(code, 'a06b');
+});
+
 test('A07', 'dedicated input генерирует callback-handler с подтверждением callback_query.answer()', () => {
   const project = makeFlowProject([
     makeMessageNode('msg_1', 'Старт', {
