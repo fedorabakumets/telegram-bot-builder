@@ -12,6 +12,7 @@ import { migrateLegacyNodeTypes } from './utils/migrate-legacy-node-types';
 import { migrateConditionalMessagesToConditionNodes } from './utils/migrate-conditional-messages';
 import { migrateLegacyMessageInputToLinkedInputs } from './utils/migrate-message-input';
 import { migrateMessageKeyboardsToNodes } from './utils/migrate-message-keyboards';
+import { migrateForwardMessageSourceLinks } from './utils/migrate-forward-message-source-links';
 
 /**
  * Интерфейс для состояния истории изменений
@@ -370,8 +371,11 @@ export function useBotEditor(initialData?: BotData) {
     // Преобразуем устаревшие типы start/command → message
     const migratedWithTypes = migrateLegacyNodeTypes(migratedWithCommands);
 
+    // Превращаем legacy autoTransition message/media -> forward_message в source-link
+    const migratedWithForwardSourceLinks = migrateForwardMessageSourceLinks(migratedWithTypes);
+
     // Миграция узлов с условными сообщениями в узлы condition
-    const migratedWithConditions = migrateConditionalMessagesToConditionNodes(migratedWithTypes);
+    const migratedWithConditions = migrateConditionalMessagesToConditionNodes(migratedWithForwardSourceLinks);
 
     // Переносим legacy-кнопки message в отдельные keyboard-узлы новой canvas-модели
     const migratedWithKeyboardNodes = migrateMessageKeyboardsToNodes(migratedWithConditions);

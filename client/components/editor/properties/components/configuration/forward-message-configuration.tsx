@@ -129,11 +129,11 @@ export function ForwardMessageConfiguration({
             value={sourceMode}
             onValueChange={(value) => onNodeUpdate(selectedNode.id, {
               sourceMessageIdSource: value as any,
-              ...(value === 'current_message' ? {} : {
+              ...((value === 'manual' || value === 'variable') ? {
                 sourceMessageId: '',
                 sourceMessageVariableName: '',
                 sourceMessageNodeId: '',
-              }),
+              } : {}),
             })}
           >
             <SelectTrigger className="bg-card/70 border border-amber-200/50 dark:border-amber-800/50">
@@ -178,7 +178,7 @@ export function ForwardMessageConfiguration({
           )}
 
           <div className="text-xs text-amber-700/80 dark:text-amber-300/80 leading-relaxed">
-            Узел пересылает текущее сообщение по умолчанию. Если нужно, можно подставить ID вручную или взять его из переменной.
+            Связь на холсте с узлом сообщения задаёт источник пересылки и не запускает `forward_message` автоматически. При необходимости можно указать ID вручную или взять его из переменной.
           </div>
         </div>
       </div>

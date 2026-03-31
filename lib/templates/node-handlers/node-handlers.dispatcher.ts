@@ -36,6 +36,54 @@ function hasUserIdsVar(text: string): boolean {
 }
 
 /**
+ * Проверяет, является ли автопереход legacy-связью источника для `forward_message`.
+ *
+ * @param node - Исходный узел.
+ * @param nodes - Все узлы проекта.
+ * @returns `true`, если автопереход нужно пропустить в генерации.
+ */
+function isLegacyForwardSourceLink(node: Node, nodes: Node[]): boolean {
+  const targetNodeId = typeof node.data?.autoTransitionTo === 'string'
+    ? node.data.autoTransitionTo.trim()
+    : '';
+
+  if (!targetNodeId || !node.data?.enableAutoTransition) {
+    return false;
+  }
+
+  const targetNode = nodes.find((candidate) => candidate.id === targetNodeId);
+  if (!targetNode || targetNode.type !== 'forward_message') {
+    return false;
+  }
+
+  return (targetNode.data as any)?.sourceMessageNodeId === node.id;
+}
+
+/**
+ * Возвращает безопасные параметры автоперехода для генерации обработчика.
+ *
+ * @param node - Узел-источник.
+ * @param nodes - Все узлы проекта.
+ * @returns Параметры автоперехода без legacy source-link.
+ */
+function getSafeAutoTransitionParams(node: Node, nodes: Node[]): {
+  enableAutoTransition: boolean;
+  autoTransitionTo?: string;
+} {
+  if (isLegacyForwardSourceLink(node, nodes)) {
+    return {
+      enableAutoTransition: false,
+      autoTransitionTo: undefined,
+    };
+  }
+
+  return {
+    enableAutoTransition: node.data?.enableAutoTransition || false,
+    autoTransitionTo: node.data?.autoTransitionTo,
+  };
+}
+
+/**
  * Генерирует безопасный no-op обработчик для keyboard-ноды.
  *
  * Keyboard-нода в новой модели используется только как отдельный узел привязки.
@@ -114,6 +162,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
   // Создаем массив всех ID узлов для генерации коротких ID (используется старыми обработчиками)
 
   const buildMessageHandlerParams = (node: Node) => {
+      const autoTransition = getSafeAutoTransitionParams(node, nodes);
       const media = resolveMediaUrls(node.data);
       return {
         nodeId: node.id,
@@ -128,8 +177,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         keyboardLayout: node.data?.keyboardLayout,
         oneTimeKeyboard: node.data?.oneTimeKeyboard ?? false,
         resizeKeyboard: node.data?.resizeKeyboard ?? true,
-        enableAutoTransition: node.data?.enableAutoTransition || false,
-        autoTransitionTo: node.data?.autoTransitionTo,
+        enableAutoTransition: autoTransition.enableAutoTransition,
+        autoTransitionTo: autoTransition.autoTransitionTo,
         collectUserInput: node.data?.collectUserInput || false,
         enableTextInput: node.data?.enableTextInput ?? true,
         enablePhotoInput: node.data?.enablePhotoInput || false,
@@ -195,10 +244,9 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     keyboard: generateKeyboardHandler,
     input: generateUserInputNodeHandler,
     media: (node) => generateMediaNode({
+      ...getSafeAutoTransitionParams(node, nodes),
       nodeId: node.id,
       attachedMedia: node.data?.attachedMedia || [],
-      enableAutoTransition: node.data?.enableAutoTransition || false,
-      autoTransitionTo: node.data?.autoTransitionTo,
     }),
   };
 

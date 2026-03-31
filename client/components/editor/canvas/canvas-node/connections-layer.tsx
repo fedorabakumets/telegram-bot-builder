@@ -5,12 +5,13 @@
  * со стрелками на конце. Линия всегда выходит из правого порта (OutputPort)
  * исходного узла и входит в левый бок целевого узла.
  *
- * Поддерживает пять типов соединений:
+ * Поддерживает шесть типов соединений:
  * - auto-transition (зелёный пунктир) — автопереход
  * - button-goto (синий пунктир) — переход по inline-кнопке
  * - input-target (фиолетовый пунктир) — переход после ввода пользователя
  * - trigger-next (жёлтый сплошной) — переход из узла command_trigger
  * - keyboard-link (янтарный пунктир) — привязка message → keyboard
+ * - forward-source (янтарно-оранжевый пунктир) — привязка источника для forward_message
  *
  * При наведении на линию появляется кнопка удаления соединения.
  *
@@ -31,7 +32,14 @@ const SVG_SIZE = 20000;
  * Тип соединения между узлами
  * "auto-transition" | "button-goto" | "input-target" | "trigger-next" | "condition-source"
  */
-type ConnectionType = 'auto-transition' | 'button-goto' | 'input-target' | 'trigger-next' | 'condition-source' | typeof KEYBOARD_LINK_PORT_TYPE;
+type ConnectionType =
+  | 'auto-transition'
+  | 'button-goto'
+  | 'input-target'
+  | 'trigger-next'
+  | 'condition-source'
+  | 'forward-source'
+  | typeof KEYBOARD_LINK_PORT_TYPE;
 
 /**
  * Одно соединение между двумя узлами
@@ -117,6 +125,13 @@ const CONNECTION_STYLES: Record<ConnectionType, ConnectionStyle> = {
     dashArray: '6 4',
     opacity: 0.7,
     markerId: 'arrow-condition',
+  },
+  'forward-source': {
+    color: '#f59e0b',
+    strokeWidth: 2,
+    dashArray: '4 4',
+    opacity: 0.8,
+    markerId: 'arrow-forward-source',
   },
 };
 
@@ -211,7 +226,12 @@ function collectConnections(nodes: Node[]): Connection[] {
     // 1. Автопереход
     if (node.data?.enableAutoTransition && node.data?.autoTransitionTo) {
       const toId = node.data.autoTransitionTo as string;
-      if (existingIds.has(toId)) {
+      const targetNode = nodes.find((candidate) => candidate.id === toId);
+      const isLegacyForwardSourceLink =
+        targetNode?.type === 'forward_message' &&
+        (targetNode.data as any)?.sourceMessageNodeId === node.id;
+
+      if (existingIds.has(toId) && !isLegacyForwardSourceLink) {
         connections.push({ fromId: node.id, toId, type: 'auto-transition' });
       }
     }
@@ -282,7 +302,24 @@ function collectConnections(nodes: Node[]): Connection[] {
       }
     }
 
-    // 7. Отдельная клавиатура у message-узла
+    // 7. Привязка источника сообщения для forward_message
+    if (node.type === 'forward_message') {
+      const sourceNodeId = typeof (node.data as any)?.sourceMessageNodeId === 'string'
+        ? ((node.data as any).sourceMessageNodeId as string).trim()
+        : '';
+      const sourceMode = typeof (node.data as any)?.sourceMessageIdSource === 'string'
+        ? (node.data as any).sourceMessageIdSource
+        : 'current_message';
+      if (sourceNodeId && existingIds.has(sourceNodeId) && (sourceMode === 'current_message' || sourceMode === 'last_message')) {
+        connections.push({
+          fromId: sourceNodeId,
+          toId: node.id,
+          type: 'forward-source',
+        });
+      }
+    }
+
+    // 8. Отдельная клавиатура у message-узла
     if (node.type === 'message') {
       const keyboardNodeId = getKeyboardNodeId(node.data);
       const keyboardNode = keyboardNodeId ? nodes.find(n => n.id === keyboardNodeId && n.type === 'keyboard') : null;

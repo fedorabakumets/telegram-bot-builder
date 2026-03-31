@@ -878,7 +878,7 @@ export default function Editor() {
         return { ...n, data };
       }
 
-      if (n.id === toId && type === 'auto-transition' && n.type === 'forward_message') {
+      if (n.id === toId && type === 'forward-source' && n.type === 'forward_message') {
         delete (data as typeof data & {
           sourceMessageId?: string;
           sourceMessageVariableName?: string;

@@ -1,10 +1,19 @@
+/**
+ * @fileoverview Холст визуального редактора Telegram-бота.
+ *
+ * Компонент отвечает за отображение узлов, drag-to-connect связи,
+ * историю операций и специальные семантики соединений на канвасе.
+ * Для `forward_message` связь от message/media-узла трактуется как
+ * привязка источника сообщения, а не как автопереход выполнения.
+ */
+
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useTouchGestures } from './use-touch-gestures';
 import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
 import { useConnectionDrag } from './use-connection-drag';
-import { clearKeyboardNodeId } from '../canvas-node/keyboard-connection';
+import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
 import { PortType } from '../canvas-node/port-colors';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from './utils/canvas-coordinate-utils';
 
@@ -13,6 +22,33 @@ import type { CommandPreset } from '@/components/editor/sidebar/massive/commands
 import { BotDataWithSheets } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { nanoid } from 'nanoid';
+
+/**
+ * Типы узлов, которые могут выступать источником сообщения для `forward_message`.
+ */
+const FORWARD_MESSAGE_SOURCE_NODE_TYPES = new Set<Node['type']>([
+  'message',
+  'media',
+  'photo',
+  'video',
+  'audio',
+  'document',
+  'sticker',
+  'voice',
+  'animation',
+  'location',
+  'contact',
+]);
+
+/**
+ * Проверяет, можно ли трактовать связь как source-link для `forward_message`.
+ *
+ * @param node - Исходный узел связи.
+ * @returns `true`, если узел может быть источником пересылаемого сообщения.
+ */
+function canLinkForwardMessageSource(node: Node | undefined): boolean {
+  return Boolean(node && FORWARD_MESSAGE_SOURCE_NODE_TYPES.has(node.type));
+}
 
 /**
  * Интерфейс действия в истории операций
@@ -238,14 +274,19 @@ export function Canvas({
 
     const sourceNode = nodes.find(n => n.id === sourceNodeId);
     const targetNode = nodes.find(n => n.id === targetNodeId);
-    const previousTargetId = typeof sourceNode?.data?.autoTransitionTo === 'string'
-      ? sourceNode.data.autoTransitionTo
-      : undefined;
+    const isForwardMessageSourceLink =
+      portType === 'auto-transition' &&
+      targetNode?.type === 'forward_message' &&
+      canLinkForwardMessageSource(sourceNode);
 
     const updatedNodes = nodes.map((n) => {
       const data = { ...n.data } as Record<string, unknown>;
 
       if (n.id === sourceNodeId) {
+        if (isForwardMessageSourceLink) {
+          return n;
+        }
+
         if (portType === 'trigger-next' || portType === 'auto-transition') {
           /**
            * Сообщение использует один общий порт.
@@ -283,35 +324,18 @@ export function Canvas({
         }
       }
 
-      if (n.id === targetNodeId && n.type === 'forward_message' && sourceNode?.type === 'message' && portType === 'auto-transition') {
+      if (n.id === targetNodeId && n.type === 'forward_message' && isForwardMessageSourceLink) {
         return {
           ...n,
           data: {
             ...data,
-            sourceMessageIdSource: 'current_message',
+            sourceMessageIdSource:
+              data.sourceMessageIdSource === 'manual' || data.sourceMessageIdSource === 'variable'
+                ? 'current_message'
+                : (data.sourceMessageIdSource as string | undefined) || 'current_message',
             sourceMessageId: '',
             sourceMessageVariableName: '',
             sourceMessageNodeId: sourceNodeId,
-          },
-        };
-      }
-
-      if (
-        previousTargetId &&
-        previousTargetId !== targetNodeId &&
-        n.id === previousTargetId &&
-        n.type === 'forward_message' &&
-        sourceNode?.type === 'message' &&
-        portType === 'auto-transition'
-      ) {
-        return {
-          ...n,
-          data: {
-            ...data,
-            sourceMessageIdSource: 'current_message',
-            sourceMessageId: '',
-            sourceMessageVariableName: '',
-            sourceMessageNodeId: '',
           },
         };
       }
@@ -367,7 +391,7 @@ export function Canvas({
         return { ...n, data };
       }
 
-      if (n.id === toId && type === 'auto-transition' && n.type === 'forward_message') {
+      if (n.id === toId && type === 'forward-source' && n.type === 'forward_message') {
         delete data.sourceMessageId;
         delete data.sourceMessageVariableName;
         delete data.sourceMessageNodeId;
