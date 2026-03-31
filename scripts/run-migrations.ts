@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import 'dotenv/config';
 
@@ -22,16 +22,10 @@ async function runMigrations() {
     const migrationsFolder = join(process.cwd(), 'migrations');
     console.log(`📂 Migrations folder: ${migrationsFolder}`);
 
-    const migrationFiles = [
-      '0000_create_tables.sql',
-      '0001_add_google_sheet_export_fields.sql',
-      '0002_add_structure_export_fields.sql',
-      '0005_make_user_ids_global.sql',
-      '0006_migrate_telegram_settings_to_global.sql',
-      '0007_add_avatar_url_to_user_bot_data.sql',
-      '0008_add_avatar_url_to_bot_users.sql',
-      '0009_add_is_bot_to_bot_users.sql'
-    ];
+    // Pick up every SQL migration in numeric order so new files are not skipped in production.
+    const migrationFiles = readdirSync(migrationsFolder)
+      .filter((file) => /^\d+.*\.sql$/.test(file))
+      .sort((a, b) => a.localeCompare(b));
 
     for (const file of migrationFiles) {
       const migrationPath = join(migrationsFolder, file);

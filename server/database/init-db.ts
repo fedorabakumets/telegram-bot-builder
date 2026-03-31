@@ -444,6 +444,26 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при проверке/добавлении колонки owner_id в bot_projects:', error);
     }
 
+    try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'bot_projects'
+        AND column_name = 'admin_ids';
+      `);
+
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Добавляем колонку admin_ids в таблицу bot_projects...');
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_projects
+          ADD COLUMN admin_ids TEXT DEFAULT '';
+        `, "Миграция: добавление admin_ids в bot_projects");
+        console.log('✅ Колонка admin_ids успешно добавлена в bot_projects');
+      }
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки admin_ids в bot_projects:', error);
+    }
+
     // Миграция: добавление owner_id в bot_templates если его нет
     try {
       const columnCheck = await db.execute(sql`
