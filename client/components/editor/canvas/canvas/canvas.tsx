@@ -761,7 +761,7 @@ export function Canvas({
     // Масштаб с 10% отступами
     const scaleX = (visibleWidth * 0.9) / contentWidth;
     const scaleY = (visibleHeight * 0.9) / contentHeight;
-    const newZoom = Math.max(Math.min(Math.min(scaleX, scaleY) * 100, 100), 20);
+    const newZoom = Math.max(Math.min(Math.min(scaleX, scaleY) * 100, 100), 1);
 
     // Центр контента в canvas-координатах
     const centerX = (nodeBounds.left + nodeBounds.right) / 2;
