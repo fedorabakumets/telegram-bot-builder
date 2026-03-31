@@ -12,6 +12,7 @@ import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useTouchGestures } from './use-touch-gestures';
 import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
+import { CanvasScrollbars } from './canvas-scrollbars';
 import { useConnectionDrag } from './use-connection-drag';
 import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
 import { PortType } from '../canvas-node/port-colors';
@@ -213,6 +214,9 @@ export function Canvas({
   const [isDragOver, setIsDragOver] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+
+  /** Размеры видимой области холста в пикселях */
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
@@ -897,6 +901,18 @@ export function Canvas({
     };
   }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
+  // Отслеживаем размеры видимой области для скроллбаров
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      setViewportSize({ width: el.clientWidth, height: el.clientHeight });
+    });
+    observer.observe(el);
+    setViewportSize({ width: el.clientWidth, height: el.clientHeight });
+    return () => observer.disconnect();
+  }, []);
+
   // Handle keyboard shortcuts
   useEffect(() => {
     
@@ -1340,6 +1356,16 @@ export function Canvas({
         </div>
 
       </div>
+
+      {/* Кастомные скроллбары холста */}
+      <CanvasScrollbars
+        panX={pan.x}
+        panY={pan.y}
+        zoom={zoom}
+        viewportWidth={viewportSize.width}
+        viewportHeight={viewportSize.height}
+        onPanChange={setPan}
+      />
 
       {/* Панель инструментов - фиксированная панель вверху */}
       <CanvasToolbar
