@@ -206,6 +206,7 @@ export function Canvas({
   onConnectionCreate,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   /** Ref для onConnectionCreate чтобы handleConnectionComplete не устаревал */
   const onConnectionCreateRef = useRef(onConnectionCreate);
   useEffect(() => { onConnectionCreateRef.current = onConnectionCreate; }, [onConnectionCreate]);
@@ -777,6 +778,11 @@ export function Canvas({
 
     setZoom(newZoom);
     setPan({ x: newPanX, y: newPanY });
+    // Сбрасываем scroll контейнера — pan управляет позицией через transform
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+      scrollContainerRef.current.scrollLeft = 0;
+    }
   }, [nodes, nodeSizes, zoom]);
 
   // Handle wheel zoom (native handler, registered with { passive: false })
@@ -1259,7 +1265,7 @@ export function Canvas({
 
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
-      <div className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60 }}>
+      <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60 }}>
 
         {/* Enhanced Canvas Grid */}
         <div
