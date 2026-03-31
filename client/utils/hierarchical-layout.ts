@@ -613,6 +613,24 @@ function expandComponentLayers(
     layerMap.set(keyboardId, (layerMap.get(hostId) ?? 0) + 1);
   }
 
+  // Триггеры которые ведут на узел не в слое 1 — переставляем вплотную к цели
+  for (const node of nodes) {
+    if (!ROOT_TYPES.has(node.type)) continue;
+    const currentLayer = layerMap.get(node.id) ?? 0;
+    if (currentLayer !== 0) continue;
+
+    const autoTarget = typeof (node.data as any)?.autoTransitionTo === 'string'
+      ? (node.data as any).autoTransitionTo
+      : '';
+    if (!autoTarget) continue;
+
+    const targetLayer = layerMap.get(autoTarget);
+    if (targetLayer === undefined || targetLayer <= 1) continue;
+
+    // Ставим триггер в слой targetLayer - 1 (вплотную к цели)
+    layerMap.set(node.id, targetLayer - 1);
+  }
+
   return layerMap;
 }
 
