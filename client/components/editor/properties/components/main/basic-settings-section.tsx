@@ -117,11 +117,12 @@ export function BasicSettingsSection({
     onNodeDelete,
   });
 
-  // Синхронизация command_trigger для узлов start/command
+  // Синхронизация command_trigger только для узлов start/command
+  // Для остальных узлов (message, condition и др.) этот хук не должен вызываться
   useNodeCommandTriggerSync(
-    (selectedNode.type !== 'command_trigger' && selectedNode.type !== 'text_trigger')
+    (selectedNode.type === 'start' || selectedNode.type === 'command')
       ? { node: selectedNode, allNodes, onNodeAdd, onNodeDelete, onNodeUpdate }
-      : { node: selectedNode, allNodes }
+      : { node: selectedNode, allNodes, onNodeAdd: undefined, onNodeDelete: undefined, onNodeUpdate: undefined }
   );
   return (
     <div className="w-full bg-gradient-to-br from-violet-50/40 to-purple-50/20 dark:from-violet-950/30 dark:to-purple-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-violet-200/40 dark:border-violet-800/40 backdrop-blur-sm">
