@@ -3,7 +3,7 @@ import { broadcastNode } from "../../canvas/canvas-node/broadcast-node";
 import { clientAuthNode } from "../../canvas/canvas-node/client-auth-node";
 import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage, mediaMessage, saveAnswerNode } from "./messages";
 import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from "./user-management";
-import { pinMessage, unpinMessage, deleteMessage } from "./content-management";
+import { pinMessage, unpinMessage, deleteMessage, forwardMessage } from "./content-management";
 import { commandTrigger, textTrigger } from "./triggers";
 import { conditionNode } from "./logic";
 
@@ -24,6 +24,7 @@ export const components: ComponentDefinition[] = [
   pinMessage,
   unpinMessage,
   deleteMessage,
+  forwardMessage,
   banUser,
   unbanUser,
   muteUser,

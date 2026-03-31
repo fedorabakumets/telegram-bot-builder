@@ -66,12 +66,24 @@ export const defaultNodeData = {
   maxUsagesPerDay: undefined,
   /** ID целевого сообщения */
   targetMessageId: undefined,
+  /** ID сообщения-источника для пересылки */
+  sourceMessageId: undefined,
   /** Источник ID сообщения: "last_message", "variable" */
   messageIdSource: 'last_message' as const,
+  /** Источник ID сообщения для пересылки */
+  sourceMessageIdSource: 'current_message' as const,
+  /** Имя переменной с ID сообщения-источника */
+  sourceMessageVariableName: undefined,
   /** Имя переменной */
   variableName: undefined,
   /** Отключить уведомление */
   disableNotification: false,
+  /** ID чата назначения */
+  targetChatId: undefined,
+  /** Источник ID чата назначения */
+  targetChatIdSource: 'manual' as const,
+  /** Имя переменной для ID чата назначения */
+  targetChatVariableName: undefined,
   /** ID целевого пользователя */
   targetUserId: undefined,
   /** Источник ID пользователя: "last_message", "variable" */

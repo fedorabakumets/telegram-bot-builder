@@ -46,13 +46,13 @@ function assertContains(value: string, substring: string, context: string) {
 const EXPECTED_TYPES = [
   'start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard',
   'command', 'sticker', 'voice', 'animation', 'location', 'contact',
-  'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user',
+  'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user',
   'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user',
   'admin_rights', 'input', 'condition', 'broadcast', 'client_auth',
 ];
 
 const MODERATOR_TYPES = [
-  'pin_message', 'unpin_message', 'delete_message',
+  'pin_message', 'unpin_message', 'delete_message', 'forward_message',
   'ban_user', 'unban_user', 'mute_user', 'unmute_user',
   'kick_user', 'promote_user', 'demote_user', 'admin_rights',
 ];
@@ -136,6 +136,10 @@ test('ban_user содержит red', () => {
 
 test('delete_message содержит red', () => {
   assertContains(nodeColors['delete_message'], 'red', 'delete_message');
+});
+
+test('forward_message содержит amber', () => {
+  assertContains(nodeColors['forward_message'], 'amber', 'forward_message');
 });
 
 test('admin_rights содержит violet', () => {
@@ -353,6 +357,10 @@ test('pin_message → fas fa-thumbtack', () => {
 
 test('delete_message → fas fa-trash', () => {
   assert(nodeIcons['delete_message'] === 'fas fa-trash', `Ожидалось "fas fa-trash", получено "${nodeIcons['delete_message']}"`);
+});
+
+test('forward_message → fas fa-share', () => {
+  assert(nodeIcons['forward_message'] === 'fas fa-share', `Ожидалось "fas fa-share", получено "${nodeIcons['forward_message']}"`);
 });
 
 test('ban_user → fas fa-ban', () => {

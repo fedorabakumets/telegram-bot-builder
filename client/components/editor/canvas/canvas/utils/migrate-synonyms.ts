@@ -26,10 +26,14 @@ import { nanoid } from 'nanoid';
  */
 export function migrateSynonymsToTextTriggers(nodes: Node[]): Node[] {
   // Исходные узлы без изменений — synonyms остаются как источник истины
-  const result: Node[] = [...nodes];
+  const result: Node[] = nodes.map((node) => ({
+    ...node,
+    data: { ...(node.data as any) },
+  })) as Node[];
   const newTriggers: Node[] = [];
 
-  for (const node of nodes) {
+  for (let index = 0; index < nodes.length; index += 1) {
+    const node = nodes[index];
     const synonyms: string[] = (node.data as any)?.synonyms || [];
     if (synonyms.length === 0) continue;
 
@@ -149,6 +153,14 @@ export function migrateSynonymsToTextTriggers(nodes: Node[]): Node[] {
 
       newTriggers.push(triggerNode);
     }
+
+    result[index] = {
+      ...result[index],
+      data: {
+        ...(result[index].data as any),
+        synonyms: [],
+      },
+    };
   }
 
   return [...result, ...newTriggers];

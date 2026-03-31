@@ -22,6 +22,7 @@ const COMMAND_NODE_TYPES = [
   'pin_message',
   'unpin_message',
   'delete_message',
+  'forward_message',
   'ban_user',
   'unban_user',
   'mute_user',

@@ -41,6 +41,7 @@ import { VoiceConfiguration } from '../configuration/voice-configuration';
 import { AnimationConfiguration } from '../configuration/animation-configuration';
 import { ContactConfiguration } from '../configuration/contact-configuration';
 import { ContentManagementConfiguration } from '../configuration/content-management-configuration';
+import { ForwardMessageConfiguration } from '../configuration/forward-message-configuration';
 import { UserManagementConfiguration } from '../configuration/user-management-configuration';
 import { LocationCoordinatesSection } from '../configuration/location-coordinates-section';
 import { LocationDetailsSection } from '../configuration/location-details-section';
@@ -347,6 +348,7 @@ export function PropertiesPanel({
               MapServicesSection={MapServicesSection}
               ContactConfiguration={ContactConfiguration}
               ContentManagementConfiguration={ContentManagementConfiguration}
+              ForwardMessageConfiguration={ForwardMessageConfiguration}
               UserManagementConfiguration={UserManagementConfiguration}
               AdminRightsInfo={AdminRightsInfo}
             />

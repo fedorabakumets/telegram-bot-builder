@@ -63,6 +63,8 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
       nodeType = 'sticker';
     } else if (nodeContent.includes('F.animation') || nodeContent.includes('@dp.message(F.animation)')) {
       nodeType = 'animation';
+    } else if (nodeContent.includes('forward_message') || nodeContent.includes('forwardMessage') || nodeContent.includes('bot.forward_message')) {
+      nodeType = 'forward_message';
     } else if (nodeContent.includes('commands=') || nodeContent.includes('F.command')) {
       nodeType = 'command';
     }
@@ -94,6 +96,9 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
     const commandMatch = /commands?\s*=\s*[\[({]['"]([^'"]+)['"][\])}]/.exec(nodeContent);
     if (commandMatch) {
       command = commandMatch[1].startsWith('/') ? commandMatch[1] : '/' + commandMatch[1];
+    }
+    if (nodeType === 'forward_message' && !command) {
+      command = '/forward_message';
     }
     const descriptionMatch = /description\s*=\s*"([^"]*)"/.exec(nodeContent);
     if (descriptionMatch) {
@@ -217,6 +222,12 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
         untilDate: 0,
         targetGroupId: '',
         disableNotification: false,
+        sourceMessageId: '',
+        sourceMessageIdSource: 'current_message',
+        sourceMessageVariableName: '',
+        targetChatId: '',
+        targetChatIdSource: 'manual',
+        targetChatVariableName: '',
         adminChatVariableName: ''
       } as any
     };

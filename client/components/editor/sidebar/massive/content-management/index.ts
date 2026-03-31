@@ -5,3 +5,4 @@
 export { pinMessage } from './pin-message';
 export { unpinMessage } from './unpin-message';
 export { deleteMessage } from './delete-message';
+export { forwardMessage } from './forward-message';

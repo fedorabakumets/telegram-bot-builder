@@ -37,6 +37,7 @@ export function NodeStatusIndicators({ node }: NodeStatusIndicatorsProps) {
       case 'location': return !!(node.data.latitude && node.data.longitude);
       case 'contact': return !!(node.data.phoneNumber && node.data.firstName);
       case 'command': return !!node.data.command;
+      case 'forward_message': return true;
       case 'admin_rights': return true;
       case 'broadcast': return true;
       default: return (node.type as any) === 'poll' 

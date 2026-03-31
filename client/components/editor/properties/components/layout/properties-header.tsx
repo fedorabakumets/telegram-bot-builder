@@ -32,6 +32,8 @@ interface PropertiesHeaderProps {
  * Маппинг названий типов узлов
  */
 const nodeTypeNames: Partial<Record<Node['type'], string>> = {
+  start: 'Старт',
+  command: 'Команда',
   message: 'Текстовое сообщение',
   sticker: 'Стикер',
   voice: 'Голосовое сообщение',
@@ -41,6 +43,7 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   pin_message: 'Закрепить сообщение',
   unpin_message: 'Открепить сообщение',
   delete_message: 'Удалить сообщение',
+  forward_message: 'Переслать сообщение',
   ban_user: 'Заблокировать пользователя',
   unban_user: 'Разблокировать пользователя',
   mute_user: 'Ограничить пользователя',
@@ -67,6 +70,8 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
  * Маппинг иконок типов узлов
  */
 const nodeIcons: Partial<Record<Node['type'], string>> = {
+  start: 'fas fa-play',
+  command: 'fas fa-terminal',
   message: 'fas fa-comment',
   sticker: 'fas fa-smile',
   voice: 'fas fa-microphone',
@@ -76,6 +81,7 @@ const nodeIcons: Partial<Record<Node['type'], string>> = {
   pin_message: 'fas fa-thumbtack',
   unpin_message: 'fas fa-times',
   delete_message: 'fas fa-trash',
+  forward_message: 'fas fa-share',
   ban_user: 'fas fa-user-slash',
   unban_user: 'fas fa-user-check',
   mute_user: 'fas fa-volume-mute',
@@ -102,6 +108,8 @@ const nodeIcons: Partial<Record<Node['type'], string>> = {
  * Маппинг цветов типов узлов
  */
 const nodeColors: Partial<Record<Node['type'], string>> = {
+  start: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+  command: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
   message: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
   sticker: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
   voice: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -111,6 +119,7 @@ const nodeColors: Partial<Record<Node['type'], string>> = {
   pin_message: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
   unpin_message: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
   delete_message: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+  forward_message: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
   ban_user: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
   unban_user: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
   mute_user: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
@@ -207,6 +216,8 @@ export function PropertiesHeader({
                     </SelectTrigger>
                     <SelectContent className="z-50 bg-gradient-to-br from-slate-50/95 to-slate-100/90 dark:from-slate-900/95 dark:to-slate-800/95 max-h-60 overflow-y-auto">
                       <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
+                      <SelectItem value="start">🚀 Старт</SelectItem>
+                      <SelectItem value="command">⌨️ Команда</SelectItem>
                       <SelectItem value="keyboard">⌨️ Клавиатура</SelectItem>
                       <SelectItem value="sticker">😀 Стикер</SelectItem>
                       <SelectItem value="voice">🎤 Голосовое сообщение</SelectItem>
@@ -218,6 +229,7 @@ export function PropertiesHeader({
                       <SelectItem value="pin_message">📌 Закрепить сообщение</SelectItem>
                       <SelectItem value="unpin_message">📌❌ Открепить сообщение</SelectItem>
                       <SelectItem value="delete_message">🗑️ Удалить сообщение</SelectItem>
+                      <SelectItem value="forward_message">↗️ Переслать сообщение</SelectItem>
                       <SelectItem value="ban_user">🚫 Заблокировать пользователя</SelectItem>
                       <SelectItem value="unban_user">✅ Разблокировать пользователя</SelectItem>
                       <SelectItem value="mute_user">🔇 Ограничить пользователя</SelectItem>

@@ -49,6 +49,7 @@ export function useCommandValidation({
       selectedNode.type === 'pin_message' ||
       selectedNode.type === 'unpin_message' ||
       selectedNode.type === 'delete_message' ||
+      selectedNode.type === 'forward_message' ||
       selectedNode.type === 'ban_user' ||
       selectedNode.type === 'unban_user' ||
       selectedNode.type === 'mute_user' ||

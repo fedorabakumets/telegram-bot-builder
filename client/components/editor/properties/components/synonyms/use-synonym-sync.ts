@@ -2,7 +2,7 @@
  * @fileoverview Sync synonyms with text_trigger nodes on the canvas.
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Node } from '@shared/schema';
 import { nanoid } from 'nanoid';
 
@@ -167,10 +167,45 @@ export function useSynonymSync({
     };
   }, [allNodes, selectedNode]);
 
+  useEffect(() => {
+    if (!onNodeAdd) {
+      return;
+    }
+
+    const normalizedLinkedSynonyms = new Set(
+      linkedTextTriggers.flatMap((trigger) =>
+        getTextSynonyms(trigger).map(normalizeSynonym).filter(Boolean)
+      )
+    );
+
+    const missingSynonyms = (selectedNode.data.synonyms || []).filter((synonym) => {
+      const normalized = normalizeSynonym(synonym);
+      return normalized && !normalizedLinkedSynonyms.has(normalized);
+    });
+
+    if (missingSynonyms.length === 0) {
+      return;
+    }
+
+    missingSynonyms.forEach((synonym) => {
+      onNodeAdd(createTriggerNode(synonym));
+    });
+
+    onNodeUpdate(selectedNode.id, { synonyms: [] });
+  }, [
+    createTriggerNode,
+    linkedTextTriggers,
+    normalizeSynonym,
+    onNodeAdd,
+    onNodeUpdate,
+    selectedNode.id,
+    selectedNode.data.synonyms,
+  ]);
+
   const handleSynonymsUpdate = useCallback((newSynonyms: string[]) => {
     const oldSynonyms = displaySynonyms;
 
-    onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
+    onNodeUpdate(selectedNode.id, { synonyms: [] });
 
     if (!onNodeAdd || !onNodeDelete) {
       return;

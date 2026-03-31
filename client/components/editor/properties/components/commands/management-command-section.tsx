@@ -31,6 +31,7 @@ export function ManagementCommandSection({
       pin_message: '/pin_message',
       unpin_message: '/unpin_message',
       delete_message: '/delete_message',
+      forward_message: '/forward_message',
       ban_user: '/ban_user',
       unban_user: '/unban_user',
       mute_user: '/mute_user',

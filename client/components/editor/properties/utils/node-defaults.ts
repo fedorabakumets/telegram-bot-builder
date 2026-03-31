@@ -150,6 +150,17 @@ export function getNodeDefaults(type: Node['type']): any {
       messageIdSource: 'last_message',
       variableName: ''
     },
+    forward_message: {
+      command: '/forward_message',
+      synonyms: ['переслать', 'отправить дальше', 'forward'],
+      sourceMessageId: '',
+      sourceMessageIdSource: 'current_message',
+      sourceMessageVariableName: '',
+      targetChatId: '',
+      targetChatIdSource: 'manual',
+      targetChatVariableName: '',
+      disableNotification: false
+    },
     ban_user: {
       command: '/ban_user',
       synonyms: ['забанить', 'заблокировать', 'бан'],

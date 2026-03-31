@@ -9,6 +9,7 @@ export * from './contact-configuration';
 export * from './sticker-configuration';
 export * from './voice-configuration';
 export * from './content-management-configuration';
+export * from './forward-message-configuration';
 export * from './user-management-configuration';
 export * from './location-coordinates-section';
 export * from './location-details-section';

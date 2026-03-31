@@ -10,6 +10,8 @@
  * @description Объект, сопоставляющий типы узлов с соответствующими им иконками
  */
 export const nodeIcons: Record<string, string> = {
+  start: 'fas fa-play',
+  command: 'fas fa-terminal',
   message: 'fas fa-comment',
   photo: 'fas fa-image',
   video: 'fas fa-video',
@@ -24,6 +26,7 @@ export const nodeIcons: Record<string, string> = {
   pin_message: 'fas fa-thumbtack',
   unpin_message: 'fas fa-times',
   delete_message: 'fas fa-trash',
+  forward_message: 'fas fa-share',
   ban_user: 'fas fa-ban',
   unban_user: 'fas fa-user-check',
   mute_user: 'fas fa-volume-mute',

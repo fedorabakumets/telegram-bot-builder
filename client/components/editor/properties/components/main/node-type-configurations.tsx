@@ -30,6 +30,7 @@ interface NodeTypeConfigurationsProps {
   ContactConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
   /** Компонент управления контентом */
   ContentManagementConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
+  ForwardMessageConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
   /** Компонент управления пользователями */
   UserManagementConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
   /** Компонент информации о правах администратора */
@@ -55,6 +56,7 @@ export function NodeTypeConfigurations({
   MapServicesSection,
   ContactConfiguration,
   ContentManagementConfiguration,
+  ForwardMessageConfiguration,
   UserManagementConfiguration,
   AdminRightsInfo
 }: NodeTypeConfigurationsProps) {
@@ -89,6 +91,10 @@ export function NodeTypeConfigurations({
 
   if (nodeType === 'pin_message' || nodeType === 'unpin_message' || nodeType === 'delete_message') {
     return <ContentManagementConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
+  }
+
+  if (nodeType === 'forward_message') {
+    return <ForwardMessageConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
   }
 
   if (nodeType === 'ban_user' || nodeType === 'unban_user' || nodeType === 'mute_user' ||

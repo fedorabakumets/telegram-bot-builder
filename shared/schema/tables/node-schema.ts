@@ -15,7 +15,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -96,12 +96,24 @@ export const nodeSchema = z.object({
     customParameters: z.array(z.string()).default([]),
     /** ID целевого сообщения для операций с сообщениями */
     targetMessageId: z.string().optional(),
+    /** ID сообщения-источника для пересылки */
+    sourceMessageId: z.string().optional(),
     /** Источник ID сообщения: "manual" — вручную, "variable" — из переменной, "last_message" — последнее */
     messageIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'),
+    /** Источник ID сообщения для пересылки: "current_message", "last_message", "manual", "variable" */
+    sourceMessageIdSource: z.enum(['current_message', 'last_message', 'manual', 'variable']).default('current_message'),
+    /** Имя переменной с ID сообщения-источника */
+    sourceMessageVariableName: z.string().optional(),
     /** Имя переменной для хранения данных */
     variableName: z.string().optional(),
     /** Отключить уведомление при закреплении/откреплении сообщения */
     disableNotification: z.boolean().default(false),
+    /** ID чата назначения для пересылки сообщения */
+    targetChatId: z.string().optional(),
+    /** Источник ID чата назначения: "manual", "variable" */
+    targetChatIdSource: z.enum(['manual', 'variable']).default('manual'),
+    /** Имя переменной с ID чата назначения */
+    targetChatVariableName: z.string().optional(),
     /** ID целевого пользователя для операций с пользователями */
     targetUserId: z.string().optional(),
     /** Источник ID пользователя: "manual" — вручную, "variable" — из переменной, "last_message" — из последнего сообщения */

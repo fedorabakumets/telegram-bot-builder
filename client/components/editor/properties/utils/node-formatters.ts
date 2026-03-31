@@ -12,6 +12,8 @@ export function formatNodeDisplay(node: Node, sheetName?: string): string {
 
 export function getNodeTypeLabel(type: Node['type']): string {
   const types: Partial<Record<Node['type'], string>> = {
+    start: 'Старт',
+    command: 'Команда',
     message: 'Сообщение',
     location: 'Геолокация',
     contact: 'Контакт',
@@ -24,6 +26,7 @@ export function getNodeTypeLabel(type: Node['type']): string {
     pin_message: 'Закрепить',
     unpin_message: 'Открепить',
     delete_message: 'Удалить',
+    forward_message: 'Переслать',
     ban_user: 'Заблокировать',
     unban_user: 'Разблокировать',
     mute_user: 'Заглушить',
@@ -53,6 +56,21 @@ function getNodeContent(node: Node): string {
 
   if (node.type === 'message') {
     return ((node.data as any).messageText || '').slice(0, 50);
+  }
+
+  if (node.type === 'forward_message') {
+    const target = ((node.data as any).targetChatId || '').trim();
+    const targetVariable = ((node.data as any).targetChatVariableName || '').trim();
+    const source = ((node.data as any).sourceMessageIdSource || 'current_message').trim();
+    const sourceVariable = ((node.data as any).sourceMessageVariableName || '').trim();
+    const sourceLabel =
+      source === 'current_message' ? 'Текущее сообщение' :
+      source === 'last_message' ? 'Последнее сообщение' :
+      source === 'manual' ? 'Вручную' : 'Из переменной';
+    const sourceSuffix = source === 'manual' ? ` (${((node.data as any).sourceMessageId || '').trim() || 'без ID'})` :
+      source === 'variable' ? ` (${sourceVariable || 'переменная'})` : '';
+    const targetLabel = target || (targetVariable ? `переменная: ${targetVariable}` : '');
+    return (targetLabel ? `${sourceLabel}${sourceSuffix} → ${targetLabel}` : `Источник: ${sourceLabel}${sourceSuffix}`).slice(0, 50);
   }
 
   if (node.type === 'input') {
