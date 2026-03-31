@@ -22,6 +22,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'command_trigger',
   'text_trigger',
   'condition',
+  'forward_message',
 ]);
 
 /**

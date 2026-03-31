@@ -40,6 +40,18 @@ describe('generateForwardMessage()', () => {
     expect(code).toContain('AND node_id = $3');
   });
 
+  it('does not double-quote linked source node ids', () => {
+    const code = generateForwardMessage(validParamsLastMessage);
+    expect(code).toContain(`linked_source_node_id = 'message_source'`);
+    expect(code).not.toContain(`linked_source_node_id = "'message_source'"`);
+  });
+
+  it('does not double-quote manual target chat ids', () => {
+    const code = generateForwardMessage(validParamsBasic);
+    expect(code).toContain(`_raw_target_chat_id = '@channel_name'`);
+    expect(code).not.toContain(`_raw_target_chat_id = "'@channel_name'"`);
+  });
+
   it('validates params through zod schema', () => {
     expect(() => forwardMessageParamsSchema.parse(validParamsBasic)).not.toThrow();
   });

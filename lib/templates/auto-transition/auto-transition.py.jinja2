@@ -11,6 +11,7 @@
 
 {% set ind = indentLevel or '    ' %}
 
+{{ ind }}is_fake_callback = getattr(callback_query, '_is_fake', False)
 {{ ind }}# Проверяем, что это не fake callback (для предотвращения дублирования сообщений)
 {{ ind }}if not is_fake_callback:
 {{ ind }}    logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTarget }}")

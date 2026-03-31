@@ -18,6 +18,7 @@ import { autoTransitionParamsSchema } from './auto-transition.schema';
 describe('generateAutoTransition()', () => {
   it('генерирует проверку is_fake_callback', () => {
     const result = generateAutoTransition(validParamsTargetExists);
+    assert.ok(result.includes("is_fake_callback = getattr(callback_query, '_is_fake', False)"));
     assert.ok(result.includes('if not is_fake_callback:'));
   });
 
@@ -44,6 +45,7 @@ describe('generateAutoTransition()', () => {
 
   it('применяет кастомный отступ', () => {
     const result = generateAutoTransition(validParamsWithIndent);
+    assert.ok(result.includes("        is_fake_callback = getattr(callback_query, '_is_fake', False)"));
     assert.ok(result.includes('        if not is_fake_callback:'));
   });
 

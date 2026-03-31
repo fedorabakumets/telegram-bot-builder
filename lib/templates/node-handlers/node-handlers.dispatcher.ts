@@ -35,51 +35,37 @@ function hasUserIdsVar(text: string): boolean {
   return /\{user_ids(?:_count)?\}/.test(text || '');
 }
 
-/**
- * Проверяет, является ли автопереход legacy-связью источника для `forward_message`.
- *
- * @param node - Исходный узел.
- * @param nodes - Все узлы проекта.
- * @returns `true`, если автопереход нужно пропустить в генерации.
- */
-function isLegacyForwardSourceLink(node: Node, nodes: Node[]): boolean {
-  const targetNodeId = typeof node.data?.autoTransitionTo === 'string'
-    ? node.data.autoTransitionTo.trim()
-    : '';
-
-  if (!targetNodeId || !node.data?.enableAutoTransition) {
-    return false;
-  }
-
-  const targetNode = nodes.find((candidate) => candidate.id === targetNodeId);
-  if (!targetNode || targetNode.type !== 'forward_message') {
-    return false;
-  }
-
-  return (targetNode.data as any)?.sourceMessageNodeId === node.id;
-}
-
-/**
- * Возвращает безопасные параметры автоперехода для генерации обработчика.
- *
- * @param node - Узел-источник.
- * @param nodes - Все узлы проекта.
- * @returns Параметры автоперехода без legacy source-link.
- */
 function getSafeAutoTransitionParams(node: Node, nodes: Node[]): {
   enableAutoTransition: boolean;
   autoTransitionTo?: string;
 } {
-  if (isLegacyForwardSourceLink(node, nodes)) {
+  const explicitAutoTransitionTo = typeof node.data?.autoTransitionTo === 'string'
+    ? node.data.autoTransitionTo.trim()
+    : '';
+
+  if (node.data?.enableAutoTransition && explicitAutoTransitionTo) {
     return {
-      enableAutoTransition: false,
-      autoTransitionTo: undefined,
+      enableAutoTransition: true,
+      autoTransitionTo: explicitAutoTransitionTo,
+    };
+  }
+
+  const linkedForwardNode = nodes.find((candidate) =>
+    candidate.type === 'forward_message' &&
+    typeof candidate.data?.sourceMessageNodeId === 'string' &&
+    candidate.data.sourceMessageNodeId.trim() === node.id
+  );
+
+  if (linkedForwardNode) {
+    return {
+      enableAutoTransition: true,
+      autoTransitionTo: linkedForwardNode.id,
     };
   }
 
   return {
-    enableAutoTransition: node.data?.enableAutoTransition || false,
-    autoTransitionTo: node.data?.autoTransitionTo,
+    enableAutoTransition: false,
+    autoTransitionTo: undefined,
   };
 }
 

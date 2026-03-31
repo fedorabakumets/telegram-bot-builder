@@ -139,9 +139,9 @@ async def _resolve_forward_message_source_{{ safeName }}(callback_query: types.C
     user_id = callback_query.from_user.id
     source_chat_id = callback_query.message.chat.id
     source_message_id = callback_query.message.message_id
-    linked_source_node_id = "{{ linked_source_node_id | escape_python_string }}"
+    linked_source_node_id = {{ linked_source_node_id | escape_python_string }}
 
-    if linked_source_node_id and "{{ source_mode }}" == "current_message":
+    if linked_source_node_id and {{ source_mode | escape_python_string }} == "current_message":
         _linked_message_id = await _load_forward_message_from_log_{{ safeName }}(
             callback_query,
             linked_node_id=linked_source_node_id,
@@ -150,7 +150,7 @@ async def _resolve_forward_message_source_{{ safeName }}(callback_query: types.C
         if _linked_message_id is not None:
             return source_chat_id, _linked_message_id
 
-    if "{{ source_mode }}" == "last_message":
+    if {{ source_mode | escape_python_string }} == "last_message":
         _last_message_id = await _load_forward_message_from_log_{{ safeName }}(
             callback_query,
             linked_node_id=linked_source_node_id,
@@ -160,11 +160,11 @@ async def _resolve_forward_message_source_{{ safeName }}(callback_query: types.C
             return source_chat_id, _last_message_id
         return source_chat_id, source_message_id
 
-    if "{{ source_mode }}" == "manual":
-        raw_source_message_id = "{{ sourceMessageId | escape_python_string }}"
-    elif "{{ source_mode }}" == "variable":
+    if {{ source_mode | escape_python_string }} == "manual":
+        raw_source_message_id = {{ sourceMessageId | escape_python_string }}
+    elif {{ source_mode | escape_python_string }} == "variable":
         _all_vars = await init_all_user_vars(user_id)
-        raw_source_message_id = _all_vars.get("{{ sourceMessageVariableName | escape_python_string }}", "")
+        raw_source_message_id = _all_vars.get({{ sourceMessageVariableName | escape_python_string }}, "")
     else:
         raw_source_message_id = str(source_message_id)
 
@@ -194,7 +194,7 @@ async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.
 {% elif recipient.targetChatIdSource == 'variable' %}
     if _all_vars is None:
         _all_vars = await init_all_user_vars(user_id)
-    _raw_target_chat_id = _all_vars.get("{{ recipient.targetChatVariableName | escape_python_string }}", "")
+    _raw_target_chat_id = _all_vars.get({{ recipient.targetChatVariableName | escape_python_string }}, "")
     _raw_target_chat_id = str(_raw_target_chat_id).strip()
     if _raw_target_chat_id:
         try:
@@ -204,7 +204,7 @@ async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.
         if _normalized_target_chat_id not in target_chat_ids:
             target_chat_ids.append(_normalized_target_chat_id)
 {% else %}
-    _raw_target_chat_id = "{{ recipient.targetChatId | escape_python_string }}"
+    _raw_target_chat_id = {{ recipient.targetChatId | escape_python_string }}
     if _raw_target_chat_id:
         try:
             _normalized_target_chat_id = int(_raw_target_chat_id)
