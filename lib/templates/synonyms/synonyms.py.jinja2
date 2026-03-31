@@ -52,7 +52,7 @@ async def message_{{ sanitized_node_id }}_synonym_{{ sanitized_synonym }}_handle
             self.from_user = user
             self.message = msg
 
-        async def answer(self):
+        async def answer(self, *args, **kwargs):
             pass
 
         async def edit_text(self, text, **kwargs):

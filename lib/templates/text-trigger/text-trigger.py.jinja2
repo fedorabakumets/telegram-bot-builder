@@ -46,7 +46,7 @@ async def text_trigger_{{ sanitized_node_id }}_{{ sanitized_synonym }}_handler(m
             self.from_user = user
             self.message = msg
 
-        async def answer(self):
+        async def answer(self, *args, **kwargs):
             pass
 
         async def edit_text(self, text, **kwargs):
