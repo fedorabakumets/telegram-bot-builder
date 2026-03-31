@@ -100,7 +100,8 @@ export function ZoomControls({
                   max="200"
                   value={Math.round(zoom)}
                   onChange={(e) => onZoomLevelChange(parseInt(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  className="flex-1 h-4 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  style={{ accentColor: '#3b82f6' }}
                 />
                 <span className="text-xs font-mono font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-700/50 px-2 py-1 rounded min-w-[45px] text-center">
                   {Math.round(zoom)}%
