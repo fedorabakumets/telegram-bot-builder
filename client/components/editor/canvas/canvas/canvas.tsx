@@ -277,10 +277,13 @@ export function Canvas({
     const existingSourceNodeId = typeof (targetNode?.data as any)?.sourceMessageNodeId === 'string'
       ? (targetNode?.data as any).sourceMessageNodeId.trim()
       : '';
+    const existingSourceMode = (targetNode?.data as any)?.sourceMessageIdSource;
     const isForwardMessageSourceLink =
       portType === 'auto-transition' &&
       targetNode?.type === 'forward_message' &&
       canLinkForwardMessageSource(sourceNode) &&
+      existingSourceMode !== 'manual' &&
+      existingSourceMode !== 'variable' &&
       (!existingSourceNodeId || existingSourceNodeId === sourceNodeId);
 
     const updatedNodes = nodes.map((n) => {
