@@ -28,13 +28,10 @@ import { findActiveProcessForToken } from '../../../utils/findActiveProcessForTo
 export async function handleBotStatusByToken(req: Request, res: Response): Promise<void> {
     try {
         const tokenId = parseInt(req.params.tokenId);
-        console.log(`[BotStatus] Запрос статуса для токена ID=${tokenId}`);
-        
+
         const instance = await storage.getBotInstanceByToken(tokenId);
-        console.log(`[BotStatus] Результат получения инстанса:`, instance ? `найден (ID=${instance.id})` : 'не найден');
 
         if (!instance) {
-            console.log(`[BotStatus] Токен ${tokenId} не найден, возвращаем status=stopped`);
             res.json({ status: 'stopped', instance: null });
             return;
         }

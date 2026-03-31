@@ -23,33 +23,27 @@ export async function startFileMonitoring(storage: EnhancedDatabaseStorage): Pro
   // Создаем watcher для директории bots/
   const watcher = chokidar.watch(botsDir, {
     persistent: true,
-    ignoreInitial: true, // Игнорируем начальные события
+    ignoreInitial: true,
     ignorePermissionErrors: true,
-    usePolling: true, // Используем polling для лучшей совместимости
-    interval: 1000, // Интервал проверки в миллисекундах
+    usePolling: true,
+    interval: 1000,
     binaryInterval: 3000
   });
 
   // Обработчик событий изменения файлов
-  const handleChange = async (filePath: string) => {
-    console.log(`Обнаружено изменение файла: ${filePath}`);
-
+  const handleChange = async (_filePath: string) => {
     try {
-      // Импортируем проекты из файлов
       await importProjectsFromFiles(storage);
-      console.log('Проекты успешно синхронизированы из файлов');
     } catch (error) {
       console.error('Ошибка при синхронизации проектов из файлов:', error);
     }
   };
 
-  // Назначаем обработчики событий
   watcher
-    .on('add', handleChange)      // При добавлении файла
-    .on('change', handleChange)   // При изменении файла
-    .on('unlink', handleChange);  // При удалении файла
+    .on('add', handleChange)
+    .on('change', handleChange)
+    .on('unlink', handleChange);
 
-  // Возвращаем функцию для остановки мониторинга
   return () => {
     console.log('Остановка мониторинга файлов...');
     watcher.close();
