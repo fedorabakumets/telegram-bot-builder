@@ -6,6 +6,17 @@
 import { z } from "zod";
 import { buttonSchema } from "./button-schema";
 
+const forwardMessageTargetRecipientSchema = z.object({
+  /** Уникальный ID получателя внутри узла */
+  id: z.string(),
+  /** Источник ID чата назначения: "manual", "variable", "admin_ids" */
+  targetChatIdSource: z.enum(['manual', 'variable', 'admin_ids']).default('manual'),
+  /** ID или username чата */
+  targetChatId: z.string().optional(),
+  /** Имя переменной с ID чата */
+  targetChatVariableName: z.string().optional(),
+});
+
 /** Схема узла бота */
 export const nodeSchema = z.object({
   /** Уникальный идентификатор узла */
@@ -102,6 +113,8 @@ export const nodeSchema = z.object({
     messageIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'),
     /** Источник ID сообщения для пересылки: "current_message", "last_message", "manual", "variable" */
     sourceMessageIdSource: z.enum(['current_message', 'last_message', 'manual', 'variable']).default('current_message'),
+    /** ID узла, от которого пришла связь к forward_message */
+    sourceMessageNodeId: z.string().optional(),
     /** Имя переменной с ID сообщения-источника */
     sourceMessageVariableName: z.string().optional(),
     /** Имя переменной для хранения данных */
@@ -110,10 +123,12 @@ export const nodeSchema = z.object({
     disableNotification: z.boolean().default(false),
     /** ID чата назначения для пересылки сообщения */
     targetChatId: z.string().optional(),
-    /** Источник ID чата назначения: "manual", "variable" */
-    targetChatIdSource: z.enum(['manual', 'variable']).default('manual'),
+    /** Источник ID чата назначения: "manual", "variable", "admin_ids" */
+    targetChatIdSource: z.enum(['manual', 'variable', 'admin_ids']).default('manual'),
     /** Имя переменной с ID чата назначения */
     targetChatVariableName: z.string().optional(),
+    /** Несколько получателей для пересылки сообщения */
+    targetChatTargets: z.array(forwardMessageTargetRecipientSchema).default([]),
     /** ID целевого пользователя для операций с пользователями */
     targetUserId: z.string().optional(),
     /** Источник ID пользователя: "manual" — вручную, "variable" — из переменной, "last_message" — из последнего сообщения */

@@ -878,6 +878,26 @@ export default function Editor() {
         return { ...n, data };
       }
 
+      if (n.id === toId && type === 'auto-transition' && n.type === 'forward_message') {
+        delete (data as typeof data & {
+          sourceMessageId?: string;
+          sourceMessageVariableName?: string;
+          sourceMessageNodeId?: string;
+        }).sourceMessageId;
+        delete (data as typeof data & {
+          sourceMessageId?: string;
+          sourceMessageVariableName?: string;
+          sourceMessageNodeId?: string;
+        }).sourceMessageVariableName;
+        delete (data as typeof data & {
+          sourceMessageId?: string;
+          sourceMessageVariableName?: string;
+          sourceMessageNodeId?: string;
+        }).sourceMessageNodeId;
+        (data as typeof data & { sourceMessageIdSource?: string }).sourceMessageIdSource = 'current_message';
+        return { ...n, data };
+      }
+
       return n;
     });
     updateNodes(updatedNodes);

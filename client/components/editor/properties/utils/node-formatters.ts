@@ -62,15 +62,37 @@ function getNodeContent(node: Node): string {
     const target = ((node.data as any).targetChatId || '').trim();
     const targetVariable = ((node.data as any).targetChatVariableName || '').trim();
     const source = ((node.data as any).sourceMessageIdSource || 'current_message').trim();
+    const linkedSourceNodeId = ((node.data as any).sourceMessageNodeId || '').trim();
     const sourceVariable = ((node.data as any).sourceMessageVariableName || '').trim();
+    const targetRecipients = Array.isArray((node.data as any).targetChatTargets)
+      ? (node.data as any).targetChatTargets
+      : [];
+    const activeTargetRecipients = targetRecipients.filter((recipient: any) => {
+      if (!recipient) return false;
+      if (recipient.targetChatIdSource === 'admin_ids') return true;
+      return Boolean((recipient.targetChatId || '').trim() || (recipient.targetChatVariableName || '').trim());
+    });
     const sourceLabel =
       source === 'current_message' ? 'Текущее сообщение' :
       source === 'last_message' ? 'Последнее сообщение' :
       source === 'manual' ? 'Вручную' : 'Из переменной';
+    const linkedSuffix = linkedSourceNodeId ? ' · по связи' : '';
     const sourceSuffix = source === 'manual' ? ` (${((node.data as any).sourceMessageId || '').trim() || 'без ID'})` :
       source === 'variable' ? ` (${sourceVariable || 'переменная'})` : '';
-    const targetLabel = target || (targetVariable ? `переменная: ${targetVariable}` : '');
-    return (targetLabel ? `${sourceLabel}${sourceSuffix} → ${targetLabel}` : `Источник: ${sourceLabel}${sourceSuffix}`).slice(0, 50);
+    const formatTargetRecipient = (recipient: any): string => {
+      const mode = recipient?.targetChatIdSource;
+      if (mode === 'variable') {
+        return `переменная: ${recipient?.targetChatVariableName?.trim() || 'пусто'}`;
+      }
+      if (mode === 'admin_ids') {
+        return 'admin ids';
+      }
+      return recipient?.targetChatId?.trim() || 'без ID';
+    };
+    const targetLabel = activeTargetRecipients.length > 0
+      ? `${activeTargetRecipients.slice(0, 2).map(formatTargetRecipient).join(', ')}${activeTargetRecipients.length > 2 ? ` +${activeTargetRecipients.length - 2}` : ''}`
+      : (target || (targetVariable ? `переменная: ${targetVariable}` : ''));
+    return (targetLabel ? `${sourceLabel}${sourceSuffix}${linkedSuffix} → ${targetLabel}` : `Источник: ${sourceLabel}${sourceSuffix}${linkedSuffix}`).slice(0, 50);
   }
 
   if (node.type === 'input') {

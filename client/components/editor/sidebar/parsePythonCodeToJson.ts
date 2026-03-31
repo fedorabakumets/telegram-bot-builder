@@ -224,10 +224,12 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
         disableNotification: false,
         sourceMessageId: '',
         sourceMessageIdSource: 'current_message',
+        sourceMessageNodeId: '',
         sourceMessageVariableName: '',
         targetChatId: '',
         targetChatIdSource: 'manual',
         targetChatVariableName: '',
+        targetChatTargets: [],
         adminChatVariableName: ''
       } as any
     };

@@ -5,6 +5,7 @@ import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
 import { useConnectionDrag } from './use-connection-drag';
 import { clearKeyboardNodeId } from '../canvas-node/keyboard-connection';
+import { PortType } from '../canvas-node/port-colors';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from './utils/canvas-coordinate-utils';
 
 import { Node, ComponentDefinition } from '@/types/bot';
@@ -169,7 +170,7 @@ export function Canvas({
   onConnectionCreate,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
-  /** Ref для onConnectionCreate чтобы handleNodeUpdate не устаревал */
+  /** Ref для onConnectionCreate чтобы handleConnectionComplete не устаревал */
   const onConnectionCreateRef = useRef(onConnectionCreate);
   useEffect(() => { onConnectionCreateRef.current = onConnectionCreate; }, [onConnectionCreate]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -219,14 +220,107 @@ export function Canvas({
   }, [onActionLog]);
 
   /**
-   * Обновляет один узел в массиве и вызывает onNodesUpdate.
-   * Используется хуком useConnectionDrag при завершении drag-to-connect.
+   * Применяет результат drag-to-connect одним проходом, чтобы сохранить
+   * и источник, и цель связи без конфликтов между последовательными обновлениями.
    */
-  const handleNodeUpdate = useCallback((nodeId: string, updater: (node: Node) => Node) => {
+  const handleConnectionComplete = useCallback(({
+    sourceNodeId,
+    targetNodeId,
+    portType,
+    buttonId,
+  }: {
+    sourceNodeId: string;
+    targetNodeId: string;
+    portType: PortType;
+    buttonId?: string;
+  }) => {
     onConnectionCreateRef.current?.();
-    const updatedNodes = nodes.map(n => n.id === nodeId ? updater(n) : n);
+
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    const targetNode = nodes.find(n => n.id === targetNodeId);
+    const previousTargetId = typeof sourceNode?.data?.autoTransitionTo === 'string'
+      ? sourceNode.data.autoTransitionTo
+      : undefined;
+
+    const updatedNodes = nodes.map((n) => {
+      const data = { ...n.data } as Record<string, unknown>;
+
+      if (n.id === sourceNodeId) {
+        if (portType === 'trigger-next' || portType === 'auto-transition') {
+          /**
+           * Сообщение использует один общий порт.
+           * При дропе на keyboard создаём привязку клавиатуры,
+           * а при дропе на любой другой узел — обычный переход.
+           */
+          if (portType === 'auto-transition' && sourceNode?.type === 'message' && targetNode?.type === 'keyboard') {
+            return { ...n, data: setKeyboardNodeId(data, targetNodeId) as unknown as Node['data'] };
+          }
+
+          data.autoTransitionTo = targetNodeId;
+          if (portType === 'auto-transition') {
+            data.enableAutoTransition = true;
+          }
+          return { ...n, data };
+        }
+
+        if (portType === 'button-goto' && buttonId) {
+          const buttons = (data.buttons as any[] | undefined) ?? [];
+          data.buttons = buttons.map((btn: any) =>
+            btn.id === buttonId ? { ...btn, target: targetNodeId } : btn
+          );
+          const branches = (data.branches as any[] | undefined) ?? [];
+          if (branches.length > 0) {
+            data.branches = branches.map((b: any) =>
+              b.id === buttonId ? { ...b, target: targetNodeId } : b
+            );
+          }
+          return { ...n, data };
+        }
+
+        if (`${portType}` === 'input-target') {
+          data.inputTargetNodeId = targetNodeId;
+          return { ...n, data };
+        }
+      }
+
+      if (n.id === targetNodeId && n.type === 'forward_message' && sourceNode?.type === 'message' && portType === 'auto-transition') {
+        return {
+          ...n,
+          data: {
+            ...data,
+            sourceMessageIdSource: 'current_message',
+            sourceMessageId: '',
+            sourceMessageVariableName: '',
+            sourceMessageNodeId: sourceNodeId,
+          },
+        };
+      }
+
+      if (
+        previousTargetId &&
+        previousTargetId !== targetNodeId &&
+        n.id === previousTargetId &&
+        n.type === 'forward_message' &&
+        sourceNode?.type === 'message' &&
+        portType === 'auto-transition'
+      ) {
+        return {
+          ...n,
+          data: {
+            ...data,
+            sourceMessageIdSource: 'current_message',
+            sourceMessageId: '',
+            sourceMessageVariableName: '',
+            sourceMessageNodeId: '',
+          },
+        };
+      }
+
+      return n;
+    }) as Node[];
+
     onNodesUpdate?.(updatedNodes);
-    addAction('connect', `Создано соединение от узла ${nodeId}`);
+    addAction('connect', `Создано соединение от узла ${sourceNodeId}`);
   }, [nodes, onNodesUpdate, addAction]);
 
   /**
@@ -273,6 +367,14 @@ export function Canvas({
         return { ...n, data };
       }
 
+      if (n.id === toId && type === 'auto-transition' && n.type === 'forward_message') {
+        delete data.sourceMessageId;
+        delete data.sourceMessageVariableName;
+        delete data.sourceMessageNodeId;
+        data.sourceMessageIdSource = 'current_message';
+        return { ...n, data };
+      }
+
       return n;
     }) as Node[];
     onNodesUpdate?.(updatedNodes);
@@ -289,7 +391,7 @@ export function Canvas({
     pan,
     canvasRef,
     nodeSizes,
-    onNodeUpdate: handleNodeUpdate,
+    onConnectionComplete: handleConnectionComplete,
   });
 
   // Функция для отмены выбранных действий

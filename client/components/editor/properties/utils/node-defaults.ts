@@ -155,10 +155,12 @@ export function getNodeDefaults(type: Node['type']): any {
       synonyms: ['переслать', 'отправить дальше', 'forward'],
       sourceMessageId: '',
       sourceMessageIdSource: 'current_message',
+      sourceMessageNodeId: '',
       sourceMessageVariableName: '',
       targetChatId: '',
       targetChatIdSource: 'manual',
       targetChatVariableName: '',
+      targetChatTargets: [],
       disableNotification: false
     },
     ban_user: {

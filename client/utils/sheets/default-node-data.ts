@@ -72,6 +72,8 @@ export const defaultNodeData = {
   messageIdSource: 'last_message' as const,
   /** Источник ID сообщения для пересылки */
   sourceMessageIdSource: 'current_message' as const,
+  /** ID ????-????????? ??? forward_message */
+  sourceMessageNodeId: undefined,
   /** Имя переменной с ID сообщения-источника */
   sourceMessageVariableName: undefined,
   /** Имя переменной */
@@ -84,6 +86,8 @@ export const defaultNodeData = {
   targetChatIdSource: 'manual' as const,
   /** Имя переменной для ID чата назначения */
   targetChatVariableName: undefined,
+  /** Несколько получателей для пересылки сообщения */
+  targetChatTargets: [],
   /** ID целевого пользователя */
   targetUserId: undefined,
   /** Источник ID пользователя: "last_message", "variable" */

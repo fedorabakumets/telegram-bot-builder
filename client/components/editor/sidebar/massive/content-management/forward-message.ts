@@ -16,10 +16,12 @@ export const forwardMessage: ComponentDefinition = {
     command: '/forward_message',
     sourceMessageId: '',
     sourceMessageIdSource: 'current_message',
+    sourceMessageNodeId: '',
     sourceMessageVariableName: '',
     targetChatId: '',
     targetChatIdSource: 'manual',
     targetChatVariableName: '',
+    targetChatTargets: [],
     disableNotification: false,
     synonyms: ['переслать', 'отправить дальше', 'forward']
   }

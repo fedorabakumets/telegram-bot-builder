@@ -11,7 +11,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Node } from '@/types/bot';
 import { PortType } from '../canvas-node/port-colors';
-import { setKeyboardNodeId } from '../canvas-node/keyboard-connection';
 import {
   getCanvasViewportMetrics,
   screenPointToCanvasPoint,
@@ -52,7 +51,12 @@ interface UseConnectionDragParams {
   /** Карта размеров узлов */
   nodeSizes: Map<string, { width: number; height: number }>;
   /** Колбэк обновления узла */
-  onNodeUpdate: (nodeId: string, updater: (node: Node) => Node) => void;
+  onConnectionComplete: (params: {
+    sourceNodeId: string;
+    targetNodeId: string;
+    portType: PortType;
+    buttonId?: string;
+  }) => void;
 }
 
 /**
@@ -79,7 +83,7 @@ export function useConnectionDrag({
   pan,
   canvasRef,
   nodeSizes,
-  onNodeUpdate,
+  onConnectionComplete,
 }: UseConnectionDragParams): UseConnectionDragResult {
   const [draftConnection, setDraftConnection] = useState<DraftConnection | null>(null);
   const [hoveredTargetNodeId, setHoveredTargetNodeId] = useState<string | null>(null);
@@ -99,13 +103,13 @@ export function useConnectionDrag({
   const panRef = useRef(pan);
   const nodesRef = useRef(nodes);
   const nodeSizesRef = useRef(nodeSizes);
-  const onNodeUpdateRef = useRef(onNodeUpdate);
+  const onConnectionCompleteRef = useRef(onConnectionComplete);
 
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
   useEffect(() => { panRef.current = pan; }, [pan]);
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
   useEffect(() => { nodeSizesRef.current = nodeSizes; }, [nodeSizes]);
-  useEffect(() => { onNodeUpdateRef.current = onNodeUpdate; }, [onNodeUpdate]);
+  useEffect(() => { onConnectionCompleteRef.current = onConnectionComplete; }, [onConnectionComplete]);
 
   /** Конвертирует экранные координаты в canvas-координаты */
   const screenToCanvas = useCallback((screenX: number, screenY: number) => {
@@ -157,39 +161,11 @@ export function useConnectionDrag({
       const targetId = findNodeAtPoint(x, y, draft.fromNodeId, draft.portType);
 
       if (targetId) {
-        const sourceNode = nodesRef.current.find(n => n.id === draft.fromNodeId);
-        const targetNode = nodesRef.current.find(n => n.id === targetId);
-
-        onNodeUpdateRef.current(draft.fromNodeId, (node) => {
-          const updated = { ...node, data: { ...(node.data as Record<string, unknown>) } } as Node;
-          if (draft.portType === 'trigger-next' || draft.portType === 'auto-transition') {
-            /**
-             * Сообщение использует один общий порт.
-             * При дропе на keyboard создаём привязку клавиатуры,
-             * а при дропе на любой другой узел — обычный переход.
-             */
-            if (draft.portType === 'auto-transition' && sourceNode?.type === 'message' && targetNode?.type === 'keyboard') {
-              updated.data = setKeyboardNodeId(updated.data as Record<string, unknown>, targetId) as unknown as Node['data'];
-            } else {
-              updated.data = {
-                ...updated.data,
-                autoTransitionTo: targetId,
-                ...(draft.portType === 'auto-transition' ? { enableAutoTransition: true } : {}),
-              };
-            }
-          } else if (draft.portType === 'button-goto' && draft.buttonId) {
-            const buttons = (updated.data.buttons || []).map((btn: any) =>
-              btn.id === draft.buttonId ? { ...btn, target: targetId } : btn
-            );
-            // condition-узел хранит переходы в branches
-            const branches = (updated.data.branches || []).map((b: any) =>
-              b.id === draft.buttonId ? { ...b, target: targetId } : b
-            );
-            updated.data = { ...updated.data, buttons, branches };
-          } else if (`${draft.portType}` === 'input-target') {
-            updated.data = { ...updated.data, inputTargetNodeId: targetId };
-          }
-          return updated;
+        onConnectionCompleteRef.current({
+          sourceNodeId: draft.fromNodeId,
+          targetNodeId: targetId,
+          portType: draft.portType,
+          buttonId: draft.buttonId,
         });
       }
 

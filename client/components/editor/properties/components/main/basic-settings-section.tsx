@@ -178,23 +178,25 @@ export function BasicSettingsSection({
               />
             </div>
           )}
-          <NodeTypeConfigurations
-            selectedNode={selectedNode}
-            projectId={projectId}
-            onNodeUpdate={onNodeUpdate}
-            StickerConfiguration={StickerConfiguration}
-            VoiceConfiguration={VoiceConfiguration}
-            AnimationConfiguration={AnimationConfiguration}
-            LocationCoordinatesSection={LocationCoordinatesSection}
-            LocationDetailsSection={LocationDetailsSection}
-            FoursquareIntegrationSection={FoursquareIntegrationSection}
-            MapServicesSection={MapServicesSection}
-            ContactConfiguration={ContactConfiguration}
-            ContentManagementConfiguration={ContentManagementConfiguration}
-            ForwardMessageConfiguration={ForwardMessageConfiguration}
-            UserManagementConfiguration={UserManagementConfiguration}
-            AdminRightsInfo={AdminRightsInfo}
-          />
+          {selectedNode.type !== 'forward_message' && (
+            <NodeTypeConfigurations
+              selectedNode={selectedNode}
+              projectId={projectId}
+              onNodeUpdate={onNodeUpdate}
+              StickerConfiguration={StickerConfiguration}
+              VoiceConfiguration={VoiceConfiguration}
+              AnimationConfiguration={AnimationConfiguration}
+              LocationCoordinatesSection={LocationCoordinatesSection}
+              LocationDetailsSection={LocationDetailsSection}
+              FoursquareIntegrationSection={FoursquareIntegrationSection}
+              MapServicesSection={MapServicesSection}
+              ContactConfiguration={ContactConfiguration}
+              ContentManagementConfiguration={ContentManagementConfiguration}
+              ForwardMessageConfiguration={ForwardMessageConfiguration}
+              UserManagementConfiguration={UserManagementConfiguration}
+              AdminRightsInfo={AdminRightsInfo}
+            />
+          )}
 
         </div>
       )}
