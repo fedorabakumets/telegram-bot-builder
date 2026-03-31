@@ -570,15 +570,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           <ButtonsPreview node={node} allNodes={allNodes} onPortMouseDown={handlePortMouseDown} isConnectionSource={isConnectionSource} onButtonPortMount={onButtonPortMount} />
         )}
 
-        {/* Р¤СѓС‚РµСЂ СЃ РїРѕР»РЅС‹Рј ID СѓР·Р»Р° вЂ” СЃРєСЂС‹С‚ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ Рё СѓР·Р»Р° СѓСЃР»РѕРІРёСЏ */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'condition' && (
-          <div
-            className={
-              node.type === 'keyboard'
-                ? "mt-3 -mx-4 -mb-4 px-4 py-2 rounded-b-2xl bg-slate-700/60 dark:bg-slate-800/90 border-t border-slate-600/40 dark:border-slate-600/60"
-                : "absolute bottom-0 left-0 right-0 px-4 py-2 rounded-b-2xl bg-slate-700/60 dark:bg-slate-800/90 border-t border-slate-600/40 dark:border-slate-600/60"
-            }
-          >
+        {/* Р¤СѓС‚РµСЂ СЃ РїРѕР»РЅС‹Рј ID СѓР·Р»Р° вЂ” СЃРєСЂС‹С‚ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ, condition Рё keyboard */}
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'condition' && node.type !== 'keyboard' && (
+          <div className="absolute bottom-0 left-0 right-0 px-4 py-2 rounded-b-2xl bg-slate-700/60 dark:bg-slate-800/90 border-t border-slate-600/40 dark:border-slate-600/60">
             <span
               className="font-mono text-[10px] text-slate-300 dark:text-slate-300 select-all tracking-tight"
               title="ID узла"
