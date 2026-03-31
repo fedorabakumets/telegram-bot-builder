@@ -766,9 +766,9 @@ export function Canvas({
     const centerX = (nodeBounds.left + nodeBounds.right) / 2;
     const centerY = (nodeBounds.top + nodeBounds.bottom) / 2;
 
-    // Центр видимой области в экранных координатах
+    // Центр видимой области в экранных координатах (относительно контейнера скролла, без тулбара)
     const screenCenterX = visibleWidth / 2;
-    const screenCenterY = toolbarHeight + visibleHeight / 2;
+    const screenCenterY = visibleHeight / 2;
 
     const newPanX = screenCenterX - centerX * (newZoom / 100);
     const newPanY = screenCenterY - centerY * (newZoom / 100);
