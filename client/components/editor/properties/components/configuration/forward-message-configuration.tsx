@@ -157,10 +157,9 @@ export function ForwardMessageConfiguration({
                 className="bg-white/60 dark:bg-slate-950/60 border-amber-200/50 dark:border-amber-800/50"
               />
               <div className="text-xs text-amber-600/70 dark:text-amber-400/70 leading-relaxed">
-                Telegram message_id сообщения в чате. Узнать можно через{' '}
-                <span className="font-mono bg-amber-100/60 dark:bg-amber-900/30 px-1 rounded">@RawDataBot</span>
-                {' '}— перешли ему нужное сообщение и найди поле{' '}
-                <span className="font-mono bg-amber-100/60 dark:bg-amber-900/30 px-1 rounded">message_id</span>
+                Telegram message_id сообщения. Найти можно в логах бота — строка вида{' '}
+                <span className="font-mono bg-amber-100/60 dark:bg-amber-900/30 px-1 rounded">✅ Сообщение сохранено в БД: bot от ... (id=XXXX)</span>
+                , где XXXX и есть нужный ID.
               </div>
             </div>
           )}
