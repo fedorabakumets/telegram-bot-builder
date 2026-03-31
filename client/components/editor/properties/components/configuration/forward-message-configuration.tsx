@@ -156,6 +156,10 @@ export function ForwardMessageConfiguration({
                 placeholder="123456789"
                 className="bg-white/60 dark:bg-slate-950/60 border-amber-200/50 dark:border-amber-800/50"
               />
+              <div className="text-xs text-amber-600/70 dark:text-amber-400/70 leading-relaxed">
+                Telegram message_id — найти можно в логах бота: строка вида{' '}
+                <span className="font-mono bg-amber-100/60 dark:bg-amber-900/30 px-1 rounded">source_message_id=XXXXX</span>
+              </div>
             </div>
           )}
 
