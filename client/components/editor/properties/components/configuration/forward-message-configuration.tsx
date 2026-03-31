@@ -157,7 +157,9 @@ export function ForwardMessageConfiguration({
                 className="bg-white/60 dark:bg-slate-950/60 border-amber-200/50 dark:border-amber-800/50"
               />
               <div className="text-xs text-amber-600/70 dark:text-amber-400/70 leading-relaxed">
-                Telegram message_id сообщения в диалоге с ботом. Бот сохраняет его в БД при каждом входящем и исходящем сообщении. Проще всего использовать режим «Последнее сообщение» — тогда ID подставится автоматически.
+                Telegram message_id сообщения в диалоге с ботом. Найти можно в логах бота — строка вида{' '}
+                <span className="font-mono bg-amber-100/60 dark:bg-amber-900/30 px-1 rounded">tg_message_id=XXXX</span>
+                . Или используй режим «Последнее сообщение» — тогда ID подставится автоматически.
               </div>
             </div>
           )}

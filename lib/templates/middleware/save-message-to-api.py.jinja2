@@ -23,7 +23,9 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
                 node_id,
                 message_data_json
             )
-            logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result['id']})")
+            tg_message_id = (message_data or {}).get("message_id")
+            tg_mid_str = f", tg_message_id={tg_message_id}" if tg_message_id else ""
+            logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result['id']}{tg_mid_str})")
             return {"id": result['id'], "user_id": result['user_id'], "message_type": result['message_type'], "created_at": result['created_at']}
     except Exception as e:
         logging.error(f"❌ Ошибка сохранения сообщения в БД: {e}")
