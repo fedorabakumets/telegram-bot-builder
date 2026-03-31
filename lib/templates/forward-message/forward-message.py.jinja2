@@ -1,0 +1,109 @@
+{#
+  @fileoverview Шаблон пересылки сообщения
+  Генерирует callback-обработчик, который пересылает исходное сообщение
+  в один или несколько чатов назначения.
+#}
+
+{% set source_mode = sourceMessageIdSource or 'current_message' %}
+
+# Обработчик пересылки сообщения: {{ nodeId }}
+{% if sourceMessageNodeId %}
+# Привязанный узел-источник: {{ sourceMessageNodeId }}
+{% endif %}
+
+async def _resolve_forward_message_source_{{ safeName }}(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    source_chat_id = callback_query.message.chat.id
+    source_message_id = callback_query.message.message_id
+
+    if "{{ source_mode }}" == "manual":
+        raw_source_message_id = "{{ sourceMessageId | escape_python_string }}"
+    elif "{{ source_mode }}" == "variable":
+        _all_vars = await init_all_user_vars(user_id)
+        raw_source_message_id = _all_vars.get("{{ sourceMessageVariableName | escape_python_string }}", "")
+    else:
+        raw_source_message_id = str(source_message_id)
+
+    raw_source_message_id = str(raw_source_message_id).strip()
+    if raw_source_message_id:
+        try:
+            source_message_id = int(raw_source_message_id)
+        except ValueError:
+            logging.warning(
+                f"forward_message node {{ nodeId }}: source message id '{raw_source_message_id}' is not numeric, using current message"
+            )
+
+    return source_chat_id, source_message_id
+
+
+async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    target_chat_ids = []
+    _all_vars = None
+
+{% for recipient in targetRecipients %}
+{% if recipient.targetChatIdSource == 'admin_ids' %}
+    for admin_id in ADMIN_IDS:
+        if admin_id not in target_chat_ids:
+            target_chat_ids.append(admin_id)
+{% elif recipient.targetChatIdSource == 'variable' %}
+    if _all_vars is None:
+        _all_vars = await init_all_user_vars(user_id)
+    _raw_target_chat_id = _all_vars.get("{{ recipient.targetChatVariableName | escape_python_string }}", "")
+    _raw_target_chat_id = str(_raw_target_chat_id).strip()
+    if _raw_target_chat_id:
+        try:
+            _normalized_target_chat_id = int(_raw_target_chat_id)
+        except ValueError:
+            _normalized_target_chat_id = _raw_target_chat_id
+        if _normalized_target_chat_id not in target_chat_ids:
+            target_chat_ids.append(_normalized_target_chat_id)
+{% else %}
+    _raw_target_chat_id = "{{ recipient.targetChatId | escape_python_string }}"
+    if _raw_target_chat_id:
+        try:
+            _normalized_target_chat_id = int(_raw_target_chat_id)
+        except ValueError:
+            _normalized_target_chat_id = _raw_target_chat_id
+        if _normalized_target_chat_id not in target_chat_ids:
+            target_chat_ids.append(_normalized_target_chat_id)
+{% endif %}
+{% endfor %}
+
+    return target_chat_ids
+
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    source_chat_id, source_message_id = await _resolve_forward_message_source_{{ safeName }}(callback_query)
+    target_chat_ids = await _resolve_forward_message_targets_{{ safeName }}(callback_query)
+
+    logging.info(
+        f"forward_message node {{ nodeId }} triggered by {user_id}; source_chat_id={source_chat_id}, source_message_id={source_message_id}, targets={target_chat_ids}"
+    )
+
+    if not target_chat_ids:
+        await callback_query.answer("Не удалось определить чат назначения", show_alert=True)
+        return
+
+    sent_count = 0
+    for target_chat_id in target_chat_ids:
+        try:
+            await bot.forward_message(
+                chat_id=target_chat_id,
+                from_chat_id=source_chat_id,
+                message_id=source_message_id,
+                disable_notification={{ disableNotification | to_python_boolean }},
+            )
+            sent_count += 1
+        except Exception as e:
+            logging.error(
+                f"forward_message node {{ nodeId }}: failed to forward to {target_chat_id} from {source_chat_id}/{source_message_id}: {e}"
+            )
+
+    if sent_count == 0:
+        await callback_query.answer("Не удалось переслать сообщение", show_alert=True)
+        return
+
+    await callback_query.answer("Сообщение переслано")

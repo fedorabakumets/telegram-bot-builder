@@ -15,6 +15,8 @@ import { sortButtonsByLayout } from '../keyboard/keyboard.renderer';
 import { generateMessage } from '../message/message.renderer';
 import { generateContactHandler, generateLocationHandler } from './contact-location.renderer';
 import { generateMessageHandlerFromNode } from '../message-handler';
+/** Генератор callback-обработчика для узла пересылки сообщений */
+import { generateForwardMessageFromNode } from '../forward-message';
 import { processCodeWithAutoComments } from '../../bot-generator/core/generated-comment';
 import { generateUserHandlerFromNode } from '../user-handler';
 import { generateAnimationHandler } from '../animation-handler/animation-handler.renderer';
@@ -179,6 +181,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     pin_message: generateMessageHandlerFromNode,
     unpin_message: generateMessageHandlerFromNode,
     delete_message: generateMessageHandlerFromNode,
+    /** Обработчик узла пересылки сообщений */
+    forward_message: generateForwardMessageFromNode,
     ban_user: generateUserHandlerFromNode,
     unban_user: generateUserHandlerFromNode,
     mute_user: generateUserHandlerFromNode,

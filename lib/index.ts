@@ -51,6 +51,10 @@ export * from './scaffolding';
 export { generateUserHandler, generateUserHandlerFromNode, nodeToUserHandlerParams } from './templates/user-handler';
 // admin-rights перенесён в templates/admin-rights (Jinja2)
 export { generateAdminRightsHandler, generateAdminRightsFromNode, nodeToAdminRightsParams } from './templates/admin-rights';
+/** Экспорт шаблона пересылки сообщений */
+export { generateForwardMessage, generateForwardMessageFromNode, nodeToForwardMessageParams } from './templates/forward-message';
+/** Типы шаблона пересылки сообщений */
+export type { ForwardMessageTemplateParams, ForwardMessageTargetRecipient, ForwardMessageSourceMode, ForwardMessageTargetMode } from './templates/forward-message';
 
 // Additional utilities
 export { addInputTargetNodes } from './bot-generator/core/add-input-target-nodes';
