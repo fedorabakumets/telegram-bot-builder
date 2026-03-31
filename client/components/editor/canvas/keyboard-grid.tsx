@@ -46,9 +46,9 @@ export function KeyboardGrid<T extends { id: string }>({
   if (rows.length === 0) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="grid gap-2" style={{ gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))` }}>
+        <div key={rowIndex} className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))` }}>
           {row.map(button => (
             <div key={button.id} className={buttonClassName}>
               {renderButton(button)}
