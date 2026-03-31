@@ -627,8 +627,8 @@ function expandComponentLayers(
     const targetLayer = layerMap.get(autoTarget);
     if (targetLayer === undefined || targetLayer <= 1) continue;
 
-    // Ставим триггер в тот же слой что и цель
-    layerMap.set(node.id, targetLayer);
+    // Ставим триггер в слой перед целью
+    layerMap.set(node.id, targetLayer - 1);
   }
 
   return layerMap;
@@ -709,7 +709,7 @@ function getDesiredCenter(
   const outgoingCenters = collectConnectedCenters(node.id, centersByNodeId, graph.mainAdjacency);
   const incomingCenters = collectConnectedCenters(node.id, centersByNodeId, graph.reverseMainAdjacency);
 
-  const outgoingWeight = node.type === 'message' || node.type === 'condition' || ROOT_TYPES.has(node.type) ? 2 : 1;
+  const outgoingWeight = node.type === 'message' || node.type === 'condition' || ROOT_TYPES.has(node.type) ? 3 : 1;
   const incomingWeight = node.type === 'condition' ? 2 : 1;
 
   if (outgoingCenters.length > 0 || incomingCenters.length > 0) {
@@ -801,7 +801,7 @@ function reduceLayerCrossings(
   let orderedLayers = layers.map(layer => [...layer]);
   let centersByNodeId = new Map<string, number>();
 
-  for (let pass = 0; pass < 3; pass += 1) {
+  for (let pass = 0; pass < 5; pass += 1) {
     for (let layerIndex = 0; layerIndex < orderedLayers.length; layerIndex += 1) {
       const placed = placeLayerNodes(
         orderedLayers[layerIndex],
