@@ -22,9 +22,17 @@ async function runMigrations() {
     const migrationsFolder = join(process.cwd(), 'migrations');
     console.log(`📂 Migrations folder: ${migrationsFolder}`);
 
-    // Pick up every SQL migration in numeric order so new files are not skipped in production.
+    // Some legacy migrations were superseded by 0000_create_tables.sql and should not run on fresh/final schemas.
+    const skippedLegacyMigrations = new Set([
+      '0003_add_user_ids_table.sql',
+      '0004_add_user_ids_unique_constraint.sql',
+      '0005_make_user_ids_global.sql',
+    ]);
+
+    // Pick up every relevant SQL migration in numeric order so new files are not skipped in production.
     const migrationFiles = readdirSync(migrationsFolder)
       .filter((file) => /^\d+.*\.sql$/.test(file))
+      .filter((file) => !skippedLegacyMigrations.has(file))
       .sort((a, b) => a.localeCompare(b));
 
     for (const file of migrationFiles) {
