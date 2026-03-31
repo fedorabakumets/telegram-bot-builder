@@ -41,7 +41,8 @@ type LayoutConnectionType =
   | 'input-target'
   | 'trigger-next'
   | 'condition-source'
-  | 'keyboard-link';
+  | 'keyboard-link'
+  | 'forward-source';
 
 /**
  * Упрощенное описание связи canvas для построения графа раскладки.
@@ -112,6 +113,7 @@ const CONTENT_TYPES = new Set([
   'client_auth',
   'admin_rights',
   'command',
+  'forward_message',
 ]);
 
 /**
@@ -307,6 +309,18 @@ function inferConnectionsFromNodes(
         toId: data.autoTransitionTo,
         type: node.type === 'command_trigger' || node.type === 'text_trigger' ? 'trigger-next' : 'auto-transition',
       });
+    }
+
+    if (node.type === 'forward_message') {
+      const sourceNodeId = typeof data.sourceMessageNodeId === 'string' ? data.sourceMessageNodeId.trim() : '';
+      const sourceMode = typeof data.sourceMessageIdSource === 'string' ? data.sourceMessageIdSource : 'current_message';
+      if (sourceNodeId && (sourceMode === 'current_message' || sourceMode === 'last_message')) {
+        pushConnection({
+          fromId: sourceNodeId,
+          toId: node.id,
+          type: 'auto-transition',
+        });
+      }
     }
 
     if (typeof data.inputTargetNodeId === 'string' && data.inputTargetNodeId) {
