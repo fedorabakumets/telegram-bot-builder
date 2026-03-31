@@ -824,6 +824,11 @@ export function Canvas({
     if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) ||
       (e.button === 0 && isEmptyCanvas)) { // Middle mouse, right mouse, Alt+click, or left-click on empty canvas
       e.preventDefault();
+      // Сбрасываем scroll контейнера — позиция управляется через pan/transform
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+        scrollContainerRef.current.scrollLeft = 0;
+      }
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
       setLastPanPosition(pan);
