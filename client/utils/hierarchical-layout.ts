@@ -891,12 +891,15 @@ export function createHierarchicalLayout(
   let currentX = opts.startX;
   const layerX: number[] = [];
 
-  for (const layer of layers) {
+  for (let li = 0; li < layers.length; li += 1) {
+    const layer = layers[li];
     layerX.push(currentX);
     const maxWidth = layer.length > 0
       ? Math.max(...layer.map(node => getNodeSize(node.id, opts).width))
       : opts.nodeWidth;
-    currentX += maxWidth + opts.horizontalSpacing;
+    const isTriggerLayer = layer.every(node => ROOT_TYPES.has(node.type));
+    const spacing = isTriggerLayer ? Math.round(opts.horizontalSpacing * 0.4) : opts.horizontalSpacing;
+    currentX += maxWidth + spacing;
   }
 
   for (let layerIndex = 0; layerIndex < layers.length; layerIndex += 1) {
