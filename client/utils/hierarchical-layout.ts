@@ -627,8 +627,8 @@ function expandComponentLayers(
     const targetLayer = layerMap.get(autoTarget);
     if (targetLayer === undefined || targetLayer <= 1) continue;
 
-    // Ставим триггер в слой targetLayer - 1 (вплотную к цели)
-    layerMap.set(node.id, targetLayer - 1);
+    // Ставим триггер в тот же слой что и цель
+    layerMap.set(node.id, targetLayer);
   }
 
   return layerMap;
