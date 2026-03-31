@@ -36,11 +36,21 @@
 {%- endif %}
 {{ indent }}        user_data[user_id].pop("multi_select_node", None)
 {{ indent }}        user_data[user_id].pop("multi_select_type", None)
+{{ indent }}    if user_id not in user_data:
+{{ indent }}        user_data[user_id] = {}
 {{ indent }}    user_data[user_id]["last_node_id"] = "{{ targetNode.id }}"
 {%- if targetNode.type == 'command' and targetNode.data and targetNode.data.command %}
 {{ indent }}    await handle_command_{{ targetNode.data.command | safe_name }}(message)
 {%- else %}
-{{ indent }}    await handle_callback_{{ targetNode.id | safe_name }}(message)
+{{ indent }}    fake_callback = SimpleNamespace(
+{{ indent }}        id="reply_nav",
+{{ indent }}        from_user=message.from_user,
+{{ indent }}        chat_instance="",
+{{ indent }}        data="{{ targetNode.id }}",
+{{ indent }}        message=message,
+{{ indent }}        answer=lambda *args, **kwargs: asyncio.sleep(0)
+{{ indent }}    )
+{{ indent }}    await handle_callback_{{ targetNode.id | safe_name }}(fake_callback)
 {%- endif %}
 {%- endif -%}
 {%- endif -%}
