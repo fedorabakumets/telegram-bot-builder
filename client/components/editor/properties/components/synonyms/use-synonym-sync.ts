@@ -70,19 +70,13 @@ export function useSynonymSync({
     );
   }, [allNodes, selectedNode.id, normalizeSynonym]);
 
-  const createTriggerNode = useCallback((synonym: string): Node => {
-    const existingTriggers = allNodes.filter(node =>
-      node.type === 'text_trigger' &&
-      (node.data as any).autoTransitionTo === selectedNode.id
-    );
-    const yOffset = existingTriggers.length * 120;
-
+  const createTriggerNode = useCallback((synonym: string, offsetIndex: number = 0): Node => {
     return {
       id: `syn-trigger-${nanoid(8)}`,
       type: 'text_trigger',
       position: {
         x: Math.max(20, selectedNode.position.x - 360),
-        y: selectedNode.position.y + yOffset,
+        y: selectedNode.position.y + (linkedTextTriggers.length + offsetIndex) * 120,
       },
       data: {
         textSynonyms: [synonym],
@@ -165,7 +159,7 @@ export function useSynonymSync({
         adminChatIdSource: 'current_chat',
       } as any,
     };
-  }, [allNodes, selectedNode]);
+  }, [linkedTextTriggers.length, selectedNode]);
 
   useEffect(() => {
     if (!onNodeAdd) {
@@ -187,8 +181,8 @@ export function useSynonymSync({
       return;
     }
 
-    missingSynonyms.forEach((synonym) => {
-      onNodeAdd(createTriggerNode(synonym));
+    missingSynonyms.forEach((synonym, index) => {
+      onNodeAdd(createTriggerNode(synonym, index));
     });
 
     onNodeUpdate(selectedNode.id, { synonyms: [] });
@@ -204,8 +198,9 @@ export function useSynonymSync({
 
   const handleSynonymsUpdate = useCallback((newSynonyms: string[]) => {
     const oldSynonyms = displaySynonyms;
+    const draftSynonyms = newSynonyms.filter((synonym) => !normalizeSynonym(synonym));
 
-    onNodeUpdate(selectedNode.id, { synonyms: [] });
+    onNodeUpdate(selectedNode.id, { synonyms: draftSynonyms });
 
     if (!onNodeAdd || !onNodeDelete) {
       return;
@@ -242,12 +237,12 @@ export function useSynonymSync({
       return !newSynonyms.some(next => normalizeSynonym(next) === normalized);
     });
 
-    for (const synonym of added) {
+    added.forEach((synonym, index) => {
       const existing = findTriggerForSynonym(synonym);
       if (!existing) {
-        onNodeAdd(createTriggerNode(synonym));
+        onNodeAdd(createTriggerNode(synonym, index));
       }
-    }
+    });
 
     for (const synonym of removed) {
       const trigger = findTriggerForSynonym(synonym);

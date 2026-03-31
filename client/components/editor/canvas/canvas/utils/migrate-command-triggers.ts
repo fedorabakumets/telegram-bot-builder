@@ -12,6 +12,30 @@
 import { Node } from '@shared/schema';
 import { nanoid } from 'nanoid';
 
+function hasTriggerableCommand(node: Node): boolean {
+  if (node.type === 'command_trigger' || node.type === 'text_trigger') {
+    return false;
+  }
+
+  const command: string = (node.data as any)?.command || '';
+  return Boolean(command.trim());
+}
+
+function getCommandTriggerPosition(node: Node, nodes: Node[], appendedTriggers: Node[]): { x: number; y: number } {
+  const linkedTextTriggersCount =
+    nodes.filter((n) => n.type === 'text_trigger' && (n.data as any).autoTransitionTo === node.id).length +
+    appendedTriggers.filter((n) => n.type === 'text_trigger' && (n.data as any).autoTransitionTo === node.id).length;
+
+  const linkedCommandTriggersCount =
+    nodes.filter((n) => n.type === 'command_trigger' && (n.data as any).sourceNodeId === node.id).length +
+    appendedTriggers.filter((n) => n.type === 'command_trigger' && (n.data as any).sourceNodeId === node.id).length;
+
+  return {
+    x: Math.max(20, node.position.x - 360),
+    y: node.position.y - ((linkedTextTriggersCount > 0 ? linkedCommandTriggersCount + 1 : linkedCommandTriggersCount) * 120),
+  };
+}
+
 /**
  * Мигрирует узлы start/command в command_trigger узлы при загрузке листа.
  *
@@ -33,8 +57,8 @@ export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
    * оставляем только тот у которого autoTransitionTo указывает НЕ на start/command узел
    * (т.е. уже перенаправлен на condition), либо первый найденный.
    */
-  const startCommandIds = new Set(
-    nodes.filter(n => n.type === 'start' || n.type === 'command').map(n => n.id)
+  const sourceNodeIds = new Set(
+    nodes.filter(hasTriggerableCommand).map(n => n.id)
   );
   const seenCommands = new Map<string, string>(); // command → id первого триггера
   const deduped = nodes.filter(n => {
@@ -52,7 +76,7 @@ export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
     const existing = nodes.find(x => x.id === existingId)!;
     const existingAutoTo: string = (existing.data as any).autoTransitionTo || '';
     // Если текущий ведёт на condition (не на start/command) — он лучше
-    if (!startCommandIds.has(autoTo) && startCommandIds.has(existingAutoTo)) {
+    if (!sourceNodeIds.has(autoTo) && sourceNodeIds.has(existingAutoTo)) {
       seenCommands.set(cmd, n.id);
       // Удаляем старый из результата — заменяем текущим
       return true;
@@ -67,10 +91,9 @@ export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
   const newTriggers: Node[] = [];
 
   for (const node of nodes) {
-    if (node.type !== 'start' && node.type !== 'command') continue;
+    if (!hasTriggerableCommand(node)) continue;
 
     const command: string = (node.data as any)?.command || '';
-    if (!command.trim()) continue;
 
     // Проверяем: уже есть command_trigger для этого узла?
     // Проверяем по sourceNodeId (новые узлы), по autoTransitionTo (старые сохранённые узлы
@@ -88,10 +111,7 @@ export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
     const triggerNode: Node = {
       id: `cmd-trigger-${nanoid(8)}`,
       type: 'command_trigger',
-      position: {
-        x: Math.max(20, node.position.x - 360),
-        y: node.position.y,
-      },
+      position: getCommandTriggerPosition(node, nodes, newTriggers),
       data: {
         command,
         description: (node.data as any).description || '',

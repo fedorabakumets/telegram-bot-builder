@@ -8,7 +8,6 @@ import { SectionHeader } from '../layout/section-header';
 import { SynonymEditor } from '../synonyms/synonym-editor';
 import { CommandEditor } from '../synonyms/CommandEditor';
 import { CommandSectionComplete } from '../commands/command-section-complete';
-import { ManagementCommandSection } from '../commands/management-command-section';
 import { NodeTypeConfigurations } from './node-type-configurations';
 import { useSynonymSync } from '../synonyms/use-synonym-sync';
 import { useCommandSync } from '../synonyms/use-command-sync';
@@ -120,7 +119,7 @@ export function BasicSettingsSection({
 
   // Синхронизация command_trigger для узлов start/command
   useNodeCommandTriggerSync(
-    (selectedNode.type === 'start' || selectedNode.type === 'command')
+    (selectedNode.type !== 'command_trigger' && selectedNode.type !== 'text_trigger')
       ? { node: selectedNode, allNodes, onNodeAdd, onNodeDelete, onNodeUpdate }
       : { node: selectedNode, allNodes }
   );
@@ -179,17 +178,6 @@ export function BasicSettingsSection({
               />
             </div>
           )}
-
-          {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message' || selectedNode.type === 'forward_message' ||
-            selectedNode.type === 'ban_user' || selectedNode.type === 'unban_user' || selectedNode.type === 'mute_user' ||
-            selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' ||
-            selectedNode.type === 'demote_user' || selectedNode.type === 'admin_rights') && (
-            <ManagementCommandSection
-              selectedNode={selectedNode}
-              onNodeUpdate={onNodeUpdate}
-            />
-          )}
-
           <NodeTypeConfigurations
             selectedNode={selectedNode}
             projectId={projectId}

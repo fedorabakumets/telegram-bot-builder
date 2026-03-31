@@ -52,18 +52,21 @@ export function useCommandSync({
    * Создаёт новый command_trigger узел для команды
    */
   const createCommandTriggerNode = useCallback((command: string): Node => {
-    const existingTriggers = allNodes.filter(n =>
+    const existingCommandTriggers = allNodes.filter(n =>
       n.type === 'command_trigger' &&
       (n.data as any).autoTransitionTo === node.id
     );
-    const yOffset = existingTriggers.length * 120;
+    const linkedTextTriggersCount = allNodes.filter(n =>
+      n.type === 'text_trigger' &&
+      (n.data as any).autoTransitionTo === node.id
+    ).length;
 
     return {
       id: `cmd-trigger-${nanoid(8)}`,
       type: 'command_trigger',
       position: {
         x: Math.max(20, node.position.x - 360),
-        y: node.position.y + yOffset,
+        y: node.position.y - ((linkedTextTriggersCount > 0 ? existingCommandTriggers.length + 1 : existingCommandTriggers.length) * 120),
       },
       data: {
         command,

@@ -47,13 +47,21 @@ function findLinkedCommandTrigger(allNodes: Node[], nodeId: string, command?: st
 /**
  * Создаёт новый command_trigger узел для команды
  */
-function createCommandTriggerNode(command: string, sourceNode: Node): Node {
+function createCommandTriggerNode(command: string, sourceNode: Node, allNodes: Node[]): Node {
+  const linkedTextTriggersCount = allNodes.filter((node) =>
+    node.type === 'text_trigger' && (node.data as any).autoTransitionTo === sourceNode.id
+  ).length;
+
+  const linkedCommandTriggersCount = allNodes.filter((node) =>
+    node.type === 'command_trigger' && (node.data as any).sourceNodeId === sourceNode.id
+  ).length;
+
   return {
     id: `cmd-trigger-${nanoid(8)}`,
     type: 'command_trigger',
     position: {
       x: Math.max(20, sourceNode.position.x - 360),
-      y: sourceNode.position.y,
+      y: sourceNode.position.y - ((linkedTextTriggersCount > 0 ? linkedCommandTriggersCount + 1 : linkedCommandTriggersCount) * 120),
     },
     data: {
       command,
@@ -172,7 +180,7 @@ export function useNodeCommandTriggerSync({
 
     if (!existing) {
       // Триггера нет — создаём
-      onNodeAdd(createCommandTriggerNode(command, node));
+      onNodeAdd(createCommandTriggerNode(command, node, allNodes));
       return;
     }
 
@@ -182,9 +190,9 @@ export function useNodeCommandTriggerSync({
         onNodeUpdate(existing.id, { command });
       } else {
         onNodeDelete(existing.id);
-        onNodeAdd(createCommandTriggerNode(command, node));
+        onNodeAdd(createCommandTriggerNode(command, node, allNodes));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [command, node.id]);
+  }, [allNodes, command, node.id]);
 }

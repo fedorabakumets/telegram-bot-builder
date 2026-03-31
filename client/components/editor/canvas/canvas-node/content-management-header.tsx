@@ -37,6 +37,8 @@ interface ContentManagementHeaderProps {
  * @returns {JSX.Element} Компонент заголовка
  */
 export function ContentManagementHeader({ node, type }: ContentManagementHeaderProps) {
+  const shouldShowCommandChip = type !== 'forward_message';
+
   const labels: Record<ContentManagementType, string> = {
     pin_message: 'Управление контентом',
     unpin_message: 'Управление контентом',
@@ -53,9 +55,11 @@ export function ContentManagementHeader({ node, type }: ContentManagementHeaderP
 
   return (
     <span className="flex flex-col gap-2">
-      <span className={`font-mono text-sm px-2 py-1 rounded-lg border inline-block w-fit ${chipClasses[type]}`}>
-        {node.data.command || `/${type}`}
-      </span>
+      {shouldShowCommandChip && (
+        <span className={`font-mono text-sm px-2 py-1 rounded-lg border inline-block w-fit ${chipClasses[type]}`}>
+          {node.data.command || `/${type}`}
+        </span>
+      )}
       <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-tight">
         {labels[type]}
       </span>

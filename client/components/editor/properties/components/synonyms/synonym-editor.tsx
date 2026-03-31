@@ -74,7 +74,7 @@ export function SynonymEditor({
           className="w-full h-9 sm:h-10 text-xs sm:text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 dark:from-purple-600 dark:to-pink-600 hover:from-purple-600 hover:to-pink-600 dark:hover:from-purple-700 dark:hover:to-pink-700 shadow-md hover:shadow-lg transition-all text-white relative group"
         >
           <i className="fas fa-plus mr-2"></i>
-          <span className="hidden sm:inline">Добавить синоним</span>
+          <span className="hidden sm:inline">Добавить текстовый триггер</span>
           <span className="sm:hidden">Добавить</span>
           {description && (
             <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-full sm:w-64 max-w-xs sm:max-w-none p-2 text-xs bg-slate-900 dark:bg-slate-800 text-slate-100 dark:text-slate-200 rounded-lg shadow-lg z-50">

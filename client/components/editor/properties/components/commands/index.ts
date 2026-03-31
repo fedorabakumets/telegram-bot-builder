@@ -10,4 +10,3 @@ export * from './command-validation-errors';
 export * from './command-section';
 export * from './command-section-complete';
 export * from './description-field';
-export * from './management-command-section';

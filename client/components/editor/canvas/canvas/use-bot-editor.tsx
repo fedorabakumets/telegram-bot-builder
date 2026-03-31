@@ -164,7 +164,41 @@ export function useBotEditor(initialData?: BotData) {
    * @param node - Узел для добавления
    */
   const addNode = useCallback((node: Node) => {
-    setNodes(prev => [...prev, node]);
+    setNodes(prev => {
+      if (!node || !node.type) {
+        return [...prev, node];
+      }
+
+      const normalizedData = { ...node.data };
+      const defaultFields = {
+        buttons: [],
+        messageText: '',
+        keyboardType: 'none',
+        oneTimeKeyboard: false,
+        resizeKeyboard: true,
+        markdown: false,
+        isPrivateOnly: false,
+        adminOnly: false,
+        requiresAuth: false,
+        showInMenu: true,
+        enableStatistics: true
+      };
+
+      for (const [key, value] of Object.entries(defaultFields)) {
+        if ((normalizedData as any)[key] === undefined) {
+          (normalizedData as any)[key] = value;
+        }
+      }
+
+      const normalizedNode = {
+        ...node,
+        data: normalizedData
+      } as Node;
+
+      const migratedWithSynonyms = migrateSynonymsToTextTriggers([normalizedNode]);
+      const migratedNodes = migrateCommandsToCommandTriggers(migratedWithSynonyms);
+      return [...prev, ...migratedNodes];
+    });
   }, []);
 
   /**
