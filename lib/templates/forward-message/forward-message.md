@@ -1,11 +1,27 @@
-# forward-message.py.jinja2
+# `forward-message.py.jinja2`
 
 ## Описание
 
 Шаблон генерирует Python-обработчик для узла `forward_message`. Он умеет:
+
 - определять исходное сообщение
-- пересылать в один или несколько чатов назначения
+- пересылать его в один или несколько чатов назначения
 - учитывать `disable_notification`
+- использовать список `ADMIN_IDS`
+
+## Источник сообщения
+
+Шаблон поддерживает четыре режима источника:
+
+- `current_message` — текущее сообщение из `callback_query`
+- `last_message` — последнее сохранённое сообщение из `bot_messages`, если логирование сообщений доступно
+- `manual` — ручной `message_id`
+- `variable` — `message_id` из пользовательской переменной
+
+Если у узла задан `sourceMessageNodeId`, шаблон пытается найти последнее бот-сообщение именно этого узла в `bot_messages`.
+Это делает фронтовую связь `message -> forward_message` полезной не только визуально, но и в генерации.
+
+Если логирование сообщений или `db_pool` недоступны, шаблон честно делает fallback на текущее сообщение из `callback_query`.
 
 ## Параметры
 
@@ -28,16 +44,22 @@ import { generateForwardMessageFromNode } from 'lib/templates/forward-message';
 const code = generateForwardMessageFromNode(node);
 ```
 
+## Ограничения
+
+- Реальное разрешение `sourceMessageNodeId` и `last_message` опирается на наличие логов сообщений в `bot_messages`.
+- Если проект не использует логирование сообщений, генерация не ломается, но оба режима деградируют до безопасного fallback на текущее сообщение.
+- `sourceMessageNodeId` не создаёт отдельный runtime-граф зависимостей сам по себе: он использует уже сохранённые сообщения узла, если они есть в журнале.
+
 ## Структура файлов
 
-```
+```text
 forward-message/
-├── forward-message.py.jinja2
-├── forward-message.params.ts
-├── forward-message.schema.ts
-├── forward-message.renderer.ts
-├── forward-message.fixture.ts
-├── forward-message.test.ts
-├── forward-message.md
-└── index.ts
+|-- forward-message.py.jinja2
+|-- forward-message.params.ts
+|-- forward-message.schema.ts
+|-- forward-message.renderer.ts
+|-- forward-message.fixture.ts
+|-- forward-message.test.ts
+|-- forward-message.md
+`-- index.ts
 ```

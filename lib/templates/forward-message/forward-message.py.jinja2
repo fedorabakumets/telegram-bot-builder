@@ -1,20 +1,164 @@
 {#
-  @fileoverview Шаблон пересылки сообщения
+  @fileoverview Шаблон пересылки сообщения.
   Генерирует callback-обработчик, который пересылает исходное сообщение
   в один или несколько чатов назначения.
 #}
 
 {% set source_mode = sourceMessageIdSource or 'current_message' %}
+{% set linked_source_node_id = sourceMessageNodeId or '' %}
 
 # Обработчик пересылки сообщения: {{ nodeId }}
-{% if sourceMessageNodeId %}
-# Привязанный узел-источник: {{ sourceMessageNodeId }}
+{% if linked_source_node_id %}
+# Привязанный узел-источник: {{ linked_source_node_id }}
 {% endif %}
 
+async def _extract_forward_message_id_{{ safeName }}(raw_message_data):
+    """Извлекает числовой message_id из сохранённых данных сообщения."""
+    if not raw_message_data:
+        return None
+
+    _message_data = raw_message_data
+    if isinstance(_message_data, str):
+        try:
+            _message_data = json.loads(_message_data)
+        except Exception:
+            return None
+
+    if not isinstance(_message_data, dict):
+        return None
+
+    _raw_message_id = _message_data.get("message_id")
+    if _raw_message_id in (None, ""):
+        return None
+
+    try:
+        return int(str(_raw_message_id).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+async def _load_forward_message_from_log_{{ safeName }}(callback_query: types.CallbackQuery, linked_node_id: str = "", use_last_logged: bool = False):
+    """Пытается получить message_id из bot_messages для привязанного узла или последнего сообщения."""
+    db_pool_ref = globals().get("db_pool")
+    project_id = globals().get("PROJECT_ID")
+
+    if not db_pool_ref:
+        return None
+
+    source_chat_id = callback_query.message.chat.id
+    user_id = callback_query.from_user.id
+    chat_lookup_id = str(source_chat_id)
+    actor_lookup_id = str(user_id)
+
+    try:
+        async with db_pool_ref.acquire() as conn:
+            if linked_node_id:
+                if project_id is not None:
+                    _linked_row = await conn.fetchrow(
+                        """
+                        SELECT message_data
+                        FROM bot_messages
+                        WHERE project_id = $1
+                          AND user_id = $2
+                          AND node_id = $3
+                          AND message_type = 'bot'
+                          AND message_data->>'message_id' IS NOT NULL
+                        ORDER BY created_at DESC
+                        LIMIT 1
+                        """,
+                        project_id,
+                        chat_lookup_id,
+                        linked_node_id,
+                    )
+                else:
+                    _linked_row = await conn.fetchrow(
+                        """
+                        SELECT message_data
+                        FROM bot_messages
+                        WHERE user_id = $1
+                          AND node_id = $2
+                          AND message_type = 'bot'
+                          AND message_data->>'message_id' IS NOT NULL
+                        ORDER BY created_at DESC
+                        LIMIT 1
+                        """,
+                        chat_lookup_id,
+                        linked_node_id,
+                    )
+
+                if _linked_row:
+                    _linked_message_id = await _extract_forward_message_id_{{ safeName }}(_linked_row.get("message_data"))
+                    if _linked_message_id is not None:
+                        return _linked_message_id
+
+            if use_last_logged:
+                _lookup_ids = [chat_lookup_id]
+                if actor_lookup_id not in _lookup_ids:
+                    _lookup_ids.append(actor_lookup_id)
+
+                for _lookup_id in _lookup_ids:
+                    if project_id is not None:
+                        _last_row = await conn.fetchrow(
+                            """
+                            SELECT message_data
+                            FROM bot_messages
+                            WHERE project_id = $1
+                              AND user_id = $2
+                              AND message_data->>'message_id' IS NOT NULL
+                            ORDER BY created_at DESC
+                            LIMIT 1
+                            """,
+                            project_id,
+                            _lookup_id,
+                        )
+                    else:
+                        _last_row = await conn.fetchrow(
+                            """
+                            SELECT message_data
+                            FROM bot_messages
+                            WHERE user_id = $1
+                              AND message_data->>'message_id' IS NOT NULL
+                            ORDER BY created_at DESC
+                            LIMIT 1
+                            """,
+                            _lookup_id,
+                        )
+
+                    if _last_row:
+                        _last_message_id = await _extract_forward_message_id_{{ safeName }}(_last_row.get("message_data"))
+                        if _last_message_id is not None:
+                            return _last_message_id
+    except Exception as e:
+        logging.warning(f"forward_message node {{ nodeId }}: failed to load source from bot_messages: {e}")
+
+    return None
+
+
 async def _resolve_forward_message_source_{{ safeName }}(callback_query: types.CallbackQuery):
+    """Определяет исходный чат и message_id для пересылки."""
     user_id = callback_query.from_user.id
     source_chat_id = callback_query.message.chat.id
     source_message_id = callback_query.message.message_id
+    linked_source_node_id = "{{ linked_source_node_id | escape_python_string }}"
+
+    if linked_source_node_id and "{{ source_mode }}" == "current_message":
+        _linked_message_id = await _load_forward_message_from_log_{{ safeName }}(
+            callback_query,
+            linked_node_id=linked_source_node_id,
+            use_last_logged=False,
+        )
+        if _linked_message_id is not None:
+            return source_chat_id, _linked_message_id
+
+    if "{{ source_mode }}" == "last_message":
+        _last_message_id = await _load_forward_message_from_log_{{ safeName }}(
+            callback_query,
+            linked_node_id=linked_source_node_id,
+            use_last_logged=True,
+        )
+        if _last_message_id is not None:
+            return source_chat_id, _last_message_id
+        return source_chat_id, source_message_id
 
     if "{{ source_mode }}" == "manual":
         raw_source_message_id = "{{ sourceMessageId | escape_python_string }}"
@@ -37,6 +181,7 @@ async def _resolve_forward_message_source_{{ safeName }}(callback_query: types.C
 
 
 async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.CallbackQuery):
+    """Собирает список уникальных чатов назначения."""
     user_id = callback_query.from_user.id
     target_chat_ids = []
     _all_vars = None
@@ -75,6 +220,7 @@ async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.
 
 @dp.callback_query(lambda c: c.data == "{{ nodeId }}")
 async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
+    """Пересылает сообщение в один или несколько чатов назначения."""
     user_id = callback_query.from_user.id
     source_chat_id, source_message_id = await _resolve_forward_message_source_{{ safeName }}(callback_query)
     target_chat_ids = await _resolve_forward_message_targets_{{ safeName }}(callback_query)

@@ -36,6 +36,22 @@ export const validParamsMixedTargets: ForwardMessageTemplateParams = {
   disableNotification: false,
 };
 
+/** Параметры: получение последнего сообщения из лога */
+export const validParamsLastMessage: ForwardMessageTemplateParams = {
+  nodeId: 'forward_3',
+  safeName: 'forward_3',
+  sourceMessageIdSource: 'last_message',
+  sourceMessageNodeId: 'message_source',
+  targetRecipients: [
+    {
+      id: 'target_manual',
+      targetChatIdSource: 'manual',
+      targetChatId: '-1007777777777',
+    },
+  ],
+  disableNotification: false,
+};
+
 /** Узел графа: базовая пересылка */
 export const forwardMessageNodeBasic: Node = {
   id: 'forward_1',
