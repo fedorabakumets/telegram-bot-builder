@@ -456,6 +456,91 @@ test('I05', 'text_trigger в листе 2 → condition в листе 3 → mess
 });
 
 
+// ─── Блок J: Остальные триггеры между листами ─────────────────────────────
+
+test('J01', 'incoming_message_trigger в листе 2 → message в листе 1', () => {
+  const p = makeMultiSheetProject([
+    { id: 's1', name: 'Лист 1', nodes: [
+      { id: 'start1', type: 'start', position: { x: 0, y: 0 }, data: { command: '/start', messageText: 'Старт', keyboardType: 'none', buttons: [] } },
+      { id: 'resp1', type: 'message', position: { x: 200, y: 0 }, data: { messageText: 'Получил сообщение', keyboardType: 'none', buttons: [] } },
+    ]},
+    { id: 's2', name: 'Лист 2', nodes: [
+      { id: 'any_trig', type: 'incoming_message_trigger', position: { x: 0, y: 0 }, data: { autoTransitionTo: 'resp1', enableAutoTransition: true } },
+    ]},
+  ]);
+  const code = gen(p, 'j01');
+  assert(syntax(code, 'j01').ok, 'Синтаксическая ошибка');
+});
+
+test('J02', 'group_message_trigger в листе 2 → message в листе 3', () => {
+  const p = makeMultiSheetProject([
+    { id: 's1', name: 'Лист 1', nodes: [
+      { id: 'start1', type: 'start', position: { x: 0, y: 0 }, data: { command: '/start', messageText: 'Старт', keyboardType: 'none', buttons: [] } },
+    ]},
+    { id: 's2', name: 'Лист 2', nodes: [
+      { id: 'grp_trig', type: 'group_message_trigger', position: { x: 0, y: 0 }, data: { triggerText: 'привет', autoTransitionTo: 'grp_resp', enableAutoTransition: true } },
+    ]},
+    { id: 's3', name: 'Лист 3', nodes: [
+      { id: 'grp_resp', type: 'message', position: { x: 0, y: 0 }, data: { messageText: 'Привет группа!', keyboardType: 'none', buttons: [] } },
+    ]},
+  ]);
+  const code = gen(p, 'j02');
+  assert(syntax(code, 'j02').ok, 'Синтаксическая ошибка');
+});
+
+test('J03', 'broadcast в листе 2 → message в листе 1', () => {
+  const p = makeMultiSheetProject([
+    { id: 's1', name: 'Лист 1', nodes: [
+      { id: 'start1', type: 'start', position: { x: 0, y: 0 }, data: { command: '/start', messageText: 'Старт', keyboardType: 'none', buttons: [] } },
+      { id: 'after_bc', type: 'message', position: { x: 200, y: 0 }, data: { messageText: 'После рассылки', keyboardType: 'none', buttons: [] } },
+    ]},
+    { id: 's2', name: 'Лист 2', nodes: [
+      { id: 'bc1', type: 'broadcast', position: { x: 0, y: 0 }, data: { messageText: 'Рассылка!', keyboardType: 'none', buttons: [], autoTransitionTo: 'after_bc', enableAutoTransition: true } },
+    ]},
+  ]);
+  const code = gen(p, 'j03', true);
+  assert(syntax(code, 'j03').ok, 'Синтаксическая ошибка');
+});
+
+test('J04', 'Все типы триггеров в разных листах — синтаксис OK', () => {
+  const p = makeMultiSheetProject([
+    { id: 's1', name: 'Лист 1', nodes: [
+      { id: 'start1', type: 'start', position: { x: 0, y: 0 }, data: { command: '/start', messageText: 'Старт', keyboardType: 'none', buttons: [], autoTransitionTo: 'msg_main', enableAutoTransition: true } },
+      { id: 'msg_main', type: 'message', position: { x: 200, y: 0 }, data: { messageText: 'Главная', keyboardType: 'none', buttons: [] } },
+    ]},
+    { id: 's2', name: 'Команды', nodes: [
+      { id: 'cmd_help', type: 'command_trigger', position: { x: 0, y: 0 }, data: { command: '/help', description: 'Помощь', showInMenu: true, autoTransitionTo: 'msg_main', enableAutoTransition: true } },
+    ]},
+    { id: 's3', name: 'Текстовые триггеры', nodes: [
+      { id: 'txt_hi', type: 'text_trigger', position: { x: 0, y: 0 }, data: { textSynonyms: ['привет'], autoTransitionTo: 'msg_main', enableAutoTransition: true } },
+    ]},
+    { id: 's4', name: 'Любые сообщения', nodes: [
+      { id: 'any_msg', type: 'incoming_message_trigger', position: { x: 0, y: 0 }, data: { autoTransitionTo: 'msg_main', enableAutoTransition: true } },
+    ]},
+  ]);
+  const code = gen(p, 'j04');
+  assert(syntax(code, 'j04').ok, 'Синтаксическая ошибка');
+  assert(code.includes('/help') || code.includes('cmd_help'), '/help не найден');
+});
+
+test('J05', 'incoming_message_trigger → condition → разные листы', () => {
+  const p = makeMultiSheetProject([
+    { id: 's1', name: 'Лист 1', nodes: [
+      { id: 'start1', type: 'start', position: { x: 0, y: 0 }, data: { command: '/start', messageText: 'Старт', keyboardType: 'none', buttons: [] } },
+    ]},
+    { id: 's2', name: 'Триггеры', nodes: [
+      { id: 'any_trig', type: 'incoming_message_trigger', position: { x: 0, y: 0 }, data: { autoTransitionTo: 'cond1', enableAutoTransition: true } },
+      { id: 'cond1', type: 'condition', position: { x: 200, y: 0 }, data: { variable: 'text', operator: 'equals', value: 'да', branches: [{ id: 'br1', operator: 'equals', value: 'да', target: 'yes_msg' }, { id: 'br2', operator: 'else', target: 'no_msg' }] } },
+    ]},
+    { id: 's3', name: 'Ответы', nodes: [
+      { id: 'yes_msg', type: 'message', position: { x: 0, y: 0 }, data: { messageText: 'Да!', keyboardType: 'none', buttons: [] } },
+      { id: 'no_msg', type: 'message', position: { x: 0, y: 200 }, data: { messageText: 'Нет!', keyboardType: 'none', buttons: [] } },
+    ]},
+  ]);
+  const code = gen(p, 'j05');
+  assert(syntax(code, 'j05').ok, 'Синтаксическая ошибка');
+});
+
 // ─── Вывод результатов ────────────────────────────────────────────────────
 
 const passed = results.filter(r => r.passed).length;
