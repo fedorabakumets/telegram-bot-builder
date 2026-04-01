@@ -16,7 +16,7 @@ const forwardMessageTargetRecipientSchema = z.object({
   /** Имя переменной с ID чата */
   targetChatVariableName: z.string().optional(),
   /** Тип получателя: "user" — пользователь, "group" — группа или канал */
-  targetChatType: z.enum(['user', 'group']).default('user'),
+  targetChatType: z.enum(['user', 'group']).optional(),
   /** ID топика (message_thread_id) для форум-групп */
   targetThreadId: z.string().optional(),
 });
@@ -125,6 +125,8 @@ export const nodeSchema = z.object({
     variableName: z.string().optional(),
     /** Отключить уведомление при закреплении/откреплении сообщения */
     disableNotification: z.boolean().default(false),
+    /** Скрыть автора при пересылке — использует copy_message вместо forward_message */
+    hideAuthor: z.boolean().default(false),
     /** ID чата назначения для пересылки сообщения */
     targetChatId: z.string().optional(),
     /** Источник ID чата назначения: "manual", "variable", "admin_ids" */
@@ -133,6 +135,12 @@ export const nodeSchema = z.object({
     targetChatVariableName: z.string().optional(),
     /** Несколько получателей для пересылки сообщения */
     targetChatTargets: z.array(forwardMessageTargetRecipientSchema).default([]),
+    /** ID топика для legacy-поля первого получателя */
+    targetThreadId: z.string().optional(),
+    /** Источник ID топика: "manual" или "variable" */
+    targetThreadIdSource: z.enum(['manual', 'variable']).optional(),
+    /** Имя переменной с ID топика */
+    targetThreadIdVariable: z.string().optional(),
     /** ID целевого пользователя для операций с пользователями */
     targetUserId: z.string().optional(),
     /** Источник ID пользователя: "manual" — вручную, "variable" — из переменной, "last_message" — из последнего сообщения */
