@@ -145,31 +145,8 @@ function syntax(code: string, label: string) {
   ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
 }
 
-/** Возвращает safe_name для Python-обработчиков. */
-function safeHandlerName(nodeId: string) {
-  return nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
-}
 
-/** Считает количество вхождений подстроки в сгенерированном коде. */
-function countOccurrences(code: string, part: string) {
-  const escaped = part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return (code.match(new RegExp(escaped, 'g')) || []).length;
-}
 
-/** Возвращает блок кода конкретного обработчика handle_callback_<nodeId>. */
-function handlerBlock(code: string, nodeId: string) {
-  const marker = `async def handle_callback_${safeHandlerName(nodeId)}(`;
-  const start = code.indexOf(marker);
-  ok(start !== -1, `Блок обработчика ${nodeId} не найден`);
-  const tail = code.slice(start);
-  const candidates = [
-    tail.indexOf('\nasync def ', marker.length),
-    tail.indexOf('\n@dp.', marker.length),
-    tail.indexOf('\nif __name__ == "__main__":', marker.length),
-  ].filter((index) => index > 0);
-  const end = candidates.length > 0 ? Math.min(...candidates) : tail.length;
-  return tail.slice(0, end);
-}
 
 // ─── Фабрики узлов ───────────────────────────────────────────────────────────
 
