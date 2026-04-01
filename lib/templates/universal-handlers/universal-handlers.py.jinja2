@@ -29,3 +29,12 @@ async def handle_unhandled_photo(message: types.Message):
     Обрабатывает фотографии, которые не были обработаны другими обработчиками.
     """
     logging.info(f"📸 Получено фото от пользователя {message.from_user.id}")
+
+
+@dp.message()
+async def handle_unhandled_message(message: types.Message):
+    """
+    Catch-all обработчик для всех остальных типов сообщений (стикеры, голосовые, видео и т.д.).
+    Нужен чтобы middleware (incoming_message_trigger) срабатывал на любой тип сообщения.
+    """
+    logging.info(f"📨 Получено необработанное сообщение от {message.from_user.id} (тип: {message.content_type})")
