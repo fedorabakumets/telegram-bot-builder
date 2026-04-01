@@ -133,10 +133,11 @@ test('A02', 'содержит dp.message.middleware(incoming_message_trigger_<id
   ok(code.includes('dp.message.middleware(incoming_message_trigger_imt1_middleware)'), 'dp.message.middleware(...) должен быть в коде');
 });
 
-test('A03', 'содержит return await handler(event, data)', () => {
+test('A03', 'содержит result = await handler(event, data) и return result', () => {
   const p = makeCleanProject([makeIncomingTriggerNode('imt1', 'msg1'), makeMessageNode('msg1')]);
   const code = gen(p, 'a03');
-  ok(code.includes('return await handler(event, data)'), 'return await handler(event, data) должен быть в коде');
+  ok(code.includes('result = await handler(event, data)'), 'result = await handler(event, data) должен быть в коде');
+  ok(code.includes('return result'), 'return result должен быть в коде');
 });
 
 test('A04', 'содержит class MockCallback:', () => {
@@ -727,10 +728,11 @@ test('H03', 'text_trigger обработчик присутствует вмес
   ok(code.includes('incoming_message_trigger_imt1_middleware'), 'incoming middleware должен быть');
 });
 
-test('H04', 'incoming_message_trigger middleware содержит return await handler(event, data) — цепочка продолжается', () => {
+test('H04', 'incoming_message_trigger middleware содержит result = await handler(event, data) и return result — цепочка продолжается', () => {
   const p = makeCleanProject([makeIncomingTriggerNode('imt1', 'msg1'), makeMessageNode('msg1')]);
   const code = gen(p, 'h04');
-  ok(code.includes('return await handler(event, data)'), 'return await handler(event, data) должен быть в middleware');
+  ok(code.includes('result = await handler(event, data)'), 'result = await handler(event, data) должен быть в middleware');
+  ok(code.includes('return result'), 'return result должен быть в middleware');
 });
 
 test('H05', 'два incoming_message_trigger → оба dp.message.middleware вызова в коде', () => {
