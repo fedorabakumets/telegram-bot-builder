@@ -425,7 +425,12 @@ export class DatabaseStorage implements IStorage {
     const [token] = await this.db.select().from(botTokens)
       .where(and(eq(botTokens.projectId, projectId), eq(botTokens.isDefault, 1)))
       .orderBy(desc(botTokens.createdAt));
-    return token || undefined;
+    if (token) return token;
+    // Fallback: берём любой токен проекта если нет дефолтного
+    const [anyToken] = await this.db.select().from(botTokens)
+      .where(eq(botTokens.projectId, projectId))
+      .orderBy(desc(botTokens.createdAt));
+    return anyToken || undefined;
   }
 
   /**
