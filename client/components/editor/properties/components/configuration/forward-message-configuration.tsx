@@ -452,8 +452,8 @@ export function ForwardMessageConfiguration({
         </div>
       </div>
 
-      {/* Секция: Тихая отправка */}
-      <div className="bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-950/20 dark:to-slate-900/10 border border-slate-200/30 dark:border-slate-800/30 rounded-lg p-4">
+      {/* Секция: Тихая отправка и скрытие автора */}
+      <div className="bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-950/20 dark:to-slate-900/10 border border-slate-200/30 dark:border-slate-800/30 rounded-lg p-4 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <Label className="text-sm font-semibold text-slate-900 dark:text-slate-100">Отправлять без уведомления</Label>
@@ -464,6 +464,19 @@ export function ForwardMessageConfiguration({
           <Switch
             checked={data.disableNotification ?? false}
             onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { disableNotification: checked })}
+          />
+        </div>
+        <div className="border-t border-slate-200/40 dark:border-slate-700/40" />
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <Label className="text-sm font-semibold text-slate-900 dark:text-slate-100">Скрыть автора</Label>
+            <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+              Использует <span className="font-mono">copy_message</span> вместо <span className="font-mono">forward_message</span> — сообщение придёт без ссылки на оригинал.
+            </div>
+          </div>
+          <Switch
+            checked={data.hideAuthor ?? false}
+            onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { hideAuthor: checked })}
           />
         </div>
       </div>
