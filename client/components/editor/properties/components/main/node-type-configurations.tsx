@@ -31,6 +31,8 @@ interface NodeTypeConfigurationsProps {
   /** Компонент управления контентом */
   ContentManagementConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
   ForwardMessageConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
+  /** Компонент конфигурации создания топика */
+  CreateForumTopicConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
   /** Компонент управления пользователями */
   UserManagementConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
   /** Компонент информации о правах администратора */
@@ -57,6 +59,7 @@ export function NodeTypeConfigurations({
   ContactConfiguration,
   ContentManagementConfiguration,
   ForwardMessageConfiguration,
+  CreateForumTopicConfiguration,
   UserManagementConfiguration,
   AdminRightsInfo
 }: NodeTypeConfigurationsProps) {
@@ -95,6 +98,10 @@ export function NodeTypeConfigurations({
 
   if (nodeType === 'forward_message') {
     return <ForwardMessageConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
+  }
+
+  if (nodeType === 'create_forum_topic') {
+    return <CreateForumTopicConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
   }
 
   if (nodeType === 'ban_user' || nodeType === 'unban_user' || nodeType === 'mute_user' ||

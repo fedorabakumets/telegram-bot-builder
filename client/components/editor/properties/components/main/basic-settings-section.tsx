@@ -61,6 +61,7 @@ interface BasicSettingsSectionProps {
   ContactConfiguration: any;
   ContentManagementConfiguration: any;
   ForwardMessageConfiguration: any;
+  CreateForumTopicConfiguration: any;
   UserManagementConfiguration: any;
   AdminRightsInfo: any;
 }
@@ -99,6 +100,7 @@ export function BasicSettingsSection({
   ContactConfiguration,
   ContentManagementConfiguration,
   ForwardMessageConfiguration,
+  CreateForumTopicConfiguration,
   UserManagementConfiguration,
   AdminRightsInfo
 }: BasicSettingsSectionProps) {
@@ -179,7 +181,7 @@ export function BasicSettingsSection({
               />
             </div>
           )}
-          {selectedNode.type !== 'forward_message' && (
+          {selectedNode.type !== 'forward_message' && selectedNode.type !== 'create_forum_topic' && (
             <NodeTypeConfigurations
               selectedNode={selectedNode}
               projectId={projectId}
@@ -194,6 +196,7 @@ export function BasicSettingsSection({
               ContactConfiguration={ContactConfiguration}
               ContentManagementConfiguration={ContentManagementConfiguration}
               ForwardMessageConfiguration={ForwardMessageConfiguration}
+              CreateForumTopicConfiguration={CreateForumTopicConfiguration}
               UserManagementConfiguration={UserManagementConfiguration}
               AdminRightsInfo={AdminRightsInfo}
             />

@@ -44,6 +44,7 @@ import { AnimationConfiguration } from '../configuration/animation-configuration
 import { ContactConfiguration } from '../configuration/contact-configuration';
 import { ContentManagementConfiguration } from '../configuration/content-management-configuration';
 import { ForwardMessageConfiguration } from '../configuration/forward-message-configuration';
+import { CreateForumTopicConfiguration } from '../configuration/create-forum-topic-configuration';
 import { UserManagementConfiguration } from '../configuration/user-management-configuration';
 import { LocationCoordinatesSection } from '../configuration/location-coordinates-section';
 import { LocationDetailsSection } from '../configuration/location-details-section';
@@ -352,6 +353,7 @@ export function PropertiesPanel({
               ContactConfiguration={ContactConfiguration}
               ContentManagementConfiguration={ContentManagementConfiguration}
               ForwardMessageConfiguration={ForwardMessageConfiguration}
+              CreateForumTopicConfiguration={CreateForumTopicConfiguration}
               UserManagementConfiguration={UserManagementConfiguration}
               AdminRightsInfo={AdminRightsInfo}
             />
@@ -403,6 +405,26 @@ export function PropertiesPanel({
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {selectedNode.type === 'create_forum_topic' && (
+            <div className="w-full bg-gradient-to-br from-teal-50/40 to-cyan-50/20 dark:from-teal-950/30 dark:to-cyan-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-teal-200/40 dark:border-teal-800/40 backdrop-blur-sm">
+              <SectionHeader
+                title="Создать топик"
+                description="Создание топика в форум-группе Telegram"
+                isOpen={true}
+                onToggle={() => {}}
+                icon="layer-group"
+                iconGradient="from-teal-100 to-cyan-100 dark:from-teal-900/50 dark:to-cyan-900/50"
+                iconColor="text-teal-600 dark:text-teal-400"
+              />
+              <div className="mt-3 sm:mt-4">
+                <CreateForumTopicConfiguration
+                  selectedNode={selectedNode}
+                  onNodeUpdate={onNodeUpdate}
+                />
+              </div>
             </div>
           )}
 

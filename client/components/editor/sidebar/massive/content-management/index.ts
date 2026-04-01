@@ -6,3 +6,4 @@ export { pinMessage } from './pin-message';
 export { unpinMessage } from './unpin-message';
 export { deleteMessage } from './delete-message';
 export { forwardMessage } from './forward-message';
+export { createForumTopicNode } from './create-forum-topic';

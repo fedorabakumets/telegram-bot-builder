@@ -30,7 +30,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -509,6 +509,20 @@ export const nodeSchema = z.object({
     textMatchType: z.enum(['exact', 'contains']).default('exact'),
     /** Переменная для проверки в узле условия, например "{{user_name}}" */
     variable: z.string().optional(),
+    /** ID форум-группы для создания топика */
+    forumChatId: z.string().optional(),
+    /** Источник ID чата: "manual" — вручную, "variable" — из переменной */
+    forumChatIdSource: z.enum(['manual', 'variable']).default('manual'),
+    /** Имя переменной с ID форум-группы */
+    forumChatVariableName: z.string().optional(),
+    /** Название создаваемого топика, поддерживает {переменные} */
+    topicName: z.string().optional(),
+    /** Цвет иконки топика (числовое значение цвета Telegram) */
+    topicIconColor: z.string().optional(),
+    /** Имя переменной для сохранения thread_id созданного топика */
+    saveThreadIdTo: z.string().optional(),
+    /** Не создавать топик повторно, если переменная saveThreadIdTo уже заполнена */
+    skipIfExists: z.boolean().default(false),
     /** Ветки узла условия */
     branches: z.array(z.object({
       /** Уникальный идентификатор ветки */

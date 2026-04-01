@@ -35,7 +35,8 @@ export const MANAGEMENT_NODE_TYPES = [
   'demote_user',
   'admin_rights',
   'broadcast',
-  'client_auth'
+  'client_auth',
+  'create_forum_topic',
 ] as const;
 
 /**
