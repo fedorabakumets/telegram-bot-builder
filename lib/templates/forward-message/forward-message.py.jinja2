@@ -215,7 +215,16 @@ async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.
             _normalized_target_chat_id = _raw_target_chat_id
         if _normalized_target_chat_id not in target_chat_ids:
             target_chat_ids.append(_normalized_target_chat_id)
-{%- if recipient.targetThreadId %}
+{%- if recipient.targetThreadIdSource == 'variable' and recipient.targetThreadIdVariable %}
+            if _all_vars is None:
+                _all_vars = await init_all_user_vars(user_id)
+            _thread_var_val = _all_vars.get({{ recipient.targetThreadIdVariable | escape_python_string }}, "")
+            if _thread_var_val:
+                try:
+                    target_thread_ids[_normalized_target_chat_id] = int(str(_thread_var_val).strip())
+                except (TypeError, ValueError):
+                    pass
+{%- elif recipient.targetThreadId %}
             _thread_id_raw = {{ recipient.targetThreadId | escape_python_string }}
             if _thread_id_raw:
                 try:
@@ -234,7 +243,16 @@ async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.
             _normalized_target_chat_id = _raw_target_chat_id
         if _normalized_target_chat_id not in target_chat_ids:
             target_chat_ids.append(_normalized_target_chat_id)
-{%- if recipient.targetThreadId %}
+{%- if recipient.targetThreadIdSource == 'variable' and recipient.targetThreadIdVariable %}
+            if _all_vars is None:
+                _all_vars = await init_all_user_vars(user_id)
+            _thread_var_val = _all_vars.get({{ recipient.targetThreadIdVariable | escape_python_string }}, "")
+            if _thread_var_val:
+                try:
+                    target_thread_ids[_normalized_target_chat_id] = int(str(_thread_var_val).strip())
+                except (TypeError, ValueError):
+                    pass
+{%- elif recipient.targetThreadId %}
             _thread_id_raw = {{ recipient.targetThreadId | escape_python_string }}
             if _thread_id_raw:
                 try:

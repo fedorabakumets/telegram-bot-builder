@@ -1,35 +1,65 @@
 /**
- * @fileoverview Конфигурация пересылки сообщения через Bot API
+ * @fileoverview Конфигурация пересылки сообщения через Bot API.
+ * Позволяет задать источник сообщения и список получателей,
+ * включая поддержку ID топика из переменной пользователя.
  */
 
+import { useMemo } from 'react';
 import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { VariableNameInput } from '../variables/variable-name-input';
+import { extractVariables } from '../../utils/variables-utils';
+import type { Variable } from '../../../inline-rich/types';
 
+/** Режим указания чата назначения */
 type TargetChatMode = 'manual' | 'variable' | 'admin_ids';
 
+/** Режим указания ID топика */
+type TargetThreadIdSource = 'manual' | 'variable';
+
+/** Один получатель пересылки сообщения */
 interface ForwardMessageTargetRecipient {
+  /** Уникальный ID получателя внутри узла */
   id: string;
+  /** Способ указания чата назначения */
   targetChatIdSource: TargetChatMode;
+  /** ID или username чата */
   targetChatId?: string;
+  /** Имя переменной с ID чата */
   targetChatVariableName?: string;
+  /** Тип получателя: "user" — пользователь, "group" — группа или канал */
   targetChatType?: 'user' | 'group';
+  /** ID топика (message_thread_id) для форум-групп */
   targetThreadId?: string;
+  /** Источник ID топика: "manual" — вручную, "variable" — из переменной */
+  targetThreadIdSource?: TargetThreadIdSource;
+  /** Имя переменной с ID топика */
+  targetThreadIdVariable?: string;
 }
 
+/** Пропсы компонента ForwardMessageConfiguration */
 interface ForwardMessageConfigurationProps {
+  /** Выбранный узел */
   selectedNode: Node;
+  /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
+  /** Все узлы проекта (для поиска источника) */
   allNodes?: Node[];
+  /** Функция форматирования отображения узла */
   formatNodeDisplay?: (node: Node) => string;
+  /** Все узлы из всех листов (для извлечения переменных) */
+  getAllNodesFromAllSheets?: Array<{ node: Node; sheetId?: string; sheetName?: string }>;
 }
 
+/** Проверяет, является ли значение допустимым режимом чата */
 const isTargetChatMode = (value: unknown): value is TargetChatMode =>
   value === 'manual' || value === 'variable' || value === 'admin_ids';
 
+/** Создаёт нового получателя с дефолтными значениями */
 const createTargetRecipient = (mode: TargetChatMode = 'manual'): ForwardMessageTargetRecipient => ({
   id: `target-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
   targetChatIdSource: mode,
@@ -37,8 +67,16 @@ const createTargetRecipient = (mode: TargetChatMode = 'manual'): ForwardMessageT
   targetChatVariableName: '',
   targetChatType: 'user',
   targetThreadId: '',
+  targetThreadIdSource: 'manual',
+  targetThreadIdVariable: '',
 });
 
+/**
+ * Нормализует данные получателя, заполняя отсутствующие поля дефолтными значениями.
+ * @param {Partial<ForwardMessageTargetRecipient>} recipient - Сырые данные получателя
+ * @param {number} index - Индекс получателя в массиве
+ * @returns {ForwardMessageTargetRecipient} Нормализованный получатель
+ */
 const normalizeTargetRecipient = (
   recipient: Partial<ForwardMessageTargetRecipient>,
   index: number
@@ -49,8 +87,15 @@ const normalizeTargetRecipient = (
   targetChatVariableName: typeof recipient.targetChatVariableName === 'string' ? recipient.targetChatVariableName : '',
   targetChatType: recipient.targetChatType === 'group' ? 'group' : 'user',
   targetThreadId: typeof recipient.targetThreadId === 'string' ? recipient.targetThreadId : '',
+  targetThreadIdSource: recipient.targetThreadIdSource === 'variable' ? 'variable' : 'manual',
+  targetThreadIdVariable: typeof recipient.targetThreadIdVariable === 'string' ? recipient.targetThreadIdVariable : '',
 });
 
+/**
+ * Извлекает список получателей из данных узла, поддерживая legacy-формат.
+ * @param {any} data - Данные узла
+ * @returns {ForwardMessageTargetRecipient[]} Список нормализованных получателей
+ */
 const getTargetRecipients = (data: any): ForwardMessageTargetRecipient[] => {
   const rawTargets = Array.isArray(data.targetChatTargets) ? data.targetChatTargets : [];
 
@@ -73,11 +118,17 @@ const getTargetRecipients = (data: any): ForwardMessageTargetRecipient[] => {
   ];
 };
 
+/**
+ * Компонент конфигурации узла пересылки сообщения.
+ * Позволяет задать источник сообщения и список получателей.
+ * Для групп поддерживает указание ID топика вручную или из переменной.
+ */
 export function ForwardMessageConfiguration({
   selectedNode,
   onNodeUpdate,
   allNodes = [],
   formatNodeDisplay,
+  getAllNodesFromAllSheets = [],
 }: ForwardMessageConfigurationProps) {
   const data = selectedNode.data as any;
   const sourceMode = data.sourceMessageIdSource || 'current_message';
@@ -90,6 +141,21 @@ export function ForwardMessageConfiguration({
     : '';
   const targetRecipients = getTargetRecipients(data);
 
+  /**
+   * Извлекаем текстовые переменные из всех узлов проекта
+   * для использования в селекторах переменных
+   */
+  const textVariables = useMemo((): Variable[] => {
+    const nodes = getAllNodesFromAllSheets.map((n) => n.node);
+    const { textVariables: vars } = extractVariables(nodes);
+    return vars as Variable[];
+  }, [getAllNodesFromAllSheets]);
+
+  /**
+   * Сохраняет обновлённый список получателей в данные узла.
+   * Также обновляет legacy-поля первого получателя для совместимости.
+   * @param {ForwardMessageTargetRecipient[]} nextRecipients - Новый список получателей
+   */
   const updateTargetRecipients = (nextRecipients: ForwardMessageTargetRecipient[]) => {
     const normalizedRecipients = (nextRecipients.length > 0 ? nextRecipients : [createTargetRecipient()])
       .map((recipient, index) => normalizeTargetRecipient(recipient, index));
@@ -102,9 +168,21 @@ export function ForwardMessageConfiguration({
       targetChatVariableName: primaryRecipient.targetChatIdSource === 'variable'
         ? (primaryRecipient.targetChatVariableName || '')
         : '',
+      targetThreadId: primaryRecipient.targetThreadIdSource === 'manual'
+        ? (primaryRecipient.targetThreadId || '')
+        : '',
+      targetThreadIdSource: primaryRecipient.targetThreadIdSource || 'manual',
+      targetThreadIdVariable: primaryRecipient.targetThreadIdSource === 'variable'
+        ? (primaryRecipient.targetThreadIdVariable || '')
+        : '',
     });
   };
 
+  /**
+   * Обновляет поля конкретного получателя по индексу.
+   * @param {number} index - Индекс получателя
+   * @param {Partial<ForwardMessageTargetRecipient>} updates - Обновляемые поля
+   */
   const updateRecipient = (index: number, updates: Partial<ForwardMessageTargetRecipient>) => {
     const nextRecipients = targetRecipients.map((recipient, recipientIndex) => (
       recipientIndex === index ? { ...recipient, ...updates } : recipient
@@ -112,16 +190,22 @@ export function ForwardMessageConfiguration({
     updateTargetRecipients(nextRecipients);
   };
 
+  /** Добавляет нового получателя в конец списка */
   const addRecipient = () => {
     updateTargetRecipients([...targetRecipients, createTargetRecipient()]);
   };
 
+  /**
+   * Удаляет получателя по индексу.
+   * @param {number} index - Индекс удаляемого получателя
+   */
   const removeRecipient = (index: number) => {
     updateTargetRecipients(targetRecipients.filter((_, recipientIndex) => recipientIndex !== index));
   };
 
   return (
     <div className="space-y-6">
+      {/* Секция: Источник сообщения */}
       <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-lg p-4">
         <div className="flex items-center space-x-2 mb-3">
           <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
@@ -194,6 +278,7 @@ export function ForwardMessageConfiguration({
         </div>
       </div>
 
+      {/* Секция: Чат назначения */}
       <div className="bg-gradient-to-br from-sky-50/50 to-blue-50/30 dark:from-sky-950/20 dark:to-blue-950/10 border border-sky-200/30 dark:border-sky-800/30 rounded-lg p-4">
         <div className="flex items-center space-x-2 mb-3">
           <div className="w-6 h-6 rounded-full bg-sky-100 dark:bg-sky-900/50 flex items-center justify-center">
@@ -229,6 +314,7 @@ export function ForwardMessageConfiguration({
                   </Button>
                 </div>
 
+                {/* Выбор способа указания чата */}
                 <Select
                   value={recipient.targetChatIdSource}
                   onValueChange={(value) => updateRecipient(index, { targetChatIdSource: value as TargetChatMode })}
@@ -245,6 +331,7 @@ export function ForwardMessageConfiguration({
 
                 {recipient.targetChatIdSource === 'manual' && (
                   <div className="space-y-2">
+                    {/* Тип получателя */}
                     <Label className="text-xs font-medium text-sky-700 dark:text-sky-300">Тип получателя</Label>
                     <Select
                       value={recipient.targetChatType || 'user'}
@@ -258,6 +345,8 @@ export function ForwardMessageConfiguration({
                         <SelectItem value="group">Группа или канал</SelectItem>
                       </SelectContent>
                     </Select>
+
+                    {/* ID или username чата */}
                     <Label className="text-xs font-medium text-sky-700 dark:text-sky-300">
                       {recipient.targetChatType === 'group' ? 'ID или username группы/канала' : 'ID или username пользователя'}
                     </Label>
@@ -267,20 +356,64 @@ export function ForwardMessageConfiguration({
                       placeholder={recipient.targetChatType === 'group' ? '2300967595 или @channel_name' : '123456789 или @username'}
                       className="bg-white/60 dark:bg-slate-950/60 border-sky-200/50 dark:border-sky-800/50"
                     />
+
+                    {/* Секция ID топика — только для групп */}
                     {recipient.targetChatType === 'group' && (
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-sky-700 dark:text-sky-300">
-                          ID топика (необязательно)
-                        </Label>
-                        <Input
-                          value={recipient.targetThreadId || ''}
-                          onChange={(e) => updateRecipient(index, { targetThreadId: e.target.value })}
-                          placeholder="615"
-                          className="bg-white/60 dark:bg-slate-950/60 border-sky-200/50 dark:border-sky-800/50"
-                        />
-                        <div className="text-xs text-sky-600/70 dark:text-sky-400/70">
-                          Для форум-групп. Найти в ссылке: t.me/c/GROUP_ID/TOPIC_ID/MSG_ID
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <Label className="text-xs font-medium text-sky-700 dark:text-sky-300">
+                            ID топика (необязательно)
+                          </Label>
+                          {/* Переключатель источника ID топика */}
+                          <Select
+                            value={recipient.targetThreadIdSource || 'manual'}
+                            onValueChange={(value) =>
+                              updateRecipient(index, {
+                                targetThreadIdSource: value as TargetThreadIdSource,
+                                targetThreadId: '',
+                                targetThreadIdVariable: '',
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-7 w-36 text-xs bg-card/70 border border-sky-200/50 dark:border-sky-800/50">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="manual">Вручную</SelectItem>
+                              <SelectItem value="variable">Из переменной</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
+
+                        {/* Ввод ID топика вручную */}
+                        {(recipient.targetThreadIdSource || 'manual') === 'manual' && (
+                          <>
+                            <Input
+                              value={recipient.targetThreadId || ''}
+                              onChange={(e) => updateRecipient(index, { targetThreadId: e.target.value })}
+                              placeholder="615"
+                              className="bg-white/60 dark:bg-slate-950/60 border-sky-200/50 dark:border-sky-800/50"
+                            />
+                            <div className="text-xs text-sky-600/70 dark:text-sky-400/70">
+                              Для форум-групп. Найти в ссылке: t.me/c/GROUP_ID/TOPIC_ID/MSG_ID
+                            </div>
+                          </>
+                        )}
+
+                        {/* Выбор переменной с ID топика */}
+                        {recipient.targetThreadIdSource === 'variable' && (
+                          <>
+                            <VariableNameInput
+                              value={recipient.targetThreadIdVariable || ''}
+                              availableVariables={textVariables}
+                              onChange={(value) => updateRecipient(index, { targetThreadIdVariable: value })}
+                              placeholder="forum_thread_id"
+                            />
+                            <div className="text-xs text-sky-600/70 dark:text-sky-400/70">
+                              Переменная должна содержать числовой ID топика форум-группы.
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -319,6 +452,7 @@ export function ForwardMessageConfiguration({
         </div>
       </div>
 
+      {/* Секция: Тихая отправка */}
       <div className="bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-950/20 dark:to-slate-900/10 border border-slate-200/30 dark:border-slate-800/30 rounded-lg p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
