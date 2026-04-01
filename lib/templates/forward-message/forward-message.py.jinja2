@@ -150,6 +150,15 @@ async def _resolve_forward_message_source_{{ safeName }}(callback_query: types.C
         if _linked_message_id is not None:
             return source_chat_id, _linked_message_id
 
+    if {{ source_mode | escape_python_string }} == "current_message" and source_chat_id > 0:
+        _fallback_message_id = await _load_forward_message_from_log_{{ safeName }}(
+            callback_query,
+            linked_node_id=linked_source_node_id,
+            use_last_logged=True,
+        )
+        if _fallback_message_id is not None:
+            return source_chat_id, _fallback_message_id
+
     if {{ source_mode | escape_python_string }} == "last_message":
         _last_message_id = await _load_forward_message_from_log_{{ safeName }}(
             callback_query,

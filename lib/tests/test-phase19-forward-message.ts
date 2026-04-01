@@ -1543,6 +1543,64 @@ test('U06', 'несколько получателей: один с threadId, о
   syntax(code, 'u06');
 });
 
+// ════════════════════════════════════════════════════════════════════════════════
+// БЛОК V: incoming_message_trigger + топик (source_chat_id > 0 fallback)
+// ════════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок V: incoming_message_trigger + топик (source_chat_id > 0) ────────');
+
+test('V01', 'current_message генерирует fallback source_chat_id > 0 с use_last_logged=True', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      sourceMessageIdSource: 'current_message',
+      targetRecipients: [
+        makeRecipient('r1', 'manual', { targetChatId: '-1002300967595', targetChatType: 'group', targetThreadId: '618' }),
+      ],
+    }),
+  ]), 'v01');
+  ok(code.includes('source_chat_id > 0'), 'Должна быть проверка source_chat_id > 0 для fallback');
+  ok(code.includes('use_last_logged=True'), 'Fallback должен использовать use_last_logged=True');
+});
+
+test('V02', 'current_message + source_chat_id > 0 fallback идёт после linked_source_node_id lookup', () => {
+  const code = gen(makeCleanProject([
+    makeMessageNode('msg_source', 'Источник'),
+    makeForwardMessageNode('fwd1', {
+      sourceMessageIdSource: 'current_message',
+      sourceMessageNodeId: 'msg_source',
+      targetRecipients: [
+        makeRecipient('r1', 'manual', { targetChatId: '-1002300967595', targetChatType: 'group', targetThreadId: '618' }),
+      ],
+    }),
+  ]), 'v02');
+  const linkedIdx = code.indexOf('linked_source_node_id and');
+  const fallbackIdx = code.indexOf('source_chat_id > 0');
+  ok(linkedIdx !== -1, 'linked_source_node_id lookup должен присутствовать');
+  ok(fallbackIdx !== -1, 'source_chat_id > 0 fallback должен присутствовать');
+  ok(linkedIdx < fallbackIdx, 'linked_source_node_id lookup должен идти раньше source_chat_id > 0 fallback');
+});
+
+test('V03', 'current_message + incoming_message_trigger + топик синтаксически корректен', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/forward', 'fwd1'),
+    makeForwardMessageNode('fwd1', {
+      sourceMessageIdSource: 'current_message',
+      targetRecipients: [
+        makeRecipient('r1', 'manual', { targetChatId: '-1002300967595', targetChatType: 'group', targetThreadId: '618' }),
+      ],
+    }),
+  ]), 'v03'), 'v03');
+});
+
+test('V04', 'current_message без linked_source_node_id тоже имеет source_chat_id > 0 fallback', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      sourceMessageIdSource: 'current_message',
+    }),
+  ]), 'v04');
+  ok(code.includes('source_chat_id > 0'), 'Fallback source_chat_id > 0 должен быть даже без linked_source_node_id');
+});
+
 const passed = results.filter((r) => r.passed).length;
 const failed = results.filter((r) => !r.passed).length;
 const total = results.length;

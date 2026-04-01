@@ -185,3 +185,51 @@ describe('targetThreadId — пересылка в топик форум-гру�
     expect(params.targetRecipients[0].targetThreadId).toBe('615');
   });
 });
+
+describe('current_message + incoming_message_trigger (source_chat_id > 0)', () => {
+  it('current_message с source_chat_id > 0 → fallback через _load_forward_message_from_log_ с use_last_logged=True', () => {
+    const code = generateForwardMessage({
+      nodeId: 'fwd_incoming',
+      safeName: 'fwd_incoming',
+      sourceMessageIdSource: 'current_message',
+      targetRecipients: [
+        { id: 'r1', targetChatIdSource: 'manual', targetChatId: '-1002300967595', targetChatType: 'group', targetThreadId: '618' },
+      ],
+      disableNotification: false,
+    });
+    expect(code).toContain('source_chat_id > 0');
+    expect(code).toContain('use_last_logged=True');
+  });
+
+  it('current_message + source_chat_id > 0 fallback не ломает linked_source_node_id логику', () => {
+    const code = generateForwardMessage({
+      nodeId: 'fwd_incoming2',
+      safeName: 'fwd_incoming2',
+      sourceMessageIdSource: 'current_message',
+      sourceMessageNodeId: 'msg_source',
+      targetRecipients: [
+        { id: 'r1', targetChatIdSource: 'manual', targetChatId: '-1002300967595', targetChatType: 'group', targetThreadId: '618' },
+      ],
+      disableNotification: false,
+    });
+    // linked_source_node_id lookup должен идти первым
+    const linkedIdx = code.indexOf('linked_source_node_id and');
+    const fallbackIdx = code.indexOf('source_chat_id > 0');
+    expect(linkedIdx).toBeGreaterThan(-1);
+    expect(fallbackIdx).toBeGreaterThan(-1);
+    expect(linkedIdx).toBeLessThan(fallbackIdx);
+  });
+
+  it('current_message + source_chat_id > 0 синтаксически корректен', () => {
+    // Проверяем что шаблон рендерится без ошибок
+    expect(() => generateForwardMessage({
+      nodeId: 'fwd_incoming3',
+      safeName: 'fwd_incoming3',
+      sourceMessageIdSource: 'current_message',
+      targetRecipients: [
+        { id: 'r1', targetChatIdSource: 'manual', targetChatId: '-1002300967595', targetChatType: 'group', targetThreadId: '618' },
+      ],
+      disableNotification: false,
+    })).not.toThrow();
+  });
+});
