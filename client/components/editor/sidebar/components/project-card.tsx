@@ -265,11 +265,11 @@ function SheetAccordionContent({
                 }}
               >
                 <div className="flex items-center gap-1.5">
-                  {/* Чекбокс — виден только при hover на строку */}
+                  {/* Чекбокс — виден только при hover на строку или если выбран */}
                   <input
                     type="checkbox"
                     checked={selected}
-                    className="opacity-0 group-hover/node:opacity-100 transition-opacity h-3 w-3 flex-shrink-0 cursor-pointer accent-blue-500"
+                    className={`transition-opacity h-3.5 w-3.5 flex-shrink-0 cursor-pointer accent-blue-500 ${selected ? 'opacity-100' : 'opacity-0 group-hover/node:opacity-70'}`}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {
                       e.stopPropagation();
