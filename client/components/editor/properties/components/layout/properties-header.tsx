@@ -63,7 +63,7 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   client_auth: 'Авторизация Client API',
   command_trigger: 'Триггер команды',
   text_trigger: 'Текстовый триггер',
-  incoming_message_trigger: 'Входящее сообщение',
+  incoming_message_trigger: 'Триггер входящего сообщения',
   media: 'Медиафайл',
 };
 

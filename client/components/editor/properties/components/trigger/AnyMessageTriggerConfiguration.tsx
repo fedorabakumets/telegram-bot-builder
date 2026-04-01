@@ -13,7 +13,7 @@ export function AnyMessageTriggerConfiguration() {
       <div className="flex items-center gap-2">
         <i className="fas fa-inbox text-green-600 dark:text-green-400 text-sm" />
         <span className="text-sm font-medium text-green-700 dark:text-green-300">
-          Входящее сообщение
+          Триггер входящего сообщения
         </span>
       </div>
       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
