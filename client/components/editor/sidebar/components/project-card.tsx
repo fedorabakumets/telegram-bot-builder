@@ -743,6 +743,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                     title={name}
                   >
                     <span className="truncate">{name || 'Без названия'}</span>
+                    {SheetsManager.isNewFormat(projectData) && (
+                      <span className="ml-1 flex-shrink-0 text-xs opacity-50 font-normal">
+                        {projectData.sheets[index]?.nodes?.length ?? 0}
+                      </span>
+                    )}
                   </div>
                 )}
 
