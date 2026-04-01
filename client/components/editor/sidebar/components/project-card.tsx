@@ -43,6 +43,7 @@ import { getNodeTypeLabel } from '@/components/editor/properties/utils/node-form
 import { SheetNodeSearch } from './sheet-node-search';
 import { useSheetNodeSearch } from '../hooks/use-sheet-node-search';
 import { useSheetSearchState } from '../hooks/use-sheet-search-state';
+import { HighlightText } from './highlight-text';
 
 /**
  * Состояние drag-and-drop для проектов и листов
@@ -235,13 +236,16 @@ function SheetAccordionContent({ nodes, searchQuery, onSearchChange }: SheetAcco
                 <div className="flex items-center gap-1.5">
                   <NodeTypeIcon type={node.type} />
                   <span className="font-medium flex-shrink-0">
-                    {node.type === 'keyboard'
-                      ? node.data?.keyboardType === 'reply' ? 'Reply кнопки' : 'Inline кнопки'
-                      : getNodeTypeLabel(node.type)}
+                    <HighlightText
+                      text={node.type === 'keyboard'
+                        ? node.data?.keyboardType === 'reply' ? 'Reply кнопки' : 'Inline кнопки'
+                        : getNodeTypeLabel(node.type)}
+                      query={searchQuery}
+                    />
                   </span>
                   {shortContent && (
                     <span className="truncate opacity-70 min-w-0">
-                      {shortContent}
+                      <HighlightText text={shortContent} query={searchQuery} />
                     </span>
                   )}
                 </div>
@@ -253,7 +257,7 @@ function SheetAccordionContent({ nodes, searchQuery, onSearchChange }: SheetAcco
                         className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/50 text-xs opacity-80 truncate max-w-[80px]"
                         title={text}
                       >
-                        {text}
+                        <HighlightText text={text} query={searchQuery} />
                       </span>
                     ))}
                   </div>
