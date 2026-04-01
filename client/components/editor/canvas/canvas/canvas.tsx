@@ -818,43 +818,6 @@ export function Canvas({
   // Держим ref актуальным чтобы autoFitOnLoad эффект не имел stale closure
   fitToContentRef.current = fitToContent;
 
-  // Синхронизируем scrollLeft/scrollTop с pan чтобы нативный скроллбар
-  // отражал реальное положение вьюпорта при изменении zoom и pan.
-  // Используем SCROLL_OFFSET чтобы скроллбар мог двигаться в обе стороны
-  // даже когда pan отрицательный.
-  const SCROLL_OFFSET = 5000;
-  const isProgrammaticScrollRef = useRef(0); // счётчик программных скроллов
-
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-
-    isProgrammaticScrollRef.current += 1;
-    el.scrollLeft = SCROLL_OFFSET - pan.x;
-    el.scrollTop = SCROLL_OFFSET - pan.y;
-    const token = isProgrammaticScrollRef.current;
-    // Сбрасываем только если никто другой не записал новый scroll за это время
-    setTimeout(() => {
-      if (isProgrammaticScrollRef.current === token) {
-        isProgrammaticScrollRef.current = 0;
-      }
-    }, 50);
-  }, [pan, zoom]);
-
-  // При скролле нативным скроллбаром обновляем pan
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-
-    const handleScroll = () => {
-      if (isPanning || isProgrammaticScrollRef.current > 0) return;
-      setPan({ x: -(el.scrollLeft - SCROLL_OFFSET), y: -(el.scrollTop - SCROLL_OFFSET) });
-    };
-
-    el.addEventListener('scroll', handleScroll, { passive: true });
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [isPanning]);
-
   // Принудительный fit по внешнему триггеру (например после применения шаблона)
   useEffect(() => {
     if (!fitTrigger) return;
