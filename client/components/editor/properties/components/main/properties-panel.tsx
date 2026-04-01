@@ -22,6 +22,7 @@ import { CommandAdvancedSettingsWrapper } from './command-advanced-settings-wrap
 import { CommandTriggerConfiguration } from '../trigger/CommandTriggerConfiguration';
 import { TextTriggerConfiguration } from '../trigger/TextTriggerConfiguration';
 import { AnyMessageTriggerConfiguration } from '../trigger/AnyMessageTriggerConfiguration';
+import { GroupMessageTriggerConfiguration } from '../trigger/GroupMessageTriggerConfiguration';
 import { ConditionNodeConfiguration } from '../condition/ConditionNodeConfiguration';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
@@ -449,6 +450,13 @@ export function PropertiesPanel({
           )}
           {isTriggerNode(selectedNode.type) && selectedNode.type === 'incoming_message_trigger' && (
             <AnyMessageTriggerConfiguration />
+          )}
+          {isTriggerNode(selectedNode.type) && selectedNode.type === 'group_message_trigger' && (
+            <GroupMessageTriggerConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+            />
           )}
 
           {/* Condition Section вЂ” С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»Р° СѓСЃР»РѕРІРёСЏ */}

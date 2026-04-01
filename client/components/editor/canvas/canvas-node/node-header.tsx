@@ -12,6 +12,7 @@ import { UserManagementHeader } from './user-management-header';
 import { AdminRightsHeaderSmall } from './admin-rights-header-small';
 import { BroadcastHeader } from './broadcast-header';
 import { ClientAuthHeader } from './client-auth-header';
+import { GroupMessageTriggerHeader } from './group-message-trigger-header';
 import { nodeIcons } from './node-icons';
 import { nodeColors } from './node-colors';
 
@@ -99,6 +100,8 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             Текстовый триггер
           </span>
         );
+      case 'group_message_trigger':
+        return <GroupMessageTriggerHeader node={node} />;
       default:
         return null;
     }

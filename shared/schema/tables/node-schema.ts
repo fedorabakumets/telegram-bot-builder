@@ -30,7 +30,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'group_message_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -531,6 +531,16 @@ export const nodeSchema = z.object({
     saveThreadIdTo: z.string().optional(),
     /** Не создавать топик повторно, если переменная saveThreadIdTo уже заполнена */
     skipIfExists: z.boolean().default(false),
+    /** ID группы для триггера сообщения в группе */
+    groupChatId: z.string().optional(),
+    /** Источник ID группы: "manual" — вручную, "variable" — из переменной */
+    groupChatIdSource: z.enum(['manual', 'variable']).optional(),
+    /** Имя переменной с ID группы */
+    groupChatVariableName: z.string().optional(),
+    /** Имя переменной где у пользователей хранится thread_id */
+    threadIdVariable: z.string().optional(),
+    /** Имя переменной куда положить найденный user_id */
+    resolvedUserIdVariable: z.string().optional(),
     /** Ветки узла условия */
     branches: z.array(z.object({
       /** Уникальный идентификатор ветки */
