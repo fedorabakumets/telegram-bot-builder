@@ -64,6 +64,7 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   command_trigger: 'Триггер команды',
   text_trigger: 'Текстовый триггер',
   incoming_message_trigger: 'Триггер входящего сообщения',
+  group_message_trigger: 'Триггер входящего сообщения в теме группы',
   media: 'Медиафайл',
 };
 
