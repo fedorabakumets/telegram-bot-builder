@@ -36,6 +36,10 @@ function normalizeRecipient(recipient: unknown, index: number): ForwardMessageTa
     targetChatVariableName?: unknown;
     targetChatType?: unknown;
     targetThreadId?: unknown;
+    /** Источник ID топика: "manual" — вручную, "variable" — из переменной */
+    targetThreadIdSource?: unknown;
+    /** Имя переменной с ID топика */
+    targetThreadIdVariable?: unknown;
   } | null | undefined;
 
   return {
@@ -45,6 +49,8 @@ function normalizeRecipient(recipient: unknown, index: number): ForwardMessageTa
     targetChatVariableName: typeof rawRecipient?.targetChatVariableName === 'string' ? rawRecipient.targetChatVariableName : '',
     targetChatType: rawRecipient?.targetChatType === 'group' ? 'group' : 'user',
     targetThreadId: typeof rawRecipient?.targetThreadId === 'string' ? rawRecipient.targetThreadId : '',
+    targetThreadIdSource: rawRecipient?.targetThreadIdSource === 'variable' ? 'variable' : 'manual',
+    targetThreadIdVariable: typeof rawRecipient?.targetThreadIdVariable === 'string' ? rawRecipient.targetThreadIdVariable : '',
   };
 }
 

@@ -141,3 +141,43 @@ export const validParamsGroupWithThread: ForwardMessageTemplateParams = {
   ],
   disableNotification: false,
 };
+
+/** Параметры: группа с ID топика из переменной */
+export const validParamsGroupWithThreadVariable: ForwardMessageTemplateParams = {
+  nodeId: 'forward_thread_var',
+  safeName: 'forward_thread_var',
+  sourceMessageIdSource: 'current_message',
+  targetRecipients: [
+    {
+      id: 'target_thread_var',
+      targetChatIdSource: 'manual',
+      targetChatId: '2300967595',
+      targetChatType: 'group',
+      /** Источник ID топика: "manual" — вручную, "variable" — из переменной */
+      targetThreadIdSource: 'variable',
+      /** Имя переменной с ID топика */
+      targetThreadIdVariable: 'support_thread_id',
+    },
+  ],
+  disableNotification: false,
+};
+
+/** Параметры: группа из переменной + ID топика из переменной */
+export const validParamsVariableChatWithThreadVariable: ForwardMessageTemplateParams = {
+  nodeId: 'forward_var_thread_var',
+  safeName: 'forward_var_thread_var',
+  sourceMessageIdSource: 'current_message',
+  targetRecipients: [
+    {
+      id: 'target_var_thread',
+      targetChatIdSource: 'variable',
+      targetChatVariableName: 'forum_chat_id',
+      targetChatType: 'group',
+      /** Источник ID топика: "manual" — вручную, "variable" — из переменной */
+      targetThreadIdSource: 'variable',
+      /** Имя переменной с ID топика */
+      targetThreadIdVariable: 'support_thread_id',
+    },
+  ],
+  disableNotification: false,
+};

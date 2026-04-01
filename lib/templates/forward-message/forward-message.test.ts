@@ -14,6 +14,8 @@ import {
   validParamsUserTarget,
   validParamsMixedChatTypes,
   validParamsGroupWithThread,
+  validParamsGroupWithThreadVariable,
+  validParamsVariableChatWithThreadVariable,
   forwardMessageNodeBasic,
   forwardMessageNodeLegacyTargets,
 } from './forward-message.fixture';
@@ -231,5 +233,54 @@ describe('current_message + incoming_message_trigger (source_chat_id > 0)', () =
       ],
       disableNotification: false,
     })).not.toThrow();
+  });
+});
+
+describe('targetThreadIdSource=variable — ID топика из переменной', () => {
+  it('targetThreadIdSource=variable → init_all_user_vars вызывается для получения thread_id', () => {
+    const code = generateForwardMessage(validParamsGroupWithThreadVariable);
+    expect(code).toContain('init_all_user_vars(user_id)');
+    expect(code).toContain("'support_thread_id'");
+  });
+
+  it('targetThreadIdSource=variable → _thread_var_val присутствует в коде', () => {
+    const code = generateForwardMessage(validParamsGroupWithThreadVariable);
+    expect(code).toContain('_thread_var_val');
+  });
+
+  it('targetThreadIdSource=variable → target_thread_ids заполняется из переменной', () => {
+    const code = generateForwardMessage(validParamsGroupWithThreadVariable);
+    expect(code).toContain('target_thread_ids[_normalized_target_chat_id]');
+  });
+
+  it('targetThreadIdSource=variable + targetChatIdSource=variable → оба из переменных', () => {
+    const code = generateForwardMessage(validParamsVariableChatWithThreadVariable);
+    expect(code).toContain("'forum_chat_id'");
+    expect(code).toContain("'support_thread_id'");
+    expect(code).toContain('_thread_var_val');
+  });
+
+  it('targetThreadIdSource=variable передаётся через nodeToForwardMessageParams', () => {
+    const params = nodeToForwardMessageParams({
+      id: 'fwd_thread_var',
+      type: 'forward_message',
+      position: { x: 0, y: 0 },
+      data: {
+        targetChatTargets: [{
+          id: 'r1',
+          targetChatIdSource: 'manual',
+          targetChatId: '2300967595',
+          targetChatType: 'group',
+          targetThreadIdSource: 'variable',
+          targetThreadIdVariable: 'support_thread_id',
+        }],
+      } as any,
+    });
+    expect(params.targetRecipients[0].targetThreadIdSource).toBe('variable');
+    expect(params.targetRecipients[0].targetThreadIdVariable).toBe('support_thread_id');
+  });
+
+  it('targetThreadIdSource=variable схема валидируется без ошибок', () => {
+    expect(() => forwardMessageParamsSchema.parse(validParamsGroupWithThreadVariable)).not.toThrow();
   });
 });

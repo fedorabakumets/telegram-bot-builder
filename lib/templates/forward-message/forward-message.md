@@ -37,6 +37,19 @@
 | `targetRecipients` | `ForwardMessageTargetRecipient[]` | `[]` | Получатели пересылки |
 | `disableNotification` | `boolean` | `false` | Тихая пересылка |
 
+## Параметры ForwardMessageTargetRecipient
+
+| Параметр | Тип | По умолчанию | Описание |
+|---|---|---|---|
+| `id` | `string` | - | ID получателя внутри узла |
+| `targetChatIdSource` | `'manual' \| 'variable' \| 'admin_ids'` | - | Способ указания чата назначения |
+| `targetChatId` | `string` | `''` | ID или username чата |
+| `targetChatVariableName` | `string` | `''` | Имя переменной с ID чата |
+| `targetChatType` | `'user' \| 'group'` | `'user'` | Тип получателя |
+| `targetThreadId` | `string` | `''` | ID топика (message_thread_id) для форум-групп |
+| `targetThreadIdSource` | `'manual' \| 'variable'` | `'manual'` | Источник ID топика |
+| `targetThreadIdVariable` | `string` | `''` | Имя переменной с ID топика |
+
 ## Пример
 
 ```ts
@@ -50,6 +63,13 @@ const code = generateForwardMessageFromNode(node);
 - Реальное разрешение `sourceMessageNodeId` и `last_message` опирается на наличие логов сообщений в `bot_messages`.
 - Если проект не использует логирование сообщений, генерация не ломается, но оба режима деградируют до безопасного fallback на текущее сообщение.
 - `sourceMessageNodeId` не создаёт отдельный runtime-граф зависимостей сам по себе: он использует уже сохранённые сообщения узла, если они есть в журнале.
+
+## ID топика из переменной
+
+Поле `targetThreadIdSource` позволяет брать `message_thread_id` из переменной пользователя вместо статического значения.
+Это необходимо для сценариев поддержки, где каждый пользователь имеет свой топик (`support_thread_id`).
+
+Пример: `targetThreadIdSource: 'variable'`, `targetThreadIdVariable: 'support_thread_id'`
 
 ## Структура файлов
 
