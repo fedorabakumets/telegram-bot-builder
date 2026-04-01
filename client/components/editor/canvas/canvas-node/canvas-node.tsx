@@ -468,10 +468,10 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
             : node.type === 'input'
             ? "p-6 pb-16 w-80"
             : "p-6 pb-10 w-80",
-          isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-shadow duration-300",
+          isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-all duration-200",
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
           isConnectionTarget ? "ring-4 ring-green-400/60 border-green-400 shadow-green-400/20" : "",
-          isConnectedToDragging && !isDragActive ? "ring-2 ring-violet-400/50 border-violet-400/60 shadow-violet-400/20 shadow-lg" : "",
+          isConnectedToDragging && !isDragActive ? "ring-2 ring-violet-400/60 border-violet-400 shadow-violet-500/30 shadow-xl scale-[1.02]" : "",
           onMove ? "cursor-grab" : "cursor-pointer"
         )}
         onClick={!isDragging ? onClick : undefined}
