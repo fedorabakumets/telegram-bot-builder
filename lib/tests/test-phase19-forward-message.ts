@@ -1717,6 +1717,102 @@ test('W06', 'targetThreadIdSource=variable + condition → полный сцен
   ]), 'w06'), 'w06');
 });
 
+// ════════════════════════════════════════════════════════════════════════════════
+// БЛОК X: Полный сценарий поддержки (support-forum-topic-demo)
+// ════════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок X: Полный сценарий поддержки ───────────────────────────────────');
+
+/** Строит полный граф поддержки из support-forum-topic-demo/project.json */
+function makeSupportDemoProject() {
+  return makeCleanProject([
+    // /start → проверка топика
+    makeCommandTriggerNode('cmd-support', '/start', 'cond-check-thread'),
+    makeConditionNode('cond-check-thread', 'support_thread_id', [
+      makeConditionBranch('empty', { target: 'create-support-topic' }),
+      makeConditionBranch('filled', { target: 'msg-topic-exists' }),
+    ]),
+    // Создание топика
+    {
+      id: 'create-support-topic',
+      type: 'create_forum_topic',
+      position: { x: 660, y: 150 },
+      data: {
+        forumChatIdSource: 'manual',
+        forumChatId: '-1001234567890',
+        forumChatVariableName: '',
+        topicName: 'Поддержка {user_name}',
+        topicIconColor: '9367192',
+        saveThreadIdTo: 'support_thread_id',
+        skipIfExists: true,
+        enableAutoTransition: true,
+        autoTransitionTo: 'msg-topic-created',
+      },
+    },
+    makeMessageNode('msg-topic-created', '✅ Ваш топик поддержки создан!'),
+    makeMessageNode('msg-topic-exists', 'ℹ️ У вас уже есть открытый топик поддержки.'),
+    // Автопересылка сообщений в топик
+    {
+      id: 'imt-relay',
+      type: 'incoming_message_trigger',
+      position: { x: 100, y: 600 },
+      data: { autoTransitionTo: 'fwd-to-topic', buttons: [], keyboardType: 'none' },
+    },
+    makeForwardMessageNode('fwd-to-topic', {
+      sourceMessageIdSource: 'current_message',
+      targetRecipients: [{
+        id: 'target-forum',
+        targetChatIdSource: 'manual',
+        targetChatId: '-1001234567890',
+        targetChatType: 'group',
+        targetThreadIdSource: 'variable',
+        targetThreadIdVariable: 'support_thread_id',
+      }],
+    }),
+    // /close → завершение обращения
+    makeCommandTriggerNode('cmd-close', '/close', 'cond-close-check'),
+    makeConditionNode('cond-close-check', 'support_thread_id', [
+      makeConditionBranch('filled', { target: 'msg-closed' }),
+      makeConditionBranch('empty', { target: 'msg-no-topic' }),
+    ]),
+    makeMessageNode('msg-closed', '✅ Ваше обращение завершено.'),
+    makeMessageNode('msg-no-topic', 'ℹ️ У вас нет активного обращения.'),
+  ]);
+}
+
+test('X01', 'полный сценарий поддержки синтаксически корректен', () => {
+  syntax(gen(makeSupportDemoProject(), 'x01'), 'x01');
+});
+
+test('X02', 'полный сценарий: /start → condition → create_forum_topic присутствует', () => {
+  const code = gen(makeSupportDemoProject(), 'x02');
+  ok(code.includes('await bot.create_forum_topic('), 'create_forum_topic должен быть в коде');
+  ok(code.includes('support_thread_id'), 'support_thread_id должен быть в коде');
+});
+
+test('X03', 'полный сценарий: incoming_message_trigger → forward_message с thread из переменной', () => {
+  const code = gen(makeSupportDemoProject(), 'x03');
+  ok(code.includes('_thread_var_val'), 'Получение thread_id из переменной должно быть в коде');
+  ok(code.includes("'support_thread_id'"), 'Имя переменной support_thread_id должно быть в коде');
+  ok(code.includes('await bot.forward_message('), 'bot.forward_message должен быть в коде');
+});
+
+test('X04', 'полный сценарий: /close → condition → msg-closed присутствует', () => {
+  const code = gen(makeSupportDemoProject(), 'x04');
+  ok(code.includes('handle_callback_msg_closed') || code.includes('msg-closed'), 'Обработчик msg-closed должен быть в коде');
+  ok(code.includes('handle_callback_msg_no_topic') || code.includes('msg-no-topic'), 'Обработчик msg-no-topic должен быть в коде');
+});
+
+test('X05', 'полный сценарий: два command_trigger (/start и /close) оба присутствуют', () => {
+  const code = gen(makeSupportDemoProject(), 'x05');
+  ok(code.includes('Command("start")'), '/start handler должен быть в коде');
+  ok(code.includes('Command("close")'), '/close handler должен быть в коде');
+});
+
+test('X06', 'полный сценарий с БД синтаксически корректен', () => {
+  syntax(genDB(makeSupportDemoProject(), 'x06'), 'x06');
+});
+
 const passed = results.filter((r) => r.passed).length;
 const failed = results.filter((r) => !r.passed).length;
 const total = results.length;
