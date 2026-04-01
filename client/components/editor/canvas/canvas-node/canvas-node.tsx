@@ -471,7 +471,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-all duration-200",
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
           isConnectionTarget ? "ring-4 ring-green-400/60 border-green-400 shadow-green-400/20" : "",
-          isConnectedToDragging && !isDragActive ? "ring-2 ring-violet-400/60 border-violet-400 shadow-violet-500/30 shadow-xl scale-[1.02]" : "",
+          isConnectedToDragging && !isDragActive ? "ring-2 ring-violet-400 border-violet-500 scale-[1.02]" : "",
           onMove ? "cursor-grab" : "cursor-pointer"
         )}
         onClick={!isDragging ? onClick : undefined}
@@ -483,9 +483,12 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         style={{
           position: 'relative',
           overflow: 'visible',
-          transform: isDragActive ? 'translate3d(0, 0, 0)' : undefined,
+          transform: isDragActive ? 'translate3d(0, 0, 0)' : isConnectedToDragging && !isDragActive ? 'scale(1.02)' : undefined,
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden' as any,
+          boxShadow: isConnectedToDragging && !isDragActive
+            ? '0 0 0 2px #8b5cf6, 0 0 20px 4px rgba(139, 92, 246, 0.5), 0 0 40px 8px rgba(139, 92, 246, 0.2)'
+            : undefined,
         }}
       >
         {/* Р—Р°РіРѕР»РѕРІРѕРє СѓР·Р»Р° вЂ” СЃРєСЂС‹С‚ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ, СѓР·Р»Р° СЃРѕРѕР±С‰РµРЅРёСЏ Рё СѓР·Р»Р° СѓСЃР»РѕРІРёСЏ */}
