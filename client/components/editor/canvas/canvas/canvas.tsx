@@ -869,8 +869,8 @@ export function Canvas({
     const isEmptyCanvas = target.classList.contains('canvas-grid-modern') ||
       target.closest('.canvas-grid-modern') === target;
 
-    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) ||
-      (e.button === 0 && isEmptyCanvas)) { // Middle mouse, right mouse, Alt+click, or left-click on empty canvas
+    if (e.button === 1 || (e.button === 0 && e.altKey) ||
+      (e.button === 0 && isEmptyCanvas)) { // Middle mouse, Alt+click, or left-click on empty canvas
       e.preventDefault();
       // Left-click on empty canvas without Alt: start drag-select
       if (e.button === 0 && isEmptyCanvas && !e.altKey) {
