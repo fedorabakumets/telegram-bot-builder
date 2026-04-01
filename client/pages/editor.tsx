@@ -117,6 +117,9 @@ export default function Editor() {
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
   const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /** ID узла для постоянной подсветки (держится до клика на другой узел или пустое место) */
+  const [highlightNodeId, setHighlightNodeId] = useState<string | null>(null);
+
   /** ID кнопки для скролла к ней в панели свойств */
   const [focusButtonId, setFocusButtonId] = useState<string | null>(null);
 
@@ -128,12 +131,12 @@ export default function Editor() {
    */
   const handleNodeFocus = useCallback((nodeId: string, buttonId?: string, persist?: boolean) => {
     setFocusNodeId(nodeId);
+    setHighlightNodeId(nodeId);
     setFocusButtonId(buttonId ?? null);
     if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
-    if (!persist) {
-      focusTimerRef.current = setTimeout(() => setFocusNodeId(null), 2000);
-    }
+    focusTimerRef.current = setTimeout(() => setFocusNodeId(null), 100);
     setTimeout(() => setFocusButtonId(null), 800);
+    void persist; // persist больше не нужен — highlight держится до нового клика
   }, []);
 
   // Хуки состояний
@@ -547,6 +550,15 @@ export default function Editor() {
 
   // Вычисляем selectedNode из selectedNodeId и nodes
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
+
+  /**
+   * Обёртка над setSelectedNodeId — сбрасывает highlight при клике на пустое место
+   * @param nodeId - ID выбранного узла или '' если кликнули на пустое место
+   */
+  const handleNodeSelect = useCallback((nodeId: string) => {
+    setSelectedNodeId(nodeId);
+    if (!nodeId) setHighlightNodeId(null);
+  }, [setSelectedNodeId]);
 
   // Реактивно открываем/закрываем панель свойств при выборе/снятии выбора узла
   // useLayoutEffect — синхронно до отрисовки, чтобы не было мигания пустой панели
@@ -1200,7 +1212,7 @@ export default function Editor() {
             // Существующие пропсы для совместимости
             nodes={nodes}
             selectedNodeId={selectedNodeId}
-            onNodeSelect={setSelectedNodeId}
+            onNodeSelect={handleNodeSelect}
             onNodeAdd={addNode}
             onNodeDelete={handleNodeDelete}
             onNodeDuplicate={handleNodeDuplicate}
@@ -1238,7 +1250,7 @@ export default function Editor() {
             autoFitOnLoad
             fitTrigger={fitTrigger}
             focusNodeId={focusNodeId}
-            highlightNodeId={focusNodeId}
+            highlightNodeId={highlightNodeId}
             onMoveNodeToSheet={moveNodeToSheet}
           />
         ) : currentTab === 'bot' ? (
@@ -1467,7 +1479,7 @@ export default function Editor() {
                   onBotDataUpdate={handleBotDataUpdate}
                   nodes={nodes}
                   selectedNodeId={selectedNodeId}
-                  onNodeSelect={setSelectedNodeId}
+                  onNodeSelect={handleNodeSelect}
                   onNodeAdd={addNode}
                   onNodeDelete={handleNodeDelete}
                   onNodeDuplicate={handleNodeDuplicate}
@@ -1501,7 +1513,7 @@ export default function Editor() {
                   autoFitOnLoad
                   fitTrigger={fitTrigger}
                   focusNodeId={focusNodeId}
-                  highlightNodeId={focusNodeId}
+                  highlightNodeId={highlightNodeId}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">
@@ -1625,3 +1637,5 @@ export default function Editor() {
     </>
   );
 }
+
+
