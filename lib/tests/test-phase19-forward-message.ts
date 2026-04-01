@@ -61,6 +61,10 @@ type ForwardRecipient = {
   targetChatType?: 'user' | 'group';
   /** ID топика (message_thread_id) для форум-групп */
   targetThreadId?: string;
+  /** Источник ID топика: "manual" — вручную, "variable" — из переменной */
+  targetThreadIdSource?: 'manual' | 'variable';
+  /** Имя переменной с ID топика */
+  targetThreadIdVariable?: string;
 };
 
 /** Опции построения узла пересылки сообщений. */
@@ -1599,6 +1603,118 @@ test('V04', 'current_message без linked_source_node_id тоже имеет so
     }),
   ]), 'v04');
   ok(code.includes('source_chat_id > 0'), 'Fallback source_chat_id > 0 должен быть даже без linked_source_node_id');
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// БЛОК W: targetThreadIdSource=variable — ID топика из переменной
+// ════════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок W: targetThreadIdSource=variable ───────────────────────────────');
+
+test('W01', 'targetThreadIdSource=variable → init_all_user_vars вызывается для получения thread_id', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      targetRecipients: [{
+        id: 'r1',
+        targetChatIdSource: 'manual',
+        targetChatId: '2300967595',
+        targetChatType: 'group',
+        targetThreadIdSource: 'variable',
+        targetThreadIdVariable: 'support_thread_id',
+      }],
+    }),
+  ]), 'w01');
+  ok(code.includes('init_all_user_vars(user_id)'), 'init_all_user_vars должен вызываться для получения thread_id из переменной');
+  ok(code.includes("'support_thread_id'"), 'Имя переменной support_thread_id должно быть в коде');
+});
+
+test('W02', 'targetThreadIdSource=variable → _thread_var_val присутствует в коде', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      targetRecipients: [{
+        id: 'r1',
+        targetChatIdSource: 'manual',
+        targetChatId: '2300967595',
+        targetChatType: 'group',
+        targetThreadIdSource: 'variable',
+        targetThreadIdVariable: 'support_thread_id',
+      }],
+    }),
+  ]), 'w02');
+  ok(code.includes('_thread_var_val'), '_thread_var_val должен присутствовать в коде');
+});
+
+test('W03', 'targetThreadIdSource=variable → target_thread_ids заполняется из переменной', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      targetRecipients: [{
+        id: 'r1',
+        targetChatIdSource: 'manual',
+        targetChatId: '2300967595',
+        targetChatType: 'group',
+        targetThreadIdSource: 'variable',
+        targetThreadIdVariable: 'support_thread_id',
+      }],
+    }),
+  ]), 'w03');
+  ok(code.includes('target_thread_ids[_normalized_target_chat_id]'), 'target_thread_ids должен заполняться из переменной');
+});
+
+test('W04', 'targetThreadIdSource=variable + targetChatIdSource=variable → оба из переменных', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      targetRecipients: [{
+        id: 'r1',
+        targetChatIdSource: 'variable',
+        targetChatVariableName: 'forum_chat_id',
+        targetChatType: 'group',
+        targetThreadIdSource: 'variable',
+        targetThreadIdVariable: 'support_thread_id',
+      }],
+    }),
+  ]), 'w04');
+  ok(code.includes("'forum_chat_id'"), 'forum_chat_id должен быть в коде');
+  ok(code.includes("'support_thread_id'"), 'support_thread_id должен быть в коде');
+  ok(code.includes('_thread_var_val'), '_thread_var_val должен быть в коде');
+});
+
+test('W05', 'targetThreadIdSource=variable синтаксически корректен', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/support', 'fwd1'),
+    makeForwardMessageNode('fwd1', {
+      sourceMessageIdSource: 'current_message',
+      targetRecipients: [{
+        id: 'r1',
+        targetChatIdSource: 'manual',
+        targetChatId: '2300967595',
+        targetChatType: 'group',
+        targetThreadIdSource: 'variable',
+        targetThreadIdVariable: 'support_thread_id',
+      }],
+    }),
+  ]), 'w05'), 'w05');
+});
+
+test('W06', 'targetThreadIdSource=variable + condition → полный сценарий поддержки синтаксически корректен', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'cond1'),
+    makeConditionNode('cond1', 'support_thread_id', [
+      makeConditionBranch('filled', { target: 'fwd1' }),
+      makeConditionBranch('empty', { target: 'msg1' }),
+    ]),
+    makeForwardMessageNode('fwd1', {
+      sourceMessageIdSource: 'current_message',
+      targetRecipients: [{
+        id: 'r1',
+        targetChatIdSource: 'manual',
+        targetChatId: '2300967595',
+        targetChatType: 'group',
+        targetThreadIdSource: 'variable',
+        targetThreadIdVariable: 'support_thread_id',
+      }],
+    }),
+    makeMessageNode('msg1', 'Сначала создайте топик'),
+  ]), 'w06'), 'w06');
 });
 
 const passed = results.filter((r) => r.passed).length;
