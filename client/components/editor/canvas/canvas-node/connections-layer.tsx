@@ -147,6 +147,8 @@ interface ConnectionsLayerProps {
   onConnectionDelete?: (fromId: string, toId: string, type: ConnectionType) => void;
   /** Y-смещения портов кнопок от верха узла (buttonId → { x, y } в canvas-координатах) */
   buttonPortYOffsets?: Map<string, { x: number; y: number }>;
+  /** ID узла, который сейчас перетаскивается — для подсветки связанных линий */
+  draggingNodeId?: string | null;
 }
 
 /** На сколько px не доходим до края узла — ровно refX маркера, чтобы кончик стрелки лёг на край */
@@ -367,7 +369,7 @@ export function getRenderableConnections(
  * @param props - Свойства компонента
  * @returns SVG элемент с линиями соединений или null если нет соединений
  */
-export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonPortYOffsets }: ConnectionsLayerProps) {
+export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonPortYOffsets, draggingNodeId }: ConnectionsLayerProps) {
   /** Ширина узла по умолчанию если ResizeObserver ещё не сработал */
   const DEFAULT_WIDTH = 320;
   /** border-box высота узла по умолчанию (до первого срабатывания ResizeObserver) */
@@ -400,6 +402,14 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
       }}
     >
       <defs>
+        {/* Фильтр свечения для подсветки активных соединений */}
+        <filter id="connection-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
         {/* Стрелки для каждого типа соединения */}
         {Object.entries(CONNECTION_STYLES).map(([, style]) => (
           <marker
@@ -415,6 +425,24 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
               points="0 0, 10 3.5, 0 7"
               fill={style.color}
               opacity={style.opacity}
+            />
+          </marker>
+        ))}
+        {/* Подсвеченные стрелки для активных соединений */}
+        {Object.entries(CONNECTION_STYLES).map(([, style]) => (
+          <marker
+            key={`${style.markerId}-active`}
+            id={`${style.markerId}-active`}
+            markerWidth="10"
+            markerHeight="7"
+            refX="9"
+            refY="3.5"
+            orient="auto"
+          >
+            <polygon
+              points="0 0, 10 3.5, 0 7"
+              fill={style.color}
+              opacity={1}
             />
           </marker>
         ))}
@@ -442,6 +470,7 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
         const style = CONNECTION_STYLES[type];
         const connKey = `${fromId}->${toId}-${type}-${buttonId ?? 'default'}`;
         const isHovered = hoveredKey === connKey;
+        const isActive = draggingNodeId != null && (fromId === draggingNodeId || toId === draggingNodeId);
 
         return (
           <g
@@ -456,18 +485,31 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
               fill="none"
               stroke={style.color}
               strokeWidth={style.strokeWidth + 2}
-              strokeOpacity={0.1}
+              strokeOpacity={isActive ? 0.35 : 0.1}
               strokeDasharray={style.dashArray || undefined}
             />
+            {/* Glow-слой при перетаскивании */}
+            {isActive && (
+              <path
+                d={d}
+                fill="none"
+                stroke={style.color}
+                strokeWidth={style.strokeWidth + 6}
+                strokeOpacity={0.25}
+                strokeDasharray={style.dashArray || undefined}
+                filter="url(#connection-glow)"
+              />
+            )}
             {/* Основная линия */}
             <path
               d={d}
               fill="none"
               stroke={style.color}
-              strokeWidth={isHovered ? style.strokeWidth + 1 : style.strokeWidth}
-              strokeOpacity={isHovered ? 1 : style.opacity}
+              strokeWidth={isActive ? style.strokeWidth + 2 : isHovered ? style.strokeWidth + 1 : style.strokeWidth}
+              strokeOpacity={isActive ? 1 : isHovered ? 1 : style.opacity}
               strokeDasharray={style.dashArray || undefined}
-              markerEnd={`url(#${style.markerId})`}
+              markerEnd={`url(#${isActive ? `${style.markerId}-active` : style.markerId})`}
+              style={isActive ? { transition: 'stroke-opacity 0.2s, stroke-width 0.2s' } : undefined}
             />
             {/* Невидимая широкая зона для hover */}
             <path

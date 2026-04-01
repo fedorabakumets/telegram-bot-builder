@@ -229,6 +229,9 @@ export function Canvas({
   // Состояние для хранения реальных размеров узлов
   const [nodeSizes, setNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
 
+  // ID узла, который сейчас перетаскивается (для подсветки связанных узлов и линий)
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+
   // Система истории действий - используем внешнюю историю если передана, иначе локальную
   const [localActionHistory, setLocalActionHistory] = useState<Action[]>([]);
   const actionHistory = externalActionHistory || localActionHistory;
@@ -1313,8 +1316,8 @@ export function Canvas({
               onNodeDuplicate(nodeId, getPastePosition());
             } : undefined}
             onNodeMove={onNodeMove}
-            onNodeMoveStart={onNodeMoveStart}
-            onNodeMoveEnd={onNodeMoveEnd}
+            onNodeMoveStart={(nodeId) => { setDraggingNodeId(nodeId); onNodeMoveStart?.(nodeId); }}
+            onNodeMoveEnd={(nodeId) => { setDraggingNodeId(null); onNodeMoveEnd?.(nodeId); }}
             setIsNodeBeingDragged={setIsNodeBeingDragged}
             onSizeChange={handleNodeSizeChange}
             nodeSizes={nodeSizes}
@@ -1322,6 +1325,7 @@ export function Canvas({
             draftConnection={draftConnection}
             hoveredTargetNodeId={hoveredTargetNodeId}
             onConnectionDelete={handleConnectionDelete}
+            draggingNodeId={draggingNodeId}
           />
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">

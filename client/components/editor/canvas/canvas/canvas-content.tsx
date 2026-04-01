@@ -11,7 +11,7 @@ import { Node } from '@/types/bot';
 import { BotDataWithSheets } from '@shared/schema';
 import { PortType } from '../canvas-node/port-colors';
 import { DraftConnection } from './use-connection-drag';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 /**
  * Свойства компонента содержимого холста
@@ -59,6 +59,8 @@ interface CanvasContentProps {
   hoveredTargetNodeId?: string | null;
   /** Колбэк удаления соединения */
   onConnectionDelete?: (fromId: string, toId: string, type: string) => void;
+  /** ID узла, который сейчас перетаскивается — для подсветки связанных линий */
+  draggingNodeId?: string | null;
 }
 
 /**
@@ -87,6 +89,7 @@ export function CanvasContent({
   draftConnection,
   hoveredTargetNodeId,
   onConnectionDelete,
+  draggingNodeId,
 }: CanvasContentProps) {
   /**
    * Получение всех узлов со всех листов для отображения связей
@@ -101,6 +104,43 @@ export function CanvasContent({
   };
 
   const allNodes = botData ? getAllNodesFromAllSheets() : nodes;
+
+  /**
+   * Вычисляем множество ID узлов, связанных с перетаскиваемым узлом.
+   */
+  const connectedTodragging = useMemo<Set<string>>(() => {
+    if (!draggingNodeId) return new Set();
+    const connected = new Set<string>();
+    nodes.forEach(n => {
+      // Автопереход
+      if (n.data?.enableAutoTransition && n.data?.autoTransitionTo) {
+        const to = n.data.autoTransitionTo as string;
+        if (n.id === draggingNodeId) connected.add(to);
+        if (to === draggingNodeId) connected.add(n.id);
+      }
+      // Кнопки goto
+      const buttons: any[] = n.data?.buttons || [];
+      buttons.forEach((btn: any) => {
+        if (btn.action === 'goto' && btn.target) {
+          if (n.id === draggingNodeId) connected.add(btn.target);
+          if (btn.target === draggingNodeId) connected.add(n.id);
+        }
+      });
+      // Input target
+      const inputTarget = (n.data as any)?.inputTargetNodeId;
+      if (inputTarget) {
+        if (n.id === draggingNodeId) connected.add(inputTarget);
+        if (inputTarget === draggingNodeId) connected.add(n.id);
+      }
+      // Trigger next
+      if ((n.type === 'command_trigger' || n.type === 'text_trigger') && n.data?.autoTransitionTo) {
+        const to = n.data.autoTransitionTo as string;
+        if (n.id === draggingNodeId) connected.add(to);
+        if (to === draggingNodeId) connected.add(n.id);
+      }
+    });
+    return connected;
+  }, [draggingNodeId, nodes]);
 
   /**
    * Карта позиций портов кнопок относительно верха/левого края узла.
@@ -129,7 +169,7 @@ export function CanvasContent({
       }}
     >
       {/* SVG-слой соединений — рисуется под нодами */}
-      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} />
+      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draggingNodeId} />
 
       {/* SVG-слой временного соединения при drag-to-connect */}
       <DraftConnectionLayer draftConnection={draftConnection ?? null} />
@@ -155,6 +195,7 @@ export function CanvasContent({
           onPortMouseDown={onPortMouseDown}
           isConnectionTarget={hoveredTargetNodeId === node.id}
           isConnectionSource={draftConnection?.fromNodeId === node.id}
+          isConnectedToDragging={connectedTodragging.has(node.id)}
           onButtonPortMount={handleButtonPortMount}
         />
       ))}

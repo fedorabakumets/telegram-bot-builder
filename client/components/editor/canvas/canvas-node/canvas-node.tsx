@@ -82,8 +82,10 @@ interface CanvasNodeProps {
   ) => void;
   /** РЈР·РµР» СЏРІР»СЏРµС‚СЃСЏ РёСЃС‚РѕС‡РЅРёРєРѕРј Р°РєС‚РёРІРЅРѕРіРѕ drag-СЃРѕРµРґРёРЅРµРЅРёСЏ (РґРµСЂР¶РёС‚ РїРѕСЂС‚С‹ РІРёРґРёРјС‹РјРё) */
   isConnectionSource?: boolean;
-  /** РџРѕРґСЃРІРµС‚РєР° СѓР·Р»Р° РєР°Рє РґРѕРїСѓСЃС‚РёРјРѕР№ С†РµР»Рё РїСЂРё drag-to-connect */
+  /** Подсветка узла как допустимой цели при drag-to-connect */
   isConnectionTarget?: boolean;
+  /** Узел связан с перетаскиваемым узлом */
+  isConnectedToDragging?: boolean;
   /**
    * РљРѕР»Р±СЌРє, РІС‹Р·С‹РІР°РµРјС‹Р№ РїСЂРё РјРѕРЅС‚РёСЂРѕРІР°РЅРёРё РїРѕСЂС‚Р° РєРЅРѕРїРєРё.
    * РџРµСЂРµРґР°С‘С‚ buttonId Рё РїРѕР·РёС†РёСЋ С†РµРЅС‚СЂР° РїРѕСЂС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper-div СѓР·Р»Р°.
@@ -107,7 +109,7 @@ interface CanvasNodeProps {
  * @param {CanvasNodeProps} props - РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р°
  * @returns {JSX.Element} РљРѕРјРїРѕРЅРµРЅС‚ СѓР·Р»Р° РЅР° С…РѕР»СЃС‚Рµ
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, onButtonPortMount }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, onButtonPortMount }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref РґР»СЏ dragOffset вЂ” РїРѕР·РІРѕР»СЏРµС‚ С‡РёС‚Р°С‚СЊ Р°РєС‚СѓР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РІ handleMouseMove
@@ -469,6 +471,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-shadow duration-300",
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
           isConnectionTarget ? "ring-4 ring-green-400/60 border-green-400 shadow-green-400/20" : "",
+          isConnectedToDragging && !isDragActive ? "ring-2 ring-violet-400/50 border-violet-400/60 shadow-violet-400/20 shadow-lg" : "",
           onMove ? "cursor-grab" : "cursor-pointer"
         )}
         onClick={!isDragging ? onClick : undefined}
