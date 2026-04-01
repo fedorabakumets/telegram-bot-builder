@@ -87,6 +87,8 @@ type ForwardNodeOptions = {
   targetRecipients?: ForwardRecipient[];
   /** Признак тихой отправки без уведомления. */
   disableNotification?: boolean;
+  /** Скрыть автора — использует copy_message вместо forward_message. */
+  hideAuthor?: boolean;
 };
 
 /** Опции построения command_trigger. */
@@ -318,6 +320,7 @@ function makeForwardMessageNode(id: string, options: ForwardNodeOptions = {}) {
       targetChatVariableName: options.targetChatVariableName ?? '',
       targetChatTargets: options.targetRecipients ?? [],
       disableNotification: options.disableNotification ?? false,
+      hideAuthor: options.hideAuthor ?? false,
       buttons: [],
       keyboardType: 'none',
     },
@@ -1715,6 +1718,75 @@ test('W06', 'targetThreadIdSource=variable + condition → полный сцен
     }),
     makeMessageNode('msg1', 'Сначала создайте топик'),
   ]), 'w06'), 'w06');
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// БЛОК Y: hideAuthor — пересылка без ссылки на автора (copy_message)
+// ════════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок Y: hideAuthor — copy_message вместо forward_message ────────────');
+
+test('Y01', 'hideAuthor=true генерирует bot.copy_message вместо bot.forward_message', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', { hideAuthor: true }),
+  ]), 'y01');
+  ok(code.includes('await bot.copy_message('), 'При hideAuthor=true должен генерироваться bot.copy_message');
+  ok(!code.includes('await bot.forward_message('), 'При hideAuthor=true не должно быть bot.forward_message');
+});
+
+test('Y02', 'hideAuthor=false (дефолт) генерирует bot.forward_message', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', { hideAuthor: false }),
+  ]), 'y02');
+  ok(code.includes('await bot.forward_message('), 'При hideAuthor=false должен генерироваться bot.forward_message');
+  ok(!code.includes('await bot.copy_message('), 'При hideAuthor=false не должно быть bot.copy_message');
+});
+
+test('Y03', 'hideAuthor не указан → дефолт false → генерируется bot.forward_message', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1'),
+  ]), 'y03');
+  ok(code.includes('await bot.forward_message('), 'По умолчанию должен генерироваться bot.forward_message');
+  ok(!code.includes('await bot.copy_message('), 'По умолчанию не должно быть bot.copy_message');
+});
+
+test('Y04', 'hideAuthor=true синтаксически корректен', () => {
+  syntax(gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', { hideAuthor: true }),
+  ]), 'y04'), 'y04');
+});
+
+test('Y05', 'hideAuthor=true + disableNotification=true корректно комбинируются', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', { hideAuthor: true, disableNotification: true }),
+  ]), 'y05');
+  ok(code.includes('await bot.copy_message('), 'Должен быть bot.copy_message');
+  ok(code.includes('disable_notification=True'), 'disable_notification=True должен присутствовать');
+  syntax(code, 'y05');
+});
+
+test('Y06', 'hideAuthor=true + manual recipient содержит copy_message с правильным chat_id', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      hideAuthor: true,
+      targetRecipients: [
+        makeRecipient('r1', 'manual', { targetChatId: '123456789', targetChatType: 'user' }),
+      ],
+    }),
+  ]), 'y06');
+  ok(code.includes('await bot.copy_message('), 'bot.copy_message должен быть в коде');
+  ok(code.includes('chat_id=target_chat_id'), 'chat_id должен передаваться в copy_message');
+});
+
+test('Y07', 'hideAuthor=true + variable recipient синтаксически корректен', () => {
+  syntax(gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      hideAuthor: true,
+      targetRecipients: [
+        makeRecipient('r1', 'variable', { targetChatVariableName: 'support_user_id' }),
+      ],
+    }),
+  ]), 'y07'), 'y07');
 });
 
 // ════════════════════════════════════════════════════════════════════════════════
