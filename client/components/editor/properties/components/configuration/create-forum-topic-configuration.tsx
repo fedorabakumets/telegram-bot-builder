@@ -52,11 +52,11 @@ export function CreateForumTopicConfiguration({ selectedNode, onNodeUpdate }: Cr
 
           {chatIdSource === 'manual' && (
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-teal-700 dark:text-teal-300">ID группы</Label>
+              <Label className="text-xs font-medium text-teal-700 dark:text-teal-300">ID или username группы</Label>
               <Input
                 value={data.forumChatId ?? ''}
                 onChange={(e) => update({ forumChatId: e.target.value })}
-                placeholder="-1001234567890"
+                placeholder="2300967595 или @group_name"
                 className="bg-white/60 dark:bg-slate-950/60 border-teal-200/50 dark:border-teal-800/50"
               />
             </div>
