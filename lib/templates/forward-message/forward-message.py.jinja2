@@ -256,7 +256,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     target_chat_ids, target_thread_ids = await _resolve_forward_message_targets_{{ safeName }}(callback_query)
 
     logging.info(
-        f"forward_message node {{ nodeId }} triggered by {user_id}; source_chat_id={source_chat_id}, source_message_id={source_message_id}, targets={target_chat_ids}"
+        f"forward_message node {{ nodeId }} triggered by {user_id}; source_chat_id={source_chat_id}, source_message_id={source_message_id}, targets={target_chat_ids}, thread_ids={target_thread_ids}"
     )
 
     if not target_chat_ids:
