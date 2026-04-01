@@ -240,8 +240,8 @@ function SheetAccordionContent({ nodes, searchQuery, onSearchChange }: SheetAcco
                       : getNodeTypeLabel(node.type)}
                   </span>
                   {shortContent && (
-                    <span className="truncate opacity-70">
-                      {shortContent.length > 30 ? shortContent.slice(0, 30) + '…' : shortContent}
+                    <span className="truncate opacity-70 min-w-0">
+                      {shortContent}
                     </span>
                   )}
                 </div>
