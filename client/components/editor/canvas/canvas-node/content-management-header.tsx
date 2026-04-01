@@ -100,6 +100,10 @@ export function ContentManagementHeader({ node, type }: ContentManagementHeaderP
           {/* Цели */}
           {targets.length > 0 && (
             <span className="flex flex-col gap-1 border-t border-amber-800/20 pt-1">
+              <span className="flex items-center gap-1.5">
+                <i className="fas fa-paper-plane text-amber-500/70 text-[10px]" />
+                <span className="text-[10px] text-slate-400">чат назначения:</span>
+              </span>
               {targets.map((t: any, i: number) => {
                 const icon = targetTypeIcon[t.targetChatType] ?? 'fa-paper-plane';
                 const label =
