@@ -24,7 +24,7 @@ export function GroupMessageTriggerPreview({ node }: GroupMessageTriggerPreviewP
         <div className="w-5 h-5 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0">
           <i className="fas fa-comments text-violet-400 text-[10px]" />
         </div>
-        <span className="text-xs font-semibold text-violet-300">Сообщение в теме группы</span>
+        <span className="text-xs font-semibold text-violet-300">Триггер входящего сообщения в теме группы</span>
       </div>
 
       {/* ID группы */}
