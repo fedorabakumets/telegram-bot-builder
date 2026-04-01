@@ -168,7 +168,7 @@ export function CanvasContent({
       }}
     >
       {/* SVG-слой соединений — рисуется под нодами */}
-      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draggingNodeId ?? hoveredNodeId} onConnectionHover={handleConnectionHover} />
+      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draftConnection ? null : (draggingNodeId ?? hoveredNodeId)} onConnectionHover={draftConnection ? undefined : handleConnectionHover} />
 
       {/* SVG-слой временного соединения при drag-to-connect */}
       <DraftConnectionLayer draftConnection={draftConnection ?? null} />
@@ -194,13 +194,13 @@ export function CanvasContent({
           onPortMouseDown={onPortMouseDown}
           isConnectionTarget={hoveredTargetNodeId === node.id}
           isConnectionSource={draftConnection?.fromNodeId === node.id}
-          isConnectedToDragging={connectedTodragging.has(node.id)}
-          isHoveredByConnection={
+          isConnectedToDragging={!draftConnection && connectedTodragging.has(node.id)}
+          isHoveredByConnection={!draftConnection && (
             hoveredConnectionNodes.fromId === node.id ||
             hoveredConnectionNodes.toId === node.id ||
             (connectedToHovered.has(node.id) && node.id !== hoveredNodeId && !connectedTodragging.has(node.id))
-          }
-          onHover={setHoveredNodeId}
+          )}
+          onHover={draftConnection ? undefined : setHoveredNodeId}
           onButtonPortMount={handleButtonPortMount}
         />
       ))}
