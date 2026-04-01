@@ -181,9 +181,10 @@ async def _resolve_forward_message_source_{{ safeName }}(callback_query: types.C
 
 
 async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.CallbackQuery):
-    """Собирает список уникальных чатов назначения."""
+    """Собирает список уникальных чатов назначения с опциональным thread_id."""
     user_id = callback_query.from_user.id
     target_chat_ids = []
+    target_thread_ids = {}
     _all_vars = None
 
 {% for recipient in targetRecipients %}
@@ -205,6 +206,14 @@ async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.
             _normalized_target_chat_id = _raw_target_chat_id
         if _normalized_target_chat_id not in target_chat_ids:
             target_chat_ids.append(_normalized_target_chat_id)
+{%- if recipient.targetThreadId %}
+            _thread_id_raw = {{ recipient.targetThreadId | escape_python_string }}
+            if _thread_id_raw:
+                try:
+                    target_thread_ids[_normalized_target_chat_id] = int(_thread_id_raw)
+                except (TypeError, ValueError):
+                    pass
+{%- endif %}
 {% else %}
     _raw_target_chat_id = {{ recipient.targetChatId | escape_python_string }}
     if _raw_target_chat_id:
@@ -216,10 +225,18 @@ async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.
             _normalized_target_chat_id = _raw_target_chat_id
         if _normalized_target_chat_id not in target_chat_ids:
             target_chat_ids.append(_normalized_target_chat_id)
+{%- if recipient.targetThreadId %}
+            _thread_id_raw = {{ recipient.targetThreadId | escape_python_string }}
+            if _thread_id_raw:
+                try:
+                    target_thread_ids[_normalized_target_chat_id] = int(_thread_id_raw)
+                except (TypeError, ValueError):
+                    pass
+{%- endif %}
 {% endif %}
 {% endfor %}
 
-    return target_chat_ids
+    return target_chat_ids, target_thread_ids
 
 
 @dp.callback_query(lambda c: c.data == "{{ nodeId }}")
@@ -227,7 +244,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     """Пересылает сообщение в один или несколько чатов назначения."""
     user_id = callback_query.from_user.id
     source_chat_id, source_message_id = await _resolve_forward_message_source_{{ safeName }}(callback_query)
-    target_chat_ids = await _resolve_forward_message_targets_{{ safeName }}(callback_query)
+    target_chat_ids, target_thread_ids = await _resolve_forward_message_targets_{{ safeName }}(callback_query)
 
     logging.info(
         f"forward_message node {{ nodeId }} triggered by {user_id}; source_chat_id={source_chat_id}, source_message_id={source_message_id}, targets={target_chat_ids}"
@@ -244,6 +261,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
                 chat_id=target_chat_id,
                 from_chat_id=source_chat_id,
                 message_id=source_message_id,
+                message_thread_id=target_thread_ids.get(target_chat_id),
                 disable_notification={{ disableNotification | to_python_boolean }},
             )
             sent_count += 1

@@ -124,3 +124,20 @@ export const validParamsMixedChatTypes: ForwardMessageTemplateParams = {
   ],
   disableNotification: false,
 };
+
+/** Параметры: группа с указанным топиком (message_thread_id) */
+export const validParamsGroupWithThread: ForwardMessageTemplateParams = {
+  nodeId: 'forward_thread',
+  safeName: 'forward_thread',
+  sourceMessageIdSource: 'current_message',
+  targetRecipients: [
+    {
+      id: 'target_thread',
+      targetChatIdSource: 'manual',
+      targetChatId: '2300967595',
+      targetChatType: 'group',
+      targetThreadId: '615',
+    },
+  ],
+  disableNotification: false,
+};

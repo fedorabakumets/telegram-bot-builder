@@ -59,6 +59,8 @@ type ForwardRecipient = {
   targetChatVariableName?: string;
   /** Тип получателя: "user" — пользователь, "group" — группа или канал */
   targetChatType?: 'user' | 'group';
+  /** ID топика (message_thread_id) для форум-групп */
+  targetThreadId?: string;
 };
 
 /** Опции построения узла пересылки сообщений. */
@@ -283,7 +285,7 @@ function makeButton(id: string, text: string, target: string) {
 function makeRecipient(
   id: string,
   targetChatIdSource: ForwardTargetMode,
-  data: { targetChatId?: string; targetChatVariableName?: string; targetChatType?: 'user' | 'group' } = {},
+  data: { targetChatId?: string; targetChatVariableName?: string; targetChatType?: 'user' | 'group'; targetThreadId?: string } = {},
 ): ForwardRecipient {
   return {
     id,
@@ -291,6 +293,7 @@ function makeRecipient(
     targetChatId: data.targetChatId ?? '',
     targetChatVariableName: data.targetChatVariableName ?? '',
     targetChatType: data.targetChatType ?? 'user',
+    targetThreadId: data.targetThreadId,
   };
 }
 
@@ -1474,6 +1477,70 @@ test('T10', 'targetChatType=group + variable → нормализация при
     }),
   ]), 't10');
   ok(code.includes('-100{_normalized_target_chat_id}'), '-100 нормализация должна быть в variable-блоке');
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// БЛОК U: targetThreadId — пересылка в топик форум-группы
+// ════════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок U: targetThreadId — пересылка в топик форум-группы ────────────');
+
+test('U01', 'targetThreadId set → target_thread_ids словарь присутствует в коде', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      targetRecipients: [makeRecipient('r1', 'manual', { targetChatId: '2300967595', targetChatType: 'group', targetThreadId: '615' })],
+    }),
+  ]), 'u01');
+  ok(code.includes('target_thread_ids'), 'target_thread_ids должен быть в коде при заданном targetThreadId');
+  ok(code.includes("'615'"), 'thread_id 615 должен быть встроен в код');
+});
+
+test('U02', 'targetThreadId set → message_thread_id передаётся в bot.forward_message', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      targetRecipients: [makeRecipient('r1', 'manual', { targetChatId: '2300967595', targetChatType: 'group', targetThreadId: '615' })],
+    }),
+  ]), 'u02');
+  ok(code.includes('message_thread_id=target_thread_ids.get(target_chat_id)'), 'message_thread_id должен передаваться в bot.forward_message');
+});
+
+test('U03', 'targetThreadId пустой → target_thread_ids остаётся пустым', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      targetRecipients: [makeRecipient('r1', 'manual', { targetChatId: '2300967595', targetChatType: 'group' })],
+    }),
+  ]), 'u03');
+  ok(code.includes('target_thread_ids = {}'), 'target_thread_ids должен инициализироваться пустым словарём');
+});
+
+test('U04', 'targetThreadId set → синтаксически корректен', () => {
+  syntax(gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      targetRecipients: [makeRecipient('r1', 'manual', { targetChatId: '2300967595', targetChatType: 'group', targetThreadId: '615' })],
+    }),
+  ]), 'u04'), 'u04');
+});
+
+test('U05', 'targetThreadId не задан → синтаксически корректен', () => {
+  syntax(gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      targetRecipients: [makeRecipient('r1', 'manual', { targetChatId: '2300967595', targetChatType: 'group' })],
+    }),
+  ]), 'u05'), 'u05');
+});
+
+test('U06', 'несколько получателей: один с threadId, один без → оба корректно обрабатываются', () => {
+  const code = gen(makeCleanProject([
+    makeForwardMessageNode('fwd1', {
+      targetRecipients: [
+        makeRecipient('r1', 'manual', { targetChatId: '2300967595', targetChatType: 'group', targetThreadId: '615' }),
+        makeRecipient('r2', 'manual', { targetChatId: '-1009999999', targetChatType: 'group' }),
+      ],
+    }),
+  ]), 'u06');
+  ok(code.includes("'615'"), 'thread_id 615 должен быть в коде');
+  ok(code.includes('message_thread_id=target_thread_ids.get(target_chat_id)'), 'message_thread_id должен передаваться');
+  syntax(code, 'u06');
 });
 
 const passed = results.filter((r) => r.passed).length;

@@ -22,6 +22,8 @@ export const forwardMessageTargetRecipientSchema = z.object({
   targetChatVariableName: z.string().optional().default(''),
   /** Тип получателя: "user" — пользователь, "group" — группа или канал */
   targetChatType: z.enum(['user', 'group']).optional().default('user'),
+  /** ID топика (message_thread_id) для форум-групп */
+  targetThreadId: z.string().optional().default(''),
 });
 
 /** Схема параметров шаблона forward_message */

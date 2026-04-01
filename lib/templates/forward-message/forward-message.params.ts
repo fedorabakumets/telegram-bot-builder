@@ -20,6 +20,8 @@ export interface ForwardMessageTargetRecipient {
   targetChatVariableName?: string;
   /** Тип получателя: "user" — пользователь, "group" — группа или канал */
   targetChatType?: 'user' | 'group';
+  /** ID топика (message_thread_id) для форум-групп */
+  targetThreadId?: string;
 }
 
 /** Параметры шаблона forward_message */

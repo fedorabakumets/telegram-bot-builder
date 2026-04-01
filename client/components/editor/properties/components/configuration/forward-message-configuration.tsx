@@ -16,6 +16,8 @@ interface ForwardMessageTargetRecipient {
   targetChatIdSource: TargetChatMode;
   targetChatId?: string;
   targetChatVariableName?: string;
+  targetChatType?: 'user' | 'group';
+  targetThreadId?: string;
 }
 
 interface ForwardMessageConfigurationProps {
@@ -33,6 +35,8 @@ const createTargetRecipient = (mode: TargetChatMode = 'manual'): ForwardMessageT
   targetChatIdSource: mode,
   targetChatId: '',
   targetChatVariableName: '',
+  targetChatType: 'user',
+  targetThreadId: '',
 });
 
 const normalizeTargetRecipient = (
@@ -44,6 +48,7 @@ const normalizeTargetRecipient = (
   targetChatId: typeof recipient.targetChatId === 'string' ? recipient.targetChatId : '',
   targetChatVariableName: typeof recipient.targetChatVariableName === 'string' ? recipient.targetChatVariableName : '',
   targetChatType: recipient.targetChatType === 'group' ? 'group' : 'user',
+  targetThreadId: typeof recipient.targetThreadId === 'string' ? recipient.targetThreadId : '',
 });
 
 const getTargetRecipients = (data: any): ForwardMessageTargetRecipient[] => {
@@ -262,6 +267,22 @@ export function ForwardMessageConfiguration({
                       placeholder={recipient.targetChatType === 'group' ? '2300967595 или @channel_name' : '123456789 или @username'}
                       className="bg-white/60 dark:bg-slate-950/60 border-sky-200/50 dark:border-sky-800/50"
                     />
+                    {recipient.targetChatType === 'group' && (
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-sky-700 dark:text-sky-300">
+                          ID топика (необязательно)
+                        </Label>
+                        <Input
+                          value={recipient.targetThreadId || ''}
+                          onChange={(e) => updateRecipient(index, { targetThreadId: e.target.value })}
+                          placeholder="615"
+                          className="bg-white/60 dark:bg-slate-950/60 border-sky-200/50 dark:border-sky-800/50"
+                        />
+                        <div className="text-xs text-sky-600/70 dark:text-sky-400/70">
+                          Для форум-групп. Найти в ссылке: t.me/c/GROUP_ID/TOPIC_ID/MSG_ID
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

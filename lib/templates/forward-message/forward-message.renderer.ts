@@ -35,6 +35,7 @@ function normalizeRecipient(recipient: unknown, index: number): ForwardMessageTa
     targetChatId?: unknown;
     targetChatVariableName?: unknown;
     targetChatType?: unknown;
+    targetThreadId?: unknown;
   } | null | undefined;
 
   return {
@@ -43,6 +44,7 @@ function normalizeRecipient(recipient: unknown, index: number): ForwardMessageTa
     targetChatId: typeof rawRecipient?.targetChatId === 'string' ? rawRecipient.targetChatId : '',
     targetChatVariableName: typeof rawRecipient?.targetChatVariableName === 'string' ? rawRecipient.targetChatVariableName : '',
     targetChatType: rawRecipient?.targetChatType === 'group' ? 'group' : 'user',
+    targetThreadId: typeof rawRecipient?.targetThreadId === 'string' ? rawRecipient.targetThreadId : '',
   };
 }
 
@@ -61,6 +63,7 @@ function collectRecipients(data: any): ForwardMessageTargetRecipient[] {
         targetChatId: data?.targetChatId,
         targetChatVariableName: data?.targetChatVariableName,
         targetChatType: data?.targetChatType,
+        targetThreadId: data?.targetThreadId,
       },
       0
     ),

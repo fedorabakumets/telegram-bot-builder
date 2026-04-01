@@ -13,6 +13,7 @@ import {
   validParamsGroupTarget,
   validParamsUserTarget,
   validParamsMixedChatTypes,
+  validParamsGroupWithThread,
   forwardMessageNodeBasic,
   forwardMessageNodeLegacyTargets,
 } from './forward-message.fixture';
@@ -138,5 +139,49 @@ describe('targetChatType — нормализация ID группы/канал
     });
     expect(code).toContain("if 'group' == 'group'");
     expect(code).toContain("'@mychannel'");
+  });
+});
+
+describe('targetThreadId — пересылка в топик форум-группы', () => {
+  it('targetThreadId set → message_thread_id присутствует в коде', () => {
+    const code = generateForwardMessage(validParamsGroupWithThread);
+    expect(code).toContain('target_thread_ids');
+    expect(code).toContain("'615'");
+  });
+
+  it('targetThreadId set → message_thread_id передаётся в bot.forward_message', () => {
+    const code = generateForwardMessage(validParamsGroupWithThread);
+    expect(code).toContain('message_thread_id=target_thread_ids.get(target_chat_id)');
+  });
+
+  it('targetThreadId пустой → target_thread_ids остаётся пустым словарём', () => {
+    const code = generateForwardMessage(validParamsGroupTarget);
+    expect(code).toContain('target_thread_ids = {}');
+    expect(code).not.toContain("int('')");
+  });
+
+  it('targetThreadId set → синтаксически корректен', () => {
+    const code = generateForwardMessage(validParamsGroupWithThread);
+    expect(code).toContain('message_thread_id=target_thread_ids.get(target_chat_id)');
+    // schema validation passes
+    expect(() => forwardMessageParamsSchema.parse(validParamsGroupWithThread)).not.toThrow();
+  });
+
+  it('targetThreadId передаётся через nodeToForwardMessageParams', () => {
+    const params = nodeToForwardMessageParams({
+      id: 'fwd_thread',
+      type: 'forward_message',
+      position: { x: 0, y: 0 },
+      data: {
+        targetChatTargets: [{
+          id: 'r1',
+          targetChatIdSource: 'manual',
+          targetChatId: '2300967595',
+          targetChatType: 'group',
+          targetThreadId: '615',
+        }],
+      } as any,
+    });
+    expect(params.targetRecipients[0].targetThreadId).toBe('615');
   });
 });
