@@ -747,7 +747,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                           {/* Строка с иконкой и названием типа */}
                           <div className="flex items-center gap-1.5">
                             <NodeTypeIcon type={node.type} />
-                            <span className="font-medium flex-shrink-0">{getNodeTypeLabel(node.type)}</span>
+                            <span className="font-medium flex-shrink-0">
+                              {node.type === 'keyboard'
+                                ? node.data?.keyboardType === 'reply' ? 'Reply кнопки' : 'Inline кнопки'
+                                : getNodeTypeLabel(node.type)}
+                            </span>
                             {shortContent && (
                               <span className="truncate opacity-70">
                                 {shortContent.length > 30 ? shortContent.slice(0, 30) + '…' : shortContent}
