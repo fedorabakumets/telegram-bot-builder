@@ -11,7 +11,7 @@ import { Node } from '@/types/bot';
 import { BotDataWithSheets } from '@shared/schema';
 import { PortType } from '../canvas-node/port-colors';
 import { DraftConnection } from './use-connection-drag';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { collectConnections } from '../canvas-node/connections-layer';
 
 /**
@@ -62,6 +62,14 @@ interface CanvasContentProps {
   onConnectionDelete?: (fromId: string, toId: string, type: string) => void;
   /** ID узла, который сейчас перетаскивается — для подсветки связанных линий */
   draggingNodeId?: string | null;
+  /** Множество ID выделенных узлов (мультиселект) */
+  selectedIds?: Set<string>;
+  /** Колбэк Shift+click по узлу — добавить/убрать из мультиселекта */
+  onShiftClick?: (nodeId: string) => void;
+  /** Колбэк клика по узлу без Shift — сбросить мультиселект */
+  onNodeClickClearMultiselect?: () => void;
+  /** Колбэк батч-обновления узлов (для группового перемещения) */
+  onNodesUpdate?: (nodes: Node[]) => void;
 }
 
 /**
@@ -91,6 +99,10 @@ export function CanvasContent({
   hoveredTargetNodeId,
   onConnectionDelete,
   draggingNodeId,
+  selectedIds = new Set(),
+  onShiftClick,
+  onNodeClickClearMultiselect,
+  onNodesUpdate,
 }: CanvasContentProps) {
   /**
    * Получение всех узлов со всех листов для отображения связей
@@ -115,6 +127,62 @@ export function CanvasContent({
 
   /** ID узла под курсором мыши */
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+
+  /**
+   * Групповое перемещение: запоминаем начальные позиции всех выделенных узлов
+   * в момент начала drag одного из них.
+   */
+  const groupDragStartPositions = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const groupDragLeaderId = useRef<string | null>(null);
+  const groupDragLeaderStartPos = useRef<{ x: number; y: number } | null>(null);
+
+  const handleGroupMoveStart = useCallback((nodeId: string) => {
+    if (selectedIds.has(nodeId) && selectedIds.size > 1) {
+      groupDragLeaderId.current = nodeId;
+      const leaderNode = nodes.find(n => n.id === nodeId);
+      groupDragLeaderStartPos.current = leaderNode ? { ...leaderNode.position } : null;
+      const startPositions = new Map<string, { x: number; y: number }>();
+      nodes.forEach(n => {
+        if (selectedIds.has(n.id)) {
+          startPositions.set(n.id, { ...n.position });
+        }
+      });
+      groupDragStartPositions.current = startPositions;
+    } else {
+      groupDragLeaderId.current = null;
+      groupDragStartPositions.current = new Map();
+      groupDragLeaderStartPos.current = null;
+    }
+  }, [selectedIds, nodes]);
+
+  const handleGroupMove = useCallback((nodeId: string, newPos: { x: number; y: number }) => {
+    if (
+      groupDragLeaderId.current === nodeId &&
+      groupDragLeaderStartPos.current &&
+      groupDragStartPositions.current.size > 1
+    ) {
+      const dx = newPos.x - groupDragLeaderStartPos.current.x;
+      const dy = newPos.y - groupDragLeaderStartPos.current.y;
+      const updatedNodes = nodes.map(n => {
+        if (n.id === nodeId) return { ...n, position: newPos };
+        const startPos = groupDragStartPositions.current.get(n.id);
+        if (startPos) {
+          return { ...n, position: { x: startPos.x + dx, y: startPos.y + dy } };
+        }
+        return n;
+      });
+      onNodesUpdate?.(updatedNodes);
+    } else {
+      onNodeMove(nodeId, newPos);
+    }
+  }, [nodes, onNodeMove, onNodesUpdate]);
+
+  const handleGroupMoveEnd = useCallback((nodeId: string) => {
+    groupDragLeaderId.current = null;
+    groupDragStartPositions.current = new Map();
+    groupDragLeaderStartPos.current = null;
+    onNodeMoveEnd?.(nodeId);
+  }, [onNodeMoveEnd]);
 
   /** Узлы, связанные с узлом под курсором */
   const connectedToHovered = useMemo<Set<string>>(() => {
@@ -180,13 +248,21 @@ export function CanvasContent({
           node={node}
           allNodes={allNodes}
           isSelected={selectedNodeId === node.id}
-          onClick={() => onNodeSelect(node.id)}
+          isMultiSelected={selectedIds.has(node.id)}
+          onClick={() => {
+            onNodeClickClearMultiselect?.();
+            onNodeSelect(node.id);
+          }}
+          onShiftClick={onShiftClick ? () => onShiftClick(node.id) : undefined}
           onDelete={() => onNodeDelete(node.id)}
           onDuplicate={onNodeDuplicate ? (targetPosition) => onNodeDuplicate(node.id, targetPosition) : undefined}
           onDuplicateAtPosition={onNodeDuplicateAtPosition ? () => onNodeDuplicateAtPosition(node.id) : undefined}
-          onMove={(position) => onNodeMove(node.id, position)}
-          onMoveStart={() => onNodeMoveStart?.(node.id)}
-          onMoveEnd={() => onNodeMoveEnd?.(node.id)}
+          onMove={(position) => handleGroupMove(node.id, position)}
+          onMoveStart={() => {
+            handleGroupMoveStart(node.id);
+            onNodeMoveStart?.(node.id);
+          }}
+          onMoveEnd={() => handleGroupMoveEnd(node.id)}
           zoom={zoom}
           pan={pan}
           setIsNodeBeingDragged={setIsNodeBeingDragged}

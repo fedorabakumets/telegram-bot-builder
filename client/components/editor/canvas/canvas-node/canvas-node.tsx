@@ -90,6 +90,10 @@ interface CanvasNodeProps {
   isHoveredByConnection?: boolean;
   /** Колбэк при наведении/уходе мыши с узла */
   onHover?: (nodeId: string | null) => void;
+  /** Узел выделен в мультиселекте */
+  isMultiSelected?: boolean;
+  /** Колбэк Shift+click — добавить/убрать из мультиселекта */
+  onShiftClick?: () => void;
   /**
    * РљРѕР»Р±СЌРє, РІС‹Р·С‹РІР°РµРјС‹Р№ РїСЂРё РјРѕРЅС‚РёСЂРѕРІР°РЅРёРё РїРѕСЂС‚Р° РєРЅРѕРїРєРё.
    * РџРµСЂРµРґР°С‘С‚ buttonId Рё РїРѕР·РёС†РёСЋ С†РµРЅС‚СЂР° РїРѕСЂС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper-div СѓР·Р»Р°.
@@ -113,7 +117,7 @@ interface CanvasNodeProps {
  * @param {CanvasNodeProps} props - РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р°
  * @returns {JSX.Element} РљРѕРјРїРѕРЅРµРЅС‚ СѓР·Р»Р° РЅР° С…РѕР»СЃС‚Рµ
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, onHover, onButtonPortMount }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, onHover, onButtonPortMount, isMultiSelected, onShiftClick }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref РґР»СЏ dragOffset вЂ” РїРѕР·РІРѕР»СЏРµС‚ С‡РёС‚Р°С‚СЊ Р°РєС‚СѓР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РІ handleMouseMove
@@ -158,11 +162,18 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!onMove) return;
 
-    // РќРµ Р·Р°РїСѓСЃРєР°С‚СЊ РґСЂР°Рі РµСЃР»Рё РєР»РёРєРЅСѓР»Рё РїРѕ РєРЅРѕРїРєРµ СѓРґР°Р»РµРЅРёСЏ
+    // Не запускать drag если кликнули по кнопке удаления
     if ((e.target as HTMLElement).closest('button')) return;
 
-    // РќР°С…РѕРґРёРј РєР°РЅРІР°СЃ (СЂРѕРґРёС‚РµР»СЊСЃРєРёР№ СЌР»РµРјРµРЅС‚ С‚СЂР°РЅСЃС„РѕСЂРјРёСЂСѓРµРјРѕРіРѕ РєРѕРЅС‚РµР№РЅРµСЂР°)
-    // nodeRef СѓРєР°Р·С‹РІР°РµС‚ РЅР° РІРЅСѓС‚СЂРµРЅРЅРёР№ div: innerDiv -> wrapper -> transformedContainer -> canvas
+    // Shift+click — добавить/убрать из мультиселекта, не начинать drag
+    if (e.shiftKey && onShiftClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      onShiftClick();
+      return;
+    }
+
+    // Находим канвас (родительский элемент трансформируемого контейнера)
     const wrapperDiv = nodeRef.current?.parentElement;
     const transformedContainer = wrapperDiv?.parentElement;
     const canvas = transformedContainer?.parentElement;
@@ -481,6 +492,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           isConnectedToDragging && !isDragActive ? "ring-2 ring-violet-400 border-violet-500 scale-[1.02]" : "",
           isHovered && !isDragActive && !isSelected && !isConnectionSource ? "ring-2 ring-sky-400 border-sky-400 scale-[1.02]" : "",
           isHoveredByConnection && !isHovered && !isDragActive && !isConnectedToDragging ? "ring-2 ring-violet-400 border-violet-500" : "",
+          isMultiSelected && !isDragActive ? "ring-2 ring-violet-400 border-violet-500 scale-[1.02]" : "",
           onMove ? "cursor-grab" : "cursor-pointer"
         )}
         onClick={!isDragging ? onClick : undefined}
@@ -492,13 +504,15 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         style={{
           position: 'relative',
           overflow: 'visible',
-          transform: isDragActive ? 'translate3d(0, 0, 0)' : isConnectedToDragging && !isDragActive ? 'scale(1.02)' : undefined,
+          transform: isDragActive ? 'translate3d(0, 0, 0)' : (isConnectedToDragging || isMultiSelected) && !isDragActive ? 'scale(1.02)' : undefined,
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden' as any,
           boxShadow: isDragActive
             ? undefined
             : isConnectedToDragging
             ? '0 0 0 2px #8b5cf6, 0 0 20px 4px rgba(139, 92, 246, 0.5), 0 0 40px 8px rgba(139, 92, 246, 0.2)'
+            : isMultiSelected
+            ? '0 0 0 2px #8b5cf6, 0 0 20px 4px rgba(139, 92, 246, 0.5)'
             : isHovered && !isSelected && !isConnectionSource
             ? '0 0 0 2px #38bdf8, 0 0 16px 4px rgba(56, 189, 248, 0.45), 0 0 32px 6px rgba(56, 189, 248, 0.2)'
             : isHoveredByConnection

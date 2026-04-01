@@ -13,6 +13,7 @@ import { useTouchGestures } from './use-touch-gestures';
 import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
 import { useConnectionDrag } from './use-connection-drag';
+import { useMultiselect } from './use-multiselect';
 import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
 import { PortType } from '../canvas-node/port-colors';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from './utils/canvas-coordinate-utils';
@@ -237,6 +238,11 @@ export function Canvas({
 
   // ID узла, который сейчас перетаскивается (для подсветки связанных узлов и линий)
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+
+  // Мультиселект
+  const multiselect = useMultiselect(nodes, pan, zoom);
+  // Флаг: drag-select рамка активна (не путать с перетаскиванием узла)
+  const isDragSelectingRef = useRef(false);
 
   // Ref для отслеживания последнего набора узлов при autoFitOnLoad
   const lastAutoFitNodesKeyRef = useRef<string>('');
@@ -866,13 +872,24 @@ export function Canvas({
     if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) ||
       (e.button === 0 && isEmptyCanvas)) { // Middle mouse, right mouse, Alt+click, or left-click on empty canvas
       e.preventDefault();
+      // Left-click on empty canvas without Alt: start drag-select
+      if (e.button === 0 && isEmptyCanvas && !e.altKey) {
+        isDragSelectingRef.current = true;
+        multiselect.startRect(e.clientX, e.clientY);
+        // Don't start panning for drag-select
+        return;
+      }
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
       setLastPanPosition(pan);
     }
-  }, [pan]);
+  }, [pan, multiselect]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isDragSelectingRef.current) {
+      multiselect.updateRect(e.clientX, e.clientY);
+      return;
+    }
     if (isPanning) {
       const deltaX = e.clientX - panStart.x;
       const deltaY = e.clientY - panStart.y;
@@ -882,11 +899,18 @@ export function Canvas({
         y: lastPanPosition.y + deltaY
       });
     }
-  }, [isPanning, panStart, lastPanPosition]);
+  }, [isPanning, panStart, lastPanPosition, multiselect]);
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((e?: React.MouseEvent) => {
+    if (isDragSelectingRef.current) {
+      isDragSelectingRef.current = false;
+      if (canvasRef.current) {
+        multiselect.finalizeRect(canvasRef.current.getBoundingClientRect(), nodeSizes);
+      }
+      return;
+    }
     setIsPanning(false);
-  }, []);
+  }, [multiselect, nodeSizes]);
 
   // Обработчики touch-жестов для мобильных устройств
   const { handleTouchStart, handleTouchMove, handleTouchEnd } = useTouchGestures({
@@ -947,11 +971,28 @@ export function Canvas({
 
       if (!isInputField) {
         // Обработка клавиши Delete для удаления выбранного узла
-        if (e.key === 'Delete' && selectedNodeId && onNodeDelete) {
+        if (e.key === 'Delete' && onNodeDelete) {
           e.preventDefault();
-          const node = nodes.find(n => n.id === selectedNodeId);
-          addAction('delete', `Удален узел "${node?.type || 'Unknown'}"`);
-          onNodeDelete(selectedNodeId);
+          // Мультиселект: удаляем все выделенные
+          if (multiselect.selectedIds.size > 0) {
+            multiselect.selectedIds.forEach(id => {
+              const node = nodes.find(n => n.id === id);
+              addAction('delete', `Удален узел "${node?.type || 'Unknown'}"`);
+              onNodeDelete(id);
+            });
+            multiselect.clear();
+            return;
+          }
+          if (selectedNodeId) {
+            const node = nodes.find(n => n.id === selectedNodeId);
+            addAction('delete', `Удален узел "${node?.type || 'Unknown'}"`);
+            onNodeDelete(selectedNodeId);
+          }
+          return;
+        }
+        // Escape — сбросить мультиселект
+        if (e.key === 'Escape') {
+          multiselect.clear();
           return;
         }
       }
@@ -1001,6 +1042,13 @@ export function Canvas({
           case '1':
             e.preventDefault();
             fitToContent();
+            break;
+          case 'a':
+          case 'A':
+          case 'ф':
+          case 'Ф':
+            e.preventDefault();
+            multiselect.selectAll();
             break;
           case 'z':
           case 'Z':
@@ -1088,13 +1136,17 @@ export function Canvas({
       document.removeEventListener('gesturechange', handleGesture);
       document.removeEventListener('gestureend', handleGesture);
     };
-  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction, getPastePosition, onPasteFromClipboard, onCopyToClipboard]);
+  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction, getPastePosition, onPasteFromClipboard, onCopyToClipboard, multiselect]);
 
 
 
   // Handle mouse events for panning
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isDragSelectingRef.current) {
+        multiselect.updateRect(e.clientX, e.clientY);
+        return;
+      }
       if (isPanning) {
         const deltaX = e.clientX - panStart.x;
         const deltaY = e.clientY - panStart.y;
@@ -1107,6 +1159,13 @@ export function Canvas({
     };
 
     const handleGlobalMouseUp = () => {
+      if (isDragSelectingRef.current) {
+        isDragSelectingRef.current = false;
+        if (canvasRef.current) {
+          multiselect.finalizeRect(canvasRef.current.getBoundingClientRect(), nodeSizes);
+        }
+        return;
+      }
       setIsPanning(false);
     };
 
@@ -1117,10 +1176,8 @@ export function Canvas({
       }
     };
 
-    if (isPanning) {
-      document.addEventListener('mousemove', handleGlobalMouseMove);
-      document.addEventListener('mouseup', handleGlobalMouseUp);
-    }
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
 
     // Добавляем обработчик для предотвращения масштабирования всей страницы
     document.addEventListener('wheel', preventPageZoom, { passive: false });
@@ -1130,7 +1187,7 @@ export function Canvas({
       document.removeEventListener('mouseup', handleGlobalMouseUp);
       document.removeEventListener('wheel', preventPageZoom);
     };
-  }, [isPanning, panStart, lastPanPosition]);
+  }, [isPanning, panStart, lastPanPosition, multiselect, nodeSizes]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -1302,8 +1359,9 @@ export function Canvas({
     
     if (e.target === e.currentTarget) {
       onNodeSelect('');
+      multiselect.clear();
     }
-  }, [onNodeSelect, pan.x, pan.y, zoom]);
+  }, [onNodeSelect, pan.x, pan.y, zoom, multiselect]);
 
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
@@ -1365,6 +1423,10 @@ export function Canvas({
             hoveredTargetNodeId={hoveredTargetNodeId}
             onConnectionDelete={handleConnectionDelete}
             draggingNodeId={draggingNodeId}
+            selectedIds={multiselect.selectedIds}
+            onShiftClick={multiselect.toggle}
+            onNodeClickClearMultiselect={multiselect.clear}
+            onNodesUpdate={onNodesUpdate}
           />
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">
@@ -1430,6 +1492,28 @@ export function Canvas({
           />
         </div>
       )}
+
+      {/* Рамка drag-select (в экранных координатах, поверх всего) */}
+      {multiselect.selectionRect && (() => {
+        const r = multiselect.selectionRect;
+        const canvasEl = canvasRef.current;
+        const canvasOffset = canvasEl ? canvasEl.getBoundingClientRect() : { left: 0, top: 0 };
+        return (
+          <div
+            style={{
+              position: 'absolute',
+              left: Math.min(r.startX, r.currentX) - canvasOffset.left,
+              top: Math.min(r.startY, r.currentY) - canvasOffset.top,
+              width: Math.abs(r.currentX - r.startX),
+              height: Math.abs(r.currentY - r.startY),
+              border: '1px solid rgba(96, 165, 250, 0.6)',
+              background: 'rgba(96, 165, 250, 0.1)',
+              pointerEvents: 'none',
+              zIndex: 9999,
+            }}
+          />
+        );
+      })()}
     </main>
   );
 }
