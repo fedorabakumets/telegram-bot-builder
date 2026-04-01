@@ -26,7 +26,17 @@ async def register_user_middleware(handler, event: types.Message, data: dict):
                     'is_bot': user.is_bot or False,
                 }
 {%- if userDatabaseEnabled %}
-                await save_user_to_db(user_id, user.username, user.first_name, user.last_name)
+                # Получаем аватарку пользователя
+                _avatar_url = None
+                try:
+                    _photos = await bot.get_user_profile_photos(user_id, limit=1)
+                    if _photos and _photos.photos:
+                        _file_id = _photos.photos[0][-1].file_id
+                        _file = await bot.get_file(_file_id)
+                        _avatar_url = f"https://api.telegram.org/file/bot{bot.token}/{_file.file_path}"
+                except Exception as _e:
+                    logging.debug(f"Не удалось получить аватарку для {user_id}: {_e}")
+                await save_user_to_db(user_id, user.username, user.first_name, user.last_name, _avatar_url)
 {%- endif %}
                 logging.info(f"Новый пользователь зарегистрирован: {user_id}")
     except Exception as e:
