@@ -181,3 +181,39 @@ export const validParamsVariableChatWithThreadVariable: ForwardMessageTemplatePa
   ],
   disableNotification: false,
 };
+
+/** Параметры: скрыть автора (copy_message) — ручной получатель */
+export const validParamsHideAuthor: ForwardMessageTemplateParams = {
+  nodeId: 'forward_copy',
+  safeName: 'forward_copy',
+  sourceMessageIdSource: 'current_message',
+  targetRecipients: [
+    {
+      id: 'target_user',
+      targetChatIdSource: 'manual',
+      targetChatId: '123456789',
+      targetChatType: 'user',
+    },
+  ],
+  disableNotification: false,
+  /** Скрыть автора — использует copy_message вместо forward_message */
+  hideAuthor: true,
+};
+
+/** Параметры: скрыть автора + получатель из переменной */
+export const validParamsHideAuthorVariable: ForwardMessageTemplateParams = {
+  nodeId: 'forward_copy_var',
+  safeName: 'forward_copy_var',
+  sourceMessageIdSource: 'current_message',
+  targetRecipients: [
+    {
+      id: 'target_var',
+      targetChatIdSource: 'variable',
+      targetChatVariableName: 'support_user_id',
+      targetChatType: 'user',
+    },
+  ],
+  disableNotification: false,
+  /** Скрыть автора — использует copy_message вместо forward_message */
+  hideAuthor: true,
+};

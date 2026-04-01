@@ -16,6 +16,8 @@ import {
   validParamsGroupWithThread,
   validParamsGroupWithThreadVariable,
   validParamsVariableChatWithThreadVariable,
+  validParamsHideAuthor,
+  validParamsHideAuthorVariable,
   forwardMessageNodeBasic,
   forwardMessageNodeLegacyTargets,
 } from './forward-message.fixture';
@@ -282,5 +284,54 @@ describe('targetThreadIdSource=variable — ID топика из перемен�
 
   it('targetThreadIdSource=variable схема валидируется без ошибок', () => {
     expect(() => forwardMessageParamsSchema.parse(validParamsGroupWithThreadVariable)).not.toThrow();
+  });
+});
+
+describe('hideAuthor — copy_message вместо forward_message', () => {
+  it('hideAuthor=true → bot.copy_message в коде', () => {
+    const code = generateForwardMessage(validParamsHideAuthor);
+    expect(code).toContain('await bot.copy_message(');
+    expect(code).not.toContain('await bot.forward_message(');
+  });
+
+  it('hideAuthor=false → bot.forward_message в коде', () => {
+    const code = generateForwardMessage(validParamsBasic);
+    expect(code).toContain('await bot.forward_message(');
+    expect(code).not.toContain('await bot.copy_message(');
+  });
+
+  it('hideAuthor=true + variable recipient → copy_message с переменным получателем', () => {
+    const code = generateForwardMessage(validParamsHideAuthorVariable);
+    expect(code).toContain('await bot.copy_message(');
+    expect(code).toContain("'support_user_id'");
+  });
+
+  it('hideAuthor=true → схема валидируется без ошибок', () => {
+    expect(() => forwardMessageParamsSchema.parse(validParamsHideAuthor)).not.toThrow();
+  });
+
+  it('hideAuthor=true передаётся через nodeToForwardMessageParams', () => {
+    const params = nodeToForwardMessageParams({
+      id: 'fwd_copy',
+      type: 'forward_message',
+      position: { x: 0, y: 0 },
+      data: {
+        targetChatTargets: [{ id: 'r1', targetChatIdSource: 'manual', targetChatId: '123' }],
+        hideAuthor: true,
+      } as any,
+    });
+    expect(params.hideAuthor).toBe(true);
+  });
+
+  it('hideAuthor=false по умолчанию', () => {
+    const params = nodeToForwardMessageParams({
+      id: 'fwd_default',
+      type: 'forward_message',
+      position: { x: 0, y: 0 },
+      data: {
+        targetChatTargets: [{ id: 'r1', targetChatIdSource: 'manual', targetChatId: '123' }],
+      } as any,
+    });
+    expect(params.hideAuthor).toBe(false);
   });
 });

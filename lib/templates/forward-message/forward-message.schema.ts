@@ -48,6 +48,8 @@ export const forwardMessageParamsSchema = z.object({
   targetRecipients: z.array(forwardMessageTargetRecipientSchema).optional().default([]),
   /** Отправлять без уведомления */
   disableNotification: z.boolean().optional().default(false),
+  /** Скрыть автора — использует copy_message вместо forward_message */
+  hideAuthor: z.boolean().optional().default(false),
 });
 
 /** Тип параметров шаблона пересылки */

@@ -284,6 +284,15 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     sent_count = 0
     for target_chat_id in target_chat_ids:
         try:
+{% if hideAuthor %}
+            await bot.copy_message(
+                chat_id=target_chat_id,
+                from_chat_id=source_chat_id,
+                message_id=source_message_id,
+                message_thread_id=target_thread_ids.get(target_chat_id),
+                disable_notification={{ disableNotification | to_python_boolean }},
+            )
+{% else %}
             await bot.forward_message(
                 chat_id=target_chat_id,
                 from_chat_id=source_chat_id,
@@ -291,10 +300,11 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
                 message_thread_id=target_thread_ids.get(target_chat_id),
                 disable_notification={{ disableNotification | to_python_boolean }},
             )
+{% endif %}
             sent_count += 1
         except Exception as e:
             logging.error(
-                f"forward_message node {{ nodeId }}: failed to forward to {target_chat_id} from {source_chat_id}/{source_message_id}: {e}"
+                f"forward_message node {{ nodeId }}: failed to {% if hideAuthor %}copy{% else %}forward{% endif %} to {target_chat_id} from {source_chat_id}/{source_message_id}: {e}"
             )
 
     if sent_count == 0:

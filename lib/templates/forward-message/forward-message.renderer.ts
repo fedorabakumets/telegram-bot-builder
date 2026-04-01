@@ -89,6 +89,7 @@ export function nodeToForwardMessageParams(node: Node): ForwardMessageTemplatePa
     sourceMessageNodeId: typeof data?.sourceMessageNodeId === 'string' ? data.sourceMessageNodeId : '',
     targetRecipients: collectRecipients(data),
     disableNotification: data?.disableNotification ?? false,
+    hideAuthor: data?.hideAuthor === true,
   };
 }
 

@@ -46,4 +46,6 @@ export interface ForwardMessageTemplateParams {
   targetRecipients: ForwardMessageTargetRecipient[];
   /** Отправлять без уведомления */
   disableNotification?: boolean;
+  /** Скрыть автора — использует copy_message вместо forward_message */
+  hideAuthor?: boolean;
 }
