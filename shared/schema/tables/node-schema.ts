@@ -15,6 +15,8 @@ const forwardMessageTargetRecipientSchema = z.object({
   targetChatId: z.string().optional(),
   /** Имя переменной с ID чата */
   targetChatVariableName: z.string().optional(),
+  /** Тип получателя: "user" — пользователь, "group" — группа или канал */
+  targetChatType: z.enum(['user', 'group']).default('user'),
 });
 
 /** Схема узла бота */

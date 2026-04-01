@@ -43,6 +43,7 @@ const normalizeTargetRecipient = (
   targetChatIdSource: isTargetChatMode(recipient.targetChatIdSource) ? recipient.targetChatIdSource : 'manual',
   targetChatId: typeof recipient.targetChatId === 'string' ? recipient.targetChatId : '',
   targetChatVariableName: typeof recipient.targetChatVariableName === 'string' ? recipient.targetChatVariableName : '',
+  targetChatType: recipient.targetChatType === 'group' ? 'group' : 'user',
 });
 
 const getTargetRecipients = (data: any): ForwardMessageTargetRecipient[] => {
@@ -239,11 +240,26 @@ export function ForwardMessageConfiguration({
 
                 {recipient.targetChatIdSource === 'manual' && (
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-sky-700 dark:text-sky-300">ID или username чата</Label>
+                    <Label className="text-xs font-medium text-sky-700 dark:text-sky-300">Тип получателя</Label>
+                    <Select
+                      value={recipient.targetChatType || 'user'}
+                      onValueChange={(value) => updateRecipient(index, { targetChatType: value as 'user' | 'group' })}
+                    >
+                      <SelectTrigger className="bg-card/70 border border-sky-200/50 dark:border-sky-800/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">Пользователь</SelectItem>
+                        <SelectItem value="group">Группа или канал</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Label className="text-xs font-medium text-sky-700 dark:text-sky-300">
+                      {recipient.targetChatType === 'group' ? 'ID или username группы/канала' : 'ID или username пользователя'}
+                    </Label>
                     <Input
                       value={recipient.targetChatId || ''}
                       onChange={(e) => updateRecipient(index, { targetChatId: e.target.value })}
-                      placeholder="-1001234567890 или @channel_name"
+                      placeholder={recipient.targetChatType === 'group' ? '2300967595 или @channel_name' : '123456789 или @username'}
                       className="bg-white/60 dark:bg-slate-950/60 border-sky-200/50 dark:border-sky-800/50"
                     />
                   </div>

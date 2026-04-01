@@ -1,4 +1,4 @@
-{#
+﻿{#
   @fileoverview Шаблон пересылки сообщения.
   Генерирует callback-обработчик, который пересылает исходное сообщение
   в один или несколько чатов назначения.
@@ -199,6 +199,8 @@ async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.
     if _raw_target_chat_id:
         try:
             _normalized_target_chat_id = int(_raw_target_chat_id)
+            if {{ (recipient.targetChatType or 'user') | escape_python_string }} == 'group' and _normalized_target_chat_id > 0:
+                _normalized_target_chat_id = int(f"-100{_normalized_target_chat_id}")
         except ValueError:
             _normalized_target_chat_id = _raw_target_chat_id
         if _normalized_target_chat_id not in target_chat_ids:
@@ -208,6 +210,8 @@ async def _resolve_forward_message_targets_{{ safeName }}(callback_query: types.
     if _raw_target_chat_id:
         try:
             _normalized_target_chat_id = int(_raw_target_chat_id)
+            if {{ (recipient.targetChatType or 'user') | escape_python_string }} == 'group' and _normalized_target_chat_id > 0:
+                _normalized_target_chat_id = int(f"-100{_normalized_target_chat_id}")
         except ValueError:
             _normalized_target_chat_id = _raw_target_chat_id
         if _normalized_target_chat_id not in target_chat_ids:
