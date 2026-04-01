@@ -35,7 +35,7 @@ import {
 import { SaveTemplateModal } from '@/components/editor/header/components/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 
 import { DialogPanel } from '@/components/editor/database/dialog/dialog-panel';
@@ -115,7 +115,7 @@ export default function Editor() {
 
   /** ID узла для фокусировки на канвасе */
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
-  const focusTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** ID кнопки для скролла к ней в панели свойств */
   const [focusButtonId, setFocusButtonId] = useState<string | null>(null);
