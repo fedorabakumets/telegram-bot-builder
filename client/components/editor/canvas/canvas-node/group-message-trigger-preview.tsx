@@ -16,7 +16,7 @@ export function GroupMessageTriggerPreview({ node }: GroupMessageTriggerPreviewP
   const groupChatId = (node.data as any).groupChatId;
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-xs text-violet-300 font-medium">Сообщение в группе</span>
+      <span className="text-xs text-violet-300 font-medium">Триггер входящего сообщения в теме группы</span>
       {groupChatId && (
         <span className="font-mono text-xs text-violet-400/70">{groupChatId}</span>
       )}

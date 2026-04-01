@@ -27,7 +27,7 @@ export function GroupMessageTriggerHeader({ node }: GroupMessageTriggerHeaderPro
       <span className="flex items-center gap-1.5">
         <i className="fas fa-comments text-violet-600 dark:text-violet-400 text-xs" />
         <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">
-          Сообщение в группе
+          Триггер входящего сообщения в теме группы
         </span>
       </span>
       {groupChatId && (
