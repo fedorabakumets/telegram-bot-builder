@@ -12,7 +12,6 @@ import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useTouchGestures } from './use-touch-gestures';
 import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
-import { CanvasScrollbars } from './canvas-scrollbars';
 import { useConnectionDrag } from './use-connection-drag';
 import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
 import { PortType } from '../canvas-node/port-colors';
@@ -214,9 +213,6 @@ export function Canvas({
   const [isDragOver, setIsDragOver] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [pan, setPan] = useState({ x: 0, y: 0 });
-
-  /** Размеры видимой области холста в пикселях */
-  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
@@ -828,11 +824,6 @@ export function Canvas({
     if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) ||
       (e.button === 0 && isEmptyCanvas)) { // Middle mouse, right mouse, Alt+click, or left-click on empty canvas
       e.preventDefault();
-      // Сбрасываем scroll контейнера — позиция управляется через pan/transform
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = 0;
-        scrollContainerRef.current.scrollLeft = 0;
-      }
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
       setLastPanPosition(pan);
@@ -900,18 +891,6 @@ export function Canvas({
       el.removeEventListener('touchend', handleTouchEnd);
     };
   }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
-
-  // Отслеживаем размеры видимой области для скроллбаров
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(() => {
-      setViewportSize({ width: el.clientWidth, height: el.clientHeight });
-    });
-    observer.observe(el);
-    setViewportSize({ width: el.clientWidth, height: el.clientHeight });
-    return () => observer.disconnect();
-  }, []);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -1286,7 +1265,7 @@ export function Canvas({
 
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
-      <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-hidden" style={{ top: 60, bottom: 60 }}>
+      <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60 }}>
 
         {/* Enhanced Canvas Grid */}
         <div
@@ -1356,16 +1335,6 @@ export function Canvas({
         </div>
 
       </div>
-
-      {/* Кастомные скроллбары холста */}
-      <CanvasScrollbars
-        panX={pan.x}
-        panY={pan.y}
-        zoom={zoom}
-        viewportWidth={viewportSize.width}
-        viewportHeight={viewportSize.height}
-        onPanChange={setPan}
-      />
 
       {/* Панель инструментов - фиксированная панель вверху */}
       <CanvasToolbar
