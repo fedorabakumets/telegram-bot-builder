@@ -29,6 +29,8 @@ export function UserAvatar({ messageType, user, projectId, size = 28 }: UserAvat
   const isBot = messageType === 'bot';
   const hasPhoto = !!user?.avatarUrl && !!projectId && !!user?.userId && !imageError;
 
+  console.log('[UserAvatar]', { messageType, userId: user?.userId, avatarUrl: user?.avatarUrl, projectId, hasPhoto, imageError });
+
   // Вычисляем размер иконки для fallback
   const iconSize = size * 0.5;
 
