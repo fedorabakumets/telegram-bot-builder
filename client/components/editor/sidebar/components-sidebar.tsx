@@ -4,7 +4,7 @@
  */
 
 import { BotProject } from '@shared/schema';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   handleProjectDragStart,
@@ -258,6 +258,50 @@ export function ComponentsSidebar({
     cancelEditingProject();
   };
 
+  /**
+   * Обработчик массового перемещения узлов между листами проекта
+   * @param projectId - Идентификатор проекта
+   * @param sourceSheetId - Идентификатор исходного листа
+   * @param nodeIds - Массив идентификаторов узлов
+   * @param targetSheetId - Идентификатор целевого листа
+   */
+  const handleBulkMoveNodes = useCallback(async (
+    projectId: number,
+    sourceSheetId: string,
+    nodeIds: string[],
+    targetSheetId: string,
+  ) => {
+    const project = projects.find((p) => p.id === projectId);
+    if (!project) return;
+    const data = project.data as any;
+    if (!data?.sheets) return;
+    const sourceSheet = data.sheets.find((s: any) => s.id === sourceSheetId);
+    if (!sourceSheet) return;
+    const movedNodes = (sourceSheet.nodes || []).filter((n: any) => nodeIds.includes(n.id));
+    const updatedSheets = data.sheets.map((sheet: any) => {
+      if (sheet.id === sourceSheetId) {
+        return { ...sheet, nodes: (sheet.nodes || []).filter((n: any) => !nodeIds.includes(n.id)) };
+      }
+      if (sheet.id === targetSheetId) {
+        return { ...sheet, nodes: [...(sheet.nodes || []), ...movedNodes] };
+      }
+      return sheet;
+    });
+    const newData = { ...data, sheets: updatedSheets };
+    try {
+      await apiRequest('PUT', `/api/projects/${projectId}`, { data: newData });
+      const updatedProjects = projects.map((p) =>
+        p.id === projectId ? { ...p, data: newData } : p
+      );
+      queryClient.setQueryData(['/api/projects'], updatedProjects);
+      queryClient.setQueryData([`/api/projects/${projectId}`], { ...project, data: newData });
+      const targetSheet = data.sheets.find((s: any) => s.id === targetSheetId);
+      toast({ title: '✅ Узлы перемещены', description: `${movedNodes.length} узл. → "${targetSheet?.name || targetSheetId}"` });
+    } catch (error: any) {
+      toast({ title: '❌ Ошибка', description: error.message, variant: 'destructive' });
+    }
+  }, [projects, queryClient, toast]);
+
   const sidebarContent = (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Sidebar Header */}
@@ -486,6 +530,9 @@ export function ComponentsSidebar({
                         toast({ title: "❌ Ошибка", description: error.message, variant: "destructive" });
                       }
                     }}
+                    onBulkMoveNodes={(sourceSheetId, nodeIds, targetSheetId) =>
+                      handleBulkMoveNodes(project.id, sourceSheetId, nodeIds, targetSheetId)
+                    }
                   />
                 ))}
               </div>

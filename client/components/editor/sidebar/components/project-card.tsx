@@ -44,6 +44,8 @@ import { SheetNodeSearch } from './sheet-node-search';
 import { useSheetNodeSearch } from '../hooks/use-sheet-node-search';
 import { useSheetSearchState } from '../hooks/use-sheet-search-state';
 import { HighlightText } from './highlight-text';
+import { useNodeSelection } from '../hooks/use-node-selection';
+import { BulkMoveSheetButton } from './bulk-move-sheet-button';
 
 /**
  * Состояние drag-and-drop для проектов и листов
@@ -159,6 +161,8 @@ export interface ProjectCardProps {
   onTouchEnd?: (e: React.TouchEvent) => void;
   /** Колбэк для фокусировки на узле канваса */
   onNodeFocus?: (nodeId: string, buttonId?: string) => void;
+  /** Колбэк массового перемещения узлов между листами */
+  onBulkMoveNodes?: (sourceSheetId: string, nodeIds: string[], targetSheetId: string) => void;
 }
 
 /**
@@ -189,16 +193,6 @@ function getShortContent(node: any): string {
   return '';
 }
 
-/**
- * Извлекает список кнопок из узла клавиатуры
- * @param node - Узел проекта
- * @returns Массив текстов кнопок
- */
-function getKeyboardButtons(node: any): string[] {
-  const buttons = node.data?.buttons;
-  if (!Array.isArray(buttons)) return [];
-  return buttons.map((b: any) => b.text || '').filter(Boolean);
-}
 
 /**
  * Пропсы компонента SheetAccordionContent
@@ -212,15 +206,38 @@ interface SheetAccordionContentProps {
   onSearchChange: (query: string) => void;
   /** Колбэк для фокусировки на узле канваса, опционально с фокусом на кнопке */
   onNodeFocus?: (nodeId: string, buttonId?: string) => void;
+  /** Список других листов проекта для перемещения */
+  availableSheets?: Array<{ id: string; name: string }>;
+  /** Колбэк массового перемещения узлов */
+  onBulkMoveNodes?: (nodeIds: string[], targetSheetId: string) => void;
 }
 
 /**
- * Содержимое раскрытого аккордеона листа: поиск + список узлов
+ * Содержимое раскрытого аккордеона листа: поиск + список узлов + массовое перемещение
  * @param props - Свойства компонента SheetAccordionContentProps
  * @returns JSX элемент содержимого аккордеона
  */
-function SheetAccordionContent({ nodes, searchQuery, onSearchChange, onNodeFocus }: SheetAccordionContentProps) {
+function SheetAccordionContent({
+  nodes,
+  searchQuery,
+  onSearchChange,
+  onNodeFocus,
+  availableSheets = [],
+  onBulkMoveNodes,
+}: SheetAccordionContentProps) {
   const filtered = useSheetNodeSearch(nodes, searchQuery);
+  const { selectedNodeIds, toggleNode, clearSelection, isSelected, selectedCount } = useNodeSelection();
+
+  /**
+   * Обработчик выбора целевого листа для массового перемещения
+   * @param sheetId - Идентификатор целевого листа
+   */
+  const handleBulkMove = (sheetId: string) => {
+    if (onBulkMoveNodes && selectedCount > 0) {
+      onBulkMoveNodes(Array.from(selectedNodeIds), sheetId);
+      clearSelection();
+    }
+  };
 
   return (
     <div className="mt-0.5 mb-1 transition-all">
@@ -237,14 +254,28 @@ function SheetAccordionContent({ nodes, searchQuery, onSearchChange, onNodeFocus
             const buttonObjects: Array<{ id: string; text: string }> = isKeyboard
               ? (node.data?.buttons || []).filter((b: any) => b.text)
               : [];
+            const selected = isSelected(node.id);
             return (
-              <div key={node.id} className="px-1.5 py-0.5 rounded text-xs text-muted-foreground cursor-pointer hover:bg-muted/40 transition-colors"
+              <div
+                key={node.id}
+                className="group/node px-1.5 py-0.5 rounded text-xs text-muted-foreground cursor-pointer hover:bg-muted/40 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (onNodeFocus && node.id) onNodeFocus(node.id);
                 }}
               >
                 <div className="flex items-center gap-1.5">
+                  {/* Чекбокс — виден только при hover на строку */}
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    className="opacity-0 group-hover/node:opacity-100 transition-opacity h-3 w-3 flex-shrink-0 cursor-pointer accent-blue-500"
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleNode(node.id);
+                    }}
+                  />
                   <NodeTypeIcon type={node.type} />
                   <span className="font-medium flex-shrink-0">
                     <HighlightText
@@ -283,6 +314,14 @@ function SheetAccordionContent({ nodes, searchQuery, onSearchChange, onNodeFocus
             );
           })}
         </div>
+      )}
+      {/* Кнопка массового перемещения — появляется при выборе хотя бы одного узла */}
+      {selectedCount > 0 && availableSheets.length > 0 && (
+        <BulkMoveSheetButton
+          count={selectedCount}
+          sheets={availableSheets}
+          onSelect={handleBulkMove}
+        />
       )}
     </div>
   );
@@ -338,6 +377,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onTouchMove,
   onTouchEnd,
   onNodeFocus,
+  onBulkMoveNodes,
 }) => {
   // Используем пропсы для совместимости интерфейса
   // onSheetRename вызывается через onSaveSheetName в родительском компоненте
@@ -841,6 +881,18 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   searchQuery={getSheetQuery(sheetId)}
                   onSearchChange={(q) => setSheetQuery(sheetId, q)}
                   onNodeFocus={onNodeFocus}
+                  availableSheets={
+                    SheetsManager.isNewFormat(projectData)
+                      ? projectData.sheets
+                          .filter((s: any) => s.id !== sheetId)
+                          .map((s: any) => ({ id: s.id, name: s.name }))
+                      : []
+                  }
+                  onBulkMoveNodes={
+                    onBulkMoveNodes
+                      ? (nodeIds, targetSheetId) => onBulkMoveNodes(sheetId, nodeIds, targetSheetId)
+                      : undefined
+                  }
                 />
               )}
               </div>

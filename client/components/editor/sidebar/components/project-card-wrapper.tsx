@@ -26,6 +26,8 @@ export interface ProjectCardWrapperProps extends Omit<ProjectCardProps, 'onTouch
   onProjectClick?: () => void;
   /** Колбэк для фокусировки на узле канваса */
   onNodeFocus?: (nodeId: string, buttonId?: string) => void;
+  /** Колбэк массового перемещения узлов между листами */
+  onBulkMoveNodes?: (sourceSheetId: string, nodeIds: string[], targetSheetId: string) => void;
 }
 
 /**
@@ -42,6 +44,7 @@ export const ProjectCardWrapper: React.FC<ProjectCardWrapperProps> = ({
   onProjectDragEnd,
   onProjectClick,
   onNodeFocus,
+  onBulkMoveNodes,
   ...cardProps
 }) => {
   // Создаём touch-обработчики для проекта
@@ -63,6 +66,7 @@ export const ProjectCardWrapper: React.FC<ProjectCardWrapperProps> = ({
       onProjectDragEnd={onProjectDragEnd}
       onProjectClick={onProjectClick}
       onNodeFocus={onNodeFocus}
+      onBulkMoveNodes={onBulkMoveNodes}
     />
   );
 };
