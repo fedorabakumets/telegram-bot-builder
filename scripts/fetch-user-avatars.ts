@@ -36,7 +36,7 @@ async function fetchUserAvatars() {
 
     // Получаем всех пользователей без avatar_url
     const result = await pool.query(`
-      SELECT user_id, username, first_name, last_name 
+      SELECT user_id, username, first_name, last_name, project_id
       FROM bot_users 
       WHERE avatar_url IS NULL 
       LIMIT 100
@@ -95,8 +95,8 @@ async function fetchUserAvatars() {
           await pool.query(`
             UPDATE bot_users
             SET avatar_url = $1
-            WHERE user_id = $2
-          `, [fullAvatarUrl, user.user_id]);
+            WHERE user_id = $2 AND project_id = $3
+          `, [fullAvatarUrl, user.user_id, user.project_id]);
 
           console.log(`✅ ${user.username || user.first_name || userId}: ${fullAvatarUrl}`);
           updated++;

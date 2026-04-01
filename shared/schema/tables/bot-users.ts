@@ -3,7 +3,7 @@
  * @module shared/schema/tables/bot-users
  */
 
-import { pgTable, text, integer, jsonb, timestamp, bigint } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, jsonb, timestamp, bigint, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -12,7 +12,9 @@ import { z } from "zod";
  */
 export const botUsers = pgTable("bot_users", {
   /** Идентификатор пользователя в Telegram */
-  userId: bigint("user_id", { mode: "number" }).primaryKey(),
+  userId: bigint("user_id", { mode: "number" }).notNull(),
+  /** Идентификатор проекта */
+  projectId: integer("project_id").notNull().default(0),
   /** Имя пользователя в Telegram */
   username: text("username"),
   /** Имя пользователя */
@@ -33,12 +35,16 @@ export const botUsers = pgTable("bot_users", {
   userData: jsonb("user_data").default({}),
   /** Флаг активности (0 = неактивен, 1 = активен) */
   isActive: integer("is_active").default(1),
-});
+}, (t) => ({
+  pk: primaryKey({ columns: [t.userId, t.projectId] }),
+}));
 
 /** Схема для вставки данных пользователя бота */
 export const insertBotUserSchema = createInsertSchema(botUsers).pick({
   /** Идентификатор пользователя в Telegram */
   userId: true,
+  /** Идентификатор проекта */
+  projectId: true,
   /** Имя пользователя в Telegram */
   username: true,
   /** Имя пользователя */
@@ -54,6 +60,8 @@ export const insertBotUserSchema = createInsertSchema(botUsers).pick({
 }).extend({
   /** Идентификатор пользователя (должен быть положительным числом) */
   userId: z.number().positive("ID пользователя должен быть положительным числом"),
+  /** Идентификатор проекта */
+  projectId: z.number().int().default(0),
   /** Пользовательские данные */
   userData: z.record(z.any()).default({}),
   /** Флаг активности (0 = неактивен, 1 = активен) */

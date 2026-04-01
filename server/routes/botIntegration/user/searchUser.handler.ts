@@ -45,7 +45,7 @@ export async function searchUserHandler(req: Request, res: Response): Promise<vo
         // Поиск в локальной базе данных
         const localResult = searchLocalDatabase(
             await storage.searchUserBotData(projectId, query),
-            await storage.searchBotUsers(query)
+            await storage.searchBotUsers(query, projectId)
         );
 
         if (localResult.found) {

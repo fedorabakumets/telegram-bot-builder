@@ -329,7 +329,8 @@ export async function initializeDatabaseTables() {
 
     await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_users (
-        user_id BIGINT PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        project_id INTEGER NOT NULL DEFAULT 0,
         username TEXT,
         first_name TEXT,
         last_name TEXT,
@@ -337,7 +338,8 @@ export async function initializeDatabaseTables() {
         last_interaction TIMESTAMP DEFAULT NOW(),
         interaction_count INTEGER DEFAULT 0,
         user_data JSONB DEFAULT '{}',
-        is_active INTEGER DEFAULT 1
+        is_active INTEGER DEFAULT 1,
+        PRIMARY KEY (user_id, project_id)
       );
     `, "Создание таблицы bot_users");
 
@@ -546,6 +548,32 @@ export async function initializeDatabaseTables() {
       }
     } catch (error) {
       console.log('⚠️ Ошибка при проверке/добавлении колонки total_execution_seconds в bot_tokens:', error);
+    }
+
+    // Миграция: добавить project_id в bot_users и обновить первичный ключ
+    try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'bot_users'
+        AND column_name = 'project_id';
+      `);
+
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Мигрируем таблицу bot_users: добавляем project_id и составной PK...');
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_users ADD COLUMN IF NOT EXISTS project_id INTEGER NOT NULL DEFAULT 0;
+        `, "Миграция: добавление project_id в bot_users");
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_users DROP CONSTRAINT IF EXISTS bot_users_pkey;
+        `, "Миграция: удаление старого PK bot_users");
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_users ADD PRIMARY KEY (user_id, project_id);
+        `, "Миграция: добавление составного PK в bot_users");
+        console.log('✅ Таблица bot_users успешно мигрирована');
+      }
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции таблицы bot_users:', error);
     }
 
     console.log('✅ Таблицы базы данных успешно инициализированы!');

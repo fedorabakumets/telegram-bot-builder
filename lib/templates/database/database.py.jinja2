@@ -79,7 +79,7 @@ async def get_user_data_from_db(user_id: int, data_key: str):
         return None
     try:
         async with db_pool.acquire() as conn:
-            row = await conn.fetchrow("SELECT user_data FROM bot_users WHERE user_id = $1", user_id)
+            row = await conn.fetchrow("SELECT user_data FROM bot_users WHERE user_id = $1 AND project_id = $2", user_id, PROJECT_ID)
             if row and row["user_data"]:
                 user_data = row["user_data"]
                 if isinstance(user_data, str):
@@ -105,7 +105,7 @@ async def update_user_variable_in_db(user_id: int, variable_name: str, variable_
         return False
     try:
         async with db_pool.acquire() as conn:
-            row = await conn.fetchrow("SELECT user_data FROM bot_users WHERE user_id = $1", user_id)
+            row = await conn.fetchrow("SELECT user_data FROM bot_users WHERE user_id = $1 AND project_id = $2", user_id, PROJECT_ID)
             if row and row["user_data"]:
                 user_data = row["user_data"]
                 if isinstance(user_data, str):
@@ -121,8 +121,8 @@ async def update_user_variable_in_db(user_id: int, variable_name: str, variable_
             user_data[variable_name] = variable_value
             
             await conn.execute(
-                "UPDATE bot_users SET user_data = $1 WHERE user_id = $2",
-                json.dumps(user_data, ensure_ascii=False), user_id
+                "UPDATE bot_users SET user_data = $1 WHERE user_id = $2 AND project_id = $3",
+                json.dumps(user_data, ensure_ascii=False), user_id, PROJECT_ID
             )
             logging.info(f"✅ Переменная '{variable_name}' обновлена в БД")
             return True
@@ -149,7 +149,8 @@ async def init_database():
         async with db_pool.acquire() as conn:
             await conn.execute("""
                 CREATE TABLE IF NOT EXISTS bot_users (
-                    user_id BIGINT PRIMARY KEY,
+                    user_id BIGINT NOT NULL,
+                    project_id INTEGER NOT NULL DEFAULT 0,
                     username TEXT,
                     first_name TEXT,
                     last_name TEXT,
@@ -157,7 +158,8 @@ async def init_database():
                     last_interaction TIMESTAMP DEFAULT NOW(),
                     interaction_count INTEGER DEFAULT 0,
                     user_data JSONB DEFAULT '{}',
-                    is_active BOOLEAN DEFAULT TRUE
+                    is_active BOOLEAN DEFAULT TRUE,
+                    PRIMARY KEY (user_id, project_id)
                 );
             """)
             await conn.execute("""
@@ -201,16 +203,16 @@ async def save_user_to_db(user_id: int, username: str = None, first_name: str = 
     try:
         async with db_pool.acquire() as conn:
             await conn.execute("""
-                INSERT INTO bot_users (user_id, username, first_name, last_name, avatar_url)
-                VALUES ($1, $2, $3, $4, $5)
-                ON CONFLICT (user_id) DO UPDATE SET
+                INSERT INTO bot_users (user_id, project_id, username, first_name, last_name, avatar_url)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                ON CONFLICT (user_id, project_id) DO UPDATE SET
                     username = EXCLUDED.username,
                     first_name = EXCLUDED.first_name,
                     last_name = EXCLUDED.last_name,
                     avatar_url = COALESCE(EXCLUDED.avatar_url, bot_users.avatar_url),
                     last_interaction = NOW(),
                     interaction_count = bot_users.interaction_count + 1
-            """, user_id, username, first_name, last_name, avatar_url)
+            """, user_id, PROJECT_ID, username, first_name, last_name, avatar_url)
         return True
     except Exception as e:
         logging.error(f"Ошибка сохранения пользователя в БД: {e}")
@@ -223,7 +225,7 @@ async def get_user_from_db(user_id: int):
         return None
     try:
         async with db_pool.acquire() as conn:
-            row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1", user_id)
+            row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1 AND project_id = $2", user_id, PROJECT_ID)
             if row:
                 row_dict = {key: row[key] for key in row.keys()}
                 if "user_data" in row_dict and row_dict["user_data"]:
@@ -249,18 +251,18 @@ async def update_user_data_in_db(user_id: int, data_key: str, data_value):
     try:
         async with db_pool.acquire() as conn:
             await conn.execute("""
-                INSERT INTO bot_users (user_id)
-                VALUES ($1)
-                ON CONFLICT (user_id) DO NOTHING
-            """, user_id)
+                INSERT INTO bot_users (user_id, project_id)
+                VALUES ($1, $2)
+                ON CONFLICT (user_id, project_id) DO NOTHING
+            """, user_id, PROJECT_ID)
 
             update_data = {data_key: data_value}
             await conn.execute("""
                 UPDATE bot_users
                 SET user_data = COALESCE(user_data, '{}'::jsonb) || $2::jsonb,
                     last_interaction = NOW()
-                WHERE user_id = $1
-            """, user_id, json.dumps(update_data))
+                WHERE user_id = $1 AND project_id = $3
+            """, user_id, json.dumps(update_data), PROJECT_ID)
         return True
     except Exception as e:
         logging.error(f"Ошибка обновления данных пользователя: {e}")

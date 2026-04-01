@@ -1835,7 +1835,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           CASE WHEN bu.is_bot = 1 THEN TRUE ELSE FALSE END AS "isBot"
         FROM bot_users bu
         LEFT JOIN bot_messages bm ON bm.user_id = bu.user_id::text AND bm.project_id = $1
-        WHERE bu.is_bot = 0
+        WHERE bu.is_bot = 0 AND bu.project_id = $1
         GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.avatar_url, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active, bu.is_bot
         ORDER BY bu.last_interaction DESC
       `, [projectId]);
@@ -1880,9 +1880,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           CASE WHEN COUNT(DISTINCT bu.user_id) > 0 THEN COALESCE(COUNT(bm.id)::float / COUNT(DISTINCT bu.user_id), 0) ELSE 0 END as "avgInteractionsPerUser"
         FROM bot_users bu
         LEFT JOIN bot_messages bm ON bm.user_id = bu.user_id::text AND bm.project_id = $1
+        WHERE bu.project_id = $1
       `, [projectId]);
-
-      // НЕ закрываем пул - он нужен для других запросов
 
       const stats = result.rows[0];
       // Convert strings to numbers
@@ -1932,8 +1931,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get detailed user responses for a project
-  app.get("/api/projects/:id/responses", async (_req, res) => {
+  app.get("/api/projects/:id/responses", async (req, res) => {
     try {
+      const projectId = parseInt(req.params.id);
 
       // Подключаемся напрямую к PostgreSQL для получения ответов пользователей из bot_users
       const { Pool } = await import('pg');
@@ -1951,10 +1951,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           registered_at,
           last_interaction
         FROM bot_users 
-        WHERE user_data IS NOT NULL 
+        WHERE project_id = $1
+          AND user_data IS NOT NULL 
           AND user_data != '{}'
         ORDER BY last_interaction DESC
-      `);
+      `, [projectId]);
 
       // НЕ закрываем пул - он нужен для других запросов
 
@@ -2140,10 +2141,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const query = `
         UPDATE bot_users 
         SET ${updateFields.join(', ')}, last_interaction = NOW()
-        WHERE user_id = $${paramIndex}
+        WHERE user_id = $${paramIndex} AND project_id = $${paramIndex + 1}
         RETURNING *
       `;
       values.push(userId);
+      values.push(req.body.projectId ?? 0);
 
       console.log('Updating user:', userId, 'with query:', query, 'values:', values);
 
@@ -2199,8 +2201,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         // Пытаемся удалить из bot_users если пользователь передал user_id
         const deleteResult = await pool.query(
-          `DELETE FROM bot_users WHERE user_id = $1`,
-          [id]
+          `DELETE FROM bot_users WHERE user_id = $1 AND project_id = $2`,
+          [id, req.body?.projectId ?? 0]
         );
 
         // НЕ закрываем пул - он нужен для других запросов

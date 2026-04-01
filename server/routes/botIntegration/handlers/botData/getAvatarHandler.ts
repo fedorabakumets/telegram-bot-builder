@@ -61,8 +61,8 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
             // Если не найдено, пробуем bot_users (для старых записей)
             if (!avatarUrl) {
                 userResult = await pool.query(
-                    'SELECT avatar_url FROM bot_users WHERE user_id = $1',
-                    [userId]
+                    'SELECT avatar_url FROM bot_users WHERE user_id = $1 AND project_id = $2',
+                    [userId, projectId]
                 );
                 avatarUrl = userResult.rows[0]?.avatar_url || null;
             }

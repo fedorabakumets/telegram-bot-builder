@@ -891,21 +891,27 @@ export class DatabaseStorage implements IStorage {
    * @param query - Поисковый запрос
    * @returns Массив найденных пользователей ботов
    */
-  async searchBotUsers(query: string): Promise<BotUser[]> {
+  async searchBotUsers(query: string, projectId?: number): Promise<BotUser[]> {
     // Убираем @ символ если есть
     const cleanQuery = query.startsWith('@') ? query.slice(1) : query;
     const searchTerm = `%${cleanQuery.toLowerCase()}%`;
     const numericQuery = parseInt(cleanQuery);
 
-    return await this.db.select().from(botUsers)
-      .where(
-        or(
-          ilike(botUsers.username, searchTerm),
-          ilike(botUsers.firstName, searchTerm),
-          ilike(botUsers.lastName, searchTerm),
-          isNaN(numericQuery) ? sql`false` : eq(botUsers.userId, numericQuery)
-        )
+    const conditions = [
+      or(
+        ilike(botUsers.username, searchTerm),
+        ilike(botUsers.firstName, searchTerm),
+        ilike(botUsers.lastName, searchTerm),
+        isNaN(numericQuery) ? sql`false` : eq(botUsers.userId, numericQuery)
       )
+    ];
+
+    if (projectId !== undefined) {
+      conditions.push(eq(botUsers.projectId, projectId));
+    }
+
+    return await this.db.select().from(botUsers)
+      .where(and(...conditions))
       .orderBy(desc(botUsers.lastInteraction));
   }
 

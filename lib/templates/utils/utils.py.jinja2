@@ -71,7 +71,7 @@ async def init_all_user_vars(user_id: int) -> dict:
     try:
         if db_pool:
             async with db_pool.acquire() as conn:
-                row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1", user_id)
+                row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1 AND project_id = $2", user_id, PROJECT_ID)
                 if row:
                     for key in row.keys():
                         if row[key] is not None:

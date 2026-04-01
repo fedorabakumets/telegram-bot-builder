@@ -643,36 +643,40 @@ test('D03', 'содержит _db_pool_ref = globals().get(\'db_pool\')', () => 
   );
 });
 
-test('D04', 'не содержит _project_id (bot_users не имеет столбца project_id)', () => {
+test('D04', 'содержит _project_id и фильтр project_id = $1 в SQL запросе', () => {
   const code = gen(makeCleanProject([
     makeGroupMessageTriggerNode('gmt1', { autoTransitionTo: 'msg1' }),
     makeMessageNode('msg1'),
   ]), 'd04');
   ok(
-    !code.includes("_project_id = globals().get('PROJECT_ID')") || !code.includes('project_id = $1'),
-    "SQL не должен фильтровать по project_id в group_message_trigger",
+    code.includes("_project_id = globals().get('PROJECT_ID', 0)"),
+    "SQL должен содержать _project_id = globals().get('PROJECT_ID', 0)",
+  );
+  ok(
+    code.includes('project_id = $1'),
+    "SQL должен фильтровать по project_id = $1 в group_message_trigger",
   );
 });
 
-test('D05', 'SQL запрос использует только $1 для thread_id', () => {
+test('D05', 'SQL запрос использует $1 для project_id и $2 для thread_id', () => {
   const code = gen(makeCleanProject([
     makeGroupMessageTriggerNode('gmt1', { autoTransitionTo: 'msg1' }),
     makeMessageNode('msg1'),
   ]), 'd05');
   ok(
-    code.includes("= $1 LIMIT 1"),
-    'SQL должен использовать $1 для thread_id',
+    code.includes("= $2 LIMIT 1"),
+    'SQL должен использовать $2 для thread_id (после project_id = $1)',
   );
 });
 
-test('D06', 'запрос с $1 (только thread_id, без project_id)', () => {
+test('D06', 'запрос содержит project_id = $1 и thread_id = $2', () => {
   const code = gen(makeCleanProject([
     makeGroupMessageTriggerNode('gmt1', { autoTransitionTo: 'msg1' }),
     makeMessageNode('msg1'),
   ]), 'd06');
   ok(
-    code.includes("= $1 LIMIT 1") || code.includes("= $1\n"),
-    'SQL без project_id с $1 должен быть в коде',
+    code.includes('project_id = $1') && (code.includes("= $2 LIMIT 1") || code.includes("= $2\n")),
+    'SQL должен содержать project_id = $1 и thread_id = $2',
   );
 });
 

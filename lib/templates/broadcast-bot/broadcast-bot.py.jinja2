@@ -27,7 +27,7 @@ async def handle_broadcast_{{ safeNodeId }}(callback_query, user_id):
             recipients.extend([str(row["user_id"]) for row in rows])
 {%- endif %}
 {%- if idSourceType == 'bot_users' or idSourceType == 'both' %}
-            rows = await conn.fetch("SELECT DISTINCT user_id FROM bot_users")
+            rows = await conn.fetch("SELECT DISTINCT user_id FROM bot_users WHERE project_id = PROJECT_ID")
             recipients.extend([str(row["user_id"]) for row in rows])
 {%- endif %}
     except Exception as e:
