@@ -12,7 +12,7 @@
 {% set indentLevel = '    ' %}
 
 @dp.message(F.text)
-async def fallback_text_handler(message: types.Message, data: dict):
+async def fallback_text_handler(message: types.Message):
     """
     Fallback обработчик для всех текстовых сообщений без специфичного обработчика.
     """
@@ -20,7 +20,7 @@ async def fallback_text_handler(message: types.Message, data: dict):
     user_text = message.text
 {% include 'handle-user-input/handle-user-input.py.jinja2' %}
     if not (user_id in user_data and "waiting_for_input" in user_data.get(user_id, {})):
-        if not data.get("_imt_handled"):
+        if not user_data.get(user_id, {}).get("_imt_handled"):
             logging.info(f"📩 Получено необработанное текстовое сообщение от {message.from_user.id}: {message.text}")
 
 

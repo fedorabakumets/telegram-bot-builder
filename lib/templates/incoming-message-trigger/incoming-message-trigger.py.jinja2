@@ -37,10 +37,17 @@ async def incoming_message_trigger_{{ sanitized_node_id }}_middleware(handler, e
 
         mock_callback = MockCallback("{{ entry.targetNodeId }}", event.from_user, event)
         await handle_callback_{{ sanitized_target_id }}(mock_callback)
-        data["_imt_handled"] = True
+        # Помечаем что сообщение уже обработано триггером
+        if event.from_user.id not in user_data:
+            user_data[event.from_user.id] = {}
+        user_data[event.from_user.id]["_imt_handled"] = True
     except Exception as e:
         logging.error(f"Ошибка в incoming_message_trigger middleware: {e}")
 
-    return await handler(event, data)
+    result = await handler(event, data)
+    # Сбрасываем флаг после обработки
+    if event.from_user.id in user_data:
+        user_data[event.from_user.id].pop("_imt_handled", None)
+    return result
 
 {% endfor %}
