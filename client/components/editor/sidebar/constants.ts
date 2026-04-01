@@ -11,7 +11,7 @@ import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
 import { commandTrigger, textTrigger, anyMessageTrigger } from './massive/triggers';
 import { conditionNode } from './massive/logic';
-import { forwardMessage } from './massive/content-management';
+import { forwardMessage, createForumTopicNode } from './massive/content-management';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -45,7 +45,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Управление контентом',
-    components: [forwardMessage]
+    components: [forwardMessage, createForumTopicNode]
   }
 ];
 
