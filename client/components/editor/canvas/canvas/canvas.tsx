@@ -164,6 +164,8 @@ interface CanvasProps {
   onConnectionDelete?: (fromId: string, toId: string, type: string) => void;
   /** Колбэк перед созданием соединения — для сохранения в историю */
   onConnectionCreate?: () => void;
+  /** Автоматически вписать содержимое в экран при первой загрузке узлов */
+  autoFitOnLoad?: boolean;
 }
 
 export function Canvas({
@@ -204,6 +206,7 @@ export function Canvas({
   onActionHistoryRemove,
   onConnectionDelete: onConnectionDeleteProp,
   onConnectionCreate,
+  autoFitOnLoad,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -231,6 +234,27 @@ export function Canvas({
 
   // ID узла, который сейчас перетаскивается (для подсветки связанных узлов и линий)
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+
+  // Ref для отслеживания последнего набора узлов при autoFitOnLoad
+  const lastAutoFitNodesKeyRef = useRef<string>('');
+  const fitToContentRef = useRef<() => void>(() => {});
+
+  // Автоматически вписываем содержимое в экран при первой загрузке узлов
+  useEffect(() => {
+    if (!autoFitOnLoad || nodes.length === 0) return;
+
+    // Ключ текущего набора узлов — чтобы не повторять fit при смене листа
+    const nodesKey = nodes.map(n => n.id).join(',');
+    if (nodesKey === lastAutoFitNodesKeyRef.current) return;
+
+    // Ждём пока ResizeObserver заполнит хотя бы половину размеров
+    const coveredCount = nodes.filter(n => nodeSizes.has(n.id)).length;
+    if (coveredCount < Math.ceil(nodes.length * 0.5)) return;
+
+    lastAutoFitNodesKeyRef.current = nodesKey;
+    const timer = setTimeout(() => fitToContentRef.current(), 150);
+    return () => clearTimeout(timer);
+  }, [autoFitOnLoad, nodes, nodeSizes]);
 
   // Система истории действий - используем внешнюю историю если передана, иначе локальную
   const [localActionHistory, setLocalActionHistory] = useState<Action[]>([]);
@@ -787,6 +811,9 @@ export function Canvas({
       scrollContainerRef.current.scrollLeft = 0;
     }
   }, [nodes, nodeSizes, zoom]);
+
+  // Держим ref актуальным чтобы autoFitOnLoad эффект не имел stale closure
+  fitToContentRef.current = fitToContent;
 
   // Handle wheel zoom (native handler, registered with { passive: false })
   const handleWheel = useCallback((e: WheelEvent) => {
