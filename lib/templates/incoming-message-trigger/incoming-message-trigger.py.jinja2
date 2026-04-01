@@ -1,0 +1,47 @@
+{#
+  Шаблон middleware триггеров входящих сообщений
+
+  @fileoverview Генерирует Python middleware для обработки входящих сообщений (incoming_message_trigger узлов)
+  @param {array} incomingMessageTriggerEntries - Массив объектов IncomingMessageTriggerEntry:
+    - nodeId: string          — ID узла incoming_message_trigger
+    - targetNodeId: string    — ID целевого узла
+    - targetNodeType: string  — тип целевого узла
+#}
+
+# Middleware триггеров входящих сообщений
+{% for entry in incomingMessageTriggerEntries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+
+async def incoming_message_trigger_{{ sanitized_node_id }}_middleware(handler, event: types.Message, data: dict):
+    """Срабатывает на каждое входящее сообщение от пользователя"""
+    try:
+        user_id = event.from_user.id
+        logging.info(f"Входящее сообщение от {user_id} — триггер узла {{ entry.nodeId }}")
+
+        class MockCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+
+            async def answer(self, *args, **kwargs):
+                pass
+
+            async def edit_text(self, text, **kwargs):
+                try:
+                    return await self.message.edit_text(text, **kwargs)
+                except Exception as e:
+                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                    return await self.message.answer(text, **kwargs)
+
+        mock_callback = MockCallback("{{ entry.targetNodeId }}", event.from_user, event)
+        await handle_callback_{{ sanitized_target_id }}(mock_callback)
+    except Exception as e:
+        logging.error(f"Ошибка в incoming_message_trigger middleware: {e}")
+
+    return await handler(event, data)
+
+dp.message.middleware(incoming_message_trigger_{{ sanitized_node_id }}_middleware)
+
+{% endfor %}
