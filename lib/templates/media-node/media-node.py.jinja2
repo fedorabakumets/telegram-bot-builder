@@ -99,6 +99,9 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     # Отправка одиночного медиафайла
 {%- if '/uploads/' in url %}
     _file_path = get_upload_file_path("{{ url }}")
+    if not os.path.exists(_file_path):
+        logging.error(f"❌ Медиафайл не найден: {_file_path} (узел {{ nodeId }})")
+        return
     _media_file = FSInputFile(_file_path)
     await callback_query.message.answer_{{ mtype }}(_media_file)
 {%- else %}
@@ -108,16 +111,22 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
 
 {%- elif attachedMedia and attachedMedia | length > 1 %}
     # Отправка медиагруппы
-    _media_group = [
+    _media_group = []
 {%- for url in attachedMedia %}
 {%- set cls = get_input_media_class(url) | trim %}
 {%- if '/uploads/' in url %}
-        {{ cls }}(media=FSInputFile(get_upload_file_path("{{ url }}"))),
+    _fp_{{ loop.index }} = get_upload_file_path("{{ url }}")
+    if not os.path.exists(_fp_{{ loop.index }}):
+        logging.error(f"❌ Медиафайл не найден: {_fp_{{ loop.index }}} (узел {{ nodeId }}, индекс {{ loop.index0 }})")
+    else:
+        _media_group.append({{ cls }}(media=FSInputFile(_fp_{{ loop.index }})))
 {%- else %}
-        {{ cls }}(media="{{ url|e }}"),
+    _media_group.append({{ cls }}(media="{{ url|e }}"))
 {%- endif %}
 {%- endfor %}
-    ]
+    if not _media_group:
+        logging.error(f"❌ Все медиафайлы недоступны для узла {{ nodeId }}")
+        return
     await callback_query.message.answer_media_group(_media_group)
 
 {%- else %}

@@ -102,6 +102,11 @@ async def send_photo_with_caption(chat_id: int, photo_source, caption: str = Non
     try:
         if isinstance(photo_source, str) and photo_source.startswith('/uploads/'):
             file_path = get_upload_file_path(photo_source)
+            if not os.path.exists(file_path):
+                logging.error(f"❌ Медиафайл не найден: {file_path}")
+                if caption:
+                    return await bot.send_message(chat_id, caption, **kwargs)
+                return None
             result = await bot.send_photo(chat_id, FSInputFile(file_path), caption=caption, **kwargs)
         else:
             result = await bot.send_photo(chat_id, photo_source, caption=caption, **kwargs)
