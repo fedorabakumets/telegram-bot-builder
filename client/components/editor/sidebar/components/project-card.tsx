@@ -40,6 +40,9 @@ import {
   Zap,
 } from 'lucide-react';
 import { getNodeTypeLabel } from '@/components/editor/properties/utils/node-formatters';
+import { SheetNodeSearch } from './sheet-node-search';
+import { useSheetNodeSearch } from '../hooks/use-sheet-node-search';
+import { useSheetSearchState } from '../hooks/use-sheet-search-state';
 
 /**
  * Состояние drag-and-drop для проектов и листов
@@ -195,6 +198,76 @@ function getKeyboardButtons(node: any): string[] {
 }
 
 /**
+ * Пропсы компонента SheetAccordionContent
+ */
+interface SheetAccordionContentProps {
+  /** Список узлов листа */
+  nodes: any[];
+  /** Текущий поисковый запрос */
+  searchQuery: string;
+  /** Обработчик изменения поискового запроса */
+  onSearchChange: (query: string) => void;
+}
+
+/**
+ * Содержимое раскрытого аккордеона листа: поиск + список узлов
+ * @param props - Свойства компонента SheetAccordionContentProps
+ * @returns JSX элемент содержимого аккордеона
+ */
+function SheetAccordionContent({ nodes, searchQuery, onSearchChange }: SheetAccordionContentProps) {
+  const filtered = useSheetNodeSearch(nodes, searchQuery);
+
+  return (
+    <div className="ml-5 mt-0.5 mb-1 transition-all">
+      <SheetNodeSearch value={searchQuery} onChange={onSearchChange} />
+      {filtered.length === 0 ? (
+        <div className="text-xs text-muted-foreground opacity-60 px-1.5">
+          {nodes.length === 0 ? 'Нет узлов' : 'Не найдено'}
+        </div>
+      ) : (
+        <div className="space-y-0.5">
+          {filtered.map((node: any) => {
+            const shortContent = getShortContent(node);
+            const isKeyboard = node.type === 'keyboard';
+            const buttons = isKeyboard ? getKeyboardButtons(node) : [];
+            return (
+              <div key={node.id} className="px-1.5 py-0.5 rounded text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <NodeTypeIcon type={node.type} />
+                  <span className="font-medium flex-shrink-0">
+                    {node.type === 'keyboard'
+                      ? node.data?.keyboardType === 'reply' ? 'Reply кнопки' : 'Inline кнопки'
+                      : getNodeTypeLabel(node.type)}
+                  </span>
+                  {shortContent && (
+                    <span className="truncate opacity-70">
+                      {shortContent.length > 30 ? shortContent.slice(0, 30) + '…' : shortContent}
+                    </span>
+                  )}
+                </div>
+                {isKeyboard && buttons.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1 ml-4">
+                    {buttons.map((text, i) => (
+                      <span
+                        key={i}
+                        className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/50 text-xs opacity-80 truncate max-w-[80px]"
+                        title={text}
+                      >
+                        {text}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Компонент карточки проекта
  * Отображает информацию о проекте, метаданные и список листов
  * Поддерживает drag-and-drop для проектов и листов
@@ -255,6 +328,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const [draggingSheetIndex, setDraggingSheetIndex] = useState<number | null>(null);
   const dragSheetIndexRef = useRef<number | null>(null);
   const [expandedSheets, setExpandedSheets] = useState<Set<string>>(new Set());
+  const { getSheetQuery, setSheetQuery } = useSheetSearchState();
 
   const toggleSheetExpanded = (sheetId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -733,55 +807,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 )}
               </div>
 
-              {/* Аккордеон: список узлов листа */}
-              {SheetsManager.isNewFormat(projectData) && sheetId && expandedSheets.has(sheetId) && (() => {
-                const nodes: any[] = projectData.sheets[index]?.nodes || [];
-                return nodes.length > 0 ? (
-                  <div className="ml-5 mt-0.5 mb-1 space-y-0.5 transition-all">
-                    {nodes.map((node: any) => {
-                      const shortContent = getShortContent(node);
-                      const isKeyboard = node.type === 'keyboard';
-                      const buttons = isKeyboard ? getKeyboardButtons(node) : [];
-                      return (
-                        <div key={node.id} className="px-1.5 py-0.5 rounded text-xs text-muted-foreground">
-                          {/* Строка с иконкой и названием типа */}
-                          <div className="flex items-center gap-1.5">
-                            <NodeTypeIcon type={node.type} />
-                            <span className="font-medium flex-shrink-0">
-                              {node.type === 'keyboard'
-                                ? node.data?.keyboardType === 'reply' ? 'Reply кнопки' : 'Inline кнопки'
-                                : getNodeTypeLabel(node.type)}
-                            </span>
-                            {shortContent && (
-                              <span className="truncate opacity-70">
-                                {shortContent.length > 30 ? shortContent.slice(0, 30) + '…' : shortContent}
-                              </span>
-                            )}
-                          </div>
-                          {/* Кнопки клавиатуры */}
-                          {isKeyboard && buttons.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1 ml-4">
-                              {buttons.map((text, i) => (
-                                <span
-                                  key={i}
-                                  className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/50 text-xs opacity-80 truncate max-w-[80px]"
-                                  title={text}
-                                >
-                                  {text}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="ml-5 mt-0.5 mb-1 text-xs text-muted-foreground opacity-60 px-1.5">
-                    Нет узлов
-                  </div>
-                );
-              })()}
+              {/* Аккордеон: поиск и список узлов листа */}
+              {SheetsManager.isNewFormat(projectData) && sheetId && expandedSheets.has(sheetId) && (
+                <SheetAccordionContent
+                  nodes={projectData.sheets[index]?.nodes || []}
+                  searchQuery={getSheetQuery(sheetId)}
+                  onSearchChange={(q) => setSheetQuery(sheetId, q)}
+                />
+              )}
               </div>
             );
           })}
