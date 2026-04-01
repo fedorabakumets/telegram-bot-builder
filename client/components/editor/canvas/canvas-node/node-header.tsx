@@ -101,11 +101,7 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
           </span>
         );
       case 'group_message_trigger':
-        return (
-          <span className="font-semibold text-violet-700 dark:text-violet-300">
-            Сообщение в теме группы
-          </span>
-        );
+        return <GroupMessageTriggerHeader node={node} />;
       default:
         return null;
     }
