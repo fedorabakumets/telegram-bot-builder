@@ -1,0 +1,114 @@
+{#
+  @fileoverview Шаблон создания топика в форум-группе Telegram.
+  Генерирует callback-обработчик, который вызывает bot.create_forum_topic()
+  и опционально сохраняет thread_id в переменную пользователя.
+#}
+
+{% set chat_id_source = forumChatIdSource or 'manual' %}
+{% set topic_name_raw = topicName or '' %}
+{% set icon_color = topicIconColor or '7322096' %}
+{% set save_to = saveThreadIdTo or '' %}
+{% set skip_if_exists = skipIfExists or false %}
+
+# Обработчик создания топика в форуме: {{ nodeId }}
+
+async def _resolve_forum_chat_id_{{ safeName }}(callback_query: types.CallbackQuery):
+    """Определяет ID форум-группы для создания топика."""
+    user_id = callback_query.from_user.id
+
+    {% if chat_id_source == 'variable' %}
+    _all_vars = await init_all_user_vars(user_id)
+    _raw_chat_id = _all_vars.get({{ forumChatVariableName | escape_python_string }}, "")
+    _raw_chat_id = str(_raw_chat_id).strip()
+    if not _raw_chat_id:
+        return None
+    try:
+        _chat_id = int(_raw_chat_id)
+        if _chat_id > 0:
+            _chat_id = int(f"-100{_chat_id}")
+    except ValueError:
+        _chat_id = _raw_chat_id
+    return _chat_id
+    {% else %}
+    _raw_chat_id = {{ forumChatId | escape_python_string }}
+    if not _raw_chat_id:
+        return None
+    try:
+        _chat_id = int(_raw_chat_id)
+        if _chat_id > 0:
+            _chat_id = int(f"-100{_chat_id}")
+    except ValueError:
+        _chat_id = _raw_chat_id
+    return _chat_id
+    {% endif %}
+
+
+async def _resolve_topic_name_{{ safeName }}(callback_query: types.CallbackQuery):
+    """Подставляет переменные пользователя в название топика."""
+    user_id = callback_query.from_user.id
+    _topic_name = {{ topic_name_raw | escape_python_string }}
+
+    if "{" in _topic_name and "}" in _topic_name:
+        _all_vars = await init_all_user_vars(user_id)
+        for _var_key, _var_val in _all_vars.items():
+            {% raw %}_topic_name = _topic_name.replace(f"{{{_var_key}}}", str(_var_val)){% endraw %}
+
+    return _topic_name or "Новый топик"
+
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
+    """Создаёт топик в форум-группе Telegram."""
+    user_id = callback_query.from_user.id
+
+    {% if skip_if_exists and save_to %}
+    # Проверяем, существует ли уже сохранённый thread_id
+    _existing_vars = await init_all_user_vars(user_id)
+    _existing_thread_id = _existing_vars.get({{ save_to | escape_python_string }}, "")
+    if _existing_thread_id:
+        logging.info(
+            f"create_forum_topic node {{ nodeId }}: skipping, thread_id already exists: {_existing_thread_id}"
+        )
+        await callback_query.answer()
+        return
+    {% endif %}
+
+    _forum_chat_id = await _resolve_forum_chat_id_{{ safeName }}(callback_query)
+    if not _forum_chat_id:
+        logging.warning(f"create_forum_topic node {{ nodeId }}: forum chat id is empty")
+        await callback_query.answer("Не удалось определить ID группы", show_alert=True)
+        return
+
+    _topic_name = await _resolve_topic_name_{{ safeName }}(callback_query)
+
+    logging.info(
+        f"create_forum_topic node {{ nodeId }} triggered by {user_id}; chat_id={_forum_chat_id}, topic_name={_topic_name!r}"
+    )
+
+    try:
+        _created_topic = await bot.create_forum_topic(
+            chat_id=_forum_chat_id,
+            name=_topic_name,
+            icon_color=int({{ icon_color | escape_python_string }}),
+        )
+        _thread_id = _created_topic.message_thread_id
+        logging.info(
+            f"create_forum_topic node {{ nodeId }}: created topic thread_id={_thread_id} in chat {_forum_chat_id}"
+        )
+    except Exception as e:
+        logging.error(f"create_forum_topic node {{ nodeId }}: failed to create topic in {_forum_chat_id}: {e}")
+        await callback_query.answer("Не удалось создать топик", show_alert=True)
+        return
+
+    {% if save_to %}
+    # Сохраняем thread_id в переменную пользователя
+    try:
+        await set_user_var(user_id, {{ save_to | escape_python_string }}, str(_thread_id))
+        logging.info(
+            f"create_forum_topic node {{ nodeId }}: saved thread_id={_thread_id} to variable '{{ save_to }}'"
+        )
+    except Exception as e:
+        logging.warning(f"create_forum_topic node {{ nodeId }}: failed to save thread_id: {e}")
+    {% endif %}
+
+    await callback_query.answer("Топик создан")
