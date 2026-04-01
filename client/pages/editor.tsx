@@ -115,6 +115,7 @@ export default function Editor() {
 
   /** ID узла для фокусировки на канвасе */
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
+  const focusTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** ID кнопки для скролла к ней в панели свойств */
   const [focusButtonId, setFocusButtonId] = useState<string | null>(null);
@@ -123,11 +124,15 @@ export default function Editor() {
    * Обработчик фокусировки на узле канваса из сайдбара
    * @param nodeId - Идентификатор узла для фокусировки
    * @param buttonId - Опциональный идентификатор кнопки для скролла в панели свойств
+   * @param persist - Если true — подсветка держится до явного сброса (для чекбоксов)
    */
-  const handleNodeFocus = useCallback((nodeId: string, buttonId?: string) => {
+  const handleNodeFocus = useCallback((nodeId: string, buttonId?: string, persist?: boolean) => {
     setFocusNodeId(nodeId);
     setFocusButtonId(buttonId ?? null);
-    setTimeout(() => setFocusNodeId(null), 2000);
+    if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
+    if (!persist) {
+      focusTimerRef.current = setTimeout(() => setFocusNodeId(null), 2000);
+    }
     setTimeout(() => setFocusButtonId(null), 800);
   }, []);
 

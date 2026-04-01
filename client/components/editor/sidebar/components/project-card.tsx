@@ -203,8 +203,8 @@ interface SheetAccordionContentProps {
   searchQuery: string;
   /** Обработчик изменения поискового запроса */
   onSearchChange: (query: string) => void;
-  /** Колбэк для фокусировки на узле канваса, опционально с фокусом на кнопке */
-  onNodeFocus?: (nodeId: string, buttonId?: string) => void;
+  /** Колбэк для фокусировки на узле канваса, опционально с фокусом на кнопке и постоянной подсветкой */
+  onNodeFocus?: (nodeId: string, buttonId?: string, persist?: boolean) => void;
   /** Список других листов проекта для перемещения */
   availableSheets?: Array<{ id: string; name: string }>;
   /** Колбэк массового перемещения узлов */
@@ -289,6 +289,12 @@ function SheetAccordionContent({
                     onChange={(e) => {
                       e.stopPropagation();
                       toggleNode(node.id);
+                      if (e.target.checked) {
+                        onNodeFocus?.(node.id, undefined, true);
+                      } else {
+                        // сбрасываем подсветку вызовом с коротким таймаутом
+                        onNodeFocus?.(node.id, undefined, false);
+                      }
                     }}
                   />
                   <NodeTypeIcon type={node.type} />
