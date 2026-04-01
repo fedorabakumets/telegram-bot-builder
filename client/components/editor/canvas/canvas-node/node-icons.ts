@@ -27,6 +27,8 @@ export const nodeIcons: Record<string, string> = {
   unpin_message: 'fas fa-times',
   delete_message: 'fas fa-trash',
   forward_message: 'fas fa-share',
+  /** Иконка узла создания топика форум-группы */
+  create_forum_topic: 'fas fa-layer-group',
   ban_user: 'fas fa-ban',
   unban_user: 'fas fa-user-check',
   mute_user: 'fas fa-volume-mute',

@@ -65,6 +65,7 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
       case 'unpin_message':
       case 'delete_message':
       case 'forward_message':
+      case 'create_forum_topic':
         return <ContentManagementHeader node={node} type={node.type} />;
       case 'ban_user':
       case 'unban_user':

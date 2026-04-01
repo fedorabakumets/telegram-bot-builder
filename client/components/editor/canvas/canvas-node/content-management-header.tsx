@@ -10,7 +10,7 @@ import { Node } from '@/types/bot';
 /**
  * Типы узлов управления контентом
  */
-type ContentManagementType = 'pin_message' | 'unpin_message' | 'delete_message' | 'forward_message';
+type ContentManagementType = 'pin_message' | 'unpin_message' | 'delete_message' | 'forward_message' | 'create_forum_topic';
 
 /**
  * Интерфейс свойств компонента ContentManagementHeader
@@ -37,13 +37,14 @@ interface ContentManagementHeaderProps {
  * @returns {JSX.Element} Компонент заголовка
  */
 export function ContentManagementHeader({ node, type }: ContentManagementHeaderProps) {
-  const shouldShowCommandChip = type !== 'forward_message';
+  const shouldShowCommandChip = type !== 'forward_message' && type !== 'create_forum_topic';
 
   const labels: Record<ContentManagementType, string> = {
     pin_message: 'Управление контентом',
     unpin_message: 'Управление контентом',
     delete_message: 'Управление контентом',
     forward_message: 'Переслать сообщение',
+    create_forum_topic: 'Создать топик',
   };
 
   const chipClasses: Record<ContentManagementType, string> = {
@@ -51,6 +52,7 @@ export function ContentManagementHeader({ node, type }: ContentManagementHeaderP
     unpin_message: 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/30 border-cyan-200 dark:border-cyan-800',
     delete_message: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800',
     forward_message: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800',
+    create_forum_topic: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30 border-teal-200 dark:border-teal-800',
   };
 
   return (
