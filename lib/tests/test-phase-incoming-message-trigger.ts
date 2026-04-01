@@ -923,6 +923,13 @@ test('J10', 'incoming_message_trigger → нет F.photo фильтра', () => 
   ok(!body.includes('F.photo'), 'F.photo НЕ должен быть в middleware');
 });
 
+test('J11', 'incoming_message_trigger → нет "Нет обработчика для узла типа incoming_message_trigger" в коде', () => {
+  const p = makeCleanProject([makeIncomingTriggerNode('imt1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'j11');
+  ok(!code.includes('Нет обработчика для узла типа incoming_message_trigger'),
+    'узел не должен попадать в общий цикл как необработанный');
+});
+
 // ════════════════════════════════════════════════════════════════════════════
 // ИТОГИ
 // ════════════════════════════════════════════════════════════════════════════
