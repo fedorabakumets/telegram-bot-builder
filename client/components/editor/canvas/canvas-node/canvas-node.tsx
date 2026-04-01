@@ -88,6 +88,8 @@ interface CanvasNodeProps {
   isConnectedToDragging?: boolean;
   /** Узел подсвечен при наведении на линию соединения */
   isHoveredByConnection?: boolean;
+  /** Колбэк при наведении/уходе мыши с узла */
+  onHover?: (nodeId: string | null) => void;
   /**
    * РљРѕР»Р±СЌРє, РІС‹Р·С‹РІР°РµРјС‹Р№ РїСЂРё РјРѕРЅС‚РёСЂРѕРІР°РЅРёРё РїРѕСЂС‚Р° РєРЅРѕРїРєРё.
    * РџРµСЂРµРґР°С‘С‚ buttonId Рё РїРѕР·РёС†РёСЋ С†РµРЅС‚СЂР° РїРѕСЂС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper-div СѓР·Р»Р°.
@@ -111,7 +113,7 @@ interface CanvasNodeProps {
  * @param {CanvasNodeProps} props - РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р°
  * @returns {JSX.Element} РљРѕРјРїРѕРЅРµРЅС‚ СѓР·Р»Р° РЅР° С…РѕР»СЃС‚Рµ
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, onButtonPortMount }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, onHover, onButtonPortMount }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref РґР»СЏ dragOffset вЂ” РїРѕР·РІРѕР»СЏРµС‚ С‡РёС‚Р°С‚СЊ Р°РєС‚СѓР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РІ handleMouseMove
@@ -440,6 +442,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         zIndex: isDragActive ? 1000 : isSelected ? 100 : 10,
         overflow: 'visible',
       }}
+      onMouseEnter={() => onHover?.(node.id)}
+      onMouseLeave={() => onHover?.(null)}
     >
       {/* РљРЅРѕРїРєРё РґРµР№СЃС‚РІРёР№ вЂ” СЃРЅР°СЂСѓР¶Рё РѕСЃРЅРѕРІРЅРѕРіРѕ div, РїРѕР·РёС†РёРѕРЅРёСЂСѓСЋС‚СЃСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper */}
       <NodeActions onDuplicate={onDuplicateAtPosition ?? onDuplicate} onDelete={onDelete} isSelected={isSelected} />

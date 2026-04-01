@@ -113,6 +113,20 @@ export function CanvasContent({
     setHoveredConnectionNodes({ fromId, toId });
   }, []);
 
+  /** ID узла под курсором мыши */
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+
+  /** Узлы, связанные с узлом под курсором */
+  const connectedToHovered = useMemo<Set<string>>(() => {
+    if (!hoveredNodeId) return new Set();
+    const connected = new Set<string>();
+    collectConnections(nodes).forEach(({ fromId, toId }) => {
+      if (fromId === hoveredNodeId) connected.add(toId);
+      if (toId === hoveredNodeId) connected.add(fromId);
+    });
+    return connected;
+  }, [hoveredNodeId, nodes]);
+
   /**
    * Вычисляем множество ID узлов, связанных с перетаскиваемым узлом.
    * Используем collectConnections — единый источник истины для всех типов связей.
@@ -180,8 +194,9 @@ export function CanvasContent({
           onPortMouseDown={onPortMouseDown}
           isConnectionTarget={hoveredTargetNodeId === node.id}
           isConnectionSource={draftConnection?.fromNodeId === node.id}
-          isConnectedToDragging={connectedTodragging.has(node.id)}
+          isConnectedToDragging={connectedTodragging.has(node.id) || connectedToHovered.has(node.id)}
           isHoveredByConnection={hoveredConnectionNodes.fromId === node.id || hoveredConnectionNodes.toId === node.id}
+          onHover={setHoveredNodeId}
           onButtonPortMount={handleButtonPortMount}
         />
       ))}
