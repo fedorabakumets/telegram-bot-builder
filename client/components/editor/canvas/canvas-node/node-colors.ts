@@ -42,7 +42,7 @@ export const nodeColors: Record<string, string> = {
   client_auth: 'bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
   command_trigger: 'bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 text-yellow-600 dark:text-yellow-400 border-2 border-yellow-300 dark:border-yellow-700/50 shadow-lg shadow-yellow-500/20',
   text_trigger: 'bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30 text-blue-600 dark:text-blue-400 border-2 border-blue-300 dark:border-blue-700/50 shadow-lg shadow-blue-500/20',
-  /** Цвет триггера любого сообщения — зелёный */
-  any_message_trigger: 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-600 dark:text-green-400 border-2 border-green-300 dark:border-green-700/50 shadow-lg shadow-green-500/20',
+  /** Цвет триггера входящего сообщения — зелёный */
+  incoming_message_trigger: 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-600 dark:text-green-400 border-2 border-green-300 dark:border-green-700/50 shadow-lg shadow-green-500/20',
   media: 'bg-gradient-to-br from-fuchsia-50 to-purple-100 dark:from-fuchsia-900/30 dark:to-purple-900/30 text-fuchsia-600 dark:text-fuchsia-400 border-2 border-fuchsia-300 dark:border-fuchsia-700/50 shadow-lg shadow-fuchsia-500/20',
 };

@@ -423,7 +423,7 @@ export function PropertiesPanel({
               formatNodeDisplay={formatNodeDisplay}
             />
           )}
-          {isTriggerNode(selectedNode.type) && selectedNode.type === 'any_message_trigger' && (
+          {isTriggerNode(selectedNode.type) && selectedNode.type === 'incoming_message_trigger' && (
             <AnyMessageTriggerConfiguration />
           )}
 

@@ -41,7 +41,7 @@ export const nodeIcons: Record<string, string> = {
   client_auth: 'fas fa-user-shield',
   command_trigger: 'fas fa-bolt',
   text_trigger: 'fas fa-comment-dots',
-  /** Иконка триггера любого сообщения */
-  any_message_trigger: 'fas fa-inbox',
+  /** Иконка триггера входящего сообщения */
+  incoming_message_trigger: 'fas fa-inbox',
   media: 'fas fa-photo-video',
 };

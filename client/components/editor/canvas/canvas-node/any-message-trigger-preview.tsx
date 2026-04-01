@@ -7,7 +7,7 @@ import { Node } from '@/types/bot';
 
 /** Пропсы компонента AnyMessageTriggerPreview */
 interface AnyMessageTriggerPreviewProps {
-  /** Узел типа any_message_trigger */
+  /** Узел типа incoming_message_trigger */
   node: Node;
 }
 
@@ -15,7 +15,7 @@ interface AnyMessageTriggerPreviewProps {
 export function AnyMessageTriggerPreview({ node: _ }: AnyMessageTriggerPreviewProps) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-xs text-green-300 font-medium">Любое сообщение</span>
+      <span className="text-xs text-green-300 font-medium">Входящее сообщение</span>
     </div>
   );
 }
