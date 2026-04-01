@@ -24,6 +24,7 @@ import { generateAdminRightsFromNode } from '../admin-rights/admin-rights.render
 import { collectSynonymEntries } from '../synonyms/synonyms.renderer';
 import { generateCommandTriggerHandlers } from '../command-trigger/command-trigger.renderer';
 import { generateTextTriggerHandlers } from '../text-trigger/text-trigger.renderer';
+import { generateIncomingMessageTriggerHandlers } from '../incoming-message-trigger/incoming-message-trigger.renderer';
 import { generateConditionHandlers } from '../condition/condition.renderer';
 import { generateMediaNode } from '../media-node';
 import { generateUserInputNodeHandler } from '../user-input';
@@ -250,6 +251,13 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     textTriggerCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Middleware триггеров входящих сообщений ---
+  const incomingMessageTriggerCode = generateIncomingMessageTriggerHandlers(nodes);
+  if (incomingMessageTriggerCode) {
+    codeLines.push('\n# Middleware триггеров входящих сообщений');
+    incomingMessageTriggerCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   // --- Обработчики узлов условия ---
   const conditionCode = generateConditionHandlers(nodes);
   if (conditionCode) {
@@ -259,7 +267,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   nodes.forEach((node: Node) => {
     // Пропускаем триггеры — они уже обработаны выше
-    if (node.type === 'command_trigger' || node.type === 'text_trigger') {
+    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger') {
       return;
     }
 
