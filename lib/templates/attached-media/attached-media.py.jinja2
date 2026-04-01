@@ -20,32 +20,48 @@
 {%- if imageUrl and imageUrl != 'undefined' %}
 {%- if '/uploads/' in imageUrl %}
 image_path = get_upload_file_path("{{ imageUrl }}")
-image_file = FSInputFile(image_path)
-sent_message = await callback_query.message.answer_photo(image_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+if not os.path.exists(image_path):
+    logging.error(f"❌ Медиафайл не найден: {image_path} (узел {{ nodeId }})")
+    sent_message = await callback_query.message.answer(text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+else:
+    image_file = FSInputFile(image_path)
+    sent_message = await callback_query.message.answer_photo(image_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- else %}
 sent_message = await callback_query.message.answer_photo("{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}
 {%- elif videoUrl %}
 {%- if '/uploads/' in videoUrl %}
 video_path = get_upload_file_path("{{ videoUrl }}")
-video_file = FSInputFile(video_path)
-sent_message = await callback_query.message.answer_video(video_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+if not os.path.exists(video_path):
+    logging.error(f"❌ Медиафайл не найден: {video_path} (узел {{ nodeId }})")
+    sent_message = await callback_query.message.answer(text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+else:
+    video_file = FSInputFile(video_path)
+    sent_message = await callback_query.message.answer_video(video_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- else %}
 sent_message = await callback_query.message.answer_video("{{ videoUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}
 {%- elif audioUrl %}
 {%- if '/uploads/' in audioUrl %}
 audio_path = get_upload_file_path("{{ audioUrl }}")
-audio_file = FSInputFile(audio_path)
-sent_message = await callback_query.message.answer_audio(audio_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+if not os.path.exists(audio_path):
+    logging.error(f"❌ Медиафайл не найден: {audio_path} (узел {{ nodeId }})")
+    sent_message = await callback_query.message.answer(text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+else:
+    audio_file = FSInputFile(audio_path)
+    sent_message = await callback_query.message.answer_audio(audio_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- else %}
 sent_message = await callback_query.message.answer_audio("{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}
 {%- elif documentUrl %}
 {%- if '/uploads/' in documentUrl %}
 doc_path = get_upload_file_path("{{ documentUrl }}")
-doc_file = FSInputFile(doc_path)
-sent_message = await callback_query.message.answer_document(doc_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+if not os.path.exists(doc_path):
+    logging.error(f"❌ Медиафайл не найден: {doc_path} (узел {{ nodeId }})")
+    sent_message = await callback_query.message.answer(text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
+else:
+    doc_file = FSInputFile(doc_path)
+    sent_message = await callback_query.message.answer_document(doc_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- else %}
 sent_message = await callback_query.message.answer_document("{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}
