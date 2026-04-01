@@ -170,6 +170,8 @@ interface CanvasProps {
   fitTrigger?: number;
   /** ID узла для фокусировки (выделение + центрирование) */
   focusNodeId?: string | null;
+  /** ID узла для программной подсветки (имитация hover из сайдбара) */
+  highlightNodeId?: string | null;
   /** Колбэк перемещения узла в другой лист */
   onMoveNodeToSheet?: (nodeId: string, sheetId: string) => void;
 }
@@ -215,6 +217,7 @@ export function Canvas({
   autoFitOnLoad,
   fitTrigger,
   focusNodeId,
+  highlightNodeId,
   onMoveNodeToSheet,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -1403,6 +1406,7 @@ export function Canvas({
             draggingNodeId={draggingNodeId}
             sheets={availableSheets}
             onMoveNodeToSheet={onMoveNodeToSheet}
+            highlightNodeId={highlightNodeId}
           />
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">

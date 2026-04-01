@@ -127,7 +127,7 @@ export default function Editor() {
   const handleNodeFocus = useCallback((nodeId: string, buttonId?: string) => {
     setFocusNodeId(nodeId);
     setFocusButtonId(buttonId ?? null);
-    setTimeout(() => setFocusNodeId(null), 100);
+    setTimeout(() => setFocusNodeId(null), 2000);
     setTimeout(() => setFocusButtonId(null), 800);
   }, []);
 
@@ -1233,6 +1233,7 @@ export default function Editor() {
             autoFitOnLoad
             fitTrigger={fitTrigger}
             focusNodeId={focusNodeId}
+            highlightNodeId={focusNodeId}
             onMoveNodeToSheet={moveNodeToSheet}
           />
         ) : currentTab === 'bot' ? (
@@ -1495,6 +1496,7 @@ export default function Editor() {
                   autoFitOnLoad
                   fitTrigger={fitTrigger}
                   focusNodeId={focusNodeId}
+                  highlightNodeId={focusNodeId}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">

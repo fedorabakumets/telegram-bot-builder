@@ -62,6 +62,8 @@ interface CanvasContentProps {
   onConnectionDelete?: (fromId: string, toId: string, type: string) => void;
   /** ID узла, который сейчас перетаскивается — для подсветки связанных линий */
   draggingNodeId?: string | null;
+  /** ID узла для программной подсветки (имитация hover из сайдбара) */
+  highlightNodeId?: string | null;
   /** Список листов для перемещения узла (без текущего) */
   sheets?: Array<{ id: string; name: string }>;
   /** Колбэк перемещения узла в другой лист */
@@ -95,6 +97,7 @@ export function CanvasContent({
   hoveredTargetNodeId,
   onConnectionDelete,
   draggingNodeId,
+  highlightNodeId,
   sheets,
   onMoveNodeToSheet,
 }: CanvasContentProps) {
@@ -147,6 +150,17 @@ export function CanvasContent({
     return connected;
   }, [draggingNodeId, nodes]);
 
+  /** Узлы, связанные с программно подсвеченным узлом (из сайдбара) */
+  const connectedToHighlighted = useMemo<Set<string>>(() => {
+    if (!highlightNodeId) return new Set();
+    const connected = new Set<string>();
+    collectConnections(nodes).forEach(({ fromId, toId }) => {
+      if (fromId === highlightNodeId) connected.add(toId);
+      if (toId === highlightNodeId) connected.add(fromId);
+    });
+    return connected;
+  }, [highlightNodeId, nodes]);
+
   /**
    * Карта позиций портов кнопок относительно верха/левого края узла.
    * buttonId → { x, y } в canvas-координатах (layout, без transform)
@@ -174,7 +188,7 @@ export function CanvasContent({
       }}
     >
       {/* SVG-слой соединений — рисуется под нодами */}
-      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draftConnection ? null : (draggingNodeId ?? hoveredNodeId)} onConnectionHover={draftConnection ? undefined : handleConnectionHover} />
+      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draftConnection ? null : (draggingNodeId ?? hoveredNodeId ?? highlightNodeId)} onConnectionHover={draftConnection ? undefined : handleConnectionHover} />
 
       {/* SVG-слой временного соединения при drag-to-connect */}
       <DraftConnectionLayer draftConnection={draftConnection ?? null} />
@@ -204,8 +218,10 @@ export function CanvasContent({
           isHoveredByConnection={!draftConnection && (
             hoveredConnectionNodes.fromId === node.id ||
             hoveredConnectionNodes.toId === node.id ||
-            (connectedToHovered.has(node.id) && node.id !== hoveredNodeId && !connectedTodragging.has(node.id))
+            (connectedToHovered.has(node.id) && node.id !== hoveredNodeId && !connectedTodragging.has(node.id)) ||
+            (connectedToHighlighted.has(node.id) && node.id !== highlightNodeId)
           )}
+          forceHover={!!highlightNodeId && node.id === highlightNodeId}
           onHover={draftConnection ? undefined : setHoveredNodeId}
           onButtonPortMount={handleButtonPortMount}
           sheets={sheets}

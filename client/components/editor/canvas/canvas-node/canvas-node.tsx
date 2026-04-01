@@ -91,6 +91,8 @@ interface CanvasNodeProps {
   isConnectedToDragging?: boolean;
   /** Узел подсвечен при наведении на линию соединения */
   isHoveredByConnection?: boolean;
+  /** Принудительная подсветка узла как при наведении мышью (из сайдбара) */
+  forceHover?: boolean;
   /** Колбэк при наведении/уходе мыши с узла */
   onHover?: (nodeId: string | null) => void;
   /** Список листов для перемещения узла (без текущего) */
@@ -120,7 +122,7 @@ interface CanvasNodeProps {
  * @param {CanvasNodeProps} props - РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р°
  * @returns {JSX.Element} РљРѕРјРїРѕРЅРµРЅС‚ СѓР·Р»Р° РЅР° С…РѕР»СЃС‚Рµ
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, onHover, onButtonPortMount, sheets, onMoveToSheet }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, forceHover, onHover, onButtonPortMount, sheets, onMoveToSheet }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref РґР»СЏ dragOffset вЂ” РїРѕР·РІРѕР»СЏРµС‚ С‡РёС‚Р°С‚СЊ Р°РєС‚СѓР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РІ handleMouseMove
@@ -432,6 +434,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
   const isDragActive = isDragging || isTouchDragging;
   const [isHovered, setIsHovered] = useState(false);
+  /** Эффективный hover: локальный или принудительный из сайдбара */
+  const effectiveHover = isHovered || !!forceHover;
 
   return (
     /**
@@ -486,8 +490,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
           isConnectionTarget ? "ring-4 ring-green-400/60 border-green-400 shadow-green-400/20" : "",
           isConnectedToDragging && !isDragActive ? "ring-2 ring-violet-400 border-violet-500 scale-[1.02]" : "",
-          isHovered && !isDragActive && !isSelected && !isConnectionSource ? "ring-2 ring-sky-400 border-sky-400 scale-[1.02]" : "",
-          isHoveredByConnection && !isHovered && !isDragActive && !isConnectedToDragging ? "ring-2 ring-violet-400 border-violet-500" : "",
+          effectiveHover && !isDragActive && !isSelected && !isConnectionSource ? "ring-2 ring-sky-400 border-sky-400 scale-[1.02]" : "",
+          isHoveredByConnection && !effectiveHover && !isDragActive && !isConnectedToDragging ? "ring-2 ring-violet-400 border-violet-500" : "",
           onMove ? "cursor-grab" : "cursor-pointer"
         )}
         onClick={!isDragging ? onClick : undefined}
@@ -506,7 +510,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
             ? undefined
             : isConnectedToDragging
             ? '0 0 0 2px #8b5cf6, 0 0 20px 4px rgba(139, 92, 246, 0.5), 0 0 40px 8px rgba(139, 92, 246, 0.2)'
-            : isHovered && !isSelected && !isConnectionSource
+            : effectiveHover && !isSelected && !isConnectionSource
             ? '0 0 0 2px #38bdf8, 0 0 16px 4px rgba(56, 189, 248, 0.45), 0 0 32px 6px rgba(56, 189, 248, 0.2)'
             : isHoveredByConnection
             ? '0 0 0 2px #8b5cf6, 0 0 20px 4px rgba(139, 92, 246, 0.5), 0 0 40px 8px rgba(139, 92, 246, 0.2)'
