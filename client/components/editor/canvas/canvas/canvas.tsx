@@ -823,16 +823,22 @@ export function Canvas({
   // Используем SCROLL_OFFSET чтобы скроллбар мог двигаться в обе стороны
   // даже когда pan отрицательный.
   const SCROLL_OFFSET = 5000;
-  const isProgrammaticScrollRef = useRef(false);
+  const isProgrammaticScrollRef = useRef(0); // счётчик программных скроллов
 
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
 
-    isProgrammaticScrollRef.current = true;
+    isProgrammaticScrollRef.current += 1;
     el.scrollLeft = SCROLL_OFFSET - pan.x;
     el.scrollTop = SCROLL_OFFSET - pan.y;
-    requestAnimationFrame(() => { isProgrammaticScrollRef.current = false; });
+    const token = isProgrammaticScrollRef.current;
+    // Сбрасываем только если никто другой не записал новый scroll за это время
+    setTimeout(() => {
+      if (isProgrammaticScrollRef.current === token) {
+        isProgrammaticScrollRef.current = 0;
+      }
+    }, 50);
   }, [pan, zoom]);
 
   // При скролле нативным скроллбаром обновляем pan
@@ -841,7 +847,7 @@ export function Canvas({
     if (!el) return;
 
     const handleScroll = () => {
-      if (isPanning || isProgrammaticScrollRef.current) return;
+      if (isPanning || isProgrammaticScrollRef.current > 0) return;
       setPan({ x: -(el.scrollLeft - SCROLL_OFFSET), y: -(el.scrollTop - SCROLL_OFFSET) });
     };
 
