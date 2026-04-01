@@ -51,7 +51,7 @@ async def _resolve_topic_name_{{ safeName }}(callback_query: types.CallbackQuery
     if "{" in _topic_name and "}" in _topic_name:
         _all_vars = await init_all_user_vars(user_id)
         for _var_key, _var_val in _all_vars.items():
-            {% raw %}_topic_name = _topic_name.replace(f"{{{_var_key}}}", str(_var_val)){% endraw %}
+            _topic_name = _topic_name.replace("{" + _var_key + "}", str(_var_val))
 
     return _topic_name or "Новый топик"
 
