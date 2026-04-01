@@ -37,6 +37,7 @@ async def incoming_message_trigger_{{ sanitized_node_id }}_middleware(handler, e
 
         mock_callback = MockCallback("{{ entry.targetNodeId }}", event.from_user, event)
         await handle_callback_{{ sanitized_target_id }}(mock_callback)
+        data["_imt_handled"] = True
     except Exception as e:
         logging.error(f"Ошибка в incoming_message_trigger middleware: {e}")
 
