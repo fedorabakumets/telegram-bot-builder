@@ -819,16 +819,20 @@ export function Canvas({
   fitToContentRef.current = fitToContent;
 
   // Синхронизируем scrollLeft/scrollTop с pan чтобы нативный скроллбар
-  // отражал реальное положение вьюпорта при изменении zoom и pan
+  // отражал реальное положение вьюпорта при изменении zoom и pan.
+  // Используем SCROLL_OFFSET чтобы скроллбар мог двигаться в обе стороны
+  // даже когда pan отрицательный.
+  const SCROLL_OFFSET = 5000;
+  const isProgrammaticScrollRef = useRef(false);
+
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
 
-    const scrollX = Math.max(0, -pan.x);
-    const scrollY = Math.max(0, -pan.y);
-
-    el.scrollLeft = scrollX;
-    el.scrollTop = scrollY;
+    isProgrammaticScrollRef.current = true;
+    el.scrollLeft = SCROLL_OFFSET - pan.x;
+    el.scrollTop = SCROLL_OFFSET - pan.y;
+    requestAnimationFrame(() => { isProgrammaticScrollRef.current = false; });
   }, [pan, zoom]);
 
   // При скролле нативным скроллбаром обновляем pan
@@ -837,8 +841,8 @@ export function Canvas({
     if (!el) return;
 
     const handleScroll = () => {
-      if (isPanning) return; // не перебиваем ручное панорамирование
-      setPan({ x: -el.scrollLeft, y: -el.scrollTop });
+      if (isPanning || isProgrammaticScrollRef.current) return;
+      setPan({ x: -(el.scrollLeft - SCROLL_OFFSET), y: -(el.scrollTop - SCROLL_OFFSET) });
     };
 
     el.addEventListener('scroll', handleScroll, { passive: true });
