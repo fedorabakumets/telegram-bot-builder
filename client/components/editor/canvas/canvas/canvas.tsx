@@ -166,6 +166,8 @@ interface CanvasProps {
   onConnectionCreate?: () => void;
   /** Автоматически вписать содержимое в экран при первой загрузке узлов */
   autoFitOnLoad?: boolean;
+  /** Инкрементируй это значение чтобы принудительно вызвать fitToContent */
+  fitTrigger?: number;
 }
 
 export function Canvas({
@@ -207,6 +209,7 @@ export function Canvas({
   onConnectionDelete: onConnectionDeleteProp,
   onConnectionCreate,
   autoFitOnLoad,
+  fitTrigger,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -814,6 +817,15 @@ export function Canvas({
 
   // Держим ref актуальным чтобы autoFitOnLoad эффект не имел stale closure
   fitToContentRef.current = fitToContent;
+
+  // Принудительный fit по внешнему триггеру (например после применения шаблона)
+  useEffect(() => {
+    if (!fitTrigger) return;
+    // Сбрасываем ключ чтобы autoFitOnLoad тоже сработал заново
+    lastAutoFitNodesKeyRef.current = '';
+    const timer = setTimeout(() => fitToContentRef.current(), 300);
+    return () => clearTimeout(timer);
+  }, [fitTrigger]);
 
   // Handle wheel zoom (native handler, registered with { passive: false })
   const handleWheel = useCallback((e: WheelEvent) => {

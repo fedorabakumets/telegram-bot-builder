@@ -109,6 +109,9 @@ export default function Editor() {
    */
   const [useFlexibleLayout] = useState(true);
 
+  /** Триггер для принудительного fitToContent после применения шаблона */
+  const [fitTrigger, setFitTrigger] = useState(0);
+
   // Хуки состояний
   const {
     isLoadingTemplate,
@@ -766,6 +769,9 @@ export default function Editor() {
             setBotData({ nodes: firstSheet.nodes }, template.name, currentNodeSizes, shouldSkipLayout);
           }
 
+          // Вписываем содержимое в экран после применения шаблона
+          setFitTrigger(t => t + 1);
+
           // Сохраняем в проект только если activeProject загружен
           if (activeProject?.id) {
             // Обновляем botDataWithSheets напрямую, а затем вызываем сохранение
@@ -785,6 +791,9 @@ export default function Editor() {
           // Всегда применяем автоиерархию при загрузке сценариев для правильного расположения
           const shouldSkipLayout = false; // Автоиерархия необходима при загрузке обычных сценариев
           setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия должна работать при загрузке сценариев
+
+          // Вписываем содержимое в экран после применения шаблона
+          setFitTrigger(t => t + 1);
 
           // Сохраняем в проект только если activeProject загружен
           if (activeProject?.id) {
@@ -1199,6 +1208,7 @@ export default function Editor() {
             onConnectionDelete={handleConnectionDelete}
             onConnectionCreate={saveToHistory}
             autoFitOnLoad
+            fitTrigger={fitTrigger}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full">
@@ -1456,6 +1466,7 @@ export default function Editor() {
                   onConnectionDelete={handleConnectionDelete}
                   onConnectionCreate={saveToHistory}
                   autoFitOnLoad
+                  fitTrigger={fitTrigger}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">
