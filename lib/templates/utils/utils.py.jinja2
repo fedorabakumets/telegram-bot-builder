@@ -95,6 +95,25 @@ async def save_message_to_api(user_id, message_type: str, message_text: str = No
 {%- endif %}
 
 
+async def set_user_var(user_id: int, key: str, value) -> None:
+    """Сохраняет переменную пользователя в локальное хранилище и БД.
+
+    Args:
+        user_id (int): ID пользователя Telegram
+        key (str): Имя переменной
+        value: Значение переменной
+    """
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id][key] = value
+{%- if userDatabaseEnabled %}
+    try:
+        await update_user_data_in_db(user_id, key, value)
+    except Exception as e:
+        logging.warning(f"⚠️ set_user_var: не удалось сохранить {key}={value} в БД: {e}")
+{%- endif %}
+
+
 def replace_variables_in_text(text: str, variables: dict, filters: dict = None) -> str:
     """Заменяет переменные вида {var_name} в тексте на их значения
 
