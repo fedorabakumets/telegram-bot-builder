@@ -30,14 +30,13 @@ const SVG_SIZE = 20000;
 
 /**
  * Тип соединения между узлами
- * "auto-transition" | "button-goto" | "input-target" | "trigger-next" | "any-message-trigger-next" | "condition-source"
+ * "auto-transition" | "button-goto" | "input-target" | "trigger-next" | "condition-source"
  */
 type ConnectionType =
   | 'auto-transition'
   | 'button-goto'
   | 'input-target'
   | 'trigger-next'
-  | 'any-message-trigger-next'
   | 'condition-source'
   | 'forward-source'
   | typeof KEYBOARD_LINK_PORT_TYPE;
@@ -111,14 +110,6 @@ const CONNECTION_STYLES: Record<ConnectionType, ConnectionStyle> = {
     dashArray: '',
     opacity: 0.8,
     markerId: 'arrow-trigger',
-  },
-  /** Соединение триггера любого сообщения с целевым узлом — зелёный сплошной */
-  'any-message-trigger-next': {
-    color: '#22c55e',
-    strokeWidth: 2,
-    dashArray: '',
-    opacity: 0.8,
-    markerId: 'arrow-any-message-trigger',
   },
   'keyboard-link': {
     color: '#f59e0b',
@@ -283,8 +274,7 @@ export function collectConnections(nodes: Node[]): Connection[] {
     if ((node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'any_message_trigger') && node.data?.autoTransitionTo) {
       const toId = node.data.autoTransitionTo as string;
       if (existingIds.has(toId)) {
-        const type = node.type === 'any_message_trigger' ? 'any-message-trigger-next' : 'trigger-next';
-        connections.push({ fromId: node.id, toId, type });
+        connections.push({ fromId: node.id, toId, type: 'trigger-next' });
       }
     }
 
