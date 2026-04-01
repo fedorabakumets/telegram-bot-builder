@@ -17,6 +17,8 @@ import { generateContactHandler, generateLocationHandler } from './contact-locat
 import { generateMessageHandlerFromNode } from '../message-handler';
 /** Генератор callback-обработчика для узла пересылки сообщений */
 import { generateForwardMessageFromNode } from '../forward-message';
+/** Генератор callback-обработчика для узла создания топика в форуме */
+import { generateCreateForumTopicFromNode } from '../create-forum-topic';
 import { processCodeWithAutoComments } from '../../bot-generator/core/generated-comment';
 import { generateUserHandlerFromNode } from '../user-handler';
 import { generateAnimationHandler } from '../animation-handler/animation-handler.renderer';
@@ -219,6 +221,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     delete_message: generateMessageHandlerFromNode,
     /** Обработчик узла пересылки сообщений */
     forward_message: generateForwardMessageFromNode,
+    /** Обработчик узла создания топика в форуме Telegram */
+    create_forum_topic: generateCreateForumTopicFromNode,
     ban_user: generateUserHandlerFromNode,
     unban_user: generateUserHandlerFromNode,
     mute_user: generateUserHandlerFromNode,
