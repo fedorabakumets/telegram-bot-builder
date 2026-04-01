@@ -58,6 +58,8 @@ export function ContentManagementHeader({ node, type }: ContentManagementHeaderP
   // Данные для forward_message
   const targets: any[] = (node.data as any).targetChatTargets ?? [];
   const sourceIdSource: string = (node.data as any).sourceMessageIdSource ?? 'current_message';
+  const disableNotification: boolean = (node.data as any).disableNotification ?? false;
+  const hideAuthor: boolean = (node.data as any).hideAuthor ?? false;
 
   const sourceLabel: Record<string, string> = {
     current_message: 'текущее',
@@ -123,6 +125,23 @@ export function ContentManagementHeader({ node, type }: ContentManagementHeaderP
                   </span>
                 );
               })}
+            </span>
+          )}
+          {/* Флаги */}
+          {(disableNotification || hideAuthor) && (
+            <span className="flex items-center gap-1.5 flex-wrap pt-0.5">
+              {disableNotification && (
+                <span className="flex items-center gap-1 text-[10px] bg-slate-700/50 border border-slate-600/40 rounded px-1.5 py-0.5 text-slate-300">
+                  <i className="fas fa-bell-slash text-[9px]" />
+                  без уведомления
+                </span>
+              )}
+              {hideAuthor && (
+                <span className="flex items-center gap-1 text-[10px] bg-slate-700/50 border border-slate-600/40 rounded px-1.5 py-0.5 text-slate-300">
+                  <i className="fas fa-user-secret text-[9px]" />
+                  скрыть автора
+                </span>
+              )}
             </span>
           )}
         </span>
