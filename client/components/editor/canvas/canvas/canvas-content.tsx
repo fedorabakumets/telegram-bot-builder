@@ -106,6 +106,13 @@ export function CanvasContent({
 
   const allNodes = botData ? getAllNodesFromAllSheets() : nodes;
 
+  /** Узлы, подсвечиваемые при наведении на линию соединения */
+  const [hoveredConnectionNodes, setHoveredConnectionNodes] = useState<{ fromId: string | null; toId: string | null }>({ fromId: null, toId: null });
+
+  const handleConnectionHover = useCallback((fromId: string | null, toId: string | null) => {
+    setHoveredConnectionNodes({ fromId, toId });
+  }, []);
+
   /**
    * Вычисляем множество ID узлов, связанных с перетаскиваемым узлом.
    * Используем collectConnections — единый источник истины для всех типов связей.
@@ -147,7 +154,7 @@ export function CanvasContent({
       }}
     >
       {/* SVG-слой соединений — рисуется под нодами */}
-      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draggingNodeId} />
+      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draggingNodeId} onConnectionHover={handleConnectionHover} />
 
       {/* SVG-слой временного соединения при drag-to-connect */}
       <DraftConnectionLayer draftConnection={draftConnection ?? null} />
@@ -174,6 +181,7 @@ export function CanvasContent({
           isConnectionTarget={hoveredTargetNodeId === node.id}
           isConnectionSource={draftConnection?.fromNodeId === node.id}
           isConnectedToDragging={connectedTodragging.has(node.id)}
+          isHoveredByConnection={hoveredConnectionNodes.fromId === node.id || hoveredConnectionNodes.toId === node.id}
           onButtonPortMount={handleButtonPortMount}
         />
       ))}

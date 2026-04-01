@@ -149,6 +149,8 @@ interface ConnectionsLayerProps {
   buttonPortYOffsets?: Map<string, { x: number; y: number }>;
   /** ID узла, который сейчас перетаскивается — для подсветки связанных линий */
   draggingNodeId?: string | null;
+  /** Колбэк при наведении на соединение — передаёт fromId и toId или null */
+  onConnectionHover?: (fromId: string | null, toId: string | null) => void;
 }
 
 /** На сколько px не доходим до края узла — ровно refX маркера, чтобы кончик стрелки лёг на край */
@@ -369,7 +371,7 @@ export function getRenderableConnections(
  * @param props - Свойства компонента
  * @returns SVG элемент с линиями соединений или null если нет соединений
  */
-export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonPortYOffsets, draggingNodeId }: ConnectionsLayerProps) {
+export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonPortYOffsets, draggingNodeId, onConnectionHover }: ConnectionsLayerProps) {
   /** Ширина узла по умолчанию если ResizeObserver ещё не сработал */
   const DEFAULT_WIDTH = 320;
   /** border-box высота узла по умолчанию (до первого срабатывания ResizeObserver) */
@@ -476,8 +478,8 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
           <g
             key={connKey}
             style={{ pointerEvents: 'all' }}
-            onMouseEnter={() => setHoveredKey(connKey)}
-            onMouseLeave={() => { setHoveredKey(null); setMousePos(null); }}
+            onMouseEnter={() => { setHoveredKey(connKey); onConnectionHover?.(fromId, toId); }}
+            onMouseLeave={() => { setHoveredKey(null); setMousePos(null); onConnectionHover?.(null, null); }}
           >
             {/* Тень для глубины */}
             <path
