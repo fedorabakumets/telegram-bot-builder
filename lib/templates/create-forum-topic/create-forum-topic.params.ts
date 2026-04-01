@@ -26,4 +26,8 @@ export interface CreateForumTopicTemplateParams {
   saveThreadIdTo?: string;
   /** Не создавать топик повторно, если переменная saveThreadIdTo уже заполнена */
   skipIfExists?: boolean;
+  /** ID узла для автоперехода после создания топика */
+  autoTransitionTo?: string;
+  /** Существует ли целевой узел автоперехода в графе */
+  autoTransitionTargetExists?: boolean;
 }

@@ -222,7 +222,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     /** Обработчик узла пересылки сообщений */
     forward_message: generateForwardMessageFromNode,
     /** Обработчик узла создания топика в форуме Telegram */
-    create_forum_topic: generateCreateForumTopicFromNode,
+    create_forum_topic: (node) => generateCreateForumTopicFromNode(node, { allNodes: nodes }),
     ban_user: generateUserHandlerFromNode,
     unban_user: generateUserHandlerFromNode,
     mute_user: generateUserHandlerFromNode,

@@ -28,6 +28,10 @@ export const createForumTopicParamsSchema = z.object({
   saveThreadIdTo: z.string().optional().default(''),
   /** Не создавать топик повторно, если переменная уже заполнена */
   skipIfExists: z.boolean().optional().default(false),
+  /** ID узла для автоперехода после создания топика */
+  autoTransitionTo: z.string().optional().default(''),
+  /** Существует ли целевой узел автоперехода в графе */
+  autoTransitionTargetExists: z.boolean().optional().default(false),
 });
 
 /** Тип параметров шаблона create_forum_topic */

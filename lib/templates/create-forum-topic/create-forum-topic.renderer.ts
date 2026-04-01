@@ -8,6 +8,12 @@ import type { CreateForumTopicTemplateParams, ForumChatIdSource } from './create
 import { createForumTopicParamsSchema, forumChatIdSourceSchema } from './create-forum-topic.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
+/** Контекст всего графа для разрешения автоперехода */
+export interface CreateForumTopicNodeContext {
+  /** Все узлы графа для проверки существования целевого узла */
+  allNodes?: Node[];
+}
+
 /**
  * Проверяет корректность источника ID форум-группы.
  * @param value - проверяемое значение
@@ -20,10 +26,17 @@ function isForumChatIdSource(value: unknown): value is ForumChatIdSource {
 /**
  * Преобразует узел графа в параметры шаблона create_forum_topic.
  * @param node - узел графа бота
+ * @param context - контекст графа (все узлы) для разрешения автоперехода
  * @returns параметры шаблона
  */
-export function nodeToCreateForumTopicParams(node: Node): CreateForumTopicTemplateParams {
+export function nodeToCreateForumTopicParams(node: Node, context?: CreateForumTopicNodeContext): CreateForumTopicTemplateParams {
   const data = node.data as any;
+  const autoTransitionTo = (data?.enableAutoTransition && typeof data?.autoTransitionTo === 'string')
+    ? data.autoTransitionTo.trim()
+    : '';
+  const autoTransitionTargetExists = autoTransitionTo
+    ? (context?.allNodes ?? []).some((n) => n.id === autoTransitionTo)
+    : false;
 
   return {
     nodeId: node.id,
@@ -35,6 +48,8 @@ export function nodeToCreateForumTopicParams(node: Node): CreateForumTopicTempla
     topicIconColor: typeof data?.topicIconColor === 'string' ? data.topicIconColor : '7322096',
     saveThreadIdTo: typeof data?.saveThreadIdTo === 'string' ? data.saveThreadIdTo : '',
     skipIfExists: data?.skipIfExists === true,
+    autoTransitionTo,
+    autoTransitionTargetExists,
   };
 }
 
@@ -51,8 +66,9 @@ export function generateCreateForumTopic(params: CreateForumTopicTemplateParams)
 /**
  * Генерирует Python-код из узла графа.
  * @param node - узел графа бота
+ * @param context - контекст графа (все узлы) для разрешения автоперехода
  * @returns сгенерированный Python-код
  */
-export function generateCreateForumTopicFromNode(node: Node): string {
-  return generateCreateForumTopic(nodeToCreateForumTopicParams(node));
+export function generateCreateForumTopicFromNode(node: Node, context?: CreateForumTopicNodeContext): string {
+  return generateCreateForumTopic(nodeToCreateForumTopicParams(node, context));
 }
