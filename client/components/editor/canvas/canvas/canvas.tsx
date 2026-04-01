@@ -818,6 +818,33 @@ export function Canvas({
   // Держим ref актуальным чтобы autoFitOnLoad эффект не имел stale closure
   fitToContentRef.current = fitToContent;
 
+  // Синхронизируем scrollLeft/scrollTop с pan чтобы нативный скроллбар
+  // отражал реальное положение вьюпорта при изменении zoom и pan
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const scrollX = Math.max(0, -pan.x);
+    const scrollY = Math.max(0, -pan.y);
+
+    el.scrollLeft = scrollX;
+    el.scrollTop = scrollY;
+  }, [pan, zoom]);
+
+  // При скролле нативным скроллбаром обновляем pan
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      if (isPanning) return; // не перебиваем ручное панорамирование
+      setPan({ x: -el.scrollLeft, y: -el.scrollTop });
+    };
+
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [isPanning]);
+
   // Принудительный fit по внешнему триггеру (например после применения шаблона)
   useEffect(() => {
     if (!fitTrigger) return;
