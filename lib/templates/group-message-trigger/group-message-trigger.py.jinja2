@@ -17,6 +17,10 @@
 @dp.message(F.chat.type.in_({'group', 'supergroup'}), F.message_thread_id)
 async def group_message_trigger_{{ entry.safeName }}_handler(message: types.Message):
     """Триггер сообщения в топике группы — узел {{ entry.nodeId }}"""
+
+    # Игнорируем сообщения от самого бота
+    if message.from_user and message.from_user.is_bot:
+        return
     {% if entry.groupChatIdSource == 'manual' %}
     _expected_chat_ids = ('{{ entry.groupChatId }}', '-100{{ entry.groupChatId }}')
     if str(message.chat.id) not in _expected_chat_ids:
