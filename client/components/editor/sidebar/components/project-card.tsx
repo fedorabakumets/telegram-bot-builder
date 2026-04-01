@@ -219,7 +219,7 @@ function SheetAccordionContent({ nodes, searchQuery, onSearchChange }: SheetAcco
   const filtered = useSheetNodeSearch(nodes, searchQuery);
 
   return (
-    <div className="ml-1 mt-0.5 mb-1 transition-all">
+    <div className="mt-0.5 mb-1 transition-all">
       <SheetNodeSearch value={searchQuery} onChange={onSearchChange} />
       {filtered.length === 0 ? (
         <div className="text-xs text-muted-foreground opacity-60 px-1.5">
