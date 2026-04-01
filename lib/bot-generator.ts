@@ -363,6 +363,7 @@ function generateCodeSections(
     .filter(node =>
       node.type !== 'command_trigger' &&
       node.type !== 'text_trigger' &&
+      node.type !== 'incoming_message_trigger' &&
       (node.type !== 'condition' || validConditionNodeIds.has(node.id))
     )
     .map(node => ({
