@@ -220,7 +220,7 @@ function buildSmartPath(
  * @param nodes - Массив узлов
  * @returns Массив соединений
  */
-function collectConnections(nodes: Node[]): Connection[] {
+export function collectConnections(nodes: Node[]): Connection[] {
   const connections: Connection[] = [];
   const existingIds = new Set(nodes.map(n => n.id));
 
