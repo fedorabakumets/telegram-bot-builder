@@ -59,6 +59,7 @@ export function isManagementNode(nodeType: Node['type']): boolean {
 export const TRIGGER_NODE_TYPES = [
   'command_trigger',
   'text_trigger',
+  'any_message_trigger',
 ] as const;
 
 /**

@@ -21,6 +21,7 @@ import { InfoBlock } from '@/components/ui/info-block';
 import { CommandAdvancedSettingsWrapper } from './command-advanced-settings-wrapper';
 import { CommandTriggerConfiguration } from '../trigger/CommandTriggerConfiguration';
 import { TextTriggerConfiguration } from '../trigger/TextTriggerConfiguration';
+import { AnyMessageTriggerConfiguration } from '../trigger/AnyMessageTriggerConfiguration';
 import { ConditionNodeConfiguration } from '../condition/ConditionNodeConfiguration';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
@@ -421,6 +422,9 @@ export function PropertiesPanel({
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
               formatNodeDisplay={formatNodeDisplay}
             />
+          )}
+          {isTriggerNode(selectedNode.type) && selectedNode.type === 'any_message_trigger' && (
+            <AnyMessageTriggerConfiguration />
           )}
 
           {/* Condition Section вЂ” С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»Р° СѓСЃР»РѕРІРёСЏ */}

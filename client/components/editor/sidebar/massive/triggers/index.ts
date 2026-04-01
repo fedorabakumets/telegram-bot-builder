@@ -5,3 +5,4 @@
 
 export { commandTrigger } from './command-trigger';
 export { textTrigger } from './text-trigger';
+export { anyMessageTrigger } from './any-message-trigger';

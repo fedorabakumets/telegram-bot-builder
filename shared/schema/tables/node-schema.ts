@@ -26,7 +26,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'any_message_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */

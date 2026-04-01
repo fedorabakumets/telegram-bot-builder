@@ -63,6 +63,7 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   client_auth: 'Авторизация Client API',
   command_trigger: 'Триггер команды',
   text_trigger: 'Текстовый триггер',
+  any_message_trigger: 'Любое сообщение',
   media: 'Медиафайл',
 };
 
@@ -101,6 +102,7 @@ const nodeIcons: Partial<Record<Node['type'], string>> = {
   client_auth: 'fas fa-key',
   command_trigger: 'fas fa-bolt',
   text_trigger: 'fas fa-comment-dots',
+  any_message_trigger: 'fas fa-inbox',
   media: 'fas fa-photo-video',
 };
 
@@ -139,6 +141,7 @@ const nodeColors: Partial<Record<Node['type'], string>> = {
   client_auth: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
   command_trigger: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
   text_trigger: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+  any_message_trigger: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
   media: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
 };
 

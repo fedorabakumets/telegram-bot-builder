@@ -4,7 +4,7 @@ import { clientAuthNode } from "../../canvas/canvas-node/client-auth-node";
 import { textMessage, stickerMessage, voiceMessage, locationMessage, contactMessage, mediaMessage, saveAnswerNode } from "./messages";
 import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from "./user-management";
 import { pinMessage, unpinMessage, deleteMessage, forwardMessage } from "./content-management";
-import { commandTrigger, textTrigger } from "./triggers";
+import { commandTrigger, textTrigger, anyMessageTrigger } from "./triggers";
 import { conditionNode } from "./logic";
 
 /**
@@ -14,6 +14,7 @@ import { conditionNode } from "./logic";
 export const components: ComponentDefinition[] = [
   commandTrigger,
   textTrigger,
+  anyMessageTrigger,
   textMessage,
   saveAnswerNode,
   mediaMessage,
