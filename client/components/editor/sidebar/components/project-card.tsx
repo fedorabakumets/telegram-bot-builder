@@ -22,14 +22,24 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import {
+  Box,
   Calendar,
+  ChevronDown,
+  ChevronRight,
   Copy,
   FileText,
+  GitBranch,
   GripVertical,
+  Image,
+  LayoutGrid,
+  MessageSquare,
+  Radio,
+  Save,
   Share2,
   Trash2,
   Zap,
 } from 'lucide-react';
+import { getNodeTypeLabel } from '@/components/editor/properties/utils/node-formatters';
 
 /**
  * Состояние drag-and-drop для проектов и листов
@@ -146,6 +156,32 @@ export interface ProjectCardProps {
 }
 
 /**
+ * Иконка для типа узла
+ */
+function NodeTypeIcon({ type }: { type: string }) {
+  const cls = 'h-3 w-3 flex-shrink-0';
+  if (type === 'command_trigger' || type === 'text_trigger') return <Zap className={cls} />;
+  if (type === 'message') return <MessageSquare className={cls} />;
+  if (type === 'keyboard') return <LayoutGrid className={cls} />;
+  if (type === 'condition') return <GitBranch className={cls} />;
+  if (type === 'input') return <Save className={cls} />;
+  if (type === 'broadcast') return <Radio className={cls} />;
+  if (['media', 'photo', 'video', 'audio', 'document'].includes(type)) return <Image className={cls} />;
+  return <Box className={cls} />;
+}
+
+/**
+ * Краткий контент узла (до 30 символов)
+ */
+function getShortContent(node: any): string {
+  if (node.type === 'command_trigger') return node.data?.command || '';
+  if (node.type === 'text_trigger') return node.data?.textSynonyms?.[0] || '';
+  if (node.type === 'message') return node.data?.messageText || '';
+  if (node.type === 'input') return node.data?.inputVariable || '';
+  return '';
+}
+
+/**
  * Компонент карточки проекта
  * Отображает информацию о проекте, метаданные и список листов
  * Поддерживает drag-and-drop для проектов и листов
@@ -205,6 +241,20 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const [dragOverSheetIndex, setDragOverSheetIndex] = useState<number | null>(null);
   const [draggingSheetIndex, setDraggingSheetIndex] = useState<number | null>(null);
   const dragSheetIndexRef = useRef<number | null>(null);
+  const [expandedSheets, setExpandedSheets] = useState<Set<string>>(new Set());
+
+  const toggleSheetExpanded = (sheetId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedSheets((prev) => {
+      const next = new Set(prev);
+      if (next.has(sheetId)) {
+        next.delete(sheetId);
+      } else {
+        next.add(sheetId);
+      }
+      return next;
+    });
+  };
 
   const sheetsInfo = getSheetsInfo(project);
   const nodeCount = getNodeCount(project);
@@ -489,8 +539,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             const isDraggedSheet = dragState.draggedSheet?.sheetId === sheetId && dragState.draggedSheet?.projectId === project.id;
 
             return (
+              <div key={sheetId || index}>
               <div
-                key={sheetId || index}
                 className={cn(
                   'flex items-center gap-1 sm:gap-1.5 group/sheet px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md hover:bg-muted/50 transition-colors border-t-2',
                   dragOverSheetIndex === index && draggingSheetIndex !== index
@@ -517,6 +567,20 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   dragSheetIndexRef.current = null;
                 }}
               >
+                {/* Кнопка-стрелка аккордеона (только для нового формата) */}
+                {SheetsManager.isNewFormat(projectData) && sheetId && !isEditing && (
+                  <button
+                    className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded"
+                    onClick={(e) => toggleSheetExpanded(sheetId, e)}
+                    title={expandedSheets.has(sheetId) ? 'Свернуть' : 'Развернуть'}
+                  >
+                    {expandedSheets.has(sheetId)
+                      ? <ChevronDown className="h-3 w-3" />
+                      : <ChevronRight className="h-3 w-3" />
+                    }
+                  </button>
+                )}
+
                 {isEditing ? (
                   <Input
                     value={editingState.editingSheetName}
@@ -654,6 +718,37 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* Аккордеон: список узлов листа */}
+              {SheetsManager.isNewFormat(projectData) && sheetId && expandedSheets.has(sheetId) && (() => {
+                const nodes: any[] = projectData.sheets[index]?.nodes || [];
+                return nodes.length > 0 ? (
+                  <div className="ml-5 mt-0.5 mb-1 space-y-0.5 transition-all">
+                    {nodes.map((node: any) => {
+                      const shortContent = getShortContent(node);
+                      return (
+                        <div
+                          key={node.id}
+                          className="flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs text-muted-foreground"
+                        >
+                          <NodeTypeIcon type={node.type} />
+                          <span className="font-medium flex-shrink-0">{getNodeTypeLabel(node.type)}</span>
+                          {shortContent && (
+                            <span className="truncate opacity-70">
+                              {shortContent.length > 30 ? shortContent.slice(0, 30) + '…' : shortContent}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="ml-5 mt-0.5 mb-1 text-xs text-muted-foreground opacity-60 px-1.5">
+                    Нет узлов
+                  </div>
+                );
+              })()}
               </div>
             );
           })}
