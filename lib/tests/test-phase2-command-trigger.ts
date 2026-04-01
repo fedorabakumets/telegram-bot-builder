@@ -783,10 +783,10 @@ test('I02', 'def __init__(self, data, user, msg): есть', () => {
   ok(code.includes('def __init__(self, data, user, msg):'), 'def __init__(self, data, user, msg): должен быть в коде');
 });
 
-test('I03', 'async def answer(self): есть', () => {
+test('I03', 'async def answer(self, *args, **kwargs): есть', () => {
   const p = makeCleanProject([makeTriggerNode('t1', '/start', 'msg1'), makeMessageNode('msg1')]);
   const code = gen(p, 'i03');
-  ok(code.includes('async def answer(self):'), 'async def answer(self): должен быть в коде');
+  ok(code.includes('async def answer(self, *args, **kwargs):'), 'async def answer(self, *args, **kwargs): должен быть в коде');
 });
 
 test('I04', 'async def edit_text(self, text, **kwargs): есть', () => {

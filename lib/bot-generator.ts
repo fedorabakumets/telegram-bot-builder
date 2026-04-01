@@ -553,13 +553,17 @@ function assembleAndValidate(
   const nodes = context.nodes || [];
   const botFatherCommands = generateBotFatherCommands(nodes);
 
+  // Экранируем содержимое docstring: тройные кавычки, одиночные кавычки и обратные слеши
+  const sanitizeDocstring = (s: string) =>
+    s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
   let code = '"""\n';
-  code += `${context.botName} - Telegram Bot\n`;
+  code += `${sanitizeDocstring(context.botName)} - Telegram Bot\n`;
   code += 'Сгенерировано с помощью TelegramBot Builder\n';
 
   if (botFatherCommands) {
     code += '\nКоманды для @BotFather:\n';
-    code += botFatherCommands;
+    code += sanitizeDocstring(botFatherCommands);
   }
 
   code += '"""\n\n';

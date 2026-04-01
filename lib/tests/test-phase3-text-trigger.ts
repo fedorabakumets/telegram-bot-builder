@@ -659,10 +659,10 @@ test('I05', 'содержит self.message = msg', () => {
   ok(code.includes('self.message = msg'), 'self.message = msg должен быть в коде');
 });
 
-test('I06', 'содержит async def answer(self):', () => {
+test('I06', 'содержит async def answer(self, *args, **kwargs):', () => {
   const p = makeCleanProject([makeTriggerNode('t1', ['привет'], 'msg1'), makeMessageNode('msg1')]);
   const code = gen(p, 'i06');
-  ok(code.includes('async def answer(self):'), 'async def answer(self): должен быть в коде');
+  ok(code.includes('async def answer(self, *args, **kwargs):'), 'async def answer(self, *args, **kwargs): должен быть в коде');
 });
 
 test('I07', 'содержит async def edit_text(self, text, **kwargs):', () => {
