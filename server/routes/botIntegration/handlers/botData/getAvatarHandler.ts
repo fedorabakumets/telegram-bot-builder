@@ -57,6 +57,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                 [userId, projectId]
             );
             avatarUrl = userResult.rows[0]?.avatar_url || null;
+            console.log(`[avatar] bot_users lookup: user_id=${userId}, project_id=${projectId}, found=${avatarUrl ? 'yes' : 'no'}, url=${avatarUrl}`);
 
             // Если не найдено, пробуем user_bot_data
             if (!avatarUrl) {
@@ -65,15 +66,20 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                     [userId, projectId]
                 );
                 avatarUrl = userResult.rows[0]?.avatar_url || null;
+                console.log(`[avatar] user_bot_data lookup: found=${avatarUrl ? 'yes' : 'no'}`);
             }
         }
 
         await pool.end();
 
         if (!avatarUrl) {
+            console.log(`[avatar] avatarUrl is null, returning 404`);
             res.status(404).json({ message: "Аватарка не найдена" });
             return;
         }
+
+        console.log(`[avatar] fetching: ${avatarUrl}`);
+        console.log(`[avatar] telegramPrefix: ${`https://api.telegram.org/file/bot${defaultToken.token}/`}`);
 
         // Обрабатываем разные форматы avatarUrl
         let telegramFileUrl: string;
