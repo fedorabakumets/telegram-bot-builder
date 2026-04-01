@@ -115,13 +115,21 @@ export default function Editor() {
   /** ID узла для фокусировки на канвасе */
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
 
+  /** ID кнопки для скролла к ней в панели свойств */
+  const [focusButtonId, setFocusButtonId] = useState<string | null>(null);
+
   /**
    * Обработчик фокусировки на узле канваса из сайдбара
    * @param nodeId - Идентификатор узла для фокусировки
+   * @param buttonId - Опциональный идентификатор кнопки для скролла в панели свойств
    */
-  const handleNodeFocus = useCallback((nodeId: string) => {
+  const handleNodeFocus = useCallback((nodeId: string, buttonId?: string) => {
     setFocusNodeId(nodeId);
-    setTimeout(() => setFocusNodeId(null), 100);
+    setFocusButtonId(buttonId ?? null);
+    setTimeout(() => {
+      setFocusNodeId(null);
+      setFocusButtonId(null);
+    }, 300);
   }, []);
 
   // Хуки состояний
@@ -1058,6 +1066,7 @@ export default function Editor() {
       onClose={handleToggleProperties}
       onActionLog={handleActionLog}
       onSaveProject={handleSaveProject}
+      focusButtonId={focusButtonId}
     />
   ) : null;
 
@@ -1530,6 +1539,7 @@ export default function Editor() {
                 onNodeAdd={addNode}
                 onNodeDelete={handleNodeDelete}
                 onActionLog={handleActionLog}
+                focusButtonId={focusButtonId}
               />
             ) : null
           }

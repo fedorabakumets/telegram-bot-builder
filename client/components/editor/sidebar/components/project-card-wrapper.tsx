@@ -25,7 +25,7 @@ export interface ProjectCardWrapperProps extends Omit<ProjectCardProps, 'onTouch
   /** Обработчик клика по проекту для сброса drag-состояния */
   onProjectClick?: () => void;
   /** Колбэк для фокусировки на узле канваса */
-  onNodeFocus?: (nodeId: string) => void;
+  onNodeFocus?: (nodeId: string, buttonId?: string) => void;
 }
 
 /**

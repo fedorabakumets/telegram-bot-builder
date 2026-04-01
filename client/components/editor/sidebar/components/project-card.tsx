@@ -158,7 +158,7 @@ export interface ProjectCardProps {
   /** Обработчик окончания touch перетаскивания проекта */
   onTouchEnd?: (e: React.TouchEvent) => void;
   /** Колбэк для фокусировки на узле канваса */
-  onNodeFocus?: (nodeId: string) => void;
+  onNodeFocus?: (nodeId: string, buttonId?: string) => void;
 }
 
 /**
@@ -210,8 +210,8 @@ interface SheetAccordionContentProps {
   searchQuery: string;
   /** Обработчик изменения поискового запроса */
   onSearchChange: (query: string) => void;
-  /** Колбэк для фокусировки на узле канваса */
-  onNodeFocus?: (nodeId: string) => void;
+  /** Колбэк для фокусировки на узле канваса, опционально с фокусом на кнопке */
+  onNodeFocus?: (nodeId: string, buttonId?: string) => void;
 }
 
 /**
@@ -234,7 +234,9 @@ function SheetAccordionContent({ nodes, searchQuery, onSearchChange, onNodeFocus
           {filtered.map((node: any) => {
             const shortContent = getShortContent(node);
             const isKeyboard = node.type === 'keyboard';
-            const buttons = isKeyboard ? getKeyboardButtons(node) : [];
+            const buttonObjects: Array<{ id: string; text: string }> = isKeyboard
+              ? (node.data?.buttons || []).filter((b: any) => b.text)
+              : [];
             return (
               <div key={node.id} className="px-1.5 py-0.5 rounded text-xs text-muted-foreground cursor-pointer hover:bg-muted/40 transition-colors"
                 onClick={(e) => {
@@ -258,15 +260,21 @@ function SheetAccordionContent({ nodes, searchQuery, onSearchChange, onNodeFocus
                     </span>
                   )}
                 </div>
-                {isKeyboard && buttons.length > 0 && (
+                {isKeyboard && buttonObjects.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1 ml-4">
-                    {buttons.map((text, i) => (
+                    {buttonObjects.map((btn) => (
                       <span
-                        key={i}
-                        className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/50 text-xs opacity-80 truncate max-w-[80px]"
-                        title={text}
+                        key={btn.id}
+                        className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/50 text-xs opacity-80 truncate max-w-[80px] cursor-pointer hover:opacity-100"
+                        title={btn.text}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onNodeFocus && btn.id) {
+                            onNodeFocus(node.id, btn.id);
+                          }
+                        }}
                       >
-                        <HighlightText text={text} query={searchQuery} />
+                        <HighlightText text={btn.text} query={searchQuery} />
                       </span>
                     ))}
                   </div>

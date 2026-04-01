@@ -1,7 +1,8 @@
 /**
  * @fileoverview Карточка кнопки
- * 
+ *
  * Основной компонент карточки кнопки, объединяющий все подкомпоненты.
+ * Корневой div помечается атрибутом data-button-id для скролла из панели свойств.
  */
 
 import { Input } from '@/components/ui/input';
@@ -46,7 +47,10 @@ export function ButtonCard({
   selectedNode
 }: ButtonCardProps) {
   return (
-    <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30 hover:border-blue-300/60 dark:hover:border-blue-700/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition-all duration-200 group">
+    <div
+      className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-50/40 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/40 dark:border-blue-800/30 hover:border-blue-300/60 dark:hover:border-blue-700/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition-all duration-200 group"
+      data-button-id={button.id}
+    >
       <ButtonTextField
         nodeId={nodeId}
         button={button}

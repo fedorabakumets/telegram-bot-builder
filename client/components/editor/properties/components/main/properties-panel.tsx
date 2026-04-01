@@ -93,6 +93,8 @@ interface PropertiesPanelProps {
   onActionLog?: (type: string, description: string) => void;
   /** Р¤СѓРЅРєС†РёСЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ РїСЂРѕРµРєС‚Р° */
   onSaveProject?: () => void;
+  /** ID кнопки для скролла к ней в панели свойств */
+  focusButtonId?: string | null;
 }
 
 /**
@@ -133,7 +135,8 @@ export function PropertiesPanel({
   currentSheetId,
   onClose,
   onActionLog,
-  onSaveProject
+  onSaveProject,
+  focusButtonId,
 }: PropertiesPanelProps) {
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
@@ -154,6 +157,22 @@ export function PropertiesPanel({
       setDisplayNodeId(selectedNode.id);
     }
   }, [selectedNode?.id]);
+
+  // Раскрываем секцию клавиатуры при наличии focusButtonId
+  useEffect(() => {
+    if (focusButtonId) setIsKeyboardSectionOpen(true);
+  }, [focusButtonId]);
+
+  // Скроллим к нужной кнопке при изменении focusButtonId
+  useEffect(() => {
+    if (!focusButtonId) return;
+    // Небольшая задержка чтобы панель успела открыться
+    const timer = setTimeout(() => {
+      const el = document.querySelector(`[data-button-id="${focusButtonId}"]`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [focusButtonId]);
 
   // Р Р°СЃРєСЂС‹РІР°РµРј СЃРµРєС†РёРё РїСЂРё РЅР°Р»РёС‡РёРё РєРѕРЅС‚РµРЅС‚Р°
   useEffect(() => {
