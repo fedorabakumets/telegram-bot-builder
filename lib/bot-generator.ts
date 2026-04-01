@@ -436,6 +436,9 @@ function generateCodeSections(
       incomingMessageTriggerMiddlewares: nodes
         .filter(n => n.type === 'incoming_message_trigger' && n.data?.autoTransitionTo)
         .map(n => `incoming_message_trigger_${n.id.replace(/[^a-zA-Z0-9_]/g, '_')}_middleware`),
+      groupMessageTriggerHandlers: nodes
+        .filter(n => n.type === 'group_message_trigger' && n.data?.autoTransitionTo)
+        .map(n => `group_message_trigger_${n.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`),
     })
   );
 
