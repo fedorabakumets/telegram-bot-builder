@@ -80,3 +80,47 @@ export const forwardMessageNodeLegacyTargets: Node = {
     disableNotification: false,
   } as any,
 };
+
+/** Параметры: получатель-группа с числовым ID (без -100 префикса) */
+export const validParamsGroupTarget: ForwardMessageTemplateParams = {
+  nodeId: 'forward_group',
+  safeName: 'forward_group',
+  sourceMessageIdSource: 'current_message',
+  targetRecipients: [
+    {
+      id: 'target_group',
+      targetChatIdSource: 'manual',
+      targetChatId: '2300967595',
+      targetChatType: 'group',
+    },
+  ],
+  disableNotification: false,
+};
+
+/** Параметры: получатель-пользователь с числовым ID */
+export const validParamsUserTarget: ForwardMessageTemplateParams = {
+  nodeId: 'forward_user',
+  safeName: 'forward_user',
+  sourceMessageIdSource: 'current_message',
+  targetRecipients: [
+    {
+      id: 'target_user',
+      targetChatIdSource: 'manual',
+      targetChatId: '123456789',
+      targetChatType: 'user',
+    },
+  ],
+  disableNotification: false,
+};
+
+/** Параметры: смешанные типы получателей */
+export const validParamsMixedChatTypes: ForwardMessageTemplateParams = {
+  nodeId: 'forward_mixed_types',
+  safeName: 'forward_mixed_types',
+  sourceMessageIdSource: 'current_message',
+  targetRecipients: [
+    { id: 'r_user', targetChatIdSource: 'manual', targetChatId: '123456789', targetChatType: 'user' },
+    { id: 'r_group', targetChatIdSource: 'manual', targetChatId: '2300967595', targetChatType: 'group' },
+  ],
+  disableNotification: false,
+};

@@ -10,6 +10,9 @@ import {
   validParamsBasic,
   validParamsLastMessage,
   validParamsMixedTargets,
+  validParamsGroupTarget,
+  validParamsUserTarget,
+  validParamsMixedChatTypes,
   forwardMessageNodeBasic,
   forwardMessageNodeLegacyTargets,
 } from './forward-message.fixture';
@@ -47,7 +50,7 @@ describe('generateForwardMessage()', () => {
   });
 
   it('does not double-quote manual target chat ids', () => {
-    const code = generateForwardMessage(validParamsBasic);
+    const code = generateForwardMessage(validParamsMixedTargets);
     expect(code).toContain(`_raw_target_chat_id = '@channel_name'`);
     expect(code).not.toContain(`_raw_target_chat_id = "'@channel_name'"`);
   });
@@ -80,5 +83,60 @@ describe('generateForwardMessageFromNode()', () => {
     const code = generateForwardMessageFromNode(forwardMessageNodeBasic);
     expect(code).toContain('forward_message node forward_1');
     expect(code).toContain('await callback_query.answer("Сообщение переслано")');
+  });
+});
+
+describe('targetChatType — нормализация ID группы/канала', () => {
+  it('targetChatType=group генерирует -100 нормализацию', () => {
+    const code = generateForwardMessage(validParamsGroupTarget);
+    expect(code).toContain("if 'group' == 'group'");
+  });
+
+  it('targetChatType=user НЕ генерирует активную -100 нормализацию', () => {
+    const code = generateForwardMessage(validParamsUserTarget);
+    expect(code).toContain("if 'user' == 'group'");
+    expect(code).not.toContain("if 'group' == 'group'");
+  });
+
+  it('targetChatType=group без указания → дефолт user в рендерере', () => {
+    const params = nodeToForwardMessageParams({
+      id: 'fwd_no_type',
+      type: 'forward_message',
+      position: { x: 0, y: 0 },
+      data: {
+        targetChatTargets: [{ id: 'r1', targetChatIdSource: 'manual', targetChatId: '999' }],
+      } as any,
+    });
+    expect(params.targetRecipients[0].targetChatType).toBe('user');
+  });
+
+  it('targetChatType=group передаётся через nodeToForwardMessageParams', () => {
+    const params = nodeToForwardMessageParams({
+      id: 'fwd_group',
+      type: 'forward_message',
+      position: { x: 0, y: 0 },
+      data: {
+        targetChatTargets: [{ id: 'r1', targetChatIdSource: 'manual', targetChatId: '2300967595', targetChatType: 'group' }],
+      } as any,
+    });
+    expect(params.targetRecipients[0].targetChatType).toBe('group');
+  });
+
+  it('смешанные типы user+group оба присутствуют в коде', () => {
+    const code = generateForwardMessage(validParamsMixedChatTypes);
+    expect(code).toContain("if 'user' == 'group'");
+    expect(code).toContain("if 'group' == 'group'");
+  });
+
+  it('targetChatType=group + @username синтаксически корректен', () => {
+    const code = generateForwardMessage({
+      nodeId: 'fwd_username',
+      safeName: 'fwd_username',
+      sourceMessageIdSource: 'current_message',
+      targetRecipients: [{ id: 'r1', targetChatIdSource: 'manual', targetChatId: '@mychannel', targetChatType: 'group' }],
+      disableNotification: false,
+    });
+    expect(code).toContain("if 'group' == 'group'");
+    expect(code).toContain("'@mychannel'");
   });
 });
