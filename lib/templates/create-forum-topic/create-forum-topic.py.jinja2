@@ -61,6 +61,9 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     """Создаёт топик в форум-группе Telegram."""
     user_id = callback_query.from_user.id
 
+    # Инициализируем переменные пользователя до подстановки в название топика
+    await init_user_variables(user_id, callback_query.from_user)
+
     {% if skip_if_exists and save_to %}
     # Проверяем, существует ли уже сохранённый thread_id
     _existing_vars = await init_all_user_vars(user_id)

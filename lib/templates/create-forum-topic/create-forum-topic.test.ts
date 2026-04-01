@@ -62,6 +62,16 @@ describe('generateCreateForumTopic()', () => {
     expect(code).toContain('_topic_name.replace(');
   });
 
+  it('инициализирует переменные пользователя до подстановки в название топика', () => {
+    const code = generateCreateForumTopic(validParamsBasic);
+    expect(code).toContain('await init_user_variables(user_id, callback_query.from_user)');
+    // init_user_variables должен вызываться до вызова _resolve_topic_name
+    const initIdx = code.indexOf('await init_user_variables(user_id, callback_query.from_user)');
+    const resolveIdx = code.indexOf('await _resolve_topic_name_');
+    expect(initIdx).toBeGreaterThan(-1);
+    expect(initIdx).toBeLessThan(resolveIdx);
+  });
+
   it('генерирует проверку skipIfExists при включённом флаге', () => {
     const code = generateCreateForumTopic(validParamsSkipIfExists);
     expect(code).toContain('_existing_thread_id');
