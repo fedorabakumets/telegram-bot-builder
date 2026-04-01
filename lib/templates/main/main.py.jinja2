@@ -54,6 +54,12 @@ async def main():
         dp.message.middleware(register_user_middleware)
         {%- endif %}
 
+        {%- if incomingMessageTriggerMiddlewares and incomingMessageTriggerMiddlewares | length > 0 %}
+        {%- for mw in incomingMessageTriggerMiddlewares %}
+        dp.message.middleware({{ mw }})
+        {%- endfor %}
+        {%- endif %}
+
         await dp.start_polling(bot)
     except KeyboardInterrupt:
         print("⚠️ Получен сигнал остановки, завершаем работу...")

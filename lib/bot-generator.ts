@@ -433,6 +433,9 @@ function generateCodeSections(
           .replace(/\r/g, ''),
       })),
       autoRegisterUsers: !!context.options.autoRegisterUsers,
+      incomingMessageTriggerMiddlewares: nodes
+        .filter(n => n.type === 'incoming_message_trigger' && n.data?.autoTransitionTo)
+        .map(n => `incoming_message_trigger_${n.id.replace(/[^a-zA-Z0-9_]/g, '_')}_middleware`),
     })
   );
 

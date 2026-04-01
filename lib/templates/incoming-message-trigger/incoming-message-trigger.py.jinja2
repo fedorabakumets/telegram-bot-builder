@@ -42,6 +42,4 @@ async def incoming_message_trigger_{{ sanitized_node_id }}_middleware(handler, e
 
     return await handler(event, data)
 
-dp.message.middleware(incoming_message_trigger_{{ sanitized_node_id }}_middleware)
-
 {% endfor %}

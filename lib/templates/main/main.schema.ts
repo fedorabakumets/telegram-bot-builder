@@ -18,6 +18,8 @@ export const mainParamsSchema = z.object({
   })).optional().default([]),
   /** Автоматически регистрировать пользователей при первом обращении */
   autoRegisterUsers: z.boolean().optional().default(false),
+  /** Список имён middleware функций для incoming_message_trigger */
+  incomingMessageTriggerMiddlewares: z.array(z.string()).optional().default([]),
 });
 
 /** Тип параметров запуска (выведен из схемы) */
