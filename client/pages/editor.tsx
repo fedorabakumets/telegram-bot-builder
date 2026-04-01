@@ -126,10 +126,8 @@ export default function Editor() {
   const handleNodeFocus = useCallback((nodeId: string, buttonId?: string) => {
     setFocusNodeId(nodeId);
     setFocusButtonId(buttonId ?? null);
-    setTimeout(() => {
-      setFocusNodeId(null);
-      setFocusButtonId(null);
-    }, 300);
+    setTimeout(() => setFocusNodeId(null), 100);
+    setTimeout(() => setFocusButtonId(null), 800);
   }, []);
 
   // Хуки состояний

@@ -170,7 +170,7 @@ export function PropertiesPanel({
     const timer = setTimeout(() => {
       const el = document.querySelector(`[data-button-id="${focusButtonId}"]`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 150);
+    }, 400);
     return () => clearTimeout(timer);
   }, [focusButtonId]);
 
