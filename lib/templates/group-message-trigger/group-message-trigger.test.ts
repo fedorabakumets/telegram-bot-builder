@@ -57,10 +57,10 @@ describe('generateGroupMessageTriggers()', () => {
     expect(r).toContain('SELECT user_id FROM bot_users');
   });
 
-  it('содержит JSONB-запрос с project_id фильтром', () => {
+  it('не содержит project_id фильтра (bot_users не имеет этого столбца)', () => {
     const r = generateGroupMessageTriggers(validParamsSingleManual);
-    expect(r).toContain('project_id = $1');
-    expect(r).toContain('_project_id = globals().get(\'PROJECT_ID\')');
+    expect(r).not.toContain('project_id = $1');
+    expect(r).not.toContain('_project_id = globals().get(\'PROJECT_ID\')');
   });
 
   it('содержит вызов set_user_var с resolvedUserIdVariable', () => {

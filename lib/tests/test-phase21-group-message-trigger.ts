@@ -607,7 +607,7 @@ test('C07', 'variable: синтаксис OK', () => {
 
 console.log('── Блок D: threadIdVariable ────────────────────────────────────────────────');
 
-test('D01', 'SQL содержит user_data->>\'threadIdVariable\' = $2 (с project_id)', () => {
+test('D01', 'SQL содержит user_data->>\'threadIdVariable\' = $1', () => {
   const code = gen(makeCleanProject([
     makeGroupMessageTriggerNode('gmt1', {
       threadIdVariable: 'support_thread_id',
@@ -643,38 +643,33 @@ test('D03', 'содержит _db_pool_ref = globals().get(\'db_pool\')', () => 
   );
 });
 
-test('D04', 'содержит _project_id = globals().get(\'PROJECT_ID\')', () => {
+test('D04', 'не содержит _project_id (bot_users не имеет столбца project_id)', () => {
   const code = gen(makeCleanProject([
     makeGroupMessageTriggerNode('gmt1', { autoTransitionTo: 'msg1' }),
     makeMessageNode('msg1'),
   ]), 'd04');
   ok(
-    code.includes("globals().get('PROJECT_ID')"),
-    "globals().get('PROJECT_ID') должен быть в коде",
+    !code.includes("_project_id = globals().get('PROJECT_ID')") || !code.includes('project_id = $1'),
+    "SQL не должен фильтровать по project_id в group_message_trigger",
   );
 });
 
-test('D05', 'ветка с _project_id is not None — запрос с project_id = $1', () => {
+test('D05', 'SQL запрос использует только $1 для thread_id', () => {
   const code = gen(makeCleanProject([
     makeGroupMessageTriggerNode('gmt1', { autoTransitionTo: 'msg1' }),
     makeMessageNode('msg1'),
   ]), 'd05');
   ok(
-    code.includes('_project_id is not None'),
-    'Ветка _project_id is not None должна быть в коде',
-  );
-  ok(
-    code.includes('project_id = $1'),
-    'SQL с project_id = $1 должен быть в коде',
+    code.includes("= $1 LIMIT 1"),
+    'SQL должен использовать $1 для thread_id',
   );
 });
 
-test('D06', 'ветка без project_id — запрос с $1 (только thread_id)', () => {
+test('D06', 'запрос с $1 (только thread_id, без project_id)', () => {
   const code = gen(makeCleanProject([
     makeGroupMessageTriggerNode('gmt1', { autoTransitionTo: 'msg1' }),
     makeMessageNode('msg1'),
   ]), 'd06');
-  // Ветка else: запрос без project_id, только $1 = thread_id
   ok(
     code.includes("= $1 LIMIT 1") || code.includes("= $1\n"),
     'SQL без project_id с $1 должен быть в коде',
