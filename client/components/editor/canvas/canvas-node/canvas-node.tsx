@@ -30,6 +30,7 @@ import { ClientAuthCard } from './client-auth-card';
 import { CommandTriggerPreview } from './command-trigger-preview';
 import { TextTriggerPreview } from './text-trigger-preview';
 import { AnyMessageTriggerPreview } from './any-message-trigger-preview';
+import { GroupMessageTriggerPreview } from './group-message-trigger-preview';
 import { ConditionNodePreview } from './condition-node-preview';
 import { MediaNodePreview } from './media-node-preview';
 
@@ -452,7 +453,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
       {/* РџРѕСЂС‚ РІС‹С…РѕРґР° вЂ” СЃРЅР°СЂСѓР¶Рё РѕСЃРЅРѕРІРЅРѕРіРѕ div, РїРѕР·РёС†РёРѕРЅРёСЂСѓРµС‚СЃСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper */}
       {/* РЈР·РµР» condition РёРјРµРµС‚ РїРѕСЂС‚С‹ РЅР° РєР°Р¶РґРѕР№ РІРµС‚РєРµ вЂ” РѕР±С‰РёР№ РїРѕСЂС‚ РЅРµ РЅСѓР¶РµРЅ */}
-      {(node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger') ? (
+      {(node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger') ? (
         <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : node.type !== 'condition' && node.type !== 'keyboard' ? (
         <OutputPort portType="auto-transition" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
@@ -508,7 +509,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         }}
       >
         {/* Р—Р°РіРѕР»РѕРІРѕРє СѓР·Р»Р° вЂ” СЃРєСЂС‹С‚ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ, СѓР·Р»Р° СЃРѕРѕР±С‰РµРЅРёСЏ Рё СѓР·Р»Р° СѓСЃР»РѕРІРёСЏ */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (
           <NodeHeader node={node} onMove={!!onMove} />
         )}
 
@@ -556,6 +557,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         {/* Any Message Trigger Preview */}
         {node.type === 'incoming_message_trigger' && <AnyMessageTriggerPreview node={node} />}
 
+        {/* Group Message Trigger Preview */}
+        {node.type === 'group_message_trigger' && <GroupMessageTriggerPreview node={node} />}
+
         {/* Condition Node Preview */}
         {node.type === 'condition' && (
           <ConditionNodePreview
@@ -596,7 +600,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         )}
 
         {/* Р¤СѓС‚РµСЂ СЃ РїРѕР»РЅС‹Рј ID СѓР·Р»Р° вЂ” СЃРєСЂС‹С‚ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ, condition Рё keyboard */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'condition' && node.type !== 'keyboard' && (
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && node.type !== 'condition' && node.type !== 'keyboard' && (
           <div className="absolute bottom-0 left-0 right-0 px-4 py-2 rounded-b-2xl bg-slate-700/60 dark:bg-slate-800/90 border-t border-slate-600/40 dark:border-slate-600/60">
             <span
               className="font-mono text-[10px] text-slate-300 dark:text-slate-300 select-all tracking-tight"
