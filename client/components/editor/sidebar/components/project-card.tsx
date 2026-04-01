@@ -172,6 +172,8 @@ function NodeTypeIcon({ type }: { type: string }) {
 
 /**
  * Краткий контент узла (до 30 символов)
+ * @param node - Узел проекта
+ * @returns Строка с кратким описанием содержимого узла
  */
 function getShortContent(node: any): string {
   if (node.type === 'command_trigger') return node.data?.command || '';
@@ -179,6 +181,17 @@ function getShortContent(node: any): string {
   if (node.type === 'message') return node.data?.messageText || '';
   if (node.type === 'input') return node.data?.inputVariable || '';
   return '';
+}
+
+/**
+ * Извлекает список кнопок из узла клавиатуры
+ * @param node - Узел проекта
+ * @returns Массив текстов кнопок
+ */
+function getKeyboardButtons(node: any): string[] {
+  const buttons = node.data?.buttons;
+  if (!Array.isArray(buttons)) return [];
+  return buttons.map((b: any) => b.text || '').filter(Boolean);
 }
 
 /**
@@ -727,17 +740,33 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   <div className="ml-5 mt-0.5 mb-1 space-y-0.5 transition-all">
                     {nodes.map((node: any) => {
                       const shortContent = getShortContent(node);
+                      const isKeyboard = node.type === 'keyboard';
+                      const buttons = isKeyboard ? getKeyboardButtons(node) : [];
                       return (
-                        <div
-                          key={node.id}
-                          className="flex items-center gap-1.5 px-1.5 py-0.5 rounded text-xs text-muted-foreground"
-                        >
-                          <NodeTypeIcon type={node.type} />
-                          <span className="font-medium flex-shrink-0">{getNodeTypeLabel(node.type)}</span>
-                          {shortContent && (
-                            <span className="truncate opacity-70">
-                              {shortContent.length > 30 ? shortContent.slice(0, 30) + '…' : shortContent}
-                            </span>
+                        <div key={node.id} className="px-1.5 py-0.5 rounded text-xs text-muted-foreground">
+                          {/* Строка с иконкой и названием типа */}
+                          <div className="flex items-center gap-1.5">
+                            <NodeTypeIcon type={node.type} />
+                            <span className="font-medium flex-shrink-0">{getNodeTypeLabel(node.type)}</span>
+                            {shortContent && (
+                              <span className="truncate opacity-70">
+                                {shortContent.length > 30 ? shortContent.slice(0, 30) + '…' : shortContent}
+                              </span>
+                            )}
+                          </div>
+                          {/* Кнопки клавиатуры */}
+                          {isKeyboard && buttons.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1 ml-4">
+                              {buttons.map((text, i) => (
+                                <span
+                                  key={i}
+                                  className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/50 text-xs opacity-80 truncate max-w-[80px]"
+                                  title={text}
+                                >
+                                  {text}
+                                </span>
+                              ))}
+                            </div>
                           )}
                         </div>
                       );
