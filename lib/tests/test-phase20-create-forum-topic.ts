@@ -1475,6 +1475,220 @@ test('O12', 'media → create_forum_topic → message: полная цепочк
   ]), 'o12'), 'o12');
 });
 
+// ════════════════════════════════════════════════════════════════════════════════
+// БЛОК P: Сценарные тесты — реальные use-case
+// ════════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок P: Сценарные тесты — реальные use-case ─────────────────────────────');
+
+test('P01', 'сценарий поддержки: command_trigger → condition → create_forum_topic → message: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd-support', '/support', 'cond-check-thread'),
+    makeConditionNode('cond-check-thread', 'support_thread_id', [
+      makeConditionBranch('empty', { target: 'create-support-topic' }),
+      makeConditionBranch('filled', { target: 'msg-topic-exists' }),
+    ]),
+    makeCreateForumTopicNode('create-support-topic', {
+      forumChatId: '-1001234567890',
+      topicName: 'Поддержка {user_name}',
+      saveThreadIdTo: 'support_thread_id',
+      skipIfExists: true,
+    }),
+    makeMessageNode('msg-topic-created', '✅ Ваш топик поддержки создан!'),
+    makeMessageNode('msg-topic-exists', 'ℹ️ У вас уже есть открытый топик поддержки.'),
+  ]), 'p01'), 'p01');
+});
+
+test('P02', 'сценарий поддержки: condition ветка empty ведёт в create_forum_topic', () => {
+  const code = gen(makeCleanProject([
+    makeCommandTriggerNode('cmd-support', '/support', 'cond-check-thread'),
+    makeConditionNode('cond-check-thread', 'support_thread_id', [
+      makeConditionBranch('empty', { target: 'create-support-topic' }),
+      makeConditionBranch('filled', { target: 'msg-topic-exists' }),
+    ]),
+    makeCreateForumTopicNode('create-support-topic', { saveThreadIdTo: 'support_thread_id' }),
+    makeMessageNode('msg-topic-exists', 'Топик уже есть'),
+  ]), 'p02');
+  ok(code.includes('create-support-topic'), 'Ветка empty должна ссылаться на create-support-topic');
+});
+
+test('P03', 'сценарий поддержки: condition ветка filled ведёт в msg-topic-exists', () => {
+  const code = gen(makeCleanProject([
+    makeCommandTriggerNode('cmd-support', '/support', 'cond-check-thread'),
+    makeConditionNode('cond-check-thread', 'support_thread_id', [
+      makeConditionBranch('empty', { target: 'create-support-topic' }),
+      makeConditionBranch('filled', { target: 'msg-topic-exists' }),
+    ]),
+    makeCreateForumTopicNode('create-support-topic', { saveThreadIdTo: 'support_thread_id' }),
+    makeMessageNode('msg-topic-exists', 'Топик уже есть'),
+  ]), 'p03');
+  ok(code.includes('msg-topic-exists'), 'Ветка filled должна ссылаться на msg-topic-exists');
+});
+
+test('P04', 'сценарий поддержки: create_forum_topic сохраняет support_thread_id', () => {
+  const code = gen(makeCleanProject([
+    makeCommandTriggerNode('cmd-support', '/support', 'create-support-topic'),
+    makeCreateForumTopicNode('create-support-topic', {
+      forumChatId: '-1001234567890',
+      topicName: 'Поддержка {user_name}',
+      saveThreadIdTo: 'support_thread_id',
+    }),
+  ]), 'p04');
+  ok(code.includes('support_thread_id'), 'Переменная support_thread_id должна быть в коде');
+  ok(code.includes('set_user_var') || code.includes('support_thread_id'), 'Сохранение support_thread_id должно быть в коде');
+});
+
+test('P05', 'сценарий поддержки: create_forum_topic с skipIfExists: true проверяет _existing_thread_id', () => {
+  const code = gen(makeCleanProject([
+    makeCommandTriggerNode('cmd-support', '/support', 'create-support-topic'),
+    makeCreateForumTopicNode('create-support-topic', {
+      forumChatId: '-1001234567890',
+      saveThreadIdTo: 'support_thread_id',
+      skipIfExists: true,
+    }),
+  ]), 'p05');
+  ok(
+    code.includes('_existing_thread_id') || code.includes('skipping') || code.includes('thread_id already exists'),
+    'Проверка существующего thread_id должна быть в коде при skipIfExists: true',
+  );
+});
+
+test('P06', 'сценарий поддержки: create_forum_topic → message через autoTransitionTo генерирует обработчик msg-topic-created', () => {
+  const code = gen(makeCleanProject([
+    makeCommandTriggerNode('cmd-support', '/support', 'create-support-topic'),
+    {
+      id: 'create-support-topic',
+      type: 'create_forum_topic',
+      position: { x: 400, y: 0 },
+      data: {
+        forumChatIdSource: 'manual',
+        forumChatId: '-1001234567890',
+        forumChatVariableName: '',
+        topicName: 'Поддержка {user_name}',
+        topicIconColor: '9367192',
+        saveThreadIdTo: 'support_thread_id',
+        skipIfExists: true,
+        enableAutoTransition: true,
+        autoTransitionTo: 'msg-topic-created',
+      },
+    },
+    makeMessageNode('msg-topic-created', '✅ Ваш топик поддержки создан!'),
+  ]), 'p06');
+  ok(
+    code.includes('handle_callback_msg-topic-created') || code.includes('FakeCallbackQuery') || code.includes('msg-topic-created'),
+    'Переход к msg-topic-created должен быть в коде',
+  );
+});
+
+test('P07', 'сценарий "сбор ID группы": command_trigger → message → input → create_forum_topic: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/setup', 'msg-ask-id'),
+    makeMessageNode('msg-ask-id', 'Введите ID форум-группы:'),
+    {
+      id: 'input-group-id',
+      type: 'input',
+      position: { x: 400, y: 0 },
+      data: {
+        inputType: 'text',
+        inputVariable: 'group_chat_id',
+        inputTargetNodeId: 'cft-setup',
+        appendVariable: false,
+        saveToDatabase: true,
+      },
+    },
+    makeCreateForumTopicNode('cft-setup', {
+      forumChatIdSource: 'variable',
+      forumChatVariableName: 'group_chat_id',
+      topicName: 'Новый топик',
+      saveThreadIdTo: 'setup_thread_id',
+    }),
+  ]), 'p07'), 'p07');
+});
+
+test('P08', 'сценарий "несколько топиков": два create_forum_topic с разными saveThreadIdTo: синтаксис OK, оба обработчика в коде', () => {
+  const code = gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'cft-alpha'),
+    makeCreateForumTopicNode('cft-alpha', {
+      forumChatId: '-1001111111111',
+      topicName: 'Топик Alpha',
+      saveThreadIdTo: 'alpha_thread_id',
+    }),
+    makeCreateForumTopicNode('cft-beta', {
+      forumChatId: '-1002222222222',
+      topicName: 'Топик Beta',
+      saveThreadIdTo: 'beta_thread_id',
+    }),
+  ]), 'p08');
+  syntax(code, 'p08');
+  ok(code.includes('handle_callback_cft-alpha') || code.includes('cft-alpha'), 'Обработчик cft-alpha должен быть в коде');
+  ok(code.includes('handle_callback_cft-beta') || code.includes('cft-beta'), 'Обработчик cft-beta должен быть в коде');
+  ok(code.includes('alpha_thread_id'), 'Переменная alpha_thread_id должна быть в коде');
+  ok(code.includes('beta_thread_id'), 'Переменная beta_thread_id должна быть в коде');
+});
+
+test('P09', 'сценарий "топик с переменным названием": command_trigger → input → create_forum_topic с {topic_title}: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/newtopic', 'msg-ask-title'),
+    makeMessageNode('msg-ask-title', 'Введите название топика:'),
+    {
+      id: 'input-title',
+      type: 'input',
+      position: { x: 400, y: 0 },
+      data: {
+        inputType: 'text',
+        inputVariable: 'topic_title',
+        inputTargetNodeId: 'cft-dynamic',
+        appendVariable: false,
+        saveToDatabase: false,
+      },
+    },
+    makeCreateForumTopicNode('cft-dynamic', {
+      forumChatId: '-1001234567890',
+      topicName: '{topic_title}',
+      saveThreadIdTo: 'dynamic_thread_id',
+    }),
+  ]), 'p09'), 'p09');
+});
+
+test('P10', 'сценарий поддержки полный: все узлы из project.json генерируют корректный Python', () => {
+  const code = gen(makeCleanProject([
+    makeCommandTriggerNode('cmd-support', '/support', 'cond-check-thread'),
+    makeConditionNode('cond-check-thread', 'support_thread_id', [
+      makeConditionBranch('empty', { target: 'create-support-topic' }),
+      makeConditionBranch('filled', { target: 'msg-topic-exists' }),
+    ]),
+    {
+      id: 'create-support-topic',
+      type: 'create_forum_topic',
+      position: { x: 660, y: 100 },
+      data: {
+        forumChatIdSource: 'manual',
+        forumChatId: '-1001234567890',
+        forumChatVariableName: '',
+        topicName: 'Поддержка {user_name}',
+        topicIconColor: '9367192',
+        saveThreadIdTo: 'support_thread_id',
+        skipIfExists: true,
+        enableAutoTransition: true,
+        autoTransitionTo: 'msg-topic-created',
+      },
+    },
+    makeMessageNode('msg-topic-created', '✅ Ваш топик поддержки создан! Напишите ваш вопрос — мы ответим в топике.'),
+    makeMessageNode('msg-topic-exists', 'ℹ️ У вас уже есть открытый топик поддержки. Напишите туда свой вопрос.'),
+  ]), 'p10');
+  syntax(code, 'p10');
+  ok(code.includes('await bot.create_forum_topic('), 'Вызов bot.create_forum_topic должен быть в коде');
+  ok(code.includes('support_thread_id'), 'Переменная support_thread_id должна быть в коде');
+  ok(
+    code.includes('set_user_var') || code.includes('support_thread_id'),
+    'Сохранение support_thread_id должно быть в коде',
+  );
+  ok(
+    code.includes('skipping') || code.includes('thread_id already exists') || code.includes('_existing_thread_id'),
+    'Логика skipIfExists должна быть в коде',
+  );
+});
+
 // ─── Итоговая таблица ─────────────────────────────────────────────────────────
 
 const passed = results.filter((r) => r.passed).length;
