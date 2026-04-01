@@ -638,7 +638,7 @@ test('F03', 'saveThreadIdTo: логирование сохранения thread_
   const code = gen(makeCleanProject([
     makeCreateForumTopicNode('cft1', { saveThreadIdTo: 'forum_thread_id' }),
   ]), 'f03');
-  ok(code.includes("saved thread_id="), 'Логирование сохранения thread_id должно быть в коде');
+  ok(code.includes("saved thread_id=") || code.includes("сохранён в переменную"), 'Логирование сохранения thread_id должно быть в коде');
 });
 
 test('F04', 'saveThreadIdTo: _thread_id берётся из _created_topic.message_thread_id', () => {
@@ -659,7 +659,7 @@ test('F06', 'saveThreadIdTo: содержит try/except вокруг set_user_v
   const code = gen(makeCleanProject([
     makeCreateForumTopicNode('cft1', { saveThreadIdTo: 'forum_thread_id' }),
   ]), 'f06');
-  ok(code.includes('failed to save thread_id'), 'Warning о неудачном сохранении thread_id должен быть в коде');
+  ok(code.includes('failed to save thread_id') || code.includes('не удалось сохранить thread_id'), 'Warning о неудачном сохранении thread_id должен быть в коде');
 });
 
 test('F07', 'saveThreadIdTo: _created_topic = await bot.create_forum_topic(...) присваивается', () => {

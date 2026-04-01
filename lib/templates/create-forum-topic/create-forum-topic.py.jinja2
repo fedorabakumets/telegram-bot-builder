@@ -82,7 +82,8 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     _topic_name = await _resolve_topic_name_{{ safeName }}(callback_query)
 
     logging.info(
-        f"create_forum_topic node {{ nodeId }} triggered by {user_id}; chat_id={_forum_chat_id}, topic_name={_topic_name!r}"
+        f"🚀 create_forum_topic [{{ nodeId }}]: попытка создать топик | "
+        f"user_id={user_id} | chat_id={_forum_chat_id} | topic_name={_topic_name!r}"
     )
 
     try:
@@ -93,10 +94,16 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
         )
         _thread_id = _created_topic.message_thread_id
         logging.info(
-            f"create_forum_topic node {{ nodeId }}: created topic thread_id={_thread_id} in chat {_forum_chat_id}"
+            f"✅ create_forum_topic [{{ nodeId }}]: топик СОЗДАН | "
+            f"thread_id={_thread_id} | chat_id={_forum_chat_id} | "
+            f"topic_name={_topic_name!r} | user_id={user_id}"
         )
     except Exception as e:
-        logging.error(f"create_forum_topic node {{ nodeId }}: failed to create topic in {_forum_chat_id}: {e}")
+        logging.error(
+            f"❌ create_forum_topic [{{ nodeId }}]: ОШИБКА создания топика | "
+            f"chat_id={_forum_chat_id} | topic_name={_topic_name!r} | "
+            f"user_id={user_id} | error={e}"
+        )
         await callback_query.answer("Не удалось создать топик", show_alert=True)
         return
 
@@ -105,24 +112,26 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     try:
         await set_user_var(user_id, {{ save_to | escape_python_string }}, str(_thread_id))
         logging.info(
-            f"create_forum_topic node {{ nodeId }}: saved thread_id={_thread_id} to variable '{{ save_to }}'"
+            f"💾 create_forum_topic [{{ nodeId }}]: thread_id={_thread_id} сохранён в переменную '{{ save_to }}'"
         )
     except Exception as e:
-        logging.warning(f"create_forum_topic node {{ nodeId }}: failed to save thread_id: {e}")
+        logging.warning(
+            f"⚠️ create_forum_topic [{{ nodeId }}]: не удалось сохранить thread_id={_thread_id} | error={e}"
+        )
     {% endif %}
 
     await callback_query.answer("Топик создан")
 
-{% if autoTransitionTo %}
+    {% if autoTransitionTo %}
     # Автопереход к следующему узлу после создания топика
     is_fake_callback = getattr(callback_query, '_is_fake', False)
     if not is_fake_callback:
         logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
-{% if autoTransitionTargetExists %}
+        {% if autoTransitionTargetExists %}
         await handle_callback_{{ autoTransitionTo | replace('-', '_') | replace('.', '_') }}(callback_query)
-{% else %}
+        {% else %}
         logging.warning(f"⚠️ Узел автоперехода не найден: {{ autoTransitionTo }}")
-{% endif %}
+        {% endif %}
         logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
         return
-{% endif %}
+    {% endif %}
