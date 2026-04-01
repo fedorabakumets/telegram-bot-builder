@@ -45,7 +45,6 @@ import { useSheetNodeSearch } from '../hooks/use-sheet-node-search';
 import { useSheetSearchState } from '../hooks/use-sheet-search-state';
 import { HighlightText } from './highlight-text';
 import { useNodeSelection } from '../hooks/use-node-selection';
-import { BulkMoveSheetButton } from './bulk-move-sheet-button';
 
 /**
  * Состояние drag-and-drop для проектов и листов
@@ -242,6 +241,22 @@ function SheetAccordionContent({
   return (
     <div className="mt-0.5 mb-1 transition-all">
       <SheetNodeSearch value={searchQuery} onChange={onSearchChange} />
+      {/* Панель перемещения — над списком, появляется при выборе хотя бы одного узла */}
+      {selectedCount > 0 && availableSheets.length > 0 && (
+        <div className="px-1.5 py-1 mb-1 flex flex-wrap items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <span className="text-xs text-muted-foreground flex-shrink-0">↗ в лист:</span>
+          {availableSheets.map((sheet) => (
+            <button
+              key={sheet.id}
+              className="text-xs px-1.5 py-0.5 rounded bg-blue-500/15 border border-blue-400/30 text-blue-700 dark:text-blue-300 hover:bg-blue-500/25 transition-colors truncate max-w-[100px]"
+              title={sheet.name}
+              onClick={(e) => { e.stopPropagation(); handleBulkMove(sheet.id); }}
+            >
+              {sheet.name}
+            </button>
+          ))}
+        </div>
+      )}
       {filtered.length === 0 ? (
         <div className="text-xs text-muted-foreground opacity-60 px-1.5">
           {nodes.length === 0 ? 'Нет узлов' : 'Не найдено'}
@@ -314,14 +329,6 @@ function SheetAccordionContent({
             );
           })}
         </div>
-      )}
-      {/* Кнопка массового перемещения — появляется при выборе хотя бы одного узла */}
-      {selectedCount > 0 && availableSheets.length > 0 && (
-        <BulkMoveSheetButton
-          count={selectedCount}
-          sheets={availableSheets}
-          onSelect={handleBulkMove}
-        />
       )}
     </div>
   );
