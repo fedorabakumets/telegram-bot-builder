@@ -29,35 +29,29 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
             return;
         }
 
-        const defaultToken = await storage.getDefaultBotToken(projectId);
-        if (!defaultToken) {
-            res.status(400).json({ message: "Токен бота не найден" });
-            return;
-        }
-
         const { Pool } = await import('pg');
         const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-        // Проверяем, это аватарка бота или пользователя
-        const isBotAvatar = userId === 'bot' || userId === defaultToken.token.split(':')[0];
-
         let avatarUrl: string | null = null;
 
-        if (isBotAvatar) {
-            // Получаем аватарку бота из bot_tokens
+        // Проверяем, это аватарка бота
+        const defaultToken = await storage.getDefaultBotToken(projectId);
+        const isBotAvatar = userId === 'bot' || (defaultToken && userId === defaultToken.token.split(':')[0]);
+
+        if (isBotAvatar && defaultToken) {
             const botResult = await pool.query(
                 'SELECT bot_photo_url FROM bot_tokens WHERE id = $1',
                 [defaultToken.id]
             );
             avatarUrl = botResult.rows[0]?.bot_photo_url || null;
         } else {
-            // Получаем аватарку пользователя из bot_users
+            // Ищем аватарку пользователя в bot_users
             let userResult = await pool.query(
                 'SELECT avatar_url FROM bot_users WHERE user_id = $1 AND project_id = $2',
                 [userId, projectId]
             );
             avatarUrl = userResult.rows[0]?.avatar_url || null;
-            console.log(`[avatar] bot_users lookup: user_id=${userId}, project_id=${projectId}, found=${avatarUrl ? 'yes' : 'no'}, url=${avatarUrl}`);
+            console.log(`[avatar] bot_users lookup: user_id=${userId}, project_id=${projectId}, found=${avatarUrl ? 'yes' : 'no'}`);
 
             // Если не найдено, пробуем user_bot_data
             if (!avatarUrl) {
@@ -73,29 +67,14 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
         await pool.end();
 
         if (!avatarUrl) {
-            console.log(`[avatar] avatarUrl is null, returning 404`);
+            console.log(`[avatar] avatarUrl is null for user_id=${userId}, project_id=${projectId}`);
             res.status(404).json({ message: "Аватарка не найдена" });
             return;
         }
 
+        // avatarUrl — полный HTTPS URL, проксируем напрямую
         console.log(`[avatar] fetching: ${avatarUrl}`);
-        console.log(`[avatar] telegramPrefix: ${`https://api.telegram.org/file/bot${defaultToken.token}/`}`);
-
-        // Обрабатываем разные форматы avatarUrl
-        let telegramFileUrl: string;
-        const telegramPrefix = `https://api.telegram.org/file/bot${defaultToken.token}/`;
-        
-        if (avatarUrl.startsWith(telegramPrefix)) {
-            telegramFileUrl = avatarUrl;
-        } else if (avatarUrl.startsWith('https://')) {
-            // Другой HTTPS URL, используем как есть
-            telegramFileUrl = avatarUrl;
-        } else {
-            // Относительный путь, добавляем префикс
-            telegramFileUrl = telegramPrefix + avatarUrl;
-        }
-        
-        const response = await fetchWithProxy(telegramFileUrl);
+        const response = await fetchWithProxy(avatarUrl);
 
         if (!response.ok) {
             res.status(404).json({ message: "Не удалось получить аватарку" });
