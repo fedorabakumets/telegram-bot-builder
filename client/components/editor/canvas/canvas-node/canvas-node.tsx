@@ -424,6 +424,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   }, [node.id, onSizeChange]);
 
   const isDragActive = isDragging || isTouchDragging;
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     /**
@@ -442,8 +443,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         zIndex: isDragActive ? 1000 : isSelected ? 100 : 10,
         overflow: 'visible',
       }}
-      onMouseEnter={() => onHover?.(node.id)}
-      onMouseLeave={() => onHover?.(null)}
+      onMouseEnter={() => { setIsHovered(true); onHover?.(node.id); }}
+      onMouseLeave={() => { setIsHovered(false); onHover?.(null); }}
     >
       {/* РљРЅРѕРїРєРё РґРµР№СЃС‚РІРёР№ вЂ” СЃРЅР°СЂСѓР¶Рё РѕСЃРЅРѕРІРЅРѕРіРѕ div, РїРѕР·РёС†РёРѕРЅРёСЂСѓСЋС‚СЃСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper */}
       <NodeActions onDuplicate={onDuplicateAtPosition ?? onDuplicate} onDelete={onDelete} isSelected={isSelected} />
@@ -478,6 +479,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
           isConnectionTarget ? "ring-4 ring-green-400/60 border-green-400 shadow-green-400/20" : "",
           isConnectedToDragging && !isDragActive ? "ring-2 ring-violet-400 border-violet-500 scale-[1.02]" : "",
+          isHovered && !isDragActive && !isSelected ? "ring-2 ring-violet-400 border-violet-500 scale-[1.02]" : "",
           isHoveredByConnection && !isDragActive && !isConnectedToDragging ? "ring-2 ring-sky-400 border-sky-400" : "",
           onMove ? "cursor-grab" : "cursor-pointer"
         )}
@@ -494,6 +496,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden' as any,
           boxShadow: isConnectedToDragging && !isDragActive
+            ? '0 0 0 2px #8b5cf6, 0 0 20px 4px rgba(139, 92, 246, 0.5), 0 0 40px 8px rgba(139, 92, 246, 0.2)'
+            : isHovered && !isDragActive && !isSelected
             ? '0 0 0 2px #8b5cf6, 0 0 20px 4px rgba(139, 92, 246, 0.5), 0 0 40px 8px rgba(139, 92, 246, 0.2)'
             : isHoveredByConnection && !isDragActive
             ? '0 0 0 2px #38bdf8, 0 0 16px 4px rgba(56, 189, 248, 0.45), 0 0 32px 6px rgba(56, 189, 248, 0.2)'

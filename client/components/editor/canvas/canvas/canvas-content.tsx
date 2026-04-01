@@ -168,7 +168,7 @@ export function CanvasContent({
       }}
     >
       {/* SVG-слой соединений — рисуется под нодами */}
-      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draggingNodeId} onConnectionHover={handleConnectionHover} />
+      <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draggingNodeId ?? hoveredNodeId} onConnectionHover={handleConnectionHover} />
 
       {/* SVG-слой временного соединения при drag-to-connect */}
       <DraftConnectionLayer draftConnection={draftConnection ?? null} />
