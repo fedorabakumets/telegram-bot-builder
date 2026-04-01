@@ -194,7 +194,7 @@ export function CanvasContent({
           onPortMouseDown={onPortMouseDown}
           isConnectionTarget={hoveredTargetNodeId === node.id}
           isConnectionSource={draftConnection?.fromNodeId === node.id}
-          isConnectedToDragging={connectedTodragging.has(node.id) || connectedToHovered.has(node.id)}
+          isConnectedToDragging={connectedTodragging.has(node.id) || (connectedToHovered.has(node.id) && node.id !== hoveredNodeId)}
           isHoveredByConnection={hoveredConnectionNodes.fromId === node.id || hoveredConnectionNodes.toId === node.id}
           onHover={setHoveredNodeId}
           onButtonPortMount={handleButtonPortMount}
