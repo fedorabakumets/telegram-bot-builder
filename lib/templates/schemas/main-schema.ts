@@ -15,6 +15,8 @@ export const mainParamsSchema = z.object({
   hasInlineButtons: z.boolean().optional().default(false),
   /** Автоматически регистрировать пользователей при первом обращении */
   autoRegisterUsers: z.boolean().optional().default(false),
+  /** Список имён middleware функций для incoming_message_trigger */
+  incomingMessageTriggerMiddlewares: z.array(z.string()).optional().default([]),
 });
 
 /** Тип параметров запуска бота (выведен из схемы) */
