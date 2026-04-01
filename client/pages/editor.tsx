@@ -112,6 +112,18 @@ export default function Editor() {
   /** Триггер для принудительного fitToContent после применения шаблона */
   const [fitTrigger, setFitTrigger] = useState(0);
 
+  /** ID узла для фокусировки на канвасе */
+  const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
+
+  /**
+   * Обработчик фокусировки на узле канваса из сайдбара
+   * @param nodeId - Идентификатор узла для фокусировки
+   */
+  const handleNodeFocus = useCallback((nodeId: string) => {
+    setFocusNodeId(nodeId);
+    setTimeout(() => setFocusNodeId(null), 100);
+  }, []);
+
   // Хуки состояний
   const {
     isLoadingTemplate,
@@ -1209,6 +1221,7 @@ export default function Editor() {
             onConnectionCreate={saveToHistory}
             autoFitOnLoad
             fitTrigger={fitTrigger}
+            focusNodeId={focusNodeId}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full">
@@ -1293,6 +1306,7 @@ export default function Editor() {
         onSheetSelect={handleSheetSelect}
         isMobile={isMobile}
         onClose={handleToggleSidebar}
+        onNodeFocus={handleNodeFocus}
       />
     ) : null;
 
@@ -1423,6 +1437,7 @@ export default function Editor() {
                 onSheetSelect={handleSheetSelect}
                 isMobile={isMobile}
                 onClose={handleToggleSidebar}
+                onNodeFocus={handleNodeFocus}
               />
             ) : null
           }
@@ -1467,6 +1482,7 @@ export default function Editor() {
                   onConnectionCreate={saveToHistory}
                   autoFitOnLoad
                   fitTrigger={fitTrigger}
+                  focusNodeId={focusNodeId}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">
@@ -1572,6 +1588,7 @@ export default function Editor() {
               onSheetSelect={handleSheetSelect}
               isMobile={isMobile}
               onClose={() => setShowMobileSidebar(false)}
+              onNodeFocus={handleNodeFocus}
             />
           </div>
         </SheetContent>

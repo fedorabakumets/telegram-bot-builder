@@ -168,6 +168,8 @@ interface CanvasProps {
   autoFitOnLoad?: boolean;
   /** Инкрементируй это значение чтобы принудительно вызвать fitToContent */
   fitTrigger?: number;
+  /** ID узла для фокусировки (выделение + центрирование) */
+  focusNodeId?: string | null;
 }
 
 export function Canvas({
@@ -210,6 +212,7 @@ export function Canvas({
   onConnectionCreate,
   autoFitOnLoad,
   fitTrigger,
+  focusNodeId,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -259,7 +262,27 @@ export function Canvas({
     return () => clearTimeout(timer);
   }, [autoFitOnLoad, nodes, nodeSizes]);
 
-  // Система истории действий - используем внешнюю историю если передана, иначе локальную
+  /**
+   * Фокусировка на узле: выделяет узел и центрирует его в видимой области
+   */
+  useEffect(() => {
+    if (!focusNodeId) return;
+    const node = nodes.find(n => n.id === focusNodeId);
+    if (!node) return;
+    onNodeSelect(focusNodeId);
+    const scrollContainer = canvasRef.current?.parentElement;
+    if (!scrollContainer) return;
+    const containerWidth = scrollContainer.clientWidth;
+    const containerHeight = scrollContainer.clientHeight;
+    const nodeW = nodeSizes.get(focusNodeId)?.width ?? 320;
+    const nodeH = nodeSizes.get(focusNodeId)?.height ?? 200;
+    const newPanX = containerWidth / 2 - (node.position.x + nodeW / 2) * (zoom / 100);
+    const newPanY = containerHeight / 2 - (node.position.y + nodeH / 2) * (zoom / 100);
+    setPan({ x: newPanX, y: newPanY });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusNodeId]);
+
+  // Система истории действий — используем внешнюю историю если передана, иначе локальную
   const [localActionHistory, setLocalActionHistory] = useState<Action[]>([]);
   const actionHistory = externalActionHistory || localActionHistory;
   const [selectedActionsForUndo, setSelectedActionsForUndo] = useState<Set<string>>(new Set());

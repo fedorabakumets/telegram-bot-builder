@@ -157,6 +157,8 @@ export interface ProjectCardProps {
   onTouchMove?: (e: React.TouchEvent) => void;
   /** Обработчик окончания touch перетаскивания проекта */
   onTouchEnd?: (e: React.TouchEvent) => void;
+  /** Колбэк для фокусировки на узле канваса */
+  onNodeFocus?: (nodeId: string) => void;
 }
 
 /**
@@ -208,6 +210,8 @@ interface SheetAccordionContentProps {
   searchQuery: string;
   /** Обработчик изменения поискового запроса */
   onSearchChange: (query: string) => void;
+  /** Колбэк для фокусировки на узле канваса */
+  onNodeFocus?: (nodeId: string) => void;
 }
 
 /**
@@ -215,7 +219,7 @@ interface SheetAccordionContentProps {
  * @param props - Свойства компонента SheetAccordionContentProps
  * @returns JSX элемент содержимого аккордеона
  */
-function SheetAccordionContent({ nodes, searchQuery, onSearchChange }: SheetAccordionContentProps) {
+function SheetAccordionContent({ nodes, searchQuery, onSearchChange, onNodeFocus }: SheetAccordionContentProps) {
   const filtered = useSheetNodeSearch(nodes, searchQuery);
 
   return (
@@ -232,7 +236,12 @@ function SheetAccordionContent({ nodes, searchQuery, onSearchChange }: SheetAcco
             const isKeyboard = node.type === 'keyboard';
             const buttons = isKeyboard ? getKeyboardButtons(node) : [];
             return (
-              <div key={node.id} className="px-1.5 py-0.5 rounded text-xs text-muted-foreground">
+              <div key={node.id} className="px-1.5 py-0.5 rounded text-xs text-muted-foreground cursor-pointer hover:bg-muted/40 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onNodeFocus && node.id) onNodeFocus(node.id);
+                }}
+              >
                 <div className="flex items-center gap-1.5">
                   <NodeTypeIcon type={node.type} />
                   <span className="font-medium flex-shrink-0">
@@ -320,6 +329,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onTouchStart,
   onTouchMove,
   onTouchEnd,
+  onNodeFocus,
 }) => {
   // Используем пропсы для совместимости интерфейса
   // onSheetRename вызывается через onSaveSheetName в родительском компоненте
@@ -817,6 +827,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   nodes={projectData.sheets[index]?.nodes || []}
                   searchQuery={getSheetQuery(sheetId)}
                   onSearchChange={(q) => setSheetQuery(sheetId, q)}
+                  onNodeFocus={onNodeFocus}
                 />
               )}
               </div>

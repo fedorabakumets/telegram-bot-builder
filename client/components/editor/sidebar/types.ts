@@ -266,4 +266,7 @@ export interface ComponentsSidebarProps {
 
   /** Колбэк для закрытия панели */
   onClose?: () => void;
+
+  /** Колбэк для фокусировки на узле канваса */
+  onNodeFocus?: (nodeId: string) => void;
 }

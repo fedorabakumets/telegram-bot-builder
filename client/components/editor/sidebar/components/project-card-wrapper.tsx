@@ -24,6 +24,8 @@ export interface ProjectCardWrapperProps extends Omit<ProjectCardProps, 'onTouch
   onProjectDragEnd?: () => void;
   /** Обработчик клика по проекту для сброса drag-состояния */
   onProjectClick?: () => void;
+  /** Колбэк для фокусировки на узле канваса */
+  onNodeFocus?: (nodeId: string) => void;
 }
 
 /**
@@ -39,6 +41,7 @@ export const ProjectCardWrapper: React.FC<ProjectCardWrapperProps> = ({
   project,
   onProjectDragEnd,
   onProjectClick,
+  onNodeFocus,
   ...cardProps
 }) => {
   // Создаём touch-обработчики для проекта
@@ -59,6 +62,7 @@ export const ProjectCardWrapper: React.FC<ProjectCardWrapperProps> = ({
       onTouchEnd={projectTouchHandlers.handleTouchEnd}
       onProjectDragEnd={onProjectDragEnd}
       onProjectClick={onProjectClick}
+      onNodeFocus={onNodeFocus}
     />
   );
 };

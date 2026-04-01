@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Боковая панель редактора с компонентами и управлением проектами
+ * @module components/editor/sidebar/components-sidebar
+ */
+
 import { BotProject } from '@shared/schema';
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -64,7 +69,8 @@ export function ComponentsSidebar({
   onSheetDuplicate,
   onSheetSelect,
   isMobile = false,
-  onClose
+  onClose,
+  onNodeFocus,
 }: ComponentsSidebarProps) {
   // Хук управления вкладками
   const { currentTab, setCurrentTab } = useSidebarTabs();
@@ -369,6 +375,7 @@ export function ComponentsSidebar({
                     onSheetRename={onSheetRename}
                     onSheetDuplicate={onSheetDuplicate}
                     onSheetDelete={onSheetDelete}
+                    onNodeFocus={onNodeFocus}
                     dragState={{
                       draggedProject: projectDragState.draggedProject,
                       dragOverProject: projectDragState.dragOverProject,
