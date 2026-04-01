@@ -1208,6 +1208,156 @@ test('N04', 'forumChatIdSource: variable → нет literal forumChatId в ко�
   ok(!code.includes("_raw_chat_id = '-1002300967595'"), 'Literal forumChatId не должен быть в коде при variable-режиме');
 });
 
+// ════════════════════════════════════════════════════════════════════════════════
+// БЛОК O: Интеграция — недостающие сценарии подключения
+// ════════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок O: Интеграция — недостающие сценарии подключения ───────────────────');
+
+test('O01', 'incoming_message_trigger → create_forum_topic: вызывает handle_callback через mock_callback', () => {
+  const code = gen(makeCleanProject([
+    {
+      id: 'imt1',
+      type: 'incoming_message_trigger',
+      position: { x: 0, y: 0 },
+      data: { autoTransitionTo: 'cft1', buttons: [], keyboardType: 'none' },
+    },
+    makeCreateForumTopicNode('cft1'),
+  ]), 'o01');
+  ok(code.includes('await handle_callback_cft1(mock_callback)'), 'incoming_message_trigger должен вести в create_forum_topic через mock_callback');
+});
+
+test('O02', 'incoming_message_trigger → create_forum_topic: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    {
+      id: 'imt1',
+      type: 'incoming_message_trigger',
+      position: { x: 0, y: 0 },
+      data: { autoTransitionTo: 'cft1', buttons: [], keyboardType: 'none' },
+    },
+    makeCreateForumTopicNode('cft1', { saveThreadIdTo: 'thread_id' }),
+  ]), 'o02'), 'o02');
+});
+
+test('O03', 'message → create_forum_topic через auto-transition: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    {
+      id: 'msg1',
+      type: 'message',
+      position: { x: 0, y: 0 },
+      data: {
+        messageText: 'Создаём топик...',
+        buttons: [],
+        keyboardType: 'none',
+        formatMode: 'none',
+        markdown: false,
+        enableAutoTransition: true,
+        autoTransitionTo: 'cft1',
+      },
+    },
+    makeCreateForumTopicNode('cft1', { saveThreadIdTo: 'thread_id' }),
+  ]), 'o03'), 'o03');
+});
+
+test('O04', 'message → create_forum_topic через auto-transition: FakeCallbackQuery в коде', () => {
+  const code = gen(makeCleanProject([
+    {
+      id: 'msg1',
+      type: 'message',
+      position: { x: 0, y: 0 },
+      data: {
+        messageText: 'Создаём топик...',
+        buttons: [],
+        keyboardType: 'none',
+        formatMode: 'none',
+        markdown: false,
+        enableAutoTransition: true,
+        autoTransitionTo: 'cft1',
+      },
+    },
+    makeCreateForumTopicNode('cft1'),
+  ]), 'o04');
+  ok(code.includes('FakeCallbackQuery') || code.includes('handle_callback_cft1'), 'auto-transition должен вести в create_forum_topic');
+});
+
+test('O05', 'create_forum_topic → message через auto-transition: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/create', 'cft1'),
+    {
+      id: 'cft1',
+      type: 'create_forum_topic',
+      position: { x: 400, y: 0 },
+      data: {
+        forumChatIdSource: 'manual',
+        forumChatId: '-1001234567890',
+        topicName: 'Топик',
+        topicIconColor: '7322096',
+        saveThreadIdTo: 'thread_id',
+        skipIfExists: false,
+        enableAutoTransition: true,
+        autoTransitionTo: 'msg_done',
+      },
+    },
+    makeMessageNode('msg_done', 'Топик создан!'),
+  ]), 'o05'), 'o05');
+});
+
+test('O06', 'keyboard кнопка → create_forum_topic: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    {
+      id: 'msg1',
+      type: 'message',
+      position: { x: 0, y: 0 },
+      data: {
+        messageText: 'Нажми кнопку',
+        keyboardType: 'inline',
+        buttons: [{ id: 'btn1', text: 'Создать топик', action: 'goto', target: 'cft1' }],
+        formatMode: 'none',
+        markdown: false,
+      },
+    },
+    makeCreateForumTopicNode('cft1', { saveThreadIdTo: 'thread_id' }),
+  ]), 'o06'), 'o06');
+});
+
+test('O07', 'полный сценарий: command_trigger → condition → create_forum_topic → message: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/support', 'cond1'),
+    makeConditionNode('cond1', 'support_thread_id', [
+      makeConditionBranch('empty', { target: 'cft1' }),
+      makeConditionBranch('filled', { target: 'msg_exists' }),
+    ]),
+    makeCreateForumTopicNode('cft1', {
+      forumChatIdSource: 'manual',
+      forumChatId: '-1001234567890',
+      topicName: 'Поддержка {user_name}',
+      topicIconColor: '9367192',
+      saveThreadIdTo: 'support_thread_id',
+      skipIfExists: false,
+    }),
+    makeMessageNode('msg_exists', 'Топик уже создан'),
+    makeMessageNode('msg_done', 'Готово'),
+  ]), 'o07'), 'o07');
+});
+
+test('O08', 'incoming_message_trigger + create_forum_topic с variable source и skipIfExists: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    {
+      id: 'imt1',
+      type: 'incoming_message_trigger',
+      position: { x: 0, y: 0 },
+      data: { autoTransitionTo: 'cft1', buttons: [], keyboardType: 'none' },
+    },
+    makeCreateForumTopicNode('cft1', {
+      forumChatIdSource: 'variable',
+      forumChatVariableName: 'forum_chat_id',
+      topicName: 'Топик {user_name}',
+      saveThreadIdTo: 'thread_id',
+      skipIfExists: true,
+    }),
+  ]), 'o08'), 'o08');
+});
+
 // ─── Итоговая таблица ─────────────────────────────────────────────────────────
 
 const passed = results.filter((r) => r.passed).length;
