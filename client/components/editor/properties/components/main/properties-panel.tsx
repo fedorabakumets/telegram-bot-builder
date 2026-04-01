@@ -423,6 +423,7 @@ export function PropertiesPanel({
                 <CreateForumTopicConfiguration
                   selectedNode={selectedNode}
                   onNodeUpdate={onNodeUpdate}
+                  getAllNodesFromAllSheets={getAllNodesFromAllSheets}
                 />
               </div>
             </div>

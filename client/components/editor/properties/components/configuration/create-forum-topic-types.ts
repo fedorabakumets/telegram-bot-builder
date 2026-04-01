@@ -23,4 +23,6 @@ export interface CreateForumTopicConfigProps {
   selectedNode: Node;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
+  /** Все узлы из всех листов для извлечения доступных переменных */
+  getAllNodesFromAllSheets?: Array<{ node: Node; sheetId?: string; sheetName?: string }>;
 }
