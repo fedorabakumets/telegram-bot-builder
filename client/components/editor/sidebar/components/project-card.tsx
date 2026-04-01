@@ -248,7 +248,7 @@ function SheetAccordionContent({
           {availableSheets.map((sheet) => (
             <button
               key={sheet.id}
-              className="text-xs px-1.5 py-0.5 rounded bg-blue-500/15 border border-blue-400/30 text-blue-700 dark:text-blue-300 hover:bg-blue-500/25 transition-colors truncate max-w-[100px]"
+              className="text-xs px-1.5 py-0.5 rounded bg-blue-500/15 border border-blue-400/30 text-blue-700 dark:text-blue-300 hover:bg-blue-500/25 transition-colors"
               title={sheet.name}
               onClick={(e) => { e.stopPropagation(); handleBulkMove(sheet.id); }}
             >
