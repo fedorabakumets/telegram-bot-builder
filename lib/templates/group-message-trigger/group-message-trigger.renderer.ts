@@ -36,8 +36,8 @@ export function collectGroupMessageTriggerEntries(nodes: Node[]): GroupMessageTr
       groupChatId: String(data?.groupChatId ?? ''),
       groupChatIdSource: data?.groupChatIdSource === 'variable' ? 'variable' : 'manual',
       groupChatVariableName: String(data?.groupChatVariableName ?? ''),
-      threadIdVariable: String(data?.threadIdVariable ?? 'support_thread_id'),
-      resolvedUserIdVariable: String(data?.resolvedUserIdVariable ?? 'resolved_user_id'),
+      threadIdVariable: String(data?.threadIdVariable || 'support_thread_id'),
+      resolvedUserIdVariable: String(data?.resolvedUserIdVariable || 'resolved_user_id'),
       targetNodeId,
       targetNodeType,
     });

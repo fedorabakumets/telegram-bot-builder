@@ -21,9 +21,9 @@ const groupMessageTriggerEntrySchema = z.object({
   /** Имя переменной с ID группы */
   groupChatVariableName: z.string().default(''),
   /** Имя переменной где у пользователей хранится thread_id */
-  threadIdVariable: z.string().min(1),
+  threadIdVariable: z.string().default('support_thread_id'),
   /** Имя переменной куда положить найденный user_id */
-  resolvedUserIdVariable: z.string().min(1),
+  resolvedUserIdVariable: z.string().default('resolved_user_id'),
   /** ID целевого узла */
   targetNodeId: z.string().min(1),
   /** Тип целевого узла */
