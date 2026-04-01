@@ -52,6 +52,7 @@ import { SimpleLayoutCustomizer } from '@/components/layout/simple-layout-custom
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
+import { useMoveNodeToSheet } from '@/components/editor/canvas/canvas/use-move-node-to-sheet';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
@@ -591,6 +592,9 @@ export default function Editor() {
       setBotDataWithSheets(updatedData);
     }
   }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
+
+  // Хук перемещения узла между листами
+  const { moveNodeToSheet } = useMoveNodeToSheet(botDataWithSheets || undefined, handleBotDataUpdate);
 
   // Обработчики узлов через хук
   const {
@@ -1229,6 +1233,7 @@ export default function Editor() {
             autoFitOnLoad
             fitTrigger={fitTrigger}
             focusNodeId={focusNodeId}
+            onMoveNodeToSheet={moveNodeToSheet}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full">

@@ -33,6 +33,7 @@ import { AnyMessageTriggerPreview } from './any-message-trigger-preview';
 import { GroupMessageTriggerPreview } from './group-message-trigger-preview';
 import { ConditionNodePreview } from './condition-node-preview';
 import { MediaNodePreview } from './media-node-preview';
+import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
 
 /**
  * РРЅС‚РµСЂС„РµР№СЃ СЃРІРѕР№СЃС‚РІ РєРѕРјРїРѕРЅРµРЅС‚Р° CanvasNode
@@ -92,6 +93,10 @@ interface CanvasNodeProps {
   isHoveredByConnection?: boolean;
   /** Колбэк при наведении/уходе мыши с узла */
   onHover?: (nodeId: string | null) => void;
+  /** Список листов для перемещения узла (без текущего) */
+  sheets?: Array<{ id: string; name: string }>;
+  /** Колбэк перемещения узла в другой лист */
+  onMoveToSheet?: (sheetId: string) => void;
   /**
    * РљРѕР»Р±СЌРє, РІС‹Р·С‹РІР°РµРјС‹Р№ РїСЂРё РјРѕРЅС‚РёСЂРѕРІР°РЅРёРё РїРѕСЂС‚Р° РєРЅРѕРїРєРё.
    * РџРµСЂРµРґР°С‘С‚ buttonId Рё РїРѕР·РёС†РёСЋ С†РµРЅС‚СЂР° РїРѕСЂС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper-div СѓР·Р»Р°.
@@ -115,7 +120,7 @@ interface CanvasNodeProps {
  * @param {CanvasNodeProps} props - РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р°
  * @returns {JSX.Element} РљРѕРјРїРѕРЅРµРЅС‚ СѓР·Р»Р° РЅР° С…РѕР»СЃС‚Рµ
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, onHover, onButtonPortMount }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, onHover, onButtonPortMount, sheets, onMoveToSheet }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref РґР»СЏ dragOffset вЂ” РїРѕР·РІРѕР»СЏРµС‚ С‡РёС‚Р°С‚СЊ Р°РєС‚СѓР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РІ handleMouseMove
@@ -636,10 +641,20 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                 }
               }
             ]}
+            extraContent={sheets && sheets.length > 0 && onMoveToSheet ? (
+              <MoveToSheetMenu
+                sheets={sheets}
+                onSelect={(sheetId) => {
+                  onMoveToSheet(sheetId);
+                  closeContextMenu();
+                }}
+              />
+            ) : undefined}
           />
         )}
       </div>
     </div>
   );
 }
+
 

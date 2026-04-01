@@ -7,7 +7,7 @@
  * привязка источника сообщения, а не как автопереход выполнения.
  */
 
-import { useRef, useCallback, useState, useEffect } from 'react';
+import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useTouchGestures } from './use-touch-gestures';
 import { CanvasToolbar } from './canvas-toolbar';
@@ -170,6 +170,8 @@ interface CanvasProps {
   fitTrigger?: number;
   /** ID узла для фокусировки (выделение + центрирование) */
   focusNodeId?: string | null;
+  /** Колбэк перемещения узла в другой лист */
+  onMoveNodeToSheet?: (nodeId: string, sheetId: string) => void;
 }
 
 export function Canvas({
@@ -213,6 +215,7 @@ export function Canvas({
   autoFitOnLoad,
   fitTrigger,
   focusNodeId,
+  onMoveNodeToSheet,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -240,6 +243,16 @@ export function Canvas({
 
   // ID узла, который сейчас перетаскивается (для подсветки связанных узлов и линий)
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+
+  /**
+   * Список листов доступных для перемещения узла (все кроме активного)
+   */
+  const availableSheets = useMemo(() => {
+    if (!botData?.sheets) return [];
+    return botData.sheets
+      .filter(s => s.id !== botData.activeSheetId)
+      .map(s => ({ id: s.id, name: s.name }));
+  }, [botData]);
 
   // Ref для отслеживания последнего набора узлов при autoFitOnLoad
   const lastAutoFitNodesKeyRef = useRef<string>('');
@@ -1388,6 +1401,8 @@ export function Canvas({
             hoveredTargetNodeId={hoveredTargetNodeId}
             onConnectionDelete={handleConnectionDelete}
             draggingNodeId={draggingNodeId}
+            sheets={availableSheets}
+            onMoveNodeToSheet={onMoveNodeToSheet}
           />
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">

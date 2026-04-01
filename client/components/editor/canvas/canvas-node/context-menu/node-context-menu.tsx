@@ -24,12 +24,14 @@ interface NodeContextMenuProps {
   items: ContextMenuItem[];
   /** Пункты опасной группы (удаление и т.п.) */
   dangerItems?: ContextMenuItem[];
+  /** Дополнительный контент между основными и опасными пунктами */
+  extraContent?: React.ReactNode;
 }
 
 /**
  * Контекстное меню с автоматической корректировкой позиции у краёв экрана
  */
-export function NodeContextMenu({ position, onClose, items, dangerItems }: NodeContextMenuProps) {
+export function NodeContextMenu({ position, onClose, items, dangerItems, extraContent }: NodeContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   /** Корректируем позицию чтобы меню не выходило за края экрана */
@@ -59,6 +61,8 @@ export function NodeContextMenu({ position, onClose, items, dangerItems }: NodeC
         {items.map((item) => (
           <ContextMenuItemComponent key={item.id} item={item} onAction={handleAction} />
         ))}
+
+        {extraContent}
 
         {dangerItems && dangerItems.length > 0 && (
           <>

@@ -62,6 +62,10 @@ interface CanvasContentProps {
   onConnectionDelete?: (fromId: string, toId: string, type: string) => void;
   /** ID узла, который сейчас перетаскивается — для подсветки связанных линий */
   draggingNodeId?: string | null;
+  /** Список листов для перемещения узла (без текущего) */
+  sheets?: Array<{ id: string; name: string }>;
+  /** Колбэк перемещения узла в другой лист */
+  onMoveNodeToSheet?: (nodeId: string, sheetId: string) => void;
 }
 
 /**
@@ -91,6 +95,8 @@ export function CanvasContent({
   hoveredTargetNodeId,
   onConnectionDelete,
   draggingNodeId,
+  sheets,
+  onMoveNodeToSheet,
 }: CanvasContentProps) {
   /**
    * Получение всех узлов со всех листов для отображения связей
@@ -202,6 +208,8 @@ export function CanvasContent({
           )}
           onHover={draftConnection ? undefined : setHoveredNodeId}
           onButtonPortMount={handleButtonPortMount}
+          sheets={sheets}
+          onMoveToSheet={onMoveNodeToSheet ? (sheetId) => onMoveNodeToSheet(node.id, sheetId) : undefined}
         />
       ))}
     </div>
