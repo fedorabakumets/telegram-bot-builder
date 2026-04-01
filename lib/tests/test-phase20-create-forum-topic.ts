@@ -1358,6 +1358,123 @@ test('O08', 'incoming_message_trigger + create_forum_topic с variable source и
   ]), 'o08'), 'o08');
 });
 
+test('O09', 'media → create_forum_topic через auto-transition: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'media1'),
+    {
+      id: 'media1',
+      type: 'media',
+      position: { x: 200, y: 0 },
+      data: {
+        attachedMedia: ['https://example.com/photo.jpg'],
+        enableAutoTransition: true,
+        autoTransitionTo: 'cft1',
+        buttons: [],
+        keyboardType: 'none',
+      },
+    },
+    makeCreateForumTopicNode('cft1', { saveThreadIdTo: 'thread_id' }),
+  ]), 'o09'), 'o09');
+});
+
+test('O10', 'input (сохранить ответ) → create_forum_topic через auto-transition: синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'msg1'),
+    {
+      id: 'msg1',
+      type: 'message',
+      position: { x: 200, y: 0 },
+      data: {
+        messageText: 'Введите ID группы',
+        buttons: [],
+        keyboardType: 'none',
+        formatMode: 'none',
+        markdown: false,
+        enableAutoTransition: true,
+        autoTransitionTo: 'input1',
+      },
+    },
+    {
+      id: 'input1',
+      type: 'input',
+      position: { x: 400, y: 0 },
+      data: {
+        inputType: 'text',
+        inputVariable: 'forum_chat_id',
+        inputTargetNodeId: 'cft1',
+        appendVariable: false,
+        saveToDatabase: true,
+      },
+    },
+    makeCreateForumTopicNode('cft1', {
+      forumChatIdSource: 'variable',
+      forumChatVariableName: 'forum_chat_id',
+      saveThreadIdTo: 'thread_id',
+    }),
+  ]), 'o10'), 'o10');
+});
+
+test('O11', 'input → create_forum_topic: handle_callback_cft1 вызывается как next_node_id', () => {
+  const code = gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'msg1'),
+    {
+      id: 'msg1',
+      type: 'message',
+      position: { x: 200, y: 0 },
+      data: {
+        messageText: 'Введите ID',
+        buttons: [],
+        keyboardType: 'none',
+        formatMode: 'none',
+        markdown: false,
+        enableAutoTransition: true,
+        autoTransitionTo: 'input1',
+      },
+    },
+    {
+      id: 'input1',
+      type: 'input',
+      position: { x: 400, y: 0 },
+      data: {
+        inputType: 'text',
+        inputVariable: 'forum_chat_id',
+        inputTargetNodeId: 'cft1',
+        appendVariable: false,
+        saveToDatabase: true,
+      },
+    },
+    makeCreateForumTopicNode('cft1', {
+      forumChatIdSource: 'variable',
+      forumChatVariableName: 'forum_chat_id',
+      saveThreadIdTo: 'thread_id',
+    }),
+  ]), 'o11');
+  ok(code.includes('"next_node_id": "cft1"'), 'input должен указывать next_node_id на create_forum_topic');
+});
+
+test('O12', 'media → create_forum_topic → message: полная цепочка синтаксически корректна', () => {
+  syntax(gen(makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/gallery', 'media1'),
+    {
+      id: 'media1',
+      type: 'media',
+      position: { x: 200, y: 0 },
+      data: {
+        attachedMedia: ['https://example.com/a.jpg', 'https://example.com/b.jpg'],
+        enableAutoTransition: true,
+        autoTransitionTo: 'cft1',
+        buttons: [],
+        keyboardType: 'none',
+      },
+    },
+    makeCreateForumTopicNode('cft1', {
+      topicName: 'Галерея {user_name}',
+      saveThreadIdTo: 'gallery_thread_id',
+    }),
+    makeMessageNode('msg_done', 'Топик с галереей создан'),
+  ]), 'o12'), 'o12');
+});
+
 // ─── Итоговая таблица ─────────────────────────────────────────────────────────
 
 const passed = results.filter((r) => r.passed).length;
