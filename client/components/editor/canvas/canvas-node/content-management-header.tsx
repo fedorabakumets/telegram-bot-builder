@@ -55,6 +55,22 @@ export function ContentManagementHeader({ node, type }: ContentManagementHeaderP
     create_forum_topic: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30 border-teal-200 dark:border-teal-800',
   };
 
+  // Данные для forward_message
+  const targets: any[] = (node.data as any).targetChatTargets ?? [];
+  const sourceIdSource: string = (node.data as any).sourceMessageIdSource ?? 'current_message';
+
+  const sourceLabel: Record<string, string> = {
+    current_message: 'текущее',
+    variable: 'из переменной',
+    node: 'из узла',
+  };
+
+  const targetTypeIcon: Record<string, string> = {
+    user: 'fa-user',
+    group: 'fa-users',
+    channel: 'fa-bullhorn',
+  };
+
   return (
     <span className="flex flex-col gap-2">
       {shouldShowCommandChip && (
@@ -65,6 +81,52 @@ export function ContentManagementHeader({ node, type }: ContentManagementHeaderP
       <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-tight">
         {labels[type]}
       </span>
+
+      {type === 'forward_message' && (
+        <span className="flex flex-col gap-1.5 mt-0.5">
+          {/* Источник */}
+          <span className="flex items-center gap-1.5">
+            <i className="fas fa-inbox text-amber-500/70 text-[10px]" />
+            <span className="text-[10px] text-slate-400">источник:</span>
+            <span className="text-[10px] text-amber-300/80 font-mono">
+              {sourceIdSource === 'variable'
+                ? ((node.data as any).sourceMessageVariableName || 'переменная')
+                : sourceLabel[sourceIdSource] ?? sourceIdSource}
+            </span>
+          </span>
+
+          {/* Цели */}
+          {targets.length > 0 && (
+            <span className="flex flex-col gap-1 border-t border-amber-800/20 pt-1">
+              {targets.map((t: any, i: number) => {
+                const icon = targetTypeIcon[t.targetChatType] ?? 'fa-paper-plane';
+                const label =
+                  t.targetChatIdSource === 'variable'
+                    ? `{${t.targetChatVariableName || 'переменная'}}`
+                    : t.targetChatId
+                      ? String(t.targetChatId)
+                      : '—';
+                const thread =
+                  t.targetThreadIdSource === 'variable' && t.targetThreadIdVariable
+                    ? t.targetThreadIdVariable
+                    : null;
+                return (
+                  <span key={i} className="flex items-center gap-1.5">
+                    <i className={`fas ${icon} text-amber-500/60 text-[10px]`} />
+                    <span className="font-mono text-[10px] text-amber-300/80">{label}</span>
+                    {thread && (
+                      <>
+                        <i className="fas fa-link text-purple-500/50 text-[10px]" />
+                        <span className="font-mono text-[10px] text-purple-300/70">{thread}</span>
+                      </>
+                    )}
+                  </span>
+                );
+              })}
+            </span>
+          )}
+        </span>
+      )}
     </span>
   );
 }
