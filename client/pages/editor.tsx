@@ -61,6 +61,7 @@ import { clearKeyboardNodeId, getKeyboardNodeId } from '@/components/editor/canv
 import { BotData, BotDataWithSheets, BotProject, UserBotData } from '@shared/schema';
 import type { ComponentDefinition, Node } from '@shared/schema';
 import { nanoid } from 'nanoid';
+import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 
 /**
  * Компонент редактора бота
@@ -969,6 +970,18 @@ export default function Editor() {
     _duplicateNode(nodeId, targetPosition);
   }, [_duplicateNode, nodes, handleActionLog, saveToHistory]);
 
+  /**
+   * Выполняет автоматическую иерархическую расстановку всех узлов на холсте.
+   * Сохраняет текущее состояние в историю перед применением раскладки.
+   */
+  const handleAutoLayout = useCallback(() => {
+    const currentData = getBotData();
+    const newNodes = applyTemplateLayout(currentData.nodes, [], undefined, currentNodeSizes);
+    saveToHistory();
+    handleActionLog('update', 'Авто-расстановка узлов');
+    updateNodes(newNodes);
+  }, [getBotData, currentNodeSizes, saveToHistory, handleActionLog, updateNodes]);
+
   // Обработчики кнопок через хук
   const { handleButtonAdd, handleButtonUpdate, handleButtonDelete } = useButtonHandlers({
     nodes,
@@ -1252,6 +1265,7 @@ export default function Editor() {
             focusNodeId={focusNodeId}
             highlightNodeId={highlightNodeId}
             onMoveNodeToSheet={moveNodeToSheet}
+            onAutoLayout={handleAutoLayout}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full">
@@ -1514,6 +1528,7 @@ export default function Editor() {
                   fitTrigger={fitTrigger}
                   focusNodeId={focusNodeId}
                   highlightNodeId={highlightNodeId}
+                  onAutoLayout={handleAutoLayout}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">

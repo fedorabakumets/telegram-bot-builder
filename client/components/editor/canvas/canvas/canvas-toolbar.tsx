@@ -9,6 +9,7 @@ import { ZoomControls } from './zoom-controls';
 import { UndoRedoButtons } from './undo-redo-buttons';
 import { ActionHistory } from './action-history';
 import { SaveButton } from './save-button';
+import { AutoLayoutButton } from './auto-layout-button';
 import { ClipboardButtons } from './clipboard-buttons';
 import { InterfaceToggles } from './interface-toggles';
 import { KeyboardShortcutsHelp } from './keyboard-shortcuts-help';
@@ -58,6 +59,8 @@ interface CanvasToolbarProps {
   onRedo?: () => void;
   /** РљРѕР»Р±СЌРє РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ */
   onSave?: () => void;
+  /** Колбэк для авто-расстановки узлов */
+  onAutoLayout?: () => void;
   /** РљРѕР»Р±СЌРє РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ РІ Р±СѓС„РµСЂ РѕР±РјРµРЅР° */
   onCopyToClipboard?: (nodeIds: string[]) => void;
   /** РљРѕР»Р±СЌРє РґР»СЏ РІСЃС‚Р°РІРєРё РёР· Р±СѓС„РµСЂР° РѕР±РјРµРЅР° */
@@ -113,6 +116,7 @@ export function CanvasToolbar({
   onUndo,
   onRedo,
   onSave,
+  onAutoLayout,
   onCopyToClipboard,
   onPasteFromClipboard,
   lastClickPosition,
@@ -164,6 +168,8 @@ export function CanvasToolbar({
             />
 
             <SaveButton onSave={onSave} isSaving={isSaving} />
+
+            <AutoLayoutButton onAutoLayout={onAutoLayout} />
 
             {/* РњРµР¶РїСЂРѕРµРєС‚РЅРѕРµ РєРѕРїРёСЂРѕРІР°РЅРёРµ/РІСЃС‚Р°РІРєР° */}
             <ClipboardButtons

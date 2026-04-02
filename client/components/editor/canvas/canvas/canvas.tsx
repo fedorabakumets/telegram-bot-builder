@@ -174,6 +174,8 @@ interface CanvasProps {
   highlightNodeId?: string | null;
   /** Колбэк перемещения узла в другой лист */
   onMoveNodeToSheet?: (nodeId: string, sheetId: string) => void;
+  /** Колбэк для авто-расстановки узлов */
+  onAutoLayout?: () => void;
 }
 
 export function Canvas({
@@ -219,6 +221,7 @@ export function Canvas({
   focusNodeId,
   highlightNodeId,
   onMoveNodeToSheet,
+  onAutoLayout,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1442,6 +1445,7 @@ export function Canvas({
         onUndo={onUndo}
         onRedo={onRedo}
         onSave={onSave}
+        onAutoLayout={onAutoLayout}
         onCopyToClipboard={onCopyToClipboard}
         onPasteFromClipboard={onPasteFromClipboard}
         lastClickPosition={lastClickPosition}
