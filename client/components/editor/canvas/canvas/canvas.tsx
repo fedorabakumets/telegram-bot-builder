@@ -871,13 +871,15 @@ export function Canvas({
 
   // Handle wheel zoom (native handler, registered with { passive: false })
   const handleWheel = useCallback((e: WheelEvent) => {
+    // Всегда предотвращаем нативный скролл контейнера — управляем паном сами
+    e.preventDefault();
+
     if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
+      // Зум относительно позиции курсора
       const delta = e.deltaY;
       const zoomFactor = delta > 0 ? 0.9 : 1.1;
 
       // Используем scrollContainer (видимая область), а не сам canvas-div
-      // canvasRef указывает на огромный div (2000vh x 2000vw), его rect.left/top некорректны
       const container = scrollContainerRef.current ?? canvasRef.current?.parentElement;
       const rect = container?.getBoundingClientRect();
       if (rect) {
@@ -894,10 +896,12 @@ export function Canvas({
 
         setZoom(newZoom);
       }
-    }
-    // Prevent page zoom on trackpad pinch gesture
-    if (e.ctrlKey) {
-      e.preventDefault();
+    } else {
+      // Обычный скролл/тачпад без Ctrl — двигаем пан вместо скролла контейнера
+      setPan(prev => ({
+        x: prev.x - e.deltaX,
+        y: prev.y - e.deltaY
+      }));
     }
   }, [zoom]);
 
