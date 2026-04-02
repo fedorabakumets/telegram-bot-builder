@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CodeFormat } from '@/components/editor/code/useCodeGeneratorServer';
+import { JsonEditorPanel } from '@/components/editor/code/json-editor-panel';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateProjectName } from '@/components/editor/bot/project/use-update-project-name';
 import { BotData, BotProject } from '@shared/schema';
