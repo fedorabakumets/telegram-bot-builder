@@ -186,12 +186,15 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
    * Получение текущего содержимого кода для выбранного формата
    * @returns Строка с кодом или пустая строка если контент не загружен
    */
-  const getCurrentContent = (index: number) => {
-    // Если передан displayContent (обрезанный), используем его
+  const getCurrentContent = (_index: number) => {
+    // Для JSON всегда берём из codeContent напрямую (не из displayContent)
+    if (selectedFormat === 'json' && codeContent?.json) {
+      return codeContent.json;
+    }
+    // Для остальных форматов — displayContent если есть, иначе codeContent
     if (displayContent) {
       return displayContent;
     }
-    // Иначе используем переданный контент из пропсов
     if (codeContent && codeContent[selectedFormat]) {
       return codeContent[selectedFormat];
     }
