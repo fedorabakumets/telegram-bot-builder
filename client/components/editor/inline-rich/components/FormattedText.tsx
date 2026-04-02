@@ -58,7 +58,7 @@ export function FormattedText({ value, className = '', lineClamp }: FormattedTex
 
   return (
     <div
-      className={`text-sm text-blue-700 dark:text-blue-300 leading-relaxed font-medium ${lineClampClass} ${className}`}
+      className={`text-sm text-blue-700 dark:text-blue-300 leading-relaxed font-medium break-all ${lineClampClass} ${className}`}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
