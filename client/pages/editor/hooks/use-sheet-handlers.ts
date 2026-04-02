@@ -42,6 +42,8 @@ interface UseSheetHandlersParams {
   nodes: any[];
   /** ID активного проекта */
   activeProjectId: number | null;
+  /** Колбэк после успешного переключения листа */
+  onAfterSelect?: () => void;
 }
 
 /** Результат работы хука useSheetHandlers */
@@ -78,6 +80,7 @@ export function useSheetHandlers(params: UseSheetHandlersParams): UseSheetHandle
     currentNodeSizes,
     nodes,
     activeProjectId,
+    onAfterSelect,
   } = params;
 
   const { handleSheetAdd } = useSheetAdd({
@@ -135,6 +138,7 @@ export function useSheetHandlers(params: UseSheetHandlersParams): UseSheetHandle
     queryClient,
     currentNodeSizes,
     activeProjectId,
+    onAfterSelect,
   });
 
   return {

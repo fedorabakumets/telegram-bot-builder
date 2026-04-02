@@ -38,6 +38,8 @@ interface UseSheetSelectParams {
   currentNodeSizes: any;
   /** ID активного проекта */
   activeProjectId: number | null;
+  /** Колбэк после успешного переключения листа (например для fitToContent) */
+  onAfterSelect?: () => void;
 }
 
 /**
@@ -59,6 +61,7 @@ export function useSheetSelect(params: UseSheetSelectParams) {
     queryClient,
     currentNodeSizes,
     activeProjectId,
+    onAfterSelect,
   } = params;
 
   /**
@@ -102,10 +105,10 @@ export function useSheetSelect(params: UseSheetSelectParams) {
           const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
           if (newActiveSheet) {
             setBotData({ nodes: newActiveSheet.nodes }, undefined, currentNodeSizes, true);
+            onAfterSelect?.();
           }
 
           if (activeProjectId) {
-            updateProjectMutation.mutate();
             setTimeout(() => {
               queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProjectId}`] });
               queryClient.refetchQueries({ queryKey: [`/api/projects/${activeProjectId}`] });
@@ -141,6 +144,7 @@ export function useSheetSelect(params: UseSheetSelectParams) {
       const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
       if (newActiveSheet) {
         setBotData({ nodes: newActiveSheet.nodes }, undefined, currentNodeSizes, true);
+        onAfterSelect?.();
       }
 
       // Сохраняем изменения
@@ -166,6 +170,7 @@ export function useSheetSelect(params: UseSheetSelectParams) {
     queryClient,
     currentNodeSizes,
     activeProjectId,
+    onAfterSelect,
   ]);
 
   return { handleSheetSelect };

@@ -749,6 +749,7 @@ export default function Editor() {
     currentNodeSizes,
     nodes,
     activeProjectId: activeProject?.id || null,
+    onAfterSelect: () => setFitTrigger(t => t + 1),
   });
 
   // Проверяем, есть ли выбранный сценарий при загрузке страницы
