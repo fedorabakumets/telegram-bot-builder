@@ -468,6 +468,17 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                     </Button>
                   </div>
 
+                  {/* Редактор JSON — показывается только на вкладке json */}
+                  {selectedFormat === 'json' && onJsonSave && (
+                    <JsonEditorPanel
+                      value={jsonEditorValues[index] ?? content}
+                      onApply={(json) => {
+                        setJsonEditorValues(prev => ({ ...prev, [index]: json }));
+                        handleApplyJson(index);
+                      }}
+                    />
+                  )}
+
                   {/* Export Structure Button - ЗАКОММЕНТИРОВАНО
                   {projectIds?.[index] && (
                     <Button
