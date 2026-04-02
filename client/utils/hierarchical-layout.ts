@@ -38,7 +38,6 @@ interface HierarchicalLayoutOptions {
 type LayoutConnectionType =
   | 'auto-transition'
   | 'button-goto'
-  | 'back-goto'
   | 'input-target'
   | 'trigger-next'
   | 'condition-source'
@@ -69,12 +68,10 @@ interface LayoutGraph {
   mainAdjacency: Map<string, Set<string>>;
   /** Обратные основные связи для barycenter-сортировки. */
   reverseMainAdjacency: Map<string, Set<string>>;
-  /** Привязка `keyboard` к хосту `message` (только последний зарегистрированный хост). */
+  /** Привязка `keyboard` к хосту `message`. */
   keyboardHostByKeyboardId: Map<string, string>;
   /** Привязка `message` к связанному `keyboard`. */
   keyboardByHostId: Map<string, string>;
-  /** Все хосты одной keyboard-ноды (для shared keyboard с несколькими хостами). */
-  hostsByKeyboardId: Map<string, Set<string>>;
   /** Узлы, на которые ведут кнопки конкретного источника. */
   buttonTargetsBySourceId: Map<string, Set<string>>;
 }
@@ -254,17 +251,10 @@ function inferConnectionsFromNodes(
     if (node.type === 'message' && linkedKeyboard && keyboardButtons.length > 0) {
       for (const button of keyboardButtons) {
         if (button?.action === 'goto' && button?.target) {
-          /**
-           * Кнопки "Назад" создают обратные рёбра которые замыкают циклы и ломают слои.
-           * Помечаем их как back-goto — они не попадут в mainAdjacency.
-           */
-          const isBackButton =
-            typeof button.text === 'string' &&
-            /назад|back|⬅|◀|🔙/i.test(button.text);
           pushConnection({
             fromId: node.id,
             toId: button.target,
-            type: isBackButton ? 'back-goto' : 'button-goto',
+            type: 'button-goto',
             buttonId: button.id,
           });
         }
@@ -303,13 +293,10 @@ function inferConnectionsFromNodes(
     if (sourceId && Array.isArray(buttonsToUse)) {
       for (const button of buttonsToUse) {
         if (button?.action === 'goto' && button?.target) {
-          const isBackButton =
-            typeof button.text === 'string' &&
-            /назад|back|⬅|◀|🔙/i.test(button.text);
           pushConnection({
             fromId: sourceId,
             toId: button.target,
-            type: isBackButton ? 'back-goto' : 'button-goto',
+            type: 'button-goto',
             buttonId: button.id,
           });
         }
@@ -356,8 +343,6 @@ function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
   const existingIds = new Set(nodes.map(node => node.id));
   const keyboardHostByKeyboardId = new Map<string, string>();
   const keyboardByHostId = buildKeyboardLinks(nodesById);
-  /** Все хосты одной keyboard-ноды — нужно для позиционирования shared keyboard по среднему Y. */
-  const hostsByKeyboardId = new Map<string, Set<string>>();
   const buttonTargetsBySourceId = new Map<string, Set<string>>();
   const mainAdjacency = new Map<string, Set<string>>();
   const reverseMainAdjacency = new Map<string, Set<string>>();
@@ -370,12 +355,6 @@ function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
 
     keyboardByHostId.set(hostId, keyboardId);
     keyboardHostByKeyboardId.set(keyboardId, hostId);
-
-    // Регистрируем хост в множестве всех хостов данной keyboard
-    if (!hostsByKeyboardId.has(keyboardId)) {
-      hostsByKeyboardId.set(keyboardId, new Set());
-    }
-    hostsByKeyboardId.get(keyboardId)!.add(hostId);
   };
 
   /**
@@ -425,9 +404,6 @@ function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
     const targetNode = nodesById.get(connection.toId);
     if (!sourceNode || !targetNode) continue;
 
-    // back-goto (кнопки "Назад") не добавляем в mainAdjacency — они создают циклы
-    if (connection.type === 'back-goto') continue;
-
     let sourceId = connection.fromId;
     if (connection.type === 'button-goto' && keyboardHostByKeyboardId.has(sourceId)) {
       sourceId = keyboardHostByKeyboardId.get(sourceId)!;
@@ -446,7 +422,6 @@ function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
     reverseMainAdjacency,
     keyboardHostByKeyboardId,
     keyboardByHostId,
-    hostsByKeyboardId,
     buttonTargetsBySourceId,
   };
 }
@@ -635,9 +610,7 @@ function expandComponentLayers(
   }
 
   for (const [keyboardId, hostId] of keyboardHostByKeyboardId) {
-    // Keyboard-нода получает тот же слой что и хост — anchorKeyboardNodes поставит её правее.
-    // Это предотвращает попадание keyboard меню в слой сообщений-потомков.
-    layerMap.set(keyboardId, layerMap.get(hostId) ?? 0);
+    layerMap.set(keyboardId, (layerMap.get(hostId) ?? 0) + 1);
   }
 
   // Триггеры которые ведут на узел не в слое 1 — переставляем вплотную к цели
@@ -798,65 +771,23 @@ function placeLayerNodes(
   layerMap: Map<string, number>,
   layerIndex: number,
   opts: HierarchicalLayoutOptions,
-): { orderedNodes: Node[]; centers: Map<string, number>; isoColOffsets: Map<string, number> } {
+): { orderedNodes: Node[]; centers: Map<string, number> } {
   const orderedNodes = sortLayerNodes(layerNodes, centersByNodeId, graph, layerMap, layerIndex);
   const centers = new Map<string, number>();
-  /** Смещение по X для изолированных нод (раскладка в сетку). */
-  const isoColOffsets = new Map<string, number>();
-
-  /**
-   * Разделяем ноды на связанные (есть желаемый центр) и изолированные (нет связей).
-   * Изолированные не должны сдвигать cursorY для связанных нод.
-   */
-  const connectedNodes: Node[] = [];
-  const isolatedNodes: Node[] = [];
+  let cursorY = opts.startY;
 
   for (const node of orderedNodes) {
-    const desired = getDesiredCenter(node, layerIndex, centersByNodeId, graph, layerMap);
-    if (Number.isFinite(desired)) {
-      connectedNodes.push(node);
-    } else {
-      isolatedNodes.push(node);
-    }
-  }
-
-  // Сначала размещаем связанные ноды
-  let cursorY = opts.startY;
-  for (const node of connectedNodes) {
     const size = getNodeSize(node.id, opts);
     const desiredCenter = getDesiredCenter(node, layerIndex, centersByNodeId, graph, layerMap);
-    const targetY = desiredCenter - size.height / 2;
+    const targetY = Number.isFinite(desiredCenter)
+      ? desiredCenter - size.height / 2
+      : cursorY;
     const y = Math.max(cursorY, Math.round(targetY));
     centers.set(node.id, y + size.height / 2);
-    // Keyboard-ноды позиционируются через anchorKeyboardNodes — не сдвигаем cursorY
-    if (!COMPANION_TYPES.has(node.type)) {
-      cursorY = y + size.height + opts.verticalSpacing;
-    }
+    cursorY = y + size.height + opts.verticalSpacing;
   }
 
-  /**
-   * Изолированные ноды раскладываем в сетку: не более ISOLATED_COL_SIZE нод в колонке,
-   * затем переходим на следующую колонку. Это предотвращает уход одной группы далеко вниз.
-   */
-  const ISOLATED_COL_SIZE = 6;
-  let isoRow = 0;
-  let isoCol = 0;
-  const isoColWidth = opts.nodeWidth + opts.horizontalSpacing;
-
-  for (const node of isolatedNodes) {
-    const size = getNodeSize(node.id, opts);
-    const colOffsetX = isoCol * isoColWidth;
-    const rowY = opts.startY + isoRow * (size.height + opts.verticalSpacing);
-    centers.set(node.id, rowY + size.height / 2);
-    isoColOffsets.set(node.id, colOffsetX);
-    isoRow += 1;
-    if (isoRow >= ISOLATED_COL_SIZE) {
-      isoRow = 0;
-      isoCol += 1;
-    }
-  }
-
-  return { orderedNodes: [...connectedNodes, ...isolatedNodes], centers, isoColOffsets };
+  return { orderedNodes, centers };
 }
 
 /**
@@ -867,10 +798,9 @@ function reduceLayerCrossings(
   graph: LayoutGraph,
   layerMap: Map<string, number>,
   opts: HierarchicalLayoutOptions,
-): { layers: Node[][]; centersByNodeId: Map<string, number>; isoColOffsets: Map<string, number> } {
+): { layers: Node[][]; centersByNodeId: Map<string, number> } {
   let orderedLayers = layers.map(layer => [...layer]);
   let centersByNodeId = new Map<string, number>();
-  let isoColOffsets = new Map<string, number>();
 
   for (let pass = 0; pass < 5; pass += 1) {
     for (let layerIndex = 0; layerIndex < orderedLayers.length; layerIndex += 1) {
@@ -885,9 +815,6 @@ function reduceLayerCrossings(
       orderedLayers[layerIndex] = placed.orderedNodes;
       for (const [nodeId, center] of placed.centers) {
         centersByNodeId.set(nodeId, center);
-      }
-      for (const [nodeId, offset] of placed.isoColOffsets) {
-        isoColOffsets.set(nodeId, offset);
       }
     }
 
@@ -904,18 +831,14 @@ function reduceLayerCrossings(
       for (const [nodeId, center] of placed.centers) {
         centersByNodeId.set(nodeId, center);
       }
-      for (const [nodeId, offset] of placed.isoColOffsets) {
-        isoColOffsets.set(nodeId, offset);
-      }
     }
   }
 
-  return { layers: orderedLayers, centersByNodeId, isoColOffsets };
+  return { layers: orderedLayers, centersByNodeId };
 }
 
 /**
  * Якорит связанные keyboard-ноды рядом с их message-хостами.
- * Для shared keyboard (несколько хостов) берёт средний Y всех хостов.
  */
 function anchorKeyboardNodes(
   positions: Map<string, { x: number; y: number }>,
@@ -932,37 +855,14 @@ function anchorKeyboardNodes(
 
     const hostSize = getNodeSize(hostId, opts);
     const keyboardSize = getNodeSize(keyboardId, opts);
+    // Держим keyboard визуально рядом с host, но оставляем более заметный зазор,
+    // чтобы узлы не выглядели "слипшимися".
     const xOffset = Math.max(56, Math.round(opts.horizontalSpacing * 0.75));
-
-    // Вычисляем средний Y по всем хостам данной keyboard
-    const allHosts = graph.hostsByKeyboardId.get(keyboardId);
-    let anchorY: number;
-
-    if (allHosts && allHosts.size > 1) {
-      // Shared keyboard: центрируем по среднему центру всех хостов
-      const hostCenters: number[] = [];
-      for (const hId of allHosts) {
-        const hPos = positions.get(hId);
-        const hSize = getNodeSize(hId, opts);
-        if (hPos) {
-          hostCenters.push(hPos.y + hSize.height / 2);
-        }
-      }
-      if (hostCenters.length > 0) {
-        const avgCenter = hostCenters.reduce((sum, c) => sum + c, 0) / hostCenters.length;
-        anchorY = Math.round(avgCenter - keyboardSize.height / 2);
-      } else {
-        anchorY = hostPosition.y + Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
-      }
-    } else {
-      // Одиночный хост: выравниваем по центру хоста
-      const yOffset = Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
-      anchorY = hostPosition.y + yOffset;
-    }
+    const yOffset = Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
 
     positions.set(keyboardId, {
       x: hostPosition.x + hostSize.width + xOffset,
-      y: anchorY,
+      y: hostPosition.y + yOffset,
     });
   }
 }
@@ -1005,7 +905,6 @@ export function createHierarchicalLayout(
   const layoutResult = reduceLayerCrossings(buildLayers(nodes, layerMap), graph, layerMap, opts);
   const layers = layoutResult.layers;
   const centersByNodeId = layoutResult.centersByNodeId;
-  const isoColOffsets = layoutResult.isoColOffsets;
   const positions = new Map<string, { x: number; y: number }>();
 
   let currentX = opts.startX;
@@ -1029,8 +928,7 @@ export function createHierarchicalLayout(
       const topY = Number.isFinite(center)
         ? Math.round((center ?? opts.startY) - size.height / 2)
         : opts.startY;
-      const isoColOffset = isoColOffsets.get(node.id) ?? 0;
-      positions.set(node.id, { x: layerX[layerIndex] + isoColOffset, y: topY });
+      positions.set(node.id, { x: layerX[layerIndex], y: topY });
     }
   }
 
