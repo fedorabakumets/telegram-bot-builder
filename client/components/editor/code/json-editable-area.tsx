@@ -93,7 +93,7 @@ export function JsonEditableArea({
   // Читаем тему напрямую из DOM чтобы не зависеть от задержки пропса
   const resolvedTheme = typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
     ? 'dark'
-    : theme;
+    : (theme || 'light');
 
   // Синхронизируем значение редактора при смене проекта или загрузке контента
   useEffect(() => { setJsonValue(jsonContent); }, [jsonContent]);
