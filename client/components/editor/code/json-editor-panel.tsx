@@ -3,7 +3,7 @@
  * @module components/editor/code/json-editor-panel
  */
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Save } from 'lucide-react';

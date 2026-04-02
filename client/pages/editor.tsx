@@ -1135,6 +1135,11 @@ export default function Editor() {
       codeContent={generatedCodeContent}
       isLoading={isCodeLoading}
       displayContent={displayContent}
+      onJsonSave={(_index, parsedData) => {
+        const withSheets = SheetsManager.migrateLegacyData(parsedData);
+        handleBotDataUpdate(withSheets);
+        updateProjectMutation.mutate({});
+      }}
     />
   ) : null;
 
@@ -1316,6 +1321,11 @@ export default function Editor() {
           codeContent={generatedCodeContent}
           isLoading={isCodeLoading}
           displayContent={displayContent}
+          onJsonSave={(_index, parsedData) => {
+            const withSheets = SheetsManager.migrateLegacyData(parsedData);
+            handleBotDataUpdate(withSheets);
+            updateProjectMutation.mutate({});
+          }}
         />
       </div>
     ) : currentTab === 'editor' ? (

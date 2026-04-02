@@ -13,8 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useUpdateProjectName } from '@/components/editor/bot/project/use-update-project-name';
 import { BotData, BotProject } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Save, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
+import { useState } from 'react';
 import { BotValidation } from './bot-validation';
 import { EnvFileTab } from './env-file-tab';
 import { normalizeProjectNameToFile } from '@/utils/normalize-file-name';
@@ -78,12 +78,6 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
   const [projectNames, setProjectNames] = useState<string[]>(() =>
     botDataArray.map((_, index) => projectName || `Проект ${index + 1}`)
   );
-
-  /**
-   * Локальное состояние редактируемого JSON для каждого проекта.
-   * Ключ — индекс проекта, значение — текущий текст в редакторе.
-   */
-  const [jsonEditorValues, setJsonEditorValues] = useState<Record<number, string>>({});
 
   // Хук для обновления имени проекта
   const updateProjectNameMutation = useUpdateProjectName();
@@ -448,7 +442,7 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                   {/* Редактор JSON — показывается только на вкладке json */}
                   {selectedFormat === 'json' && onJsonSave && (
                     <JsonEditorPanel
-                      value={jsonEditorValues[index] ?? content}
+                      value={content}
                       onApply={(json) => {
                         try {
                           const parsed = JSON.parse(json) as BotData;
