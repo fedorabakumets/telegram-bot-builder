@@ -3,7 +3,7 @@
  * Отображает сгенерированный код с подсветкой синтаксиса и поддержкой сворачивания
  */
 
-import { MutableRefObject } from 'react';
+import { MutableRefObject, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Editor from '@monaco-editor/react';
 import { Loader2 } from 'lucide-react';
@@ -83,6 +83,18 @@ export function CodeEditorArea({
   setAreAllCollapsed,
   areAllCollapsed,
 }: CodeEditorAreaProps) {
+  // Реагируем на изменение состояния сворачивания извне
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    if (selectedFormat !== 'python' && selectedFormat !== 'json') return;
+    if (areAllCollapsed) {
+      editor.getAction('editor.foldAll')?.run();
+    } else {
+      editor.getAction('editor.unfoldAll')?.run();
+    }
+  }, [areAllCollapsed, selectedFormat]);
+
   return (
     <Card className="border border-border/50 shadow-sm overflow-hidden h-full flex flex-col">
       <CardContent className="p-0 flex-1 flex flex-col h-full">
