@@ -588,8 +588,8 @@ export default function Editor() {
     // Синхронизируем активный лист с системой редактора
     const activeSheet = SheetsManager.getActiveSheet(updatedData);
     if (activeSheet) {
-      // Применяем миграции и получаем итоговые узлы
-      const migratedNodes = setBotData({ nodes: activeSheet.nodes }, undefined, currentNodeSizes, false);
+      // Применяем миграции и получаем итоговые узлы (без автоиерархии)
+      const migratedNodes = setBotData({ nodes: activeSheet.nodes }, undefined, currentNodeSizes, true);
 
       // Сохраняем мигрированные узлы обратно в botDataWithSheets
       // чтобы при следующем вызове handleBotDataUpdate не было дублей
@@ -804,8 +804,8 @@ export default function Editor() {
           // Устанавливаем первый лист как активный на холсте
           const firstSheet = updatedSheets[0];
           if (firstSheet) {
-            // Всегда применяем автоиерархию при загрузке сценариев для правильного расположения
-            const shouldSkipLayout = false; // Автоиерархия необходима при загрузке многолистовых сценариев
+            // Пропускаем автоиерархию при загрузке сценариев — расположение сохраняется как есть
+            const shouldSkipLayout = true; // Автоиерархия отключена: применяется только вручную через тулбар
             setBotData({ nodes: firstSheet.nodes }, template.name, currentNodeSizes, shouldSkipLayout);
           }
 
@@ -828,9 +828,9 @@ export default function Editor() {
           console.log('Применяем обычный сценарий и мигрируем к формату с листами');
           const migratedData = SheetsManager.migrateLegacyData(template.data);
           setBotDataWithSheets(migratedData);
-          // Всегда применяем автоиерархию при загрузке сценариев для правильного расположения
-          const shouldSkipLayout = false; // Автоиерархия необходима при загрузке обычных сценариев
-          setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия должна работать при загрузке сценариев
+          // Пропускаем автоиерархию при загрузке сценариев — расположение сохраняется как есть
+          const shouldSkipLayout = true; // Автоиерархия отключена: применяется только вручную через тулбар
+          setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия отключена при загрузке сценариев
 
           // Вписываем содержимое в экран после применения шаблона
           setFitTrigger(t => t + 1);

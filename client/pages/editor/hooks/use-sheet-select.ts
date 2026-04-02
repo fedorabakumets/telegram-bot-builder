@@ -101,7 +101,7 @@ export function useSheetSelect(params: UseSheetSelectParams) {
 
           const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
           if (newActiveSheet) {
-            setBotData({ nodes: newActiveSheet.nodes }, undefined, currentNodeSizes, false);
+            setBotData({ nodes: newActiveSheet.nodes }, undefined, currentNodeSizes, true);
           }
 
           if (activeProjectId) {
@@ -137,10 +137,10 @@ export function useSheetSelect(params: UseSheetSelectParams) {
       );
       setBotDataWithSheets(updatedData);
 
-      // Загружаем данные нового активного листа
+      // Загружаем данные нового активного листа (без автоиерархии)
       const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
       if (newActiveSheet) {
-        setBotData({ nodes: newActiveSheet.nodes }, undefined, currentNodeSizes, false);
+        setBotData({ nodes: newActiveSheet.nodes }, undefined, currentNodeSizes, true);
       }
 
       // Сохраняем изменения
