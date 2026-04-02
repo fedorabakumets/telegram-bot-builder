@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Панель кода проекта с вкладками форматов и редактором Monaco
+ * @module components/editor/code/code-panel
+ */
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -7,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUpdateProjectName } from '@/components/editor/bot/project/use-update-project-name';
 import { BotData, BotProject } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
-import { X } from 'lucide-react';
+import { AlertTriangle, Save, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { BotValidation } from './bot-validation';
 import { EnvFileTab } from './env-file-tab';
@@ -46,13 +51,22 @@ interface CodePanelProps {
   isLoading?: boolean;
   /** Отображаемый контент (с учетом обрезки) */
   displayContent?: string;
+  /**
+   * Колбэк для сохранения отредактированного JSON проекта.
+   * Вызывается с распарсенным объектом данных при нажатии "Применить изменения".
+   * @param index - Индекс проекта в массиве
+   * @param parsedData - Распарсенные данные JSON
+   */
+  onJsonSave?: (index: number, parsedData: BotData) => void;
 }
 
 /**
  * [CONTAINER] CodePanel - Основной контейнер для панели кода
  * Управляет состоянием и данными для дочерних компонентов
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
-export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange, onBotDataUpdate, codeContent, isLoading, displayContent }: CodePanelProps) {
+export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange, onBotDataUpdate, codeContent, isLoading, displayContent, onJsonSave }: CodePanelProps) {
   // const queryClient = useQueryClient(); // Закомментировано - не используется после отключения экспорта
 
   // Состояние для управления форматом и отображением кода
@@ -63,6 +77,12 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
   const [projectNames, setProjectNames] = useState<string[]>(() =>
     botDataArray.map((_, index) => projectName || `Проект ${index + 1}`)
   );
+
+  /**
+   * Локальное состояние редактируемого JSON для каждого проекта.
+   * Ключ — индекс проекта, значение — текущий текст в редакторе.
+   */
+  const [jsonEditorValues, setJsonEditorValues] = useState<Record<number, string>>({});
 
   // Хук для обновления имени проекта
   const updateProjectNameMutation = useUpdateProjectName();
@@ -181,6 +201,29 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
       return codeContent[selectedFormat];
     }
     return '';
+  };
+
+  /**
+   * Применяет изменения JSON-редактора для проекта с указанным индексом.
+   * Валидирует JSON и вызывает onJsonSave при успехе, иначе показывает toast с ошибкой.
+   * @param index - Индекс проекта в массиве
+   */
+  const handleApplyJson = (index: number) => {
+    const rawValue = jsonEditorValues[index] ?? getCurrentContent(index);
+    try {
+      const parsed = JSON.parse(rawValue) as BotData;
+      onJsonSave?.(index, parsed);
+      toast({
+        title: 'JSON применён',
+        description: 'Изменения сохранены в проект',
+      });
+    } catch (err) {
+      toast({
+        title: 'Ошибка валидации JSON',
+        description: err instanceof Error ? err.message : 'Невалидный JSON',
+        variant: 'destructive',
+      });
+    }
   };
 
   // [CALCULATIONS] Расчеты для отображения кода и статистики
