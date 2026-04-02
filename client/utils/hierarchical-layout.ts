@@ -771,23 +771,62 @@ function placeLayerNodes(
   layerMap: Map<string, number>,
   layerIndex: number,
   opts: HierarchicalLayoutOptions,
-): { orderedNodes: Node[]; centers: Map<string, number> } {
+): { orderedNodes: Node[]; centers: Map<string, number>; isoColOffsets: Map<string, number> } {
   const orderedNodes = sortLayerNodes(layerNodes, centersByNodeId, graph, layerMap, layerIndex);
   const centers = new Map<string, number>();
-  let cursorY = opts.startY;
+  /** Смещение по X для изолированных нод (раскладка в сетку). */
+  const isoColOffsets = new Map<string, number>();
+
+  /**
+   * Разделяем ноды на связанные (есть желаемый центр) и изолированные (нет связей).
+   * Изолированные не должны сдвигать cursorY для связанных нод.
+   */
+  const connectedNodes: Node[] = [];
+  const isolatedNodes: Node[] = [];
 
   for (const node of orderedNodes) {
+    const desired = getDesiredCenter(node, layerIndex, centersByNodeId, graph, layerMap);
+    if (Number.isFinite(desired)) {
+      connectedNodes.push(node);
+    } else {
+      isolatedNodes.push(node);
+    }
+  }
+
+  // Сначала размещаем связанные ноды
+  let cursorY = opts.startY;
+  for (const node of connectedNodes) {
     const size = getNodeSize(node.id, opts);
     const desiredCenter = getDesiredCenter(node, layerIndex, centersByNodeId, graph, layerMap);
-    const targetY = Number.isFinite(desiredCenter)
-      ? desiredCenter - size.height / 2
-      : cursorY;
+    const targetY = desiredCenter - size.height / 2;
     const y = Math.max(cursorY, Math.round(targetY));
     centers.set(node.id, y + size.height / 2);
     cursorY = y + size.height + opts.verticalSpacing;
   }
 
-  return { orderedNodes, centers };
+  /**
+   * Изолированные ноды раскладываем в сетку: не более ISOLATED_COL_SIZE нод в колонке,
+   * затем переходим на следующую колонку. Это предотвращает уход одной группы далеко вниз.
+   */
+  const ISOLATED_COL_SIZE = 6;
+  let isoRow = 0;
+  let isoCol = 0;
+  const isoColWidth = opts.nodeWidth + opts.horizontalSpacing;
+
+  for (const node of isolatedNodes) {
+    const size = getNodeSize(node.id, opts);
+    const colOffsetX = isoCol * isoColWidth;
+    const rowY = opts.startY + isoRow * (size.height + opts.verticalSpacing);
+    centers.set(node.id, rowY + size.height / 2);
+    isoColOffsets.set(node.id, colOffsetX);
+    isoRow += 1;
+    if (isoRow >= ISOLATED_COL_SIZE) {
+      isoRow = 0;
+      isoCol += 1;
+    }
+  }
+
+  return { orderedNodes: [...connectedNodes, ...isolatedNodes], centers, isoColOffsets };
 }
 
 /**
@@ -798,9 +837,10 @@ function reduceLayerCrossings(
   graph: LayoutGraph,
   layerMap: Map<string, number>,
   opts: HierarchicalLayoutOptions,
-): { layers: Node[][]; centersByNodeId: Map<string, number> } {
+): { layers: Node[][]; centersByNodeId: Map<string, number>; isoColOffsets: Map<string, number> } {
   let orderedLayers = layers.map(layer => [...layer]);
   let centersByNodeId = new Map<string, number>();
+  let isoColOffsets = new Map<string, number>();
 
   for (let pass = 0; pass < 5; pass += 1) {
     for (let layerIndex = 0; layerIndex < orderedLayers.length; layerIndex += 1) {
@@ -815,6 +855,9 @@ function reduceLayerCrossings(
       orderedLayers[layerIndex] = placed.orderedNodes;
       for (const [nodeId, center] of placed.centers) {
         centersByNodeId.set(nodeId, center);
+      }
+      for (const [nodeId, offset] of placed.isoColOffsets) {
+        isoColOffsets.set(nodeId, offset);
       }
     }
 
@@ -831,10 +874,13 @@ function reduceLayerCrossings(
       for (const [nodeId, center] of placed.centers) {
         centersByNodeId.set(nodeId, center);
       }
+      for (const [nodeId, offset] of placed.isoColOffsets) {
+        isoColOffsets.set(nodeId, offset);
+      }
     }
   }
 
-  return { layers: orderedLayers, centersByNodeId };
+  return { layers: orderedLayers, centersByNodeId, isoColOffsets };
 }
 
 /**
@@ -905,6 +951,7 @@ export function createHierarchicalLayout(
   const layoutResult = reduceLayerCrossings(buildLayers(nodes, layerMap), graph, layerMap, opts);
   const layers = layoutResult.layers;
   const centersByNodeId = layoutResult.centersByNodeId;
+  const isoColOffsets = layoutResult.isoColOffsets;
   const positions = new Map<string, { x: number; y: number }>();
 
   let currentX = opts.startX;
@@ -928,7 +975,8 @@ export function createHierarchicalLayout(
       const topY = Number.isFinite(center)
         ? Math.round((center ?? opts.startY) - size.height / 2)
         : opts.startY;
-      positions.set(node.id, { x: layerX[layerIndex], y: topY });
+      const isoColOffset = isoColOffsets.get(node.id) ?? 0;
+      positions.set(node.id, { x: layerX[layerIndex] + isoColOffset, y: topY });
     }
   }
 
