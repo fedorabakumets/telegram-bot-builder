@@ -1207,6 +1207,7 @@ export default function Editor() {
           <JsonEditableArea
             isLoading={isCodeLoading}
             displayContent={displayContent}
+            jsonContent={generatedCodeContent['json'] || ''}
             selectedFormat={selectedFormat}
             theme={theme}
             editorRef={editorRef}
@@ -1392,6 +1393,7 @@ export default function Editor() {
                   <JsonEditableArea
                     isLoading={isCodeLoading}
                     displayContent={displayContent}
+                    jsonContent={generatedCodeContent['json'] || ''}
                     selectedFormat={selectedFormat}
                     theme={theme}
                     editorRef={editorRef}

@@ -3,7 +3,7 @@
  * @module components/editor/code/json-editable-area
  */
 
-import { MutableRefObject, useState } from 'react';
+import { MutableRefObject, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
 import { CodeEditorArea } from './code-editor-area';
@@ -47,8 +47,10 @@ interface CodeStats {
 interface JsonEditableAreaProps {
   /** Флаг загрузки */
   isLoading: boolean;
-  /** Отображаемый контент */
+  /** Отображаемый контент (для не-JSON форматов) */
   displayContent: string;
+  /** Контент JSON (передаётся явно чтобы не зависеть от selectedFormat) */
+  jsonContent?: string;
   /** Выбранный формат */
   selectedFormat: string;
   /** Тема редактора */
@@ -74,6 +76,7 @@ interface JsonEditableAreaProps {
 export function JsonEditableArea({
   isLoading,
   displayContent,
+  jsonContent = '',
   selectedFormat,
   theme,
   editorRef,
@@ -82,10 +85,13 @@ export function JsonEditableArea({
   areAllCollapsed,
   onJsonApply,
 }: JsonEditableAreaProps) {
-  /** Текущее значение редактора (только для json) */
-  const [jsonValue, setJsonValue] = useState(displayContent);
-  const { toast } = useToast();
   const isJson = selectedFormat === 'json';
+  /** Текущее значение редактора (только для json) */
+  const [jsonValue, setJsonValue] = useState(jsonContent);
+  const { toast } = useToast();
+
+  // Синхронизируем значение редактора при смене проекта или загрузке контента
+  useEffect(() => { setJsonValue(jsonContent); }, [jsonContent]);
 
   /**
    * Применяет изменения JSON — валидирует и вызывает onJsonApply
