@@ -38,6 +38,7 @@ interface HierarchicalLayoutOptions {
 type LayoutConnectionType =
   | 'auto-transition'
   | 'button-goto'
+  | 'back-goto'
   | 'input-target'
   | 'trigger-next'
   | 'condition-source'
@@ -251,10 +252,17 @@ function inferConnectionsFromNodes(
     if (node.type === 'message' && linkedKeyboard && keyboardButtons.length > 0) {
       for (const button of keyboardButtons) {
         if (button?.action === 'goto' && button?.target) {
+          /**
+           * Кнопки "Назад" создают обратные рёбра которые замыкают циклы и ломают слои.
+           * Помечаем их как back-goto — они не попадут в mainAdjacency.
+           */
+          const isBackButton =
+            typeof button.text === 'string' &&
+            /назад|back|⬅|◀|🔙/i.test(button.text);
           pushConnection({
             fromId: node.id,
             toId: button.target,
-            type: 'button-goto',
+            type: isBackButton ? 'back-goto' : 'button-goto',
             buttonId: button.id,
           });
         }
@@ -293,10 +301,13 @@ function inferConnectionsFromNodes(
     if (sourceId && Array.isArray(buttonsToUse)) {
       for (const button of buttonsToUse) {
         if (button?.action === 'goto' && button?.target) {
+          const isBackButton =
+            typeof button.text === 'string' &&
+            /назад|back|⬅|◀|🔙/i.test(button.text);
           pushConnection({
             fromId: sourceId,
             toId: button.target,
-            type: 'button-goto',
+            type: isBackButton ? 'back-goto' : 'button-goto',
             buttonId: button.id,
           });
         }
@@ -403,6 +414,9 @@ function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
     const sourceNode = nodesById.get(connection.fromId);
     const targetNode = nodesById.get(connection.toId);
     if (!sourceNode || !targetNode) continue;
+
+    // back-goto (кнопки "Назад") не добавляем в mainAdjacency — они создают циклы
+    if (connection.type === 'back-goto') continue;
 
     let sourceId = connection.fromId;
     if (connection.type === 'button-goto' && keyboardHostByKeyboardId.has(sourceId)) {
