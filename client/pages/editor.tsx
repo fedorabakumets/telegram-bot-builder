@@ -8,6 +8,7 @@
  */
 
 import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
+import { JsonEditableArea } from '@/components/editor/code/json-editable-area';
 import { CodePanel } from '@/components/editor/code/code-panel';
 import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { useCodeGeneratorServer } from '@/components/editor/code/useCodeGeneratorServer';
@@ -1203,8 +1204,7 @@ export default function Editor() {
             }}
           />
         ) : (
-          <CodeEditorArea
-            isMobile={false}
+          <JsonEditableArea
             isLoading={isCodeLoading}
             displayContent={displayContent}
             selectedFormat={selectedFormat}
@@ -1213,6 +1213,14 @@ export default function Editor() {
             codeStats={codeStats}
             setAreAllCollapsed={setAreAllCollapsed}
             areAllCollapsed={areAllCollapsed}
+            onJsonApply={(json) => {
+              const parsed = JSON.parse(json);
+              const withSheets = SheetsManager.isNewFormat(parsed)
+                ? parsed
+                : SheetsManager.migrateLegacyData(parsed);
+              handleBotDataUpdate(withSheets);
+              updateProjectMutation.mutate({});
+            }}
           />
         )}
       </div>
@@ -1381,8 +1389,7 @@ export default function Editor() {
             codeEditorContent={
               activeProject ? (
                 <div className="h-full flex flex-col">
-                  <CodeEditorArea
-                    isMobile={false}
+                  <JsonEditableArea
                     isLoading={isCodeLoading}
                     displayContent={displayContent}
                     selectedFormat={selectedFormat}
@@ -1391,6 +1398,14 @@ export default function Editor() {
                     codeStats={codeStats}
                     setAreAllCollapsed={setAreAllCollapsed}
                     areAllCollapsed={areAllCollapsed}
+                    onJsonApply={(json) => {
+                      const parsed = JSON.parse(json);
+                      const withSheets = SheetsManager.isNewFormat(parsed)
+                        ? parsed
+                        : SheetsManager.migrateLegacyData(parsed);
+                      handleBotDataUpdate(withSheets);
+                      updateProjectMutation.mutate({});
+                    }}
                   />
                 </div>
               ) : null
