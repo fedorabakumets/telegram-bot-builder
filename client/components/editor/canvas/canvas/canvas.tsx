@@ -876,7 +876,10 @@ export function Canvas({
       const delta = e.deltaY;
       const zoomFactor = delta > 0 ? 0.9 : 1.1;
 
-      const rect = canvasRef.current?.getBoundingClientRect();
+      // Используем scrollContainer (видимая область), а не сам canvas-div
+      // canvasRef указывает на огромный div (2000vh x 2000vw), его rect.left/top некорректны
+      const container = scrollContainerRef.current ?? canvasRef.current?.parentElement;
+      const rect = container?.getBoundingClientRect();
       if (rect) {
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
