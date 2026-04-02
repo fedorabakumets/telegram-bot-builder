@@ -860,12 +860,15 @@ export function Canvas({
   // Держим ref актуальным чтобы autoFitOnLoad эффект не имел stale closure
   fitToContentRef.current = fitToContent;
 
-  // Принудительный fit по внешнему триггеру (например после применения шаблона)
+  // Принудительный fit по внешнему триггеру (например при переключении листа или применении шаблона)
   useEffect(() => {
     if (!fitTrigger) return;
-    // Сбрасываем ключ чтобы autoFitOnLoad тоже сработал заново
+    // Сбрасываем ключ чтобы autoFitOnLoad сработал заново при появлении размеров нового листа
     lastAutoFitNodesKeyRef.current = '';
-    const timer = setTimeout(() => fitToContentRef.current(), 300);
+    // Очищаем кэш размеров — ResizeObserver заново измерит узлы нового листа
+    setNodeSizes(new Map());
+    // Fallback: если узлов нет или они уже измерены — вписываем напрямую
+    const timer = setTimeout(() => fitToContentRef.current(), 400);
     return () => clearTimeout(timer);
   }, [fitTrigger]);
 
