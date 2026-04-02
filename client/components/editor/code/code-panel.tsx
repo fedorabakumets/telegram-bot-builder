@@ -204,29 +204,6 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
     return '';
   };
 
-  /**
-   * Применяет изменения JSON-редактора для проекта с указанным индексом.
-   * Валидирует JSON и вызывает onJsonSave при успехе, иначе показывает toast с ошибкой.
-   * @param index - Индекс проекта в массиве
-   */
-  const handleApplyJson = (index: number) => {
-    const rawValue = jsonEditorValues[index] ?? getCurrentContent(index);
-    try {
-      const parsed = JSON.parse(rawValue) as BotData;
-      onJsonSave?.(index, parsed);
-      toast({
-        title: 'JSON применён',
-        description: 'Изменения сохранены в проект',
-      });
-    } catch (err) {
-      toast({
-        title: 'Ошибка валидации JSON',
-        description: err instanceof Error ? err.message : 'Невалидный JSON',
-        variant: 'destructive',
-      });
-    }
-  };
-
   // [CALCULATIONS] Расчеты для отображения кода и статистики
 
   const getContentAndStats = (index: number) => {
