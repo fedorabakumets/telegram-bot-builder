@@ -264,18 +264,24 @@ export function Canvas({
   const lastAutoFitNodesKeyRef = useRef<string>('');
   const fitToContentRef = useRef<() => void>(() => {});
 
+  // Флаг что был запрошен принудительный fit (не ждём 50% nodeSizes)
+  const forceFitRef = useRef(false);
+
   // Автоматически вписываем содержимое в экран при первой загрузке узлов
   useEffect(() => {
     if (!autoFitOnLoad || nodes.length === 0) return;
 
-    // Ключ текущего набора узлов — чтобы не повторять fit при смене листа
+    // Ключ текущего набора узлов — срабатываем только при смене набора
     const nodesKey = nodes.map(n => n.id).join(',');
     if (nodesKey === lastAutoFitNodesKeyRef.current) return;
 
-    // Ждём пока ResizeObserver заполнит хотя бы половину размеров
-    const coveredCount = nodes.filter(n => nodeSizes.has(n.id)).length;
-    if (coveredCount < Math.ceil(nodes.length * 0.5)) return;
+    // Если был принудительный fit — не ждём nodeSizes, вписываем сразу
+    if (!forceFitRef.current) {
+      const coveredCount = nodes.filter(n => nodeSizes.has(n.id)).length;
+      if (coveredCount < Math.ceil(nodes.length * 0.5)) return;
+    }
 
+    forceFitRef.current = false;
     lastAutoFitNodesKeyRef.current = nodesKey;
     const timer = setTimeout(() => fitToContentRef.current(), 150);
     return () => clearTimeout(timer);
@@ -863,12 +869,14 @@ export function Canvas({
   // Принудительный fit по внешнему триггеру (например при переключении листа или применении шаблона)
   useEffect(() => {
     if (!fitTrigger) return;
-    // Сбрасываем ключ чтобы autoFitOnLoad сработал заново при появлении размеров нового листа
+    // Выставляем флаг и сбрасываем ключ — autoFitOnLoad сработает без ожидания nodeSizes
+    forceFitRef.current = true;
     lastAutoFitNodesKeyRef.current = '';
-    // Очищаем кэш размеров — ResizeObserver заново измерит узлы нового листа
-    setNodeSizes(new Map());
-    // Fallback: если узлов нет или они уже измерены — вписываем напрямую
-    const timer = setTimeout(() => fitToContentRef.current(), 400);
+    // Fallback: если nodes уже обновились но autoFitOnLoad не сработал
+    const timer = setTimeout(() => {
+      forceFitRef.current = false;
+      fitToContentRef.current();
+    }, 500);
     return () => clearTimeout(timer);
   }, [fitTrigger]);
 
