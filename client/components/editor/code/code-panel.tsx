@@ -473,8 +473,20 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                     <JsonEditorPanel
                       value={jsonEditorValues[index] ?? content}
                       onApply={(json) => {
-                        setJsonEditorValues(prev => ({ ...prev, [index]: json }));
-                        handleApplyJson(index);
+                        try {
+                          const parsed = JSON.parse(json) as BotData;
+                          onJsonSave(index, parsed);
+                          toast({
+                            title: 'JSON применён',
+                            description: 'Изменения сохранены в проект',
+                          });
+                        } catch (err) {
+                          toast({
+                            title: 'Ошибка валидации JSON',
+                            description: err instanceof Error ? err.message : 'Невалидный JSON',
+                            variant: 'destructive',
+                          });
+                        }
                       }}
                     />
                   )}
