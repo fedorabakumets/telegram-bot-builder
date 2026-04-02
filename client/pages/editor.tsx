@@ -8,7 +8,6 @@
  */
 
 import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
-import { JsonEditableArea } from '@/components/editor/code/json-editable-area';
 import { CodePanel } from '@/components/editor/code/code-panel';
 import { ReadmePreview } from '@/components/editor/code/readme-preview';
 import { useCodeGeneratorServer } from '@/components/editor/code/useCodeGeneratorServer';
@@ -495,13 +494,6 @@ export default function Editor() {
   useEffect(() => {
     loadContent(selectedFormat);
   }, [selectedFormat, loadContent]);
-
-  // При открытии редактора кода — всегда предзагружаем JSON
-  useEffect(() => {
-    if (codeEditorVisible || currentTab === 'export') {
-      loadContent('json');
-    }
-  }, [codeEditorVisible, currentTab, loadContent]);
 
   // Получение текущего содержимого кода для выбранного формата
   const getCurrentContent = () => generatedCodeContent[selectedFormat] || '';
@@ -1143,11 +1135,6 @@ export default function Editor() {
       codeContent={generatedCodeContent}
       isLoading={isCodeLoading}
       displayContent={displayContent}
-      onJsonSave={(_index, parsedData) => {
-        const withSheets = SheetsManager.migrateLegacyData(parsedData);
-        handleBotDataUpdate(withSheets);
-        updateProjectMutation.mutate({});
-      }}
     />
   ) : null;
 
@@ -1211,24 +1198,16 @@ export default function Editor() {
             }}
           />
         ) : (
-          <JsonEditableArea
+          <CodeEditorArea
+            isMobile={false}
             isLoading={isCodeLoading}
             displayContent={displayContent}
-            jsonContent={generatedCodeContent['json'] || ''}
             selectedFormat={selectedFormat}
             theme={theme}
             editorRef={editorRef}
             codeStats={codeStats}
             setAreAllCollapsed={setAreAllCollapsed}
             areAllCollapsed={areAllCollapsed}
-            onJsonApply={(json) => {
-              const parsed = JSON.parse(json);
-              const withSheets = SheetsManager.isNewFormat(parsed)
-                ? parsed
-                : SheetsManager.migrateLegacyData(parsed);
-              handleBotDataUpdate(withSheets);
-              updateProjectMutation.mutate({});
-            }}
           />
         )}
       </div>
@@ -1337,11 +1316,6 @@ export default function Editor() {
           codeContent={generatedCodeContent}
           isLoading={isCodeLoading}
           displayContent={displayContent}
-          onJsonSave={(_index, parsedData) => {
-            const withSheets = SheetsManager.migrateLegacyData(parsedData);
-            handleBotDataUpdate(withSheets);
-            updateProjectMutation.mutate({});
-          }}
         />
       </div>
     ) : currentTab === 'editor' ? (
@@ -1397,24 +1371,16 @@ export default function Editor() {
             codeEditorContent={
               activeProject ? (
                 <div className="h-full flex flex-col">
-                  <JsonEditableArea
+                  <CodeEditorArea
+                    isMobile={false}
                     isLoading={isCodeLoading}
                     displayContent={displayContent}
-                    jsonContent={generatedCodeContent['json'] || ''}
                     selectedFormat={selectedFormat}
                     theme={theme}
                     editorRef={editorRef}
                     codeStats={codeStats}
                     setAreAllCollapsed={setAreAllCollapsed}
                     areAllCollapsed={areAllCollapsed}
-                    onJsonApply={(json) => {
-                      const parsed = JSON.parse(json);
-                      const withSheets = SheetsManager.isNewFormat(parsed)
-                        ? parsed
-                        : SheetsManager.migrateLegacyData(parsed);
-                      handleBotDataUpdate(withSheets);
-                      updateProjectMutation.mutate({});
-                    }}
                   />
                 </div>
               ) : null

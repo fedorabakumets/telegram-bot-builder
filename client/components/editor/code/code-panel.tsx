@@ -1,20 +1,14 @@
-/**
- * @fileoverview Панель кода проекта с вкладками форматов и редактором Monaco
- * @module components/editor/code/code-panel
- */
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CodeFormat } from '@/components/editor/code/useCodeGeneratorServer';
-import { JsonEditorPanel } from '@/components/editor/code/json-editor-panel';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateProjectName } from '@/components/editor/bot/project/use-update-project-name';
 import { BotData, BotProject } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BotValidation } from './bot-validation';
 import { EnvFileTab } from './env-file-tab';
 import { normalizeProjectNameToFile } from '@/utils/normalize-file-name';
@@ -52,22 +46,13 @@ interface CodePanelProps {
   isLoading?: boolean;
   /** Отображаемый контент (с учетом обрезки) */
   displayContent?: string;
-  /**
-   * Колбэк для сохранения отредактированного JSON проекта.
-   * Вызывается с распарсенным объектом данных при нажатии "Применить изменения".
-   * @param index - Индекс проекта в массиве
-   * @param parsedData - Распарсенные данные JSON
-   */
-  onJsonSave?: (index: number, parsedData: BotData) => void;
 }
 
 /**
  * [CONTAINER] CodePanel - Основной контейнер для панели кода
  * Управляет состоянием и данными для дочерних компонентов
- * @param props - Свойства компонента
- * @returns JSX элемент
  */
-export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange, onBotDataUpdate, codeContent, isLoading, displayContent, onJsonSave }: CodePanelProps) {
+export function CodePanel({ botDataArray, projectIds, projectName, onClose, selectedFormat: externalSelectedFormat, onFormatChange, areAllCollapsed, onCollapseChange, showFullCode, onShowFullCodeChange, onBotDataUpdate, codeContent, isLoading, displayContent }: CodePanelProps) {
   // const queryClient = useQueryClient(); // Закомментировано - не используется после отключения экспорта
 
   // Состояние для управления форматом и отображением кода
@@ -186,15 +171,12 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
    * Получение текущего содержимого кода для выбранного формата
    * @returns Строка с кодом или пустая строка если контент не загружен
    */
-  const getCurrentContent = (_index: number) => {
-    // Для JSON всегда берём из codeContent напрямую (не из displayContent)
-    if (selectedFormat === 'json' && codeContent?.json) {
-      return codeContent.json;
-    }
-    // Для остальных форматов — displayContent если есть, иначе codeContent
+  const getCurrentContent = (index: number) => {
+    // Если передан displayContent (обрезанный), используем его
     if (displayContent) {
       return displayContent;
     }
+    // Иначе используем переданный контент из пропсов
     if (codeContent && codeContent[selectedFormat]) {
       return codeContent[selectedFormat];
     }
@@ -441,29 +423,6 @@ export function CodePanel({ botDataArray, projectIds, projectName, onClose, sele
                       <span className="hidden xs:inline ml-1.5">Скачать</span>
                     </Button>
                   </div>
-
-                  {/* Редактор JSON — показывается только на вкладке json */}
-                  {selectedFormat === 'json' && onJsonSave && (
-                    <JsonEditorPanel
-                      value={content}
-                      onApply={(json) => {
-                        try {
-                          const parsed = JSON.parse(json) as BotData;
-                          onJsonSave(index, parsed);
-                          toast({
-                            title: 'JSON применён',
-                            description: 'Изменения сохранены в проект',
-                          });
-                        } catch (err) {
-                          toast({
-                            title: 'Ошибка валидации JSON',
-                            description: err instanceof Error ? err.message : 'Невалидный JSON',
-                            variant: 'destructive',
-                          });
-                        }
-                      }}
-                    />
-                  )}
 
                   {/* Export Structure Button - ЗАКОММЕНТИРОВАНО
                   {projectIds?.[index] && (
