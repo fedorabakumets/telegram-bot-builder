@@ -6,7 +6,7 @@
  * @module EditorCodeStates
  */
 
-import type { CodeFormat } from '@/components/editor/code/useCodeGeneratorServer';
+import type { CodeFormat } from '@/components/editor/code/hooks';
 
 /**
  * Состояния управления кодом

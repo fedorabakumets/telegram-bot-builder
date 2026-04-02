@@ -8,7 +8,6 @@ import { useState, useEffect } from 'react';
 
 /**
  * Свойства компонента валидации бота
- * @interface BotValidationProps
  */
 interface BotValidationProps {
   /** Данные бота для валидации */
@@ -17,21 +16,20 @@ interface BotValidationProps {
 
 /**
  * Компонент для проверки и отображения валидации структуры бота
- * @param botData - Данные бота для проверки
- * @returns JSX элемент компонента валидации
+ * @param props - Свойства компонента
+ * @returns JSX элемент или null если структура корректна
  */
 export function BotValidation({ botData }: BotValidationProps) {
-  /**
-   * Валидация структуры бота
-   * Проверяет наличие стартовой команды, корректность команд и кнопок
-   */
-  const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
+  const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({
+    isValid: true,
+    errors: [],
+  });
 
   useEffect(() => {
     const errors: string[] = [];
-    // Поддержка многолистовой структуры (sheets) и простой (nodes)
     const data = botData as any;
     let nodes: any[] = [];
+
     if (Array.isArray(data?.nodes)) {
       nodes = data.nodes;
     } else if (Array.isArray(data?.sheets)) {
@@ -39,18 +37,18 @@ export function BotValidation({ botData }: BotValidationProps) {
         if (Array.isArray(sheet.nodes)) nodes.push(...sheet.nodes);
       });
     }
-    const hasStart = nodes.some((n: any) =>
-      n.type === 'command_trigger' &&
-      (n.data?.command === '/start' || n.data?.command === 'start')
+
+    const hasStart = nodes.some(
+      (n: any) =>
+        n.type === 'command_trigger' &&
+        (n.data?.command === '/start' || n.data?.command === 'start'),
     );
+
     if (!hasStart) errors.push('Отсутствует стартовый триггер команды (/start)');
     setValidationResult({ isValid: errors.length === 0, errors });
   }, [botData]);
 
-  // Не показываем ничего, если структура корректна
-  if (validationResult.isValid) {
-    return null;
-  }
+  if (validationResult.isValid) return null;
 
   return (
     <div className="space-y-2">

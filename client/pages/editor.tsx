@@ -7,10 +7,10 @@
  * @module Editor
  */
 
-import { CodeEditorArea } from '@/components/editor/code/code-editor-area';
-import { CodePanel } from '@/components/editor/code/code-panel';
-import { ReadmePreview } from '@/components/editor/code/readme-preview';
-import { useCodeGeneratorServer } from '@/components/editor/code/useCodeGeneratorServer';
+import { CodeEditorArea } from '@/components/editor/code/editor';
+import { CodePanel } from '@/components/editor/code/panel';
+import { ReadmePreview } from '@/components/editor/code/readme';
+import { useCodeGenerator as useCodeGeneratorServer } from '@/components/editor/code/hooks';
 import { ComponentsSidebar } from '@/components/editor/sidebar/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
@@ -465,12 +465,13 @@ export default function Editor() {
   }, [currentTab, users, handleSelectUserDetails, handleSelectDialogUser]);
 
   // Использование хука генератора кода
-  const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent, setCodeContent } = useCodeGeneratorServer(
-    activeProject?.data as BotData || { nodes: [] },
-    activeProject?.name || 'project',
-    activeProject?.userDatabaseEnabled === 1,
-    activeProject?.id || null
-  );
+  const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent, setCodeContent } = useCodeGeneratorServer({
+    botData: activeProject?.data as BotData || { nodes: [] },
+    projectName: activeProject?.name || 'project',
+    userDatabaseEnabled: activeProject?.userDatabaseEnabled === 1,
+    projectId: activeProject?.id || null,
+    mode: 'server',
+  });
 
   // Определение и отслеживание темы приложения
   useEffect(() => {
