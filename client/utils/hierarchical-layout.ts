@@ -801,7 +801,10 @@ function placeLayerNodes(
     const targetY = desiredCenter - size.height / 2;
     const y = Math.max(cursorY, Math.round(targetY));
     centers.set(node.id, y + size.height / 2);
-    cursorY = y + size.height + opts.verticalSpacing;
+    // Keyboard-ноды позиционируются через anchorKeyboardNodes — не сдвигаем cursorY
+    if (!COMPANION_TYPES.has(node.type)) {
+      cursorY = y + size.height + opts.verticalSpacing;
+    }
   }
 
   /**
