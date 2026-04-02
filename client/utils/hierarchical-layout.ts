@@ -69,10 +69,12 @@ interface LayoutGraph {
   mainAdjacency: Map<string, Set<string>>;
   /** Обратные основные связи для barycenter-сортировки. */
   reverseMainAdjacency: Map<string, Set<string>>;
-  /** Привязка `keyboard` к хосту `message`. */
+  /** Привязка `keyboard` к хосту `message` (только последний зарегистрированный хост). */
   keyboardHostByKeyboardId: Map<string, string>;
   /** Привязка `message` к связанному `keyboard`. */
   keyboardByHostId: Map<string, string>;
+  /** Все хосты одной keyboard-ноды (для shared keyboard с несколькими хостами). */
+  hostsByKeyboardId: Map<string, Set<string>>;
   /** Узлы, на которые ведут кнопки конкретного источника. */
   buttonTargetsBySourceId: Map<string, Set<string>>;
 }
@@ -354,6 +356,8 @@ function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
   const existingIds = new Set(nodes.map(node => node.id));
   const keyboardHostByKeyboardId = new Map<string, string>();
   const keyboardByHostId = buildKeyboardLinks(nodesById);
+  /** Все хосты одной keyboard-ноды — нужно для позиционирования shared keyboard по среднему Y. */
+  const hostsByKeyboardId = new Map<string, Set<string>>();
   const buttonTargetsBySourceId = new Map<string, Set<string>>();
   const mainAdjacency = new Map<string, Set<string>>();
   const reverseMainAdjacency = new Map<string, Set<string>>();
@@ -366,6 +370,12 @@ function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
 
     keyboardByHostId.set(hostId, keyboardId);
     keyboardHostByKeyboardId.set(keyboardId, hostId);
+
+    // Регистрируем хост в множестве всех хостов данной keyboard
+    if (!hostsByKeyboardId.has(keyboardId)) {
+      hostsByKeyboardId.set(keyboardId, new Set());
+    }
+    hostsByKeyboardId.get(keyboardId)!.add(hostId);
   };
 
   /**
@@ -436,6 +446,7 @@ function buildLayoutGraph(nodes: Node[], connections: any[]): LayoutGraph {
     reverseMainAdjacency,
     keyboardHostByKeyboardId,
     keyboardByHostId,
+    hostsByKeyboardId,
     buttonTargetsBySourceId,
   };
 }
@@ -624,7 +635,9 @@ function expandComponentLayers(
   }
 
   for (const [keyboardId, hostId] of keyboardHostByKeyboardId) {
-    layerMap.set(keyboardId, (layerMap.get(hostId) ?? 0) + 1);
+    // Keyboard-нода получает тот же слой что и хост — anchorKeyboardNodes поставит её правее.
+    // Это предотвращает попадание keyboard меню в слой сообщений-потомков.
+    layerMap.set(keyboardId, layerMap.get(hostId) ?? 0);
   }
 
   // Триггеры которые ведут на узел не в слое 1 — переставляем вплотную к цели
@@ -902,6 +915,7 @@ function reduceLayerCrossings(
 
 /**
  * Якорит связанные keyboard-ноды рядом с их message-хостами.
+ * Для shared keyboard (несколько хостов) берёт средний Y всех хостов.
  */
 function anchorKeyboardNodes(
   positions: Map<string, { x: number; y: number }>,
@@ -918,14 +932,37 @@ function anchorKeyboardNodes(
 
     const hostSize = getNodeSize(hostId, opts);
     const keyboardSize = getNodeSize(keyboardId, opts);
-    // Держим keyboard визуально рядом с host, но оставляем более заметный зазор,
-    // чтобы узлы не выглядели "слипшимися".
     const xOffset = Math.max(56, Math.round(opts.horizontalSpacing * 0.75));
-    const yOffset = Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
+
+    // Вычисляем средний Y по всем хостам данной keyboard
+    const allHosts = graph.hostsByKeyboardId.get(keyboardId);
+    let anchorY: number;
+
+    if (allHosts && allHosts.size > 1) {
+      // Shared keyboard: центрируем по среднему центру всех хостов
+      const hostCenters: number[] = [];
+      for (const hId of allHosts) {
+        const hPos = positions.get(hId);
+        const hSize = getNodeSize(hId, opts);
+        if (hPos) {
+          hostCenters.push(hPos.y + hSize.height / 2);
+        }
+      }
+      if (hostCenters.length > 0) {
+        const avgCenter = hostCenters.reduce((sum, c) => sum + c, 0) / hostCenters.length;
+        anchorY = Math.round(avgCenter - keyboardSize.height / 2);
+      } else {
+        anchorY = hostPosition.y + Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
+      }
+    } else {
+      // Одиночный хост: выравниваем по центру хоста
+      const yOffset = Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
+      anchorY = hostPosition.y + yOffset;
+    }
 
     positions.set(keyboardId, {
       x: hostPosition.x + hostSize.width + xOffset,
-      y: hostPosition.y + yOffset,
+      y: anchorY,
     });
   }
 }
