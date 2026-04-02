@@ -496,6 +496,13 @@ export default function Editor() {
     loadContent(selectedFormat);
   }, [selectedFormat, loadContent]);
 
+  // При открытии редактора кода — всегда предзагружаем JSON
+  useEffect(() => {
+    if (codeEditorVisible || currentTab === 'export') {
+      loadContent('json');
+    }
+  }, [codeEditorVisible, currentTab, loadContent]);
+
   // Получение текущего содержимого кода для выбранного формата
   const getCurrentContent = () => generatedCodeContent[selectedFormat] || '';
 
