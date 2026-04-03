@@ -37,6 +37,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     """Обработчик перехода к узлу {{ nodeId }}"""
     user_id = callback_query.from_user.id
     logging.info(f"🔵 Переход к узлу {{ nodeId }} для пользователя {user_id}")
+    {# Лог нажатия кнопки пользователем #}
+    _pressed_cb = getattr(callback_query, 'data', None)
+    if _pressed_cb and not getattr(callback_query, '_is_fake', False):
+        logging.info(f"🖱️ Пользователь {user_id} нажал кнопку с callback_data=\"{_pressed_cb}\"")
 
     # Отвечаем на callback (чтобы убрать часы загрузки)
     try:
@@ -206,6 +210,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     sent_message = await callback_query.message.answer(text, reply_markup={{ effectiveKeyboard }})
     {%- endif %}
     {%- endif %}
+    {%- endif %}
+
+    {# Лог отправленных кнопок #}
+    {%- if buttons and buttons|length > 0 and keyboardType == 'inline' %}
+    if sent_message:
+        _btn_log = [{% for btn in buttons %}{%- if btn.action != 'url' %}"{{ btn.customCallbackData or btn.target or btn.id }}"{% if not loop.last %}, {% endif %}{%- endif %}{% endfor %}]
+        if _btn_log:
+            logging.info(f"⌨️ Отправлено сообщение с кнопками (callback_data): {_btn_log} → пользователю {user_id}")
     {%- endif %}
 
     {# Автопереход #}
