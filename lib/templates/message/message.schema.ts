@@ -102,6 +102,12 @@ export const messageParamsSchema = z.object({
   hasHideAfterClickIncoming: z.boolean().optional().default(false),
   /** Использует ли текст переменные user_ids */
   hasUserIdsVariable: z.boolean().optional().default(false),
+  /**
+   * Паттерн для декоратора @dp.callback_query.
+   * Если задан customCallbackData у кнопки goto/command — используется он.
+   * Иначе — nodeId (обратная совместимость).
+   */
+  callbackPattern: z.string().optional(),
 });
 
 /** Тип параметров сообщения (выведен из схемы) */

@@ -125,4 +125,10 @@ export interface MessageTemplateParams {
   hasHideAfterClickIncoming?: boolean;
   /** Использует ли текст переменные user_ids */
   hasUserIdsVariable?: boolean;
+  /**
+   * Паттерн для декоратора @dp.callback_query.
+   * Если задан customCallbackData у кнопки goto/command, ведущей к этому узлу —
+   * используется он. Иначе — nodeId (обратная совместимость).
+   */
+  callbackPattern?: string;
 }

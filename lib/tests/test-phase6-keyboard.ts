@@ -1400,6 +1400,29 @@ test('J04', 'selection и complete не затрагиваются customCallbac
   syntax(code, 'j04');
 });
 
+test('J05', 'обработчик целевого узла регистрируется по customCallbackData, а не по nodeId', () => {
+  // Кнопка с customCallbackData ведёт к msg_2.
+  // Декоратор handle_callback_msg_2 должен слушать "confirm_order", а не "msg_2".
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Подтвердите заказ', {
+      keyboardType: 'inline',
+      buttons: [
+        {
+          ...makeButton('Подтвердить', 'goto', 'msg_2'),
+          customCallbackData: 'confirm_order',
+        },
+      ],
+    }),
+    makeMessageNode('msg_2', 'Заказ подтверждён'),
+  ]);
+
+  const code = gen(project, 'j05');
+  const b = block(code, 'msg_2');
+  assertIncludesAll(b, ['lambda c: c.data == "confirm_order"'], 'J05: декоратор должен использовать customCallbackData');
+  assertExcludes(b, ['lambda c: c.data == "msg_2"'], 'J05: декоратор не должен использовать nodeId как паттерн');
+  syntax(code, 'j05');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 

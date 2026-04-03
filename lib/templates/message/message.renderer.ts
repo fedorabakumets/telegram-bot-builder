@@ -63,5 +63,6 @@ export function generateMessage(params: MessageTemplateParams): string {
     handlerContext: 'callback',
     adjustStr: computeAdjustStr(params.keyboardLayout),
     userInputBlock,
+    callbackPattern: params.callbackPattern || params.nodeId,
   });
 }

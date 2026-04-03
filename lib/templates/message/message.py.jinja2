@@ -31,7 +31,8 @@
 {%- endif %}
 
 {# Обработчик callback для навигации к узлу #}
-@dp.callback_query(lambda c: c.data == "{{ nodeId }}" or c.data.startswith("{{ nodeId }}_btn_"))
+{# callbackPattern: кастомный callback_data (если задан) или nodeId (обратная совместимость) #}
+@dp.callback_query(lambda c: c.data == "{{ callbackPattern or nodeId }}" or c.data.startswith("{{ nodeId }}_btn_"))
 async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery):
     """Обработчик перехода к узлу {{ nodeId }}"""
     user_id = callback_query.from_user.id
