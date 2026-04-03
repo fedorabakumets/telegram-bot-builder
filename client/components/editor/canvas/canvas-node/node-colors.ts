@@ -48,5 +48,7 @@ export const nodeColors: Record<string, string> = {
   incoming_message_trigger: 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-600 dark:text-green-400 border-2 border-green-300 dark:border-green-700/50 shadow-lg shadow-green-500/20',
   /** Цвет триггера сообщения в группе — фиолетовый */
   group_message_trigger: 'bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 text-violet-600 dark:text-violet-400 border-2 border-violet-300 dark:border-violet-700/50 shadow-lg shadow-violet-500/20',
+  /** Цвет триггера inline-кнопки — оранжевый */
+  callback_trigger: 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 text-orange-600 dark:text-orange-400 border-2 border-orange-300 dark:border-orange-700/50 shadow-lg shadow-orange-500/20',
   media: 'bg-gradient-to-br from-fuchsia-50 to-purple-100 dark:from-fuchsia-900/30 dark:to-purple-900/30 text-fuchsia-600 dark:text-fuchsia-400 border-2 border-fuchsia-300 dark:border-fuchsia-700/50 shadow-lg shadow-fuchsia-500/20',
 };

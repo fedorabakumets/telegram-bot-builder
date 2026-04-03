@@ -47,5 +47,7 @@ export const nodeIcons: Record<string, string> = {
   incoming_message_trigger: 'fas fa-inbox',
   /** Иконка триггера сообщения в группе */
   group_message_trigger: 'fas fa-comments',
+  /** Иконка триггера inline-кнопки */
+  callback_trigger: 'fas fa-hand-pointer',
   media: 'fas fa-photo-video',
 };
