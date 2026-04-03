@@ -27,6 +27,8 @@ export const buttonSchema = z.object({
   skipDataCollection: z.boolean().default(false),
   /** Скрыть кнопку после использования */
   hideAfterClick: z.boolean().default(false),
+  /** Пользовательский callback_data (если не задан — генерируется автоматически) */
+  customCallbackData: z.string().optional(),
 });
 
 /** Тип кнопки бота */

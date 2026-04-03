@@ -578,6 +578,7 @@ export function PropertiesPanel({
                               onButtonUpdate={onButtonUpdate}
                               onButtonDelete={onButtonDelete}
                               selectedNode={selectedNode}
+                              keyboardType={selectedNode.data.keyboardType as string}
                             />
                           ))}
                         </div>

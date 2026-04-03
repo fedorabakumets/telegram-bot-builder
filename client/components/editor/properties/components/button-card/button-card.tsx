@@ -8,6 +8,7 @@
 import { Input } from '@/components/ui/input';
 import { ButtonTextField } from './button-text-field';
 import { ButtonActionSelector } from './button-action-selector';
+import { ButtonCallbackField } from './button-callback-field';
 import { GotoTargetSection } from '../navigation/goto-target-section';
 import type { Button } from '@shared/schema';
 import type { ProjectVariable } from '../../utils/variables-utils';
@@ -29,6 +30,8 @@ interface ButtonCardProps {
   onButtonDelete: (nodeId: string, buttonId: string) => void;
   /** Выбранный узел */
   selectedNode: Node;
+  /** Тип клавиатуры (inline/reply/none) */
+  keyboardType?: string;
 }
 
 /**
@@ -44,7 +47,8 @@ export function ButtonCard({
   getAllNodesFromAllSheets,
   onButtonUpdate,
   onButtonDelete,
-  selectedNode
+  selectedNode,
+  keyboardType,
 }: ButtonCardProps) {
   return (
     <div
@@ -75,6 +79,18 @@ export function ButtonCard({
             selectedNode={selectedNode}
             button={button}
             getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+            onButtonUpdate={onButtonUpdate}
+          />
+        </>
+      )}
+
+      {!['url', 'contact', 'location'].includes(button.action) && (
+        <>
+          <div className="border-t border-border/20 my-3"></div>
+          <ButtonCallbackField
+            nodeId={nodeId}
+            button={button}
+            keyboardType={keyboardType}
             onButtonUpdate={onButtonUpdate}
           />
         </>

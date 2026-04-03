@@ -62,6 +62,7 @@ export function KeyboardNodeProperties({
           onButtonUpdate={onButtonUpdate}
           onButtonDelete={onButtonDelete}
           selectedNode={selectedNode}
+          keyboardType={selectedNode.data.keyboardType as string}
         />
       ))}
       {buttons.length > 0 && (
