@@ -10,6 +10,7 @@
  * Блок G: Goto / condition / transition
  * Блок H: Backward compatibility и повторное использование keyboard-ноды
  * Блок I: Краевые случаи и синтаксис
+ * Блок J: customCallbackData — кастомные callback_data для кнопок и обработчиков
  */
 
 import fs from 'fs';
@@ -1421,6 +1422,36 @@ test('J05', 'обработчик целевого узла регистриру
   assertIncludesAll(b, ['lambda c: c.data == "confirm_order"'], 'J05: декоратор должен использовать customCallbackData');
   assertExcludes(b, ['lambda c: c.data == "msg_2"'], 'J05: декоратор не должен использовать nodeId как паттерн');
   syntax(code, 'j05');
+});
+
+test('J06', 'кнопка в keyboard-ноде с customCallbackData использует его в кнопке и обработчике', () => {
+  // Кнопка находится в отдельной keyboard-ноде (не в message напрямую).
+  // После нормализации кнопка переносится в msg_1, но customCallbackData должен сохраниться.
+  // Обработчик msg_2 должен слушать "go_to_msg2", а не "msg_2".
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', { keyboardNodeId: 'kbd_1' }),
+    makeKeyboardNode('kbd_1', 'inline', [
+      {
+        ...makeButton('Перейти', 'goto', 'msg_2'),
+        customCallbackData: 'go_to_msg2',
+      },
+    ]),
+    makeMessageNode('msg_2', 'Цель'),
+  ]);
+
+  const code = gen(project, 'j06');
+  const msg1 = block(code, 'msg_1');
+  const msg2 = block(code, 'msg_2');
+
+  // Кнопка использует кастомный callback
+  assertIncludesAll(msg1, ['callback_data="go_to_msg2"'], 'J06: кнопка должна использовать customCallbackData');
+  assertExcludes(msg1, ['callback_data="msg_2"'], 'J06: target не должен использоваться');
+
+  // Обработчик целевого узла слушает кастомный callback
+  assertIncludesAll(msg2, ['lambda c: c.data == "go_to_msg2"'], 'J06: обработчик должен слушать customCallbackData');
+  assertExcludes(msg2, ['lambda c: c.data == "msg_2"'], 'J06: обработчик не должен слушать nodeId');
+
+  syntax(code, 'j06');
 });
 
 const passed = results.filter(r => r.passed).length;
