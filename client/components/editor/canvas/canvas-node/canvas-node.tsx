@@ -31,6 +31,7 @@ import { CommandTriggerPreview } from './command-trigger-preview';
 import { TextTriggerPreview } from './text-trigger-preview';
 import { AnyMessageTriggerPreview } from './any-message-trigger-preview';
 import { GroupMessageTriggerPreview } from './group-message-trigger-preview';
+import { CallbackTriggerPreview } from './callback-trigger-preview';
 import { ConditionNodePreview } from './condition-node-preview';
 import { MediaNodePreview } from './media-node-preview';
 import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
@@ -462,7 +463,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
       {/* РџРѕСЂС‚ РІС‹С…РѕРґР° вЂ” СЃРЅР°СЂСѓР¶Рё РѕСЃРЅРѕРІРЅРѕРіРѕ div, РїРѕР·РёС†РёРѕРЅРёСЂСѓРµС‚СЃСЏ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ wrapper */}
       {/* РЈР·РµР» condition РёРјРµРµС‚ РїРѕСЂС‚С‹ РЅР° РєР°Р¶РґРѕР№ РІРµС‚РєРµ вЂ” РѕР±С‰РёР№ РїРѕСЂС‚ РЅРµ РЅСѓР¶РµРЅ */}
-      {(node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger') ? (
+      {(node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger') ? (
         <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : node.type !== 'condition' && node.type !== 'keyboard' ? (
         <OutputPort portType="auto-transition" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
@@ -476,6 +477,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           "bg-white/90 dark:bg-slate-900/90 rounded-2xl border-2 relative select-none",
           // РљРѕРјРїР°РєС‚РЅС‹Р№ СЂР°Р·РјРµСЂ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ
           node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger'
+            ? "p-3 w-52"
+            : (node.type as any) === 'callback_trigger'
             ? "p-3 w-52"
             : node.type === 'condition'
             ? "p-4 w-64"
@@ -518,7 +521,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         }}
       >
         {/* Р—Р°РіРѕР»РѕРІРѕРє СѓР·Р»Р° вЂ” СЃРєСЂС‹С‚ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ, СѓР·Р»Р° СЃРѕРѕР±С‰РµРЅРёСЏ Рё СѓР·Р»Р° СѓСЃР»РѕРІРёСЏ */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'callback_trigger' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (
           <NodeHeader node={node} onMove={!!onMove} />
         )}
 
@@ -568,6 +571,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Group Message Trigger Preview */}
         {node.type === 'group_message_trigger' && <GroupMessageTriggerPreview node={node} />}
+
+        {/* Callback Trigger Preview */}
+        {(node.type as any) === 'callback_trigger' && <CallbackTriggerPreview node={node} />}
 
         {/* Condition Node Preview */}
         {node.type === 'condition' && (
