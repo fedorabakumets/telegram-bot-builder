@@ -66,6 +66,8 @@ interface CodeEditorAreaProps {
   setAreAllCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
   /** Текущее состояние сворачивания */
   areAllCollapsed?: boolean;
+  /** Колбэк изменения контента (только для редактируемых форматов) */
+  onContentChange?: (value: string) => void;
 }
 
 /**
@@ -82,6 +84,7 @@ export function CodeEditorArea({
   codeStats,
   setAreAllCollapsed,
   areAllCollapsed,
+  onContentChange,
 }: CodeEditorAreaProps) {
   // Реагируем на изменение состояния сворачивания извне
   useEffect(() => {
@@ -133,7 +136,7 @@ export function CodeEditorArea({
               }
             }}
             options={{
-              readOnly: true,
+              readOnly: selectedFormat !== 'json',
               lineNumbers: 'on',
               wordWrap: 'on',
               fontSize: 12,
@@ -153,6 +156,9 @@ export function CodeEditorArea({
               formatOnType: false,
             }}
             data-testid={`monaco-editor-code-${selectedFormat}`}
+            onChange={(value) => {
+              if (selectedFormat === 'json') onContentChange?.(value ?? '');
+            }}
           />
         )}
       </CardContent>

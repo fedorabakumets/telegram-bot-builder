@@ -6,13 +6,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BotData, BotProject } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useUpdateProjectName } from '@/components/editor/bot/project/use-update-project-name';
 import { BotValidation } from '../types/bot-validation';
 import { CodePanelHeader } from './CodePanelHeader';
 import { CodeFormatTabs } from './CodeFormatTabs';
 import { CodeActions } from './CodeActions';
 import { CodeStats } from './CodeStats';
+import { JsonApplyBar } from './JsonApplyBar';
 import { CodeFormat } from '../hooks/use-code-generator';
 
 /**
@@ -47,6 +48,12 @@ interface CodePanelProps {
   isLoading?: boolean;
   /** Отображаемый контент (с учётом обрезки) */
   displayContent?: string;
+  /** Колбэк применения отредактированного JSON к данным бота */
+  onApplyJson?: (jsonString: string, index: number) => void;
+  /** Текущий отредактированный контент из Monaco Editor (для отображения isDirty) */
+  editedContent?: string;
+  /** Колбэк сброса редактора к исходному контенту */
+  onResetEditor?: () => void;
 }
 
 /**
@@ -60,6 +67,7 @@ export function CodePanel({
   areAllCollapsed, onCollapseChange,
   onShowFullCodeChange, onBotDataUpdate,
   codeContent, isLoading, displayContent,
+  onApplyJson, editedContent, onResetEditor,
 }: CodePanelProps) {
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
@@ -70,13 +78,31 @@ export function CodePanel({
   const [editingValue, setEditingValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  /** Текст ошибки валидации JSON */
+  const [jsonError, setJsonError] = useState<string | null>(null);
+
   const updateProjectNameMutation = useUpdateProjectName();
 
   const selectedFormat = externalSelectedFormat ?? localSelectedFormat;
   const collapseState = areAllCollapsed ?? localAreAllCollapsed;
 
+  // Валидируем JSON при изменении editedContent
+  useEffect(() => {
+    if (!editedContent || selectedFormat !== 'json') {
+      setJsonError(null);
+      return;
+    }
+    try {
+      JSON.parse(editedContent);
+      setJsonError(null);
+    } catch (e) {
+      setJsonError(e instanceof Error ? e.message : 'Невалидный JSON');
+    }
+  }, [editedContent, selectedFormat]);
+
   const handleFormatChange = (format: CodeFormat) => {
     onFormatChange ? onFormatChange(format) : setLocalSelectedFormat(format);
+    setJsonError(null);
   };
 
   const handleCollapseChange = (collapsed: boolean) => {
@@ -112,6 +138,21 @@ export function CodePanel({
       if (onBotDataUpdate) onBotDataUpdate(botDataArray, index, newName);
     }
     setEditingIndex(null);
+  };
+
+  /**
+   * Применяет изменения JSON
+   * @param index - Индекс проекта
+   */
+  const handleApplyJson = (index: number) => {
+    if (!editedContent || jsonError) return;
+    onApplyJson?.(editedContent, index);
+  };
+
+  /** Сбрасывает изменения JSON */
+  const handleResetJson = () => {
+    setJsonError(null);
+    onResetEditor?.();
   };
 
   /**
@@ -201,6 +242,14 @@ export function CodePanel({
                 <CardContent className="space-y-3 xs:space-y-3.5 sm:space-y-4">
                   <BotValidation botData={botDataArray[index]} />
                   <CodeFormatTabs selectedFormat={selectedFormat} projectName={currentProjectName} onFormatChange={handleFormatChange} />
+                  {selectedFormat === 'json' && (
+                    <JsonApplyBar
+                      isDirty={!!editedContent && editedContent !== content}
+                      error={jsonError}
+                      onApply={() => handleApplyJson(index)}
+                      onReset={handleResetJson}
+                    />
+                  )}
                   <CodeActions content={content} selectedFormat={selectedFormat} fileName={safeFileName} />
                   <CodeStats
                     content={content}

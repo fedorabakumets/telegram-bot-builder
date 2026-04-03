@@ -11,6 +11,7 @@ import { CodeEditorArea } from '@/components/editor/code/editor';
 import { CodePanel } from '@/components/editor/code/panel';
 import { ReadmePreview } from '@/components/editor/code/readme';
 import { useCodeGenerator as useCodeGeneratorServer } from '@/components/editor/code/hooks';
+import type { CodeFormat } from '@/components/editor/code/hooks';
 import { ComponentsSidebar } from '@/components/editor/sidebar/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
@@ -182,6 +183,18 @@ export default function Editor() {
     setCodeEditorVisible,
     setCodePanelVisible,
   } = useCodeStates();
+
+  /** Текущий отредактированный JSON контент из Monaco Editor */
+  const [editedJsonContent, setEditedJsonContent] = useState<string>('');
+
+  /**
+   * Обрабатывает смену формата кода, сбрасывая редактируемый JSON
+   * @param format - Новый формат кода
+   */
+  const handleFormatChange = useCallback((format: CodeFormat) => {
+    setSelectedFormat(format);
+    setEditedJsonContent('');
+  }, [setSelectedFormat]);
 
   // Хук обработчиков мобильных панелей
   const {
@@ -611,6 +624,31 @@ export default function Editor() {
       setBotDataWithSheets(updatedData);
     }
   }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
+
+  /**
+   * Применяет отредактированный JSON к данным бота
+   * @param jsonString - Строка JSON для применения
+   */
+  const handleApplyJsonToBotData = useCallback((jsonString: string) => {
+    try {
+      const parsed = JSON.parse(jsonString) as BotDataWithSheets | BotData;
+      if ((parsed as BotDataWithSheets).sheets) {
+        handleBotDataUpdate(parsed as BotDataWithSheets);
+      } else if ((parsed as BotData).nodes) {
+        const current = botDataWithSheets;
+        if (!current) return;
+        const updated: BotDataWithSheets = {
+          ...current,
+          sheets: current.sheets.map((sheet, i) =>
+            i === 0 ? { ...sheet, nodes: (parsed as BotData).nodes } : sheet
+          ),
+        };
+        handleBotDataUpdate(updated);
+      }
+    } catch (e) {
+      console.error('Ошибка применения JSON:', e);
+    }
+  }, [botDataWithSheets, handleBotDataUpdate]);
 
   // Хук перемещения узла между листами
   const { moveNodeToSheet } = useMoveNodeToSheet(botDataWithSheets || undefined, handleBotDataUpdate);
@@ -1128,7 +1166,7 @@ export default function Editor() {
       projectName={activeProject.name}
       onClose={handleCloseCodePanel}
       selectedFormat={selectedFormat}
-      onFormatChange={setSelectedFormat}
+      onFormatChange={handleFormatChange}
       areAllCollapsed={areAllCollapsed}
       onCollapseChange={setAreAllCollapsed}
       showFullCode={showFullCode}
@@ -1136,6 +1174,12 @@ export default function Editor() {
       codeContent={generatedCodeContent}
       isLoading={isCodeLoading}
       displayContent={displayContent}
+      onApplyJson={(jsonString) => handleApplyJsonToBotData(jsonString)}
+      editedContent={editedJsonContent}
+      onResetEditor={() => {
+        setEditedJsonContent('');
+        editorRef.current?.setValue(displayContent);
+      }}
     />
   ) : null;
 
@@ -1209,6 +1253,7 @@ export default function Editor() {
             codeStats={codeStats}
             setAreAllCollapsed={setAreAllCollapsed}
             areAllCollapsed={areAllCollapsed}
+            onContentChange={(value) => setEditedJsonContent(value)}
           />
         )}
       </div>
@@ -1309,7 +1354,7 @@ export default function Editor() {
           projectName={activeProject.name}
           onClose={handleToggleCodePanel}
           selectedFormat={selectedFormat}
-          onFormatChange={setSelectedFormat}
+          onFormatChange={handleFormatChange}
           areAllCollapsed={areAllCollapsed}
           onCollapseChange={setAreAllCollapsed}
           showFullCode={showFullCode}
@@ -1317,6 +1362,12 @@ export default function Editor() {
           codeContent={generatedCodeContent}
           isLoading={isCodeLoading}
           displayContent={displayContent}
+          onApplyJson={(jsonString) => handleApplyJsonToBotData(jsonString)}
+          editedContent={editedJsonContent}
+          onResetEditor={() => {
+            setEditedJsonContent('');
+            editorRef.current?.setValue(displayContent);
+          }}
         />
       </div>
     ) : currentTab === 'editor' ? (
@@ -1382,6 +1433,7 @@ export default function Editor() {
                     codeStats={codeStats}
                     setAreAllCollapsed={setAreAllCollapsed}
                     areAllCollapsed={areAllCollapsed}
+                    onContentChange={(value) => setEditedJsonContent(value)}
                   />
                 </div>
               ) : null
