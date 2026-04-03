@@ -107,9 +107,9 @@
 {%- elif btn.action == 'complete' and allowMultipleSelection %}
 {{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="done_{{ effectiveNodeId }}"))
 {%- elif btn.action == 'goto' or btn.action == 'complete' %}
-{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.target or btn.id or 'no_action' }}"))
+{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or btn.target or btn.id or 'no_action' }}"))
 {%- elif btn.action == 'command' %}
-{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="cmd_{{ (btn.target or '')|replace('/', '') or 'unknown' }}"))
+{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or 'cmd_' ~ ((btn.target or '')|replace('/', '') or 'unknown') }}"))
 {%- else %}
 {{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.id or btn.target or 'btn' }}"))
 {%- endif %}

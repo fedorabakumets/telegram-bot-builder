@@ -28,6 +28,30 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
 ]);
 
 /**
+ * Ищет кастомный callback_data среди кнопок всех узлов, ведущих к указанному nodeId.
+ * Применяется только для кнопок с action === 'goto' или action === 'command'.
+ *
+ * @param nodeId - ID целевого узла
+ * @param nodes - Массив всех узлов проекта
+ * @returns Кастомный callback_data или undefined
+ */
+function findCustomCallbackForNode(nodeId: string, nodes: any[]): string | undefined {
+  for (const node of nodes) {
+    const buttons: any[] = node.data?.buttons || [];
+    for (const btn of buttons) {
+      if (
+        btn.target === nodeId &&
+        (btn.action === 'goto' || btn.action === 'command') &&
+        btn.customCallbackData
+      ) {
+        return btn.customCallbackData as string;
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
  * Генерирует интерактивные callback-обработчики для inline кнопок,
  * автопереходов и условных кнопок.
  *
@@ -81,8 +105,12 @@ export function generateInteractiveCallbackHandlers(
 
     const shortNodeId = String(nodeId).slice(-10).replace(/^_+/, '');
 
+    // Ищем кастомный callback_data среди кнопок, ведущих к этому узлу
+    const customCb = findCustomCallbackForNode(nodeId, nodes);
+    const callbackPattern = customCb || nodeId;
+
     // Декоратор и заголовок обработчика
-    code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}")\n`;
+    code += `\n@dp.callback_query(lambda c: c.data == "${callbackPattern}")\n`;
     code += `async def handle_callback_${nodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query: types.CallbackQuery):\n`;
     code += '    try:\n';
     code += '        user_id = callback_query.from_user.id\n';

@@ -51,7 +51,7 @@ export function generateContactHandler(node: Node): string {
       if (button.action === "url") {
         code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
       } else if (button.action === 'goto') {
-        code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${button.target || button.id || 'no_action'}"))\n`;
+        code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${button.customCallbackData || button.target || button.id || 'no_action'}"))\n`;
       }
     });
     code += '        keyboard = builder.as_markup()\n';
@@ -167,7 +167,7 @@ export function generateLocationHandler(node: Node): string {
       if (button.action === "url") {
         code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
       } else if (button.action === 'goto') {
-        code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${button.target || button.id || 'no_action'}"))\n`;
+        code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${button.customCallbackData || button.target || button.id || 'no_action'}"))\n`;
       }
     });
     code += '        keyboard = builder.as_markup()\n';

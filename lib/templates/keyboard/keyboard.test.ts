@@ -247,7 +247,74 @@ describe('keyboard.py.jinja2 шаблон', () => {
       });
     });
 
-    describe('Производительность', () => {
+    describe('customCallbackData', () => {
+      it('кастомный customCallbackData используется вместо target для goto', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [
+            {
+              id: 'btn_order',
+              text: 'Подтвердить',
+              action: 'goto',
+              target: 'node_confirm',
+              buttonType: 'normal',
+              skipDataCollection: false,
+              hideAfterClick: false,
+              customCallbackData: 'confirm_order',
+            },
+          ],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+
+        assert.ok(result.includes('callback_data="confirm_order"'), `Ожидался callback_data="confirm_order", получено:\n${result}`);
+        assert.ok(!result.includes('callback_data="node_confirm"'), 'target не должен использоваться как callback_data');
+      });
+
+      it('кастомный customCallbackData используется вместо авто-значения для command', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [
+            {
+              id: 'btn_cmd',
+              text: 'Команда',
+              action: 'command',
+              target: '/start',
+              buttonType: 'normal',
+              skipDataCollection: false,
+              hideAfterClick: false,
+              customCallbackData: 'my_custom_cmd',
+            },
+          ],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+
+        assert.ok(result.includes('callback_data="my_custom_cmd"'), `Ожидался callback_data="my_custom_cmd", получено:\n${result}`);
+        assert.ok(!result.includes('cmd_start'), 'авто-значение cmd_start не должно использоваться');
+      });
+
+      it('без customCallbackData используется target как callback_data', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [
+            {
+              id: 'btn_back',
+              text: 'Назад',
+              action: 'goto',
+              target: 'node_back',
+              buttonType: 'normal',
+              skipDataCollection: false,
+              hideAfterClick: false,
+            },
+          ],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+
+        assert.ok(result.includes('callback_data="node_back"'), `Ожидался callback_data="node_back", получено:\n${result}`);
+      });
+    });
       it('должен генерировать код быстрее 10ms', () => {
         const start = Date.now();
         generateKeyboard(validParamsInline);

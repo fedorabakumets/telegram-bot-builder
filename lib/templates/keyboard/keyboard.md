@@ -25,6 +25,7 @@ interface Button {
   action: string;
   target?: string;
   url?: string;
+  customCallbackData?: string; // Переопределяет авто-генерируемый callback_data (только для goto/command)
 }
 ```
 

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import type { Button } from '@shared/schema';
 
 /** Действия, для которых показывается поле callback_data */
-const INLINE_ACTIONS = ['goto', 'command', 'selection', 'complete'] as const;
+const INLINE_ACTIONS = ['goto', 'command'] as const;
 type InlineAction = typeof INLINE_ACTIONS[number];
 
 /** Пропсы поля callback_data */
@@ -28,25 +28,19 @@ interface ButtonCallbackFieldProps {
 /**
  * Вычисляет авто-генерируемое значение callback_data по типу действия
  *
- * @param action - Действие кнопки
+ * @param action - Действие кнопки (goto или command)
  * @param button - Объект кнопки
- * @param nodeId - ID узла
  * @returns Авто-значение callback_data
  */
 function computeAutoCallbackData(
   action: InlineAction,
   button: ButtonCallbackFieldProps['button'],
-  nodeId: string,
 ): string {
   switch (action) {
     case 'goto':
       return button.target || button.id || 'no_action';
     case 'command':
       return `cmd_${(button.target || '').replace('/', '') || 'unknown'}`;
-    case 'selection':
-      return `ms_${nodeId}_${button.shortButtonId || button.target || button.id || 'btn'}`;
-    case 'complete':
-      return button.target || button.id || `done_${nodeId}`;
     default:
       return button.id;
   }
@@ -68,7 +62,7 @@ export function ButtonCallbackField({
   if (keyboardType !== 'inline') return null;
   if (!INLINE_ACTIONS.includes(button.action as InlineAction)) return null;
 
-  const autoValue = computeAutoCallbackData(button.action as InlineAction, button, nodeId);
+  const autoValue = computeAutoCallbackData(button.action as InlineAction, button);
 
   return (
     <div className="space-y-1">

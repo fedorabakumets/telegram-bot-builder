@@ -25,6 +25,8 @@ export interface CompleteButton {
 export interface ButtonWithShortId extends Button {
   /** Короткий ID кнопки (pre-computed для callback_data) */
   shortButtonId?: string;
+  /** Пользовательский callback_data (переопределяет авто-генерируемый) */
+  customCallbackData?: string;
 }
 
 /** Условное сообщение */

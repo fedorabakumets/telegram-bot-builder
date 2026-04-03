@@ -19,6 +19,8 @@ export const keyboardParamsSchema = z.object({
     url: z.string().optional(),
     requestContact: z.boolean().optional(),
     requestLocation: z.boolean().optional(),
+    /** Пользовательский callback_data */
+    customCallbackData: z.string().optional(),
   })).default([]),
   /** Раскладка клавиатуры */
   keyboardLayout: z.object({
