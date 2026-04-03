@@ -186,6 +186,8 @@ export default function Editor() {
 
   /** Текущий отредактированный JSON контент из Monaco Editor */
   const [editedJsonContent, setEditedJsonContent] = useState<string>('');
+  /** Флаг программного сброса редактора — игнорируем onChange во время setValue */
+  const isResettingEditorRef = useRef(false);
 
   /**
    * Обрабатывает смену формата кода, сбрасывая редактируемый JSON
@@ -530,7 +532,10 @@ export default function Editor() {
    */
   useEffect(() => {
     if (editedJsonContent === '' && selectedFormat === 'json' && editorRef.current) {
+      isResettingEditorRef.current = true;
       editorRef.current.setValue(displayContent);
+      // Снимаем флаг после того как Monaco обработает setValue
+      setTimeout(() => { isResettingEditorRef.current = false; }, 0);
     }
   }, [editedJsonContent, selectedFormat, displayContent]);
 
@@ -1194,8 +1199,10 @@ export default function Editor() {
       onApplyJson={(jsonString) => handleApplyJsonToBotData(jsonString)}
       editedContent={editedJsonContent}
       onResetEditor={() => {
+        isResettingEditorRef.current = true;
         setEditedJsonContent('');
         editorRef.current?.setValue(displayContent);
+        setTimeout(() => { isResettingEditorRef.current = false; }, 0);
       }}
     />
   ) : null;
@@ -1270,7 +1277,7 @@ export default function Editor() {
             codeStats={codeStats}
             setAreAllCollapsed={setAreAllCollapsed}
             areAllCollapsed={areAllCollapsed}
-            onContentChange={(value) => setEditedJsonContent(value)}
+            onContentChange={(value) => { if (!isResettingEditorRef.current) setEditedJsonContent(value); }}
           />
         )}
       </div>
@@ -1382,8 +1389,10 @@ export default function Editor() {
           onApplyJson={(jsonString) => handleApplyJsonToBotData(jsonString)}
           editedContent={editedJsonContent}
           onResetEditor={() => {
+            isResettingEditorRef.current = true;
             setEditedJsonContent('');
             editorRef.current?.setValue(displayContent);
+            setTimeout(() => { isResettingEditorRef.current = false; }, 0);
           }}
         />
       </div>
@@ -1450,7 +1459,7 @@ export default function Editor() {
                     codeStats={codeStats}
                     setAreAllCollapsed={setAreAllCollapsed}
                     areAllCollapsed={areAllCollapsed}
-                    onContentChange={(value) => setEditedJsonContent(value)}
+                    onContentChange={(value) => { if (!isResettingEditorRef.current) setEditedJsonContent(value); }}
                   />
                 </div>
               ) : null
