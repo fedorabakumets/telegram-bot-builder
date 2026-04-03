@@ -11,7 +11,10 @@ import type { Node, Button } from '@shared/schema';
 import type { EnhancedNode } from '../types/enhanced-node.types';
 
 /**
- * Нормализует кнопки узла для совместимости
+ * Нормализует кнопки узла для совместимости.
+ * Сохраняет все поля кнопки, включая customCallbackData.
+ * @param buttons - Массив кнопок для нормализации
+ * @returns Нормализованный массив кнопок
  */
 function normalizeButtons(buttons: any[]): Button[] {
   if (!buttons || !Array.isArray(buttons)) {
@@ -29,6 +32,8 @@ function normalizeButtons(buttons: any[]): Button[] {
     hideAfterClick: btn.hideAfterClick ?? false,
     requestContact: btn.requestContact ?? false,
     requestLocation: btn.requestLocation ?? false,
+    /** Пользовательский callback_data (приоритет над target/id) */
+    customCallbackData: btn.customCallbackData,
   }));
 }
 

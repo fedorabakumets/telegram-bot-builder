@@ -315,6 +315,8 @@ describe('keyboard.py.jinja2 шаблон', () => {
         assert.ok(result.includes('callback_data="node_back"'), `Ожидался callback_data="node_back", получено:\n${result}`);
       });
     });
+
+    describe('Производительность', () => {
       it('должен генерировать код быстрее 10ms', () => {
         const start = Date.now();
         generateKeyboard(validParamsInline);
