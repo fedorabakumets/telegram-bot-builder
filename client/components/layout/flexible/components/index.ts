@@ -12,3 +12,4 @@ export * from './right-panels';
 export * from './top-bar';
 export * from './bottom-bar';
 export * from './center-panel';
+export * from './CodeMobileLayout';
