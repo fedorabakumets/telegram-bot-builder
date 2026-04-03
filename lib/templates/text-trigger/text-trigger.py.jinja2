@@ -43,6 +43,7 @@ async def text_trigger_{{ sanitized_node_id }}_{{ sanitized_synonym }}_handler(m
     class MockCallback:
         def __init__(self, data, user, msg):
             self.data = data
+            self._is_fake = True
             self.from_user = user
             self.message = msg
 

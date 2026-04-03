@@ -49,6 +49,7 @@ async def message_{{ sanitized_node_id }}_synonym_{{ sanitized_synonym }}_handle
     class MockCallback:
         def __init__(self, data, user, msg):
             self.data = data
+            self._is_fake = True
             self.from_user = user
             self.message = msg
 
