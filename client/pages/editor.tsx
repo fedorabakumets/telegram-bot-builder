@@ -513,6 +513,13 @@ export default function Editor() {
     loadContent(selectedFormat);
   }, [selectedFormat, loadContent]);
 
+  // Загрузка python-контента при открытии панели кода (если ещё не загружен)
+  useEffect(() => {
+    if (codePanelVisible || codeEditorVisible) {
+      loadContent(selectedFormat);
+    }
+  }, [codePanelVisible, codeEditorVisible]);
+
   // Получение текущего содержимого кода для выбранного формата
   const getCurrentContent = () => generatedCodeContent[selectedFormat] || '';
 
