@@ -477,9 +477,11 @@ export default function Editor() {
     }
   }, [currentTab, users, handleSelectUserDetails, handleSelectDialogUser]);
 
-  // Использование хука генератора кода
+  // Использование хука генератора кода.
+  // Передаём botDataWithSheets вместо activeProject?.data, чтобы генератор
+  // видел актуальные данные после редактирования JSON через Monaco Editor.
   const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent, setCodeContent } = useCodeGeneratorServer({
-    botData: activeProject?.data as BotData || { nodes: [] },
+    botData: (botDataWithSheets ?? activeProject?.data) as BotData || { nodes: [] },
     projectName: activeProject?.name || 'project',
     userDatabaseEnabled: activeProject?.userDatabaseEnabled === 1,
     projectId: activeProject?.id || null,
@@ -520,6 +522,17 @@ export default function Editor() {
   const displayContent = useMemo(() => {
     return content;
   }, [content]);
+
+  /**
+   * Эффект: когда editedJsonContent сброшен в '' (после применения JSON),
+   * обновляем Monaco Editor актуальным displayContent.
+   * Это гарантирует что редактор показывает применённые данные.
+   */
+  useEffect(() => {
+    if (editedJsonContent === '' && selectedFormat === 'json' && editorRef.current) {
+      editorRef.current.setValue(displayContent);
+    }
+  }, [editedJsonContent, selectedFormat, displayContent]);
 
   // Статистика кода для отображения информации о структуре (считается от отображаемого контента)
   const codeStats = useMemo(() => {
@@ -626,7 +639,9 @@ export default function Editor() {
   }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
 
   /**
-   * Применяет отредактированный JSON к данным бота
+   * Применяет отредактированный JSON к данным бота.
+   * После успешного применения сбрасывает editedJsonContent,
+   * чтобы isDirty стал false и панель применения скрылась.
    * @param jsonString - Строка JSON для применения
    */
   const handleApplyJsonToBotData = useCallback((jsonString: string) => {
@@ -645,6 +660,8 @@ export default function Editor() {
         };
         handleBotDataUpdate(updated);
       }
+      // Сбрасываем редактируемый контент — данные успешно применены
+      setEditedJsonContent('');
     } catch (e) {
       console.error('Ошибка применения JSON:', e);
     }
