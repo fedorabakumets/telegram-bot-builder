@@ -44,6 +44,7 @@ export function getNodeTypeLabel(type: Node['type']): string {
     input: 'Сохранить ответ в переменную',
     condition: 'Условие',
     client_auth: 'Авторизация',
+    callback_trigger: 'Триггер inline-кнопки',
   };
 
   return types[type] || type;
