@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { MessageTextSectionHeader } from './message-text-section-header';
 import { MessageTextSectionContent } from './message-text-section-content';
+import { MessageRecipientSection } from './message-recipient-section';
 import { BroadcastToggle } from '../broadcast/broadcast-toggle';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Node } from '@shared/schema';
@@ -60,21 +61,27 @@ export function MessageTextSection({
       <MessageTextSectionHeader isOpen={isOpen} onToggle={onToggle} />
 
       {isOpen && (
-        <MessageTextSectionContent
-          nodeId={selectedNode.id}
-          messageText={selectedNode.data.messageText || ''}
-          markdown={selectedNode.data.markdown}
-          _formatMode={selectedNode.data.formatMode}
-          availableVariables={[...textVariables, ...mediaVariables] as ProjectVariable[]}
-          allNodes={allNodes}
-          variableFilters={variableFilters}
-          onNodeUpdate={onNodeUpdate}
-          onMediaVariableSelect={onMediaVariableSelect}
-          onFiltersChange={(filters) => {
-            setVariableFilters(filters);
-            onNodeUpdate(selectedNode.id, { variableFilters: filters });
-          }}
-        />
+        <>
+          <MessageTextSectionContent
+            nodeId={selectedNode.id}
+            messageText={selectedNode.data.messageText || ''}
+            markdown={selectedNode.data.markdown}
+            _formatMode={selectedNode.data.formatMode}
+            availableVariables={[...textVariables, ...mediaVariables] as ProjectVariable[]}
+            allNodes={allNodes}
+            variableFilters={variableFilters}
+            onNodeUpdate={onNodeUpdate}
+            onMediaVariableSelect={onMediaVariableSelect}
+            onFiltersChange={(filters) => {
+              setVariableFilters(filters);
+              onNodeUpdate(selectedNode.id, { variableFilters: filters });
+            }}
+          />
+          <MessageRecipientSection
+            selectedNode={selectedNode}
+            onNodeUpdate={onNodeUpdate}
+          />
+        </>
       )}
 
       {selectedNode.type === 'message' && hasBroadcastNodes && (
