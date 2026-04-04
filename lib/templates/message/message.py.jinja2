@@ -184,8 +184,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {# Клавиатура #}
 {%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
 
+    {# Определяем нужно ли отправлять пользователю #}
+    {# Если все получатели имеют тип chat_id — основная отправка пользователю пропускается #}
+    {%- set hasUserRecipient = true %}
+    {%- if messageSendRecipients and messageSendRecipients|length > 0 %}
+      {%- set hasUserRecipient = false %}
+      {%- for r in messageSendRecipients %}
+        {%- if r.type == 'user' %}
+          {%- set hasUserRecipient = true %}
+        {%- endif %}
+      {%- endfor %}
+    {%- endif %}
+
     {# Отправка медиафайлов или обычного сообщения #}
     sent_message = None
+    {%- if hasUserRecipient %}
     {%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
 {%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
     {%- else %}
@@ -211,6 +224,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {%- endif %}
     {%- endif %}
     {%- endif %}
+    {%- endif %}{# /hasUserRecipient — основная отправка пользователю #}
 
     {# Отправка дополнительным получателям (chat_id / admin_ids) #}
     {%- if messageSendRecipients and messageSendRecipients|length > 0 %}
@@ -219,6 +233,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     # Отправка получателю {{ loop.index }}: {{ recipient.chatId }}
     try:
         _recipient_chat_id = replace_variables_in_text("{{ recipient.chatId }}", all_user_vars, {})
+        # Автоматически добавляем -100 для групп/каналов если ID положительное и длиннее 9 цифр
+        if _recipient_chat_id.lstrip('-').isdigit() and not _recipient_chat_id.startswith('-') and len(_recipient_chat_id) >= 10:
+            _recipient_chat_id = f"-100{_recipient_chat_id}"
         {%- if recipient.threadId %}
         _recipient_thread_id = replace_variables_in_text("{{ recipient.threadId }}", all_user_vars, {})
         _thread_id_int = int(_recipient_thread_id) if _recipient_thread_id and _recipient_thread_id.strip().lstrip('-').isdigit() else None
