@@ -42,9 +42,9 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
   /** Классы фона и текста в зависимости от style (Bot API 9.4) */
   const styleClass = (button as any).style === 'primary'
     ? 'bg-blue-500 dark:bg-blue-600 border-blue-600 dark:border-blue-500 text-white'
-    : (button as any).style === 'secondary'
-    ? 'bg-gray-400 dark:bg-gray-600 border-gray-500 dark:border-gray-500 text-white'
-    : (button as any).style === 'destructive'
+    : (button as any).style === 'success'
+    ? 'bg-green-500 dark:bg-green-600 border-green-600 dark:border-green-500 text-white'
+    : (button as any).style === 'danger'
     ? 'bg-red-500 dark:bg-red-600 border-red-600 dark:border-red-500 text-white'
     : 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300';
 

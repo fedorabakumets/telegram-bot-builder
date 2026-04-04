@@ -86,8 +86,8 @@ export function ButtonCard({
           {([
             { value: undefined, label: 'Авто', className: 'border-gray-300 text-gray-600' },
             { value: 'primary', label: 'Синий', className: 'border-blue-400 text-blue-600 bg-blue-50 dark:bg-blue-900/20' },
-            { value: 'secondary', label: 'Серый', className: 'border-gray-400 text-gray-600 bg-gray-50 dark:bg-gray-900/20' },
-            { value: 'destructive', label: 'Красный', className: 'border-red-400 text-red-600 bg-red-50 dark:bg-red-900/20' },
+            { value: 'success', label: 'Зелёный', className: 'border-green-400 text-green-600 bg-green-50 dark:bg-green-900/20' },
+            { value: 'danger', label: 'Красный', className: 'border-red-400 text-red-600 bg-red-50 dark:bg-red-900/20' },
           ] as const).map(({ value, label, className }) => (
             <button
               key={label}
