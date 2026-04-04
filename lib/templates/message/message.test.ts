@@ -12,6 +12,7 @@ import {
   validParamsWithMedia,
   validParamsWithSecurity,
   validParamsReply,
+  validParamsWithRecipients,
   invalidParamsWrongType,
   invalidParamsMissingNodeId,
 } from './message.fixture';
@@ -212,6 +213,73 @@ describe('message.py.jinja2 шаблон', () => {
           });
           assert.ok(result.success, `Режим ${mode} должен быть валидным`);
         }
+      });
+    });
+
+    describe('messageSendRecipients', () => {
+      it('должен генерировать bot.send_message для получателей с type=chat_id', () => {
+        const result = generateMessage(validParamsWithRecipients);
+
+        assert.ok(result.includes('bot.send_message'));
+        assert.ok(result.includes('_recipient_chat_id'));
+      });
+
+      it('должен генерировать отправку для каждого chat_id получателя', () => {
+        const result = generateMessage(validParamsWithRecipients);
+
+        // r2: chatId='123456789', r3: chatId='{admin_chat}'
+        assert.ok(result.includes('"123456789"'));
+        assert.ok(result.includes('"{admin_chat}"'));
+      });
+
+      it('должен обрабатывать переменные в chatId через replace_variables_in_text', () => {
+        const result = generateMessage(validParamsWithRecipients);
+
+        assert.ok(result.includes('replace_variables_in_text'));
+        assert.ok(result.includes('_recipient_chat_id'));
+      });
+
+      it('должен обрабатывать переменные в threadId через replace_variables_in_text', () => {
+        const result = generateMessage(validParamsWithRecipients);
+
+        // r3 имеет threadId='{thread_id}'
+        assert.ok(result.includes('_recipient_thread_id'));
+        assert.ok(result.includes('_thread_id_int'));
+      });
+
+      it('не должен генерировать дополнительных отправок если все получатели type=user', () => {
+        const result = generateMessage({
+          nodeId: 'msg_only_user',
+          messageText: 'Привет',
+          messageSendRecipients: [
+            { id: 'r1', type: 'user' },
+          ],
+        });
+
+        assert.ok(!result.includes('_recipient_chat_id'));
+        assert.ok(!result.includes('📤 Сообщение отправлено получателю'));
+      });
+
+      it('не должен генерировать дополнительных отправок если messageSendRecipients пустой', () => {
+        const result = generateMessage({
+          nodeId: 'msg_empty',
+          messageText: 'Привет',
+          messageSendRecipients: [],
+        });
+
+        assert.ok(!result.includes('_recipient_chat_id'));
+      });
+
+      it('должен генерировать логирование успешной отправки', () => {
+        const result = generateMessage(validParamsWithRecipients);
+
+        assert.ok(result.includes('📤 Сообщение отправлено получателю'));
+      });
+
+      it('должен генерировать обработку ошибок отправки', () => {
+        const result = generateMessage(validParamsWithRecipients);
+
+        assert.ok(result.includes('❌ Ошибка отправки получателю'));
       });
     });
 

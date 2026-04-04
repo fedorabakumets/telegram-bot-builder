@@ -131,4 +131,16 @@ export interface MessageTemplateParams {
    * используется он. Иначе — nodeId (обратная совместимость).
    */
   callbackPattern?: string;
+
+  /** Список получателей сообщения (помимо основного пользователя) */
+  messageSendRecipients?: Array<{
+    /** Уникальный идентификатор получателя */
+    id: string;
+    /** Тип получателя: 'user' — основной пользователь, 'chat_id' — конкретный чат, 'admin_ids' — администраторы */
+    type: 'user' | 'chat_id' | 'admin_ids';
+    /** ID чата, @username или {переменная} */
+    chatId?: string;
+    /** ID топика или {переменная} */
+    threadId?: string;
+  }>;
 }

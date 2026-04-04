@@ -212,6 +212,41 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {%- endif %}
     {%- endif %}
 
+    {# Отправка дополнительным получателям (chat_id / admin_ids) #}
+    {%- if messageSendRecipients and messageSendRecipients|length > 0 %}
+    {%- for recipient in messageSendRecipients %}
+    {%- if recipient.type == 'chat_id' and recipient.chatId %}
+    # Отправка получателю {{ loop.index }}: {{ recipient.chatId }}
+    try:
+        _recipient_chat_id = replace_variables_in_text("{{ recipient.chatId }}", all_user_vars, {})
+        {%- if recipient.threadId %}
+        _recipient_thread_id = replace_variables_in_text("{{ recipient.threadId }}", all_user_vars, {})
+        _thread_id_int = int(_recipient_thread_id) if _recipient_thread_id and _recipient_thread_id.strip().lstrip('-').isdigit() else None
+        {%- else %}
+        _recipient_thread_id = None
+        _thread_id_int = None
+        {%- endif %}
+        await bot.send_message(
+            int(_recipient_chat_id) if _recipient_chat_id.lstrip('-').isdigit() else _recipient_chat_id,
+            text,
+            reply_markup=keyboard,
+            message_thread_id=_thread_id_int,
+        )
+        logging.info(f"📤 Сообщение отправлено получателю {_recipient_chat_id}")
+    except Exception as _e:
+        logging.error(f"❌ Ошибка отправки получателю {{ recipient.chatId }}: {_e}")
+    {%- elif recipient.type == 'admin_ids' %}
+    # Отправка администраторам (получатель {{ loop.index }})
+    for _admin_id in ADMIN_IDS:
+        try:
+            await bot.send_message(_admin_id, text, reply_markup=keyboard)
+            logging.info(f"📤 Сообщение отправлено администратору {_admin_id}")
+        except Exception as _e_admin_{{ loop.index }}:
+            logging.error(f"❌ Ошибка отправки администратору {_admin_id}: {_e_admin_{{ loop.index }}}")
+    {%- endif %}
+    {%- endfor %}
+    {%- endif %}
+
     {# Лог отправленных кнопок #}
     {%- if buttons and buttons|length > 0 and keyboardType == 'inline' %}
     if sent_message:

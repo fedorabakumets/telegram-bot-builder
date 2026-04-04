@@ -73,6 +73,17 @@ export const invalidParamsMissingNodeId = {
   // отсутствует nodeId
 };
 
+/** Валидные параметры: с получателями (messageSendRecipients) */
+export const validParamsWithRecipients: MessageTemplateParams = {
+  nodeId: 'msg_notify',
+  messageText: 'Уведомление',
+  messageSendRecipients: [
+    { id: 'r1', type: 'user' },
+    { id: 'r2', type: 'chat_id', chatId: '123456789' },
+    { id: 'r3', type: 'chat_id', chatId: '{admin_chat}', threadId: '{thread_id}' },
+  ],
+};
+
 /** Ожидаемый вывод: базовое сообщение */
 export const expectedOutputBasic = `
 @dp.callback_query(lambda c: c.data == "msg_123" or c.data.startswith("msg_123_btn_"))

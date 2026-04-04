@@ -108,6 +108,18 @@ export const messageParamsSchema = z.object({
    * Иначе — nodeId (обратная совместимость).
    */
   callbackPattern: z.string().optional(),
+
+  /** Список получателей сообщения (помимо основного пользователя) */
+  messageSendRecipients: z.array(z.object({
+    /** Уникальный идентификатор получателя */
+    id: z.string(),
+    /** Тип получателя */
+    type: z.enum(['user', 'chat_id', 'admin_ids']),
+    /** ID чата, @username или {переменная} */
+    chatId: z.string().optional(),
+    /** ID топика или {переменная} */
+    threadId: z.string().optional(),
+  })).optional().default([]),
 });
 
 /** Тип параметров сообщения (выведен из схемы) */

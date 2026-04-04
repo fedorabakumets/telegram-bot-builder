@@ -47,6 +47,24 @@
 | `synonymEntries` | `SynonymEntry[]` | `[]` | Записи синонимов |
 | `hasHideAfterClickIncoming` | `boolean` | `false` | Входящие кнопки с hideAfterClick |
 | `hasUserIdsVariable` | `boolean` | `false` | Текст использует переменную user_ids |
+| `messageSendRecipients` | `MessageSendRecipient[]` | `[]` | Список дополнительных получателей сообщения |
+
+## Тип MessageSendRecipient
+
+```typescript
+interface MessageSendRecipient {
+  /** Уникальный идентификатор получателя */
+  id: string;
+  /** Тип: 'user' — основной пользователь, 'chat_id' — конкретный чат, 'admin_ids' — администраторы */
+  type: 'user' | 'chat_id' | 'admin_ids';
+  /** ID чата, @username или {переменная} */
+  chatId?: string;
+  /** ID топика или {переменная} */
+  threadId?: string;
+}
+```
+
+Если `messageSendRecipients` пустой или содержит только `type: 'user'` — дополнительный код не генерируется (обратная совместимость).
 
 ## Использование
 

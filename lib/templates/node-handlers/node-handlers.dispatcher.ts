@@ -230,6 +230,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
           (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === node.id)
         ),
         callbackPattern: findCustomCallbackPatternForNode(node.id, nodes),
+        messageSendRecipients: (node.data as any)?.messageSendRecipients || [],
       };
   };
 
