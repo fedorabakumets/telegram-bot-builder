@@ -51,6 +51,11 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
               К узлу: {targetNodeDisplay}{targetNodeDisplay.length > 30 ? '...' : ''}
             </div>
           )}
+          {button.callback_data && (
+            <div className="mt-1 text-xs text-gray-400 dark:text-gray-500 truncate font-mono">
+              {button.callback_data}
+            </div>
+          )}
           {button.action === 'url' && (
             <div className="mt-1.5 text-xs text-purple-600 dark:text-purple-300 truncate">
               🔗 {button.url}
