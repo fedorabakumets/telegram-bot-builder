@@ -1075,11 +1075,16 @@ export default function Editor() {
     setHasLocalChanges(true);
 
     // Создаем новый узел из компонента
+    const clonedData = structuredClone(component.defaultData || {});
+    // Регенерируем id кнопок чтобы они были уникальны между узлами
+    if (Array.isArray((clonedData as any).buttons)) {
+      (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: nanoid() }));
+    }
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
       position: { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 }, // Случайная позиция с небольшим смещением
-      data: component.defaultData || {}
+      data: clonedData
     };
 
     // Логируем добавление в историю действий

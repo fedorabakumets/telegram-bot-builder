@@ -16,7 +16,10 @@ export const keyboardMessage: ComponentDefinition = {
   type: 'keyboard',
   defaultData: {
     keyboardType: 'inline',
-    buttons: [],
+    buttons: [
+      { id: 'btn-default-1', text: 'Кнопка 1', action: 'goto', target: '' },
+      { id: 'btn-default-2', text: 'Кнопка 2', action: 'goto', target: '' },
+    ],
     allowMultipleSelection: false,
     markdown: false,
     oneTimeKeyboard: false,
