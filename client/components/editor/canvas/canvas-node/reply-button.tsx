@@ -33,17 +33,20 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
                            targetNode?.data?.command || 
                            (button.action === 'goto' ? (button.target?.slice(0, 8) ?? '') : '');
 
-  /** Класс цветной полосы слева в зависимости от style (Bot API 9.4) */
-  const styleClass = (button as any).style === 'primary' ? 'border-l-4 border-blue-500'
-    : (button as any).style === 'secondary' ? 'border-l-4 border-gray-400'
-    : (button as any).style === 'destructive' ? 'border-l-4 border-red-500'
-    : '';
+  /** Классы фона и текста в зависимости от style (Bot API 9.4) */
+  const styleClass = (button as any).style === 'primary'
+    ? 'bg-blue-500 dark:bg-blue-600 border-blue-600 dark:border-blue-500 text-white'
+    : (button as any).style === 'secondary'
+    ? 'bg-gray-400 dark:bg-gray-600 border-gray-500 dark:border-gray-500 text-white'
+    : (button as any).style === 'destructive'
+    ? 'bg-red-500 dark:bg-red-600 border-red-600 dark:border-red-500 text-white'
+    : 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300';
 
   return (
-    <div className={`bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:border-gray-300 dark:hover:border-gray-600 transition-colors p-3 ${styleClass}`}>
+    <div className={`rounded-lg border shadow-sm transition-colors p-3 ${styleClass}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+          <div className="text-sm font-medium truncate">
             {button.text}
           </div>
           {button.action === 'goto' && (
