@@ -51,8 +51,9 @@ describe('keyboard.py.jinja2 шаблон', () => {
         const result = generateKeyboard(validParamsWithLayout);
 
         assert.ok(result.includes('InlineKeyboardBuilder'));
-        assert.ok(result.includes('Ряд 1'));
-        assert.ok(result.includes('Ряд 2'));
+        assert.ok(result.includes('builder.adjust(2, 2)'));
+        assert.ok(result.includes('callback_data="btn1"'));
+        assert.ok(result.includes('callback_data="btn4"'));
       });
 
       it('должен генерировать oneTimeKeyboard', () => {
@@ -119,8 +120,9 @@ describe('keyboard.py.jinja2 шаблон', () => {
       it('должен генерировать комментарии для ручной раскладки', () => {
         const result = generateKeyboard(validParamsWithLayout);
 
-        assert.ok(result.includes('# Ряд 1:'));
-        assert.ok(result.includes('# Ряд 2:'));
+        assert.ok(result.includes('builder.adjust(2, 2)'), `Ожидался builder.adjust(2, 2), получено:\n${result}`);
+        assert.ok(result.includes('callback_data="btn1"'));
+        assert.ok(result.includes('callback_data="btn3"'));
       });
 
       it('не должен генерировать builder.adjust(, ) при пустых buttonIds', () => {
@@ -143,18 +145,22 @@ describe('keyboard.py.jinja2 шаблон', () => {
           },
         });
 
-        assert.ok(result.includes('# Авто-раскладка: 3 колонок'));
+        assert.ok(result.includes('builder.adjust(3)'), `Ожидался builder.adjust(3), получено:\n${result}`);
       });
 
       it('должен генерировать кнопки в правильном порядке', () => {
         const result = generateKeyboard(validParamsWithLayout);
 
-        const btn1Index = result.indexOf('btn_1');
-        const btn2Index = result.indexOf('btn_2');
-        const btn3Index = result.indexOf('btn_3');
-        const btn4Index = result.indexOf('btn_4');
+        // Ручная раскладка: rows = [[btn_1, btn_2], [btn_3, btn_4]]
+        // Кнопки должны идти в порядке btn1 → btn2 → btn3 → btn4
+        const btn1Index = result.indexOf('callback_data="btn1"');
+        const btn2Index = result.indexOf('callback_data="btn2"');
+        const btn3Index = result.indexOf('callback_data="btn3"');
+        const btn4Index = result.indexOf('callback_data="btn4"');
 
-        assert.ok(btn1Index < btn2Index && btn2Index < btn3Index && btn3Index < btn4Index);
+        assert.ok(btn1Index !== -1, 'btn1 не найден');
+        assert.ok(btn1Index < btn2Index && btn2Index < btn3Index && btn3Index < btn4Index,
+          `Неправильный порядок: btn1=${btn1Index} btn2=${btn2Index} btn3=${btn3Index} btn4=${btn4Index}`);
       });
     });
 
@@ -200,7 +206,7 @@ describe('keyboard.py.jinja2 шаблон', () => {
         assert.ok(result.success);
         if (result.success) {
           assert.strictEqual(result.data.oneTimeKeyboard, false);
-          assert.strictEqual(result.data.resizeKeyboard, true);
+          assert.strictEqual(result.data.allowMultipleSelection, false);
         }
       });
 
