@@ -42,6 +42,8 @@ export function MessageRecipientSection({ selectedNode, onNodeUpdate, textVariab
   const target: 'user' | 'chat_id' = selectedNode.data.messageSendTarget ?? 'user';
   /** Текущий chat_id */
   const chatId: string = selectedNode.data.messageSendChatId ?? '';
+  /** Текущий thread_id топика */
+  const threadId: string = selectedNode.data.messageSendThreadId ?? '';
 
   /**
    * Обработчик смены типа получателя
@@ -107,18 +109,34 @@ export function MessageRecipientSection({ selectedNode, onNodeUpdate, textVariab
 
       {/* Поле ввода chat_id с кнопкой вставки переменной */}
       {target === 'chat_id' && (
-        <div className="flex items-center gap-1 ml-5">
-          <Input
-            value={chatId}
-            onChange={handleChatIdChange}
-            placeholder="123456789 или {admin_id}"
-            className="flex-1 h-8 text-sm"
-          />
-          <VariableSelector
-            availableVariables={textVariables || []}
-            onSelect={(varName) => onNodeUpdate(selectedNode.id, { messageSendChatId: `{${varName}}` })}
-          />
-        </div>
+        <>
+          <div className="flex items-center gap-1 ml-5">
+            <Input
+              value={chatId}
+              onChange={handleChatIdChange}
+              placeholder="123456789 или {admin_id}"
+              className="flex-1 h-8 text-sm"
+            />
+            <VariableSelector
+              availableVariables={textVariables || []}
+              onSelect={(varName) => onNodeUpdate(selectedNode.id, { messageSendChatId: `{${varName}}` })}
+            />
+          </div>
+          {/* Поле топика — опционально */}
+          <div className="flex items-center gap-1 ml-5">
+            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Топик ID:</span>
+            <Input
+              value={threadId}
+              onChange={e => onNodeUpdate(selectedNode.id, { messageSendThreadId: e.target.value })}
+              placeholder="{thread_id} или число"
+              className="flex-1 h-8 text-sm"
+            />
+            <VariableSelector
+              availableVariables={textVariables || []}
+              onSelect={(varName) => onNodeUpdate(selectedNode.id, { messageSendThreadId: `{${varName}}` })}
+            />
+          </div>
+        </>
       )}
     </div>
   );
