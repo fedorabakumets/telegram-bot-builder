@@ -59,7 +59,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {%- endfor %} }
     user_data[user_id]["button_text"] = _btn_text_map.get(_pressed_cb or "", "")
     {%- else %}
-    user_data[user_id]["button_text"] = ""
+    # Не перезаписываем button_text если он уже был установлен предыдущим обработчиком
+    if not user_data[user_id].get("button_text"):
+        user_data[user_id]["button_text"] = ""
     {%- endif %}
 
     # Отвечаем на callback (чтобы убрать часы загрузки)
