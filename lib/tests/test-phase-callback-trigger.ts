@@ -1016,6 +1016,60 @@ test('N08', 'incoming_callback_trigger → message с userDatabaseEnabled: true 
   ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК O: Регрессия — _is_fake не перезаписывает callback_data и button_text
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок O: Регрессия — _is_fake не перезаписывает переменные ─────');
+
+test('O01', 'handle_callback содержит проверку _is_fake перед записью callback_data', () => {
+  const p = makeCleanProject([makeMessageNode('msg1', 'Ответ: {callback_data}')]);
+  const code = gen(p, 'o01');
+  ok(code.includes('_is_fake'), 'проверка _is_fake должна быть в коде');
+  ok(code.includes('not getattr(callback_query, \'_is_fake\''), 'not getattr(_is_fake) должен быть в коде');
+});
+
+test('O02', 'incoming_callback_trigger → message → callback_data не перезаписывается fake значением', () => {
+  const p = makeCleanProject([
+    { id: 'ict1', type: 'incoming_callback_trigger', position: { x: 0, y: 0 }, data: { autoTransitionTo: 'msg_notify', buttons: [], keyboardType: 'none' } },
+    makeMessageNode('msg_notify', 'Нажали: {callback_data}'),
+  ]);
+  const code = gen(p, 'o02');
+  // Блок записи callback_data должен быть защищён проверкой _is_fake
+  ok(code.includes('not getattr(callback_query, \'_is_fake\''), 'защита от перезаписи должна быть в коде');
+  ok(code.includes('user_data[user_id]["callback_data"]'), 'сохранение callback_data должно быть в коде');
+});
+
+test('O03', 'incoming_callback_trigger → message → button_text не перезаписывается fake значением', () => {
+  const p = makeCleanProject([
+    { id: 'ict1', type: 'incoming_callback_trigger', position: { x: 0, y: 0 }, data: { autoTransitionTo: 'msg_notify', buttons: [], keyboardType: 'none' } },
+    makeMessageNode('msg_notify', 'Кнопка: {button_text}'),
+  ]);
+  const code = gen(p, 'o03');
+  ok(code.includes('not getattr(callback_query, \'_is_fake\''), 'защита от перезаписи должна быть в коде');
+  ok(code.includes('user_data[user_id]["button_text"]'), 'сохранение button_text должно быть в коде');
+});
+
+test('O04', 'синтаксис Python OK с защитой _is_fake', () => {
+  const p = makeCleanProject([
+    { id: 'ict1', type: 'incoming_callback_trigger', position: { x: 0, y: 0 }, data: { autoTransitionTo: 'msg_notify', buttons: [], keyboardType: 'none' } },
+    makeMessageNode('msg_notify', 'Данные: {callback_data} / {button_text}'),
+  ]);
+  syntax(gen(p, 'o04'), 'o04');
+});
+
+test('O05', 'callback_trigger + incoming_callback_trigger → оба содержат защиту _is_fake → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('ct1', 'confirm', 'exact', 'msg_result'),
+    { id: 'ict1', type: 'incoming_callback_trigger', position: { x: 0, y: 0 }, data: { autoTransitionTo: 'msg_notify', buttons: [], keyboardType: 'none' } },
+    makeMessageNode('msg_result', 'Результат: {callback_data}'),
+    makeMessageNode('msg_notify', 'Уведомление: {button_text}'),
+  ]);
+  const code = gen(p, 'o05');
+  ok(code.includes('not getattr(callback_query, \'_is_fake\''), 'защита _is_fake должна быть в коде');
+  syntax(code, 'o05');
+});
+
 // ─── Итоги ───────────────────────────────────────────────────────────────────
 
 const passed = results.filter(r => r.passed).length;
