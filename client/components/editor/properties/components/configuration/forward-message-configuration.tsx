@@ -230,9 +230,15 @@ export function ForwardMessageConfiguration({
               <SelectValue placeholder="Выберите источник сообщения" />
             </SelectTrigger>
             <SelectContent>
+              {/* Текущее входящее сообщение пользователя */}
               <SelectItem value="current_message">Текущее сообщение</SelectItem>
-              <SelectItem value="last_message">Последнее сообщение</SelectItem>
+              {/* Последнее входящее сообщение пользователя */}
+              <SelectItem value="last_message">Последнее сообщение пользователя</SelectItem>
+              {/** Последнее исходящее сообщение бота */}
+              <SelectItem value="last_bot_message">Последнее сообщение бота</SelectItem>
+              {/* Указать ID сообщения вручную */}
               <SelectItem value="manual">Вручную</SelectItem>
+              {/* Взять ID сообщения из переменной */}
               <SelectItem value="variable">Из переменной</SelectItem>
             </SelectContent>
           </Select>
@@ -249,7 +255,7 @@ export function ForwardMessageConfiguration({
               <div className="text-xs text-amber-600/70 dark:text-amber-400/70 leading-relaxed">
                 Telegram message_id сообщения в диалоге с ботом. Найти можно в логах бота — строка вида{' '}
                 <span className="font-mono bg-amber-100/60 dark:bg-amber-900/30 px-1 rounded">tg_message_id=XXXX</span>
-                . Или используй режим «Последнее сообщение» — тогда ID подставится автоматически.
+                . Или используй режим «Последнее сообщение бота» — тогда ID подставится автоматически из переменной {'{last_bot_message_id}'}.
               </div>
             </div>
           )}
