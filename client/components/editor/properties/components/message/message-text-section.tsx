@@ -10,6 +10,7 @@ import { MessageTextSectionContent } from './message-text-section-content';
 import { MessageRecipientSection } from './message-recipient-section';
 import { BroadcastToggle } from '../broadcast/broadcast-toggle';
 import type { ProjectVariable } from '../../utils/variables-utils';
+import type { Variable } from '../../../inline-rich/types';
 import type { Node } from '@shared/schema';
 
 /** Пропсы секции текста сообщения */
@@ -80,6 +81,7 @@ export function MessageTextSection({
           <MessageRecipientSection
             selectedNode={selectedNode}
             onNodeUpdate={onNodeUpdate}
+            textVariables={[...textVariables, ...mediaVariables] as Variable[]}
           />
         </>
       )}

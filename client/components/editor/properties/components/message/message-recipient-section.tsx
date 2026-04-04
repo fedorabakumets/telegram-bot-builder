@@ -2,10 +2,13 @@
  * @fileoverview Секция выбора получателя сообщения
  *
  * Позволяет выбрать, кому отправлять сообщение: пользователю или по конкретному chat_id.
+ * Поддерживает вставку переменных в поле chat_id через VariableSelector.
  */
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { VariableSelector } from '../variables/variable-selector';
+import type { Variable } from '../../../inline-rich/types';
 import type { Node } from '@shared/schema';
 
 /** Пропсы секции получателя сообщения */
@@ -14,6 +17,8 @@ interface MessageRecipientSectionProps {
   selectedNode: Node;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
+  /** Текстовые переменные для вставки в поле chat_id */
+  textVariables?: Variable[];
 }
 
 /** Типы узлов, для которых показывается секция получателя */
@@ -25,7 +30,7 @@ const SUPPORTED_NODE_TYPES = ['message', 'start', 'command'] as const;
  * @param props - Свойства компонента
  * @returns JSX элемент или null, если тип узла не поддерживается
  */
-export function MessageRecipientSection({ selectedNode, onNodeUpdate }: MessageRecipientSectionProps) {
+export function MessageRecipientSection({ selectedNode, onNodeUpdate, textVariables }: MessageRecipientSectionProps) {
   const nodeType = selectedNode.type as string;
 
   // Показываем только для поддерживаемых типов узлов
@@ -100,14 +105,20 @@ export function MessageRecipientSection({ selectedNode, onNodeUpdate }: MessageR
         По ID:
       </button>
 
-      {/* Поле ввода chat_id — только при выборе "По ID" */}
+      {/* Поле ввода chat_id с кнопкой вставки переменной */}
       {target === 'chat_id' && (
-        <Input
-          value={chatId}
-          onChange={handleChatIdChange}
-          placeholder="123456789 или {admin_id}"
-          className="h-8 text-sm ml-5"
-        />
+        <div className="flex items-center gap-1 ml-5">
+          <Input
+            value={chatId}
+            onChange={handleChatIdChange}
+            placeholder="123456789 или {admin_id}"
+            className="flex-1 h-8 text-sm"
+          />
+          <VariableSelector
+            availableVariables={textVariables || []}
+            onSelect={(varName) => onNodeUpdate(selectedNode.id, { messageSendChatId: `{${varName}}` })}
+          />
+        </div>
       )}
     </div>
   );
