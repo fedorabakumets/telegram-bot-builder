@@ -31,6 +31,9 @@ export const SYSTEM_VARIABLES: SystemVariable[] = [
   { name: 'user_name', nodeId: 'system', nodeType: 'system', description: 'Отображаемое имя пользователя (first_name или username)', sourceTable: 'bot_users' },
   { name: 'chat_id', nodeId: 'system', nodeType: 'system', description: 'ID чата', sourceTable: null as any },
   { name: 'bot_name', nodeId: 'system', nodeType: 'system', description: 'Имя бота', sourceTable: null as any },
+  // Переменные нажатой кнопки (доступны после любого нажатия инлайн-кнопки)
+  { name: 'callback_data', nodeId: 'system', nodeType: 'system', description: 'Данные последней нажатой инлайн-кнопки (callback_data)', sourceTable: null as any },
+  { name: 'button_text', nodeId: 'system', nodeType: 'system', description: 'Текст последней нажатой инлайн-кнопки', sourceTable: null as any },
   // Переменные из схем таблиц
   ...getAllSystemVariables()
 ];
