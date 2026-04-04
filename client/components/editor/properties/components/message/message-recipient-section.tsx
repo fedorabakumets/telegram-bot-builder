@@ -83,7 +83,6 @@ function RecipientCard({
         <SelectContent>
           <SelectItem value="user">Пользователю</SelectItem>
           <SelectItem value="chat_id">По ID</SelectItem>
-          <SelectItem value="admin_ids">Администраторам</SelectItem>
         </SelectContent>
       </Select>
 
@@ -119,12 +118,7 @@ function RecipientCard({
         </div>
       )}
 
-      {/* Подсказка для admin_ids */}
-      {recipient.type === 'admin_ids' && (
-        <p className="text-xs text-blue-600/70 dark:text-blue-400/70">
-          Сообщение будет отправлено всем администраторам проекта.
-        </p>
-      )}
+      {/* Подсказка для admin_ids — оставлена для обратной совместимости */}
     </div>
   );
 }
