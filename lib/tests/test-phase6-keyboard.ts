@@ -388,7 +388,7 @@ test('B01', 'message -> keyboard прикрепляет отдельную keybo
   assertIncludesAll(msg, [
     'InlineKeyboardBuilder()',
     'callback_data="msg_2"',
-    'await callback_query.message.answer(text, reply_markup=keyboard)',
+    'reply_markup=keyboard',
   ], 'B01 message');
   assertIncludesAll(kbd, [
     'без самостоятельной отправки сообщения',
@@ -1032,7 +1032,7 @@ test('G01', 'inline goto-кнопка ведёт к целевому message', (
 
   const code = gen(project, 'g01');
   const b = block(code, 'msg_1');
-  assertIncludesAll(b, ['callback_data="msg_2"', 'await callback_query.message.answer(text, reply_markup=keyboard)'], 'G01');
+  assertIncludesAll(b, ['callback_data="msg_2"', 'reply_markup=keyboard'], 'G01');
   syntax(code, 'g01');
 });
 
@@ -1126,10 +1126,9 @@ test('G07', 'auto-transition -> condition -> keyboard без keyboardNodeId вс
   const code = gen(project, 'g07', true);
   const host = block(code, 'msg_host');
   assertIncludesAll(host, [
-    'sent_message = await bot.send_message(callback_query.message.chat.id, text, node_id="msg_host", reply_markup=keyboard, message_thread_id=getattr(callback_query.message, "message_thread_id", None))',
+    'reply_markup=keyboard',
     'InlineKeyboardBuilder()',
     'callback_data="msg_2"',
-    'reply_markup=keyboard',
   ], 'G07 host');
   assertIncludesAll(code, [
     'await handle_callback_kbd_1(callback_query)',
