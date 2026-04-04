@@ -15,7 +15,7 @@ import type { Node } from '@shared/schema';
  * @param data - Данные узла
  * @returns Объект узла
  */
-function makeNode(id: string, type: string, data: Record<string, any>): Node {
+export function makeNode(id: string, type: string, data: Record<string, any>): Node {
   return { id, type, data, position: { x: 0, y: 0 } } as unknown as Node;
 }
 
@@ -157,4 +157,31 @@ export const nodesWithRequiresAuth: Node[] = [
     requiresAuth: true,
   }),
   makeNode('msg_profile', 'message', {}),
+];
+
+// ─── Фикстуры для виртуальных триггеров из customCallbackData ────────────────
+
+/** Узлы с кнопками имеющими customCallbackData — должны генерировать виртуальные триггеры */
+export const nodesWithCustomCallbackButtons: Node[] = [
+  makeNode('msg_src', 'message', {
+    messageText: 'Выберите:',
+    keyboardType: 'inline',
+    buttons: [
+      { id: 'btn_yes', text: 'Да', action: 'goto', target: 'msg_answer', customCallbackData: 'yes', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+      { id: 'btn_no', text: 'Нет', action: 'goto', target: 'msg_answer', customCallbackData: 'no', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+    ],
+  }),
+  makeNode('msg_answer', 'message', { messageText: 'Ответ: {button_text}' }),
+];
+
+/** Узлы с одной кнопкой с customCallbackData */
+export const nodesWithSingleCustomCallback: Node[] = [
+  makeNode('msg_src', 'message', {
+    messageText: 'Подтвердить?',
+    keyboardType: 'inline',
+    buttons: [
+      { id: 'btn_confirm', text: 'Подтвердить', action: 'goto', target: 'msg_confirmed', customCallbackData: 'confirm_action', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+    ],
+  }),
+  makeNode('msg_confirmed', 'message', { messageText: 'Подтверждено!' }),
 ];

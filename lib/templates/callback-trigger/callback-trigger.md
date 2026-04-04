@@ -88,3 +88,24 @@ callback-trigger/
 ├── callback-trigger.md            (документация)
 └── index.ts                       (экспорт)
 ```
+
+## Виртуальные триггеры из customCallbackData кнопок
+
+Если кнопка имеет `customCallbackData` и `target`, генератор автоматически создаёт виртуальный `callback_trigger` обработчик — без необходимости явно добавлять ноду `callback_trigger` на холст.
+
+**Пример:** кнопка `{ text: "Да", customCallbackData: "yes", target: "msg_answer" }` генерирует:
+
+```python
+@dp.callback_query(lambda c: c.data == "yes")
+async def callback_trigger_auto_btn_yes_handler(callback_query):
+    user_data[user_id]["callback_data"] = "yes"
+    user_data[user_id]["button_text"] = ...  # из reply_markup
+    mock = MockCallback("msg_answer", ...)
+    await handle_callback_msg_answer(mock)
+```
+
+**Приоритет:** если в проекте есть явный `callback_trigger` с тем же `callbackData` — виртуальный не генерируется.
+
+**Два способа настройки:**
+- Линия от кнопки к ноде + `customCallbackData` → виртуальный триггер (простой UX)
+- Явная нода `callback_trigger` → расширенные настройки (adminOnly, requiresAuth, startswith)

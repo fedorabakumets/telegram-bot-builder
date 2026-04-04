@@ -41,11 +41,11 @@ function hasUserIdsVar(text: string): boolean {
 }
 
 /**
- * Ищет customCallbackData среди кнопок всех узлов, ведущих к указанному nodeId.
- * Применяется только для кнопок с action === 'goto' или action === 'command'.
- * Если несколько кнопок ведут к одному узлу с одинаковым customCallbackData — возвращает его.
- * Если customCallbackData не задан ни у одной кнопки — возвращает undefined (обратная совместимость).
+ * @deprecated Больше не используется — виртуальные callback_trigger обработчики
+ * генерируются через collectVirtualCallbackTriggerEntries в callback-trigger.renderer.ts.
+ * Оставлена для обратной совместимости, будет удалена в следующей версии.
  *
+ * Ищет customCallbackData среди кнопок всех узлов, ведущих к указанному nodeId.
  * @param nodeId - ID целевого узла
  * @param nodes - Массив всех узлов проекта
  * @returns Кастомный callback_data или undefined
@@ -229,7 +229,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         hasHideAfterClickIncoming: nodes.some((n: Node) =>
           (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === node.id)
         ),
-        callbackPattern: findCustomCallbackPatternForNode(node.id, nodes),
+        // callbackPattern: удалён — виртуальные триггеры теперь генерируются через collectVirtualCallbackTriggerEntries
         messageSendRecipients: (node.data as any)?.messageSendRecipients || [],
       };
   };

@@ -8,6 +8,7 @@ import {
   generateCallbackTriggers,
   generateCallbackTriggerHandlers,
   collectCallbackTriggerEntries,
+  collectVirtualCallbackTriggerEntries,
 } from './callback-trigger.renderer';
 import type { CallbackTriggerTemplateParams } from './callback-trigger.params';
 import {
@@ -26,6 +27,8 @@ import {
   nodesWithNullAndMixed,
   nodesWithAdminOnly,
   nodesWithRequiresAuth,
+  nodesWithCustomCallbackButtons,
+  makeNode,
 } from './callback-trigger.fixture';
 import { callbackTriggerParamsSchema } from './callback-trigger.schema';
 
@@ -312,6 +315,66 @@ describe('Рантайм-чтение button_text из reply_markup', () => {
     const opens = (r.match(/\(/g) || []).length;
     const closes = (r.match(/\)/g) || []).length;
     expect(opens).toBe(closes);
+  });
+});
+
+// ─── Виртуальные callback_trigger из customCallbackData кнопок ────────────────
+
+describe('Виртуальные callback_trigger из customCallbackData', () => {
+  it('collectVirtualCallbackTriggerEntries: собирает виртуальные триггеры из кнопок', () => {
+    const entries = collectVirtualCallbackTriggerEntries(nodesWithCustomCallbackButtons);
+    expect(entries).toHaveLength(2);
+    expect(entries.map(e => e.callbackData)).toContain('yes');
+    expect(entries.map(e => e.callbackData)).toContain('no');
+  });
+
+  it('collectVirtualCallbackTriggerEntries: дедупликация по callbackData+target', () => {
+    /** Две кнопки с одинаковым customCallbackData к одной ноде — один entry */
+    const nodes = [makeNode('src', 'message', {
+      keyboardType: 'inline',
+      buttons: [
+        { id: 'b1', text: 'Да', action: 'goto', target: 'dst', customCallbackData: 'yes' },
+        { id: 'b2', text: 'Да тоже', action: 'goto', target: 'dst', customCallbackData: 'yes' },
+      ],
+    }), makeNode('dst', 'message', {})];
+    const entries = collectVirtualCallbackTriggerEntries(nodes as any);
+    expect(entries).toHaveLength(1);
+  });
+
+  it('collectVirtualCallbackTriggerEntries: пропускает кнопки без customCallbackData', () => {
+    const entries = collectVirtualCallbackTriggerEntries(nodesWithCallbackTriggerExact);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('collectVirtualCallbackTriggerEntries: пропускает кнопки без target', () => {
+    const nodes = [makeNode('src', 'message', {
+      keyboardType: 'inline',
+      buttons: [{ id: 'b1', text: 'Кнопка', action: 'goto', customCallbackData: 'cb', target: '' }],
+    })];
+    const entries = collectVirtualCallbackTriggerEntries(nodes as any);
+    expect(entries).toHaveLength(0);
+  });
+
+  it('generateCallbackTriggerHandlers: виртуальные триггеры генерируют обработчики', () => {
+    const r = generateCallbackTriggerHandlers(nodesWithCustomCallbackButtons as any);
+    expect(r).toContain('lambda c: c.data == "yes"');
+    expect(r).toContain('lambda c: c.data == "no"');
+  });
+
+  it('generateCallbackTriggerHandlers: явный callback_trigger имеет приоритет над виртуальным', () => {
+    /** Если есть явный callback_trigger с тем же callbackData — виртуальный не добавляется */
+    const nodes = [
+      makeNode('explicit_trigger', 'callback_trigger', { callbackData: 'yes', matchType: 'exact', autoTransitionTo: 'msg_answer' }),
+      makeNode('msg_src', 'message', {
+        keyboardType: 'inline',
+        buttons: [{ id: 'btn_yes', text: 'Да', action: 'goto', target: 'msg_answer', customCallbackData: 'yes' }],
+      }),
+      makeNode('msg_answer', 'message', {}),
+    ];
+    const r = generateCallbackTriggerHandlers(nodes as any);
+    /** Должен быть только один обработчик для "yes" */
+    const count = (r.match(/lambda c: c\.data == "yes"/g) || []).length;
+    expect(count).toBe(1);
   });
 });
 
