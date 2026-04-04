@@ -21,6 +21,7 @@ import { SaveAnswerIndicator } from './save-answer-indicator';
 import { MessageLinkedInputIndicator } from './message-linked-input-indicator';
 import { MessagePreview } from './message-preview';
 import { MessageRecipientsPreview } from './message-recipients-preview';
+import { ForumTopicPreview } from './forum-topic-preview';
 import { ImageAttachment } from './image-attachment';
 import { MediaAttachmentsPreview } from './media-attachments-preview';
 import { NodeActions } from './node-actions';
@@ -558,6 +559,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Admin Rights preview */}
         {node.type === 'admin_rights' && <AdminRightsPreview />}
+
+        {/* Forum Topic preview */}
+        {node.type === 'create_forum_topic' && <ForumTopicPreview node={node} />}
 
         {/* Client Auth Card */}
         {node.type === 'client_auth' && <ClientAuthCard node={node} />}
