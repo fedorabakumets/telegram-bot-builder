@@ -68,6 +68,7 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   media: 'Медиафайл',
   callback_trigger: 'Триггер inline-кнопки',
   incoming_callback_trigger: 'Триггер нажатия кнопки',
+  outgoing_message_trigger: 'Триггер исходящего сообщения',
   create_forum_topic: 'Создать топик форума',
 };
 
@@ -110,6 +111,7 @@ const nodeIcons: Partial<Record<Node['type'], string>> = {
   media: 'fas fa-photo-video',
   callback_trigger: 'fas fa-hand-pointer',
   incoming_callback_trigger: 'fas fa-hand-pointer',
+  outgoing_message_trigger: 'fas fa-paper-plane',
   create_forum_topic: 'fas fa-comments',
 };
 
@@ -152,6 +154,7 @@ const nodeColors: Partial<Record<Node['type'], string>> = {
   media: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
   callback_trigger: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
   incoming_callback_trigger: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
+  outgoing_message_trigger: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
   create_forum_topic: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
 };
 

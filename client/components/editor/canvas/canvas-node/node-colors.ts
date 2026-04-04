@@ -48,6 +48,8 @@ export const nodeColors: Record<string, string> = {
   incoming_message_trigger: 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-600 dark:text-green-400 border-2 border-green-300 dark:border-green-700/50 shadow-lg shadow-green-500/20',
   /** Цвет триггера входящего callback_query — оранжевый */
   incoming_callback_trigger: 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 text-orange-600 dark:text-orange-400 border-2 border-orange-300 dark:border-orange-700/50 shadow-lg shadow-orange-500/20',
+  /** Цвет триггера исходящего сообщения — фиолетовый */
+  outgoing_message_trigger: 'bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30 text-purple-600 dark:text-purple-400 border-2 border-purple-300 dark:border-purple-700/50 shadow-lg shadow-purple-500/20',
   /** Цвет триггера сообщения в группе — фиолетовый */
   group_message_trigger: 'bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 text-violet-600 dark:text-violet-400 border-2 border-violet-300 dark:border-violet-700/50 shadow-lg shadow-violet-500/20',
   /** Цвет триггера inline-кнопки — оранжевый */
