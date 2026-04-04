@@ -19,6 +19,8 @@ export interface CallbackTriggerEntry {
   targetNodeId: string;
   /** Тип целевого узла */
   targetNodeType: string;
+  /** Текст кнопки, найденный по callbackData среди кнопок проекта */
+  buttonText?: string;
 }
 
 /** Параметры для генерации всех обработчиков триггеров inline-кнопок */

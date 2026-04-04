@@ -31,6 +31,14 @@ export function collectCallbackTriggerEntries(nodes: Node[]): CallbackTriggerEnt
     const targetNode = nodeMap.get(targetNodeId);
     const targetNodeType = targetNode?.type ?? 'message';
 
+    // Ищем текст кнопки по callbackData среди всех кнопок проекта
+    let buttonText = '';
+    for (const n of validNodes) {
+      const buttons: any[] = (n.data as any).buttons ?? [];
+      const btn = buttons.find((b: any) => b.customCallbackData === callbackData);
+      if (btn?.text) { buttonText = btn.text; break; }
+    }
+
     entries.push({
       nodeId: node.id,
       callbackData,
@@ -39,6 +47,7 @@ export function collectCallbackTriggerEntries(nodes: Node[]): CallbackTriggerEnt
       requiresAuth: node.data.requiresAuth,
       targetNodeId,
       targetNodeType,
+      buttonText,
     });
   }
 

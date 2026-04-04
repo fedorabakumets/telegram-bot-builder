@@ -262,6 +262,29 @@ test('C05', 'несколько триггеров → синтаксис Python
   syntax(gen(p, 'c05'), 'c05');
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК D: Переменные callback_data и button_text
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок D: Переменные callback_data и button_text ────────────────');
+
+test('D01', 'сгенерированный код содержит user_data[user_id]["callback_data"]', () => {
+  const p = makeCleanProject([makeCallbackTriggerNode('t1', 'confirm_order', 'exact', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'd01');
+  ok(code.includes('user_data[user_id]["callback_data"]'), 'user_data[user_id]["callback_data"] должен быть в коде');
+});
+
+test('D02', 'сгенерированный код содержит user_data[user_id]["button_text"]', () => {
+  const p = makeCleanProject([makeCallbackTriggerNode('t1', 'confirm_order', 'exact', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'd02');
+  ok(code.includes('user_data[user_id]["button_text"]'), 'user_data[user_id]["button_text"] должен быть в коде');
+});
+
+test('D03', 'синтаксис Python OK с новыми переменными', () => {
+  const p = makeCleanProject([makeCallbackTriggerNode('t1', 'confirm_order', 'exact', 'msg1'), makeMessageNode('msg1', 'Вы нажали: {callback_data}')]);
+  syntax(gen(p, 'd03'), 'd03');
+});
+
 // ─── Итоги ───────────────────────────────────────────────────────────────────
 
 const passed = results.filter(r => r.passed).length;

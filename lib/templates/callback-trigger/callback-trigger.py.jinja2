@@ -9,6 +9,7 @@
     - targetNodeType: string  — тип целевого узла
     - adminOnly: bool         — только администраторы
     - requiresAuth: bool      — требуется авторизация
+    - buttonText: string      — текст кнопки, найденный по callbackData
 #}
 
 # Обработчики триггеров inline-кнопок
@@ -51,6 +52,12 @@ async def callback_trigger_{{ sanitized_node_id }}_handler(callback_query: types
             except Exception as e:
                 logging.warning(f"Не удалось отредактировать сообщение: {e}")
                 return await self.message.answer(text, **kwargs)
+
+    # Сохраняем данные нажатой кнопки для использования в переменных {callback_data} и {button_text}
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["callback_data"] = callback_query.data or "{{ entry.callbackData }}"
+    user_data[user_id]["button_text"] = "{{ entry.buttonText or entry.callbackData }}"
 
     mock_callback = MockCallback("{{ entry.targetNodeId }}", callback_query.from_user, callback_query.message)
     await handle_callback_{{ sanitized_target_id }}(mock_callback)

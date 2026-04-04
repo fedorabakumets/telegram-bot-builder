@@ -9,6 +9,7 @@ import {
   generateCallbackTriggerHandlers,
   collectCallbackTriggerEntries,
 } from './callback-trigger.renderer';
+import type { CallbackTriggerTemplateParams } from './callback-trigger.params';
 import {
   validParamsEmpty,
   validParamsExact,
@@ -213,6 +214,33 @@ describe('generateCallbackTriggerHandlers()', () => {
 
   it('узлы без callback_trigger → пустая строка', () => {
     expect(generateCallbackTriggerHandlers(nodesWithoutCallbackTriggers)).toBe('');
+  });
+});
+
+// ─── Переменные callback_data и button_text ───────────────────────────────────
+
+describe('Переменные callback_data и button_text', () => {
+  it('генерирует сохранение user_data["callback_data"]', () => {
+    const r = generateCallbackTriggers(validParamsExact);
+    expect(r).toContain('user_data[user_id]["callback_data"]');
+  });
+
+  it('генерирует сохранение user_data["button_text"]', () => {
+    const r = generateCallbackTriggers(validParamsExact);
+    expect(r).toContain('user_data[user_id]["button_text"]');
+  });
+
+  it('buttonText из entry используется как значение button_text', () => {
+    const paramsWithText: CallbackTriggerTemplateParams = {
+      entries: [{ ...validParamsExact.entries[0], buttonText: 'Подтвердить заказ' }],
+    };
+    const r = generateCallbackTriggers(paramsWithText);
+    expect(r).toContain('"Подтвердить заказ"');
+  });
+
+  it('без buttonText используется callbackData как fallback', () => {
+    const r = generateCallbackTriggers(validParamsExact);
+    expect(r).toContain('"confirm_order"');
   });
 });
 
