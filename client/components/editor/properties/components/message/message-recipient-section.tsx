@@ -90,7 +90,7 @@ function RecipientCard({
       {recipient.type === 'chat_id' && (
         <div className="space-y-1.5">
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Chat ID:</span>
+            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Чат/канал:</span>
             <Input
               value={recipient.chatId ?? ''}
               onChange={(e) => onUpdate({ chatId: e.target.value })}
@@ -103,7 +103,7 @@ function RecipientCard({
             />
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Топик:</span>
+            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Топик (опц.):</span>
             <Input
               value={recipient.threadId ?? ''}
               onChange={(e) => onUpdate({ threadId: e.target.value })}
