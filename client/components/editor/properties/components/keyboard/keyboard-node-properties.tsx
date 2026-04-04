@@ -5,12 +5,14 @@
  */
 
 import { Node } from '@shared/schema';
+import type { Button } from '@shared/schema';
 import { ButtonCard } from '../button-card/button-card';
 import { KeyboardButtonsSection } from './keyboard-buttons-section';
 import { KeyboardTypeSelector } from './keyboard-type-selector';
 import { KeyboardLayoutEditor } from './keyboard-layout-editor';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import type { ProjectVariable } from '../../utils/variables-utils';
+import { generateButtonId } from '@/utils/generate-button-id';
 
 /** Пропсы панели клавиатуры */
 interface KeyboardNodePropertiesProps {
@@ -47,6 +49,19 @@ export function KeyboardNodeProperties({
 }: KeyboardNodePropertiesProps) {
   const buttons = selectedNode.data.buttons || [];
 
+  /**
+   * Дублирует кнопку, вставляя копию сразу после оригинала
+   * @param nodeId - ID узла
+   * @param button - Кнопка для дублирования
+   */
+  const handleDuplicateButton = (nodeId: string, button: Button) => {
+    const newButton = { ...button, id: generateButtonId() };
+    const index = buttons.findIndex((b: Button) => b.id === button.id);
+    const updated = [...buttons];
+    updated.splice(index + 1, 0, newButton);
+    onNodeUpdate(nodeId, { buttons: updated });
+  };
+
   return (
     <div className="space-y-4 p-4">
       <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
@@ -61,6 +76,7 @@ export function KeyboardNodeProperties({
           getAllNodesFromAllSheets={getAllNodesFromAllSheets}
           onButtonUpdate={onButtonUpdate}
           onButtonDelete={onButtonDelete}
+          onButtonDuplicate={handleDuplicateButton}
           selectedNode={selectedNode}
           keyboardType={selectedNode.data.keyboardType as string}
         />

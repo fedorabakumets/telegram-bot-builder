@@ -1,7 +1,7 @@
 /**
  * @fileoverview Заголовок карточки кнопки
  *
- * Отображает кнопку удаления.
+ * Отображает кнопки управления: дублировать и удалить.
  */
 
 import { Button as UiButton } from '@/components/ui/button';
@@ -13,6 +13,8 @@ interface ButtonCardHeaderProps {
   allowMultipleSelection?: boolean;
   /** Функция удаления кнопки */
   onDelete: () => void;
+  /** Функция дублирования кнопки */
+  onDuplicate?: () => void;
   /** ID узла */
   nodeId: string;
   /** Функция обновления кнопки */
@@ -21,15 +23,27 @@ interface ButtonCardHeaderProps {
 
 /**
  * Компонент заголовка карточки кнопки
- * 
- * @param {ButtonCardHeaderProps} props - Пропсы компонента
- * @returns {JSX.Element} Заголовок карточки
+ *
+ * @param props - Пропсы компонента
+ * @returns JSX элемент заголовка
  */
 export function ButtonCardHeader({
   onDelete,
+  onDuplicate,
 }: ButtonCardHeaderProps) {
   return (
     <div className="flex items-center justify-end gap-2">
+      {onDuplicate && (
+        <UiButton
+          size="sm"
+          variant="ghost"
+          onClick={onDuplicate}
+          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 h-auto p-1.5 transition-colors duration-200 flex-shrink-0"
+          title="Дублировать кнопку"
+        >
+          <i className="fas fa-copy w-4 h-4" />
+        </UiButton>
+      )}
       <UiButton
         size="sm"
         variant="ghost"

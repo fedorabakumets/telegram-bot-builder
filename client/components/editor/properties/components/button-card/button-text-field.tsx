@@ -1,7 +1,7 @@
 /**
  * @fileoverview Поле текста кнопки
  *
- * Компонент ввода текста кнопки с кнопкой переменных и кнопкой удаления.
+ * Компонент ввода текста кнопки с кнопкой переменных, дублирования и удаления.
  */
 
 import { Input } from '@/components/ui/input';
@@ -22,20 +22,23 @@ interface ButtonTextFieldProps {
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
   /** Функция удаления кнопки */
   onDelete?: () => void;
+  /** Функция дублирования кнопки */
+  onDuplicate?: () => void;
 }
 
 /**
  * Компонент поля текста кнопки
- * 
- * @param {ButtonTextFieldProps} props - Пропсы компонента
- * @returns {JSX.Element} Поле текста кнопки
+ *
+ * @param props - Пропсы компонента
+ * @returns JSX элемент поля текста
  */
 export function ButtonTextField({
   nodeId,
   button,
   textVariables,
   onButtonUpdate,
-  onDelete
+  onDelete,
+  onDuplicate,
 }: ButtonTextFieldProps) {
   return (
     <div className="space-y-2">
@@ -52,6 +55,17 @@ export function ButtonTextField({
           onButtonUpdate={onButtonUpdate}
           textVariables={textVariables}
         />
+        {onDuplicate && (
+          <UiButton
+            size="sm"
+            variant="ghost"
+            onClick={onDuplicate}
+            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 h-7 w-7 p-0 flex-shrink-0"
+            title="Дублировать кнопку"
+          >
+            <i className="fas fa-copy w-4 h-4" />
+          </UiButton>
+        )}
         {onDelete && (
           <UiButton
             size="sm"

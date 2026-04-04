@@ -40,6 +40,7 @@ import { KeyboardNodeProperties } from '../keyboard/keyboard-node-properties';
 import { SaveAnswerProperties } from '../input/save-answer-properties';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import { ButtonCard } from '../button-card/button-card';
+import { generateButtonId } from '@/utils/generate-button-id';
 import { StickerConfiguration } from '../configuration/sticker-configuration';
 import { VoiceConfiguration } from '../configuration/voice-configuration';
 import { AnimationConfiguration } from '../configuration/animation-configuration';
@@ -266,6 +267,20 @@ export function PropertiesPanel({
   if (!selectedNode) {
     return <EmptyState onClose={onClose} />;
   }
+
+  /**
+   * Дублирует кнопку, вставляя копию сразу после оригинала
+   * @param nodeId - ID узла
+   * @param button - Кнопка для дублирования
+   */
+  const handleDuplicateButton = (nodeId: string, button: Button) => {
+    const currentButtons = selectedNode.data.buttons || [];
+    const newButton = { ...button, id: generateButtonId() };
+    const index = currentButtons.findIndex((b: Button) => b.id === button.id);
+    const updated = [...currentButtons];
+    updated.splice(index + 1, 0, newButton);
+    onNodeUpdate(nodeId, { buttons: updated });
+  };
 
   if (selectedNode.type === 'keyboard') {
     return (
@@ -586,6 +601,7 @@ export function PropertiesPanel({
                               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
                               onButtonUpdate={onButtonUpdate}
                               onButtonDelete={onButtonDelete}
+                              onButtonDuplicate={handleDuplicateButton}
                               selectedNode={selectedNode}
                               keyboardType={selectedNode.data.keyboardType as string}
                             />

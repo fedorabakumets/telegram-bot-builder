@@ -29,6 +29,8 @@ interface ButtonCardProps {
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
   /** Функция удаления кнопки */
   onButtonDelete: (nodeId: string, buttonId: string) => void;
+  /** Функция дублирования кнопки */
+  onButtonDuplicate: (nodeId: string, button: Button) => void;
   /** Выбранный узел */
   selectedNode: Node;
   /** Тип клавиатуры (inline/reply/none) */
@@ -48,6 +50,7 @@ export function ButtonCard({
   getAllNodesFromAllSheets,
   onButtonUpdate,
   onButtonDelete,
+  onButtonDuplicate,
   selectedNode,
   keyboardType,
 }: ButtonCardProps) {
@@ -62,6 +65,7 @@ export function ButtonCard({
         textVariables={textVariables}
         onButtonUpdate={onButtonUpdate}
         onDelete={() => onButtonDelete(nodeId, button.id)}
+        onDuplicate={() => onButtonDuplicate(nodeId, button)}
       />
 
       <div className="border-t border-border/20 my-3"></div>
