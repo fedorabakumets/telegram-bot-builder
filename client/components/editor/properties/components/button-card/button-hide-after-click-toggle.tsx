@@ -37,6 +37,11 @@ export function ButtonHideAfterClickToggle({
     return null;
   }
 
+  // copy_text кнопки не отправляют callback — hideAfterClick физически невозможен
+  if (button.action === 'copy_text') {
+    return null;
+  }
+
   return (
     <div className="space-y-2.5 sm:space-y-3 p-2.5 sm:p-3 rounded-lg bg-gradient-to-br from-red-50/40 to-rose-50/30 dark:from-red-950/20 dark:to-rose-950/10 border border-red-200/40 dark:border-red-800/30 hover:border-red-300/60 dark:hover:border-red-700/60 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-all duration-200 group">
       <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 justify-between">
