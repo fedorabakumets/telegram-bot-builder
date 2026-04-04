@@ -18,7 +18,7 @@
 {%- set effectiveKeyboard = 'ReplyKeyboardRemove()' if (hasHideAfterClickIncoming and keyboardType == 'none') else 'keyboard' %}
 {%- set parse_mode_arg = ', parse_mode="HTML"' if formatMode == 'html' else (', parse_mode="Markdown"' if formatMode == 'markdown' else '') %}
 {%- if imageUrl and imageUrl != 'undefined' %}
-{%- if imageUrl and imageUrl.startswith('/uploads/') %}
+{%- if imageUrl and imageUrl[:9] == '/uploads/' %}
 image_path = get_upload_file_path("{{ imageUrl }}")
 if not os.path.exists(image_path):
     logging.error(f"❌ Медиафайл не найден: {image_path} (узел {{ nodeId }})")
@@ -30,7 +30,7 @@ else:
 sent_message = await callback_query.message.answer_photo("{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}
 {%- elif videoUrl %}
-{%- if videoUrl and videoUrl.startswith('/uploads/') %}
+{%- if videoUrl and videoUrl[:9] == '/uploads/' %}
 video_path = get_upload_file_path("{{ videoUrl }}")
 if not os.path.exists(video_path):
     logging.error(f"❌ Медиафайл не найден: {video_path} (узел {{ nodeId }})")
@@ -42,7 +42,7 @@ else:
 sent_message = await callback_query.message.answer_video("{{ videoUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}
 {%- elif audioUrl %}
-{%- if audioUrl and audioUrl.startswith('/uploads/') %}
+{%- if audioUrl and audioUrl[:9] == '/uploads/' %}
 audio_path = get_upload_file_path("{{ audioUrl }}")
 if not os.path.exists(audio_path):
     logging.error(f"❌ Медиафайл не найден: {audio_path} (узел {{ nodeId }})")
@@ -54,7 +54,7 @@ else:
 sent_message = await callback_query.message.answer_audio("{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- endif %}
 {%- elif documentUrl %}
-{%- if documentUrl and documentUrl.startswith('/uploads/') %}
+{%- if documentUrl and documentUrl[:9] == '/uploads/' %}
 doc_path = get_upload_file_path("{{ documentUrl }}")
 if not os.path.exists(doc_path):
     logging.error(f"❌ Медиафайл не найден: {doc_path} (узел {{ nodeId }})")

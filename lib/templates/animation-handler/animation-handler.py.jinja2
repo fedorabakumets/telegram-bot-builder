@@ -14,7 +14,7 @@ async def handle_animation_{{ nodeId|safe_name }}(message: types.Message):
     parse_mode = None
 {%- if animationUrl %}
     try:
-{%- if animationUrl and animationUrl.startswith('/uploads/') %}
+{%- if animationUrl and animationUrl[:9] == '/uploads/' %}
         animation_path = get_upload_file_path("{{ animationUrl }}")
         animation_file = FSInputFile(animation_path)
         await bot.send_animation(message.chat.id, animation_file, caption=text, parse_mode=parse_mode)
