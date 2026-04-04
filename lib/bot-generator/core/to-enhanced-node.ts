@@ -36,6 +36,8 @@ function normalizeButtons(buttons: any[]): Button[] {
     customCallbackData: btn.customCallbackData,
     /** Текст для копирования в буфер обмена (только для copy_text) */
     copyText: btn.copyText,
+    /** URL для Telegram Mini App (только для web_app, требует HTTPS) */
+    webAppUrl: btn.webAppUrl,
   }));
 }
 

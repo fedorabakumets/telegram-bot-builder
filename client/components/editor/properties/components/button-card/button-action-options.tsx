@@ -5,7 +5,7 @@
  */
 
 /** Тип действия кнопки */
-export type ButtonActionType = 'goto' | 'url' | 'selection' | 'complete' | 'default' | 'contact' | 'location' | 'command' | 'copy_text';
+export type ButtonActionType = 'goto' | 'url' | 'selection' | 'complete' | 'default' | 'contact' | 'location' | 'command' | 'copy_text' | 'web_app';
 
 /** Пропсы для рендеринга опции действия */
 interface ButtonActionOptionProps {
@@ -27,6 +27,8 @@ export const ACTION_CONFIG: Record<ButtonActionType, { icon: string; color: stri
   command: { icon: 'fa-terminal', color: 'text-orange-600 dark:text-orange-400', label: 'Команда' },
   /** Копировать текст в буфер обмена (Bot API 7.11, только inline) */
   copy_text: { icon: 'fa-clipboard', color: 'text-yellow-600 dark:text-yellow-400', label: 'Копировать текст' },
+  /** Открыть Telegram Mini App по URL (только inline, требует HTTPS) */
+  web_app: { icon: 'fa-globe', color: 'text-cyan-600 dark:text-cyan-400', label: 'Открыть Web App' },
 };
 
 /**

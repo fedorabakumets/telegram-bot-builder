@@ -27,6 +27,8 @@ export interface ButtonWithShortId extends Button {
   shortButtonId?: string;
   /** Пользовательский callback_data (переопределяет авто-генерируемый) */
   customCallbackData?: string;
+  /** URL для Telegram Mini App (только для web_app, требует HTTPS) */
+  webAppUrl?: string;
 }
 
 /** Условное сообщение */

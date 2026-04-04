@@ -37,8 +37,8 @@ export function ButtonHideAfterClickToggle({
     return null;
   }
 
-  // copy_text кнопки не отправляют callback — hideAfterClick физически невозможен
-  if (button.action === 'copy_text') {
+  // copy_text и web_app кнопки не отправляют callback — hideAfterClick физически невозможен
+  if (button.action === 'copy_text' || button.action === 'web_app') {
     return null;
   }
 

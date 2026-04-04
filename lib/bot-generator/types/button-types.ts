@@ -26,6 +26,7 @@ export type ButtonAction =
   | 'complete'   /** Кнопка завершения (multi-select done) */
   | 'default'    /** Кнопка по умолчанию */
   | 'copy_text'; /** Копировать текст в буфер обмена (Bot API 7.11, только inline) */
+  | 'web_app';   /** Открыть Telegram Mini App по URL (только inline, требует HTTPS) */
 
 /** Тип кнопки бота из схемы Zod */
 export type Button = z.infer<typeof buttonSchema>;

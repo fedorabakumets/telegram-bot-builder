@@ -76,6 +76,11 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
               📋 {(button as any).copyText}
             </div>
           )}
+          {button.action === 'web_app' && (
+            <div className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 truncate">
+              🌐 {(button as any).webAppUrl}
+            </div>
+          )}
           {button.hideAfterClick && (
             <div className="mt-1 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
               <i className="fas fa-eye-slash text-[10px]"></i>
@@ -98,6 +103,9 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
           )}
           {button.action === 'copy_text' && (
             <i className="fas fa-clipboard text-yellow-600 dark:text-yellow-400 text-xs opacity-70" title="Копировать текст"></i>
+          )}
+          {button.action === 'web_app' && (
+            <i className="fas fa-globe text-cyan-600 dark:text-cyan-400 text-xs opacity-70" title={`Web App: ${(button as any).webAppUrl}`}></i>
           )}
         </div>
       </div>

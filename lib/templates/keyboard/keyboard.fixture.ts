@@ -211,3 +211,14 @@ export const validParamsCopyText: KeyboardTemplateParams = {
   oneTimeKeyboard: false,
   resizeKeyboard: true,
 };
+
+/** Валидные параметры: web_app кнопка (Telegram Mini App) */
+export const validParamsWebApp: KeyboardTemplateParams = {
+  keyboardType: 'inline',
+  buttons: [
+    btn('🌐 Открыть магазин', 'web_app', { id: 'btn_webapp', webAppUrl: 'https://example.com/shop' }),
+    btn('Перейти', 'goto', { target: 'next_node', id: 'btn_next' }),
+  ],
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};

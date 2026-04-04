@@ -90,7 +90,7 @@ export function ButtonCard({
         </>
       )}
 
-      {!['url', 'contact', 'location', 'copy_text'].includes(button.action) && (
+      {!['url', 'contact', 'location', 'copy_text', 'web_app'].includes(button.action) && (
         <>
           <div className="border-t border-border/20 my-3"></div>
           <ButtonCallbackField
@@ -122,6 +122,18 @@ export function ButtonCard({
             onChange={(e) => onButtonUpdate(nodeId, button.id, { copyText: e.target.value } as any)}
             className="text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 text-blue-900 dark:text-blue-50 placeholder:text-blue-500/50 dark:placeholder:text-blue-400/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 rounded-lg"
             placeholder="Текст для копирования"
+          />
+        </>
+      )}
+
+      {button.action === 'web_app' && (
+        <>
+          <div className="border-t border-border/20 my-3"></div>
+          <Input
+            value={(button as any).webAppUrl || ''}
+            onChange={(e) => onButtonUpdate(nodeId, button.id, { webAppUrl: e.target.value } as any)}
+            className="text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 text-blue-900 dark:text-blue-50 placeholder:text-blue-500/50 dark:placeholder:text-blue-400/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 rounded-lg"
+            placeholder="https://example.com"
           />
         </>
       )}

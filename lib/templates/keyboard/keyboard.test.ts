@@ -20,6 +20,7 @@ import {
   expectedOutputEmpty,
   validParamsContactLocation,
   validParamsCopyText,
+  validParamsWebApp,
 } from './keyboard.fixture';
 import { keyboardParamsSchema } from './keyboard.schema';
 
@@ -458,6 +459,78 @@ describe('keyboard.py.jinja2 шаблон', () => {
         assert.ok(result.includes('CopyTextButton'), 'Должна быть copy_text кнопка');
         assert.ok(result.includes('callback_data="next_node"'), 'Должна быть goto кнопка');
         assert.ok(result.includes('InlineKeyboardBuilder'), 'Должен использоваться InlineKeyboardBuilder');
+      });
+    });
+
+    describe('web_app действие', () => {
+      it('генерирует WebAppInfo(url="https://example.com/shop") для web_app кнопки', () => {
+        const result = generateKeyboard(validParamsWebApp);
+        assert.ok(result.includes('WebAppInfo(url="https://example.com/shop")'), `Ожидался WebAppInfo(url="https://example.com/shop"), получено:\n${result}`);
+      });
+
+      it('не генерирует callback_data для web_app кнопки с заполненным URL', () => {
+        const result = generateKeyboard(validParamsWebApp);
+        const lines = result.split('\n');
+        const webAppLine = lines.find(l => l.includes('WebAppInfo'));
+        assert.ok(!webAppLine?.includes('callback_data'), 'web_app кнопка с URL не должна иметь callback_data');
+      });
+
+      it('фоллбэк на callback_data при пустом webAppUrl', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [{
+            id: 'btn_wa_empty',
+            text: 'Web App',
+            action: 'web_app',
+            buttonType: 'normal',
+            skipDataCollection: false,
+            hideAfterClick: false,
+          }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(result.includes('callback_data='), 'Пустой webAppUrl должен генерировать callback_data');
+        assert.ok(!result.includes('WebAppInfo'), 'Не должен генерировать WebAppInfo при пустом URL');
+      });
+
+      it('схема принимает webAppUrl поле в кнопке', () => {
+        const result = keyboardParamsSchema.safeParse({
+          keyboardType: 'inline',
+          buttons: [{ id: 'btn_wa', text: 'Открыть', action: 'web_app', webAppUrl: 'https://example.com', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(result.success, `Схема должна принять webAppUrl: ${JSON.stringify(result)}`);
+      });
+
+      it('web_app кнопка работает вместе с другими inline кнопками', () => {
+        const result = generateKeyboard(validParamsWebApp);
+        assert.ok(result.includes('WebAppInfo'), 'Должна быть web_app кнопка');
+        assert.ok(result.includes('callback_data="next_node"'), 'Должна быть goto кнопка');
+        assert.ok(result.includes('InlineKeyboardBuilder'), 'Должен использоваться InlineKeyboardBuilder');
+      });
+
+      it('web_app кнопка корректно работает с ручной раскладкой', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [
+            { id: 'btn_wa', text: '🌐 Открыть', action: 'web_app', webAppUrl: 'https://example.com', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+            { id: 'btn_g1', text: 'Далее', action: 'goto', target: 'node_2', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+            { id: 'btn_g2', text: 'Назад', action: 'goto', target: 'node_3', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+          ],
+          keyboardLayout: {
+            rows: [
+              { buttonIds: ['btn_wa', 'btn_g1'] },
+              { buttonIds: ['btn_g2'] },
+            ],
+            columns: 2,
+            autoLayout: false,
+          },
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(result.includes('WebAppInfo(url="https://example.com")'), 'Должна быть web_app кнопка');
+        assert.ok(result.includes('builder.adjust(2, 1)'), `Ожидался builder.adjust(2, 1), получено:\n${result}`);
       });
     });
 

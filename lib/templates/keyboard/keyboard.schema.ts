@@ -23,6 +23,8 @@ export const keyboardParamsSchema = z.object({
     customCallbackData: z.string().optional(),
     /** Текст для копирования в буфер обмена (только для copy_text) */
     copyText: z.string().optional(),
+    /** URL для Telegram Mini App (только для web_app, требует HTTPS) */
+    webAppUrl: z.string().optional(),
   })).default([]),
   /** Раскладка клавиатуры */
   keyboardLayout: z.object({
