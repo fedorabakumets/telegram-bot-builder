@@ -189,12 +189,17 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
     }
   });
 
-  // Добавляем переменные от инлайн-кнопок клавиатуры
+  // Добавляем переменные от инлайн-кнопок клавиатуры.
+  // Только action-типы которые реально генерируют callback_data в Telegram:
+  // goto, command, selection, complete, default — остальные (url, web_app, contact, location, copy_text) не имеют callback_data
+  const CALLBACK_ACTIONS = new Set(['goto', 'command', 'selection', 'complete', 'default']);
   allNodes.forEach(node => {
     if ((node.data as any).keyboardType !== 'inline') return;
     const buttons: any[] = (node.data as any).buttons ?? [];
     buttons.forEach(btn => {
       if (!btn.text) return;
+      // Пропускаем кнопки без callback_data (url, web_app, contact, location, copy_text)
+      if (!CALLBACK_ACTIONS.has(btn.action) && !btn.customCallbackData) return;
       /** Значение callback_data: customCallbackData если задан, иначе target (nodeId) */
       const cbValue: string = btn.customCallbackData || btn.target || btn.id || '';
       const cbKey = `callback_data__btn__${btn.id}`;
