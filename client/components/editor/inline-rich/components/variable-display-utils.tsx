@@ -42,7 +42,8 @@ export function getBadgeText(variable: Variable): string {
     start: '▶️ Команда',
     command: '🔧 Команда',
     system: '⚙️ Система',
-    conditional: '❓ Условие'
+    conditional: '❓ Условие',
+    callback_trigger: '👆 Инлайн-триггер'
   };
   return labels[variable.nodeType] || '📌';
 }
@@ -53,6 +54,14 @@ export function getBadgeText(variable: Variable): string {
  * @returns React компонент с информацией
  */
 export function getNodeInfo(variable: Variable) {
+  // Для callback_trigger показываем описание триггера
+  if (variable.nodeType === 'callback_trigger') {
+    return (
+      <div className="text-[10px] text-orange-500 dark:text-orange-400 font-mono mt-0.5 truncate">
+        👆 {variable.description || variable.nodeId.slice(0, 8)}
+      </div>
+    );
+  }
   // Для системных переменных показываем таблицу
   if (variable.nodeType === 'system' && variable.sourceTable) {
     return (

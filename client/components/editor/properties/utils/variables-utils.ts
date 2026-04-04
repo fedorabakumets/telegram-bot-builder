@@ -153,6 +153,42 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
       });
     }
   });
+  // Добавляем переменные от callback_trigger нод
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'callback_trigger') return;
+    const callbackData: string = (node.data as any).callbackData ?? '';
+    if (!callbackData.trim()) return;
+
+    // Ищем текст кнопки по callbackData среди всех кнопок проекта
+    let buttonText = '';
+    allNodes.forEach(n => {
+      const buttons: any[] = (n.data as any).buttons ?? [];
+      const btn = buttons.find(b => b.customCallbackData === callbackData);
+      if (btn) buttonText = btn.text || '';
+    });
+
+    const cbKey = `callback_data__${node.id}`;
+    const btKey = `button_text__${node.id}`;
+
+    if (!variablesMap.has(cbKey)) {
+      variablesMap.set(cbKey, {
+        name: 'callback_data',
+        nodeId: node.id,
+        nodeType: 'callback_trigger',
+        description: `Данные кнопки: ${callbackData}`,
+      });
+    }
+
+    if (!variablesMap.has(btKey)) {
+      variablesMap.set(btKey, {
+        name: 'button_text',
+        nodeId: node.id,
+        nodeType: 'callback_trigger',
+        description: buttonText ? `Текст кнопки: "${buttonText}"` : `Триггер: ${callbackData}`,
+      });
+    }
+  });
+
   // Добавляем системные переменные
   SYSTEM_VARIABLES.forEach(v => { 
     if (!variablesMap.has(v.name)) {

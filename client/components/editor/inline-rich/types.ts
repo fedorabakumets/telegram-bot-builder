@@ -6,8 +6,8 @@
 /** Тип медиа: "photo", "video", "audio", "document", "sticker" */
 type MediaType = 'photo' | 'video' | 'audio' | 'document' | 'sticker';
 
-/** Тип узла: "user-input", "start", "command", "system", "conditional" */
-type NodeType = 'user-input' | 'start' | 'command' | 'system' | 'conditional';
+/** Тип узла: "user-input", "start", "command", "system", "conditional", "callback_trigger" */
+type NodeType = 'user-input' | 'start' | 'command' | 'system' | 'conditional' | 'callback_trigger';
 
 /**
  * Интерфейс для описания переменной, доступной в редакторе
