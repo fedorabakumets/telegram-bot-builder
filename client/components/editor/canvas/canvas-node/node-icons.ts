@@ -45,6 +45,8 @@ export const nodeIcons: Record<string, string> = {
   text_trigger: 'fas fa-comment-dots',
   /** Иконка триггера входящего сообщения */
   incoming_message_trigger: 'fas fa-inbox',
+  /** Иконка триггера входящего callback_query */
+  incoming_callback_trigger: 'fas fa-hand-pointer',
   /** Иконка триггера сообщения в группе */
   group_message_trigger: 'fas fa-comments',
   /** Иконка триггера inline-кнопки */

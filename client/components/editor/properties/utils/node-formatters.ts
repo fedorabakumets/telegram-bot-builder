@@ -45,6 +45,7 @@ export function getNodeTypeLabel(type: Node['type']): string {
     condition: 'Условие',
     client_auth: 'Авторизация',
     callback_trigger: 'Триггер inline-кнопки',
+    incoming_callback_trigger: 'Триггер нажатия кнопки',
   };
 
   return types[type] || type;

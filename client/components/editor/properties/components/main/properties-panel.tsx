@@ -24,6 +24,7 @@ import { TextTriggerConfiguration } from '../trigger/TextTriggerConfiguration';
 import { AnyMessageTriggerConfiguration } from '../trigger/AnyMessageTriggerConfiguration';
 import { GroupMessageTriggerConfiguration } from '../trigger/GroupMessageTriggerConfiguration';
 import { CallbackTriggerConfiguration } from '../trigger/CallbackTriggerConfiguration';
+import { IncomingCallbackTriggerConfiguration } from '../trigger/IncomingCallbackTriggerConfiguration';
 import { ConditionNodeConfiguration } from '../condition/ConditionNodeConfiguration';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
@@ -495,6 +496,14 @@ export function PropertiesPanel({
           )}
           {isTriggerNode(selectedNode.type) && (selectedNode.type as any) === 'callback_trigger' && (
             <CallbackTriggerConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+            />
+          )}
+          {isTriggerNode(selectedNode.type) && (selectedNode.type as any) === 'incoming_callback_trigger' && (
+            <IncomingCallbackTriggerConfiguration
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
