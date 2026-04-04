@@ -21,6 +21,8 @@ export const callbackTriggerEntrySchema = z.object({
   targetNodeId: z.string().min(1),
   /** Тип целевого узла */
   targetNodeType: z.string().min(1),
+  /** Текст кнопки, найденный по callbackData среди кнопок проекта */
+  buttonText: z.string().optional(),
 });
 
 /** Схема параметров шаблона триггеров inline-кнопок */
