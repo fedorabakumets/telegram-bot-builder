@@ -26,6 +26,7 @@ import { generateAdminRightsFromNode } from '../admin-rights/admin-rights.render
 import { collectSynonymEntries } from '../synonyms/synonyms.renderer';
 import { generateCommandTriggerHandlers } from '../command-trigger/command-trigger.renderer';
 import { generateTextTriggerHandlers } from '../text-trigger/text-trigger.renderer';
+import { generateCallbackTriggerHandlers } from '../callback-trigger/callback-trigger.renderer';
 import { generateIncomingMessageTriggerHandlers } from '../incoming-message-trigger/incoming-message-trigger.renderer';
 import { generateGroupMessageTriggerHandlers } from '../group-message-trigger';
 import { generateConditionHandlers } from '../condition/condition.renderer';
@@ -283,6 +284,13 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     textTriggerCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Обработчики триггеров inline-кнопок ---
+  const callbackTriggerCode = generateCallbackTriggerHandlers(nodes);
+  if (callbackTriggerCode) {
+    codeLines.push('\n# Обработчики триггеров inline-кнопок');
+    callbackTriggerCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   // --- Middleware триггеров входящих сообщений ---
   const incomingMessageTriggerCode = generateIncomingMessageTriggerHandlers(nodes);
   if (incomingMessageTriggerCode) {
@@ -306,7 +314,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   nodes.forEach((node: Node) => {
     // Пропускаем триггеры — они уже обработаны выше
-    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger') {
+    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger') {
       return;
     }
 

@@ -21,6 +21,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'media',
   'command_trigger',
   'text_trigger',
+  'callback_trigger',
   'condition',
   'forward_message',
   'create_forum_topic', // собственный обработчик генерируется шаблоном create-forum-topic.py.jinja2

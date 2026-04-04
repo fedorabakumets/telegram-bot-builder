@@ -42,6 +42,7 @@ export const ALREADY_HANDLED_TYPES = new Set<string>([
   'media',
   'command_trigger',
   'text_trigger',
+  'callback_trigger',
   'condition',
 ]);
 
