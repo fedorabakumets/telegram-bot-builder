@@ -24,6 +24,6 @@ export const forwardMessage: ComponentDefinition = {
     targetChatTargets: [],
     disableNotification: false,
     hideAuthor: false,
-    synonyms: ['переслать', 'отправить дальше', 'forward']
+    synonyms: []
   }
 };

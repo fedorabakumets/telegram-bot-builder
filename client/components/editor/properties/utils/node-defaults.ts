@@ -152,7 +152,7 @@ export function getNodeDefaults(type: Node['type']): any {
     },
     forward_message: {
       command: '/forward_message',
-      synonyms: ['переслать', 'отправить дальше', 'forward'],
+      synonyms: [],
       sourceMessageId: '',
       sourceMessageIdSource: 'current_message',
       sourceMessageNodeId: '',
