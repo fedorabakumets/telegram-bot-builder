@@ -1,7 +1,11 @@
 {#
   Шаблон обработчика узла сообщения (message)
 
-  @fileoverview Генерирует Python код для обработки узла типа message
+  @fileoverview Генерирует Python код для обработки узла типа message.
+  Включает вложенную вспомогательную функцию _send_to_<nodeId>, которая
+  отправляет сообщение (с медиа или без) в произвольный чат — используется
+  как для основного пользователя, так и для дополнительных получателей.
+
   @param {string} nodeId - Уникальный идентификатор узла
   @param {string} messageText - Текст сообщения
   @param {boolean} adminOnly - Только администраторы
@@ -23,6 +27,7 @@
   @param {boolean} enableConditionalMessages - Условные сообщения включены
   @param {array} conditionalMessages - Условные сообщения
   @param {string} fallbackMessage - Запасное сообщение
+  @param {array} messageSendRecipients - Список получателей сообщения
 #}
 
 {# Обработчики синонимов — генерируются ДО handle_callback, так как это отдельные функции #}
@@ -146,7 +151,6 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 
     {%- if attachedMedia and attachedMedia|length > 0 %}
     {# Сохранение переменных из attachedMedia #}
-    {%- set ind = '    ' %}
     {%- for mediaVar in attachedMedia %}
     {%- if 'imageUrlVar' in mediaVar and imageUrl and imageUrl != 'undefined' %}
     user_data[user_id]["{{ mediaVar }}"] = "{{ imageUrl }}"
@@ -196,35 +200,81 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
       {%- endfor %}
     {%- endif %}
 
-    {# Отправка медиафайлов или обычного сообщения #}
+    {# ------------------------------------------------------------------ #}
+    {# Вспомогательная вложенная функция отправки сообщения/медиа в чат.  #}
+    {# Использует замыкание: text, keyboard и медиа-переменные доступны    #}
+    {# из внешней области видимости обработчика.                           #}
+    {# ------------------------------------------------------------------ #}
+    {%- set parse_mode_arg = ', parse_mode="HTML"' if formatMode == 'html' else (', parse_mode="Markdown"' if formatMode == 'markdown' else '') %}
+    {%- set effectiveKeyboard = 'ReplyKeyboardRemove()' if (hasHideAfterClickIncoming and keyboardType == 'none') else 'keyboard' %}
+    async def _send_to_{{ nodeId|replace('-', '_') }}(_target_chat_id, _thread_id=None):
+        """
+        Отправляет сообщение (с медиа или без) в указанный чат.
+
+        @param _target_chat_id - Идентификатор целевого чата
+        @param _thread_id - Идентификатор треда (для групп с топиками), None если не нужен
+        @returns Объект отправленного сообщения или None при ошибке
+        """
+        try:
+{%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
+{%- if imageUrl and imageUrl != 'undefined' %}
+{%- if '/uploads/' in imageUrl %}
+            image_path = get_upload_file_path("{{ imageUrl }}")
+            if not os.path.exists(image_path):
+                logging.error(f"❌ Медиафайл не найден: {image_path} (узел {{ nodeId }})")
+                return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await bot.send_photo(_target_chat_id, FSInputFile(image_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- else %}
+            return await bot.send_photo(_target_chat_id, "{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- endif %}
+{%- elif videoUrl %}
+{%- if '/uploads/' in videoUrl %}
+            video_path = get_upload_file_path("{{ videoUrl }}")
+            if not os.path.exists(video_path):
+                logging.error(f"❌ Медиафайл не найден: {video_path} (узел {{ nodeId }})")
+                return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await bot.send_video(_target_chat_id, FSInputFile(video_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- else %}
+            return await bot.send_video(_target_chat_id, "{{ videoUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- endif %}
+{%- elif audioUrl %}
+{%- if '/uploads/' in audioUrl %}
+            audio_path = get_upload_file_path("{{ audioUrl }}")
+            if not os.path.exists(audio_path):
+                logging.error(f"❌ Медиафайл не найден: {audio_path} (узел {{ nodeId }})")
+                return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await bot.send_audio(_target_chat_id, FSInputFile(audio_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- else %}
+            return await bot.send_audio(_target_chat_id, "{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- endif %}
+{%- elif documentUrl %}
+{%- if '/uploads/' in documentUrl %}
+            doc_path = get_upload_file_path("{{ documentUrl }}")
+            if not os.path.exists(doc_path):
+                logging.error(f"❌ Медиафайл не найден: {doc_path} (узел {{ nodeId }})")
+                return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await bot.send_document(_target_chat_id, FSInputFile(doc_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- else %}
+            return await bot.send_document(_target_chat_id, "{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- endif %}
+{%- else %}
+            return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- endif %}
+{%- else %}
+            return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- endif %}
+        except Exception as _send_err:
+            logging.error(f"❌ Ошибка отправки в {_target_chat_id}: {_send_err}")
+            return None
+
+    {# Отправка медиафайлов или обычного сообщения основному пользователю #}
     sent_message = None
     {%- if hasUserRecipient %}
-    {%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
-{%- filter indent(4) %}{% include 'attached-media/attached-media.py.jinja2' %}{% endfilter %}
-    {%- else %}
-    {# Отправка сообщения без медиа #}
-    {%- set effectiveKeyboard = 'ReplyKeyboardRemove()' if (hasHideAfterClickIncoming and keyboardType == 'none') else 'keyboard' %}
-    {%- if formatMode == 'html' %}
-    {%- if userDatabaseEnabled %}
-    sent_message = await bot.send_message(callback_query.message.chat.id, text, node_id="{{ nodeId }}", reply_markup={{ effectiveKeyboard }}, parse_mode="HTML", message_thread_id=getattr(callback_query.message, "message_thread_id", None))
-    {%- else %}
-    sent_message = await callback_query.message.answer(text, reply_markup={{ effectiveKeyboard }}, parse_mode="HTML")
-    {%- endif %}
-    {%- elif formatMode == 'markdown' %}
-    {%- if userDatabaseEnabled %}
-    sent_message = await bot.send_message(callback_query.message.chat.id, text, node_id="{{ nodeId }}", reply_markup={{ effectiveKeyboard }}, parse_mode="Markdown", message_thread_id=getattr(callback_query.message, "message_thread_id", None))
-    {%- else %}
-    sent_message = await callback_query.message.answer(text, reply_markup={{ effectiveKeyboard }}, parse_mode="Markdown")
-    {%- endif %}
-    {%- else %}
-    {%- if userDatabaseEnabled %}
-    sent_message = await bot.send_message(callback_query.message.chat.id, text, node_id="{{ nodeId }}", reply_markup={{ effectiveKeyboard }}, message_thread_id=getattr(callback_query.message, "message_thread_id", None))
-    {%- else %}
-    sent_message = await callback_query.message.answer(text, reply_markup={{ effectiveKeyboard }})
-    {%- endif %}
-    {%- endif %}
-    {%- endif %}
-    {%- endif %}{# /hasUserRecipient — основная отправка пользователю #}
+    sent_message = await _send_to_{{ nodeId|replace('-', '_') }}(
+        callback_query.message.chat.id,
+        getattr(callback_query.message, "message_thread_id", None),
+    )
+    {%- endif %}{# /hasUserRecipient #}
 
     {# Отправка дополнительным получателям (chat_id / admin_ids) #}
     {%- if messageSendRecipients and messageSendRecipients|length > 0 %}
@@ -232,28 +282,23 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {%- if recipient.type == 'chat_id' and recipient.chatId %}
     # Отправка получателю {{ loop.index }}: {{ recipient.chatId }}
     try:
-        _recipient_chat_id = replace_variables_in_text("{{ recipient.chatId }}", all_user_vars, {})
-        # Добавляем -100 для групп/каналов если включён флаг isGroup
+        _rchat = replace_variables_in_text("{{ recipient.chatId }}", all_user_vars, {})
         {%- if recipient.isGroup %}
-        if _recipient_chat_id.lstrip('-').isdigit() and not _recipient_chat_id.startswith('-'):
-            _recipient_chat_id = f"-100{_recipient_chat_id}"
+        # Добавляем -100 для групп/каналов если включён флаг isGroup
+        if _rchat.lstrip('-').isdigit() and not _rchat.startswith('-'):
+            _rchat = f"-100{_rchat}"
         {%- endif %}
         {%- if recipient.threadId %}
-        _recipient_thread_id = replace_variables_in_text("{{ recipient.threadId }}", all_user_vars, {})
-        _thread_id_int = int(_recipient_thread_id) if _recipient_thread_id and _recipient_thread_id.strip().lstrip('-').isdigit() else None
+        _rthread = replace_variables_in_text("{{ recipient.threadId }}", all_user_vars, {})
+        _rthread_int = int(_rthread) if _rthread and _rthread.strip().lstrip('-').isdigit() else None
         {%- else %}
-        _recipient_thread_id = None
-        _thread_id_int = None
+        _rthread_int = None
         {%- endif %}
-        await bot.send_message(
-            int(_recipient_chat_id) if _recipient_chat_id.lstrip('-').isdigit() else _recipient_chat_id,
-            text,
-            reply_markup=keyboard,
-            message_thread_id=_thread_id_int,
-        )
-        logging.info(f"📤 Сообщение отправлено получателю {_recipient_chat_id}")
-    except Exception as _e:
-        logging.error(f"❌ Ошибка отправки получателю {{ recipient.chatId }}: {_e}")
+        _rchat_id = int(_rchat) if _rchat.lstrip('-').isdigit() else _rchat
+        await _send_to_{{ nodeId|replace('-', '_') }}(_rchat_id, _rthread_int)
+        logging.info(f"📤 Отправлено получателю {_rchat}")
+    except Exception as _re:
+        logging.error(f"❌ Ошибка отправки получателю {{ recipient.chatId }}: {_re}")
     {%- elif recipient.type == 'admin_ids' %}
     # Отправка администраторам (получатель {{ loop.index }})
     for _admin_id in ADMIN_IDS:
@@ -301,7 +346,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     return
     {%- endif %}
 
-    {# ���� ����������������� ����� #}
+    {# Сбор пользовательского ввода #}
     {%- if collectUserInput and userInputBlock %}
 {{ userInputBlock }}
     {%- endif %}
