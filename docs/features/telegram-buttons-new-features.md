@@ -10,7 +10,22 @@
 В данном документе описаны новые типы кнопок и параметры клавиатур Telegram, которые ещё не реализованы в редакторе.
 Фичи сгруппированы по приоритету. Самые свежие возможности из Bot API 9.4 (`style`, `icon_custom_emoji_id`) выделены как **приоритетные**.
 
-Уже реализовано и **не входит** в этот план: `goto`, `url`, `contact`, `location`, `copy_text`, `web_app`, `command`, `selection`, `complete`, `default`, `hideAfterClick`, `customCallbackData`.
+Уже реализовано и **не входит** в этот план: `goto`, `url`, `contact`, `location`, `copy_text`, `web_app`, `command`, `selection`, `complete`, `default`, `hideAfterClick`, `customCallbackData`, `style`.
+
+---
+
+## ✅ Реализовано
+
+### `style` — цвет кнопки (Bot API 9.4)
+
+**Реализовано:** 4 апреля 2026 | **Требует:** aiogram >= 3.27.0
+
+Правильные значения (aiogram 3.27.0):
+- `"primary"` — синий
+- `"success"` — зелёный
+- `"danger"` — красный
+
+> ⚠️ Значения в документации Telegram (`secondary`, `destructive`) отличаются от aiogram. Используй значения aiogram.
 
 ---
 
@@ -18,33 +33,9 @@
 
 ### 1.1 `style` — цвет кнопки
 
-**Bot API:** 9.4 | **Тип:** inline + reply | **Сложность:** Средняя | **Ценность:** Высокая
+~~**Bot API:** 9.4 | **Тип:** inline + reply | **Сложность:** Средняя | **Ценность:** Высокая~~
 
-Позволяет задать визуальный стиль кнопки. Telegram отображает кнопку в соответствующем цвете.
-
-**Значения:**
-- `"primary"` — синий (акцентный)
-- `"secondary"` — серый (нейтральный)
-- `"destructive"` — красный (опасное действие)
-
-**Пример (aiogram):**
-```python
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-
-kb = InlineKeyboardMarkup(inline_keyboard=[[
-    InlineKeyboardButton(text="Подтвердить", callback_data="confirm", style="primary"),
-    InlineKeyboardButton(text="Удалить", callback_data="delete", style="destructive"),
-    InlineKeyboardButton(text="Отмена", callback_data="cancel", style="secondary"),
-]])
-```
-
-**Затронутые файлы:**
-- `shared/schema/tables/button-schema.ts` — добавить поле `style: z.enum(['primary', 'secondary', 'destructive']).optional()`
-- `lib/bot-generator/types/button-types.ts` — добавить `style` в интерфейс `Button`
-- `lib/templates/keyboard/keyboard.py.jinja2` — добавить `style="{{ btn.style }}"` в `InlineKeyboardButton` и `KeyboardButton`
-- `client/components/editor/properties/components/button-card/button-card.tsx` — UI-селектор стиля (3 варианта)
-- `client/components/editor/canvas/canvas-node/inline-button.tsx` — превью с цветом кнопки
-- `client/components/editor/canvas/canvas-node/reply-button.tsx` — превью с цветом кнопки
+✅ **Реализовано** — см. секцию выше.
 
 ---
 
@@ -403,7 +394,7 @@ btn = KeyboardButton(
 
 | # | Фича | Bot API | Тип | Сложность | Ценность | Приоритет |
 |---|------|---------|-----|-----------|----------|-----------|
-| 1 | `style` — цвет кнопки | 9.4 | inline + reply | Средняя | **Высокая** | 🔴 1 |
+| 1 | `style` — цвет кнопки | 9.4 | inline + reply | Средняя | **Высокая** | ✅ Готово |
 | 2 | `icon_custom_emoji_id` — эмодзи | 9.4 | inline + reply | Средняя | **Высокая** | 🔴 1 |
 | 3 | `switch_inline_query` | 2.0 | inline | Низкая | Средняя | 🟠 2 |
 | 4 | `switch_inline_query_current_chat` | 6.1 | inline | Низкая | Средняя | 🟠 2 |
