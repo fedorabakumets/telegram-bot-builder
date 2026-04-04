@@ -26,11 +26,11 @@ const TOPIC_COLORS: Record<string, string> = {
 export function ForumTopicPreview({ node }: { node: Node }) {
   const { topicName, topicIconColor, saveThreadIdTo, skipIfExists, forumChatIdSource, forumChatId, forumChatVariableName } = node.data as any;
 
-  if (!topicName && !saveThreadIdTo) return null;
-
   const chatDisplay = forumChatIdSource === 'variable'
     ? (forumChatVariableName ? `{${forumChatVariableName}}` : null)
     : (forumChatId || null);
+
+  if (!topicName && !saveThreadIdTo && !chatDisplay) return null;
 
   const color = topicIconColor ? TOPIC_COLORS[topicIconColor] ?? '#6FB9F0' : null;
 
