@@ -268,6 +268,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
       ...getSafeAutoTransitionParams(node, nodes),
       nodeId: node.id,
       attachedMedia: node.data?.attachedMedia || [],
+      /** Список получателей медиа-сообщения */
+      messageSendRecipients: (node.data as any)?.messageSendRecipients || [],
     }),
   };
 

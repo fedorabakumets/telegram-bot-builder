@@ -3,12 +3,13 @@
 
   @fileoverview Генерирует Python-код для отправки медиафайлов из массива attachedMedia.
   Поддерживает одиночную отправку и медиагруппы, FSInputFile для /uploads/ путей,
-  автопереход и логирование.
+  автопереход, логирование и список получателей (messageSendRecipients).
 
-  @param {string}   nodeId               - уникальный идентификатор узла
-  @param {array}    attachedMedia        - массив URL медиафайлов
-  @param {boolean}  enableAutoTransition - включить автопереход
-  @param {string}   autoTransitionTo     - ID целевого узла автоперехода
+  @param {string}   nodeId                  - уникальный идентификатор узла
+  @param {array}    attachedMedia           - массив URL медиафайлов
+  @param {boolean}  enableAutoTransition    - включить автопереход
+  @param {string}   autoTransitionTo        - ID целевого узла автоперехода
+  @param {array}    messageSendRecipients   - список получателей (пустой = отправка пользователю)
 #}
 
 {#- Макрос: определяет тип медиа по расширению URL -#}
@@ -31,12 +32,43 @@
 {%- endif -%}
 {%- endmacro -%}
 
+{#- Вычисляем hasUserRecipient: если все получатели chat_id — пользователю не отправляем -#}
+{%- set hasUserRecipient = true %}
+{%- if messageSendRecipients and messageSendRecipients|length > 0 %}
+  {%- set hasUserRecipient = false %}
+  {%- for r in messageSendRecipients %}
+    {%- if r.type == 'user' %}
+      {%- set hasUserRecipient = true %}
+    {%- endif %}
+  {%- endfor %}
+{%- endif %}
+
+{#- Флаг: есть ли дополнительные chat_id получатели -#}
+{%- set hasChatIdRecipients = false %}
+{%- if messageSendRecipients and messageSendRecipients|length > 0 %}
+  {%- for r in messageSendRecipients %}
+    {%- if r.type == 'chat_id' and r.chatId %}
+      {%- set hasChatIdRecipients = true %}
+    {%- endif %}
+  {%- endfor %}
+{%- endif %}
+
 @dp.callback_query(lambda c: c.data == "{{ nodeId }}")
 async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQuery):
     """Обработчик медиа-ноды для узла {{ nodeId }}"""
     is_fake_callback = getattr(callback_query, '_is_fake', False)
     logging.info(f"Медиа-нода {{ nodeId }}: отправка медиафайлов")
 
+{%- if hasChatIdRecipients %}
+    # Инициализируем переменные пользователя для подстановки в chat_id получателях
+    all_user_vars = {}
+    try:
+        all_user_vars = await init_all_user_vars(callback_query.from_user.id)
+    except Exception:
+        pass
+{%- endif %}
+
+{%- if hasUserRecipient %}
 {%- if attachedMedia and attachedMedia | length == 1 %}
 {%- set url = attachedMedia[0] %}
 {%- if '{' in url and '}' in url %}
@@ -134,6 +166,94 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     pass
 
 {%- endif %}
+{%- endif %}{# /hasUserRecipient #}
+
+{#- Вспомогательная функция для отправки дополнительным chat_id получателям -#}
+{%- if hasChatIdRecipients %}
+    async def _send_media_to_{{ nodeId|safe_name }}(_target_chat_id, _thread_id=None):
+        """
+        Отправляет медиафайлы в указанный чат (для дополнительных получателей).
+
+        @param _target_chat_id - Идентификатор целевого чата
+        @param _thread_id - Идентификатор топика (для групп), None если не нужен
+        """
+        try:
+{%- if attachedMedia and attachedMedia | length == 1 %}
+{%- set url = attachedMedia[0] %}
+{%- if '{' in url and '}' in url %}
+            _raw = "{{ url|e }}"
+            _rtype = "document"
+            _rval = _raw
+            _mv = all_user_vars.get(_raw[1:-1]) if _raw.startswith("{") and _raw.endswith("}") else None
+            if isinstance(_mv, dict):
+                _rtype = _mv.get("type", "document")
+                _rval = _mv.get("value") or _mv.get("photoUrl") or _mv.get("videoUrl") or _mv.get("audioUrl") or _mv.get("documentUrl") or _raw
+            elif _mv:
+                _rval = _mv
+            if _rtype == "photo":
+                await bot.send_photo(_target_chat_id, _rval, message_thread_id=_thread_id)
+            elif _rtype == "video":
+                await bot.send_video(_target_chat_id, _rval, message_thread_id=_thread_id)
+            elif _rtype == "audio":
+                await bot.send_audio(_target_chat_id, _rval, message_thread_id=_thread_id)
+            else:
+                await bot.send_document(_target_chat_id, _rval, message_thread_id=_thread_id)
+{%- else %}
+{%- set mtype = get_media_type(url) | trim %}
+{%- if '/uploads/' in url %}
+            _fp = get_upload_file_path("{{ url }}")
+            if not os.path.exists(_fp):
+                logging.error(f"❌ Медиафайл не найден: {_fp} (узел {{ nodeId }})")
+                return
+            await bot.send_{{ mtype }}(_target_chat_id, FSInputFile(_fp), message_thread_id=_thread_id)
+{%- else %}
+            await bot.send_{{ mtype }}(_target_chat_id, "{{ url|e }}", message_thread_id=_thread_id)
+{%- endif %}
+{%- endif %}
+{%- elif attachedMedia and attachedMedia | length > 1 %}
+            _mg = []
+{%- for url in attachedMedia %}
+{%- set cls = get_input_media_class(url) | trim %}
+{%- if '/uploads/' in url %}
+            _fp2_{{ loop.index }} = get_upload_file_path("{{ url }}")
+            if os.path.exists(_fp2_{{ loop.index }}):
+                _mg.append({{ cls }}(media=FSInputFile(_fp2_{{ loop.index }})))
+{%- else %}
+            _mg.append({{ cls }}(media="{{ url|e }}"))
+{%- endif %}
+{%- endfor %}
+            if _mg:
+                await bot.send_media_group(_target_chat_id, _mg, message_thread_id=_thread_id)
+{%- else %}
+            pass
+{%- endif %}
+        except Exception as _send_err:
+            logging.error(f"❌ Ошибка отправки медиа в {_target_chat_id}: {_send_err}")
+
+    {# Цикл по дополнительным chat_id получателям #}
+{%- for recipient in messageSendRecipients %}
+{%- if recipient.type == 'chat_id' and recipient.chatId %}
+    # Отправка получателю {{ loop.index }}: {{ recipient.chatId }}
+    try:
+        _rchat = replace_variables_in_text("{{ recipient.chatId }}", all_user_vars, {})
+{%- if recipient.isGroup %}
+        if _rchat.lstrip('-').isdigit() and not _rchat.startswith('-'):
+            _rchat = f"-100{_rchat}"
+{%- endif %}
+{%- if recipient.threadId %}
+        _rthread = replace_variables_in_text("{{ recipient.threadId }}", all_user_vars, {})
+        _rthread_int = int(_rthread) if _rthread and _rthread.strip().lstrip('-').isdigit() else None
+{%- else %}
+        _rthread_int = None
+{%- endif %}
+        _rchat_id = int(_rchat) if _rchat.lstrip('-').isdigit() else _rchat
+        await _send_media_to_{{ nodeId|safe_name }}(_rchat_id, _rthread_int)
+        logging.info(f"📤 Медиа отправлено получателю {_rchat}")
+    except Exception as _re:
+        logging.error(f"❌ Ошибка отправки медиа получателю {{ recipient.chatId }}: {_re}")
+{%- endif %}
+{%- endfor %}
+{%- endif %}{# /hasChatIdRecipients #}
 
 {%- if enableAutoTransition and autoTransitionTo %}
     # Автопереход к следующему узлу

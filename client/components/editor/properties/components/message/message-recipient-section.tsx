@@ -30,7 +30,7 @@ interface MessageRecipientSectionProps {
 }
 
 /** Типы узлов, для которых показывается секция */
-const SUPPORTED_NODE_TYPES = ['message', 'start', 'command'] as const;
+const SUPPORTED_NODE_TYPES = ['message', 'start', 'command', 'media'] as const;
 
 /**
  * Карточка одного получателя
