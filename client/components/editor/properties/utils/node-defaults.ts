@@ -151,7 +151,7 @@ export function getNodeDefaults(type: Node['type']): any {
       variableName: ''
     },
     forward_message: {
-      command: '/forward_message',
+      command: '',
       synonyms: [],
       sourceMessageId: '',
       sourceMessageIdSource: 'current_message',

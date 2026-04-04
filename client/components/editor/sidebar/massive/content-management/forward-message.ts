@@ -13,7 +13,7 @@ export const forwardMessage: ComponentDefinition = {
   color: 'bg-amber-100 text-amber-600',
   type: 'forward_message',
   defaultData: {
-    command: '/forward_message',
+    command: '',
     sourceMessageId: '',
     sourceMessageIdSource: 'current_message',
     sourceMessageNodeId: '',
