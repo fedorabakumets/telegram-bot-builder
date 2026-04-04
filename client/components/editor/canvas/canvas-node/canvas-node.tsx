@@ -20,6 +20,7 @@ import { TextInputIndicator } from './text-input-indicator';
 import { SaveAnswerIndicator } from './save-answer-indicator';
 import { MessageLinkedInputIndicator } from './message-linked-input-indicator';
 import { MessagePreview } from './message-preview';
+import { MessageRecipientsPreview } from './message-recipients-preview';
 import { ImageAttachment } from './image-attachment';
 import { MediaAttachmentsPreview } from './media-attachments-preview';
 import { NodeActions } from './node-actions';
@@ -533,6 +534,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Message preview */}
         <MessagePreview node={node} />
+        <MessageRecipientsPreview node={node} />
 
         {/* Media attachment indicator for non-image files */}
         {node.type === 'message' && !node.data.imageUrl && !node.data.attachedMedia?.length && (node.data.videoUrl || node.data.audioUrl || node.data.documentUrl) && (
