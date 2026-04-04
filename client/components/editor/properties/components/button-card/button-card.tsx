@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { ButtonTextField } from './button-text-field';
 import { ButtonActionSelector } from './button-action-selector';
 import { ButtonCallbackField } from './button-callback-field';
+import { ButtonHideAfterClickToggle } from './button-hide-after-click-toggle';
 import { GotoTargetSection } from '../navigation/goto-target-section';
 import type { Button } from '@shared/schema';
 import type { ProjectVariable } from '../../utils/variables-utils';
@@ -107,6 +108,14 @@ export function ButtonCard({
           />
         </>
       )}
+
+      <div className="border-t border-border/20 my-3"></div>
+      <ButtonHideAfterClickToggle
+        nodeId={nodeId}
+        button={button}
+        onButtonUpdate={onButtonUpdate}
+        keyboardType={keyboardType as 'inline' | 'reply' | 'none' | undefined}
+      />
     </div>
   );
 }

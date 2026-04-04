@@ -32,7 +32,8 @@ export function ButtonHideAfterClickToggle({
   nodeId,
   keyboardType
 }: ButtonHideAfterClickToggleProps) {
-  if (keyboardType !== 'reply') {
+  // Показываем для inline и reply, скрываем только если тип явно 'none'
+  if (keyboardType === 'none') {
     return null;
   }
 

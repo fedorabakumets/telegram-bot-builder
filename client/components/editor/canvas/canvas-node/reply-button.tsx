@@ -68,6 +68,9 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
           )}
         </div>
         <div className="flex items-center space-x-1 ml-2 flex-shrink-0">
+          {button.hideAfterClick && (
+            <i className="fas fa-eye-slash text-gray-400 dark:text-gray-500 text-xs" title="Скрыть после нажатия"></i>
+          )}
           {button.action === 'url' && (
             <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title={`Ссылка: ${button.url}`}></i>
           )}
