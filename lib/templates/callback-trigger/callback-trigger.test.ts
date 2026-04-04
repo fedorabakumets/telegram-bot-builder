@@ -230,17 +230,88 @@ describe('Переменные callback_data и button_text', () => {
     expect(r).toContain('user_data[user_id]["button_text"]');
   });
 
+  /**
+   * Проверяет, что button_text читается из reply_markup в рантайме,
+   * а не из статичной строки _btn_text_map
+   */
   it('buttonText из entry используется как значение button_text', () => {
     const paramsWithText: CallbackTriggerTemplateParams = {
       entries: [{ ...validParamsExact.entries[0], buttonText: 'Подтвердить заказ' }],
     };
     const r = generateCallbackTriggers(paramsWithText);
+    // Рантайм-чтение из reply_markup должно присутствовать в коде
+    expect(r).toContain('reply_markup');
+    // Fallback на buttonText из entry тоже должен быть
     expect(r).toContain('"Подтвердить заказ"');
   });
 
   it('без buttonText используется callbackData как fallback', () => {
     const r = generateCallbackTriggers(validParamsExact);
     expect(r).toContain('"confirm_order"');
+  });
+});
+
+// ─── Рантайм-чтение button_text из reply_markup ───────────────────────────────
+
+describe('Рантайм-чтение button_text из reply_markup', () => {
+  /**
+   * Проверяет наличие чтения из callback_query.message.reply_markup
+   */
+  it('генерирует чтение из callback_query.message.reply_markup', () => {
+    const r = generateCallbackTriggers(validParamsExact);
+    expect(r).toContain('reply_markup');
+    expect(r).toContain('inline_keyboard');
+  });
+
+  /**
+   * Проверяет наличие try/except для безопасного чтения reply_markup
+   */
+  it('генерирует try/except вокруг чтения reply_markup', () => {
+    const r = generateCallbackTriggers(validParamsExact);
+    // Должен быть try/except для безопасного чтения
+    expect(r).toContain('try:');
+    expect(r).toContain('except Exception:');
+  });
+
+  /**
+   * Проверяет fallback на entry.buttonText если reply_markup пуст
+   */
+  it('генерирует fallback на entry.buttonText если reply_markup пуст', () => {
+    const paramsWithText: CallbackTriggerTemplateParams = {
+      entries: [{ ...validParamsExact.entries[0], buttonText: 'Подтвердить заказ' }],
+    };
+    const r = generateCallbackTriggers(paramsWithText);
+    // Fallback строка должна быть в коде
+    expect(r).toContain('"Подтвердить заказ"');
+  });
+
+  /**
+   * Проверяет fallback на callbackData если buttonText не задан
+   */
+  it('генерирует fallback на callbackData если buttonText не задан', () => {
+    const r = generateCallbackTriggers(validParamsExact);
+    // Fallback на callbackData
+    expect(r).toContain('"confirm_order"');
+  });
+
+  /**
+   * Проверяет, что каждый триггер имеет свой блок чтения reply_markup
+   */
+  it('несколько триггеров — каждый имеет свой блок чтения reply_markup', () => {
+    const r = generateCallbackTriggers(validParamsMultiple);
+    // Каждый обработчик должен иметь свой _cb_btn_text
+    const count = (r.match(/_cb_btn_text/g) || []).length;
+    expect(count).toBeGreaterThanOrEqual(3);
+  });
+
+  /**
+   * Проверяет корректность синтаксиса Python с рантайм-чтением
+   */
+  it('синтаксис Python корректен с рантайм-чтением', () => {
+    const r = generateCallbackTriggers(validParamsMultiple);
+    const opens = (r.match(/\(/g) || []).length;
+    const closes = (r.match(/\)/g) || []).length;
+    expect(opens).toBe(closes);
   });
 });
 

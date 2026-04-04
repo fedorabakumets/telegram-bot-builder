@@ -47,19 +47,25 @@ async def callback_trigger_trigger_order_handler(callback_query: types.CallbackQ
 
 ## Переменные в тексте сообщений
 
-После срабатывания триггера в `user_data` пользователя сохраняются две переменные, доступные в тексте следующего сообщения:
+После срабатывания триггера в `user_data` пользователя сохраняются две переменные:
 
 | Переменная | Значение |
 |------------|----------|
-| `{callback_data}` | Реальное значение `callback_data` из Telegram (например `confirm_order`) |
-| `{button_text}` | Текст кнопки, найденный по `customCallbackData` среди кнопок проекта |
+| `{callback_data}` | Реальное значение `callback_data` из Telegram (`callback_query.data`) |
+| `{button_text}` | Текст нажатой кнопки — читается из `reply_markup` сообщения в рантайме |
+
+**Логика получения `button_text`:**
+1. Читаем `callback_query.message.reply_markup.inline_keyboard`
+2. Ищем кнопку с совпадающим `callback_data`
+3. Берём её `text`
+4. Если не нашли — используем fallback: `buttonText` из проекта или само значение `callbackData`
 
 **Пример использования в тексте сообщения:**
 ```
 Вы нажали кнопку «{button_text}» (данные: {callback_data})
 ```
 
-Если `buttonText` не найден в проекте — в качестве fallback используется значение `callbackData`.
+Это работает для любых нод — не нужно знать граф переходов.
 
 ## Использование
 

@@ -334,6 +334,94 @@ test('E03', 'синтаксис Python OK с инлайн-кнопками и п
   syntax(gen(p, 'e03'), 'e03');
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК F: Рантайм-чтение button_text из reply_markup
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок F: Рантайм-чтение button_text из reply_markup ────────────');
+
+/**
+ * F01: Проверяет наличие чтения из reply_markup в сгенерированном коде
+ */
+test('F01', 'callback_trigger → содержит чтение из reply_markup', () => {
+  const p = makeCleanProject([makeCallbackTriggerNode('t1', 'confirm_order', 'exact', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'f01');
+  ok(code.includes('reply_markup'), 'reply_markup должен быть в коде');
+  ok(code.includes('inline_keyboard'), 'inline_keyboard должен быть в коде');
+});
+
+/**
+ * F02: Проверяет наличие try/except вокруг чтения reply_markup
+ */
+test('F02', 'callback_trigger → содержит try/except вокруг чтения reply_markup', () => {
+  const p = makeCleanProject([makeCallbackTriggerNode('t1', 'confirm_order', 'exact', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'f02');
+  ok(code.includes('except Exception:'), 'except Exception: должен быть в коде');
+});
+
+/**
+ * F03: Проверяет наличие _btn_text_found в message-узле с инлайн-кнопками
+ */
+test('F03', 'message с инлайн-кнопками → содержит _btn_text_found', () => {
+  const p = makeCleanProject([makeMessageNodeWithButtons('msg1', 'Выберите:', [
+    { id: 'btn1', text: 'Да', action: 'goto', target: 'msg2', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+  ]), makeMessageNode('msg2')]);
+  const code = gen(p, 'f03');
+  ok(code.includes('_btn_text_found'), '_btn_text_found должен быть в коде');
+});
+
+/**
+ * F04: Проверяет наличие чтения из reply_markup в message-узле с инлайн-кнопками
+ */
+test('F04', 'message с инлайн-кнопками → содержит чтение из reply_markup', () => {
+  const p = makeCleanProject([makeMessageNodeWithButtons('msg1', 'Выберите:', [
+    { id: 'btn1', text: 'Да', action: 'goto', target: 'msg2', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+  ]), makeMessageNode('msg2')]);
+  const code = gen(p, 'f04');
+  ok(code.includes('reply_markup'), 'reply_markup должен быть в коде');
+  ok(code.includes('inline_keyboard'), 'inline_keyboard должен быть в коде');
+});
+
+/**
+ * F05: Сложный сценарий — callback_trigger + инлайн-кнопки + переменные в тексте
+ */
+test('F05', 'сложный сценарий: callback_trigger + инлайн-кнопки + переменные в тексте → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('t1', 'confirm', 'exact', 'msg_with_btns'),
+    makeMessageNodeWithButtons('msg_with_btns', 'Выберите действие:', [
+      { id: 'btn1', text: 'Продолжить', action: 'goto', target: 'msg_final', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+      { id: 'btn2', text: 'Отмена', action: 'goto', target: 'msg_final', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+    ]),
+    makeMessageNode('msg_final', 'Триггер: {callback_data}, кнопка: {button_text}'),
+  ]);
+  syntax(gen(p, 'f05'), 'f05');
+});
+
+/**
+ * F06: Два callback_trigger — каждый должен иметь свой блок reply_markup
+ */
+test('F06', 'сложный сценарий: два callback_trigger → каждый имеет свой блок reply_markup', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('t1', 'action_a', 'exact', 'msg1'),
+    makeCallbackTriggerNode('t2', 'action_b', 'exact', 'msg1'),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'f06');
+  // Каждый callback_trigger должен иметь свой _cb_btn_text
+  const count = (code.match(/_cb_btn_text/g) || []).length;
+  ok(count >= 2, `Должно быть минимум 2 вхождения _cb_btn_text, найдено: ${count}`);
+});
+
+/**
+ * F07: startswith триггер — должен содержать рантайм-чтение reply_markup
+ */
+test('F07', 'startswith триггер → содержит рантайм-чтение reply_markup', () => {
+  const p = makeCleanProject([makeCallbackTriggerNode('t1', 'order_', 'startswith', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'f07');
+  ok(code.includes('_cb_btn_text'), '_cb_btn_text должен быть в коде для startswith триггера');
+  ok(code.includes('reply_markup'), 'reply_markup должен быть в коде');
+});
+
 // ─── Итоги ───────────────────────────────────────────────────────────────────
 
 const passed = results.filter(r => r.passed).length;
