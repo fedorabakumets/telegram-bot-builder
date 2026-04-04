@@ -34,6 +34,8 @@ function normalizeButtons(buttons: any[]): Button[] {
     requestLocation: btn.requestLocation ?? false,
     /** Пользовательский callback_data (приоритет над target/id) */
     customCallbackData: btn.customCallbackData,
+    /** Текст для копирования в буфер обмена (только для copy_text) */
+    copyText: btn.copyText,
   }));
 }
 
