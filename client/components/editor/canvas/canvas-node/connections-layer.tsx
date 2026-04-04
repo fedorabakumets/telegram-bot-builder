@@ -196,7 +196,7 @@ function buildSmartPath(
   toH: number,
   fromPortOffset?: { x: number; y: number },
 ): string {
-  const isTrigger = fromNode.type === 'command_trigger' || fromNode.type === 'text_trigger' || fromNode.type === 'incoming_message_trigger' || fromNode.type === 'group_message_trigger';
+  const isTrigger = fromNode.type === 'command_trigger' || fromNode.type === 'text_trigger' || fromNode.type === 'incoming_message_trigger' || fromNode.type === 'group_message_trigger' || (fromNode.type as any) === 'callback_trigger' || (fromNode.type as any) === 'incoming_callback_trigger';
   const xOffset = isTrigger ? TRIGGER_PORT_X_OFFSET : PORT_X_OFFSET;
 
   // Если передан offset порта кнопки — используем его, иначе правый край + центр узла
@@ -271,7 +271,7 @@ export function collectConnections(nodes: Node[]): Connection[] {
     }
 
     // 4. Соединение триггера команды, текстового триггера или триггера входящего сообщения с целевым узлом
-    if ((node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger') && node.data?.autoTransitionTo) {
+    if ((node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger') && node.data?.autoTransitionTo) {
       const toId = node.data.autoTransitionTo as string;
       if (existingIds.has(toId)) {
         connections.push({ fromId: node.id, toId, type: 'trigger-next' });
