@@ -36,7 +36,7 @@ const nodes: Node[] = [
 ## Пример выходного Python кода
 
 ```python
-async def outgoing_message_trigger_omt_1_handler(user_id: int, message_id, message_text: str):
+async def outgoing_message_trigger_omt_1_handler(user_id: int, message_id, message_text: str, chat_id: int = 0):
     """Срабатывает когда бот отправляет сообщение пользователю"""
     try:
         logging.info(f"Исходящее сообщение для {user_id} — триггер узла omt_1")
@@ -44,6 +44,8 @@ async def outgoing_message_trigger_omt_1_handler(user_id: int, message_id, messa
             user_data[user_id] = {}
         user_data[user_id]["last_bot_message_id"] = message_id
         user_data[user_id]["message_text"] = message_text or ""
+        _effective_chat_id = chat_id if chat_id else user_id
+        fake_msg = FakeMessage(_effective_chat_id, message_id)
         # ... FakeCallbackQuery и вызов handle_callback_fwd_to_admin
     except Exception as e:
         logging.error(f"Ошибка в outgoing_message_trigger omt_1: {e}")
@@ -52,6 +54,20 @@ _outgoing_message_trigger_handlers = [
     outgoing_message_trigger_omt_1_handler,
 ]
 ```
+
+## Связь исходящего сообщения с пользователем
+
+Обработчик принимает `chat_id` — ID чата куда было отправлено сообщение. Для личных сообщений `chat_id == user_id`. Создаётся `FakeMessage` с `chat.id = chat_id` и `message_id` — это позволяет `forward_message` знать из какого чата пересылать сообщение.
+
+```python
+class FakeMessage:
+    def __init__(self, chat_id_val, message_id_val):
+        self.chat = type('Chat', (), {'id': chat_id_val})()
+        self.message_id = message_id_val
+        self.message_thread_id = None
+```
+
+Если `chat_id` не передан (0) — используется `user_id` как fallback.
 
 ## Использование
 

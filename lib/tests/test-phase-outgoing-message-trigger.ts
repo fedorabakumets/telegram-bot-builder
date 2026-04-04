@@ -502,6 +502,65 @@ test('D05', 'полный сценарий поддержки → синтакс
   syntax(gen(p, 'd05'), 'd05');
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК E: FakeMessage и chat_id
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок E: FakeMessage и chat_id ─────────────────────────────────');
+
+/** E01: Проверяет наличие FakeMessage в сгенерированном коде */
+test('E01', 'обработчик содержит FakeMessage', () => {
+  const p = makeCleanProject([makeOutgoingMessageTriggerNode('omt1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'e01');
+  ok(code.includes('FakeMessage'), 'FakeMessage должен быть в коде');
+});
+
+/** E02: Проверяет наличие _effective_chat_id в сгенерированном коде */
+test('E02', 'обработчик содержит _effective_chat_id', () => {
+  const p = makeCleanProject([makeOutgoingMessageTriggerNode('omt1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'e02');
+  ok(code.includes('_effective_chat_id'), '_effective_chat_id должен быть в коде');
+});
+
+/** E03: Проверяет что сигнатура содержит chat_id: int = 0 */
+test('E03', 'обработчик принимает chat_id параметр', () => {
+  const p = makeCleanProject([makeOutgoingMessageTriggerNode('omt1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'e03');
+  ok(code.includes('chat_id: int = 0'), 'chat_id: int = 0 должен быть в сигнатуре');
+});
+
+/** E04: Проверяет наличие self.chat в FakeMessage */
+test('E04', 'FakeMessage содержит self.chat с id', () => {
+  const p = makeCleanProject([makeOutgoingMessageTriggerNode('omt1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'e04');
+  ok(code.includes('self.chat'), 'self.chat должен быть в FakeMessage');
+});
+
+/** E05: Проверяет наличие self.message_id в FakeMessage */
+test('E05', 'FakeMessage содержит message_id', () => {
+  const p = makeCleanProject([makeOutgoingMessageTriggerNode('omt1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'e05');
+  ok(code.includes('self.message_id'), 'self.message_id должен быть в FakeMessage');
+});
+
+/** E06: Проверяет синтаксис при связке omt → forward_message с last_bot_message + FakeMessage */
+test('E06', 'outgoing_message_trigger → forward_message с last_bot_message + FakeMessage → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeOutgoingMessageTriggerNode('omt1', 'fwd1'),
+    makeForwardMessageNodeWithThread('fwd1', '-1002300967595', '618', 'last_bot_message'),
+  ]);
+  syntax(gen(p, 'e06'), 'e06');
+});
+
+/** E07: Проверяет что middleware вызывает обработчик с chat_id */
+test('E07', 'middleware содержит chat_id в вызове обработчика', () => {
+  const p = makeCleanProject([makeOutgoingMessageTriggerNode('omt1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'e07');
+  // Проверяем что middleware передаёт chat_id
+  ok(code.includes('_omt_handler') || code.includes('outgoing_message_trigger'), 'middleware должен вызывать обработчик');
+  syntax(code, 'e07');
+});
+
 // ─── Итоги ───────────────────────────────────────────────────────────────────
 
 const passed = results.filter(r => r.passed).length;

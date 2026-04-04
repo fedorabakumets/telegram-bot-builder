@@ -175,9 +175,28 @@ describe('Специфика триггера исходящих', () => {
     expect(r).toContain('_is_fake = True');
   });
 
-  it('обработчик принимает user_id, message_id, message_text', () => {
+  it('обработчик принимает user_id, message_id, message_text, chat_id', () => {
     const r = generateOutgoingMessageTriggers(validParamsSingle);
-    expect(r).toContain('user_id: int, message_id, message_text: str');
+    expect(r).toContain('user_id: int, message_id, message_text: str, chat_id: int = 0');
+  });
+
+  /** Проверяет наличие FakeMessage с полем self.chat в сгенерированном коде */
+  it('обработчик содержит FakeMessage с chat.id', () => {
+    const r = generateOutgoingMessageTriggers(validParamsSingle);
+    expect(r).toContain('FakeMessage');
+    expect(r).toContain('self.chat');
+  });
+
+  /** Проверяет наличие _effective_chat_id в сгенерированном коде */
+  it('обработчик содержит _effective_chat_id', () => {
+    const r = generateOutgoingMessageTriggers(validParamsSingle);
+    expect(r).toContain('_effective_chat_id');
+  });
+
+  /** Проверяет что сигнатура обработчика содержит chat_id: int = 0 */
+  it('обработчик принимает chat_id параметр', () => {
+    const r = generateOutgoingMessageTriggers(validParamsSingle);
+    expect(r).toContain('chat_id: int = 0');
   });
 });
 
