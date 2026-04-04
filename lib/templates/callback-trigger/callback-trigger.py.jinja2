@@ -76,6 +76,12 @@ async def callback_trigger_{{ sanitized_node_id }}_handler(callback_query: types
     # Fallback: используем статичный текст кнопки из проекта если не нашли в reply_markup
     user_data[user_id]["button_text"] = _cb_btn_text or "{{ entry.buttonText or entry.callbackData }}"
 
+    # Сразу убираем анимацию загрузки — до вызова MockCallback который может занять время
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
     mock_callback = MockCallback("{{ entry.targetNodeId }}", callback_query.from_user, callback_query.message)
     await handle_callback_{{ sanitized_target_id }}(mock_callback)
 
