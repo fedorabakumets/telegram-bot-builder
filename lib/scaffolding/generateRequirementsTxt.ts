@@ -9,7 +9,7 @@ export function generateRequirementsTxt(): string {
     '# If you get Rust compilation errors, use: pip install --only-binary=all -r requirements.txt',
     '',
     '# Core dependencies (using newer versions to avoid Rust compilation issues)',
-    'aiogram>=3.21.0',
+    'aiogram>=3.27.0',
     'aiohttp>=3.12.13',
     'requests>=2.32.4',
     'python-dotenv>=1.0.0',
