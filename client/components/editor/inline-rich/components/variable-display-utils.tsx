@@ -65,9 +65,13 @@ export function getNodeInfo(variable: Variable) {
   // Для системных переменных показываем таблицу или описание
   if (variable.nodeType === 'system') {
     if (variable.sourceTable) {
+      // Обрезаем описание до скобки с именем таблицы если оно есть
+      const desc = variable.description
+        ? variable.description.replace(/\s*\([^)]+\)\s*$/, '')
+        : null;
       return (
-        <div className="text-[10px] text-teal-600 dark:text-teal-400 font-mono mt-0.5">
-          🗄️ {variable.sourceTable}
+        <div className="text-[10px] text-teal-600 dark:text-teal-400 mt-0.5 truncate">
+          {desc || <span className="font-mono">🗄️ {variable.sourceTable}</span>}
         </div>
       );
     }
