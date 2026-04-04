@@ -37,7 +37,13 @@
 
 {# Обработчик callback для навигации к узлу #}
 {# callbackPattern: кастомный callback_data (если задан) или nodeId (обратная совместимость) #}
-@dp.callback_query(lambda c: c.data == "{{ callbackPattern or nodeId }}" or c.data.startswith("{{ nodeId }}_btn_"))
+{# Исправление бага: при наличии callbackPattern декоратор должен слушать и nodeId напрямую, #}
+{# чтобы кнопки без customCallbackData (у которых callback_data = nodeId) тоже обрабатывались #}
+{%- if callbackPattern and callbackPattern != nodeId %}
+@dp.callback_query(lambda c: c.data == "{{ callbackPattern }}" or c.data == "{{ nodeId }}" or c.data.startswith("{{ nodeId }}_btn_"))
+{%- else %}
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}" or c.data.startswith("{{ nodeId }}_btn_"))
+{%- endif %}
 async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery):
     """Обработчик перехода к узлу {{ nodeId }}"""
     user_id = callback_query.from_user.id
