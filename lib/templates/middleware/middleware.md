@@ -107,3 +107,18 @@ middleware/
 
 - [`main.py.jinja2`](../main/) — регистрация middleware в `dp`
 - [`utils.py.jinja2`](../utils/) — `check_auth`, `is_admin`, `save_user_to_db`
+
+## Интеграция с outgoing_message_trigger
+
+Все методы отправки сообщений вызывают обработчики из `_outgoing_message_trigger_handlers` после отправки. Это позволяет узлу `outgoing_message_trigger` перехватывать любые исходящие сообщения бота — текст, фото, видео, аудио, документы.
+
+Перехватываемые методы:
+- `bot.send_message` → через `_wrap_bot_send_message`
+- `bot.send_photo` → через `_wrap_bot_send_photo`
+- `message.answer` → через `_patched_answer`
+- `message.answer_photo` → через `_patched_answer_photo`
+- `message.answer_video` → через `_patched_answer_video`
+- `message.answer_audio` → через `_patched_answer_audio`
+- `message.answer_document` → через `_patched_answer_document`
+
+Каждый обработчик получает: `user_id`, `message_id` (для `forward_message`), `text/caption`, `chat_id`.

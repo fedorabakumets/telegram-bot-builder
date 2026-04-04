@@ -1,6 +1,7 @@
 {#
-  Обёртка для bot.send_photo с автоматическим логированием и регистрацией медиа
-  Использует closure вместо глобального monkey-patching
+  Обёртка для bot.send_photo с автоматическим логированием, регистрацией медиа
+  и вызовом обработчиков outgoing_message_trigger.
+  Использует closure вместо глобального monkey-patching.
 #}
 
 def _wrap_bot_send_photo(bot_instance):
@@ -58,6 +59,20 @@ def _wrap_bot_send_photo(bot_instance):
             node_id=node_id,
             message_data=message_data_obj,
         )
+
+        # Вызываем обработчики триггеров исходящих сообщений
+        try:
+            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
+            if _omt_handlers:
+                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
+                if _omt_user_id > 0:
+                    for _omt_handler in _omt_handlers:
+                        try:
+                            await _omt_handler(_omt_user_id, result.message_id if result else None, caption or "[Фото]", chat_id=_omt_user_id)
+                        except Exception as _omt_e:
+                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+        except Exception as _omt_outer_e:
+            logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
 
         return result
 
