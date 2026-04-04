@@ -18,6 +18,7 @@ import {
   expectedOutputInline,
   expectedOutputReply,
   expectedOutputEmpty,
+  validParamsContactLocation,
 } from './keyboard.fixture';
 import { keyboardParamsSchema } from './keyboard.schema';
 
@@ -313,6 +314,112 @@ describe('keyboard.py.jinja2 шаблон', () => {
         });
 
         assert.ok(result.includes('callback_data="node_back"'), `Ожидался callback_data="node_back", получено:\n${result}`);
+      });
+    });
+
+    describe('requestContact / requestLocation', () => {
+      it('генерирует request_contact=True для кнопки с requestContact', () => {
+        const result = generateKeyboard(validParamsContactLocation);
+        assert.ok(result.includes('request_contact=True'), `Ожидался request_contact=True, получено:\n${result}`);
+      });
+
+      it('генерирует request_location=True для кнопки с requestLocation', () => {
+        const result = generateKeyboard(validParamsContactLocation);
+        assert.ok(result.includes('request_location=True'), `Ожидался request_location=True, получено:\n${result}`);
+      });
+
+      it('не генерирует request_contact для обычной goto кнопки', () => {
+        const result = generateKeyboard(validParamsContactLocation);
+        const lines = result.split('\n');
+        // Строка с btn_skip не должна содержать request_contact
+        const skipLine = lines.find(l => l.includes('Пропустить'));
+        assert.ok(!skipLine?.includes('request_contact'), 'goto кнопка не должна иметь request_contact');
+      });
+
+      it('не генерирует request_location для обычной goto кнопки', () => {
+        const result = generateKeyboard(validParamsContactLocation);
+        const lines = result.split('\n');
+        const skipLine = lines.find(l => l.includes('Пропустить'));
+        assert.ok(!skipLine?.includes('request_location'), 'goto кнопка не должна иметь request_location');
+      });
+
+      it('использует ReplyKeyboardBuilder для contact/location кнопок', () => {
+        const result = generateKeyboard(validParamsContactLocation);
+        assert.ok(result.includes('ReplyKeyboardBuilder'), 'Должен использоваться ReplyKeyboardBuilder');
+        assert.ok(!result.includes('InlineKeyboardBuilder'), 'Не должен использоваться InlineKeyboardBuilder');
+      });
+
+      it('contact кнопка не генерирует callback_data', () => {
+        const result = generateKeyboard({
+          keyboardType: 'reply',
+          buttons: [{
+            id: 'btn_c', text: 'Контакт', action: 'contact',
+            buttonType: 'normal', skipDataCollection: false, hideAfterClick: false,
+            requestContact: true,
+          }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(!result.includes('callback_data'), 'contact кнопка не должна иметь callback_data');
+        assert.ok(result.includes('request_contact=True'));
+      });
+
+      it('location кнопка не генерирует callback_data', () => {
+        const result = generateKeyboard({
+          keyboardType: 'reply',
+          buttons: [{
+            id: 'btn_l', text: 'Геолокация', action: 'location',
+            buttonType: 'normal', skipDataCollection: false, hideAfterClick: false,
+            requestLocation: true,
+          }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(!result.includes('callback_data'), 'location кнопка не должна иметь callback_data');
+        assert.ok(result.includes('request_location=True'));
+      });
+
+      it('схема принимает requestContact=true в кнопке', () => {
+        const result = keyboardParamsSchema.safeParse({
+          keyboardType: 'reply',
+          buttons: [{
+            id: 'btn_c', text: 'Контакт', action: 'contact',
+            buttonType: 'normal', skipDataCollection: false, hideAfterClick: false,
+            requestContact: true,
+          }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(result.success, `Схема должна принять requestContact: ${JSON.stringify(result)}`);
+      });
+
+      it('схема принимает requestLocation=true в кнопке', () => {
+        const result = keyboardParamsSchema.safeParse({
+          keyboardType: 'reply',
+          buttons: [{
+            id: 'btn_l', text: 'Геолокация', action: 'location',
+            buttonType: 'normal', skipDataCollection: false, hideAfterClick: false,
+            requestLocation: true,
+          }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(result.success, `Схема должна принять requestLocation: ${JSON.stringify(result)}`);
+      });
+
+      it('смешанная клавиатура: contact + goto кнопки вместе', () => {
+        const result = generateKeyboard({
+          keyboardType: 'reply',
+          buttons: [
+            { id: 'btn_c', text: 'Контакт', action: 'contact', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false, requestContact: true },
+            { id: 'btn_g', text: 'Далее', action: 'goto', target: 'next_node', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+          ],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(result.includes('request_contact=True'), 'Должен быть request_contact=True');
+        assert.ok(result.includes('Далее'), 'Должна быть кнопка Далее');
+        assert.ok(result.includes('ReplyKeyboardBuilder'));
       });
     });
 
