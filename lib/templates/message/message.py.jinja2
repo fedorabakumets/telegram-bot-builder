@@ -46,6 +46,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     _pressed_cb = getattr(callback_query, 'data', None)
     if _pressed_cb and not getattr(callback_query, '_is_fake', False):
         logging.info(f"🖱️ Пользователь {user_id} нажал кнопку с callback_data=\"{_pressed_cb}\"")
+    # Сохраняем данные нажатой кнопки для использования в переменных {callback_data} и {button_text}
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["callback_data"] = _pressed_cb or ""
+    {%- if buttons and buttons|length > 0 %}
+    # Ищем текст нажатой кнопки по callback_data
+    _btn_text_map = { {%- for btn in buttons -%}
+      {%- if btn.action in ['goto', 'command', 'selection', 'complete', 'default'] or btn.customCallbackData %}
+      "{{ btn.customCallbackData or btn.target or btn.id or 'btn' }}": {{ btn.text|format_python_text }},
+      {%- endif %}
+    {%- endfor %} }
+    user_data[user_id]["button_text"] = _btn_text_map.get(_pressed_cb or "", "")
+    {%- else %}
+    user_data[user_id]["button_text"] = ""
+    {%- endif %}
 
     # Отвечаем на callback (чтобы убрать часы загрузки)
     try:

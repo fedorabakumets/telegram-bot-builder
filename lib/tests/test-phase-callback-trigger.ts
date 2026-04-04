@@ -285,6 +285,55 @@ test('D03', 'синтаксис Python OK с новыми переменными
   syntax(gen(p, 'd03'), 'd03');
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК E: Переменные callback_data и button_text от инлайн-кнопок клавиатуры
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок E: callback_data и button_text от инлайн-кнопок ──────────');
+
+/**
+ * Создаёт message-узел с инлайн-кнопками
+ * @param id - ID узла
+ * @param text - Текст сообщения
+ * @param buttons - Кнопки
+ * @returns Объект узла типа message с инлайн-клавиатурой
+ */
+function makeMessageNodeWithButtons(id: string, text: string, buttons: any[]) {
+  return {
+    id,
+    type: 'message',
+    position: { x: 0, y: 0 },
+    data: { messageText: text, buttons, keyboardType: 'inline', formatMode: 'none', markdown: false },
+  };
+}
+
+test('E01', 'message с инлайн-кнопкой → содержит user_data[user_id]["callback_data"]', () => {
+  const p = makeCleanProject([makeMessageNodeWithButtons('msg1', 'Выберите:', [
+    { id: 'btn1', text: 'Подтвердить', action: 'goto', target: 'msg2', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+  ]), makeMessageNode('msg2')]);
+  const code = gen(p, 'e01');
+  ok(code.includes('user_data[user_id]["callback_data"]'), 'user_data[user_id]["callback_data"] должен быть в коде');
+});
+
+test('E02', 'message с инлайн-кнопкой → содержит user_data[user_id]["button_text"]', () => {
+  const p = makeCleanProject([makeMessageNodeWithButtons('msg1', 'Выберите:', [
+    { id: 'btn1', text: 'Подтвердить', action: 'goto', target: 'msg2', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+  ]), makeMessageNode('msg2')]);
+  const code = gen(p, 'e02');
+  ok(code.includes('user_data[user_id]["button_text"]'), 'user_data[user_id]["button_text"] должен быть в коде');
+});
+
+test('E03', 'синтаксис Python OK с инлайн-кнопками и переменными', () => {
+  const p = makeCleanProject([
+    makeMessageNodeWithButtons('msg1', 'Выберите:', [
+      { id: 'btn1', text: 'Подтвердить', action: 'goto', target: 'msg2', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+      { id: 'btn2', text: 'Отмена', action: 'goto', target: 'msg2', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false },
+    ]),
+    makeMessageNode('msg2', 'Вы нажали: {button_text}'),
+  ]);
+  syntax(gen(p, 'e03'), 'e03');
+});
+
 // ─── Итоги ───────────────────────────────────────────────────────────────────
 
 const passed = results.filter(r => r.passed).length;

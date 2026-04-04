@@ -58,3 +58,23 @@ const code = generateKeyboard({
 ## Примечание
 
 Если keyboard-нода вынесена отдельно на canvas, её данные при генерации переносятся в связанный message/start/command-узел. Привязка может быть явной через `keyboardNodeId` или неявной через граф переходов, например `message -> condition -> keyboard`. Сам `keyboard`-узел остаётся отдельной сущностью только на уровне редактора.
+
+## Переменные {callback_data} и {button_text}
+
+При нажатии инлайн-кнопки в обработчике `handle_callback_<nodeId>` автоматически сохраняются переменные:
+
+| Переменная | Значение |
+|------------|----------|
+| `{callback_data}` | Значение `callback_data` нажатой кнопки |
+| `{button_text}` | Текст нажатой кнопки (ищется по `callback_data` среди кнопок узла) |
+
+Эти переменные доступны в тексте следующего сообщения через `replace_variables_in_text`.
+
+**Какие action имеют callback_data:**
+- `goto` → `customCallbackData` или `target` (nodeId)
+- `command` → `customCallbackData` или `cmd_<target>`
+- `selection` → `ms_<shortNodeId>_<shortButtonId>`
+- `complete` → `done_<shortNodeId>` или `customCallbackData` или `target`
+- `default` → `customCallbackData` или `target` или `id`
+
+**Не имеют callback_data:** `url`, `web_app` (с url), `contact`, `location`, `copy_text` (с copyText)
