@@ -7,7 +7,6 @@
 
 import { Node } from '@/types/bot';
 import type { Button } from '@shared/schema';
-import type { Button } from '@shared/schema';
 
 /**
  * Пропсы компонента ReplyButton
