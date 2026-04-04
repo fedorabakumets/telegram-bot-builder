@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { VariableSelector } from '../variables/variable-selector';
 import type { Variable } from '../../../inline-rich/types';
 import type { Node } from '@shared/schema';
@@ -89,6 +90,17 @@ function RecipientCard({
       {/* Поля Chat ID и Топик — только для типа chat_id */}
       {recipient.type === 'chat_id' && (
         <div className="space-y-1.5">
+          {/* Переключатель группа/канал */}
+          <div className="flex items-center gap-2 px-1">
+            <Switch
+              checked={recipient.isGroup ?? false}
+              onCheckedChange={(v) => onUpdate({ isGroup: v })}
+              id={`isGroup-${recipient.id}`}
+            />
+            <label htmlFor={`isGroup-${recipient.id}`} className="text-xs text-muted-foreground cursor-pointer select-none">
+              Группа или канал (добавить -100)
+            </label>
+          </div>
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Чат/канал:</span>
             <Input

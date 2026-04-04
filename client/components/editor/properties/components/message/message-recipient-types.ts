@@ -15,6 +15,8 @@ export interface MessageSendRecipient {
   chatId?: string;
   /** ID топика или переменная вида {var} */
   threadId?: string;
+  /** Это группа или канал (добавляет -100 к ID автоматически) */
+  isGroup?: boolean;
 }
 
 /**
@@ -44,6 +46,7 @@ export function normalizeRecipient(raw: Partial<MessageSendRecipient>, index: nu
     type: validTypes.includes(raw.type as MessageSendRecipientType) ? raw.type! : 'user',
     chatId: typeof raw.chatId === 'string' ? raw.chatId : '',
     threadId: typeof raw.threadId === 'string' ? raw.threadId : '',
+    isGroup: raw.isGroup === true,
   };
 }
 

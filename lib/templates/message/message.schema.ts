@@ -100,8 +100,19 @@ export const messageParamsSchema = z.object({
   // --- Служебные ---
   /** Есть ли входящие кнопки с hideAfterClick=true, ведущие к этому узлу */
   hasHideAfterClickIncoming: z.boolean().optional().default(false),
-  /** Использует ли текст переменные user_ids */
-  hasUserIdsVariable: z.boolean().optional().default(false),
+  /** Список получателей сообщения (chat_id / user / admin_ids) */
+  messageSendRecipients: z.array(z.object({
+    /** Уникальный ID получателя */
+    id: z.string(),
+    /** Тип получателя */
+    type: z.enum(['user', 'chat_id', 'admin_ids']).default('user'),
+    /** Chat ID или переменная */
+    chatId: z.string().optional(),
+    /** ID топика или переменная */
+    threadId: z.string().optional(),
+    /** Это группа или канал — добавить -100 к ID */
+    isGroup: z.boolean().optional().default(false),
+  })).optional().default([]),
   /**
    * Паттерн для декоратора @dp.callback_query.
    * Если задан customCallbackData у кнопки goto/command — используется он.
