@@ -1,0 +1,3356 @@
+{
+  "sheets": [
+    {
+      "id": "wmWdCzCXc76HOD1jhgtnT",
+      "name": "Лист 1",
+      "nodes": [
+        {
+          "id": "6HXfOotg5ngzaFVqGazfM",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 10332
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "🌚 ЗА#БАЛСЯ ПЕРЕПЛАЧИВАТЬ?\n\nМногие обменники просто уже обнаглели. Комиссия 20-30% за пополнение, а порой и транзакции приходится ждать по несколько часов. \n\nКак хорошо, что мы собрали для вас проверенные сервисы которые остаются в адеквате и наоборот понижают комиссии \n\n💸  Здесь вы найдете самые быстрые обмены и самые выгодные курсы на рынке!\n\n",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "6HXfOotg5ngzaFVqGazfM_keyboard_1774963283353_xk84arpdi",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "start",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 21968
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Привет! Я — TorLink бот, твой надежный помощник в поиске проверенных ссылок на различные ресурсы.",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "start_keyboard_1774963283353_oah58zpfi",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "cmd-trigger-8dBvyGem",
+          "type": "command_trigger",
+          "position": {
+            "x": 100,
+            "y": 19323
+          },
+          "data": {
+            "buttons": [],
+            "command": "/start",
+            "mapZoom": 15,
+            "options": [],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "allowSkip": false,
+            "inputType": "text",
+            "formatMode": "none",
+            "mapService": "custom",
+            "showInMenu": true,
+            "canBanUsers": false,
+            "description": "Запустить бота",
+            "isAnonymous": false,
+            "messageText": "",
+            "canAddAdmins": false,
+            "canSendPolls": true,
+            "is_anonymous": false,
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "responseType": "text",
+            "silentAction": false,
+            "sourceNodeId": "WxB05doZoSGwkYUL-NlUs",
+            "textSynonyms": [],
+            "userIdSource": "last_message",
+            "attachedMedia": [],
+            "canChangeInfo": false,
+            "inputRequired": true,
+            "isPrivateOnly": false,
+            "textMatchType": "exact",
+            "appendVariable": false,
+            "canInviteUsers": false,
+            "canPinMessages": false,
+            "resizeKeyboard": true,
+            "saveToDatabase": false,
+            "showDirections": false,
+            "anonymousVoting": true,
+            "canInviteUsers2": true,
+            "canManageTopics": false,
+            "canPinMessages2": true,
+            "canSendMessages": true,
+            "can_change_info": false,
+            "can_manage_chat": false,
+            "inputButtonType": "inline",
+            "messageIdSource": "last_message",
+            "oneTimeKeyboard": false,
+            "responseOptions": [],
+            "variableFilters": {},
+            "autoTransitionTo": "WxB05doZoSGwkYUL-NlUs",
+            "can_edit_stories": false,
+            "can_invite_users": false,
+            "can_pin_messages": false,
+            "can_post_stories": false,
+            "collectUserInput": false,
+            "customParameters": [],
+            "enableStatistics": true,
+            "adminChatIdSource": "current_chat",
+            "adminUserIdSource": "last_message",
+            "canDeleteMessages": false,
+            "canPromoteMembers": false,
+            "can_edit_messages": false,
+            "can_manage_topics": false,
+            "can_post_messages": false,
+            "enableUserActions": false,
+            "canChangeGroupInfo": true,
+            "canRestrictMembers": false,
+            "can_delete_stories": false,
+            "generateMapPreview": true,
+            "canManageVideoChats": false,
+            "can_delete_messages": false,
+            "can_promote_members": false,
+            "conditionalMessages": [],
+            "canSendMediaMessages": true,
+            "canSendOtherMessages": true,
+            "can_restrict_members": false,
+            "enableAutoTransition": false,
+            "allowsMultipleAnswers": false,
+            "canAddWebPagePreviews": true,
+            "allowMultipleSelection": false,
+            "can_manage_video_chats": false,
+            "enableConditionalMessages": false
+          }
+        },
+        {
+          "id": "WxB05doZoSGwkYUL-NlUs",
+          "type": "message",
+          "position": {
+            "x": -5360,
+            "y": 21400
+          },
+          "data": {
+            "buttons": [],
+            "command": "/start",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "description": "Запустить бота",
+            "messageText": "Привет {user_name}! \n",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "autoTransitionTo": "start",
+            "enableStatistics": true,
+            "enableAutoTransition": true
+          }
+        },
+        {
+          "id": "cmd-trigger-lpzJoIPx",
+          "type": "command_trigger",
+          "position": {
+            "x": -7520,
+            "y": 16780
+          },
+          "data": {
+            "buttons": [],
+            "command": "/menu",
+            "mapZoom": 15,
+            "options": [],
+            "markdown": false,
+            "synonyms": [],
+            "adminOnly": false,
+            "allowSkip": false,
+            "inputType": "text",
+            "formatMode": "none",
+            "mapService": "custom",
+            "showInMenu": true,
+            "canBanUsers": false,
+            "description": "Главное меню",
+            "isAnonymous": false,
+            "messageText": "",
+            "canAddAdmins": false,
+            "canSendPolls": true,
+            "is_anonymous": false,
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "responseType": "text",
+            "silentAction": false,
+            "sourceNodeId": "1ighFa0m7rV2ycSowKhAj",
+            "textSynonyms": [],
+            "userIdSource": "last_message",
+            "attachedMedia": [],
+            "canChangeInfo": false,
+            "inputRequired": true,
+            "isPrivateOnly": false,
+            "textMatchType": "exact",
+            "appendVariable": false,
+            "canInviteUsers": false,
+            "canPinMessages": false,
+            "resizeKeyboard": true,
+            "saveToDatabase": false,
+            "showDirections": false,
+            "anonymousVoting": true,
+            "canInviteUsers2": true,
+            "canManageTopics": false,
+            "canPinMessages2": true,
+            "canSendMessages": true,
+            "can_change_info": false,
+            "can_manage_chat": false,
+            "inputButtonType": "inline",
+            "messageIdSource": "last_message",
+            "oneTimeKeyboard": false,
+            "responseOptions": [],
+            "variableFilters": {},
+            "autoTransitionTo": "1ighFa0m7rV2ycSowKhAj",
+            "can_edit_stories": false,
+            "can_invite_users": false,
+            "can_pin_messages": false,
+            "can_post_stories": false,
+            "collectUserInput": false,
+            "customParameters": [],
+            "enableStatistics": true,
+            "adminChatIdSource": "current_chat",
+            "adminUserIdSource": "last_message",
+            "canDeleteMessages": false,
+            "canPromoteMembers": false,
+            "can_edit_messages": false,
+            "can_manage_topics": false,
+            "can_post_messages": false,
+            "enableUserActions": false,
+            "canChangeGroupInfo": true,
+            "canRestrictMembers": false,
+            "can_delete_stories": false,
+            "generateMapPreview": true,
+            "canManageVideoChats": false,
+            "can_delete_messages": false,
+            "can_promote_members": false,
+            "conditionalMessages": [],
+            "canSendMediaMessages": true,
+            "canSendOtherMessages": true,
+            "can_restrict_members": false,
+            "enableAutoTransition": false,
+            "allowsMultipleAnswers": false,
+            "canAddWebPagePreviews": true,
+            "allowMultipleSelection": false,
+            "can_manage_video_chats": false,
+            "enableConditionalMessages": false
+          }
+        },
+        {
+          "id": "1ighFa0m7rV2ycSowKhAj",
+          "type": "message",
+          "position": {
+            "x": -6100,
+            "y": 17040
+          },
+          "data": {
+            "buttons": [],
+            "command": "/menu",
+            "markdown": true,
+            "adminOnly": false,
+            "showInMenu": true,
+            "description": "Главное меню",
+            "messageText": "📋 Главное меню:",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "1ighFa0m7rV2ycSowKhAj_keyboard_1774963283354_wn30htzuo",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "-jbJbfHTbqRpxYkWXYf1E",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 10932
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Заходи на OMG!OMG! через Телеграм. Чтобы получить доступ отправь любое сообщение 👇",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "-jbJbfHTbqRpxYkWXYf1E_keyboard_1774963283354_49lbqu67t",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "vz7q30z1yX_V3DHY22bE0",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 11213
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Бот KRAKEN&nbsp; — уникальная&nbsp;возможность использовать все функции площадки прямо в Telegram",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "vz7q30z1yX_V3DHY22bE0_keyboard_1774963283354_uo38uru9h",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "yDx9Ya2gRkNt7uJptQCsD",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 11516
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Мы собрали проверенные казино, играя в которых наши пользователи забрали уже не один миллион рублей ! \n\nПолучай бонусы, бесплатные спины и другие привилегии.\nВыиграй свой миллион!\n",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/1/2026-03-24/1774351316622-107312733-photo_2026-03-24_14-21-30.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "yDx9Ya2gRkNt7uJptQCsD_keyboard_1774963283354_vo9rhvxat",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "AJyufw2e96huM-yUEwnKM",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 12122
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Здесь вы найдете надежные инструменты для вашей анонимности: мосты, тор, впн 👇🏻",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "AJyufw2e96huM-yUEwnKM_keyboard_1774963283354_kfqkc9zu8",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "NDhwCI3g_B-ElAMnbktkK",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 12403
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Глаз Бога постоянно банят! \nЭто лучший бот для пробива \nУзнай любую информацию за считанные секунды ",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/1/2026-03-24/1774351556376-698299039-photo_2026-03-24_14-25-27.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "NDhwCI3g_B-ElAMnbktkK_keyboard_1774963283354_n7jcqlyk2",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "gi8Cw5LSWEwtLKEDy22jO",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 12918
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "<b>Вам срочно нужны деньги? ❓\nНе знаете, где взять в долг? 💸\nМы поможем быстро и без лишних вопросов!\n\n⭐️ Получите средства прямо сейчас и забудьте о финансовой нестабильности.\n💰 Ваше благополучие – наша главная цель 🙌\n\nP.S. Если у вас есть друг, который нуждается в деньгах, поделитесь этим постом👥</b>",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "gi8Cw5LSWEwtLKEDy22jO_keyboard_1774963283354_fvu6g0dfh",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "yvMrqOMBcXuibHk3GrRCg",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 13450
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Здесь вы найдете все необходимое для своего сада 😉",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "yvMrqOMBcXuibHk3GrRCg_keyboard_1774963283354_z92lodzz3",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "phZVP_xTHPb0NgAb4PcF9",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 13708
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "💬 Я знаю, почему у тебя нет деняг! \nЗаработать – это одно, а вот сохранить и приумножить – совсем другое.\n\n💸 @PromoShop_probot — бот, который экономит за тебя\nПромокоды, скидки, купоны, кешбэк — всё в одном месте\n\nЭкономь на покупках 💪 Сэкономил - Заработал 😎",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/1/2026-03-24/1774352764372-422659012-photo_2026-03-24_14-45-39.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "phZVP_xTHPb0NgAb4PcF9_keyboard_1774963283354_sqqp5tvmp",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "x_5dW_fTkrQGEp6lE7vrq",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 14428
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "🍓BongaCams — лучший вебкам-чат для незабываемого онлайн-общения! 🔥\n\nИщешь горячие знакомства? На BongaCams тебя ждут тысячи моделей, готовых воплотить твои самые смелые фантазии! 🔥\n\n👯‍♀️Сотни девушек онлайн 24/7\n📼Приватные и бесплатные шоу\n🍓 Огромный выбор категорий на любой вкус\n💬 Живое общение и интерактивные развлечения\n\n🔗Заходи и наслаждайся прямо сейчас! ",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/1/2026-03-24/1774353027840-246084198-video_2026-03-24_14-49-28.mp4"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "x_5dW_fTkrQGEp6lE7vrq_keyboard_1774963283354_9ebmciv2h",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "6L12kjdMERiCNCb6-Izvc",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 15129
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "6L12kjdMERiCNCb6-Izvc_keyboard_1774963283354_zq0matsjg",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "CpJFawp4rkihWC2wBBSnK",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 21732
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Форумы",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "CpJFawp4rkihWC2wBBSnK_keyboard_1774963283354_04oo04k78",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "EKxX39tKBmlElzMoMQTM3",
+          "type": "message",
+          "position": {
+            "x": 740,
+            "y": 24720
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Открывать ссылки необходимо в браузере TOR:\n\nrutordeepeib6lopqoor55gfbnvh2zbsyxqpv5hnjg2qcji2x7sookqd.onion\nrutorbesth5lhmj47qz4fi5i4x5zvh4fizruog6iw2l3q223jmnawvid.onion\nrutorclubwiypaf63caqzlqwtcxqu5w6req6h7bjnvdlm4m7tddiwoyd.onion\nrutordark63xripv2a3skfrgjonvr3rqawcdpj2zcbw3sigkn6l3xpad.onion\nrutorsite3s7oalfxlcv5kdk6opadvkoremcoyrdm75rgips6pv33did.onion\nrutorcoolfldlmrpalkmfklw3nyzad6b6fycdtof3xbnixkerr47udyd.onion\n\nДополнительно:\nrutor.or.at\nrutor-24.at\nrutorforum24.to\nrutor24x7.to\nrutorforum24x7.to\nrutorforum24x7.top",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "EKxX39tKBmlElzMoMQTM3_keyboard_1774963283354_thxcagzp4",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "tiiwYYjgmf4Pafy71bvhw",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 22272
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Полезные сервисы",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "tiiwYYjgmf4Pafy71bvhw_keyboard_1774963283354_sln8fzsoc",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "0BApw5mwp2vFJOckVcBdM",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 26110
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Если у вас или у вашего друга передозировка или вы не уверены, что знаете безопасную дозировку - вам сюда:\n\nБот наркопомощи OMG:\n@narconan_bot\n\nБот первой доврачебной помощи при передозировке ПАВ:\n@overdosehelp_bot\n\nНаркологическая служба WayAway:\n@Narkolog_online_bot\n\nMega Health:\n@megahealth_support_bot\n\n@megamental_bot — бот психологической помощи Меги\n\nБот помощи от OMNIA:\n@omniahelp_bot",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "0BApw5mwp2vFJOckVcBdM_keyboard_1774963283354_nefcnhekh",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "W4XdXVdbY7fyTR3KV0O5I",
+          "type": "message",
+          "position": {
+            "x": -6300,
+            "y": 18780
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Маркетплейсы",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "W4XdXVdbY7fyTR3KV0O5I_keyboard_1774963283354_ub4mqbdtx",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "f7m2RyPIatIYdlGR6Dlf5",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 15292
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Tor ссылка:\n\ngreenwsz4q55w5qmlgttw7gx4hq66abyzsfoeucmvdped7gejcmchmqd.onion?r=TorLink\n\ngreenwtdus5vuvdjydvpums7gocultk5rpoh7fdqvblkjchgfvuv7xad.onion?r=TorLink\n\ngreenwtc2may3bzvebf57ihzmno3poei7d6i552zqcfnzmm7cojrlzid.onion?r=TorLink\n\n\nVPN (Клир) ссылка:\n\n3-m.ac/?r=TorLink\n3-mir.org/?r=TorLink\n\nПереходник:\n\n3mir.org/?r=TorLink",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "f7m2RyPIatIYdlGR6Dlf5_keyboard_1774963283354_6eo4lcv7e",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "3MF_L-XC9-_Z7gzjbJDmH",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 21569
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "3MF_L-XC9-_Z7gzjbJDmH_keyboard_1774963283354_r8k25cdb9",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "1xYHZajokNfothqnVVY4E",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 27386
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Общайтесь с единомышленниками в наших чатах, здесь вам всегда рады 👽\n",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "1xYHZajokNfothqnVVY4E_keyboard_1774963283354_u0au57lkc",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "s7ty7o2JH3u9vAx78IdYm",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 27667
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Чтобы быть в курсе всего самого интересного подпишись на наши каналы 😎\n\n📺 Onion News — новости даркнета \n🌱 Grow Street  — растаманский канал \n🚬 Rasta Memes  — смешные мемы 420",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "s7ty7o2JH3u9vAx78IdYm_keyboard_1774963283354_7r55g9pyu",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "cnc9k-SXcbX64z1EY-cdQ",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 25298
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Открывать ссылки необходимо в браузере TOR:\n\nbazaomg5eqce3x2d5daulwpkultwjkwatgetevbwgth2r3qllpgdluyd.onion\n\nДополнительно:\n\nbaza8.cc",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "cnc9k-SXcbX64z1EY-cdQ_keyboard_1774963283354_6z4a7c7tu",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "0DSUTTLO5nc25WW3Zxo92",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 25670
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Открывать ссылки необходимо в браузере TOR:\n\nwayawaywadzldenxngutxmbr3mh3it4gzkocxyw2fn2exoig3sbjm6qd.onion\n\n2on2hyadgfr6lorgk6evjiyhbskknaawjpvnx4ia6tyds355hgwvjsqd.onion\n\nДополнительно:\ngoway.cc\ngowaygo.vip\ngoway.hk",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "0DSUTTLO5nc25WW3Zxo92_keyboard_1774963283354_w00lq21mg",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "EvXgm0uIEBgOjK-a6DYpj",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 26869
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "imgbb / https://imgbb.com/\nTurbo.my / https://turbo.my/\nFiles.fm / https://ru.files.fm/",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "EvXgm0uIEBgOjK-a6DYpj_keyboard_1774963283354_vai5jwu4k",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "9vdLClOFntBQq20fCSAoC",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 27150
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Проверенные VPN сервисы",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "9vdLClOFntBQq20fCSAoC_keyboard_1774963283354_77e9h0u54",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "zSKAlg7he2k-EdzpBQiHy",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 15960
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Tor ссылка:\n\nskyiwredshjnhjgeleladu7m7mgpuxgsnfxzhncwtvmhr7l5bniutayd.onion\n\nblackspruty4w3j4bzyhlk24jr32wbpnfo3oyywn4ckwylo4hkcyy4yd.onion\n\nVPN (Клир) ссылка:\n\nbs2best.at\nbs2web.at\n\nblsp.at/check",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "zSKAlg7he2k-EdzpBQiHy_keyboard_1774963283354_rcgswpqdf",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "MKSDOV1zUTdO4dSfdMZ8W",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 16446
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "TOR:\n\nbazaarbazanvf7e4w6g4666jkepothi5cx2s7hvw2nosucwrunwjshad.onion\n\nVPN:\nbazaar3.at\nbazaar1.at",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "MKSDOV1zUTdO4dSfdMZ8W_keyboard_1774963283354_gnc3vuq7j",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "ozMQTcZQD4dEsptiY-gvr",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 16818
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Tor ссылка:\n\nMega 2.0\n\nmega2o2nde2gzktxse2fesqpyfeoma72qmvk3fkecip2l3uv3tbn5mad.onion\n\nmega2oakke6o6mya3lte64b4d3mrq2ohz6waamfmszcfjhayszqhchqd.onion\n\nmega2ooyov5nrf42ld7gnbsurg2rgmxn2xkxj5datwzv3qy5pk3pk57qd.onion\n\nmega2onq5nskz5ib5cg3a2aqkcprqnm3lojxtik2zeou6au6mno7d4ad.onion\n\nmega2ousbpnmmput4tiyu4oa4mjck2icier52ud6lmgrhzlikrxmysid.onion\n\n\nVPN (Клир) ссылка:\n\nMega 1.0:\n\nmegaweb16.at\n\nMega 2.0:\n\nmgmarket5.at\n\nmgmarket6.at\n\nПереходник: mg3.at",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "ozMQTcZQD4dEsptiY-gvr_keyboard_1774963283354_fcaw6orwz",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "LxrtVcsmKkLYrhHp5mZnR",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 17668
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "TOR:\n\nkraken2trfqodidvlh4aa33\n7cpzfrhdlfldhve5nf7njhumwr7instad.onion/x101-torlink\nkraken3yvbvzmhytnrnuhsy772i6dfobofu652e27f5hx6y5cpj7rgyd.onion/x101-torlink\nkraken4qzqnoi7ogpzpzwrxk7mw53n5i56loydwiyonu4owxsh4g67yd.onion/x101-torlink\nkraken5af44k24fwzohe6fvqfgxfsee4lgydb3ayzkfhlzqhuwlo33ad.onion/x101-torlink\nkraken6gf6o4rxewycqwjgfchzgxyfeoj5xafqbfm4vgvyaig2vmxvyd.onion/x101-torlink\nkraken7jmgt7yhhe2c4iyilthnhcugfylcztsdhh7otrr6jgdw667pqd.onion/x101-torlink\n\nClear:\n\nslon2.to/x101-torlink (используйте VPN)\nslon3.at/x101-torlink  (используйте VPN)\nslon4.at/x101-torlink  (используйте VPN)\nв случае отключения slon4, slon5, и так далее\n\nБот @kiikikilove_bot",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "LxrtVcsmKkLYrhHp5mZnR_keyboard_1774963283354_5obhlmwfy",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "diumrGvaknWs1nSp6M8AM",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 18404
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "VPN (Клир) ссылка:\n\nweeedcat.com/invite/polo32",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "diumrGvaknWs1nSp6M8AM_keyboard_1774963283354_zem36r8yy",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "aH_kI8BnXIBpTzeDcVNYf",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 18685
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Tor ссылка:\n\nnova3ltdfyo64bqgrnlouxvavoncqk5363ik7kcw7t3ufismrkicejad.onion\n\nnova4ltd6cidwsxxfgukivilufskh2fm372t56ej7mnogfwoby4uf7id.onion\n\nnova4ltdzhi3bdtgzzic3pacijhpbm5lfhwzx4ge5zga3d6uvly2wxad.onion\n\nnovaltda4llwuj3sr6vl3uy3nl4r5hvnjakpzaqy5zygzbav5vexi2yd.onion\n\nVPN (Клир) ссылка:\n\nnova-ltd.life",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "aH_kI8BnXIBpTzeDcVNYf_keyboard_1774963283354_9nzr0a4dd",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "BN-zJCoRk62ArF58c_u_D",
+          "type": "message",
+          "position": {
+            "x": 740,
+            "y": 19200
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "TOR: \n\nhttps://omgomgomg5j4yrr4mjdv3h5c5xfvxtqqs2in7smi65mjps7wvkmqmtqd.onion/auth/register/?refid=torli26&subid=torli26&clickid=one\n\nClear:\n\nhttp://omgup2.at/auth/register/?refid=torli26&subid=torli26&clickid=one (используйте VPN)\n\n📱 Приложение для смартфона:\nhttps://omgap9.cc\n\n📱 Android-браузер со встроенным VPN:\n\nhttp://omgup2.at/omg-browser.apk\n\nhttps://omgomg.crypto (инструкция как подключиться)\n\n✅ 🩺 НАРКОЛОГ — КОНСУЛЬТАЦИИ 24/7\n\n🔗 https://t.me/narconan_bot\n\n🤝 Бот профсоюза: https://t.me/profsoyuz_baza_bot",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "BN-zJCoRk62ArF58c_u_D_keyboard_1774963283354_9pzzm3005",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "6BaLt2_FrrSAmKrNkt9sM",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 19930
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "VPN (Клир) ссылка:\n\nvolnapeople.co/?ref=gOsRHg5h\n\nTor ссылка:\n\nvolnaruyyfimjnlsl7kuez5cryk7wmlfbvzruv62et6zpydq3warlsad.onion/?ref=gOsRHg5h\n\nvolnaruzsssgk4qe3wuplhivx5t5eorlvxcejk2fortuuwqacrnnpgyd.onion/?ref=gOsRHg5h\n\nvolnaruzkydz6diihhtd3xmohmapidsay47qbgjanfsv6ze5dme6fvad.onion/?ref=gOsRHg5h",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "6BaLt2_FrrSAmKrNkt9sM_keyboard_1774963283354_b9offg9b5",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "eHyz7XgORICHeW90jIdTE",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 20461
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Tor ссылка:\n\njinnland42q5alr4olhf7hr75o4j3pcalibu37dldkf5dbbecunqnjad.onion\n\njinnstoreflhly3wzbxoqv4sgihylbw3nlalofqqkiwgovdlv6svobyd.onion\n\njinn4youuuhdz63jxa72g3qdryliklmwbtc2nf7krr6gadjmbxs5xfad.onion\n\nVPN (Клир) ссылка:\n\njinn.best\n\n\nG0WRYY5TYTCL\nукажи и получи 500 бонусных рублей!",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "eHyz7XgORICHeW90jIdTE_keyboard_1774963283354_z1vj3xaxk",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "8P6j8r8CXV5uEGwt275sQ",
+          "type": "message",
+          "position": {
+            "x": 828,
+            "y": 21015
+          },
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Tor ссылка:\n\ntor4club265s7ve7q73sdzncokraxa23fog73ulqnvit6sqhg5f3vuad.onion\n\ntordark24hubivklsvijsqujj6pxfilthoq6yvfogu2q2tcyme2vpsad.onion\n\ntorclub2o7wm75lo42r2ci6m2oo5wn2pquyvbnuf6ocqilp5keomsvid.onion\n\nVPN (Клир) ссылка:\n\ntor-mart.pro\n\ntormarket.media\n\ntormarketplace.org",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "8P6j8r8CXV5uEGwt275sQ_keyboard_1774963283354_a5t87d7kx",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "6HXfOotg5ngzaFVqGazfM_keyboard_1774963283353_xk84arpdi",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 10470
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774349261865",
+                "url": "https://t.me/TopExchanger_bot",
+                "text": "Топ обменники",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349341039",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774349261865"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774349341039"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "start_keyboard_1774963283353_oah58zpfi",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 21968
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774349146611",
+                "text": "Топ Обменники",
+                "action": "goto",
+                "target": "6HXfOotg5ngzaFVqGazfM",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349147755",
+                "text": "OMG!OMG! MiniApp",
+                "action": "goto",
+                "target": "-jbJbfHTbqRpxYkWXYf1E",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349148412",
+                "text": "Маркетплейсы",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349148856",
+                "text": "KRAKEN BOT",
+                "action": "goto",
+                "target": "vz7q30z1yX_V3DHY22bE0",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349149132",
+                "text": "Казино",
+                "action": "goto",
+                "target": "yDx9Ya2gRkNt7uJptQCsD",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349929412",
+                "text": "Мосты",
+                "action": "goto",
+                "target": "AJyufw2e96huM-yUEwnKM",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349930078",
+                "text": "Пробив",
+                "action": "goto",
+                "target": "NDhwCI3g_B-ElAMnbktkK",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349930521",
+                "text": "Финансовая помощь",
+                "action": "goto",
+                "target": "gi8Cw5LSWEwtLKEDy22jO",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349931468",
+                "text": "Все для сада",
+                "action": "goto",
+                "target": "yvMrqOMBcXuibHk3GrRCg",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349933925",
+                "text": "Промокоды | Cкидки",
+                "action": "goto",
+                "target": "phZVP_xTHPb0NgAb4PcF9",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774350039119",
+                "text": "Горячие знакомства",
+                "action": "goto",
+                "target": "x_5dW_fTkrQGEp6lE7vrq",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774350039577",
+                "text": "Чаты/Каналы",
+                "action": "goto",
+                "target": "3MF_L-XC9-_Z7gzjbJDmH",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774350040009",
+                "text": "Форумы",
+                "action": "goto",
+                "target": "CpJFawp4rkihWC2wBBSnK",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774350040451",
+                "text": "Полезное",
+                "action": "goto",
+                "target": "tiiwYYjgmf4Pafy71bvhw",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774350040919",
+                "text": "Резерв",
+                "action": "goto",
+                "target": "6L12kjdMERiCNCb6-Izvc",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774349146611"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774349148412",
+                    "1774349147755",
+                    "1774349148856"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774349149132",
+                    "1774349930078",
+                    "1774349929412"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774349930521",
+                    "1774349931468",
+                    "1774349933925"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774350039577",
+                    "1774350039119",
+                    "1774350040009"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774350040919",
+                    "1774350040451"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "1ighFa0m7rV2ycSowKhAj_keyboard_1774963283354_wn30htzuo",
+          "type": "keyboard",
+          "position": {
+            "x": -9740,
+            "y": 15800
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "btn-1",
+                "text": "Топ обменники",
+                "action": "goto",
+                "target": "6HXfOotg5ngzaFVqGazfM",
+                "buttonType": "normal"
+              },
+              {
+                "id": "btn-2",
+                "text": "Маркетплейсы",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal"
+              },
+              {
+                "id": "btn-3",
+                "text": "KRAKEN BOT",
+                "action": "goto",
+                "target": "vz7q30z1yX_V3DHY22bE0",
+                "buttonType": "normal"
+              },
+              {
+                "id": "btn-4",
+                "text": "OMG!OMG! MiniApp",
+                "action": "goto",
+                "target": "-jbJbfHTbqRpxYkWXYf1E",
+                "buttonType": "normal"
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "reply",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "btn-1"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "btn-2",
+                    "btn-3",
+                    "btn-4"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "-jbJbfHTbqRpxYkWXYf1E_keyboard_1774963283354_49lbqu67t",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 10932
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774349471326",
+                "url": "https://t.me/bigklad",
+                "text": "OMG!OMG! MiniApp",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349556860",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774349471326"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774349556860"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "vz7q30z1yX_V3DHY22bE0_keyboard_1774963283354_uo38uru9h",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 11213
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774349712124",
+                "url": "https://t.me/kiikikilove_bot",
+                "text": "KRAKEN BOT",
+                "action": "url",
+                "target": "https://t.me/kiikikilove_bot",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774349712613",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774349712124"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774349712613"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "yDx9Ya2gRkNt7uJptQCsD_keyboard_1774963283354_vo9rhvxat",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 11657
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774351245219",
+                "url": "https://t.me/Jackpot_probot",
+                "text": "Jackpot_probot",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774351264410",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774351245219"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774351264410"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "AJyufw2e96huM-yUEwnKM_keyboard_1774963283354_kfqkc9zu8",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 12122
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774351383942",
+                "url": "https://t.me/TorBridges_Robot",
+                "text": "TorBridges_Robot",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774351386284",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774351383942"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774351386284"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "NDhwCI3g_B-ElAMnbktkK_keyboard_1774963283354_n7jcqlyk2",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 12487
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774351581398",
+                "url": "https://t.me/HimeraSearch_broBot",
+                "text": "Himera Search",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774351582921",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774351581398"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774351582921"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "gi8Cw5LSWEwtLKEDy22jO_keyboard_1774963283354_fvu6g0dfh",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 13022
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774352291732",
+                "url": "https://t.me/MoneyHelps_bot",
+                "text": "Перейти",
+                "action": "url",
+                "target": "https://t.me/MoneyHelps_bot",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774352294752",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774352291732"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774352294752"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "yvMrqOMBcXuibHk3GrRCg_keyboard_1774963283354_z92lodzz3",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 13450
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774352590535",
+                "url": "https://t.me/rastagarden_bot",
+                "text": "Все для сада",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774352591058",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774352590535"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774352591058"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "phZVP_xTHPb0NgAb4PcF9_keyboard_1774963283354_sqqp5tvmp",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 13906
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774352822045",
+                "url": "https://t.me/PromoShop_probot",
+                "text": "PromoShop",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774352822619",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774352822045"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774352822619"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "x_5dW_fTkrQGEp6lE7vrq_keyboard_1774963283354_9ebmciv2h",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 14617
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774352990318",
+                "url": "https://clck.ru/3GWGLj",
+                "text": "Перейти",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774352991938",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774352990318"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774352991938"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "6L12kjdMERiCNCb6-Izvc_keyboard_1774963283354_zq0matsjg",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 15129
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774353147801",
+                "url": "https://t.me/TorLink_original",
+                "text": "Резерв",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774353154244",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774353147801"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774353154244"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "CpJFawp4rkihWC2wBBSnK_keyboard_1774963283354_04oo04k78",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 21732
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774367447894",
+                "text": "RuTOR",
+                "action": "goto",
+                "target": "EKxX39tKBmlElzMoMQTM3",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367448378",
+                "text": "BAZA",
+                "action": "goto",
+                "target": "cnc9k-SXcbX64z1EY-cdQ",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367448802",
+                "text": "WayAway",
+                "action": "goto",
+                "target": "0DSUTTLO5nc25WW3Zxo92",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367450691",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774367448378",
+                    "1774367447894",
+                    "1774367448802"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774367450691"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "EKxX39tKBmlElzMoMQTM3_keyboard_1774963283354_thxcagzp4",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 24886
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774367804178",
+                "text": "Назад",
+                "action": "goto",
+                "target": "CpJFawp4rkihWC2wBBSnK",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774367804178"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "tiiwYYjgmf4Pafy71bvhw_keyboard_1774963283354_sln8fzsoc",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 22272
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774367912151",
+                "text": "Неотложная помощь",
+                "action": "goto",
+                "target": "0BApw5mwp2vFJOckVcBdM",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367912554",
+                "url": "https://safestreet.cc",
+                "text": "Карта патрулей",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367912822",
+                "url": "https://t.me/Lawyer_SupportBot",
+                "text": "Юридическая помощь",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367913002",
+                "text": "Фотохостинги",
+                "action": "goto",
+                "target": "EvXgm0uIEBgOjK-a6DYpj",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367913391",
+                "text": "vpn/proxy",
+                "action": "goto",
+                "target": "9vdLClOFntBQq20fCSAoC",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774368311937",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774367913391"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774367912151",
+                    "1774367913002"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774367912822",
+                    "1774367912554"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774368311937"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "0BApw5mwp2vFJOckVcBdM_keyboard_1774963283354_nefcnhekh",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 26366
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774367954078",
+                "text": "Назад",
+                "action": "goto",
+                "target": "tiiwYYjgmf4Pafy71bvhw",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774367954078"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "W4XdXVdbY7fyTR3KV0O5I_keyboard_1774963283354_ub4mqbdtx",
+          "type": "keyboard",
+          "position": {
+            "x": -4300,
+            "y": 20340
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774369117501",
+                "text": "Зелёный мир",
+                "action": "goto",
+                "target": "f7m2RyPIatIYdlGR6Dlf5",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369135338",
+                "text": "KRAKEN",
+                "action": "goto",
+                "target": "LxrtVcsmKkLYrhHp5mZnR",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369135874",
+                "text": "BlackSprut",
+                "action": "goto",
+                "target": "zSKAlg7he2k-EdzpBQiHy",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369136031",
+                "text": "Bazaar",
+                "action": "goto",
+                "target": "MKSDOV1zUTdO4dSfdMZ8W",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369136205",
+                "text": "Mega",
+                "action": "goto",
+                "target": "ozMQTcZQD4dEsptiY-gvr",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369136357",
+                "text": "Weedcat",
+                "action": "goto",
+                "target": "diumrGvaknWs1nSp6M8AM",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369136518",
+                "text": "OMG",
+                "action": "goto",
+                "target": "BN-zJCoRk62ArF58c_u_D",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369136682",
+                "text": "MATANGA",
+                "action": "goto",
+                "target": "BN-zJCoRk62ArF58c_u_D",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369136880",
+                "text": "XNOVA",
+                "action": "goto",
+                "target": "aH_kI8BnXIBpTzeDcVNYf",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369137158",
+                "text": "TOR",
+                "action": "goto",
+                "target": "8P6j8r8CXV5uEGwt275sQ",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369137316",
+                "text": "JINN",
+                "action": "goto",
+                "target": "eHyz7XgORICHeW90jIdTE",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369267761",
+                "text": "VOLNA",
+                "action": "goto",
+                "target": "6BaLt2_FrrSAmKrNkt9sM",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369268149",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774369117501"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774369135338",
+                    "1774369135874",
+                    "1774369136031"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774369136518",
+                    "1774369136205",
+                    "1774369136357"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774369137158",
+                    "1774369137316",
+                    "1774369136682"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774369136880",
+                    "1774369267761"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774369268149"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true,
+            "multiSelectVariable": "W4XdXVdbY7fyTR3KV0O5I",
+            "allowMultipleSelection": false
+          }
+        },
+        {
+          "id": "f7m2RyPIatIYdlGR6Dlf5_keyboard_1774963283354_6eo4lcv7e",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 15502
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774369381525",
+                "text": "Назад",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774369381525"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "3MF_L-XC9-_Z7gzjbJDmH_keyboard_1774963283354_r8k25cdb9",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 21569
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774369801301",
+                "text": "Чаты",
+                "action": "goto",
+                "target": "1xYHZajokNfothqnVVY4E",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369801906",
+                "text": "Каналы",
+                "action": "goto",
+                "target": "s7ty7o2JH3u9vAx78IdYm",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774369803297",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774369801301",
+                    "1774369801906"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774369803297"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "1xYHZajokNfothqnVVY4E_keyboard_1774963283354_u0au57lkc",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 27386
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774367016875",
+                "url": "https://t.me/+lckzm4T1f8c1OGMy",
+                "text": "CHILL CHAT ",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367017302",
+                "url": "https://t.me/+-PS9UZbPs_ZhMGNi",
+                "text": "GROW CHAT ",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367019940",
+                "url": "https://t.me/+jtQ7Xfr9LZI1OWMy",
+                "text": "TRIP CHAT ",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367020498",
+                "url": "https://t.me/+UBGw-LR3yWI1MWFk",
+                "text": "TOR CHAT ",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774367020994",
+                "text": "Назад",
+                "action": "goto",
+                "target": "3MF_L-XC9-_Z7gzjbJDmH",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774367020498",
+                    "1774367016875"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774367017302",
+                    "1774367019940"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774367020994"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "s7ty7o2JH3u9vAx78IdYm_keyboard_1774963283354_7r55g9pyu",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 27726
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774366746069",
+                "url": "https://t.me/+JbF4T37A2ktiZTUy",
+                "text": "Rasta Memes",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774366747564",
+                "url": "https://t.me/+fH5sYiePJAE2NGJi",
+                "text": "Grow Street",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774366748056",
+                "url": "https://t.me/+3CNPmG8ShmZjZjg8",
+                "text": "Onion News",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774366908280",
+                "text": "Назад",
+                "action": "goto",
+                "target": "3MF_L-XC9-_Z7gzjbJDmH",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774366746069",
+                    "1774366747564"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774366748056",
+                    "1774366908280"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "cnc9k-SXcbX64z1EY-cdQ_keyboard_1774963283354_6z4a7c7tu",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 25348
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774367818953",
+                "text": "Назад",
+                "action": "goto",
+                "target": "CpJFawp4rkihWC2wBBSnK",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774367818953"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "0DSUTTLO5nc25WW3Zxo92_keyboard_1774963283354_w00lq21mg",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 25766
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774367784722",
+                "text": "Назад",
+                "action": "goto",
+                "target": "CpJFawp4rkihWC2wBBSnK",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774367784722"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "EvXgm0uIEBgOjK-a6DYpj_keyboard_1774963283354_vai5jwu4k",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 26874
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774368265247",
+                "text": "Назад",
+                "action": "goto",
+                "target": "tiiwYYjgmf4Pafy71bvhw",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774368265247"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "9vdLClOFntBQq20fCSAoC_keyboard_1774963283354_77e9h0u54",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 27150
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774368366731",
+                "url": "https://t.me/Alice_VPN_bot?start=MVYGSEI",
+                "text": "AliceVPN",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774368367251",
+                "url": "https://t.me/VPNSOKOLBOT?start=845759076",
+                "text": "VPN C ОБХОДОМ ГЛУШИЛОК",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774368367615",
+                "url": "https://t.me/ranetka_vpn_bot?start=snusmurmik",
+                "text": "Ranetka",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774368368221",
+                "url": "https://t.me/shark_shop_bot?start=r_47366789",
+                "text": "SharkShop",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774368536318",
+                "url": "https://t.me/neovpnbot?start=7733607050",
+                "text": "NEOVPN",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774368537030",
+                "text": "Назад",
+                "action": "goto",
+                "target": "tiiwYYjgmf4Pafy71bvhw",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774368367251"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774368366731",
+                    "1774368368221"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774368367615",
+                    "1774368536318"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774368537030"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "zSKAlg7he2k-EdzpBQiHy_keyboard_1774963283354_rcgswpqdf",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 16067
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774370316396",
+                "text": "Назад",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774370316396"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "MKSDOV1zUTdO4dSfdMZ8W_keyboard_1774963283354_gnc3vuq7j",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 16508
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774370374302",
+                "text": "Назад",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774370374302"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "ozMQTcZQD4dEsptiY-gvr_keyboard_1774963283354_fcaw6orwz",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 17107
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774370412077",
+                "text": "Назад",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774370412077"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "LxrtVcsmKkLYrhHp5mZnR_keyboard_1774963283354_5obhlmwfy",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 17912
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774369436818",
+                "text": "Назад",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774369436818"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "diumrGvaknWs1nSp6M8AM_keyboard_1774963283354_zem36r8yy",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 18421
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774370446719",
+                "text": "Назад",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774370446719"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "aH_kI8BnXIBpTzeDcVNYf_keyboard_1774963283354_9nzr0a4dd",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 18815
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774370534700",
+                "text": "Назад",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774370534700"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "BN-zJCoRk62ArF58c_u_D_keyboard_1774963283354_9pzzm3005",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 19426
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774370499017",
+                "text": "Назад",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774370499017"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "6BaLt2_FrrSAmKrNkt9sM_keyboard_1774963283354_b9offg9b5",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 20072
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774370732677",
+                "text": "Новая кнопка",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774370732677"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "eHyz7XgORICHeW90jIdTE_keyboard_1774963283354_z1vj3xaxk",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 20614
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774370689012",
+                "text": "Назад",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774370689012"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        },
+        {
+          "id": "8P6j8r8CXV5uEGwt275sQ_keyboard_1774963283354_a5t87d7kx",
+          "type": "keyboard",
+          "position": {
+            "x": 1223,
+            "y": 21168
+          },
+          "data": {
+            "buttons": [
+              {
+                "id": "1774370640578",
+                "text": "Назад",
+                "action": "goto",
+                "target": "W4XdXVdbY7fyTR3KV0O5I",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774370640578"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          }
+        }
+      ],
+      "viewState": {
+        "pan": {
+          "x": 0,
+          "y": 0
+        },
+        "zoom": 100
+      },
+      "createdAt": "2026-04-04T21:17:02.895Z",
+      "updatedAt": "2026-04-04T21:17:02.895Z"
+    }
+  ],
+  "activeSheetId": "wmWdCzCXc76HOD1jhgtnT",
+  "version": 2
+}
