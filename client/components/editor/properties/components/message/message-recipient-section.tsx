@@ -1,143 +1,197 @@
 /**
- * @fileoverview Секция выбора получателя сообщения
- *
- * Позволяет выбрать, кому отправлять сообщение: пользователю или по конкретному chat_id.
- * Поддерживает вставку переменных в поле chat_id через VariableSelector.
+ * @fileoverview Секция списка получателей узла отправки сообщения.
+ * Поддерживает несколько получателей с типами: пользователь, по ID, администраторам.
  */
 
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VariableSelector } from '../variables/variable-selector';
 import type { Variable } from '../../../inline-rich/types';
 import type { Node } from '@shared/schema';
+import {
+  type MessageSendRecipient,
+  type MessageSendRecipientType,
+  createRecipient,
+  getRecipients,
+  normalizeRecipient,
+} from './message-recipient-types';
 
-/** Пропсы секции получателя сообщения */
+/** Пропсы секции получателей сообщения */
 interface MessageRecipientSectionProps {
   /** Выбранный узел */
   selectedNode: Node;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
-  /** Текстовые переменные для вставки в поле chat_id */
+  /** Текстовые переменные для вставки */
   textVariables?: Variable[];
 }
 
-/** Типы узлов, для которых показывается секция получателя */
+/** Типы узлов, для которых показывается секция */
 const SUPPORTED_NODE_TYPES = ['message', 'start', 'command'] as const;
 
 /**
- * Секция выбора получателя сообщения
- *
- * @param props - Свойства компонента
- * @returns JSX элемент или null, если тип узла не поддерживается
+ * Карточка одного получателя
+ * @param props - Свойства карточки
+ * @returns JSX элемент карточки
  */
-export function MessageRecipientSection({ selectedNode, onNodeUpdate, textVariables }: MessageRecipientSectionProps) {
-  const nodeType = selectedNode.type as string;
-
-  // Показываем только для поддерживаемых типов узлов
-  if (!SUPPORTED_NODE_TYPES.includes(nodeType as typeof SUPPORTED_NODE_TYPES[number])) {
-    return null;
-  }
-
-  /** Текущий тип получателя */
-  const target: 'user' | 'chat_id' = selectedNode.data.messageSendTarget ?? 'user';
-  /** Текущий chat_id */
-  const chatId: string = selectedNode.data.messageSendChatId ?? '';
-  /** Текущий thread_id топика */
-  const threadId: string = selectedNode.data.messageSendThreadId ?? '';
-
-  /**
-   * Обработчик смены типа получателя
-   * @param value - Новый тип получателя
-   */
-  function handleTargetChange(value: 'user' | 'chat_id') {
-    const updates: Partial<any> = { messageSendTarget: value };
-    if (value === 'user') {
-      updates.messageSendChatId = '';
-    }
-    onNodeUpdate(selectedNode.id, updates);
-  }
-
-  /**
-   * Обработчик изменения chat_id
-   * @param e - Событие изменения поля ввода
-   */
-  function handleChatIdChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onNodeUpdate(selectedNode.id, { messageSendChatId: e.target.value });
-  }
-
+function RecipientCard({
+  recipient,
+  index,
+  textVariables,
+  onUpdate,
+  onRemove,
+}: {
+  /** Данные получателя */
+  recipient: MessageSendRecipient;
+  /** Порядковый номер */
+  index: number;
+  /** Доступные переменные */
+  textVariables: Variable[];
+  /** Обновление полей получателя */
+  onUpdate: (updates: Partial<MessageSendRecipient>) => void;
+  /** Удаление получателя */
+  onRemove: () => void;
+}) {
   return (
-    <div className="bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 border border-blue-200/40 dark:border-blue-800/40 rounded-xl p-3 space-y-2">
-      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
-        Получатель
-      </Label>
+    <div className="border border-blue-200/40 dark:border-blue-800/40 bg-white/50 dark:bg-slate-950/30 rounded-xl p-3 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
+          Получатель {index + 1}
+        </Label>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+          onClick={onRemove}
+        >
+          <i className="fas fa-trash text-xs mr-1" />
+          Удалить
+        </Button>
+      </div>
 
-      {/* Вариант: пользователю */}
-      <button
-        type="button"
-        onClick={() => handleTargetChange('user')}
-        className={`flex items-center gap-2 w-full text-left text-sm px-2 py-1 rounded-lg transition-colors ${
-          target === 'user'
-            ? 'text-blue-700 dark:text-blue-300 font-medium'
-            : 'text-muted-foreground hover:text-foreground'
-        }`}
+      {/* Выбор типа получателя */}
+      <Select
+        value={recipient.type}
+        onValueChange={(v) => onUpdate({ type: v as MessageSendRecipientType })}
       >
-        <span className={`w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${
-          target === 'user'
-            ? 'border-blue-500 bg-blue-500'
-            : 'border-muted-foreground'
-        }`} />
-        Пользователю
-      </button>
+        <SelectTrigger className="bg-card/70 border border-blue-200/50 dark:border-blue-800/50">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="user">Пользователю</SelectItem>
+          <SelectItem value="chat_id">По ID</SelectItem>
+          <SelectItem value="admin_ids">Администраторам</SelectItem>
+        </SelectContent>
+      </Select>
 
-      {/* Вариант: по ID */}
-      <button
-        type="button"
-        onClick={() => handleTargetChange('chat_id')}
-        className={`flex items-center gap-2 w-full text-left text-sm px-2 py-1 rounded-lg transition-colors ${
-          target === 'chat_id'
-            ? 'text-blue-700 dark:text-blue-300 font-medium'
-            : 'text-muted-foreground hover:text-foreground'
-        }`}
-      >
-        <span className={`w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${
-          target === 'chat_id'
-            ? 'border-blue-500 bg-blue-500'
-            : 'border-muted-foreground'
-        }`} />
-        По ID:
-      </button>
-
-      {/* Поле ввода chat_id с кнопкой вставки переменной */}
-      {target === 'chat_id' && (
-        <>
-          <div className="flex items-center gap-1 ml-5">
+      {/* Поля Chat ID и Топик — только для типа chat_id */}
+      {recipient.type === 'chat_id' && (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Chat ID:</span>
             <Input
-              value={chatId}
-              onChange={handleChatIdChange}
-              placeholder="123456789 или {admin_id}"
+              value={recipient.chatId ?? ''}
+              onChange={(e) => onUpdate({ chatId: e.target.value })}
+              placeholder="123456789 или {переменная}"
               className="flex-1 h-8 text-sm"
             />
             <VariableSelector
-              availableVariables={textVariables || []}
-              onSelect={(varName) => onNodeUpdate(selectedNode.id, { messageSendChatId: `{${varName}}` })}
+              availableVariables={textVariables}
+              onSelect={(v) => onUpdate({ chatId: `{${v}}` })}
             />
           </div>
-          {/* Поле топика — опционально */}
-          <div className="flex items-center gap-1 ml-5">
-            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Топик ID:</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">Топик:</span>
             <Input
-              value={threadId}
-              onChange={e => onNodeUpdate(selectedNode.id, { messageSendThreadId: e.target.value })}
+              value={recipient.threadId ?? ''}
+              onChange={(e) => onUpdate({ threadId: e.target.value })}
               placeholder="{thread_id} или число"
               className="flex-1 h-8 text-sm"
             />
             <VariableSelector
-              availableVariables={textVariables || []}
-              onSelect={(varName) => onNodeUpdate(selectedNode.id, { messageSendThreadId: `{${varName}}` })}
+              availableVariables={textVariables}
+              onSelect={(v) => onUpdate({ threadId: `{${v}}` })}
             />
           </div>
-        </>
+        </div>
       )}
+
+      {/* Подсказка для admin_ids */}
+      {recipient.type === 'admin_ids' && (
+        <p className="text-xs text-blue-600/70 dark:text-blue-400/70">
+          Сообщение будет отправлено всем администраторам проекта.
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Секция списка получателей сообщения
+ * @param props - Свойства компонента
+ * @returns JSX элемент или null, если тип узла не поддерживается
+ */
+export function MessageRecipientSection({ selectedNode, onNodeUpdate, textVariables = [] }: MessageRecipientSectionProps) {
+  if (!SUPPORTED_NODE_TYPES.includes(selectedNode.type as typeof SUPPORTED_NODE_TYPES[number])) {
+    return null;
+  }
+
+  const recipients = getRecipients(selectedNode.data);
+
+  /**
+   * Сохраняет обновлённый список получателей в узел
+   * @param next - Новый список получателей
+   */
+  function save(next: MessageSendRecipient[]) {
+    const normalized = (next.length > 0 ? next : [createRecipient()]).map((r, i) => normalizeRecipient(r, i));
+    const primary = normalized[0];
+    onNodeUpdate(selectedNode.id, {
+      messageSendRecipients: normalized,
+      // legacy-поля для обратной совместимости
+      messageSendTarget: primary.type === 'chat_id' ? 'chat_id' : 'user',
+      messageSendChatId: primary.type === 'chat_id' ? (primary.chatId ?? '') : '',
+      messageSendThreadId: primary.type === 'chat_id' ? (primary.threadId ?? '') : '',
+    });
+  }
+
+  /** Обновляет поля конкретного получателя */
+  function update(index: number, updates: Partial<MessageSendRecipient>) {
+    save(recipients.map((r, i) => (i === index ? { ...r, ...updates } : r)));
+  }
+
+  /** Удаляет получателя (минимум 1 остаётся) */
+  function remove(index: number) {
+    if (recipients.length <= 1) return;
+    save(recipients.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-blue-50/40 to-cyan-50/20 dark:from-blue-950/30 dark:to-cyan-900/20 border border-blue-200/40 dark:border-blue-800/40 rounded-xl p-3 space-y-2">
+      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">Получатели</Label>
+
+      {recipients.map((r, i) => (
+        <RecipientCard
+          key={r.id}
+          recipient={r}
+          index={i}
+          textVariables={textVariables}
+          onUpdate={(updates) => update(i, updates)}
+          onRemove={() => remove(i)}
+        />
+      ))}
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full border-dashed border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-950/20"
+        onClick={() => save([...recipients, createRecipient()])}
+      >
+        <i className="fas fa-plus mr-2" />
+        Добавить получателя
+      </Button>
     </div>
   );
 }
