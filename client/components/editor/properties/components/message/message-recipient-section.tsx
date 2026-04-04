@@ -94,7 +94,7 @@ function RecipientCard({
             <Input
               value={recipient.chatId ?? ''}
               onChange={(e) => onUpdate({ chatId: e.target.value })}
-              placeholder="123456789 или {переменная}"
+              placeholder="123456789, @channel или {переменная}"
               className="flex-1 h-8 text-sm"
             />
             <VariableSelector
