@@ -189,6 +189,36 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
     }
   });
 
+  // Добавляем переменные от инлайн-кнопок клавиатуры
+  allNodes.forEach(node => {
+    if ((node.data as any).keyboardType !== 'inline') return;
+    const buttons: any[] = (node.data as any).buttons ?? [];
+    buttons.forEach(btn => {
+      if (!btn.text) return;
+      /** Значение callback_data: customCallbackData если задан, иначе target (nodeId) */
+      const cbValue: string = btn.customCallbackData || btn.target || btn.id || '';
+      const cbKey = `callback_data__btn__${btn.id}`;
+      const btKey = `button_text__btn__${btn.id}`;
+
+      if (!variablesMap.has(cbKey)) {
+        variablesMap.set(cbKey, {
+          name: 'callback_data',
+          nodeId: node.id,
+          nodeType: 'callback_trigger',
+          description: cbValue ? `Данные кнопки: ${cbValue}` : `Кнопка: ${btn.text}`,
+        });
+      }
+      if (!variablesMap.has(btKey)) {
+        variablesMap.set(btKey, {
+          name: 'button_text',
+          nodeId: node.id,
+          nodeType: 'callback_trigger',
+          description: `Текст кнопки: "${btn.text}"`,
+        });
+      }
+    });
+  });
+
   // Добавляем системные переменные
   SYSTEM_VARIABLES.forEach(v => { 
     if (!variablesMap.has(v.name)) {
