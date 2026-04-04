@@ -50,19 +50,22 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     if user_id not in user_data:
         user_data[user_id] = {}
     user_data[user_id]["callback_data"] = _pressed_cb or ""
-    {%- if buttons and buttons|length > 0 %}
-    # Ищем текст нажатой кнопки по callback_data
-    _btn_text_map = { {%- for btn in buttons -%}
-      {%- if btn.action in ['goto', 'command', 'selection', 'complete', 'default'] or btn.customCallbackData %}
-      "{{ btn.customCallbackData or btn.target or btn.id or 'btn' }}": {{ btn.text|format_python_text }},
-      {%- endif %}
-    {%- endfor %} }
-    user_data[user_id]["button_text"] = _btn_text_map.get(_pressed_cb or "", "")
-    {%- else %}
-    # Не перезаписываем button_text если он уже был установлен предыдущим обработчиком
-    if not user_data[user_id].get("button_text"):
-        user_data[user_id]["button_text"] = ""
-    {%- endif %}
+    # Читаем текст кнопки из reply_markup сообщения — Telegram хранит его там
+    _btn_text_found = ""
+    try:
+        if _pressed_cb and callback_query.message and hasattr(callback_query.message, "reply_markup"):
+            _rm = callback_query.message.reply_markup
+            if _rm and hasattr(_rm, "inline_keyboard"):
+                for _row in _rm.inline_keyboard:
+                    for _btn in _row:
+                        if getattr(_btn, "callback_data", None) == _pressed_cb:
+                            _btn_text_found = _btn.text or ""
+                            break
+                    if _btn_text_found:
+                        break
+    except Exception:
+        pass
+    user_data[user_id]["button_text"] = _btn_text_found
 
     # Отвечаем на callback (чтобы убрать часы загрузки)
     try:

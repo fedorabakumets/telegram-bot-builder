@@ -57,7 +57,24 @@ async def callback_trigger_{{ sanitized_node_id }}_handler(callback_query: types
     if user_id not in user_data:
         user_data[user_id] = {}
     user_data[user_id]["callback_data"] = callback_query.data or "{{ entry.callbackData }}"
-    user_data[user_id]["button_text"] = "{{ entry.buttonText or entry.callbackData }}"
+    # Читаем текст кнопки из reply_markup сообщения — Telegram хранит его там
+    _cb_btn_text = ""
+    try:
+        _cb_data = callback_query.data or "{{ entry.callbackData }}"
+        if callback_query.message and hasattr(callback_query.message, "reply_markup"):
+            _rm = callback_query.message.reply_markup
+            if _rm and hasattr(_rm, "inline_keyboard"):
+                for _row in _rm.inline_keyboard:
+                    for _btn in _row:
+                        if getattr(_btn, "callback_data", None) == _cb_data:
+                            _cb_btn_text = _btn.text or ""
+                            break
+                    if _cb_btn_text:
+                        break
+    except Exception:
+        pass
+    # Fallback: используем статичный текст кнопки из проекта если не нашли в reply_markup
+    user_data[user_id]["button_text"] = _cb_btn_text or "{{ entry.buttonText or entry.callbackData }}"
 
     mock_callback = MockCallback("{{ entry.targetNodeId }}", callback_query.from_user, callback_query.message)
     await handle_callback_{{ sanitized_target_id }}(mock_callback)
