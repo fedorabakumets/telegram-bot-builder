@@ -258,6 +258,19 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
 {%- if enableAutoTransition and autoTransitionTo %}
     # Автопереход к следующему узлу
     logging.info(f"Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTo }}")
+    class FakeCallbackQuery:
+        def __init__(self, message, target_node_id):
+            self.from_user = message.from_user
+            self.message = message
+            self.data = target_node_id
+            self.chat = message.chat
+            self.date = message.date
+            self.message_id = message.message_id
+            self._is_fake = True
+
+        async def answer(self, *args, **kwargs):
+            pass
+
     fake_cb = FakeCallbackQuery(callback_query.message, "{{ autoTransitionTo }}")
     await handle_callback_{{ autoTransitionTo|safe_name }}(fake_cb)
 {%- endif %}
