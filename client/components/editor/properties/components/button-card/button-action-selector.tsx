@@ -32,7 +32,7 @@ export function ButtonActionSelector({
   nodeId,
   allowMultipleSelection = false
 }: ButtonActionSelectorProps) {
-  const config = ACTION_CONFIG[button.action as ButtonActionType];
+  const config = ACTION_CONFIG[button.action as ButtonActionType] ?? ACTION_CONFIG['default'];
 
   return (
     <div className="space-y-2">
