@@ -572,6 +572,25 @@ export const nodeSchema = z.object({
       /** ID целевого узла для перехода по этой ветке */
       target: z.string().optional(),
     })).default([]),
+    /** Список получателей сообщения (для узлов message и media) */
+    messageSendRecipients: z.array(z.object({
+      /** Уникальный ID получателя */
+      id: z.string(),
+      /** Тип получателя: пользователь, по ID чата, администраторам */
+      type: z.enum(['user', 'chat_id', 'admin_ids']).default('user'),
+      /** ID чата или канала */
+      chatId: z.string().optional(),
+      /** ID топика в группе */
+      threadId: z.string().optional(),
+      /** Добавить префикс -100 для групп/каналов */
+      isGroup: z.boolean().optional().default(false),
+    })).optional().default([]),
+    /** Целевой чат для отправки (legacy) */
+    messageSendTarget: z.string().optional(),
+    /** ID чата для отправки (legacy) */
+    messageSendChatId: z.string().optional(),
+    /** ID топика для отправки (legacy) */
+    messageSendThreadId: z.string().optional(),
   }),
 });
 
