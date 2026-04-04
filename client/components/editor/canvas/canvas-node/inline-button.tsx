@@ -71,6 +71,11 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
               Завершение
             </div>
           )}
+          {button.action === 'copy_text' && (
+            <div className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 truncate">
+              📋 {(button as any).copyText}
+            </div>
+          )}
           {button.hideAfterClick && (
             <div className="mt-1 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
               <i className="fas fa-eye-slash text-[10px]"></i>
@@ -90,6 +95,9 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
           )}
           {button.action === 'complete' && (
             <i className="fas fa-flag-checkered text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Завершение"></i>
+          )}
+          {button.action === 'copy_text' && (
+            <i className="fas fa-clipboard text-yellow-600 dark:text-yellow-400 text-xs opacity-70" title="Копировать текст"></i>
           )}
         </div>
       </div>

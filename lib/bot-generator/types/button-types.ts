@@ -24,7 +24,8 @@ export type ButtonAction =
   | 'location'   /** Отправка геолокации */
   | 'selection'  /** Кнопка выбора (multi-select) */
   | 'complete'   /** Кнопка завершения (multi-select done) */
-  | 'default';   /** Кнопка по умолчанию */
+  | 'default'    /** Кнопка по умолчанию */
+  | 'copy_text'; /** Копировать текст в буфер обмена (Bot API 7.11, только inline) */
 
 /** Тип кнопки бота из схемы Zod */
 export type Button = z.infer<typeof buttonSchema>;

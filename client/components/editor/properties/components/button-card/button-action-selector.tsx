@@ -62,6 +62,9 @@ export function ButtonActionSelector({
           {isReply && (
             <SelectItem value="location"><ButtonActionOption action="location" /></SelectItem>
           )}
+          {!isReply && (
+            <SelectItem value="copy_text"><ButtonActionOption action="copy_text" /></SelectItem>
+          )}
           {allowMultipleSelection && (
             <SelectItem value="selection"><ButtonActionOption action="selection" /></SelectItem>
           )}

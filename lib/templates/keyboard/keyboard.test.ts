@@ -19,6 +19,7 @@ import {
   expectedOutputReply,
   expectedOutputEmpty,
   validParamsContactLocation,
+  validParamsCopyText,
 } from './keyboard.fixture';
 import { keyboardParamsSchema } from './keyboard.schema';
 
@@ -429,8 +430,38 @@ describe('keyboard.py.jinja2 шаблон', () => {
       });
     });
 
-    describe('Производительность', () => {
-      it('должен генерировать код быстрее 10ms', () => {
+    describe('copy_text действие', () => {
+      it('генерирует CopyTextButton(text="...") для copy_text кнопки', () => {
+        const result = generateKeyboard(validParamsCopyText);
+        assert.ok(result.includes('CopyTextButton(text="PROMO2024")'), `Ожидался CopyTextButton(text="PROMO2024"), получено:\n${result}`);
+      });
+
+      it('не генерирует callback_data для copy_text кнопки', () => {
+        const result = generateKeyboard(validParamsCopyText);
+        const lines = result.split('\n');
+        const copyLine = lines.find(l => l.includes('CopyTextButton'));
+        assert.ok(!copyLine?.includes('callback_data'), 'copy_text кнопка не должна иметь callback_data');
+      });
+
+      it('схема принимает copyText поле в кнопке', () => {
+        const result = keyboardParamsSchema.safeParse({
+          keyboardType: 'inline',
+          buttons: [{ id: 'btn_c', text: 'Скопировать', action: 'copy_text', copyText: 'hello', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(result.success, `Схема должна принять copyText: ${JSON.stringify(result)}`);
+      });
+
+      it('copy_text кнопка работает вместе с другими inline кнопками', () => {
+        const result = generateKeyboard(validParamsCopyText);
+        assert.ok(result.includes('CopyTextButton'), 'Должна быть copy_text кнопка');
+        assert.ok(result.includes('callback_data="next_node"'), 'Должна быть goto кнопка');
+        assert.ok(result.includes('InlineKeyboardBuilder'), 'Должен использоваться InlineKeyboardBuilder');
+      });
+    });
+
+    describe('Производительность', () => {      it('должен генерировать код быстрее 10ms', () => {
         const start = Date.now();
         generateKeyboard(validParamsInline);
         const duration = Date.now() - start;

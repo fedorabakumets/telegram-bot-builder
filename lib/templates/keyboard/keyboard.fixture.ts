@@ -200,3 +200,14 @@ export const expectedOutputReply = `
 
 /** Ожидаемый вывод: пустая клавиатура */
 export const expectedOutputEmpty = '    keyboard = None';
+
+/** Валидные параметры: copy_text кнопка (Bot API 7.11) */
+export const validParamsCopyText: KeyboardTemplateParams = {
+  keyboardType: 'inline',
+  buttons: [
+    btn('📋 Скопировать промокод', 'copy_text', { id: 'btn_copy', copyText: 'PROMO2024' }),
+    btn('Перейти', 'goto', { target: 'next_node', id: 'btn_next' }),
+  ],
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};
