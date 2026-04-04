@@ -7,6 +7,7 @@
  * Блок D: forward_message с last_bot_message (5 тестов)
  * Блок E: FakeMessage и chat_id (7 тестов)
  * Блок F: Медиа-сообщения и last_bot_message_id (4 теста)
+ * Блок G: Стикеры, голосовые, анимации, медиагруппы (5 тестов)
  */
 
 import fs from 'fs';
@@ -624,6 +625,62 @@ test('F04', 'полный сценарий: start + omt + ict + forward_message 
     makeMessageNode('msg_welcome', 'Добро пожаловать!'),
   ]);
   syntax(gen(p, 'f04'), 'f04');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК G: Стикеры, голосовые, анимации, медиагруппы
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок G: Стикеры, голосовые, анимации, медиагруппы ─────────────');
+
+test('G01', 'outgoing_message_trigger + sticker-нода → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeOutgoingMessageTriggerNode('omt1', 'fwd1'),
+    makeForwardMessageNode('fwd1', '123456789', 'last_bot_message'),
+    { id: 'sticker1', type: 'sticker', position: { x: 0, y: 0 }, data: { stickerFileId: 'CAACAgIA', buttons: [], keyboardType: 'none' } },
+  ]);
+  syntax(gen(p, 'g01'), 'g01');
+});
+
+test('G02', 'outgoing_message_trigger + voice-нода → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeOutgoingMessageTriggerNode('omt1', 'fwd1'),
+    makeForwardMessageNode('fwd1', '123456789', 'last_bot_message'),
+    { id: 'voice1', type: 'voice', position: { x: 0, y: 0 }, data: { voiceUrl: 'https://example.com/voice.ogg', buttons: [], keyboardType: 'none' } },
+  ]);
+  syntax(gen(p, 'g02'), 'g02');
+});
+
+test('G03', 'outgoing_message_trigger + animation-нода → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeOutgoingMessageTriggerNode('omt1', 'fwd1'),
+    makeForwardMessageNode('fwd1', '123456789', 'last_bot_message'),
+    { id: 'anim1', type: 'animation', position: { x: 0, y: 0 }, data: { animationUrl: 'https://example.com/anim.gif', buttons: [], keyboardType: 'none' } },
+  ]);
+  syntax(gen(p, 'g03'), 'g03');
+});
+
+test('G04', 'outgoing_message_trigger + media-нода → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeOutgoingMessageTriggerNode('omt1', 'fwd1'),
+    makeForwardMessageNode('fwd1', '123456789', 'last_bot_message'),
+    { id: 'media1', type: 'media', position: { x: 0, y: 0 }, data: { attachedMedia: ['https://example.com/photo.jpg'], buttons: [], keyboardType: 'none' } },
+  ]);
+  syntax(gen(p, 'g04'), 'g04');
+});
+
+test('G05', 'полный сценарий со всеми типами нод → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeStartNode('start1'),
+    makeOutgoingMessageTriggerNode('omt1', 'fwd_support'),
+    makeIncomingCallbackTriggerNode('ict1', 'msg_notify'),
+    makeForwardMessageNodeWithThread('fwd_support', '-1002300967595', '618', 'last_bot_message'),
+    makeMessageNode('msg_notify', 'Уведомление'),
+    makeMessageNode('msg_welcome', 'Добро пожаловать!'),
+    { id: 'sticker1', type: 'sticker', position: { x: 0, y: 0 }, data: { stickerFileId: 'CAACAgIA', buttons: [], keyboardType: 'none' } },
+    { id: 'voice1', type: 'voice', position: { x: 0, y: 0 }, data: { voiceUrl: 'https://example.com/voice.ogg', buttons: [], keyboardType: 'none' } },
+  ]);
+  syntax(gen(p, 'g05'), 'g05');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

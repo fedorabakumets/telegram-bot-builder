@@ -89,6 +89,22 @@ const code = generateOutgoingMessageTriggers({
 });
 ```
 
+## Перехватываемые методы отправки
+
+Обработчики вызываются из следующих обёрток после каждой отправки:
+
+- `bot.send_message` → через `_wrap_bot_send_message`
+- `bot.send_photo` → через `_wrap_bot_send_photo`
+- `bot.send_sticker` → через `_wrap_bot_send_sticker` (текст: `[Стикер]`)
+- `bot.send_voice` → через `_wrap_bot_send_voice` (текст: caption или `[Голосовое]`)
+- `bot.send_animation` → через `_wrap_bot_send_animation` (текст: caption или `[Анимация]`)
+- `bot.send_media_group` → через `_wrap_bot_send_media_group` (текст: `[Медиагруппа]`, message_id первого сообщения)
+- `message.answer` → через `_patched_answer`
+- `message.answer_photo` → через `_patched_answer_photo`
+- `message.answer_video` → через `_patched_answer_video`
+- `message.answer_audio` → через `_patched_answer_audio`
+- `message.answer_document` → через `_patched_answer_document`
+
 ## Структура файлов
 
 ```

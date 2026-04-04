@@ -45,6 +45,10 @@ async def main():
         _wrap_bot_send_message(bot)
         _wrap_bot_send_photo(bot)
         _wrap_message_answer(bot)
+        _wrap_bot_send_sticker(bot)
+        _wrap_bot_send_voice(bot)
+        _wrap_bot_send_animation(bot)
+        _wrap_bot_send_media_group(bot)
         {%- if hasInlineButtons %}
         dp.callback_query.middleware(callback_query_logging_middleware)
         {%- endif %}
