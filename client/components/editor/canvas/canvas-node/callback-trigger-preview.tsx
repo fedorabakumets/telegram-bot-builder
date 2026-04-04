@@ -36,7 +36,10 @@ export function CallbackTriggerPreview({ node }: CallbackTriggerPreviewProps) {
   const displayText = matchType === 'startswith' ? `${callbackData}*` : callbackData;
 
   return (
-    <div className="flex items-center">
+    <div className="flex flex-col gap-1">
+      <span className="text-xs font-semibold text-orange-400/80">
+        Триггер inline-кнопки
+      </span>
       <span className="font-mono text-sm font-semibold text-orange-300">
         {displayText}
       </span>
