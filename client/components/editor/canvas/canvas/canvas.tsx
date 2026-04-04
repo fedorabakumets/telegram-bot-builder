@@ -1268,18 +1268,24 @@ export function Canvas({
     const component: ComponentDefinition = JSON.parse(componentData);
     const nodePosition = getDropPosition();
 
+    const clonedData = structuredClone({
+      keyboardType: 'none',
+      buttons: [],
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      markdown: false,
+      ...component.defaultData
+    });
+    // Регенерируем id кнопок чтобы они были уникальны между узлами
+    if (Array.isArray((clonedData as any).buttons)) {
+      (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: nanoid() }));
+    }
+
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
       position: nodePosition,
-      data: {
-        keyboardType: 'none',
-        buttons: [],
-        oneTimeKeyboard: false,
-        resizeKeyboard: true,
-        markdown: false,
-        ...component.defaultData
-      }
+      data: clonedData
     };
 
     addAction('add', `Добавлен узел "${component.type}"`);
@@ -1317,18 +1323,23 @@ export function Canvas({
       nodePosition = getCenterPosition();
     }
 
+    const clonedTouchData = structuredClone({
+      keyboardType: 'none',
+      buttons: [],
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      markdown: false,
+      ...component.defaultData
+    });
+    if (Array.isArray((clonedTouchData as any).buttons)) {
+      (clonedTouchData as any).buttons = (clonedTouchData as any).buttons.map((btn: any) => ({ ...btn, id: nanoid() }));
+    }
+
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
       position: nodePosition,
-      data: {
-        keyboardType: 'none',
-        buttons: [],
-        oneTimeKeyboard: false,
-        resizeKeyboard: true,
-        markdown: false,
-        ...component.defaultData
-      }
+      data: clonedTouchData
     };
 
     addAction('add', `Добавлен узел "${component.type}"`);
