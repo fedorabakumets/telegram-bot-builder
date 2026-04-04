@@ -4,7 +4,7 @@
  */
 
 /** Режим определения исходного сообщения */
-export type ForwardMessageSourceMode = 'current_message' | 'last_message' | 'manual' | 'variable';
+export type ForwardMessageSourceMode = 'current_message' | 'last_message' | 'last_bot_message' | 'manual' | 'variable';
 /** Режим определения чата назначения */
 export type ForwardMessageTargetMode = 'manual' | 'variable' | 'admin_ids';
 

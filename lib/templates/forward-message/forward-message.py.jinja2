@@ -169,6 +169,23 @@ async def _resolve_forward_message_source_{{ safeName }}(callback_query: types.C
             return source_chat_id, _last_message_id
         return source_chat_id, source_message_id
 
+    if {{ source_mode | escape_python_string }} == "last_bot_message":
+        _last_bot_msg_id = user_data.get(user_id, {}).get("last_bot_message_id")
+        if _last_bot_msg_id is not None:
+            try:
+                return source_chat_id, int(_last_bot_msg_id)
+            except (TypeError, ValueError):
+                pass
+        # Fallback на last_message если last_bot_message_id не найден
+        _fallback_id = await _load_forward_message_from_log_{{ safeName }}(
+            callback_query,
+            linked_node_id=linked_source_node_id,
+            use_last_logged=True,
+        )
+        if _fallback_id is not None:
+            return source_chat_id, _fallback_id
+        return source_chat_id, source_message_id
+
     if {{ source_mode | escape_python_string }} == "manual":
         raw_source_message_id = {{ sourceMessageId | escape_python_string }}
     elif {{ source_mode | escape_python_string }} == "variable":

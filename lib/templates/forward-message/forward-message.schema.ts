@@ -6,7 +6,7 @@
 import { z } from 'zod';
 
 /** Режим определения исходного сообщения */
-export const forwardMessageSourceModeSchema = z.enum(['current_message', 'last_message', 'manual', 'variable']);
+export const forwardMessageSourceModeSchema = z.enum(['current_message', 'last_message', 'last_bot_message', 'manual', 'variable']);
 /** Режим определения чата назначения */
 export const forwardMessageTargetModeSchema = z.enum(['manual', 'variable', 'admin_ids']);
 

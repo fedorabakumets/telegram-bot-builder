@@ -335,3 +335,35 @@ describe('hideAuthor — copy_message вместо forward_message', () => {
     expect(params.hideAuthor).toBe(false);
   });
 });
+
+describe('last_bot_message — последнее исходящее сообщение бота', () => {
+  it('last_bot_message → содержит user_data.get(user_id, {}).get("last_bot_message_id")', () => {
+    const code = generateForwardMessage({
+      nodeId: 'fwd_bot_msg',
+      safeName: 'fwd_bot_msg',
+      sourceMessageIdSource: 'last_bot_message',
+      targetRecipients: [{ id: 'r1', targetChatIdSource: 'manual', targetChatId: '123', targetChatType: 'user' }],
+      disableNotification: false,
+    });
+    expect(code).toContain('last_bot_message_id');
+  });
+
+  it('last_bot_message → схема валидируется без ошибок', () => {
+    expect(() => forwardMessageParamsSchema.parse({
+      nodeId: 'fwd_bot_msg',
+      safeName: 'fwd_bot_msg',
+      sourceMessageIdSource: 'last_bot_message',
+      targetRecipients: [{ id: 'r1', targetChatIdSource: 'manual', targetChatId: '123' }],
+    })).not.toThrow();
+  });
+
+  it('last_bot_message → синтаксически корректен', () => {
+    expect(() => generateForwardMessage({
+      nodeId: 'fwd_bot_msg2',
+      safeName: 'fwd_bot_msg2',
+      sourceMessageIdSource: 'last_bot_message',
+      targetRecipients: [{ id: 'r1', targetChatIdSource: 'manual', targetChatId: '-1002300967595', targetChatType: 'group', targetThreadId: '618' }],
+      disableNotification: false,
+    })).not.toThrow();
+  });
+});

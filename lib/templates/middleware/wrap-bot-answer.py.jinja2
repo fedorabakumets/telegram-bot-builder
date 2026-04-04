@@ -52,6 +52,19 @@ def _wrap_message_answer(bot_instance):
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования message.answer: {e}")
+        # Вызываем обработчики триггеров исходящих сообщений
+        try:
+            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
+            if _omt_handlers:
+                _omt_user_id = int(str(self.chat.id)) if str(self.chat.id).lstrip('-').isdigit() else 0
+                if _omt_user_id > 0:
+                    for _omt_handler in _omt_handlers:
+                        try:
+                            await _omt_handler(_omt_user_id, result.message_id if result else None, text)
+                        except Exception as _omt_e:
+                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+        except Exception as _omt_outer_e:
+            logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
         return result
 
     async def _patched_answer_photo(self, photo, *args, caption=None, node_id=None, **kwargs):

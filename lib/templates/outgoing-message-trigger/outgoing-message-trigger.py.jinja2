@@ -1,0 +1,48 @@
+{#
+  Шаблон обработчиков триггеров исходящих сообщений
+
+  @param {array} outgoingMessageTriggerEntries - Массив OutgoingMessageTriggerEntry:
+    - nodeId: string          — ID узла outgoing_message_trigger
+    - targetNodeId: string    — ID целевого узла
+    - targetNodeType: string  — тип целевого узла
+#}
+
+# Обработчики триггеров исходящих сообщений
+{% for entry in outgoingMessageTriggerEntries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+
+async def outgoing_message_trigger_{{ sanitized_node_id }}_handler(user_id: int, message_id, message_text: str):
+    """Срабатывает когда бот отправляет сообщение пользователю"""
+    try:
+        logging.info(f"Исходящее сообщение для {user_id} — триггер узла {{ entry.nodeId }}")
+        # Сохраняем данные последнего исходящего сообщения
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        user_data[user_id]["last_bot_message_id"] = message_id
+        user_data[user_id]["message_text"] = message_text or ""
+
+        class FakeCallbackQuery:
+            def __init__(self, user_id_val):
+                self.from_user = type('User', (), {'id': user_id_val, 'username': user_data.get(user_id_val, {}).get('username', ''), 'first_name': user_data.get(user_id_val, {}).get('first_name', ''), 'last_name': user_data.get(user_id_val, {}).get('last_name', ''), 'language_code': '', 'is_premium': False, 'is_bot': False})()
+                self.message = None
+                self.data = "{{ entry.targetNodeId }}"
+                self._is_fake = True
+
+            async def answer(self, *args, **kwargs):
+                pass
+
+        fake_cb = FakeCallbackQuery(user_id)
+        await handle_callback_{{ sanitized_target_id }}(fake_cb)
+    except Exception as e:
+        logging.error(f"Ошибка в outgoing_message_trigger {{ entry.nodeId }}: {e}")
+
+{% endfor %}
+
+# Список обработчиков исходящих сообщений для вызова из middleware
+_outgoing_message_trigger_handlers = [
+{% for entry in outgoingMessageTriggerEntries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+    outgoing_message_trigger_{{ sanitized_node_id }}_handler,
+{% endfor %}
+]

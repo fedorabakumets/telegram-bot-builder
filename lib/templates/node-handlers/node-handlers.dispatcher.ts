@@ -29,6 +29,7 @@ import { generateTextTriggerHandlers } from '../text-trigger/text-trigger.render
 import { generateCallbackTriggerHandlers } from '../callback-trigger/callback-trigger.renderer';
 import { generateIncomingMessageTriggerHandlers } from '../incoming-message-trigger/incoming-message-trigger.renderer';
 import { generateIncomingCallbackTriggerHandlers } from '../incoming-callback-trigger/incoming-callback-trigger.renderer';
+import { generateOutgoingMessageTriggerHandlers } from '../outgoing-message-trigger/outgoing-message-trigger.renderer';
 import { generateGroupMessageTriggerHandlers } from '../group-message-trigger';
 import { generateConditionHandlers } from '../condition/condition.renderer';
 import { generateMediaNode } from '../media-node';
@@ -309,6 +310,13 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     incomingCallbackTriggerCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Обработчики триггеров исходящих сообщений ---
+  const outgoingMessageTriggerCode = generateOutgoingMessageTriggerHandlers(nodes);
+  if (outgoingMessageTriggerCode) {
+    codeLines.push('\n# Обработчики триггеров исходящих сообщений');
+    outgoingMessageTriggerCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   // --- Обработчики триггеров сообщений в группе ---
   const groupMessageTriggerCode = generateGroupMessageTriggerHandlers(nodes);
   if (groupMessageTriggerCode) {
@@ -325,7 +333,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   nodes.forEach((node: Node) => {
     // Пропускаем триггеры — они уже обработаны выше
-    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger') {
+    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger') {
       return;
     }
 
