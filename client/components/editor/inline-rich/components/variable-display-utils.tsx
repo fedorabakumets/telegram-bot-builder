@@ -62,11 +62,25 @@ export function getNodeInfo(variable: Variable) {
       </div>
     );
   }
-  // Для системных переменных показываем таблицу
-  if (variable.nodeType === 'system' && variable.sourceTable) {
+  // Для системных переменных показываем таблицу или описание
+  if (variable.nodeType === 'system') {
+    if (variable.sourceTable) {
+      return (
+        <div className="text-[10px] text-teal-600 dark:text-teal-400 font-mono mt-0.5">
+          🗄️ {variable.sourceTable}
+        </div>
+      );
+    }
+    if (variable.description) {
+      return (
+        <div className="text-[10px] text-teal-600 dark:text-teal-400 mt-0.5 truncate">
+          {variable.description}
+        </div>
+      );
+    }
     return (
-      <div className="text-[10px] text-teal-600 dark:text-teal-400 font-mono mt-0.5">
-        🗄️ {variable.sourceTable}
+      <div className="text-[10px] text-teal-600 dark:text-teal-400 mt-0.5">
+        ⚙️ Системная переменная
       </div>
     );
   }
