@@ -21,6 +21,7 @@
 | targetNodeType | string | Тип целевого узла | ✅ |
 | adminOnly | boolean | Только для администраторов | нет |
 | requiresAuth | boolean | Требуется авторизация | нет |
+| buttonText | string | Текст кнопки, найденный по callbackData среди кнопок проекта | нет |
 
 ## Пример выходного Python кода
 
@@ -30,6 +31,11 @@
 async def callback_trigger_trigger_confirm_handler(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     logging.info(f"Пользователь {user_id} нажал кнопку 'confirm_order' — триггер узла trigger_confirm")
+    # Сохраняем данные нажатой кнопки для использования в переменных {callback_data} и {button_text}
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["callback_data"] = callback_query.data or "confirm_order"
+    user_data[user_id]["button_text"] = "Подтвердить заказ"  # текст кнопки из проекта
     mock_callback = MockCallback("msg_confirmed", callback_query.from_user, callback_query.message)
     await handle_callback_msg_confirmed(mock_callback)
 
@@ -38,6 +44,22 @@ async def callback_trigger_trigger_confirm_handler(callback_query: types.Callbac
 async def callback_trigger_trigger_order_handler(callback_query: types.CallbackQuery):
     ...
 ```
+
+## Переменные в тексте сообщений
+
+После срабатывания триггера в `user_data` пользователя сохраняются две переменные, доступные в тексте следующего сообщения:
+
+| Переменная | Значение |
+|------------|----------|
+| `{callback_data}` | Реальное значение `callback_data` из Telegram (например `confirm_order`) |
+| `{button_text}` | Текст кнопки, найденный по `customCallbackData` среди кнопок проекта |
+
+**Пример использования в тексте сообщения:**
+```
+Вы нажали кнопку «{button_text}» (данные: {callback_data})
+```
+
+Если `buttonText` не найден в проекте — в качестве fallback используется значение `callbackData`.
 
 ## Использование
 
