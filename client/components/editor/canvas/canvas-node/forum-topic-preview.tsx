@@ -24,9 +24,13 @@ const TOPIC_COLORS: Record<string, string> = {
  * @returns JSX элемент или null
  */
 export function ForumTopicPreview({ node }: { node: Node }) {
-  const { topicName, topicIconColor, saveThreadIdTo, skipIfExists } = node.data as any;
+  const { topicName, topicIconColor, saveThreadIdTo, skipIfExists, forumChatIdSource, forumChatId, forumChatVariableName } = node.data as any;
 
   if (!topicName && !saveThreadIdTo) return null;
+
+  const chatDisplay = forumChatIdSource === 'variable'
+    ? (forumChatVariableName ? `{${forumChatVariableName}}` : null)
+    : (forumChatId || null);
 
   const color = topicIconColor ? TOPIC_COLORS[topicIconColor] ?? '#6FB9F0' : null;
 
@@ -50,6 +54,12 @@ export function ForumTopicPreview({ node }: { node: Node }) {
       {saveThreadIdTo && (
         <div className="text-xs text-gray-400 dark:text-gray-500 font-mono truncate">
           → {saveThreadIdTo}
+        </div>
+      )}
+
+      {chatDisplay && (
+        <div className="text-xs text-gray-400 dark:text-gray-500 font-mono truncate">
+          группа: {chatDisplay}
         </div>
       )}
 
