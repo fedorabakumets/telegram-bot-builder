@@ -51,9 +51,9 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
               К узлу: {targetNodeDisplay}{targetNodeDisplay.length > 30 ? '...' : ''}
             </div>
           )}
-          {button.customCallbackData && (
+          {(button.action === 'goto' || button.action === 'command' || button.customCallbackData) && (
             <div className="mt-1 text-xs text-gray-400 dark:text-gray-500 truncate font-mono">
-              {button.customCallbackData}
+              {button.customCallbackData || button.target || button.id || 'no_action'}
             </div>
           )}
           {button.action === 'url' && (
