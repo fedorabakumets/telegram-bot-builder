@@ -62,6 +62,7 @@ import { clearKeyboardNodeId, getKeyboardNodeId } from '@/components/editor/canv
 import { BotData, BotDataWithSheets, BotProject, UserBotData } from '@shared/schema';
 import type { ComponentDefinition, Node } from '@shared/schema';
 import { nanoid } from 'nanoid';
+import { generateButtonId } from '@/utils/generate-button-id';
 import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 
 /**
@@ -1078,7 +1079,7 @@ export default function Editor() {
     const clonedData = structuredClone(component.defaultData || {});
     // Регенерируем id кнопок чтобы они были уникальны между узлами
     if (Array.isArray((clonedData as any).buttons)) {
-      (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: nanoid() }));
+      (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
     }
     const newNode: Node = {
       id: nanoid(),

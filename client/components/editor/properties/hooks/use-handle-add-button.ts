@@ -4,7 +4,7 @@
  * Предоставляет функцию для добавления новой кнопки к узлу.
  */
 
-import { nanoid } from 'nanoid';
+import { generateButtonId } from '@/utils/generate-button-id';
 import type { Button, Node } from '@shared/schema';
 
 /** Интерфейс возвращаемого значения хука */
@@ -32,7 +32,7 @@ export function useHandleAddButton({
 }: UseHandleAddButtonProps): UseHandleAddButtonReturn {
   const handleAddButton = (nodeId: string) => {
     const newButton: Button = {
-      id: nanoid(),
+      id: generateButtonId(),
       text: 'Новая кнопка',
       action: 'goto',
       buttonType: 'normal',

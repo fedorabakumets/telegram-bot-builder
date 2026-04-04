@@ -4,6 +4,7 @@
  * Компонент отображает кнопки для добавления новых кнопок.
  */
 
+import { generateButtonId } from '@/utils/generate-button-id';
 import { Button } from '@/components/ui/button';
 import type { Node, Button as ButtonType } from '@shared/schema';
 
@@ -27,7 +28,7 @@ export function KeyboardButtonsSection({
 }: KeyboardButtonsSectionProps) {
   const handleAddOptionButton = () => {
     const newButton: ButtonType = {
-      id: Date.now().toString(),
+      id: generateButtonId(),
       text: 'Новая опция',
       action: 'selection' as const,
       buttonType: 'option' as const,
@@ -42,7 +43,7 @@ export function KeyboardButtonsSection({
 
   const handleAddCompleteButton = () => {
     const newButton: ButtonType = {
-      id: Date.now().toString(),
+      id: generateButtonId(),
       text: 'Готово',
       action: 'complete' as const,
       buttonType: 'complete' as const,
@@ -61,7 +62,7 @@ export function KeyboardButtonsSection({
         size="sm"
         variant="outline"
         onClick={() => onButtonAdd(selectedNode.id, {
-          id: Date.now().toString(),
+          id: generateButtonId(),
           text: 'Новая кнопка',
           action: 'goto',
           buttonType: 'normal' as const,

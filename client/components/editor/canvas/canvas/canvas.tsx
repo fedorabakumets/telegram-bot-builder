@@ -22,6 +22,7 @@ import type { CommandPreset } from '@/components/editor/sidebar/massive/commands
 import { BotDataWithSheets } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { nanoid } from 'nanoid';
+import { generateButtonId } from '@/utils/generate-button-id';
 
 /**
  * Типы узлов, которые могут выступать источником сообщения для `forward_message`.
@@ -1278,7 +1279,7 @@ export function Canvas({
     });
     // Регенерируем id кнопок чтобы они были уникальны между узлами
     if (Array.isArray((clonedData as any).buttons)) {
-      (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: nanoid() }));
+      (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
     }
 
     const newNode: Node = {
@@ -1332,7 +1333,7 @@ export function Canvas({
       ...component.defaultData
     });
     if (Array.isArray((clonedTouchData as any).buttons)) {
-      (clonedTouchData as any).buttons = (clonedTouchData as any).buttons.map((btn: any) => ({ ...btn, id: nanoid() }));
+      (clonedTouchData as any).buttons = (clonedTouchData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
     }
 
     const newNode: Node = {
