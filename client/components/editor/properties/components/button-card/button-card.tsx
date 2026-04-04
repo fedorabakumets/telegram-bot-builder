@@ -78,6 +78,30 @@ export function ButtonCard({
         keyboardType={keyboardType}
       />
 
+      {/* Селектор стиля кнопки (Bot API 9.4) */}
+      <div className="border-t border-border/20 my-3"></div>
+      <div className="space-y-1.5">
+        <span className="text-xs text-gray-500 dark:text-gray-400">Стиль кнопки</span>
+        <div className="flex gap-2">
+          {([
+            { value: undefined, label: 'Авто', className: 'border-gray-300 text-gray-600' },
+            { value: 'primary', label: 'Синий', className: 'border-blue-400 text-blue-600 bg-blue-50 dark:bg-blue-900/20' },
+            { value: 'secondary', label: 'Серый', className: 'border-gray-400 text-gray-600 bg-gray-50 dark:bg-gray-900/20' },
+            { value: 'destructive', label: 'Красный', className: 'border-red-400 text-red-600 bg-red-50 dark:bg-red-900/20' },
+          ] as const).map(({ value, label, className }) => (
+            <button
+              key={label}
+              onClick={() => onButtonUpdate(nodeId, button.id, { style: value } as any)}
+              className={`text-xs px-2 py-1 rounded border transition-all ${className} ${
+                (button as any).style === value ? 'ring-2 ring-offset-1 ring-current' : 'opacity-60 hover:opacity-100'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {button.action === 'goto' && (
         <>
           <div className="border-t border-border/20 my-3"></div>

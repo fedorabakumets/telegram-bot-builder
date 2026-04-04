@@ -29,6 +29,8 @@ export interface ButtonWithShortId extends Button {
   customCallbackData?: string;
   /** URL для Telegram Mini App (только для web_app, требует HTTPS) */
   webAppUrl?: string;
+  /** Визуальный стиль кнопки (Bot API 9.4): primary=синий, secondary=серый, destructive=красный */
+  style?: 'primary' | 'secondary' | 'destructive';
 }
 
 /** Условное сообщение */

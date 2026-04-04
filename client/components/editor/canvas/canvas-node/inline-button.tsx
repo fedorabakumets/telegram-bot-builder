@@ -39,8 +39,14 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
                            targetNode?.data?.command ||
                            (button.action === 'goto' ? (button.target?.slice(0, 8) ?? '') : '');
 
+  /** Класс цветной полосы слева в зависимости от style (Bot API 9.4) */
+  const styleClass = (button as any).style === 'primary' ? 'border-l-4 border-blue-500'
+    : (button as any).style === 'secondary' ? 'border-l-4 border-gray-400'
+    : (button as any).style === 'destructive' ? 'border-l-4 border-red-500'
+    : '';
+
   return (
-    <div className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:border-gray-300 dark:hover:border-gray-600 transition-colors p-3">
+    <div className={`bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:border-gray-300 dark:hover:border-gray-600 transition-colors p-3 ${styleClass}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">

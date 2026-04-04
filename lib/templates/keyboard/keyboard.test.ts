@@ -21,6 +21,7 @@ import {
   validParamsContactLocation,
   validParamsCopyText,
   validParamsWebApp,
+  validParamsWithStyle,
 } from './keyboard.fixture';
 import { keyboardParamsSchema } from './keyboard.schema';
 
@@ -531,6 +532,80 @@ describe('keyboard.py.jinja2 шаблон', () => {
         });
         assert.ok(result.includes('WebAppInfo(url="https://example.com")'), 'Должна быть web_app кнопка');
         assert.ok(result.includes('builder.adjust(2, 1)'), `Ожидался builder.adjust(2, 1), получено:\n${result}`);
+      });
+    });
+
+    describe('style — цвет кнопки (Bot API 9.4)', () => {
+      it('style="primary" генерирует style="primary" в InlineKeyboardButton', () => {
+        const result = generateKeyboard(validParamsWithStyle);
+        assert.ok(result.includes('style="primary"'), `Ожидался style="primary", получено:\n${result}`);
+      });
+
+      it('style="destructive" генерирует style="destructive"', () => {
+        const result = generateKeyboard(validParamsWithStyle);
+        assert.ok(result.includes('style="destructive"'), `Ожидался style="destructive", получено:\n${result}`);
+      });
+
+      it('style="secondary" генерирует style="secondary"', () => {
+        const result = generateKeyboard(validParamsWithStyle);
+        assert.ok(result.includes('style="secondary"'), `Ожидался style="secondary", получено:\n${result}`);
+      });
+
+      it('кнопка без style не генерирует параметр style', () => {
+        const result = generateKeyboard(validParamsInline);
+        assert.ok(!result.includes('style='), `Кнопка без style не должна содержать style=, получено:\n${result}`);
+      });
+
+      it('style работает вместе с goto кнопкой', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [{
+            id: 'btn_s', text: 'Удалить', action: 'goto', target: 'node_del',
+            buttonType: 'normal', skipDataCollection: false, hideAfterClick: false,
+            style: 'destructive',
+          }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(result.includes('callback_data="node_del"'), 'Должен быть callback_data');
+        assert.ok(result.includes('style="destructive"'), 'Должен быть style="destructive"');
+      });
+
+      it('style работает вместе с url кнопкой', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [{
+            id: 'btn_u', text: 'Сайт', action: 'url', url: 'https://example.com',
+            buttonType: 'normal', skipDataCollection: false, hideAfterClick: false,
+            style: 'primary',
+          }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(result.includes('url="https://example.com"'), 'Должен быть url=');
+        assert.ok(result.includes('style="primary"'), 'Должен быть style="primary"');
+      });
+
+      it('схема принимает все три значения style', () => {
+        for (const style of ['primary', 'secondary', 'destructive'] as const) {
+          const result = keyboardParamsSchema.safeParse({
+            keyboardType: 'inline',
+            buttons: [{ id: 'b', text: 'T', action: 'goto', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false, style }],
+            oneTimeKeyboard: false,
+            resizeKeyboard: true,
+          });
+          assert.ok(result.success, `Схема должна принять style="${style}": ${JSON.stringify(result)}`);
+        }
+      });
+
+      it('схема отклоняет неизвестное значение style', () => {
+        const result = keyboardParamsSchema.safeParse({
+          keyboardType: 'inline',
+          buttons: [{ id: 'b', text: 'T', action: 'goto', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false, style: 'danger' }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(!result.success, 'Схема должна отклонить неизвестный style="danger"');
       });
     });
 

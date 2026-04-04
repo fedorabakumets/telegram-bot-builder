@@ -33,6 +33,8 @@ export const buttonSchema = z.object({
   hideAfterClick: z.boolean().default(false),
   /** Пользовательский callback_data (если не задан — генерируется автоматически) */
   customCallbackData: z.string().optional(),
+  /** Визуальный стиль кнопки (Bot API 9.4): primary=синий, secondary=серый, destructive=красный */
+  style: z.enum(['primary', 'secondary', 'destructive']).optional(),
 });
 
 /** Тип кнопки бота */

@@ -1695,6 +1695,68 @@ test('L05', 'web_app не генерирует callback обработчик', (
   syntax(code, 'l05');
 });
 
+console.log('══ Блок M: style — цвет кнопки (Bot API 9.4) ════════════════════════');
+
+test('M01', 'style="primary" генерирует style="primary" в коде', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', { keyboardNodeId: 'kbd_m01' }),
+    makeKeyboardNode('kbd_m01', 'inline', [
+      { ...makeButton('Подтвердить', 'goto', 'msg_2', { id: 'btn_m01' }), style: 'primary' },
+    ]),
+    makeMessageNode('msg_2', 'Цель'),
+  ]);
+
+  const code = gen(project, 'm01');
+  const msg1 = block(code, 'msg_1');
+  assertIncludesAll(msg1, ['style="primary"'], 'M01: должен генерировать style="primary"');
+  syntax(code, 'm01');
+});
+
+test('M02', 'style="destructive" генерирует style="destructive"', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', { keyboardNodeId: 'kbd_m02' }),
+    makeKeyboardNode('kbd_m02', 'inline', [
+      { ...makeButton('Удалить', 'goto', 'msg_2', { id: 'btn_m02' }), style: 'destructive' },
+    ]),
+    makeMessageNode('msg_2', 'Цель'),
+  ]);
+
+  const code = gen(project, 'm02');
+  const msg1 = block(code, 'msg_1');
+  assertIncludesAll(msg1, ['style="destructive"'], 'M02: должен генерировать style="destructive"');
+  syntax(code, 'm02');
+});
+
+test('M03', 'кнопка без style не генерирует параметр style', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', { keyboardNodeId: 'kbd_m03' }),
+    makeKeyboardNode('kbd_m03', 'inline', [
+      makeButton('Обычная', 'goto', 'msg_2', { id: 'btn_m03' }),
+    ]),
+    makeMessageNode('msg_2', 'Цель'),
+  ]);
+
+  const code = gen(project, 'm03');
+  const msg1 = block(code, 'msg_1');
+  assertExcludes(msg1, ['style='], 'M03: кнопка без style не должна содержать style=');
+  syntax(code, 'm03');
+});
+
+test('M04', 'style работает для reply кнопок', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', { keyboardNodeId: 'kbd_m04' }),
+    makeKeyboardNode('kbd_m04', 'reply', [
+      { ...makeButton('Подтвердить', 'goto', 'msg_2', { id: 'btn_m04' }), style: 'primary' },
+    ]),
+    makeMessageNode('msg_2', 'Цель'),
+  ]);
+
+  const code = gen(project, 'm04');
+  const msg1 = block(code, 'msg_1');
+  assertIncludesAll(msg1, ['style="primary"'], 'M04: reply кнопка должна генерировать style="primary"');
+  syntax(code, 'm04');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 

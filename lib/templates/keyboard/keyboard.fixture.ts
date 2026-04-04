@@ -222,3 +222,15 @@ export const validParamsWebApp: KeyboardTemplateParams = {
   oneTimeKeyboard: false,
   resizeKeyboard: true,
 };
+
+/** Валидные параметры: кнопки со стилями (Bot API 9.4) */
+export const validParamsWithStyle: KeyboardTemplateParams = {
+  keyboardType: 'inline',
+  buttons: [
+    btn('Подтвердить', 'goto', { target: 'confirm', id: 'btn_confirm', style: 'primary' }),
+    btn('Отмена', 'goto', { target: 'cancel', id: 'btn_cancel', style: 'secondary' }),
+    btn('Удалить', 'goto', { target: 'delete', id: 'btn_delete', style: 'destructive' }),
+  ],
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};

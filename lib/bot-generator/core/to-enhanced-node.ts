@@ -38,6 +38,8 @@ function normalizeButtons(buttons: any[]): Button[] {
     copyText: btn.copyText,
     /** URL для Telegram Mini App (только для web_app, требует HTTPS) */
     webAppUrl: btn.webAppUrl,
+    /** Визуальный стиль кнопки (Bot API 9.4) */
+    style: btn.style,
   }));
 }
 
