@@ -28,6 +28,7 @@ import { generateCommandTriggerHandlers } from '../command-trigger/command-trigg
 import { generateTextTriggerHandlers } from '../text-trigger/text-trigger.renderer';
 import { generateCallbackTriggerHandlers } from '../callback-trigger/callback-trigger.renderer';
 import { generateIncomingMessageTriggerHandlers } from '../incoming-message-trigger/incoming-message-trigger.renderer';
+import { generateIncomingCallbackTriggerHandlers } from '../incoming-callback-trigger/incoming-callback-trigger.renderer';
 import { generateGroupMessageTriggerHandlers } from '../group-message-trigger';
 import { generateConditionHandlers } from '../condition/condition.renderer';
 import { generateMediaNode } from '../media-node';
@@ -301,6 +302,13 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     incomingMessageTriggerCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Middleware триггеров входящих callback_query ---
+  const incomingCallbackTriggerCode = generateIncomingCallbackTriggerHandlers(nodes);
+  if (incomingCallbackTriggerCode) {
+    codeLines.push('\n# Middleware триггеров входящих callback_query');
+    incomingCallbackTriggerCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   // --- Обработчики триггеров сообщений в группе ---
   const groupMessageTriggerCode = generateGroupMessageTriggerHandlers(nodes);
   if (groupMessageTriggerCode) {
@@ -317,7 +325,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   nodes.forEach((node: Node) => {
     // Пропускаем триггеры — они уже обработаны выше
-    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger') {
+    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger') {
       return;
     }
 

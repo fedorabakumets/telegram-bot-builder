@@ -1,0 +1,67 @@
+{#
+  Шаблон middleware триггеров входящих callback_query
+
+  @param {array} incomingCallbackTriggerEntries - Массив IncomingCallbackTriggerEntry:
+    - nodeId: string          — ID узла incoming_callback_trigger
+    - targetNodeId: string    — ID целевого узла
+    - targetNodeType: string  — тип целевого узла
+#}
+
+# Middleware триггеров входящих callback_query
+{% for entry in incomingCallbackTriggerEntries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+
+async def incoming_callback_trigger_{{ sanitized_node_id }}_middleware(handler, event: types.CallbackQuery, data: dict):
+    """Срабатывает на каждое нажатие инлайн-кнопки пользователем"""
+    try:
+        user_id = event.from_user.id
+        logging.info(f"Нажатие кнопки от {user_id} — триггер узла {{ entry.nodeId }}")
+        # Сохраняем данные нажатой кнопки
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        user_data[user_id]["callback_data"] = event.data or ""
+        # Читаем текст кнопки из reply_markup
+        _ict_btn_text = ""
+        try:
+            if event.data and event.message and hasattr(event.message, "reply_markup"):
+                _rm = event.message.reply_markup
+                if _rm and hasattr(_rm, "inline_keyboard"):
+                    for _row in _rm.inline_keyboard:
+                        for _btn in _row:
+                            if getattr(_btn, "callback_data", None) == event.data:
+                                _ict_btn_text = _btn.text or ""
+                                break
+                        if _ict_btn_text:
+                            break
+        except Exception:
+            pass
+        user_data[user_id]["button_text"] = _ict_btn_text
+
+        class MockCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+                self._is_fake = True
+
+            async def answer(self, *args, **kwargs):
+                pass
+
+            async def edit_text(self, text, **kwargs):
+                try:
+                    return await self.message.edit_text(text, **kwargs)
+                except Exception as e:
+                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                    return await self.message.answer(text, **kwargs)
+
+        mock_callback = MockCallback("{{ entry.targetNodeId }}", event.from_user, event.message)
+        await handle_callback_{{ sanitized_target_id }}(mock_callback)
+    except Exception as e:
+        logging.error(f"Ошибка в incoming_callback_trigger middleware: {e}")
+
+    return await handler(event, data)
+
+dp.callback_query.middleware(incoming_callback_trigger_{{ sanitized_node_id }}_middleware)
+
+{% endfor %}
