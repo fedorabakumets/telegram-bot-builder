@@ -271,7 +271,7 @@ export function collectConnections(nodes: Node[]): Connection[] {
     }
 
     // 4. Соединение триггера команды, текстового триггера или триггера входящего сообщения с целевым узлом
-    if ((node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger') && node.data?.autoTransitionTo) {
+    if ((node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger') && node.data?.autoTransitionTo) {
       const toId = node.data.autoTransitionTo as string;
       if (existingIds.has(toId)) {
         connections.push({ fromId: node.id, toId, type: 'trigger-next' });
