@@ -134,7 +134,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
 {%- else %}
 {%- set mtype = get_media_type(url) | trim %}
     # Отправка одиночного медиафайла
-{%- if url and url[:9] == '/uploads/' %}
+{%- if '/uploads/' in url %}
     _file_path = get_upload_file_path("{{ url }}")
     if not os.path.exists(_file_path):
         logging.error(f"❌ Медиафайл не найден: {_file_path} (узел {{ nodeId }})")
@@ -151,7 +151,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     _media_group = []
 {%- for url in attachedMedia %}
 {%- set cls = get_input_media_class(url) | trim %}
-{%- if url and url[:9] == '/uploads/' %}
+{%- if '/uploads/' in url %}
     _fp_{{ loop.index }} = get_upload_file_path("{{ url }}")
     if not os.path.exists(_fp_{{ loop.index }}):
         logging.error(f"❌ Медиафайл не найден: {_fp_{{ loop.index }}} (узел {{ nodeId }}, индекс {{ loop.index0 }})")
@@ -205,7 +205,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
                 await bot.send_document(_target_chat_id, _rval, message_thread_id=_thread_id)
 {%- else %}
 {%- set mtype = get_media_type(url) | trim %}
-{%- if url and url[:9] == '/uploads/' %}
+{%- if '/uploads/' in url %}
             _fp = get_upload_file_path("{{ url }}")
             if not os.path.exists(_fp):
                 logging.error(f"❌ Медиафайл не найден: {_fp} (узел {{ nodeId }})")
@@ -219,7 +219,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             _mg = []
 {%- for url in attachedMedia %}
 {%- set cls = get_input_media_class(url) | trim %}
-{%- if url and url[:9] == '/uploads/' %}
+{%- if '/uploads/' in url %}
             _fp2_{{ loop.index }} = get_upload_file_path("{{ url }}")
             if os.path.exists(_fp2_{{ loop.index }}):
                 _mg.append({{ cls }}(media=FSInputFile(_fp2_{{ loop.index }})))

@@ -13,6 +13,8 @@ export const animationHandlerParamsSchema = z.object({
   nodeId: z.string().optional(),
   /** Уровень отступа */
   indentLevel: z.string().optional(),
+  /** Флаг: animationUrl является локальным путём /uploads/ */
+  isLocalAnimationUrl: z.boolean().optional(),
 });
 
 export type AnimationHandlerParams = z.infer<typeof animationHandlerParamsSchema>;

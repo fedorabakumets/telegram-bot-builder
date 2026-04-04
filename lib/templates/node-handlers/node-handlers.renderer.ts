@@ -12,12 +12,31 @@ import { generateVoice as generateVoiceTemplate } from '../voice/voice.renderer'
 /**
  * Определяет тип медиа по URL и возвращает объект с нужным полем.
  */
+
+/**
+ * Проверяет является ли URL локальным путём к загруженному файлу.
+ * Только пути начинающиеся с /uploads/ считаются локальными.
+ * Внешние URL (http/https) содержащие /uploads/ в пути — не локальные.
+ * @param url - URL для проверки
+ * @returns true если это локальный /uploads/ путь
+ */
+export function isLocalUploadPath(url: string): boolean {
+  return typeof url === 'string' && url.startsWith('/uploads/');
+}
 export function resolveMediaUrls(data: any): {
   imageUrl: string;
   videoUrl: string;
   audioUrl: string;
   documentUrl: string;
   attachedMediaUrls: string[];
+  /** Флаг: imageUrl является локальным путём /uploads/ */
+  isLocalImageUrl: boolean;
+  /** Флаг: videoUrl является локальным путём /uploads/ */
+  isLocalVideoUrl: boolean;
+  /** Флаг: audioUrl является локальным путём /uploads/ */
+  isLocalAudioUrl: boolean;
+  /** Флаг: documentUrl является локальным путём /uploads/ */
+  isLocalDocumentUrl: boolean;
 } {
   const imageUrl = data?.imageUrl || '';
   const videoUrl = data?.videoUrl || '';
@@ -26,12 +45,32 @@ export function resolveMediaUrls(data: any): {
   const rawAttached: unknown[] = Array.isArray(data?.attachedMedia) ? data.attachedMedia : [];
 
   if (imageUrl || videoUrl || audioUrl || documentUrl) {
-    return { imageUrl, videoUrl, audioUrl, documentUrl, attachedMediaUrls: rawAttached as string[] };
+    return {
+      imageUrl,
+      videoUrl,
+      audioUrl,
+      documentUrl,
+      attachedMediaUrls: rawAttached as string[],
+      isLocalImageUrl: isLocalUploadPath(imageUrl),
+      isLocalVideoUrl: isLocalUploadPath(videoUrl),
+      isLocalAudioUrl: isLocalUploadPath(audioUrl),
+      isLocalDocumentUrl: isLocalUploadPath(documentUrl),
+    };
   }
 
   const urlStrings = (rawAttached as string[]).filter(u => typeof u === 'string' && (u.startsWith('http') || u.startsWith('/uploads/')));
   if (urlStrings.length === 0) {
-    return { imageUrl, videoUrl, audioUrl, documentUrl, attachedMediaUrls: [] };
+    return {
+      imageUrl,
+      videoUrl,
+      audioUrl,
+      documentUrl,
+      attachedMediaUrls: [],
+      isLocalImageUrl: false,
+      isLocalVideoUrl: false,
+      isLocalAudioUrl: false,
+      isLocalDocumentUrl: false,
+    };
   }
 
   const first = urlStrings[0].toLowerCase();
@@ -40,12 +79,21 @@ export function resolveMediaUrls(data: any): {
   const isAudio = /\.(mp3|ogg|oga|wav|m4a|flac|aac)(\?|#|$)/.test(first);
   const isDoc = !isPhoto && !isVideo && !isAudio;
 
+  const resolvedImageUrl = isPhoto ? urlStrings[0] : '';
+  const resolvedVideoUrl = isVideo ? urlStrings[0] : '';
+  const resolvedAudioUrl = isAudio ? urlStrings[0] : '';
+  const resolvedDocumentUrl = isDoc ? urlStrings[0] : '';
+
   return {
-    imageUrl: isPhoto ? urlStrings[0] : '',
-    videoUrl: isVideo ? urlStrings[0] : '',
-    audioUrl: isAudio ? urlStrings[0] : '',
-    documentUrl: isDoc ? urlStrings[0] : '',
+    imageUrl: resolvedImageUrl,
+    videoUrl: resolvedVideoUrl,
+    audioUrl: resolvedAudioUrl,
+    documentUrl: resolvedDocumentUrl,
     attachedMediaUrls: urlStrings,
+    isLocalImageUrl: isLocalUploadPath(resolvedImageUrl),
+    isLocalVideoUrl: isLocalUploadPath(resolvedVideoUrl),
+    isLocalAudioUrl: isLocalUploadPath(resolvedAudioUrl),
+    isLocalDocumentUrl: isLocalUploadPath(resolvedDocumentUrl),
   };
 }
 

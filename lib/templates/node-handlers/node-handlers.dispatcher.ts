@@ -10,7 +10,7 @@
  */
 
 import { Node } from '@shared/schema';
-import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, resolveMediaUrls } from './node-handlers.renderer';
+import { generateBroadcastHandler, generateStickerHandler, generateVoiceHandler, resolveMediaUrls, isLocalUploadPath } from './node-handlers.renderer';
 import { sortButtonsByLayout } from '../keyboard/keyboard.renderer';
 import { generateMessage } from '../message/message.renderer';
 import { generateContactHandler, generateLocationHandler } from './contact-location.renderer';
@@ -223,6 +223,10 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         videoUrl: media.videoUrl,
         audioUrl: media.audioUrl,
         attachedMedia: media.attachedMediaUrls,
+        isLocalImageUrl: media.isLocalImageUrl,
+        isLocalVideoUrl: media.isLocalVideoUrl,
+        isLocalAudioUrl: media.isLocalAudioUrl,
+        isLocalDocumentUrl: media.isLocalDocumentUrl,
         enableConditionalMessages: node.data?.enableConditionalMessages || false,
         conditionalMessages: node.data?.conditionalMessages || [],
         fallbackMessage: node.data?.fallbackMessage,
@@ -245,6 +249,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     animation: (node) => generateAnimationHandler({
       nodeId: node.id,
       animationUrl: node.data?.animationUrl || '',
+      isLocalAnimationUrl: isLocalUploadPath(node.data?.animationUrl || ''),
     }),
     location: generateLocationHandler,
     contact: generateContactHandler,

@@ -107,6 +107,14 @@ export interface MessageTemplateParams {
   audioUrl?: string;
   /** Прикреплённые медиафайлы */
   attachedMedia?: string[];
+  /** Флаг: imageUrl является локальным путём /uploads/ */
+  isLocalImageUrl?: boolean;
+  /** Флаг: videoUrl является локальным путём /uploads/ */
+  isLocalVideoUrl?: boolean;
+  /** Флаг: audioUrl является локальным путём /uploads/ */
+  isLocalAudioUrl?: boolean;
+  /** Флаг: documentUrl является локальным путём /uploads/ */
+  isLocalDocumentUrl?: boolean;
 
   // --- Условные сообщения ---
   /** Условные сообщения включены */

@@ -11,4 +11,6 @@ export interface AnimationHandlerTemplateParams {
   nodeId?: string;
   /** Уровень отступа */
   indentLevel?: string;
+  /** Флаг: animationUrl является локальным путём /uploads/ */
+  isLocalAnimationUrl?: boolean;
 }

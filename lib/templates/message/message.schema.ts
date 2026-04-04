@@ -84,6 +84,14 @@ export const messageParamsSchema = z.object({
   audioUrl: z.string().optional(),
   /** Прикреплённые медиафайлы */
   attachedMedia: z.array(z.string()).optional().default([]),
+  /** Флаг: imageUrl является локальным путём /uploads/ */
+  isLocalImageUrl: z.boolean().optional().default(false),
+  /** Флаг: videoUrl является локальным путём /uploads/ */
+  isLocalVideoUrl: z.boolean().optional().default(false),
+  /** Флаг: audioUrl является локальным путём /uploads/ */
+  isLocalAudioUrl: z.boolean().optional().default(false),
+  /** Флаг: documentUrl является локальным путём /uploads/ */
+  isLocalDocumentUrl: z.boolean().optional().default(false),
 
   // --- Условные сообщения ---
   /** Условные сообщения включены */
