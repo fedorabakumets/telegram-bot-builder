@@ -1,35 +1,30 @@
 /**
  * @fileoverview Компонент reply кнопки
- * 
- * Отображает отдельную reply кнопку с информацией о действии
- * и превью перехода к узлу или ссылки.
+ *
+ * Отображает отдельную reply кнопку с информацией о действии,
+ * превью перехода к узлу, ссылки, запроса контакта или геолокации.
  */
 
 import { Node } from '@/types/bot';
+import type { Button } from '@shared/schema';
+import type { Button } from '@shared/schema';
 
 /**
- * Интерфейс свойств компонента ReplyButton
- *
- * @interface ReplyButtonProps
- * @property {any} button - Объект кнопки
- * @property {Node[]} [allNodes] - Все узлы для поиска целевых
+ * Пропсы компонента ReplyButton
  */
 interface ReplyButtonProps {
-  button: any;
+  /** Объект кнопки */
+  button: Button;
+  /** Все узлы для поиска целевых */
   allNodes?: Node[];
 }
 
 /**
- * Компонент reply кнопки
+ * Компонент reply кнопки на канвасе.
+ * Отображает текст кнопки и индикатор действия (переход, ссылка, контакт, геолокация).
  *
- * @component
- * @description Отображает reply кнопку
- *
- * @param {ReplyButtonProps} props - Свойства компонента
- * @param {any} props.button - Объект кнопки
- * @param {Node[]} [props.allNodes] - Все узлы
- *
- * @returns {JSX.Element} Компонент reply кнопки
+ * @param props - Свойства компонента
+ * @returns JSX элемент reply кнопки
  */
 export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
   const targetNode = button.action === 'goto' && button.target 
@@ -66,6 +61,12 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
               Завершение
             </div>
           )}
+          {button.requestContact && (
+            <div className="mt-1.5 text-xs text-green-600 dark:text-green-400">📞 Контакт</div>
+          )}
+          {button.requestLocation && (
+            <div className="mt-1.5 text-xs text-blue-600 dark:text-blue-400">📍 Геолокация</div>
+          )}
           {button.hideAfterClick && (
             <div className="mt-1 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
               <i className="fas fa-eye-slash text-[10px]"></i>
@@ -85,6 +86,12 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
           )}
           {button.action === 'complete' && (
             <i className="fas fa-flag-checkered text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Завершение"></i>
+          )}
+          {button.requestContact && (
+            <span className="text-xs opacity-70" title="Запрос контакта">📞</span>
+          )}
+          {button.requestLocation && (
+            <span className="text-xs opacity-70" title="Запрос геолокации">📍</span>
           )}
         </div>
       </div>
