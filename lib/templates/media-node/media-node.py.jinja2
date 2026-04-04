@@ -58,6 +58,11 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     """Обработчик медиа-ноды для узла {{ nodeId }}"""
     is_fake_callback = getattr(callback_query, '_is_fake', False)
     logging.info(f"Медиа-нода {{ nodeId }}: отправка медиафайлов")
+    # Сразу убираем анимацию загрузки в Telegram
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
 
 {%- if hasChatIdRecipients %}
     # Инициализируем переменные пользователя для подстановки в chat_id получателях
