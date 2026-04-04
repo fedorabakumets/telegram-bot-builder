@@ -18,6 +18,8 @@ interface ButtonActionSelectorProps {
   nodeId: string;
   /** Разрешён ли множественный выбор */
   allowMultipleSelection?: boolean;
+  /** Тип клавиатуры */
+  keyboardType?: string;
 }
 
 /**
@@ -30,9 +32,11 @@ export function ButtonActionSelector({
   button,
   onButtonUpdate,
   nodeId,
-  allowMultipleSelection = false
+  allowMultipleSelection = false,
+  keyboardType,
 }: ButtonActionSelectorProps) {
   const config = ACTION_CONFIG[button.action as ButtonActionType] ?? ACTION_CONFIG['default'];
+  const isReply = keyboardType === 'reply';
 
   return (
     <div className="space-y-2">
@@ -52,6 +56,12 @@ export function ButtonActionSelector({
           <SelectItem value="goto"><ButtonActionOption action="goto" /></SelectItem>
           <SelectItem value="url"><ButtonActionOption action="url" /></SelectItem>
           <SelectItem value="default"><ButtonActionOption action="default" /></SelectItem>
+          {isReply && (
+            <SelectItem value="contact"><ButtonActionOption action="contact" /></SelectItem>
+          )}
+          {isReply && (
+            <SelectItem value="location"><ButtonActionOption action="location" /></SelectItem>
+          )}
           {allowMultipleSelection && (
             <SelectItem value="selection"><ButtonActionOption action="selection" /></SelectItem>
           )}

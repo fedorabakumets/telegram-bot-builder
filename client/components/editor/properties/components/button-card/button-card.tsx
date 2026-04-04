@@ -72,6 +72,7 @@ export function ButtonCard({
         button={button}
         onButtonUpdate={onButtonUpdate}
         allowMultipleSelection={selectedNode.data.allowMultipleSelection ?? false}
+        keyboardType={keyboardType}
       />
 
       {button.action === 'goto' && (
