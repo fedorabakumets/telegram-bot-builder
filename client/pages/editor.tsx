@@ -372,7 +372,9 @@ export default function Editor() {
 
       return apiRequest('PUT', `/api/projects/${projectId}`, {
         data: projectData,
-        restartOnUpdate: params.restartOnUpdate || false
+        restartOnUpdate: params.restartOnUpdate || false,
+        // Передаём новое имя если оно было указано при вызове мутации
+        ...(params.newName ? { name: params.newName } : {}),
       });
     },
     onMutate: async (_variables) => {
@@ -897,8 +899,7 @@ export default function Editor() {
                 ...templateDataWithSheets
               });
 
-              // Обновляем имя проекта на имя сценария
-              if (activeProject?.id && template.name) {
+              if (template.name) {
                 // Оптимистично обновляем имя в кеше списка проектов
                 const currentList = queryClient.getQueryData<Array<{ id: number; name: string }>>(['/api/projects/list']);
                 if (currentList) {
@@ -915,14 +916,9 @@ export default function Editor() {
                     currentProjects.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
                   );
                 }
-                await apiRequest('PUT', `/api/projects/${activeProject.id}`, { name: template.name });
-                queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-                queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
-                /** Инвалидируем кеш списка проектов для обновления сайдбара */
-                queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
               }
 
-              // Сохраняем изменения в проекте с новым именем
+              // Сохраняем данные холста и новое имя одним запросом
               updateProjectMutation.mutate({ newName: template.name });
             }
           } else {
@@ -945,8 +941,7 @@ export default function Editor() {
                 ...migratedData
               });
 
-              // Обновляем имя проекта на имя сценария
-              if (activeProject?.id && template.name) {
+              if (template.name) {
                 // Оптимистично обновляем имя в кеше списка проектов
                 const currentList = queryClient.getQueryData<Array<{ id: number; name: string }>>(['/api/projects/list']);
                 if (currentList) {
@@ -963,14 +958,9 @@ export default function Editor() {
                     currentProjects.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
                   );
                 }
-                await apiRequest('PUT', `/api/projects/${activeProject.id}`, { name: template.name });
-                queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-                queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
-                /** Инвалидируем кеш списка проектов для обновления сайдбара */
-                queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
               }
 
-              // Сохраняем изменения в проекте с новым именем
+              // Сохраняем данные холста и новое имя одним запросом
               updateProjectMutation.mutate({ newName: template.name });
             }
           }
