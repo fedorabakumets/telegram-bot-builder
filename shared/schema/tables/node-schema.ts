@@ -30,7 +30,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -591,6 +591,20 @@ export const nodeSchema = z.object({
     messageSendChatId: z.string().optional(),
     /** ID топика для отправки (legacy) */
     messageSendThreadId: z.string().optional(),
+    /** URL для HTTP запроса, поддерживает переменные {var} */
+    httpRequestUrl: z.string().optional(),
+    /** HTTP метод: GET, POST, PUT, PATCH, DELETE */
+    httpRequestMethod: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']).default('GET').optional(),
+    /** Заголовки запроса в формате JSON строки */
+    httpRequestHeaders: z.string().optional(),
+    /** Тело запроса в формате JSON строки */
+    httpRequestBody: z.string().optional(),
+    /** Таймаут запроса в секундах */
+    httpRequestTimeout: z.number().default(30).optional(),
+    /** Имя переменной для сохранения ответа */
+    httpRequestResponseVariable: z.string().optional(),
+    /** Имя переменной для сохранения HTTP статус кода */
+    httpRequestStatusVariable: z.string().optional(),
   }),
 });
 

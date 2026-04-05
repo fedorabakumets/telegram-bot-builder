@@ -54,4 +54,6 @@ export const nodeIcons: Record<string, string> = {
   /** Иконка триггера inline-кнопки */
   callback_trigger: 'fas fa-hand-pointer',
   media: 'fas fa-photo-video',
+  /** Иконка узла HTTP запроса */
+  http_request: 'fas fa-globe',
 };

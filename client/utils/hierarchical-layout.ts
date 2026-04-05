@@ -114,6 +114,7 @@ const CONTENT_TYPES = new Set([
   'admin_rights',
   'command',
   'forward_message',
+  'http_request',
 ]);
 
 /**

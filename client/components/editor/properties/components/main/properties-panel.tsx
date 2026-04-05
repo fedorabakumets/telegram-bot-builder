@@ -58,6 +58,7 @@ import { MapServicesSection } from '../configuration/map-services-section';
 import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
 import { ClientAuthProperties } from '../client-auth/client-auth-properties';
 import { MediaNodeProperties } from './media-node-properties';
+import { HttpRequestConfiguration } from '../configuration/http-request-configuration';
 import type { Variable } from '../../../inline-rich/types';
 
 /**
@@ -362,7 +363,7 @@ export function PropertiesPanel({
         <div className="space-y-0">
 
           {/* Basic Settings Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»Р° СЂР°СЃСЃС‹Р»РєР°, client_auth, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <BasicSettingsSection
               selectedNode={selectedNode}
               projectId={projectId}
@@ -463,6 +464,27 @@ export function PropertiesPanel({
                   selectedNode={selectedNode}
                   onNodeUpdate={onNodeUpdate}
                   getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* HTTP Request Section */}
+          {(selectedNode.type as any) === 'http_request' && (
+            <div className="w-full bg-gradient-to-br from-cyan-50/40 to-blue-50/20 dark:from-cyan-950/30 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-cyan-200/40 dark:border-cyan-800/40 backdrop-blur-sm">
+              <SectionHeader
+                title="HTTP запрос"
+                description="Настройки запроса к внешнему API"
+                isOpen={true}
+                onToggle={() => {}}
+                icon="globe"
+                iconGradient="from-cyan-100 to-blue-100 dark:from-cyan-900/50 dark:to-blue-900/50"
+                iconColor="text-cyan-600 dark:text-cyan-400"
+              />
+              <div className="mt-3 sm:mt-4">
+                <HttpRequestConfiguration
+                  selectedNode={selectedNode}
+                  onNodeUpdate={onNodeUpdate}
                 />
               </div>
             </div>

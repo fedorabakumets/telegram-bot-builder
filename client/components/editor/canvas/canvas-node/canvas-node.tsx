@@ -38,6 +38,7 @@ import { IncomingCallbackTriggerPreview } from './incoming-callback-trigger-prev
 import { OutgoingMessageTriggerPreview } from './outgoing-message-trigger-preview';
 import { ConditionNodePreview } from './condition-node-preview';
 import { MediaNodePreview } from './media-node-preview';
+import { HttpRequestPreview } from './http-request-preview';
 import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
 
 /**
@@ -552,6 +553,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Media node preview */}
         {node.type === 'media' && <MediaNodePreview attachedMedia={node.data.attachedMedia || []} />}
+
+        {/* HTTP Request preview */}
+        {(node.type as any) === 'http_request' && <HttpRequestPreview node={node} />}
 
         {/* Location preview */}
         {node.type === 'location' && <LocationPreview node={node} />}

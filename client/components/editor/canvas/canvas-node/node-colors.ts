@@ -55,4 +55,6 @@ export const nodeColors: Record<string, string> = {
   /** Цвет триггера inline-кнопки — оранжевый */
   callback_trigger: 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 text-orange-600 dark:text-orange-400 border-2 border-orange-300 dark:border-orange-700/50 shadow-lg shadow-orange-500/20',
   media: 'bg-gradient-to-br from-fuchsia-50 to-purple-100 dark:from-fuchsia-900/30 dark:to-purple-900/30 text-fuchsia-600 dark:text-fuchsia-400 border-2 border-fuchsia-300 dark:border-fuchsia-700/50 shadow-lg shadow-fuchsia-500/20',
+  /** Цвет узла HTTP запроса — голубой */
+  http_request: 'bg-gradient-to-br from-cyan-50 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800',
 };

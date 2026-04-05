@@ -12,6 +12,7 @@ import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-
 import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger } from './massive/triggers';
 import { conditionNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode } from './massive/content-management';
+import { httpRequestNode } from './massive/http-request';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -46,6 +47,10 @@ export const componentCategories: Array<{
   {
     title: 'Управление контентом',
     components: [forwardMessage, createForumTopicNode]
+  },
+  {
+    title: 'Интеграции',
+    components: [httpRequestNode]
   }
 ];
 

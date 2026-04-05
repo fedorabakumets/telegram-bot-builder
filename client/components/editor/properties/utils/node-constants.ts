@@ -37,6 +37,7 @@ export const MANAGEMENT_NODE_TYPES = [
   'broadcast',
   'client_auth',
   'create_forum_topic',
+  'http_request',
 ] as const;
 
 /**
