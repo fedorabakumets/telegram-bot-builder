@@ -153,6 +153,30 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
       });
     }
   });
+  // Добавляем переменные от managed_bot_updated_trigger нод (Bot API 9.6)
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'managed_bot_updated_trigger') return;
+    const data = node.data as any;
+    const vars: Array<{ key: string; name: string; description: string }> = [
+      { key: 'saveBotIdTo', name: data.saveBotIdTo || 'bot_id', description: 'ID созданного управляемого бота' },
+      { key: 'saveBotUsernameTo', name: data.saveBotUsernameTo || 'bot_username', description: 'Username созданного управляемого бота' },
+      { key: 'saveBotNameTo', name: data.saveBotNameTo || 'bot_name', description: 'Имя созданного управляемого бота' },
+      { key: 'saveCreatorIdTo', name: data.saveCreatorIdTo || 'creator_id', description: 'ID пользователя, создавшего бота' },
+      { key: 'saveCreatorUsernameTo', name: data.saveCreatorUsernameTo || 'creator_username', description: 'Username пользователя, создавшего бота' },
+    ];
+    vars.forEach(({ key, name, description }) => {
+      if (!name) return;
+      const mapKey = `managed_bot__${node.id}__${key}`;
+      if (!variablesMap.has(mapKey)) {
+        variablesMap.set(mapKey, {
+          name,
+          nodeId: node.id,
+          nodeType: 'managed_bot_updated_trigger' as any,
+          description,
+        });
+      }
+    });
+  });
   // Добавляем переменные от callback_trigger нод
   allNodes.forEach(node => {
     if ((node.type as string) !== 'callback_trigger') return;

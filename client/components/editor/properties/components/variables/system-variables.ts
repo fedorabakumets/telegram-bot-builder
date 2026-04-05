@@ -46,7 +46,8 @@ export const SYSTEM_VARIABLES: SystemVariable[] = [
 export function getVariableIcon(nodeType: string): string {
   const icons: Record<string, string> = {
     'user-input': 'keyboard', 'system': 'cog', 'start': 'terminal',
-    'command': 'terminal', 'conditional': 'code-branch'
+    'command': 'terminal', 'conditional': 'code-branch',
+    'managed_bot_updated_trigger': 'robot'
   };
   return icons[nodeType] || 'cube';
 }
@@ -60,7 +61,8 @@ export function getVariableColor(nodeType: string): string {
   const gradients: Record<string, string> = {
     'user-input': 'from-blue-400 to-blue-500', 'system': 'from-teal-400 to-teal-500',
     'start': 'from-orange-400 to-orange-500', 'command': 'from-orange-400 to-orange-500',
-    'conditional': 'from-purple-400 to-purple-500'
+    'conditional': 'from-purple-400 to-purple-500',
+    'managed_bot_updated_trigger': 'from-indigo-400 to-indigo-500'
   };
   return gradients[nodeType] || 'from-gray-400 to-gray-500';
 }
@@ -73,7 +75,8 @@ export function getVariableColor(nodeType: string): string {
 export function getVariableBadge(nodeType: string): string {
   const badges: Record<string, string> = {
     'user-input': 'Ввод', 'system': 'Система', 'start': 'Команда',
-    'command': 'Команда', 'conditional': 'Условие'
+    'command': 'Команда', 'conditional': 'Условие',
+    'managed_bot_updated_trigger': 'Управляемый бот'
   };
   return badges[nodeType] || 'Другое';
 }
