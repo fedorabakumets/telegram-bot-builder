@@ -57,4 +57,6 @@ export const nodeColors: Record<string, string> = {
   media: 'bg-gradient-to-br from-fuchsia-50 to-purple-100 dark:from-fuchsia-900/30 dark:to-purple-900/30 text-fuchsia-600 dark:text-fuchsia-400 border-2 border-fuchsia-300 dark:border-fuchsia-700/50 shadow-lg shadow-fuchsia-500/20',
   /** Цвет узла HTTP запроса — голубой */
   http_request: 'bg-gradient-to-br from-cyan-50 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800',
+  /** Цвет триггера обновления управляемого бота — индиго */
+  managed_bot_updated_trigger: 'bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-300 dark:border-indigo-700/50 shadow-lg shadow-indigo-500/20',
 };

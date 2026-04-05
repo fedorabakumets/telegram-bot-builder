@@ -102,6 +102,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
         );
       case 'group_message_trigger':
         return <GroupMessageTriggerHeader node={node} />;
+      /** Заголовок триггера обновления управляемого бота */
+      case 'managed_bot_updated_trigger' as any:
+        return (
+          <span className="font-semibold text-indigo-700 dark:text-indigo-300">
+            🤖 Управляемый бот
+          </span>
+        );
       case 'http_request':
         return (
           <span className="font-semibold text-cyan-700 dark:text-cyan-300">

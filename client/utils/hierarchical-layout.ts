@@ -92,7 +92,7 @@ const DEFAULT_OPTIONS: HierarchicalLayoutOptions = {
 /**
  * Узлы, которые естественно являются входом сценария.
  */
-const ROOT_TYPES = new Set(['start', 'command_trigger', 'text_trigger']);
+const ROOT_TYPES = new Set(['start', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'group_message_trigger', 'callback_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'managed_bot_updated_trigger']);
 
 /**
  * Узлы-сопровождающие, которые не должны вести себя как полноценный шаг сценария.
@@ -308,7 +308,7 @@ function inferConnectionsFromNodes(
       pushConnection({
         fromId: node.id,
         toId: data.autoTransitionTo,
-        type: node.type === 'command_trigger' || node.type === 'text_trigger' ? 'trigger-next' : 'auto-transition',
+        type: node.type === 'command_trigger' || node.type === 'text_trigger' || (node.type as any) === 'managed_bot_updated_trigger' ? 'trigger-next' : 'auto-transition',
       });
     }
 

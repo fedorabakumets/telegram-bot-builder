@@ -56,4 +56,6 @@ export const nodeIcons: Record<string, string> = {
   media: 'fas fa-photo-video',
   /** Иконка узла HTTP запроса */
   http_request: 'fas fa-globe',
+  /** Иконка триггера обновления управляемого бота (Bot API 9.6) */
+  managed_bot_updated_trigger: 'fas fa-robot',
 };
