@@ -9,7 +9,7 @@ import { textMessage, mediaMessage, keyboardMessage, saveAnswerNode } from './ma
 import { allCommandPresets } from './massive/commands';
 import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
-import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger } from './massive/triggers';
+import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger } from './massive/triggers';
 import { conditionNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode } from './massive/content-management';
 import { httpRequestNode } from './massive/http-request';
@@ -26,7 +26,7 @@ export const componentCategories: Array<{
 }> = [
   {
     title: 'Триггеры',
-    components: [commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger]
+    components: [commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger]
   },
   {
     title: 'Сообщения',

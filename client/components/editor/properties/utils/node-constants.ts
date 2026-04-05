@@ -66,6 +66,7 @@ export const TRIGGER_NODE_TYPES = [
   'callback_trigger' as any,
   'incoming_callback_trigger' as any,
   'outgoing_message_trigger' as any,
+  'managed_bot_updated_trigger' as any,
 ] as const;
 
 /**

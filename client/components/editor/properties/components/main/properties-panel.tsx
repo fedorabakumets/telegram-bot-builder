@@ -26,6 +26,7 @@ import { GroupMessageTriggerConfiguration } from '../trigger/GroupMessageTrigger
 import { CallbackTriggerConfiguration } from '../trigger/CallbackTriggerConfiguration';
 import { IncomingCallbackTriggerConfiguration } from '../trigger/IncomingCallbackTriggerConfiguration';
 import { OutgoingMessageTriggerConfiguration } from '../trigger/OutgoingMessageTriggerConfiguration';
+import { ManagedBotUpdatedTriggerConfiguration } from '../trigger/ManagedBotUpdatedTriggerConfiguration';
 import { ConditionNodeConfiguration } from '../condition/ConditionNodeConfiguration';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
@@ -535,6 +536,14 @@ export function PropertiesPanel({
           )}
           {isTriggerNode(selectedNode.type) && (selectedNode.type as any) === 'outgoing_message_trigger' && (
             <OutgoingMessageTriggerConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+            />
+          )}
+          {isTriggerNode(selectedNode.type) && (selectedNode.type as any) === 'managed_bot_updated_trigger' && (
+            <ManagedBotUpdatedTriggerConfiguration
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}

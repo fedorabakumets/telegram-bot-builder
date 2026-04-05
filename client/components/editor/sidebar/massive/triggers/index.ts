@@ -3,6 +3,7 @@
  * @module components/editor/sidebar/massive/triggers
  */
 
+export { managedBotUpdatedTrigger } from './managed-bot-updated-trigger';
 export { commandTrigger } from './command-trigger';
 export { textTrigger } from './text-trigger';
 export { anyMessageTrigger } from './any-message-trigger';

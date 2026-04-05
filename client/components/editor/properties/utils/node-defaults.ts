@@ -323,7 +323,16 @@ export function getNodeDefaults(type: Node['type']): any {
       attachedMedia: [],
       enableAutoTransition: false,
       autoTransitionTo: ''
-    }
+    },
+    managed_bot_updated_trigger: {
+      saveBotIdTo: 'bot_id',
+      saveBotUsernameTo: 'bot_username',
+      saveBotNameTo: 'bot_name',
+      saveCreatorIdTo: 'creator_id',
+      saveCreatorUsernameTo: 'creator_username',
+      filterByUserId: '',
+      autoTransitionTo: '',
+    },
   };
   return defaults[type] || {};
 }

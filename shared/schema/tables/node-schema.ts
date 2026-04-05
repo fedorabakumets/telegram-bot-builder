@@ -30,7 +30,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -529,6 +529,18 @@ export const nodeSchema = z.object({
     topicIconColor: z.string().optional(),
     /** Имя переменной для сохранения thread_id созданного топика */
     saveThreadIdTo: z.string().optional(),
+    /** Переменная для сохранения bot.id управляемого бота */
+    saveBotIdTo: z.string().optional(),
+    /** Переменная для сохранения bot.username управляемого бота */
+    saveBotUsernameTo: z.string().optional(),
+    /** Переменная для сохранения bot.first_name управляемого бота */
+    saveBotNameTo: z.string().optional(),
+    /** Переменная для сохранения user.id создателя бота */
+    saveCreatorIdTo: z.string().optional(),
+    /** Переменная для сохранения user.username создателя бота */
+    saveCreatorUsernameTo: z.string().optional(),
+    /** Фильтр по user.id — реагировать только на конкретного пользователя */
+    filterByUserId: z.string().optional(),
     /** Не создавать топик повторно, если переменная saveThreadIdTo уже заполнена */
     skipIfExists: z.boolean().default(false),
     /** ID группы для триггера сообщения в группе */
