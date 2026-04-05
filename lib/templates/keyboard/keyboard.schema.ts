@@ -27,6 +27,10 @@ export const keyboardParamsSchema = z.object({
     webAppUrl: z.string().optional(),
     /** Визуальный стиль кнопки (Bot API 9.4): primary=синий, success=зелёный, danger=красный */
     style: z.enum(['primary', 'success', 'danger']).optional(),
+    /** Предложенное имя для создаваемого управляемого бота (Bot API 9.6) */
+    suggestedBotName: z.string().optional(),
+    /** Предложенный username для создаваемого управляемого бота (Bot API 9.6) */
+    suggestedBotUsername: z.string().optional(),
   })).default([]),
   /** Раскладка клавиатуры */
   keyboardLayout: z.object({

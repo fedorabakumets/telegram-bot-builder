@@ -234,3 +234,18 @@ export const validParamsWithStyle: KeyboardTemplateParams = {
   oneTimeKeyboard: false,
   resizeKeyboard: true,
 };
+
+/** Валидные параметры: кнопка запроса управляемого бота (Bot API 9.6) */
+export const validParamsRequestManagedBot: KeyboardTemplateParams = {
+  keyboardType: 'reply',
+  buttons: [
+    btn('🤖 Создать бота', 'request_managed_bot', {
+      id: 'btn_managed_bot',
+      suggestedBotName: 'Мой бот',
+      suggestedBotUsername: 'my_new_bot',
+    }),
+    btn('Пропустить', 'goto', { target: 'skip_node', id: 'btn_skip' }),
+  ],
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};

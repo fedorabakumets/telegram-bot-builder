@@ -3,7 +3,7 @@
 
   @fileoverview Генерирует Python код для создания inline/reply клавиатуры
   @param {string} keyboardType - Тип клавиатуры: 'inline', 'reply', 'none'
-  @param {array} buttons - Массив кнопок {action, text, url?, target?, id?, requestContact?, requestLocation?}
+  @param {array} buttons - Массив кнопок {action, text, url?, target?, id?, requestContact?, requestLocation?, suggestedBotName?, suggestedBotUsername?}
   @param {object} keyboardLayout - Раскладка клавиатуры {autoLayout, columns, rows: [{buttonIds}]}
   @param {boolean} oneTimeKeyboard - Скрыть после использования
   @param {boolean} resizeKeyboard - Изменить размер под кнопки
@@ -146,6 +146,8 @@
 {{ indent }}builder.add(KeyboardButton(text={{ btn.text|format_python_text }}, request_contact=True{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
 {%- elif btn.action == 'location' and btn.requestLocation %}
 {{ indent }}builder.add(KeyboardButton(text={{ btn.text|format_python_text }}, request_location=True{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+{%- elif btn.action == 'request_managed_bot' %}
+{{ indent }}builder.add(KeyboardButton(text={{ btn.text|format_python_text }}, request_managed_bot=KeyboardButtonRequestManagedBot(request_id={{ loop.index }}{% if btn.suggestedBotName %}, suggested_name="{{ btn.suggestedBotName }}"{% endif %}{% if btn.suggestedBotUsername %}, suggested_username="{{ btn.suggestedBotUsername }}"{% endif %}){% if btn.style %}, style="{{ btn.style }}"{% endif %}))
 {%- elif btn.action == 'selection' and allowMultipleSelection %}
 {{ indent }}_btn_text = {{ btn.text|format_python_text }}
 {{ indent }}builder.add(KeyboardButton(text=("✅ " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "") + _btn_text{% if btn.style %}, style="{{ btn.style }}"{% endif %}))

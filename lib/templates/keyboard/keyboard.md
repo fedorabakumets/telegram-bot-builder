@@ -25,7 +25,11 @@ interface Button {
   action: string;
   target?: string;
   url?: string;
-  customCallbackData?: string; // Переопределяет авто-генерируемый callback_data (только для goto/command)
+  requestContact?: boolean;       // Запросить контакт (только для contact, reply)
+  requestLocation?: boolean;      // Запросить геолокацию (только для location, reply)
+  suggestedBotName?: string;      // Предложенное имя бота (только для request_managed_bot, Bot API 9.6)
+  suggestedBotUsername?: string;  // Предложенный username бота (только для request_managed_bot, Bot API 9.6)
+  customCallbackData?: string;    // Переопределяет авто-генерируемый callback_data (только для goto/command)
 }
 ```
 
@@ -77,4 +81,4 @@ const code = generateKeyboard({
 - `complete` → `done_<shortNodeId>` или `customCallbackData` или `target`
 - `default` → `customCallbackData` или `target` или `id`
 
-**Не имеют callback_data:** `url`, `web_app` (с url), `contact`, `location`, `copy_text` (с copyText)
+**Не имеют callback_data:** `url`, `web_app` (с url), `contact`, `location`, `copy_text` (с copyText), `request_managed_bot`

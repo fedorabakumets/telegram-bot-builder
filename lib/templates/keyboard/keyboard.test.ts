@@ -22,6 +22,7 @@ import {
   validParamsCopyText,
   validParamsWebApp,
   validParamsWithStyle,
+  validParamsRequestManagedBot,
 } from './keyboard.fixture';
 import { keyboardParamsSchema } from './keyboard.schema';
 
@@ -532,6 +533,67 @@ describe('keyboard.py.jinja2 шаблон', () => {
         });
         assert.ok(result.includes('WebAppInfo(url="https://example.com")'), 'Должна быть web_app кнопка');
         assert.ok(result.includes('builder.adjust(2, 1)'), `Ожидался builder.adjust(2, 1), получено:\n${result}`);
+      });
+    });
+
+    describe('request_managed_bot действие (Bot API 9.6)', () => {
+      it('генерирует KeyboardButtonRequestManagedBot для кнопки с request_managed_bot', () => {
+        const result = generateKeyboard(validParamsRequestManagedBot);
+        assert.ok(
+          result.includes('KeyboardButtonRequestManagedBot('),
+          `Ожидался KeyboardButtonRequestManagedBot, получено:\n${result}`
+        );
+      });
+
+      it('генерирует suggested_name если задан suggestedBotName', () => {
+        const result = generateKeyboard(validParamsRequestManagedBot);
+        assert.ok(
+          result.includes('suggested_name="Мой бот"'),
+          `Ожидался suggested_name="Мой бот", получено:\n${result}`
+        );
+      });
+
+      it('генерирует suggested_username если задан suggestedBotUsername', () => {
+        const result = generateKeyboard(validParamsRequestManagedBot);
+        assert.ok(
+          result.includes('suggested_username="my_new_bot"'),
+          `Ожидался suggested_username="my_new_bot", получено:\n${result}`
+        );
+      });
+
+      it('не генерирует callback_data для request_managed_bot кнопки', () => {
+        const result = generateKeyboard(validParamsRequestManagedBot);
+        const lines = result.split('\n');
+        const botLine = lines.find(l => l.includes('KeyboardButtonRequestManagedBot'));
+        assert.ok(!botLine?.includes('callback_data'), 'request_managed_bot кнопка не должна иметь callback_data');
+      });
+
+      it('использует ReplyKeyboardBuilder', () => {
+        const result = generateKeyboard(validParamsRequestManagedBot);
+        assert.ok(result.includes('ReplyKeyboardBuilder'), 'Должен использоваться ReplyKeyboardBuilder');
+        assert.ok(!result.includes('InlineKeyboardBuilder'), 'Не должен использоваться InlineKeyboardBuilder');
+      });
+
+      it('схема принимает suggestedBotName и suggestedBotUsername в кнопке', () => {
+        const result = keyboardParamsSchema.safeParse({
+          keyboardType: 'reply',
+          buttons: [{
+            id: 'btn_mb', text: '🤖 Создать', action: 'request_managed_bot',
+            buttonType: 'normal', skipDataCollection: false, hideAfterClick: false,
+            suggestedBotName: 'Тест бот',
+            suggestedBotUsername: 'test_bot_123',
+          }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(result.success, `Схема должна принять suggestedBotName/suggestedBotUsername: ${JSON.stringify(result)}`);
+      });
+
+      it('работает вместе с другими reply кнопками', () => {
+        const result = generateKeyboard(validParamsRequestManagedBot);
+        assert.ok(result.includes('KeyboardButtonRequestManagedBot('), 'Должна быть request_managed_bot кнопка');
+        assert.ok(result.includes('Пропустить'), 'Должна быть кнопка Пропустить');
+        assert.ok(result.includes('ReplyKeyboardBuilder'), 'Должен использоваться ReplyKeyboardBuilder');
       });
     });
 

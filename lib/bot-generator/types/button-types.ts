@@ -25,8 +25,9 @@ export type ButtonAction =
   | 'selection'  /** Кнопка выбора (multi-select) */
   | 'complete'   /** Кнопка завершения (multi-select done) */
   | 'default'    /** Кнопка по умолчанию */
-  | 'copy_text'  /** Копировать текст в буфер обмена (Bot API 7.11, только inline) */
-  | 'web_app';   /** Открыть Telegram Mini App по URL (только inline, требует HTTPS) */
+  | 'copy_text'         /** Копировать текст в буфер обмена (Bot API 7.11, только inline) */
+  | 'web_app'          /** Открыть Telegram Mini App по URL (только inline, требует HTTPS) */
+  | 'request_managed_bot'; /** Запросить создание управляемого бота (Bot API 9.6, только reply) */
 
 /** Визуальный стиль кнопки (Bot API 9.4) */
 export type ButtonStyle = 'primary' | 'secondary' | 'destructive';

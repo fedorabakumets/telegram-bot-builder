@@ -118,6 +118,8 @@ function makeButton(
     url: extra.url,
     requestContact: extra.requestContact,
     requestLocation: extra.requestLocation,
+    suggestedBotName: extra.suggestedBotName,
+    suggestedBotUsername: extra.suggestedBotUsername,
   };
 }
 
@@ -1755,6 +1757,72 @@ test('M04', 'style работает для reply кнопок', () => {
   const msg1 = block(code, 'msg_1');
   assertIncludesAll(msg1, ['style="primary"'], 'M04: reply кнопка должна генерировать style="primary"');
   syntax(code, 'm04');
+});
+
+console.log('══ Блок N: request_managed_bot (Bot API 9.6) ════════════════════════');
+
+test('N01', 'reply-клавиатура с request_managed_bot кнопкой генерирует KeyboardButtonRequestManagedBot', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Создайте бота', {
+      keyboardType: 'reply',
+      buttons: [
+        makeButton('🤖 Создать бота', 'request_managed_bot', 'msg_2', {
+          id: 'btn_mb_n01',
+          suggestedBotName: 'Мой бот',
+          suggestedBotUsername: 'my_new_bot',
+        }),
+      ],
+    }),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'n01');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, ['KeyboardButtonRequestManagedBot(', 'ReplyKeyboardBuilder'], 'N01');
+  syntax(code, 'n01');
+});
+
+test('N02', 'suggestedBotName и suggestedBotUsername попадают в сгенерированный код', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Создайте бота', {
+      keyboardType: 'reply',
+      buttons: [
+        makeButton('🤖 Создать', 'request_managed_bot', 'msg_2', {
+          id: 'btn_mb_n02',
+          suggestedBotName: 'Тест Бот',
+          suggestedBotUsername: 'test_bot_xyz',
+        }),
+      ],
+    }),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'n02');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, ['suggested_name="Тест Бот"', 'suggested_username="test_bot_xyz"'], 'N02');
+  syntax(code, 'n02');
+});
+
+test('N03', 'request_managed_bot кнопка работает вместе с обычными reply кнопками', () => {
+  const project = makeProject([
+    makeMessageNode('msg_1', 'Меню', {
+      keyboardType: 'reply',
+      buttons: [
+        makeButton('🤖 Создать бота', 'request_managed_bot', 'msg_2', {
+          id: 'btn_mb_n03',
+          suggestedBotName: 'Бот',
+          suggestedBotUsername: 'bot_n03',
+        }),
+        makeButton('Пропустить', 'goto', 'msg_2', { id: 'btn_skip_n03' }),
+      ],
+    }),
+    makeMessageNode('msg_2', 'Готово'),
+  ]);
+
+  const code = gen(project, 'n03');
+  const b = block(code, 'msg_1');
+  assertIncludesAll(b, ['KeyboardButtonRequestManagedBot(', 'Пропустить', 'ReplyKeyboardBuilder'], 'N03');
+  syntax(code, 'n03');
 });
 
 const passed = results.filter(r => r.passed).length;

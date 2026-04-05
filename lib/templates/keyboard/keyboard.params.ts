@@ -31,6 +31,10 @@ export interface ButtonWithShortId extends Button {
   webAppUrl?: string;
   /** Визуальный стиль кнопки (Bot API 9.4): primary=синий, secondary=серый, destructive=красный */
   style?: 'primary' | 'secondary' | 'destructive';
+  /** Предложенное имя для создаваемого управляемого бота (Bot API 9.6) */
+  suggestedBotName?: string;
+  /** Предложенный username для создаваемого управляемого бота (Bot API 9.6) */
+  suggestedBotUsername?: string;
 }
 
 /** Условное сообщение */
