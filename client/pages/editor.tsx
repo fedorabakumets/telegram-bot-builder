@@ -193,7 +193,7 @@ export default function Editor() {
       if (context?.previousProjects) queryClient.setQueryData(['/api/projects'], context.previousProjects);
       if (context?.previousProject && activeProject?.id) queryClient.setQueryData([`/api/projects/${activeProject.id}`], context.previousProject);
       if (context?.previousList) queryClient.setQueryData(['/api/projects/list'], context.previousList);
-      toast({ title: 'Ошибка сохранения', description: 'Не удалось сохранить проект', variant: 'destructive' as any });
+      toast({ title: 'Ошибка сохранения', description: 'Не удалось сохранить проект', variant: 'destructive' });
     },
   });
 
@@ -241,7 +241,7 @@ export default function Editor() {
     activeProject, botDataWithSheets, setBotDataWithSheets, setBotData,
     currentNodeSizes, setIsLoadingTemplate, setFitTrigger,
     updateProjectMutation, queryClient,
-    toast: (opts) => toast(opts as any),
+    toast,
   });
 
   // --- Обработчики узлов ---
@@ -262,6 +262,29 @@ export default function Editor() {
     currentNodeSizes, nodes, activeProjectId: activeProject?.id || null,
     onAfterSelect: () => setFitTrigger(t => t + 1),
   });
+
+  /**
+   * Синхронизирует активный лист с холстом при обновлении данных бота
+   * @param updatedData - Обновлённые данные бота с листами
+   */
+  const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
+    const activeSheet = SheetsManager.getActiveSheet(updatedData);
+    if (activeSheet) {
+      const migratedNodes = setBotData({ nodes: activeSheet.nodes }, undefined, currentNodeSizes, true);
+      if (migratedNodes && migratedNodes.length !== activeSheet.nodes.length) {
+        setBotDataWithSheets({
+          ...updatedData,
+          sheets: updatedData.sheets.map(s =>
+            s.id === activeSheet.id ? { ...s, nodes: migratedNodes } : s
+          ),
+        });
+      } else {
+        setBotDataWithSheets(updatedData);
+      }
+    } else {
+      setBotDataWithSheets(updatedData);
+    }
+  }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
 
   // --- Перемещение узла между листами ---
   const { moveNodeToSheet } = useMoveNodeToSheet(botDataWithSheets || undefined, handleBotDataUpdate);
@@ -320,29 +343,6 @@ export default function Editor() {
   });
 
   // --- Инлайн обработчики ---
-
-  /**
-   * Синхронизирует активный лист с холстом при обновлении данных
-   * @param updatedData - Обновлённые данные бота с листами
-   */
-  function handleBotDataUpdate(updatedData: BotDataWithSheets) {
-    const activeSheet = SheetsManager.getActiveSheet(updatedData);
-    if (activeSheet) {
-      const migratedNodes = setBotData({ nodes: activeSheet.nodes }, undefined, currentNodeSizes, true);
-      if (migratedNodes && migratedNodes.length !== activeSheet.nodes.length) {
-        setBotDataWithSheets({
-          ...updatedData,
-          sheets: updatedData.sheets.map(s =>
-            s.id === activeSheet.id ? { ...s, nodes: migratedNodes } : s
-          ),
-        });
-      } else {
-        setBotDataWithSheets(updatedData);
-      }
-    } else {
-      setBotDataWithSheets(updatedData);
-    }
-  }
 
   /**
    * Применяет отредактированный JSON к данным бота
@@ -560,19 +560,11 @@ export default function Editor() {
       setSelectedUserDetails(first);
       setSelectedDialogUser(first);
     }
-  }, [currentTab, users]);
-
-  // --- useEffect: сброс Monaco при сбросе editedJsonContent ---
-  useEffect(() => {
-    if (editedJsonContent === '' && selectedFormat === 'json' && editorRef.current) {
-      isResettingEditorRef.current = true;
-      editorRef.current.setValue(displayContent);
-      setTimeout(() => { isResettingEditorRef.current = false; }, 0);
-    }
-  }, [editedJsonContent, selectedFormat]);
+  }, [currentTab, users, setSelectedUserDetails, setSelectedDialogUser]);
 
   // --- Вычисляемые значения ---
   const content = generatedCodeContent[selectedFormat] || '';
+  /** Отображаемый контент кода (мемоизирован для стабильности ссылки) */
   const displayContent = useMemo(() => content, [content]);
 
   const codeStats = useMemo(() => {
@@ -585,6 +577,15 @@ export default function Editor() {
       comments: (displayContent.match(/^[^#]*#/gm) || []).length,
     };
   }, [displayContent]);
+
+  // --- useEffect: сброс Monaco при сбросе editedJsonContent ---
+  useEffect(() => {
+    if (editedJsonContent === '' && selectedFormat === 'json' && editorRef.current) {
+      isResettingEditorRef.current = true;
+      editorRef.current.setValue(displayContent);
+      setTimeout(() => { isResettingEditorRef.current = false; }, 0);
+    }
+  }, [editedJsonContent, selectedFormat, displayContent]);
 
   const getVisible = (id: string) =>
     flexibleLayoutConfig.elements.find(el => el.id === id)?.visible ?? true;
@@ -757,12 +758,8 @@ export default function Editor() {
     />
   ) : null;
 
-  // --- Контент панели кода ---
-  const codePanelContent = activeProject ? (
-    <div className="h-full border-r bg-background">
-      {/* Используется внутри SidebarContent */}
-    </div>
-  ) : null;
+  // --- Контент панели кода (SidebarContent сам рендерит CodePanel) ---
+  const codePanelContent = null;
 
   // --- Контент сайдбара ---
   const sidebarContent = (

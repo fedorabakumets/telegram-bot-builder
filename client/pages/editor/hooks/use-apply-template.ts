@@ -12,6 +12,7 @@ import { nanoid } from 'nanoid';
 import type { QueryClient } from '@tanstack/react-query';
 import type { BotProject, BotData, BotDataWithSheets } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
+import type { Toast } from '@/hooks/use-toast';
 
 /** Параметры хука useApplyTemplate */
 export interface UseApplyTemplateParams {
@@ -34,7 +35,7 @@ export interface UseApplyTemplateParams {
   /** QueryClient для обновления кеша */
   queryClient: QueryClient;
   /** Функция показа уведомлений */
-  toast: (opts: { title: string; description?: string; variant?: string }) => void;
+  toast: (opts: Toast) => void;
 }
 
 /**
