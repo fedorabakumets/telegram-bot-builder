@@ -31,7 +31,7 @@ export function ManagedBotUpdatedTriggerPreview({ node }: ManagedBotUpdatedTrigg
         <div className="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
           <i className="fas fa-robot text-indigo-400 text-[10px]" />
         </div>
-        <span className="text-xs font-semibold text-indigo-300">Триггер управляемого бота</span>
+        <span className="text-xs font-semibold text-indigo-300">Триггер создания/обновления бота</span>
       </div>
 
       {/* Фильтр по userId */}

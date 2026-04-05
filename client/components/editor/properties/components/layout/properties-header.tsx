@@ -71,7 +71,7 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   outgoing_message_trigger: 'Триггер исходящего сообщения',
   create_forum_topic: 'Создать топик форума',
   http_request: 'HTTP запрос',
-  managed_bot_updated_trigger: 'Триггер управляемого бота',
+  managed_bot_updated_trigger: 'Триггер создания/обновления бота',
 };
 
 /**

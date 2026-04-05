@@ -11,7 +11,7 @@ import { ComponentDefinition } from "@shared/schema";
  */
 export const managedBotUpdatedTrigger: ComponentDefinition = {
   id: 'managed-bot-updated-trigger',
-  name: 'Триггер управляемого бота',
+  name: 'Триггер создания/обновления бота',
   description: 'Срабатывает когда пользователь создал управляемого бота или сменил его токен',
   icon: 'fas fa-robot',
   color: 'bg-indigo-100 text-indigo-600',
