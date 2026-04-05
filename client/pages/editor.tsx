@@ -823,123 +823,144 @@ export default function Editor() {
 
   // Проверяем, есть ли выбранный сценарий при загрузке страницы
   useEffect(() => {
-    const selectedTemplateData = localStorage.getItem('selectedTemplate');
-    if (selectedTemplateData && activeProject) {
-      try {
-        setIsLoadingTemplate(true); // Устанавливаем флаг загрузки сценария
-        const template = JSON.parse(selectedTemplateData);
-        console.log('Применяем сохраненный сценарий:', template.name);
+    /**
+     * Асинхронная функция применения сценария из localStorage к текущему проекту.
+     * Используется IIFE-паттерн, так как useEffect не поддерживает async напрямую.
+     */
+    const apply = async () => {
+      const selectedTemplateData = localStorage.getItem('selectedTemplate');
+      if (selectedTemplateData && activeProject) {
+        try {
+          setIsLoadingTemplate(true); // Устанавливаем флаг загрузки сценария
+          const template = JSON.parse(selectedTemplateData);
+          console.log('Применяем сохраненный сценарий:', template.name);
 
-        // Проверяем, есть ли в сценарии многолистовая структура
-        if (template.data.sheets && Array.isArray(template.data.sheets)) {
-          console.log('Применяем многолистовой сценарий с листами:', template.data.sheets.length);
+          // Проверяем, есть ли в сценарии многолистовая структура
+          if (template.data.sheets && Array.isArray(template.data.sheets)) {
+            console.log('Применяем многолистовой сценарий с листами:', template.data.sheets.length);
 
-          // Создаем новые ID для листов сценария
-          const updatedSheets = template.data.sheets.map((sheet: any) => {
-            // Очищаем узлы от потенциальных циклических ссылок
-            const cleanNodes = sheet.nodes?.map((node: any) => {
-              const cleanNode = {
-                id: node.id,
-                type: node.type,
-                position: node.position || { x: 0, y: 0 },
-                data: {
-                  ...node.data,
-                  // Убираем любые потенциальные циклические ссылки
-                  parent: undefined,
-                  children: undefined
-                }
+            // Создаем новые ID для листов сценария
+            const updatedSheets = template.data.sheets.map((sheet: any) => {
+              // Очищаем узлы от потенциальных циклических ссылок
+              const cleanNodes = sheet.nodes?.map((node: any) => {
+                const cleanNode = {
+                  id: node.id,
+                  type: node.type,
+                  position: node.position || { x: 0, y: 0 },
+                  data: {
+                    ...node.data,
+                    // Убираем любые потенциальные циклические ссылки
+                    parent: undefined,
+                    children: undefined
+                  }
+                };
+                return cleanNode;
+              }) || [];
+
+              return {
+                id: nanoid(), // Новый уникальный ID для листа
+                name: sheet.name,
+                nodes: cleanNodes,
+                viewState: sheet.viewState || { position: { x: 0, y: 0 }, zoom: 1 },
+                createdAt: new Date(),
+                updatedAt: new Date()
               };
-              return cleanNode;
-            }) || [];
+            });
 
-            return {
-              id: nanoid(), // Новый уникальный ID для листа
-              name: sheet.name,
-              nodes: cleanNodes,
-              viewState: sheet.viewState || { position: { x: 0, y: 0 }, zoom: 1 },
-              createdAt: new Date(),
-              updatedAt: new Date()
+            const templateDataWithSheets = {
+              sheets: updatedSheets,
+              activeSheetId: updatedSheets[0]?.id,
+              version: 2
             };
-          });
 
-          const templateDataWithSheets = {
-            sheets: updatedSheets,
-            activeSheetId: updatedSheets[0]?.id,
-            version: 2
-          };
+            // Устанавливаем многолистовые данные
+            setBotDataWithSheets(templateDataWithSheets);
 
-          // Устанавливаем многолистовые данные
-          setBotDataWithSheets(templateDataWithSheets);
+            // Устанавливаем первый лист как активный на холсте
+            const firstSheet = updatedSheets[0];
+            if (firstSheet) {
+              // Пропускаем автоиерархию при загрузке сценариев — расположение сохраняется как есть
+              const shouldSkipLayout = true; // Автоиерархия отключена: применяется только вручную через тулбар
+              setBotData({ nodes: firstSheet.nodes }, template.name, currentNodeSizes, shouldSkipLayout);
+            }
 
-          // Устанавливаем первый лист как активный на холсте
-          const firstSheet = updatedSheets[0];
-          if (firstSheet) {
+            // Вписываем содержимое в экран после применения шаблона
+            setFitTrigger(t => t + 1);
+
+            // Сохраняем в проект только если activeProject загружен
+            if (activeProject?.id) {
+              // Обновляем botDataWithSheets напрямую, а затем вызываем сохранение
+              setBotDataWithSheets({
+                ...botDataWithSheets,
+                ...templateDataWithSheets
+              });
+
+              // Обновляем имя проекта на имя сценария
+              if (activeProject?.id && template.name) {
+                await apiRequest('PUT', `/api/projects/${activeProject.id}`, { name: template.name });
+                queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+                queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
+              }
+
+              // Сохраняем изменения в проекте
+              updateProjectMutation.mutate({});
+            }
+          } else {
+            // Обычный сценарий без листов - мигрируем к формату с листами
+            console.log('Применяем обычный сценарий и мигрируем к формату с листами');
+            const migratedData = SheetsManager.migrateLegacyData(template.data);
+            setBotDataWithSheets(migratedData);
             // Пропускаем автоиерархию при загрузке сценариев — расположение сохраняется как есть
             const shouldSkipLayout = true; // Автоиерархия отключена: применяется только вручную через тулбар
-            setBotData({ nodes: firstSheet.nodes }, template.name, currentNodeSizes, shouldSkipLayout);
+            setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия отключена при загрузке сценариев
+
+            // Вписываем содержимое в экран после применения шаблона
+            setFitTrigger(t => t + 1);
+
+            // Сохраняем в проект только если activeProject загружен
+            if (activeProject?.id) {
+              // Обновляем botDataWithSheets напрямую, а затем вызываем сохранение
+              setBotDataWithSheets({
+                ...botDataWithSheets,
+                ...migratedData
+              });
+
+              // Обновляем имя проекта на имя сценария
+              if (activeProject?.id && template.name) {
+                await apiRequest('PUT', `/api/projects/${activeProject.id}`, { name: template.name });
+                queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+                queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
+              }
+
+              // Сохраняем изменения в проекте
+              updateProjectMutation.mutate({});
+            }
           }
 
-          // Вписываем содержимое в экран после применения шаблона
-          setFitTrigger(t => t + 1);
+          // Принудительно инвалидируем кеш проектов после применения сценария
+          // чтобы на странице "Проекты" отображалось правильное количество листов
+          queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
 
-          // Сохраняем в проект только если activeProject загружен
-          if (activeProject?.id) {
-            // Обновляем botDataWithSheets напрямую, а затем вызываем сохранение
-            setBotDataWithSheets({
-              ...botDataWithSheets,
-              ...templateDataWithSheets
-            });
+          toast({
+            title: 'Сценарий применен',
+            description: `Сценарий "${template.name}" успешно загружен`,
+          });
 
-            // Сохраняем изменения в проекте
-            updateProjectMutation.mutate({});
-          }
-        } else {
-          // Обычный сценарий без листов - мигрируем к формату с листами
-          console.log('Применяем обычный сценарий и мигрируем к формату с листами');
-          const migratedData = SheetsManager.migrateLegacyData(template.data);
-          setBotDataWithSheets(migratedData);
-          // Пропускаем автоиерархию при загрузке сценариев — расположение сохраняется как есть
-          const shouldSkipLayout = true; // Автоиерархия отключена: применяется только вручную через тулбар
-          setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия отключена при загрузке сценариев
+          // Удаляем сохраненный сценарий
+          localStorage.removeItem('selectedTemplate');
 
-          // Вписываем содержимое в экран после применения шаблона
-          setFitTrigger(t => t + 1);
-
-          // Сохраняем в проект только если activeProject загружен
-          if (activeProject?.id) {
-            // Обновляем botDataWithSheets напрямую, а затем вызываем сохранение
-            setBotDataWithSheets({
-              ...botDataWithSheets,
-              ...migratedData
-            });
-
-            // Сохраняем изменения в проекте
-            updateProjectMutation.mutate({});
-          }
+          // Небольшая задержка, чтобы дать время на сохранение, затем убираем флаг
+          setTimeout(() => {
+            setIsLoadingTemplate(false);
+          }, 1000);
+        } catch (error) {
+          console.error('Ошибка применения сохраненного сценария:', error);
+          localStorage.removeItem('selectedTemplate');
+          setIsLoadingTemplate(false); // Убираем флаг при ошибке
         }
-
-        // Принудительно инвалидируем кеш проектов после применения сценария
-        // чтобы на странице "Проекты" отображалось правильное количество листов
-        queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-
-        toast({
-          title: 'Сценарий применен',
-          description: `Сценарий "${template.name}" успешно загружен`,
-        });
-
-        // Удаляем сохраненный сценарий
-        localStorage.removeItem('selectedTemplate');
-
-        // Небольшая задержка, чтобы дать время на сохранение, затем убираем флаг
-        setTimeout(() => {
-          setIsLoadingTemplate(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Ошибка применения сохраненного сценария:', error);
-        localStorage.removeItem('selectedTemplate');
-        setIsLoadingTemplate(false); // Убираем флаг при ошибке
       }
-    }
+    };
+    apply();
   }, [activeProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast, queryClient]);
 
   // Обёртки для deleteNode и duplicateNode с логированием в историю
