@@ -336,7 +336,7 @@ export default function Editor() {
    * Используется для сохранения изменений в проекте на сервере
    */
   const updateProjectMutation = useMutation({
-    mutationFn: async (params: { restartOnUpdate?: boolean } = {}) => {
+    mutationFn: async (params: { restartOnUpdate?: boolean; newName?: string } = {}) => {
       if (!activeProject?.id) {
         console.warn('Cannot save: activeProject or ID is undefined');
         return;
@@ -394,6 +394,8 @@ export default function Editor() {
 
       const optimisticProject: BotProject = {
         ...activeProject,
+        // Используем переданное новое имя если есть, иначе текущее
+        name: _variables?.newName ?? activeProject.name,
         data: optimisticProjectData,
         updatedAt: new Date()
       };
@@ -905,6 +907,14 @@ export default function Editor() {
                     currentList.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
                   );
                 }
+                // Оптимистично обновляем имя в полном кеше проектов (используется сайдбаром)
+                const currentProjects = queryClient.getQueryData<Array<{ id: number; name: string }>>(['/api/projects']);
+                if (currentProjects) {
+                  queryClient.setQueryData(
+                    ['/api/projects'],
+                    currentProjects.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
+                  );
+                }
                 await apiRequest('PUT', `/api/projects/${activeProject.id}`, { name: template.name });
                 queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
                 queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
@@ -912,8 +922,8 @@ export default function Editor() {
                 queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
               }
 
-              // Сохраняем изменения в проекте
-              updateProjectMutation.mutate({});
+              // Сохраняем изменения в проекте с новым именем
+              updateProjectMutation.mutate({ newName: template.name });
             }
           } else {
             // Обычный сценарий без листов - мигрируем к формату с листами
@@ -945,6 +955,14 @@ export default function Editor() {
                     currentList.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
                   );
                 }
+                // Оптимистично обновляем имя в полном кеше проектов (используется сайдбаром)
+                const currentProjects = queryClient.getQueryData<Array<{ id: number; name: string }>>(['/api/projects']);
+                if (currentProjects) {
+                  queryClient.setQueryData(
+                    ['/api/projects'],
+                    currentProjects.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
+                  );
+                }
                 await apiRequest('PUT', `/api/projects/${activeProject.id}`, { name: template.name });
                 queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
                 queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
@@ -952,8 +970,8 @@ export default function Editor() {
                 queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
               }
 
-              // Сохраняем изменения в проекте
-              updateProjectMutation.mutate({});
+              // Сохраняем изменения в проекте с новым именем
+              updateProjectMutation.mutate({ newName: template.name });
             }
           }
 
