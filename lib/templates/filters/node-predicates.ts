@@ -223,3 +223,13 @@ export function hasBotCommands(nodes: Node[]): boolean {
 }
 
 export type { InputCollectionCheckResult };
+
+/**
+ * Проверяет наличие узлов managed_bot_updated_trigger в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа managed_bot_updated_trigger
+ */
+export function hasManagedBotUpdatedTriggerNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'managed_bot_updated_trigger');
+}
