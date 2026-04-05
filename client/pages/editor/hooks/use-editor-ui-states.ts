@@ -7,14 +7,9 @@
  */
 
 import { useState } from 'react';
-import type { UserBotData } from '@shared/schema';
 
 /** Результат работы хука useEditorUIStates */
 export interface UseEditorUIStatesResult {
-  /** Выбранный пользователь для диалога */
-  selectedDialogUser: UserBotData | null;
-  /** Выбранный пользователь для деталей */
-  selectedUserDetails: UserBotData | null;
   /** Флаг загрузки сценария */
   isLoadingTemplate: boolean;
   /** Флаг отображения менеджера макета */
@@ -23,10 +18,6 @@ export interface UseEditorUIStatesResult {
   showMobileProperties: boolean;
   /** Флаг отображения мобильного сайдбара */
   showMobileSidebar: boolean;
-  /** Установить selectedDialogUser */
-  setSelectedDialogUser: (user: UserBotData | null) => void;
-  /** Установить selectedUserDetails */
-  setSelectedUserDetails: (user: UserBotData | null) => void;
   /** Установить isLoadingTemplate */
   setIsLoadingTemplate: (loading: boolean) => void;
   /** Установить showLayoutManager */
@@ -43,22 +34,16 @@ export interface UseEditorUIStatesResult {
  * @returns Объект с состояниями и сеттерами
  */
 export function useEditorUIStates(): UseEditorUIStatesResult {
-  const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
-  const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
   const [showLayoutManager, setShowLayoutManager] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   return {
-    selectedDialogUser,
-    selectedUserDetails,
     isLoadingTemplate,
     showLayoutManager,
     showMobileProperties,
     showMobileSidebar,
-    setSelectedDialogUser,
-    setSelectedUserDetails,
     setIsLoadingTemplate,
     setShowLayoutManager,
     setShowMobileProperties,
