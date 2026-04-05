@@ -40,6 +40,10 @@ function normalizeButtons(buttons: any[]): Button[] {
     webAppUrl: btn.webAppUrl,
     /** Визуальный стиль кнопки (Bot API 9.4) */
     style: btn.style,
+    /** Предложенное имя для создаваемого управляемого бота (Bot API 9.6) */
+    suggestedBotName: btn.suggestedBotName,
+    /** Предложенный username для создаваемого управляемого бота (Bot API 9.6) */
+    suggestedBotUsername: btn.suggestedBotUsername,
   }));
 }
 
