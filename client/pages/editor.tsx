@@ -897,9 +897,19 @@ export default function Editor() {
 
               // Обновляем имя проекта на имя сценария
               if (activeProject?.id && template.name) {
+                // Оптимистично обновляем имя в кеше списка проектов
+                const currentList = queryClient.getQueryData<Array<{ id: number; name: string }>>(['/api/projects/list']);
+                if (currentList) {
+                  queryClient.setQueryData(
+                    ['/api/projects/list'],
+                    currentList.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
+                  );
+                }
                 await apiRequest('PUT', `/api/projects/${activeProject.id}`, { name: template.name });
                 queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
                 queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
+                /** Инвалидируем кеш списка проектов для обновления сайдбара */
+                queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
               }
 
               // Сохраняем изменения в проекте
@@ -927,9 +937,19 @@ export default function Editor() {
 
               // Обновляем имя проекта на имя сценария
               if (activeProject?.id && template.name) {
+                // Оптимистично обновляем имя в кеше списка проектов
+                const currentList = queryClient.getQueryData<Array<{ id: number; name: string }>>(['/api/projects/list']);
+                if (currentList) {
+                  queryClient.setQueryData(
+                    ['/api/projects/list'],
+                    currentList.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
+                  );
+                }
                 await apiRequest('PUT', `/api/projects/${activeProject.id}`, { name: template.name });
                 queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
                 queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
+                /** Инвалидируем кеш списка проектов для обновления сайдбара */
+                queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
               }
 
               // Сохраняем изменения в проекте
