@@ -12,6 +12,13 @@ import { execSync } from "node:child_process";
 import { botProcesses } from "../routes/routes";
 
 /**
+ * Хранилище cleanup-функций для удаления слушателей stdout/stderr
+ * @external processCleanups
+ * @see {@link ../terminal/setupBotProcessListeners}
+ */
+import { processCleanups } from "../terminal/setupBotProcessListeners";
+
+/**
  * Модуль для взаимодействия с хранилищем данных
  * @external storage
  * @see {@link ./storage}
@@ -108,6 +115,12 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
         }
       } catch (e) {
         // Процесс уже завершен
+      }
+      // Удаляем слушатели процесса перед удалением из памяти
+      const cleanup = processCleanups.get(processKey);
+      if (cleanup) {
+        cleanup();
+        processCleanups.delete(processKey);
       }
       botProcesses.delete(processKey);
     }

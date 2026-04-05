@@ -25,6 +25,13 @@ import { fetchWithProxy } from "../utils/telegram-proxy";
 import { botProcesses } from "../routes/routes";
 
 /**
+ * Хранилище cleanup-функций для удаления слушателей stdout/stderr
+ * @external processCleanups
+ * @see {@link ../terminal/setupBotProcessListeners}
+ */
+import { processCleanups } from "../terminal/setupBotProcessListeners";
+
+/**
  * Функция для создания полного комплекта файлов бота
  * @external createCompleteBotFiles
  * @see {@link ./createBotFile}
@@ -155,6 +162,12 @@ export async function startBot(projectId: number, token: string, tokenId: number
         oldProcess?.kill('SIGKILL');
       } catch (e) {
         // Игнорируем ошибки
+      }
+      // Удаляем слушатели старого процесса перед удалением из памяти
+      const cleanup = processCleanups.get(processKey);
+      if (cleanup) {
+        cleanup();
+        processCleanups.delete(processKey);
       }
       botProcesses.delete(processKey);
       console.log(`🗑️ Удалили старый процесс из памяти для токена ${tokenId}`);
