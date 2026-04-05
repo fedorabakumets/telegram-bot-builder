@@ -25,6 +25,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'condition',
   'forward_message',
   'create_forum_topic', // собственный обработчик генерируется шаблоном create-forum-topic.py.jinja2
+  'http_request', // собственный обработчик генерируется шаблоном http-request.py.jinja2
   'group_message_trigger', // собственный обработчик генерируется шаблоном group-message-trigger.py.jinja2
 ]);
 
