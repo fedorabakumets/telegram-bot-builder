@@ -102,6 +102,12 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
         );
       case 'group_message_trigger':
         return <GroupMessageTriggerHeader node={node} />;
+      case 'http_request':
+        return (
+          <span className="font-semibold text-cyan-700 dark:text-cyan-300">
+            HTTP запрос
+          </span>
+        );
       default:
         return null;
     }
