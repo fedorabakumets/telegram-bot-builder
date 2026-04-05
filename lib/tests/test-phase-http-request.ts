@@ -1132,6 +1132,57 @@ test('J10', 'Финальный мегатест: POST + заголовки + т
   syntax(code, 'J10');
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// БЛОК K: Регрессия — отсутствие дублей обработчиков
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('\n── Блок K: Регрессия — отсутствие дублей обработчиков ──────────');
+
+test('K01', 'handle_callback_http1 определён ровно 1 раз', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1')]);
+  const code = gen(p, 'K01');
+  const count = (code.match(/async def handle_callback_http1\(/g) || []).length;
+  ok(count === 1, `handle_callback_http1 определён ${count} раз(а), ожидается 1 — дубль обработчика!`);
+});
+
+test('K02', '@dp.callback_query для http1 регистрируется ровно 1 раз', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1')]);
+  const code = gen(p, 'K02');
+  const count = (code.match(/@dp\.callback_query\(lambda c: c\.data == "http1"\)/g) || []).length;
+  ok(count === 1, `@dp.callback_query для http1 зарегистрирован ${count} раз(а), ожидается 1`);
+});
+
+test('K03', '3 http_request узла — каждый обработчик определён ровно 1 раз', () => {
+  const p = makeCleanProject([
+    makeStartNode(),
+    makeHttpRequestNode('req1', { httpRequestResponseVariable: 'r1' }),
+    makeHttpRequestNode('req2', { httpRequestResponseVariable: 'r2' }),
+    makeHttpRequestNode('req3', { httpRequestResponseVariable: 'r3' }),
+  ]);
+  const code = gen(p, 'K03');
+  for (const id of ['req1', 'req2', 'req3']) {
+    const safeName = id.replace(/[^a-zA-Z0-9_]/g, '_');
+    const count = (code.match(new RegExp(`async def handle_callback_${safeName}\\(`, 'g')) || []).length;
+    ok(count === 1, `handle_callback_${safeName} определён ${count} раз(а), ожидается 1`);
+  }
+});
+
+test('K04', 'http_request с autoTransitionTo — обработчик цели не дублируется', () => {
+  const msgNode = makeMessageNode('result', 'Готово');
+  const httpNode = makeHttpRequestNode('http1', { autoTransitionTo: 'result' });
+  const p = makeCleanProject([makeStartNode(), httpNode, msgNode]);
+  const code = gen(p, 'K04');
+  const count = (code.match(/async def handle_callback_result\(/g) || []).length;
+  ok(count === 1, `handle_callback_result определён ${count} раз(а), ожидается 1`);
+});
+
+test('K05', 'http_request с дефисами в nodeId — обработчик определён ровно 1 раз', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http-request-node')]);
+  const code = gen(p, 'K05');
+  const count = (code.match(/async def handle_callback_http_request_node\(/g) || []).length;
+  ok(count === 1, `handle_callback_http_request_node определён ${count} раз(а), ожидается 1`);
+});
+
 // ─── Итог ────────────────────────────────────────────────────────────────────
 
 const passed = results.filter(r => r.passed).length;
