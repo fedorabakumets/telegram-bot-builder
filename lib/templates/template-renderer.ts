@@ -42,9 +42,27 @@ let env: Environment | null = null;
  * Кеш скомпилированных шаблонов.
  * В dev режиме кеш отключён — шаблоны читаются с диска при каждом вызове,
  * что позволяет подхватывать изменения .jinja2 файлов без перезапуска сервера.
+ * В production ограничен MAX_CACHE_SIZE записями — при превышении удаляется самая старая.
  */
 const templateCache = new Map<string, any>();
 const isDev = process.env.NODE_ENV === 'development';
+/** Максимальное количество записей в кеше шаблонов */
+const MAX_CACHE_SIZE = 100;
+
+/**
+ * Добавляет шаблон в кеш с ограничением размера (LRU-подобная стратегия).
+ * При превышении MAX_CACHE_SIZE удаляет самую старую запись.
+ *
+ * @param key - Путь к шаблону
+ * @param template - Скомпилированный шаблон Nunjucks
+ */
+function setCachedTemplate(key: string, template: any): void {
+  if (templateCache.size >= MAX_CACHE_SIZE) {
+    const oldestKey = templateCache.keys().next().value;
+    templateCache.delete(oldestKey);
+  }
+  templateCache.set(key, template);
+}
 
 /**
  * Инициализирует окружение Nunjucks
@@ -183,7 +201,7 @@ export function renderPartialTemplate(
     let template = templateCache.get(templatePath);
     if (!template) {
       const compiled = environment.getTemplate(templatePath);
-      templateCache.set(templatePath, compiled);
+      setCachedTemplate(templatePath, compiled);
       return compiled.render(context);
     }
     return template.render(context);

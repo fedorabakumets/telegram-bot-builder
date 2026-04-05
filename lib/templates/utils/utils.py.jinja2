@@ -1,11 +1,34 @@
 {#
   Утилиты для бота
 
-  @fileoverview Вспомогательные функции: is_admin, check_auth, get_user_variables
+  @fileoverview Вспомогательные функции: is_admin, check_auth, get_user_variables, TTL-очистка user_data
   @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей
 #}
 
 # Утилитарные функции
+
+# TTL для записей user_data (секунды)
+USER_DATA_TTL = 3600
+# Метки времени последней активности пользователей
+_user_last_seen: dict[int, float] = {}
+
+
+async def cleanup_user_data() -> None:
+    """Фоновая задача: удаляет записи user_data, неактивные дольше USER_DATA_TTL секунд.
+
+    Запускается один раз при старте бота и работает в бесконечном цикле.
+    Предотвращает бесконечный рост глобального словаря user_data.
+    """
+    import time
+    while True:
+        await asyncio.sleep(USER_DATA_TTL)
+        now = time.monotonic()
+        expired = [uid for uid, ts in _user_last_seen.items() if now - ts > USER_DATA_TTL]
+        for uid in expired:
+            user_data.pop(uid, None)
+            _user_last_seen.pop(uid, None)
+        if expired:
+            logging.debug(f"🧹 TTL-очистка user_data: удалено {len(expired)} записей")
 
 {%- if adminOnly %}
 
@@ -19,7 +42,8 @@ def get_user_variables(user_id):
 
 
 async def init_user_variables(user_id: int, from_user) -> str:
-    """Инициализирует переменные пользователя в локальном хранилище
+    """Инициализирует переменные пользователя в локальном хранилище.
+    Обновляет метку времени активности для TTL-очистки.
 
     Args:
         user_id (int): ID пользователя Telegram
@@ -28,6 +52,8 @@ async def init_user_variables(user_id: int, from_user) -> str:
     Returns:
         str: Имя пользователя (username или first_name)
     """
+    import time
+    _user_last_seen[user_id] = time.monotonic()
     if user_id not in user_data:
         user_data[user_id] = {}
     username = getattr(from_user, 'username', None) or ''
