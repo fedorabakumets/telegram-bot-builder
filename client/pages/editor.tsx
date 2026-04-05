@@ -25,6 +25,7 @@ import { SaveTemplateModal } from '@/components/editor/header/components/save-te
 import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
 import { ReadmePreview } from '@/components/editor/code/readme';
 import { CodeEditorArea } from '@/components/editor/code/editor';
+import { CodePanel } from '@/components/editor/code/panel';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
 import { useCodeGenerator as useCodeGeneratorServer } from '@/components/editor/code/hooks';
 import type { CodeFormat } from '@/components/editor/code/hooks';
@@ -758,8 +759,35 @@ export default function Editor() {
     />
   ) : null;
 
-  // --- Контент панели кода (SidebarContent сам рендерит CodePanel) ---
-  const codePanelContent = null;
+  // --- Контент панели кода (передаётся в отдельный code-слот FlexibleLayout) ---
+  const codePanelContent = (
+    <CodePanel
+      botDataArray={allProjects.length > 0
+        ? allProjects.map(p => p.id === activeProject.id ? activeProject.data as BotData : p.data as BotData)
+        : [activeProject.data as BotData]
+      }
+      projectIds={allProjects.length > 0 ? allProjects.map(p => p.id) : [activeProject.id]}
+      projectName={activeProject.name}
+      onClose={handleCloseCodePanel}
+      selectedFormat={selectedFormat}
+      onFormatChange={handleFormatChange}
+      areAllCollapsed={areAllCollapsed}
+      onCollapseChange={setAreAllCollapsed}
+      showFullCode={showFullCode}
+      onShowFullCodeChange={setShowFullCode}
+      codeContent={generatedCodeContent}
+      isLoading={isCodeLoading}
+      displayContent={displayContent}
+      onApplyJson={handleApplyJsonToBotData}
+      editedContent={editedJsonContent}
+      onResetEditor={() => {
+        isResettingEditorRef.current = true;
+        setEditedJsonContent('');
+        editorRef.current?.setValue(displayContent);
+        setTimeout(() => { isResettingEditorRef.current = false; }, 0);
+      }}
+    />
+  );
 
   // --- Контент сайдбара ---
   const sidebarContent = (
