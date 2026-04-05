@@ -603,14 +603,14 @@ describe('keyboard.py.jinja2 шаблон', () => {
         assert.ok(result.includes('style="primary"'), `Ожидался style="primary", получено:\n${result}`);
       });
 
-      it('style="destructive" генерирует style="destructive"', () => {
+      it('style="danger" генерирует style="danger"', () => {
         const result = generateKeyboard(validParamsWithStyle);
-        assert.ok(result.includes('style="destructive"'), `Ожидался style="destructive", получено:\n${result}`);
+        assert.ok(result.includes('style="danger"'), `Ожидался style="danger", получено:\n${result}`);
       });
 
-      it('style="secondary" генерирует style="secondary"', () => {
+      it('style="success" генерирует style="success"', () => {
         const result = generateKeyboard(validParamsWithStyle);
-        assert.ok(result.includes('style="secondary"'), `Ожидался style="secondary", получено:\n${result}`);
+        assert.ok(result.includes('style="success"'), `Ожидался style="success", получено:\n${result}`);
       });
 
       it('кнопка без style не генерирует параметр style', () => {
@@ -624,13 +624,13 @@ describe('keyboard.py.jinja2 шаблон', () => {
           buttons: [{
             id: 'btn_s', text: 'Удалить', action: 'goto', target: 'node_del',
             buttonType: 'normal', skipDataCollection: false, hideAfterClick: false,
-            style: 'destructive',
+            style: 'danger',
           }],
           oneTimeKeyboard: false,
           resizeKeyboard: true,
         });
         assert.ok(result.includes('callback_data="node_del"'), 'Должен быть callback_data');
-        assert.ok(result.includes('style="destructive"'), 'Должен быть style="destructive"');
+        assert.ok(result.includes('style="danger"'), 'Должен быть style="danger"');
       });
 
       it('style работает вместе с url кнопкой', () => {
@@ -649,7 +649,7 @@ describe('keyboard.py.jinja2 шаблон', () => {
       });
 
       it('схема принимает все три значения style', () => {
-        for (const style of ['primary', 'secondary', 'destructive'] as const) {
+        for (const style of ['primary', 'success', 'danger'] as const) {
           const result = keyboardParamsSchema.safeParse({
             keyboardType: 'inline',
             buttons: [{ id: 'b', text: 'T', action: 'goto', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false, style }],
@@ -663,11 +663,11 @@ describe('keyboard.py.jinja2 шаблон', () => {
       it('схема отклоняет неизвестное значение style', () => {
         const result = keyboardParamsSchema.safeParse({
           keyboardType: 'inline',
-          buttons: [{ id: 'b', text: 'T', action: 'goto', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false, style: 'danger' }],
+          buttons: [{ id: 'b', text: 'T', action: 'goto', buttonType: 'normal', skipDataCollection: false, hideAfterClick: false, style: 'secondary' }],
           oneTimeKeyboard: false,
           resizeKeyboard: true,
         });
-        assert.ok(!result.success, 'Схема должна отклонить неизвестный style="danger"');
+        assert.ok(!result.success, 'Схема должна отклонить неизвестный style="secondary"');
       });
     });
 

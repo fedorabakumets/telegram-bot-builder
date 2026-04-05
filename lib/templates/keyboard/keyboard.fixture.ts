@@ -228,8 +228,8 @@ export const validParamsWithStyle: KeyboardTemplateParams = {
   keyboardType: 'inline',
   buttons: [
     btn('Подтвердить', 'goto', { target: 'confirm', id: 'btn_confirm', style: 'primary' }),
-    btn('Отмена', 'goto', { target: 'cancel', id: 'btn_cancel', style: 'secondary' }),
-    btn('Удалить', 'goto', { target: 'delete', id: 'btn_delete', style: 'destructive' }),
+    btn('Отмена', 'goto', { target: 'cancel', id: 'btn_cancel', style: 'success' }),
+    btn('Удалить', 'goto', { target: 'delete', id: 'btn_delete', style: 'danger' }),
   ],
   oneTimeKeyboard: false,
   resizeKeyboard: true,
