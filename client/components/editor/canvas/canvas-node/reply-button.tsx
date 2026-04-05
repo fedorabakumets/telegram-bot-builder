@@ -75,6 +75,9 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
           {button.requestLocation && (
             <div className="mt-1.5 text-xs text-blue-600 dark:text-blue-400">📍 Геолокация</div>
           )}
+          {button.action === 'request_managed_bot' && (
+            <div className="mt-1.5 text-xs text-indigo-600 dark:text-indigo-400">🤖 Управляемый бот</div>
+          )}
           {button.hideAfterClick && (
             <div className="mt-1 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
               <i className="fas fa-eye-slash text-[10px]"></i>
@@ -100,6 +103,9 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
           )}
           {button.requestLocation && (
             <span className="text-xs opacity-70" title="Запрос геолокации">📍</span>
+          )}
+          {button.action === 'request_managed_bot' && (
+            <span className="text-xs opacity-70" title="Запрос управляемого бота">🤖</span>
           )}
         </div>
       </div>

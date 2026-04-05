@@ -12,7 +12,7 @@ export const buttonSchema = z.object({
   /** Текст кнопки */
   text: z.string(),
   /** Действие кнопки */
-  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'complete', 'default', 'copy_text', 'web_app']),
+  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'complete', 'default', 'copy_text', 'web_app', 'request_managed_bot']),
   /** Текст для копирования в буфер обмена (только для copy_text) */
   copyText: z.string().optional(),
   /** URL для Telegram Mini App (только для web_app, требует HTTPS) */
@@ -35,6 +35,10 @@ export const buttonSchema = z.object({
   customCallbackData: z.string().optional(),
   /** Визуальный стиль кнопки (Bot API 9.4): primary=синий, success=зелёный, danger=красный */
   style: z.enum(['primary', 'success', 'danger']).optional(),
+  /** Предложенное имя для создаваемого управляемого бота */
+  suggestedBotName: z.string().optional(),
+  /** Предложенный username для создаваемого управляемого бота */
+  suggestedBotUsername: z.string().optional(),
 });
 
 /** Тип кнопки бота */

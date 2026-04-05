@@ -11,6 +11,7 @@ import { ButtonActionSelector } from './button-action-selector';
 import { ButtonCallbackField } from './button-callback-field';
 import { ButtonHideAfterClickToggle } from './button-hide-after-click-toggle';
 import { GotoTargetSection } from '../navigation/goto-target-section';
+import { ButtonRequestManagedBotFields } from './button-request-managed-bot-fields';
 import type { Button } from '@shared/schema';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Node } from '@shared/schema';
@@ -114,7 +115,7 @@ export function ButtonCard({
         </>
       )}
 
-      {!['url', 'contact', 'location', 'copy_text', 'web_app'].includes(button.action) && (
+      {!['url', 'contact', 'location', 'copy_text', 'web_app', 'request_managed_bot'].includes(button.action) && (
         <>
           <div className="border-t border-border/20 my-3"></div>
           <ButtonCallbackField
@@ -158,6 +159,18 @@ export function ButtonCard({
             onChange={(e) => onButtonUpdate(nodeId, button.id, { webAppUrl: e.target.value } as any)}
             className="text-xs sm:text-sm bg-white/60 dark:bg-slate-950/60 border border-blue-300/40 dark:border-blue-700/40 text-blue-900 dark:text-blue-50 placeholder:text-blue-500/50 dark:placeholder:text-blue-400/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 rounded-lg"
             placeholder="https://example.com"
+          />
+        </>
+      )}
+
+      {button.action === 'request_managed_bot' && (
+        <>
+          <div className="border-t border-border/20 my-3"></div>
+          <ButtonRequestManagedBotFields
+            nodeId={nodeId}
+            button={button}
+            onButtonUpdate={onButtonUpdate}
+            keyboardType={keyboardType}
           />
         </>
       )}
