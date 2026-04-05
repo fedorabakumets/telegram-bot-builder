@@ -20,6 +20,8 @@ export const mainParamsSchema = z.object({
   autoRegisterUsers: z.boolean().optional().default(false),
   /** Список имён middleware функций для incoming_message_trigger */
   incomingMessageTriggerMiddlewares: z.array(z.string()).optional().default([]),
+  /** Список имён middleware функций для managed_bot_updated_trigger */
+  managedBotUpdatedTriggerMiddlewares: z.array(z.string()).optional().default([]),
 });
 
 /** Тип параметров запуска (выведен из схемы) */

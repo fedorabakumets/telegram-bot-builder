@@ -15,4 +15,6 @@ export interface MainTemplateParams {
   autoRegisterUsers?: boolean;
   /** Список имён middleware функций для incoming_message_trigger */
   incomingMessageTriggerMiddlewares?: string[];
+  /** Список имён middleware функций для managed_bot_updated_trigger */
+  managedBotUpdatedTriggerMiddlewares?: string[];
 }

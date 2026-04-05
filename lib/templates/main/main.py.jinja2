@@ -66,6 +66,12 @@ async def main():
         {%- endfor %}
         {%- endif %}
 
+        {%- if managedBotUpdatedTriggerMiddlewares and managedBotUpdatedTriggerMiddlewares | length > 0 %}
+        {%- for mw in managedBotUpdatedTriggerMiddlewares %}
+        dp.message.middleware({{ mw }})
+        {%- endfor %}
+        {%- endif %}
+
         # Запускаем фоновую задачу TTL-очистки user_data
         asyncio.create_task(cleanup_user_data())
 

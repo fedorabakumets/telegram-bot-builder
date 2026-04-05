@@ -213,9 +213,9 @@ describe('main.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 3 поля', () => {
+      it('должен иметь 6 полей', () => {
         const shape = mainParamsSchema.shape;
-        assert.strictEqual(Object.keys(shape).length, 3);
+        assert.strictEqual(Object.keys(shape).length, 6);
       });
 
       it('должен использовать ZodOptional', () => {
@@ -223,6 +223,22 @@ describe('main.py.jinja2 шаблон', () => {
         assert.ok(shape.userDatabaseEnabled.isOptional());
         assert.ok(shape.hasInlineButtons.isOptional());
         assert.ok(shape.menuCommands.isOptional());
+      });
+
+      it('должен регистрировать managedBotUpdatedTrigger middleware через dp.message.middleware', () => {
+        const result = generateMain({
+          userDatabaseEnabled: false,
+          managedBotUpdatedTriggerMiddlewares: ['managed_bot_updated_trigger_mbu_1_middleware'],
+        });
+        assert.ok(result.includes('dp.message.middleware(managed_bot_updated_trigger_mbu_1_middleware)'));
+      });
+
+      it('не должен регистрировать managedBotUpdatedTrigger middleware при пустом массиве', () => {
+        const result = generateMain({
+          userDatabaseEnabled: false,
+          managedBotUpdatedTriggerMiddlewares: [],
+        });
+        assert.ok(!result.includes('managed_bot_updated_trigger'));
       });
     });
   });

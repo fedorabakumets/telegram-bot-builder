@@ -1,5 +1,10 @@
 {#
-  Шаблон middleware-обработчиков триггеров обновления управляемого бота
+  Шаблон middleware-обработчиков триггеров обновления управляемого бота.
+
+  Telegram присылает managed_bot_created/managed_bot_token_changed как сервисное
+  сообщение (types.Message), а не как отдельный тип Update. Поэтому обработчик
+  регистрируется через dp.message.middleware() с проверкой event.managed_bot_created
+  или event.managed_bot_token_changed — это единственный надёжный способ в aiogram 3.
 
   @param {array} managedBotUpdatedTriggerEntries - Массив ManagedBotUpdatedTriggerEntry:
     - nodeId: string              — ID узла managed_bot_updated_trigger
@@ -18,16 +23,22 @@
 {%- set sanitized_node_id = entry.nodeId | safe_name -%}
 {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
 
-@dp.update.outer_middleware()
-async def managed_bot_updated_trigger_{{ sanitized_node_id }}_middleware(handler, event: types.Update, data: dict):
-    """Срабатывает когда пользователь создал управляемого бота или сменил его токен"""
-    if not event.managed_bot:
+async def managed_bot_updated_trigger_{{ sanitized_node_id }}_middleware(handler, event: types.Message, data: dict):
+    """Срабатывает когда пользователь создал управляемого бота или сменил его токен.
+
+    Telegram присылает это событие как сервисное сообщение с полем
+    managed_bot_created или managed_bot_token_changed, а не как Update.managed_bot.
+    """
+    # Проверяем что это сервисное сообщение о создании/обновлении управляемого бота
+    managed_bot_info = getattr(event, 'managed_bot_created', None) or getattr(event, 'managed_bot_token_changed', None)
+    if not managed_bot_info:
         return await handler(event, data)
     try:
-        managed_bot_update = event.managed_bot
-        creator_user = managed_bot_update.user
-        managed_bot = managed_bot_update.bot
-        user_id = creator_user.id
+        creator_user = event.from_user
+        managed_bot = managed_bot_info.bot if hasattr(managed_bot_info, 'bot') else managed_bot_info
+        user_id = creator_user.id if creator_user else None
+        if not user_id:
+            return await handler(event, data)
 
         {% if entry.filterByUserId %}
         if str(user_id) != "{{ entry.filterByUserId }}":
@@ -39,13 +50,13 @@ async def managed_bot_updated_trigger_{{ sanitized_node_id }}_middleware(handler
             user_data[user_id] = {}
 
         {% if entry.saveBotIdTo %}
-        user_data[user_id]["{{ entry.saveBotIdTo }}"] = managed_bot.id
+        user_data[user_id]["{{ entry.saveBotIdTo }}"] = getattr(managed_bot, 'id', None)
         {% endif %}
         {% if entry.saveBotUsernameTo %}
-        user_data[user_id]["{{ entry.saveBotUsernameTo }}"] = managed_bot.username or ""
+        user_data[user_id]["{{ entry.saveBotUsernameTo }}"] = getattr(managed_bot, 'username', '') or ""
         {% endif %}
         {% if entry.saveBotNameTo %}
-        user_data[user_id]["{{ entry.saveBotNameTo }}"] = managed_bot.first_name or ""
+        user_data[user_id]["{{ entry.saveBotNameTo }}"] = getattr(managed_bot, 'first_name', '') or ""
         {% endif %}
 
         {% if entry.saveCreatorIdTo %}

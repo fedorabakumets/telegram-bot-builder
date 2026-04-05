@@ -28,9 +28,23 @@ describe('generateManagedBotUpdatedTriggers()', () => {
     expect(generateManagedBotUpdatedTriggers(validParamsEmpty)).toBe('');
   });
 
-  it('генерирует outer_middleware декоратор', () => {
+  it('генерирует async def middleware функцию (без декоратора)', () => {
     const r = generateManagedBotUpdatedTriggers(validParamsSingle);
-    expect(r).toContain('@dp.update.outer_middleware()');
+    expect(r).toContain('async def managed_bot_updated_trigger_mbu_trigger_1_middleware');
+    expect(r).not.toContain('@dp.update.outer_middleware()');
+  });
+
+  it('принимает types.Message, а не types.Update', () => {
+    const r = generateManagedBotUpdatedTriggers(validParamsSingle);
+    expect(r).toContain('event: types.Message');
+    expect(r).not.toContain('event: types.Update');
+  });
+
+  it('проверяет managed_bot_created или managed_bot_token_changed', () => {
+    const r = generateManagedBotUpdatedTriggers(validParamsSingle);
+    expect(r).toContain('managed_bot_created');
+    expect(r).toContain('managed_bot_token_changed');
+    expect(r).not.toContain('event.managed_bot');
   });
 
   it('имя middleware содержит nodeId', () => {
@@ -170,6 +184,19 @@ describe('Специфика триггера managed_bot_updated', () => {
   it('содержит _is_fake = True в FakeCallbackQuery', () => {
     const r = generateManagedBotUpdatedTriggers(validParamsSingle);
     expect(r).toContain('_is_fake = True');
+  });
+
+  it('не использует event.managed_bot (несуществующее поле в aiogram 3)', () => {
+    const r = generateManagedBotUpdatedTriggers(validParamsSingle);
+    expect(r).not.toContain('event.managed_bot');
+  });
+
+  it('middleware должен регистрироваться через dp.message.middleware, а не как декоратор', () => {
+    // Шаблон генерирует async def без @dp.update.outer_middleware() декоратора.
+    // Регистрация происходит в main() через dp.message.middleware(func).
+    const r = generateManagedBotUpdatedTriggers(validParamsSingle);
+    expect(r).not.toContain('@dp.update.outer_middleware()');
+    expect(r).toContain('async def managed_bot_updated_trigger_');
   });
 });
 
