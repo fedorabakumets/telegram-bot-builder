@@ -1,10 +1,9 @@
 {#
-  Шаблон middleware-обработчиков триггеров обновления управляемого бота.
+  Шаблон обработчиков триггеров создания управляемого бота.
 
-  Telegram присылает managed_bot_created/managed_bot_token_changed как сервисное
-  сообщение (types.Message), а не как отдельный тип Update. Поэтому обработчик
-  регистрируется через dp.message.middleware() с проверкой event.managed_bot_created
-  или event.managed_bot_token_changed — это единственный надёжный способ в aiogram 3.
+  Telegram присылает managed_bot_created как сервисное сообщение (types.Message),
+  а не как отдельный тип Update. Поэтому обработчик регистрируется через
+  @dp.message(lambda m: m.managed_bot_created is not None).
 
   @param {array} managedBotUpdatedTriggerEntries - Массив ManagedBotUpdatedTriggerEntry:
     - nodeId: string              — ID узла managed_bot_updated_trigger
@@ -18,45 +17,38 @@
     - filterByUserId?: string     — фильтр по user.id
 #}
 
-# Middleware триггеров обновления управляемого бота
+# Обработчики триггеров создания управляемого бота
 {% for entry in managedBotUpdatedTriggerEntries -%}
 {%- set sanitized_node_id = entry.nodeId | safe_name -%}
 {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
 
-async def managed_bot_updated_trigger_{{ sanitized_node_id }}_middleware(handler, event: types.Message, data: dict):
-    """Срабатывает когда пользователь создал управляемого бота или сменил его токен.
-
-    Telegram присылает это событие как сервисное сообщение с полем
-    managed_bot_created или managed_bot_token_changed, а не как Update.managed_bot.
-    """
-    # Проверяем что это сервисное сообщение о создании/обновлении управляемого бота
-    managed_bot_info = getattr(event, 'managed_bot_created', None) or getattr(event, 'managed_bot_token_changed', None)
-    if not managed_bot_info:
-        return await handler(event, data)
+@dp.message(lambda m: m.managed_bot_created is not None)
+async def managed_bot_updated_trigger_{{ sanitized_node_id }}_handler(message: types.Message):
+    """Срабатывает когда пользователь создал управляемого бота"""
     try:
-        creator_user = event.from_user
-        managed_bot = managed_bot_info.bot if hasattr(managed_bot_info, 'bot') else managed_bot_info
+        managed_bot = message.managed_bot_created.bot
+        creator_user = message.from_user
         user_id = creator_user.id if creator_user else None
         if not user_id:
-            return await handler(event, data)
+            return
 
         {% if entry.filterByUserId %}
         if str(user_id) != "{{ entry.filterByUserId }}":
-            return await handler(event, data)
+            return
         {% endif %}
 
-        logging.info(f"Управляемый бот создан/обновлён — триггер узла {{ entry.nodeId }}, user_id={user_id}")
+        logging.info(f"Управляемый бот создан — триггер узла {{ entry.nodeId }}, user_id={user_id}")
         if user_id not in user_data:
             user_data[user_id] = {}
 
         {% if entry.saveBotIdTo %}
-        user_data[user_id]["{{ entry.saveBotIdTo }}"] = getattr(managed_bot, 'id', None)
+        user_data[user_id]["{{ entry.saveBotIdTo }}"] = managed_bot.id
         {% endif %}
         {% if entry.saveBotUsernameTo %}
-        user_data[user_id]["{{ entry.saveBotUsernameTo }}"] = getattr(managed_bot, 'username', '') or ""
+        user_data[user_id]["{{ entry.saveBotUsernameTo }}"] = managed_bot.username or ""
         {% endif %}
         {% if entry.saveBotNameTo %}
-        user_data[user_id]["{{ entry.saveBotNameTo }}"] = getattr(managed_bot, 'first_name', '') or ""
+        user_data[user_id]["{{ entry.saveBotNameTo }}"] = managed_bot.first_name or ""
         {% endif %}
 
         {% if entry.saveCreatorIdTo %}
@@ -68,7 +60,7 @@ async def managed_bot_updated_trigger_{{ sanitized_node_id }}_middleware(handler
 
         class FakeCallbackQuery:
             """Фейковый объект callback_query для вызова обработчика следующего узла"""
-            def __init__(self, user_id_val):
+            def __init__(self, user_id_val, msg):
                 self.from_user = type('User', (), {
                     'id': user_id_val,
                     'username': user_data.get(user_id_val, {}).get('username', ''),
@@ -78,17 +70,16 @@ async def managed_bot_updated_trigger_{{ sanitized_node_id }}_middleware(handler
                     'is_premium': False,
                     'is_bot': False,
                 })()
+                self.message = msg
                 self.data = "{{ entry.targetNodeId }}"
                 self._is_fake = True
 
             async def answer(self, *args, **kwargs):
                 pass
 
-        fake_cb = FakeCallbackQuery(user_id)
+        fake_cb = FakeCallbackQuery(user_id, message)
         await handle_callback_{{ sanitized_target_id }}(fake_cb)
     except Exception as e:
         logging.error(f"Ошибка в managed_bot_updated_trigger {{ entry.nodeId }}: {e}")
-
-    return await handler(event, data)
 
 {% endfor %}

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Тесты для шаблона обработчиков триггеров обновления управляемого бота
+ * @fileoverview Тесты для шаблона обработчиков триггеров создания управляемого бота
  * @module templates/managed-bot-updated-trigger/managed-bot-updated-trigger.test
  */
 
@@ -28,28 +28,28 @@ describe('generateManagedBotUpdatedTriggers()', () => {
     expect(generateManagedBotUpdatedTriggers(validParamsEmpty)).toBe('');
   });
 
-  it('генерирует async def middleware функцию (без декоратора)', () => {
+  it('генерирует @dp.message декоратор', () => {
     const r = generateManagedBotUpdatedTriggers(validParamsSingle);
-    expect(r).toContain('async def managed_bot_updated_trigger_mbu_trigger_1_middleware');
+    expect(r).toContain('@dp.message(');
     expect(r).not.toContain('@dp.update.outer_middleware()');
   });
 
-  it('принимает types.Message, а не types.Update', () => {
+  it('принимает types.Message', () => {
     const r = generateManagedBotUpdatedTriggers(validParamsSingle);
-    expect(r).toContain('event: types.Message');
+    expect(r).toContain('message: types.Message');
     expect(r).not.toContain('event: types.Update');
   });
 
-  it('проверяет managed_bot_created или managed_bot_token_changed', () => {
+  it('проверяет managed_bot_created', () => {
     const r = generateManagedBotUpdatedTriggers(validParamsSingle);
     expect(r).toContain('managed_bot_created');
-    expect(r).toContain('managed_bot_token_changed');
+    expect(r).not.toContain('managed_bot_token_changed');
     expect(r).not.toContain('event.managed_bot');
   });
 
-  it('имя middleware содержит nodeId', () => {
+  it('имя обработчика содержит nodeId', () => {
     const r = generateManagedBotUpdatedTriggers(validParamsSingle);
-    expect(r).toContain('managed_bot_updated_trigger_mbu_trigger_1_middleware');
+    expect(r).toContain('managed_bot_updated_trigger_mbu_trigger_1_handler');
   });
 
   it('содержит сохранение bot_id в user_data', () => {
@@ -73,10 +73,10 @@ describe('generateManagedBotUpdatedTriggers()', () => {
     expect(r).toContain('logging.error');
   });
 
-  it('несколько триггеров генерируют несколько middleware', () => {
+  it('несколько триггеров генерируют несколько обработчиков', () => {
     const r = generateManagedBotUpdatedTriggers(validParamsMultiple);
-    expect(r).toContain('managed_bot_updated_trigger_mbu_trigger_1_middleware');
-    expect(r).toContain('managed_bot_updated_trigger_mbu_trigger_2_middleware');
+    expect(r).toContain('managed_bot_updated_trigger_mbu_trigger_1_handler');
+    expect(r).toContain('managed_bot_updated_trigger_mbu_trigger_2_handler');
   });
 });
 
@@ -140,13 +140,13 @@ describe('generateManagedBotUpdatedTriggerHandlers()', () => {
 
   it('генерирует код из узлов напрямую', () => {
     const r = generateManagedBotUpdatedTriggerHandlers(nodesWithTrigger);
-    expect(r).toContain('managed_bot_updated_trigger_mbu_trigger_1_middleware');
+    expect(r).toContain('managed_bot_updated_trigger_mbu_trigger_1_handler');
     expect(r).toContain('handle_callback_msg_1');
   });
 
   it('фильтрует null узлы и не-триггеры', () => {
     const r = generateManagedBotUpdatedTriggerHandlers(nodesWithNullAndMixed);
-    expect(r).toContain('managed_bot_updated_trigger_mbu_trigger_1_middleware');
+    expect(r).toContain('managed_bot_updated_trigger_mbu_trigger_1_handler');
   });
 
   it('узлы без триггеров → пустая строка', () => {
@@ -175,7 +175,7 @@ describe('Специфика триггера managed_bot_updated', () => {
     expect(r).not.toContain('str(user_id) !=');
   });
 
-  it('содержит FakeCallbackQuery без message_id и chat_id', () => {
+  it('содержит FakeCallbackQuery без FakeMessage', () => {
     const r = generateManagedBotUpdatedTriggers(validParamsSingle);
     expect(r).toContain('FakeCallbackQuery');
     expect(r).not.toContain('FakeMessage');
@@ -186,16 +186,20 @@ describe('Специфика триггера managed_bot_updated', () => {
     expect(r).toContain('_is_fake = True');
   });
 
-  it('не использует event.managed_bot (несуществующее поле в aiogram 3)', () => {
+  it('FakeCallbackQuery содержит self.message', () => {
     const r = generateManagedBotUpdatedTriggers(validParamsSingle);
-    expect(r).not.toContain('event.managed_bot');
+    expect(r).toContain('self.message');
   });
 
-  it('middleware должен регистрироваться через dp.message.middleware, а не как декоратор', () => {
-    // Шаблон генерирует async def без @dp.update.outer_middleware() декоратора.
-    // Регистрация происходит в main() через dp.message.middleware(func).
+  it('не использует event.managed_bot и не использует outer_middleware', () => {
     const r = generateManagedBotUpdatedTriggers(validParamsSingle);
-    expect(r).not.toContain('@dp.update.outer_middleware()');
+    expect(r).not.toContain('event.managed_bot');
+    expect(r).not.toContain('outer_middleware');
+  });
+
+  it('обработчик регистрируется через @dp.message декоратор', () => {
+    const r = generateManagedBotUpdatedTriggers(validParamsSingle);
+    expect(r).toContain('@dp.message(lambda m: m.managed_bot_created is not None)');
     expect(r).toContain('async def managed_bot_updated_trigger_');
   });
 });

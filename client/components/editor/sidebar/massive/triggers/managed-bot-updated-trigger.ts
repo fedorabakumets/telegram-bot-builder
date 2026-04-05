@@ -6,13 +6,13 @@
 import { ComponentDefinition } from "@shared/schema";
 
 /**
- * Определение компонента триггера управляемого бота.
- * Срабатывает на апдейт Update.managed_bot типа ManagedBotUpdated.
+ * Определение компонента триггера создания управляемого бота.
+ * Срабатывает на сервисное сообщение managed_bot_created (ContentType.MANAGED_BOT_CREATED).
  */
 export const managedBotUpdatedTrigger: ComponentDefinition = {
   id: 'managed-bot-updated-trigger',
-  name: 'Триггер создания/обновления бота',
-  description: 'Срабатывает когда пользователь создал управляемого бота или сменил его токен',
+  name: 'Триггер создания бота',
+  description: 'Срабатывает когда пользователь создал управляемого бота',
   icon: 'fas fa-robot',
   color: 'bg-indigo-100 text-indigo-600',
   type: 'managed_bot_updated_trigger' as any,

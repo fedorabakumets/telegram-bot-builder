@@ -60,12 +60,11 @@ export function ManagedBotUpdatedTriggerConfiguration({
         <div className="flex items-center gap-2">
           <i className="fas fa-robot text-indigo-600 dark:text-indigo-400 text-sm" />
           <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
-            Триггер создания/обновления бота
+            Триггер создания бота
           </span>
         </div>
         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-          Срабатывает когда пользователь создал управляемого бота или сменил его токен.
-          Доступны данные из <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">Update.managed_bot</code> (Bot API 9.6).
+          Срабатывает когда пользователь создал управляемого бота. Данные доступны из сервисного сообщения <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">managed_bot_created</code> (Bot API 9.6).
         </p>
       </div>
 
