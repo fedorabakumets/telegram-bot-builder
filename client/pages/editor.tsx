@@ -1,34 +1,57 @@
 /**
- * @fileoverview Компонент редактора бота (новая версия)
+ * @fileoverview Компонент редактора бота
  *
- * Основной компонент редактора, построенный на основе хуков и компонентов.
- * Использует FlexibleLayoutView и SidebarContent для рендера интерфейса.
+ * Этот компонент предоставляет основной интерфейс для создания и редактирования
+ * телеграм-ботов с использованием визуального редактора узлов.
  *
  * @module Editor
  */
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useLocation } from 'wouter';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { nanoid } from 'nanoid';
-
-import { Canvas } from '@/components/editor/canvas/canvas/canvas';
-import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
-import { BotLayout } from '@/components/editor/bot/panel/BotLayout';
-import { GroupsPanel } from '@/components/editor/groups/groups-panel';
-import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
-import { UserIdsDatabase } from '@/components/editor/user-ids-db';
-import { TelegramClientConfig } from '@/components/editor/telegram-client';
-import { AdaptiveHeader } from '@/components/editor/header/adaptive-header';
-import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
-import { SaveTemplateModal } from '@/components/editor/header/components/save-template-modal';
-import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
-import { ReadmePreview } from '@/components/editor/code/readme';
 import { CodeEditorArea } from '@/components/editor/code/editor';
 import { CodePanel } from '@/components/editor/code/panel';
-import { ProjectNotFound } from '@/components/editor/project-not-found';
+import { ReadmePreview } from '@/components/editor/code/readme';
 import { useCodeGenerator as useCodeGeneratorServer } from '@/components/editor/code/hooks';
 import type { CodeFormat } from '@/components/editor/code/hooks';
+import { ComponentsSidebar } from '@/components/editor/sidebar/components-sidebar';
+import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
+import { Canvas } from '@/components/editor/canvas/canvas/canvas';
+import { BotLayout } from '@/components/editor/bot/panel/BotLayout';
+import { BotControl } from '@/components/editor/bot/bot-control';
+import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
+import { createActionHistoryItem } from './editor/utils/action-logger';
+import type { ActionType, PreviousEditorTab, ActionHistoryItem, EditorTab } from './editor/types';
+import { useProjectLoader } from './editor/hooks/use-project-loader';
+import { useTabNavigation } from './editor/hooks/use-tab-navigation';
+import { useLayoutManager as useFlexibleLayoutManager } from './editor/hooks/use-layout-management';
+import { useNodeHandlers } from './editor/hooks/use-node-handlers';
+import { useButtonHandlers } from './editor/hooks/use-button-handlers';
+import {
+  useSheetHandlers,
+  useEditorUIStates,
+  useSheetStates,
+  useCodeStates,
+  useMobileHandlers,
+  useCodePanelHandlers,
+} from '@/pages/editor/hooks';
+import { SaveTemplateModal } from '@/components/editor/header/components/save-template-modal';
+import { TelegramClientConfig } from '@/components/editor/telegram-client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'wouter';
+
+import { DialogPanel } from '@/components/editor/database/dialog/dialog-panel';
+import { GroupsPanel } from '@/components/editor/groups/groups-panel';
+import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
+import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
+import { UserIdsDatabase } from '@/components/editor/user-ids-db';
+import { ProjectNotFound } from '@/components/editor/project-not-found';
+import { AdaptiveHeader } from '@/components/editor/header/adaptive-header';
+import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
+import { FlexibleLayout } from '@/components/layout/flexible/flexible-layout';
+import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
+import { SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useMoveNodeToSheet } from '@/components/editor/canvas/canvas/use-move-node-to-sheet';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
@@ -36,261 +59,434 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { clearKeyboardNodeId, getKeyboardNodeId } from '@/components/editor/canvas/canvas-node/keyboard-connection';
-import { applyTemplateLayout } from '@/utils/hierarchical-layout';
-import { generateButtonId } from '@/utils/generate-button-id';
-import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
-import { createActionHistoryItem } from './editor/utils/action-logger';
-import type { ActionType, ActionHistoryItem, EditorTab, PreviousEditorTab } from './editor/types';
-
-import {
-  useSheetHandlers, useEditorUIStates, useSheetStates, useCodeStates,
-  useMobileHandlers, useCodePanelHandlers, useDialogHandlers,
-  useApplyTemplate, useNodesSync, useNodeFocus,
-} from '@/pages/editor/hooks';
-import { useProjectLoader } from './editor/hooks/use-project-loader';
-import { useTabNavigation } from './editor/hooks/use-tab-navigation';
-import { useLayoutManager as useFlexibleLayoutManager } from './editor/hooks/use-layout-management';
-import { useNodeHandlers } from './editor/hooks/use-node-handlers';
-import { useButtonHandlers } from './editor/hooks/use-button-handlers';
-import { FlexibleLayoutView, SidebarContent } from './editor/components';
-
-import type { BotData, BotDataWithSheets, BotProject, UserBotData } from '@shared/schema';
+import { BotData, BotDataWithSheets, BotProject, UserBotData } from '@shared/schema';
 import type { ComponentDefinition, Node } from '@shared/schema';
+import { nanoid } from 'nanoid';
+import { generateButtonId } from '@/utils/generate-button-id';
+import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 
 /**
  * Компонент редактора бота
  *
- * @returns JSX элемент редактора
+ * Основной компонент, предоставляющий интерфейс для создания и редактирования
+ * телеграм-ботов с использованием визуального редактора узлов.
+ *
+ * @returns {JSX.Element} Компонент редактора бота
  */
 export default function Editor() {
+  // Используем useLocation для получения текущего пути
   const [location, setLocation] = useLocation();
 
-  /** ID проекта из URL */
-  const projectId = useMemo(() => {
+  /**
+   * ID проекта, извлеченный из URL
+   * @type {number|null}
+   */
+  const projectId = (() => {
     const match = location.match(/^\/editor\/(\d+)/) || location.match(/^\/projects\/(\d+)/);
     return match ? parseInt(match[1]) : null;
-  }, [location]);
+  })();
 
+  /**
+   * Текущая выбранная вкладка в интерфейсе редактора
+   * @type {EditorTab}
+   */
   const [currentTab, setCurrentTab] = useState<EditorTab>('editor');
+
+  /**
+   * Флаг отображения модального окна сохранения сценария
+   * @type {boolean}
+   */
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+
+  // Определяем мобильное устройство
+  const isMobile = useIsMobile();
+
+  /**
+   * Флаг автоматического создания кнопок при добавлении соединений
+   * @type {boolean}
+   */
+  const [] = useState(true);
+
+  /**
+   * Флаг использования гибкого макета
+   * @type {boolean}
+   */
+  const [useFlexibleLayout] = useState(true);
+
+  /** Триггер для принудительного fitToContent после применения шаблона */
   const [fitTrigger, setFitTrigger] = useState(0);
-  const [editedJsonContent, setEditedJsonContent] = useState('');
+
+  /** ID узла для фокусировки на канвасе */
+  const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
+  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** ID узла для постоянной подсветки (держится до клика на другой узел или пустое место) */
+  const [highlightNodeId, setHighlightNodeId] = useState<string | null>(null);
+
+  /** ID кнопки для скролла к ней в панели свойств */
+  const [focusButtonId, setFocusButtonId] = useState<string | null>(null);
+
+  /**
+   * Обработчик фокусировки на узле канваса из сайдбара
+   * @param nodeId - Идентификатор узла для фокусировки
+   * @param buttonId - Опциональный идентификатор кнопки для скролла в панели свойств
+   * @param persist - Если true — подсветка держится до явного сброса (для чекбоксов)
+   */
+  const handleNodeFocus = useCallback((nodeId: string, buttonId?: string, persist?: boolean) => {
+    setFocusNodeId(nodeId);
+    setHighlightNodeId(nodeId);
+    setFocusButtonId(buttonId ?? null);
+    if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
+    focusTimerRef.current = setTimeout(() => setFocusNodeId(null), 100);
+    setTimeout(() => setFocusButtonId(null), 800);
+    void persist; // persist больше не нужен — highlight держится до нового клика
+  }, []);
+
+  // Хуки состояний
+  const {
+    isLoadingTemplate,
+    showLayoutManager,
+    showMobileProperties,
+    showMobileSidebar,
+    setIsLoadingTemplate,
+    setShowLayoutManager,
+    setShowMobileProperties,
+    setShowMobileSidebar,
+  } = useEditorUIStates();
+
+  // Хук состояний листов
+  const {
+    botDataWithSheets,
+    currentNodeSizes,
+    actionHistory,
+    lastLoadedProjectId,
+    hasLocalChanges,
+    setBotDataWithSheets,
+    setCurrentNodeSizes,
+    setActionHistory,
+    setLastLoadedProjectId,
+    setHasLocalChanges,
+  } = useSheetStates();
+
+  // Хук состояний кода
+  const {
+    selectedFormat,
+    theme,
+    areAllCollapsed,
+    showFullCode,
+    codeEditorVisible,
+    codePanelVisible,
+    editorRef,
+    setSelectedFormat,
+    setTheme,
+    setAreAllCollapsed,
+    setShowFullCode,
+    setCodeEditorVisible,
+    setCodePanelVisible,
+  } = useCodeStates();
+
+  /** Текущий отредактированный JSON контент из Monaco Editor */
+  const [editedJsonContent, setEditedJsonContent] = useState<string>('');
   /** Флаг программного сброса редактора — игнорируем onChange во время setValue */
   const isResettingEditorRef = useRef(false);
 
-  const isMobile = useIsMobile();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  /**
+   * Обрабатывает смену формата кода, сбрасывая редактируемый JSON
+   * @param format - Новый формат кода
+   */
+  const handleFormatChange = useCallback((format: CodeFormat) => {
+    setSelectedFormat(format);
+    setEditedJsonContent('');
+  }, [setSelectedFormat]);
 
-  // --- Состояния ---
+  // Хук обработчиков мобильных панелей
   const {
-    isLoadingTemplate, showLayoutManager, showMobileProperties, showMobileSidebar,
-    setIsLoadingTemplate, setShowLayoutManager, setShowMobileProperties, setShowMobileSidebar,
-  } = useEditorUIStates();
+    handleOpenMobileSidebar,
+    handleOpenMobileProperties,
+  } = useMobileHandlers({ setShowMobileSidebar, setShowMobileProperties });
 
-  const {
-    botDataWithSheets, currentNodeSizes, actionHistory, lastLoadedProjectId, hasLocalChanges,
-    setBotDataWithSheets, setCurrentNodeSizes, setActionHistory, setLastLoadedProjectId, setHasLocalChanges,
-  } = useSheetStates();
+  // Обработчик логирования действий
+  const handleActionLog = useCallback((type: string, description: string) => {
+    setActionHistory((prevHistory: ActionHistoryItem[]) => [createActionHistoryItem(type as ActionType, description), ...prevHistory].slice(0, 50));
+  }, [setActionHistory]);
 
-  const {
-    selectedFormat, theme, areAllCollapsed, showFullCode, codeEditorVisible, codePanelVisible,
-    editorRef, setSelectedFormat, setTheme, setAreAllCollapsed, setShowFullCode,
-    setCodeEditorVisible, setCodePanelVisible,
-  } = useCodeStates();
+  // Callback для получения размеров узлов
+  const handleNodeSizesChange = useCallback((nodeSizes: Map<string, { width: number; height: number }>) => {
+    setCurrentNodeSizes(nodeSizes);
+  }, [setCurrentNodeSizes]);
 
-  // --- Макет ---
+  // Управление макетом через хук
   const {
-    flexibleLayoutConfig, setFlexibleLayoutConfig,
-    handleToggleHeader, handleToggleSidebar, handleToggleProperties, handleToggleCanvas,
+    flexibleLayoutConfig,
+    setFlexibleLayoutConfig,
+    handleToggleHeader,
+    handleToggleSidebar,
+    handleToggleProperties,
+    handleToggleCanvas
   } = useFlexibleLayoutManager(isMobile, currentTab);
 
   const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // --- Диалоги ---
+  // Хук обработчиков диалогов
+  const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
+  const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
+
+  // Обработчики закрытия панелей (объявляем первыми для использования в других функциях)
+  const handleCloseDialogPanel = useCallback(() => {
+    setSelectedDialogUser(null);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el =>
+        el.id === 'dialog' ? { ...el, visible: false } : el
+      )
+    }));
+  }, [setFlexibleLayoutConfig]);
+
+  const handleCloseUserDetailsPanel = useCallback(() => {
+    setSelectedUserDetails(null);
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el => {
+        if (el.id === 'userDetails') return { ...el, visible: false };
+        if (el.id === 'sidebar') return { ...el, visible: true };
+        return el;
+      })
+    }));
+  }, [setFlexibleLayoutConfig]);
+
+  // Обработчик выбора пользователя в диалоге
+  const handleSelectDialogUser = useCallback((user: UserBotData) => {
+    console.log('[handleSelectDialogUser] Selecting user:', user);
+    // Обновляем выбранного пользователя и открываем панель
+    setSelectedDialogUser(user);
+    setFlexibleLayoutConfig(prev => {
+      const newConfig = {
+        ...prev,
+        elements: prev.elements.map(el => {
+          if (el.id === 'dialog') return { ...el, visible: true };
+          if (el.id === 'properties') return { ...el, visible: false };
+          return el;
+        })
+      };
+      console.log('[handleSelectDialogUser] New config:', newConfig);
+      return newConfig;
+    });
+  }, [setFlexibleLayoutConfig]);
+
+  // Обработчик выбора пользователя в деталях
+  const handleSelectUserDetails = useCallback((user: UserBotData) => {
+    console.log('[handleSelectUserDetails] Selecting user:', user);
+    // Обновляем выбранного пользователя и открываем панель
+    setSelectedUserDetails(user);
+    setFlexibleLayoutConfig(prev => {
+      const newConfig = {
+        ...prev,
+        elements: prev.elements.map(el => {
+          if (el.id === 'userDetails') return { ...el, visible: true };
+          if (el.id === 'sidebar') return { ...el, visible: false };
+          return el;
+        })
+      };
+      console.log('[handleSelectUserDetails] New config:', newConfig);
+      return newConfig;
+    });
+  }, [setFlexibleLayoutConfig]);
+
+  // Обработчики для передачи в UserDatabasePanel (с toggle-логикой для кнопок)
+  const handleOpenDialogPanel = useCallback((user: UserBotData) => {
+    // Если панель уже открыта для этого пользователя, закрываем её
+    if (selectedDialogUser?.userId === user.userId) {
+      handleCloseDialogPanel();
+    } else {
+      handleSelectDialogUser(user);
+    }
+  }, [selectedDialogUser, handleSelectDialogUser, handleCloseDialogPanel]);
+
+  const handleOpenUserDetailsPanel = useCallback((user: UserBotData) => {
+    // Если панель уже открыта для этого пользователя, закрываем её
+    if (selectedUserDetails?.userId === user.userId) {
+      handleCloseUserDetailsPanel();
+    } else {
+      handleSelectUserDetails(user);
+    }
+  }, [selectedUserDetails, handleSelectUserDetails, handleCloseUserDetailsPanel]);
+
+  // Хук состояний вкладок
+  const [, setPreviousTab] = useState<PreviousEditorTab>('editor');
+
+  // Хук обработчиков кодовых панелей
   const {
-    selectedDialogUser, selectedUserDetails,
-    handleOpenDialogPanel, handleCloseDialogPanel,
-    handleOpenUserDetailsPanel, handleCloseUserDetailsPanel,
-    setSelectedDialogUser, setSelectedUserDetails,
-  } = useDialogHandlers({ setFlexibleLayoutConfig });
-
-  // --- Фокус узла ---
-  const { focusNodeId, highlightNodeId, focusButtonId, setHighlightNodeId, handleNodeFocus } = useNodeFocus();
-
-  // --- Мобильные обработчики ---
-  const { handleOpenMobileSidebar, handleOpenMobileProperties } = useMobileHandlers({ setShowMobileSidebar, setShowMobileProperties });
-
-  // --- Панель кода ---
-  const { handleToggleCodePanel, handleOpenCodePanel, handleCloseCodePanel, handleToggleCodeEditor } = useCodePanelHandlers({
-    setCodePanelVisible, setCodeEditorVisible, currentTab, setFlexibleLayoutConfig, codeEditorVisible,
+    handleToggleCodePanel,
+    handleOpenCodePanel,
+    handleCloseCodePanel,
+    handleToggleCodeEditor,
+  } = useCodePanelHandlers({
+    setCodePanelVisible,
+    setCodeEditorVisible,
+    currentTab,
+    setFlexibleLayoutConfig,
+    codeEditorVisible,
   });
 
-  // --- Загрузка проекта ---
-  const { currentProject, firstProject, isProjectNotFound: projectNotFound } = useProjectLoader({ projectId });
-  const activeProject = projectId ? currentProject : firstProject;
-
-  /** Ref для доступа к getBotData внутри мутации (объявляется до useBotEditor) */
-  const getBotDataRef = useRef<() => { nodes: Node[] }>(() => ({ nodes: [] }));
-
-  // --- Мутация сохранения (инлайн — нужен newName) ---
   /**
-   * Мутация обновления проекта на сервере.
-   * Поддерживает параметр newName для переименования при применении сценария.
+   * Мутация для обновления проекта
+   *
+   * Используется для сохранения изменений в проекте на сервере
    */
   const updateProjectMutation = useMutation({
     mutationFn: async (params: { restartOnUpdate?: boolean; newName?: string } = {}) => {
-      if (!activeProject?.id) return;
-      let projectData: BotDataWithSheets | BotData;
+      if (!activeProject?.id) {
+        console.warn('Cannot save: activeProject or ID is undefined');
+        return;
+      }
+
+      // Всегда используем текущие данные с холста для сохранения
+      let projectData;
+
       if (botDataWithSheets) {
-        const currentCanvasData = getBotDataRef.current();
+        // Обновляем активный лист текущими данными холста
+        const currentCanvasData = getBotData();
         const activeSheetId = botDataWithSheets.activeSheetId;
+        const updatedSheets = botDataWithSheets.sheets.map(sheet =>
+          sheet.id === activeSheetId
+            ? { ...sheet, nodes: currentCanvasData.nodes, updatedAt: new Date() }
+            : sheet
+        );
+
         projectData = {
           ...botDataWithSheets,
-          sheets: botDataWithSheets.sheets.map(sheet =>
-            sheet.id === activeSheetId ? { ...sheet, nodes: currentCanvasData.nodes, updatedAt: new Date() } : sheet
-          ),
+          sheets: updatedSheets
         };
       } else {
-        projectData = getBotDataRef.current();
+        // Если нет формата с листами, используем текущие данные холста
+        projectData = getBotData();
       }
-      return apiRequest('PUT', `/api/projects/${activeProject.id}`, {
+
+      // Additional safety check before making the API request
+      const projectId = activeProject.id;
+      if (!projectId) {
+        throw new Error('Project ID is required for update');
+      }
+
+      return apiRequest('PUT', `/api/projects/${projectId}`, {
         data: projectData,
         restartOnUpdate: params.restartOnUpdate || false,
+        // Передаём новое имя если оно было указано при вызове мутации
         ...(params.newName ? { name: params.newName } : {}),
       });
     },
     onMutate: async (_variables) => {
       if (!activeProject?.id) return;
+
+      // Отменяем текущие запросы для предотвращения race condition
       await queryClient.cancelQueries({ queryKey: ['/api/projects'] });
       await queryClient.cancelQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
       await queryClient.cancelQueries({ queryKey: ['/api/projects/list'] });
+
+      // Сохраняем предыдущие значения для отката
       const previousProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']);
       const previousProject = queryClient.getQueryData<BotProject>([`/api/projects/${activeProject.id}`]);
       const previousList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']);
+
+      // Используем botDataWithSheets напрямую (он уже содержит текущие данные активного листа)
+      // так как onMutate вызывается после обновления локального состояния в обработчиках листов
       const optimisticProjectData = botDataWithSheets || activeProject.data;
+
       const optimisticProject: BotProject = {
         ...activeProject,
+        // Используем переданное новое имя если есть, иначе текущее
         name: _variables?.newName ?? activeProject.name,
         data: optimisticProjectData,
-        updatedAt: new Date(),
+        updatedAt: new Date()
       };
+
+      // Оптимистично обновляем кеш
       queryClient.setQueryData<BotProject>([`/api/projects/${activeProject.id}`], optimisticProject);
+
       if (previousProjects) {
-        queryClient.setQueryData<BotProject[]>(['/api/projects'], previousProjects.map(p => p.id === activeProject.id ? optimisticProject : p));
+        const updatedProjects = previousProjects.map(p =>
+          p.id === activeProject.id ? optimisticProject : p
+        );
+        queryClient.setQueryData<BotProject[]>(['/api/projects'], updatedProjects);
       }
+
       if (previousList) {
-        queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], previousList.map(p => p.id === activeProject.id ? { ...p, updatedAt: optimisticProject.updatedAt } : p));
+        const updatedList = previousList.map(p =>
+          p.id === activeProject.id ? { ...p, updatedAt: optimisticProject.updatedAt } : p
+        );
+        queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], updatedList);
       }
+
+      // Возвращаем контекст для отката
       return { previousProjects, previousProject, previousList };
     },
-    onSuccess: async () => {
+    onSuccess: async (_updatedProject) => {
+      // Reset local changes flag only after successful save
       setHasLocalChanges(false);
+
+      // Инвалидируем кеш для загрузки актуальных данных с сервера
       if (activeProject?.id) {
-        await queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`], exact: true });
+        await queryClient.invalidateQueries({
+          queryKey: [`/api/projects/${activeProject.id}`],
+          exact: true
+        });
       }
     },
     onError: (_error, _variables, context) => {
-      if (context?.previousProjects) queryClient.setQueryData(['/api/projects'], context.previousProjects);
-      if (context?.previousProject && activeProject?.id) queryClient.setQueryData([`/api/projects/${activeProject.id}`], context.previousProject);
-      if (context?.previousList) queryClient.setQueryData(['/api/projects/list'], context.previousList);
-      toast({ title: 'Ошибка сохранения', description: 'Не удалось сохранить проект', variant: 'destructive' });
-    },
-  });
-
-  // --- useBotEditor ---
-  const {
-    nodes, selectedNodeId, setSelectedNodeId,
-    addNode, updateNode, updateNodeData, duplicateNode: _duplicateNode,
-    addButton, updateButton, deleteButton, updateNodes,
-    setBotData, getBotData, undo, redo, canUndo, canRedo,
-    copyToClipboard, pasteFromClipboard, hasClipboardData,
-    isNodeBeingDragged, setIsNodeBeingDragged, saveToHistory,
-  } = useBotEditor();
-
-  // Обновляем ref после получения getBotData
-  getBotDataRef.current = getBotData;
-
-  const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
-
-  /**
-   * Обёртка над setSelectedNodeId — сбрасывает highlight при клике на пустое место
-   * @param nodeId - ID выбранного узла или '' если кликнули на пустое место
-   */
-  const handleNodeSelect = useCallback((nodeId: string) => {
-    setSelectedNodeId(nodeId);
-    if (!nodeId) setHighlightNodeId(null);
-  }, [setSelectedNodeId, setHighlightNodeId]);
-
-  /** Логирование действий в историю */
-  const handleActionLog = useCallback((type: string, description: string) => {
-    setActionHistory((prev: ActionHistoryItem[]) =>
-      [createActionHistoryItem(type as ActionType, description), ...prev].slice(0, 50)
-    );
-  }, [setActionHistory]);
-
-  /** Callback для получения размеров узлов */
-  const handleNodeSizesChange = useCallback((sizes: Map<string, { width: number; height: number }>) => {
-    setCurrentNodeSizes(sizes);
-  }, [setCurrentNodeSizes]);
-
-  // --- Синхронизация nodes → botDataWithSheets ---
-  useNodesSync({ nodes, botDataWithSheets, setBotDataWithSheets });
-
-  // --- Применение сценария из localStorage ---
-  useApplyTemplate({
-    activeProject, botDataWithSheets, setBotDataWithSheets, setBotData,
-    currentNodeSizes, setIsLoadingTemplate, setFitTrigger,
-    updateProjectMutation, queryClient,
-    toast,
-  });
-
-  // --- Обработчики узлов ---
-  const { handleNodeUpdateWithSheets, handleNodeTypeChange, handleNodeIdChange, handleNodeMove, handleNodeMoveStart, handleNodeMoveEnd } = useNodeHandlers({
-    nodes, updateNode, updateNodeData, onActionLog: handleActionLog,
-    saveToHistory, botDataWithSheets, setBotDataWithSheets, selectedNodeId, setSelectedNodeId,
-  });
-
-  // --- Обработчики кнопок ---
-  const { handleButtonAdd, handleButtonUpdate, handleButtonDelete } = useButtonHandlers({
-    nodes, addButton, updateButton, deleteButton, onActionLog: handleActionLog, saveToHistory,
-  });
-
-  // --- Обработчики листов ---
-  const { handleSheetAdd, handleSheetDelete, handleSheetRename, handleSheetDuplicate, handleSheetSelect } = useSheetHandlers({
-    botDataWithSheets, setBotDataWithSheets, setBotData, getBotData,
-    handleActionLog, saveToHistory, updateProjectMutation, toast, queryClient,
-    currentNodeSizes, nodes, activeProjectId: activeProject?.id || null,
-    onAfterSelect: () => setFitTrigger(t => t + 1),
-  });
-
-  /**
-   * Синхронизирует активный лист с холстом при обновлении данных бота
-   * @param updatedData - Обновлённые данные бота с листами
-   */
-  const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
-    const activeSheet = SheetsManager.getActiveSheet(updatedData);
-    if (activeSheet) {
-      const migratedNodes = setBotData({ nodes: activeSheet.nodes }, undefined, currentNodeSizes, true);
-      if (migratedNodes && migratedNodes.length !== activeSheet.nodes.length) {
-        setBotDataWithSheets({
-          ...updatedData,
-          sheets: updatedData.sheets.map(s =>
-            s.id === activeSheet.id ? { ...s, nodes: migratedNodes } : s
-          ),
-        });
-      } else {
-        setBotDataWithSheets(updatedData);
+      // Откатываем изменения при ошибке
+      if (context?.previousProjects) {
+        queryClient.setQueryData(['/api/projects'], context.previousProjects);
       }
-    } else {
-      setBotDataWithSheets(updatedData);
+      if (context?.previousProject && activeProject?.id) {
+        queryClient.setQueryData([`/api/projects/${activeProject.id}`], context.previousProject);
+      }
+      if (context?.previousList) {
+        queryClient.setQueryData(['/api/projects/list'], context.previousList);
+      }
+
+      toast({
+        title: "Ошибка сохранения",
+        description: "Не удалось сохранить проект",
+        variant: "destructive",
+      });
     }
-  }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
+  });
 
-  // --- Перемещение узла между листами ---
-  const { moveNodeToSheet } = useMoveNodeToSheet(botDataWithSheets || undefined, handleBotDataUpdate);
+  // Загрузка проекта через хук
+  const {
+    currentProject,
+    firstProject,
+    isProjectNotFound: projectNotFound
+  } = useProjectLoader({ projectId });
 
-  // --- Генератор кода ---
+  // Активный проект
+  const activeProject = projectId ? currentProject : firstProject;
+
+  // Загрузка пользователей для вкладки "Пользователи"
+  const { data: users = [] } = useQuery<UserBotData[]>({
+    queryKey: [`/api/projects/${activeProject?.id}/users`],
+    enabled: !!activeProject?.id && currentTab === 'users',
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  /**
+   * Эффект для автоматического выбора первого пользователя при переключении на вкладку "Пользователи"
+   */
+  useEffect(() => {
+    if (currentTab === 'users' && users.length > 0) {
+      const firstUser = users[0];
+      // Открываем обе панели с первым пользователем
+      handleSelectUserDetails(firstUser);
+      handleSelectDialogUser(firstUser);
+    }
+  }, [currentTab, users, handleSelectUserDetails, handleSelectDialogUser]);
+
+  // Использование хука генератора кода.
+  // Передаём botDataWithSheets вместо activeProject?.data, чтобы генератор
+  // видел актуальные данные после редактирования JSON через Monaco Editor.
   const { codeContent: generatedCodeContent, isLoading: isCodeLoading, loadContent, setCodeContent } = useCodeGeneratorServer({
     botData: (botDataWithSheets ?? activeProject?.data) as BotData || { nodes: [] },
     projectName: activeProject?.name || 'project',
@@ -299,54 +495,170 @@ export default function Editor() {
     mode: 'server',
   });
 
-  // --- Загрузка пользователей ---
-  const { data: users = [] } = useQuery<UserBotData[]>({
-    queryKey: [`/api/projects/${activeProject?.id}/users`],
-    enabled: !!activeProject?.id && currentTab === 'users',
-    staleTime: 0, gcTime: 0,
-  });
+  // Определение и отслеживание темы приложения
+  useEffect(() => {
+    const checkTheme = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setTheme(isDark ? 'dark' : 'light');
+    };
 
-  // --- Загрузка всех проектов для CodePanel ---
-  const { data: allProjects = [] } = useQuery<BotProject[]>({
-    queryKey: ['/api/projects'],
-    staleTime: 30000,
-  });
+    checkTheme();
 
-  // --- Навигация по вкладкам ---
-  const [, setPreviousTab] = useState<PreviousEditorTab>('editor');
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Загрузка контента при изменении выбранного формата
+  useEffect(() => {
+    loadContent(selectedFormat);
+  }, [selectedFormat, loadContent]);
+
+  // Загрузка python-контента при открытии панели кода (если ещё не загружен)
+  useEffect(() => {
+    if (codePanelVisible || codeEditorVisible) {
+      loadContent(selectedFormat);
+    }
+  }, [codePanelVisible, codeEditorVisible]);
+
+  // Получение текущего содержимого кода для выбранного формата
+  const getCurrentContent = () => generatedCodeContent[selectedFormat] || '';
+
+  const content = getCurrentContent();
+  const lines = content.split('\n');
+  const lineCount = lines.length;
+
+  // Отображаемый контент (без обрезки)
+  const displayContent = useMemo(() => {
+    return content;
+  }, [content]);
 
   /**
-   * Восстанавливает видимость canvas и основных элементов
+   * Эффект: когда editedJsonContent сброшен в '' (после применения JSON),
+   * обновляем Monaco Editor актуальным displayContent.
+   * Это гарантирует что редактор показывает применённые данные.
    */
-  const handleRestoreCanvas = useCallback(() => {
+  useEffect(() => {
+    if (editedJsonContent === '' && selectedFormat === 'json' && editorRef.current) {
+      isResettingEditorRef.current = true;
+      editorRef.current.setValue(displayContent);
+      // Снимаем флаг после того как Monaco обработает setValue
+      setTimeout(() => { isResettingEditorRef.current = false; }, 0);
+    }
+  }, [editedJsonContent, selectedFormat, displayContent]);
+
+  // Статистика кода для отображения информации о структуре (считается от отображаемого контента)
+  const codeStats = useMemo(() => {
+    const displayLines = displayContent.split('\n');
+    return {
+      totalLines: displayLines.length,
+      truncated: false,
+      functions: (displayContent.match(/^def |^async def /gm) || []).length,
+      classes: (displayContent.match(/^class /gm) || []).length,
+      comments: (displayContent.match(/^[^#]*#/gm) || []).length
+    };
+  }, [displayContent]);
+
+  // Determine if we're still loading
+
+
+
+  const {
+    nodes,
+    selectedNodeId,
+    setSelectedNodeId,
+    addNode,
+    updateNode,
+    duplicateNode: _duplicateNode,
+    updateNodeData,
+    addButton,
+    updateButton,
+    deleteButton,
+    updateNodes,
+    setBotData,
+    getBotData,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    copyToClipboard,
+    pasteFromClipboard,
+    hasClipboardData,
+    isNodeBeingDragged,
+    setIsNodeBeingDragged,
+    saveToHistory
+  } = useBotEditor();
+
+  // Вычисляем selectedNode из selectedNodeId и nodes
+  const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
+
+  /**
+   * Обёртка над setSelectedNodeId — сбрасывает highlight при клике на пустое место
+   * @param nodeId - ID выбранного узла или '' если кликнули на пустое место
+   */
+  const handleNodeSelect = useCallback((nodeId: string) => {
+    setSelectedNodeId(nodeId);
+    if (!nodeId) setHighlightNodeId(null);
+  }, [setSelectedNodeId]);
+
+  // Реактивно открываем/закрываем панель свойств при выборе/снятии выбора узла
+  // useLayoutEffect — синхронно до отрисовки, чтобы не было мигания пустой панели
+  useLayoutEffect(() => {
+    if (currentTab !== 'editor') return;
     setFlexibleLayoutConfig(prev => ({
       ...prev,
       elements: prev.elements.map(el => {
-        if (el.type === 'canvas') return el.visible ? el : { ...el, visible: true };
-        if (el.id === 'sidebar') return el.visible ? el : { ...el, visible: true };
-        if (el.id === 'properties') {
-          const next = !!selectedNodeId;
-          return el.visible === next ? el : { ...el, visible: next };
-        }
-        return el;
-      }),
+        if (el.id !== 'properties') return el;
+
+        const nextVisible = !!selectedNodeId;
+        return el.visible === nextVisible ? el : { ...el, visible: nextVisible };
+      })
     }));
-  }, [setFlexibleLayoutConfig, selectedNodeId]);
+  }, [selectedNodeId, currentTab, setFlexibleLayoutConfig]);
 
-  const { handleTabChange } = useTabNavigation({
-    currentTab, setCurrentTab, setPreviousTab,
-    onSaveProject: () => activeProject?.id && updateProjectMutation.mutate({}),
-    onOpenCodePanel: handleOpenCodePanel,
-    onCloseCodePanel: handleCloseCodePanel,
-    onRestoreCanvas: handleRestoreCanvas,
-    setLocation,
-    projectId: activeProject?.id || null,
-  });
+  // Reset hasLocalChanges when activeProject changes
+  useEffect(() => {
+    if (activeProject?.id !== lastLoadedProjectId && lastLoadedProjectId !== null) {
+      setHasLocalChanges(false);
+    }
+  }, [activeProject?.id, lastLoadedProjectId]);
 
-  // --- Инлайн обработчики ---
+  // Обработчик обновления данных листов
+  const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
+    // Синхронизируем активный лист с системой редактора
+    const activeSheet = SheetsManager.getActiveSheet(updatedData);
+    if (activeSheet) {
+      // Применяем миграции и получаем итоговые узлы (без автоиерархии)
+      const migratedNodes = setBotData({ nodes: activeSheet.nodes }, undefined, currentNodeSizes, true);
+
+      // Сохраняем мигрированные узлы обратно в botDataWithSheets
+      // чтобы при следующем вызове handleBotDataUpdate не было дублей
+      if (migratedNodes && migratedNodes.length !== activeSheet.nodes.length) {
+        const updatedWithMigrated = {
+          ...updatedData,
+          sheets: updatedData.sheets.map(sheet =>
+            sheet.id === activeSheet.id
+              ? { ...sheet, nodes: migratedNodes }
+              : sheet
+          ),
+        };
+        setBotDataWithSheets(updatedWithMigrated);
+      } else {
+        setBotDataWithSheets(updatedData);
+      }
+    } else {
+      setBotDataWithSheets(updatedData);
+    }
+  }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
 
   /**
-   * Применяет отредактированный JSON к данным бота
+   * Применяет отредактированный JSON к данным бота.
+   * После успешного применения сбрасывает editedJsonContent,
+   * чтобы isDirty стал false и панель применения скрылась.
    * @param jsonString - Строка JSON для применения
    */
   const handleApplyJsonToBotData = useCallback((jsonString: string) => {
@@ -357,387 +669,542 @@ export default function Editor() {
       } else if ((parsed as BotData).nodes) {
         const current = botDataWithSheets;
         if (!current) return;
-        handleBotDataUpdate({
+        const updated: BotDataWithSheets = {
           ...current,
-          sheets: current.sheets.map((s, i) => i === 0 ? { ...s, nodes: (parsed as BotData).nodes } : s),
-        });
+          sheets: current.sheets.map((sheet, i) =>
+            i === 0 ? { ...sheet, nodes: (parsed as BotData).nodes } : sheet
+          ),
+        };
+        handleBotDataUpdate(updated);
       }
+      // Сбрасываем редактируемый контент — данные успешно применены
       setEditedJsonContent('');
-    } catch { /* игнорируем ошибки парсинга */ }
-  }, [botDataWithSheets]);
+    } catch (e) {
+      console.error('Ошибка применения JSON:', e);
+    }
+  }, [botDataWithSheets, handleBotDataUpdate]);
+
+  // Хук перемещения узла между листами
+  const { moveNodeToSheet } = useMoveNodeToSheet(botDataWithSheets || undefined, handleBotDataUpdate);
+
+  // Обработчики узлов через хук
+  const {
+    handleNodeUpdateWithSheets,
+    handleNodeTypeChange,
+    handleNodeIdChange,
+    handleNodeMove,
+    handleNodeMoveStart,
+    handleNodeMoveEnd
+  } = useNodeHandlers({
+    nodes,
+    updateNode,
+    updateNodeData,
+    onActionLog: handleActionLog,
+    saveToHistory,
+    botDataWithSheets,
+    setBotDataWithSheets,
+    selectedNodeId,
+    setSelectedNodeId
+  });
+
+  // Синхронизация nodes → botDataWithSheets для undo/redo
+  useEffect(() => {
+    if (!botDataWithSheets || !botDataWithSheets.activeSheetId) return;
+    const activeSheet = botDataWithSheets.sheets.find(sheet => sheet.id === botDataWithSheets.activeSheetId);
+    if (!activeSheet || activeSheet.nodes === nodes) return;
+
+    // Обновляем узлы в активном листе при изменении nodes
+    const updatedSheets = botDataWithSheets.sheets.map(sheet => {
+      if (sheet.id === botDataWithSheets.activeSheetId) {
+        return {
+          ...sheet,
+          nodes
+        };
+      }
+      return sheet;
+    });
+
+    setBotDataWithSheets({
+      ...botDataWithSheets,
+      sheets: updatedSheets
+    });
+  }, [nodes, botDataWithSheets, setBotDataWithSheets]);
+
+  // Обновляем данные бота при смене проекта
+  useEffect(() => {
+    if (activeProject?.data && !isLoadingTemplate && !hasLocalChanges &&
+      (lastLoadedProjectId !== activeProject?.id)) {
+
+      const projectData = activeProject.data as any;
+
+      // Проверяем формат и мигрируем если нужно
+      let sheetsData: BotDataWithSheets;
+      if (SheetsManager.isNewFormat(projectData)) {
+        sheetsData = projectData;
+      } else {
+        sheetsData = SheetsManager.migrateLegacyData(projectData as BotData);
+        // Сохраняем мигрированные данные
+        updateProjectMutation.mutate({});
+      }
+
+      // Миграция keyboardLayout для всех узлов
+      sheetsData = {
+        ...sheetsData,
+        sheets: migrateAllKeyboardLayouts(sheetsData.sheets)
+      };
+
+      // Устанавливаем данные листов для отображения панели
+      setBotDataWithSheets(sheetsData);
+
+      // Устанавливаем активный лист в редактор
+      const activeSheet = SheetsManager.getActiveSheet(sheetsData);
+      if (activeSheet) {
+        setBotData({ nodes: activeSheet.nodes }, undefined, undefined, true);
+      }
+
+      // Обновляем отслеживание загруженного проекта
+      setLastLoadedProjectId(activeProject.id);
+      localStorage.setItem('lastProjectId', activeProject.id.toString());
+    }
+  }, [activeProject?.id, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId]);
+
+
 
   /**
-   * Удаляет узел с сохранением в историю
-   * @param nodeId - ID удаляемого узла
+   * Обработчик восстановления видимости canvas
    */
+  const handleRestoreCanvas = useCallback(() => {
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(el => {
+        // Восстанавливаем все основные элементы интерфейса
+        if (el.type === 'canvas') return el.visible ? el : { ...el, visible: true };
+        if (el.id === 'sidebar') return el.visible ? el : { ...el, visible: true };
+        if (el.id === 'properties') {
+          const nextVisible = !!selectedNodeId;
+          return el.visible === nextVisible ? el : { ...el, visible: nextVisible };
+        }
+        return el;
+      })
+    }));
+  }, [setFlexibleLayoutConfig, selectedNodeId]);
+
+  // Навигация по вкладкам через хук
+  const { handleTabChange } = useTabNavigation({
+    currentTab,
+    setCurrentTab,
+    setPreviousTab,
+    onSaveProject: () => activeProject?.id && updateProjectMutation.mutate({}),
+    onOpenCodePanel: handleOpenCodePanel,
+    onCloseCodePanel: handleCloseCodePanel,
+    onRestoreCanvas: handleRestoreCanvas,
+    setLocation,
+    projectId: activeProject?.id || null
+  });
+
+  // Хук для управления операциями с листами
+  const {
+    handleSheetAdd,
+    handleSheetDelete,
+    handleSheetRename,
+    handleSheetDuplicate,
+    handleSheetSelect,
+  } = useSheetHandlers({
+    botDataWithSheets,
+    setBotDataWithSheets,
+    setBotData,
+    getBotData,
+    handleActionLog,
+    saveToHistory,
+    updateProjectMutation,
+    toast,
+    queryClient,
+    currentNodeSizes,
+    nodes,
+    activeProjectId: activeProject?.id || null,
+    onAfterSelect: () => setFitTrigger(t => t + 1),
+  });
+
+  // Проверяем, есть ли выбранный сценарий при загрузке страницы
+  useEffect(() => {
+    /**
+     * Асинхронная функция применения сценария из localStorage к текущему проекту.
+     * Используется IIFE-паттерн, так как useEffect не поддерживает async напрямую.
+     */
+    const apply = async () => {
+      const selectedTemplateData = localStorage.getItem('selectedTemplate');
+      if (selectedTemplateData && activeProject) {
+        try {
+          setIsLoadingTemplate(true); // Устанавливаем флаг загрузки сценария
+          const template = JSON.parse(selectedTemplateData);
+          console.log('Применяем сохраненный сценарий:', template.name);
+
+          // Проверяем, есть ли в сценарии многолистовая структура
+          if (template.data.sheets && Array.isArray(template.data.sheets)) {
+            console.log('Применяем многолистовой сценарий с листами:', template.data.sheets.length);
+
+            // Создаем новые ID для листов сценария
+            const updatedSheets = template.data.sheets.map((sheet: any) => {
+              // Очищаем узлы от потенциальных циклических ссылок
+              const cleanNodes = sheet.nodes?.map((node: any) => {
+                const cleanNode = {
+                  id: node.id,
+                  type: node.type,
+                  position: node.position || { x: 0, y: 0 },
+                  data: {
+                    ...node.data,
+                    // Убираем любые потенциальные циклические ссылки
+                    parent: undefined,
+                    children: undefined
+                  }
+                };
+                return cleanNode;
+              }) || [];
+
+              return {
+                id: nanoid(), // Новый уникальный ID для листа
+                name: sheet.name,
+                nodes: cleanNodes,
+                viewState: sheet.viewState || { position: { x: 0, y: 0 }, zoom: 1 },
+                createdAt: new Date(),
+                updatedAt: new Date()
+              };
+            });
+
+            const templateDataWithSheets = {
+              sheets: updatedSheets,
+              activeSheetId: updatedSheets[0]?.id,
+              version: 2
+            };
+
+            // Устанавливаем многолистовые данные
+            setBotDataWithSheets(templateDataWithSheets);
+
+            // Устанавливаем первый лист как активный на холсте
+            const firstSheet = updatedSheets[0];
+            if (firstSheet) {
+              // Пропускаем автоиерархию при загрузке сценариев — расположение сохраняется как есть
+              const shouldSkipLayout = true; // Автоиерархия отключена: применяется только вручную через тулбар
+              setBotData({ nodes: firstSheet.nodes }, template.name, currentNodeSizes, shouldSkipLayout);
+            }
+
+            // Вписываем содержимое в экран после применения шаблона
+            setFitTrigger(t => t + 1);
+
+            // Сохраняем в проект только если activeProject загружен
+            if (activeProject?.id) {
+              // Обновляем botDataWithSheets напрямую, а затем вызываем сохранение
+              setBotDataWithSheets({
+                ...botDataWithSheets,
+                ...templateDataWithSheets
+              });
+
+              if (template.name) {
+                // Оптимистично обновляем имя в кеше списка проектов
+                const currentList = queryClient.getQueryData<Array<{ id: number; name: string }>>(['/api/projects/list']);
+                if (currentList) {
+                  queryClient.setQueryData(
+                    ['/api/projects/list'],
+                    currentList.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
+                  );
+                }
+                // Оптимистично обновляем имя в полном кеше проектов (используется сайдбаром)
+                const currentProjects = queryClient.getQueryData<Array<{ id: number; name: string }>>(['/api/projects']);
+                if (currentProjects) {
+                  queryClient.setQueryData(
+                    ['/api/projects'],
+                    currentProjects.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
+                  );
+                }
+              }
+
+              // Сохраняем данные холста и новое имя одним запросом
+              updateProjectMutation.mutate({ newName: template.name });
+            }
+          } else {
+            // Обычный сценарий без листов - мигрируем к формату с листами
+            console.log('Применяем обычный сценарий и мигрируем к формату с листами');
+            const migratedData = SheetsManager.migrateLegacyData(template.data);
+            setBotDataWithSheets(migratedData);
+            // Пропускаем автоиерархию при загрузке сценариев — расположение сохраняется как есть
+            const shouldSkipLayout = true; // Автоиерархия отключена: применяется только вручную через тулбар
+            setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия отключена при загрузке сценариев
+
+            // Вписываем содержимое в экран после применения шаблона
+            setFitTrigger(t => t + 1);
+
+            // Сохраняем в проект только если activeProject загружен
+            if (activeProject?.id) {
+              // Обновляем botDataWithSheets напрямую, а затем вызываем сохранение
+              setBotDataWithSheets({
+                ...botDataWithSheets,
+                ...migratedData
+              });
+
+              if (template.name) {
+                // Оптимистично обновляем имя в кеше списка проектов
+                const currentList = queryClient.getQueryData<Array<{ id: number; name: string }>>(['/api/projects/list']);
+                if (currentList) {
+                  queryClient.setQueryData(
+                    ['/api/projects/list'],
+                    currentList.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
+                  );
+                }
+                // Оптимистично обновляем имя в полном кеше проектов (используется сайдбаром)
+                const currentProjects = queryClient.getQueryData<Array<{ id: number; name: string }>>(['/api/projects']);
+                if (currentProjects) {
+                  queryClient.setQueryData(
+                    ['/api/projects'],
+                    currentProjects.map(p => p.id === activeProject.id ? { ...p, name: template.name } : p)
+                  );
+                }
+              }
+
+              // Сохраняем данные холста и новое имя одним запросом
+              updateProjectMutation.mutate({ newName: template.name });
+            }
+          }
+
+          // Принудительно инвалидируем кеш проектов после применения сценария
+          // чтобы на странице "Проекты" отображалось правильное количество листов
+          queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+
+          toast({
+            title: 'Сценарий применен',
+            description: `Сценарий "${template.name}" успешно загружен`,
+          });
+
+          // Удаляем сохраненный сценарий
+          localStorage.removeItem('selectedTemplate');
+
+          // Небольшая задержка, чтобы дать время на сохранение, затем убираем флаг
+          setTimeout(() => {
+            setIsLoadingTemplate(false);
+          }, 1000);
+        } catch (error) {
+          console.error('Ошибка применения сохраненного сценария:', error);
+          localStorage.removeItem('selectedTemplate');
+          setIsLoadingTemplate(false); // Убираем флаг при ошибке
+        }
+      }
+    };
+    apply();
+  }, [activeProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast, queryClient]);
+
+  // Обёртки для deleteNode и duplicateNode с логированием в историю
   const handleNodeDelete = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     handleActionLog('delete', `Удален узел "${node?.type || 'Unknown'}"`);
+    // Сохраняем в историю ДО изменений
     saveToHistory();
-    const updated = nodes
-      .map(n => getKeyboardNodeId(n.data) === nodeId ? { ...n, data: clearKeyboardNodeId(n.data) } : n)
+    const updatedNodes = nodes
+      .map(n => getKeyboardNodeId(n.data) === nodeId
+        ? { ...n, data: clearKeyboardNodeId(n.data) }
+        : n)
       .filter(n => n.id !== nodeId);
-    updateNodes(updated);
+    updateNodes(updatedNodes);
     if (selectedNodeId === nodeId) setSelectedNodeId(null);
   }, [nodes, handleActionLog, saveToHistory, updateNodes, selectedNodeId, setSelectedNodeId]);
 
   /**
-   * Удаляет соединение между узлами
-   * @param fromId - ID исходного узла
-   * @param toId - ID целевого узла
-   * @param type - Тип соединения
+   * Удаляет соединение между узлами с сохранением в историю.
    */
   const handleConnectionDelete = useCallback((fromId: string, toId: string, type: string) => {
     saveToHistory();
-    const updated = nodes.map(n => {
+    const updatedNodes = nodes.map(n => {
       const data = { ...n.data };
+
       if (n.id === fromId) {
-        if (type === 'trigger-next') { delete data.autoTransitionTo; }
-        else if (type === 'auto-transition') { data.enableAutoTransition = false; delete data.autoTransitionTo; }
-        else if (type === 'button-goto') {
-          data.buttons = ((data.buttons as any[]) ?? []).map((btn: any) =>
+        if (type === 'trigger-next') {
+          delete data.autoTransitionTo;
+        } else if (type === 'auto-transition') {
+          data.enableAutoTransition = false;
+          delete data.autoTransitionTo;
+        } else if (type === 'button-goto') {
+          const buttons = (data.buttons as any[] | undefined) ?? [];
+          data.buttons = buttons.map((btn: any) =>
             btn.action === 'goto' && btn.target === toId ? { ...btn, target: undefined } : btn
           );
-          data.branches = ((data.branches as any[]) ?? []).map((b: any) =>
-            b.target === toId ? { ...b, target: undefined } : b
-          );
-        } else if (type === 'input-target') { delete data.inputTargetNodeId; }
-        else if (type === 'keyboard-link') { return { ...n, data: clearKeyboardNodeId(data) }; }
+          // condition-узел хранит переходы в branches, а не в buttons
+          const branches = (data.branches as any[] | undefined) ?? [];
+          if (branches.length > 0) {
+            data.branches = branches.map((b: any) =>
+              b.target === toId ? { ...b, target: undefined } : b
+            );
+          }
+        } else if (type === 'input-target') {
+          delete data.inputTargetNodeId;
+        } else if (type === 'keyboard-link') {
+          return { ...n, data: clearKeyboardNodeId(data) };
+        }
         return { ...n, data };
       }
+
+      // condition-source хранится в condition-узле (toId) как sourceNodeId
       if (n.id === toId && type === 'condition-source') {
-        delete (data as any).sourceNodeId;
+        delete (data as typeof data & { sourceNodeId?: string }).sourceNodeId;
         return { ...n, data };
       }
+
       if (n.id === toId && type === 'forward-source' && n.type === 'forward_message') {
-        delete (data as any).sourceMessageId;
-        delete (data as any).sourceMessageVariableName;
-        delete (data as any).sourceMessageNodeId;
-        (data as any).sourceMessageIdSource = 'current_message';
+        delete (data as typeof data & {
+          sourceMessageId?: string;
+          sourceMessageVariableName?: string;
+          sourceMessageNodeId?: string;
+        }).sourceMessageId;
+        delete (data as typeof data & {
+          sourceMessageId?: string;
+          sourceMessageVariableName?: string;
+          sourceMessageNodeId?: string;
+        }).sourceMessageVariableName;
+        delete (data as typeof data & {
+          sourceMessageId?: string;
+          sourceMessageVariableName?: string;
+          sourceMessageNodeId?: string;
+        }).sourceMessageNodeId;
+        (data as typeof data & { sourceMessageIdSource?: string }).sourceMessageIdSource = 'current_message';
         return { ...n, data };
       }
+
       return n;
     });
-    updateNodes(updated);
+    updateNodes(updatedNodes);
     handleActionLog('disconnect', 'Удалено соединение');
   }, [nodes, updateNodes, saveToHistory, handleActionLog]);
 
   /**
-   * Дублирует узел с логированием
-   * @param nodeId - ID дублируемого узла
-   * @param targetPosition - Целевая позиция (опционально)
+   * Обёртка над duplicateNode с логированием в историю.
+   * Принимает опциональную целевую позицию и передаёт её в duplicateNode,
+   * чтобы дубль появлялся именно там, где пользователь кликнул правой кнопкой
+   * или где находится курсор при нажатии Ctrl+C / Ctrl+D.
+   *
+   * @param nodeId - ID узла для дублирования
+   * @param targetPosition - Целевая позиция в координатах канваса (опционально)
    */
   const handleNodeDuplicate = useCallback((nodeId: string, targetPosition?: { x: number; y: number }) => {
     const node = nodes.find(n => n.id === nodeId);
     handleActionLog('duplicate', `Дублирован узел "${node?.type || 'Unknown'}"`);
+    // Сохраняем в историю ДО изменений
     saveToHistory();
     _duplicateNode(nodeId, targetPosition);
   }, [_duplicateNode, nodes, handleActionLog, saveToHistory]);
 
   /**
-   * Выполняет автоматическую иерархическую расстановку узлов
+   * Выполняет автоматическую иерархическую расстановку всех узлов на холсте.
+   * Сохраняет текущее состояние в историю перед применением раскладки.
    */
   const handleAutoLayout = useCallback(() => {
-    const newNodes = applyTemplateLayout(getBotData().nodes, [], undefined, currentNodeSizes);
+    const currentData = getBotData();
+    const newNodes = applyTemplateLayout(currentData.nodes, [], undefined, currentNodeSizes);
     saveToHistory();
     handleActionLog('update', 'Авто-расстановка узлов');
     updateNodes(newNodes);
   }, [getBotData, currentNodeSizes, saveToHistory, handleActionLog, updateNodes]);
 
-  /** Обработчик перетаскивания компонента (заглушка) */
-  const handleComponentDrag = useCallback((_component: ComponentDefinition) => {}, []);
+  // Обработчики кнопок через хук
+  const { handleButtonAdd, handleButtonUpdate, handleButtonDelete } = useButtonHandlers({
+    nodes,
+    addButton,
+    updateButton,
+    deleteButton,
+    onActionLog: handleActionLog,
+    saveToHistory
+  });
 
-  /**
-   * Добавляет новый компонент на холст
-   * @param component - Определение компонента
-   */
+  const handleComponentDrag = useCallback((_component: ComponentDefinition) => {
+    // Handle component drag start if needed
+  }, []);
+
   const handleComponentAdd = useCallback((component: ComponentDefinition) => {
-    if (isLoadingTemplate) return;
+    // Prevent adding nodes during template loading
+    if (isLoadingTemplate) {
+      return;
+    }
+
+    // Set local changes flag first to prevent useEffect from running
     setHasLocalChanges(true);
+
+    // Создаем новый узел из компонента
     const clonedData = structuredClone(component.defaultData || {});
+    // Регенерируем id кнопок чтобы они были уникальны между узлами
     if (Array.isArray((clonedData as any).buttons)) {
       (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
     }
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
-      position: { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 },
-      data: clonedData,
+      position: { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 }, // Случайная позиция с небольшим смещением
+      data: clonedData
     };
+
+    // Логируем добавление в историю действий
+    console.log('📝 Добавление узла:', component.type);
     handleActionLog('add', `Добавлен узел "${component.type}"`);
+
+    // Сохраняем в историю ДО изменений
     saveToHistory();
+
+    // Добавляем узел на холст
     addNode(newNode);
-    setTimeout(() => { if (activeProject?.id) updateProjectMutation.mutate({}); }, 1000);
-  }, [addNode, isLoadingTemplate, updateProjectMutation, activeProject, handleActionLog, saveToHistory]);
 
-  /** Явное сохранение проекта */
-  const handleSaveProject = useCallback(() => {
-    if (activeProject?.id) updateProjectMutation.mutate({});
-  }, [activeProject?.id, updateProjectMutation]);
-
-  /** Открывает модальное окно сохранения сценария */
-  const handleSaveAsTemplate = useCallback(() => setShowSaveTemplate(true), []);
-
-  /** Переходит на страницу сценариев */
-  const handleLoadTemplate = useCallback(() => setLocation('/templates'), [setLocation]);
-
-  /** Переходит к списку проектов */
-  const handleGoToProjects = useCallback(() => setLocation('/projects'), [setLocation]);
+    // Auto-save after a short delay to persist the new node
+    setTimeout(() => {
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
+    }, 1000);
+  }, [addNode, isLoadingTemplate, updateProjectMutation, activeProject, handleActionLog, saveToHistory, nodes]);
 
   /**
-   * Выбирает проект по ID
-   * @param newProjectId - ID проекта
+   * Обработчик явного сохранения проекта
+   *
+   * Вызывается при нажатии кнопки "Применить" в панели свойств
+   */
+  const handleSaveProject = useCallback(() => {
+    if (activeProject?.id) {
+      updateProjectMutation.mutate({});
+    }
+  }, [activeProject?.id, updateProjectMutation]);
+
+  /**
+   * Обработчик открытия модального окна сохранения сценария
+   */
+  const handleSaveAsTemplate = useCallback(() => {
+    setShowSaveTemplate(true);
+  }, []);
+
+  /**
+   * Обработчик загрузки сценария
+   *
+   * Переходит на страницу сценариев для выбора сценария
+   */
+  const handleLoadTemplate = useCallback(() => {
+    console.log('Template button clicked, navigating to templates page...');
+    setLocation('/templates');
+  }, [setLocation]);
+
+  /**
+   * Обработчик перехода к списку проектов
+   */
+  const handleGoToProjects = useCallback(() => {
+    setLocation('/projects');
+  }, [setLocation]);
+
+  /**
+   * Обработчик выбора проекта
+   *
+   * @param {number} newProjectId - ID выбранного проекта
    */
   const handleProjectSelect = useCallback((newProjectId: number) => {
     setLocation(`/editor/${newProjectId}`);
   }, [setLocation]);
 
-  /**
-   * Обработчик смены формата кода
-   * @param format - Новый формат
-   */
-  const handleFormatChange = useCallback((format: CodeFormat) => {
-    setSelectedFormat(format);
-    setEditedJsonContent('');
-  }, [setSelectedFormat]);
 
-  // --- useEffect: тема ---
-  useEffect(() => {
-    const check = () => setTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-    check();
-    const obs = new MutationObserver(check);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => obs.disconnect();
-  }, [setTheme]);
 
-  // --- useEffect: загрузка кода ---
-  useEffect(() => { loadContent(selectedFormat); }, [selectedFormat, loadContent]);
 
-  useEffect(() => {
-    if (codePanelVisible || codeEditorVisible) loadContent(selectedFormat);
-  }, [codePanelVisible, codeEditorVisible]);
 
-  // --- useEffect: обновление данных при смене проекта ---
-  useEffect(() => {
-    if (activeProject?.data && !isLoadingTemplate && !hasLocalChanges && lastLoadedProjectId !== activeProject.id) {
-      const projectData = activeProject.data as any;
-      let sheetsData: BotDataWithSheets = SheetsManager.isNewFormat(projectData)
-        ? projectData
-        : SheetsManager.migrateLegacyData(projectData as BotData);
-      if (!SheetsManager.isNewFormat(projectData)) updateProjectMutation.mutate({});
-      sheetsData = { ...sheetsData, sheets: migrateAllKeyboardLayouts(sheetsData.sheets) };
-      setBotDataWithSheets(sheetsData);
-      const activeSheet = SheetsManager.getActiveSheet(sheetsData);
-      if (activeSheet) setBotData({ nodes: activeSheet.nodes }, undefined, undefined, true);
-      setLastLoadedProjectId(activeProject.id);
-      localStorage.setItem('lastProjectId', activeProject.id.toString());
-    }
-  }, [activeProject?.id, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId]);
-
-  // --- useEffect: сброс hasLocalChanges при смене проекта ---
-  useEffect(() => {
-    if (activeProject?.id !== lastLoadedProjectId && lastLoadedProjectId !== null) {
-      setHasLocalChanges(false);
-    }
-  }, [activeProject?.id, lastLoadedProjectId]);
-
-  // --- useLayoutEffect: панель свойств ---
-  useLayoutEffect(() => {
-    if (currentTab !== 'editor') return;
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(el => {
-        if (el.id !== 'properties') return el;
-        const next = !!selectedNodeId;
-        return el.visible === next ? el : { ...el, visible: next };
-      }),
-    }));
-  }, [selectedNodeId, currentTab, setFlexibleLayoutConfig]);
-
-  // --- useEffect: первый пользователь ---
-  useEffect(() => {
-    if (currentTab === 'users' && users.length > 0) {
-      const first = users[0];
-      setSelectedUserDetails(first);
-      setSelectedDialogUser(first);
-    }
-  }, [currentTab, users, setSelectedUserDetails, setSelectedDialogUser]);
-
-  // --- Вычисляемые значения ---
-  const content = generatedCodeContent[selectedFormat] || '';
-  /** Отображаемый контент кода (мемоизирован для стабильности ссылки) */
-  const displayContent = useMemo(() => content, [content]);
-
-  const codeStats = useMemo(() => {
-    const lines = displayContent.split('\n');
-    return {
-      totalLines: lines.length,
-      truncated: false,
-      functions: (displayContent.match(/^def |^async def /gm) || []).length,
-      classes: (displayContent.match(/^class /gm) || []).length,
-      comments: (displayContent.match(/^[^#]*#/gm) || []).length,
-    };
-  }, [displayContent]);
-
-  // --- useEffect: сброс Monaco при сбросе editedJsonContent ---
-  useEffect(() => {
-    if (editedJsonContent === '' && selectedFormat === 'json' && editorRef.current) {
-      isResettingEditorRef.current = true;
-      editorRef.current.setValue(displayContent);
-      setTimeout(() => { isResettingEditorRef.current = false; }, 0);
-    }
-  }, [editedJsonContent, selectedFormat, displayContent]);
-
-  const getVisible = (id: string) =>
-    flexibleLayoutConfig.elements.find(el => el.id === id)?.visible ?? true;
-
-  // --- Ранний возврат ---
-  if (projectNotFound) return <ProjectNotFound />;
-
-  if (!activeProject) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-spinner fa-spin text-gray-400 text-xl" />
-          </div>
-          <p className="text-gray-600">Загрузка проекта...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // --- Контент заголовка ---
-  const headerContent = (
-    <AdaptiveHeader
-      config={layoutConfig}
-      projectName={activeProject.name}
-      currentTab={currentTab}
-      onTabChange={handleTabChange}
-      onExport={() => {}}
-      onSaveAsTemplate={handleSaveAsTemplate}
-      onLoadTemplate={handleLoadTemplate}
-      onLayoutSettings={() => setShowLayoutManager(true)}
-      onToggleHeader={handleToggleHeader}
-      onToggleSidebar={handleToggleSidebar}
-      onToggleProperties={handleToggleProperties}
-      onToggleCanvas={handleToggleCanvas}
-      onToggleCode={handleToggleCodePanel}
-      onToggleCodeEditor={handleToggleCodeEditor}
-      headerVisible={getVisible('header')}
-      sidebarVisible={getVisible('sidebar')}
-      propertiesVisible={getVisible('properties')}
-      canvasVisible={getVisible('canvas')}
-      codeVisible={codePanelVisible}
-      codeEditorVisible={codeEditorVisible}
-      onOpenMobileSidebar={() => setShowMobileSidebar(true)}
-      onOpenMobileProperties={() => setShowMobileProperties(true)}
-    />
-  );
-
-  // --- Контент canvas ---
-  const canvasContent = codeEditorVisible ? (
-    <div className="h-full flex flex-col">
-      {selectedFormat === 'readme' ? (
-        <ReadmePreview
-          markdownContent={displayContent}
-          theme={theme}
-          onContentChange={(c) => setCodeContent(prev => ({ ...prev, readme: c }))}
-        />
-      ) : (
-        <CodeEditorArea
-          isMobile={false}
-          isLoading={isCodeLoading}
-          displayContent={displayContent}
-          selectedFormat={selectedFormat}
-          theme={theme}
-          editorRef={editorRef}
-          codeStats={codeStats}
-          setAreAllCollapsed={setAreAllCollapsed}
-          areAllCollapsed={areAllCollapsed}
-          onContentChange={(v) => { if (!isResettingEditorRef.current) setEditedJsonContent(v); }}
-        />
-      )}
-    </div>
-  ) : (
-    <div className="h-full">
-      {currentTab === 'groups' ? (
-        <GroupsPanel projectId={activeProject.id} projectName={activeProject.name} />
-      ) : currentTab === 'editor' ? (
-        <Canvas
-          botData={botDataWithSheets || undefined}
-          onBotDataUpdate={handleBotDataUpdate}
-          nodes={nodes}
-          selectedNodeId={selectedNodeId}
-          onNodeSelect={handleNodeSelect}
-          onNodeAdd={addNode}
-          onNodeDelete={handleNodeDelete}
-          onNodeDuplicate={handleNodeDuplicate}
-          onNodeMove={handleNodeMove}
-          onNodeMoveStart={handleNodeMoveStart}
-          onNodeMoveEnd={handleNodeMoveEnd}
-          onNodesUpdate={updateNodes}
-          onUndo={undo}
-          onRedo={redo}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onSave={() => updateProjectMutation.mutate({})}
-          isSaving={updateProjectMutation.isPending}
-          onCopyToClipboard={copyToClipboard}
-          onPasteFromClipboard={pasteFromClipboard}
-          hasClipboardData={hasClipboardData()}
-          isNodeBeingDragged={isNodeBeingDragged}
-          setIsNodeBeingDragged={setIsNodeBeingDragged}
-          onToggleHeader={handleToggleHeader}
-          onToggleSidebar={handleToggleSidebar}
-          onToggleProperties={handleToggleProperties}
-          onToggleCanvas={handleToggleCanvas}
-          headerVisible={getVisible('header')}
-          sidebarVisible={getVisible('sidebar')}
-          propertiesVisible={getVisible('properties')}
-          canvasVisible={getVisible('canvas')}
-          onOpenMobileSidebar={handleOpenMobileSidebar}
-          onOpenMobileProperties={handleOpenMobileProperties}
-          onNodeSizesChange={handleNodeSizesChange}
-          onActionLog={handleActionLog}
-          actionHistory={actionHistory}
-          onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
-          onConnectionDelete={handleConnectionDelete}
-          onConnectionCreate={saveToHistory}
-          autoFitOnLoad
-          fitTrigger={fitTrigger}
-          focusNodeId={focusNodeId}
-          highlightNodeId={highlightNodeId}
-          onMoveNodeToSheet={moveNodeToSheet}
-          onAutoLayout={handleAutoLayout}
-        />
-      ) : currentTab === 'bot' ? (
-        <div className="h-full">
-          <BotLayout projectId={activeProject.id} projectName={activeProject.name} />
-        </div>
-      ) : currentTab === 'users' ? (
-        <div className="h-full overflow-hidden">
-          <UserDatabasePanel
-            projectId={activeProject.id}
-            projectName={activeProject.name}
-            onOpenDialogPanel={handleOpenDialogPanel}
-            onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
-          />
-        </div>
-      ) : currentTab === 'user-ids' ? (
-        <UserIdsDatabase />
-      ) : currentTab === 'client-api' ? (
-        <div className="h-full p-6 bg-background overflow-auto">
-          <div className="max-w-3xl mx-auto"><TelegramClientConfig /></div>
-        </div>
-      ) : currentTab === 'export' ? (
-        <div className="h-full bg-background" />
-      ) : null}
-    </div>
-  );
-
-  // --- Контент свойств ---
-  const propertiesContent = currentTab === 'editor' ? (
+  // Определяем содержимое панели свойств для переиспользования
+  const propertiesContent = activeProject && currentTab === 'editor' ? (
     <PropertiesPanel
       projectId={activeProject.id}
       selectedNode={selectedNode}
@@ -759,14 +1226,27 @@ export default function Editor() {
     />
   ) : null;
 
-  // --- Контент панели кода (передаётся в отдельный code-слот FlexibleLayout) ---
-  const codePanelContent = (
+  // Загрузка всех проектов для передачи в CodePanel
+  const { data: allProjects = [] } = useQuery<BotProject[]>({
+    queryKey: ['/api/projects'],
+    staleTime: 30000,
+  });
+
+  // Определяем содержимое панели кода
+  const codeContent = activeProject ? (
     <CodePanel
       botDataArray={allProjects.length > 0
-        ? allProjects.map(p => p.id === activeProject.id ? activeProject.data as BotData : p.data as BotData)
+        ? allProjects.map(project =>
+            project.id === activeProject.id
+              ? activeProject.data as BotData  // Используем актуальные данные активного проекта
+              : project.data as BotData
+          )
         : [activeProject.data as BotData]
       }
-      projectIds={allProjects.length > 0 ? allProjects.map(p => p.id) : [activeProject.id]}
+      projectIds={allProjects.length > 0
+        ? allProjects.map(project => project.id)
+        : [activeProject.id]
+      }
       projectName={activeProject.name}
       onClose={handleCloseCodePanel}
       selectedFormat={selectedFormat}
@@ -778,7 +1258,7 @@ export default function Editor() {
       codeContent={generatedCodeContent}
       isLoading={isCodeLoading}
       displayContent={displayContent}
-      onApplyJson={handleApplyJsonToBotData}
+      onApplyJson={(jsonString) => handleApplyJsonToBotData(jsonString)}
       editedContent={editedJsonContent}
       onResetEditor={() => {
         isResettingEditorRef.current = true;
@@ -787,89 +1267,463 @@ export default function Editor() {
         setTimeout(() => { isResettingEditorRef.current = false; }, 0);
       }}
     />
-  );
+  ) : null;
 
-  // --- Контент сайдбара ---
-  const sidebarContent = (
-    <SidebarContent
-      codePanelVisible={codePanelVisible}
-      currentTab={currentTab}
-      allProjects={allProjects}
-      activeProject={activeProject}
-      flexibleLayoutConfig={flexibleLayoutConfig}
-      setFlexibleLayoutConfig={setFlexibleLayoutConfig}
-      selectedFormat={selectedFormat}
-      onFormatChange={handleFormatChange}
-      areAllCollapsed={areAllCollapsed}
-      setAreAllCollapsed={setAreAllCollapsed}
-      showFullCode={showFullCode}
-      setShowFullCode={setShowFullCode}
-      generatedCodeContent={generatedCodeContent}
-      isCodeLoading={isCodeLoading}
-      displayContent={displayContent}
-      onApplyJson={handleApplyJsonToBotData}
-      editedJsonContent={editedJsonContent}
-      onResetEditor={() => {
-        isResettingEditorRef.current = true;
-        setEditedJsonContent('');
-        editorRef.current?.setValue(displayContent);
-        setTimeout(() => { isResettingEditorRef.current = false; }, 0);
-      }}
-      onToggleCodePanel={handleToggleCodePanel}
-      onComponentDrag={handleComponentDrag}
-      onComponentAdd={handleComponentAdd}
-      onLayoutChange={(config) => updateLayoutConfig(config as any)}
-      onGoToProjects={handleGoToProjects}
-      onProjectSelect={handleProjectSelect}
-      activeSheetId={botDataWithSheets?.activeSheetId}
-      headerContent={headerContent}
-      canvasContent={canvasContent}
-      propertiesContent={propertiesContent}
-      onToggleCanvas={handleToggleCanvas}
-      onToggleHeader={handleToggleHeader}
-      onToggleProperties={handleToggleProperties}
-      onSheetAdd={() => handleSheetAdd('Новый лист')}
-      onSheetDelete={handleSheetDelete}
-      onSheetRename={handleSheetRename}
-      onSheetDuplicate={handleSheetDuplicate}
-      onSheetSelect={handleSheetSelect}
-      isMobile={isMobile}
-      onClose={handleToggleSidebar}
-      onNodeFocus={handleNodeFocus}
-    />
-  );
+  // Показываем компонент 404 если проект не найден
+  if (projectNotFound) {
+    return <ProjectNotFound />;
+  }
+
+  if (!activeProject) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <i className="fas fa-spinner fa-spin text-gray-400 text-xl"></i>
+          </div>
+          <p className="text-gray-600">Загрузка проекта...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Функция рендеринга содержимого для гибкого макета
+  const renderFlexibleLayoutContent = () => {
+    const headerContent = (
+      <AdaptiveHeader
+        config={layoutConfig}
+        projectName={activeProject.name}
+        currentTab={currentTab}
+        onTabChange={handleTabChange}
+        onExport={() => { }}
+        onSaveAsTemplate={handleSaveAsTemplate}
+        onLoadTemplate={handleLoadTemplate}
+        onLayoutSettings={() => setShowLayoutManager(true)}
+        onToggleHeader={handleToggleHeader}
+        onToggleSidebar={handleToggleSidebar}
+        onToggleProperties={handleToggleProperties}
+        onToggleCanvas={handleToggleCanvas}
+        onToggleCode={handleToggleCodePanel}
+        onToggleCodeEditor={handleToggleCodeEditor}
+        headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+        sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+        propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+        canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+        codeVisible={codePanelVisible}
+        codeEditorVisible={codeEditorVisible}
+        onOpenMobileSidebar={() => setShowMobileSidebar(true)}
+        onOpenMobileProperties={() => setShowMobileProperties(true)}
+      />
+    );
+
+    const canvasContent = codeEditorVisible ? (
+      // Показываем редактор кода поверх canvas
+      <div className="h-full flex flex-col">
+        {selectedFormat === 'readme' ? (
+          <ReadmePreview
+            markdownContent={displayContent}
+            theme={theme}
+            onContentChange={(content) => {
+              // Обновляем контент README в состоянии генератора
+              setCodeContent(prev => ({ ...prev, readme: content }));
+            }}
+          />
+        ) : (
+          <CodeEditorArea
+            isMobile={false}
+            isLoading={isCodeLoading}
+            displayContent={displayContent}
+            selectedFormat={selectedFormat}
+            theme={theme}
+            editorRef={editorRef}
+            codeStats={codeStats}
+            setAreAllCollapsed={setAreAllCollapsed}
+            areAllCollapsed={areAllCollapsed}
+            onContentChange={(value) => { if (!isResettingEditorRef.current) setEditedJsonContent(value); }}
+          />
+        )}
+      </div>
+    ) : (
+      <div className="h-full">
+        {currentTab === 'groups' ? (
+          <GroupsPanel
+            projectId={activeProject.id}
+            projectName={activeProject.name}
+          />
+        ) : currentTab === 'editor' ? (
+          <Canvas
+            // Новая система листов
+            botData={botDataWithSheets || undefined}
+            onBotDataUpdate={handleBotDataUpdate}
+            // Существующие пропсы для совместимости
+            nodes={nodes}
+            selectedNodeId={selectedNodeId}
+            onNodeSelect={handleNodeSelect}
+            onNodeAdd={addNode}
+            onNodeDelete={handleNodeDelete}
+            onNodeDuplicate={handleNodeDuplicate}
+            onNodeMove={handleNodeMove}
+            onNodeMoveStart={handleNodeMoveStart}
+            onNodeMoveEnd={handleNodeMoveEnd}
+            onNodesUpdate={updateNodes}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onSave={() => updateProjectMutation.mutate({})}
+            isSaving={updateProjectMutation.isPending}
+            onCopyToClipboard={copyToClipboard}
+            onPasteFromClipboard={pasteFromClipboard}
+            hasClipboardData={hasClipboardData()}
+            isNodeBeingDragged={isNodeBeingDragged}
+            setIsNodeBeingDragged={setIsNodeBeingDragged}
+            onToggleHeader={handleToggleHeader}
+            onToggleSidebar={handleToggleSidebar}
+            onToggleProperties={handleToggleProperties}
+            onToggleCanvas={handleToggleCanvas}
+            headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+            sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+            propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+            canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+            onOpenMobileSidebar={handleOpenMobileSidebar}
+            onOpenMobileProperties={handleOpenMobileProperties}
+            onNodeSizesChange={handleNodeSizesChange}
+            onActionLog={handleActionLog}
+            actionHistory={actionHistory}
+            onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
+            onConnectionDelete={handleConnectionDelete}
+            onConnectionCreate={saveToHistory}
+            autoFitOnLoad
+            fitTrigger={fitTrigger}
+            focusNodeId={focusNodeId}
+            highlightNodeId={highlightNodeId}
+            onMoveNodeToSheet={moveNodeToSheet}
+            onAutoLayout={handleAutoLayout}
+          />
+        ) : currentTab === 'bot' ? (
+          <div className="h-full">
+            <BotLayout
+              projectId={activeProject.id}
+              projectName={activeProject.name}
+            />
+          </div>
+        ) : currentTab === 'users' ? (
+          <div className="h-full overflow-hidden">
+            <UserDatabasePanel
+              projectId={activeProject.id}
+              projectName={activeProject.name}
+              onOpenDialogPanel={handleOpenDialogPanel}
+              onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
+            />
+          </div>
+        ) : currentTab === 'user-ids' ? (
+          <UserIdsDatabase />
+        ) : currentTab === 'client-api' ? (
+          <div className="h-full p-6 bg-background overflow-auto">
+            <div className="max-w-3xl mx-auto">
+              <TelegramClientConfig />
+            </div>
+          </div>
+        ) : currentTab === 'export' ? (
+          // Для вкладки Код показываем пустой контейнер (код показывается в CodeEditorArea и CodePanel)
+          <div className="h-full bg-background" />
+        ) : null}
+      </div>
+    );
+
+    const sidebarContent = codePanelVisible ? (
+      // Показываем CodePanel поверх sidebar
+      <div className="h-full border-r bg-background">
+        <CodePanel
+          botDataArray={allProjects.map(project => project.data as BotData)}
+          projectIds={allProjects.map(project => project.id)}
+          projectName={activeProject.name}
+          onClose={handleToggleCodePanel}
+          selectedFormat={selectedFormat}
+          onFormatChange={handleFormatChange}
+          areAllCollapsed={areAllCollapsed}
+          onCollapseChange={setAreAllCollapsed}
+          showFullCode={showFullCode}
+          onShowFullCodeChange={setShowFullCode}
+          codeContent={generatedCodeContent}
+          isLoading={isCodeLoading}
+          displayContent={displayContent}
+          onApplyJson={(jsonString) => handleApplyJsonToBotData(jsonString)}
+          editedContent={editedJsonContent}
+          onResetEditor={() => {
+            isResettingEditorRef.current = true;
+            setEditedJsonContent('');
+            editorRef.current?.setValue(displayContent);
+            setTimeout(() => { isResettingEditorRef.current = false; }, 0);
+          }}
+        />
+      </div>
+    ) : currentTab === 'editor' ? (
+      <ComponentsSidebar
+        onComponentDrag={handleComponentDrag}
+        onComponentAdd={handleComponentAdd}
+        onLayoutChange={updateLayoutConfig}
+        onGoToProjects={handleGoToProjects}
+        onProjectSelect={handleProjectSelect}
+        currentProjectId={activeProject?.id}
+        activeSheetId={botDataWithSheets?.activeSheetId}
+        headerContent={headerContent}
+        sidebarContent={<div>Sidebar</div>}
+        canvasContent={canvasContent}
+        propertiesContent={propertiesContent}
+        onToggleCanvas={handleToggleCanvas}
+        onToggleHeader={handleToggleHeader}
+        onToggleProperties={handleToggleProperties}
+        onShowFullLayout={() => {
+          setFlexibleLayoutConfig(prev => ({
+            ...prev,
+            elements: prev.elements.map(element => ({ ...element, visible: true }))
+          }))
+        }}
+        canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+        headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+        propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+        showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+        onSheetAdd={handleSheetAdd}
+        onSheetDelete={handleSheetDelete}
+        onSheetRename={handleSheetRename}
+        onSheetDuplicate={handleSheetDuplicate}
+        onSheetSelect={handleSheetSelect}
+        isMobile={isMobile}
+        onClose={handleToggleSidebar}
+        onNodeFocus={handleNodeFocus}
+      />
+    ) : null;
+
+    if (useFlexibleLayout) {
+      return (
+        <SimpleLayoutCustomizer
+          config={flexibleLayoutConfig}
+          onConfigChange={setFlexibleLayoutConfig}
+        >
+          <FlexibleLayout
+            config={flexibleLayoutConfig}
+            headerContent={headerContent}
+            sidebarContent={sidebarContent}
+            canvasContent={canvasContent}
+            propertiesContent={propertiesContent}
+            codeContent={codeContent}
+            codeEditorContent={
+              activeProject ? (
+                <div className="h-full flex flex-col">
+                  <CodeEditorArea
+                    isMobile={false}
+                    isLoading={isCodeLoading}
+                    displayContent={displayContent}
+                    selectedFormat={selectedFormat}
+                    theme={theme}
+                    editorRef={editorRef}
+                    codeStats={codeStats}
+                    setAreAllCollapsed={setAreAllCollapsed}
+                    areAllCollapsed={areAllCollapsed}
+                    onContentChange={(value) => { if (!isResettingEditorRef.current) setEditedJsonContent(value); }}
+                  />
+                </div>
+              ) : null
+            }
+            dialogContent={
+              selectedDialogUser && activeProject && (
+                <DialogPanel
+                  key={`dialog-${selectedDialogUser?.userId || 'none'}`}
+                  projectId={activeProject.id}
+                  user={selectedDialogUser}
+                  onClose={handleCloseDialogPanel}
+                  onSelectUser={handleSelectDialogUser}
+                />
+              )
+            }
+            userDetailsContent={
+              selectedUserDetails && activeProject && (
+                <UserDetailsPanel
+                  key={`userdetails-${selectedUserDetails?.userId || 'none'}`}
+                  projectId={activeProject.id}
+                  user={selectedUserDetails}
+                  onClose={handleCloseUserDetailsPanel}
+                  onOpenDialog={handleOpenDialogPanel}
+                  onSelectUser={handleSelectUserDetails}
+                />
+              )
+            }
+            onConfigChange={setFlexibleLayoutConfig}
+            hideOnMobile={isMobile}
+            currentTab={currentTab}
+          />
+        </SimpleLayoutCustomizer>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <>
-      <FlexibleLayoutView
-        flexibleLayoutConfig={flexibleLayoutConfig}
-        setFlexibleLayoutConfig={setFlexibleLayoutConfig}
-        headerContent={headerContent}
-        sidebarContent={sidebarContent}
-        canvasContent={canvasContent}
-        propertiesContent={propertiesContent}
-        codeContent={codePanelContent}
-        activeProject={activeProject}
-        selectedDialogUser={selectedDialogUser}
-        selectedUserDetails={selectedUserDetails}
-        onCloseDialogPanel={handleCloseDialogPanel}
-        onOpenDialogPanel={handleOpenDialogPanel}
-        onCloseUserDetailsPanel={handleCloseUserDetailsPanel}
-        onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
-        onSelectDialogUser={(u) => { setSelectedDialogUser(u); }}
-        onSelectUserDetails={(u) => { setSelectedUserDetails(u); }}
-        isCodeLoading={isCodeLoading}
-        displayContent={displayContent}
-        selectedFormat={selectedFormat}
-        theme={theme}
-        editorRef={editorRef}
-        codeStats={codeStats}
-        setAreAllCollapsed={setAreAllCollapsed}
-        areAllCollapsed={areAllCollapsed}
-        onContentChange={(v) => { if (!isResettingEditorRef.current) setEditedJsonContent(v); }}
-        isMobile={isMobile}
-        currentTab={currentTab}
-      />
+      {useFlexibleLayout ? (
+        renderFlexibleLayoutContent()
+      ) : (
+        <AdaptiveLayout
+          config={layoutConfig}
+          header={
+            <AdaptiveHeader
+              config={layoutConfig}
+              projectName={activeProject.name}
+              currentTab={currentTab}
+              onTabChange={handleTabChange}
+              onExport={() => { }}
+              onSaveAsTemplate={handleSaveAsTemplate}
+              onLoadTemplate={handleLoadTemplate}
+              onLayoutSettings={() => setShowLayoutManager(true)}
+              onToggleHeader={handleToggleHeader}
+              onToggleSidebar={handleToggleSidebar}
+              onToggleProperties={handleToggleProperties}
+              onToggleCanvas={handleToggleCanvas}
+              onToggleCode={handleToggleCodePanel}
+              onToggleCodeEditor={handleToggleCodeEditor}
+              headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+              sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+              propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+              codeVisible={codePanelVisible}
+              codeEditorVisible={codeEditorVisible}
+              onOpenMobileSidebar={() => setShowMobileSidebar(true)}
+              onOpenMobileProperties={() => setShowMobileProperties(true)}
+            />
+          }
+          sidebar={
+            currentTab === 'editor' ? (
+              <ComponentsSidebar
+                onComponentDrag={handleComponentDrag}
+                onComponentAdd={handleComponentAdd}
+                onLayoutChange={updateLayoutConfig}
+                onGoToProjects={handleGoToProjects}
+                onProjectSelect={handleProjectSelect}
+                currentProjectId={activeProject?.id}
+                activeSheetId={botDataWithSheets?.activeSheetId}
+                onToggleCanvas={handleToggleCanvas}
+                onToggleHeader={handleToggleHeader}
+                onToggleProperties={handleToggleProperties}
+                onShowFullLayout={() => {
+                  setFlexibleLayoutConfig(prev => ({
+                    ...prev,
+                    elements: prev.elements.map(element => ({ ...element, visible: true }))
+                  }))
+                }}
+                canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+                headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+                propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+                showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+                onSheetAdd={handleSheetAdd}
+                onSheetDelete={handleSheetDelete}
+                onSheetRename={handleSheetRename}
+                onSheetDuplicate={handleSheetDuplicate}
+                onSheetSelect={handleSheetSelect}
+                isMobile={isMobile}
+                onClose={handleToggleSidebar}
+                onNodeFocus={handleNodeFocus}
+              />
+            ) : null
+          }
+          canvas={
+            <div className="h-full">
+              {currentTab === 'editor' ? (
+                <Canvas
+                  botData={botDataWithSheets || undefined}
+                  onBotDataUpdate={handleBotDataUpdate}
+                  nodes={nodes}
+                  selectedNodeId={selectedNodeId}
+                  onNodeSelect={handleNodeSelect}
+                  onNodeAdd={addNode}
+                  onNodeDelete={handleNodeDelete}
+                  onNodeDuplicate={handleNodeDuplicate}
+                  onNodeMove={handleNodeMove}
+                  onNodeMoveStart={handleNodeMoveStart}
+                  onNodeMoveEnd={handleNodeMoveEnd}
+                  onNodesUpdate={updateNodes}
+                  onUndo={undo}
+                  onRedo={redo}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                  onSave={() => updateProjectMutation.mutate({})}
+                  isSaving={updateProjectMutation.isPending}
+                  onCopyToClipboard={copyToClipboard}
+                  onPasteFromClipboard={pasteFromClipboard}
+                  hasClipboardData={hasClipboardData()}
+                  onToggleHeader={handleToggleHeader}
+                  onToggleSidebar={handleToggleSidebar}
+                  onToggleProperties={handleToggleProperties}
+                  onToggleCanvas={handleToggleCanvas}
+                  headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+                  sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+                  propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+                  canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+                  onOpenMobileSidebar={handleOpenMobileSidebar}
+                  onActionLog={handleActionLog}
+                  actionHistory={actionHistory}
+                  onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
+                  onConnectionDelete={handleConnectionDelete}
+                  onConnectionCreate={saveToHistory}
+                  autoFitOnLoad
+                  fitTrigger={fitTrigger}
+                  focusNodeId={focusNodeId}
+                  highlightNodeId={highlightNodeId}
+                  onAutoLayout={handleAutoLayout}
+                />
+              ) : currentTab === 'bot' ? (
+                <div className="h-full p-6 bg-background overflow-auto">
+                  <div className="max-w-2xl mx-auto">
+                    <BotControl
+                      projectId={activeProject.id}
+                      projectName={activeProject.name}
+                      onBotStarted={handleOpenCodePanel}
+                    />
+                  </div>
+                </div>
+              ) : currentTab === 'users' ? (
+                <div className="h-full">
+                  <UserDatabasePanel
+                    projectId={activeProject.id}
+                    projectName={activeProject.name}
+                    onOpenDialogPanel={handleOpenDialogPanel}
+                    onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
+                  />
+                </div>
+              ) : currentTab === 'groups' ? (
+                <div className="h-full">
+                  <GroupsPanel
+                    projectId={activeProject.id}
+                    projectName={activeProject.name}
+                  />
+                </div>
+              ) : currentTab === 'export' ? null : null}
+            </div>
+          }
+          properties={
+            currentTab === 'editor' ? (
+              <PropertiesPanel
+                projectId={activeProject.id}
+                selectedNode={selectedNode}
+                allNodes={nodes}
+                allSheets={botDataWithSheets?.sheets || []}
+                currentSheetId={botDataWithSheets?.activeSheetId || undefined}
+                onNodeUpdate={handleNodeUpdateWithSheets}
+                onNodeTypeChange={handleNodeTypeChange}
+                onNodeIdChange={handleNodeIdChange}
+                onButtonAdd={handleButtonAdd}
+                onButtonUpdate={handleButtonUpdate}
+                onButtonDelete={handleButtonDelete}
+                onNodeAdd={addNode}
+                onNodeDelete={handleNodeDelete}
+                onActionLog={handleActionLog}
+                focusButtonId={focusButtonId}
+              />
+            ) : null
+          }
+        />
+      )}
 
       {showLayoutManager && (
         <LayoutManager
@@ -883,16 +1737,62 @@ export default function Editor() {
       <SaveTemplateModal
         isOpen={showSaveTemplate}
         onClose={() => setShowSaveTemplate(false)}
-        botData={(botDataWithSheets || getBotDataRef.current()) as any}
+        botData={(botDataWithSheets || getBotData()) as any}
         projectName={activeProject.name}
       />
 
+
+      {/* Мобильный sidebar */}
+      <Sheet open={showMobileSidebar && currentTab === 'editor'} onOpenChange={setShowMobileSidebar}>
+        <SheetContent side="left" className="p-0 w-80">
+          <SheetHeader className="px-4 py-3 border-b">
+            <SheetTitle>Компоненты</SheetTitle>
+          </SheetHeader>
+          <div className="h-full overflow-auto">
+            <ComponentsSidebar
+              onComponentDrag={handleComponentDrag}
+              onComponentAdd={handleComponentAdd}
+              onLayoutChange={updateLayoutConfig}
+              onGoToProjects={handleGoToProjects}
+              onProjectSelect={handleProjectSelect}
+              currentProjectId={activeProject?.id}
+              activeSheetId={botDataWithSheets?.activeSheetId}
+              onToggleCanvas={handleToggleCanvas}
+              onToggleHeader={handleToggleHeader}
+              onToggleProperties={handleToggleProperties}
+              onShowFullLayout={() => {
+                setFlexibleLayoutConfig(prev => ({
+                  ...prev,
+                  elements: prev.elements.map(element => ({ ...element, visible: true }))
+                }))
+              }}
+              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+              headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+              propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+              showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+              onSheetAdd={handleSheetAdd}
+              onSheetDelete={handleSheetDelete}
+              onSheetRename={handleSheetRename}
+              onSheetDuplicate={handleSheetDuplicate}
+              onSheetSelect={handleSheetSelect}
+              isMobile={isMobile}
+              onClose={() => setShowMobileSidebar(false)}
+              onNodeFocus={handleNodeFocus}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Мобильная панель свойств - полноэкранная на мобильных */}
       <MobilePropertiesSheet
         open={showMobileProperties && currentTab === 'editor'}
         onOpenChange={setShowMobileProperties}
       >
         {propertiesContent}
       </MobilePropertiesSheet>
+
     </>
   );
 }
+
+

@@ -73,7 +73,7 @@ import { applyTemplateLayout } from '@/utils/hierarchical-layout';
  *
  * @returns {JSX.Element} Компонент редактора бота
  */
-export function EditorLegacy() {
+export default function Editor() {
   // Используем useLocation для получения текущего пути
   const [location, setLocation] = useLocation();
 
