@@ -71,7 +71,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     # Сохраняем ответ
     await set_user_var(user_id, "{{ responseVariable }}", _response_data)
     {% if statusVariable %}
-    await set_user_var(user_id, "{{ statusVariable }}", _status_code)
+    await set_user_var(user_id, "{{ statusVariable }}", str(_status_code))
     {% endif %}
 
     try:
