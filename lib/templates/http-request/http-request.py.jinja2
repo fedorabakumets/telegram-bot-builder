@@ -1,0 +1,88 @@
+{#
+  @fileoverview Шаблон HTTP запроса к внешнему API.
+  Генерирует callback-обработчик, который выполняет HTTP запрос через aiohttp
+  и сохраняет ответ в переменную пользователя.
+#}
+
+# Обработчик HTTP запроса: {{ nodeId }}
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
+    """Выполняет HTTP запрос и сохраняет ответ в переменную."""
+    user_id = callback_query.from_user.id
+    await init_user_variables(user_id, callback_query.from_user)
+    _all_vars = await init_all_user_vars(user_id)
+
+    # Подставляем переменные в URL
+    _url = "{{ url }}"
+    for _k, _v in _all_vars.items():
+        _url = _url.replace("{" + _k + "}", str(_v))
+
+    # Заголовки
+    _headers = {}
+    {% if headers %}
+    try:
+        import json as _json_mod
+        _headers_raw = """{{ headers }}"""
+        for _k, _v in _all_vars.items():
+            _headers_raw = _headers_raw.replace("{" + _k + "}", str(_v))
+        _headers = _json_mod.loads(_headers_raw)
+    except Exception as _e:
+        logging.warning(f"http_request [{{ nodeId }}]: ошибка парсинга заголовков: {_e}")
+    {% endif %}
+
+    # Тело запроса
+    _body = None
+    {% if body and method in ['POST', 'PUT', 'PATCH'] %}
+    try:
+        import json as _json_mod
+        _body_raw = """{{ body }}"""
+        for _k, _v in _all_vars.items():
+            _body_raw = _body_raw.replace("{" + _k + "}", str(_v))
+        _body = _json_mod.loads(_body_raw)
+    except Exception as _e:
+        logging.warning(f"http_request [{{ nodeId }}]: ошибка парсинга тела: {_e}")
+    {% endif %}
+
+    logging.info(f"🌐 http_request [{{ nodeId }}]: {{ method }} {_url} | user_id={user_id}")
+
+    _response_data = None
+    _status_code = 0
+    try:
+        import aiohttp as _aiohttp
+        async with _aiohttp.ClientSession() as _session:
+            async with _session.{{ method | lower }}(
+                _url,
+                headers=_headers or None,
+                json=_body,
+                timeout=_aiohttp.ClientTimeout(total={{ timeout }})
+            ) as _resp:
+                _status_code = _resp.status
+                try:
+                    _response_data = await _resp.json(content_type=None)
+                except Exception:
+                    _response_data = await _resp.text()
+                logging.info(
+                    f"✅ http_request [{{ nodeId }}]: статус={_status_code} | user_id={user_id}"
+                )
+    except Exception as _e:
+        logging.error(f"❌ http_request [{{ nodeId }}]: ошибка запроса: {_e} | user_id={user_id}")
+
+    # Сохраняем ответ
+    await set_user_var(user_id, "{{ responseVariable }}", _response_data)
+    {% if statusVariable %}
+    await set_user_var(user_id, "{{ statusVariable }}", _status_code)
+    {% endif %}
+
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    {% if autoTransitionTo %}
+    {% if autoTransitionTargetExists %}
+    await handle_callback_{{ autoTransitionTo | replace('-', '_') | replace('.', '_') }}(callback_query)
+    {% else %}
+    logging.warning(f"⚠️ http_request [{{ nodeId }}]: узел автоперехода не найден: {{ autoTransitionTo }}")
+    {% endif %}
+    {% endif %}

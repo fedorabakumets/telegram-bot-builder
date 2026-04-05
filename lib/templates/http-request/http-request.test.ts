@@ -1,0 +1,166 @@
+/**
+ * @fileoverview Тесты шаблона http-request — HTTP запрос к внешнему API.
+ * @module templates/http-request/http-request.test
+ */
+
+import { describe, expect, it } from 'vitest';
+import {
+  generateHttpRequest,
+  generateHttpRequestFromNode,
+  nodeToHttpRequestParams,
+} from './http-request.renderer';
+import { httpRequestParamsSchema } from './http-request.schema';
+import {
+  validParamsGet,
+  validParamsPost,
+  validParamsWithHeaders,
+  validParamsWithStatus,
+  validParamsWithVariables,
+  httpRequestNodeGet,
+  httpRequestNodePost,
+} from './http-request.fixture';
+
+describe('generateHttpRequest()', () => {
+  it('генерирует callback-обработчик с правильным nodeId', () => {
+    const code = generateHttpRequest(validParamsGet);
+    expect(code).toContain('@dp.callback_query(lambda c: c.data == "http_request_1")');
+    expect(code).toContain('async def handle_callback_http_request_1');
+  });
+
+  it('подставляет переменные в URL', () => {
+    const code = generateHttpRequest(validParamsWithVariables);
+    expect(code).toContain('_url.replace(');
+    expect(code).toContain('for _k, _v in _all_vars.items()');
+  });
+
+  it('парсит JSON заголовки', () => {
+    const code = generateHttpRequest(validParamsWithHeaders);
+    expect(code).toContain('_headers_raw');
+    expect(code).toContain('_json_mod.loads(_headers_raw)');
+  });
+
+  it('парсит JSON тело для POST', () => {
+    const code = generateHttpRequest(validParamsPost);
+    expect(code).toContain('_body_raw');
+    expect(code).toContain('_json_mod.loads(_body_raw)');
+  });
+
+  it('не генерирует тело для GET', () => {
+    const code = generateHttpRequest(validParamsGet);
+    expect(code).not.toContain('_body_raw');
+  });
+
+  it('сохраняет ответ в responseVariable', () => {
+    const code = generateHttpRequest(validParamsGet);
+    expect(code).toContain('set_user_var(user_id, "response", _response_data)');
+  });
+
+  it('сохраняет статус код если statusVariable задан', () => {
+    const code = generateHttpRequest(validParamsWithStatus);
+    expect(code).toContain('set_user_var(user_id, "http_status", _status_code)');
+  });
+
+  it('не сохраняет статус код если statusVariable пустой', () => {
+    const code = generateHttpRequest(validParamsGet);
+    expect(code).not.toContain('_status_code)');
+  });
+
+  it('логирует запрос', () => {
+    const code = generateHttpRequest(validParamsGet);
+    expect(code).toContain('logging.info(');
+    expect(code).toContain('http_request [http_request_1]');
+  });
+
+  it('обрабатывает ошибки', () => {
+    const code = generateHttpRequest(validParamsGet);
+    expect(code).toContain('logging.error(');
+    expect(code).toContain('ошибка запроса');
+  });
+
+  it('выполняет автопереход если autoTransitionTo задан и узел существует', () => {
+    const code = generateHttpRequest({
+      ...validParamsGet,
+      autoTransitionTo: 'next_node',
+      autoTransitionTargetExists: true,
+    });
+    expect(code).toContain('await handle_callback_next_node(callback_query)');
+  });
+
+  it('логирует предупреждение если узел автоперехода не найден', () => {
+    const code = generateHttpRequest({
+      ...validParamsGet,
+      autoTransitionTo: 'missing_node',
+      autoTransitionTargetExists: false,
+    });
+    expect(code).toContain('узел автоперехода не найден: missing_node');
+  });
+
+  it('валидирует параметры через Zod-схему без ошибок', () => {
+    expect(() => httpRequestParamsSchema.parse(validParamsGet)).not.toThrow();
+    expect(() => httpRequestParamsSchema.parse(validParamsPost)).not.toThrow();
+    expect(() => httpRequestParamsSchema.parse(validParamsWithHeaders)).not.toThrow();
+    expect(() => httpRequestParamsSchema.parse(validParamsWithStatus)).not.toThrow();
+  });
+});
+
+describe('nodeToHttpRequestParams()', () => {
+  it('корректно извлекает параметры из узла', () => {
+    const params = nodeToHttpRequestParams(httpRequestNodeGet);
+    expect(params.nodeId).toBe('http_request_1');
+    expect(params.url).toBe('https://api.example.com/data');
+    expect(params.method).toBe('GET');
+    expect(params.timeout).toBe(30);
+    expect(params.responseVariable).toBe('response');
+  });
+
+  it('корректно извлекает параметры POST узла', () => {
+    const params = nodeToHttpRequestParams(httpRequestNodePost);
+    expect(params.method).toBe('POST');
+    expect(params.body).toBe('{"name": "test"}');
+  });
+
+  it('использует дефолтные значения при отсутствии полей', () => {
+    const params = nodeToHttpRequestParams({
+      id: 'test_node',
+      type: 'http_request',
+      position: { x: 0, y: 0 },
+      data: {} as any,
+    });
+    expect(params.method).toBe('GET');
+    expect(params.timeout).toBe(30);
+    expect(params.responseVariable).toBe('response');
+  });
+
+  it('генерирует safeName без спецсимволов', () => {
+    const params = nodeToHttpRequestParams({
+      id: 'node-with-dashes',
+      type: 'http_request',
+      position: { x: 0, y: 0 },
+      data: {} as any,
+    });
+    expect(params.safeName).toBe('node_with_dashes');
+    expect(params.safeName).not.toContain('-');
+  });
+
+  it('разрешает autoTransitionTargetExists через контекст', () => {
+    const params = nodeToHttpRequestParams(
+      { ...httpRequestNodeGet, data: { ...httpRequestNodeGet.data, autoTransitionTo: 'next' } as any },
+      { allNodes: [{ id: 'next', type: 'message', position: { x: 0, y: 0 }, data: {} as any }] }
+    );
+    expect(params.autoTransitionTo).toBe('next');
+    expect(params.autoTransitionTargetExists).toBe(true);
+  });
+});
+
+describe('generateHttpRequestFromNode()', () => {
+  it('рендерит код из узла графа', () => {
+    const code = generateHttpRequestFromNode(httpRequestNodeGet);
+    expect(code).toContain('http_request [http_request_1]');
+    expect(code).toContain('handle_callback_http_request_1');
+  });
+
+  it('рендерит код POST узла с телом', () => {
+    const code = generateHttpRequestFromNode(httpRequestNodePost);
+    expect(code).toContain('_body_raw');
+  });
+});

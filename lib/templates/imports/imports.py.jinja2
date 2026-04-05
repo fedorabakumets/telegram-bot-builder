@@ -15,6 +15,7 @@
   @param {boolean} hasReplyKeyboard - Есть ли reply клавиатуры (нужен ReplyKeyboardBuilder, KeyboardButton)
   @param {boolean} hasLocalMediaFiles - Есть ли локальные медиа файлы (нужен FSInputFile)
   @param {boolean} hasBotCommands - Есть ли команды для BotCommand (нужен BotCommand)
+  @param {boolean} hasHttpRequestNodes - Есть ли узлы HTTP запросов (нужен aiohttp)
 #}
 
 import asyncio
@@ -49,6 +50,11 @@ from aiogram.exceptions import TelegramBadRequest
 {%- endif %}
 
 {%- if hasMediaNodes or hasUploadImages %}
+import aiohttp
+from aiohttp import TCPConnector
+{%- endif %}
+
+{%- if hasHttpRequestNodes and not hasMediaNodes and not hasUploadImages %}
 import aiohttp
 from aiohttp import TCPConnector
 {%- endif %}

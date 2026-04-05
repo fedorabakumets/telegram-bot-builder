@@ -19,6 +19,8 @@ import { generateMessageHandlerFromNode } from '../message-handler';
 import { generateForwardMessageFromNode } from '../forward-message';
 /** Генератор callback-обработчика для узла создания топика в форуме */
 import { generateCreateForumTopicFromNode } from '../create-forum-topic';
+/** Генератор callback-обработчика для узла HTTP запроса */
+import { generateHttpRequestFromNode } from '../http-request';
 import { processCodeWithAutoComments } from '../../bot-generator/core/generated-comment';
 import { generateUserHandlerFromNode } from '../user-handler';
 import { generateAnimationHandler } from '../animation-handler/animation-handler.renderer';
@@ -260,6 +262,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     forward_message: generateForwardMessageFromNode,
     /** Обработчик узла создания топика в форуме Telegram */
     create_forum_topic: (node) => generateCreateForumTopicFromNode(node, { allNodes: nodes }),
+    /** Обработчик узла HTTP запроса */
+    http_request: (node) => generateHttpRequestFromNode(node, { allNodes: nodes }),
     ban_user: generateUserHandlerFromNode,
     unban_user: generateUserHandlerFromNode,
     mute_user: generateUserHandlerFromNode,

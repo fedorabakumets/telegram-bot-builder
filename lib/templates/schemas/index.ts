@@ -10,3 +10,4 @@ export { headerParamsSchema, type HeaderParams } from './header-schema';
 export { databaseParamsSchema, type DatabaseParams } from './database-schema';
 export { utilsParamsSchema, type UtilsParams } from './utils-schema';
 export { mainParamsSchema, type MainParams } from './main-schema';
+export { httpRequestParamsSchema, type HttpRequestParams } from '../http-request/http-request.schema';
