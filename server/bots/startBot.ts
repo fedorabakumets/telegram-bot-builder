@@ -16,6 +16,7 @@ import { URL } from "node:url";
  */
 import { dirname, join } from "node:path";
 import { fetchWithProxy } from "../utils/telegram-proxy";
+import { generatePythonCode } from "../../lib/bot-generator";
 
 /**
  * Глобальная коллекция активных процессов ботов
@@ -191,10 +192,6 @@ export async function startBot(projectId: number, token: string, tokenId: number
     console.log(`   project.userDatabaseEnabled:`, project.userDatabaseEnabled);
     console.log(`   typeof project.userDatabaseEnabled:`, typeof project.userDatabaseEnabled);
 
-    // Генерируем код бота через клиентский генератор (с cache busting)
-    const modUrl = new URL("../../lib/bot-generator.ts", import.meta.url);
-    modUrl.searchParams.set("t", Date.now().toString());
-    const { generatePythonCode } = await import(modUrl.href);
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
     // Получаем настройки генерации комментариев из переменной окружения (по умолчанию выключено)
     const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION === 'true';
