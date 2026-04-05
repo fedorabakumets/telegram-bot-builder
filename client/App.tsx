@@ -28,7 +28,7 @@ import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/Active
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
 const Editor = lazy(() => import("@/pages/editor"));
-const TemplatesPage = lazy(() => import("@/components/editor/template/templates-wrapper"));
+const TemplatesPage = lazy(() => import("@/components/editor/scenariy"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 /**
