@@ -1999,3 +1999,25 @@ input[type="checkbox"]:focus {
   }
 }
 
+
+/* Стили для подсветки переменных в редакторе */
+.variable-chip {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 4px;
+  padding: 0 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+  color: rgb(99, 102, 241);
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+
+.dark .variable-chip {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+  border-color: rgba(139, 92, 246, 0.5);
+  color: rgb(167, 139, 250);
+}

@@ -4,6 +4,7 @@
  */
 
 import { decodeHtmlEntities } from './utils/html-entities';
+import { highlightVariables, unwrapVariables } from './utils/highlight-variables';
 
 /**
  * Преобразует текст в HTML для отображения в contenteditable
@@ -34,7 +35,7 @@ export function valueToHtml(text: string, enableMarkdown: boolean): string {
     html = html.replace(/\n/g, '<br>');
   }
 
-  return html;
+  return highlightVariables(html);
 }
 
 /**
@@ -46,8 +47,8 @@ export function valueToHtml(text: string, enableMarkdown: boolean): string {
 export function htmlToValue(html: string, enableMarkdown: boolean): string {
   if (!html) return '';
 
-  // Сначала декодируем HTML-сущности (если они есть)
-  let text = decodeHtmlEntities(html);
+  // Сначала убираем span-обёртки переменных, затем декодируем HTML-сущности
+  let text = decodeHtmlEntities(unwrapVariables(html));
 
   if (enableMarkdown) {
     text = text
