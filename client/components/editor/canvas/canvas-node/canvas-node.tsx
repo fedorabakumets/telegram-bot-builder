@@ -490,12 +490,12 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
             : node.type === 'condition'
             ? "p-4 w-64"
             : node.type === 'message'
-            ? "p-4 pb-16 w-80"
+            ? "p-4 w-80"
             : node.type === 'keyboard'
             ? "p-4 w-80"
             : node.type === 'input'
             ? "p-4 w-80"
-            : "p-6 pb-10 w-80",
+            : "p-6 w-80",
           isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-all duration-200",
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
           isConnectionTarget ? "ring-4 ring-green-400/60 border-green-400 shadow-green-400/20" : "",
