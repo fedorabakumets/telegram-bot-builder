@@ -473,7 +473,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       {(node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger') ? (
         <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : node.type !== 'condition' && node.type !== 'keyboard' ? (
-        <OutputPort portType="auto-transition" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
+        <OutputPort portType={node.type === 'input' ? 'input-target' : 'auto-transition'} onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : null}
 
       {/* РћСЃРЅРѕРІРЅРѕР№ div СѓР·Р»Р° вЂ” С‚РѕР»СЊРєРѕ РІРёР·СѓР°Р»СЊРЅРѕРµ СЃРѕРґРµСЂР¶РёРјРѕРµ */}

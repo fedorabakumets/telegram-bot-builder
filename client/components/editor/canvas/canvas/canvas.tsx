@@ -467,6 +467,10 @@ export function Canvas({
           }
         } else if (type === 'input-target') {
           delete data.inputTargetNodeId;
+          // Также чистим autoTransitionTo для input-узлов (fallback для старых данных)
+          if (n.type === 'input') {
+            delete data.autoTransitionTo;
+          }
         } else if (type === 'keyboard-link') {
           return { ...n, data: clearKeyboardNodeId(data) };
         }

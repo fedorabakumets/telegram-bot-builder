@@ -330,6 +330,12 @@ function inferConnectionsFromNodes(
         toId: data.inputTargetNodeId,
         type: 'input-target',
       });
+    } else if (node.type === 'input' && typeof data.autoTransitionTo === 'string' && data.autoTransitionTo) {
+      pushConnection({
+        fromId: node.id,
+        toId: data.autoTransitionTo,
+        type: 'input-target',
+      });
     }
   }
 
