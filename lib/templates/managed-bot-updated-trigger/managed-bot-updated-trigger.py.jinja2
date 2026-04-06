@@ -42,13 +42,13 @@ async def managed_bot_updated_trigger_{{ sanitized_node_id }}_handler(message: t
             user_data[user_id] = {}
 
         {% if entry.saveBotIdTo %}
-        user_data[user_id]["{{ entry.saveBotIdTo }}"] = managed_bot.id
+        user_data[user_id]["{{ entry.saveBotIdTo }}"] = getattr(managed_bot, 'id', None)
         {% endif %}
         {% if entry.saveBotUsernameTo %}
-        user_data[user_id]["{{ entry.saveBotUsernameTo }}"] = managed_bot.username or ""
+        user_data[user_id]["{{ entry.saveBotUsernameTo }}"] = getattr(managed_bot, 'username', '') or ""
         {% endif %}
         {% if entry.saveBotNameTo %}
-        user_data[user_id]["{{ entry.saveBotNameTo }}"] = managed_bot.first_name or ""
+        user_data[user_id]["{{ entry.saveBotNameTo }}"] = getattr(managed_bot, 'first_name', '') or getattr(managed_bot, 'full_name', '') or ""
         {% endif %}
 
         {% if entry.saveCreatorIdTo %}
