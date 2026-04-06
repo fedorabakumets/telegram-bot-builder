@@ -5,3 +5,4 @@
 export { extractVariables } from './extract-variables';
 export type { VariableInfo } from './extract-variables';
 export { parseHTML, formatText } from './formatting-parser';
+export { decodeHtmlEntities } from './html-entities';

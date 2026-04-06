@@ -64,8 +64,7 @@ export function useInlineRichEditor(
   const { wordCount, charCount } = useTextStats(props.value);
   const { undo, redo, saveToUndoStack, undoStack, redoStack } = useUndoRedo(
     props.value,
-    props.onChange,
-    toast
+    props.onChange
   );
 
   useEditorSync({

@@ -22,6 +22,46 @@ export interface UseEditorSyncOptions {
 }
 
 /**
+ * Вычисляет абсолютную позицию курсора относительно всего текстового контента
+ * @param container - Корневой DOM-элемент редактора
+ * @param node - Узел, в котором находится курсор
+ * @param offset - Смещение внутри узла
+ * @returns Абсолютная позиция курсора
+ */
+function getAbsoluteOffset(container: HTMLElement, node: Node, offset: number): number {
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+  let total = 0;
+  while (walker.nextNode()) {
+    if (walker.currentNode === node) return total + offset;
+    total += walker.currentNode.textContent?.length ?? 0;
+  }
+  return total;
+}
+
+/**
+ * Восстанавливает курсор по абсолютной позиции в тексте
+ * @param container - Корневой DOM-элемент редактора
+ * @param absoluteOffset - Абсолютная позиция курсора
+ */
+function restoreAbsoluteOffset(container: HTMLElement, absoluteOffset: number): void {
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+  let total = 0;
+  while (walker.nextNode()) {
+    const len = walker.currentNode.textContent?.length ?? 0;
+    if (total + len >= absoluteOffset) {
+      const range = document.createRange();
+      range.setStart(walker.currentNode, absoluteOffset - total);
+      range.collapse(true);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      return;
+    }
+    total += len;
+  }
+}
+
+/**
  * Хук для синхронизации DOM редактора со значением
  * @param options - Параметры хука
  */
@@ -37,54 +77,27 @@ export function useEditorSync({
       const html = valueToHtml(value, enableMarkdown);
       if (editorRef.current.innerHTML !== html) {
         const selection = window.getSelection();
-        let range = null;
-        let offset = 0;
+        let absoluteOffset: number | null = null;
 
         if (selection && selection.rangeCount > 0) {
           try {
-            range = selection.getRangeAt(0);
-            offset = range.startOffset;
-          } catch (e) {
+            const range = selection.getRangeAt(0);
+            absoluteOffset = getAbsoluteOffset(
+              editorRef.current,
+              range.startContainer,
+              range.startOffset
+            );
+          } catch {
             // Игнорировать ошибки выделения
           }
         }
 
         editorRef.current.innerHTML = html;
 
-        // Восстановить выделение
-        if (range && selection) {
+        if (absoluteOffset !== null && selection) {
           try {
-            const newRange = document.createRange();
-            const walker = document.createTreeWalker(
-              editorRef.current,
-              NodeFilter.SHOW_TEXT,
-              null
-            );
-
-            let currentOffset = 0;
-            let targetNode = null;
-
-            while (walker.nextNode()) {
-              const node = walker.currentNode;
-              const nodeLength = node.textContent?.length || 0;
-
-              if (currentOffset + nodeLength >= offset) {
-                targetNode = node;
-                break;
-              }
-              currentOffset += nodeLength;
-            }
-
-            if (targetNode) {
-              newRange.setStart(
-                targetNode,
-                Math.min(offset - currentOffset, targetNode.textContent?.length || 0)
-              );
-              newRange.collapse(true);
-              selection.removeAllRanges();
-              selection.addRange(newRange);
-            }
-          } catch (e) {
+            restoreAbsoluteOffset(editorRef.current, absoluteOffset);
+          } catch {
             // Игнорировать ошибки range
           }
         }

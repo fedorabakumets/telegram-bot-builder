@@ -3,7 +3,7 @@
  * @module hooks/useVariableFilters
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Node } from '@shared/schema';
 import { extractVariables, type VariableInfo } from '../utils/extract-variables';
 
@@ -60,7 +60,10 @@ export function useVariableFilters({
     }
   }, [variableFilters, onFiltersChange]);
 
-  const variables = extractVariables(value || '', allNodes);
+  const variables = useMemo(
+    () => extractVariables(value || '', allNodes),
+    [value, allNodes]
+  );
 
   /**
    * Применяет или удаляет фильтр для переменной

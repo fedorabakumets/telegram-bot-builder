@@ -3,6 +3,8 @@
  * @description Преобразование Markdown ↔ HTML для contenteditable редактора
  */
 
+import { decodeHtmlEntities } from './utils/html-entities';
+
 /**
  * Преобразует текст в HTML для отображения в contenteditable
  * @param text - Исходный текст
@@ -13,12 +15,7 @@ export function valueToHtml(text: string, enableMarkdown: boolean): string {
   if (!text) return '';
 
   // Сначала декодируем HTML-сущности (если они есть)
-  let html = text
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+  let html = decodeHtmlEntities(text);
 
   if (enableMarkdown) {
     html = html
@@ -50,12 +47,7 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
   if (!html) return '';
 
   // Сначала декодируем HTML-сущности (если они есть)
-  let text = html
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+  let text = decodeHtmlEntities(html);
 
   if (enableMarkdown) {
     text = text
