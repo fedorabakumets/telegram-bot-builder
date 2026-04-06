@@ -513,17 +513,12 @@ export default function Editor() {
     return () => observer.disconnect();
   }, []);
 
-  // Загрузка контента при изменении выбранного формата
-  useEffect(() => {
-    loadContent(selectedFormat);
-  }, [selectedFormat, loadContent]);
-
-  // Загрузка python-контента при открытии панели кода (если ещё не загружен)
+  // Загрузка контента только при открытии панели кода или смене формата внутри открытой панели
   useEffect(() => {
     if (codePanelVisible || codeEditorVisible) {
       loadContent(selectedFormat);
     }
-  }, [codePanelVisible, codeEditorVisible]);
+  }, [codePanelVisible, codeEditorVisible, selectedFormat]);
 
   // Получение текущего содержимого кода для выбранного формата
   const getCurrentContent = () => generatedCodeContent[selectedFormat] || '';
