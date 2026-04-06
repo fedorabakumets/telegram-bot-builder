@@ -13,6 +13,7 @@ import { migrateConditionalMessagesToConditionNodes } from './utils/migrate-cond
 import { migrateLegacyMessageInputToLinkedInputs } from './utils/migrate-message-input';
 import { migrateMessageKeyboardsToNodes } from './utils/migrate-message-keyboards';
 import { migrateForwardMessageSourceLinks } from './utils/migrate-forward-message-source-links';
+import { migrateInputNodeTarget } from './utils/migrate-input-node-target';
 
 /**
  * Интерфейс для состояния истории изменений
@@ -383,9 +384,12 @@ export function useBotEditor(initialData?: BotData) {
     // Применяем иерархическую компоновку только если не отключена
     const migratedWithLinkedInputs = migrateLegacyMessageInputToLinkedInputs(migratedWithKeyboardNodes);
 
+    // Миграция autoTransitionTo → inputTargetNodeId для input-узлов
+    const migratedWithInputTargets = migrateInputNodeTarget(migratedWithLinkedInputs);
+
     const finalNodes = skipLayout
-      ? migratedWithLinkedInputs
-      : applyTemplateLayout(migratedWithLinkedInputs, [], templateName, nodeSizes);
+      ? migratedWithInputTargets
+      : applyTemplateLayout(migratedWithInputTargets, [], templateName, nodeSizes);
 
     setNodes(finalNodes);
     setSelectedNodeId(null); // Сбрасываем выбранный узел
