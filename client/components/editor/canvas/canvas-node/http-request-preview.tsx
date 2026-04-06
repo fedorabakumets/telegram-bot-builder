@@ -35,7 +35,7 @@ export function HttpRequestPreview({ node }: HttpRequestPreviewProps) {
         <span className={`text-xs font-bold px-1.5 py-0.5 rounded font-mono ${METHOD_COLORS[method] || METHOD_COLORS.GET}`}>
           {method}
         </span>
-        <span className="text-xs text-muted-foreground truncate max-w-[160px]">{url}</span>
+        <span className="text-xs text-muted-foreground break-all">{url}</span>
       </div>
       {responseVar && (
         <div className="text-xs text-muted-foreground">
