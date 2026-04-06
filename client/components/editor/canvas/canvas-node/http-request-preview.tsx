@@ -24,10 +24,34 @@ const METHOD_COLORS: Record<string, string> = {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
+/**
+ * Парсит JSON-строку заголовков и возвращает массив пар ключ-значение
+ * @param raw - сырая JSON-строка заголовков
+ * @returns массив пар [ключ, значение]
+ */
+function parseHeaders(raw: string | undefined): [string, string][] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return Object.entries(parsed) as [string, string][];
+    }
+  } catch {
+    // невалидный JSON — не показываем
+  }
+  return [];
+}
+
+/**
+ * Компонент превью HTTP запроса на канвасе
+ * @param props - Свойства компонента
+ * @returns JSX элемент
+ */
 export function HttpRequestPreview({ node }: HttpRequestPreviewProps) {
   const method = node.data.httpRequestMethod || 'GET';
   const url = node.data.httpRequestUrl || 'URL не задан';
   const responseVar = node.data.httpRequestResponseVariable;
+  const headers = parseHeaders(node.data.httpRequestHeaders as string | undefined);
 
   return (
     <div className="space-y-2 p-1">
@@ -37,6 +61,15 @@ export function HttpRequestPreview({ node }: HttpRequestPreviewProps) {
         </span>
         <span className="text-xs text-muted-foreground break-all">{url}</span>
       </div>
+      {headers.length > 0 && (
+        <div className="space-y-0.5">
+          {headers.map(([key, value]) => (
+            <div key={key} className="text-xs font-mono text-muted-foreground break-all">
+              <span className="text-violet-500 dark:text-violet-400">{key}:</span> {value}
+            </div>
+          ))}
+        </div>
+      )}
       {responseVar && (
         <div className="text-xs text-muted-foreground">
           → <span className="font-mono text-cyan-600 dark:text-cyan-400">{'{' + responseVar + '}'}</span>
