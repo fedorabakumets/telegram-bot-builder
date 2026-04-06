@@ -1,93 +1,140 @@
 /**
- * @fileoverview Парсер форматированного текста через DOMParser
- * @description Утилиты для парсинга HTML и Markdown форматирования
+ * @fileoverview Единый парсер HTML → JSX для форматированного текста
+ * @description Преобразует HTML-строку в массив JSX-элементов через DOMParser.
+ * Поддерживает все теги форматирования Telegram и Markdown.
  * @module formatting-parser
  */
 
 import { decodeHtmlEntities } from './html-entities';
 
-/** Счётчик ключей для JSX элементов */
-let keyCounter = 0;
+/**
+ * Ссылка на счётчик ключей JSX — избегает глобального состояния
+ * при параллельных вызовах parseHTML
+ */
+interface KeyRef {
+  /** Текущее значение счётчика */
+  current: number;
+}
 
 /**
- * Рекурсивно обходит DOM-узел и создаёт JSX элементы
- * @param node - DOM-узел для обхода
- * @returns JSX элемент или null
+ * CSS-класс для инлайн-кода и блоков pre
  */
-function nodeToJsx(node: Node): JSX.Element | null {
+const CODE_CLASS =
+  'bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono';
+
+/**
+ * CSS-класс для блока цитаты
+ */
+const BLOCKQUOTE_CLASS =
+  'border-l-4 border-blue-500 pl-3 my-2 italic text-slate-600 dark:text-slate-400';
+
+/**
+ * CSS-класс для ссылки
+ */
+const LINK_CLASS =
+  'text-blue-600 dark:text-blue-400 underline break-all';
+
+/**
+ * Рекурсивно обходит DOM-узел и создаёт JSX-элемент
+ * @param node - DOM-узел для обхода
+ * @param keyRef - Ссылка на счётчик ключей
+ * @returns JSX-элемент или null для неподдерживаемых узлов
+ */
+function nodeToJsx(node: Node, keyRef: KeyRef): JSX.Element | null {
   if (node.nodeType === Node.TEXT_NODE) {
-    return <span key={keyCounter++}>{node.textContent}</span>;
+    const text = node.textContent ?? '';
+    return <span key={keyRef.current++}>{text}</span>;
   }
 
   if (node.nodeType !== Node.ELEMENT_NODE) return null;
 
   const el = node as Element;
   const tag = el.tagName.toUpperCase();
-  const children = Array.from(el.childNodes).map(nodeToJsx).filter(Boolean) as JSX.Element[];
+
+  /** Рекурсивно обрабатываем дочерние узлы */
+  const children = Array.from(el.childNodes)
+    .map((child) => nodeToJsx(child, keyRef))
+    .filter(Boolean) as JSX.Element[];
 
   switch (tag) {
     case 'B':
     case 'STRONG':
-      return <strong key={keyCounter++} className="font-bold">{children}</strong>;
+    case 'H3':
+    case 'H4':
+    case 'H5':
+      return <strong key={keyRef.current++} className="font-bold">{children}</strong>;
+
     case 'I':
     case 'EM':
-      return <em key={keyCounter++} className="italic">{children}</em>;
+      return <em key={keyRef.current++} className="italic">{children}</em>;
+
     case 'U':
-      return <span key={keyCounter++} className="underline">{children}</span>;
+      return <span key={keyRef.current++} className="underline">{children}</span>;
+
     case 'S':
-      return <span key={keyCounter++} className="line-through">{children}</span>;
+    case 'STRIKE':
+    case 'DEL':
+      return <span key={keyRef.current++} className="line-through">{children}</span>;
+
     case 'CODE':
-      return (
-        <code key={keyCounter++} className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">
-          {children}
-        </code>
-      );
+    case 'PRE':
+      return <code key={keyRef.current++} className={CODE_CLASS}>{children}</code>;
+
     case 'BLOCKQUOTE':
       return (
-        <blockquote key={keyCounter++} className="border-l-4 border-blue-500 pl-3 my-2 italic text-slate-600 dark:text-slate-400">
+        <blockquote key={keyRef.current++} className={BLOCKQUOTE_CLASS}>
           {children}
         </blockquote>
       );
+
+    case 'A': {
+      const href = (el as HTMLAnchorElement).getAttribute('href') ?? '#';
+      return (
+        <a
+          key={keyRef.current++}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={LINK_CLASS}
+        >
+          {children}
+        </a>
+      );
+    }
+
     case 'BR':
-      return <br key={keyCounter++} />;
+      return <br key={keyRef.current++} />;
+
     default:
+      /** Для неизвестных тегов рекурсивно возвращаем дочерние элементы */
       return <>{children}</>;
   }
 }
 
 /**
- * Парсит HTML строку через DOMParser и возвращает массив JSX элементов
- * @param htmlText - HTML строка для парсинга
- * @returns Массив JSX элементов
+ * Парсит HTML-строку через DOMParser и возвращает массив JSX-элементов
+ * @param htmlText - HTML-строка для парсинга
+ * @returns Массив JSX-элементов
  */
 export function parseHTML(htmlText: string): JSX.Element[] {
-  keyCounter = 0;
-  const doc = new DOMParser().parseFromString(`<body>${htmlText}</body>`, 'text/html');
+  if (!htmlText) return [];
+  const keyRef: KeyRef = { current: 0 };
+  const doc = new DOMParser().parseFromString(
+    `<body>${htmlText}</body>`,
+    'text/html'
+  );
   return Array.from(doc.body.childNodes)
-    .map(nodeToJsx)
+    .map((node) => nodeToJsx(node, keyRef))
     .filter(Boolean) as JSX.Element[];
 }
 
 /**
- * Форматирует текст с поддержкой HTML тегов
- * @param text - Текст для форматирования
- * @returns Отформатированный JSX элемент
+ * Форматирует текст с поддержкой HTML-тегов и возвращает единый JSX-элемент
+ * @param text - Текст для форматирования (может содержать HTML)
+ * @returns Обёрнутый span с отформатированным содержимым
  */
 export function formatText(text: string): JSX.Element {
   if (!text) return <span>{text}</span>;
-
-  const decodedText = decodeHtmlEntities(text);
-
-  const hasHTMLTags =
-    decodedText.includes('<b>') || decodedText.includes('<i>') ||
-    decodedText.includes('<u>') || decodedText.includes('<s>') ||
-    decodedText.includes('<code>') || decodedText.includes('<strong>') ||
-    decodedText.includes('<em>') || decodedText.includes('<blockquote>') ||
-    decodedText.includes('<br');
-
-  const parsedParts = hasHTMLTags
-    ? parseHTML(decodedText)
-    : [<span key="0">{decodedText}</span>];
-
-  return <span>{parsedParts}</span>;
+  const decoded = decodeHtmlEntities(text);
+  return <span>{parseHTML(decoded)}</span>;
 }

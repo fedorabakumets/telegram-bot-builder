@@ -1,136 +1,44 @@
 /**
- * @fileoverview Компонент форматированного текста
- * @description Рендерит HTML с поддержкой тегов Telegram (b, i, u, s, code, etc.)
+ * @fileoverview Компонент форматированного текста для диалога
+ * @description Рендерит HTML с поддержкой тегов Telegram (b, i, u, s, code и др.)
+ * через единый парсер из formatting-parser.
  */
 
 import { useMemo } from 'react';
+import { parseHTML } from '@/components/editor/inline-rich/utils/formatting-parser';
 
 /**
- * Свойства форматированного текста
+ * Свойства компонента форматированного текста
  */
 interface FormattedTextProps {
-  /** Текст с HTML-тегами */
+  /** Текст с HTML-тегами (может быть null или undefined) */
   text?: string | null;
-  /** Тип сообщения для стилей */
+  /** Тип сообщения для выбора цветовой схемы */
   messageType: 'bot' | 'user';
 }
 
 /**
  * Компонент текста с поддержкой HTML-форматирования
+ * @param props - Свойства компонента
+ * @returns JSX-элемент с форматированным текстом
  */
 export function FormattedText({ text, messageType }: FormattedTextProps) {
   const isBot = messageType === 'bot';
 
-  /**
-   * Преобразует HTML-строку в массив React-элементов
-   * Поддерживает теги: b, strong, i, em, u, s, strike, del, code, pre, a
-   */
+  /** Парсим HTML в JSX только при изменении текста */
   const formattedContent = useMemo(() => {
-    // Строгая проверка: text должен быть строкой
     if (typeof text !== 'string' || !text.trim()) return null;
-
-    const content = text.trimEnd();
-
-    // Простая функция для парсинга HTML с тегами форматирования
-    const parseFormattedText = (html: string): (string | JSX.Element)[] => {
-      const elements: (string | JSX.Element)[] = [];
-      let remaining = html;
-      let keyIndex = 0;
-
-      while (remaining.length > 0) {
-        // Ищем ближайший открывающий тег
-        const tagMatch = remaining.match(/<(b|strong|i|em|u|s|strike|del|code|pre)>([\s\S]*?)<\/\1>|<(a)([^>]*)>([\s\S]*?)<\/a>|<(br\s*\/?)>/i);
-
-        if (!tagMatch || tagMatch.index === undefined) {
-          // Тегов больше нет, добавляем оставшийся текст
-          if (remaining) {
-            elements.push(remaining);
-          }
-          break;
-        }
-
-        const startIndex = tagMatch.index;
-
-        // Добавляем текст до тега
-        if (startIndex > 0) {
-          elements.push(remaining.slice(0, startIndex));
-        }
-
-        const fullMatch = tagMatch[0];
-        const tagName = (tagMatch[1] || tagMatch[3])?.toLowerCase() || '';
-        const innerContent = tagMatch[2] ?? tagMatch[5];
-        const anchorAttrs = tagMatch[4];
-
-        // Обработка тега
-        if (tagName === 'br' || tagName === 'br/') {
-          elements.push('\n');
-        } else if (tagName === 'a') {
-          const hrefMatch = anchorAttrs?.match(/href="([^"]*)"/);
-          const href = hrefMatch ? hrefMatch[1] : '#';
-          elements.push(
-            <a
-              key={keyIndex++}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 dark:text-blue-400 underline break-all"
-            >
-              {innerContent}
-            </a>
-          );
-        } else {
-          // Рекурсивно обрабатываем содержимое тега
-          const children = parseFormattedText(innerContent || '');
-
-          const baseClasses = 'inline';
-          let className = baseClasses;
-
-          switch (tagName) {
-            case 'b':
-            case 'strong':
-              className += ' font-bold';
-              break;
-            case 'i':
-            case 'em':
-              className += ' italic';
-              break;
-            case 'u':
-              className += ' underline';
-              break;
-            case 's':
-            case 'strike':
-            case 'del':
-              className += ' line-through';
-              break;
-            case 'code':
-            case 'pre':
-              className += ' bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded text-xs font-mono';
-              break;
-          }
-
-          elements.push(
-            <span key={keyIndex++} className={className}>
-              {children}
-            </span>
-          );
-        }
-
-        // Переходим к следующей части после тега
-        remaining = remaining.slice(startIndex + fullMatch.length);
-      }
-
-      return elements;
-    };
-
-    return parseFormattedText(content);
+    return parseHTML(text.trimEnd());
   }, [text]);
 
   return (
-    <div className={`rounded-lg px-3 py-2 ${
+    <div
+      className={`rounded-lg px-3 py-2 ${
         isBot
           ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100'
           : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
-      }`}>
+      }`}
+    >
       <p className="text-sm whitespace-pre-wrap break-words">
         {formattedContent}
       </p>
