@@ -52,6 +52,8 @@ export function HttpRequestPreview({ node }: HttpRequestPreviewProps) {
   const url = node.data.httpRequestUrl || 'URL не задан';
   const responseVar = node.data.httpRequestResponseVariable;
   const headers = parseHeaders(node.data.httpRequestHeaders as string | undefined);
+  const body = node.data.httpRequestBody as string | undefined;
+  const showBody = (method === 'POST' || method === 'PUT' || method === 'PATCH') && body && body !== '{}';
 
   return (
     <div className="space-y-2 p-1">
@@ -68,6 +70,11 @@ export function HttpRequestPreview({ node }: HttpRequestPreviewProps) {
               <span className="text-violet-500 dark:text-violet-400">{key}:</span> {value}
             </div>
           ))}
+        </div>
+      )}
+      {showBody && (
+        <div className="text-xs font-mono text-muted-foreground break-all bg-slate-100/60 dark:bg-slate-800/60 rounded p-1.5">
+          {body}
         </div>
       )}
       {responseVar && (
