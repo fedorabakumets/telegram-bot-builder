@@ -113,7 +113,7 @@ export function nodeToUserInputParams(node: Node): UserInputTemplateParams {
     safeName,
     inputVariable,
     appendVariable: node.data.appendVariable ?? false,
-    inputTargetNodeId: node.data.inputTargetNodeId || '',
+    inputTargetNodeId: node.data.inputTargetNodeId || (isDedicatedInputNode ? (node.data.autoTransitionTo || '') : ''),
     inputSource,
     enableTextInput: isDedicatedInputNode
       ? (acceptsAny || inputSource === 'text')
