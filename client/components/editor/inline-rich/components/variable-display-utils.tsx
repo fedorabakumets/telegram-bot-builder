@@ -45,7 +45,9 @@ export function getBadgeText(variable: Variable): string {
     conditional: '❓ Условие',
     callback_trigger: '👆 Инлайн-триггер',
     managed_bot_updated_trigger: '🤖 Управляемый бот',
-    get_managed_bot_token: '🔑 Токен бота'
+    get_managed_bot_token: '🔑 Токен бота',
+    http_request: '🌐 HTTP',
+    input: '⌨️ Ввод',
   };
   return labels[variable.nodeType] || '📌';
 }
@@ -120,6 +122,22 @@ export function getNodeInfo(variable: Variable) {
     return (
       <div className="text-[10px] text-indigo-500 dark:text-indigo-400 mt-0.5 truncate">
         🤖 {variable.description}
+      </div>
+    );
+  }
+  // Для http_request показываем описание (метод + URL)
+  if ((variable.nodeType as string) === 'http_request') {
+    return (
+      <div className="text-[10px] text-sky-500 dark:text-sky-400 mt-0.5 truncate">
+        🌐 {variable.description}
+      </div>
+    );
+  }
+  // Для input-узлов показываем описание
+  if ((variable.nodeType as string) === 'input') {
+    return (
+      <div className="text-[10px] text-cyan-500 dark:text-cyan-400 mt-0.5 truncate">
+        ⌨️ {variable.description}
       </div>
     );
   }
