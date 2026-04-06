@@ -617,6 +617,34 @@ export const nodeSchema = z.object({
     httpRequestResponseVariable: z.string().optional(),
     /** Имя переменной для сохранения HTTP статус кода */
     httpRequestStatusVariable: z.string().optional(),
+    /** Query параметры в формате JSON строки [{key, value}] */
+    httpRequestQueryParams: z.string().optional(),
+    /** Формат тела запроса: json, form-urlencoded, raw */
+    httpRequestBodyFormat: z.enum(['json', 'form-urlencoded', 'raw']).default('json').optional(),
+    /** Тип аутентификации */
+    httpRequestAuthType: z.enum(['none', 'basic', 'bearer', 'header', 'query']).default('none').optional(),
+    /** Bearer токен */
+    httpRequestAuthBearerToken: z.string().optional(),
+    /** Basic auth логин */
+    httpRequestAuthBasicUsername: z.string().optional(),
+    /** Basic auth пароль */
+    httpRequestAuthBasicPassword: z.string().optional(),
+    /** Имя заголовка для header auth */
+    httpRequestAuthHeaderName: z.string().optional(),
+    /** Значение заголовка для header auth */
+    httpRequestAuthHeaderValue: z.string().optional(),
+    /** Имя query параметра для query auth */
+    httpRequestAuthQueryName: z.string().optional(),
+    /** Значение query параметра для query auth */
+    httpRequestAuthQueryValue: z.string().optional(),
+    /** Формат ответа: autodetect, json, text */
+    httpRequestResponseFormat: z.enum(['autodetect', 'json', 'text']).default('autodetect').optional(),
+    /** Не падать при HTTP ошибках (4xx, 5xx) */
+    httpRequestIgnoreHttpErrors: z.boolean().default(false).optional(),
+    /** Игнорировать ошибки SSL сертификата */
+    httpRequestIgnoreSsl: z.boolean().default(false).optional(),
+    /** Следовать редиректам */
+    httpRequestFollowRedirects: z.boolean().default(true).optional(),
   }),
 });
 

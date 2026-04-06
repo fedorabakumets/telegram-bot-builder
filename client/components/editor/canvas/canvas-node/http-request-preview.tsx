@@ -19,82 +19,92 @@ const METHOD_COLORS: Record<string, string> = {
   DELETE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 };
 
+/** Метки типов аутентификации */
+const AUTH_LABELS: Record<string, string> = {
+  bearer: 'Bearer',
+  basic: 'Basic',
+  header: 'Header',
+  query: 'Query',
+};
+
 /**
- * Компонент превью HTTP запроса на канвасе
- * @param props - Свойства компонента
- * @returns JSX элемент
+ * Считает количество query параметров из JSON строки
+ * @param raw - JSON строка параметров
+ * @returns количество параметров
  */
-/**
- * Парсит JSON-строку заголовков и возвращает массив пар ключ-значение
- * @param raw - сырая JSON-строка заголовков
- * @returns массив пар [ключ, значение]
- */
-function parseHeaders(raw: string | undefined): [string, string][] {
-  if (!raw) return [];
+function countQueryParams(raw: string | undefined): number {
+  if (!raw) return 0;
   try {
     const parsed = JSON.parse(raw);
-    if (typeof parsed === 'object' && parsed !== null) {
-      return Object.entries(parsed) as [string, string][];
-    }
-  } catch {
-    // невалидный JSON — не показываем
-  }
-  return [];
+    return Array.isArray(parsed) ? parsed.filter((p) => p.key).length : 0;
+  } catch { return 0; }
 }
 
 /**
  * Компонент превью HTTP запроса на канвасе
- * @param props - Свойства компонента
+ * @param props - свойства компонента
  * @returns JSX элемент
  */
 export function HttpRequestPreview({ node }: HttpRequestPreviewProps) {
-  const method = node.data.httpRequestMethod || 'GET';
-  const url = node.data.httpRequestUrl || 'URL не задан';
-  const responseVar = node.data.httpRequestResponseVariable;
-  const statusVar = node.data.httpRequestStatusVariable;
-  const timeout = node.data.httpRequestTimeout as number | undefined;
-  const headers = parseHeaders(node.data.httpRequestHeaders as string | undefined);
-  const body = node.data.httpRequestBody as string | undefined;
-  const showBody = (method === 'POST' || method === 'PUT' || method === 'PATCH') && body && body !== '{}';
+  const d = node.data;
+  const method = (d.httpRequestMethod as string) || 'GET';
+  const url = (d.httpRequestUrl as string) || 'URL не задан';
+  const responseVar = d.httpRequestResponseVariable as string | undefined;
+  const statusVar = d.httpRequestStatusVariable as string | undefined;
+  const authType = (d.httpRequestAuthType as string) || 'none';
+  const queryCount = countQueryParams(d.httpRequestQueryParams as string | undefined);
+  const ignoreSsl = !!(d.httpRequestIgnoreSsl);
+  const ignoreErrors = !!(d.httpRequestIgnoreHttpErrors);
+  const noRedirects = d.httpRequestFollowRedirects === false;
 
   return (
-    <div className="space-y-2 p-1">
-      <div className="flex items-center gap-2">
+    <div className="space-y-1.5 p-1">
+      {/* Метод + URL */}
+      <div className="flex items-center gap-1.5 flex-wrap">
         <span className={`text-xs font-bold px-1.5 py-0.5 rounded font-mono ${METHOD_COLORS[method] || METHOD_COLORS.GET}`}>
           {method}
         </span>
         <span className="text-xs text-muted-foreground break-all">{url}</span>
       </div>
-      {headers.length > 0 && (
-        <div className="space-y-0.5">
-          {headers.map(([key, value]) => (
-            <div key={key} className="text-xs font-mono text-muted-foreground break-all">
-              <span className="text-violet-500 dark:text-violet-400">{key}:</span> {value}
-            </div>
-          ))}
+
+      {/* Бейджи: auth + query params */}
+      {(authType !== 'none' || queryCount > 0) && (
+        <div className="flex items-center gap-1 flex-wrap">
+          {authType !== 'none' && AUTH_LABELS[authType] && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium">
+              {AUTH_LABELS[authType]}
+            </span>
+          )}
+          {queryCount > 0 && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 font-mono">
+              ?{queryCount} params
+            </span>
+          )}
         </div>
       )}
-      {showBody && (
-        <div className="text-xs font-mono text-muted-foreground break-all bg-slate-100/60 dark:bg-slate-800/60 rounded p-1.5">
-          {body}
-        </div>
-      )}
+
+      {/* Переменная ответа */}
       {responseVar && (
         <div className="text-xs text-muted-foreground">
           <span className="text-slate-400 dark:text-slate-500">ответ → </span>
           <span className="font-mono text-cyan-600 dark:text-cyan-400">{'{' + responseVar + '}'}</span>
         </div>
       )}
+
+      {/* Переменная статуса */}
       {statusVar && (
         <div className="text-xs text-muted-foreground">
           <span className="text-slate-400 dark:text-slate-500">статус → </span>
           <span className="font-mono text-emerald-600 dark:text-emerald-400">{'{' + statusVar + '}'}</span>
         </div>
       )}
-      {timeout && timeout !== 30 && (
-        <div className="text-xs text-muted-foreground">
-          <span className="text-slate-400 dark:text-slate-500">таймаут: </span>
-          <span className="font-mono text-amber-600 dark:text-amber-400">{timeout}с</span>
+
+      {/* Иконки опций */}
+      {(ignoreSsl || ignoreErrors || noRedirects) && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          {ignoreSsl && <span title="Игнорировать SSL">🔒</span>}
+          {noRedirects && <span title="Не следовать редиректам">↩</span>}
+          {ignoreErrors && <span title="Игнорировать HTTP ошибки">⚠</span>}
         </div>
       )}
     </div>
