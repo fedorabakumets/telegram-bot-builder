@@ -47,7 +47,8 @@ export function getVariableIcon(nodeType: string): string {
   const icons: Record<string, string> = {
     'user-input': 'keyboard', 'system': 'cog', 'start': 'terminal',
     'command': 'terminal', 'conditional': 'code-branch',
-    'managed_bot_updated_trigger': 'robot'
+    'managed_bot_updated_trigger': 'robot',
+    'get_managed_bot_token': 'key'
   };
   return icons[nodeType] || 'cube';
 }
@@ -62,7 +63,8 @@ export function getVariableColor(nodeType: string): string {
     'user-input': 'from-blue-400 to-blue-500', 'system': 'from-teal-400 to-teal-500',
     'start': 'from-orange-400 to-orange-500', 'command': 'from-orange-400 to-orange-500',
     'conditional': 'from-purple-400 to-purple-500',
-    'managed_bot_updated_trigger': 'from-indigo-400 to-indigo-500'
+    'managed_bot_updated_trigger': 'from-indigo-400 to-indigo-500',
+    'get_managed_bot_token': 'from-indigo-400 to-violet-500'
   };
   return gradients[nodeType] || 'from-gray-400 to-gray-500';
 }
@@ -76,7 +78,8 @@ export function getVariableBadge(nodeType: string): string {
   const badges: Record<string, string> = {
     'user-input': 'Ввод', 'system': 'Система', 'start': 'Команда',
     'command': 'Команда', 'conditional': 'Условие',
-    'managed_bot_updated_trigger': 'Управляемый бот'
+    'managed_bot_updated_trigger': 'Управляемый бот',
+    'get_managed_bot_token': 'Токен бота'
   };
   return badges[nodeType] || 'Другое';
 }

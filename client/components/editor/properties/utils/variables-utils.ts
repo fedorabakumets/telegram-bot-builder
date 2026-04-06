@@ -177,6 +177,27 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
       }
     });
   });
+  // Добавляем переменные от get_managed_bot_token нод (Bot API 9.6)
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'get_managed_bot_token') return;
+    const data = node.data as any;
+    const vars: Array<{ key: string; name: string; description: string }> = [
+      { key: 'saveTokenTo', name: data.saveTokenTo || 'bot_token', description: 'Токен управляемого бота' },
+      { key: 'saveErrorTo', name: data.saveErrorTo || '', description: 'Ошибка при получении токена' },
+    ];
+    vars.forEach(({ key, name, description }) => {
+      if (!name) return;
+      const mapKey = `get_managed_bot_token__${node.id}__${key}`;
+      if (!variablesMap.has(mapKey)) {
+        variablesMap.set(mapKey, {
+          name,
+          nodeId: node.id,
+          nodeType: 'get_managed_bot_token' as any,
+          description,
+        });
+      }
+    });
+  });
   // Добавляем переменные от callback_trigger нод
   allNodes.forEach(node => {
     if ((node.type as string) !== 'callback_trigger') return;

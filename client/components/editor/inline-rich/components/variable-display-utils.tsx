@@ -44,7 +44,8 @@ export function getBadgeText(variable: Variable): string {
     system: '⚙️ Система',
     conditional: '❓ Условие',
     callback_trigger: '👆 Инлайн-триггер',
-    managed_bot_updated_trigger: '🤖 Управляемый бот'
+    managed_bot_updated_trigger: '🤖 Управляемый бот',
+    get_managed_bot_token: '🔑 Токен бота'
   };
   return labels[variable.nodeType] || '📌';
 }
@@ -103,6 +104,14 @@ export function getNodeInfo(variable: Variable) {
     return (
       <div className="text-[10px] text-slate-500 dark:text-slate-500 font-mono mt-0.5 truncate">
         🗄️ bot_users
+      </div>
+    );
+  }
+  // Для get_managed_bot_token показываем описание переменной
+  if ((variable.nodeType as string) === 'get_managed_bot_token') {
+    return (
+      <div className="text-[10px] text-indigo-500 dark:text-indigo-400 mt-0.5 truncate">
+        🔑 {variable.description}
       </div>
     );
   }
