@@ -25,19 +25,27 @@ export interface UseInlineRichEditorReturn {
   editorRef: React.RefObject<HTMLDivElement>;
   /** Флаг активного форматирования */
   isFormatting: boolean;
-  /** Статистика текста */
+  /** Количество слов */
   wordCount: number;
+  /** Количество символов */
   charCount: number;
-  /** Функции управления */
+  /** Функция отмены действия */
   undo: () => void;
+  /** Функция повтора действия */
   redo: () => void;
+  /** Функция применения форматирования */
   applyFormatting: (format: any) => void;
+  /** Обработчик нажатия клавиш */
   handleKeyDown: (e: React.KeyboardEvent) => void;
+  /** Функция копирования в буфер */
   copyFormatted: () => void;
+  /** Функция вставки переменной */
   insertVariable: (name: string) => void;
-  applyFilterToVariable: (variableName: string, filter: string) => void;
+  /** Обработчик ввода */
   handleInput: () => void;
+  /** Доступен ли undo */
   canUndo: boolean;
+  /** Доступен ли redo */
   canRedo: boolean;
 }
 
@@ -54,7 +62,7 @@ export function useInlineRichEditor(
   const { toast } = useToast();
 
   const { wordCount, charCount } = useTextStats(props.value);
-  const { undo, redo, saveToUndoStack } = useUndoRedo(
+  const { undo, redo, saveToUndoStack, undoStack, redoStack } = useUndoRedo(
     props.value,
     props.onChange,
     toast
@@ -104,12 +112,6 @@ export function useInlineRichEditor(
     setIsFormatting
   });
 
-  const applyFilterToVariable = (variableName: string, filter: string) => {
-    // Фильтры хранятся отдельно в состоянии InlineRichEditor
-    // Эта функция теперь только для совместимости
-    console.log(`Фильтр для ${variableName}: ${filter || 'нет'}`);
-  };
-
   return {
     editorRef,
     isFormatting,
@@ -121,9 +123,8 @@ export function useInlineRichEditor(
     handleKeyDown,
     copyFormatted,
     insertVariable,
-    applyFilterToVariable,
     handleInput,
-    canUndo: true,
-    canRedo: true
+    canUndo: undoStack.length > 0,
+    canRedo: redoStack.length > 0
   };
 }

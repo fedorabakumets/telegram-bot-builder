@@ -6,7 +6,7 @@
 import { useInlineRichEditor } from './hooks/useInlineRichEditor';
 import type { InlineRichEditorProps } from './types';
 import { formatOptions } from './format-options';
-import { CompactToolbar } from './components/CompactToolbar';
+import { Toolbar } from './components/Toolbar';
 import { EditorContent } from './components/EditorContent';
 
 /**
@@ -19,26 +19,34 @@ export interface CompactInlineEditorProps extends Omit<InlineRichEditorProps, 'e
 
 /**
  * Компактный редактор текста для диалоговых панелей
+ * @param props - Свойства компонента
+ * @returns JSX элемент компактного редактора
  */
 export function CompactInlineEditor({ showStats = false, ...props }: CompactInlineEditorProps) {
-  const { editorRef, wordCount, charCount, undo, redo, applyFormatting, handleKeyDown, copyFormatted, handleInput } = useInlineRichEditor({ ...props, enableMarkdown: false });
+  const {
+    editorRef, wordCount, charCount,
+    undo, redo, canUndo, canRedo,
+    applyFormatting, handleKeyDown,
+    copyFormatted, handleInput
+  } = useInlineRichEditor({ ...props, enableMarkdown: false });
 
   return (
     <div className="space-y-1.5">
-      <CompactToolbar
+      <Toolbar
+        compact
         formatOptions={formatOptions}
         applyFormatting={applyFormatting}
         undo={undo}
         redo={redo}
-        canUndo={true}
-        canRedo={true}
+        canUndo={canUndo}
+        canRedo={canRedo}
         copyFormatted={copyFormatted}
       />
       <EditorContent
         value={props.value}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
-        placeholder={props.placeholder || "Введите сообщение..."}
+        placeholder={props.placeholder || 'Введите сообщение...'}
         innerRef={editorRef}
       >
         {showStats && (

@@ -3,7 +3,7 @@
  * @description Подсчитывает количество слов и символов, игнорируя HTML-теги и Markdown
  */
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 
 /**
  * Результат работы хука useTextStats
@@ -21,23 +21,27 @@ export interface TextStats {
  * @returns Объект со статистикой (wordCount, charCount)
  */
 export function useTextStats(value: string): TextStats {
-  const [wordCount, setWordCount] = useState(0);
-  const [charCount, setCharCount] = useState(0);
-
-  useEffect(() => {
-    // Удаляем HTML теги и Markdown синтаксис
-    const plainText = value
-      .replace(/<[^>]*>/g, '')  // HTML теги
-      .replace(/&nbsp;/g, ' ')   // HTML сущности
+  const wordCount = useMemo(() => {
+    const plain = value
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&amp;/g, '&')
-      .replace(/\n/g, '')        // Символы новой строки
-      .replace(/\*\*|__|~~|`/g, '');  // Markdown
-    
-    const words = plainText.trim().split(/\s+/).filter(word => word.length > 0);
-    setWordCount(words.length);
-    setCharCount(plainText.length);
+      .replace(/\n/g, '')
+      .replace(/\*\*|__|~~|`/g, '');
+    return plain.trim().split(/\s+/).filter(w => w.length > 0).length;
+  }, [value]);
+
+  const charCount = useMemo(() => {
+    return value
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/\n/g, '')
+      .replace(/\*\*|__|~~|`/g, '').length;
   }, [value]);
 
   return { wordCount, charCount };

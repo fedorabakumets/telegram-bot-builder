@@ -3,6 +3,8 @@
  * @description Содержит основные типы для редактора текста с форматированием
  */
 
+import type { Node } from '@shared/schema';
+
 /** Тип медиа: "photo", "video", "audio", "document", "sticker" */
 type MediaType = 'photo' | 'video' | 'audio' | 'document' | 'sticker';
 
@@ -50,4 +52,16 @@ export interface InlineRichEditorProps {
   availableVariables?: Variable[];
   /** Функция обратного вызова при выборе медиапеременной */
   onMediaVariableSelect?: (variableName: string, mediaType: string) => void;
+}
+
+/**
+ * Расширенные свойства InlineRichEditor с поддержкой фильтров переменных
+ */
+export interface InlineRichEditorWithFiltersProps extends InlineRichEditorProps {
+  /** Текущие фильтры переменных */
+  variableFilters?: Record<string, string>;
+  /** Функция обновления фильтров */
+  onFiltersChange?: (filters: Record<string, string>) => void;
+  /** Все узлы проекта */
+  allNodes?: Node[];
 }

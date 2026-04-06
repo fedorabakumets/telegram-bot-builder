@@ -1,18 +1,10 @@
 /**
  * @fileoverview Список использованных переменных с выбором фильтров
- * Отображает все переменные в тексте и позволяет настроить фильтры
- * @module used-variables-list
+ * @description Отображает переменные из текста и позволяет настроить фильтры
  */
 
 import { VariableFilterToggle } from './VariableFilterToggle';
-
-import type { Node } from '@shared/schema';
-
-/** Переменная с дополнительной информацией */
-export interface VariableInfo {
-  /** Имя переменной */
-  name: string;
-}
+import type { VariableInfo } from '../utils/extract-variables';
 
 /** Пропсы компонента UsedVariablesList */
 interface UsedVariablesListProps {
@@ -25,46 +17,9 @@ interface UsedVariablesListProps {
 }
 
 /**
- * Извлекает переменные из текста и проверяет, включена ли опция "Не перезаписывать"
- * @param text - Текст сообщения
- * @param allNodes - Все узлы проекта
- * @returns Массив найденных переменных с флагом canUseFilter
- */
-function extractVariables(text: string, allNodes: Node[]): VariableInfo[] {
-  const regex = /\{([^}|]+)(?:\|[^}]+)?\}/g;
-  const matches = text.matchAll(regex);
-  const variables: VariableInfo[] = [];
-  const seen = new Set<string>();
-
-  for (const match of matches) {
-    const name = match[1].trim();
-    if (!seen.has(name)) {
-      seen.add(name);
-      // Ищем узел, где создана эта переменная
-      const sourceNode = allNodes.find(
-        node => node.data.inputVariable === name ||
-                node.data.photoInputVariable === name ||
-                node.data.videoInputVariable === name ||
-                node.data.audioInputVariable === name ||
-                node.data.documentInputVariable === name
-      );
-      // Если узел не найден — переменная не существует, пропускаем
-      if (!sourceNode) continue;
-      
-      // Добавляем переменную только если включено "Не перезаписывать"
-      if (sourceNode.data.appendVariable) {
-        variables.push({ name });
-      }
-    }
-  }
-
-  return variables;
-}
-
-/**
  * Список использованных переменных с выбором фильтров
- * @param {UsedVariablesListProps} props - Пропсы компонента
- * @returns {JSX.Element | null} Компонент списка или null
+ * @param props - Свойства компонента
+ * @returns JSX элемент списка или null если переменных нет
  */
 export function UsedVariablesList({
   variables,
@@ -83,26 +38,21 @@ export function UsedVariablesList({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {variables.map((variable) => {
-          const currentFilter = variableFilters[variable.name];
-
-          return (
-            <div
-              key={variable.name}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/60 border border-purple-200/40 dark:border-purple-700/40"
-            >
-              <code className="text-xs font-mono text-purple-700 dark:text-purple-300">
-                {`{${variable.name}}`}
-              </code>
-
-              <VariableFilterToggle
-                variableName={variable.name}
-                currentFilter={currentFilter}
-                onFilterChange={onApplyFilter}
-              />
-            </div>
-          );
-        })}
+        {variables.map((variable) => (
+          <div
+            key={variable.name}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/60 dark:bg-slate-800/60 border border-purple-200/40 dark:border-purple-700/40"
+          >
+            <code className="text-xs font-mono text-purple-700 dark:text-purple-300">
+              {`{${variable.name}}`}
+            </code>
+            <VariableFilterToggle
+              variableName={variable.name}
+              currentFilter={variableFilters[variable.name]}
+              onFilterChange={onApplyFilter}
+            />
+          </div>
+        ))}
       </div>
 
       <div className="text-xs text-purple-600 dark:text-purple-400 leading-relaxed">
@@ -111,10 +61,3 @@ export function UsedVariablesList({
     </div>
   );
 }
-
-/**
- * Извлекает переменные из текста (утилита для внешнего использования)
- * @param {string} text - Текст сообщения
- * @returns {Array<{ name: string }>} Массив переменных
- */
-export { extractVariables };
