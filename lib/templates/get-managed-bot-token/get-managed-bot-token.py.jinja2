@@ -1,0 +1,87 @@
+{#
+  Шаблон обработчиков узла получения токена управляемого бота.
+
+  Узел регистрируется через @dp.callback_query (как обычный action-узел),
+  поскольку вызывается из сценария, а не срабатывает на внешнее событие.
+  Вызывает await bot.get_managed_bot_token(user_id=<bot_id>) и сохраняет токен.
+
+  @param {array} entries - Массив GetManagedBotTokenEntry:
+    - nodeId: string          — ID узла get_managed_bot_token
+    - targetNodeId: string    — ID целевого узла
+    - targetNodeType: string  — тип целевого узла
+    - botIdSource?: string    — 'variable' или 'manual'
+    - botIdVariable?: string  — имя переменной с bot_id
+    - botIdManual?: string    — ручной числовой ID бота
+    - saveTokenTo?: string    — переменная для токена
+    - saveErrorTo?: string    — переменная для ошибки
+#}
+{% for entry in entries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+
+# @@NODE_START:{{ entry.nodeId }}@@
+
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery):
+    """Получить токен управляемого бота"""
+    try:
+        user_id = callback_query.from_user.id
+        logging.info(f"Получение токена управляемого бота — узел {{ entry.nodeId }}, user_id={user_id}")
+
+        # Определяем bot_id
+        {% if entry.botIdSource == 'manual' and entry.botIdManual %}
+        _bot_id = {{ entry.botIdManual }}
+        {% else %}
+        _bot_id = user_data.get(user_id, {}).get("{{ entry.botIdVariable or 'bot_id' }}")
+        {% endif %}
+
+        if not _bot_id:
+            logging.error(f"bot_id не найден для пользователя {user_id}")
+            {% if entry.saveErrorTo %}
+            user_data.setdefault(user_id, {})["{{ entry.saveErrorTo }}"] = "bot_id не найден"
+            {% endif %}
+            return
+
+        # Получаем токен управляемого бота
+        _token = await bot.get_managed_bot_token(user_id=int(_bot_id))
+
+        if user_id not in user_data:
+            user_data[user_id] = {}
+
+        {% if entry.saveTokenTo %}
+        user_data[user_id]["{{ entry.saveTokenTo }}"] = _token
+        {% endif %}
+
+        logging.info(f"Токен управляемого бота получен для пользователя {user_id}")
+
+        # Переход к следующему узлу
+        {% if entry.targetNodeId %}
+        class FakeCallbackQuery:
+            def __init__(self, user_id_val, msg):
+                self.from_user = type('User', (), {
+                    'id': user_id_val,
+                    'username': user_data.get(user_id_val, {}).get('username', ''),
+                    'first_name': user_data.get(user_id_val, {}).get('first_name', ''),
+                    'last_name': user_data.get(user_id_val, {}).get('last_name', ''),
+                    'language_code': '',
+                    'is_premium': False,
+                    'is_bot': False,
+                })()
+                self.message = msg
+                self.data = "{{ entry.targetNodeId }}"
+                self._is_fake = True
+
+            async def answer(self, *args, **kwargs):
+                pass
+
+        fake_cb = FakeCallbackQuery(user_id, callback_query.message)
+        await handle_callback_{{ sanitized_target_id }}(fake_cb)
+        {% endif %}
+    except Exception as e:
+        logging.error(f"Ошибка в get_managed_bot_token {{ entry.nodeId }}: {e}")
+        {% if entry.saveErrorTo %}
+        user_data.setdefault(user_id, {})["{{ entry.saveErrorTo }}"] = str(e)
+        {% endif %}
+
+# @@NODE_END:{{ entry.nodeId }}@@
+{% endfor %}

@@ -33,6 +33,7 @@ import { generateIncomingMessageTriggerHandlers } from '../incoming-message-trig
 import { generateIncomingCallbackTriggerHandlers } from '../incoming-callback-trigger/incoming-callback-trigger.renderer';
 import { generateOutgoingMessageTriggerHandlers } from '../outgoing-message-trigger/outgoing-message-trigger.renderer';
 import { generateManagedBotUpdatedTriggerHandlers } from '../managed-bot-updated-trigger/managed-bot-updated-trigger.renderer';
+import { generateGetManagedBotToken } from '../get-managed-bot-token/get-managed-bot-token.renderer';
 import { generateGroupMessageTriggerHandlers } from '../group-message-trigger';
 import { generateConditionHandlers } from '../condition/condition.renderer';
 import { generateMediaNode } from '../media-node';
@@ -276,6 +277,19 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     broadcast: (node) => generateBroadcastHandler(node, nodes, enableComments),
     keyboard: generateKeyboardHandler,
     input: generateUserInputNodeHandler,
+    get_managed_bot_token: (node) => {
+      const entry = {
+        nodeId: node.id,
+        targetNodeId: (node.data as any)?.autoTransitionTo || '',
+        targetNodeType: nodes.find(n => n.id === (node.data as any)?.autoTransitionTo)?.type || 'message',
+        botIdSource: (node.data as any)?.botIdSource || 'variable',
+        botIdVariable: (node.data as any)?.botIdVariable || 'bot_id',
+        botIdManual: (node.data as any)?.botIdManual || '',
+        saveTokenTo: (node.data as any)?.saveTokenTo || 'bot_token',
+        saveErrorTo: (node.data as any)?.saveErrorTo || undefined,
+      };
+      return generateGetManagedBotToken({ entries: [entry] });
+    },
     media: (node) => generateMediaNode({
       ...getSafeAutoTransitionParams(node, nodes),
       nodeId: node.id,

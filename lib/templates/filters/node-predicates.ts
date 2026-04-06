@@ -233,3 +233,13 @@ export function hasManagedBotUpdatedTriggerNodes(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'managed_bot_updated_trigger');
 }
+
+/**
+ * Проверяет наличие узлов get_managed_bot_token в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа get_managed_bot_token
+ */
+export function hasGetManagedBotTokenNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'get_managed_bot_token');
+}
