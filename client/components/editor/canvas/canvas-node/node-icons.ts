@@ -58,4 +58,6 @@ export const nodeIcons: Record<string, string> = {
   http_request: 'fas fa-globe',
   /** Иконка триггера обновления управляемого бота (Bot API 9.6) */
   managed_bot_updated_trigger: 'fas fa-robot',
+  /** Иконка узла получения токена управляемого бота */
+  get_managed_bot_token: 'fas fa-key',
 };

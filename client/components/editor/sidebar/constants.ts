@@ -13,6 +13,7 @@ import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, ca
 import { conditionNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode } from './massive/content-management';
 import { httpRequestNode } from './massive/http-request';
+import { getManagedBotTokenNode } from './massive/managed-bots';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -51,6 +52,10 @@ export const componentCategories: Array<{
   {
     title: 'Интеграции',
     components: [httpRequestNode]
+  },
+  {
+    title: 'Управление ботами',
+    components: [getManagedBotTokenNode]
   }
 ];
 

@@ -72,6 +72,7 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   create_forum_topic: 'Создать топик форума',
   http_request: 'HTTP запрос',
   managed_bot_updated_trigger: 'Триггер создания/обновления бота',
+  get_managed_bot_token: 'Получить токен бота',
 };
 
 /**
@@ -117,6 +118,7 @@ const nodeIcons: Partial<Record<Node['type'], string>> = {
   create_forum_topic: 'fas fa-comments',
   http_request: 'fas fa-globe',
   managed_bot_updated_trigger: 'fas fa-robot',
+  get_managed_bot_token: 'fas fa-key',
 };
 
 /**
@@ -162,6 +164,7 @@ const nodeColors: Partial<Record<Node['type'], string>> = {
   create_forum_topic: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
   http_request: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
   managed_bot_updated_trigger: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+  get_managed_bot_token: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
 };
 
 /**

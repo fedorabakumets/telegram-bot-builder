@@ -333,6 +333,14 @@ export function getNodeDefaults(type: Node['type']): any {
       filterByUserId: '',
       autoTransitionTo: '',
     },
+    get_managed_bot_token: {
+      botIdSource: 'variable',
+      botIdVariable: 'bot_id',
+      botIdManual: '',
+      saveTokenTo: 'bot_token',
+      saveErrorTo: '',
+      autoTransitionTo: '',
+    },
   };
   return defaults[type] || {};
 }

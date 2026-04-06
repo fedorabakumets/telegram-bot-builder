@@ -60,6 +60,7 @@ import { BroadcastNodeProperties } from '../broadcast/broadcast-properties';
 import { ClientAuthProperties } from '../client-auth/client-auth-properties';
 import { MediaNodeProperties } from './media-node-properties';
 import { HttpRequestConfiguration } from '../configuration/http-request-configuration';
+import { GetManagedBotTokenConfiguration } from '../configuration/get-managed-bot-token-configuration';
 import type { Variable } from '../../../inline-rich/types';
 
 /**
@@ -486,6 +487,28 @@ export function PropertiesPanel({
                 <HttpRequestConfiguration
                   selectedNode={selectedNode}
                   onNodeUpdate={onNodeUpdate}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Get Managed Bot Token Section */}
+          {(selectedNode.type as any) === 'get_managed_bot_token' && (
+            <div className="w-full bg-gradient-to-br from-indigo-50/40 to-violet-50/20 dark:from-indigo-950/30 dark:to-violet-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-indigo-200/40 dark:border-indigo-800/40 backdrop-blur-sm">
+              <SectionHeader
+                title="Получить токен бота"
+                description="getManagedBotToken — Bot API 9.6"
+                isOpen={true}
+                onToggle={() => {}}
+                icon="key"
+                iconGradient="from-indigo-100 to-violet-100 dark:from-indigo-900/50 dark:to-violet-900/50"
+                iconColor="text-indigo-600 dark:text-indigo-400"
+              />
+              <div className="mt-3 sm:mt-4">
+                <GetManagedBotTokenConfiguration
+                  selectedNode={selectedNode}
+                  onNodeUpdate={onNodeUpdate}
+                  getAllNodesFromAllSheets={getAllNodesFromAllSheets}
                 />
               </div>
             </div>
