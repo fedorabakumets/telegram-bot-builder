@@ -13,8 +13,8 @@ export interface UseEditorSyncOptions {
   editorRef: React.RefObject<HTMLDivElement>;
   /** Текущее значение редактора */
   value: string;
-  /** Флаг активного форматирования */
-  isFormatting: boolean;
+  /** Ref флага активного форматирования */
+  isFormattingRef: React.RefObject<boolean>;
   /** Функция конвертации значения в HTML */
   valueToHtml: (text: string, enableMarkdown: boolean) => string;
   /** Включена ли поддержка Markdown */
@@ -68,12 +68,12 @@ function restoreAbsoluteOffset(container: HTMLElement, absoluteOffset: number): 
 export function useEditorSync({
   editorRef,
   value,
-  isFormatting,
+  isFormattingRef,
   valueToHtml,
   enableMarkdown
 }: UseEditorSyncOptions): void {
   useEffect(() => {
-    if (editorRef.current && !isFormatting) {
+    if (editorRef.current && !isFormattingRef.current) {
       const html = valueToHtml(value, enableMarkdown);
       if (editorRef.current.innerHTML !== html) {
         const selection = window.getSelection();
@@ -103,5 +103,5 @@ export function useEditorSync({
         }
       }
     }
-  }, [value, valueToHtml, enableMarkdown, isFormatting, editorRef]);
+  }, [value, valueToHtml, enableMarkdown, editorRef]);
 }

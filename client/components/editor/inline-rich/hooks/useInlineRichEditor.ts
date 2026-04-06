@@ -3,7 +3,7 @@
  * @description Агрегирует все хуки редактора в один
  */
 
-import { useState, useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { InlineRichEditorProps } from '../types';
 import { useTextStats } from './useTextStats';
@@ -23,8 +23,6 @@ import { formatOptions } from '../format-options';
 export interface UseInlineRichEditorReturn {
   /** Ref на DOM элемент редактора */
   editorRef: React.RefObject<HTMLDivElement>;
-  /** Флаг активного форматирования */
-  isFormatting: boolean;
   /** Количество слов */
   wordCount: number;
   /** Количество символов */
@@ -57,8 +55,9 @@ export interface UseInlineRichEditorReturn {
 export function useInlineRichEditor(
   props: InlineRichEditorProps
 ): UseInlineRichEditorReturn {
-  const [isFormatting, setIsFormatting] = useState(false);
+  const isFormattingRef = useRef(false);
   const editorRef = useRef<HTMLDivElement>(null);
+  const setIsFormatting = useCallback((v: boolean) => { isFormattingRef.current = v; }, []);
   const { toast } = useToast();
 
   const { wordCount, charCount } = useTextStats(props.value);
@@ -70,7 +69,7 @@ export function useInlineRichEditor(
   useEditorSync({
     editorRef,
     value: props.value,
-    isFormatting,
+    isFormattingRef,
     valueToHtml,
     enableMarkdown: props.enableMarkdown ?? false
   });
@@ -113,7 +112,6 @@ export function useInlineRichEditor(
 
   return {
     editorRef,
-    isFormatting,
     wordCount,
     charCount,
     undo,

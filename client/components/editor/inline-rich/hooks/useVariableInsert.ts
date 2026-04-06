@@ -5,16 +5,7 @@
 
 import { useCallback } from 'react';
 import type { Variable } from '../types';
-
-/** Тип уведомления */
-type ToastOptions = {
-  title: string;
-  description: string;
-  variant?: 'default' | 'destructive';
-};
-
-/** Тип функции toast */
-type ToastFn = (toast: ToastOptions) => void;
+import type { ToastFn } from '../utils/toast-types';
 
 /**
  * Параметры хука useVariableInsert
@@ -100,12 +91,6 @@ export function useVariableInsert({
 
       setTimeout(() => {
         handleInput();
-        const filterDesc = filter ? ` с фильтром ${filter}` : '';
-        toast({
-          title: "Переменная добавлена",
-          description: `Переменная "${variableName}"${filterDesc} вставлена в текст`,
-          variant: "default"
-        });
       }, 0);
     } catch (e) {
       toast({

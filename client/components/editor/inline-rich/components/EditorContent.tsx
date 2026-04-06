@@ -47,6 +47,7 @@ export function EditorContent({
       <div
         ref={innerRef}
         contentEditable
+        suppressContentEditableWarning={true}
         onInput={onInput}
         onKeyDown={onKeyDown}
         className="min-h-[80px] sm:min-h-[100px] max-h-[200px] overflow-y-auto p-3 sm:p-4 w-full text-sm sm:text-base bg-transparent text-slate-900 dark:text-slate-100 focus:outline-none whitespace-pre-wrap selection:bg-blue-200 dark:selection:bg-blue-900"

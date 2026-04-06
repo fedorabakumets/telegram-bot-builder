@@ -4,16 +4,7 @@
  */
 
 import { useCallback, RefObject } from 'react';
-
-/** Тип уведомления */
-type ToastOptions = {
-  title: string;
-  description: string;
-  variant?: 'default' | 'destructive';
-};
-
-/** Тип функции toast */
-type ToastFn = (toast: ToastOptions) => void;
+import type { ToastFn } from '../utils/toast-types';
 
 /**
  * Параметры хука useClipboard

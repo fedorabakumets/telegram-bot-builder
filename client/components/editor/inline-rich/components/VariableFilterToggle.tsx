@@ -7,6 +7,7 @@
 import { useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { VARIABLE_FILTER_OPTIONS } from '../utils/filter-options';
 
 /** Пропсы компонента VariableFilterToggle */
 interface VariableFilterToggleProps {
@@ -29,8 +30,8 @@ export function VariableFilterToggle({
   onFilterChange
 }: VariableFilterToggleProps) {
   const separator = currentFilter ? currentFilter.split('"')[1] || '' : '';
-  const isComma = separator === ', ';
-  const isNewline = separator === '\n';
+  const isComma = separator === VARIABLE_FILTER_OPTIONS[0].separator;
+  const isNewline = separator === VARIABLE_FILTER_OPTIONS[1].separator;
 
   // Если оба включены (невозможное состояние), выключаем оба
   useEffect(() => {
@@ -50,10 +51,8 @@ export function VariableFilterToggle({
           checked={isComma}
           onCheckedChange={(checked) => {
             if (checked) {
-              // Включаем запятую, выключаем столбик
-              onFilterChange(variableName, '|join:", "');
+              onFilterChange(variableName, VARIABLE_FILTER_OPTIONS[0].filter);
             } else {
-              // Выключаем всё
               onFilterChange(variableName, '');
             }
           }}
@@ -70,10 +69,8 @@ export function VariableFilterToggle({
           checked={isNewline}
           onCheckedChange={(checked) => {
             if (checked) {
-              // Включаем столбик, выключаем запятую
-              onFilterChange(variableName, '|join:"\n"');
+              onFilterChange(variableName, VARIABLE_FILTER_OPTIONS[1].filter);
             } else {
-              // Выключаем всё
               onFilterChange(variableName, '');
             }
           }}

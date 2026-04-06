@@ -16,21 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sliders } from 'lucide-react';
 import { useState } from 'react';
-
-/** Типы поддерживаемых фильтров */
-export type FilterType = 'join';
-
-/** Опция фильтра */
-export interface FilterOption {
-  /** Тип фильтра */
-  type: FilterType;
-  /** Значение разделителя */
-  separator: string;
-  /** Описание фильтра */
-  label: string;
-  /** Иконка фильтра */
-  icon: string;
-}
+import { VARIABLE_FILTER_OPTIONS } from '../utils/filter-options';
 
 /** Пропсы компонента VariableFilterMenu */
 interface VariableFilterMenuProps {
@@ -39,22 +25,6 @@ interface VariableFilterMenuProps {
   /** Функция применения фильтра к переменной */
   onApplyFilter: (variableName: string, filter: string) => void;
 }
-
-/** Доступные фильтры */
-const FILTER_OPTIONS: FilterOption[] = [
-  {
-    type: 'join',
-    separator: ', ',
-    label: 'Через запятую',
-    icon: '📝'
-  },
-  {
-    type: 'join',
-    separator: '\n',
-    label: 'В столбик',
-    icon: '📋'
-  }
-];
 
 /**
  * Меню выбора фильтра для переменной
@@ -67,8 +37,7 @@ export function VariableFilterMenu({
 }: VariableFilterMenuProps) {
   const [open, setOpen] = useState(false);
 
-  const handleFilterSelect = (separator: string) => {
-    const filter = `|join:"${separator}"`;
+  const handleFilterSelect = (filter: string) => {
     onApplyFilter(variableName, filter);
     setOpen(false);
   };
@@ -97,18 +66,18 @@ export function VariableFilterMenu({
           <div className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">
             📦 Для массивов:
           </div>
-          {FILTER_OPTIONS.map((option) => (
+          {VARIABLE_FILTER_OPTIONS.map((option) => (
             <DropdownMenuItem
-              key={`${option.type}-${option.separator}`}
+              key={option.filter}
               className="cursor-pointer py-1.5 text-xs"
-              onClick={() => handleFilterSelect(option.separator)}
+              onClick={() => handleFilterSelect(option.filter)}
             >
               <span className="flex items-center gap-2">
                 <span>{option.icon}</span>
                 <span>{option.label}</span>
               </span>
               <Badge variant="secondary" className="ml-auto text-xs h-5">
-                <code className="font-mono">{`|join:"${option.separator}"`}</code>
+                <code className="font-mono">{option.filter}</code>
               </Badge>
             </DropdownMenuItem>
           ))}

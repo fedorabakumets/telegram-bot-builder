@@ -5,16 +5,7 @@
 
 import { useCallback } from 'react';
 import type { FormatOption } from '../format-options';
-
-/** Тип уведомления */
-type ToastOptions = {
-  title: string;
-  description: string;
-  variant?: 'default' | 'destructive';
-};
-
-/** Тип функции toast */
-type ToastFn = (toast: ToastOptions) => void;
+import type { ToastFn } from '../utils/toast-types';
 
 /**
  * Параметры хука useFormatting
@@ -33,6 +24,33 @@ export interface UseFormattingOptions {
   /** Флаг установки форматирования */
   setIsFormatting: (value: boolean) => void;
 }
+
+/**
+ * Оборачивает выделенный текст в HTML-тег
+ * @param tagName - Имя тега для оборачивания
+ */
+function wrapSelection(tagName: string): void {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+  const range = selection.getRangeAt(0);
+  const selectedText = range.toString();
+  if (!selectedText) return;
+  const el = document.createElement(tagName);
+  el.textContent = selectedText;
+  range.deleteContents();
+  range.insertNode(el);
+  range.selectNode(el);
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+/** Маппинг команд форматирования на HTML-теги */
+const FORMAT_TAG_MAP: Record<string, string> = {
+  bold: 'strong',
+  italic: 'em',
+  underline: 'u',
+  strikethrough: 's'
+};
 
 /**
  * Хук для применения форматирования к выделенному тексту
@@ -72,8 +90,9 @@ export function useFormatting({
       const range = selection.getRangeAt(0);
       const selectedText = range.toString();
 
-      if (['bold', 'italic', 'underline', 'strikethrough'].includes(format.command)) {
-        document.execCommand(format.command, false, undefined);
+      const tagName = FORMAT_TAG_MAP[format.command];
+      if (tagName) {
+        wrapSelection(tagName);
       } else if (format.command === 'code' && selectedText) {
         const codeElement = document.createElement('code');
         codeElement.textContent = selectedText;
