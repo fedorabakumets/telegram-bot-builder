@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InfoBlock } from '@/components/ui/info-block';
+import { TriggerTargetSelector } from '../trigger/TriggerTargetSelector';
+import { formatNodeDisplay as defaultFormatNodeDisplay } from '../../utils/node-formatters';
 
 /** Пропсы компонента настройки узла получения токена */
 interface GetManagedBotTokenConfigurationProps {
@@ -15,7 +17,9 @@ interface GetManagedBotTokenConfigurationProps {
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
   /** Все узлы из всех листов */
-  getAllNodesFromAllSheets: Node[];
+  getAllNodesFromAllSheets: Array<{ node: Node; sheetId?: string; sheetName?: string }>;
+  /** Форматирование названия узла */
+  formatNodeDisplay?: (node: Node, sheetName?: string) => string;
 }
 
 /**
@@ -28,6 +32,8 @@ interface GetManagedBotTokenConfigurationProps {
 export function GetManagedBotTokenConfiguration({
   selectedNode,
   onNodeUpdate,
+  getAllNodesFromAllSheets = [],
+  formatNodeDisplay = defaultFormatNodeDisplay,
 }: GetManagedBotTokenConfigurationProps) {
   const data = selectedNode.data as any;
   const source = data.botIdSource || 'variable';
@@ -106,16 +112,14 @@ export function GetManagedBotTokenConfiguration({
         />
       </div>
 
-      {/* Следующий узел */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Следующий узел (ID)</Label>
-        <Input
-          placeholder="node_id"
-          value={data.autoTransitionTo || ''}
-          onChange={(e) => update('autoTransitionTo', e.target.value)}
-          className="font-mono text-sm"
-        />
-      </div>
+      {/* Следующий узел — селектор */}
+      <TriggerTargetSelector
+        selectedNode={selectedNode}
+        autoTransitionTo={data.autoTransitionTo ?? ''}
+        getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+        onNodeUpdate={onNodeUpdate}
+        formatNodeDisplay={formatNodeDisplay}
+      />
     </div>
   );
 }

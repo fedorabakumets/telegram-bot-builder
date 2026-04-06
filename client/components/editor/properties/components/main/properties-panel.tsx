@@ -509,6 +509,7 @@ export function PropertiesPanel({
                   selectedNode={selectedNode}
                   onNodeUpdate={onNodeUpdate}
                   getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+                  formatNodeDisplay={formatNodeDisplay}
                 />
               </div>
             </div>
