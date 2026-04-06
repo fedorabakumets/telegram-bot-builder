@@ -26,7 +26,7 @@ export function SaveAnswerIndicator({ node }: SaveAnswerIndicatorProps) {
   const mode = data.appendVariable ? 'append' : 'replace';
 
   return (
-    <div className="rounded-xl p-4 mb-4 bg-gradient-to-br from-cyan-50/80 to-sky-50/80 dark:from-cyan-900/20 dark:to-sky-900/20 border border-cyan-100 dark:border-cyan-800/30">
+    <div className="rounded-xl p-4 bg-gradient-to-br from-cyan-50/80 to-sky-50/80 dark:from-cyan-900/20 dark:to-sky-900/20 border border-cyan-100 dark:border-cyan-800/30">
       <div className="flex items-start space-x-3">
         <div className="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center flex-shrink-0">
           <i className="fas fa-save text-cyan-600 dark:text-cyan-400 text-sm" />
