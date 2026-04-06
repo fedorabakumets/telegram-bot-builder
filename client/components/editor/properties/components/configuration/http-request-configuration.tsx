@@ -34,7 +34,7 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
       {/* Метод и URL */}
       <div className="space-y-2">
         <Label className="text-sm font-medium">Метод и URL</Label>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
           <Select
             value={method}
             onValueChange={(v) => onNodeUpdate(selectedNode.id, { httpRequestMethod: v as typeof HTTP_METHODS[number] })}
@@ -52,7 +52,7 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
             placeholder="https://api.example.com/endpoint"
             value={data.httpRequestUrl || ''}
             onChange={(e) => onNodeUpdate(selectedNode.id, { httpRequestUrl: e.target.value })}
-            className="flex-1 font-mono text-sm"
+            className="w-full font-mono text-sm"
           />
         </div>
       </div>
