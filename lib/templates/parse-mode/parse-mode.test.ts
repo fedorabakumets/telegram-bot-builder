@@ -45,6 +45,13 @@ describe('generateParseMode()', () => {
     const result = generateParseMode(validParamsWithIndent);
     assert.ok(result.includes('    # Используем parse_mode'));
   });
+
+  it('при конфликте markdown=true + formatMode="html" — побеждает formatMode (HTML)', () => {
+    // formatMode имеет приоритет над устаревшим флагом markdown
+    const result = generateParseMode({ markdown: true, formatMode: 'html' });
+    assert.ok(result.includes('parse_mode = ParseMode.HTML'), 'должен быть HTML');
+    assert.ok(!result.includes('parse_mode = ParseMode.MARKDOWN'), 'Markdown не должен быть');
+  });
 });
 
 describe('parseModeParamsSchema', () => {

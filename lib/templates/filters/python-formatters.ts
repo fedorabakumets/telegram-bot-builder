@@ -48,20 +48,37 @@ export function escapePythonString(value: string | number | null | undefined): s
 }
 
 /**
- * Форматирует текст для вставки в Python код (тройные кавычки для многострочного)
+ * Форматирует текст для вставки в Python код.
+ * Многострочный текст оборачивается в одинарные тройные кавычки `'''`,
+ * чтобы не нужно было экранировать двойные кавычки (они встречаются чаще).
+ * Однострочный текст оборачивается в двойные кавычки с полным экранированием.
+ *
+ * @param text - Исходный текст для форматирования
+ * @returns Python-литерал строки (с кавычками)
+ *
+ * @example
+ * formatTextForPython("Привет!")          // → `"Привет!"`
+ * formatTextForPython('Он сказал "да"')   // → `"Он сказал \"да\""`
+ * formatTextForPython("Строка 1\nСтрока 2") // → `'''Строка 1\nСтрока 2'''`
+ * formatTextForPython("Текст с '''")      // → `'''Текст с '\'\'\'`
  */
 export function formatTextForPython(text: string): string {
   if (!text) return '""';
   if (text.includes('\n')) {
-    // В тройных кавычках экранируем только """ и обратный слеш
+    // Многострочный режим: одинарные тройные кавычки — двойные кавычки не нужно экранировать
     const escaped = text
       .replace(/\\/g, '\\\\')
-      .replace(/"""/g, '\\"\\"\\"')
+      .replace(/'''/g, "'\\'")   // ''' → '\' — разрываем тройную одинарную кавычку
       .replace(/\r/g, '\\r');
-    return `"""${escaped}"""`;
+    return `'''${escaped}'''`;
   }
-  // В обычных двойных кавычках — полное экранирование
-  return `"${text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\r/g, '\\r').replace(/\t/g, '\\t')}"`;
+  // Однострочный режим: двойные кавычки с полным экранированием
+  return `"${text
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t')}"`;
 }
 
 /**
@@ -127,27 +144,17 @@ export interface GenerateMessageTextOptions {
 }
 
 /**
- * Генерирует Python-код для определения переменной текста сообщения
+ * Генерирует Python-код для определения переменной текста сообщения.
+ * Использует `formatTextForPython` для корректного экранирования.
+ * @param options - Параметры генерации
+ * @returns Массив строк Python-кода
  */
 export function generateMessageText(options: GenerateMessageTextOptions): string[] {
   const { node, indent, variableName = 'text' } = options;
   const lines: string[] = [];
   const messageText = node.data?.messageText || '';
   lines.push(`${indent}# Текст сообщения из узла`);
-  if (messageText.includes('\n')) {
-    const escapedText = messageText
-      .replace(/\\/g, '\\\\')
-      .replace(/"""/g, '\\"\\"\\"')
-      .replace(/\r/g, '\\r');
-    lines.push(`${indent}${variableName} = """${escapedText}"""`);
-  } else {
-    const escapedText = messageText
-      .replace(/\\/g, '\\\\')
-      .replace(/"/g, '\\"')
-      .replace(/\r/g, '\\r')
-      .replace(/\t/g, '\\t');
-    lines.push(`${indent}${variableName} = "${escapedText}"`);
-  }
+  lines.push(`${indent}${variableName} = ${formatTextForPython(messageText)}`);
   lines.push('');
   return lines;
 }
