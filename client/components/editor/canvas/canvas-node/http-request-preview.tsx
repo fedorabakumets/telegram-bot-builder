@@ -79,7 +79,8 @@ export function HttpRequestPreview({ node }: HttpRequestPreviewProps) {
       )}
       {responseVar && (
         <div className="text-xs text-muted-foreground">
-          → <span className="font-mono text-cyan-600 dark:text-cyan-400">{'{' + responseVar + '}'}</span>
+          <span className="text-slate-400 dark:text-slate-500">ответ → </span>
+          <span className="font-mono text-cyan-600 dark:text-cyan-400">{'{' + responseVar + '}'}</span>
         </div>
       )}
     </div>
