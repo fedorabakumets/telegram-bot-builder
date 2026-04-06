@@ -51,6 +51,8 @@ export function HttpRequestPreview({ node }: HttpRequestPreviewProps) {
   const method = node.data.httpRequestMethod || 'GET';
   const url = node.data.httpRequestUrl || 'URL не задан';
   const responseVar = node.data.httpRequestResponseVariable;
+  const statusVar = node.data.httpRequestStatusVariable;
+  const timeout = node.data.httpRequestTimeout as number | undefined;
   const headers = parseHeaders(node.data.httpRequestHeaders as string | undefined);
   const body = node.data.httpRequestBody as string | undefined;
   const showBody = (method === 'POST' || method === 'PUT' || method === 'PATCH') && body && body !== '{}';
@@ -81,6 +83,18 @@ export function HttpRequestPreview({ node }: HttpRequestPreviewProps) {
         <div className="text-xs text-muted-foreground">
           <span className="text-slate-400 dark:text-slate-500">ответ → </span>
           <span className="font-mono text-cyan-600 dark:text-cyan-400">{'{' + responseVar + '}'}</span>
+        </div>
+      )}
+      {statusVar && (
+        <div className="text-xs text-muted-foreground">
+          <span className="text-slate-400 dark:text-slate-500">статус → </span>
+          <span className="font-mono text-emerald-600 dark:text-emerald-400">{'{' + statusVar + '}'}</span>
+        </div>
+      )}
+      {timeout && timeout !== 30 && (
+        <div className="text-xs text-muted-foreground">
+          <span className="text-slate-400 dark:text-slate-500">таймаут: </span>
+          <span className="font-mono text-amber-600 dark:text-amber-400">{timeout}с</span>
         </div>
       )}
     </div>
