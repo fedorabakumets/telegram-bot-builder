@@ -45,4 +45,36 @@ describe('generateNodeHandlers', () => {
     assert.ok(result.includes('"waiting_for_input"'));
     assert.ok(result.includes('"variable": "user_name"'));
   });
+  it('does not duplicate callback handler for get_managed_bot_token', () => {
+    const result = generateNodeHandlers([
+      {
+        id: 'get_token_1',
+        type: 'get_managed_bot_token',
+        position: { x: 0, y: 0 },
+        data: {
+          autoTransitionTo: 'msg_done',
+          enableAutoTransition: true,
+          botIdSource: 'manual',
+          botIdManual: '123456789',
+          saveTokenTo: 'bot_token',
+          buttons: [],
+          keyboardType: 'none',
+        },
+      } as any,
+      {
+        id: 'msg_done',
+        type: 'message',
+        position: { x: 0, y: 0 },
+        data: {
+          messageText: 'done',
+          buttons: [],
+          keyboardType: 'none',
+        },
+      } as any,
+    ], false, false);
+
+    const handlerMatches = result.match(/async def handle_callback_get_token_1\(/g) || [];
+    assert.equal(handlerMatches.length, 1);
+    assert.ok(result.includes('get_managed_bot_token(user_id=int(_bot_id))'));
+  });
 });

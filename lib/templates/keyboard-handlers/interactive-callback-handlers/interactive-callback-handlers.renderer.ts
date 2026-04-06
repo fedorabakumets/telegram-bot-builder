@@ -19,6 +19,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'input',
   'keyboard',
   'media',
+  'get_managed_bot_token',
   'command_trigger',
   'text_trigger',
   'callback_trigger',
