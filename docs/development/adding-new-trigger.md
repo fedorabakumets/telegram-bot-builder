@@ -135,3 +135,144 @@ type: z.enum([..., 'managed_bot_updated_trigger'])
 5. Канвас (`preview.tsx`, `header.tsx`, `canvas-node.tsx`, `node-header.tsx`, `node-icons.ts`, `node-colors.ts`, `connections-layer.tsx`)
 6. Переменные (`variables-utils.ts`, `variable-display-utils.tsx`)
 7. Раскладка (`hierarchical-layout.ts`)
+
+---
+
+# Добавление нового триггера в генерацию кода
+
+Этот раздел описывает все файлы для добавления поддержки нового триггера на стороне генерации Python кода.
+
+Пример реализации: `managed_bot_updated_trigger` → папка `lib/templates/managed-bot-updated-trigger/`.
+
+---
+
+## 1. Новая папка шаблона `lib/templates/{name}/`
+
+Каждый триггер — отдельная папка со стандартным набором файлов:
+
+### `{name}.params.ts` — TypeScript интерфейсы
+Определяет `{Name}Entry` (поля одного триггера) и `{Name}TemplateParams` (массив entries).
+
+Обязательные поля Entry:
+- `nodeId: string` — ID узла
+- `targetNodeId: string` — ID целевого узла
+- `targetNodeType: string` — тип целевого узла
+
+Опциональные поля — специфичные для триггера (переменные для сохранения, фильтры и т.д.).
+
+### `{name}.schema.ts` — Zod схема валидации
+Валидирует параметры перед передачей в шаблон. Обязательные поля — `z.string()`, опциональные — `z.string().optional()`.
+
+### `{name}.py.jinja2` — Jinja2 шаблон Python кода
+Генерирует Python обработчик. Для триггеров-сообщений:
+```jinja2
+@dp.message(lambda m: m.{event_field} is not None)
+async def {name}_{nodeId}_handler(message: types.Message):
+    ...
+    fake_cb = FakeCallbackQuery(user_id, message)
+    await handle_callback_{targetNodeId}(fake_cb)
+```
+
+`FakeCallbackQuery` должен содержать `self.message = message` чтобы `safe_edit_or_send` мог отправить ответ.
+
+### `{name}.renderer.ts` — функции генерации
+Три функции:
+- `collect{Name}Entries(nodes)` — собирает триггеры из узлов
+- `generate{Name}(params)` — низкоуровневый API
+- `generate{Name}Handlers(nodes)` — высокоуровневый API
+
+### `{name}.fixture.ts` — тестовые данные
+Фикстуры для unit-тестов: `validParamsEmpty`, `validParamsSingle`, `validParamsMultiple`, `nodesWithTrigger`, `nodesWithMissingTarget`, `nodesWithoutTriggers`, `nodesWithNullAndMixed`.
+
+### `{name}.test.ts` — unit тесты (vitest)
+Блоки тестов:
+- `generate{Name}()` — 8–10 тестов
+- `{name}ParamsSchema` — 4 теста
+- `collect{Name}Entries()` — 5 тестов
+- `generate{Name}Handlers()` — 4 теста
+- Специфика триггера — 5–7 тестов
+- Производительность — 2 теста
+
+### `{name}.md` — документация
+Описание, таблица параметров, пример входных данных, пример выходного Python кода, использование API.
+
+### `index.ts` — реэкспорт модуля
+
+---
+
+## 2. Фазовый тест `lib/tests/test-phase-{name}.ts`
+
+Интеграционный тест генерации Python кода через `generatePythonCode`. Блоки:
+- **A**: Базовая генерация (10 тестов) — декоратор, имя, переменные, вызов handle_callback, logging, без autoTransitionTo, несколько триггеров, синтаксис
+- **B**: Целевые ноды (6 тестов) — message, forward_message, condition, с переменными
+- **C**: Специфика триггера (4 теста) — фильтры, условия
+- **D**: Взаимодействие с другими триггерами (5 тестов)
+- **E**: FakeCallbackQuery (4 теста) — from_user, _is_fake, self.message
+- **F**: Полные сценарии (3 теста) — с userDatabaseEnabled, несколько триггеров
+
+---
+
+## 3. Редактируемые файлы
+
+### `lib/templates/node-handlers/node-handlers.dispatcher.ts`
+Три изменения:
+1. Добавить импорт `generate{Name}Handlers`
+2. Добавить блок вызова после аналогичных триггеров:
+```ts
+const {name}Code = generate{Name}Handlers(nodes);
+if ({name}Code) {
+  codeLines.push('\n# Обработчики {название}');
+  {name}Code.split('\n').forEach(line => codeLines.push(line));
+}
+```
+3. Добавить тип в условие пропуска: `|| (node.type as any) === '{type_name}'`
+
+### `lib/templates/filters/node-predicates.ts`
+Добавить предикат:
+```ts
+export function has{Name}Nodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === '{type_name}');
+}
+```
+
+---
+
+## 4. Особенности для разных типов триггеров
+
+### Триггер-сообщение (ContentType)
+Регистрируется через `@dp.message(lambda m: m.{field} is not None)`.
+`FakeCallbackQuery` принимает `message` и хранит `self.message = message`.
+
+### Триггер-апдейт (Update.*)
+Регистрируется через `@dp.update.outer_middleware()`.
+`FakeCallbackQuery` без `self.message`.
+
+### Триггер-команда
+Регистрируется через `@dp.message(Command("..."))`.
+
+---
+
+## 5. Итого файлов для генерации
+
+| Тип | Количество |
+|-----|-----------|
+| Новых файлов в папке шаблона | 8 |
+| Новый фазовый тест | 1 |
+| Редактируемых файлов | 2 |
+| **Итого** | **11** |
+
+---
+
+## 6. Порядок реализации (генерация)
+
+1. `{name}.params.ts` — интерфейсы
+2. `{name}.schema.ts` — схема
+3. `{name}.py.jinja2` — шаблон
+4. `{name}.renderer.ts` — генератор
+5. `{name}.fixture.ts` — фикстуры
+6. `{name}.test.ts` — unit тесты
+7. `{name}.md` — документация
+8. `index.ts` — реэкспорт
+9. `node-handlers.dispatcher.ts` — интеграция
+10. `node-predicates.ts` — предикат
+11. `test-phase-{name}.ts` — фазовый тест
