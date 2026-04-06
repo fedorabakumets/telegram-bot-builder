@@ -19,8 +19,6 @@
 {%- set sanitized_node_id = entry.nodeId | safe_name -%}
 {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
 
-# @@NODE_START:{{ entry.nodeId }}@@
-
 @dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
 async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery):
     """Получить токен управляемого бота"""
@@ -56,6 +54,7 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 
         # Переход к следующему узлу
         {% if entry.targetNodeId %}
+        logging.info(f"🔵 get_managed_bot_token: переход к узлу {{ entry.targetNodeId }}")
         class FakeCallbackQuery:
             def __init__(self, user_id_val, msg):
                 self.from_user = type('User', (), {
@@ -83,5 +82,4 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         user_data.setdefault(user_id, {})["{{ entry.saveErrorTo }}"] = str(e)
         {% endif %}
 
-# @@NODE_END:{{ entry.nodeId }}@@
 {% endfor %}
