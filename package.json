@@ -40,6 +40,7 @@
     "build:client": "vite build --mode production --config vite.config.ts",
     "build:fast": "vite build --mode production --minify false",
     "build:server": "tsc --project tsconfig.server.json --outDir dist/server --noEmitOnError false",
+    "postbuild:server": "node scripts/copy-server-templates.js",
     "check": "tsc --noEmit",
     "db:push": "drizzle-kit push",
     "db:test": "tsx --tsconfig tsconfig.node.json server/test-db-connection.ts",
