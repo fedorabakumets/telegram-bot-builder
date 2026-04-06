@@ -10,10 +10,10 @@
 {{ ind }}if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
 {{ ind }}    parse_mode = conditional_parse_mode
 {{ ind }}else:
-{% if formatMode == 'markdown' or markdown %}
-{{ ind }}    parse_mode = ParseMode.MARKDOWN
-{% elif formatMode == 'html' %}
+{% if formatMode == 'html' %}
 {{ ind }}    parse_mode = ParseMode.HTML
+{% elif formatMode == 'markdown' or markdown %}
+{{ ind }}    parse_mode = ParseMode.MARKDOWN
 {% else %}
 {{ ind }}    parse_mode = None
 {% endif %}
