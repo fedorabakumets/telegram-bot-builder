@@ -153,6 +153,52 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
       });
     }
   });
+  // Добавляем переменные от http_request-узлов
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'http_request') return;
+    const data = node.data as any;
+    if (data.httpRequestResponseVariable) {
+      const key = `http_response__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.httpRequestResponseVariable,
+          nodeId: node.id,
+          nodeType: 'http_request' as any,
+          description: `Ответ HTTP запроса (${data.httpRequestMethod || 'GET'} ${data.httpRequestUrl || ''})`,
+        });
+      }
+    }
+    if (data.httpRequestStatusVariable) {
+      const key = `http_status__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.httpRequestStatusVariable,
+          nodeId: node.id,
+          nodeType: 'http_request' as any,
+          description: `Статус-код HTTP запроса (${data.httpRequestMethod || 'GET'} ${data.httpRequestUrl || ''})`,
+        });
+      }
+    }
+  });
+
+  // Добавляем переменные от отдельных input-узлов (type === 'input')
+  allNodes.forEach(node => {
+    if (node.type !== 'input') return;
+    const data = node.data as any;
+    if (data.inputVariable) {
+      const key = `input_node__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.inputVariable,
+          nodeId: node.id,
+          nodeType: 'input' as any,
+          sourceTable: 'bot_users',
+          description: `Ответ пользователя (${data.inputType || 'any'})`,
+        });
+      }
+    }
+  });
+
   // Добавляем переменные от managed_bot_updated_trigger нод (Bot API 9.6)
   allNodes.forEach(node => {
     if ((node.type as string) !== 'managed_bot_updated_trigger') return;
