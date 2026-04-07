@@ -349,6 +349,32 @@ export function getNodeDefaults(type: Node['type']): any {
       /** Время кеширования ответа в секундах */
       callbackCacheTime: 0,
     },
+    edit_message: {
+      /** Режим редактирования: 'text' | 'markup' | 'both' */
+      editMode: 'text',
+      /** Новый текст сообщения */
+      editMessageText: '',
+      /** Режим форматирования: 'html' | 'markdown' | 'none' */
+      editFormatMode: 'none',
+      /** Источник ID сообщения */
+      editMessageIdSource: 'current_message',
+      /** Имя переменной с ID сообщения */
+      editMessageIdVariable: '',
+      /** ID сообщения вручную */
+      editMessageIdManual: '',
+      /** Источник ID чата */
+      editChatIdSource: 'current_chat',
+      /** Имя переменной с ID чата */
+      editChatIdVariable: '',
+      /** ID чата вручную */
+      editChatIdManual: '',
+      /** Убрать клавиатуру */
+      editRemoveKeyboard: false,
+      /** Новые кнопки */
+      editButtons: [],
+      /** Тип клавиатуры */
+      editKeyboardType: 'inline',
+    },
   };
   return defaults[type] || {};
 }

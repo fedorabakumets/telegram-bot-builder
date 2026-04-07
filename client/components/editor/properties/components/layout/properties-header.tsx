@@ -74,6 +74,7 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   managed_bot_updated_trigger: 'Триггер создания/обновления бота',
   get_managed_bot_token: 'Получить токен бота',
   answer_callback_query: 'Уведомление inline кнопки',
+  edit_message: 'Редактировать сообщение',
 };
 
 /**
@@ -121,6 +122,7 @@ const nodeIcons: Partial<Record<Node['type'], string>> = {
   managed_bot_updated_trigger: 'fas fa-robot',
   get_managed_bot_token: 'fas fa-key',
   answer_callback_query: 'fas fa-bell',
+  edit_message: 'fas fa-pen',
 };
 
 /**
@@ -168,6 +170,8 @@ const nodeColors: Partial<Record<Node['type'], string>> = {
   managed_bot_updated_trigger: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
   get_managed_bot_token: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
   answer_callback_query: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+  /** Цвет узла редактирования сообщения — синий */
+  edit_message: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
 /**

@@ -42,6 +42,7 @@ import { MediaNodePreview } from './media-node-preview';
 import { HttpRequestPreview } from './http-request-preview';
 import { GetManagedBotTokenPreview } from './get-managed-bot-token-preview';
 import { AnswerCallbackQueryPreview } from './answer-callback-query-preview';
+import { EditMessagePreview } from './edit-message-preview';
 import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
 
 /**
@@ -486,7 +487,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           // Компактный размер для триггеров
           node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger'
             ? "p-3 w-52"
-            : (node.type as any) === 'callback_trigger' || (node.type as any) === 'answer_callback_query'
+            : (node.type as any) === 'callback_trigger' || (node.type as any) === 'answer_callback_query' || (node.type as any) === 'edit_message'
             ? "p-3 w-52"            : node.type === 'condition'
             ? "p-4 w-64"
             : node.type === 'message'
@@ -528,7 +529,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         }}
       >
         {/* Заголовок узла — скрыт для триггеров, узла сообщения и узла условия */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && (node.type as any) !== 'edit_message' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (
           <NodeHeader node={node} onMove={!!onMove} />
         )}
 
@@ -603,6 +604,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Answer Callback Query Preview */}
         {(node.type as any) === 'answer_callback_query' && <AnswerCallbackQueryPreview node={node} />}
+
+        {/* Edit Message Preview */}
+        {(node.type as any) === 'edit_message' && <EditMessagePreview node={node} />}
 
         {/* Condition Node Preview */}
         {node.type === 'condition' && (

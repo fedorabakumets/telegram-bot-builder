@@ -109,6 +109,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             🔔 Уведомление кнопки
           </span>
         );
+      /** Заголовок узла редактирования сообщения */
+      case 'edit_message' as any:
+        return (
+          <span className="font-semibold text-blue-700 dark:text-blue-300">
+            ✏️ Редактировать сообщение
+          </span>
+        );
       /** Заголовок триггера обновления управляемого бота */
       case 'managed_bot_updated_trigger' as any:
         return (

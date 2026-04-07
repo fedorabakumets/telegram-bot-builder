@@ -4,3 +4,4 @@
  */
 
 export { answerCallbackQueryNode } from './answer-callback-query-node';
+export { editMessageNode } from './edit-message-node';

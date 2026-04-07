@@ -62,4 +62,6 @@ export const nodeIcons: Record<string, string> = {
   get_managed_bot_token: 'fas fa-key',
   /** Иконка узла ответа на callback_query */
   answer_callback_query: 'fas fa-bell',
+  /** Иконка узла редактирования сообщения */
+  edit_message: 'fas fa-pen',
 };

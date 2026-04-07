@@ -14,7 +14,7 @@ import { conditionNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode } from './massive/content-management';
 import { httpRequestNode } from './massive/http-request';
 import { getManagedBotTokenNode } from './massive/managed-bots';
-import { answerCallbackQueryNode } from './massive/actions';
+import { answerCallbackQueryNode, editMessageNode } from './massive/actions';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -48,7 +48,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Управление контентом',
-    components: [forwardMessage, createForumTopicNode]
+    components: [forwardMessage, createForumTopicNode, editMessageNode]
   },
   {
     title: 'Интеграции',

@@ -50,6 +50,7 @@ export function getNodeTypeLabel(type: Node['type']): string {
     managed_bot_updated_trigger: 'Триггер создания/обновления бота',
     get_managed_bot_token: 'Получить токен бота',
     answer_callback_query: 'Уведомление inline кнопки',
+    edit_message: 'Редактировать сообщение',
   };
 
   return types[type] || type;

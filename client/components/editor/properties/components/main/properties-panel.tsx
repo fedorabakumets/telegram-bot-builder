@@ -62,6 +62,7 @@ import { MediaNodeProperties } from './media-node-properties';
 import { HttpRequestConfiguration } from '../configuration/http-request-configuration';
 import { GetManagedBotTokenConfiguration } from '../configuration/get-managed-bot-token-configuration';
 import { AnswerCallbackQueryConfiguration } from '../action/AnswerCallbackQueryConfiguration';
+import { EditMessageConfiguration } from '../action/EditMessageConfiguration';
 import type { Variable } from '../../../inline-rich/types';
 
 /**
@@ -366,7 +367,7 @@ export function PropertiesPanel({
         <div className="space-y-0">
 
           {/* Basic Settings Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»Р° СЂР°СЃСЃС‹Р»РєР°, client_auth, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <BasicSettingsSection
               selectedNode={selectedNode}
               projectId={projectId}
@@ -538,6 +539,28 @@ export function PropertiesPanel({
             </div>
           )}
 
+          {/* Edit Message Section */}
+          {(selectedNode.type as any) === 'edit_message' && (
+            <div className="w-full bg-gradient-to-br from-blue-50/40 to-sky-50/20 dark:from-blue-950/30 dark:to-sky-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
+              <SectionHeader
+                title="Редактировать сообщение"
+                description="editMessageText / editMessageReplyMarkup"
+                isOpen={true}
+                onToggle={() => {}}
+                icon="pen"
+                iconGradient="from-blue-100 to-sky-100 dark:from-blue-900/50 dark:to-sky-900/50"
+                iconColor="text-blue-600 dark:text-blue-400"
+              />
+              <div className="mt-3 sm:mt-4">
+                <EditMessageConfiguration
+                  selectedNode={selectedNode}
+                  onNodeUpdate={onNodeUpdate}
+                  getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Trigger Section - С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»РѕРІ-С‚СЂРёРіРіРµСЂРѕРІ */}
           {isTriggerNode(selectedNode.type) && selectedNode.type === 'command_trigger' && (
             <CommandTriggerConfiguration
@@ -610,7 +633,7 @@ export function PropertiesPanel({
           )}
 
           {/* Message Content - скрыто для узлов управления, триггеров, условия и медиа-нодов */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (
             <MessageContentSection
               selectedNode={selectedNode}
               allNodes={allNodes}
@@ -628,7 +651,7 @@ export function PropertiesPanel({
             />
           )}
           {/* Media File Section - скрыто для узлов управления, триггеров, условия и медиа-нодов */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (
             <MediaFileSection
               projectId={projectId}
               selectedNode={selectedNode}
@@ -640,7 +663,7 @@ export function PropertiesPanel({
           )}
 
           {/* Keyboard Section - скрыто для узлов управления, триггеров, условия и медиа-нодов */}
-          {selectedNode.type !== 'message' && !isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (
+          {selectedNode.type !== 'message' && !isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (
             <div className="w-full bg-gradient-to-br from-amber-50/40 to-yellow-50/20 dark:from-amber-950/30 dark:to-yellow-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-amber-200/40 dark:border-amber-800/40 backdrop-blur-sm">
               <KeyboardSectionHeader
                 selectedNode={selectedNode}
@@ -774,7 +797,7 @@ export function PropertiesPanel({
         )}
 
         {/* Universal User Input Collection - скрыто для узлов управления, триггеров, условия и медиа-нодов */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (
             <UserInputSettingsSection
               selectedNode={selectedNode}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
