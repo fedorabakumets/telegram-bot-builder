@@ -62,7 +62,6 @@ function makeHttpRequestNode(id: string, data: Record<string, any>): BotData['no
 function makeBotDataWithHttpRequest(httpData: Record<string, any>): BotData {
   return {
     nodes: [makeStartNode(), makeHttpRequestNode('http_req_1', httpData)],
-    connections: [],
   };
 }
 
@@ -285,7 +284,6 @@ describe('http_request — несколько узлов', () => {
           httpRequestMethod: 'GET',
         }),
       ],
-      connections: [],
     };
     const code = generatePythonCode(botData, { botName: 'TestBot' });
     expect(code).toContain('handle_callback_http_1');
@@ -307,7 +305,6 @@ describe('http_request — несколько узлов', () => {
           httpRequestResponseVariable: 'resp2',
         }),
       ],
-      connections: [],
     };
     const code = generatePythonCode(botData, { botName: 'TestBot' });
     expect(code).toContain('resp1');
@@ -340,7 +337,6 @@ describe('http_request — автопереход', () => {
           } as unknown as BotData['nodes'][number]['data'],
         },
       ],
-      connections: [],
     };
     const code = generatePythonCode(botData, { botName: 'TestBot' });
     expect(code).toContain('handle_callback_next_node');
