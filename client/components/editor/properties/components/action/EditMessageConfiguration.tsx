@@ -7,6 +7,7 @@ import type { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InlineRichEditor } from '@/components/editor/inline-rich/inline-rich-editor';
 import { extractVariables } from '../../utils/variables-utils';
 import type { Variable } from '@/components/editor/inline-rich/types';
@@ -73,25 +74,19 @@ export function EditMessageConfiguration({
         <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
           Источник сообщения
         </p>
-        <div className="flex flex-col gap-2">
-          {[
-            { value: 'current_message', label: 'Текущее сообщение' },
-            { value: 'variable', label: 'Из переменной' },
-            { value: 'manual', label: 'Вручную' },
-          ].map(({ value, label }) => (
-            <label key={value} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name={`editMessageIdSource_${selectedNode.id}`}
-                value={value}
-                checked={(data.editMessageIdSource ?? 'current_message') === value}
-                onChange={() => update('editMessageIdSource', value)}
-                className="accent-blue-500"
-              />
-              <span className="text-xs text-slate-600 dark:text-slate-400">{label}</span>
-            </label>
-          ))}
-        </div>
+        <Select
+          value={data.editMessageIdSource ?? 'current_message'}
+          onValueChange={(v) => update('editMessageIdSource', v)}
+        >
+          <SelectTrigger className="bg-card/70">
+            <SelectValue placeholder="Выберите источник сообщения" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="current_message">Текущее сообщение</SelectItem>
+            <SelectItem value="variable">Из переменной</SelectItem>
+            <SelectItem value="manual">Вручную</SelectItem>
+          </SelectContent>
+        </Select>
         {data.editMessageIdSource === 'variable' && (
           <Input
             value={data.editMessageIdVariable ?? ''}
