@@ -299,6 +299,13 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     )
     {%- endif %}{# /hasUserRecipient #}
 
+    {# Сохранение ID отправленного сообщения в переменную #}
+    {%- if saveMessageIdTo %}
+    if sent_message and hasattr(sent_message, 'message_id'):
+        user_data[user_id]["{{ saveMessageIdTo }}"] = sent_message.message_id
+        logging.info(f"💾 ID сообщения сохранён в переменную '{{ saveMessageIdTo }}': {sent_message.message_id}")
+    {%- endif %}
+
     {# Отправка дополнительным получателям (chat_id / admin_ids) #}
     {%- if messageSendRecipients and messageSendRecipients|length > 0 %}
     {%- for recipient in messageSendRecipients %}

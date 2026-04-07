@@ -108,6 +108,9 @@ export const messageParamsSchema = z.object({
   // --- Служебные ---
   /** Есть ли входящие кнопки с hideAfterClick=true, ведущие к этому узлу */
   hasHideAfterClickIncoming: z.boolean().optional().default(false),
+  /** Имя переменной для сохранения ID отправленного сообщения */
+  saveMessageIdTo: z.string().optional(),
+
   /** Список получателей сообщения (chat_id / user / admin_ids) */
   messageSendRecipients: z.array(z.object({
     /** Уникальный ID получателя */
@@ -128,17 +131,8 @@ export const messageParamsSchema = z.object({
    */
   callbackPattern: z.string().optional(),
 
-  /** Список получателей сообщения (помимо основного пользователя) */
-  messageSendRecipients: z.array(z.object({
-    /** Уникальный идентификатор получателя */
-    id: z.string(),
-    /** Тип получателя */
-    type: z.enum(['user', 'chat_id', 'admin_ids']),
-    /** ID чата, @username или {переменная} */
-    chatId: z.string().optional(),
-    /** ID топика или {переменная} */
-    threadId: z.string().optional(),
-  })).optional().default([]),
+  /** Имя переменной для сохранения ID отправленного сообщения */
+  saveMessageIdTo: z.string().optional(),
 });
 
 /** Тип параметров сообщения (выведен из схемы) */
