@@ -544,7 +544,6 @@ export function PropertiesPanel({
             <div className="w-full bg-gradient-to-br from-blue-50/40 to-sky-50/20 dark:from-blue-950/30 dark:to-sky-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
               <SectionHeader
                 title="Редактировать сообщение"
-                description="editMessageText / editMessageReplyMarkup"
                 isOpen={true}
                 onToggle={() => {}}
                 icon="pen"
