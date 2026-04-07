@@ -102,6 +102,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
         );
       case 'group_message_trigger':
         return <GroupMessageTriggerHeader node={node} />;
+      /** Заголовок узла ответа на callback_query */
+      case 'answer_callback_query' as any:
+        return (
+          <span className="font-semibold text-purple-700 dark:text-purple-300">
+            🔔 Уведомление кнопки
+          </span>
+        );
       /** Заголовок триггера обновления управляемого бота */
       case 'managed_bot_updated_trigger' as any:
         return (

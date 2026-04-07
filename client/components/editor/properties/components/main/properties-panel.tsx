@@ -61,6 +61,7 @@ import { ClientAuthProperties } from '../client-auth/client-auth-properties';
 import { MediaNodeProperties } from './media-node-properties';
 import { HttpRequestConfiguration } from '../configuration/http-request-configuration';
 import { GetManagedBotTokenConfiguration } from '../configuration/get-managed-bot-token-configuration';
+import { AnswerCallbackQueryConfiguration } from '../action/AnswerCallbackQueryConfiguration';
 import type { Variable } from '../../../inline-rich/types';
 
 /**
@@ -365,7 +366,7 @@ export function PropertiesPanel({
         <div className="space-y-0">
 
           {/* Basic Settings Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»Р° СЂР°СЃСЃС‹Р»РєР°, client_auth, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <BasicSettingsSection
               selectedNode={selectedNode}
               projectId={projectId}
@@ -515,6 +516,28 @@ export function PropertiesPanel({
             </div>
           )}
 
+          {/* Answer Callback Query Section */}
+          {(selectedNode.type as any) === 'answer_callback_query' && (
+            <div className="w-full bg-gradient-to-br from-purple-50/40 to-violet-50/20 dark:from-purple-950/30 dark:to-violet-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-purple-200/40 dark:border-purple-800/40 backdrop-blur-sm">
+              <SectionHeader
+                title="Уведомление inline-кнопки"
+                description="answerCallbackQuery — уведомление после нажатия кнопки"
+                isOpen={true}
+                onToggle={() => {}}
+                icon="bell"
+                iconGradient="from-purple-100 to-violet-100 dark:from-purple-900/50 dark:to-violet-900/50"
+                iconColor="text-purple-600 dark:text-purple-400"
+              />
+              <div className="mt-3 sm:mt-4">
+                <AnswerCallbackQueryConfiguration
+                  selectedNode={selectedNode}
+                  onNodeUpdate={onNodeUpdate}
+                  getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Trigger Section - С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»РѕРІ-С‚СЂРёРіРіРµСЂРѕРІ */}
           {isTriggerNode(selectedNode.type) && selectedNode.type === 'command_trigger' && (
             <CommandTriggerConfiguration
@@ -586,8 +609,8 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Message Content - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
+          {/* Message Content - скрыто для узлов управления, триггеров, условия и медиа-нодов */}
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (
             <MessageContentSection
               selectedNode={selectedNode}
               allNodes={allNodes}
@@ -604,8 +627,8 @@ export function PropertiesPanel({
               projectId={projectId}
             />
           )}
-          {/* Media File Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
+          {/* Media File Section - скрыто для узлов управления, триггеров, условия и медиа-нодов */}
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (
             <MediaFileSection
               projectId={projectId}
               selectedNode={selectedNode}
@@ -616,8 +639,8 @@ export function PropertiesPanel({
             />
           )}
 
-          {/* Keyboard Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-          {selectedNode.type !== 'message' && !isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
+          {/* Keyboard Section - скрыто для узлов управления, триггеров, условия и медиа-нодов */}
+          {selectedNode.type !== 'message' && !isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (
             <div className="w-full bg-gradient-to-br from-amber-50/40 to-yellow-50/20 dark:from-amber-950/30 dark:to-yellow-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-amber-200/40 dark:border-amber-800/40 backdrop-blur-sm">
               <KeyboardSectionHeader
                 selectedNode={selectedNode}
@@ -750,8 +773,8 @@ export function PropertiesPanel({
           </div>
         )}
 
-        {/* Universal User Input Collection - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»РѕРІ СѓРїСЂР°РІР»РµРЅРёСЏ, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (
+        {/* Universal User Input Collection - скрыто для узлов управления, триггеров, условия и медиа-нодов */}
+          {!isManagementNode(selectedNode.type) && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (
             <UserInputSettingsSection
               selectedNode={selectedNode}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}

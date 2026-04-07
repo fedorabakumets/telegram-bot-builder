@@ -14,6 +14,7 @@ import { conditionNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode } from './massive/content-management';
 import { httpRequestNode } from './massive/http-request';
 import { getManagedBotTokenNode } from './massive/managed-bots';
+import { answerCallbackQueryNode } from './massive/actions';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -51,7 +52,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Интеграции',
-    components: [httpRequestNode]
+    components: [httpRequestNode, answerCallbackQueryNode]
   },
   {
     title: 'Управление ботами',

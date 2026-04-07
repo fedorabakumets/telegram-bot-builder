@@ -61,4 +61,6 @@ export const nodeColors: Record<string, string> = {
   managed_bot_updated_trigger: 'bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-300 dark:border-indigo-700/50 shadow-lg shadow-indigo-500/20',
   /** Цвет узла получения токена управляемого бота — индиго */
   get_managed_bot_token: 'bg-gradient-to-br from-indigo-50 to-violet-100 dark:from-indigo-900/30 dark:to-violet-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800',
+  /** Цвет узла ответа на callback_query — фиолетовый */
+  answer_callback_query: 'bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800',
 };

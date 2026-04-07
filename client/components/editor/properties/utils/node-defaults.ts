@@ -341,6 +341,14 @@ export function getNodeDefaults(type: Node['type']): any {
       saveErrorTo: '',
       autoTransitionTo: '',
     },
+    answer_callback_query: {
+      /** Текст уведомления (0–200 символов) */
+      callbackNotificationText: '',
+      /** Показать как алерт (true) или тост (false) */
+      callbackShowAlert: false,
+      /** Время кеширования ответа в секундах */
+      callbackCacheTime: 0,
+    },
   };
   return defaults[type] || {};
 }

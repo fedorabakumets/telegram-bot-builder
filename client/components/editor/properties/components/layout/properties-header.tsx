@@ -73,6 +73,7 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   http_request: 'HTTP запрос',
   managed_bot_updated_trigger: 'Триггер создания/обновления бота',
   get_managed_bot_token: 'Получить токен бота',
+  answer_callback_query: 'Уведомление при нажатии на inline кнопку',
 };
 
 /**
@@ -119,6 +120,7 @@ const nodeIcons: Partial<Record<Node['type'], string>> = {
   http_request: 'fas fa-globe',
   managed_bot_updated_trigger: 'fas fa-robot',
   get_managed_bot_token: 'fas fa-key',
+  answer_callback_query: 'fas fa-bell',
 };
 
 /**
@@ -165,6 +167,7 @@ const nodeColors: Partial<Record<Node['type'], string>> = {
   http_request: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
   managed_bot_updated_trigger: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
   get_managed_bot_token: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+  answer_callback_query: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
 };
 
 /**

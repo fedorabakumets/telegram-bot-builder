@@ -60,4 +60,6 @@ export const nodeIcons: Record<string, string> = {
   managed_bot_updated_trigger: 'fas fa-robot',
   /** Иконка узла получения токена управляемого бота */
   get_managed_bot_token: 'fas fa-key',
+  /** Иконка узла ответа на callback_query */
+  answer_callback_query: 'fas fa-bell',
 };

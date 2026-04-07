@@ -49,6 +49,7 @@ export function getNodeTypeLabel(type: Node['type']): string {
     outgoing_message_trigger: 'Триггер исходящего сообщения',
     managed_bot_updated_trigger: 'Триггер создания/обновления бота',
     get_managed_bot_token: 'Получить токен бота',
+    answer_callback_query: 'Уведомление при нажатии на inline кнопку',
   };
 
   return types[type] || type;
