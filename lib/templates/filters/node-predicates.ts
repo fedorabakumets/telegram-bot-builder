@@ -243,3 +243,12 @@ export function hasGetManagedBotTokenNodes(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'get_managed_bot_token');
 }
+
+/**
+ * Проверяет наличие узлов answer_callback_query в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа answer_callback_query
+ */
+export function hasAnswerCallbackQueryNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'answer_callback_query');
+}

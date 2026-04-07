@@ -1,0 +1,43 @@
+{#
+  Шаблон обработчиков действия answer_callback_query.
+
+  Узел является действием — регистрируется как callback_query обработчик.
+  Вызывает callback_query.answer() для показа уведомления пользователю
+  после нажатия inline-кнопки.
+
+  @param {array} entries - Массив AnswerCallbackQueryEntry:
+    - nodeId: string          — ID узла
+    - targetNodeId: string    — ID следующего узла
+    - targetNodeType: string  — тип следующего узла
+    - notificationText: string — текст уведомления (поддерживает {var})
+    - showAlert: boolean      — true = алерт, false = тост
+    - cacheTime: number       — время кеширования
+#}
+
+# Обработчики узлов answer_callback_query
+{% for entry in entries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery):
+    """Уведомление inline-кнопки"""
+    try:
+        user_id = callback_query.from_user.id
+        logging.info(f"🔔 answer_callback_query узел {{ entry.nodeId }} для пользователя {user_id}")
+
+        {% if entry.notificationText %}
+        _all_vars = await init_all_user_vars(user_id)
+        _notification_text = replace_variables_in_text({{ entry.notificationText | format_python_text }}, _all_vars, {})
+        await callback_query.answer(text=_notification_text, show_alert={{ entry.showAlert | to_python_boolean }}, cache_time={{ entry.cacheTime }})
+        {% else %}
+        await callback_query.answer()
+        {% endif %}
+
+        {% if entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query)
+        {% endif %}
+    except Exception as e:
+        logging.error(f"Ошибка в answer_callback_query {{ entry.nodeId }}: {e}")
+
+{% endfor %}

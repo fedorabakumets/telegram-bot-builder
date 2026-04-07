@@ -33,6 +33,7 @@ import { generateIncomingMessageTriggerHandlers } from '../incoming-message-trig
 import { generateIncomingCallbackTriggerHandlers } from '../incoming-callback-trigger/incoming-callback-trigger.renderer';
 import { generateOutgoingMessageTriggerHandlers } from '../outgoing-message-trigger/outgoing-message-trigger.renderer';
 import { generateManagedBotUpdatedTriggerHandlers } from '../managed-bot-updated-trigger/managed-bot-updated-trigger.renderer';
+import { generateAnswerCallbackQuery } from '../answer-callback-query/answer-callback-query.renderer';
 import { generateGetManagedBotToken } from '../get-managed-bot-token/get-managed-bot-token.renderer';
 import { generateGroupMessageTriggerHandlers } from '../group-message-trigger';
 import { generateConditionHandlers } from '../condition/condition.renderer';
@@ -277,6 +278,17 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     broadcast: (node) => generateBroadcastHandler(node, nodes, enableComments),
     keyboard: generateKeyboardHandler,
     input: generateUserInputNodeHandler,
+    answer_callback_query: (node) => {
+      const entry = {
+        nodeId: node.id,
+        targetNodeId: (node.data as any)?.autoTransitionTo || '',
+        targetNodeType: nodes.find(n => n.id === (node.data as any)?.autoTransitionTo)?.type || 'message',
+        notificationText: (node.data as any)?.callbackNotificationText || '',
+        showAlert: (node.data as any)?.callbackShowAlert ?? false,
+        cacheTime: (node.data as any)?.callbackCacheTime ?? 0,
+      };
+      return generateAnswerCallbackQuery({ entries: [entry] });
+    },
     get_managed_bot_token: (node) => {
       const entry = {
         nodeId: node.id,
