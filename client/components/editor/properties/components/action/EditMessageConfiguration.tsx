@@ -57,20 +57,15 @@ export function EditMessageConfiguration({
 
       {/* Новый текст — InlineRichEditor как в узле сообщения */}
       {showText && (
-        <div className="rounded-xl bg-slate-50/40 dark:bg-slate-900/10 border border-slate-200/40 dark:border-slate-700/30 p-4 space-y-3">
-          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-            Новый текст
-          </p>
-          <InlineRichEditor
-            value={data.editMessageText ?? ''}
-            onChange={(v) => update('editMessageText', v)}
-            placeholder="Введите новый текст сообщения..."
-            enableMarkdown={data.editFormatMode === 'markdown'}
-            onFormatModeChange={(mode) => update('editFormatMode', mode)}
-            availableVariables={[...textVariables, ...mediaVariables] as Variable[]}
-            allNodes={allNodes}
-          />
-        </div>
+        <InlineRichEditor
+          value={data.editMessageText ?? ''}
+          onChange={(v) => update('editMessageText', v)}
+          placeholder="Введите новый текст сообщения..."
+          enableMarkdown={data.editFormatMode === 'markdown'}
+          onFormatModeChange={(mode) => update('editFormatMode', mode)}
+          availableVariables={[...textVariables, ...mediaVariables] as Variable[]}
+          allNodes={allNodes}
+        />
       )}
 
       {/* Источник сообщения */}
