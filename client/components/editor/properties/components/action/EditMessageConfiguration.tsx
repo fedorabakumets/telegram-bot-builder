@@ -90,44 +90,31 @@ export function EditMessageConfiguration({
             <SelectContent>
               {/* Последнее исходящее сообщение бота */}
               <SelectItem value="last_bot_message">Последнее сообщение бота</SelectItem>
-              {/* Взять ID сообщения из переменной */}
-              <SelectItem value="variable">Из переменной</SelectItem>
-              {/* Указать ID сообщения вручную */}
-              <SelectItem value="manual">Вручную</SelectItem>
+              {/* Указать ID вручную или из переменной */}
+              <SelectItem value="custom">ID сообщения</SelectItem>
             </SelectContent>
           </Select>
 
-          {data.editMessageIdSource === 'manual' && (
+          {data.editMessageIdSource === 'custom' && (
             <div className="space-y-2">
-              <Label className="text-xs font-medium text-amber-700 dark:text-amber-300">ID сообщения</Label>
-              <Input
-                value={data.editMessageIdManual ?? ''}
-                onChange={(e) => update('editMessageIdManual', e.target.value)}
-                placeholder="123456789"
-                className="bg-white/60 dark:bg-slate-950/60 border-amber-200/50 dark:border-amber-800/50"
-              />
-              <div className="text-xs text-amber-600/70 dark:text-amber-400/70 leading-relaxed">
-                Telegram message_id сообщения в диалоге с ботом. Найти можно в логах бота — строка вида{' '}
-                <span className="font-mono bg-amber-100/60 dark:bg-amber-900/30 px-1 rounded">tg_message_id=XXXX</span>.
-              </div>
-            </div>
-          )}
-
-          {data.editMessageIdSource === 'variable' && (
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-amber-700 dark:text-amber-300">Имя переменной</Label>
+              <Label className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                ID сообщения или переменная
+              </Label>
               <div className="flex gap-2">
                 <Input
-                  value={data.editMessageIdVariable ?? ''}
-                  onChange={(e) => update('editMessageIdVariable', e.target.value)}
-                  placeholder="source_message_id"
+                  value={data.editMessageIdManual ?? ''}
+                  onChange={(e) => update('editMessageIdManual', e.target.value)}
+                  placeholder="123456789 или {message_id}"
                   className="bg-white/60 dark:bg-slate-950/60 border-amber-200/50 dark:border-amber-800/50 flex-1"
                 />
                 <VariableSelector
                   availableVariables={textVariables as any}
-                  onSelect={(name) => update('editMessageIdVariable', name)}
+                  onSelect={(name) => update('editMessageIdManual', `{${name}}`)}
                 />
               </div>
+              <p className="text-xs text-amber-600/70 dark:text-amber-400/70">
+                Введи число или выбери переменную — например <span className="font-mono">{'{menu_msg_id}'}</span>
+              </p>
             </div>
           )}
         </div>
