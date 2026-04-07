@@ -332,6 +332,14 @@ export function collectConnections(nodes: Node[]): Connection[] {
         connections.push({ fromId: node.id, toId: keyboardNode.id, type: 'keyboard-link' });
       }
     }
+
+    // 9. Клавиатура для edit_message узла
+    if ((node.type as any) === 'edit_message') {
+      const kbNodeId = (node.data as any)?.editKeyboardNodeId as string | undefined;
+      if (kbNodeId && existingIds.has(kbNodeId)) {
+        connections.push({ fromId: node.id, toId: kbNodeId, type: 'keyboard-link' });
+      }
+    }
   });
 
   return connections;
