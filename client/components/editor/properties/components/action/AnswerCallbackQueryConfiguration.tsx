@@ -61,12 +61,12 @@ export function AnswerCallbackQueryConfiguration({
     const el = textareaRef.current;
     const current: string = data.callbackNotificationText ?? '';
     if (!el) {
-      update('callbackNotificationText', current + `{{${variableName}}}`);
+      update('callbackNotificationText', current + `{${variableName}}`);
       return;
     }
     const start = el.selectionStart ?? current.length;
     const end = el.selectionEnd ?? current.length;
-    const inserted = `{{${variableName}}}`;
+    const inserted = `{${variableName}}`;
     const next = current.slice(0, start) + inserted + current.slice(end);
     update('callbackNotificationText', next);
     requestAnimationFrame(() => {
