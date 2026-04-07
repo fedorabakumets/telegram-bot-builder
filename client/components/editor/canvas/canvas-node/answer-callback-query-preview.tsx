@@ -46,7 +46,7 @@ export function AnswerCallbackQueryPreview({ node }: AnswerCallbackQueryPreviewP
       {/* Тип отображения */}
       <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
         <i className={showAlert ? 'fas fa-exclamation-circle text-amber-500' : 'fas fa-info-circle text-purple-400'} />
-        <span>{showAlert ? 'Алерт' : 'Тост'}</span>
+        <span>{showAlert ? 'Требует закрытия' : 'Исчезает само'}</span>
       </div>
     </div>
   );
