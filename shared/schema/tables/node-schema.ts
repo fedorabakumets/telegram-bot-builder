@@ -529,6 +529,8 @@ export const nodeSchema = z.object({
     topicIconColor: z.string().optional(),
     /** Имя переменной для сохранения thread_id созданного топика */
     saveThreadIdTo: z.string().optional(),
+    /** Имя переменной для сохранения ID отправленного сообщения */
+    saveMessageIdTo: z.string().optional(),
     /** Переменная для сохранения bot.id управляемого бота */
     saveBotIdTo: z.string().optional(),
     /** Переменная для сохранения bot.username управляемого бота */

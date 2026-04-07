@@ -19,7 +19,8 @@ export function getNodeDefaults(type: Node['type']): any {
       buttons: [],
       markdown: false,
       oneTimeKeyboard: false,
-      resizeKeyboard: true
+      resizeKeyboard: true,
+      saveMessageIdTo: ''
     },
     sticker: {
       stickerUrl: '',
@@ -322,7 +323,8 @@ export function getNodeDefaults(type: Node['type']): any {
       mediaItems: [],
       attachedMedia: [],
       enableAutoTransition: false,
-      autoTransitionTo: ''
+      autoTransitionTo: '',
+      saveMessageIdTo: ''
     },
     managed_bot_updated_trigger: {
       saveBotIdTo: 'bot_id',

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { MessageTextSectionHeader } from './message-text-section-header';
 import { MessageTextSectionContent } from './message-text-section-content';
 import { MessageRecipientSection } from './message-recipient-section';
+import { SaveMessageIdSection } from './save-message-id-section';
 import { BroadcastToggle } from '../broadcast/broadcast-toggle';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Variable } from '../../../inline-rich/types';
@@ -79,6 +80,11 @@ export function MessageTextSection({
             }}
           />
           <MessageRecipientSection
+            selectedNode={selectedNode}
+            onNodeUpdate={onNodeUpdate}
+            textVariables={[...textVariables, ...mediaVariables] as Variable[]}
+          />
+          <SaveMessageIdSection
             selectedNode={selectedNode}
             onNodeUpdate={onNodeUpdate}
             textVariables={[...textVariables, ...mediaVariables] as Variable[]}
