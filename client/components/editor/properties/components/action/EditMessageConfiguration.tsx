@@ -81,23 +81,19 @@ export function EditMessageConfiguration({
 
         <div className="space-y-3">
           <Select
-            value={data.editMessageIdSource ?? 'current_message'}
+            value={data.editMessageIdSource ?? 'last_bot_message'}
             onValueChange={(v) => update('editMessageIdSource', v)}
           >
             <SelectTrigger className="bg-card/70 border border-amber-200/50 dark:border-amber-800/50">
               <SelectValue placeholder="Выберите источник сообщения" />
             </SelectTrigger>
             <SelectContent>
-              {/* Текущее входящее сообщение пользователя */}
-              <SelectItem value="current_message">Текущее сообщение</SelectItem>
-              {/* Последнее входящее сообщение пользователя */}
-              <SelectItem value="last_message">Последнее сообщение пользователя</SelectItem>
               {/* Последнее исходящее сообщение бота */}
               <SelectItem value="last_bot_message">Последнее сообщение бота</SelectItem>
-              {/* Указать ID сообщения вручную */}
-              <SelectItem value="manual">Вручную</SelectItem>
               {/* Взять ID сообщения из переменной */}
               <SelectItem value="variable">Из переменной</SelectItem>
+              {/* Указать ID сообщения вручную */}
+              <SelectItem value="manual">Вручную</SelectItem>
             </SelectContent>
           </Select>
 
