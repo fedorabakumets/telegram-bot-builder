@@ -283,6 +283,32 @@ describe('message.py.jinja2 шаблон', () => {
       });
     });
 
+    describe('saveMessageIdTo', () => {
+      it('сохраняет ID сообщения в переменную если saveMessageIdTo задан', () => {
+        const result = generateMessage({
+          nodeId: 'msg_menu',
+          messageText: 'Меню',
+          saveMessageIdTo: 'menu_msg_id',
+        });
+        assert.ok(result.includes('menu_msg_id'), 'имя переменной должно быть в коде');
+        assert.ok(result.includes('sent_message.message_id'), 'message_id должен сохраняться');
+        assert.ok(result.includes('user_data[user_id]'), 'должно сохраняться в user_data');
+      });
+
+      it('не генерирует код сохранения если saveMessageIdTo не задан', () => {
+        const result = generateMessage({
+          nodeId: 'msg_plain',
+          messageText: 'Привет',
+        });
+        assert.ok(!result.includes('saveMessageIdTo'), 'saveMessageIdTo не должен быть в коде');
+      });
+
+      it('saveMessageIdTo принимается схемой', () => {
+        const r = messageParamsSchema.safeParse({ nodeId: 'msg_1', saveMessageIdTo: 'my_id' });
+        assert.ok(r.success);
+      });
+    });
+
     describe('Производительность', () => {
       it('должен генерировать код быстрее 10ms', () => {
         const start = Date.now();

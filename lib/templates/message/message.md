@@ -48,6 +48,7 @@
 | `hasHideAfterClickIncoming` | `boolean` | `false` | Входящие кнопки с hideAfterClick |
 | `hasUserIdsVariable` | `boolean` | `false` | Текст использует переменную user_ids |
 | `messageSendRecipients` | `MessageSendRecipient[]` | `[]` | Список дополнительных получателей сообщения |
+| `saveMessageIdTo` | `string` | - | Имя переменной для сохранения ID отправленного сообщения |
 
 ## Тип MessageSendRecipient
 
@@ -134,6 +135,20 @@ const code = generateMessage({
     { text: 'Опция 2', action: 'goto', target: 'option_2', id: 'btn_2' },
   ],
 });
+```
+
+### С сохранением ID сообщения
+
+```typescript
+const code = generateMessage({
+  nodeId: 'menu_node',
+  messageText: 'Выберите действие:',
+  keyboardType: 'inline',
+  buttons: [{ text: '👍 Лайк', action: 'goto', target: 'like', id: 'btn_like' }],
+  saveMessageIdTo: 'menu_msg_id',
+});
+// Генерирует: user_data[user_id]["menu_msg_id"] = sent_message.message_id
+// Используй в узле edit_message: editMessageIdSource: 'custom', editMessageIdManual: '{menu_msg_id}'
 ```
 
 ### С автопереходом
