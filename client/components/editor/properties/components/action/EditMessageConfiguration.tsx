@@ -2,15 +2,15 @@
  * @fileoverview Панель свойств узла "Редактировать сообщение"
  * @module properties/components/action/EditMessageConfiguration
  */
-import { useRef, useMemo } from 'react';
+import { useMemo } from 'react';
 import type { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { InfoBlock } from '@/components/ui/info-block';
-import { VariableSelector } from '../variables/variable-selector';
+import { InlineRichEditor } from '@/components/editor/inline-rich/inline-rich-editor';
 import { extractVariables } from '../../utils/variables-utils';
+import type { Variable } from '@/components/editor/inline-rich/types';
 
 /** Пропсы компонента EditMessageConfiguration */
 interface EditMessageConfigurationProps {
@@ -29,17 +29,9 @@ const EDIT_MODES = [
   { value: 'both', label: 'Текст и кнопки' },
 ] as const;
 
-/** Варианты форматирования */
-const FORMAT_MODES = [
-  { value: 'none', label: 'Без форматирования' },
-  { value: 'html', label: 'HTML' },
-  { value: 'markdown', label: 'Markdown' },
-] as const;
-
 /**
  * Панель свойств узла редактирования сообщения.
- * Позволяет настроить режим редактирования, новый текст,
- * источник ID сообщения и чата.
+ * Позволяет настроить режим редактирования, новый текст и источник ID сообщения.
  *
  * @param props - Свойства компонента
  * @returns JSX элемент
@@ -50,13 +42,13 @@ export function EditMessageConfiguration({
   getAllNodesFromAllSheets = [],
 }: EditMessageConfigurationProps) {
   const data = selectedNode.data as any;
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  /** Список всех узлов для извлечения переменных */
   const allNodes = useMemo(
     () => getAllNodesFromAllSheets.map(({ node }) => node),
     [getAllNodesFromAllSheets]
   );
-  const { textVariables } = useMemo(() => extractVariables(allNodes), [allNodes]);
+  const { textVariables, mediaVariables } = useMemo(() => extractVariables(allNodes), [allNodes]);
 
   /**
    * Обновляет поле данных узла
@@ -65,28 +57,6 @@ export function EditMessageConfiguration({
    */
   const update = (field: string, value: any) =>
     onNodeUpdate(selectedNode.id, { [field]: value });
-
-  /**
-   * Вставляет переменную в позицию курсора в textarea
-   * @param variableName - Имя переменной для вставки
-   */
-  const insertVariable = (variableName: string) => {
-    const el = textareaRef.current;
-    const current: string = data.editMessageText ?? '';
-    if (!el) {
-      update('editMessageText', current + `{${variableName}}`);
-      return;
-    }
-    const start = el.selectionStart ?? current.length;
-    const end = el.selectionEnd ?? current.length;
-    const inserted = `{${variableName}}`;
-    const next = current.slice(0, start) + inserted + current.slice(end);
-    update('editMessageText', next);
-    requestAnimationFrame(() => {
-      el.focus();
-      el.setSelectionRange(start + inserted.length, start + inserted.length);
-    });
-  };
 
   const editMode: string = data.editMode ?? 'text';
   const showText = editMode !== 'markup';
@@ -122,41 +92,21 @@ export function EditMessageConfiguration({
         </div>
       </div>
 
-      {/* Новый текст */}
+      {/* Новый текст — InlineRichEditor как в узле сообщения */}
       {showText && (
         <div className="rounded-xl bg-slate-50/40 dark:bg-slate-900/10 border border-slate-200/40 dark:border-slate-700/30 p-4 space-y-3">
           <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
             Новый текст
           </p>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs text-slate-600 dark:text-slate-400">Текст сообщения</Label>
-              <VariableSelector availableVariables={textVariables as any} onSelect={insertVariable} />
-            </div>
-            <Textarea
-              ref={textareaRef}
-              value={data.editMessageText ?? ''}
-              onChange={(e) => update('editMessageText', e.target.value)}
-              placeholder="Введите новый текст..."
-              rows={3}
-              className="resize-none text-sm"
-            />
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {FORMAT_MODES.map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => update('editFormatMode', value)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-                  (data.editFormatMode ?? 'none') === value
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <InlineRichEditor
+            value={data.editMessageText ?? ''}
+            onChange={(v) => update('editMessageText', v)}
+            placeholder="Введите новый текст сообщения..."
+            enableMarkdown={data.editFormatMode === 'markdown'}
+            onFormatModeChange={(mode) => update('editFormatMode', mode)}
+            availableVariables={[...textVariables, ...mediaVariables] as Variable[]}
+            allNodes={allNodes}
+          />
         </div>
       )}
 
@@ -174,7 +124,7 @@ export function EditMessageConfiguration({
             <label key={value} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
-                name="editMessageIdSource"
+                name={`editMessageIdSource_${selectedNode.id}`}
                 value={value}
                 checked={(data.editMessageIdSource ?? 'current_message') === value}
                 onChange={() => update('editMessageIdSource', value)}
