@@ -541,23 +541,11 @@ export function PropertiesPanel({
 
           {/* Edit Message Section */}
           {(selectedNode.type as any) === 'edit_message' && (
-            <div className="w-full bg-gradient-to-br from-blue-50/40 to-sky-50/20 dark:from-blue-950/30 dark:to-sky-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-blue-200/40 dark:border-blue-800/40 backdrop-blur-sm">
-              <SectionHeader
-                title="Редактировать сообщение"
-                isOpen={true}
-                onToggle={() => {}}
-                icon="pen"
-                iconGradient="from-blue-100 to-sky-100 dark:from-blue-900/50 dark:to-sky-900/50"
-                iconColor="text-blue-600 dark:text-blue-400"
-              />
-              <div className="mt-3 sm:mt-4">
-                <EditMessageConfiguration
-                  selectedNode={selectedNode}
-                  onNodeUpdate={onNodeUpdate}
-                  getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-                />
-              </div>
-            </div>
+            <EditMessageConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+            />
           )}
 
           {/* Trigger Section - С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»РѕРІ-С‚СЂРёРіРіРµСЂРѕРІ */}
