@@ -7,7 +7,6 @@ import type { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import { InfoBlock } from '@/components/ui/info-block';
 import { InlineRichEditor } from '@/components/editor/inline-rich/inline-rich-editor';
 import { extractVariables } from '../../utils/variables-utils';
 import type { Variable } from '@/components/editor/inline-rich/types';
@@ -21,13 +20,6 @@ interface EditMessageConfigurationProps {
   /** Все узлы из всех листов */
   getAllNodesFromAllSheets?: Array<{ node: Node; sheetId?: string; sheetName?: string }>;
 }
-
-/** Варианты режима редактирования */
-const EDIT_MODES = [
-  { value: 'text', label: 'Текст' },
-  { value: 'markup', label: 'Кнопки' },
-  { value: 'both', label: 'Текст и кнопки' },
-] as const;
 
 /**
  * Панель свойств узла редактирования сообщения.
@@ -60,37 +52,8 @@ export function EditMessageConfiguration({
 
   const editMode: string = data.editMode ?? 'text';
   const showText = editMode !== 'markup';
-  const showKeyboard = editMode === 'markup' || editMode === 'both';
-
-  return (
+  const showKeyboard = editMode === 'markup' || editMode === 'both';  return (
     <div className="space-y-4 p-4">
-      <InfoBlock
-        variant="info"
-        title="editMessageText / editMessageReplyMarkup"
-        description="Редактирует уже отправленное сообщение — изменяет текст, кнопки или оба сразу."
-      />
-
-      {/* Режим редактирования */}
-      <div className="rounded-xl bg-blue-50/40 dark:bg-blue-900/10 border border-blue-200/40 dark:border-blue-700/30 p-4 space-y-3">
-        <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
-          Режим редактирования
-        </p>
-        <div className="flex gap-2 flex-wrap">
-          {EDIT_MODES.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => update('editMode', value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                editMode === value
-                  ? 'bg-blue-500 text-white shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Новый текст — InlineRichEditor как в узле сообщения */}
       {showText && (
