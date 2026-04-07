@@ -73,7 +73,7 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   http_request: 'HTTP запрос',
   managed_bot_updated_trigger: 'Триггер создания/обновления бота',
   get_managed_bot_token: 'Получить токен бота',
-  answer_callback_query: 'Уведомление при нажатии на inline кнопку',
+  answer_callback_query: 'Уведомление inline кнопки',
 };
 
 /**

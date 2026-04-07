@@ -117,15 +117,15 @@ export function AnswerCallbackQueryConfiguration({
       {/* Секция: Тип отображения */}
       <div className="rounded-xl bg-slate-50/40 dark:bg-slate-900/10 border border-slate-200/40 dark:border-slate-700/30 p-4 space-y-3">
         <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-          Тип отображения
+          Поведение
         </p>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <Label className="text-xs text-slate-600 dark:text-slate-400">
-              Показать как алерт
+              Требовать закрытия
             </Label>
             <p className="text-[10px] text-slate-400">
-              {data.callbackShowAlert ? 'Модальное окно с кнопкой OK' : 'Тост-уведомление (исчезает само)'}
+              {data.callbackShowAlert ? 'Модальное окно — пользователь нажимает OK' : 'Тост — исчезает само через пару секунд'}
             </p>
           </div>
           <Switch

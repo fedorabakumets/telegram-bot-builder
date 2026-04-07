@@ -11,7 +11,7 @@ import type { ComponentDefinition } from '@shared/schema';
 export const answerCallbackQueryNode: ComponentDefinition = {
   id: 'answer_callback_query',
   type: 'answer_callback_query' as any,
-  name: 'Уведомление при нажатии на inline кнопку',
+  name: 'Уведомление inline кнопки',
   description: 'Показывает всплывающее уведомление пользователю после нажатия inline-кнопки',
   icon: 'fas fa-bell',
   color: 'bg-purple-100 text-purple-600',
