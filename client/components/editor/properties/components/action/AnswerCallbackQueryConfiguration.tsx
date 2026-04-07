@@ -2,11 +2,13 @@
  * @fileoverview Панель свойств узла "Уведомление при нажатии на inline кнопку"
  * @module properties/components/action/AnswerCallbackQueryConfiguration
  */
+import { useRef } from 'react';
 import type { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { InfoBlock } from '@/components/ui/info-block';
-import { InlineRichEditor } from '@/components/editor/inline-rich/inline-rich-editor';
+import { VariableSelector } from '../variables/variable-selector';
 import { extractVariables } from '../../utils/variables-utils';
 import { useMemo } from 'react';
 
@@ -22,7 +24,7 @@ interface AnswerCallbackQueryConfigurationProps {
 
 /**
  * Панель свойств узла ответа на callback_query.
- * Содержит поле текста уведомления с поддержкой переменных,
+ * Содержит plain-text поле для текста уведомления с кнопкой вставки переменной,
  * переключатель типа отображения (тост/алерт).
  *
  * @param props - Свойства компонента
@@ -34,6 +36,7 @@ export function AnswerCallbackQueryConfiguration({
   getAllNodesFromAllSheets = [],
 }: AnswerCallbackQueryConfigurationProps) {
   const data = selectedNode.data as any;
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /** Список всех узлов для извлечения переменных */
   const allNodes = useMemo(
@@ -50,13 +53,35 @@ export function AnswerCallbackQueryConfiguration({
   const update = (field: string, value: any) =>
     onNodeUpdate(selectedNode.id, { [field]: value });
 
+  /**
+   * Вставляет переменную в позицию курсора в textarea
+   * @param variableName - Имя переменной для вставки
+   */
+  const insertVariable = (variableName: string) => {
+    const el = textareaRef.current;
+    const current: string = data.callbackNotificationText ?? '';
+    if (!el) {
+      update('callbackNotificationText', current + `{{${variableName}}}`);
+      return;
+    }
+    const start = el.selectionStart ?? current.length;
+    const end = el.selectionEnd ?? current.length;
+    const inserted = `{{${variableName}}}`;
+    const next = current.slice(0, start) + inserted + current.slice(end);
+    update('callbackNotificationText', next);
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(start + inserted.length, start + inserted.length);
+    });
+  };
+
   return (
     <div className="space-y-4 p-4">
       {/* Инфо-блок */}
       <InfoBlock
         variant="info"
         title="answerCallbackQuery"
-        description="Вызывает answer_callback_query и показывает уведомление пользователю после нажатия inline-кнопки. Текст поддерживает переменные."
+        description="Показывает уведомление пользователю после нажатия inline-кнопки. Форматирование не поддерживается — только plain text и переменные {{var}}."
       />
 
       {/* Секция: Текст уведомления */}
@@ -65,16 +90,27 @@ export function AnswerCallbackQueryConfiguration({
           Текст уведомления
         </p>
         <div className="space-y-2">
-          <Label className="text-xs text-slate-600 dark:text-slate-400">
-            Текст (0–200 символов)
-          </Label>
-          <InlineRichEditor
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-slate-600 dark:text-slate-400">
+              Текст (0–200 символов)
+            </Label>
+            <VariableSelector
+              availableVariables={textVariables as any}
+              onSelect={insertVariable}
+            />
+          </div>
+          <Textarea
+            ref={textareaRef}
             value={data.callbackNotificationText ?? ''}
-            onChange={(v) => update('callbackNotificationText', v)}
+            onChange={(e) => update('callbackNotificationText', e.target.value)}
             placeholder="Введите текст уведомления..."
-            availableVariables={textVariables as any}
-            allNodes={allNodes}
+            maxLength={200}
+            rows={3}
+            className="resize-none text-sm"
           />
+          <p className="text-[10px] text-slate-400 text-right">
+            {(data.callbackNotificationText ?? '').length}/200
+          </p>
         </div>
       </div>
 
