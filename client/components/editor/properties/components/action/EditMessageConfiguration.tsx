@@ -69,40 +69,65 @@ export function EditMessageConfiguration({
         />
       )}
 
-      {/* Источник сообщения */}
-      <div className="rounded-xl bg-slate-50/40 dark:bg-slate-900/10 border border-slate-200/40 dark:border-slate-700/30 p-4 space-y-3">
-        <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-          Источник сообщения
-        </p>
-        <Select
-          value={data.editMessageIdSource ?? 'current_message'}
-          onValueChange={(v) => update('editMessageIdSource', v)}
-        >
-          <SelectTrigger className="bg-card/70">
-            <SelectValue placeholder="Выберите источник сообщения" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="current_message">Текущее сообщение</SelectItem>
-            <SelectItem value="variable">Из переменной</SelectItem>
-            <SelectItem value="manual">Вручную</SelectItem>
-          </SelectContent>
-        </Select>
-        {data.editMessageIdSource === 'variable' && (
-          <Input
-            value={data.editMessageIdVariable ?? ''}
-            onChange={(e) => update('editMessageIdVariable', e.target.value)}
-            placeholder="Имя переменной с ID сообщения"
-            className="text-sm h-8"
-          />
-        )}
-        {data.editMessageIdSource === 'manual' && (
-          <Input
-            value={data.editMessageIdManual ?? ''}
-            onChange={(e) => update('editMessageIdManual', e.target.value)}
-            placeholder="ID сообщения"
-            className="text-sm h-8"
-          />
-        )}
+      {/* Секция: Источник сообщения */}
+      <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-lg p-4">
+        <div className="flex items-center space-x-2 mb-3">
+          <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+            <i className="fas fa-pen text-amber-600 dark:text-amber-400 text-xs"></i>
+          </div>
+          <Label className="text-sm font-semibold text-amber-900 dark:text-amber-100">Источник сообщения</Label>
+        </div>
+
+        <div className="space-y-3">
+          <Select
+            value={data.editMessageIdSource ?? 'current_message'}
+            onValueChange={(v) => update('editMessageIdSource', v)}
+          >
+            <SelectTrigger className="bg-card/70 border border-amber-200/50 dark:border-amber-800/50">
+              <SelectValue placeholder="Выберите источник сообщения" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* Текущее входящее сообщение пользователя */}
+              <SelectItem value="current_message">Текущее сообщение</SelectItem>
+              {/* Последнее входящее сообщение пользователя */}
+              <SelectItem value="last_message">Последнее сообщение пользователя</SelectItem>
+              {/* Последнее исходящее сообщение бота */}
+              <SelectItem value="last_bot_message">Последнее сообщение бота</SelectItem>
+              {/* Указать ID сообщения вручную */}
+              <SelectItem value="manual">Вручную</SelectItem>
+              {/* Взять ID сообщения из переменной */}
+              <SelectItem value="variable">Из переменной</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {data.editMessageIdSource === 'manual' && (
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-amber-700 dark:text-amber-300">ID сообщения</Label>
+              <Input
+                value={data.editMessageIdManual ?? ''}
+                onChange={(e) => update('editMessageIdManual', e.target.value)}
+                placeholder="123456789"
+                className="bg-white/60 dark:bg-slate-950/60 border-amber-200/50 dark:border-amber-800/50"
+              />
+              <div className="text-xs text-amber-600/70 dark:text-amber-400/70 leading-relaxed">
+                Telegram message_id сообщения в диалоге с ботом. Найти можно в логах бота — строка вида{' '}
+                <span className="font-mono bg-amber-100/60 dark:bg-amber-900/30 px-1 rounded">tg_message_id=XXXX</span>.
+              </div>
+            </div>
+          )}
+
+          {data.editMessageIdSource === 'variable' && (
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-amber-700 dark:text-amber-300">Имя переменной</Label>
+              <Input
+                value={data.editMessageIdVariable ?? ''}
+                onChange={(e) => update('editMessageIdVariable', e.target.value)}
+                placeholder="source_message_id"
+                className="bg-white/60 dark:bg-slate-950/60 border-amber-200/50 dark:border-amber-800/50"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Убрать клавиатуру */}
