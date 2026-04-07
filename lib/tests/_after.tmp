@@ -1,0 +1,18 @@
+const passed = results.filter(r => r.passed).length;
+const failed = results.filter(r => !r.passed).length;
+const total = results.length;
+
+console.log('\n╔══════════════════════════════════════════════════════════════╗');
+const summary = `  Итог: ${passed}/${total} пройдено  |  Провалено: ${failed}`;
+const padding = ' '.repeat(Math.max(0, 62 - summary.length));
+console.log(`║${summary}${padding}║`);
+console.log('╚══════════════════════════════════════════════════════════════╝');
+
+if (failed > 0) {
+  console.log('\nПровалившиеся тесты:');
+  results.filter(r => !r.passed).forEach(r => {
+    console.log(`  ❌ ${r.id}. ${r.name}`);
+    console.log(`     ${r.note}`);
+  });
+  process.exit(1);
+}
