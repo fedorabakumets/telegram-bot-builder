@@ -2,6 +2,7 @@
  * @fileoverview Панель свойств узла HTTP запроса — полная конфигурация
  * @module components/editor/properties/components/configuration/http-request-configuration
  */
+import React from 'react';
 import { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,55 @@ import { HttpCurlImport } from './http-curl-import';
 
 /** Доступные HTTP методы */
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const;
+
+/**
+ * Обёртка секции с отступами
+ * @param props - дочерние элементы
+ * @returns JSX элемент
+ */
+function Section({ children }: { children: React.ReactNode }) {
+  return <div className="px-4 py-3">{children}</div>;
+}
+
+/**
+ * Заголовок секции
+ * @param props - дочерние элементы
+ * @returns JSX элемент
+ */
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs font-semibold text-foreground mb-2">{children}</p>;
+}
+
+/** Пропсы чекбокса с подписью */
+interface CheckOptionProps {
+  /** Идентификатор */
+  id: string;
+  /** Подпись */
+  label: string;
+  /** Состояние */
+  checked: boolean;
+  /** Обработчик изменения */
+  onCheckedChange: (v: boolean) => void;
+}
+
+/**
+ * Чекбокс с подписью
+ * @param props - свойства компонента
+ * @returns JSX элемент
+ */
+function CheckOption({ id, label, checked, onCheckedChange }: CheckOptionProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <Checkbox
+        id={id}
+        checked={checked}
+        onCheckedChange={(v) => onCheckedChange(!!v)}
+        className="h-3.5 w-3.5"
+      />
+      <Label htmlFor={id} className="text-xs text-muted-foreground cursor-pointer">{label}</Label>
+    </div>
+  );
+}
 
 /** Пропсы компонента настройки HTTP запроса */
 interface HttpRequestConfigurationProps {
@@ -69,7 +119,6 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
 
   return (
     <div className="space-y-0 divide-y divide-border">
-      {/* Метод + URL + Import cURL */}
       <Section>
         <div className="flex items-center justify-between mb-2">
           <SectionLabel>Запрос</SectionLabel>
@@ -98,7 +147,6 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
         </div>
       </Section>
 
-      {/* Query параметры */}
       <Section>
         <SectionLabel>Query параметры</SectionLabel>
         <KeyValueEditor
@@ -109,13 +157,11 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
         />
       </Section>
 
-      {/* Аутентификация */}
       <Section>
         <SectionLabel>Аутентификация</SectionLabel>
         <HttpAuthEditor data={data} onUpdate={upd} />
       </Section>
 
-      {/* Заголовки */}
       <Section>
         <SectionLabel>Заголовки</SectionLabel>
         <KeyValueEditor
@@ -126,7 +172,6 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
         />
       </Section>
 
-      {/* Тело запроса */}
       {showBody && (
         <Section>
           <div className="flex items-center justify-between mb-2">
@@ -154,7 +199,6 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
         </Section>
       )}
 
-      {/* Ответ */}
       <Section>
         <SectionLabel>Ответ</SectionLabel>
         <div className="space-y-2">
@@ -186,7 +230,6 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
         </div>
       </Section>
 
-      {/* Статус код */}
       <Section>
         <SectionLabel>Статус код (опционально)</SectionLabel>
         <Input
@@ -197,7 +240,6 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
         />
       </Section>
 
-      {/* Таймаут */}
       <Section>
         <SectionLabel>Таймаут (секунды)</SectionLabel>
         <Input
@@ -210,7 +252,6 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
         />
       </Section>
 
-      {/* Опции */}
       <Section>
         <SectionLabel>Опции</SectionLabel>
         <div className="space-y-2">
@@ -234,55 +275,6 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
           />
         </div>
       </Section>
-    </div>
-  );
-}
-
-/**
- * Обёртка секции с отступами
- * @param props - дочерние элементы
- * @returns JSX элемент
- */
-function Section({ children }: { children: React.ReactNode }) {
-  return <div className="px-4 py-3">{children}</div>;
-}
-
-/**
- * Заголовок секции
- * @param props - дочерние элементы
- * @returns JSX элемент
- */
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs font-semibold text-foreground mb-2">{children}</p>;
-}
-
-/** Пропсы чекбокса с подписью */
-interface CheckOptionProps {
-  /** Идентификатор */
-  id: string;
-  /** Подпись */
-  label: string;
-  /** Состояние */
-  checked: boolean;
-  /** Обработчик изменения */
-  onCheckedChange: (v: boolean) => void;
-}
-
-/**
- * Чекбокс с подписью
- * @param props - свойства компонента
- * @returns JSX элемент
- */
-function CheckOption({ id, label, checked, onCheckedChange }: CheckOptionProps) {
-  return (
-    <div className="flex items-center gap-2">
-      <Checkbox
-        id={id}
-        checked={checked}
-        onCheckedChange={(v) => onCheckedChange(!!v)}
-        className="h-3.5 w-3.5"
-      />
-      <Label htmlFor={id} className="text-xs text-muted-foreground cursor-pointer">{label}</Label>
     </div>
   );
 }
