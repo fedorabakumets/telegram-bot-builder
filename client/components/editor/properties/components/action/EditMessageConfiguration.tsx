@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InlineRichEditor } from '@/components/editor/inline-rich/inline-rich-editor';
 import { extractVariables } from '../../utils/variables-utils';
+import { VariableSelector } from '../variables/variable-selector';
 import type { Variable } from '@/components/editor/inline-rich/types';
 
 /** Пропсы компонента EditMessageConfiguration */
@@ -119,12 +120,18 @@ export function EditMessageConfiguration({
           {data.editMessageIdSource === 'variable' && (
             <div className="space-y-2">
               <Label className="text-xs font-medium text-amber-700 dark:text-amber-300">Имя переменной</Label>
-              <Input
-                value={data.editMessageIdVariable ?? ''}
-                onChange={(e) => update('editMessageIdVariable', e.target.value)}
-                placeholder="source_message_id"
-                className="bg-white/60 dark:bg-slate-950/60 border-amber-200/50 dark:border-amber-800/50"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={data.editMessageIdVariable ?? ''}
+                  onChange={(e) => update('editMessageIdVariable', e.target.value)}
+                  placeholder="source_message_id"
+                  className="bg-white/60 dark:bg-slate-950/60 border-amber-200/50 dark:border-amber-800/50 flex-1"
+                />
+                <VariableSelector
+                  availableVariables={textVariables as any}
+                  onSelect={(name) => update('editMessageIdVariable', name)}
+                />
+              </div>
             </div>
           )}
         </div>
