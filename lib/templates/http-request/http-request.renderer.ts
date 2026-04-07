@@ -50,6 +50,20 @@ export function nodeToHttpRequestParams(node: Node, context?: HttpRequestNodeCon
     statusVariable: typeof data?.httpRequestStatusVariable === 'string' ? data.httpRequestStatusVariable : '',
     autoTransitionTo,
     autoTransitionTargetExists,
+    authType: data?.httpRequestAuthType || 'none',
+    authBearerToken: data?.httpRequestAuthBearerToken || '',
+    authBasicUsername: data?.httpRequestAuthBasicUsername || '',
+    authBasicPassword: data?.httpRequestAuthBasicPassword || '',
+    authHeaderName: data?.httpRequestAuthHeaderName || '',
+    authHeaderValue: data?.httpRequestAuthHeaderValue || '',
+    authQueryName: data?.httpRequestAuthQueryName || '',
+    authQueryValue: data?.httpRequestAuthQueryValue || '',
+    queryParams: data?.httpRequestQueryParams || '',
+    bodyFormat: data?.httpRequestBodyFormat || 'json',
+    responseFormat: data?.httpRequestResponseFormat || 'autodetect',
+    ignoreHttpErrors: !!data?.httpRequestIgnoreHttpErrors,
+    ignoreSsl: !!data?.httpRequestIgnoreSsl,
+    followRedirects: data?.httpRequestFollowRedirects !== false,
   };
 }
 

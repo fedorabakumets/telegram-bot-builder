@@ -6,6 +6,15 @@
 /** HTTP метод запроса */
 export type HttpRequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
+/** Тип аутентификации */
+export type HttpRequestAuthType = 'none' | 'basic' | 'bearer' | 'header' | 'query';
+
+/** Формат тела запроса */
+export type HttpRequestBodyFormat = 'json' | 'form-urlencoded' | 'raw';
+
+/** Формат ответа */
+export type HttpRequestResponseFormat = 'autodetect' | 'json' | 'text';
+
 /** Параметры шаблона http_request */
 export interface HttpRequestTemplateParams {
   /** Уникальный идентификатор узла */
@@ -30,4 +39,32 @@ export interface HttpRequestTemplateParams {
   autoTransitionTo?: string;
   /** Существует ли целевой узел автоперехода */
   autoTransitionTargetExists?: boolean;
+  /** Тип аутентификации: none, basic, bearer, header, query */
+  authType?: HttpRequestAuthType;
+  /** Bearer токен */
+  authBearerToken?: string;
+  /** Basic auth логин */
+  authBasicUsername?: string;
+  /** Basic auth пароль */
+  authBasicPassword?: string;
+  /** Имя заголовка для header auth */
+  authHeaderName?: string;
+  /** Значение заголовка для header auth */
+  authHeaderValue?: string;
+  /** Имя query параметра для query auth */
+  authQueryName?: string;
+  /** Значение query параметра для query auth */
+  authQueryValue?: string;
+  /** Query параметры в формате JSON строки [{key, value}] */
+  queryParams?: string;
+  /** Формат тела запроса: json, form-urlencoded, raw */
+  bodyFormat?: HttpRequestBodyFormat;
+  /** Формат ответа: autodetect, json, text */
+  responseFormat?: HttpRequestResponseFormat;
+  /** Не падать при HTTP ошибках 4xx/5xx */
+  ignoreHttpErrors?: boolean;
+  /** Игнорировать SSL сертификат */
+  ignoreSsl?: boolean;
+  /** Следовать редиректам */
+  followRedirects?: boolean;
 }

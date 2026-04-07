@@ -18,6 +18,11 @@ import {
   validParamsWithVariables,
   httpRequestNodeGet,
   httpRequestNodePost,
+  validParamsBearer,
+  validParamsBasic,
+  validParamsWithQueryParams,
+  validParamsFormEncoded,
+  validParamsIgnoreErrors,
 } from './http-request.fixture';
 
 describe('generateHttpRequest()', () => {
@@ -41,13 +46,13 @@ describe('generateHttpRequest()', () => {
 
   it('парсит JSON тело для POST', () => {
     const code = generateHttpRequest(validParamsPost);
-    expect(code).toContain('_body_raw');
-    expect(code).toContain('_json_mod.loads(_body_raw)');
+    expect(code).toContain('_body_raw_str');
+    expect(code).toContain('_json_mod.loads(_body_raw_str)');
   });
 
   it('не генерирует тело для GET', () => {
     const code = generateHttpRequest(validParamsGet);
-    expect(code).not.toContain('_body_raw');
+    expect(code).not.toContain('_body_raw_str');
   });
 
   it('сохраняет ответ в responseVariable', () => {
@@ -57,7 +62,7 @@ describe('generateHttpRequest()', () => {
 
   it('сохраняет статус код если statusVariable задан', () => {
     const code = generateHttpRequest(validParamsWithStatus);
-    expect(code).toContain('set_user_var(user_id, "http_status", _status_code)');
+    expect(code).toContain('set_user_var(user_id, "http_status", str(_status_code))');
   });
 
   it('не сохраняет статус код если statusVariable пустой', () => {
@@ -100,6 +105,46 @@ describe('generateHttpRequest()', () => {
     expect(() => httpRequestParamsSchema.parse(validParamsPost)).not.toThrow();
     expect(() => httpRequestParamsSchema.parse(validParamsWithHeaders)).not.toThrow();
     expect(() => httpRequestParamsSchema.parse(validParamsWithStatus)).not.toThrow();
+  });
+});
+
+describe('аутентификация', () => {
+  it('добавляет Bearer заголовок', () => {
+    const code = generateHttpRequest(validParamsBearer);
+    expect(code).toContain("_headers['Authorization'] = 'Bearer mytoken123'");
+  });
+
+  it('добавляет Basic заголовок', () => {
+    const code = generateHttpRequest(validParamsBasic);
+    expect(code).toContain('_base64.b64encode');
+    expect(code).toContain('Basic');
+  });
+});
+
+describe('query параметры', () => {
+  it('добавляет query параметры к URL', () => {
+    const code = generateHttpRequest(validParamsWithQueryParams);
+    expect(code).toContain('_urlencode');
+    expect(code).toContain('_qp_list');
+  });
+});
+
+describe('формат тела', () => {
+  it('использует form-urlencoded', () => {
+    const code = generateHttpRequest(validParamsFormEncoded);
+    expect(code).toContain('_body_form');
+  });
+});
+
+describe('опции', () => {
+  it('отключает SSL верификацию', () => {
+    const code = generateHttpRequest(validParamsIgnoreErrors);
+    expect(code).toContain('ssl=False');
+  });
+
+  it('отключает редиректы', () => {
+    const code = generateHttpRequest(validParamsIgnoreErrors);
+    expect(code).toContain('allow_redirects=False');
   });
 });
 
@@ -150,6 +195,24 @@ describe('nodeToHttpRequestParams()', () => {
     expect(params.autoTransitionTo).toBe('next');
     expect(params.autoTransitionTargetExists).toBe(true);
   });
+
+  it('маппит новые поля аутентификации из data узла', () => {
+    const params = nodeToHttpRequestParams({
+      id: 'test_auth',
+      type: 'http_request',
+      position: { x: 0, y: 0 },
+      data: {
+        httpRequestAuthType: 'bearer',
+        httpRequestAuthBearerToken: 'tok123',
+        httpRequestIgnoreSsl: true,
+        httpRequestFollowRedirects: false,
+      } as any,
+    });
+    expect(params.authType).toBe('bearer');
+    expect(params.authBearerToken).toBe('tok123');
+    expect(params.ignoreSsl).toBe(true);
+    expect(params.followRedirects).toBe(false);
+  });
 });
 
 describe('generateHttpRequestFromNode()', () => {
@@ -161,6 +224,6 @@ describe('generateHttpRequestFromNode()', () => {
 
   it('рендерит код POST узла с телом', () => {
     const code = generateHttpRequestFromNode(httpRequestNodePost);
-    expect(code).toContain('_body_raw');
+    expect(code).toContain('_body_raw_str');
   });
 });

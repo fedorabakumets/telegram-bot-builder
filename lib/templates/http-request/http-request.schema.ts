@@ -8,6 +8,15 @@ import { z } from 'zod';
 /** Схема HTTP метода запроса */
 export const httpRequestMethodSchema = z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
+/** Схема типа аутентификации */
+export const httpRequestAuthTypeSchema = z.enum(['none', 'basic', 'bearer', 'header', 'query']);
+
+/** Схема формата тела запроса */
+export const httpRequestBodyFormatSchema = z.enum(['json', 'form-urlencoded', 'raw']);
+
+/** Схема формата ответа */
+export const httpRequestResponseFormatSchema = z.enum(['autodetect', 'json', 'text']);
+
 /** Схема параметров шаблона http_request */
 export const httpRequestParamsSchema = z.object({
   /** Уникальный идентификатор узла */
@@ -32,6 +41,34 @@ export const httpRequestParamsSchema = z.object({
   autoTransitionTo: z.string().optional().default(''),
   /** Существует ли целевой узел автоперехода */
   autoTransitionTargetExists: z.boolean().optional().default(false),
+  /** Тип аутентификации */
+  authType: httpRequestAuthTypeSchema.optional().default('none'),
+  /** Bearer токен */
+  authBearerToken: z.string().optional().default(''),
+  /** Basic auth логин */
+  authBasicUsername: z.string().optional().default(''),
+  /** Basic auth пароль */
+  authBasicPassword: z.string().optional().default(''),
+  /** Имя заголовка для header auth */
+  authHeaderName: z.string().optional().default(''),
+  /** Значение заголовка для header auth */
+  authHeaderValue: z.string().optional().default(''),
+  /** Имя query параметра для query auth */
+  authQueryName: z.string().optional().default(''),
+  /** Значение query параметра для query auth */
+  authQueryValue: z.string().optional().default(''),
+  /** Query параметры в формате JSON строки [{key, value}] */
+  queryParams: z.string().optional().default(''),
+  /** Формат тела запроса */
+  bodyFormat: httpRequestBodyFormatSchema.optional().default('json'),
+  /** Формат ответа */
+  responseFormat: httpRequestResponseFormatSchema.optional().default('autodetect'),
+  /** Не падать при HTTP ошибках 4xx/5xx */
+  ignoreHttpErrors: z.boolean().optional().default(false),
+  /** Игнорировать SSL сертификат */
+  ignoreSsl: z.boolean().optional().default(false),
+  /** Следовать редиректам */
+  followRedirects: z.boolean().optional().default(true),
 });
 
 /** Тип параметров шаблона http_request */

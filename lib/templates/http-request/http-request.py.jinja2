@@ -18,6 +18,24 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     for _k, _v in _all_vars.items():
         _url = _url.replace("{" + _k + "}", str(_v))
 
+    {% if queryParams %}
+    # Query параметры
+    try:
+        import json as _json_mod
+        _qp_raw = """{{ queryParams }}"""
+        for _k, _v in _all_vars.items():
+            _qp_raw = _qp_raw.replace("{" + _k + "}", str(_v))
+        _qp_list = _json_mod.loads(_qp_raw)
+        if _qp_list:
+            from urllib.parse import urlencode as _urlencode
+            _qp_dict = {p['key']: p['value'] for p in _qp_list if p.get('key')}
+            if _qp_dict:
+                _sep = '&' if '?' in _url else '?'
+                _url = _url + _sep + _urlencode(_qp_dict)
+    except Exception as _e:
+        logging.warning(f"http_request [{{ nodeId }}]: ошибка парсинга query params: {_e}")
+    {% endif %}
+
     # Заголовки
     _headers = {}
     {% if headers %}
@@ -31,15 +49,38 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
         logging.warning(f"http_request [{{ nodeId }}]: ошибка парсинга заголовков: {_e}")
     {% endif %}
 
+    # Аутентификация
+    {% if authType == 'bearer' and authBearerToken %}
+    _headers['Authorization'] = 'Bearer {{ authBearerToken }}'
+    {% elif authType == 'basic' and authBasicUsername %}
+    import base64 as _base64
+    _basic_creds = _base64.b64encode(f'{{ authBasicUsername }}:{{ authBasicPassword }}'.encode()).decode()
+    _headers['Authorization'] = f'Basic {_basic_creds}'
+    {% elif authType == 'header' and authHeaderName %}
+    _headers['{{ authHeaderName }}'] = '{{ authHeaderValue }}'
+    {% elif authType == 'query' and authQueryName %}
+    _sep = '&' if '?' in _url else '?'
+    _url = _url + _sep + '{{ authQueryName }}={{ authQueryValue }}'
+    {% endif %}
+
     # Тело запроса
     _body = None
+    _body_form = None
+    _body_raw = None
     {% if body and method in ['POST', 'PUT', 'PATCH'] %}
     try:
         import json as _json_mod
-        _body_raw = """{{ body }}"""
+        _body_raw_str = """{{ body }}"""
         for _k, _v in _all_vars.items():
-            _body_raw = _body_raw.replace("{" + _k + "}", str(_v))
-        _body = _json_mod.loads(_body_raw)
+            _body_raw_str = _body_raw_str.replace("{" + _k + "}", str(_v))
+        {% if bodyFormat == 'json' %}
+        _body = _json_mod.loads(_body_raw_str)
+        {% elif bodyFormat == 'form-urlencoded' %}
+        _body_form = _body_raw_str
+        _headers['Content-Type'] = 'application/x-www-form-urlencoded'
+        {% else %}
+        _body_raw = _body_raw_str
+        {% endif %}
     except Exception as _e:
         logging.warning(f"http_request [{{ nodeId }}]: ошибка парсинга тела: {_e}")
     {% endif %}
@@ -50,18 +91,31 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     _status_code = 0
     try:
         import aiohttp as _aiohttp
-        async with _aiohttp.ClientSession() as _session:
+        _connector = _aiohttp.TCPConnector(ssl={{ 'False' if ignoreSsl else 'True' }})
+        async with _aiohttp.ClientSession(connector=_connector) as _session:
             async with _session.{{ method | lower }}(
                 _url,
                 headers=_headers or None,
-                json=_body,
-                timeout=_aiohttp.ClientTimeout(total={{ timeout }})
+                {% if bodyFormat == 'json' %}json=_body,{% endif %}
+                {% if bodyFormat == 'form-urlencoded' %}data=_body_form,{% endif %}
+                {% if bodyFormat == 'raw' %}data=_body_raw,{% endif %}
+                timeout=_aiohttp.ClientTimeout(total={{ timeout }}),
+                allow_redirects={{ 'True' if followRedirects else 'False' }}
             ) as _resp:
                 _status_code = _resp.status
+                {% if responseFormat == 'json' %}
+                _response_data = await _resp.json(content_type=None)
+                {% elif responseFormat == 'text' %}
+                _response_data = await _resp.text()
+                {% else %}
                 try:
                     _response_data = await _resp.json(content_type=None)
                 except Exception:
                     _response_data = await _resp.text()
+                {% endif %}
+                {% if ignoreHttpErrors %}
+                # Ошибки HTTP 4xx/5xx игнорируются
+                {% endif %}
                 logging.info(
                     f"✅ http_request [{{ nodeId }}]: статус={_status_code} | user_id={user_id}"
                 )

@@ -59,6 +59,67 @@ export const validParamsWithVariables: HttpRequestTemplateParams = {
   responseVariable: 'weather_data',
 };
 
+/** Параметры: Bearer аутентификация */
+export const validParamsBearer: HttpRequestTemplateParams = {
+  nodeId: 'http_request_bearer',
+  safeName: 'http_request_bearer',
+  url: 'https://api.example.com/me',
+  method: 'GET',
+  authType: 'bearer',
+  authBearerToken: 'mytoken123',
+  timeout: 30,
+  responseVariable: 'me_response',
+};
+
+/** Параметры: Basic аутентификация */
+export const validParamsBasic: HttpRequestTemplateParams = {
+  nodeId: 'http_request_basic',
+  safeName: 'http_request_basic',
+  url: 'https://api.example.com/secure',
+  method: 'GET',
+  authType: 'basic',
+  authBasicUsername: 'admin',
+  authBasicPassword: 'secret',
+  timeout: 30,
+  responseVariable: 'secure_response',
+};
+
+/** Параметры: с query параметрами */
+export const validParamsWithQueryParams: HttpRequestTemplateParams = {
+  nodeId: 'http_request_qp',
+  safeName: 'http_request_qp',
+  url: 'https://api.example.com/search',
+  method: 'GET',
+  queryParams: '[{"key":"q","value":"test"},{"key":"limit","value":"10"}]',
+  timeout: 30,
+  responseVariable: 'search_response',
+};
+
+/** Параметры: form-urlencoded тело */
+export const validParamsFormEncoded: HttpRequestTemplateParams = {
+  nodeId: 'http_request_form',
+  safeName: 'http_request_form',
+  url: 'https://api.example.com/submit',
+  method: 'POST',
+  bodyFormat: 'form-urlencoded',
+  body: 'name=test&email=test@example.com',
+  timeout: 30,
+  responseVariable: 'submit_response',
+};
+
+/** Параметры: игнорировать SSL и ошибки, без редиректов */
+export const validParamsIgnoreErrors: HttpRequestTemplateParams = {
+  nodeId: 'http_request_ignore',
+  safeName: 'http_request_ignore',
+  url: 'https://self-signed.example.com/api',
+  method: 'GET',
+  ignoreSsl: true,
+  ignoreHttpErrors: true,
+  followRedirects: false,
+  timeout: 30,
+  responseVariable: 'ignore_response',
+};
+
 /** Узел графа: GET запрос */
 export const httpRequestNodeGet: Node = {
   id: 'http_request_1',
