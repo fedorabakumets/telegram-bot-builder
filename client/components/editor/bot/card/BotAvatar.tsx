@@ -9,7 +9,7 @@
  * @module BotAvatar
  */
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { UserAvatar } from '../../database/dialog/components/user-avatar';
 import { useBotData } from '../../database/dialog/hooks/use-bot-data';
 import type { UserBotData } from '@shared/schema';
@@ -50,7 +50,12 @@ export function BotAvatar({
   const { bot: botData } = useBotData(projectId || 0);
 
   const resolvedUserId = botUserId || botId || botData?.userId;
-  const resolvedPhotoUrl = photoUrl || botData?.avatarUrl;
+  const rawPhotoUrl = photoUrl || botData?.avatarUrl;
+
+  // Стабилизируем photoUrl — не сбрасываем в null/undefined если уже было значение
+  const stablePhotoUrlRef = useRef<string | null | undefined>(undefined);
+  if (rawPhotoUrl) stablePhotoUrlRef.current = rawPhotoUrl;
+  const resolvedPhotoUrl = rawPhotoUrl || stablePhotoUrlRef.current;
 
   // Формируем объект UserBotData для UserAvatar
   const botUser = useMemo((): UserBotData | null => {
