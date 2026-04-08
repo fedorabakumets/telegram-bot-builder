@@ -5,7 +5,7 @@
 
 import { Bot, User } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 /**
  * Свойства аватара
@@ -27,16 +27,10 @@ interface UserAvatarProps {
 export function UserAvatar({ messageType, user, projectId, size = 28 }: UserAvatarProps) {
   const [imageError, setImageError] = useState(false);
   const isBot = messageType === 'bot';
-
-  // Сбрасываем ошибку при смене URL аватарки
-  const avatarKey = `${projectId}-${user?.userId}-${user?.avatarUrl}`;
-  useEffect(() => {
-    setImageError(false);
-  }, [avatarKey]);
-
   const hasPhoto = !!user?.avatarUrl && !!projectId && !!user?.userId && !imageError;
 
-  console.log('[UserAvatar]', { messageType, userId: user?.userId, avatarUrl: user?.avatarUrl, projectId, hasPhoto, imageError });
+  // Ключ для сброса imageError при смене аватарки
+  const imgKey = `${projectId}-${user?.userId}-${user?.avatarUrl}`;
 
   // Вычисляем размер иконки для fallback
   const iconSize = size * 0.5;
@@ -48,13 +42,12 @@ export function UserAvatar({ messageType, user, projectId, size = 28 }: UserAvat
 
     return (
       <img
+        key={imgKey}
         src={avatarUrl}
         alt="Bot avatar"
         style={{ width: size, height: size }}
         className="flex-shrink-0 rounded-full object-cover"
-        onError={() => {
-          setImageError(true);
-        }}
+        onError={() => setImageError(true)}
       />
     );
   }
@@ -77,13 +70,12 @@ export function UserAvatar({ messageType, user, projectId, size = 28 }: UserAvat
 
     return (
       <img
+        key={imgKey}
         src={avatarUrl}
         alt="User avatar"
         style={{ width: size, height: size }}
         className="flex-shrink-0 rounded-full object-cover"
-        onError={() => {
-          setImageError(true);
-        }}
+        onError={() => setImageError(true)}
       />
     );
   }
