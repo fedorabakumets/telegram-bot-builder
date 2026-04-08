@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express, { NextFunction, type Request, Response } from "express";
 import { createServer } from "http";
 import { startFileMonitoring } from "./files/file-monitoring";
+import { restoreRunningBots } from "./bots/restoreRunningBots";
 import { registerRoutes } from "./routes/routes";
 import { log, serveStatic, setupVite } from "./routes/vite";
 import { storage } from "./storages/storage";
@@ -186,6 +187,11 @@ app.use((req, res, next) => {
     // Отображаем localhost в логах даже при привязке к 0.0.0.0 для внешних подключений
     const displayHost = host === '0.0.0.0' ? 'localhost' : host;
     log(`сервер запущен на http://${displayHost}:${port}`);
+
+    // Восстанавливаем боты, которые были запущены до рестарта/редеплоя
+    restoreRunningBots().catch((err) =>
+      log(`Ошибка при восстановлении ботов: ${err.message}`)
+    );
   });
 
   // Корректное завершение работы

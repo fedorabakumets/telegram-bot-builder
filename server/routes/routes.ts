@@ -319,10 +319,8 @@ async function initializeComponents() {
           console.log('✅ Default project ready');
         }).catch(err => console.error('❌ Default project failed:', err)),
 
-        // Очистка состояний ботов (быстро)
-        cleanupBotStates().then(() => {
-          console.log('✅ Bot states cleaned');
-        }).catch(err => console.error('❌ Bot cleanup failed:', err)),
+        // Очистка состояний ботов пропускается — восстановление выполняется
+        // в restoreRunningBots после старта сервера (server/index.ts)
 
         // Инициализация Telegram клиентов (быстро)
         initializeTelegramManager().then(() => {
