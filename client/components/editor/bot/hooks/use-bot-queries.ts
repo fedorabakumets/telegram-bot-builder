@@ -32,7 +32,7 @@ export interface BotQueriesResult {
   /** Статусы ботов */
   allBotStatuses: BotStatusResponse[];
   /** Информация о ботах из Telegram API */
-  allBotInfos: BotInfo[];
+  allBotInfos: (BotInfo | undefined)[];
   /** Функции для ручного обновления статусов */
   refetchStatuses: () => void;
 }
@@ -91,9 +91,8 @@ export function useBotQueries(): BotQueriesResult {
     })),
   });
 
-  const allBotInfos = botInfoResults
-    .map(q => q.data)
-    .filter(Boolean) as BotInfo[];
+  // Не фильтруем undefined — сохраняем индексы в соответствии с projects
+  const allBotInfos = botInfoResults.map(q => q.data ?? undefined) as (BotInfo | undefined)[];
 
   const refetchStatuses = () => {
     statusResults.forEach(q => q.refetch());
