@@ -47,6 +47,32 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                     [tokenToUse.id]
                 );
                 avatarUrl = botResult.rows[0]?.bot_photo_url || null;
+
+                // Если фото нет в базе — получаем из Telegram и сохраняем
+                if (!avatarUrl) {
+                    try {
+                        const photoResp = await fetchWithProxy(
+                            `https://api.telegram.org/bot${tokenToUse.token}/getUserProfilePhotos`,
+                            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, limit: 1 }) }
+                        );
+                        const photoData = await photoResp.json();
+                        if (photoResp.ok && photoData.result?.total_count > 0) {
+                            const fileId = photoData.result.photos[0].at(-1).file_id;
+                            const fileResp = await fetchWithProxy(
+                                `https://api.telegram.org/bot${tokenToUse.token}/getFile`,
+                                { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_id: fileId }) }
+                            );
+                            const fileData = await fileResp.json();
+                            if (fileResp.ok && fileData.result?.file_path) {
+                                avatarUrl = `https://api.telegram.org/file/bot${tokenToUse.token}/${fileData.result.file_path}`;
+                                // Сохраняем в базу чтобы не запрашивать каждый раз
+                                await pool.query('UPDATE bot_tokens SET bot_photo_url = $1 WHERE id = $2', [avatarUrl, tokenToUse.id]);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('[avatar] failed to fetch from Telegram:', e);
+                    }
+                }
             }
         } else {
             // Ищем аватарку пользователя в bot_users
