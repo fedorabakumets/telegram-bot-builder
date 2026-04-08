@@ -16,12 +16,10 @@ export function useBotData(projectId: number) {
     queryKey: [`/api/projects/${projectId}/bot/data`],
     enabled: !!projectId,
     staleTime: 60_000,
+    // Сохраняем предыдущие данные при рефетче — аватарка не мигает
+    placeholderData: (prev) => prev,
     select: (data) => {
-      // Защита: если данные не объект или null, возвращаем null
-      if (!data || typeof data !== 'object') {
-        console.warn('useBotData: API returned invalid data:', data);
-        return null;
-      }
+      if (!data || typeof data !== 'object') return null;
       return data;
     },
   });

@@ -88,6 +88,8 @@ export function useBotQueries(): BotQueriesResult {
       refetchInterval: allBotStatuses.some(s => s?.status === 'running') ? 60000 : false,
       refetchIntervalInBackground: false,
       staleTime: 30000,
+      // Сохраняем предыдущие данные при рефетче — аватарки не мигают
+      placeholderData: (prev: BotInfo | undefined) => prev,
     })),
   });
 
