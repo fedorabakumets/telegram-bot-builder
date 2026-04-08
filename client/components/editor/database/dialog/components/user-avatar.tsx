@@ -5,7 +5,7 @@
 
 import { Bot, User } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * Свойства аватара
@@ -27,6 +27,13 @@ interface UserAvatarProps {
 export function UserAvatar({ messageType, user, projectId, size = 28 }: UserAvatarProps) {
   const [imageError, setImageError] = useState(false);
   const isBot = messageType === 'bot';
+
+  // Сбрасываем ошибку при смене URL аватарки
+  const avatarKey = `${projectId}-${user?.userId}-${user?.avatarUrl}`;
+  useEffect(() => {
+    setImageError(false);
+  }, [avatarKey]);
+
   const hasPhoto = !!user?.avatarUrl && !!projectId && !!user?.userId && !imageError;
 
   console.log('[UserAvatar]', { messageType, userId: user?.userId, avatarUrl: user?.avatarUrl, projectId, hasPhoto, imageError });
