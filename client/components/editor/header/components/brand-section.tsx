@@ -48,7 +48,7 @@ export function BrandSection({ projectName, botInfo, isVertical, isCompact, isMo
         isCompact={isCompact}
         isMobile={isMobile}
       />
-      <VersionBadge version="2.1.0" />
+      <VersionBadge version="2.1.2" />
       {!isVertical && <GithubButton className="!p-0 !h-auto" />}
     </div>
   );
