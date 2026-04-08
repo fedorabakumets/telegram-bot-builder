@@ -141,7 +141,7 @@ async def set_user_var(user_id: int, key: str, value) -> None:
 
 
 def replace_variables_in_text(text: str, variables: dict, filters: dict = None) -> str:
-    """Заменяет переменные вида {var_name} в тексте на их значения
+    """Заменяет переменные вида {var_name} и {var.path.nested} в тексте на их значения
 
     Args:
         text: Исходный текст с переменными
@@ -153,10 +153,39 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
     """
     if not text or not variables:
         return text or ''
-    result = text
-    for key, value in variables.items():
-        if value is not None:
-            result = result.replace('{' + str(key) + '}', str(value))
+    import re as _re
+    import json as _json
+
+    def _resolve(var_path: str) -> str | None:
+        """Разрешает переменную, поддерживая вложенные пути через точку"""
+        if '.' not in var_path:
+            val = variables.get(var_path)
+            return str(val) if val is not None else None
+        parts = var_path.split('.')
+        root = variables.get(parts[0])
+        if root is None:
+            return None
+        # Если корень — строка, пробуем распарсить как JSON
+        if isinstance(root, str):
+            try:
+                root = _json.loads(root)
+            except Exception:
+                return None
+        obj = root
+        for part in parts[1:]:
+            if not isinstance(obj, dict):
+                return None
+            obj = obj.get(part)
+            if obj is None:
+                return None
+        return str(obj)
+
+    def _replacer(match):
+        var_path = match.group(1)
+        resolved = _resolve(var_path)
+        return resolved if resolved is not None else match.group(0)
+
+    result = _re.sub(r'\{([\w.]+)\}', _replacer, text)
     return result
 
 

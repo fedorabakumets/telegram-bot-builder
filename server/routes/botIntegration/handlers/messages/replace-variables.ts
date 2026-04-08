@@ -109,9 +109,27 @@ export async function replaceVariablesInText(
   variables.user_ids = [];
   variables.user_ids_count = "0";
 
-  // Заменяем все переменные в формате {variable_name}
-  return text.replace(/\{(\w+)\}/g, (match, varName) => {
-    const value = variables[varName];
+  // Заменяем все переменные в формате {variable_name} и {variable.path.nested}
+  return text.replace(/\{([\w.]+)\}/g, (match, varPath) => {
+    // Поддержка вложенных путей через точку (например validate_response.result.first_name)
+    if (varPath.includes('.')) {
+      const parts = varPath.split('.');
+      const rootKey = parts[0];
+      const rootVal = variables[rootKey];
+      if (rootVal === undefined) return match;
+      try {
+        // Пробуем распарсить как JSON если это строка
+        let obj: unknown = typeof rootVal === 'string' ? JSON.parse(rootVal) : rootVal;
+        for (let i = 1; i < parts.length; i++) {
+          if (obj === null || typeof obj !== 'object') return match;
+          obj = (obj as Record<string, unknown>)[parts[i]];
+        }
+        return obj !== undefined && obj !== null ? String(obj) : match;
+      } catch {
+        return match;
+      }
+    }
+    const value = variables[varPath];
     return value !== undefined && value !== "" ? value : match;
   });
 }
