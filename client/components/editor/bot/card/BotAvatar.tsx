@@ -44,7 +44,7 @@ export function BotAvatar({ photoUrl, botName, size = 40, className = '', projec
   if (resolvedPhotoUrl) {
     return (
       <div
-        className={`relative rounded-lg overflow-hidden flex-shrink-0 ${className}`}
+        className={`relative rounded-full overflow-hidden flex-shrink-0 ${className}`}
         style={{ width: size, height: size }}
       >
         <img
@@ -61,7 +61,7 @@ export function BotAvatar({ photoUrl, botName, size = 40, className = '', projec
 
   return (
     <div
-      className={`bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
+      className={`bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
       style={{ width: size, height: size }}
     >
       {initials ? (
