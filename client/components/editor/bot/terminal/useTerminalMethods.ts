@@ -80,12 +80,12 @@ export function useTerminalMethods({
   /**
    * Добавить строку без отправки на сервер
    */
-  const addLineLocal = (content: string, type: 'stdout' | 'stderr' = 'stdout') => {
+  const addLineLocal = (content: string, type: 'stdout' | 'stderr' = 'stdout', timestamp?: Date) => {
     const newLine: TerminalLine = {
       id: Date.now().toString(),
       content,
       type,
-      timestamp: new Date()
+      timestamp: timestamp ?? new Date()
     };
 
     if (logKey) {

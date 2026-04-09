@@ -44,7 +44,7 @@ export interface TerminalHandle {
   /** Добавить новую строку в терминал */
   addLine: (content: string, type?: 'stdout' | 'stderr', sendToServer?: boolean) => void;
   /** Добавить новую строку в терминал без отправки на сервер */
-  addLineLocal: (content: string, type?: 'stdout' | 'stderr') => void;
+  addLineLocal: (content: string, type?: 'stdout' | 'stderr', timestamp?: Date) => void;
   /** Отправить строку в серверный терминал */
   sendToServer: (content: string, type?: 'stdout' | 'stderr') => void;
 }

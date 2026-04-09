@@ -39,13 +39,15 @@ const FLUSH_INTERVAL_MS = 5000;
  * @param content - Содержимое строки лога
  * @param type - Тип строки лога
  * @param launchId - Идентификатор запуска (опционально)
+ * @param timestamp - Временная метка (опционально, по умолчанию текущее время)
  */
 export function addToBuffer(
   projectId: number,
   tokenId: number,
   content: string,
   type: "stdout" | "stderr" | "status",
-  launchId?: number
+  launchId?: number,
+  timestamp?: string
 ): void {
   const key = `${projectId}_${tokenId}`;
   if (!buffer.has(key)) {
@@ -53,7 +55,14 @@ export function addToBuffer(
   }
   const slot = buffer.get(key)!;
   if (launchId !== undefined) slot.launchId = launchId;
-  slot.entries.push({ projectId, tokenId, content, type, launchId: slot.launchId });
+  slot.entries.push({
+    projectId,
+    tokenId,
+    content,
+    type,
+    launchId: slot.launchId,
+    ...(timestamp ? { timestamp: new Date(timestamp) } : {}),
+  });
 }
 
 /**

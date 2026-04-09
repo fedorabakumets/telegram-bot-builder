@@ -127,7 +127,8 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
             // Защита от undefined content
             const content = message.content ?? '';
             if (content) {
-              terminalRefRef.current.current.addLineLocal(content, outputType);
+              const ts = message.timestamp ? new Date(message.timestamp) : undefined;
+              terminalRefRef.current.current.addLineLocal(content, outputType, ts);
             }
           }
         } catch (error) {

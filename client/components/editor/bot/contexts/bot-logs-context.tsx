@@ -40,7 +40,9 @@ export function BotLogsProvider({ children }: { children: ReactNode }) {
   const addLog = useCallback((key: string, entry: LogEntry) => {
     setLogs(prev => {
       const currentLogs = prev[key] || [];
-      const updatedLogs = [...currentLogs, entry].slice(-1000);
+      const updatedLogs = [...currentLogs, entry]
+        .slice(-1000)
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
       return { ...prev, [key]: updatedLogs };
     });
   }, []);
