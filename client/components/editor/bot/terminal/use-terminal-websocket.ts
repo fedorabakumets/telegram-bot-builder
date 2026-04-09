@@ -9,7 +9,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TerminalHandle } from './Terminal';
-import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
 
 /**
  * Тип для сообщений, получаемых от WebSocket-сервера терминала
@@ -71,7 +70,6 @@ interface UseTerminalWebSocketResult {
 export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTerminalWebSocketParams): UseTerminalWebSocketResult => {
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
-  const { clearLogs } = useBotLogs();
 
   // Используем ref для хранения актуальных значений чтобы избежать пересоздания connect
   const projectIdRef = useRef(projectId);
@@ -116,10 +114,6 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       ws.onopen = () => {
         console.log('Соединение с терминалом установлено');
         setStatus('connected');
-        // Очищаем контекст перед получением истории от сервера
-        if (projectIdRef.current && tokenIdRef.current) {
-          clearLogs(`${projectIdRef.current}-${tokenIdRef.current}`);
-        }
       };
 
       ws.onmessage = (event) => {
