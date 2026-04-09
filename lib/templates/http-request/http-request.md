@@ -6,7 +6,7 @@
 
 | Параметр | Тип | По умолчанию | Описание |
 |---|---|---|---|
-| `url` | string | — | URL запроса, поддерживает `{var_name}` |
+| `url` | string | — | URL запроса, поддерживает `{var_name}` и dot-notation `{obj.field}` |
 | `method` | GET/POST/PUT/PATCH/DELETE | `GET` | HTTP метод |
 | `headers` | JSON string | — | Заголовки запроса |
 | `body` | JSON string | — | Тело запроса (POST/PUT/PATCH) |
@@ -115,6 +115,29 @@
 ## Подстановка переменных
 
 Переменные в формате `{var_name}` подставляются в URL, заголовки, тело и query параметры из переменных пользователя.
+
+Поддерживается **dot-notation** для вложенных переменных: `{validate_response.result.first_name}`. Это позволяет обращаться к полям объектов, сохранённых в переменных предыдущих узлов.
+
+### Пример с dot-notation в URL
+
+```json
+{
+  "url": "https://api.example.com/users/{validate_response.result.user_id}/profile",
+  "method": "GET",
+  "responseVariable": "profile_data"
+}
+```
+
+### Пример с dot-notation в теле запроса
+
+```json
+{
+  "url": "https://api.example.com/update",
+  "method": "POST",
+  "body": "{\"first_name\": \"{validate_response.result.first_name}\", \"email\": \"{user.email}\"}",
+  "responseVariable": "update_result"
+}
+```
 
 ## Обработка ошибок
 

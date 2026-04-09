@@ -16,6 +16,8 @@ import {
   validParamsWithHeaders,
   validParamsWithStatus,
   validParamsWithVariables,
+  validParamsWithDotNotationUrl,
+  validParamsWithDotNotationBody,
   httpRequestNodeGet,
   httpRequestNodePost,
   validParamsBearer,
@@ -32,10 +34,22 @@ describe('generateHttpRequest()', () => {
     expect(code).toContain('async def handle_callback_http_request_1');
   });
 
-  it('подставляет переменные в URL', () => {
+  it('подставляет переменные в URL через replace_variables_in_text', () => {
     const code = generateHttpRequest(validParamsWithVariables);
-    expect(code).toContain('_url.replace(');
-    expect(code).toContain('for _k, _v in _all_vars.items()');
+    expect(code).toContain('replace_variables_in_text(_url, _all_vars, {})');
+    expect(code).not.toContain('for _k, _v in _all_vars.items()');
+  });
+
+  it('подставляет dot-notation переменные в URL', () => {
+    const code = generateHttpRequest(validParamsWithDotNotationUrl);
+    expect(code).toContain('replace_variables_in_text(_url, _all_vars, {})');
+    expect(code).toContain('{validate_response.result.user_id}');
+  });
+
+  it('подставляет dot-notation переменные в тело запроса через replace_variables_in_text', () => {
+    const code = generateHttpRequest(validParamsWithDotNotationBody);
+    expect(code).toContain('replace_variables_in_text(_body_raw_str, _all_vars, {})');
+    expect(code).not.toContain('for _k, _v in _all_vars.items()');
   });
 
   it('парсит JSON заголовки', () => {

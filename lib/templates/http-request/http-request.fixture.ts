@@ -120,6 +120,27 @@ export const validParamsIgnoreErrors: HttpRequestTemplateParams = {
   responseVariable: 'ignore_response',
 };
 
+/** Параметры: URL с dot-notation переменной {validate_response.result.user_id} */
+export const validParamsWithDotNotationUrl: HttpRequestTemplateParams = {
+  nodeId: 'http_request_dot_url',
+  safeName: 'http_request_dot_url',
+  url: 'https://api.example.com/users/{validate_response.result.user_id}/profile',
+  method: 'GET',
+  timeout: 30,
+  responseVariable: 'profile_data',
+};
+
+/** Параметры: тело с dot-notation переменной {validate_response.result.first_name} */
+export const validParamsWithDotNotationBody: HttpRequestTemplateParams = {
+  nodeId: 'http_request_dot_body',
+  safeName: 'http_request_dot_body',
+  url: 'https://api.example.com/update',
+  method: 'POST',
+  body: '{"first_name": "{validate_response.result.first_name}", "email": "{user.email}"}',
+  timeout: 30,
+  responseVariable: 'update_result',
+};
+
 /** Узел графа: GET запрос */
 export const httpRequestNodeGet: Node = {
   id: 'http_request_1',
