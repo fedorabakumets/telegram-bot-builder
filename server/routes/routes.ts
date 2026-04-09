@@ -11,6 +11,7 @@ import { Pool } from "pg";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { cleanupBotStates } from "../bots/cleanupBotStates";
+import { stopBot } from "../bots/stopBot";
 import dbRoutes from "../database/db-routes";
 import { db } from "../database/db";
 import { initializeDatabaseTables } from "../database/init-db";
@@ -985,6 +986,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.delete("/api/projects/:projectId/tokens/:tokenId", async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
 
       // Check ownership if user is authenticated
       const ownerId = getOwnerIdFromRequest(req);
@@ -996,6 +998,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         if (existingToken.ownerId !== ownerId) {
           return res.status(403).json({ message: "You don't have permission to delete this token" });
         }
+      }
+
+      // Останавливаем процесс бота перед удалением токена
+      try {
+        await stopBot(projectId, tokenId);
+      } catch (stopError) {
+        console.warn(`[DeleteToken] Не удалось остановить бота ${tokenId} перед удалением:`, stopError);
       }
 
       const success = await storage.deleteBotToken(tokenId);
