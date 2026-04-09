@@ -34,7 +34,7 @@ interface BotAvatarProps {
 export function BotAvatar({ photoUrl, botName, size = 40, className = '', projectId }: BotAvatarProps) {
   const { bot: botData } = useBotData(projectId || 0);
 
-  const rawPhotoUrl = photoUrl || botData?.avatarUrl;
+  const rawPhotoUrl = photoUrl;  // Используем только явно переданный URL, без фоллбэка на данные проекта
 
   // Стабилизируем — не сбрасываем в null если уже было значение (защита от мигания при рефетче)
   const stableRef = useRef<string | null | undefined>(undefined);
