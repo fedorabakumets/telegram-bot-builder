@@ -84,57 +84,69 @@ export function BotAutoRestartToggle({
 
   return (
     <div
-      className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${className} ${
+      className={`flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border transition-all col-span-full ${className} ${
         localEnabled
           ? 'bg-blue-500/8 border-blue-500/30 dark:bg-blue-500/10 dark:border-blue-500/40'
           : 'bg-muted/40 border-border/50'
       }`}
     >
-      <RefreshCw
-        className={`w-4 h-4 flex-shrink-0 ${localEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}
-      />
-      <Label
-        htmlFor={`auto-restart-${tokenId}`}
-        className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${
-          localEnabled ? 'text-blue-700 dark:text-blue-300' : 'text-muted-foreground'
-        }`}
-      >
-        {localEnabled ? 'Автоперезапуск' : 'Без перезапуска'}
-      </Label>
-
-      {localEnabled && (
-        /** Выпадающий список выбора максимального числа попыток перезапуска */
-        <Select
-          value={String(localAttempts)}
-          onValueChange={(val) => {
-            const ma = parseInt(val);
-            setLocalAttempts(ma);
-            mutation.mutate({ ar: 1, ma });
+      {/* Верхняя строка: иконка + заголовок + переключатель */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        <RefreshCw
+          className={`w-4 h-4 flex-shrink-0 ${localEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}
+        />
+        <div className="flex-1 min-w-0">
+          <Label
+            htmlFor={`auto-restart-${tokenId}`}
+            className={`text-xs sm:text-sm font-semibold cursor-pointer block ${
+              localEnabled ? 'text-blue-700 dark:text-blue-300' : 'text-muted-foreground'
+            }`}
+          >
+            Перезапуск при сбое
+          </Label>
+          <p className="text-xs text-muted-foreground/70 mt-0.5">
+            {localEnabled
+              ? 'Бот автоматически перезапустится если упадёт с ошибкой'
+              : 'Бот останется выключенным после сбоя'}
+          </p>
+        </div>
+        <Switch
+          id={`auto-restart-${tokenId}`}
+          checked={localEnabled}
+          onCheckedChange={(checked) => {
+            setLocalEnabled(checked);
+            mutation.mutate({ ar: checked ? 1 : 0, ma: localAttempts });
           }}
           disabled={mutation.isPending}
-        >
-          <SelectTrigger className="h-6 w-24 text-xs border-blue-500/30 bg-transparent text-blue-700 dark:text-blue-300">
-            <SelectValue placeholder="Попыток" />
-          </SelectTrigger>
-          <SelectContent>
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-              <SelectItem key={n} value={String(n)} className="text-xs">
-                {n} {n === 1 ? 'попытка' : n < 5 ? 'попытки' : 'попыток'}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+        />
+      </div>
 
-      <Switch
-        id={`auto-restart-${tokenId}`}
-        checked={localEnabled}
-        onCheckedChange={(checked) => {
-          setLocalEnabled(checked);
-          mutation.mutate({ ar: checked ? 1 : 0, ma: localAttempts });
-        }}
-        disabled={mutation.isPending}
-      />
+      {/* Нижняя строка: выбор попыток (только когда включено) */}
+      {localEnabled && (
+        <div className="flex items-center gap-2 pl-6">
+          <span className="text-xs text-blue-600/70 dark:text-blue-400/70">Максимум попыток:</span>
+          <Select
+            value={String(localAttempts)}
+            onValueChange={(val) => {
+              const ma = parseInt(val);
+              setLocalAttempts(ma);
+              mutation.mutate({ ar: 1, ma });
+            }}
+            disabled={mutation.isPending}
+          >
+            <SelectTrigger className="h-6 w-28 text-xs border-blue-500/30 bg-transparent text-blue-700 dark:text-blue-300">
+              <SelectValue placeholder="Попыток" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                <SelectItem key={n} value={String(n)} className="text-xs">
+                  {n} {n === 1 ? 'попытка' : n < 5 ? 'попытки' : 'попыток'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 }
