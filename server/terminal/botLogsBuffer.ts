@@ -184,6 +184,8 @@ export function stopFlushTimer(): void {
  */
 export async function clearBotLogs(projectId: number, tokenId: number): Promise<void> {
   const key = `${projectId}_${tokenId}`;
+  // Сначала сбрасываем буфер чтобы старые логи не записались в БД после очистки
+  await flushBuffer(key);
   // Очищаем in-memory буфер
   buffer.delete(key);
 
