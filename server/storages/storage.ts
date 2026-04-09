@@ -20,7 +20,9 @@ import {
   type InsertUserBotData,
   type MediaFile,
   type TelegramUserDB,
-  type UserBotData
+  type UserBotData,
+  type BotLog,
+  type InsertBotLog,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
 
@@ -637,6 +639,22 @@ export interface IStorage {
    * @returns Массив импортированных проектов
    */
   importProjectsFromFiles(): Promise<BotProject[]>;
+
+  /**
+   * Сохранить батч записей логов бота
+   * @param logs - Массив записей для вставки
+   * @returns Promise<void>
+   */
+  saveBotLogs(logs: InsertBotLog[]): Promise<void>;
+
+  /**
+   * Получить последние N строк логов бота
+   * @param projectId - Идентификатор проекта
+   * @param tokenId - Идентификатор токена
+   * @param limit - Максимальное количество строк (по умолчанию 500)
+   * @returns Массив записей логов
+   */
+  getBotLogs(projectId: number, tokenId: number, limit?: number): Promise<BotLog[]>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

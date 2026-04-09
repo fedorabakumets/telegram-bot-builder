@@ -9,6 +9,7 @@
  */
 
 import { sendOutputToTerminals } from './sendOutputToTerminals';
+import { flushBuffer } from './botLogsBuffer';
 
 /**
  * Настройка прослушивания вывода для конкретного процесса
@@ -52,10 +53,11 @@ export function setupProcessOutputListener(processKey: string, botProcess: any):
     };
 
     /** Именованный обработчик завершения процесса для возможности последующего удаления */
-    const onExit = (code: number, signal: string) => {
+    const onExit = async (code: number, signal: string) => {
         const content = `Процесс завершен с кодом ${code}, сигнал: ${signal}`;
         console.log(`[Terminal:${processKey}] exit: ${content}`);
         sendOutputToTerminals(content, 'status', projectId, tokenId);
+        await flushBuffer(processKey);
     };
 
     /** Именованный обработчик ошибок процесса для возможности последующего удаления */

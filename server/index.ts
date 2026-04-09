@@ -9,6 +9,7 @@ import { storage } from "./storages/storage";
 import { initializeTerminalWebSocket } from './terminal/initializeTerminalWebSocket';
 import { stopCleanup } from "./utils/cache";
 import { shutdownAllBots } from "./utils/graceful-shutdown";
+import { runMigrations } from "./database/runMigrations";
 
 // Настраиваем прокси для Telegram API ДО всех импортов
 dotenv.config({ debug: false });
@@ -96,6 +97,7 @@ app.use((req, res, next) => {
  */
 (async () => {
   const httpServer = createServer(app);
+  await runMigrations();
   await registerRoutes(app, httpServer);
 
   /**

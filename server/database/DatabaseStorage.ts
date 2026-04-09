@@ -1,4 +1,4 @@
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type InsertBotGroup, type InsertBotInstance, type InsertBotMessage, type InsertBotMessageMedia, type InsertBotProject, type InsertBotTemplate, type InsertBotToken, type InsertGroupMember, type InsertMediaFile, type InsertTelegramUser, type InsertUserBotData, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type InsertBotGroup, type InsertBotInstance, type InsertBotMessage, type InsertBotMessageMedia, type InsertBotProject, type InsertBotTemplate, type InsertBotToken, type InsertGroupMember, type InsertMediaFile, type InsertTelegramUser, type InsertUserBotData, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, type InsertBotLog } from "@shared/schema";
 import { and, asc, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
 import { db } from "./db";
@@ -1232,9 +1232,33 @@ export class DatabaseStorage implements IStorage {
    * @returns Массив импортированных проектов
    */
   async importProjectsFromFiles(): Promise<BotProject[]> {
-    // TODO: Реализовать импорт проектов из файлов в директории bots/
-    // Этот метод должен читать файлы проектов из директории bots/ и сохранять их в базе данных
-    // Пока что возвращаем пустой массив
     return [];
+  }
+
+  /**
+   * Сохранить батч записей логов бота в базу данных
+   * @param logs - Массив записей для вставки
+   * @returns Promise<void>
+   */
+  async saveBotLogs(logs: InsertBotLog[]): Promise<void> {
+    if (logs.length === 0) return;
+    await this.db.insert(botLogs).values(logs);
+  }
+
+  /**
+   * Получить последние N строк логов бота из базы данных
+   * @param projectId - Идентификатор проекта
+   * @param tokenId - Идентификатор токена
+   * @param limit - Максимальное количество строк (по умолчанию 500)
+   * @returns Массив записей логов, отсортированных по времени ASC
+   */
+  async getBotLogs(projectId: number, tokenId: number, limit = 500): Promise<BotLog[]> {
+    const rows = await this.db
+      .select()
+      .from(botLogs)
+      .where(and(eq(botLogs.projectId, projectId), eq(botLogs.tokenId, tokenId)))
+      .orderBy(desc(botLogs.timestamp))
+      .limit(limit);
+    return rows.reverse();
   }
 }

@@ -1,51 +1,62 @@
 /**
  * @fileoverview Хук для управления строками терминала
  *
- * Предоставляет состояние строк и автопрокрутку.
+ * Читает строки напрямую из BotLogsContext без промежуточного useState,
+ * что устраняет двойное хранение и рассинхронизацию при переключении вкладок.
  *
  * @module useTerminalLines
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
-import { TerminalLine } from './terminalTypes';
+import { useEffect, useRef } from "react";
+import { useBotLogs } from "@/components/editor/bot/contexts/bot-logs-context";
+import { TerminalLine } from "./terminalTypes";
 
+/** Результат хука useTerminalLines */
 interface UseTerminalLinesResult {
+  /** Строки терминала из контекста */
   lines: TerminalLine[];
+  /** Ссылка на контейнер вывода для автопрокрутки */
   outputContainerRef: React.RefObject<HTMLDivElement>;
-  setLines: (lines: TerminalLine[] | ((prev: TerminalLine[]) => TerminalLine[])) => void;
+  /**
+   * No-op для обратной совместимости — управление строками через контекст
+   * @param _lines - Игнорируется
+   */
+  setLines: (
+    _lines: TerminalLine[] | ((_prev: TerminalLine[]) => TerminalLine[])
+  ) => void;
 }
 
 /**
  * Хук для управления строками терминала
- * @param logKey - Ключ для доступа к логам
- * @returns Объект со строками и ссылкой на контейнер
+ * @param logKey - Ключ для доступа к логам в контексте
+ * @returns Объект со строками, ссылкой на контейнер и no-op setLines
  */
 export function useTerminalLines(logKey: string | null): UseTerminalLinesResult {
   const { getLogs } = useBotLogs();
   const outputContainerRef = useRef<HTMLDivElement>(null);
 
-  // Получаем логи из контекста при монтировании
-  const storedLines = logKey ? getLogs(logKey) : [];
-  const [lines, setLines] = useState<TerminalLine[]>(storedLines);
+  // Читаем строки напрямую из контекста — без промежуточного useState
+  const lines = logKey ? getLogs(logKey) : [];
 
-  // Синхронизируем состояние при изменении storedLines
-  useEffect(() => {
-    if (logKey) {
-      setLines(getLogs(logKey));
-    }
-  }, [logKey, getLogs]);
-
-  // Эффект для автопрокрутки к последней строке
+  // Автопрокрутка к последней строке при изменении логов
   useEffect(() => {
     if (outputContainerRef.current) {
-      outputContainerRef.current.scrollTop = outputContainerRef.current.scrollHeight;
+      outputContainerRef.current.scrollTop =
+        outputContainerRef.current.scrollHeight;
     }
   }, [lines]);
+
+  /**
+   * No-op: управление строками осуществляется через контекст
+   * clearTerminal вызывает clearLogs из контекста напрямую в useTerminalMethods
+   */
+  const setLines = (
+    _lines: TerminalLine[] | ((_prev: TerminalLine[]) => TerminalLine[])
+  ): void => {};
 
   return {
     lines,
     outputContainerRef,
-    setLines
+    setLines,
   };
 }

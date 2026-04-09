@@ -55,6 +55,9 @@ export type { SheetViewState, CanvasSheet, BotDataWithSheets, BotData } from "./
 export { sendMessageSchema } from "./schema/tables/additional-schemas";
 export type { SendMessage, ComponentDefinition } from "./schema/tables/additional-schemas";
 
+export { botLogs, insertBotLogSchema } from "./schema/tables/bot-logs";
+export type { BotLog, InsertBotLog } from "./schema/tables/bot-logs";
+
 export type TelegramUserDB = typeof telegramUsersTable.$inferSelect;
 
 // Импорты для обратной совместимости

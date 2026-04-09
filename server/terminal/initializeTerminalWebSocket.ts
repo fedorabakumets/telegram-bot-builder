@@ -1,96 +1,118 @@
-import { Server as HttpServer } from 'node:http';
-import { WebSocket, WebSocketServer } from 'ws';
-import { activeConnections } from './activeConnections';
-import { sendStatusMessage } from './sendStatusMessage';
-import { setTerminalWss } from './setTerminalWss';
-import { setupBotProcessListeners } from './setupBotProcessListeners';
+/**
+ * @fileoverview Инициализация WebSocket-сервера для передачи вывода ботов
+ * @module server/terminal/initializeTerminalWebSocket
+ */
+
+import { Server as HttpServer } from "node:http";
+import { WebSocket, WebSocketServer } from "ws";
+import { activeConnections } from "./activeConnections";
+import { setTerminalWss } from "./setTerminalWss";
+import { setupBotProcessListeners } from "./setupBotProcessListeners";
+import { startFlushTimer } from "./botLogsBuffer";
+import { storage } from "../storages/storage";
+import { TerminalMessage } from "./TerminalMessage";
 
 /**
  * Инициализирует WebSocket-сервер для передачи вывода ботов
- *
- * @param {HttpServer} server - HTTP-сервер, к которому будет подключен WebSocket
- * @returns {WebSocketServer} - Экземпляр WebSocket-сервера
+ * @param server - HTTP-сервер, к которому будет подключён WebSocket
+ * @returns Экземпляр WebSocket-сервера
  */
-
 export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer {
-    const wss = new WebSocketServer({ server, path: '/api/terminal' });
+  const wss = new WebSocketServer({ server, path: "/api/terminal" });
 
-    wss.on('connection', (ws: WebSocket, request) => {
-        console.log('Новое WebSocket-соединение для терминала');
+  wss.on("connection", (ws: WebSocket, request) => {
+    console.log("Новое WebSocket-соединение для терминала");
 
-        // Обработка параметров запроса для определения проекта/токена
-        const urlParams = new URLSearchParams(request.url?.split('?')[1]);
-        const projectId = urlParams.get('projectId');
-        const tokenId = urlParams.get('tokenId');
+    const urlParams = new URLSearchParams(request.url?.split("?")[1]);
+    const projectIdStr = urlParams.get("projectId");
+    const tokenIdStr = urlParams.get("tokenId");
 
-        if (!projectId || !tokenId) {
-            console.error('Отсутствуют обязательные параметры projectId или tokenId');
-            ws.close(4001, 'Отсутствуют обязательные параметры');
-            return;
-        }
+    if (!projectIdStr || !tokenIdStr) {
+      console.error("Отсутствуют обязательные параметры projectId или tokenId");
+      ws.close(4001, "Отсутствуют обязательные параметры");
+      return;
+    }
 
-        const connectionKey = `${projectId}_${tokenId}`;
+    const projectId = parseInt(projectIdStr);
+    const tokenId = parseInt(tokenIdStr);
+    const connectionKey = `${projectId}_${tokenId}`;
 
-        // Добавляем соединение в карту
-        if (!activeConnections.has(connectionKey)) {
-            activeConnections.set(connectionKey, new Set<WebSocket>());
-        }
-        activeConnections.get(connectionKey)!.add(ws);
+    // Регистрируем соединение
+    if (!activeConnections.has(connectionKey)) {
+      activeConnections.set(connectionKey, new Set<WebSocket>());
+    }
+    activeConnections.get(connectionKey)!.add(ws);
 
-        // НЕ отправляем статус подключения - он создаёт спам в терминале
-        // sendStatusMessage(ws, 'connected', parseInt(projectId), parseInt(tokenId));
+    // Отправляем историю логов новому клиенту
+    sendHistoryToClient(ws, projectId, tokenId);
 
-        // Обработка закрытия соединения
-        ws.on('close', () => {
-            console.log(`WebSocket-соединение закрыто для проекта ${projectId}, токена ${tokenId}`);
-            const connections = activeConnections.get(connectionKey);
-            if (connections) {
-                connections.delete(ws);
-                if (connections.size === 0) {
-                    activeConnections.delete(connectionKey);
-                }
-            }
-        });
-
-        // Обработка ошибок соединения
-        ws.on('error', (error) => {
-            console.error(`Ошибка WebSocket-соединения для проекта ${projectId}, токена ${tokenId}:`, error);
-            const connections = activeConnections.get(connectionKey);
-            if (connections) {
-                connections.delete(ws);
-                if (connections.size === 0) {
-                    activeConnections.delete(connectionKey);
-                }
-            }
-        });
-
-        // Обработка входящих сообщений (если нужно)
-        ws.on('message', (data) => {
-            // Можно обрабатывать команды от клиента, например, очистку терминала
-            const message = data.toString();
-            try {
-                const parsedMessage = JSON.parse(message);
-                if (parsedMessage.command === 'clear') {
-                    // Команда очистки терминала
-                    console.log(`Получена команда очистки терминала для проекта ${projectId}, токена ${tokenId}`);
-                }
-            } catch (e) {
-                // Игнорируем некорректные сообщения
-                console.warn('Получено некорректное сообщение от клиента:', message);
-            }
-        });
+    ws.on("close", () => {
+      console.log(`WebSocket закрыт для проекта ${projectId}, токена ${tokenId}`);
+      const conns = activeConnections.get(connectionKey);
+      if (conns) {
+        conns.delete(ws);
+        if (conns.size === 0) activeConnections.delete(connectionKey);
+      }
     });
 
-    wss.on('error', (error) => {
-        console.error('Ошибка WebSocket-сервера:', error);
+    ws.on("error", (error) => {
+      console.error(`Ошибка WebSocket для проекта ${projectId}, токена ${tokenId}:`, error);
+      const conns = activeConnections.get(connectionKey);
+      if (conns) {
+        conns.delete(ws);
+        if (conns.size === 0) activeConnections.delete(connectionKey);
+      }
     });
 
-    // Подписываемся на вывод процессов ботов
-    setupBotProcessListeners();
+    ws.on("message", (data) => {
+      try {
+        const parsed = JSON.parse(data.toString());
+        if (parsed.command === "clear") {
+          console.log(`Команда очистки терминала для проекта ${projectId}, токена ${tokenId}`);
+        }
+      } catch {
+        console.warn("Некорректное сообщение от клиента:", data.toString());
+      }
+    });
+  });
 
-    // Устанавливаем сервер в глобальную переменную
-    setTerminalWss(wss);
+  wss.on("error", (error) => {
+    console.error("Ошибка WebSocket-сервера:", error);
+  });
 
-    console.log('WebSocket-сервер для терминала инициализирован на /api/terminal');
-    return wss;
+  setupBotProcessListeners();
+  startFlushTimer();
+  setTerminalWss(wss);
+
+  console.log("WebSocket-сервер для терминала инициализирован на /api/terminal");
+  return wss;
+}
+
+/**
+ * Загружает историю логов из БД и отправляет её клиенту
+ * @param ws - WebSocket-соединение клиента
+ * @param projectId - Идентификатор проекта
+ * @param tokenId - Идентификатор токена
+ */
+async function sendHistoryToClient(
+  ws: WebSocket,
+  projectId: number,
+  tokenId: number
+): Promise<void> {
+  try {
+    const logs = await storage.getBotLogs(projectId, tokenId, 500);
+    for (const log of logs) {
+      if (ws.readyState !== WebSocket.OPEN) break;
+      const message: TerminalMessage = {
+        type: (log.type as "stdout" | "stderr" | "status") ?? "stdout",
+        content: log.content,
+        projectId,
+        tokenId,
+        timestamp: log.timestamp?.toISOString() ?? new Date().toISOString(),
+      };
+      ws.send(JSON.stringify(message));
+    }
+  } catch (err) {
+    console.error(`[Terminal] Ошибка загрузки истории логов для ${projectId}_${tokenId}:`, err);
+  }
 }
