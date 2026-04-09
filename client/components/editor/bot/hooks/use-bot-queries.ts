@@ -71,9 +71,12 @@ export function useBotQueries(): BotQueriesResult {
     queries: allTokensFlat.map(token => ({
       queryKey: [`/api/tokens/${token.id}/bot-status`],
       queryFn: () => apiRequest('GET', `/api/tokens/${token.id}/bot-status`),
-      refetchInterval: 3000,
-      refetchIntervalInBackground: true,
-      staleTime: 1000,
+      /**
+       * staleTime: 0 — данные сразу считаются устаревшими,
+       * поэтому при инвалидации через WebSocket-событие рефетч произойдёт немедленно.
+       * Polling убран — обновляем статусы только по событиям WebSocket.
+       */
+      staleTime: 0,
     })),
   });
 

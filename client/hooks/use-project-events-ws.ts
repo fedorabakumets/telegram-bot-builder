@@ -54,6 +54,13 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
   /** Ref для стабильной ссылки на callback без перезапуска эффекта */
   const onTokenCreatedRef = useRef(onTokenCreated);
   onTokenCreatedRef.current = onTokenCreated;
+  /**
+   * Флаг первого подключения.
+   * При первом onopen данные уже загружены при монтировании — рефетч не нужен.
+   * При каждом последующем onopen (реконнект) инвалидируем все статусы,
+   * чтобы синхронизироваться с событиями, пропущенными во время обрыва.
+   */
+  const isFirstConnectRef = useRef(true);
 
   useEffect(() => {
     if (!projectId) return;
@@ -68,6 +75,22 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
 
       const ws = new WebSocket(url);
       wsRef.current = ws;
+
+      ws.onopen = () => {
+        if (isFirstConnectRef.current) {
+          // Первое подключение — данные уже загружены при монтировании, рефетч не нужен
+          isFirstConnectRef.current = false;
+          return;
+        }
+        // Реконнект после обрыва — инвалидируем все bot-status запросы проекта,
+        // чтобы подтянуть статусы, изменившиеся пока соединение было разорвано
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            typeof query.queryKey[0] === 'string' &&
+            query.queryKey[0].startsWith('/api/tokens/') &&
+            query.queryKey[0].endsWith('/bot-status'),
+        });
+      };
 
       ws.onmessage = (event) => {
         try {
@@ -124,6 +147,9 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       wsRef.current?.close();
       wsRef.current = null;
+      // Сбрасываем флаг, чтобы при повторном монтировании первое подключение
+      // снова считалось первым и не вызывало лишний рефетч
+      isFirstConnectRef.current = true;
     };
   }, [projectId, queryClient]);
 }
