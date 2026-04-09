@@ -20,7 +20,8 @@ export function useLaunchHistory(tokenId: number | undefined) {
       return res.json();
     },
     enabled: tokenId !== undefined,
-    staleTime: 30000,
+    staleTime: 0,
+    refetchInterval: 5000,
   });
 
   return {

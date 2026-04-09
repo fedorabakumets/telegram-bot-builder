@@ -76,6 +76,7 @@ export function useBotMutations({
       queryClient.invalidateQueries({ queryKey: [`/api/tokens/${vars.tokenId}/bot-status`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/bot/info`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/tokens`] });
+      queryClient.invalidateQueries({ queryKey: ['launch-history', vars.tokenId] });
       const token = findToken(vars.tokenId);
       if (token && onBotStarted) {
         onBotStarted(vars.projectId, vars.tokenId, token.name || `Бот ${vars.tokenId}`);
@@ -92,6 +93,7 @@ export function useBotMutations({
     onSuccess: (_, vars) => {
       toast({ title: 'Бот остановлен', description: 'Бот успешно остановлен.' });
       queryClient.invalidateQueries({ queryKey: [`/api/tokens/${vars.tokenId}/bot-status`] });
+      queryClient.invalidateQueries({ queryKey: ['launch-history', vars.tokenId] });
       if (onBotStopped) onBotStopped(vars.projectId, vars.tokenId);
     },
     onError: (error: Error) => {
