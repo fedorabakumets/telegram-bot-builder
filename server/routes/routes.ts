@@ -861,7 +861,34 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         ownerId: getOwnerIdFromRequest(req)
       });
 
-      const token = await storage.createBotToken(tokenData);
+      // Если botUsername не передан — автоматически получаем данные бота из Telegram
+      let enrichedTokenData = { ...tokenData };
+      if (!tokenData.botUsername && tokenData.token) {
+        try {
+          const tgRes = await fetchWithProxy(`https://api.telegram.org/bot${tokenData.token}/getMe`, {
+            signal: AbortSignal.timeout(8000),
+          });
+          if (tgRes.ok) {
+            const tgData = await tgRes.json();
+            if (tgData.ok && tgData.result) {
+              const r = tgData.result;
+              enrichedTokenData = {
+                ...enrichedTokenData,
+                botUsername: r.username ?? enrichedTokenData.botUsername,
+                botFirstName: enrichedTokenData.botFirstName || r.first_name,
+                botCanJoinGroups: r.can_join_groups ? 1 : 0,
+                botCanReadAllGroupMessages: r.can_read_all_group_messages ? 1 : 0,
+                botSupportsInlineQueries: r.supports_inline_queries ? 1 : 0,
+                lastUsedAt: new Date(),
+              };
+            }
+          }
+        } catch {
+          // Не блокируем создание если Telegram недоступен
+        }
+      }
+
+      const token = await storage.createBotToken(enrichedTokenData);
 
       broadcastProjectEvent(projectId, {
         type: 'token-created',
