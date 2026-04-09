@@ -283,6 +283,8 @@ export async function startBot(projectId: number, token: string, tokenId: number
         tokenId,
         status: 'running',
         processId,
+        // Явно передаём startedAt из Node.js (UTC) чтобы избежать timezone-расхождения с PostgreSQL defaultNow()
+        startedAt: new Date(),
       });
       launchId = launchRecord.id;
     } catch (historyError) {
