@@ -73,7 +73,7 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
   const title = `Запуск · ${formatStartedAt(startedAt)}`;
 
   return (
-    <div className={`h-full flex flex-col ${terminalBgClass}`}>
+    <div className={`h-full flex flex-col font-mono text-sm ${terminalBgClass}`}>
       <div className={`${headerBgClass} px-4 py-2 flex justify-between items-center`}>
         <h3 className="font-semibold text-sm">{title}</h3>
         <div className="flex space-x-1 flex-wrap justify-end">
