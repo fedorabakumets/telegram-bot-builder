@@ -2,11 +2,12 @@
  * @fileoverview Просмотрщик логов истории запуска бота
  *
  * Отображает статичные логи из БД в стиле терминала.
+ * При первой загрузке логов автоматически прокручивает контейнер вниз.
  *
  * @module bot/terminal/LaunchHistoryViewer
  */
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { useLaunchLogs } from '../hooks/use-launch-logs';
 import { useTerminalTheme } from './useTerminalTheme';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
@@ -70,6 +71,14 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
   const containerRef = useRef<HTMLDivElement>(null);
 
   const lines = logs.map(botLogToLine);
+
+  // Прокрутка вниз при первой загрузке логов
+  useEffect(() => {
+    if (!isLoading && logs.length > 0) {
+      const el = containerRef.current;
+      if (el) el.scrollTo({ top: el.scrollHeight });
+    }
+  }, [isLoading, logs.length]);
   const title = `Запуск · ${formatStartedAt(startedAt)}`;
 
   return (
