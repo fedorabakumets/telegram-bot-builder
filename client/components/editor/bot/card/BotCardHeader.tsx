@@ -146,7 +146,7 @@ export function BotCardHeader({
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    className="group/name flex items-center gap-1 font-bold text-base sm:text-lg cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors truncate text-left"
+                    className="group/name flex items-center gap-1 font-bold text-base sm:text-lg cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors text-left"
                     onDoubleClick={() =>
                       handleStartEdit(token.id, 'name', displayName)
                     }
@@ -167,7 +167,7 @@ export function BotCardHeader({
             </TooltipProvider>
           )}
           {token.botUsername && (
-            <span className="text-xs sm:text-sm text-muted-foreground truncate">
+            <span className="text-xs sm:text-sm text-muted-foreground">
               @{token.botUsername}
             </span>
           )}
