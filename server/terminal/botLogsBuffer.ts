@@ -22,8 +22,11 @@ const buffer = new Map<string, BufferSlot>();
 /** Идентификатор таймера периодического сброса */
 let flushTimerId: ReturnType<typeof setInterval> | null = null;
 
-/** Максимальное количество строк лога на бота */
-const MAX_LOGS_PER_BOT = 500;
+/** Максимальное количество строк лога на один запуск */
+const MAX_LOGS_PER_LAUNCH = 300;
+
+/** Страховочный лимит строк на бота суммарно (все запуски) */
+const MAX_LOGS_PER_BOT = 2000;
 
 /** Интервал сброса буфера в миллисекундах */
 const FLUSH_INTERVAL_MS = 5000;
@@ -73,6 +76,11 @@ export async function flushBuffer(processKey: string): Promise<void> {
     const projectId = parseInt(projectIdStr);
     const tokenId = parseInt(tokenIdStr);
 
+    // Обрезаем по запуску если launchId известен
+    if (slot.launchId !== undefined) {
+      await trimLogsByLaunch(slot.launchId);
+    }
+    // Страховочная обрезка суммарно по боту
     await trimOldLogs(projectId, tokenId);
   } catch (err) {
     console.error(`[BotLogsBuffer] Ошибка сброса буфера для ${processKey}:`, err);
@@ -80,7 +88,29 @@ export async function flushBuffer(processKey: string): Promise<void> {
 }
 
 /**
- * Удаляет старые записи, оставляя только последние MAX_LOGS_PER_BOT строк
+ * Удаляет старые записи конкретного запуска, оставляя MAX_LOGS_PER_LAUNCH строк
+ * @param launchId - Идентификатор запуска
+ * @returns Promise<void>
+ */
+async function trimLogsByLaunch(launchId: number): Promise<void> {
+  try {
+    await db.execute(sql`
+      DELETE FROM bot_logs
+      WHERE launch_id = ${launchId}
+        AND id NOT IN (
+          SELECT id FROM bot_logs
+          WHERE launch_id = ${launchId}
+          ORDER BY timestamp DESC
+          LIMIT ${MAX_LOGS_PER_LAUNCH}
+        )
+    `);
+  } catch (err) {
+    console.error(`[BotLogsBuffer] Ошибка обрезки логов запуска ${launchId}:`, err);
+  }
+}
+
+/**
+ * Страховочная обрезка — удаляет старые записи, оставляя MAX_LOGS_PER_BOT строк на бота
  * @param projectId - Идентификатор проекта
  * @param tokenId - Идентификатор токена
  * @returns Promise<void>
