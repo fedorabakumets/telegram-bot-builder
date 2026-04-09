@@ -80,6 +80,11 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
     const connectionKey = `${projectId}_${tokenId}`;
     registerConnection(connectionKey, ws);
 
+    // Сбрасываем буфер в БД перед отправкой истории клиенту
+    // чтобы свежие логи не потерялись если буфер ещё не сбросился
+    const { flushBuffer } = await import('./botLogsBuffer');
+    await flushBuffer(connectionKey);
+
     // Отправляем историю логов новому клиенту
     sendHistoryToClient(ws, projectId, tokenId);
 
