@@ -21,7 +21,6 @@ export function useLaunchHistory(tokenId: number | undefined) {
     },
     enabled: tokenId !== undefined,
     staleTime: 0,
-    refetchInterval: 5000,
   });
 
   return {
