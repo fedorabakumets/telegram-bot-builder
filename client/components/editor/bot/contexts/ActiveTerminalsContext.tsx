@@ -103,10 +103,24 @@ export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const removeTerminalById = useCallback((id: string) => {
-    setTerminals(prev => prev.filter(t => {
-      const key = t.tabType === 'history' ? `history_${t.launchId}` : `${t.projectId}_${t.tokenId}`;
-      return key !== id;
-    }));
+    setTerminals(prev => {
+      const idx = prev.findIndex(t => {
+        const key = t.tabType === 'history' ? `history_${t.launchId}` : `${t.projectId}_${t.tokenId}`;
+        return key === id;
+      });
+      if (idx === -1) return prev;
+      const next = prev.filter((_, i) => i !== idx);
+      // Переключаемся на соседнюю вкладку если закрываем активную
+      setActiveTerminalId(current => {
+        if (current !== id) return current;
+        if (next.length === 0) return null;
+        const neighbour = next[idx] ?? next[idx - 1];
+        return neighbour.tabType === 'history'
+          ? `history_${neighbour.launchId}`
+          : `${neighbour.projectId}_${neighbour.tokenId}`;
+      });
+      return next;
+    });
   }, []);
 
   const updateTerminalStatus = useCallback((projectId: number, tokenId: number, isRunning: boolean) => {
