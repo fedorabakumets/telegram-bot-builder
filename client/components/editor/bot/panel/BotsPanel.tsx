@@ -29,7 +29,7 @@ interface BotStatusResponse {
  * Панель ботов
  */
 export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
-  const { addTerminal, updateTerminalStatus, terminals } = useActiveTerminals();
+  const { addTerminal, updateTerminalStatus, removeTerminal, terminals } = useActiveTerminals();
   const { clearLogs } = useBotLogs();
 
   // Получаем токены проекта
@@ -78,6 +78,11 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
     updateTerminalStatus(projectId, tokenId, false);
   };
 
+  // Обработчик удаления бота — убираем терминальную вкладку
+  const handleBotDeleted = (projectId: number, tokenId: number) => {
+    removeTerminal(projectId, tokenId);
+  };
+
   return (
     <div className="h-full overflow-auto p-3 sm:p-4 lg:p-6">
       <BotControl
@@ -85,6 +90,7 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
         projectName={projectName}
         onBotStarted={handleBotStarted}
         onBotStopped={handleBotStopped}
+        onBotDeleted={handleBotDeleted}
       />
     </div>
   );

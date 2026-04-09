@@ -35,12 +35,14 @@ interface BotControlProps {
   onBotStarted?: (projectId: number, tokenId: number, botName: string) => void;
   /** Callback при остановке бота */
   onBotStopped?: (projectId: number, tokenId: number) => void;
+  /** Callback при удалении бота */
+  onBotDeleted?: (projectId: number, tokenId: number) => void;
 }
 
 /**
  * Основной компонент управления ботами
  */
-export function BotControl({ projectId, onBotStarted, onBotStopped }: Omit<BotControlProps, 'projectName'> & { projectName?: string }) {
+export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted }: Omit<BotControlProps, 'projectName'> & { projectName?: string }) {
   const [showAddBot, setShowAddBot] = useState(false);
   const [newBotToken, setNewBotToken] = useState('');
   const [projectForNewBot, setProjectForNewBot] = useState<number | null>(null);
@@ -86,6 +88,7 @@ export function BotControl({ projectId, onBotStarted, onBotStopped }: Omit<BotCo
     allTokensFlat,
     onBotStarted,
     onBotStopped,
+    onBotDeleted,
     newBotToken,
     projectForNewBot,
     existingTokensCount: allTokensFlat.length,

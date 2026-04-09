@@ -31,6 +31,8 @@ interface UseBotMutationsParams {
   onBotStarted?: (projectId: number, tokenId: number, botName: string) => void;
   /** Callback при остановке бота */
   onBotStopped?: (projectId: number, tokenId: number) => void;
+  /** Callback при удалении бота */
+  onBotDeleted?: (projectId: number, tokenId: number) => void;
   /** Токен нового бота (для parseBotInfo → createBot) */
   newBotToken: string;
   /** ID проекта для нового бота */
@@ -51,6 +53,7 @@ export function useBotMutations({
   allTokensFlat,
   onBotStarted,
   onBotStopped,
+  onBotDeleted,
   newBotToken,
   projectForNewBot,
   existingTokensCount,
@@ -107,6 +110,8 @@ export function useBotMutations({
       if (token) {
         queryClient.invalidateQueries({ queryKey: [`/api/projects/${token.projectId}/tokens`] });
         queryClient.invalidateQueries({ queryKey: [`/api/projects/${token.projectId}/bot/info`] });
+        // Удаляем терминальную вкладку удалённого бота
+        if (onBotDeleted) onBotDeleted(token.projectId, tokenId);
       }
       toast({ title: 'Бот удалён' });
     },
