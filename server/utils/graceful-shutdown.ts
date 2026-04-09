@@ -14,6 +14,7 @@
  * @see {@link ./routes}
  */
 import { botProcesses } from "../routes/routes";
+import { closeDbPool } from "../database/db";
 
 /**
  * Модуль для взаимодействия с хранилищем данных
@@ -197,4 +198,5 @@ export async function shutdownAllBots(): Promise<void> {
   botProcesses.clear();
 
   console.log('✅ Все боты корректно завершены');
+  closeDbPool();
 }

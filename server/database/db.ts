@@ -160,25 +160,10 @@ async function testConnection() {
 setTimeout(testConnection, 2000);
 
 /**
- * Обработка корректного завершения работы приложения
- * Обновляем флаг состояния пула перед закрытием соединений
+ * Закрывает пул соединений с БД.
+ * Вызывается из graceful-shutdown ПОСЛЕ записи маркеров в БД.
  */
-process.on('SIGTERM', () => {
-  // console.log('🛑 Получен сигнал SIGTERM, закрываем пул соединений...');
+export function closeDbPool(): void {
   globalThis.__dbPoolActive = false;
-  pool.end(() => {
-    // console.log('🔌 Пул соединений закрыт');
-  });
-});
-
-/**
- * Обработка завершения работы через сигнал прерывания
- * Обновляем флаг состояния пула перед закрытием соединений
- */
-process.on('SIGINT', () => {
-  // console.log('🛑 Получен сигнал SIGINT, закрываем пул соединений...');
-  globalThis.__dbPoolActive = false;
-  pool.end(() => {
-    // console.log('🔌 Пул соединений закрыт');
-  });
-});
+  pool.end();
+}
