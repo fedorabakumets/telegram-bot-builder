@@ -20,7 +20,15 @@ export async function restoreRunningBots(): Promise<void> {
     console.log("🔄 Восстанавливаем запущенные боты после рестарта...");
 
     const allInstances = await storage.getAllBotInstances();
-    const runningInstances = allInstances.filter((i) => i.status === "running");
+    /**
+     * Ищем боты для восстановления по двум условиям:
+     * 1. `status === 'running'` — бот был запущен, но сервер упал без graceful shutdown
+     * 2. `errorMessage === '__server_restart__'` — бот был корректно остановлен сервером
+     *    (graceful shutdown) и помечен маркером для последующего восстановления
+     */
+    const runningInstances = allInstances.filter(
+      (i) => i.status === "running" || i.errorMessage === "__server_restart__"
+    );
 
     if (runningInstances.length === 0) {
       console.log("ℹ️ Нет ботов для восстановления.");
@@ -45,6 +53,10 @@ export async function restoreRunningBots(): Promise<void> {
           console.error(
             `❌ Не удалось восстановить бота projectId=${instance.projectId}: ${result.error}`
           );
+          /**
+           * Убираем маркер `__server_restart__` при неудаче, чтобы следующий рестарт
+           * не пытался снова запустить заведомо неработающего бота.
+           */
           await storage.updateBotInstance(instance.id, {
             status: "error",
             errorMessage: result.error ?? "Ошибка при восстановлении после рестарта",

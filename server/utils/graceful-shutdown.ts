@@ -182,10 +182,15 @@ export async function shutdownAllBots(): Promise<void> {
       const allInstances = await storage.getAllBotInstances();
       for (const instance of allInstances) {
         if (instance.status === 'running') {
+          /**
+           * Используем специальный маркер вместо обычного сообщения об остановке,
+           * чтобы `restoreRunningBots` мог отличить "остановлен сервером" от
+           * "остановлен пользователем вручную" и восстановить бота после рестарта.
+           */
           await storage.updateBotInstance(instance.id, {
             status: 'stopped',
             stoppedAt: new Date(),
-            errorMessage: 'Сервер остановлен'
+            errorMessage: '__server_restart__'
           });
         }
       }
