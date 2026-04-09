@@ -51,6 +51,7 @@ export function useBotQueries(): BotQueriesResult {
       queryKey: [`/api/projects/${project.id}/tokens`],
       queryFn: () => apiRequest('GET', `/api/projects/${project.id}/tokens`),
       enabled: projects.length > 0,
+      staleTime: 0,
     })),
   });
 
