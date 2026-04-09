@@ -29,6 +29,11 @@ export async function handleBotStatusByToken(req: Request, res: Response): Promi
     try {
         const tokenId = parseInt(req.params.tokenId);
 
+        // Отключаем кэширование — статус должен всегда быть актуальным
+        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+
         const instance = await storage.getBotInstanceByToken(tokenId);
 
         if (!instance) {

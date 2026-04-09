@@ -337,7 +337,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
               errorMessage: error.message,
             });
           }
-          const instance = await storage.getBotInstance(projectId);
+          const instance = await storage.getBotInstanceByToken(tokenId);
           if (instance) {
             await storage.updateBotInstance(instance.id, {
               status: 'error',
@@ -371,7 +371,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
               errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null,
             });
           }
-          const instance = await storage.getBotInstance(projectId);
+          const instance = await storage.getBotInstanceByToken(tokenId);
           if (instance) {
             await storage.updateBotInstance(instance.id, {
               status: 'stopped',
