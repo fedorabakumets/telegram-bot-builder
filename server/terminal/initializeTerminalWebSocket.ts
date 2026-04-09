@@ -9,7 +9,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import { activeConnections } from "./activeConnections";
 import { setTerminalWss } from "./setTerminalWss";
 import { setupBotProcessListeners } from "./setupBotProcessListeners";
-import { startFlushTimer } from "./botLogsBuffer";
+import { startFlushTimer, flushBuffer } from "./botLogsBuffer";
 import { storage } from "../storages/storage";
 import { TerminalMessage } from "./TerminalMessage";
 import "express-session";
@@ -80,13 +80,11 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
     const connectionKey = `${projectId}_${tokenId}`;
     registerConnection(connectionKey, ws);
 
-    // Сбрасываем буфер в БД перед отправкой истории клиенту
-    // чтобы свежие логи не потерялись если буфер ещё не сбросился
-    const { flushBuffer } = await import('./botLogsBuffer');
-    await flushBuffer(connectionKey);
-
-    // Отправляем историю логов новому клиенту
-    sendHistoryToClient(ws, projectId, tokenId);
+    // Сбрасываем буфер и отправляем историю асинхронно
+    (async () => {
+      await flushBuffer(connectionKey);
+      sendHistoryToClient(ws, projectId, tokenId);
+    })();
 
     ws.on("close", () => {
       console.log(`WebSocket закрыт для проекта ${projectId}, токена ${tokenId}`);
