@@ -20,14 +20,12 @@ for sheet in root["sheets"]:
             action = btn.get("action", "")
             text = btn.get("text", "").strip().lower()
 
-            if action == "url":
-                btn["style"] = "primary"
+            GREEN = ("купить", "продать")
+            if text in GREEN:
+                btn["style"] = "success"
                 colored += 1
-            elif action == "goto":
-                if text in ("назад", "← назад", "< назад", "back"):
-                    btn["style"] = "primary"
-                else:
-                    btn["style"] = "success"
+            elif action in ("url", "goto"):
+                btn["style"] = "primary"
                 colored += 1
 
 with open(PATH, "w", encoding="utf-8") as f:
