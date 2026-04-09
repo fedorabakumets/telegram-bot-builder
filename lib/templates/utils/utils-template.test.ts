@@ -118,6 +118,35 @@ describe('replace_variables_in_text()', () => {
   it('генерируется всегда', () => {
     expect(generateUtils(validParamsDisabled)).toContain('def replace_variables_in_text');
   });
+
+  it('поддерживает dot-notation для вложенных JSON путей', () => {
+    const r = generateUtils(validParamsDisabled);
+    // Функция должна содержать логику разбора пути через точку
+    expect(r).toContain("var_path.split('.')");
+  });
+
+  it('разворачивает вложенный путь из JSON-строки', () => {
+    const r = generateUtils(validParamsDisabled);
+    // Корень-строка парсится как JSON перед обходом пути
+    expect(r).toContain('_json.loads(root)');
+  });
+
+  it('несуществующий dot-notation путь остаётся как есть', () => {
+    const r = generateUtils(validParamsDisabled);
+    // При отсутствии значения возвращается исходный match (match.group(0))
+    expect(r).toContain('match.group(0)');
+  });
+
+  it('плоские переменные по-прежнему работают', () => {
+    const r = generateUtils(validParamsDisabled);
+    // Ветка без точки использует variables.get(var_path)
+    expect(r).toContain("variables.get(var_path)");
+  });
+
+  it('использует regex для поиска {var} и {var.path}', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain(String.raw`r'\{([\w.]+)\}'`);
+  });
 });
 
 // ─── utilsParamsSchema ────────────────────────────────────────────────────────
