@@ -64,19 +64,13 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
     const projectId = parseInt(projectIdStr);
     const tokenId = parseInt(tokenIdStr);
 
-    // Режим подписки на все проекты пользователя: projectId=0
+    // Режим подписки на все проекты: projectId=0
+    // В single-tenant режиме без авторизации используем глобальный ключ
     if (projectId === 0) {
       const session = (request as any).session;
       const userId: number | undefined = session?.telegramUser?.id;
-      if (!userId) {
-        // Гостевой режим — соединение принято, но события не рассылаются
-        ws.on("close", () => {});
-        ws.on("error", () => ws.close());
-        return;
-      }
-      const allKey = `user_${userId}`;
+      const allKey = userId ? `user_${userId}` : `user_global`;
       registerConnection(allKey, ws);
-      console.log(`WebSocket подписка на все проекты пользователя ${userId} (ключ: ${allKey})`);
 
       ws.on("close", () => removeConnection(allKey, ws));
       ws.on("error", () => removeConnection(allKey, ws));

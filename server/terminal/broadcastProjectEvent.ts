@@ -44,12 +44,10 @@ export async function broadcastProjectEvent(projectId: number, event: ProjectEve
   // Рассылаем клиентам подписанным на все проекты пользователя
   try {
     const project = await storage.getBotProject(projectId);
-    if (project?.ownerId) {
-      const userKey = `user_${project.ownerId}`;
-      const userConns = activeConnections.get(userKey);
-      if (userConns) {
-        sendToConnections(userConns, payload);
-      }
+    const userKey = project?.ownerId ? `user_${project.ownerId}` : `user_global`;
+    const userConns = activeConnections.get(userKey);
+    if (userConns) {
+      sendToConnections(userConns, payload);
     }
   } catch (err) {
     console.error(`[broadcastProjectEvent] Ошибка получения проекта ${projectId}:`, err);
