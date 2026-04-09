@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @fileoverview ������ ����� ������ ��������� � �� ������ �����.
  */
 
@@ -654,7 +654,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
             items={[
               {
                 id: 'duplicate',
-                label: '�����������',
+                label: 'Дублировать',
                 icon: 'fas fa-copy',
                 onClick: () => {
                   /**
