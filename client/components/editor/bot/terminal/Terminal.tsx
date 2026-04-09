@@ -15,10 +15,10 @@ import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { TerminalHandle, TerminalProps } from './terminalTypes';
 import { useTerminalTheme } from './useTerminalTheme';
 import { useTerminalResize } from './useTerminalResize';
-import { useTerminalScale } from './useTerminalScale';
 import { useTerminalLines } from './useTerminalLines';
 import { useTerminalMethods } from './useTerminalMethods';
 import { useTerminalFilter } from './useTerminalFilter';
+import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 
 export type { TerminalHandle, TerminalProps };
 
@@ -46,8 +46,8 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   // Хук изменения размера (используется для будущего ресайза)
   useTerminalResize({ fullSize: true });
 
-  // Хук масштаба
-  const { scale, adjustScale } = useTerminalScale();
+  // Глобальный масштаб из контекста (общий для всех вкладок)
+  const { terminalScale: scale, adjustTerminalScale: adjustScale } = useActiveTerminals();
 
   // Хук строк
   const { lines, outputContainerRef, setLines } = useTerminalLines(logKey);

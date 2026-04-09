@@ -9,7 +9,7 @@
 import { useRef } from 'react';
 import { useLaunchLogs } from '../hooks/use-launch-logs';
 import { useTerminalTheme } from './useTerminalTheme';
-import { useTerminalScale } from './useTerminalScale';
+import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 import { TerminalOutput } from './TerminalOutput';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { Button } from '@/components/ui/button';
@@ -62,7 +62,7 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
     terminalBgClass, terminalTextClass, headerBgClass,
     buttonTextColorClass, buttonHoverClass, placeholderTextClass, stderrTextClass,
   } = useTerminalTheme();
-  const { scale, adjustScale } = useTerminalScale();
+  const { terminalScale: scale, adjustTerminalScale: adjustScale } = useActiveTerminals();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const lines = logs.map(botLogToLine);

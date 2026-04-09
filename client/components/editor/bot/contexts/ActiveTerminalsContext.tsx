@@ -67,6 +67,10 @@ interface ActiveTerminalsContextType {
   setActiveTerminalById: (id: string) => void;
   /** Открыть вкладку с историей запуска */
   openHistoryTab: (params: OpenHistoryTabParams) => void;
+  /** Глобальный масштаб текста терминала (общий для всех вкладок) */
+  terminalScale: number;
+  /** Изменить масштаб терминала */
+  adjustTerminalScale: (factor: number) => void;
 }
 
 const ActiveTerminalsContext = createContext<ActiveTerminalsContextType | null>(null);
@@ -79,6 +83,11 @@ const ActiveTerminalsContext = createContext<ActiveTerminalsContextType | null>(
 export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
   const [terminals, setTerminals] = useState<TerminalInfo[]>([]);
   const [activeTerminalId, setActiveTerminalId] = useState<string | null>(null);
+  const [terminalScale, setTerminalScale] = useState<number>(1);
+
+  const adjustTerminalScale = useCallback((factor: number) => {
+    setTerminalScale(prev => Math.max(0.5, Math.min(2, prev * factor)));
+  }, []);
 
   const addTerminal = useCallback((info: TerminalInfo) => {
     setTerminals(prev => {
@@ -130,6 +139,7 @@ export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
       terminals, activeTerminalId,
       addTerminal, removeTerminal, removeTerminalById,
       updateTerminalStatus, setActiveTerminal, setActiveTerminalById, openHistoryTab,
+      terminalScale, adjustTerminalScale,
     }}>
       {children}
     </ActiveTerminalsContext.Provider>
