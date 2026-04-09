@@ -71,7 +71,7 @@ export async function restoreRunningBots(): Promise<void> {
           `▶️ Восстанавливаем бота: projectId=${instance.projectId}, tokenId=${instance.tokenId}`
         );
 
-        const result = await startBot(instance.projectId, instance.token, instance.tokenId);
+        const result = await startBot(instance.projectId, instance.token, instance.tokenId, { clearLogs: false });
 
         if (result.success) {
           console.log(

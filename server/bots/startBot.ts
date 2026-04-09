@@ -95,7 +95,8 @@ import {
  * }
  * ```
  */
-export async function startBot(projectId: number, token: string, tokenId: number): Promise<{ success: boolean; error?: string; processId?: string | undefined; }> {
+export async function startBot(projectId: number, token: string, tokenId: number, options?: { clearLogs?: boolean }): Promise<{ success: boolean; error?: string; processId?: string | undefined; }> {
+  const shouldClearLogs = options?.clearLogs !== false; // по умолчанию true
   try {
     const processKey = `${projectId}_${tokenId}`;
 
@@ -260,8 +261,10 @@ export async function startBot(projectId: number, token: string, tokenId: number
     }
     }
 
-    // Очищаем логи предыдущего запуска перед стартом нового
-    await clearBotLogs(projectId, tokenId);
+    // Очищаем логи предыдущего запуска перед стартом нового (только при ручном запуске)
+    if (shouldClearLogs) {
+      await clearBotLogs(projectId, tokenId);
+    }
 
     // Запускаем бота
     const pythonPath = process.platform === 'win32'

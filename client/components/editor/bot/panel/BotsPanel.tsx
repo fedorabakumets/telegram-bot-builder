@@ -51,10 +51,15 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
   
   // Инициализируем терминалы при загрузке для запущенных ботов
   useEffect(() => {
-    if (tokens.length > 0 && terminals.length === 0) {
-      tokens.forEach((token: BotToken, index: number) => {
-        const statusResponse = tokenStatuses[index]?.data as BotStatusResponse | undefined;
-        if (statusResponse?.status === 'running' && statusResponse?.instance) {
+    if (tokens.length === 0) return;
+    tokens.forEach((token: BotToken, index: number) => {
+      const statusResponse = tokenStatuses[index]?.data as BotStatusResponse | undefined;
+      if (statusResponse?.status === 'running' && statusResponse?.instance) {
+        // Добавляем вкладку только если её ещё нет
+        const alreadyOpen = terminals.some(
+          t => t.projectId === token.projectId && t.tokenId === token.id && t.tabType !== 'history'
+        );
+        if (!alreadyOpen) {
           addTerminal({
             projectId: token.projectId,
             tokenId: token.id,
@@ -62,9 +67,9 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
             isRunning: true
           });
         }
-      });
-    }
-  }, [tokens, tokenStatuses, terminals.length, projectId, projectName]);
+      }
+    });
+  }, [tokens, tokenStatuses, projectId, projectName]);
 
   // Обработчик запуска бота
   const handleBotStarted = (projectId: number, tokenId: number, botName: string) => {
