@@ -11,7 +11,6 @@ import type { Express } from "express";
 import express from "express";
 import fs from "fs";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
 import { viteLogger } from "../utils/viteLogger";
@@ -25,6 +24,9 @@ import { viteLogger } from "../utils/viteLogger";
  * @returns {Promise<void>}
  */
 export async function setupVite(app: Express, server: Server): Promise<void> {
+  // Динамический импорт vite — только в dev режиме, не грузится в продакшне
+  const { createServer: createViteServer } = await import('vite');
+  
   const serverOptions = {
     middlewareMode: true,
     hmr: {
