@@ -191,12 +191,9 @@ export async function clearBotLogs(projectId: number, tokenId: number): Promise<
 
   if (globalThis.__dbPoolActive === false) return;
   try {
-    // Удаляем только live-логи (без launch_id) — логи истории запусков не трогаем
+    // Удаляем все live-логи — логи истории запросов через getBotLogsByLaunch по launchId
     await db.execute(sql`
-      DELETE FROM bot_logs
-      WHERE project_id = ${projectId}
-        AND token_id = ${tokenId}
-        AND launch_id IS NULL
+      DELETE FROM bot_logs WHERE project_id = ${projectId} AND token_id = ${tokenId}
     `);
   } catch (err) {
     console.error(`[BotLogsBuffer] Ошибка очистки логов для ${key}:`, err);

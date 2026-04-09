@@ -1256,11 +1256,7 @@ export class DatabaseStorage implements IStorage {
     const rows = await this.db
       .select()
       .from(botLogs)
-      .where(and(
-        eq(botLogs.projectId, projectId),
-        eq(botLogs.tokenId, tokenId),
-        isNull(botLogs.launchId),
-      ))
+      .where(and(eq(botLogs.projectId, projectId), eq(botLogs.tokenId, tokenId)))
       .orderBy(desc(botLogs.timestamp))
       .limit(limit);
     return rows.reverse();
