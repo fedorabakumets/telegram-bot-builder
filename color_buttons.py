@@ -25,7 +25,7 @@ for sheet in root["sheets"]:
                 colored += 1
             elif action == "goto":
                 if text in ("назад", "← назад", "< назад", "back"):
-                    btn["style"] = "danger"
+                    btn["style"] = "primary"
                 else:
                     btn["style"] = "success"
                 colored += 1
