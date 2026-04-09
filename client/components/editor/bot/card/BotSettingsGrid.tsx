@@ -5,9 +5,7 @@
  * - Переключатель базы данных
  * - Таймер выполнения (только когда бот запущен)
  * - Список администраторов
- *
- * Когда бот не запущен и число элементов нечётное,
- * последний элемент растягивается на всю ширину через col-span-full.
+ * - История запусков
  *
  * @module BotSettingsGrid
  */
@@ -18,11 +16,14 @@ import { BotAdminIds } from '../profile/BotAdminIds';
 import { BotLaunchHistory } from './BotLaunchHistory';
 import type { BotStatusResponse } from '../bot-types';
 
+/** Пропсы сетки настроек бота */
 interface BotSettingsGridProps {
   /** ID проекта */
   projectId: number;
   /** ID токена */
   tokenId: number;
+  /** Имя бота (для передачи в историю запусков) */
+  botName?: string;
   /** Включена ли база данных пользователей (1 — да, 0/null — нет) */
   userDatabaseEnabled: number | null;
   /** Запущен ли бот */
@@ -33,28 +34,31 @@ interface BotSettingsGridProps {
   allBotStatuses: BotStatusResponse[];
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: {
+    /** Флаг ожидания ответа */
     isPending: boolean;
+    /** Функция мутации */
     mutate: (enabled: boolean) => void;
   };
 }
 
 /**
  * Сетка настроек бота
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
 export function BotSettingsGrid({
   projectId,
   tokenId,
+  botName,
   userDatabaseEnabled,
   isBotRunning,
   currentElapsedSeconds,
   allBotStatuses,
   toggleDatabaseMutation,
 }: BotSettingsGridProps) {
-  // Считаем количество элементов в сетке (без BotAdminIds — он всегда col-span-full)
-  // Элементы: BotDatabaseToggle (всегда) + BotExecutionTimer (только при запущенном боте)
   const itemCount = isBotRunning ? 2 : 1;
-  // Если нечётное число элементов — последний занимает всю ширину
   const dbToggleClass = itemCount === 1 ? 'col-span-full' : '';
+  const resolvedBotName = botName ?? `Бот ${tokenId}`;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -73,7 +77,11 @@ export function BotSettingsGrid({
         />
       )}
       <BotAdminIds projectId={projectId} />
-      <BotLaunchHistory tokenId={tokenId} />
+      <BotLaunchHistory
+        tokenId={tokenId}
+        projectId={projectId}
+        botName={resolvedBotName}
+      />
     </div>
   );
 }

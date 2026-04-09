@@ -103,6 +103,7 @@ export function BotCard({ token, project, projectBotInfo, isThisTokenRunning }: 
         <BotSettingsGrid
           projectId={project.id}
           tokenId={token.id}
+          botName={token.name ?? `Бот ${token.id}`}
           userDatabaseEnabled={project.userDatabaseEnabled}
           isBotRunning={isThisTokenRunning}
           currentElapsedSeconds={currentElapsedSeconds}

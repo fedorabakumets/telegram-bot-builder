@@ -1,16 +1,18 @@
 /**
  * @fileoverview Контекст для управления активными терминалами ботов
  *
- * Этот модуль предоставляет контекст и хук для управления
- * активными терминалами и переключения между ними.
+ * Поддерживает два типа вкладок: live (живой бот) и history (история запуска).
  *
  * @module bot/ActiveTerminalsContext
  */
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
+/** Тип вкладки терминала */
+export type TerminalTabType = 'live' | 'history';
+
 /**
- * Информация о терминале бота
+ * Информация о вкладке терминала
  */
 export interface TerminalInfo {
   /** Идентификатор проекта */
@@ -21,6 +23,26 @@ export interface TerminalInfo {
   botName: string;
   /** Статус бота */
   isRunning: boolean;
+  /** Тип вкладки: live — живой бот, history — история запуска */
+  tabType?: TerminalTabType;
+  /** ID запуска (только для tabType === 'history') */
+  launchId?: number;
+  /** Дата запуска для отображения в заголовке вкладки */
+  launchStartedAt?: string | null;
+}
+
+/** Параметры для открытия вкладки истории */
+interface OpenHistoryTabParams {
+  /** ID проекта */
+  projectId: number;
+  /** ID токена */
+  tokenId: number;
+  /** Имя бота */
+  botName: string;
+  /** ID запуска */
+  launchId: number;
+  /** Дата запуска */
+  launchStartedAt: string | null;
 }
 
 /**
@@ -29,22 +51,30 @@ export interface TerminalInfo {
 interface ActiveTerminalsContextType {
   /** Список активных терминалов */
   terminals: TerminalInfo[];
-  /** Идентификатор активного терминала (ключ projectId_tokenId) */
+  /** Идентификатор активной вкладки */
   activeTerminalId: string | null;
   /** Добавить терминал в список */
   addTerminal: (info: TerminalInfo) => void;
   /** Удалить терминал из списка */
   removeTerminal: (projectId: number, tokenId: number) => void;
+  /** Удалить вкладку по строковому ключу */
+  removeTerminalById: (id: string) => void;
   /** Обновить статус терминала */
   updateTerminalStatus: (projectId: number, tokenId: number, isRunning: boolean) => void;
-  /** Установить активный терминал */
+  /** Установить активный терминал по projectId и tokenId */
   setActiveTerminal: (projectId: number, tokenId: number) => void;
+  /** Установить активный терминал по строковому ключу */
+  setActiveTerminalById: (id: string) => void;
+  /** Открыть вкладку с историей запуска */
+  openHistoryTab: (params: OpenHistoryTabParams) => void;
 }
 
 const ActiveTerminalsContext = createContext<ActiveTerminalsContextType | null>(null);
 
 /**
  * Провайдер контекста активных терминалов
+ * @param props - Свойства провайдера
+ * @returns JSX элемент
  */
 export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
   const [terminals, setTerminals] = useState<TerminalInfo[]>([]);
@@ -56,12 +86,18 @@ export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
       if (exists) return prev;
       return [...prev, info];
     });
-    // Автоматически переключаемся на новый терминал
     setActiveTerminalId(`${info.projectId}_${info.tokenId}`);
   }, []);
 
   const removeTerminal = useCallback((projectId: number, tokenId: number) => {
     setTerminals(prev => prev.filter(t => !(t.projectId === projectId && t.tokenId === tokenId)));
+  }, []);
+
+  const removeTerminalById = useCallback((id: string) => {
+    setTerminals(prev => prev.filter(t => {
+      const key = t.tabType === 'history' ? `history_${t.launchId}` : `${t.projectId}_${t.tokenId}`;
+      return key !== id;
+    }));
   }, []);
 
   const updateTerminalStatus = useCallback((projectId: number, tokenId: number, isRunning: boolean) => {
@@ -74,8 +110,27 @@ export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
     setActiveTerminalId(`${projectId}_${tokenId}`);
   }, []);
 
+  const setActiveTerminalById = useCallback((id: string) => {
+    setActiveTerminalId(id);
+  }, []);
+
+  const openHistoryTab = useCallback((params: OpenHistoryTabParams) => {
+    const { projectId, tokenId, botName, launchId, launchStartedAt } = params;
+    const tabId = `history_${launchId}`;
+    setTerminals(prev => {
+      const exists = prev.some(t => t.tabType === 'history' && t.launchId === launchId);
+      if (exists) return prev;
+      return [...prev, { projectId, tokenId, botName, isRunning: false, tabType: 'history', launchId, launchStartedAt }];
+    });
+    setActiveTerminalId(tabId);
+  }, []);
+
   return (
-    <ActiveTerminalsContext.Provider value={{ terminals, activeTerminalId, addTerminal, removeTerminal, updateTerminalStatus, setActiveTerminal }}>
+    <ActiveTerminalsContext.Provider value={{
+      terminals, activeTerminalId,
+      addTerminal, removeTerminal, removeTerminalById,
+      updateTerminalStatus, setActiveTerminal, setActiveTerminalById, openHistoryTab,
+    }}>
       {children}
     </ActiveTerminalsContext.Provider>
   );
@@ -83,6 +138,7 @@ export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
 
 /**
  * Хук для доступа к контексту активных терминалов
+ * @returns Контекст активных терминалов
  */
 export function useActiveTerminals() {
   const context = useContext(ActiveTerminalsContext);

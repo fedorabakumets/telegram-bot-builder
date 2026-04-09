@@ -3,17 +3,20 @@
  * @module bot/card/BotLaunchHistory
  */
 
-import { useState } from 'react';
 import { History, Circle, X, FileText } from 'lucide-react';
 import type { BotLaunchHistory as BotLaunchHistoryType } from '@shared/schema';
 import { useLaunchHistory } from '../hooks/use-launch-history';
 import { formatExecutionTime } from '../contexts/bot-control-utils';
-import { LaunchLogsModal } from './LaunchLogsModal';
+import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 
 /** Пропсы компонента истории запусков */
 interface BotLaunchHistoryProps {
   /** ID токена бота */
   tokenId: number;
+  /** ID проекта */
+  projectId: number;
+  /** Имя бота */
+  botName: string;
 }
 
 /**
@@ -34,7 +37,7 @@ function formatDate(date: Date | string | null): string {
 /**
  * Вычисляет длительность запуска в секундах
  * @param startedAt - Время запуска
- * @param stoppedAt - Время остановки (null если ещё работает)
+ * @param stoppedAt - Время остановки
  * @returns Длительность в секундах или null
  */
 function getDuration(
@@ -107,42 +110,36 @@ function LaunchRow({ record, onShowLogs }: LaunchRowProps) {
  * @param props - Свойства компонента
  * @returns JSX элемент или null если история пустая
  */
-export function BotLaunchHistory({ tokenId }: BotLaunchHistoryProps) {
+export function BotLaunchHistory({ tokenId, projectId, botName }: BotLaunchHistoryProps) {
   const { history } = useLaunchHistory(tokenId);
-  const [selectedLaunchId, setSelectedLaunchId] = useState<number | null>(null);
-  const [selectedStartedAt, setSelectedStartedAt] = useState<Date | string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { openHistoryTab } = useActiveTerminals();
 
   if (history.length === 0) return null;
 
   /**
-   * Открывает модалку с логами выбранного запуска
+   * Открывает вкладку с логами в терминальной панели
    * @param id - ID запуска
    * @param startedAt - Время запуска
    */
   const handleShowLogs = (id: number, startedAt: Date | string | null) => {
-    setSelectedLaunchId(id);
-    setSelectedStartedAt(startedAt);
-    setIsModalOpen(true);
+    openHistoryTab({
+      projectId,
+      tokenId,
+      botName,
+      launchId: id,
+      launchStartedAt: startedAt ? String(startedAt) : null,
+    });
   };
 
   return (
-    <>
-      <div className="flex flex-col gap-1.5 p-2.5 sm:p-3 rounded-lg border bg-muted/30 border-border/50 col-span-full">
-        <div className="flex items-center gap-2 mb-1">
-          <History className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground">История запусков</span>
-        </div>
-        {history.slice(0, 5).map((record) => (
-          <LaunchRow key={record.id} record={record} onShowLogs={handleShowLogs} />
-        ))}
+    <div className="flex flex-col gap-1.5 p-2.5 sm:p-3 rounded-lg border bg-muted/30 border-border/50 col-span-full">
+      <div className="flex items-center gap-2 mb-1">
+        <History className="w-3.5 h-3.5 text-muted-foreground" />
+        <span className="text-xs font-medium text-muted-foreground">История запусков</span>
       </div>
-      <LaunchLogsModal
-        launchId={selectedLaunchId}
-        startedAt={selectedStartedAt}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </>
+      {history.slice(0, 5).map((record) => (
+        <LaunchRow key={record.id} record={record} onShowLogs={handleShowLogs} />
+      ))}
+    </div>
   );
 }

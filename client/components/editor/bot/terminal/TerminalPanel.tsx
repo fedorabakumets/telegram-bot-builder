@@ -1,39 +1,48 @@
 /**
  * @fileoverview Правая панель с терминалами ботов
  *
- * Отображает вкладки терминалов и активный терминал.
- * Реализует lazy mount: терминал монтируется только при первом
- * переключении на него, что предотвращает лишние WebSocket-соединения.
+ * Отображает вкладки терминалов и активный терминал или просмотрщик истории.
+ * Реализует lazy mount: компонент монтируется только при первом открытии вкладки.
  *
  * @module bot/TerminalPanel
  */
 
 import { useState, useCallback } from 'react';
 import { BotTerminal } from './BotTerminal';
+import { LaunchHistoryViewer } from './LaunchHistoryViewer';
 import { TerminalTabs } from './TerminalTabs';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 import type { TerminalInfo } from '../contexts/ActiveTerminalsContext';
 
 /**
- * Панель терминалов с lazy mount
+ * Возвращает строковый ключ вкладки терминала
+ * @param terminal - Информация о терминале
+ * @returns Строковый ключ
+ */
+function getTabKey(terminal: TerminalInfo): string {
+  return terminal.tabType === 'history'
+    ? `history_${terminal.launchId}`
+    : `${terminal.projectId}_${terminal.tokenId}`;
+}
+
+/**
+ * Панель терминалов с lazy mount и поддержкой history-вкладок
+ * @returns JSX элемент
  */
 export function TerminalPanel() {
   const { activeTerminalId, terminals } = useActiveTerminals();
 
-  /**
-   * Множество ключей терминалов, которые уже были смонтированы хотя бы раз.
-   * Используем Set для O(1) проверки.
-   */
   const [mountedTabs, setMountedTabs] = useState<Set<string>>(() => {
-    // Монтируем активный терминал сразу при инициализации
     const initial = new Set<string>();
     if (activeTerminalId) initial.add(activeTerminalId);
     return initial;
   });
 
-  /** Обработчик выбора вкладки — добавляем ключ в mountedTabs */
-  const handleTerminalSelect = useCallback((projectId: number, tokenId: number) => {
-    const key = `${projectId}_${tokenId}`;
+  /**
+   * Обработчик выбора вкладки — добавляем ключ в mountedTabs
+   * @param key - Строковый ключ вкладки
+   */
+  const handleTerminalSelect = useCallback((key: string) => {
     setMountedTabs(prev => {
       if (prev.has(key)) return prev;
       const next = new Set(prev);
@@ -58,22 +67,26 @@ export function TerminalPanel() {
       <TerminalTabs onTerminalSelect={handleTerminalSelect} />
       <div className="flex-1 overflow-hidden p-2">
         {terminals.map((terminal: TerminalInfo) => {
-          const key = `${terminal.projectId}_${terminal.tokenId}`;
+          const key = getTabKey(terminal);
           const isActive = key === activeTerminalId;
+          const isHistory = terminal.tabType === 'history';
 
-          // Монтируем только если вкладка уже была открыта хотя бы раз
           if (!mountedTabs.has(key) && !isActive) return null;
 
           return (
-            <div
-              key={key}
-              className={isActive ? 'block h-full' : 'hidden'}
-            >
-              <BotTerminal
-                projectId={terminal.projectId}
-                tokenId={terminal.tokenId}
-                isBotRunning={terminal.isRunning}
-              />
+            <div key={key} className={isActive ? 'block h-full' : 'hidden'}>
+              {isHistory ? (
+                <LaunchHistoryViewer
+                  launchId={terminal.launchId!}
+                  startedAt={terminal.launchStartedAt ?? null}
+                />
+              ) : (
+                <BotTerminal
+                  projectId={terminal.projectId}
+                  tokenId={terminal.tokenId}
+                  isBotRunning={terminal.isRunning}
+                />
+              )}
             </div>
           );
         })}
