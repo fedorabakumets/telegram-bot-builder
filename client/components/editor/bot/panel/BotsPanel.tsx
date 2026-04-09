@@ -14,6 +14,7 @@ import { useQuery, useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { apiRequest } from '@/queryClient';
 import { BotToken } from '@shared/schema';
+import { getBotDisplayName } from '../contexts/bot-control-utils';
 
 interface BotsPanelProps {
   projectId: number;
@@ -57,7 +58,7 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
           addTerminal({
             projectId: token.projectId,
             tokenId: token.id,
-            botName: token.name || `${projectName} #${token.id}`,
+            botName: getBotDisplayName(token, `${projectName} #${token.id}`),
             isRunning: true
           });
         }

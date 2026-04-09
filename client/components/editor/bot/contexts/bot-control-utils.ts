@@ -23,3 +23,22 @@ export function formatExecutionTime(seconds: number): string {
 
   return parts.length > 0 ? parts.join(' ') : '0с';
 }
+
+/**
+ * Формирует отображаемое имя бота для вкладки терминала.
+ * Приоритет: botFirstName (@botUsername) > botFirstName > name > fallback
+ * @param token - Данные токена
+ * @param fallback - Запасное значение
+ * @returns Отображаемое имя бота
+ */
+export function getBotDisplayName(
+  token: { name?: string | null; botFirstName?: string | null; botUsername?: string | null },
+  fallback = 'Бот',
+): string {
+  if (token.botFirstName && token.botUsername) {
+    return `${token.botFirstName} (@${token.botUsername})`;
+  }
+  if (token.botFirstName) return token.botFirstName;
+  if (token.name) return token.name;
+  return fallback;
+}

@@ -18,6 +18,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { BotToken } from '@shared/schema';
+import { getBotDisplayName } from '../contexts/bot-control-utils';
 
 /**
  * Параметры хука мутаций ботов
@@ -79,7 +80,7 @@ export function useBotMutations({
       queryClient.invalidateQueries({ queryKey: ['launch-history', vars.tokenId] });
       const token = findToken(vars.tokenId);
       if (token && onBotStarted) {
-        onBotStarted(vars.projectId, vars.tokenId, token.name || `Бот ${vars.tokenId}`);
+        onBotStarted(vars.projectId, vars.tokenId, getBotDisplayName(token, `Бот ${vars.tokenId}`));
       }
     },
     onError: (error: Error) => {
