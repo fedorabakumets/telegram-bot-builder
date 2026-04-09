@@ -37,13 +37,15 @@ export interface BotInstance {
 }
 
 /**
- * Ответ API со статусом бота
+ * Ответ API со статусом бота (с добавленным tokenId для удобства поиска)
  */
 export interface BotStatusResponse {
   /** Текущий статус */
   status: BotStatus;
   /** Экземпляр бота или null */
   instance: BotInstance | null;
+  /** ID токена (добавляется на клиенте для удобства поиска) */
+  tokenId?: number;
 }
 
 /**

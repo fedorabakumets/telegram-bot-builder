@@ -70,14 +70,14 @@ export function useBotQueries(): BotQueriesResult {
     queries: allTokensFlat.map(token => ({
       queryKey: [`/api/tokens/${token.id}/bot-status`],
       queryFn: () => apiRequest('GET', `/api/tokens/${token.id}/bot-status`),
-      refetchInterval: 10000,
+      refetchInterval: 3000,
       refetchIntervalInBackground: true,
-      staleTime: 5000,
+      staleTime: 1000,
     })),
   });
 
   const allBotStatuses = statusResults
-    .map(q => q.data)
+    .map((q, idx) => q.data ? { ...q.data, tokenId: allTokensFlat[idx]?.id } : null)
     .filter(Boolean) as BotStatusResponse[];
 
   const botInfoResults = useQueries({

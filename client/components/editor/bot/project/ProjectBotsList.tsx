@@ -34,7 +34,7 @@ export function ProjectBotsList({ project, projectTokens, projectBotInfo }: Proj
     <div className="grid gap-4">
       {projectTokens.map((token) => {
         const tokenStatus = allBotStatuses.find(
-          s => s.instance?.tokenId === token.id,
+          s => s.tokenId === token.id || s.instance?.tokenId === token.id,
         );
         const isThisTokenRunning = tokenStatus?.status === 'running';
 

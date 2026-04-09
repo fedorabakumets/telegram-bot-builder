@@ -124,7 +124,11 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
           if (terminalRefRef.current?.current) {
             // Для типа 'status' используем 'stdout', так как TerminalHandle.addLine принимает только 'stdout' или 'stderr'
             const outputType = message.type === 'status' ? 'stdout' : message.type;
-            terminalRefRef.current.current.addLineLocal(`[PID:${message.projectId}/${message.tokenId}] ${message.content}`, outputType);
+            // Защита от undefined content
+            const content = message.content ?? '';
+            if (content) {
+              terminalRefRef.current.current.addLineLocal(content, outputType);
+            }
           }
         } catch (error) {
           console.error('Ошибка при обработке сообщения от терминала:', error);
