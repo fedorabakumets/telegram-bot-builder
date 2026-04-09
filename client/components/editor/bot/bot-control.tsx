@@ -64,6 +64,8 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
   const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState<Record<number, number>>({});
   /** Ref для хранения статусов без попадания в зависимости useEffect */
   const runningBotsRef = useRef<BotStatusResponse[]>([]);
+  /** Локальное время старта бота — устанавливается сразу при запуске, до прихода instance из API */
+  const localStartTimesRef = useRef<Record<number, number>>({});
 
   const queryClient = useQueryClient();
 
@@ -93,8 +95,16 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
   } = useBotMutations({
     projectId,
     allTokensFlat,
-    onBotStarted,
-    onBotStopped,
+    onBotStarted: (pid, tokenId, botName) => {
+      // Фиксируем время старта локально — сразу, не дожидаясь instance из API
+      localStartTimesRef.current[tokenId] = Date.now();
+      onBotStarted?.(pid, tokenId, botName);
+    },
+    onBotStopped: (pid, tokenId) => {
+      // Сбрасываем локальное время при остановке
+      delete localStartTimesRef.current[tokenId];
+      onBotStopped?.(pid, tokenId);
+    },
     onBotDeleted,
     newBotToken,
     projectForNewBot,
@@ -113,23 +123,36 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
   // Таймер для работающих ботов
   useEffect(() => {
     const interval = setInterval(() => {
-      const running = runningBotsRef.current.filter(
-        s => s?.status === 'running' && s.instance?.startedAt,
-      );
-      if (running.length === 0) return;
+      // Берём все running статусы (с instance или без)
+      const running = runningBotsRef.current.filter(s => s?.status === 'running');
+      // Также добавляем токены у которых есть локальное время старта
+      const localTokenIds = Object.keys(localStartTimesRef.current).map(Number);
+
+      if (running.length === 0 && localTokenIds.length === 0) return;
 
       setCurrentElapsedSeconds(() => {
         const next: Record<number, number> = {};
+        const now = Date.now();
+
         running.forEach(bot => {
-          if (bot.instance) {
-            next[bot.instance.tokenId] = Math.floor(
-              (Date.now() - new Date(bot.instance.startedAt).getTime()) / 1000,
-            );
-          } else if (bot.tokenId) {
-            // instance может быть null при первом запуске — используем tokenId из маппинга
-            next[bot.tokenId] = 0;
+          const tid = bot.instance?.tokenId ?? bot.tokenId;
+          if (!tid) return;
+          // Приоритет: startedAt из instance → локальное время старта
+          const startMs = bot.instance?.startedAt
+            ? new Date(bot.instance.startedAt).getTime()
+            : localStartTimesRef.current[tid];
+          if (startMs) {
+            next[tid] = Math.floor((now - startMs) / 1000);
           }
         });
+
+        // Токены с локальным временем старта но без статуса в running (ещё не пришёл polling)
+        localTokenIds.forEach(tid => {
+          if (!(tid in next)) {
+            next[tid] = Math.floor((now - localStartTimesRef.current[tid]) / 1000);
+          }
+        });
+
         return next;
       });
     }, 1000);
@@ -200,7 +223,7 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
   return (
     <BotControlProvider value={{
       allBotStatuses,
-      allBotInfos,
+      allBotInfos: allBotInfos.filter((x): x is BotInfo => x !== undefined),
       currentElapsedSeconds,
       editingField,
       editValue,
