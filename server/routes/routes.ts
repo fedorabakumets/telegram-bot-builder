@@ -896,7 +896,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         tokenId: token.id,
         data: { tokenId: token.id, tokenName: token.name },
         timestamp: new Date().toISOString(),
-      });
+      }).catch(err => console.error('[routes] broadcastProjectEvent error:', err));
 
       res.status(201).json(token);
     } catch (error) {

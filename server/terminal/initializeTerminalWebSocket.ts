@@ -1,5 +1,6 @@
 /**
- * @fileoverview Инициализация WebSocket-сервера для передачи вывода ботов
+ * @fileoverview Инициализация WebSocket-сервера для передачи вывода ботов.
+ * Поддерживает режим подписки на все проекты пользователя (projectId=0).
  * @module server/terminal/initializeTerminalWebSocket
  */
 
@@ -11,9 +12,36 @@ import { setupBotProcessListeners } from "./setupBotProcessListeners";
 import { startFlushTimer } from "./botLogsBuffer";
 import { storage } from "../storages/storage";
 import { TerminalMessage } from "./TerminalMessage";
+import "express-session";
 
 /**
- * Инициализирует WebSocket-сервер для передачи вывода ботов
+ * Регистрирует WebSocket-соединение в карте активных соединений
+ * @param key - Ключ соединения
+ * @param ws - WebSocket-соединение
+ */
+function registerConnection(key: string, ws: WebSocket): void {
+  if (!activeConnections.has(key)) {
+    activeConnections.set(key, new Set<WebSocket>());
+  }
+  activeConnections.get(key)!.add(ws);
+}
+
+/**
+ * Удаляет WebSocket-соединение из карты активных соединений
+ * @param key - Ключ соединения
+ * @param ws - WebSocket-соединение
+ */
+function removeConnection(key: string, ws: WebSocket): void {
+  const conns = activeConnections.get(key);
+  if (conns) {
+    conns.delete(ws);
+    if (conns.size === 0) activeConnections.delete(key);
+  }
+}
+
+/**
+ * Инициализирует WebSocket-сервер для передачи вывода ботов.
+ * При projectId=0 открывает соединение для всех проектов пользователя (ключ user_${userId}).
  * @param server - HTTP-сервер, к которому будет подключён WebSocket
  * @returns Экземпляр WebSocket-сервера
  */
@@ -35,33 +63,39 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
 
     const projectId = parseInt(projectIdStr);
     const tokenId = parseInt(tokenIdStr);
-    const connectionKey = `${projectId}_${tokenId}`;
 
-    // Регистрируем соединение
-    if (!activeConnections.has(connectionKey)) {
-      activeConnections.set(connectionKey, new Set<WebSocket>());
+    // Режим подписки на все проекты пользователя: projectId=0
+    if (projectId === 0) {
+      const session = (request as any).session;
+      const userId: number | undefined = session?.telegramUser?.id;
+      if (!userId) {
+        console.error("Подписка на все проекты: пользователь не авторизован");
+        ws.close(4003, "Требуется авторизация");
+        return;
+      }
+      const allKey = `user_${userId}`;
+      registerConnection(allKey, ws);
+      console.log(`WebSocket подписка на все проекты пользователя ${userId} (ключ: ${allKey})`);
+
+      ws.on("close", () => removeConnection(allKey, ws));
+      ws.on("error", () => removeConnection(allKey, ws));
+      return;
     }
-    activeConnections.get(connectionKey)!.add(ws);
+
+    const connectionKey = `${projectId}_${tokenId}`;
+    registerConnection(connectionKey, ws);
 
     // Отправляем историю логов новому клиенту
     sendHistoryToClient(ws, projectId, tokenId);
 
     ws.on("close", () => {
       console.log(`WebSocket закрыт для проекта ${projectId}, токена ${tokenId}`);
-      const conns = activeConnections.get(connectionKey);
-      if (conns) {
-        conns.delete(ws);
-        if (conns.size === 0) activeConnections.delete(connectionKey);
-      }
+      removeConnection(connectionKey, ws);
     });
 
     ws.on("error", (error) => {
       console.error(`Ошибка WebSocket для проекта ${projectId}, токена ${tokenId}:`, error);
-      const conns = activeConnections.get(connectionKey);
-      if (conns) {
-        conns.delete(ws);
-        if (conns.size === 0) activeConnections.delete(connectionKey);
-      }
+      removeConnection(connectionKey, ws);
     });
 
     ws.on("message", (data) => {

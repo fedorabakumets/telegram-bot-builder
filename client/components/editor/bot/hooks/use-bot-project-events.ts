@@ -1,11 +1,10 @@
 /**
- * @fileoverview Хук для подписки на события всех проектов бота.
- * Пробрасывает callback onTokenCreated в каждый WebSocket-слот.
+ * @fileoverview Хук для подписки на события всех проектов бота через одно WebSocket-соединение.
+ * Заменяет прежний подход с 5 фиксированными слотами на единое соединение.
  * @module client/components/editor/bot/hooks/use-bot-project-events
  */
 
-import { useProjectEventsWs } from '@/hooks/use-project-events-ws';
-import type { BotProject } from '@shared/schema';
+import { useAllProjectsEventsWs } from '@/hooks/use-all-projects-events-ws';
 
 /**
  * Опции хука подписки на события проектов бота
@@ -21,30 +20,16 @@ interface UseBotProjectEventsOptions {
 }
 
 /**
- * Вызывает useProjectEventsWs для каждого проекта из списка.
+ * Подписывается на события всех проектов пользователя через одно WebSocket-соединение.
  * Обеспечивает real-time обновление списка ботов при создании/удалении токенов.
  * При создании токена вызывает onTokenCreated, если передан.
  *
- * @param projects - Список проектов для подписки
+ * @param _projects - Список проектов (не используется, оставлен для обратной совместимости)
  * @param options - Опциональные callback-и для событий
  */
 export function useBotProjectEvents(
-  projects: BotProject[],
+  _projects: { id: number }[],
   options?: UseBotProjectEventsOptions,
 ): void {
-  const { onTokenCreated } = options ?? {};
-
-  // Хуки вызываются для фиксированного числа проектов — порядок стабилен
-  // Используем до 5 слотов (реальное число проектов обычно мало)
-  const p0 = projects[0]?.id ?? 0;
-  const p1 = projects[1]?.id ?? 0;
-  const p2 = projects[2]?.id ?? 0;
-  const p3 = projects[3]?.id ?? 0;
-  const p4 = projects[4]?.id ?? 0;
-
-  useProjectEventsWs(p0, { onTokenCreated });
-  useProjectEventsWs(p1, { onTokenCreated });
-  useProjectEventsWs(p2, { onTokenCreated });
-  useProjectEventsWs(p3, { onTokenCreated });
-  useProjectEventsWs(p4, { onTokenCreated });
+  useAllProjectsEventsWs({ onTokenCreated: options?.onTokenCreated });
 }

@@ -315,7 +315,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
     }, STABLE_UPTIME_MS);
 
     // Рассылаем событие о запуске бота всем клиентам проекта
-    broadcastProjectEvent(projectId, {
+    void broadcastProjectEvent(projectId, {
       type: 'bot-started',
       projectId,
       tokenId,
@@ -368,7 +368,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
         console.error(`Ошибка обновления статуса бота в базе данных:`, dbError);
       }
       // Рассылаем событие об ошибке бота всем клиентам проекта
-      broadcastProjectEvent(projectId, {
+      void broadcastProjectEvent(projectId, {
         type: 'bot-error',
         projectId,
         tokenId,
@@ -407,7 +407,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
         console.error(`Ошибка обновления статуса бота в базе данных:`, dbError);
       }
       // Рассылаем событие об остановке бота всем клиентам проекта
-      broadcastProjectEvent(projectId, {
+      void broadcastProjectEvent(projectId, {
         type: 'bot-stopped',
         projectId,
         tokenId,

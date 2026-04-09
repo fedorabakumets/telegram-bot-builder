@@ -145,7 +145,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
     await storage.stopBotInstanceByToken(tokenId);
 
     // Рассылаем событие об остановке бота всем клиентам проекта
-    broadcastProjectEvent(projectId, {
+    void broadcastProjectEvent(projectId, {
       type: 'bot-stopped',
       projectId,
       tokenId,

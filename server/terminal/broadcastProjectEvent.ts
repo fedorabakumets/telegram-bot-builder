@@ -1,31 +1,57 @@
 /**
- * @fileoverview Рассылка событий проекта всем подключённым WebSocket-клиентам
+ * @fileoverview Рассылка событий проекта всем подключённым WebSocket-клиентам.
+ * Рассылает событие как клиентам конкретного проекта, так и клиентам
+ * подписанным на все проекты пользователя (ключ user_${ownerId}).
  * @module server/terminal/broadcastProjectEvent
  */
 
 import { WebSocket } from 'ws';
 import { activeConnections } from './activeConnections';
 import type { ProjectEvent } from './ProjectEvent';
+import { storage } from '../storages/storage';
 
 /**
- * Рассылает событие проекта всем WebSocket-соединениям данного проекта.
- * Итерирует activeConnections и отправляет сообщение всем клиентам,
- * чей ключ начинается с `${projectId}_`.
+ * Отправляет payload всем открытым соединениям из набора
+ * @param connections - Набор WebSocket-соединений
+ * @param payload - Сериализованное сообщение
+ */
+function sendToConnections(connections: Set<WebSocket>, payload: string): void {
+  for (const ws of connections) {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(payload);
+    }
+  }
+}
+
+/**
+ * Рассылает событие проекта всем WebSocket-соединениям данного проекта,
+ * а также соединениям пользователя, подписанным на все проекты (user_${ownerId}).
  *
  * @param projectId - Идентификатор проекта
  * @param event - Событие для рассылки
  */
-export function broadcastProjectEvent(projectId: number, event: ProjectEvent): void {
+export async function broadcastProjectEvent(projectId: number, event: ProjectEvent): Promise<void> {
   const prefix = `${projectId}_`;
   const payload = JSON.stringify(event);
 
+  // Рассылаем клиентам конкретного проекта
   for (const [key, connections] of activeConnections.entries()) {
-    if (!key.startsWith(prefix)) continue;
+    if (key.startsWith(prefix)) {
+      sendToConnections(connections, payload);
+    }
+  }
 
-    for (const ws of connections) {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(payload);
+  // Рассылаем клиентам подписанным на все проекты пользователя
+  try {
+    const project = await storage.getBotProject(projectId);
+    if (project?.ownerId) {
+      const userKey = `user_${project.ownerId}`;
+      const userConns = activeConnections.get(userKey);
+      if (userConns) {
+        sendToConnections(userConns, payload);
       }
     }
+  } catch (err) {
+    console.error(`[broadcastProjectEvent] Ошибка получения проекта ${projectId}:`, err);
   }
 }
