@@ -46,6 +46,7 @@ import { normalizeProjectNameToFile } from "../files/normalizeFileName";
  * @see {@link ./storage}
  */
 import { storage } from "../storages/storage";
+import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 
 
 
@@ -290,6 +291,14 @@ export async function startBot(projectId: number, token: string, tokenId: number
       console.error('Ошибка создания записи истории запуска:', historyError);
     }
 
+    // Рассылаем событие о запуске бота всем клиентам проекта
+    broadcastProjectEvent(projectId, {
+      type: 'bot-started',
+      projectId,
+      tokenId,
+      timestamp: new Date().toISOString(),
+    });
+
     // Создаем или обновляем запись в базе данных для конкретного токена
     const existingBotInstance = await storage.getBotInstanceByToken(tokenId);
     if (existingBotInstance) {
@@ -335,6 +344,13 @@ export async function startBot(projectId: number, token: string, tokenId: number
       } catch (dbError) {
         console.error(`Ошибка обновления статуса бота в базе данных:`, dbError);
       }
+      // Рассылаем событие об ошибке бота всем клиентам проекта
+      broadcastProjectEvent(projectId, {
+        type: 'bot-error',
+        projectId,
+        tokenId,
+        timestamp: new Date().toISOString(),
+      });
       botProcesses.delete(processKey);
     });
 
@@ -362,6 +378,13 @@ export async function startBot(projectId: number, token: string, tokenId: number
       } catch (dbError) {
         console.error(`Ошибка обновления статуса бота в базе данных:`, dbError);
       }
+      // Рассылаем событие об остановке бота всем клиентам проекта
+      broadcastProjectEvent(projectId, {
+        type: 'bot-stopped',
+        projectId,
+        tokenId,
+        timestamp: new Date().toISOString(),
+      });
       botProcesses.delete(processKey);
     });
 

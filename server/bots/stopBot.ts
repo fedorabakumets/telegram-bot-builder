@@ -25,6 +25,7 @@ import { processCleanups } from "../terminal/setupBotProcessListeners";
  */
 import { storage } from '../storages/storage';
 import { flushBuffer } from '../terminal/botLogsBuffer';
+import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 
 /**
  * Останавливает запущенный экземпляр Telegram-бота по идентификатору проекта и токена
@@ -131,6 +132,14 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
 
     await flushBuffer(processKey);
     await storage.stopBotInstanceByToken(tokenId);
+
+    // Рассылаем событие об остановке бота всем клиентам проекта
+    broadcastProjectEvent(projectId, {
+      type: 'bot-stopped',
+      projectId,
+      tokenId,
+      timestamp: new Date().toISOString(),
+    });
 
     return { success: true };
   } catch (error) {

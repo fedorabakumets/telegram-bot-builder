@@ -7,10 +7,12 @@
  * Событие проекта, рассылаемое всем подключённым клиентам
  */
 export interface ProjectEvent {
-  /** Тип события: создание или удаление токена */
-  type: 'token-created' | 'token-deleted';
+  /** Тип события: создание/удаление токена или изменение статуса бота */
+  type: 'token-created' | 'token-deleted' | 'bot-started' | 'bot-stopped' | 'bot-error';
   /** Идентификатор проекта */
   projectId: number;
+  /** ID токена (для событий бота) */
+  tokenId?: number;
   /** Дополнительные данные события */
   data?: unknown;
   /** Временная метка события в ISO-формате */
