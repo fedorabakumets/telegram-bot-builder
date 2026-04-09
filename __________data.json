@@ -1,0 +1,3268 @@
+{
+  "sheets": [
+    {
+      "id": "cbIuBg-Y3W0pX1HHNYUyO",
+      "name": "Обменники основный лист",
+      "nodes": [
+        {
+          "id": "85iBN08ZTPeZ8UN7rT2la_dup_1775330630988_863gd78mn",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Вы можете воспользоваться обменниками в Telegram или зайти на сайты и выбрать самое выгодное предложение.",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057415733-535809870-photo_2026-02-27_11-16-48.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "85iBN08ZTPeZ8UN7rT2la_keyboard_1774974624658_krt7jox40_dup_1775330630989_2ogq0z0s1",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 5118
+          }
+        },
+        {
+          "id": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Здесь вы найдёте проверенные Telegram-боты для покупки криптовалюты.\n\nВыбирайте самое выгодное для себя предложение.",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057415679-293003625-photo_2025-11-14_21-20-57.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "yw_mNIfYEudZi6qBKl9ov_keyboard_1774974624659_bplb421y4_dup_1775330630989_0qs6uycp4",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 680,
+            "y": 12980
+          }
+        },
+        {
+          "id": "SufEBj6f0TVeYbH8nu4ca_dup_1775330630988_zvghvf2oa",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "✅ Реквизиты всегда в наличии\n✨ RUB ↔️ BTC/LTC/XMR за минуты\n💸 Кешбек до 2.5% на все сделки!\n💰 Подарок: купон SCOOBY (200₽)\n📌 Надёжно с 2022 года\n🛎 Быстрая поддержка",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057579025-981914035-photo_2026-02-27_11-52-08.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "SufEBj6f0TVeYbH8nu4ca_keyboard_1774974624659_6nfziivmn_dup_1775330630989_q9nfn2wzu",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 8808
+          }
+        },
+        {
+          "id": "start_dup_1775330630988_2w4z6c8t9",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Здесь ты найдёшь проверенные обменники, сможешь сравнить скорость обмена, комиссии и выбрать подходящий вариант на самых выгодных условиях.",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057415769-276604871-photo_2025-11-12_20-48-41.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "start_keyboard_1774974624659_mvun7q4ps_dup_1775330630989_e14cws36e",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 3651
+          }
+        },
+        {
+          "id": "PUS-Fd5aAJ98QLk-ishTU_dup_1775330630988_9v3j3eyid",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Здесь вы найдёте проверенные сайты для покупки криптовалюты.\n\nВыбирайте самое выгодное для себя предложение.",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775056639383-554436912-photo_2026-02-27_11-16-48.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "PUS-Fd5aAJ98QLk-ishTU_keyboard_1774974624659_xpxexguhg_dup_1775330630989_0edu3t58h",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 600,
+            "y": 6280
+          }
+        },
+        {
+          "id": "q8O2eOlMSvU8I38mABaOl_dup_1775330630988_851jcsnos",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "formatMode": "html",
+            "showInMenu": true,
+            "messageText": "✅ Регистрируйся на ByBit, вводи промокод и получи массу привилегий и бонусов, внеси депозит и получи до 1000%\n(размер вознаграждения зависит от суммы депозита) \n\nПромокод - PWLPREV",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057415735-873070286-photo_2025-11-15_13-54-34.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "q8O2eOlMSvU8I38mABaOl_keyboard_1774974624659_9fdwh1de4_dup_1775330630989_rhqqihfkc",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 2436
+          }
+        },
+        {
+          "id": "CDDI_a_PKYOWH80wa1HXw_dup_1775330630988_0t67r8in7",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "✅Проверенный магазин товаров для арбитража криптовалют.\nЗдесь вы найдете:\n\n💳 Виртуальные карты\n👤 Верификации, \n🪪 Отрисовка документов\n📱 Аренда номеров\n👛 Кошельки\n🔰 Криптобиржи\n🔓 Помощь с разблокировками \n♻️ И многое другое вы найдете здесь.",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057415766-384822542-photo_2026-02-27_11-03-11.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "CDDI_a_PKYOWH80wa1HXw_keyboard_1774974624659_xhna7eff2_dup_1775330630989_axo9c0wvc",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 2636
+          }
+        },
+        {
+          "id": "4aK7tBp04cV48AdVkFcwy_dup_1775330630988_4rlgygcms",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Покупай крипту по P2P и храни её прямо там же — в удобном Telegram-боте",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057415735-897940958-photo_2026-02-27_11-11-42.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "4aK7tBp04cV48AdVkFcwy_keyboard_1774974624659_pagf8tkcj_dup_1775330630989_l95zvtddo",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 2836
+          }
+        },
+        {
+          "id": "f_Cp9YJKmXokG-Ub2l7Fp_dup_1775330630988_3pe8qr1xm",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "⚡️ Быстрые выплаты — деньги приходят оперативно \n💰Ниже комиссия при сделках через бота — больше остаётся тебе \n🔗Реферальная программа — приглашай друзей и получай процент с их сделок \n✅Автоматизация ключевых шагов — бот выдаёт кошелёк автоматически и присылает уведомление о подтверждении транзакции \n🐾 Удобный интерфейс — простые шаги без лишних действий \n🏃🏻‍♂️ Быстрая поддержка — подключаемся при необходимости, помогаем оперативно",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057415728-203675767-photo_2026-02-27_11-15-09.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "f_Cp9YJKmXokG-Ub2l7Fp_keyboard_1774974624659_kg950woyi_dup_1775330630989_y27hwyetv",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 3036
+          }
+        },
+        {
+          "id": "F5YsR6I9iz9kiAD8eTbJJ_dup_1775330630988_refipacx7",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Кошельки:",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardNodeId": "F5YsR6I9iz9kiAD8eTbJJ_keyboard_1774974624659_wlsgzeqmr_dup_1775330630989_5i4groxbk",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 560,
+            "y": 2980
+          }
+        },
+        {
+          "id": "LUQKuMleTf_AkZK-NdrRp_dup_1775330630989_d1wemjhrt",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "NC Wallet сделает ваше взаимодействие с криптовалютой безопаснее и проще, наслаждайтесь первым в мире кошельком без комиссий!",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775056616456-223869753-photo_2026-02-27_11-05-18.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "LUQKuMleTf_AkZK-NdrRp_keyboard_1774974624659_latgmnrcq_dup_1775330630989_l0784uldr",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 3436
+          }
+        },
+        {
+          "id": "bH89Jz9E1foI-54dxfVQ5_dup_1775330630989_j1r99ds47",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "📩 Обмен в личных сообщениях, меняем даже от 50 рублей!\n🎓 Бесплатные консультации\n⭐️ 1000+ довольных клиентов, отзвов и живой чат\n🚀 Мы больше чем просто обмен\nДоверие и скорость обслуживания, которые делают нас лидерами на рынке.",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057536270-458483115-photo_2026-02-27_11-55-46.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "bH89Jz9E1foI-54dxfVQ5_keyboard_1774974624659_ei41twqwn_dup_1775330630989_masc3dice",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 9008
+          }
+        },
+        {
+          "id": "OnEnxQgo0H5pDIDyHuzLb_dup_1775330630989_hqx21nz4w",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "🚀 Быстрый обмен\n✅ надежный сервис\n⭐️ Минимальную комиссию 🟢Круглосуточную техническую поддержку.\n👛 Встроенный кошеле\n💸 Акции для пользователей",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057502984-390152940-photo_2026-02-27_11-58-12.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "OnEnxQgo0H5pDIDyHuzLb_keyboard_1774974624659_g0l34zaqs_dup_1775330630989_0cwk9no4h",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 9208
+          }
+        },
+        {
+          "id": "hqDUnZpbhQjn68O6dvBXy_dup_1775330630989_31b8d0hco",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "😎 Топовый сервис\n⚡️ Обмен в среднем до 10 минут\n💰 Крутые курсы\n🧩 Полная приватность без KYC/AML\n💳 Удобная оплата\n🟢 Реквы всегда живые\n🔥 Плюшки и скидки активным клиентам",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057464208-217356691-photo_2026-02-27_11-59-58.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "hqDUnZpbhQjn68O6dvBXy_keyboard_1774974624659_7zdv4d21v_dup_1775330630989_0pl7vn7qa",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 9408
+          }
+        },
+        {
+          "id": "v6dI1-Nnpd9ZeAw8IY5ee_dup_1775330630989_13onbm510",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "⚡️ Быстрая отправка средств \n💰Низкие комиссии \n✅ Реквизиты всегда в наличии \n🐾 Удобный интерфейс \n🏃🏻‍♂️ Быстрая и оперативная поддержка поможет по любому вопросу",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775069368095-727248943-photo_2026-04-01_21-49-04.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "v6dI1-Nnpd9ZeAw8IY5ee_keyboard_1774974624659_163hopidk_dup_1775330630989_aax2bpggu",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 9608
+          }
+        },
+        {
+          "id": "URN9S7Fy5y7VDLkj_GSOh_dup_1775330630989_388rcl0pl",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "⚠️ Обмен работает 24/7 без перебоев\n✈️ Гарантируем скорость: наши транзакции не зависают в мемпуле, а долетают до счетов\n💰 Выгоднее некуда — впечатляюще низкие комиссии на обмен!\n♻️Мультивалютная системы\n✅Скидки, кэшбэки и многое другое",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775069038342-553795217-___________________________183_.png"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "URN9S7Fy5y7VDLkj_GSOh_keyboard_1774974624659_7daei498w_dup_1775330630989_732l8cs39",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 9808
+          }
+        },
+        {
+          "id": "eriR-M4qvolmZmNTo-CVN_dup_1775330630989_b8m6w1un3",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "💱 Минимальные комиссии\n💳 Рабочие реквизиты всегда в наличии,\n💰 Моментальная отправка без «доплат за скорость»\n👍 Без AML и KYC,\n🤝 Честный расчёт без скрытых условий.\n\n🏷 Промокод SALE30 - срежь до 30% комиссии.\nКаждый рубль экономии - твоя прибыль.",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057135254-428927843-photo_2026-02-27_12-08-05.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "eriR-M4qvolmZmNTo-CVN_keyboard_1774974624659_jgg93d8no_dup_1775330630989_8g9msk3lg",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 10008
+          }
+        },
+        {
+          "id": "7eWaa90YuXM8mmAhFi8ur_dup_1775330630989_legfq2391",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "🔥 Стабильная работа 24/7 \n✅ Отсутствует регистрации и верификации карты/документов\n💸 Система быстрых платежей \n🚀 Мгновенная обработка заявки \n🔗 Имеется реферальная система\n⚠️ Отсутствие проверок AML/KYC\n👛 Розыгрыш 15000₽ каждую  \nнеделю для наших пользователей",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775056804220-135025866-photo_2026-02-27_12-22-52.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "7eWaa90YuXM8mmAhFi8ur_keyboard_1774974624659_nhaf1kjxa_dup_1775330630989_fdbyqjvma",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 10208
+          }
+        },
+        {
+          "id": "WAf9gve0Tt19zAGxXROdT_dup_1775330630989_l39k04q62",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "😎 Хорошая репутация\n🚀 Обмен проходит в течение 10-ти минут.\n💰 Выгодные курсы\n🌚 Полная конфиденциальность при проведении сделки, без KYC и AML.\n💳 Удобная система оплаты \n🟢 Реквизиты всегда в наличии \n💸 Скидки и акции для клиентов",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775057058430-758025850-photo_2026-02-27_12-16-15.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "WAf9gve0Tt19zAGxXROdT_keyboard_1774974624659_plz2jka84_dup_1775330630989_dp3hiemyx",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 10408
+          }
+        },
+        {
+          "id": "sfty2HanOmKU31WSOO2jt_dup_1775330630989_do5g4jura",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "⚡️Моментальный обмен \n💰 Каждый первый обмен в каждом месяце, со скидкой 10%\n💲КЭШБЭК — при покупке в боте на сумму от 2500р\n💸 Каждый 7-й обмен вам возвращается кэшбек",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775056804708-325252264-photo_2026-02-27_12-26-29.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "sfty2HanOmKU31WSOO2jt_keyboard_1774974624659_7mvfuhss2_dup_1775330630989_kfbenukxc",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 10608
+          }
+        },
+        {
+          "id": "b_Tyo9JqA0qWNC7xvEzH9_dup_1775330630989_l4v9qrjwz",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "✅Наилучший курс на рынке – максимальная выгода для Вас;\n✅Быстрые операции – мгновенные сделки без задержек;\n✅Безопасность – ваши средства под надежной защитой. \n✅Чем выше сумма - тем ниже%\n✅Профессиональная поддержка и консультации",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775056804240-812205537-photo_2026-02-27_12-28-50.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "b_Tyo9JqA0qWNC7xvEzH9_keyboard_1774974624659_8fglxaim4_dup_1775330630989_8zwj9s5ce",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 10808
+          }
+        },
+        {
+          "id": "Q9H2iY_J6d0fcIpKanFOK_dup_1775330630989_cqvfkw0pi",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "💵Бонусная система\n👛Кошелек для хранения крипты!\n💱Моментальный обмен крипты!",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775056804801-154180137-photo_2026-02-27_12-30-51.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "Q9H2iY_J6d0fcIpKanFOK_keyboard_1774974624659_8jtvewozu_dup_1775330630989_u5nvew2rh",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 11008
+          }
+        },
+        {
+          "id": "ZoN0opKnjLAy_VA6p_G5L_dup_1775330630989_dg57lyapi",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "🟣Выкуп вашей крипты без NYC и AML проверок \n🟣Лояльны комиссии на LTC/BTC/XMR/USDT\n🟣Акции, новости и конкурсы \n🟣Интеграция вашего бизнеса \n🟣Индивидуальный подход к клиентам и парнерам \n🟣Качество, анонимность и уважение ",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775056804186-529104368-photo_2026-02-27_12-32-22.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "ZoN0opKnjLAy_VA6p_G5L_keyboard_1774974624659_aqooyo2cy_dup_1775330630989_quor2s4zf",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 11208
+          }
+        },
+        {
+          "id": "D8GyV4JtfEadOlOx-jbY1_dup_1775330630989_edxxrj56x",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "⏳ Работаем 24/7 \n✈Высокая скорость обменов \n💰 Низкие комиссии на обмен!",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775056804142-669890781-photo_2026-02-27_12-33-51.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "D8GyV4JtfEadOlOx-jbY1_keyboard_1774974624659_w4ctj3zrp_dup_1775330630989_9qde72tds",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 11408
+          }
+        },
+        {
+          "id": "DpKvu0ysWjssY5PS4VU8P_dup_1775330630989_17oh1s8cs",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "🧮З@ЕБАЛИ ОБМЕННИКИ С КОМИССИЕЙ 30% И РЕКВИЗИТАМИ ИЗ ТАДЖИКИСТАНА?!\n\nSANCHEZ EXCHANGE - ЭТО:\n\n• 💸Реквизиты только российских банков\n• 👛Полная анонимность, никаких AML/KYC проверок\n• 🛫Быстрое подтверждение платежа и отправка битков за несколько минут!\n•📉Комиссия от 10% \n•🛍Инвестиционная программа, зарабатывай вместе с нами\n\nХватит переплачивать, покупай через Sanchez 👇🏻\n",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775056804217-200852236-photo_2026-02-27_12-20-10.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "DpKvu0ysWjssY5PS4VU8P_keyboard_1774974624659_p3nyfil5w_dup_1775330630989_plah5exaz",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 11608
+          }
+        },
+        {
+          "id": "MZptbnTxwtDoyHMKo4nUt_dup_1775330630989_c61i57y0i",
+          "data": {
+            "buttons": [],
+            "imageUrl": "",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "🔥ВЫГОДНО и БЫСТРО \n🫵 Именно так ТЫ подумаешь когда познакомишся с обменником Capitali%t\n🥷 Никаких логов, только анонимные транзакции на самые ТЁМНЫЕ площадки!\n🚀 Динамическая комиссия, позволяющая доставлять вашу крипту гораздо быстрее конкурентов!\n💬 Активная поддержка — Мы ценим своих клиентов!\n✅Стабильная выдача реквизитов !!!",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775056750328-52948919-photo_2026-02-27_12-25-07.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "MZptbnTxwtDoyHMKo4nUt_keyboard_1774974624659_1zqzq8bg0_dup_1775330630989_x5o8qee7k",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 11808
+          }
+        },
+        {
+          "id": "TWswJndQWLS1WSvKzs75z_dup_1775330630989_d5fs0xph1",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "🍀 Lucky Exchange — надежный сервис обмена криптовалют, работающий с 2024 года на рынке СНГ. Успешно обслужили тысячи клиентов и провели более 50 000 обменов\n\n🍀 Моментальный обмен\n🍀 Удобный интерфейс\n🍀 No KYC. Анонимно\n🍀 Поддержка 24/7\n",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775055725774-996302059-atcewg.mp4"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "TWswJndQWLS1WSvKzs75z_keyboard_1774974624659_92upeb4c5_dup_1775330630989_6sxaeiii9",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 12008
+          }
+        },
+        {
+          "id": "H-MTAO8_r3_VPMHy_7UVP_dup_1775330630989_gw6d94fb9",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Самый милый и быстрый сервис крипто-обмена 🚀\n\nМеняют рубли на криптовалюту быстро, аккуратно и без лишних слов.\n\n✨ Быстро — всего ~30 секунд\n🔒 Приватно — никаких лишних вопросов\n💸 Честный расчёт и прозрачные условия\n🕒 Поддержка и реквизиты — 24/7\n\nLove Exchange — когда обмен проходит с любовью 💕",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775055783944-373793163-photo_2026-03-04_09-21-42.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "H-MTAO8_r3_VPMHy_7UVP_keyboard_1774974624659_ekasfv9hb_dup_1775330630989_ysekt8bt4",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 12208
+          }
+        },
+        {
+          "id": "hlXSGYpDZIx6UgGpJTL4E_dup_1775330630989_07kpnmyoz",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "⏺BitGo — простой криптообмен в Telegram\n\nЕсли нужно быстро обменять криптовалюту и не разбираться в сложных интерфейсах —\nBitGo работает прямо в Telegram и решает задачу за пару шагов.\n\n🔹 BTC / LTC / XMR / USDT\n🔹 Без регистрации и KYC\n🔹 Курс фиксируется при создании заявки\n🔹 Быстрое выполнение, без лишних ожиданий\n🔹 Вывод средств на банки РФ\n🔹 Поддержка 24/7\n\nНичего лишнего — только обмен и понятные условия.\n",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775055668437-941781508-photo_2026-04-01_18-00-48.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "hlXSGYpDZIx6UgGpJTL4E_keyboard_1774974624659_b5a3wxwq3_dup_1775330630989_rbdr12svq",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 940,
+            "y": 12408
+          }
+        },
+        {
+          "id": "-bLSyxREMI9woziy1YVfT_dup_1775330630989_8zhubjyw6",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Antarctic Wallet - легальный криптокошелёк с VASP-лицензией и AML-защитой 🔒\n\nТеперь можно платить криптой как обычными деньгами — просто сканируешь QR-код в магазине.\n\nБез лишних переводов и вывода на карту.\n\nВ нынешних реалиях — максимально удобно 👌",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "/uploads/6/2026-04-01/1775055559845-395674630-photo_2025-02-18_14-53-52.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "-bLSyxREMI9woziy1YVfT_keyboard_1774974624659_4ozfg282k_dup_1775330630989_kzbrf5oox",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": -60,
+            "y": 2940
+          }
+        },
+        {
+          "id": "xHb70wqOuHOQ0I9DOY6ed_dup_1775330630989_9ndo68oi8",
+          "data": {
+            "buttons": [],
+            "command": "/start",
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "description": "Запустить бота",
+            "messageText": "",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "autoTransitionTo": "3UAiVkVQmXZqbeXWMPfqo_dup_1775330630989_hf9jdvbkh",
+            "enableStatistics": true
+          },
+          "type": "command_trigger",
+          "position": {
+            "x": 100,
+            "y": 3505
+          }
+        },
+        {
+          "id": "3UAiVkVQmXZqbeXWMPfqo_dup_1775330630989_hf9jdvbkh",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "Привет {user_name}",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "autoTransitionTo": "start_dup_1775330630988_2w4z6c8t9",
+            "enableStatistics": true,
+            "enableAutoTransition": true
+          },
+          "type": "message",
+          "position": {
+            "x": 520,
+            "y": 3447
+          }
+        },
+        {
+          "id": "85iBN08ZTPeZ8UN7rT2la_keyboard_1774974624658_krt7jox40_dup_1775330630989_2ogq0z0s1",
+          "data": {
+            "buttons": [
+              {
+                "id": "NwHgO-rV3I24T3gl5TKfv",
+                "text": "Боты",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "owJjfyAT_EGKmtW72uSUy",
+                "text": "Сайты",
+                "action": "goto",
+                "target": "PUS-Fd5aAJ98QLk-ishTU_dup_1775330630988_9v3j3eyid",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "o4mxwLlsd7dWMeyScNr70",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start_dup_1775330630988_2w4z6c8t9",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "NwHgO-rV3I24T3gl5TKfv",
+                    "owJjfyAT_EGKmtW72uSUy"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "o4mxwLlsd7dWMeyScNr70"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 5118
+          }
+        },
+        {
+          "id": "yw_mNIfYEudZi6qBKl9ov_keyboard_1774974624659_bplb421y4_dup_1775330630989_0qs6uycp4",
+          "data": {
+            "buttons": [
+              {
+                "id": "XyzJI-8-6PEXcb63THxtd",
+                "url": "",
+                "text": "ScoobyChange",
+                "action": "goto",
+                "target": "SufEBj6f0TVeYbH8nu4ca_dup_1775330630988_zvghvf2oa",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "_tduSErKUOkAm5Hjr1S8A",
+                "text": "Империя Обмена",
+                "action": "goto",
+                "target": "bH89Jz9E1foI-54dxfVQ5_dup_1775330630989_j1r99ds47",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "FsVJ8FwvkivRQ_1S-fj9-",
+                "text": "Shaxta",
+                "action": "goto",
+                "target": "OnEnxQgo0H5pDIDyHuzLb_dup_1775330630989_hqx21nz4w",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "dL07jVzrhVUUfzjVB2sMI",
+                "text": "CrytoFlow",
+                "action": "goto",
+                "target": "hqDUnZpbhQjn68O6dvBXy_dup_1775330630989_31b8d0hco",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "8YH6JvVNE7vUZ7w2xnJYS",
+                "text": "Vortex",
+                "action": "goto",
+                "target": "v6dI1-Nnpd9ZeAw8IY5ee_dup_1775330630989_13onbm510",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "JEg5ci6u-TEf-D4jA9fhN",
+                "text": "INFINITY",
+                "action": "goto",
+                "target": "ZoN0opKnjLAy_VA6p_G5L_dup_1775330630989_dg57lyapi",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "RaK4CeifJmwcleT7hXlcq",
+                "text": "Пополнятор",
+                "action": "goto",
+                "target": "eriR-M4qvolmZmNTo-CVN_dup_1775330630989_b8m6w1un3",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "qN4nC_SeOyHTK55SvOpHC",
+                "text": "Sanchez Ex (15%)",
+                "action": "goto",
+                "target": "DpKvu0ysWjssY5PS4VU8P_dup_1775330630989_17oh1s8cs",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "mDQJBb0GSgIygslb6Tu_N",
+                "text": "Hustle",
+                "action": "goto",
+                "target": "URN9S7Fy5y7VDLkj_GSOh_dup_1775330630989_388rcl0pl",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "eqCWEqtM0q4omvxKVsWqQ",
+                "text": "BTC MONOPOLY",
+                "action": "goto",
+                "target": "WAf9gve0Tt19zAGxXROdT_dup_1775330630989_l39k04q62",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "ETAdT0nWs36MOMld6I3Wa",
+                "text": "CrazyBTC",
+                "action": "goto",
+                "target": "7eWaa90YuXM8mmAhFi8ur_dup_1775330630989_legfq2391",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "N_pdRLYBqvp5X-Xk4lpgr",
+                "text": "24CRYPTO",
+                "action": "goto",
+                "target": "b_Tyo9JqA0qWNC7xvEzH9_dup_1775330630989_l4v9qrjwz",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "3Y2YAxEnxNfJK6B8gt9iZ",
+                "text": "Capitalist",
+                "action": "goto",
+                "target": "MZptbnTxwtDoyHMKo4nUt_dup_1775330630989_c61i57y0i",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "yvbuO0lpDtcuvrCo-_SHW",
+                "text": "CryptoSwap",
+                "action": "goto",
+                "target": "Q9H2iY_J6d0fcIpKanFOK_dup_1775330630989_cqvfkw0pi",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "2BPmxjLVRxrw3QBgQP_Ew",
+                "text": "LiteBit",
+                "action": "goto",
+                "target": "sfty2HanOmKU31WSOO2jt_dup_1775330630989_do5g4jura",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "kqpJKZqKo3j7gaBkx6CzV",
+                "text": "BitMixer",
+                "action": "goto",
+                "target": "D8GyV4JtfEadOlOx-jbY1_dup_1775330630989_edxxrj56x",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1773510125105",
+                "text": "Lucky Exchange",
+                "action": "goto",
+                "target": "TWswJndQWLS1WSvKzs75z_dup_1775330630989_d5fs0xph1",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1773510433603",
+                "text": "Love Exchange",
+                "action": "goto",
+                "target": "H-MTAO8_r3_VPMHy_7UVP_dup_1775330630989_gw6d94fb9",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1773510663633",
+                "text": "BitGo",
+                "action": "goto",
+                "target": "hlXSGYpDZIx6UgGpJTL4E_dup_1775330630989_07kpnmyoz",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1773512075312",
+                "text": "Назад",
+                "action": "goto",
+                "target": "85iBN08ZTPeZ8UN7rT2la_dup_1775330630988_863gd78mn",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "btn_2",
+                "text": "Squidward Ex (15%)",
+                "action": "goto",
+                "target": "R53QV08x5l-KebeltnxAZ",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "XyzJI-8-6PEXcb63THxtd",
+                    "_tduSErKUOkAm5Hjr1S8A"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "FsVJ8FwvkivRQ_1S-fj9-",
+                    "dL07jVzrhVUUfzjVB2sMI"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "8YH6JvVNE7vUZ7w2xnJYS",
+                    "JEg5ci6u-TEf-D4jA9fhN"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "RaK4CeifJmwcleT7hXlcq",
+                    "qN4nC_SeOyHTK55SvOpHC"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "mDQJBb0GSgIygslb6Tu_N",
+                    "eqCWEqtM0q4omvxKVsWqQ"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "ETAdT0nWs36MOMld6I3Wa",
+                    "N_pdRLYBqvp5X-Xk4lpgr"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "3Y2YAxEnxNfJK6B8gt9iZ",
+                    "yvbuO0lpDtcuvrCo-_SHW"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "2BPmxjLVRxrw3QBgQP_Ew",
+                    "kqpJKZqKo3j7gaBkx6CzV"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1773510125105",
+                    "1773510433603"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1773510663633",
+                    "1773512075312"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "btn_2"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1340,
+            "y": 12800
+          }
+        },
+        {
+          "id": "SufEBj6f0TVeYbH8nu4ca_keyboard_1774974624659_6nfziivmn_dup_1775330630989_q9nfn2wzu",
+          "data": {
+            "buttons": [
+              {
+                "id": "G5M3zi-_BHzTRsrIvbh6f",
+                "url": "https://t.me/scdoo_bot?start=7733607050",
+                "text": "ScoobyChange",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "GhvNSDR8xfo3yBXCE3Y2Z",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "G5M3zi-_BHzTRsrIvbh6f"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "GhvNSDR8xfo3yBXCE3Y2Z"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 8808
+          }
+        },
+        {
+          "id": "start_keyboard_1774974624659_mvun7q4ps_dup_1775330630989_e14cws36e",
+          "data": {
+            "buttons": [
+              {
+                "id": "GWNlAKYzhIrH1EDIF3NSV",
+                "text": "Купить",
+                "action": "goto",
+                "target": "85iBN08ZTPeZ8UN7rT2la_dup_1775330630988_863gd78mn",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "hXskuMsZk96GXf6Y7ScIe",
+                "text": "Продать ",
+                "action": "goto",
+                "target": "f_Cp9YJKmXokG-Ub2l7Fp_dup_1775330630988_3pe8qr1xm",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "3UzKMV5DQzYIYc1HTKR-b",
+                "text": "P2P",
+                "action": "goto",
+                "target": "4aK7tBp04cV48AdVkFcwy_dup_1775330630988_4rlgygcms",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "Vi-dWOjC2TiJaUC6jWHXc",
+                "text": "ACS",
+                "action": "goto",
+                "target": "CDDI_a_PKYOWH80wa1HXw_dup_1775330630988_0t67r8in7",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "mvWOkplWLm8Y2RmCyVu0A",
+                "text": "Кошельки",
+                "action": "goto",
+                "target": "F5YsR6I9iz9kiAD8eTbJJ_dup_1775330630988_refipacx7",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "WBRqLmIXY81qcKeDbHzds",
+                "text": "ByBit",
+                "action": "goto",
+                "target": "q8O2eOlMSvU8I38mABaOl_dup_1775330630988_851jcsnos",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1775057958734",
+                "text": "⚡️BTC MONOPOLY | ТВОЙ НАДЕЖНЫЙ ОБМЕННИК",
+                "action": "goto",
+                "target": "O10QLc2qkpVpRLxQeNArx_dup_1775330630989_npxy4i8sq",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "GWNlAKYzhIrH1EDIF3NSV",
+                    "hXskuMsZk96GXf6Y7ScIe"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "3UzKMV5DQzYIYc1HTKR-b",
+                    "Vi-dWOjC2TiJaUC6jWHXc"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "mvWOkplWLm8Y2RmCyVu0A",
+                    "WBRqLmIXY81qcKeDbHzds"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1775057958734"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 820,
+            "y": 4040
+          }
+        },
+        {
+          "id": "PUS-Fd5aAJ98QLk-ishTU_keyboard_1774974624659_xpxexguhg_dup_1775330630989_0edu3t58h",
+          "data": {
+            "buttons": [
+              {
+                "id": "sT9K8axGs8YSD-AjexaYO",
+                "url": "https://sova.is/?ref=92ecb16b-ddf3-4c42-bc70-444a585ee01d",
+                "text": "Sova",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "wtb6FTYHj95FaiM3YUGRd",
+                "url": "https://epichange.online/?rid=20527",
+                "text": "Epichange",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "TsegqhpmQsdPPZYnAzTok",
+                "url": "https://ferma.cc/?ref=a8524c1a-ab23-48ea-9605-f02c2e9aa6a0",
+                "text": "Ферма",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "0c8zYt3rHVQgVgUA3XBLb",
+                "url": "https://onemoment.cc/?ref=68e80d95-db0d-43a4-aba0-16545d3dfb52",
+                "text": "OneMoment",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "0AtABxOhsugHNerCubAtM",
+                "url": "https://metka.cc/?ref=27274a76-0c13-4eb4-8760-6a0ecc371bae",
+                "text": "MetkA",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "YqzPbJkqlv_w4v_H9mSI_",
+                "url": "https://exbitbot.net/?rid=12032",
+                "text": "Exbitbot",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "AqwpV4FY7T3OuohdFF76I",
+                "url": "https://yodaobmen.com/?ref=Yxqw",
+                "text": "YodaObmen",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "wDBikZWZRBbrDR0zr4d8g",
+                "url": "https://cripta.cc/?ref=50345637-d97e-4a50-9924-98de1815e1ea",
+                "text": "CRIPTA",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "xv6SNYQ-HdRjrPJMOY0ib",
+                "url": "https://cryptobar.cc/?rid=15066",
+                "text": "CryptoBar",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "ASjI_aEgTe2vj3BjiygKr",
+                "url": "https://in-to.cc/?ref=d5d99848-135c-44c0-ad13-4d193b953c48",
+                "text": "IN TO",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "TXlXa9neF5dEi_i4Ju9-m",
+                "url": "https://pocket-exchange.com/?ref=71a67c97-b958-44ee-8782-ad6beb2530ab",
+                "text": "PocketEX",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "Y1YHCV-JlDp_ZTHYDRPmV",
+                "url": "https://swop.is/?ref=95631b98-d29f-4c9f-962c-ebabff3525bb",
+                "text": "SWOP",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "MHN-6ds-E-K6edXShSTT5",
+                "text": "Назад",
+                "action": "goto",
+                "target": "85iBN08ZTPeZ8UN7rT2la_dup_1775330630988_863gd78mn",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "sT9K8axGs8YSD-AjexaYO",
+                    "wtb6FTYHj95FaiM3YUGRd"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "TsegqhpmQsdPPZYnAzTok",
+                    "0c8zYt3rHVQgVgUA3XBLb"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "0AtABxOhsugHNerCubAtM",
+                    "YqzPbJkqlv_w4v_H9mSI_"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "AqwpV4FY7T3OuohdFF76I",
+                    "wDBikZWZRBbrDR0zr4d8g"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "xv6SNYQ-HdRjrPJMOY0ib",
+                    "ASjI_aEgTe2vj3BjiygKr"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "TXlXa9neF5dEi_i4Ju9-m",
+                    "Y1YHCV-JlDp_ZTHYDRPmV"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "MHN-6ds-E-K6edXShSTT5"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 6504
+          }
+        },
+        {
+          "id": "q8O2eOlMSvU8I38mABaOl_keyboard_1774974624659_9fdwh1de4_dup_1775330630989_rhqqihfkc",
+          "data": {
+            "buttons": [
+              {
+                "id": "-BFrZ8YoBpGPAg_cgcRER",
+                "url": "https://www.bybit.com/invite?ref=PWLPREV",
+                "text": "Перейти",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "blMtXnJoRPRnC3Uz-7JNX",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start_dup_1775330630988_2w4z6c8t9",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "-BFrZ8YoBpGPAg_cgcRER"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "blMtXnJoRPRnC3Uz-7JNX"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true,
+            "allowMultipleSelection": false
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 2436
+          }
+        },
+        {
+          "id": "CDDI_a_PKYOWH80wa1HXw_keyboard_1774974624659_xhna7eff2_dup_1775330630989_axo9c0wvc",
+          "data": {
+            "buttons": [
+              {
+                "id": "SCaeTse7Y22McnyypduyO",
+                "url": "https://t.me/ACSstore_Robot",
+                "text": "Перейти",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "PzaeMzOPslCgkW-16Mmgu",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start_dup_1775330630988_2w4z6c8t9",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "SCaeTse7Y22McnyypduyO"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "PzaeMzOPslCgkW-16Mmgu"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 2636
+          }
+        },
+        {
+          "id": "4aK7tBp04cV48AdVkFcwy_keyboard_1774974624659_pagf8tkcj_dup_1775330630989_l95zvtddo",
+          "data": {
+            "buttons": [
+              {
+                "id": "TZM3uiDxFbPVdkQDpI2Un",
+                "url": "http://t.me/bit_bridge_bot?start=r_zpf70sdgn4",
+                "text": "BitBridge",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "5DUtwAfY6u6AmiM-Sq1ts",
+                "url": "http://t.me/send?start=r-xo3q1",
+                "text": "CryptoBot",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "LyiHP7KSFBN1m7n96VLms",
+                "url": "https://t.me/xrocket?start=i_LLvwTMJDlP",
+                "text": "xRoket",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "3K1ogZuPsMspSod93d81D",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start_dup_1775330630988_2w4z6c8t9",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "TZM3uiDxFbPVdkQDpI2Un",
+                    "LyiHP7KSFBN1m7n96VLms",
+                    "5DUtwAfY6u6AmiM-Sq1ts"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "3K1ogZuPsMspSod93d81D"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 2836
+          }
+        },
+        {
+          "id": "f_Cp9YJKmXokG-Ub2l7Fp_keyboard_1774974624659_kg950woyi_dup_1775330630989_y27hwyetv",
+          "data": {
+            "buttons": [
+              {
+                "id": "UZqqGzFxMf_-ulnLiEI8F",
+                "url": "https://t.me/VRTX_SALE_BOT?start=NzczMzYwNzA1MA",
+                "text": "Vortex Hub",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "rLHuHZ8y7fJ7-Fn1vX2YI",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start_dup_1775330630988_2w4z6c8t9",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "UZqqGzFxMf_-ulnLiEI8F"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "rLHuHZ8y7fJ7-Fn1vX2YI"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 3036
+          }
+        },
+        {
+          "id": "F5YsR6I9iz9kiAD8eTbJJ_keyboard_1774974624659_wlsgzeqmr_dup_1775330630989_5i4groxbk",
+          "data": {
+            "buttons": [
+              {
+                "id": "1774261810947",
+                "text": "NC Wallet ",
+                "action": "goto",
+                "target": "LUQKuMleTf_AkZK-NdrRp_dup_1775330630989_d1wemjhrt",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774262058267",
+                "text": "Antarctic Wallet",
+                "action": "goto",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774262188917",
+                "text": "Назад",
+                "action": "goto",
+                "target": "start_dup_1775330630988_2w4z6c8t9",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774261810947",
+                    "1774262058267"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1774262188917"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1140,
+            "y": 3880
+          }
+        },
+        {
+          "id": "LUQKuMleTf_AkZK-NdrRp_keyboard_1774974624659_latgmnrcq_dup_1775330630989_l0784uldr",
+          "data": {
+            "buttons": [
+              {
+                "id": "EAazdxVePH-m02mNYeMOT",
+                "url": "https://ncwallet.net/invite-telegram/APVQBNAF",
+                "text": "Telegram",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "HbhxXg72iweRu0WPUb-jr",
+                "url": "https://ncwallet.net/invite/APVQBNAF",
+                "text": "Приложение",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "y0UTqQYMRdFiuE_yzk0WV",
+                "text": "Назад",
+                "action": "goto",
+                "target": "F5YsR6I9iz9kiAD8eTbJJ_dup_1775330630988_refipacx7",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "EAazdxVePH-m02mNYeMOT"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "HbhxXg72iweRu0WPUb-jr"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "y0UTqQYMRdFiuE_yzk0WV"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1520,
+            "y": 3320
+          }
+        },
+        {
+          "id": "bH89Jz9E1foI-54dxfVQ5_keyboard_1774974624659_ei41twqwn_dup_1775330630989_masc3dice",
+          "data": {
+            "buttons": [
+              {
+                "id": "71Ea25BKRnfGZjYB8UMnH",
+                "url": "https://t.me/IMPERIA_OBMENA_BOT?start=7733607050",
+                "text": "Империя обмена",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1swV_c-DRkNJFveIaK-3C",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "71Ea25BKRnfGZjYB8UMnH"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1swV_c-DRkNJFveIaK-3C"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 9008
+          }
+        },
+        {
+          "id": "OnEnxQgo0H5pDIDyHuzLb_keyboard_1774974624659_g0l34zaqs_dup_1775330630989_0cwk9no4h",
+          "data": {
+            "buttons": [
+              {
+                "id": "jzGyZgQYMLO3BH_K3P0gb",
+                "url": "https://t.me/shaxta24_bot?start=r-7733607050",
+                "text": "Shaxta",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "x75SARXiQW-L_ebOSCw26",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "jzGyZgQYMLO3BH_K3P0gb"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "x75SARXiQW-L_ebOSCw26"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 9208
+          }
+        },
+        {
+          "id": "hqDUnZpbhQjn68O6dvBXy_keyboard_1774974624659_7zdv4d21v_dup_1775330630989_0pl7vn7qa",
+          "data": {
+            "buttons": [
+              {
+                "id": "6SfukmzPId9JB1dhl-5ij",
+                "url": "https://t.me/Crypto_Flow_exchange_bot?start=ref7733607050",
+                "text": "CryptoFlow",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "z9ZL5aaMTx9ZmpAnWBpUr",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "6SfukmzPId9JB1dhl-5ij"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "z9ZL5aaMTx9ZmpAnWBpUr"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 9408
+          }
+        },
+        {
+          "id": "v6dI1-Nnpd9ZeAw8IY5ee_keyboard_1774974624659_163hopidk_dup_1775330630989_aax2bpggu",
+          "data": {
+            "buttons": [
+              {
+                "id": "_7tQdGe11JhvDiZsdJajY",
+                "url": "https://t.me/vrtxbtc_bot?start=7733607050",
+                "text": "Vortex",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1yGewa4h-HWfI1cQAVGb_",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "_7tQdGe11JhvDiZsdJajY"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1yGewa4h-HWfI1cQAVGb_"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 9608
+          }
+        },
+        {
+          "id": "URN9S7Fy5y7VDLkj_GSOh_keyboard_1774974624659_7daei498w_dup_1775330630989_732l8cs39",
+          "data": {
+            "buttons": [
+              {
+                "id": "Kcm_uO3Xm2D7R5YYsS8Fg",
+                "url": "https://t.me/HUSTLE_BTC_BOT?start=502869414",
+                "text": "Hustle",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "239Y3uJ2BFlyJMIkX_mTP",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "Kcm_uO3Xm2D7R5YYsS8Fg"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "239Y3uJ2BFlyJMIkX_mTP"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 9808
+          }
+        },
+        {
+          "id": "eriR-M4qvolmZmNTo-CVN_keyboard_1774974624659_jgg93d8no_dup_1775330630989_8g9msk3lg",
+          "data": {
+            "buttons": [
+              {
+                "id": "F0PLiBxwsMDMTQ4SrD2NC",
+                "url": "https://t.me/POPOLNYATOR_EXCHANGE_BOT?start=ref_959XUMH2",
+                "text": "Пополнятор",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "TyMrdCkzRxZnG7dQjJXVK",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "F0PLiBxwsMDMTQ4SrD2NC"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "TyMrdCkzRxZnG7dQjJXVK"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 10008
+          }
+        },
+        {
+          "id": "7eWaa90YuXM8mmAhFi8ur_keyboard_1774974624659_nhaf1kjxa_dup_1775330630989_fdbyqjvma",
+          "data": {
+            "buttons": [
+              {
+                "id": "LKxqYAVwGqg6SRH4rO6cu",
+                "url": "https://t.me/BTCrzyBOT?start=7733607050",
+                "text": "CrazyBTC",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "QmkhTpS49uy9xp0W78_sE",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "LKxqYAVwGqg6SRH4rO6cu"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "QmkhTpS49uy9xp0W78_sE"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 10208
+          }
+        },
+        {
+          "id": "WAf9gve0Tt19zAGxXROdT_keyboard_1774974624659_plz2jka84_dup_1775330630989_dp3hiemyx",
+          "data": {
+            "buttons": [
+              {
+                "id": "lb9q4VnGemTRbpvissCPX",
+                "url": "https://t.me/BTC_Monopoly_bot?start=7733607050",
+                "text": "Бот",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "R1Ir7y-nBo4PcVbjezXKV",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774861334952",
+                "url": "https://monopolybot.com",
+                "text": "Сайт",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "lb9q4VnGemTRbpvissCPX",
+                    "1774861334952"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "R1Ir7y-nBo4PcVbjezXKV"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 10408
+          }
+        },
+        {
+          "id": "sfty2HanOmKU31WSOO2jt_keyboard_1774974624659_7mvfuhss2_dup_1775330630989_kfbenukxc",
+          "data": {
+            "buttons": [
+              {
+                "id": "r6XfRecq_w1AL3ZkY363p",
+                "url": "https://telegram.me/litebitbit_bot?start=7733607050",
+                "text": "LiteBit",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "Vo7mU1iIfDTsxrgqQp5A7",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "r6XfRecq_w1AL3ZkY363p"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "Vo7mU1iIfDTsxrgqQp5A7"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 10608
+          }
+        },
+        {
+          "id": "b_Tyo9JqA0qWNC7xvEzH9_keyboard_1774974624659_8fglxaim4_dup_1775330630989_8zwj9s5ce",
+          "data": {
+            "buttons": [
+              {
+                "id": "oJ7nwJVOdan5ky8_6_FLm",
+                "url": "http://t.me/Exchange24Crypto_bot?start=r-7733607050",
+                "text": "24crypto",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "yyvJZZkLa7cKZJKHd1X8G",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "oJ7nwJVOdan5ky8_6_FLm"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "yyvJZZkLa7cKZJKHd1X8G"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 10808
+          }
+        },
+        {
+          "id": "Q9H2iY_J6d0fcIpKanFOK_keyboard_1774974624659_8jtvewozu_dup_1775330630989_u5nvew2rh",
+          "data": {
+            "buttons": [
+              {
+                "id": "SkAZAz3e26XBWNsiAWIdj",
+                "url": "http://t.me/CryptoSwaprobot?start=7733607050",
+                "text": "CryptoSwap",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "pXuV0CFOpa58wkcJVJ_29",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "SkAZAz3e26XBWNsiAWIdj",
+                    "pXuV0CFOpa58wkcJVJ_29"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 11008
+          }
+        },
+        {
+          "id": "ZoN0opKnjLAy_VA6p_G5L_keyboard_1774974624659_aqooyo2cy_dup_1775330630989_quor2s4zf",
+          "data": {
+            "buttons": [
+              {
+                "id": "vDo6IzsmyOjMvKjHz_l4i",
+                "url": "https://t.me/Infinity_exchange_bot?start=jBmKj8kM8Z",
+                "text": "Infinity",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "mSGEM_lp03RcVVmBNKd9o",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "vDo6IzsmyOjMvKjHz_l4i"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "mSGEM_lp03RcVVmBNKd9o"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 11208
+          }
+        },
+        {
+          "id": "D8GyV4JtfEadOlOx-jbY1_keyboard_1774974624659_w4ctj3zrp_dup_1775330630989_9qde72tds",
+          "data": {
+            "buttons": [
+              {
+                "id": "tcC1qrWrHFQCanqHlYbZf",
+                "url": "https://t.me/bitmixerac_bot?start=7a88e5da",
+                "text": "BitMixer",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "dzKBm5-PdmybctrdB2c_X",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "tcC1qrWrHFQCanqHlYbZf"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "dzKBm5-PdmybctrdB2c_X"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 11408
+          }
+        },
+        {
+          "id": "DpKvu0ysWjssY5PS4VU8P_keyboard_1774974624659_p3nyfil5w_dup_1775330630989_plah5exaz",
+          "data": {
+            "buttons": [
+              {
+                "id": "tDPaKr4tCOwExAjEpXlR5",
+                "url": "https://t.me/Sanchez_exchange_bot?start=REF_IED1WL",
+                "text": "SanchezExchange",
+                "action": "url",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "h8RcccP8M0UKVeovbGy3Y",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "tDPaKr4tCOwExAjEpXlR5"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "h8RcccP8M0UKVeovbGy3Y"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 11608
+          }
+        },
+        {
+          "id": "MZptbnTxwtDoyHMKo4nUt_keyboard_1774974624659_1zqzq8bg0_dup_1775330630989_x5o8qee7k",
+          "data": {
+            "buttons": [
+              {
+                "id": "zCPnIHwyeQ3_Ou8o0ALtm",
+                "url": "https://telegram.me/btccapital_bot?start=7733607050",
+                "text": "Capitalist",
+                "action": "url",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "Lk-yq6gc8GIx88mcIdTj1",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "zCPnIHwyeQ3_Ou8o0ALtm"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "Lk-yq6gc8GIx88mcIdTj1"
+                  ]
+                }
+              ],
+              "columns": 1,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 11808
+          }
+        },
+        {
+          "id": "TWswJndQWLS1WSvKzs75z_keyboard_1774974624659_92upeb4c5_dup_1775330630989_6sxaeiii9",
+          "data": {
+            "buttons": [
+              {
+                "id": "1773509885449",
+                "url": "https://t.me/LuckyExchange_Bot?start=ref_cmj72beqs0001lz016qurlvoz",
+                "text": "Lucky Exchange",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1773509954630",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1773509885449"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1773509954630"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 12008
+          }
+        },
+        {
+          "id": "H-MTAO8_r3_VPMHy_7UVP_keyboard_1774974624659_ekasfv9hb_dup_1775330630989_ysekt8bt4",
+          "data": {
+            "buttons": [
+              {
+                "id": "1773510257195",
+                "url": "https://t.me/Exchange_Love_Bot?start=ref_7733607050",
+                "text": "Love Exchange",
+                "action": "url",
+                "target": "",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1773510257728",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1773510257195",
+                    "1773510257728"
+                  ]
+                }
+              ],
+              "columns": 3,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 12208
+          }
+        },
+        {
+          "id": "hlXSGYpDZIx6UgGpJTL4E_keyboard_1774974624659_b5a3wxwq3_dup_1775330630989_rbdr12svq",
+          "data": {
+            "buttons": [
+              {
+                "id": "1773510600768",
+                "url": "https://t.me/bgoex_bot?start=NzczMzYwNzA1MA==",
+                "text": "Bitgo",
+                "action": "url",
+                "target": "https://t.me/bgoex_bot?start=NzczMzYwNzA1MA==",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1773510626012",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1773510600768",
+                    "1773510626012"
+                  ]
+                }
+              ],
+              "columns": 3,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 1335,
+            "y": 12408
+          }
+        },
+        {
+          "id": "-bLSyxREMI9woziy1YVfT_keyboard_1774974624659_4ozfg282k_dup_1775330630989_kzbrf5oox",
+          "data": {
+            "buttons": [
+              {
+                "id": "1774261513248",
+                "url": "https://t.me/antarctic_wallet_bot/app?startapp=ref_bd7be9589e&startapp=ref_bd7be9589e",
+                "text": "Antarctic Wallet",
+                "action": "url",
+                "target": "q8O2eOlMSvU8I38mABaOl_dup_1775330630988_851jcsnos",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1774261607517",
+                "text": "Назад",
+                "action": "goto",
+                "target": "F5YsR6I9iz9kiAD8eTbJJ_dup_1775330630988_refipacx7",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "1774261513248",
+                    "1774261607517"
+                  ]
+                }
+              ],
+              "columns": 3,
+              "autoLayout": true
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 340,
+            "y": 3000
+          }
+        },
+        {
+          "id": "O10QLc2qkpVpRLxQeNArx_dup_1775330630989_npxy4i8sq",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "💰 ТВОЙ НАДЁЖНЫЙ ОБМЕННИК В TELEGRAM\n\nПраздники прошли, а бонусы — нет 😏\nРебята из BTC MONOPOLY раздают бонусы каждый день.\n\n⚡️ Обмен за 2–3 минуты — без ожиданий\n💸 Минимальные комиссии — реально выгодно\n🕒 Работа 24/7 — меняй когда угодно\n\nЛичная рекомендация. Если за криптой — только Monopoly.\n\n🎁 Новичкам — промокод с денежным бонусом. Для активации — пиши @MONOPOLYBANKER\n\nУспей забрать, пока действует 👇\n\nhttps://t.me/BTC_Monopoly_bot?start=7733607050",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 1620,
+            "y": 2420
+          }
+        },
+        {
+          "id": "start_keyboard_1774974624659_mvun7q4ps_copy_1775058076453_e8o7xjs8t_dup_1775330630989_zjv999p4j",
+          "data": {
+            "buttons": [
+              {
+                "id": "GWNlAKYzhIrH1EDIF3NSV",
+                "text": "Купить",
+                "action": "goto",
+                "target": "85iBN08ZTPeZ8UN7rT2la_dup_1775330630988_863gd78mn",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "hXskuMsZk96GXf6Y7ScIe",
+                "text": "Продать ",
+                "action": "goto",
+                "target": "f_Cp9YJKmXokG-Ub2l7Fp_dup_1775330630988_3pe8qr1xm",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "3UzKMV5DQzYIYc1HTKR-b",
+                "text": "P2P",
+                "action": "goto",
+                "target": "4aK7tBp04cV48AdVkFcwy_dup_1775330630988_4rlgygcms",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "Vi-dWOjC2TiJaUC6jWHXc",
+                "text": "ACS",
+                "action": "goto",
+                "target": "CDDI_a_PKYOWH80wa1HXw_dup_1775330630988_0t67r8in7",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "mvWOkplWLm8Y2RmCyVu0A",
+                "text": "Кошельки",
+                "action": "goto",
+                "target": "F5YsR6I9iz9kiAD8eTbJJ_dup_1775330630988_refipacx7",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "WBRqLmIXY81qcKeDbHzds",
+                "text": "ByBit",
+                "action": "goto",
+                "target": "q8O2eOlMSvU8I38mABaOl_dup_1775330630988_851jcsnos",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              },
+              {
+                "id": "1775057958734",
+                "text": "⚡️BTC MONOPOLY | ТВОЙ НАДЕЖНЫЙ ОБМЕННИК",
+                "action": "goto",
+                "target": "O10QLc2qkpVpRLxQeNArx_dup_1775330630989_npxy4i8sq",
+                "buttonType": "normal",
+                "hideAfterClick": false,
+                "skipDataCollection": false
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "GWNlAKYzhIrH1EDIF3NSV",
+                    "hXskuMsZk96GXf6Y7ScIe"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "1775057958734"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "3UzKMV5DQzYIYc1HTKR-b",
+                    "mvWOkplWLm8Y2RmCyVu0A",
+                    "Vi-dWOjC2TiJaUC6jWHXc"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "WBRqLmIXY81qcKeDbHzds"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 520,
+            "y": 3780
+          }
+        },
+        {
+          "id": "R53QV08x5l-KebeltnxAZ",
+          "data": {
+            "buttons": [],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "🦑 СКВИДВАРД УСТАЛ ТЕРПЕТЬ.\nТы тоже.\n\nКомиссии 30%? Реквизиты на имя «Абдулло»?\nДаже на кассе Красти Краб так не обдирают.\n\nSQUIDWARD EXCHANGE — обмен для тех, кто ценит свои деньги:\n\n💳 Только надёжные реквизиты  российских банков\n🔒 Полная анонимность — без AML/KYC\n⚡️ BTC на кошельке за считанные минуты\n📉 Комиссия от 10%\n💰 Инвест-программа — зарабатывай вместе с нами\n\nХватит кормить жадных крабов — покупай через Squidward 👇\n",
+            "keyboardType": "none",
+            "requiresAuth": false,
+            "attachedMedia": [
+              "https://keephere.ru/get/SNOsw8_dne9/o/photo.jpg"
+            ],
+            "isPrivateOnly": false,
+            "keyboardNodeId": "BRdnooFen5dmLlJMacqtC",
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "variableFilters": {},
+            "enableStatistics": true
+          },
+          "type": "message",
+          "position": {
+            "x": 2020,
+            "y": 13640
+          }
+        },
+        {
+          "id": "BRdnooFen5dmLlJMacqtC",
+          "data": {
+            "buttons": [
+              {
+                "id": "btn_3",
+                "url": "https://t.me/Squidward_exchange_bot?start=REF_39P6P1",
+                "text": "Squidward exchange (15%)",
+                "action": "url",
+                "target": ""
+              },
+              {
+                "id": "btn_4",
+                "text": "Назад",
+                "action": "goto",
+                "target": "yw_mNIfYEudZi6qBKl9ov_dup_1775330630988_5mk95rdym"
+              }
+            ],
+            "markdown": false,
+            "adminOnly": false,
+            "showInMenu": true,
+            "messageText": "",
+            "keyboardType": "inline",
+            "requiresAuth": false,
+            "isPrivateOnly": false,
+            "keyboardLayout": {
+              "rows": [
+                {
+                  "buttonIds": [
+                    "btn_3"
+                  ]
+                },
+                {
+                  "buttonIds": [
+                    "btn_4"
+                  ]
+                }
+              ],
+              "columns": 2,
+              "autoLayout": false
+            },
+            "resizeKeyboard": true,
+            "oneTimeKeyboard": false,
+            "enableStatistics": true,
+            "allowMultipleSelection": false
+          },
+          "type": "keyboard",
+          "position": {
+            "x": 2680,
+            "y": 14100
+          }
+        }
+      ],
+      "createdAt": "2026-04-07T03:57:09.638Z",
+      "updatedAt": "2026-04-08T23:09:27.110Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "version": 2,
+  "activeSheetId": "cbIuBg-Y3W0pX1HHNYUyO"
+}
