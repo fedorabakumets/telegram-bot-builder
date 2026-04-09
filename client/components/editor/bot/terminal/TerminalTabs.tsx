@@ -81,7 +81,7 @@ export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
               ) : (
                 <Bot className="w-3 h-3 text-gray-400" />
               )}
-              <span className="max-w-[200px] truncate">
+              <span>
                 {isHistory ? formatTabDate(terminal.launchStartedAt) : terminal.botName}
               </span>
               {!isHistory && terminal.isRunning && (
