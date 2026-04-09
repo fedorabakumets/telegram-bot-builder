@@ -7,6 +7,10 @@
  * - Статусы ботов по каждому токену
  * - Информация о ботах (getMe) по каждому проекту
  *
+ * Важно: allTokens НЕ фильтруется — индексы сохраняются в соответствии с projects,
+ * иначе токены отображались бы под неправильными проектами (botUsername и др. поля
+ * не совпадали бы с нужным ботом).
+ *
  * @module use-bot-queries
  */
 
@@ -55,9 +59,15 @@ export function useBotQueries(): BotQueriesResult {
     })),
   });
 
-  const allTokens: BotToken[][] = tokensResults
-    .map(q => q.data || [])
-    .filter((data): data is BotToken[] => Array.isArray(data) && data.length > 0);
+  /**
+   * Токены по каждому проекту — индекс совпадает с projects.
+   * Фильтрация пустых массивов убрана намеренно: она сдвигала индексы
+   * и приводила к тому, что токены одного проекта отображались под другим,
+   * а поля (botUsername и др.) не совпадали с нужным проектом.
+   */
+  const allTokens: BotToken[][] = tokensResults.map(q =>
+    Array.isArray(q.data) ? (q.data as BotToken[]) : [],
+  );
 
   const allTokensFlat = useMemo(
     () =>
