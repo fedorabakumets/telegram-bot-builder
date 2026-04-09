@@ -366,9 +366,11 @@ export async function startBot(projectId: number, token: string, tokenId: number
         if ((globalThis as any).__dbPoolActive !== false) {
           if (launchId !== undefined) {
             await storage.updateLaunchHistory(launchId, {
-              status: code === 0 ? 'stopped' : 'error',
+              // code === null означает завершение по сигналу (SIGTERM/SIGKILL) — статус 'stopped'
+              status: (code === null || code === 0) ? 'stopped' : 'error',
               stoppedAt: new Date(),
-              errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null,
+              // code может быть null при завершении по сигналу (SIGTERM/SIGKILL) — не считаем это ошибкой
+              errorMessage: (code !== null && code !== 0) ? `Процесс завершен с кодом ${code}` : null,
             });
           }
           const instance = await storage.getBotInstanceByToken(tokenId);

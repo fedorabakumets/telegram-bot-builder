@@ -1309,4 +1309,19 @@ export class DatabaseStorage implements IStorage {
       .where(eq(botLogs.launchId, launchId))
       .orderBy(asc(botLogs.timestamp));
   }
+
+  /**
+   * Получить активную (со статусом 'running') запись истории запуска для токена
+   * @param tokenId - ID токена
+   * @returns Последняя запись со статусом 'running' или undefined, если не найдена
+   */
+  async getActiveLaunchHistory(tokenId: number): Promise<BotLaunchHistory | undefined> {
+    const [record] = await this.db
+      .select()
+      .from(botLaunchHistory)
+      .where(and(eq(botLaunchHistory.tokenId, tokenId), eq(botLaunchHistory.status, 'running')))
+      .orderBy(desc(botLaunchHistory.startedAt))
+      .limit(1);
+    return record || undefined;
+  }
 }

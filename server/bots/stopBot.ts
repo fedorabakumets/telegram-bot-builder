@@ -131,6 +131,17 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
     botProcesses.delete(processKey);
 
     await flushBuffer(processKey);
+
+    // Получаем последний активный запуск для этого токена и закрываем его
+    const activeHistory = await storage.getActiveLaunchHistory(tokenId);
+    if (activeHistory) {
+      await storage.updateLaunchHistory(activeHistory.id, {
+        status: 'stopped',
+        stoppedAt: new Date(),
+        errorMessage: null,
+      });
+    }
+
     await storage.stopBotInstanceByToken(tokenId);
 
     // Рассылаем событие об остановке бота всем клиентам проекта
