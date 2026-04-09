@@ -28,9 +28,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Build outputs (пересобираются внутри контейнера)
-dist/
-
 # Test files
 __tests__/
 *.test.js
