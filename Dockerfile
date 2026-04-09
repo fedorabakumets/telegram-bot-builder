@@ -18,7 +18,8 @@ RUN npm run build:client
 FROM node:20-alpine
 
 # Python3 нужен для запуска пользовательских ботов (server/bots/startBot.ts)
-RUN apk add --no-cache python3 py3-pip
+# procps нужен для команды ps (поиск Python процессов при остановке)
+RUN apk add --no-cache python3 py3-pip procps
 
 WORKDIR /app
 
@@ -33,6 +34,7 @@ COPY --from=builder /app/dist ./dist
 COPY server ./server
 COPY lib ./lib
 COPY shared ./shared
+COPY client/utils ./client/utils
 COPY scripts ./scripts
 COPY tsconfig*.json ./
 COPY drizzle.config.ts* ./
