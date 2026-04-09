@@ -13,6 +13,7 @@ import { handleBotStart } from './botManagement/handlers/botStartHandler';
 import { handleBotStop } from './botManagement/handlers/botStopHandler';
 import { handleBotRestart } from './botManagement/handlers/botRestartHandler';
 import { handleBotStatusByToken } from './botManagement/handlers/botStatusByTokenHandler';
+import { handleGetLaunchHistory } from './botManagement/handlers/botLaunchHistoryHandler';
 
 /**
  * Настраивает маршруты управления ботами
@@ -24,6 +25,7 @@ import { handleBotStatusByToken } from './botManagement/handlers/botStatusByToke
 export function setupBotManagementRoutes(app: Express): void {
     app.get("/api/projects/:id/bot", handleBotStatus);
     app.get("/api/tokens/:tokenId/bot-status", handleBotStatusByToken);
+    app.get("/api/tokens/:tokenId/launch-history", handleGetLaunchHistory);
     app.post("/api/projects/:id/bot/start", handleBotStart);
     app.post("/api/projects/:id/bot/stop", handleBotStop);
     app.post("/api/projects/:id/bot/restart", handleBotRestart);

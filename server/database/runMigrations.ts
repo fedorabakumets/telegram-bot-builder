@@ -22,6 +22,23 @@ const CREATE_BOT_LOGS_TABLE = `
 `;
 
 /**
+ * SQL для создания таблицы истории запусков ботов
+ */
+const CREATE_BOT_LAUNCH_HISTORY_TABLE = `
+  CREATE TABLE IF NOT EXISTS bot_launch_history (
+    id SERIAL PRIMARY KEY,
+    project_id INTEGER NOT NULL REFERENCES bot_projects(id) ON DELETE CASCADE,
+    token_id INTEGER NOT NULL REFERENCES bot_tokens(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'running',
+    started_at TIMESTAMP DEFAULT NOW(),
+    stopped_at TIMESTAMP,
+    error_message TEXT,
+    process_id TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_bot_launch_history_token ON bot_launch_history(token_id);
+`;
+
+/**
  * Запускает все необходимые миграции базы данных
  * @returns Promise<void>
  */
@@ -30,6 +47,8 @@ export async function runMigrations(): Promise<void> {
   try {
     await client.query(CREATE_BOT_LOGS_TABLE);
     console.log("[Migrations] Таблица bot_logs готова");
+    await client.query(CREATE_BOT_LAUNCH_HISTORY_TABLE);
+    console.log("[Migrations] Таблица bot_launch_history готова");
   } catch (err) {
     console.error("[Migrations] Ошибка выполнения миграций:", err);
   } finally {

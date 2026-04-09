@@ -58,6 +58,9 @@ export type { SendMessage, ComponentDefinition } from "./schema/tables/additiona
 export { botLogs, insertBotLogSchema } from "./schema/tables/bot-logs";
 export type { BotLog, InsertBotLog } from "./schema/tables/bot-logs";
 
+export { botLaunchHistory, insertBotLaunchHistorySchema } from "./schema/tables/bot-launch-history";
+export type { BotLaunchHistory, InsertBotLaunchHistory } from "./schema/tables/bot-launch-history";
+
 export type TelegramUserDB = typeof telegramUsersTable.$inferSelect;
 
 // Импорты для обратной совместимости

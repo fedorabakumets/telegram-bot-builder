@@ -23,6 +23,8 @@ import {
   type UserBotData,
   type BotLog,
   type InsertBotLog,
+  type BotLaunchHistory,
+  type InsertBotLaunchHistory,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
 
@@ -655,6 +657,29 @@ export interface IStorage {
    * @returns Массив записей логов
    */
   getBotLogs(projectId: number, tokenId: number, limit?: number): Promise<BotLog[]>;
+
+  /**
+   * Создать запись о запуске бота
+   * @param data - Данные для создания записи
+   * @returns Созданная запись истории запуска
+   */
+  createLaunchHistory(data: InsertBotLaunchHistory): Promise<BotLaunchHistory>;
+
+  /**
+   * Обновить запись истории запуска (при остановке или ошибке)
+   * @param id - ID записи
+   * @param data - Данные для обновления
+   * @returns Promise<void>
+   */
+  updateLaunchHistory(id: number, data: Partial<InsertBotLaunchHistory>): Promise<void>;
+
+  /**
+   * Получить последние N запусков для токена
+   * @param tokenId - ID токена
+   * @param limit - Максимальное количество записей (по умолчанию 10)
+   * @returns Массив записей истории запусков
+   */
+  getLaunchHistory(tokenId: number, limit?: number): Promise<BotLaunchHistory[]>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

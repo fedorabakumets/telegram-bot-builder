@@ -1,4 +1,4 @@
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type InsertBotGroup, type InsertBotInstance, type InsertBotMessage, type InsertBotMessageMedia, type InsertBotProject, type InsertBotTemplate, type InsertBotToken, type InsertGroupMember, type InsertMediaFile, type InsertTelegramUser, type InsertUserBotData, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, type InsertBotLog } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type InsertBotGroup, type InsertBotInstance, type InsertBotMessage, type InsertBotMessageMedia, type InsertBotProject, type InsertBotTemplate, type InsertBotToken, type InsertGroupMember, type InsertMediaFile, type InsertTelegramUser, type InsertUserBotData, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, type InsertBotLog, botLaunchHistory, type BotLaunchHistory, type InsertBotLaunchHistory } from "@shared/schema";
 import { and, asc, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
 import { db } from "./db";
@@ -1260,5 +1260,40 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(botLogs.timestamp))
       .limit(limit);
     return rows.reverse();
+  }
+
+  /**
+   * Создать запись о запуске бота
+   * @param data - Данные для создания записи
+   * @returns Созданная запись истории запуска
+   */
+  async createLaunchHistory(data: InsertBotLaunchHistory): Promise<BotLaunchHistory> {
+    const [record] = await this.db.insert(botLaunchHistory).values(data).returning();
+    return record;
+  }
+
+  /**
+   * Обновить запись истории запуска (при остановке или ошибке)
+   * @param id - ID записи
+   * @param data - Данные для обновления
+   * @returns Promise<void>
+   */
+  async updateLaunchHistory(id: number, data: Partial<InsertBotLaunchHistory>): Promise<void> {
+    await this.db.update(botLaunchHistory).set(data).where(eq(botLaunchHistory.id, id));
+  }
+
+  /**
+   * Получить последние N запусков для токена
+   * @param tokenId - ID токена
+   * @param limit - Максимальное количество записей (по умолчанию 10)
+   * @returns Массив записей истории запусков
+   */
+  async getLaunchHistory(tokenId: number, limit = 10): Promise<BotLaunchHistory[]> {
+    return await this.db
+      .select()
+      .from(botLaunchHistory)
+      .where(eq(botLaunchHistory.tokenId, tokenId))
+      .orderBy(desc(botLaunchHistory.startedAt))
+      .limit(limit);
   }
 }

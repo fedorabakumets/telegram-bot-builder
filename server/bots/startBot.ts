@@ -276,6 +276,20 @@ export async function startBot(projectId: number, token: string, tokenId: number
     // Сохраняем процесс
     botProcesses.set(processKey, botProcess);
 
+    // Создаём запись в истории запусков
+    let launchId: number | undefined;
+    try {
+      const launchRecord = await storage.createLaunchHistory({
+        projectId,
+        tokenId,
+        status: 'running',
+        processId,
+      });
+      launchId = launchRecord.id;
+    } catch (historyError) {
+      console.error('Ошибка создания записи истории запуска:', historyError);
+    }
+
     // Создаем или обновляем запись в базе данных для конкретного токена
     const existingBotInstance = await storage.getBotInstanceByToken(tokenId);
     if (existingBotInstance) {
@@ -300,8 +314,14 @@ export async function startBot(projectId: number, token: string, tokenId: number
     botProcess.on('error', async (error) => {
       console.error(`Ошибка запуска бота ${projectId} (токен ${tokenId}):`, error);
       try {
-        // Проверяем, что пул соединений все еще активен перед обращением к базе данных
         if ((globalThis as any).__dbPoolActive !== false) {
+          if (launchId !== undefined) {
+            await storage.updateLaunchHistory(launchId, {
+              status: 'error',
+              stoppedAt: new Date(),
+              errorMessage: error.message,
+            });
+          }
           const instance = await storage.getBotInstance(projectId);
           if (instance) {
             await storage.updateBotInstance(instance.id, {
@@ -321,8 +341,14 @@ export async function startBot(projectId: number, token: string, tokenId: number
     botProcess.on('exit', async (code, signal) => {
       console.log(`Бот ${projectId} (токен ${tokenId}) завершен с кодом ${code}, сигнал: ${signal}`);
       try {
-        // Проверяем, что пул соединений все еще активен перед обращением к базе данных
         if ((globalThis as any).__dbPoolActive !== false) {
+          if (launchId !== undefined) {
+            await storage.updateLaunchHistory(launchId, {
+              status: code === 0 ? 'stopped' : 'error',
+              stoppedAt: new Date(),
+              errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null,
+            });
+          }
           const instance = await storage.getBotInstance(projectId);
           if (instance) {
             await storage.updateBotInstance(instance.id, {

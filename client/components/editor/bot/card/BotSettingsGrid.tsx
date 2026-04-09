@@ -15,6 +15,7 @@
 import { BotDatabaseToggle } from './BotDatabaseToggle';
 import { BotExecutionTimer } from './BotExecutionTimer';
 import { BotAdminIds } from '../profile/BotAdminIds';
+import { BotLaunchHistory } from './BotLaunchHistory';
 import type { BotStatusResponse } from '../bot-types';
 
 interface BotSettingsGridProps {
@@ -72,6 +73,7 @@ export function BotSettingsGrid({
         />
       )}
       <BotAdminIds projectId={projectId} />
+      <BotLaunchHistory tokenId={tokenId} />
     </div>
   );
 }
