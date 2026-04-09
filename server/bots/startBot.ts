@@ -392,10 +392,13 @@ export async function startBot(projectId: number, token: string, tokenId: number
           }
           const instance = await storage.getBotInstanceByToken(tokenId);
           if (instance) {
-            await storage.updateBotInstance(instance.id, {
-              status: 'stopped',
-              errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null
-            });
+            // Не перезаписываем маркер __server_restart__ — он нужен для восстановления после деплоя
+            if (instance.errorMessage !== '__server_restart__') {
+              await storage.updateBotInstance(instance.id, {
+                status: 'stopped',
+                errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null
+              });
+            }
           }
         } else {
           console.log(`⚠️ Пропускаем обновление статуса бота в базе данных - пул соединений закрыт`);
