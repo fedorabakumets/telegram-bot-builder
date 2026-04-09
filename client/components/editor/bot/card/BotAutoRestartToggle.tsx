@@ -113,13 +113,13 @@ export function BotAutoRestartToggle({
           }}
           disabled={mutation.isPending}
         >
-          <SelectTrigger className="h-6 w-14 text-xs border-blue-500/30 bg-transparent text-blue-700 dark:text-blue-300">
-            <SelectValue />
+          <SelectTrigger className="h-6 w-24 text-xs border-blue-500/30 bg-transparent text-blue-700 dark:text-blue-300">
+            <SelectValue placeholder="Попыток" />
           </SelectTrigger>
           <SelectContent>
             {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
               <SelectItem key={n} value={String(n)} className="text-xs">
-                {n}x
+                {n} {n === 1 ? 'попытка' : n < 5 ? 'попытки' : 'попыток'}
               </SelectItem>
             ))}
           </SelectContent>
