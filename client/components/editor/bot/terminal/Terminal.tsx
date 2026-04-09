@@ -10,6 +10,7 @@
 import { forwardRef, useImperativeHandle } from 'react';
 import { TerminalHeader } from './TerminalHeader';
 import { TerminalOutput } from './TerminalOutput';
+import { TerminalFilterBar } from './TerminalFilterBar';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { TerminalHandle, TerminalProps } from './terminalTypes';
 import { useTerminalTheme } from './useTerminalTheme';
@@ -17,6 +18,7 @@ import { useTerminalResize } from './useTerminalResize';
 import { useTerminalScale } from './useTerminalScale';
 import { useTerminalLines } from './useTerminalLines';
 import { useTerminalMethods } from './useTerminalMethods';
+import { useTerminalFilter } from './useTerminalFilter';
 
 export type { TerminalHandle, TerminalProps };
 
@@ -59,12 +61,18 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
     setLines
   });
 
+  // Хук фильтрации строк
+  const { filter, setFilter, filterLines, stderrCount } = useTerminalFilter();
+
   // Предоставляем методы через ref
   useImperativeHandle(ref, () => ({
     addLine,
     addLineLocal,
     sendToServer
   }));
+
+  // Отфильтрованные строки для вывода
+  const visibleLines = filterLines(lines);
 
   return (
     <div
@@ -74,16 +82,21 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         onZoomIn={() => adjustScale(1.2)}
         onZoomOut={() => adjustScale(0.8)}
         onClear={clearTerminal}
-        onCopy={() => copyTerminalOutput(lines)}
-        onSave={() => saveTerminalOutput(lines)}
+        onCopy={() => copyTerminalOutput(visibleLines)}
+        onSave={() => saveTerminalOutput(visibleLines)}
         onHide={onToggleVisibility}
         headerBgClass={themeClasses.headerBgClass}
         buttonTextColorClass={themeClasses.buttonTextColorClass}
         buttonHoverClass={themeClasses.buttonHoverClass}
       />
+      <TerminalFilterBar
+        filter={filter}
+        onFilterChange={setFilter}
+        stderrCount={stderrCount(lines)}
+      />
       <div className="flex-1 overflow-hidden min-h-0">
         <TerminalOutput
-          lines={lines}
+          lines={visibleLines}
           containerRef={outputContainerRef}
           scale={scale}
           terminalTextClass={themeClasses.terminalTextClass}
