@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RefreshCw } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 /** Пропсы компонента переключателя автоперезапуска */
 interface BotAutoRestartToggleProps {
@@ -56,8 +57,8 @@ export function BotAutoRestartToggle({
   maxRestartAttempts,
   className = '',
 }: BotAutoRestartToggleProps) {
-  const isEnabled = autoRestart === 1;
-  const attempts = maxRestartAttempts ?? 3;
+  const [localEnabled, setLocalEnabled] = useState(autoRestart === 1);
+  const [localAttempts, setLocalAttempts] = useState(maxRestartAttempts ?? 3);
   const queryClient = useQueryClient();
 
   /** Мутация обновления настроек автоперезапуска */
@@ -65,36 +66,43 @@ export function BotAutoRestartToggle({
     mutationFn: ({ ar, ma }: { ar: number; ma: number }) =>
       updateAutoRestart(projectId, tokenId, ar, ma),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tokens', projectId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+    },
+    onError: () => {
+      // Откатываем локальный стейт при ошибке
+      setLocalEnabled(autoRestart === 1);
+      setLocalAttempts(maxRestartAttempts ?? 3);
     },
   });
 
   return (
     <div
       className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border transition-all ${className} ${
-        isEnabled
+        localEnabled
           ? 'bg-blue-500/8 border-blue-500/30 dark:bg-blue-500/10 dark:border-blue-500/40'
           : 'bg-muted/40 border-border/50'
       }`}
     >
       <RefreshCw
-        className={`w-4 h-4 flex-shrink-0 ${isEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}
+        className={`w-4 h-4 flex-shrink-0 ${localEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}
       />
       <Label
         htmlFor={`auto-restart-${tokenId}`}
         className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${
-          isEnabled ? 'text-blue-700 dark:text-blue-300' : 'text-muted-foreground'
+          localEnabled ? 'text-blue-700 dark:text-blue-300' : 'text-muted-foreground'
         }`}
       >
-        {isEnabled ? 'Автоперезапуск' : 'Без перезапуска'}
+        {localEnabled ? 'Автоперезапуск' : 'Без перезапуска'}
       </Label>
 
-      {isEnabled && (
+      {localEnabled && (
         <select
-          value={attempts}
-          onChange={(e) =>
-            mutation.mutate({ ar: 1, ma: parseInt(e.target.value) })
-          }
+          value={localAttempts}
+          onChange={(e) => {
+            const ma = parseInt(e.target.value);
+            setLocalAttempts(ma);
+            mutation.mutate({ ar: 1, ma });
+          }}
           disabled={mutation.isPending}
           className="text-xs bg-transparent border border-blue-500/30 rounded px-1 py-0.5 text-blue-700 dark:text-blue-300 cursor-pointer"
           aria-label="Максимум попыток перезапуска"
@@ -109,10 +117,11 @@ export function BotAutoRestartToggle({
 
       <Switch
         id={`auto-restart-${tokenId}`}
-        checked={isEnabled}
-        onCheckedChange={(checked) =>
-          mutation.mutate({ ar: checked ? 1 : 0, ma: attempts })
-        }
+        checked={localEnabled}
+        onCheckedChange={(checked) => {
+          setLocalEnabled(checked);
+          mutation.mutate({ ar: checked ? 1 : 0, ma: localAttempts });
+        }}
         disabled={mutation.isPending}
       />
     </div>
