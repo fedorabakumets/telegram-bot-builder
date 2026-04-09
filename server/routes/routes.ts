@@ -865,7 +865,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       broadcastProjectEvent(projectId, {
         type: 'token-created',
         projectId,
-        data: { tokenId: token.id },
+        tokenId: token.id,
+        data: { tokenId: token.id, tokenName: token.name },
         timestamp: new Date().toISOString(),
       });
 

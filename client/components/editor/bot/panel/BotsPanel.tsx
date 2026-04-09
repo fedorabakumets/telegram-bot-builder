@@ -83,6 +83,22 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
     removeTerminal(projectId, tokenId);
   };
 
+  /**
+   * Обработчик создания нового токена через внешний Telegram-бот.
+   * Автоматически открывает терминальную вкладку для нового бота.
+   * @param pid - ID проекта
+   * @param tokenId - ID нового токена
+   * @param tokenName - Имя нового токена
+   */
+  const handleTokenCreated = (pid: number, tokenId: number, tokenName: string) => {
+    addTerminal({
+      projectId: pid,
+      tokenId,
+      botName: tokenName || `Bot #${tokenId}`,
+      isRunning: false,
+    });
+  };
+
   return (
     <div className="h-full overflow-auto p-3 sm:p-4 lg:p-6">
       <BotControl
@@ -91,6 +107,7 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
         onBotStarted={handleBotStarted}
         onBotStopped={handleBotStopped}
         onBotDeleted={handleBotDeleted}
+        onTokenCreated={handleTokenCreated}
       />
     </div>
   );

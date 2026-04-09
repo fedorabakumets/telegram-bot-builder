@@ -37,12 +37,19 @@ interface BotControlProps {
   onBotStopped?: (projectId: number, tokenId: number) => void;
   /** Callback при удалении бота */
   onBotDeleted?: (projectId: number, tokenId: number) => void;
+  /**
+   * Callback при создании нового токена через внешний Telegram-бот (WebSocket событие).
+   * @param projectId - ID проекта
+   * @param tokenId - ID нового токена
+   * @param tokenName - Имя нового токена
+   */
+  onTokenCreated?: (projectId: number, tokenId: number, tokenName: string) => void;
 }
 
 /**
  * Основной компонент управления ботами
  */
-export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted }: Omit<BotControlProps, 'projectName'> & { projectName?: string }) {
+export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted, onTokenCreated }: Omit<BotControlProps, 'projectName'> & { projectName?: string }) {
   const [showAddBot, setShowAddBot] = useState(false);
   const [newBotToken, setNewBotToken] = useState('');
   const [projectForNewBot, setProjectForNewBot] = useState<number | null>(null);
@@ -71,7 +78,7 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
   } = useBotQueries();
 
   // Подписываемся на real-time события проектов через WebSocket
-  useBotProjectEvents(projects);
+  useBotProjectEvents(projects, { onTokenCreated });
 
   const {
     startBotMutation,

@@ -1,5 +1,6 @@
 /**
- * @fileoverview Хук для подписки на события проекта через WebSocket
+ * @fileoverview Хук для подписки на события проекта через WebSocket.
+ * Поддерживает опциональный callback при создании нового токена.
  * @module client/hooks/use-project-events-ws
  */
 
@@ -23,17 +24,36 @@ interface ProjectEvent {
 }
 
 /**
+ * Опции хука подписки на события проекта
+ */
+interface UseProjectEventsWsOptions {
+  /**
+   * Callback, вызываемый при создании нового токена (бота).
+   * @param projectId - ID проекта
+   * @param tokenId - ID нового токена
+   * @param tokenName - Имя нового токена
+   */
+  onTokenCreated?: (projectId: number, tokenId: number, tokenName: string) => void;
+}
+
+/**
  * Подключается к WebSocket терминала с tokenId=0 и слушает события проекта.
  * При token-created/token-deleted инвалидирует кэш токенов.
  * При bot-started/bot-stopped/bot-error инвалидирует историю запусков и статус бота.
+ * При token-created вызывает опциональный callback onTokenCreated.
  * Автоматически переподключается при разрыве соединения.
  *
  * @param projectId - Идентификатор проекта для подписки
+ * @param options - Опциональные callback-и для событий
  */
-export function useProjectEventsWs(projectId: number): void {
+export function useProjectEventsWs(projectId: number, options?: UseProjectEventsWsOptions): void {
+  const { onTokenCreated } = options ?? {};
   const queryClient = useQueryClient();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Ref для стабильной ссылки на callback без перезапуска эффекта */
+  const onTokenCreatedRef = useRef(onTokenCreated);
+  onTokenCreatedRef.current = onTokenCreated;
 
   useEffect(() => {
     if (!projectId) return;
@@ -59,6 +79,12 @@ export function useProjectEventsWs(projectId: number): void {
             });
             // Также инвалидируем список проектов на случай изменения счётчиков
             queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+
+            // Вызываем callback при создании нового токена
+            if (msg.type === 'token-created' && msg.tokenId) {
+              const tokenName = (msg.data as any)?.tokenName ?? '';
+              onTokenCreatedRef.current?.(msg.projectId, msg.tokenId, tokenName);
+            }
           }
 
           if (msg.type === 'bot-started' || msg.type === 'bot-stopped' || msg.type === 'bot-error') {
