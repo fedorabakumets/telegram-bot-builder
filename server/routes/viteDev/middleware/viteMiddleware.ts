@@ -13,7 +13,6 @@ import fs from "fs";
 import path from "path";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
-import { viteLogger } from "../utils/viteLogger";
 
 /**
  * Настраивает Vite сервер и middleware
@@ -25,7 +24,8 @@ import { viteLogger } from "../utils/viteLogger";
  */
 export async function setupVite(app: Express, server: Server): Promise<void> {
   // Динамический импорт vite — только в dev режиме, не грузится в продакшне
-  const { createServer: createViteServer } = await import('vite');
+  const { createServer: createViteServer, createLogger } = await import('vite');
+  const viteLogger = createLogger();
   
   const serverOptions = {
     middlewareMode: true,
