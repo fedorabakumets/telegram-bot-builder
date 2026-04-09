@@ -1,5 +1,5 @@
 import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type InsertBotGroup, type InsertBotInstance, type InsertBotMessage, type InsertBotMessageMedia, type InsertBotProject, type InsertBotTemplate, type InsertBotToken, type InsertGroupMember, type InsertMediaFile, type InsertTelegramUser, type InsertUserBotData, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, type InsertBotLog, botLaunchHistory, type BotLaunchHistory, type InsertBotLaunchHistory } from "@shared/schema";
-import { and, asc, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
 import { db } from "./db";
 
@@ -1262,13 +1262,34 @@ export class DatabaseStorage implements IStorage {
     return rows.reverse();
   }
 
+  /** Максимальное количество записей истории запусков на один токен */
+  private static readonly LAUNCH_HISTORY_LIMIT = 20;
+
   /**
-   * Создать запись о запуске бота
+   * Создать запись о запуске бота.
+   * После вставки удаляет старые записи, если их больше лимита для данного токена.
    * @param data - Данные для создания записи
    * @returns Созданная запись истории запуска
    */
   async createLaunchHistory(data: InsertBotLaunchHistory): Promise<BotLaunchHistory> {
     const [record] = await this.db.insert(botLaunchHistory).values(data).returning();
+
+    // Удаляем старые записи, оставляя только 20 самых новых по startedAt
+    await this.db.delete(botLaunchHistory).where(
+      and(
+        eq(botLaunchHistory.tokenId, data.tokenId),
+        notInArray(
+          botLaunchHistory.id,
+          this.db
+            .select({ id: botLaunchHistory.id })
+            .from(botLaunchHistory)
+            .where(eq(botLaunchHistory.tokenId, data.tokenId))
+            .orderBy(desc(botLaunchHistory.startedAt))
+            .limit(DatabaseStorage.LAUNCH_HISTORY_LIMIT)
+        )
+      )
+    );
+
     return record;
   }
 
