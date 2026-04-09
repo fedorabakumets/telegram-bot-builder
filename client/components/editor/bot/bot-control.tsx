@@ -125,6 +125,9 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
             next[bot.instance.tokenId] = Math.floor(
               (Date.now() - new Date(bot.instance.startedAt).getTime()) / 1000,
             );
+          } else if (bot.tokenId) {
+            // instance может быть null при первом запуске — используем tokenId из маппинга
+            next[bot.tokenId] = 0;
           }
         });
         return next;
@@ -172,7 +175,10 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
   };
 
   const getStatusBadge = (token: Pick<BotToken, 'id' | 'isDefault'>) => {
-    const status = allBotStatuses.find(s => s.instance?.tokenId === token.id);
+    // Ищем по tokenId (добавлен при маппинге) или через instance
+    const status = allBotStatuses.find(
+      s => s.tokenId === token.id || s.instance?.tokenId === token.id,
+    );
     if (status?.status === 'running') {
       return (
         <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">
