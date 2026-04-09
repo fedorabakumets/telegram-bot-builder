@@ -54,6 +54,10 @@ export const botTokens = pgTable("bot_tokens", {
   trackExecutionTime: integer("track_execution_time").default(0),
   /** Общее время выполнения в секундах */
   totalExecutionSeconds: integer("total_execution_seconds").default(0),
+  /** Флаг автоперезапуска при краше (0 = выключено, 1 = включено) */
+  autoRestart: integer("auto_restart").default(0),
+  /** Максимальное количество попыток автоперезапуска подряд */
+  maxRestartAttempts: integer("max_restart_attempts").default(3),
   /** Дата создания токена */
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления токена */
@@ -98,6 +102,10 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   trackExecutionTime: true,
   /** Общее время выполнения в секундах */
   totalExecutionSeconds: true,
+  /** Флаг автоперезапуска при краше (0 = выключено, 1 = включено) */
+  autoRestart: true,
+  /** Максимальное количество попыток автоперезапуска подряд */
+  maxRestartAttempts: true,
 }).extend({
   /** Идентификатор владельца токена */
   ownerId: z.number().nullable().optional(),
@@ -121,6 +129,10 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   trackExecutionTime: z.number().min(0).max(1).default(0),
   /** Общее время выполнения в секундах */
   totalExecutionSeconds: z.number().min(0).default(0),
+  /** Флаг автоперезапуска при краше (0 = выключено, 1 = включено) */
+  autoRestart: z.number().min(0).max(1).default(0),
+  /** Максимальное количество попыток автоперезапуска подряд */
+  maxRestartAttempts: z.number().min(1).max(10).default(3),
 });
 
 /** Тип записи токена бота */

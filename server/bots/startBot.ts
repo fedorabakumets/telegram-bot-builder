@@ -48,6 +48,13 @@ import { normalizeProjectNameToFile } from "../files/normalizeFileName";
 import { storage } from "../storages/storage";
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { pendingLaunchIds } from '../terminal/setupBotProcessListeners';
+import {
+  getRestartDelay,
+  incrementRestartCounter,
+  resetRestartCounter,
+  getRestartCounter,
+  STABLE_UPTIME_MS,
+} from './botRestartManager';
 
 
 
@@ -299,6 +306,14 @@ export async function startBot(projectId: number, token: string, tokenId: number
     // Сохраняем процесс
     botProcesses.set(processKey, botProcess);
 
+    // Сбрасываем счётчик перезапусков если бот проработал стабильно 2 минуты
+    setTimeout(() => {
+      if (botProcesses.has(processKey)) {
+        resetRestartCounter(tokenId);
+        console.log(`✅ Счётчик перезапусков сброшен для бота ${tokenId} (стабильная работа)`);
+      }
+    }, STABLE_UPTIME_MS);
+
     // Рассылаем событие о запуске бота всем клиентам проекта
     broadcastProjectEvent(projectId, {
       type: 'bot-started',
@@ -396,6 +411,34 @@ export async function startBot(projectId: number, token: string, tokenId: number
         timestamp: new Date().toISOString(),
       });
       botProcesses.delete(processKey);
+
+      // Автоперезапуск только при краше (ненулевой код, без сигнала)
+      const isCrash = code !== null && code !== 0 && signal === null;
+      if (isCrash && (globalThis as any).__dbPoolActive !== false) {
+        try {
+          const tokenRecord = await storage.getBotToken(tokenId);
+          if (tokenRecord?.autoRestart === 1) {
+            const maxAttempts = tokenRecord.maxRestartAttempts ?? 3;
+            const delay = getRestartDelay(tokenId, maxAttempts);
+            if (delay !== null) {
+              incrementRestartCounter(tokenId);
+              const attempt = getRestartCounter(tokenId)?.attempts ?? 1;
+              console.log(`🔄 Автоперезапуск бота ${tokenId} через ${delay / 1000}с (попытка ${attempt}/${maxAttempts})`);
+              setTimeout(async () => {
+                // Проверяем что бот не был запущен вручную за это время
+                const currentInstance = await storage.getBotInstanceByToken(tokenId);
+                if (currentInstance?.status !== 'running') {
+                  await startBot(projectId, token, tokenId);
+                }
+              }, delay);
+            } else {
+              console.log(`❌ Автоперезапуск бота ${tokenId} исчерпан (${maxAttempts} попыток)`);
+            }
+          }
+        } catch (err) {
+          console.error('Ошибка автоперезапуска:', err);
+        }
+      }
     });
 
     return { success: true, processId };

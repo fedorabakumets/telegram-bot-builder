@@ -108,6 +108,7 @@ export function BotCard({ token, project, projectBotInfo, isThisTokenRunning }: 
           isBotRunning={isThisTokenRunning}
           currentElapsedSeconds={currentElapsedSeconds}
           allBotStatuses={allBotStatuses}
+          token={token}
           toggleDatabaseMutation={toggleDatabaseMutation}
         />
       </CardContent>

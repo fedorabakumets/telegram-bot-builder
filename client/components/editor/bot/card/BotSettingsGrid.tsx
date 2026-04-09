@@ -3,6 +3,7 @@
  *
  * Компонент объединяет все настройки бота в единую сетку:
  * - Переключатель базы данных
+ * - Переключатель автоперезапуска
  * - Таймер выполнения (только когда бот запущен)
  * - Список администраторов
  * - История запусков
@@ -11,10 +12,12 @@
  */
 
 import { BotDatabaseToggle } from './BotDatabaseToggle';
+import { BotAutoRestartToggle } from './BotAutoRestartToggle';
 import { BotExecutionTimer } from './BotExecutionTimer';
 import { BotAdminIds } from '../profile/BotAdminIds';
 import { BotLaunchHistory } from './BotLaunchHistory';
 import type { BotStatusResponse } from '../bot-types';
+import type { BotToken } from '@shared/schema';
 
 /** Пропсы сетки настроек бота */
 interface BotSettingsGridProps {
@@ -32,6 +35,8 @@ interface BotSettingsGridProps {
   currentElapsedSeconds: Record<number, number>;
   /** Статусы всех ботов */
   allBotStatuses: BotStatusResponse[];
+  /** Данные токена для настроек автоперезапуска */
+  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts'>;
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: {
     /** Флаг ожидания ответа */
@@ -54,10 +59,9 @@ export function BotSettingsGrid({
   isBotRunning,
   currentElapsedSeconds,
   allBotStatuses,
+  token,
   toggleDatabaseMutation,
 }: BotSettingsGridProps) {
-  const itemCount = isBotRunning ? 2 : 1;
-  const dbToggleClass = itemCount === 1 ? 'col-span-full' : '';
   const resolvedBotName = botName ?? `Бот ${tokenId}`;
 
   return (
@@ -67,7 +71,12 @@ export function BotSettingsGrid({
         tokenId={tokenId}
         userDatabaseEnabled={userDatabaseEnabled}
         toggleDatabaseMutation={toggleDatabaseMutation}
-        className={dbToggleClass}
+      />
+      <BotAutoRestartToggle
+        projectId={projectId}
+        tokenId={tokenId}
+        autoRestart={token.autoRestart}
+        maxRestartAttempts={token.maxRestartAttempts}
       />
       {isBotRunning && (
         <BotExecutionTimer

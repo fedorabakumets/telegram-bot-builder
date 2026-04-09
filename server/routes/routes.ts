@@ -1019,6 +1019,36 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  /**
+   * Переключение настроек автоперезапуска для токена бота
+   * PUT /api/projects/:projectId/tokens/:tokenId/auto-restart
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/auto-restart", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const { autoRestart, maxRestartAttempts } = req.body as {
+        autoRestart: number;
+        maxRestartAttempts: number;
+      };
+
+      if (autoRestart !== 0 && autoRestart !== 1) {
+        return res.status(400).json({ message: "autoRestart должен быть 0 или 1" });
+      }
+      if (maxRestartAttempts < 1 || maxRestartAttempts > 10) {
+        return res.status(400).json({ message: "maxRestartAttempts должен быть от 1 до 10" });
+      }
+
+      const updated = await storage.updateBotToken(tokenId, { autoRestart, maxRestartAttempts });
+      if (!updated) {
+        return res.status(404).json({ message: "Токен не найден" });
+      }
+
+      res.json({ success: true, autoRestart, maxRestartAttempts });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления настроек автоперезапуска" });
+    }
+  });
+
   // Set default token
   app.post("/api/projects/:projectId/tokens/:tokenId/set-default", async (req, res) => {
     try {
