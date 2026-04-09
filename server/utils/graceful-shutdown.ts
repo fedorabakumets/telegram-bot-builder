@@ -66,6 +66,32 @@ import { execSync } from "node:child_process";
  * @since 1.0.0
  */
 export async function shutdownAllBots(): Promise<void> {
+  if (globalThis.__dbPoolActive !== false) {
+    try {
+      const allInstances = await storage.getAllBotInstances();
+      for (const instance of allInstances) {
+        if (instance.status === 'running') {
+          /**
+           * Записываем маркер ДО убийства процессов — иначе обработчик exit
+           * в startBot.ts перезапишет errorMessage своим кодом ошибки.
+           * Используем специальный маркер вместо обычного сообщения об остановке,
+           * чтобы `restoreRunningBots` мог отличить "остановлен сервером" от
+           * "остановлен пользователем вручную" и восстановить бота после рестарта.
+           */
+          await storage.updateBotInstance(instance.id, {
+            status: 'stopped',
+            stoppedAt: new Date(),
+            errorMessage: '__server_restart__'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка обновления статуса экземпляров ботов:', error);
+    }
+  } else {
+    console.log('⚠️ Пропускаем обновление статуса ботов - пул соединений закрыт');
+  }
+
   console.log('🛑 Начинаем корректное завершение всех ботов...');
 
   /**
@@ -169,37 +195,6 @@ export async function shutdownAllBots(): Promise<void> {
    * и избежать попыток взаимодействия с уже завершенными процессами.
    */
   botProcesses.clear();
-
-  /**
-   * Этап 4: Обновление статусов ботов в базе данных (при активном пуле соединений)
-   *
-   * Если пул соединений с базой данных все еще активен, обновляем статусы
-   * всех запущенных экземпляров ботов на 'stopped'. Если пул соединений
-   * уже закрыт, пропускаем этот этап.
-   */
-  if (globalThis.__dbPoolActive !== false) {
-    try {
-      const allInstances = await storage.getAllBotInstances();
-      for (const instance of allInstances) {
-        if (instance.status === 'running') {
-          /**
-           * Используем специальный маркер вместо обычного сообщения об остановке,
-           * чтобы `restoreRunningBots` мог отличить "остановлен сервером" от
-           * "остановлен пользователем вручную" и восстановить бота после рестарта.
-           */
-          await storage.updateBotInstance(instance.id, {
-            status: 'stopped',
-            stoppedAt: new Date(),
-            errorMessage: '__server_restart__'
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Ошибка обновления статуса экземпляров ботов:', error);
-    }
-  } else {
-    console.log('⚠️ Пропускаем обновление статуса ботов - пул соединений закрыт');
-  }
 
   console.log('✅ Все боты корректно завершены');
 }
