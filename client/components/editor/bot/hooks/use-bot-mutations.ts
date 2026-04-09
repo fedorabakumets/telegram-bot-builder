@@ -135,10 +135,14 @@ export function useBotMutations({
   const createBotMutation = useMutation({
     mutationFn: (botData: BotToken & { projectId: number }) =>
       apiRequest('POST', `/api/projects/${botData.projectId}/tokens`, botData),
-    onSuccess: (_, vars) => {
+    onSuccess: (data, vars) => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/tokens`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/bot/info`] });
       toast({ title: 'Бот успешно добавлен', description: 'Информация о боте автоматически получена из Telegram' });
+      // Создаём терминальную вкладку для нового бота
+      if (onBotStarted && data?.id) {
+        onBotStarted(vars.projectId, data.id, vars.name || `Бот ${data.id}`);
+      }
       onBotAdded();
     },
     onError: (error: Error) => {
@@ -207,10 +211,15 @@ export function useBotMutations({
         projectId: targetProjectId,
       });
     },
-    onSuccess: (_, vars) => {
+    onSuccess: (data, vars) => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.targetProjectId}/tokens`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.targetProjectId}/bot/info`] });
       toast({ title: 'Бот успешно добавлен', description: 'Существующий токен привязан к проекту' });
+      // Создаём терминальную вкладку для привязанного бота
+      if (onBotStarted && data?.id) {
+        const source = allTokensFlatFull.find(t => t.id === vars.tokenId);
+        onBotStarted(vars.targetProjectId, data.id, source?.name || `Бот ${data.id}`);
+      }
       onBotAdded();
     },
     onError: (error: Error) => {
