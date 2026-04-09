@@ -3,11 +3,14 @@
  * @module bot/card/BotLaunchHistory
  */
 
-import { History, Circle, X } from "lucide-react";
-import type { BotLaunchHistory as BotLaunchHistoryType } from "@shared/schema";
-import { useLaunchHistory } from "../hooks/use-launch-history";
-import { formatExecutionTime } from "../contexts/bot-control-utils";
+import { useState } from 'react';
+import { History, Circle, X, FileText } from 'lucide-react';
+import type { BotLaunchHistory as BotLaunchHistoryType } from '@shared/schema';
+import { useLaunchHistory } from '../hooks/use-launch-history';
+import { formatExecutionTime } from '../contexts/bot-control-utils';
+import { LaunchLogsModal } from './LaunchLogsModal';
 
+/** Пропсы компонента истории запусков */
 interface BotLaunchHistoryProps {
   /** ID токена бота */
   tokenId: number;
@@ -19,12 +22,12 @@ interface BotLaunchHistoryProps {
  * @returns Отформатированная строка даты
  */
 function formatDate(date: Date | string | null): string {
-  if (!date) return "—";
-  return new Date(date).toLocaleString("ru-RU", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
+  if (!date) return '—';
+  return new Date(date).toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
@@ -50,19 +53,27 @@ function getDuration(
  * @returns JSX элемент
  */
 function StatusIcon({ status }: { status: string }) {
-  if (status === "running")
+  if (status === 'running')
     return <Circle className="w-2.5 h-2.5 fill-green-500 text-green-500 flex-shrink-0" />;
-  if (status === "error")
+  if (status === 'error')
     return <X className="w-2.5 h-2.5 text-red-500 flex-shrink-0" />;
   return <Circle className="w-2.5 h-2.5 fill-gray-400 text-gray-400 flex-shrink-0" />;
 }
 
+/** Пропсы строки запуска */
+interface LaunchRowProps {
+  /** Запись истории запуска */
+  record: BotLaunchHistoryType;
+  /** Колбэк открытия логов */
+  onShowLogs: (id: number, startedAt: Date | string | null) => void;
+}
+
 /**
- * Одна строка истории запуска
+ * Одна строка истории запуска с кнопкой просмотра логов
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-function LaunchRow({ record }: { record: BotLaunchHistoryType }) {
+function LaunchRow({ record, onShowLogs }: LaunchRowProps) {
   const duration = getDuration(record.startedAt, record.stoppedAt);
   return (
     <div className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -80,6 +91,13 @@ function LaunchRow({ record }: { record: BotLaunchHistoryType }) {
           </span>
         )}
       </span>
+      <button
+        onClick={() => onShowLogs(record.id, record.startedAt)}
+        className="flex-shrink-0 text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+        title="Показать логи"
+      >
+        <FileText className="w-3 h-3" />
+      </button>
     </div>
   );
 }
@@ -91,17 +109,40 @@ function LaunchRow({ record }: { record: BotLaunchHistoryType }) {
  */
 export function BotLaunchHistory({ tokenId }: BotLaunchHistoryProps) {
   const { history } = useLaunchHistory(tokenId);
+  const [selectedLaunchId, setSelectedLaunchId] = useState<number | null>(null);
+  const [selectedStartedAt, setSelectedStartedAt] = useState<Date | string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   if (history.length === 0) return null;
 
+  /**
+   * Открывает модалку с логами выбранного запуска
+   * @param id - ID запуска
+   * @param startedAt - Время запуска
+   */
+  const handleShowLogs = (id: number, startedAt: Date | string | null) => {
+    setSelectedLaunchId(id);
+    setSelectedStartedAt(startedAt);
+    setIsModalOpen(true);
+  };
+
   return (
-    <div className="flex flex-col gap-1.5 p-2.5 sm:p-3 rounded-lg border bg-muted/30 border-border/50 col-span-full">
-      <div className="flex items-center gap-2 mb-1">
-        <History className="w-3.5 h-3.5 text-muted-foreground" />
-        <span className="text-xs font-medium text-muted-foreground">История запусков</span>
+    <>
+      <div className="flex flex-col gap-1.5 p-2.5 sm:p-3 rounded-lg border bg-muted/30 border-border/50 col-span-full">
+        <div className="flex items-center gap-2 mb-1">
+          <History className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground">История запусков</span>
+        </div>
+        {history.slice(0, 5).map((record) => (
+          <LaunchRow key={record.id} record={record} onShowLogs={handleShowLogs} />
+        ))}
       </div>
-      {history.slice(0, 5).map((record) => (
-        <LaunchRow key={record.id} record={record} />
-      ))}
-    </div>
+      <LaunchLogsModal
+        launchId={selectedLaunchId}
+        startedAt={selectedStartedAt}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
   );
 }

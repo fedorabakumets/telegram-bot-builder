@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
 import { botTokens } from "./bot-tokens";
+import { botLaunchHistory } from "./bot-launch-history";
 
 /**
  * Таблица логов ботов — хранит строки вывода stdout/stderr/status
@@ -24,6 +25,9 @@ export const botLogs = pgTable("bot_logs", {
   tokenId: integer("token_id")
     .references(() => botTokens.id, { onDelete: "cascade" })
     .notNull(),
+  /** Идентификатор запуска (ссылка на bot_launch_history.id) */
+  launchId: integer("launch_id")
+    .references(() => botLaunchHistory.id, { onDelete: "set null" }),
   /** Содержимое строки лога */
   content: text("content").notNull(),
   /** Тип строки лога: stdout, stderr или status */
@@ -36,6 +40,8 @@ export const botLogs = pgTable("bot_logs", {
 export const insertBotLogSchema = createInsertSchema(botLogs).extend({
   /** Тип строки лога */
   type: z.enum(["stdout", "stderr", "status"]).default("stdout"),
+  /** Идентификатор запуска (опционально) */
+  launchId: z.number().optional(),
 });
 
 /** Тип записи лога бота */

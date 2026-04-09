@@ -47,6 +47,7 @@ import { normalizeProjectNameToFile } from "../files/normalizeFileName";
  */
 import { storage } from "../storages/storage";
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
+import { pendingLaunchIds } from '../terminal/setupBotProcessListeners';
 
 
 
@@ -274,9 +275,6 @@ export async function startBot(projectId: number, token: string, tokenId: number
 
     const processId = botProcess.pid?.toString();
 
-    // Сохраняем процесс
-    botProcesses.set(processKey, botProcess);
-
     // Создаём запись в истории запусков
     let launchId: number | undefined;
     try {
@@ -290,6 +288,14 @@ export async function startBot(projectId: number, token: string, tokenId: number
     } catch (historyError) {
       console.error('Ошибка создания записи истории запуска:', historyError);
     }
+
+    // Регистрируем launchId до сохранения процесса, чтобы слушатель его подхватил
+    if (launchId !== undefined) {
+      pendingLaunchIds.set(processKey, launchId);
+    }
+
+    // Сохраняем процесс
+    botProcesses.set(processKey, botProcess);
 
     // Рассылаем событие о запуске бота всем клиентам проекта
     broadcastProjectEvent(projectId, {

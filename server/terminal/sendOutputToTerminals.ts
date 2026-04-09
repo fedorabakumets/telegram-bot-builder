@@ -14,12 +14,14 @@ import { addToBuffer } from "./botLogsBuffer";
  * @param type - Тип вывода: stdout, stderr или status
  * @param projectId - Идентификатор проекта
  * @param tokenId - Идентификатор токена
+ * @param launchId - Идентификатор запуска (опционально)
  */
 export function sendOutputToTerminals(
   content: string,
   type: "stdout" | "stderr" | "status",
   projectId: number,
-  tokenId: number
+  tokenId: number,
+  launchId?: number
 ): void {
   const connectionKey = `${projectId}_${tokenId}`;
   const connections = activeConnections.get(connectionKey);
@@ -41,5 +43,5 @@ export function sendOutputToTerminals(
   }
 
   // Добавляем строку в буфер для последующей записи в БД
-  addToBuffer(projectId, tokenId, content, type);
+  addToBuffer(projectId, tokenId, content, type, launchId);
 }

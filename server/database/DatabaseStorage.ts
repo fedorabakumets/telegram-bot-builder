@@ -1296,4 +1296,17 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(botLaunchHistory.startedAt))
       .limit(limit);
   }
+
+  /**
+   * Получить логи конкретного запуска бота
+   * @param launchId - ID записи в bot_launch_history
+   * @returns Массив записей логов
+   */
+  async getBotLogsByLaunch(launchId: number): Promise<BotLog[]> {
+    return await this.db
+      .select()
+      .from(botLogs)
+      .where(eq(botLogs.launchId, launchId))
+      .orderBy(asc(botLogs.timestamp));
+  }
 }

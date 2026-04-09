@@ -6,3 +6,4 @@ export { useBotQueries } from './use-bot-queries';
 export { useBotMutations } from './use-bot-mutations';
 export { useBotProjectEvents } from './use-bot-project-events';
 export { useLaunchHistory } from './use-launch-history';
+export { useLaunchLogs } from './use-launch-logs';

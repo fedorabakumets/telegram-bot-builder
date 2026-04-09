@@ -680,6 +680,13 @@ export interface IStorage {
    * @returns Массив записей истории запусков
    */
   getLaunchHistory(tokenId: number, limit?: number): Promise<BotLaunchHistory[]>;
+
+  /**
+   * Получить логи конкретного запуска бота
+   * @param launchId - ID записи в bot_launch_history
+   * @returns Массив записей логов
+   */
+  getBotLogsByLaunch(launchId: number): Promise<BotLog[]>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

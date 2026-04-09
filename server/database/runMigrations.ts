@@ -39,6 +39,14 @@ const CREATE_BOT_LAUNCH_HISTORY_TABLE = `
 `;
 
 /**
+ * SQL для добавления колонки launch_id в таблицу bot_logs
+ */
+const ADD_LAUNCH_ID_TO_BOT_LOGS = `
+  ALTER TABLE bot_logs ADD COLUMN IF NOT EXISTS launch_id INTEGER REFERENCES bot_launch_history(id) ON DELETE SET NULL;
+  CREATE INDEX IF NOT EXISTS idx_bot_logs_launch_id ON bot_logs(launch_id);
+`;
+
+/**
  * Запускает все необходимые миграции базы данных
  * @returns Promise<void>
  */
@@ -49,6 +57,8 @@ export async function runMigrations(): Promise<void> {
     console.log("[Migrations] Таблица bot_logs готова");
     await client.query(CREATE_BOT_LAUNCH_HISTORY_TABLE);
     console.log("[Migrations] Таблица bot_launch_history готова");
+    await client.query(ADD_LAUNCH_ID_TO_BOT_LOGS);
+    console.log("[Migrations] Колонка launch_id в bot_logs готова");
   } catch (err) {
     console.error("[Migrations] Ошибка выполнения миграций:", err);
   } finally {

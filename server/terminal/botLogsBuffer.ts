@@ -5,11 +5,19 @@
 
 import { db } from "../database/db";
 import { botLogs } from "@shared/schema";
-import { eq, and, asc, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import type { InsertBotLog } from "@shared/schema";
 
-/** Буфер: ключ `${projectId}_${tokenId}` → массив записей для вставки */
-const buffer = new Map<string, InsertBotLog[]>();
+/** Структура слота буфера для одного процесса */
+interface BufferSlot {
+  /** Накопленные записи для вставки */
+  entries: InsertBotLog[];
+  /** Идентификатор текущего запуска */
+  launchId?: number;
+}
+
+/** Буфер: ключ `${projectId}_${tokenId}` → слот с записями и launchId */
+const buffer = new Map<string, BufferSlot>();
 
 /** Идентификатор таймера периодического сброса */
 let flushTimerId: ReturnType<typeof setInterval> | null = null;
@@ -26,18 +34,22 @@ const FLUSH_INTERVAL_MS = 5000;
  * @param tokenId - Идентификатор токена
  * @param content - Содержимое строки лога
  * @param type - Тип строки лога
+ * @param launchId - Идентификатор запуска (опционально)
  */
 export function addToBuffer(
   projectId: number,
   tokenId: number,
   content: string,
-  type: "stdout" | "stderr" | "status"
+  type: "stdout" | "stderr" | "status",
+  launchId?: number
 ): void {
   const key = `${projectId}_${tokenId}`;
   if (!buffer.has(key)) {
-    buffer.set(key, []);
+    buffer.set(key, { entries: [], launchId });
   }
-  buffer.get(key)!.push({ projectId, tokenId, content, type });
+  const slot = buffer.get(key)!;
+  if (launchId !== undefined) slot.launchId = launchId;
+  slot.entries.push({ projectId, tokenId, content, type, launchId: slot.launchId });
 }
 
 /**
@@ -46,10 +58,11 @@ export function addToBuffer(
  * @returns Promise<void>
  */
 export async function flushBuffer(processKey: string): Promise<void> {
-  const entries = buffer.get(processKey);
-  if (!entries || entries.length === 0) return;
+  const slot = buffer.get(processKey);
+  if (!slot || slot.entries.length === 0) return;
 
-  buffer.set(processKey, []);
+  const entries = slot.entries;
+  buffer.set(processKey, { entries: [], launchId: slot.launchId });
 
   if (globalThis.__dbPoolActive === false) return;
 
