@@ -6,6 +6,13 @@
 
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { RefreshCw } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -96,23 +103,27 @@ export function BotAutoRestartToggle({
       </Label>
 
       {localEnabled && (
-        <select
-          value={localAttempts}
-          onChange={(e) => {
-            const ma = parseInt(e.target.value);
+        /** Выпадающий список выбора максимального числа попыток перезапуска */
+        <Select
+          value={String(localAttempts)}
+          onValueChange={(val) => {
+            const ma = parseInt(val);
             setLocalAttempts(ma);
             mutation.mutate({ ar: 1, ma });
           }}
           disabled={mutation.isPending}
-          className="text-xs bg-transparent border border-blue-500/30 rounded px-1 py-0.5 text-blue-700 dark:text-blue-300 cursor-pointer"
-          aria-label="Максимум попыток перезапуска"
         >
-          {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-            <option key={n} value={n}>
-              {n}x
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="h-6 w-14 text-xs border-blue-500/30 bg-transparent text-blue-700 dark:text-blue-300">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+              <SelectItem key={n} value={String(n)} className="text-xs">
+                {n}x
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
 
       <Switch
