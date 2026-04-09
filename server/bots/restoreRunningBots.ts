@@ -21,13 +21,17 @@ export async function restoreRunningBots(): Promise<void> {
 
     const allInstances = await storage.getAllBotInstances();
     /**
-     * Ищем боты для восстановления по двум условиям:
-     * 1. `status === 'running'` — бот был запущен, но сервер упал без graceful shutdown
-     * 2. `errorMessage === '__server_restart__'` — бот был корректно остановлен сервером
-     *    (graceful shutdown) и помечен маркером для последующего восстановления
+     * Ищем боты для восстановления по трём условиям:
+     * 1. `status === 'running'` — бот был запущен, сервер упал без graceful shutdown
+     * 2. `errorMessage === '__server_restart__'` — graceful shutdown записал маркер
+     * 3. `status === 'stopped'` + `stoppedAt === null` — процесс убит внезапно
+     *    (закрытие терминала, kill -9), stopped_at не успел записаться
      */
     const runningInstances = allInstances.filter(
-      (i) => i.status === "running" || i.errorMessage === "__server_restart__"
+      (i) =>
+        i.status === "running" ||
+        i.errorMessage === "__server_restart__" ||
+        (i.status === "stopped" && !i.stoppedAt)
     );
 
     if (runningInstances.length === 0) {
