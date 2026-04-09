@@ -67,9 +67,13 @@ interface ActiveTerminalsContextType {
   setActiveTerminalById: (id: string) => void;
   /** Открыть вкладку с историей запуска */
   openHistoryTab: (params: OpenHistoryTabParams) => void;
-  /** Глобальный масштаб текста терминала (общий для всех вкладок) */
+  /** Получить масштаб для конкретной вкладки по её tabId */
+  getTabScale: (tabId: string) => number;
+  /** Изменить масштаб конкретной вкладки */
+  adjustTabScale: (tabId: string, factor: number) => void;
+  /** @deprecated Используй getTabScale/adjustTabScale. Оставлен для совместимости */
   terminalScale: number;
-  /** Изменить масштаб терминала */
+  /** @deprecated Используй getTabScale/adjustTabScale. Оставлен для совместимости */
   adjustTerminalScale: (factor: number) => void;
 }
 
@@ -83,11 +87,23 @@ const ActiveTerminalsContext = createContext<ActiveTerminalsContextType | null>(
 export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
   const [terminals, setTerminals] = useState<TerminalInfo[]>([]);
   const [activeTerminalId, setActiveTerminalId] = useState<string | null>(null);
-  const [terminalScale, setTerminalScale] = useState<number>(1);
+  /** Масштаб по вкладкам: tabId → scale */
+  const [tabScales, setTabScales] = useState<Record<string, number>>({});
 
-  const adjustTerminalScale = useCallback((factor: number) => {
-    setTerminalScale(prev => Math.max(0.5, Math.min(2, prev * factor)));
+  const getTabScale = useCallback((tabId: string) => tabScales[tabId] ?? 1, [tabScales]);
+
+  const adjustTabScale = useCallback((tabId: string, factor: number) => {
+    setTabScales(prev => ({
+      ...prev,
+      [tabId]: Math.max(0.5, Math.min(2, (prev[tabId] ?? 1) * factor)),
+    }));
   }, []);
+
+  // Совместимость со старым API — работает с активной вкладкой
+  const terminalScale = activeTerminalId ? (tabScales[activeTerminalId] ?? 1) : 1;
+  const adjustTerminalScale = useCallback((factor: number) => {
+    if (activeTerminalId) adjustTabScale(activeTerminalId, factor);
+  }, [activeTerminalId, adjustTabScale]);
 
   const addTerminal = useCallback((info: TerminalInfo) => {
     setTerminals(prev => {
@@ -153,6 +169,7 @@ export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
       terminals, activeTerminalId,
       addTerminal, removeTerminal, removeTerminalById,
       updateTerminalStatus, setActiveTerminal, setActiveTerminalById, openHistoryTab,
+      getTabScale, adjustTabScale,
       terminalScale, adjustTerminalScale,
     }}>
       {children}

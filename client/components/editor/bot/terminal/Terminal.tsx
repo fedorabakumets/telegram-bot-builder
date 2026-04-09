@@ -7,7 +7,7 @@
  * @module Terminal
  */
 
-import { forwardRef, useImperativeHandle } from 'react';
+import { forwardRef, useImperativeHandle, useCallback } from 'react';
 import { TerminalHeader } from './TerminalHeader';
 import { TerminalOutput } from './TerminalOutput';
 import { TerminalFilterBar } from './TerminalFilterBar';
@@ -46,8 +46,13 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   // Хук изменения размера (используется для будущего ресайза)
   useTerminalResize({ fullSize: true });
 
-  // Глобальный масштаб из контекста (общий для всех вкладок)
-  const { terminalScale: scale, adjustTerminalScale: adjustScale } = useActiveTerminals();
+  // Масштаб для этой конкретной вкладки
+  const tabId = projectId && tokenId ? `${projectId}_${tokenId}` : null;
+  const { getTabScale, adjustTabScale } = useActiveTerminals();
+  const scale = tabId ? getTabScale(tabId) : 1;
+  const adjustScale = useCallback((factor: number) => {
+    if (tabId) adjustTabScale(tabId, factor);
+  }, [tabId, adjustTabScale]);
 
   // Хук строк
   const { lines, outputContainerRef, setLines } = useTerminalLines(logKey);

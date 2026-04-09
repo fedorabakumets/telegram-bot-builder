@@ -6,7 +6,7 @@
  * @module bot/terminal/LaunchHistoryViewer
  */
 
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { useLaunchLogs } from '../hooks/use-launch-logs';
 import { useTerminalTheme } from './useTerminalTheme';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
@@ -62,7 +62,11 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
     terminalBgClass, terminalTextClass, headerBgClass,
     buttonTextColorClass, buttonHoverClass, placeholderTextClass, stderrTextClass,
   } = useTerminalTheme();
-  const { terminalScale: scale, adjustTerminalScale: adjustScale } = useActiveTerminals();
+  // Масштаб для этой конкретной вкладки истории
+  const { getTabScale, adjustTabScale } = useActiveTerminals();
+  const historyTabId = `history_${launchId}`;
+  const scale = getTabScale(historyTabId);
+  const adjustScale = useCallback((factor: number) => adjustTabScale(historyTabId, factor), [historyTabId, adjustTabScale]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const lines = logs.map(botLogToLine);
