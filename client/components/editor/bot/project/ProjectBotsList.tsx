@@ -28,7 +28,7 @@ interface ProjectBotsListProps {
  * Список ботов проекта
  */
 export function ProjectBotsList({ project, projectTokens, projectBotInfo }: ProjectBotsListProps) {
-  const { allBotStatuses } = useBotControl();
+  const { allBotStatuses, currentElapsedSeconds } = useBotControl();
 
   return (
     <div className="grid gap-4">
@@ -36,7 +36,10 @@ export function ProjectBotsList({ project, projectTokens, projectBotInfo }: Proj
         const tokenStatus = allBotStatuses.find(
           s => s.tokenId === token.id || s.instance?.tokenId === token.id,
         );
-        const isThisTokenRunning = tokenStatus?.status === 'running';
+        // Считаем бота запущенным если статус running ИЛИ есть локальный таймер (запущен только что)
+        const isThisTokenRunning =
+          tokenStatus?.status === 'running' ||
+          (currentElapsedSeconds[token.id] !== undefined && currentElapsedSeconds[token.id] > 0);
 
         return (
           <BotCard
