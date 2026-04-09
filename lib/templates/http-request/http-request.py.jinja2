@@ -15,8 +15,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
 
     # Подставляем переменные в URL
     _url = "{{ url }}"
-    for _k, _v in _all_vars.items():
-        _url = _url.replace("{" + _k + "}", str(_v))
+    _url = replace_variables_in_text(_url, _all_vars, {})
 
     {% if queryParams %}
     # Query параметры
@@ -71,8 +70,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     try:
         import json as _json_mod
         _body_raw_str = """{{ body }}"""
-        for _k, _v in _all_vars.items():
-            _body_raw_str = _body_raw_str.replace("{" + _k + "}", str(_v))
+        _body_raw_str = replace_variables_in_text(_body_raw_str, _all_vars, {})
         {% if bodyFormat == 'json' %}
         _body = _json_mod.loads(_body_raw_str)
         {% elif bodyFormat == 'form-urlencoded' %}
