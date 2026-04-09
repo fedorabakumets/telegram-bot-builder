@@ -48,6 +48,7 @@ import { normalizeProjectNameToFile } from "../files/normalizeFileName";
 import { storage } from "../storages/storage";
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { pendingLaunchIds } from '../terminal/setupBotProcessListeners';
+import { clearBotLogs } from '../terminal/botLogsBuffer';
 import {
   getRestartDelay,
   incrementRestartCounter,
@@ -258,6 +259,9 @@ export async function startBot(projectId: number, token: string, tokenId: number
       console.log('⚠️ Не удалось установить зависимости (продолжаем запуск):', pipError instanceof Error ? pipError.message : pipError);
     }
     }
+
+    // Очищаем логи предыдущего запуска перед стартом нового
+    await clearBotLogs(projectId, tokenId);
 
     // Запускаем бота
     const pythonPath = process.platform === 'win32'

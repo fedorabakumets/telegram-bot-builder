@@ -175,3 +175,24 @@ export function stopFlushTimer(): void {
     console.log("[BotLogsBuffer] Таймер сброса буфера остановлен");
   }
 }
+
+/**
+ * Удаляет все логи бота из БД и очищает буфер.
+ * Вызывается перед запуском нового экземпляра бота.
+ * @param projectId - Идентификатор проекта
+ * @param tokenId - Идентификатор токена
+ */
+export async function clearBotLogs(projectId: number, tokenId: number): Promise<void> {
+  const key = `${projectId}_${tokenId}`;
+  // Очищаем in-memory буфер
+  buffer.delete(key);
+
+  if (globalThis.__dbPoolActive === false) return;
+  try {
+    await db.execute(sql`
+      DELETE FROM bot_logs WHERE project_id = ${projectId} AND token_id = ${tokenId}
+    `);
+  } catch (err) {
+    console.error(`[BotLogsBuffer] Ошибка очистки логов для ${key}:`, err);
+  }
+}
