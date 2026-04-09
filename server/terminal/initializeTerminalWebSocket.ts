@@ -69,8 +69,9 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
       const session = (request as any).session;
       const userId: number | undefined = session?.telegramUser?.id;
       if (!userId) {
-        console.error("Подписка на все проекты: пользователь не авторизован");
-        ws.close(4003, "Требуется авторизация");
+        // Гостевой режим — соединение принято, но события не рассылаются
+        ws.on("close", () => {});
+        ws.on("error", () => ws.close());
         return;
       }
       const allKey = `user_${userId}`;
