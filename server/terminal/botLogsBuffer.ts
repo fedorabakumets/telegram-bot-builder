@@ -7,6 +7,7 @@ import { db } from "../database/db";
 import { botLogs } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import type { InsertBotLog } from "@shared/schema";
+import { startLogsCleanupTimer, stopLogsCleanupTimer } from "../database/cleanupOldLogs";
 
 /** Структура слота буфера для одного процесса */
 interface BufferSlot {
@@ -147,6 +148,9 @@ export function startFlushTimer(): void {
     }
   }, FLUSH_INTERVAL_MS);
 
+  // Запускаем периодическую TTL-очистку логов
+  startLogsCleanupTimer();
+
   console.log("[BotLogsBuffer] Таймер сброса буфера запущен");
 }
 
@@ -158,6 +162,7 @@ export function stopFlushTimer(): void {
   if (flushTimerId !== null) {
     clearInterval(flushTimerId);
     flushTimerId = null;
+    stopLogsCleanupTimer();
     console.log("[BotLogsBuffer] Таймер сброса буфера остановлен");
   }
 }
