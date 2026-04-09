@@ -101,8 +101,13 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
       onBotStarted?.(pid, tokenId, botName);
     },
     onBotStopped: (pid, tokenId) => {
-      // Сбрасываем локальное время при остановке
+      // Сбрасываем локальное время и счётчик при остановке
       delete localStartTimesRef.current[tokenId];
+      setCurrentElapsedSeconds(prev => {
+        const next = { ...prev };
+        delete next[tokenId];
+        return next;
+      });
       onBotStopped?.(pid, tokenId);
     },
     onBotDeleted,
