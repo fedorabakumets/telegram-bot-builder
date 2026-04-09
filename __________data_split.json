@@ -1,7 +1,17 @@
 {
+  "version": 2,
   "sheets": [
     {
-      "id": "4820deab-90c2-4eda-a769-888af091ce10",
+      "createdAt": "2026-04-07T03:57:09.638Z",
+      "updatedAt": "2026-04-08T23:09:27.110Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "id": "682dbffe-face-43b0-a0ca-8fafd07da262",
       "name": "Обменники — часть 1",
       "nodes": [
         {
@@ -38,9 +48,7 @@
             "messageText": "✅ Регистрируйся на ByBit, вводи промокод и получи массу привилегий и бонусов, внеси депозит и получи до 1000%\n(размер вознаграждения зависит от суммы депозита) \n\nПромокод - PWLPREV",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057415735-873070286-photo_2025-11-15_13-54-34.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "q8O2eOlMSvU8I38mABaOl_keyboard_1774974624659_9fdwh1de4_dup_1775330630989_rhqqihfkc",
             "resizeKeyboard": true,
@@ -123,9 +131,7 @@
             "messageText": "✅Проверенный магазин товаров для арбитража криптовалют.\nЗдесь вы найдете:\n\n💳 Виртуальные карты\n👤 Верификации, \n🪪 Отрисовка документов\n📱 Аренда номеров\n👛 Кошельки\n🔰 Криптобиржи\n🔓 Помощь с разблокировками \n♻️ И многое другое вы найдете здесь.",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057415766-384822542-photo_2026-02-27_11-03-11.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "CDDI_a_PKYOWH80wa1HXw_keyboard_1774974624659_xhna7eff2_dup_1775330630989_axo9c0wvc",
             "resizeKeyboard": true,
@@ -207,9 +213,7 @@
             "messageText": "Покупай крипту по P2P и храни её прямо там же — в удобном Telegram-боте",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057415735-897940958-photo_2026-02-27_11-11-42.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "4aK7tBp04cV48AdVkFcwy_keyboard_1774974624659_pagf8tkcj_dup_1775330630989_l95zvtddo",
             "resizeKeyboard": true,
@@ -312,9 +316,7 @@
             "messageText": "Antarctic Wallet - легальный криптокошелёк с VASP-лицензией и AML-защитой 🔒\n\nТеперь можно платить криптой как обычными деньгами — просто сканируешь QR-код в магазине.\n\nБез лишних переводов и вывода на карту.\n\nВ нынешних реалиях — максимально удобно 👌",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775055559845-395674630-photo_2025-02-18_14-53-52.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "-bLSyxREMI9woziy1YVfT_keyboard_1774974624659_4ozfg282k_dup_1775330630989_kzbrf5oox",
             "resizeKeyboard": true,
@@ -331,7 +333,16 @@
       ]
     },
     {
-      "id": "58adc9d4-85a2-48d2-bc93-fe7432c398cd",
+      "createdAt": "2026-04-07T03:57:09.638Z",
+      "updatedAt": "2026-04-08T23:09:27.110Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "id": "2d33ece1-3109-407b-a2e1-2b766fa524f9",
       "name": "Обменники — часть 2",
       "nodes": [
         {
@@ -420,9 +431,7 @@
             "messageText": "⚡️ Быстрые выплаты — деньги приходят оперативно \n💰Ниже комиссия при сделках через бота — больше остаётся тебе \n🔗Реферальная программа — приглашай друзей и получай процент с их сделок \n✅Автоматизация ключевых шагов — бот выдаёт кошелёк автоматически и присылает уведомление о подтверждении транзакции \n🐾 Удобный интерфейс — простые шаги без лишних действий \n🏃🏻‍♂️ Быстрая поддержка — подключаемся при необходимости, помогаем оперативно",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057415728-203675767-photo_2026-02-27_11-15-09.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "f_Cp9YJKmXokG-Ub2l7Fp_keyboard_1774974624659_kg950woyi_dup_1775330630989_y27hwyetv",
             "resizeKeyboard": true,
@@ -576,9 +585,7 @@
             "messageText": "NC Wallet сделает ваше взаимодействие с криптовалютой безопаснее и проще, наслаждайтесь первым в мире кошельком без комиссий!",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775056616456-223869753-photo_2026-02-27_11-05-18.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "LUQKuMleTf_AkZK-NdrRp_keyboard_1774974624659_latgmnrcq_dup_1775330630989_l0784uldr",
             "resizeKeyboard": true,
@@ -643,7 +650,16 @@
       ]
     },
     {
-      "id": "4e33328a-55c0-45b1-8038-ff2301fd9f52",
+      "createdAt": "2026-04-07T03:57:09.638Z",
+      "updatedAt": "2026-04-08T23:09:27.110Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "id": "9058dded-2124-433b-925b-55373b906880",
       "name": "Обменники — часть 3",
       "nodes": [
         {
@@ -656,9 +672,7 @@
             "messageText": "Здесь ты найдёшь проверенные обменники, сможешь сравнить скорость обмена, комиссии и выбрать подходящий вариант на самых выгодных условиях.",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057415769-276604871-photo_2025-11-12_20-48-41.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "start_keyboard_1774974624659_mvun7q4ps_dup_1775330630989_e14cws36e",
             "resizeKeyboard": true,
@@ -976,9 +990,7 @@
             "messageText": "Вы можете воспользоваться обменниками в Telegram или зайти на сайты и выбрать самое выгодное предложение.",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057415733-535809870-photo_2026-02-27_11-16-48.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "85iBN08ZTPeZ8UN7rT2la_keyboard_1774974624658_krt7jox40_dup_1775330630989_2ogq0z0s1",
             "resizeKeyboard": true,
@@ -1069,9 +1081,7 @@
             "messageText": "Здесь вы найдёте проверенные сайты для покупки криптовалюты.\n\nВыбирайте самое выгодное для себя предложение.",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775056639383-554436912-photo_2026-02-27_11-16-48.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "PUS-Fd5aAJ98QLk-ishTU_keyboard_1774974624659_xpxexguhg_dup_1775330630989_0edu3t58h",
             "resizeKeyboard": true,
@@ -1286,7 +1296,16 @@
       ]
     },
     {
-      "id": "768508f6-c213-4207-a9c6-0ad4d77231b7",
+      "createdAt": "2026-04-07T03:57:09.638Z",
+      "updatedAt": "2026-04-08T23:09:27.110Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "id": "89186ec1-2f46-405e-87ee-d2aeaab48eb2",
       "name": "Обменники — часть 4",
       "nodes": [
         {
@@ -1300,9 +1319,7 @@
             "messageText": "✅ Реквизиты всегда в наличии\n✨ RUB ↔️ BTC/LTC/XMR за минуты\n💸 Кешбек до 2.5% на все сделки!\n💰 Подарок: купон SCOOBY (200₽)\n📌 Надёжно с 2022 года\n🛎 Быстрая поддержка",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057579025-981914035-photo_2026-02-27_11-52-08.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "SufEBj6f0TVeYbH8nu4ca_keyboard_1774974624659_6nfziivmn_dup_1775330630989_q9nfn2wzu",
             "resizeKeyboard": true,
@@ -1384,9 +1401,7 @@
             "messageText": "📩 Обмен в личных сообщениях, меняем даже от 50 рублей!\n🎓 Бесплатные консультации\n⭐️ 1000+ довольных клиентов, отзвов и живой чат\n🚀 Мы больше чем просто обмен\nДоверие и скорость обслуживания, которые делают нас лидерами на рынке.",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057536270-458483115-photo_2026-02-27_11-55-46.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "bH89Jz9E1foI-54dxfVQ5_keyboard_1774974624659_ei41twqwn_dup_1775330630989_masc3dice",
             "resizeKeyboard": true,
@@ -1468,9 +1483,7 @@
             "messageText": "🚀 Быстрый обмен\n✅ надежный сервис\n⭐️ Минимальную комиссию 🟢Круглосуточную техническую поддержку.\n👛 Встроенный кошеле\n💸 Акции для пользователей",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057502984-390152940-photo_2026-02-27_11-58-12.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "OnEnxQgo0H5pDIDyHuzLb_keyboard_1774974624659_g0l34zaqs_dup_1775330630989_0cwk9no4h",
             "resizeKeyboard": true,
@@ -1552,9 +1565,7 @@
             "messageText": "😎 Топовый сервис\n⚡️ Обмен в среднем до 10 минут\n💰 Крутые курсы\n🧩 Полная приватность без KYC/AML\n💳 Удобная оплата\n🟢 Реквы всегда живые\n🔥 Плюшки и скидки активным клиентам",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057464208-217356691-photo_2026-02-27_11-59-58.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "hqDUnZpbhQjn68O6dvBXy_keyboard_1774974624659_7zdv4d21v_dup_1775330630989_0pl7vn7qa",
             "resizeKeyboard": true,
@@ -1628,7 +1639,16 @@
       ]
     },
     {
-      "id": "74efb379-b6c6-492a-a7a4-ac8da84c0121",
+      "createdAt": "2026-04-07T03:57:09.638Z",
+      "updatedAt": "2026-04-08T23:09:27.110Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "id": "9cc2a8c1-eec2-471a-8ccd-8873ce84548f",
       "name": "Обменники — часть 5",
       "nodes": [
         {
@@ -1642,9 +1662,7 @@
             "messageText": "⚡️ Быстрая отправка средств \n💰Низкие комиссии \n✅ Реквизиты всегда в наличии \n🐾 Удобный интерфейс \n🏃🏻‍♂️ Быстрая и оперативная поддержка поможет по любому вопросу",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775069368095-727248943-photo_2026-04-01_21-49-04.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "v6dI1-Nnpd9ZeAw8IY5ee_keyboard_1774974624659_163hopidk_dup_1775330630989_aax2bpggu",
             "resizeKeyboard": true,
@@ -1726,9 +1744,7 @@
             "messageText": "⚠️ Обмен работает 24/7 без перебоев\n✈️ Гарантируем скорость: наши транзакции не зависают в мемпуле, а долетают до счетов\n💰 Выгоднее некуда — впечатляюще низкие комиссии на обмен!\n♻️Мультивалютная системы\n✅Скидки, кэшбэки и многое другое",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775069038342-553795217-___________________________183_.png"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "URN9S7Fy5y7VDLkj_GSOh_keyboard_1774974624659_7daei498w_dup_1775330630989_732l8cs39",
             "resizeKeyboard": true,
@@ -1810,9 +1826,7 @@
             "messageText": "💱 Минимальные комиссии\n💳 Рабочие реквизиты всегда в наличии,\n💰 Моментальная отправка без «доплат за скорость»\n👍 Без AML и KYC,\n🤝 Честный расчёт без скрытых условий.\n\n🏷 Промокод SALE30 - срежь до 30% комиссии.\nКаждый рубль экономии - твоя прибыль.",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057135254-428927843-photo_2026-02-27_12-08-05.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "eriR-M4qvolmZmNTo-CVN_keyboard_1774974624659_jgg93d8no_dup_1775330630989_8g9msk3lg",
             "resizeKeyboard": true,
@@ -1894,9 +1908,7 @@
             "messageText": "🔥 Стабильная работа 24/7 \n✅ Отсутствует регистрации и верификации карты/документов\n💸 Система быстрых платежей \n🚀 Мгновенная обработка заявки \n🔗 Имеется реферальная система\n⚠️ Отсутствие проверок AML/KYC\n👛 Розыгрыш 15000₽ каждую  \nнеделю для наших пользователей",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775056804220-135025866-photo_2026-02-27_12-22-52.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "7eWaa90YuXM8mmAhFi8ur_keyboard_1774974624659_nhaf1kjxa_dup_1775330630989_fdbyqjvma",
             "resizeKeyboard": true,
@@ -1970,7 +1982,16 @@
       ]
     },
     {
-      "id": "dd341c92-eb20-4c80-8627-5b9b3578722c",
+      "createdAt": "2026-04-07T03:57:09.638Z",
+      "updatedAt": "2026-04-08T23:09:27.110Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "id": "e8988383-c74e-4ddf-9084-ab310ff6296c",
       "name": "Обменники — часть 6",
       "nodes": [
         {
@@ -1984,9 +2005,7 @@
             "messageText": "😎 Хорошая репутация\n🚀 Обмен проходит в течение 10-ти минут.\n💰 Выгодные курсы\n🌚 Полная конфиденциальность при проведении сделки, без KYC и AML.\n💳 Удобная система оплаты \n🟢 Реквизиты всегда в наличии \n💸 Скидки и акции для клиентов",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057058430-758025850-photo_2026-02-27_12-16-15.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "WAf9gve0Tt19zAGxXROdT_keyboard_1774974624659_plz2jka84_dup_1775330630989_dp3hiemyx",
             "resizeKeyboard": true,
@@ -2079,9 +2098,7 @@
             "messageText": "⚡️Моментальный обмен \n💰 Каждый первый обмен в каждом месяце, со скидкой 10%\n💲КЭШБЭК — при покупке в боте на сумму от 2500р\n💸 Каждый 7-й обмен вам возвращается кэшбек",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775056804708-325252264-photo_2026-02-27_12-26-29.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "sfty2HanOmKU31WSOO2jt_keyboard_1774974624659_7mvfuhss2_dup_1775330630989_kfbenukxc",
             "resizeKeyboard": true,
@@ -2163,9 +2180,7 @@
             "messageText": "✅Наилучший курс на рынке – максимальная выгода для Вас;\n✅Быстрые операции – мгновенные сделки без задержек;\n✅Безопасность – ваши средства под надежной защитой. \n✅Чем выше сумма - тем ниже%\n✅Профессиональная поддержка и консультации",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775056804240-812205537-photo_2026-02-27_12-28-50.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "b_Tyo9JqA0qWNC7xvEzH9_keyboard_1774974624659_8fglxaim4_dup_1775330630989_8zwj9s5ce",
             "resizeKeyboard": true,
@@ -2247,9 +2262,7 @@
             "messageText": "💵Бонусная система\n👛Кошелек для хранения крипты!\n💱Моментальный обмен крипты!",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775056804801-154180137-photo_2026-02-27_12-30-51.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "Q9H2iY_J6d0fcIpKanFOK_keyboard_1774974624659_8jtvewozu_dup_1775330630989_u5nvew2rh",
             "resizeKeyboard": true,
@@ -2319,7 +2332,16 @@
       ]
     },
     {
-      "id": "890fd416-1194-4251-91e6-a4ee12efea4b",
+      "createdAt": "2026-04-07T03:57:09.638Z",
+      "updatedAt": "2026-04-08T23:09:27.110Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "id": "a594cbd2-8a1e-44aa-8e54-7d80f3aaf9ff",
       "name": "Обменники — часть 7",
       "nodes": [
         {
@@ -2333,9 +2355,7 @@
             "messageText": "🟣Выкуп вашей крипты без NYC и AML проверок \n🟣Лояльны комиссии на LTC/BTC/XMR/USDT\n🟣Акции, новости и конкурсы \n🟣Интеграция вашего бизнеса \n🟣Индивидуальный подход к клиентам и парнерам \n🟣Качество, анонимность и уважение ",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775056804186-529104368-photo_2026-02-27_12-32-22.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "ZoN0opKnjLAy_VA6p_G5L_keyboard_1774974624659_aqooyo2cy_dup_1775330630989_quor2s4zf",
             "resizeKeyboard": true,
@@ -2417,9 +2437,7 @@
             "messageText": "⏳ Работаем 24/7 \n✈Высокая скорость обменов \n💰 Низкие комиссии на обмен!",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775056804142-669890781-photo_2026-02-27_12-33-51.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "D8GyV4JtfEadOlOx-jbY1_keyboard_1774974624659_w4ctj3zrp_dup_1775330630989_9qde72tds",
             "resizeKeyboard": true,
@@ -2501,9 +2519,7 @@
             "messageText": "🧮З@ЕБАЛИ ОБМЕННИКИ С КОМИССИЕЙ 30% И РЕКВИЗИТАМИ ИЗ ТАДЖИКИСТАНА?!\n\nSANCHEZ EXCHANGE - ЭТО:\n\n• 💸Реквизиты только российских банков\n• 👛Полная анонимность, никаких AML/KYC проверок\n• 🛫Быстрое подтверждение платежа и отправка битков за несколько минут!\n•📉Комиссия от 10% \n•🛍Инвестиционная программа, зарабатывай вместе с нами\n\nХватит переплачивать, покупай через Sanchez 👇🏻\n",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775056804217-200852236-photo_2026-02-27_12-20-10.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "DpKvu0ysWjssY5PS4VU8P_keyboard_1774974624659_p3nyfil5w_dup_1775330630989_plah5exaz",
             "resizeKeyboard": true,
@@ -2585,9 +2601,7 @@
             "messageText": "🔥ВЫГОДНО и БЫСТРО \n🫵 Именно так ТЫ подумаешь когда познакомишся с обменником Capitali%t\n🥷 Никаких логов, только анонимные транзакции на самые ТЁМНЫЕ площадки!\n🚀 Динамическая комиссия, позволяющая доставлять вашу крипту гораздо быстрее конкурентов!\n💬 Активная поддержка — Мы ценим своих клиентов!\n✅Стабильная выдача реквизитов !!!",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775056750328-52948919-photo_2026-02-27_12-25-07.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "MZptbnTxwtDoyHMKo4nUt_keyboard_1774974624659_1zqzq8bg0_dup_1775330630989_x5o8qee7k",
             "resizeKeyboard": true,
@@ -2661,7 +2675,16 @@
       ]
     },
     {
-      "id": "2f04f096-4505-42b0-baf0-93de348815f6",
+      "createdAt": "2026-04-07T03:57:09.638Z",
+      "updatedAt": "2026-04-08T23:09:27.110Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "id": "7c5ce0b7-bde7-495a-9cd1-1b8029e02abb",
       "name": "Обменники — часть 8",
       "nodes": [
         {
@@ -2674,9 +2697,7 @@
             "messageText": "🍀 Lucky Exchange — надежный сервис обмена криптовалют, работающий с 2024 года на рынке СНГ. Успешно обслужили тысячи клиентов и провели более 50 000 обменов\n\n🍀 Моментальный обмен\n🍀 Удобный интерфейс\n🍀 No KYC. Анонимно\n🍀 Поддержка 24/7\n",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775055725774-996302059-atcewg.mp4"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "TWswJndQWLS1WSvKzs75z_keyboard_1774974624659_92upeb4c5_dup_1775330630989_6sxaeiii9",
             "resizeKeyboard": true,
@@ -2757,9 +2778,7 @@
             "messageText": "Самый милый и быстрый сервис крипто-обмена 🚀\n\nМеняют рубли на криптовалюту быстро, аккуратно и без лишних слов.\n\n✨ Быстро — всего ~30 секунд\n🔒 Приватно — никаких лишних вопросов\n💸 Честный расчёт и прозрачные условия\n🕒 Поддержка и реквизиты — 24/7\n\nLove Exchange — когда обмен проходит с любовью 💕",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775055783944-373793163-photo_2026-03-04_09-21-42.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "H-MTAO8_r3_VPMHy_7UVP_keyboard_1774974624659_ekasfv9hb_dup_1775330630989_ysekt8bt4",
             "resizeKeyboard": true,
@@ -2836,9 +2855,7 @@
             "messageText": "⏺BitGo — простой криптообмен в Telegram\n\nЕсли нужно быстро обменять криптовалюту и не разбираться в сложных интерфейсах —\nBitGo работает прямо в Telegram и решает задачу за пару шагов.\n\n🔹 BTC / LTC / XMR / USDT\n🔹 Без регистрации и KYC\n🔹 Курс фиксируется при создании заявки\n🔹 Быстрое выполнение, без лишних ожиданий\n🔹 Вывод средств на банки РФ\n🔹 Поддержка 24/7\n\nНичего лишнего — только обмен и понятные условия.\n",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775055668437-941781508-photo_2026-04-01_18-00-48.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "hlXSGYpDZIx6UgGpJTL4E_keyboard_1774974624659_b5a3wxwq3_dup_1775330630989_rbdr12svq",
             "resizeKeyboard": true,
@@ -3199,9 +3216,7 @@
             "messageText": "Здесь вы найдёте проверенные Telegram-боты для покупки криптовалюты.\n\nВыбирайте самое выгодное для себя предложение.",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "/uploads/6/2026-04-01/1775057415679-293003625-photo_2025-11-14_21-20-57.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "yw_mNIfYEudZi6qBKl9ov_keyboard_1774974624659_bplb421y4_dup_1775330630989_0qs6uycp4",
             "resizeKeyboard": true,
@@ -3218,7 +3233,16 @@
       ]
     },
     {
-      "id": "64fe9db2-849a-46f0-b0ff-ba73e1dd73d1",
+      "createdAt": "2026-04-07T03:57:09.638Z",
+      "updatedAt": "2026-04-08T23:09:27.110Z",
+      "viewState": {
+        "zoom": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "id": "1c6ac5fb-f0d7-40ff-b1d8-b2cb0d311d38",
       "name": "Обменники — часть 9",
       "nodes": [
         {
@@ -3231,9 +3255,7 @@
             "messageText": "🦑 СКВИДВАРД УСТАЛ ТЕРПЕТЬ.\nТы тоже.\n\nКомиссии 30%? Реквизиты на имя «Абдулло»?\nДаже на кассе Красти Краб так не обдирают.\n\nSQUIDWARD EXCHANGE — обмен для тех, кто ценит свои деньги:\n\n💳 Только надёжные реквизиты  российских банков\n🔒 Полная анонимность — без AML/KYC\n⚡️ BTC на кошельке за считанные минуты\n📉 Комиссия от 10%\n💰 Инвест-программа — зарабатывай вместе с нами\n\nХватит кормить жадных крабов — покупай через Squidward 👇\n",
             "keyboardType": "none",
             "requiresAuth": false,
-            "attachedMedia": [
-              "https://keephere.ru/get/SNOsw8_dne9/o/photo.jpg"
-            ],
+            "attachedMedia": [],
             "isPrivateOnly": false,
             "keyboardNodeId": "BRdnooFen5dmLlJMacqtC",
             "resizeKeyboard": true,
@@ -3301,5 +3323,6 @@
         }
       ]
     }
-  ]
+  ],
+  "activeSheetId": "682dbffe-face-43b0-a0ca-8fafd07da262"
 }
