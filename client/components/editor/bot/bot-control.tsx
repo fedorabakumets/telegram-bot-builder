@@ -20,6 +20,7 @@ import { BotControlPanel } from './panel/BotControlPanel';
 import { BotControlProvider } from './bot-control-context';
 import { useBotQueries } from './hooks/use-bot-queries';
 import { useBotMutations } from './hooks/use-bot-mutations';
+import { useBotProjectEvents } from './hooks/use-bot-project-events';
 import type { BotStatusResponse } from './bot-types';
 
 /**
@@ -66,6 +67,9 @@ export function BotControl({ projectId, onBotStarted, onBotStopped }: Omit<BotCo
     allBotInfos,
     refetchStatuses,
   } = useBotQueries();
+
+  // Подписываемся на real-time события проектов через WebSocket
+  useBotProjectEvents(projects);
 
   const {
     startBotMutation,

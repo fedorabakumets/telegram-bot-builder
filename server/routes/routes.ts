@@ -35,6 +35,7 @@ import { setupProjectRoutes } from "./setupProjectRoutes";
 import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes";
 import { setupUserTemplateRoutes } from "./setupUserTemplateRoutes";
 import { createUserIdsRoutes } from "./user-ids-routes";
+import { broadcastProjectEvent } from "../terminal";
 
 /**
  * Глобальное хранилище активных процессов ботов
@@ -860,6 +861,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
 
       const token = await storage.createBotToken(tokenData);
+
+      broadcastProjectEvent(projectId, {
+        type: 'token-created',
+        projectId,
+        data: { tokenId: token.id },
+        timestamp: new Date().toISOString(),
+      });
 
       res.status(201).json(token);
     } catch (error) {

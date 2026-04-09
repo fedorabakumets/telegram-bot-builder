@@ -1,17 +1,22 @@
 /**
- * Тип для сообщений, передаваемых через WebSocket
- * @typedef {Object} TerminalMessage
- * @property {string} type - Тип сообщения ('stdout' | 'stderr' | 'status')
- * @property {string} content - Содержимое сообщения
- * @property {number} projectId - Идентификатор проекта
- * @property {number} tokenId - Идентификатор токена
- * @property {string} timestamp - Временная метка
+ * @fileoverview Тип сообщений WebSocket терминала
+ * @module server/terminal/TerminalMessage
  */
 
+/**
+ * Сообщение, передаваемое через WebSocket терминала
+ */
 export interface TerminalMessage {
-    type: 'stdout' | 'stderr' | 'status';
-    content: string;
-    projectId: number;
-    tokenId: number;
-    timestamp: string;
+  /** Тип сообщения */
+  type: 'stdout' | 'stderr' | 'status' | 'token-created' | 'token-deleted';
+  /** Содержимое сообщения (для stdout/stderr/status) */
+  content: string;
+  /** Идентификатор проекта */
+  projectId: number;
+  /** Идентификатор токена */
+  tokenId: number;
+  /** Временная метка */
+  timestamp: string;
+  /** Дополнительные данные (для событий проекта) */
+  data?: unknown;
 }

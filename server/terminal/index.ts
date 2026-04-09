@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Публичный API модуля терминала
+ * @module server/terminal
+ */
+
 // Terminal module exports
 export { activeConnections } from './activeConnections';
 export { getTerminalWss } from './getTerminalWss';
@@ -10,3 +15,5 @@ export { setupBotProcessListeners } from './setupBotProcessListeners';
 export { setupProcessOutputListener } from './setupProcessOutputListener';
 export { globalWssContainer } from './terminal-websocket';
 export type { TerminalMessage } from './TerminalMessage';
+export { broadcastProjectEvent } from './broadcastProjectEvent';
+export type { ProjectEvent } from './ProjectEvent';
