@@ -40,8 +40,10 @@ export function EditMessagePreview({ node }: EditMessagePreviewProps) {
 
   /** Метка источника ID редактируемого сообщения */
   const sourceLabel = idSource === 'last_bot_message'
-    ? '🕐 Последнее сообщение'
-    : `🆔 ${idManual.length > 20 ? idManual.slice(0, 20) + '…' : idManual || '—'}`;
+    ? 'Последнее сообщение'
+    : idManual.length > 24 ? idManual.slice(0, 24) + '…' : idManual || '—';
+
+  const sourceIcon = idSource === 'last_bot_message' ? 'fas fa-clock' : 'fas fa-hashtag';
 
   return (
     <div>
@@ -61,11 +63,12 @@ export function EditMessagePreview({ node }: EditMessagePreviewProps) {
 
       {/* Мета-информация */}
       <div className="space-y-1">
-        <div className="text-xs text-sky-600 dark:text-sky-400 font-medium">
-          {sourceLabel}
+        <div className="flex items-center gap-1.5 text-sm text-sky-600 dark:text-sky-400 font-medium">
+          <i className={`${sourceIcon} text-xs`} />
+          <span>{sourceLabel}</span>
         </div>
         {showKeyboard && keyboardMode !== 'keep' && (
-          <div className="text-xs text-muted-foreground">
+          <div className="text-sm text-muted-foreground">
             {KEYBOARD_LABELS[keyboardMode]}
           </div>
         )}

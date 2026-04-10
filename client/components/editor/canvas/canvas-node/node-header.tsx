@@ -113,7 +113,7 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
       case 'edit_message' as any:
         return (
           <span className="font-semibold text-blue-700 dark:text-blue-300">
-            ✏️ Редактировать сообщение
+            Редактировать сообщение
           </span>
         );
       /** Заголовок триггера обновления управляемого бота */
