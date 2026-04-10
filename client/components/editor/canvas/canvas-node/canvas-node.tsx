@@ -529,7 +529,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         }}
       >
         {/* Заголовок узла — скрыт для триггеров, узла сообщения и узла условия */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && (node.type as any) !== 'edit_message' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (
           <NodeHeader node={node} onMove={!!onMove} />
         )}
 

@@ -47,6 +47,14 @@ export function EditMessagePreview({ node }: EditMessagePreviewProps) {
 
   return (
     <div>
+      {/* Заголовок */}
+      <div className="flex items-center gap-2 mb-4">
+        <i className="fas fa-pen text-blue-500 text-sm" />
+        <span className="font-semibold text-blue-700 dark:text-blue-300 text-base">
+          Редактировать сообщение
+        </span>
+      </div>
+
       {/* Пузырь — аналог MessagePreview */}
       <div className="rounded-xl p-4 mb-3 bg-gradient-to-br from-blue-50/80 to-sky-50/80 dark:from-blue-900/20 dark:to-sky-900/20 border border-blue-100 dark:border-blue-800/30">
         <div className="flex items-start space-x-2">
