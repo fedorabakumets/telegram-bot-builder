@@ -23,6 +23,7 @@ import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tok
 import { updateCommentsSettingsHandler } from "./projectRoutes/handlers/settingsHandler";
 import { exportToGoogleSheetsHandler, exportStructureToGoogleSheetsHandler } from "./projectRoutes/handlers/googleSheetsHandlers";
 import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
+import { cleanupOrphanedFoldersHandler } from "./projectManagement/handlers/cleanupOrphanedFoldersHandler";
 import { handleGenerateCode } from "./projects/generateCode";
 import { getAdminIdsHandler, updateAdminIdsHandler } from "./projectRoutes/handlers/adminIdsHandler";
 
@@ -71,6 +72,9 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
     // Загрузка изображений по URL
     app.post("/api/media/upload-from-url", requireDbReady, uploadImageHandler);
+
+    // Очистка осиротевших папок ботов (без проекта в БД)
+    app.post("/api/bot-folders/cleanup", requireDbReady, cleanupOrphanedFoldersHandler);
 
     // Управление ботом
     setupBotManagementRoutes(app);
