@@ -33,6 +33,7 @@ import {
   useMobileHandlers,
   useCodePanelHandlers,
 } from '@/pages/editor/hooks';
+import { useProjectReset } from '@/pages/editor/hooks/use-project-reset';
 import { SaveTemplateModal } from '@/components/editor/header/components/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -616,18 +617,11 @@ export default function Editor() {
   }, [selectedNodeId, currentTab, setFlexibleLayoutConfig]);
 
   // Сбрасываем состояние при смене проекта
-  const prevProjectIdRef = useRef<number | undefined>(undefined);
-  useEffect(() => {
-    const prevId = prevProjectIdRef.current;
-    const currId = activeProject?.id;
-    // Сбрасываем только если ID реально изменился (не первая загрузка)
-    if (prevId !== undefined && prevId !== currId) {
-      setHasLocalChanges(false);
-      // Сбрасываем данные листов чтобы не показывались листы предыдущего проекта
-      setBotDataWithSheets(null as any);
-    }
-    prevProjectIdRef.current = currId;
-  }, [activeProject?.id, setBotDataWithSheets]);
+  useProjectReset({
+    activeProjectId: activeProject?.id,
+    setBotDataWithSheets,
+    setHasLocalChanges,
+  });
 
   // Обработчик обновления данных листов
   const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
