@@ -66,8 +66,8 @@ export async function handleMiniAppAuth(req: Request, res: Response): Promise<vo
 
     const tgUser = JSON.parse(userJson);
     const userData = await storage.getTelegramUserOrCreate({
-      id: tgUser.id,
-      firstName: tgUser.first_name,
+      id: Number(tgUser.id),
+      firstName: tgUser.first_name || '',
       lastName: tgUser.last_name,
       username: tgUser.username,
       photoUrl: tgUser.photo_url,
@@ -90,8 +90,8 @@ export async function handleMiniAppAuth(req: Request, res: Response): Promise<vo
     console.log(`✅ Mini App авторизация: ${tgUser.first_name} (@${tgUser.username}), ID: ${userData.id}`);
 
     res.json({ success: true, user: userData });
-  } catch (error) {
-    console.error('Mini App auth error:', error);
-    res.status(500).json({ success: false, error: 'Ошибка авторизации' });
+  } catch (error: any) {
+    console.error('Mini App auth error:', error?.message || error);
+    res.status(500).json({ success: false, error: error?.message || 'Ошибка авторизации' });
   }
 }
