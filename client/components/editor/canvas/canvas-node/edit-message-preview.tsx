@@ -40,18 +40,19 @@ export function EditMessagePreview({ node }: EditMessagePreviewProps) {
 
   /** Метка источника ID редактируемого сообщения */
   const sourceLabel = idSource === 'last_bot_message'
-    ? 'Последнее сообщение'
-    : idManual.length > 24 ? idManual.slice(0, 24) + '…' : idManual || '—';
-
-  const sourceIcon = idSource === 'last_bot_message' ? 'fas fa-clock' : 'fas fa-hashtag';
+    ? 'последнее'
+    : idManual.length > 18 ? idManual.slice(0, 18) + '…' : idManual || '—';
 
   return (
     <div>
-      {/* Заголовок */}
+      {/* Заголовок + источник на одной строке */}
       <div className="flex items-center gap-2 mb-4">
         <i className="fas fa-pen text-blue-500 text-sm" />
         <span className="font-semibold text-blue-700 dark:text-blue-300 text-base">
           Редактировать сообщение
+        </span>
+        <span className="text-sm text-sky-500 dark:text-sky-400 font-mono ml-auto truncate max-w-[100px]">
+          {sourceLabel}
         </span>
       </div>
 
@@ -69,18 +70,12 @@ export function EditMessagePreview({ node }: EditMessagePreviewProps) {
         </div>
       </div>
 
-      {/* Мета-информация */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-sm text-sky-600 dark:text-sky-400 font-medium">
-          <i className={`${sourceIcon} text-xs`} />
-          <span>{sourceLabel}</span>
+      {/* Действие с клавиатурой */}
+      {showKeyboard && keyboardMode !== 'keep' && (
+        <div className="mt-1.5 px-1 text-sm text-muted-foreground">
+          {KEYBOARD_LABELS[keyboardMode]}
         </div>
-        {showKeyboard && keyboardMode !== 'keep' && (
-          <div className="text-sm text-muted-foreground">
-            {KEYBOARD_LABELS[keyboardMode]}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
