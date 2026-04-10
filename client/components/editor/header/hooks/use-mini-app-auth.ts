@@ -39,7 +39,8 @@ export function useMiniAppAuth(): void {
     const tg = window.Telegram?.WebApp;
     if (!tg) return;
     tg.ready?.();
-    (tg as any).requestFullscreen?.();
+    // requestFullscreen доступен с версии 7.8+
+    try { (tg as any).requestFullscreen?.(); } catch {}
   }, []);
 
   useEffect(() => {
