@@ -14,7 +14,7 @@ export interface UseProjectResetOptions {
   /** ID активного проекта */
   activeProjectId: number | undefined;
   /** Сеттер данных листов */
-  setBotDataWithSheets: (data: BotDataWithSheets | null) => void;
+  setBotDataWithSheets: (data: BotDataWithSheets) => void;
   /** Сеттер флага локальных изменений */
   setHasLocalChanges: (has: boolean) => void;
 }
@@ -39,7 +39,8 @@ export function useProjectReset({
     // Сбрасываем только если ID реально изменился (не первая загрузка)
     if (prevId !== undefined && prevId !== currId) {
       setHasLocalChanges(false);
-      setBotDataWithSheets(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setBotDataWithSheets(null as any);
     }
 
     prevProjectIdRef.current = currId;

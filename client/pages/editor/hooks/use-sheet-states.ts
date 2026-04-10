@@ -25,7 +25,7 @@ export interface UseSheetStatesResult {
   /** Флаг локальных изменений */
   hasLocalChanges: boolean;
   /** Установить botDataWithSheets */
-  setBotDataWithSheets: (data: BotDataWithSheets) => void;
+  setBotDataWithSheets: (data: BotDataWithSheets | null) => void;
   /** Установить currentNodeSizes */
   setCurrentNodeSizes: (sizes: NodeSizeMap) => void;
   /** Установить actionHistory */
