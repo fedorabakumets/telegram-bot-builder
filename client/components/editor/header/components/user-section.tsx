@@ -7,22 +7,9 @@ import { cn } from '@/utils/utils';
 import { UserAvatar } from './user-avatar';
 import { UserInfo } from './user-info';
 import { LogoutButton } from './logout-button';
+import type { TelegramUser } from '@/types/telegram-user';
 
-/**
- * Данные пользователя от Telegram
- */
-export interface TelegramUser {
-  /** ID пользователя */
-  id: number;
-  /** Имя пользователя */
-  firstName: string;
-  /** Фамилия (опционально) */
-  lastName?: string;
-  /** Username (опционально) */
-  username?: string;
-  /** URL фотографии профиля */
-  photoUrl?: string | null;
-}
+export type { TelegramUser };
 
 /**
  * Свойства секции пользователя
