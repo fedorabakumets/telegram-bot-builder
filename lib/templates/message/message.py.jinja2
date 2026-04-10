@@ -372,7 +372,6 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
     except Exception as e:
         logging.error(f"Ошибка при автопереходе к узлу {{ autoTransitionTo }}: {e}")
-        await (sent_message or callback_query.message).answer("Переход завершен")
     return
     {%- endif %}
 

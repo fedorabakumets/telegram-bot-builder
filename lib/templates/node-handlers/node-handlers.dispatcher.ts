@@ -83,10 +83,14 @@ function getSafeAutoTransitionParams(node: Node, nodes: Node[]): {
     : '';
 
   if (node.data?.enableAutoTransition && explicitAutoTransitionTo) {
-    return {
-      enableAutoTransition: true,
-      autoTransitionTo: explicitAutoTransitionTo,
-    };
+    // Проверяем что целевой узел существует в проекте
+    const targetExists = nodes.some(n => n != null && n.id === explicitAutoTransitionTo);
+    if (targetExists) {
+      return {
+        enableAutoTransition: true,
+        autoTransitionTo: explicitAutoTransitionTo,
+      };
+    }
   }
 
   const linkedForwardNode = nodes.find((candidate) =>
