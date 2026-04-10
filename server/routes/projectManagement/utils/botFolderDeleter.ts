@@ -27,7 +27,8 @@ export async function deleteBotFolder(projectId: number): Promise<void> {
     }
 
     const allFiles = fs.readdirSync(botsDir);
-    const botDirs = allFiles.filter(file => file.startsWith(`bot_${projectId}_`));
+    // Ищем папки обоих форматов: bot_{projectId}_{tokenId} и {customName}_{projectId}_{tokenId}
+    const botDirs = allFiles.filter(file => file.includes(`_${projectId}_`));
 
     if (botDirs.length === 0) {
         console.log(`📄 Нет папок бота для проекта ${projectId}`);
