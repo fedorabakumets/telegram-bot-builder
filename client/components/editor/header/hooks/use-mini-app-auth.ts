@@ -8,14 +8,20 @@ import { useTelegramAuth } from './use-telegram-auth';
 
 /**
  * Хук автоматической авторизации через Telegram Mini App.
- * Если сайт открыт внутри Telegram — автоматически логинит пользователя.
- * Верифицирует initData на сервере перед логином.
+ * Разворачивает приложение на весь экран и логинит пользователя автоматически.
  */
 export function useMiniAppAuth(): void {
   const { login, isLoading } = useTelegramAuth();
 
+  // Разворачиваем на весь экран сразу при монтировании
   useEffect(() => {
-    // Ждём пока useTelegramAuth загрузит данные из localStorage
+    const tg = window.Telegram?.WebApp;
+    if (!tg) return;
+    tg.expand?.();
+    tg.ready?.();
+  }, []);
+
+  useEffect(() => {
     if (isLoading) return;
 
     const tg = window.Telegram?.WebApp;
@@ -42,5 +48,5 @@ export function useMiniAppAuth(): void {
         }
       })
       .catch(err => console.error('Mini App auth error:', err));
-  }, [isLoading]); // запускаем когда isLoading стал false
+  }, [isLoading]);
 }

@@ -30,6 +30,10 @@ declare global {
             photo_url?: string;
           };
         };
+        /** Разворачивает приложение на весь экран */
+        expand?: () => void;
+        /** Сигнализирует Telegram что приложение готово */
+        ready?: () => void;
       };
     };
   }
