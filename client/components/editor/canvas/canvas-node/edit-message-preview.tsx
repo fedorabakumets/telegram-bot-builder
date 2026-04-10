@@ -21,6 +21,7 @@ const KEYBOARD_LABELS: Record<string, string> = {
 /**
  * Превью узла редактирования сообщения на канвасе.
  * Стиль аналогичен MessagePreview — пузырь с градиентом.
+ * Заголовок рендерится через NodeHeader, здесь только содержимое.
  *
  * @param props - Свойства компонента
  * @returns JSX элемент
@@ -43,13 +44,13 @@ export function EditMessagePreview({ node }: EditMessagePreviewProps) {
     : `🆔 ${idManual.length > 20 ? idManual.slice(0, 20) + '…' : idManual || '—'}`;
 
   return (
-    <div className="mb-4">
-      {/* Пузырь сообщения — аналог MessagePreview */}
-      <div className="rounded-xl p-4 bg-gradient-to-br from-blue-50/80 to-sky-50/80 dark:from-blue-900/20 dark:to-sky-900/20 border border-blue-100 dark:border-blue-800/30">
+    <div>
+      {/* Пузырь — аналог MessagePreview */}
+      <div className="rounded-xl p-4 mb-3 bg-gradient-to-br from-blue-50/80 to-sky-50/80 dark:from-blue-900/20 dark:to-sky-900/20 border border-blue-100 dark:border-blue-800/30">
         <div className="flex items-start space-x-2">
           <div className="w-2 h-2 rounded-full bg-blue-400 dark:bg-blue-500 mt-1.5 flex-shrink-0" />
           {showText && text.trim() ? (
-            <FormattedText value={text} lineClamp={5} />
+            <FormattedText value={text} lineClamp={6} />
           ) : showText ? (
             <span className="text-sm italic text-muted-foreground opacity-60">Текст не задан</span>
           ) : (
@@ -58,13 +59,13 @@ export function EditMessagePreview({ node }: EditMessagePreviewProps) {
         </div>
       </div>
 
-      {/* Мета-информация под пузырём */}
-      <div className="mt-1.5 px-1 space-y-0.5">
-        <div className="text-[10px] text-sky-600 dark:text-sky-400">
+      {/* Мета-информация */}
+      <div className="space-y-1">
+        <div className="text-xs text-sky-600 dark:text-sky-400 font-medium">
           {sourceLabel}
         </div>
         {showKeyboard && keyboardMode !== 'keep' && (
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {KEYBOARD_LABELS[keyboardMode]}
           </div>
         )}
