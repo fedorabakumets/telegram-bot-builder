@@ -17,6 +17,20 @@ declare global {
         /** Альтернативный метод авторизации */
         auth: (options: object, callback: (data: any) => void) => void;
       };
+      WebApp?: {
+        /** Строка initData для верификации на сервере */
+        initData: string;
+        /** Распарсенные данные инициализации */
+        initDataUnsafe: {
+          user?: {
+            id: number;
+            first_name: string;
+            last_name?: string;
+            username?: string;
+            photo_url?: string;
+          };
+        };
+      };
     };
   }
 }

@@ -6,50 +6,21 @@
 import { useEffect } from 'react';
 import { useTelegramAuth } from './use-telegram-auth';
 
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        /** Строка initData для верификации на сервере */
-        initData: string;
-        /** Распарсенные данные инициализации */
-        initDataUnsafe: {
-          /** Данные пользователя Telegram */
-          user?: {
-            /** Числовой ID пользователя */
-            id: number;
-            /** Имя пользователя */
-            first_name: string;
-            /** Фамилия пользователя */
-            last_name?: string;
-            /** Username пользователя */
-            username?: string;
-            /** URL аватара */
-            photo_url?: string;
-          };
-        };
-      };
-    };
-  }
-}
-
 /**
  * Хук автоматической авторизации через Telegram Mini App.
  * Если сайт открыт внутри Telegram — автоматически логинит пользователя.
  * Верифицирует initData на сервере перед логином.
  */
 export function useMiniAppAuth(): void {
-  const { login, user } = useTelegramAuth();
+  const { login, isLoading } = useTelegramAuth();
 
   useEffect(() => {
+    // Ждём пока useTelegramAuth загрузит данные из localStorage
+    if (isLoading) return;
+
     const tg = window.Telegram?.WebApp;
-    if (!tg?.initDataUnsafe?.user) return; // не Mini App или нет данных
+    if (!tg?.initDataUnsafe?.user || !tg.initData) return;
 
-    const tgUser = tg.initDataUnsafe.user;
-    // Если уже залогинен тем же пользователем — пропускаем
-    if (user && 'id' in user && user.id === tgUser.id) return;
-
-    // Отправляем initData на сервер для верификации и авторизации
     fetch('/api/auth/telegram/miniapp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -66,8 +37,10 @@ export function useMiniAppAuth(): void {
             username: data.user.username,
             photoUrl: data.user.photoUrl,
           });
+        } else {
+          console.warn('Mini App auth failed:', data.error);
         }
       })
       .catch(err => console.error('Mini App auth error:', err));
-  }, []); // только при монтировании
+  }, [isLoading]); // запускаем когда isLoading стал false
 }
