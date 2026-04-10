@@ -1,7 +1,10 @@
 /**
  * @fileoverview Хук для входа через Telegram
- * @description Предоставляет функцию для открытия окна авторизации Telegram
+ * @description Открывает popup авторизации и слушает postMessage с данными пользователя
  */
+
+import { useEffect } from 'react';
+import { useTelegramAuth } from './use-telegram-auth';
 
 /** Параметры окна авторизации */
 const LOGIN_WINDOW_CONFIG = {
@@ -11,9 +14,28 @@ const LOGIN_WINDOW_CONFIG = {
 
 /**
  * Хук для управления входом через Telegram
- * @returns Объект с функцией handleTelegramLogin для открытия окна авторизации
+ * Открывает popup и обрабатывает ответ через window.postMessage
+ * @returns Объект с функцией handleTelegramLogin
  */
 export function useTelegramLogin() {
+  const { login } = useTelegramAuth();
+
+  useEffect(() => {
+    /**
+     * Обрабатывает сообщение от popup-окна авторизации
+     * @param event - MessageEvent с данными пользователя
+     */
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'telegram-auth' && event.data?.user) {
+        login(event.data.user);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [login]);
+
   /**
    * Открывает окно авторизации Telegram в центре экрана
    */
