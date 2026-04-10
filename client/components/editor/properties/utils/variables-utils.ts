@@ -244,6 +244,24 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
       }
     });
   });
+  /**
+   * Добавляем переменные saveMessageIdTo из message/start/command-узлов.
+   * Эти переменные хранят ID отправленного сообщения для последующего редактирования.
+   */
+  allNodes.forEach(node => {
+    if (node.type !== 'message' && node.type !== 'start' && node.type !== 'command') return;
+    const saveMessageIdTo: string = (node.data as any)?.saveMessageIdTo || '';
+    if (!saveMessageIdTo.trim()) return;
+    const mapKey = `save_message_id__${node.id}`;
+    if (!variablesMap.has(mapKey)) {
+      variablesMap.set(mapKey, {
+        name: saveMessageIdTo,
+        nodeId: node.id,
+        nodeType: 'message_id' as any,
+        description: `ID сообщения из узла "${(node.data as any)?.messageText?.substring(0, 30) || node.id}"`,
+      });
+    }
+  });
   // Добавляем переменные от callback_trigger нод
   allNodes.forEach(node => {
     if ((node.type as string) !== 'callback_trigger') return;
