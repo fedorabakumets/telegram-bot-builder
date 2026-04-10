@@ -252,3 +252,12 @@ export function hasGetManagedBotTokenNodes(nodes: Node[]): boolean {
 export function hasAnswerCallbackQueryNodes(nodes: Node[]): boolean {
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'answer_callback_query');
 }
+
+/**
+ * Проверяет наличие узлов edit_message в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа edit_message
+ */
+export function hasEditMessageNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'edit_message');
+}

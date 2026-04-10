@@ -1,0 +1,70 @@
+{#
+  Шаблон обработчиков действия edit_message.
+  Редактирует текст или клавиатуру уже отправленного сообщения.
+
+  @param {array} entries - Массив EditMessageEntry:
+    - nodeId: string              — ID узла
+    - targetNodeId: string        — ID следующего узла
+    - editMode: string            — 'text' | 'markup' | 'both'
+    - editMessageText: string     — новый текст (поддерживает {var})
+    - editFormatMode: string      — 'html' | 'markdown' | 'none'
+    - editMessageIdSource: string — 'last_bot_message' | 'custom'
+    - editMessageIdManual: string — ID или {переменная}
+    - editKeyboardMode: string    — 'keep' | 'remove' | 'node'
+    - editKeyboardNodeId: string  — ID keyboard-узла
+#}
+
+# Обработчики узлов edit_message
+{% for entry in entries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery):
+    """Редактирование сообщения"""
+    try:
+        user_id = callback_query.from_user.id
+        logging.info(f"✏️ edit_message узел {{ entry.nodeId }} для пользователя {user_id}")
+
+        {% if entry.editMessageIdSource == 'last_bot_message' %}
+        _msg_id = user_data.get(user_id, {}).get('last_bot_message_id')
+        {% else %}
+        _all_vars = await init_all_user_vars(user_id)
+        _msg_id_raw = {{ entry.editMessageIdManual | format_python_text }}
+        _msg_id = replace_variables_in_text(_msg_id_raw, _all_vars, {})
+        try:
+            _msg_id = int(_msg_id)
+        except (ValueError, TypeError):
+            pass
+        {% endif %}
+
+        _chat_id = callback_query.message.chat.id
+
+        {% if entry.editMode in ['text', 'both'] %}
+        _all_vars = await init_all_user_vars(user_id)
+        _new_text = replace_variables_in_text({{ entry.editMessageText | format_python_text }}, _all_vars, {})
+        {% if entry.editFormatMode == 'html' %}
+        await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, parse_mode="HTML")
+        {% elif entry.editFormatMode == 'markdown' %}
+        await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, parse_mode="Markdown")
+        {% else %}
+        await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text)
+        {% endif %}
+        {% endif %}
+
+        {% if entry.editMode in ['markup', 'both'] %}
+        {% if entry.editKeyboardMode == 'remove' %}
+        await bot.edit_message_reply_markup(chat_id=_chat_id, message_id=_msg_id, reply_markup=None)
+        {% else %}
+        # Клавиатура: режим {{ entry.editKeyboardMode }}
+        await bot.edit_message_reply_markup(chat_id=_chat_id, message_id=_msg_id, reply_markup=None)
+        {% endif %}
+        {% endif %}
+
+        {% if entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query)
+        {% endif %}
+    except Exception as e:
+        logging.error(f"Ошибка в edit_message {{ entry.nodeId }}: {e}")
+
+{% endfor %}
