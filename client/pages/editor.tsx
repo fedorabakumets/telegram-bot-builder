@@ -615,12 +615,14 @@ export default function Editor() {
     }));
   }, [selectedNodeId, currentTab, setFlexibleLayoutConfig]);
 
-  // Reset hasLocalChanges when activeProject changes
+  // Сбрасываем состояние при смене проекта
   useEffect(() => {
     if (activeProject?.id !== lastLoadedProjectId && lastLoadedProjectId !== null) {
       setHasLocalChanges(false);
+      // Сбрасываем данные листов чтобы не показывались листы предыдущего проекта
+      setBotDataWithSheets(null as any);
     }
-  }, [activeProject?.id, lastLoadedProjectId]);
+  }, [activeProject?.id, lastLoadedProjectId, setBotDataWithSheets]);
 
   // Обработчик обновления данных листов
   const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
