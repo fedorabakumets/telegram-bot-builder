@@ -30,12 +30,24 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         _msg_id = user_data.get(user_id, {}).get('last_bot_message_id')
         {% else %}
         _all_vars = await init_all_user_vars(user_id)
-        _msg_id_raw = {{ entry.editMessageIdManual | format_python_text }}
-        _msg_id = replace_variables_in_text(_msg_id_raw, _all_vars, {})
+        {%- set _raw = entry.editMessageIdManual | trim %}
+        {%- if _raw | int(-1) != -1 %}
+        _msg_id = {{ _raw | int }}
+        {%- elif '{' in _raw %}
+        _msg_id_raw = {{ _raw | format_python_text }}
+        _msg_id_str = replace_variables_in_text(_msg_id_raw, _all_vars, {})
         try:
-            _msg_id = int(_msg_id)
+            _msg_id = int(_msg_id_str)
         except (ValueError, TypeError):
-            pass
+            _msg_id = _msg_id_str
+        {%- else %}
+        _msg_id_str = str(_all_vars.get("{{ _raw }}", ""))
+        try:
+            _msg_id = int(_msg_id_str)
+        except (ValueError, TypeError):
+            _msg_id = None
+            logging.warning(f"edit_message: не удалось получить message_id из переменной '{{ _raw }}' для пользователя {user_id}")
+        {%- endif %}
         {% endif %}
 
         _chat_id = callback_query.message.chat.id
