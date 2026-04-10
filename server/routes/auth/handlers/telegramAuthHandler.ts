@@ -2,7 +2,8 @@
  * @fileoverview Хендлер авторизации через Telegram
  *
  * Этот модуль предоставляет функцию для обработки данных
- * авторизации от виджета Telegram Login.
+ * авторизации от нового Telegram Login JS API.
+ * Поддерживает опциональную верификацию id_token (JWT) через JWKS.
  *
  * @module auth/handlers/telegramAuthHandler
  */
@@ -10,23 +11,32 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
 import { regenerateSession, saveSession } from "../utils/sessionUtils";
+import { verifyTelegramIdToken } from "../utils/telegramJwks";
 
 /**
  * Обрабатывает данные авторизации от Telegram
  * После входа мигрирует гостевые проекты сессии к пользователю
  *
- * @function handleTelegramAuth
- * @param {Request} req - Объект запроса
- * @param {Response} res - Объект ответа
- * @returns {Promise<void>}
+ * @param req - Объект запроса (тело: id, first_name, last_name, username, photo_url, auth_date, id_token?)
+ * @param res - Объект ответа
+ * @returns Promise<void>
  */
 export async function handleTelegramAuth(req: Request, res: Response): Promise<void> {
     try {
-        const { id, first_name, last_name, username, photo_url, auth_date } = req.body;
+        const { id, first_name, last_name, username, photo_url, auth_date, id_token } = req.body;
 
         if (!id) {
             res.status(400).json({ success: false, error: "User ID обязателен" });
             return;
+        }
+
+        // Верифицируем id_token если он присутствует (новый OIDC flow)
+        if (id_token) {
+            const valid = await verifyTelegramIdToken(id_token);
+            if (!valid) {
+                res.status(401).json({ success: false, error: "Невалидный id_token" });
+                return;
+            }
         }
 
         const userData = await storage.getTelegramUserOrCreate({
@@ -43,14 +53,12 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
             return;
         }
 
-        // Сохраняем старый sessionId ДО regenerate — после него ID изменится
         const oldSessionId = req.session.id;
 
         await regenerateSession(req);
         req.session.telegramUser = userData;
         await saveSession(req);
 
-        // Мигрируем гостевые проекты старой сессии к авторизованному пользователю
         if (oldSessionId) {
             await storage.migrateGuestProjects(oldSessionId, userData.id);
         }
