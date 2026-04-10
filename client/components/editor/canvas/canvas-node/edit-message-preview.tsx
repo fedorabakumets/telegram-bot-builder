@@ -59,11 +59,6 @@ export function EditMessagePreview({ node }: EditMessagePreviewProps) {
         </span>
       </div>
 
-      {/* Источник ID сообщения */}
-      <div className="text-[10px] text-sky-600 dark:text-sky-400 font-medium">
-        {sourceLabel}
-      </div>
-
       {/* Новый текст */}
       {showText && (
         <div className="text-xs font-mono text-blue-500 dark:text-blue-300 truncate max-w-full">
@@ -80,6 +75,11 @@ export function EditMessagePreview({ node }: EditMessagePreviewProps) {
           {KEYBOARD_LABELS[keyboardMode] ?? keyboardMode}
         </div>
       )}
+
+      {/* Источник ID сообщения — внизу как мета-информация */}
+      <div className="text-[10px] text-sky-600 dark:text-sky-400 font-medium">
+        {sourceLabel}
+      </div>
 
     </div>
   );
