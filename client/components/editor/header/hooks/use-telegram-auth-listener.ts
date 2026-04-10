@@ -1,33 +1,15 @@
 /**
- * @fileoverview Хук слушателя postMessage авторизации Telegram
+ * @fileoverview Хук-заглушка для обратной совместимости
  * @module components/editor/header/hooks/use-telegram-auth-listener
+ *
+ * Listener авторизации перенесён в {@link useTelegramLogin}.
+ * Popup-механизм заменён на встроенный Telegram Login виджет.
  */
-
-import { useEffect } from 'react';
-import { useTelegramAuth } from './use-telegram-auth';
 
 /**
- * Подключает глобальный обработчик window.postMessage для авторизации через Telegram.
- * Должен монтироваться один раз на верхнем уровне приложения (например, в AdaptiveHeader).
- *
- * Ожидает сообщения вида: `{ type: 'telegram-auth', user: TelegramUser }`
+ * Хук оставлен для обратной совместимости.
+ * Логика postMessage listener перенесена в useTelegramLogin.
  */
 export function useTelegramAuthListener(): void {
-  const { login } = useTelegramAuth();
-
-  useEffect(() => {
-    /**
-     * Обрабатывает входящее postMessage от popup-окна авторизации
-     * @param event - MessageEvent с данными пользователя
-     */
-    const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data?.type === 'telegram-auth' && event.data?.user) {
-        login(event.data.user);
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [login]);
+  // Listener перенесён в use-telegram-login.ts (Telegram.Login.init callback)
 }
