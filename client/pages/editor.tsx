@@ -34,6 +34,9 @@ import {
   useCodePanelHandlers,
 } from '@/pages/editor/hooks';
 import { useProjectReset } from '@/pages/editor/hooks/use-project-reset';
+import { useNodeFocus } from '@/pages/editor/hooks/use-node-focus';
+import { useDialogPanel } from '@/pages/editor/hooks/use-dialog-panel';
+import { useProjectNavigation } from '@/pages/editor/hooks/use-project-navigation';
 import { SaveTemplateModal } from '@/components/editor/header/components/save-template-modal';
 import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -118,30 +121,13 @@ export default function Editor() {
   const [fitTrigger, setFitTrigger] = useState(0);
 
   /** ID узла для фокусировки на канвасе */
-  const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
-  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  /** ID узла для постоянной подсветки (держится до клика на другой узел или пустое место) */
-  const [highlightNodeId, setHighlightNodeId] = useState<string | null>(null);
-
-  /** ID кнопки для скролла к ней в панели свойств */
-  const [focusButtonId, setFocusButtonId] = useState<string | null>(null);
-
-  /**
-   * Обработчик фокусировки на узле канваса из сайдбара
-   * @param nodeId - Идентификатор узла для фокусировки
-   * @param buttonId - Опциональный идентификатор кнопки для скролла в панели свойств
-   * @param persist - Если true — подсветка держится до явного сброса (для чекбоксов)
-   */
-  const handleNodeFocus = useCallback((nodeId: string, buttonId?: string, persist?: boolean) => {
-    setFocusNodeId(nodeId);
-    setHighlightNodeId(nodeId);
-    setFocusButtonId(buttonId ?? null);
-    if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
-    focusTimerRef.current = setTimeout(() => setFocusNodeId(null), 100);
-    setTimeout(() => setFocusButtonId(null), 800);
-    void persist; // persist больше не нужен — highlight держится до нового клика
-  }, []);
+  const {
+    focusNodeId,
+    highlightNodeId,
+    focusButtonId,
+    setHighlightNodeId,
+    handleNodeFocus,
+  } = useNodeFocus();
 
   // Хуки состояний
   const {
@@ -231,88 +217,16 @@ export default function Editor() {
   const queryClient = useQueryClient();
 
   // Хук обработчиков диалогов
-  const [selectedDialogUser, setSelectedDialogUser] = useState<UserBotData | null>(null);
-  const [selectedUserDetails, setSelectedUserDetails] = useState<UserBotData | null>(null);
-
-  // Обработчики закрытия панелей (объявляем первыми для использования в других функциях)
-  const handleCloseDialogPanel = useCallback(() => {
-    setSelectedDialogUser(null);
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(el =>
-        el.id === 'dialog' ? { ...el, visible: false } : el
-      )
-    }));
-  }, [setFlexibleLayoutConfig]);
-
-  const handleCloseUserDetailsPanel = useCallback(() => {
-    setSelectedUserDetails(null);
-    setFlexibleLayoutConfig(prev => ({
-      ...prev,
-      elements: prev.elements.map(el => {
-        if (el.id === 'userDetails') return { ...el, visible: false };
-        if (el.id === 'sidebar') return { ...el, visible: true };
-        return el;
-      })
-    }));
-  }, [setFlexibleLayoutConfig]);
-
-  // Обработчик выбора пользователя в диалоге
-  const handleSelectDialogUser = useCallback((user: UserBotData) => {
-    console.log('[handleSelectDialogUser] Selecting user:', user);
-    // Обновляем выбранного пользователя и открываем панель
-    setSelectedDialogUser(user);
-    setFlexibleLayoutConfig(prev => {
-      const newConfig = {
-        ...prev,
-        elements: prev.elements.map(el => {
-          if (el.id === 'dialog') return { ...el, visible: true };
-          if (el.id === 'properties') return { ...el, visible: false };
-          return el;
-        })
-      };
-      console.log('[handleSelectDialogUser] New config:', newConfig);
-      return newConfig;
-    });
-  }, [setFlexibleLayoutConfig]);
-
-  // Обработчик выбора пользователя в деталях
-  const handleSelectUserDetails = useCallback((user: UserBotData) => {
-    console.log('[handleSelectUserDetails] Selecting user:', user);
-    // Обновляем выбранного пользователя и открываем панель
-    setSelectedUserDetails(user);
-    setFlexibleLayoutConfig(prev => {
-      const newConfig = {
-        ...prev,
-        elements: prev.elements.map(el => {
-          if (el.id === 'userDetails') return { ...el, visible: true };
-          if (el.id === 'sidebar') return { ...el, visible: false };
-          return el;
-        })
-      };
-      console.log('[handleSelectUserDetails] New config:', newConfig);
-      return newConfig;
-    });
-  }, [setFlexibleLayoutConfig]);
-
-  // Обработчики для передачи в UserDatabasePanel (с toggle-логикой для кнопок)
-  const handleOpenDialogPanel = useCallback((user: UserBotData) => {
-    // Если панель уже открыта для этого пользователя, закрываем её
-    if (selectedDialogUser?.userId === user.userId) {
-      handleCloseDialogPanel();
-    } else {
-      handleSelectDialogUser(user);
-    }
-  }, [selectedDialogUser, handleSelectDialogUser, handleCloseDialogPanel]);
-
-  const handleOpenUserDetailsPanel = useCallback((user: UserBotData) => {
-    // Если панель уже открыта для этого пользователя, закрываем её
-    if (selectedUserDetails?.userId === user.userId) {
-      handleCloseUserDetailsPanel();
-    } else {
-      handleSelectUserDetails(user);
-    }
-  }, [selectedUserDetails, handleSelectUserDetails, handleCloseUserDetailsPanel]);
+  const {
+    selectedDialogUser,
+    selectedUserDetails,
+    handleCloseDialogPanel,
+    handleCloseUserDetailsPanel,
+    handleSelectDialogUser,
+    handleSelectUserDetails,
+    handleOpenDialogPanel,
+    handleOpenUserDetailsPanel,
+  } = useDialogPanel({ setFlexibleLayoutConfig });
 
   // Хук состояний вкладок
   const [, setPreviousTab] = useState<PreviousEditorTab>('editor');
@@ -1173,31 +1087,11 @@ export default function Editor() {
     setShowSaveTemplate(true);
   }, []);
 
-  /**
-   * Обработчик загрузки сценария
-   *
-   * Переходит на страницу сценариев для выбора сценария
-   */
-  const handleLoadTemplate = useCallback(() => {
-    console.log('Template button clicked, navigating to templates page...');
-    setLocation('/templates');
-  }, [setLocation]);
-
-  /**
-   * Обработчик перехода к списку проектов
-   */
-  const handleGoToProjects = useCallback(() => {
-    setLocation('/projects');
-  }, [setLocation]);
-
-  /**
-   * Обработчик выбора проекта
-   *
-   * @param {number} newProjectId - ID выбранного проекта
-   */
-  const handleProjectSelect = useCallback((newProjectId: number) => {
-    setLocation(`/editor/${newProjectId}`);
-  }, [setLocation]);
+  const {
+    handleLoadTemplate,
+    handleGoToProjects,
+    handleProjectSelect,
+  } = useProjectNavigation();
 
 
 
