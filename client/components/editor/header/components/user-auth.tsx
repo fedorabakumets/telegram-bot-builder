@@ -1,17 +1,21 @@
 /**
  * @fileoverview Авторизация пользователя
- * @description Компонент отображает секцию пользователя или кнопку входа
+ * @description Отображает секцию пользователя, гостя или ничего при загрузке
  */
 
-import { UserSection, type TelegramUser } from './user-section';
-import { LoginButton } from './login-button';
+import { UserSection } from './user-section';
+import { GuestSection } from './guest-section';
+import { isGuest, isTelegramUser } from '@/types/telegram-user';
+import type { AppUser } from '@/types/telegram-user';
 
 /**
  * Свойства компонента авторизации
  */
 export interface UserAuthProps {
-  /** Данные авторизованного пользователя (null если не авторизован) */
-  user: TelegramUser | null;
+  /** Пользователь приложения (Telegram, гость или null) */
+  user: AppUser | null;
+  /** Флаг загрузки — при true ничего не рендерится */
+  isLoading?: boolean;
   /** Обработчик выхода */
   onLogout?: () => void;
   /** Обработчик входа */
@@ -21,12 +25,20 @@ export interface UserAuthProps {
 }
 
 /**
- * Компонент авторизации: показывает секцию пользователя или кнопку входа
+ * Компонент авторизации: загрузка → null, Telegram → UserSection, гость → GuestSection
+ * @param props - Свойства компонента
+ * @returns JSX элемент или null
  */
-export function UserAuth({ user, onLogout, onLogin, isVertical }: UserAuthProps) {
-  if (user) {
+export function UserAuth({ user, isLoading, onLogout, onLogin, isVertical }: UserAuthProps) {
+  if (isLoading) return null;
+
+  if (user && isTelegramUser(user)) {
     return <UserSection user={user} onLogout={onLogout || (() => {})} isVertical={isVertical} />;
   }
 
-  return <LoginButton onClick={onLogin} />;
+  if (user && isGuest(user)) {
+    return <GuestSection onLogin={onLogin} isVertical={isVertical} />;
+  }
+
+  return null;
 }

@@ -6,7 +6,7 @@
 import { MobileNavigation } from './mobile-navigation';
 import { MobileActions } from './mobile-actions';
 import type { HeaderTab } from '../types';
-import type { TelegramUser } from './user-section';
+import type { AppUser } from '@/types/telegram-user';
 
 /**
  * Свойства контента мобильного меню
@@ -34,8 +34,10 @@ export interface MobileMenuContentProps {
   propertiesVisible?: boolean;
   codeVisible?: boolean;
   codeEditorVisible?: boolean;
-  /** Данные пользователя */
-  user?: TelegramUser | null;
+  /** Пользователь приложения */
+  user?: AppUser | null;
+  /** Флаг загрузки авторизации */
+  isLoading?: boolean;
   /** Обработчик выхода */
   onLogout?: () => void;
   /** Обработчик входа */
@@ -66,6 +68,7 @@ export function MobileMenuContent({
   codeVisible,
   codeEditorVisible,
   user,
+  isLoading,
   onLogout,
   onLogin,
   onCloseMenu,
@@ -103,6 +106,7 @@ export function MobileMenuContent({
           codeEditorVisible={codeEditorVisible}
           onCloseMenu={onCloseMenu}
           user={user}
+          isLoading={isLoading}
           onLogout={onLogout}
           onLogin={onLogin}
         />

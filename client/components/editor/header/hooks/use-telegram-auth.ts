@@ -1,14 +1,15 @@
 /**
- * @fileoverview Хук управления авторизацией через Telegram
+ * @fileoverview Хук управления авторизацией через Telegram с поддержкой гостевого режима
  * @module components/editor/header/hooks/use-telegram-auth
  */
 
 import { useState, useEffect } from 'react';
 import { queryClient } from '@/queryClient';
-import type { TelegramUser } from '@/types/telegram-user';
+import type { AppUser, TelegramUser } from '@/types/telegram-user';
+import { isGuest as checkIsGuest, isTelegramUser } from '@/types/telegram-user';
 import { invalidateAuthQueries } from '@/utils/invalidate-auth-queries';
 
-export type { TelegramUser };
+export type { TelegramUser, AppUser };
 
 /** Ключ хранения данных пользователя в localStorage */
 const STORAGE_KEY = 'telegramUser';
@@ -16,23 +17,27 @@ const STORAGE_KEY = 'telegramUser';
 /** Имя события смены авторизации */
 const AUTH_EVENT = 'telegram-auth-change';
 
+/** Объект гостевого пользователя */
+const GUEST_USER: AppUser = { isGuest: true };
+
 /**
- * Хук управления авторизацией через Telegram.
- * Читает/пишет пользователя в localStorage, слушает события смены авторизации.
+ * Хук управления авторизацией.
+ * При отсутствии сохранённого пользователя автоматически устанавливает гостевой режим.
  *
- * @returns Объект с пользователем, методами login/logout и флагом загрузки
+ * @returns Объект с пользователем, методами login/logout, флагом загрузки и хелпером isGuest
  */
 export function useTelegramAuth() {
-  const [user, setUser] = useState<TelegramUser | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Загружаем пользователя из localStorage при монтировании
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      setUser(saved ? JSON.parse(saved) : null);
+      // Если нет сохранённого пользователя — устанавливаем гостя
+      setUser(saved ? JSON.parse(saved) : GUEST_USER);
     } catch (e) {
       console.error('Ошибка загрузки пользователя из localStorage:', e);
+      setUser(GUEST_USER);
     }
     setIsLoading(false);
 
@@ -42,7 +47,7 @@ export function useTelegramAuth() {
      */
     const handleAuthChange = (e: any) => {
       try {
-        setUser(e.detail.user ?? null);
+        setUser(e.detail.user ?? GUEST_USER);
         invalidateAuthQueries(queryClient);
       } catch (err) {
         console.error('Ошибка обработки события авторизации:', err);
@@ -56,7 +61,7 @@ export function useTelegramAuth() {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key !== STORAGE_KEY) return;
       try {
-        setUser(e.newValue ? JSON.parse(e.newValue) : null);
+        setUser(e.newValue ? JSON.parse(e.newValue) : GUEST_USER);
         invalidateAuthQueries(queryClient);
       } catch (err) {
         console.error('Ошибка разбора пользователя из StorageEvent:', err);
@@ -73,7 +78,7 @@ export function useTelegramAuth() {
 
   /**
    * Сохраняет пользователя и инвалидирует кеш
-   * @param userData - Данные пользователя для входа
+   * @param userData - Данные пользователя Telegram для входа
    */
   const login = (userData: TelegramUser) => {
     setUser(userData);
@@ -88,7 +93,7 @@ export function useTelegramAuth() {
   };
 
   /**
-   * Выполняет выход: очищает сессию, localStorage и кеш запросов
+   * Выполняет выход: очищает сессию, localStorage и устанавливает гостя
    * @returns Промис, завершающийся после выхода
    */
   const logout = async () => {
@@ -101,7 +106,7 @@ export function useTelegramAuth() {
     } catch (e) {
       console.error('Ошибка выхода:', e);
     }
-    setUser(null);
+    setUser(GUEST_USER);
     try {
       localStorage.removeItem(STORAGE_KEY);
       invalidateAuthQueries(queryClient);
@@ -110,5 +115,5 @@ export function useTelegramAuth() {
     }
   };
 
-  return { user, login, logout, isLoading };
+  return { user, login, logout, isLoading, isGuest: checkIsGuest, isTelegramUser };
 }

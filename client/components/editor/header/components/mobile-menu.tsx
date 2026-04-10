@@ -39,6 +39,7 @@ export function MobileMenu({
   codeVisible,
   codeEditorVisible,
   user,
+  isLoading,
   onLogout,
   onLogin,
   contentClassName,
@@ -75,6 +76,7 @@ export function MobileMenu({
               codeVisible={codeVisible}
               codeEditorVisible={codeEditorVisible}
               user={user}
+              isLoading={isLoading}
               onLogout={onLogout}
               onLogin={onLogin}
               onCloseMenu={handleClose}

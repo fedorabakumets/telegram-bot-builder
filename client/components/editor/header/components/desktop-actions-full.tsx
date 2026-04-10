@@ -8,7 +8,7 @@ import { TelegramChatInvite } from './telegram-chat-invite';
 import { UserAuth } from './user-auth';
 import { Separator } from './separator';
 import { cn } from '@/utils/utils';
-import type { TelegramUser } from './user-section';
+import type { AppUser } from '@/types/telegram-user';
 
 /**
  * Свойства полных десктопных действий
@@ -32,8 +32,10 @@ export interface DesktopActionsFullProps {
   propertiesVisible?: boolean;
   codeVisible?: boolean;
   codeEditorVisible?: boolean;
-  /** Данные пользователя */
-  user?: TelegramUser | null;
+  /** Пользователь приложения */
+  user?: AppUser | null;
+  /** Флаг загрузки авторизации */
+  isLoading?: boolean;
   /** Обработчик выхода */
   onLogout?: () => void;
   /** Обработчик входа */
@@ -62,6 +64,7 @@ export function DesktopActionsFull({
   codeVisible,
   codeEditorVisible,
   user,
+  isLoading,
   onLogout,
   onLogin,
   isVertical,
@@ -96,6 +99,7 @@ export function DesktopActionsFull({
 
       <UserAuth
         user={user || null}
+        isLoading={isLoading}
         onLogout={onLogout}
         onLogin={onLogin}
         isVertical={isVertical}

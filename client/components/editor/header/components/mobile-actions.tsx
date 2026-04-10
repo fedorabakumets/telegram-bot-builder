@@ -14,7 +14,7 @@ import { LoadTemplateButton } from './load-template-button';
 import { SaveTemplateButton } from './save-template-button';
 import { ThemeToggle } from './theme-toggle';
 import { UserAuth } from './user-auth';
-import type { TelegramUser } from './user-section';
+import type { AppUser } from '@/types/telegram-user';
 
 /**
  * Свойства компонента мобильных действий
@@ -40,8 +40,10 @@ export interface MobileActionsProps {
   codeEditorVisible?: boolean;
   /** Обработчик закрытия меню */
   onCloseMenu?: () => void;
-  /** Данные пользователя */
-  user?: TelegramUser | null;
+  /** Пользователь приложения */
+  user?: AppUser | null;
+  /** Флаг загрузки авторизации */
+  isLoading?: boolean;
   /** Обработчик выхода */
   onLogout?: () => void;
   /** Обработчик входа */
@@ -69,6 +71,7 @@ export function MobileActions({
   codeEditorVisible,
   onCloseMenu,
   user,
+  isLoading,
   onLogout,
   onLogin,
 }: MobileActionsProps) {
@@ -83,6 +86,7 @@ export function MobileActions({
 
       <UserAuth
         user={user || null}
+        isLoading={isLoading}
         onLogout={onLogout}
         onLogin={onLogin}
       />

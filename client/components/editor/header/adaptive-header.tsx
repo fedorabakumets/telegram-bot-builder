@@ -36,7 +36,7 @@ export function AdaptiveHeader({
 }: AdaptiveHeaderProps) {
 
   // Проверка авторизации пользователя
-  const { user, logout } = useTelegramAuth();
+  const { user, logout, isLoading } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
 
   // Подключаем listener postMessage один раз на верхнем уровне
@@ -93,6 +93,7 @@ export function AdaptiveHeader({
           codeVisible={codeVisible}
           codeEditorVisible={codeEditorVisible}
           user={user}
+          isLoading={isLoading}
           onLogout={logout}
           onLogin={handleTelegramLogin}
           isVertical={isVertical}
@@ -148,6 +149,7 @@ export function AdaptiveHeader({
           codeVisible={codeVisible}
           codeEditorVisible={codeEditorVisible}
           user={user}
+          isLoading={isLoading}
           onLogout={logout}
           onLogin={handleTelegramLogin}
           isVertical={isVertical}
@@ -175,6 +177,7 @@ export function AdaptiveHeader({
           codeVisible={codeVisible}
           codeEditorVisible={codeEditorVisible}
           user={user}
+          isLoading={isLoading}
           onLogout={logout}
           onLogin={handleTelegramLogin}
         />
