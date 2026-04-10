@@ -3,19 +3,13 @@
  * @module components/editor/canvas/canvas-node/edit-message-preview
  */
 import { Node } from '@shared/schema';
+import { FormattedText } from '@/components/editor/inline-rich/components/FormattedText';
 
 /** Пропсы компонента превью */
 interface EditMessagePreviewProps {
   /** Узел редактирования сообщения */
   node: Node;
 }
-
-/** Иконки режимов редактирования */
-const MODE_ICONS: Record<string, string> = {
-  text:   'fas fa-font',
-  markup: 'fas fa-keyboard',
-  both:   'fas fa-layer-group',
-};
 
 /** Метки действий с клавиатурой */
 const KEYBOARD_LABELS: Record<string, string> = {
@@ -26,7 +20,7 @@ const KEYBOARD_LABELS: Record<string, string> = {
 
 /**
  * Превью узла редактирования сообщения на канвасе.
- * Показывает заголовок, источник ID, текст и действие с клавиатурой.
+ * Стиль аналогичен MessagePreview — пузырь с градиентом.
  *
  * @param props - Свойства компонента
  * @returns JSX элемент
@@ -34,53 +28,47 @@ const KEYBOARD_LABELS: Record<string, string> = {
 export function EditMessagePreview({ node }: EditMessagePreviewProps) {
   const data = node.data as any;
 
-  const editMode: string       = data.editMode ?? 'text';
-  const idSource: string       = data.editMessageIdSource ?? 'last_bot_message';
-  const idManual: string       = data.editMessageIdManual ?? '';
-  const text: string           = data.editMessageText ?? '';
-  const keyboardMode: string   = data.editKeyboardMode ?? 'keep';
+  const editMode: string     = data.editMode ?? 'text';
+  const idSource: string     = data.editMessageIdSource ?? 'last_bot_message';
+  const idManual: string     = data.editMessageIdManual ?? '';
+  const text: string         = data.editMessageText ?? '';
+  const keyboardMode: string = data.editKeyboardMode ?? 'keep';
 
   const showText     = editMode === 'text' || editMode === 'both';
   const showKeyboard = editMode === 'markup' || editMode === 'both';
 
-  /** Метка источника ID сообщения */
+  /** Метка источника ID редактируемого сообщения */
   const sourceLabel = idSource === 'last_bot_message'
-    ? '🕐 Последнее сообщение бота'
-    : `🆔 ${idManual.length > 22 ? idManual.slice(0, 22) + '…' : idManual || '—'}`;
+    ? '🕐 Последнее сообщение'
+    : `🆔 ${idManual.length > 20 ? idManual.slice(0, 20) + '…' : idManual || '—'}`;
 
   return (
-    <div className="space-y-2 p-1">
-
-      {/* Заголовок */}
-      <div className="flex items-center gap-2">
-        <i className={`${MODE_ICONS[editMode] ?? 'fas fa-pen'} text-blue-400 text-sm`} />
-        <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
-          Редактировать сообщение
-        </span>
+    <div className="mb-4">
+      {/* Пузырь сообщения — аналог MessagePreview */}
+      <div className="rounded-xl p-4 bg-gradient-to-br from-blue-50/80 to-sky-50/80 dark:from-blue-900/20 dark:to-sky-900/20 border border-blue-100 dark:border-blue-800/30">
+        <div className="flex items-start space-x-2">
+          <div className="w-2 h-2 rounded-full bg-blue-400 dark:bg-blue-500 mt-1.5 flex-shrink-0" />
+          {showText && text.trim() ? (
+            <FormattedText value={text} lineClamp={5} />
+          ) : showText ? (
+            <span className="text-sm italic text-muted-foreground opacity-60">Текст не задан</span>
+          ) : (
+            <span className="text-sm text-muted-foreground opacity-60">Редактирование кнопок</span>
+          )}
+        </div>
       </div>
 
-      {/* Новый текст */}
-      {showText && (
-        <div className="text-xs font-mono text-blue-500 dark:text-blue-300 truncate max-w-full">
-          {text.trim()
-            ? (text.length > 45 ? text.slice(0, 45) + '…' : text)
-            : <span className="italic opacity-50 font-sans">Текст не задан</span>
-          }
+      {/* Мета-информация под пузырём */}
+      <div className="mt-1.5 px-1 space-y-0.5">
+        <div className="text-[10px] text-sky-600 dark:text-sky-400">
+          {sourceLabel}
         </div>
-      )}
-
-      {/* Действие с клавиатурой */}
-      {showKeyboard && (
-        <div className="text-[10px] text-muted-foreground">
-          {KEYBOARD_LABELS[keyboardMode] ?? keyboardMode}
-        </div>
-      )}
-
-      {/* Источник ID сообщения — внизу как мета-информация */}
-      <div className="text-[10px] text-sky-600 dark:text-sky-400 font-medium">
-        {sourceLabel}
+        {showKeyboard && keyboardMode !== 'keep' && (
+          <div className="text-[10px] text-muted-foreground">
+            {KEYBOARD_LABELS[keyboardMode]}
+          </div>
+        )}
       </div>
-
     </div>
   );
 }
