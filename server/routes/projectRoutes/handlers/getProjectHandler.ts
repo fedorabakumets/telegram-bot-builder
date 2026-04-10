@@ -9,7 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegram/auth-middleware";
+import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { normalizeProjectData } from "../../../utils/normalizeProjectData";
 
 /**
@@ -43,15 +43,6 @@ export async function getProjectHandler(req: Request, res: Response): Promise<vo
         }
 
         const ownerId = getOwnerIdFromRequest(req);
-
-        // Гостевой проект с sessionId — проверяем принадлежность сессии
-        if (project.ownerId === null && project.sessionId !== null) {
-            const sessionId = getSessionIdFromRequest(req);
-            if (project.sessionId !== sessionId) {
-                res.status(403).json({ message: "Нет прав доступа к проекту" });
-                return;
-            }
-        }
 
         // Авторизованный пользователь — проверяем владельца
         if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
