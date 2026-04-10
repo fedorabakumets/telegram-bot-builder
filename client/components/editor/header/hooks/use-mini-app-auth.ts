@@ -63,7 +63,10 @@ export function useMiniAppAuth(): void {
       credentials: 'include',
       body: JSON.stringify({ initData: tg.initData }),
     })
-      .then(res => res.json())
+      .then(res => {
+        const status = res.status;
+        return res.json().then(data => ({ ...data, _status: status }));
+      })
       .then(data => {
         if (data.success && data.user) {
           showDebug(`✅ вошёл как ${data.user.firstName}`);
@@ -75,7 +78,7 @@ export function useMiniAppAuth(): void {
             photoUrl: data.user.photoUrl,
           });
         } else {
-          showDebug(`❌ ошибка: ${data.error}`);
+          showDebug(`❌ HTTP ${data._status}: ${data.error}`);
         }
       })
       .catch(err => showDebug(`❌ fetch error: ${err.message}`));

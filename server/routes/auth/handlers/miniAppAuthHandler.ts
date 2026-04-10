@@ -73,7 +73,12 @@ export async function handleMiniAppAuth(req: Request, res: Response): Promise<vo
       photoUrl: tgUser.photo_url,
     });
 
-    const oldSessionId = req.session?.id;
+    if (!req.session) {
+      res.status(500).json({ success: false, error: 'Сессия не инициализирована' });
+      return;
+    }
+
+    const oldSessionId = req.session.id;
     await regenerateSession(req);
     req.session.telegramUser = userData;
     await saveSession(req);
