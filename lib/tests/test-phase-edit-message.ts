@@ -7,6 +7,10 @@
  * Блок D: Клавиатура (6 тестов)
  * Блок E: Взаимодействие с триггерами (6 тестов)
  * Блок F: Полные сценарии (4 теста)
+ * Блок G: Цепочки узлов (8 тестов)
+ * Блок H: Граничные случаи (8 тестов)
+ * Блок I: Взаимодействие с другими action-узлами (8 тестов)
+ * Блок J: Полные реальные сценарии (8 тестов)
  */
 
 import fs from 'fs';
@@ -226,6 +230,125 @@ function makeConditionNode(id: string, targetId: string) {
     data: {
       conditions: [{ id: 'br1', label: 'Ветка', variable: 'x', operator: 'not_empty', value: '', targetNodeId: targetId }],
       defaultTargetId: '',
+    },
+  };
+}
+
+/**
+ * Создаёт узел forward_message
+ * @param id - ID узла
+ * @param targetChatId - ID целевого чата
+ * @returns Объект узла типа forward_message
+ */
+function makeForwardMessageNode(id: string, targetChatId: string) {
+  return {
+    id, type: 'forward_message',
+    position: { x: 0, y: 0 },
+    data: {
+      sourceMessageIdSource: 'current_message',
+      targetChatTargets: [{ id: 'r1', targetChatIdSource: 'manual', targetChatId, targetChatType: 'user' }],
+      buttons: [], keyboardType: 'none',
+    },
+  };
+}
+
+/**
+ * Создаёт узел http_request
+ * @param id - ID узла
+ * @param url - URL запроса
+ * @param targetId - ID следующего узла
+ * @returns Объект узла типа http_request
+ */
+function makeHttpRequestNode(id: string, url: string, targetId: string) {
+  return {
+    id, type: 'http_request',
+    position: { x: 0, y: 0 },
+    data: {
+      autoTransitionTo: targetId, url, method: 'GET',
+      headers: [], body: '', saveResponseTo: '',
+      buttons: [], keyboardType: 'none',
+    },
+  };
+}
+
+/**
+ * Создаёт узел ban_user
+ * @param id - ID узла
+ * @param targetId - ID следующего узла (опционально)
+ * @returns Объект узла типа ban_user
+ */
+function makeBanUserNode(id: string, targetId = '') {
+  return {
+    id, type: 'ban_user',
+    position: { x: 0, y: 0 },
+    data: {
+      autoTransitionTo: targetId, userIdSource: 'last_message',
+      targetGroupId: '-100123456789', buttons: [], keyboardType: 'none',
+    },
+  };
+}
+
+/**
+ * Создаёт узел delete_message
+ * @param id - ID узла
+ * @param targetId - ID следующего узла (опционально)
+ * @returns Объект узла типа delete_message
+ */
+function makeDeleteMessageNode(id: string, targetId = '') {
+  return {
+    id, type: 'delete_message',
+    position: { x: 0, y: 0 },
+    data: { autoTransitionTo: targetId, buttons: [], keyboardType: 'none' },
+  };
+}
+
+/**
+ * Создаёт узел pin_message
+ * @param id - ID узла
+ * @param targetId - ID следующего узла (опционально)
+ * @returns Объект узла типа pin_message
+ */
+function makePinMessageNode(id: string, targetId = '') {
+  return {
+    id, type: 'pin_message',
+    position: { x: 0, y: 0 },
+    data: { autoTransitionTo: targetId, buttons: [], keyboardType: 'none' },
+  };
+}
+
+/**
+ * Создаёт узел get_managed_bot_token
+ * @param id - ID узла
+ * @param targetId - ID следующего узла (опционально)
+ * @returns Объект узла типа get_managed_bot_token
+ */
+function makeGetManagedBotTokenNode(id: string, targetId = '') {
+  return {
+    id, type: 'get_managed_bot_token',
+    position: { x: 0, y: 0 },
+    data: {
+      autoTransitionTo: targetId, botIdSource: 'variable',
+      botIdVariable: 'bot_id', saveTokenTo: 'bot_token',
+      buttons: [], keyboardType: 'none',
+    },
+  };
+}
+
+/**
+ * Создаёт узел answer_callback_query
+ * @param id - ID узла
+ * @param targetId - ID следующего узла
+ * @param extra - Дополнительные поля data
+ * @returns Объект узла типа answer_callback_query
+ */
+function makeAnswerCallbackQueryNode(id: string, targetId: string, extra: Record<string, any> = {}) {
+  return {
+    id, type: 'answer_callback_query',
+    position: { x: 0, y: 0 },
+    data: {
+      autoTransitionTo: targetId, callbackNotificationText: '',
+      callbackShowAlert: false, callbackCacheTime: 0,
+      buttons: [], keyboardType: 'none', ...extra,
     },
   };
 }
@@ -664,6 +787,453 @@ test('F04', 'три edit_message в одном проекте → все три 
   ok(code.includes('handle_callback_em_2'), 'handle_callback_em_2 должен быть в коде');
   ok(code.includes('handle_callback_em_3'), 'handle_callback_em_3 должен быть в коде');
   syntax(code, 'f04');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК G: Цепочки узлов
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок G: Цепочки узлов ─────────────────────────────────────────');
+
+test('G01', 'edit_message → edit_message → message → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'em_2', { editMessageText: 'Шаг 1' }),
+    makeEditMessageNode('em_2', 'msg1', { editMessageText: 'Шаг 2' }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'g01');
+  ok(code.includes('handle_callback_em_1'), 'handle_callback_em_1 должен быть в коде');
+  ok(code.includes('handle_callback_em_2'), 'handle_callback_em_2 должен быть в коде');
+  syntax(code, 'g01');
+});
+
+test('G02', 'edit_message → answer_callback_query → message → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'acq_1', { editMessageText: 'Обновлено' }),
+    makeAnswerCallbackQueryNode('acq_1', 'msg1', { callbackNotificationText: 'OK' }),
+    makeMessageNode('msg1', 'Конец'),
+  ]);
+  syntax(gen(p, 'g02'), 'g02');
+});
+
+test('G03', 'edit_message → http_request → message → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'http1', { editMessageText: 'Загружаем...' }),
+    makeHttpRequestNode('http1', 'https://api.example.com/data', 'msg1'),
+    makeMessageNode('msg1', 'Данные получены'),
+  ]);
+  syntax(gen(p, 'g03'), 'g03');
+});
+
+test('G04', 'edit_message → ban_user → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb_ban', 'em_warn'),
+    makeEditMessageNode('em_warn', 'ban1', { editMessageText: 'Вы заблокированы' }),
+    makeBanUserNode('ban1'),
+  ]);
+  syntax(gen(p, 'g04'), 'g04');
+});
+
+test('G05', 'edit_message → forward_message → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'fwd1', { editMessageText: 'Пересылаем' }),
+    makeForwardMessageNode('fwd1', '987654321'),
+  ]);
+  syntax(gen(p, 'g05'), 'g05');
+});
+
+test('G06', 'три edit_message в цепочке с разными режимами → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_text'),
+    makeEditMessageNode('em_text', 'em_markup', { editMode: 'text', editMessageText: 'Текст' }),
+    makeEditMessageNode('em_markup', 'em_both', { editMode: 'markup', editKeyboardMode: 'remove' }),
+    makeEditMessageNode('em_both', 'msg1', { editMode: 'both', editMessageText: 'Оба', editKeyboardMode: 'keep' }),
+    makeMessageNode('msg1', 'Финал'),
+  ]);
+  syntax(gen(p, 'g06'), 'g06');
+});
+
+test('G07', 'edit_message → condition → edit_message (ветвление) → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'cond1', { editMessageText: 'Проверяем...' }),
+    makeConditionNode('cond1', 'em_yes'),
+    makeEditMessageNode('em_yes', 'msg1', { editMessageText: 'Условие выполнено' }),
+    makeMessageNode('msg1', 'Ответ'),
+  ]);
+  syntax(gen(p, 'g07'), 'g07');
+});
+
+test('G08', 'полная цепочка с saveMessageIdTo → edit_message(custom) → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'msg_save'),
+    makeMessageNode('msg_save', 'Сохраняем ID', 'saved_msg_id'),
+    makeCallbackTriggerNode('cb_edit', 'em_custom'),
+    makeEditMessageNode('em_custom', 'msg_done', {
+      editMode: 'both',
+      editMessageIdSource: 'custom',
+      editMessageIdManual: '{saved_msg_id}',
+      editMessageText: 'Обновлено через saveMessageIdTo',
+      editKeyboardMode: 'remove',
+    }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+  syntax(gen(p, 'g08'), 'g08');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК H: Граничные случаи
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок H: Граничные случаи ──────────────────────────────────────');
+
+test('H01', 'пустой editMessageText при editMode=text → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'msg1', { editMode: 'text', editMessageText: '' }),
+    makeMessageNode('msg1'),
+  ]);
+  syntax(gen(p, 'h01'), 'h01');
+});
+
+test('H02', 'editMessageText с только пробелами → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'msg1', { editMode: 'text', editMessageText: '   ' }),
+    makeMessageNode('msg1'),
+  ]);
+  syntax(gen(p, 'h02'), 'h02');
+});
+
+test('H03', 'editMessageText 1000+ символов → синтаксис OK', () => {
+  const longText = 'Длинный текст сообщения. '.repeat(50);
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'msg1', { editMode: 'text', editMessageText: longText }),
+    makeMessageNode('msg1'),
+  ]);
+  syntax(gen(p, 'h03'), 'h03');
+});
+
+test('H04', 'editMessageIdManual с кириллицей в имени переменной {id_меню} → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'msg1', {
+      editMessageIdSource: 'custom',
+      editMessageIdManual: '{id_меню}',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  syntax(gen(p, 'h04'), 'h04');
+});
+
+test('H05', 'editKeyboardNodeId с UUID-подобным ID → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  syntax(gen(p, 'h05'), 'h05');
+});
+
+test('H06', 'edit_message с nodeId содержащим дефисы и цифры → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb-node-42', 'em-node-42'),
+    makeEditMessageNode('em-node-42', 'msg1', { editMessageText: 'Дефисы и цифры' }),
+    makeMessageNode('msg1'),
+  ]);
+  syntax(gen(p, 'h06'), 'h06');
+});
+
+test('H07', 'editMode=text + editMessageText с HTML-тегами при editFormatMode=html → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'msg1', {
+      editMode: 'text',
+      editFormatMode: 'html',
+      editMessageText: '<b>Жирный</b> <i>курсив</i> <code>код</code>',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  syntax(gen(p, 'h07'), 'h07');
+});
+
+test('H08', 'editMode=markup + editKeyboardMode=node + несуществующий editKeyboardNodeId → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_1'),
+    makeEditMessageNode('em_1', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'nonexistent_node_999',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  syntax(gen(p, 'h08'), 'h08');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК I: Взаимодействие с другими action-узлами
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок I: Взаимодействие с другими action-узлами ────────────────');
+
+test('I01', 'command_trigger → message(saveMessageIdTo) → callback_trigger → answer_callback_query → edit_message → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'msg_menu'),
+    makeMessageNode('msg_menu', 'Меню', 'menu_id'),
+    makeCallbackTriggerNode('cb_acq', 'acq_1'),
+    makeAnswerCallbackQueryNode('acq_1', 'em_1', { callbackNotificationText: 'Принято' }),
+    makeEditMessageNode('em_1', '', {
+      editMessageIdSource: 'custom',
+      editMessageIdManual: '{menu_id}',
+      editMessageText: 'Меню обновлено',
+    }),
+  ]);
+  syntax(gen(p, 'i01'), 'i01');
+});
+
+test('I02', 'edit_message + get_managed_bot_token в одном проекте → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb_em', 'em_1'),
+    makeCallbackTriggerNode('cb_gbt', 'gbt_1'),
+    makeEditMessageNode('em_1', 'msg1', { editMessageText: 'Редактируем' }),
+    makeGetManagedBotTokenNode('gbt_1', 'msg2'),
+    makeMessageNode('msg1', 'После редактирования'),
+    makeMessageNode('msg2', 'Токен получен'),
+  ]);
+  syntax(gen(p, 'i02'), 'i02');
+});
+
+test('I03', 'edit_message + delete_message в одном проекте → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb_em', 'em_1'),
+    makeCallbackTriggerNode('cb_del', 'del_1'),
+    makeEditMessageNode('em_1', 'msg1', { editMessageText: 'Обновлено' }),
+    makeDeleteMessageNode('del_1', 'msg2'),
+    makeMessageNode('msg1', 'После редактирования'),
+    makeMessageNode('msg2', 'После удаления'),
+  ]);
+  syntax(gen(p, 'i03'), 'i03');
+});
+
+test('I04', 'edit_message + pin_message в одном проекте → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb_em', 'em_1'),
+    makeCallbackTriggerNode('cb_pin', 'pin_1'),
+    makeEditMessageNode('em_1', 'msg1', { editMessageText: 'Обновлено' }),
+    makePinMessageNode('pin_1', 'msg2'),
+    makeMessageNode('msg1', 'После редактирования'),
+    makeMessageNode('msg2', 'После закрепления'),
+  ]);
+  syntax(gen(p, 'i04'), 'i04');
+});
+
+test('I05', 'edit_message + http_request → edit_message (цепочка) → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_before'),
+    makeEditMessageNode('em_before', 'http1', { editMessageText: 'Загружаем...' }),
+    makeHttpRequestNode('http1', 'https://api.example.com/update', 'em_after'),
+    makeEditMessageNode('em_after', 'msg1', { editMessageText: 'Загружено!' }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  syntax(gen(p, 'i05'), 'i05');
+});
+
+test('I06', 'edit_message + ban_user + answer_callback_query → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb_em', 'em_1'),
+    makeCallbackTriggerNode('cb_ban', 'ban_1'),
+    makeCallbackTriggerNode('cb_acq', 'acq_1'),
+    makeEditMessageNode('em_1', 'msg1', { editMessageText: 'Предупреждение' }),
+    makeBanUserNode('ban_1', 'msg2'),
+    makeAnswerCallbackQueryNode('acq_1', 'msg3', { callbackNotificationText: 'Обработано' }),
+    makeMessageNode('msg1', 'После редактирования'),
+    makeMessageNode('msg2', 'После бана'),
+    makeMessageNode('msg3', 'После ответа'),
+  ]);
+  syntax(gen(p, 'i06'), 'i06');
+});
+
+test('I07', 'edit_message + forward_message → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb_em', 'em_1'),
+    makeCallbackTriggerNode('cb_fwd', 'fwd_1'),
+    makeEditMessageNode('em_1', 'msg1', { editMessageText: 'Обновлено' }),
+    makeForwardMessageNode('fwd_1', '111222333'),
+    makeMessageNode('msg1', 'После редактирования'),
+  ]);
+  syntax(gen(p, 'i07'), 'i07');
+});
+
+test('I08', 'edit_message + condition + edit_message (разные ветки) → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_first'),
+    makeEditMessageNode('em_first', 'cond1', { editMessageText: 'Проверяем...' }),
+    makeConditionNode('cond1', 'em_yes'),
+    makeEditMessageNode('em_yes', 'msg_yes', { editMessageText: 'Одобрено ✅' }),
+    makeEditMessageNode('em_no', 'msg_no', { editMessageText: 'Отклонено ❌' }),
+    makeMessageNode('msg_yes', 'Успех'),
+    makeMessageNode('msg_no', 'Отказ'),
+  ]);
+  syntax(gen(p, 'i08'), 'i08');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК J: Полные реальные сценарии
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок J: Полные реальные сценарии ──────────────────────────────');
+
+test('J01', 'бот-голосование: /vote → message(saveMessageIdTo) → callback_trigger → edit_message(убрать кнопки) → message → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd_vote', '/vote', 'msg_vote'),
+    makeMessageNode('msg_vote', 'Голосуйте!', 'vote_msg_id'),
+    makeCallbackTriggerNode('cb_vote_yes', 'em_remove_kb'),
+    makeEditMessageNode('em_remove_kb', 'msg_thanks', {
+      editMode: 'markup',
+      editKeyboardMode: 'remove',
+      editMessageIdSource: 'custom',
+      editMessageIdManual: '{vote_msg_id}',
+    }),
+    makeMessageNode('msg_thanks', 'Спасибо за голос!'),
+  ]);
+  syntax(gen(p, 'j01'), 'j01');
+});
+
+test('J02', 'редактирование меню: /menu → message(saveMessageIdTo=menu_id) → callback_trigger → edit_message(custom, {menu_id}) → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd_menu', '/menu', 'msg_menu'),
+    makeMessageNode('msg_menu', 'Главное меню', 'menu_id'),
+    makeCallbackTriggerNode('cb_edit_menu', 'em_menu'),
+    makeEditMessageNode('em_menu', '', {
+      editMode: 'text',
+      editMessageIdSource: 'custom',
+      editMessageIdManual: '{menu_id}',
+      editMessageText: '📋 Обновлённое меню',
+      editFormatMode: 'none',
+    }),
+  ]);
+  syntax(gen(p, 'j02'), 'j02');
+});
+
+test('J03', 'таймер: command_trigger → message(saveMessageIdTo) → edit_message(both, remove keyboard) → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd_timer', '/timer', 'msg_timer'),
+    makeMessageNode('msg_timer', '⏳ Таймер запущен...', 'timer_msg_id'),
+    makeCallbackTriggerNode('cb_done', 'em_done'),
+    makeEditMessageNode('em_done', '', {
+      editMode: 'both',
+      editMessageIdSource: 'custom',
+      editMessageIdManual: '{timer_msg_id}',
+      editMessageText: '✅ Таймер завершён!',
+      editKeyboardMode: 'remove',
+    }),
+  ]);
+  syntax(gen(p, 'j03'), 'j03');
+});
+
+test('J04', 'многошаговый: start → msg1(saveMessageIdTo=step1_id) → cb → edit_message(step1_id) → msg2(saveMessageIdTo=step2_id) → cb2 → edit_message(step2_id) → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeStartNode('start1'),
+    makeMessageNode('msg_step1', 'Шаг 1', 'step1_id'),
+    makeCallbackTriggerNode('cb_step2', 'em_step2'),
+    makeEditMessageNode('em_step2', 'msg_step2', {
+      editMessageIdSource: 'custom',
+      editMessageIdManual: '{step1_id}',
+      editMessageText: 'Шаг 2',
+    }),
+    makeMessageNode('msg_step2', 'Шаг 2 отправлен', 'step2_id'),
+    makeCallbackTriggerNode('cb_step3', 'em_step3'),
+    makeEditMessageNode('em_step3', '', {
+      editMessageIdSource: 'custom',
+      editMessageIdManual: '{step2_id}',
+      editMessageText: 'Шаг 3',
+    }),
+  ]);
+  syntax(gen(p, 'j04'), 'j04');
+});
+
+test('J05', 'условное редактирование: callback_trigger → condition → edit_message("Одобрено") / edit_message("Отклонено") → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb_check', 'cond_approve'),
+    makeConditionNode('cond_approve', 'em_approved'),
+    makeEditMessageNode('em_approved', 'msg_ok', {
+      editMode: 'text',
+      editMessageText: '✅ Одобрено',
+      editFormatMode: 'none',
+    }),
+    makeEditMessageNode('em_rejected', 'msg_fail', {
+      editMode: 'text',
+      editMessageText: '❌ Отклонено',
+      editFormatMode: 'none',
+    }),
+    makeMessageNode('msg_ok', 'Заявка одобрена'),
+    makeMessageNode('msg_fail', 'Заявка отклонена'),
+  ]);
+  syntax(gen(p, 'j05'), 'j05');
+});
+
+test('J06', 'userDatabaseEnabled=true + переменные пользователя в тексте → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/profile', 'msg_profile'),
+    makeMessageNode('msg_profile', 'Ваш профиль', 'profile_msg_id'),
+    makeCallbackTriggerNode('cb_update_profile', 'em_profile'),
+    makeEditMessageNode('em_profile', '', {
+      editMode: 'text',
+      editMessageIdSource: 'custom',
+      editMessageIdManual: '{profile_msg_id}',
+      editMessageText: 'Привет, {user_name}! Ваш ID: {user_id}. Баланс: {balance}',
+      editFormatMode: 'none',
+    }),
+  ]);
+  syntax(gen(p, 'j06', true), 'j06');
+});
+
+test('J07', 'edit_message(editMode=both, html, remove) в сложном проекте с 5+ узлами → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeStartNode('start1'),
+    makeCommandTriggerNode('cmd_help', '/help', 'msg_help'),
+    makeMessageNode('msg_help', 'Помощь', 'help_msg_id'),
+    makeCallbackTriggerNode('cb_close_help', 'em_close_help'),
+    makeEditMessageNode('em_close_help', 'msg_closed', {
+      editMode: 'both',
+      editFormatMode: 'html',
+      editMessageIdSource: 'custom',
+      editMessageIdManual: '{help_msg_id}',
+      editMessageText: '<b>Помощь закрыта</b>',
+      editKeyboardMode: 'remove',
+    }),
+    makeMessageNode('msg_closed', 'Раздел помощи закрыт'),
+  ]);
+  syntax(gen(p, 'j07'), 'j07');
+});
+
+test('J08', 'полный проект: start + 3 callback_trigger + 3 edit_message + 3 message → все обработчики в коде → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeStartNode('start1'),
+    makeCallbackTriggerNode('cb_a', 'em_a'),
+    makeCallbackTriggerNode('cb_b', 'em_b'),
+    makeCallbackTriggerNode('cb_c', 'em_c'),
+    makeEditMessageNode('em_a', 'msg_a', { editMode: 'text', editMessageText: 'Вариант A' }),
+    makeEditMessageNode('em_b', 'msg_b', { editMode: 'markup', editKeyboardMode: 'remove' }),
+    makeEditMessageNode('em_c', 'msg_c', { editMode: 'both', editMessageText: 'Вариант C', editKeyboardMode: 'keep' }),
+    makeMessageNode('msg_a', 'Ответ A'),
+    makeMessageNode('msg_b', 'Ответ B'),
+    makeMessageNode('msg_c', 'Ответ C'),
+  ]);
+  const code = gen(p, 'j08');
+  ok(code.includes('handle_callback_em_a'), 'handle_callback_em_a должен быть в коде');
+  ok(code.includes('handle_callback_em_b'), 'handle_callback_em_b должен быть в коде');
+  ok(code.includes('handle_callback_em_c'), 'handle_callback_em_c должен быть в коде');
+  syntax(code, 'j08');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────
