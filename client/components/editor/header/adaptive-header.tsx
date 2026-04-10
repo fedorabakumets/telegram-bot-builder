@@ -2,6 +2,7 @@ import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import { useTelegramAuthListener } from '@/components/editor/header/hooks/use-telegram-auth-listener';
+import { useMiniAppAuth } from '@/components/editor/header/hooks/use-mini-app-auth';
 import type { AdaptiveHeaderProps } from './types';
 import { BrandSection } from './components/brand-section';
 import { Navigation } from './components/navigation';
@@ -41,6 +42,8 @@ export function AdaptiveHeader({
 
   // Подключаем listener postMessage один раз на верхнем уровне
   useTelegramAuthListener();
+  // Автоматическая авторизация при открытии как Mini App
+  useMiniAppAuth();
 
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
