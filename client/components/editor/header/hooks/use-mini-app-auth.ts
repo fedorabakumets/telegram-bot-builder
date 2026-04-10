@@ -41,7 +41,6 @@ export function useMiniAppAuth(): void {
       showDebug('WebApp недоступен');
       return;
     }
-    tg.expand?.();
     tg.ready?.();
     showDebug(`platform: ${(tg as any).platform ?? '?'}, initData: ${tg.initData ? 'есть' : 'пусто'}`);
   }, []);
