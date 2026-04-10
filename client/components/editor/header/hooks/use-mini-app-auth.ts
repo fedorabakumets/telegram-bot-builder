@@ -39,6 +39,7 @@ export function useMiniAppAuth(): void {
     const tg = window.Telegram?.WebApp;
     if (!tg) return;
     tg.ready?.();
+    (tg as any).requestFullscreen?.();
   }, []);
 
   useEffect(() => {
