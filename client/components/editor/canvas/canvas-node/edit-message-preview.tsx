@@ -46,14 +46,16 @@ export function EditMessagePreview({ node }: EditMessagePreviewProps) {
   return (
     <div>
       {/* Заголовок + источник на одной строке */}
-      <div className="flex items-center gap-2 mb-4">
-        <i className="fas fa-pen text-blue-500 text-sm" />
-        <span className="font-semibold text-blue-700 dark:text-blue-300 text-base">
+      <div className="flex items-center gap-2 mb-4 flex-nowrap">
+        <i className="fas fa-pen text-blue-500 text-sm flex-shrink-0" />
+        <span className="font-semibold text-blue-700 dark:text-blue-300 text-sm whitespace-nowrap">
           Редактировать сообщение
         </span>
-        <span className="text-sm text-sky-500 dark:text-sky-400 font-mono ml-auto truncate max-w-[100px]">
-          {sourceLabel}
-        </span>
+        {sourceLabel && (
+          <span className="text-sm text-sky-500 dark:text-sky-400 font-mono whitespace-nowrap">
+            {sourceLabel}
+          </span>
+        )}
       </div>
 
       {/* Пузырь — аналог MessagePreview */}
