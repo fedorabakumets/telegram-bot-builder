@@ -9,8 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
-import { getCachedOrExecute } from "../../../utils/cache";
+import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
  * Обрабатывает запрос на получение списка проектов
@@ -22,29 +21,18 @@ import { getCachedOrExecute } from "../../../utils/cache";
  */
 export async function listProjectsHandler(req: Request, res: Response): Promise<void> {
     try {
-        const { ids } = req.query;
         const ownerId = getOwnerIdFromRequest(req);
         let projects;
 
         if (ownerId !== null) {
-            const userProjects = await storage.getUserBotProjects(ownerId);
-            const guestProjects = await storage.getGuestBotProjects();
-            projects = [...userProjects, ...guestProjects];
+            // Авторизованный: только свои проекты, без гостевых
+            projects = await storage.getUserBotProjects(ownerId);
         } else {
-            let allProjects = await getCachedOrExecute(
-                'all-projects-list',
-                async () => await storage.getAllBotProjects(),
-                30000
-            );
-
-            if (ids && typeof ids === 'string') {
-                const requestedIds = ids.split(',').map(id => parseInt(id)).filter(id => !isNaN(id));
-                projects = requestedIds.length > 0
-                    ? allProjects.filter(p => requestedIds.includes(p.id))
-                    : allProjects;
-            } else {
-                projects = allProjects;
-            }
+            // Гость: свои по sessionId + старые общие (sessionId = NULL)
+            const sessionId = getSessionIdFromRequest(req);
+            projects = sessionId
+                ? await storage.getGuestBotProjectsBySession(sessionId)
+                : await storage.getGuestBotProjects();
         }
 
         const projectsList = projects.map(({ data, ...metadata }) => metadata);

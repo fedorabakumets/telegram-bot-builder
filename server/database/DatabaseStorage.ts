@@ -531,12 +531,38 @@ export class DatabaseStorage implements IStorage {
 
   /**
    * Получить гостевые проекты ботов (без владельца) из базы данных
-   * @returns Массив гостевых проектов ботов
+   * @returns Массив гостевых проектов ботов (только с sessionId = NULL)
    */
   async getGuestBotProjects(): Promise<BotProject[]> {
     return await this.db.select().from(botProjects)
-      .where(isNull(botProjects.ownerId))
+      .where(and(isNull(botProjects.ownerId), isNull(botProjects.sessionId)))
       .orderBy(desc(botProjects.createdAt));
+  }
+
+  /**
+   * Получить гостевые проекты по ID сессии
+   * Возвращает проекты конкретной сессии + старые общие (sessionId = NULL)
+   * @param sessionId - ID сессии гостевого пользователя
+   * @returns Массив гостевых проектов доступных для данной сессии
+   */
+  async getGuestBotProjectsBySession(sessionId: string): Promise<BotProject[]> {
+    return await this.db.select().from(botProjects)
+      .where(and(
+        isNull(botProjects.ownerId),
+        or(eq(botProjects.sessionId, sessionId), isNull(botProjects.sessionId))
+      ))
+      .orderBy(desc(botProjects.createdAt));
+  }
+
+  /**
+   * Переносит гостевые проекты сессии к авторизованному пользователю
+   * @param sessionId - ID сессии гостя
+   * @param ownerId - ID нового владельца
+   */
+  async migrateGuestProjects(sessionId: string, ownerId: number): Promise<void> {
+    await this.db.update(botProjects)
+      .set({ ownerId, sessionId: null })
+      .where(and(eq(botProjects.sessionId, sessionId), isNull(botProjects.ownerId)));
   }
 
   /**

@@ -47,6 +47,8 @@ export const botProjects = pgTable("bot_projects", {
   sortOrder: real("sort_order").default(0),
   /** ID администраторов бота (через запятую) */
   adminIds: text("admin_ids").default(""),
+  /** ID сессии гостевого пользователя (для изоляции гостевых проектов) */
+  sessionId: text("session_id"),
 });
 
 /** Схема для вставки данных проекта бота */

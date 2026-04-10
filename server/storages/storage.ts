@@ -329,9 +329,25 @@ export interface IStorage {
 
   /**
    * Получить гостевые проекты ботов (без владельца)
+   * Возвращает только проекты с sessionId = NULL (старые общие)
    * @returns Массив гостевых проектов ботов
    */
   getGuestBotProjects(): Promise<BotProject[]>;
+
+  /**
+   * Получить гостевые проекты по ID сессии
+   * Возвращает проекты конкретной сессии + старые общие (sessionId = NULL)
+   * @param sessionId - ID сессии гостевого пользователя
+   * @returns Массив гостевых проектов доступных для данной сессии
+   */
+  getGuestBotProjectsBySession(sessionId: string): Promise<BotProject[]>;
+
+  /**
+   * Переносит гостевые проекты сессии к авторизованному пользователю
+   * @param sessionId - ID сессии гостя
+   * @param ownerId - ID нового владельца
+   */
+  migrateGuestProjects(sessionId: string, ownerId: number): Promise<void>;
 
   /**
    * Получить токены ботов пользователя

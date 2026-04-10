@@ -13,6 +13,7 @@ import { regenerateSession, saveSession } from "../utils/sessionUtils";
 
 /**
  * Обрабатывает данные авторизации от Telegram
+ * После входа мигрирует гостевые проекты сессии к пользователю
  *
  * @function handleTelegramAuth
  * @param {Request} req - Объект запроса
@@ -24,10 +25,7 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
         const { id, first_name, last_name, username, photo_url, auth_date } = req.body;
 
         if (!id) {
-            res.status(400).json({
-                success: false,
-                error: "User ID обязателен"
-            });
+            res.status(400).json({ success: false, error: "User ID обязателен" });
             return;
         }
 
@@ -41,29 +39,27 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
         });
 
         if (!req.session) {
-            res.status(500).json({
-                success: false,
-                error: "Сессия не инициализирована"
-            });
+            res.status(500).json({ success: false, error: "Сессия не инициализирована" });
             return;
         }
+
+        // Сохраняем старый sessionId ДО regenerate — после него ID изменится
+        const oldSessionId = req.session.id;
 
         await regenerateSession(req);
         req.session.telegramUser = userData;
         await saveSession(req);
 
-        console.log(`✅ Telegram авторизация успешна для: ${first_name} (@${username}) - Сессия СОХРАНЕНА с ID: ${userData.id}`);
+        // Мигрируем гостевые проекты старой сессии к авторизованному пользователю
+        if (oldSessionId) {
+            await storage.migrateGuestProjects(oldSessionId, userData.id);
+        }
 
-        res.json({
-            success: true,
-            message: "Авторизация успешна",
-            user: userData
-        });
+        console.log(`✅ Telegram авторизация: ${first_name} (@${username}), ID: ${userData.id}`);
+
+        res.json({ success: true, message: "Авторизация успешна", user: userData });
     } catch (error: any) {
         console.error("Ошибка авторизации через Telegram:", error);
-        res.status(500).json({
-            success: false,
-            error: "Ошибка авторизации"
-        });
+        res.status(500).json({ success: false, error: "Ошибка авторизации" });
     }
 }

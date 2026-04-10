@@ -59,3 +59,13 @@ export function getOwnerIdFromRequest(req: Request): number | null {
   }
   return null;
 }
+
+/**
+ * Возвращает ID сессии для неавторизованных пользователей
+ * @param req - Объект запроса Express
+ * @returns ID сессии или null если пользователь авторизован
+ */
+export function getSessionIdFromRequest(req: Request): string | null {
+  if (req.user) return null; // авторизованный — sessionId не нужен
+  return req.session?.id ?? null;
+}

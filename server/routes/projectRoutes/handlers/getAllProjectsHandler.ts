@@ -9,8 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
-import { getCachedOrExecute } from "../../../utils/cache";
+import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
  * Обрабатывает запрос на получение всех проектов
@@ -26,15 +25,14 @@ export async function getAllProjectsHandler(req: Request, res: Response): Promis
         let projects;
 
         if (ownerId !== null) {
-            const userProjects = await storage.getUserBotProjects(ownerId);
-            const guestProjects = await storage.getGuestBotProjects();
-            projects = [...userProjects, ...guestProjects];
+            // Авторизованный: только свои проекты, без гостевых
+            projects = await storage.getUserBotProjects(ownerId);
         } else {
-            projects = await getCachedOrExecute(
-                'all-projects',
-                () => storage.getAllBotProjects(),
-                30000
-            );
+            // Гость: свои по sessionId + старые общие (sessionId = NULL)
+            const sessionId = getSessionIdFromRequest(req);
+            projects = sessionId
+                ? await storage.getGuestBotProjectsBySession(sessionId)
+                : await storage.getGuestBotProjects();
         }
 
         res.json(projects);
