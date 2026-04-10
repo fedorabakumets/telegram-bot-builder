@@ -4,39 +4,29 @@
  */
 import { Node } from '@shared/schema';
 
-/** Пропсы компонента превью узла редактирования сообщения */
+/** Пропсы компонента превью */
 interface EditMessagePreviewProps {
   /** Узел редактирования сообщения */
   node: Node;
 }
 
-/**
- * Конфигурация режима редактирования: иконка и метка
- */
-interface ModeConfig {
-  /** CSS-класс иконки FontAwesome */
-  icon: string;
-  /** Человекочитаемая метка */
-  label: string;
-}
-
-/** Конфигурации режимов редактирования */
-const MODE_CONFIG: Record<string, ModeConfig> = {
-  text:   { icon: 'fas fa-font',        label: 'Текст' },
-  markup: { icon: 'fas fa-keyboard',    label: 'Кнопки' },
-  both:   { icon: 'fas fa-layer-group', label: 'Текст + кнопки' },
+/** Иконки режимов редактирования */
+const MODE_ICONS: Record<string, string> = {
+  text:   'fas fa-font',
+  markup: 'fas fa-keyboard',
+  both:   'fas fa-layer-group',
 };
 
 /** Метки действий с клавиатурой */
 const KEYBOARD_LABELS: Record<string, string> = {
-  keep:   '⏸ Не менять',
+  keep:   '⏸ Клавиатура не меняется',
   remove: '🗑 Убрать кнопки',
   node:   '⌨️ Из узла keyboard',
 };
 
 /**
- * Компонент превью узла редактирования сообщения на канвасе.
- * Отображает источник сообщения, режим редактирования, текст и действие с клавиатурой.
+ * Превью узла редактирования сообщения на канвасе.
+ * Показывает заголовок, источник ID, текст и действие с клавиатурой.
  *
  * @param props - Свойства компонента
  * @returns JSX элемент
@@ -44,51 +34,50 @@ const KEYBOARD_LABELS: Record<string, string> = {
 export function EditMessagePreview({ node }: EditMessagePreviewProps) {
   const data = node.data as any;
 
-  const editMode: string        = data.editMode ?? 'text';
-  const messageSource: string   = data.editMessageIdSource ?? 'last_bot_message';
-  const customId: string        = data.editMessageIdManual ?? '';
-  const text: string            = data.editMessageText ?? '';
-  const keyboardAction: string  = data.editKeyboardMode ?? 'keep';
+  const editMode: string       = data.editMode ?? 'text';
+  const idSource: string       = data.editMessageIdSource ?? 'last_bot_message';
+  const idManual: string       = data.editMessageIdManual ?? '';
+  const text: string           = data.editMessageText ?? '';
+  const keyboardMode: string   = data.editKeyboardMode ?? 'keep';
 
   const showText     = editMode === 'text' || editMode === 'both';
   const showKeyboard = editMode === 'markup' || editMode === 'both';
 
-  const sourceLabel = messageSource === 'last_bot_message'
-    ? '🕐 Последнее сообщение'
-    : `🆔 ${customId.length > 20 ? customId.slice(0, 20) + '…' : customId || '—'}`;
-
-  const modeConfig = MODE_CONFIG[editMode] ?? { icon: 'fas fa-edit', label: editMode };
+  /** Метка источника ID сообщения */
+  const sourceLabel = idSource === 'last_bot_message'
+    ? '🕐 Последнее сообщение бота'
+    : `🆔 ${idManual.length > 22 ? idManual.slice(0, 22) + '…' : idManual || '—'}`;
 
   return (
-    <div className="space-y-1.5 p-1">
+    <div className="space-y-2 p-1">
 
-      {/* Источник сообщения */}
-      <div className="flex items-center gap-1.5 text-[11px] font-medium text-sky-700 dark:text-sky-300">
-        <span>{sourceLabel}</span>
+      {/* Заголовок */}
+      <div className="flex items-center gap-2">
+        <i className={`${MODE_ICONS[editMode] ?? 'fas fa-pen'} text-blue-400 text-sm`} />
+        <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+          Редактировать сообщение
+        </span>
       </div>
 
-      <div className="border-t border-sky-200 dark:border-sky-800" />
-
-      {/* Режим редактирования */}
-      <div className="flex items-center gap-1.5 text-[11px] text-blue-600 dark:text-blue-400">
-        <i className={`${modeConfig.icon} w-3 text-center`} />
-        <span className="font-medium">{modeConfig.label}</span>
-
-        {/* Текст сообщения — inline после режима */}
-        {showText && (
-          <span className="font-mono text-blue-500 dark:text-blue-300 truncate max-w-[120px]">
-            {text.trim()
-              ? (text.length > 50 ? text.slice(0, 50) + '…' : text)
-              : <span className="italic opacity-50 not-italic">не задан</span>
-            }
-          </span>
-        )}
+      {/* Источник ID сообщения */}
+      <div className="text-[10px] text-sky-600 dark:text-sky-400 font-medium">
+        {sourceLabel}
       </div>
+
+      {/* Новый текст */}
+      {showText && (
+        <div className="text-xs font-mono text-blue-500 dark:text-blue-300 truncate max-w-full">
+          {text.trim()
+            ? (text.length > 45 ? text.slice(0, 45) + '…' : text)
+            : <span className="italic opacity-50 font-sans">Текст не задан</span>
+          }
+        </div>
+      )}
 
       {/* Действие с клавиатурой */}
       {showKeyboard && (
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span>{KEYBOARD_LABELS[keyboardAction] ?? keyboardAction}</span>
+        <div className="text-[10px] text-muted-foreground">
+          {KEYBOARD_LABELS[keyboardMode] ?? keyboardMode}
         </div>
       )}
 
