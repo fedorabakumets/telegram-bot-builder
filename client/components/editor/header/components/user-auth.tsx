@@ -4,6 +4,7 @@
  */
 
 import { UserSection, type TelegramUser } from './user-section';
+import { LoginButton } from './login-button';
 
 /**
  * Свойства компонента авторизации
@@ -22,12 +23,10 @@ export interface UserAuthProps {
 /**
  * Компонент авторизации: показывает секцию пользователя или кнопку входа
  */
-export function UserAuth({ user, onLogout, isVertical }: UserAuthProps) {
+export function UserAuth({ user, onLogout, onLogin, isVertical }: UserAuthProps) {
   if (user) {
     return <UserSection user={user} onLogout={onLogout || (() => {})} isVertical={isVertical} />;
   }
 
-  // Временно скрыта кнопка входа
-  // return <LoginButton onClick={onLogin} />;
-  return null;
+  return <LoginButton onClick={onLogin} />;
 }
