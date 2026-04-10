@@ -75,11 +75,15 @@ export function handleLogin(_req: Request, res: Response): void {
   <div class="container">
     <h1>Вход в BotCraft Studio</h1>
     <p>Используйте свой аккаунт Telegram для входа</p>
-    ${isDev ? devForm : `<script async src="https://telegram.org/js/telegram-widget.js?22"
-      data-telegram-login="${cleanBotUsername}"
-      data-size="large"
-      data-onauth="onTelegramAuth(user)"
-      data-request-access="write">
+    ${isDev ? devForm : `<script src="https://telegram.org/js/telegram-login.js"></script>
+    <button id="tgLoginBtn" style="padding:10px 24px;background:#0088cc;color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">Войти через Telegram</button>
+    <script>
+      Telegram.Login.init({
+        client_id: ${process.env.TELEGRAM_CLIENT_ID || 0},
+        request_access: ['write'],
+      }, function(user) { if (user) onTelegramAuth(user); });
+      document.getElementById('tgLoginBtn').addEventListener('click', function() { Telegram.Login.open(); });
+      window.addEventListener('load', function() { Telegram.Login.open(); });
     </script>`}
   </div>
   <script>
