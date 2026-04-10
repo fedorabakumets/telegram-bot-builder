@@ -37,24 +37,15 @@ export function useMiniAppAuth(): void {
   // Разворачиваем на весь экран сразу при монтировании
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
-    if (!tg) {
-      showDebug('WebApp недоступен');
-      return;
-    }
+    if (!tg) return;
     tg.ready?.();
-    showDebug(`platform: ${(tg as any).platform ?? '?'}, initData: ${tg.initData ? 'есть' : 'пусто'}`);
   }, []);
 
   useEffect(() => {
     if (isLoading) return;
 
     const tg = window.Telegram?.WebApp;
-    if (!tg?.initDataUnsafe?.user || !tg.initData) {
-      showDebug(`нет user в initDataUnsafe: ${JSON.stringify(tg?.initDataUnsafe ?? {})}`);
-      return;
-    }
-
-    showDebug(`отправляем auth для user.id=${tg.initDataUnsafe.user?.id}`);
+    if (!tg?.initDataUnsafe?.user || !tg.initData) return;
 
     fetch('/api/auth/telegram/miniapp', {
       method: 'POST',
@@ -68,7 +59,6 @@ export function useMiniAppAuth(): void {
       })
       .then(data => {
         if (data.success && data.user) {
-          showDebug(`✅ вошёл как ${data.user.firstName}`);
           login({
             id: data.user.id,
             firstName: data.user.firstName,
