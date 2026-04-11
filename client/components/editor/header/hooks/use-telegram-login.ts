@@ -3,8 +3,9 @@
  * @module components/editor/header/hooks/use-telegram-login
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useTelegramAuth } from './use-telegram-auth';
+import { useToast } from '@/hooks/use-toast';
 
 declare global {
   interface Window {
@@ -41,6 +42,51 @@ declare global {
 
 /** Идентификатор Telegram-приложения */
 const CLIENT_ID = 7713154819;
+const TELEGRAM_LOGIN_SRC = 'https://oauth.telegram.org/js/telegram-login.js?3';
+const TELEGRAM_LOGIN_SCRIPT_ID = 'telegram-login-sdk';
+
+function waitForTelegramLogin(timeoutMs: number): Promise<boolean> {
+  if (typeof window === 'undefined') return Promise.resolve(false);
+  if (typeof window.Telegram?.Login?.init === 'function') return Promise.resolve(true);
+
+  return new Promise((resolve) => {
+    const startedAt = Date.now();
+    const tick = () => {
+      if (typeof window.Telegram?.Login?.init === 'function') {
+        resolve(true);
+        return;
+      }
+      if (Date.now() - startedAt >= timeoutMs) {
+        resolve(false);
+        return;
+      }
+      setTimeout(tick, 120);
+    };
+    tick();
+  });
+}
+
+function ensureTelegramLogin(timeoutMs = 2500): Promise<boolean> {
+  if (typeof window === 'undefined') return Promise.resolve(false);
+  if (typeof window.Telegram?.Login?.init === 'function') return Promise.resolve(true);
+
+  const existing = document.getElementById(TELEGRAM_LOGIN_SCRIPT_ID) as HTMLScriptElement | null;
+  if (existing) {
+    return waitForTelegramLogin(timeoutMs);
+  }
+
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.id = TELEGRAM_LOGIN_SCRIPT_ID;
+    script.async = true;
+    script.src = TELEGRAM_LOGIN_SRC;
+    script.onload = () => {
+      waitForTelegramLogin(timeoutMs).then(resolve);
+    };
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+}
 
 /**
  * Хук инициализации Telegram Login виджета.
@@ -50,53 +96,63 @@ const CLIENT_ID = 7713154819;
  */
 export function useTelegramLogin() {
   const { login } = useTelegramAuth();
+  const { toast } = useToast();
+  const didInit = useRef(false);
+  const isDev = import.meta.env?.MODE === 'development';
+
+  const init = useCallback(() => {
+    if (didInit.current) return;
+    if (typeof window.Telegram?.Login?.init !== 'function') return;
+    window.Telegram.Login.init(
+      { client_id: CLIENT_ID, request_access: ['write'] },
+      (data: any) => {
+        if (!data || data.error) return;
+        // Маппим поля из id_token payload или user объекта
+        const user = data.user ?? data;
+        login({
+          id: user.id ?? user.sub,
+          firstName: user.first_name ?? user.name ?? '',
+          lastName: user.last_name,
+          username: user.username ?? user.preferred_username,
+          photoUrl: user.photo_url ?? user.picture,
+        });
+      }
+    );
+    didInit.current = true;
+  }, [login]);
 
   useEffect(() => {
-    /**
-     * Инициализирует Telegram.Login с колбэком авторизации
-     */
-    const init = () => {
-      if (typeof window.Telegram?.Login?.init !== 'function') return;
-      window.Telegram.Login.init(
-        { client_id: CLIENT_ID, request_access: ['write'] },
-        (data: any) => {
-          if (!data || data.error) return;
-          // Маппим поля из id_token payload или user объекта
-          const user = data.user ?? data;
-          login({
-            id: user.id ?? user.sub,
-            firstName: user.first_name ?? user.name ?? '',
-            lastName: user.last_name,
-            username: user.username ?? user.preferred_username,
-            photoUrl: user.photo_url ?? user.picture,
-          });
-        }
-      );
-    };
-
     if (typeof window.Telegram?.Login?.init === 'function') {
       init();
-    } else {
-      // Ждём загрузки скрипта виджета
-      window.addEventListener('load', init, { once: true });
     }
-  }, [login]);
+  }, [init]);
 
   /**
    * Открывает диалог авторизации Telegram.
    * Если виджет недоступен (dev-режим) — открывает popup /api/auth/login.
    */
-  const handleTelegramLogin = useCallback(() => {
-    if (window.Telegram?.Login?.open) {
-      window.Telegram.Login.open();
-    } else {
-      // Dev fallback — старый popup
-      const w = 500, h = 600;
-      const left = window.innerWidth / 2 - w / 2;
-      const top = window.innerHeight / 2 - h / 2;
-      window.open('/api/auth/login', 'telegram_login', `width=${w},height=${h},left=${left},top=${top}`);
+  const handleTelegramLogin = useCallback(async () => {
+    const ready = await ensureTelegramLogin();
+    if (!ready || typeof window.Telegram?.Login?.open !== 'function') {
+      if (isDev) {
+        // Dev fallback — старый popup
+        const w = 500, h = 600;
+        const left = window.innerWidth / 2 - w / 2;
+        const top = window.innerHeight / 2 - h / 2;
+        window.open('/api/auth/login', 'telegram_login', `width=${w},height=${h},left=${left},top=${top}`);
+        return;
+      }
+      toast({
+        title: 'Telegram недоступен',
+        description: 'Не удалось загрузить виджет. Откройте сайт в Telegram или попробуйте позже.',
+        variant: 'destructive',
+      });
+      return;
     }
-  }, []);
+
+    init();
+    window.Telegram.Login.open();
+  }, [init, isDev, toast]);
 
   return { handleTelegramLogin };
 }
