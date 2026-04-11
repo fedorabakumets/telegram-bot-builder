@@ -11,7 +11,6 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "noEmit": false,
-    "baseUrl": ".",
     "paths": {
       "@shared/*": ["./shared/*"]
     }

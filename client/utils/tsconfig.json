@@ -1,12 +1,11 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "../..",
     "paths": {
-      "@/*": ["client/*"],
-      "@lib/*": ["lib/*"],
-      "@shared/*": ["shared/*"],
-      "@assets/*": ["attached_assets/*"]
+      "@/*": ["../../client/*"],
+      "@lib/*": ["../../lib/*"],
+      "@shared/*": ["../../shared/*"],
+      "@assets/*": ["../../attached_assets/*"]
     }
   },
   "include": [

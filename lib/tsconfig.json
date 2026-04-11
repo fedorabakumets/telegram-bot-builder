@@ -2,10 +2,9 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "lib": ["ES2020"],
-    "baseUrl": "..",
     "paths": {
-      "@lib/*": ["lib/*"],
-      "@shared/*": ["shared/*"]
+      "@lib/*": ["../lib/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
   "include": ["**/*.ts"],

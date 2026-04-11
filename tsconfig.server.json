@@ -14,14 +14,13 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "noEmitOnError": false,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["client/*"],
-      "@lib/*": ["lib/*"],
+      "@/*": ["./client/*"],
+      "@lib/*": ["./lib/*"],
       "@shared/*": [
         "./shared/*"
       ],
-      "@assets/*": ["attached_assets/*"]
+      "@assets/*": ["./attached_assets/*"]
     }
   },
   "include": [

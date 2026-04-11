@@ -18,14 +18,12 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noImplicitReturns": true,
-    "ignoreDeprecations": "6.0",
     "exactOptionalPropertyTypes": false,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["client/*"],
-      "@lib/*": ["lib/*"],
-      "@shared/*": ["shared/*"],
-      "@assets/*": ["attached_assets/*"]
+      "@/*": ["./client/*"],
+      "@lib/*": ["./lib/*"],
+      "@shared/*": ["./shared/*"],
+      "@assets/*": ["./attached_assets/*"]
     }
   },
   "include": [

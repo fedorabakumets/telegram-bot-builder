@@ -18,10 +18,9 @@
     "declarationMap": true,
     "noEmit": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "paths": {
-      "@shared/*": ["shared/*"],
-      "@client/*": ["client/*"]
+      "@shared/*": ["./shared/*"],
+      "@client/*": ["./client/*"]
     }
   },
   "include": ["lib/**/*", "shared/**/*"],
