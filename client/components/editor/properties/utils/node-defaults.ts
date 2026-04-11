@@ -299,7 +299,16 @@ export function getNodeDefaults(type: Node['type']): any {
     },
     keyboard: {
       keyboardType: 'inline',
-      buttons: []
+      buttons: [],
+      enableDynamicButtons: false,
+      dynamicButtons: {
+        variable: '',
+        arrayField: '',
+        textField: '',
+        callbackField: '',
+        styleField: '',
+        columns: 2,
+      },
     },
     input: {
       inputType: 'any',

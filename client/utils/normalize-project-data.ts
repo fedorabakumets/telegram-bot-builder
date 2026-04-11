@@ -81,6 +81,21 @@ export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWit
         node.data.buttons = normalizeButtons(node.data.buttons);
       }
 
+      // Инициализируем поля динамических кнопок, если их нет
+      if (node.data.enableDynamicButtons === undefined) {
+        node.data.enableDynamicButtons = false;
+      }
+      if (!node.data.dynamicButtons) {
+        node.data.dynamicButtons = {
+          variable: '',
+          arrayField: '',
+          textField: '',
+          callbackField: '',
+          styleField: '',
+          columns: 2,
+        };
+      }
+
       // Конвертируем continueButtonText в кнопку с action: 'complete'
       if (node.data.allowMultipleSelection && node.data.continueButtonText) {
         const hasCompleteButton = node.data.buttons.some((btn: any) => btn.action === 'complete');

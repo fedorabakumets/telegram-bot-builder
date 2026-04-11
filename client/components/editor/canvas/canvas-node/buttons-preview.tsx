@@ -62,6 +62,8 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
   const hasOptionButtons = node.data.buttons.some((button: any) => button.action === 'selection');
   const isMultiSelect = hasOptionButtons && (node.data as any).allowMultipleSelection;
   const keyboardType = node.data.keyboardType as 'inline' | 'reply';
+  const enableDynamicButtons = (node.data as any).enableDynamicButtons ?? false;
+  const dynamicButtons = (node.data as any).dynamicButtons;
 
   // Находим кнопку завершения (для множественного выбора)
   const completeButton = useMemo(() =>
@@ -80,6 +82,13 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
   return (
     <div className="space-y-3 mb-1">
       <ButtonsPreviewHeader isMultiSelect={isMultiSelect} keyboardType={keyboardType} />
+
+      {/* Индикатор динамических кнопок */}
+      {enableDynamicButtons && dynamicButtons && (
+        <div className="rounded-md border border-blue-200/50 bg-blue-50/50 px-2 py-1 text-xs text-blue-700 dark:border-blue-800/50 dark:bg-blue-950/30 dark:text-blue-300">
+          <span className="font-medium">&#9889;</span> Динамические: {dynamicButtons.variable}.{dynamicButtons.arrayField} ({dynamicButtons.columns ?? 2} кол.)
+        </div>
+      )}
 
       {keyboardType === 'inline' ? (
         <KeyboardGrid

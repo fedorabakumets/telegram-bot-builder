@@ -333,6 +333,28 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
     });
   });
 
+  /**
+   * Добавляем переменные из динамических кнопок keyboard-узлов.
+   * Переменная dynamicButtons.variable ссылается на существующую переменную
+   * (например, ответ HTTP-запроса) — помечаем, что keyboard-узел её использует.
+   */
+  allNodes.forEach(node => {
+    if ((node.data as any).keyboardType === undefined && node.type !== 'keyboard') return;
+    const data = node.data as any;
+    if (!data.enableDynamicButtons) return;
+    const dynVar = data.dynamicButtons?.variable;
+    if (!dynVar || !dynVar.trim()) return;
+    const mapKey = `dynamic_btn__${node.id}__${dynVar}`;
+    if (!variablesMap.has(mapKey)) {
+      variablesMap.set(mapKey, {
+        name: dynVar,
+        nodeId: node.id,
+        nodeType: 'keyboard' as any,
+        description: `Динамические кнопки: ${data.dynamicButtons?.arrayField || 'массив'}.${data.dynamicButtons?.textField || 'text'}`,
+      });
+    }
+  });
+
   // Добавляем системные переменные
   SYSTEM_VARIABLES.forEach(v => { 
     if (!variablesMap.has(v.name)) {

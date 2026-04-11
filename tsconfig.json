@@ -18,6 +18,7 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noImplicitReturns": true,
+    "ignoreDeprecations": "6.0",
     "exactOptionalPropertyTypes": false,
     "baseUrl": ".",
     "paths": {

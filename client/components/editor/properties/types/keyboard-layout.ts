@@ -28,3 +28,19 @@ export interface KeyboardPreset {
   /** Описание пресета */
   description: string;
 }
+
+/** Конфигурация динамических кнопок */
+export interface DynamicButtonsConfig {
+  /** Имя переменной с HTTP-ответом */
+  variable: string;
+  /** Поле с массивом кнопок в ответе */
+  arrayField: string;
+  /** Поле для текста кнопки */
+  textField: string;
+  /** Поле для callback_data */
+  callbackField: string;
+  /** Поле для стиля кнопки (опционально) */
+  styleField?: string;
+  /** Количество колонок (1-6) */
+  columns?: number;
+}

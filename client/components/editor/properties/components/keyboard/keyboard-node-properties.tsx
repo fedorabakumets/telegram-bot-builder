@@ -6,12 +6,15 @@
 
 import { Node } from '@shared/schema';
 import type { Button } from '@shared/schema';
+import type { DynamicButtonsConfig } from '../../types/keyboard-layout';
 import { ButtonCard } from '../button-card/button-card';
 import { KeyboardButtonsSection } from './keyboard-buttons-section';
 import { KeyboardTypeSelector } from './keyboard-type-selector';
 import { KeyboardLayoutEditor } from './keyboard-layout-editor';
+import { DynamicButtonsSection } from './dynamic-buttons-section';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import type { ProjectVariable } from '../../utils/variables-utils';
+import { Switch } from '@/components/ui/switch';
 import { generateButtonId } from '@/utils/generate-button-id';
 
 /** Пропсы панели клавиатуры */
@@ -48,6 +51,32 @@ export function KeyboardNodeProperties({
   onButtonDelete,
 }: KeyboardNodePropertiesProps) {
   const buttons = selectedNode.data.buttons || [];
+  const enableDynamicButtons = selectedNode.data.enableDynamicButtons ?? false;
+
+  /**
+   * Переключает режим динамических кнопок.
+   * @param {boolean} checked - Состояние переключателя
+   */
+  const handleDynamicToggle = (checked: boolean) => {
+    onNodeUpdate(selectedNode.id, { enableDynamicButtons: checked });
+  };
+
+  /**
+   * Обновляет конфигурацию динамических кнопок.
+   * @param {DynamicButtonsConfig} config - Новая конфигурация
+   */
+  const handleDynamicConfigChange = (config: DynamicButtonsConfig) => {
+    onNodeUpdate(selectedNode.id, {
+      dynamicButtons: {
+        variable: config.variable,
+        arrayField: config.arrayField,
+        textField: config.textField,
+        callbackField: config.callbackField,
+        styleField: config.styleField || '',
+        columns: config.columns ?? 2,
+      },
+    });
+  };
 
   /**
    * Дублирует кнопку, вставляя копию сразу после оригинала
@@ -66,6 +95,28 @@ export function KeyboardNodeProperties({
     <div className="space-y-4 p-4">
       <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
       <MultipleSelectionSettings selectedNode={selectedNode} keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply'} onNodeUpdate={onNodeUpdate} />
+
+      {/* Переключатель динамических кнопок */}
+      <div className="flex items-center justify-between rounded-lg border border-amber-200/40 dark:border-amber-800/40 bg-amber-50/30 dark:bg-amber-950/20 p-3">
+        <div className="flex items-center gap-2">
+          <i className="fas fa-bolt text-amber-500 text-xs" />
+          <span className="text-sm font-medium text-amber-900 dark:text-amber-100">Генерировать кнопки из HTTP-ответа</span>
+        </div>
+        <Switch
+          checked={enableDynamicButtons}
+          onCheckedChange={handleDynamicToggle}
+        />
+      </div>
+
+      {/* Секция динамических кнопок */}
+      {enableDynamicButtons && (
+        <DynamicButtonsSection
+          config={selectedNode.data.dynamicButtons}
+          textVariables={textVariables}
+          onChange={handleDynamicConfigChange}
+        />
+      )}
+
       <KeyboardButtonsSection selectedNode={selectedNode} onButtonAdd={onButtonAdd} />
       {buttons.map((button: any) => (
         <ButtonCard

@@ -63,6 +63,23 @@ export const nodeSchema = z.object({
     keyboardType: z.enum(['reply', 'inline', 'none']).default('none'),
     /** Массив кнопок клавиатуры */
     buttons: z.array(buttonSchema).default([]),
+    /** Включить генерацию кнопок из HTTP-ответа */
+    enableDynamicButtons: z.boolean().default(false),
+    /** Конфигурация динамических кнопок (генерация из HTTP-ответа) */
+    dynamicButtons: z.object({
+      /** Имя переменной с HTTP-ответом */
+      variable: z.string().default(''),
+      /** Поле с массивом кнопок в ответе */
+      arrayField: z.string().default(''),
+      /** Поле для текста кнопки */
+      textField: z.string().default(''),
+      /** Поле для callback_data кнопки */
+      callbackField: z.string().default(''),
+      /** Поле для стиля кнопки (опционально) */
+      styleField: z.string().default(''),
+      /** Количество колонок (1-6) */
+      columns: z.number().default(2),
+    }).optional(),
     /** Настройки макета клавиатуры */
     keyboardLayout: z.object({
       /** Строки клавиатуры с ID кнопок */
