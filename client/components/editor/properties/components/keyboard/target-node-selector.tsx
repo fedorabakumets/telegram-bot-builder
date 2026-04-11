@@ -39,7 +39,7 @@ const getNodeInfo = (node: Node): NodeInfo => {
  * Компонент выбора целевого узла
  */
 export function TargetNodeSelector({
-  option, index, getAllNodesFromAllSheets, selectedNode, onOptionsUpdate, formatNodeDisplay
+  option, index, getAllNodesFromAllSheets, selectedNode, onOptionsUpdate
 }: TargetNodeSelectorProps) {
   const updateTarget = (value: string) => {
     const updated = [...(selectedNode.data.responseOptions || [])];

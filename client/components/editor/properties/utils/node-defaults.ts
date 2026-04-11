@@ -5,6 +5,7 @@
  */
 
 import { Node } from '@shared/schema';
+import { normalizeDynamicButtonsConfig } from './dynamic-buttons';
 
 /**
  * Получает данные по умолчанию для типа узла.
@@ -12,7 +13,7 @@ import { Node } from '@shared/schema';
  * @returns {any} Объект с данными по умолчанию
  */
 export function getNodeDefaults(type: Node['type']): any {
-  const defaults: Record<Node['type'], any> = {
+  const defaults: Partial<Record<Node['type'], any>> = {
     message: {
       messageText: 'Новое сообщение',
       keyboardType: 'none',
@@ -301,14 +302,16 @@ export function getNodeDefaults(type: Node['type']): any {
       keyboardType: 'inline',
       buttons: [],
       enableDynamicButtons: false,
-      dynamicButtons: {
-        variable: '',
-        arrayField: '',
-        textField: '',
-        callbackField: '',
+      dynamicButtons: normalizeDynamicButtonsConfig({
+        sourceVariable: '',
+        arrayPath: '',
+        textTemplate: '{name}',
+        callbackTemplate: 'project_{id}',
+        styleMode: 'none',
         styleField: '',
+        styleTemplate: '',
         columns: 2,
-      },
+      }),
     },
     input: {
       inputType: 'any',

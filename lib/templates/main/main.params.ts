@@ -17,4 +17,6 @@ export interface MainTemplateParams {
   incomingMessageTriggerMiddlewares?: string[];
   /** Список имён middleware функций для managed_bot_updated_trigger */
   managedBotUpdatedTriggerMiddlewares?: string[];
+  /** Список имён обработчиков для group_message_trigger */
+  groupMessageTriggerHandlers?: string[];
 }

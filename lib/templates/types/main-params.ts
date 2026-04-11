@@ -13,4 +13,10 @@ export interface MainTemplateParams {
   hasInlineButtons?: boolean;
   /** Автоматически регистрировать пользователей при первом обращении */
   autoRegisterUsers?: boolean;
+  /** Список имён middleware функций для incoming_message_trigger */
+  incomingMessageTriggerMiddlewares?: string[];
+  /** Список имён middleware функций для managed_bot_updated_trigger */
+  managedBotUpdatedTriggerMiddlewares?: string[];
+  /** Список имён обработчиков для group_message_trigger */
+  groupMessageTriggerHandlers?: string[];
 }

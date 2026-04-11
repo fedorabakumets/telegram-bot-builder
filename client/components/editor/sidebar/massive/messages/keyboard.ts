@@ -5,6 +5,7 @@
  */
 
 import { ComponentDefinition } from '@shared/schema';
+import { normalizeDynamicButtonsConfig } from '@/components/editor/properties/utils/dynamic-buttons';
 
 /** Клавиатура как отдельный узел редактора */
 export const keyboardMessage: ComponentDefinition = {
@@ -21,14 +22,16 @@ export const keyboardMessage: ComponentDefinition = {
       { id: 'btn-default-2', text: 'Кнопка 2', action: 'goto', target: '' },
     ],
     enableDynamicButtons: false,
-    dynamicButtons: {
-      variable: '',
-      arrayField: '',
-      textField: '',
-      callbackField: '',
+    dynamicButtons: normalizeDynamicButtonsConfig({
+      sourceVariable: '',
+      arrayPath: '',
+      textTemplate: '{name}',
+      callbackTemplate: 'project_{id}',
+      styleMode: 'none',
       styleField: '',
+      styleTemplate: '',
       columns: 2,
-    },
+    }),
     allowMultipleSelection: false,
     markdown: false,
     oneTimeKeyboard: false,

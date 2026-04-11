@@ -14,6 +14,7 @@ import { KeyboardLayoutEditor } from './keyboard-layout-editor';
 import { DynamicButtonsSection } from './dynamic-buttons-section';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import type { ProjectVariable } from '../../utils/variables-utils';
+import { normalizeDynamicButtonsConfig } from '../../utils/dynamic-buttons';
 import { Switch } from '@/components/ui/switch';
 import { generateButtonId } from '@/utils/generate-button-id';
 
@@ -58,7 +59,10 @@ export function KeyboardNodeProperties({
    * @param {boolean} checked - Состояние переключателя
    */
   const handleDynamicToggle = (checked: boolean) => {
-    onNodeUpdate(selectedNode.id, { enableDynamicButtons: checked });
+    onNodeUpdate(selectedNode.id, {
+      enableDynamicButtons: checked,
+      keyboardType: checked ? 'inline' : selectedNode.data.keyboardType,
+    });
   };
 
   /**
@@ -67,14 +71,8 @@ export function KeyboardNodeProperties({
    */
   const handleDynamicConfigChange = (config: DynamicButtonsConfig) => {
     onNodeUpdate(selectedNode.id, {
-      dynamicButtons: {
-        variable: config.variable,
-        arrayField: config.arrayField,
-        textField: config.textField,
-        callbackField: config.callbackField,
-        styleField: config.styleField || '',
-        columns: config.columns ?? 2,
-      },
+      keyboardType: 'inline',
+      dynamicButtons: normalizeDynamicButtonsConfig(config),
     });
   };
 
@@ -93,8 +91,10 @@ export function KeyboardNodeProperties({
 
   return (
     <div className="space-y-4 p-4">
-      <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
-      <MultipleSelectionSettings selectedNode={selectedNode} keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply'} onNodeUpdate={onNodeUpdate} />
+      <KeyboardTypeSelector selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} isDynamicMode={enableDynamicButtons} />
+      {!enableDynamicButtons && (
+        <MultipleSelectionSettings selectedNode={selectedNode} keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply'} onNodeUpdate={onNodeUpdate} />
+      )}
 
       {/* Переключатель динамических кнопок */}
       <div className="flex items-center justify-between rounded-lg border border-amber-200/40 dark:border-amber-800/40 bg-amber-50/30 dark:bg-amber-950/20 p-3">
@@ -117,27 +117,35 @@ export function KeyboardNodeProperties({
         />
       )}
 
-      <KeyboardButtonsSection selectedNode={selectedNode} onButtonAdd={onButtonAdd} />
-      {buttons.map((button: any) => (
-        <ButtonCard
-          key={button.id}
-          nodeId={selectedNode.id}
-          button={button}
-          textVariables={textVariables}
-          getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-          onButtonUpdate={onButtonUpdate}
-          onButtonDelete={onButtonDelete}
-          onButtonDuplicate={handleDuplicateButton}
-          selectedNode={selectedNode}
-          keyboardType={selectedNode.data.keyboardType as string}
-        />
-      ))}
-      {buttons.length > 0 && (
-        <KeyboardLayoutEditor
-          buttons={buttons}
-          initialLayout={selectedNode.data.keyboardLayout}
-          onLayoutChange={(layout) => onNodeUpdate(selectedNode.id, { keyboardLayout: layout })}
-        />
+      {enableDynamicButtons ? (
+        <div className="rounded-lg border border-dashed border-amber-300/60 dark:border-amber-700/50 bg-amber-50/40 dark:bg-amber-950/20 p-3 text-xs text-amber-900 dark:text-amber-100">
+          Динамический режим скрывает ручной редактор кнопок. Превью будет строиться из шаблонов HTTP-ответа.
+        </div>
+      ) : (
+        <>
+          <KeyboardButtonsSection selectedNode={selectedNode} onButtonAdd={onButtonAdd} />
+          {buttons.map((button: any) => (
+            <ButtonCard
+              key={button.id}
+              nodeId={selectedNode.id}
+              button={button}
+              textVariables={textVariables}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              onButtonUpdate={onButtonUpdate}
+              onButtonDelete={onButtonDelete}
+              onButtonDuplicate={handleDuplicateButton}
+              selectedNode={selectedNode}
+              keyboardType={selectedNode.data.keyboardType as string}
+            />
+          ))}
+          {buttons.length > 0 && (
+            <KeyboardLayoutEditor
+              buttons={buttons}
+              initialLayout={selectedNode.data.keyboardLayout}
+              onLayoutChange={(layout) => onNodeUpdate(selectedNode.id, { keyboardLayout: layout })}
+            />
+          )}
+        </>
       )}
     </div>
   );

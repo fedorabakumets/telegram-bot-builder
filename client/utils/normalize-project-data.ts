@@ -8,6 +8,7 @@
  */
 
 import { BotDataWithSheets } from '@shared/schema';
+import { normalizeDynamicButtonsConfig } from '@/components/editor/properties/utils/dynamic-buttons';
 
 /**
  * Нормализует кнопку, конвертируя устаревшие поля
@@ -85,15 +86,9 @@ export function normalizeProjectData(projectData: BotDataWithSheets): BotDataWit
       if (node.data.enableDynamicButtons === undefined) {
         node.data.enableDynamicButtons = false;
       }
-      if (!node.data.dynamicButtons) {
-        node.data.dynamicButtons = {
-          variable: '',
-          arrayField: '',
-          textField: '',
-          callbackField: '',
-          styleField: '',
-          columns: 2,
-        };
+      node.data.dynamicButtons = normalizeDynamicButtonsConfig(node.data.dynamicButtons);
+      if (node.type === 'keyboard' && node.data.enableDynamicButtons && node.data.keyboardType !== 'inline') {
+        node.data.keyboardType = 'inline';
       }
 
       // Конвертируем continueButtonText в кнопку с action: 'complete'

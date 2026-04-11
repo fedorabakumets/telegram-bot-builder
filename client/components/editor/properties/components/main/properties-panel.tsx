@@ -210,17 +210,19 @@ export function PropertiesPanel({
     }
 
     // РЎРµРєС†РёСЏ РІРІРѕРґР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
-    const hasMessageInput = selectedNode.type === 'message' && (
+    const hasMessageInput = selectedNode.type === 'message' && Boolean(
       selectedNode.data.autoTransitionTo ||
       hasLegacyMessageInput(selectedNode)
     );
-    const hasUserInput = hasMessageInput ||
-                         selectedNode.data.collectUserInput || 
-                         selectedNode.data.enableTextInput || 
-                         selectedNode.data.enablePhotoInput || 
-                         selectedNode.data.enableVideoInput || 
-                         selectedNode.data.enableAudioInput || 
-                         selectedNode.data.enableDocumentInput;
+    const hasUserInput = Boolean(
+      hasMessageInput ||
+      selectedNode.data.collectUserInput ||
+      selectedNode.data.enableTextInput ||
+      selectedNode.data.enablePhotoInput ||
+      selectedNode.data.enableVideoInput ||
+      selectedNode.data.enableAudioInput ||
+      selectedNode.data.enableDocumentInput
+    );
 
     if (hasUserInput && !wasUserInputPresentRef.current && !isUserInputSectionOpen) {
       setIsUserInputSectionOpen(true);

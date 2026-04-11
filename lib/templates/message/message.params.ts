@@ -143,9 +143,6 @@ export interface MessageTemplateParams {
   /** Имя переменной для сохранения ID отправленного сообщения */
   saveMessageIdTo?: string;
 
-  /** Имя переменной для сохранения ID отправленного сообщения */
-  saveMessageIdTo?: string;
-
   /** Список получателей сообщения (помимо основного пользователя) */
   messageSendRecipients?: Array<{
     /** Уникальный идентификатор получателя */

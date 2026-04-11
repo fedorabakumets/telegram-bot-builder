@@ -130,9 +130,6 @@ export const messageParamsSchema = z.object({
    * Иначе — nodeId (обратная совместимость).
    */
   callbackPattern: z.string().optional(),
-
-  /** Имя переменной для сохранения ID отправленного сообщения */
-  saveMessageIdTo: z.string().optional(),
 });
 
 /** Тип параметров сообщения (выведен из схемы) */

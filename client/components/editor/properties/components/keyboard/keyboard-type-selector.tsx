@@ -23,6 +23,8 @@ interface KeyboardTypeSelectorProps {
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
   /** Функция раскрытия секции */
   onToggle?: () => void;
+  /** Динамический режим клавиатуры */
+  isDynamicMode?: boolean;
 }
 
 /**
@@ -38,7 +40,7 @@ interface KeyboardTypeSelectorProps {
  * @param {KeyboardTypeSelectorProps} props - Пропсы компонента
  * @returns {JSX.Element} Селектор типа клавиатуры
  */
-export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTypeSelectorProps) {
+export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, isDynamicMode = false }: KeyboardTypeSelectorProps) {
   const handleKeyboardChange = (checked: boolean, type: 'reply' | 'inline' | 'none') => {
     const updates: Partial<Node['data']> = {};
     
@@ -60,6 +62,7 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTyp
         </label>
         <Switch
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE}
+          disabled={isDynamicMode}
           onCheckedChange={(checked) => handleKeyboardChange(checked, KEYBOARD_TYPES.INLINE as 'inline')}
         />
       </div>
@@ -70,6 +73,7 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate }: KeyboardTyp
         </label>
         <Switch
           checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
+          disabled={isDynamicMode}
           onCheckedChange={(checked) => handleKeyboardChange(checked, KEYBOARD_TYPES.REPLY as 'reply')}
         />
       </div>

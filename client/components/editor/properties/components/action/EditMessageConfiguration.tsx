@@ -5,7 +5,6 @@
 import { useMemo } from 'react';
 import type { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InlineRichEditor } from '@/components/editor/inline-rich/inline-rich-editor';
@@ -39,7 +38,6 @@ export function EditMessageConfiguration({
   onNodeUpdate,
   getAllNodesFromAllSheets = [],
   allNodes = [],
-  formatNodeDisplay,
 }: EditMessageConfigurationProps) {
   const data = selectedNode.data as any;
 

@@ -59,7 +59,9 @@ const MAX_CACHE_SIZE = 100;
 function setCachedTemplate(key: string, template: any): void {
   if (templateCache.size >= MAX_CACHE_SIZE) {
     const oldestKey = templateCache.keys().next().value;
-    templateCache.delete(oldestKey);
+    if (typeof oldestKey === 'string') {
+      templateCache.delete(oldestKey);
+    }
   }
   templateCache.set(key, template);
 }

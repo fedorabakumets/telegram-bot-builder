@@ -1,10 +1,4 @@
-/**
- * @fileoverview Компонент превью кнопок
- *
- * Отображает превью кнопок узла с поддержкой inline/reply клавиатур,
- * множественного выбора и различных типов действий.
- */
-
+import { useMemo } from 'react';
 import { Node } from '@/types/bot';
 import { ButtonsPreviewHeader } from './buttons-preview-header';
 import { InlineButton } from './inline-button';
@@ -12,90 +6,72 @@ import { ReplyButton } from './reply-button';
 import { OptionButton } from './option-button';
 import { DoneButton } from './done-button';
 import { KeyboardGrid } from '../keyboard-grid';
-import { useMemo } from 'react';
 import { OutputPort } from './output-port';
 import { PortType } from './port-colors';
+import { buildDynamicButtonsPreviewItems, getDynamicButtonsSummary, normalizeDynamicButtonsConfig } from '@/components/editor/properties/utils/dynamic-buttons';
 
-/**
- * Интерфейс свойств компонента ButtonsPreview
- *
- * @interface ButtonsPreviewProps
- * @property {Node} node - Узел с кнопками
- * @property {Node[]} [allNodes] - Все узлы для поиска целевых
- * @property {Function} [onPortMouseDown] - Обработчик начала перетаскивания от порта кнопки
- * @property {Function} [onButtonPortMount] - Колбэк монтирования порта кнопки с Y-смещением
- */
 interface ButtonsPreviewProps {
-  /** Узел с кнопками */
   node: Node;
-  /** Все узлы для поиска целевых */
   allNodes?: Node[];
-  /** Обработчик начала перетаскивания от порта кнопки */
   onPortMouseDown?: (e: React.MouseEvent, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => void;
-  /** Узел является источником активного drag — держит порты видимыми */
   isConnectionSource?: boolean;
-  /**
-   * Колбэк, вызываемый при монтировании порта кнопки.
-   * Передаёт buttonId и позицию центра порта относительно wrapper-div узла
-   * в canvas-координатах (layout, без transform).
-   */
   onButtonPortMount?: (buttonId: string, offset: { x: number; y: number }) => void;
 }
 
-/**
- * Компонент превью кнопок
- *
- * @component
- * @description Отображает превью кнопок узла
- *
- * @param {ButtonsPreviewProps} props - Свойства компонента
- * @param {Node} props.node - Узел с кнопками
- * @param {Node[]} [props.allNodes] - Все узлы
- *
- * @returns {JSX.Element | null} Компонент превью или null если нет кнопок
- */
 export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSource, onButtonPortMount }: ButtonsPreviewProps) {
-  if (!node.data.buttons || node.data.buttons.length === 0 || node.data.keyboardType === 'none') {
+  const keyboardType = node.data.keyboardType as 'inline' | 'reply' | 'none';
+  const enableDynamicButtons = (node.data as any).enableDynamicButtons ?? false;
+  const dynamicButtons = enableDynamicButtons ? normalizeDynamicButtonsConfig((node.data as any).dynamicButtons) : null;
+  const effectiveKeyboardType = enableDynamicButtons ? 'inline' : keyboardType;
+
+  const staticButtons = node.data.buttons || [];
+  const previewButtons = useMemo(() => {
+    if (enableDynamicButtons) {
+      return buildDynamicButtonsPreviewItems(dynamicButtons);
+    }
+    return staticButtons;
+  }, [enableDynamicButtons, dynamicButtons, staticButtons]);
+
+  if (previewButtons.length === 0 || effectiveKeyboardType === 'none') {
     return null;
   }
 
-  const hasOptionButtons = node.data.buttons.some((button: any) => button.action === 'selection');
-  const isMultiSelect = hasOptionButtons && (node.data as any).allowMultipleSelection;
-  const keyboardType = node.data.keyboardType as 'inline' | 'reply';
-  const enableDynamicButtons = (node.data as any).enableDynamicButtons ?? false;
-  const dynamicButtons = (node.data as any).dynamicButtons;
+  const hasOptionButtons = staticButtons.some((button: any) => button.action === 'selection');
+  const isMultiSelect = !enableDynamicButtons && hasOptionButtons && (node.data as any).allowMultipleSelection;
 
-  // Находим кнопку завершения (для множественного выбора)
-  const completeButton = useMemo(() =>
-    isMultiSelect
-      ? node.data.buttons.find((button: any) => button.action === 'complete')
-      : undefined,
-    [isMultiSelect, node.data.buttons]
+  const completeButton = useMemo(
+    () => (isMultiSelect ? staticButtons.find((button: any) => button.action === 'complete') : undefined),
+    [isMultiSelect, staticButtons]
   );
   void completeButton;
 
-  // Все кнопки включая кнопку завершения для отображения в сетке
-  const allButtonsForGrid = useMemo(() => {
-    return node.data.buttons || [];
-  }, [node.data.buttons]);
+  const dynamicSummary = enableDynamicButtons ? getDynamicButtonsSummary(dynamicButtons) : '';
+  const previewKeyboardLayout = enableDynamicButtons ? undefined : node.data.keyboardLayout;
+  const previewDefaultColumns = enableDynamicButtons ? dynamicButtons?.columns ?? 2 : 2;
 
   return (
     <div className="space-y-3 mb-1">
-      <ButtonsPreviewHeader isMultiSelect={isMultiSelect} keyboardType={keyboardType} />
+      <ButtonsPreviewHeader
+        isMultiSelect={isMultiSelect}
+        keyboardType={effectiveKeyboardType}
+        isDynamicMode={enableDynamicButtons}
+        dynamicSummary={dynamicSummary}
+      />
 
-      {/* Индикатор динамических кнопок */}
       {enableDynamicButtons && dynamicButtons && (
         <div className="rounded-md border border-blue-200/50 bg-blue-50/50 px-2 py-1 text-xs text-blue-700 dark:border-blue-800/50 dark:bg-blue-950/30 dark:text-blue-300">
-          <span className="font-medium">&#9889;</span> Динамические: {dynamicButtons.variable}.{dynamicButtons.arrayField} ({dynamicButtons.columns ?? 2} кол.)
+          <span className="font-medium">&#9889;</span> {dynamicButtons.sourceVariable || 'response'}
+          {dynamicButtons.arrayPath ? `.${dynamicButtons.arrayPath}` : ''} ({dynamicButtons.columns} cols)
         </div>
       )}
 
-      {keyboardType === 'inline' ? (
+      {effectiveKeyboardType === 'inline' ? (
         <KeyboardGrid
-          buttons={allButtonsForGrid}
-          keyboardLayout={node.data.keyboardLayout}
+          buttons={previewButtons}
+          keyboardLayout={previewKeyboardLayout}
+          defaultColumns={previewDefaultColumns}
           buttonClassName=""
-          renderButton={(button) => {
+          renderButton={(button: any) => {
             if (button.action === 'complete') return <DoneButton button={button} />;
             if (button.action === 'selection') return <OptionButton button={button} />;
             return (
@@ -110,10 +86,11 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
         />
       ) : (
         <KeyboardGrid
-          buttons={node.data.buttons}
-          keyboardLayout={node.data.keyboardLayout}
+          buttons={previewButtons}
+          keyboardLayout={previewKeyboardLayout}
+          defaultColumns={previewDefaultColumns}
           buttonClassName=""
-          renderButton={(button) => (
+          renderButton={(button: any) => (
             <div className="relative">
               <ReplyButton button={button} allNodes={allNodes} />
               {button.action === 'goto' && (

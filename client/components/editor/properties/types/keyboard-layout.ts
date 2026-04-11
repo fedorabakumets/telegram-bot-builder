@@ -31,16 +31,29 @@ export interface KeyboardPreset {
 
 /** Конфигурация динамических кнопок */
 export interface DynamicButtonsConfig {
+  [key: string]: unknown;
   /** Имя переменной с HTTP-ответом */
-  variable: string;
-  /** Поле с массивом кнопок в ответе */
-  arrayField: string;
-  /** Поле для текста кнопки */
-  textField: string;
-  /** Поле для callback_data */
-  callbackField: string;
-  /** Поле для стиля кнопки (опционально) */
-  styleField?: string;
+  sourceVariable: string;
+  /** Путь к массиву внутри ответа */
+  arrayPath: string;
+  /** Шаблон текста кнопки, например {name} */
+  textTemplate: string;
+  /** Шаблон callback_data, например project_{id} */
+  callbackTemplate: string;
+  /** Источник стиля кнопки */
+  styleMode: 'field' | 'template' | 'none';
+  /** Поле для стиля кнопки, когда styleMode=field */
+  styleField: string;
+  /** Шаблон стиля кнопки, когда styleMode=template */
+  styleTemplate: string;
   /** Количество колонок (1-6) */
-  columns?: number;
+  columns: number;
+  /** Legacy alias for backward compatibility */
+  variable?: string;
+  /** Legacy alias for backward compatibility */
+  arrayField?: string;
+  /** Legacy alias for backward compatibility */
+  textField?: string;
+  /** Legacy alias for backward compatibility */
+  callbackField?: string;
 }

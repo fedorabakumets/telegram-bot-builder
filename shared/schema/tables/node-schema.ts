@@ -21,6 +21,38 @@ const forwardMessageTargetRecipientSchema = z.object({
   targetThreadId: z.string().optional(),
 });
 
+const dynamicButtonsSchema = z.preprocess((value) => {
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+
+  const config = value as Record<string, unknown>;
+  return {
+    ...config,
+    sourceVariable: typeof config.sourceVariable === 'string' ? config.sourceVariable : config.variable,
+    arrayPath: typeof config.arrayPath === 'string' ? config.arrayPath : config.arrayField,
+    textTemplate: typeof config.textTemplate === 'string' ? config.textTemplate : config.textField,
+    callbackTemplate: typeof config.callbackTemplate === 'string' ? config.callbackTemplate : config.callbackField,
+  };
+}, z.object({
+  /** Имя переменной с HTTP-ответом */
+  sourceVariable: z.string().default(''),
+  /** Путь к массиву внутри ответа */
+  arrayPath: z.string().default(''),
+  /** Шаблон текста кнопки */
+  textTemplate: z.string().default(''),
+  /** Шаблон callback_data */
+  callbackTemplate: z.string().default(''),
+  /** Режим стиля */
+  styleMode: z.enum(['field', 'template', 'none']).default('none'),
+  /** Поле стиля */
+  styleField: z.string().default(''),
+  /** Шаблон стиля */
+  styleTemplate: z.string().default(''),
+  /** Количество колонок */
+  columns: z.number().min(1).max(6).default(2),
+}).passthrough());
+
 /** Схема узла бота */
 export const nodeSchema = z.object({
   /** Уникальный идентификатор узла */
@@ -66,20 +98,7 @@ export const nodeSchema = z.object({
     /** Включить генерацию кнопок из HTTP-ответа */
     enableDynamicButtons: z.boolean().default(false),
     /** Конфигурация динамических кнопок (генерация из HTTP-ответа) */
-    dynamicButtons: z.object({
-      /** Имя переменной с HTTP-ответом */
-      variable: z.string().default(''),
-      /** Поле с массивом кнопок в ответе */
-      arrayField: z.string().default(''),
-      /** Поле для текста кнопки */
-      textField: z.string().default(''),
-      /** Поле для callback_data кнопки */
-      callbackField: z.string().default(''),
-      /** Поле для стиля кнопки (опционально) */
-      styleField: z.string().default(''),
-      /** Количество колонок (1-6) */
-      columns: z.number().default(2),
-    }).optional(),
+    dynamicButtons: dynamicButtonsSchema.optional(),
     /** Настройки макета клавиатуры */
     keyboardLayout: z.object({
       /** Строки клавиатуры с ID кнопок */
@@ -636,6 +655,16 @@ export const nodeSchema = z.object({
     httpRequestResponseVariable: z.string().optional(),
     /** Имя переменной для сохранения HTTP статус кода */
     httpRequestStatusVariable: z.string().optional(),
+    /** Источник bot_id для get_managed_bot_token */
+    botIdSource: z.string().optional(),
+    /** Имя переменной с bot_id для get_managed_bot_token */
+    botIdVariable: z.string().optional(),
+    /** Ручной bot_id для get_managed_bot_token */
+    botIdManual: z.string().optional(),
+    /** Переменная для сохранения токена get_managed_bot_token */
+    saveTokenTo: z.string().optional(),
+    /** Переменная для сохранения ошибки get_managed_bot_token */
+    saveErrorTo: z.string().optional(),
     /** Query параметры в формате JSON строки [{key, value}] */
     httpRequestQueryParams: z.string().optional(),
     /** Формат тела запроса: json, form-urlencoded, raw */
