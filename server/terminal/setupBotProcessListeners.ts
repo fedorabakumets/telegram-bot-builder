@@ -8,7 +8,7 @@
  * @module terminal/setupBotProcessListeners
  */
 
-import { botProcesses } from 'server/routes/routes';
+import { botProcesses } from '../routes/routes';
 import { setupProcessOutputListener } from './setupProcessOutputListener';
 
 /**

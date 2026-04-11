@@ -8,7 +8,7 @@
  */
 
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { VariableSelector } from '../variables/variable-selector';
 import type { DynamicButtonsConfig } from '../../types/keyboard-layout';
 import type { ProjectVariable } from '../../utils/variables-utils';
 
@@ -60,21 +60,18 @@ export function DynamicButtonsSection({ config, textVariables, onChange }: Dynam
       {/* Выбор переменной */}
       <div className="space-y-1">
         <label className="text-xs font-medium text-muted-foreground">Переменная с ответом</label>
-        <Select
-          value={current.variable}
-          onValueChange={(val: string) => updateField('variable', val)}
-        >
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue placeholder="Выберите переменную" />
-          </SelectTrigger>
-          <SelectContent>
-            {textVariables.map((v) => (
-              <SelectItem key={v.name} value={v.name}>
-                {v.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-1">
+          <Input
+            value={current.variable}
+            onChange={(e) => updateField('variable', e.target.value)}
+            placeholder="projects"
+            className="h-8 text-xs"
+          />
+          <VariableSelector
+            availableVariables={textVariables as any}
+            onSelect={(value) => updateField('variable', value)}
+          />
+        </div>
       </div>
 
       {/* Поле массива */}
