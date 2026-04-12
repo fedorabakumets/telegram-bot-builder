@@ -13,6 +13,13 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     """Выполняет HTTP запрос и сохраняет ответ в переменную."""
     user_id = callback_query.from_user.id
     await init_user_variables(user_id, callback_query.from_user)
+
+    # Сразу убираем анимацию загрузки — не ждём завершения HTTP-запроса
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
     _all_vars = await init_all_user_vars(user_id)
 
     # Подставляем переменные в URL
@@ -133,11 +140,6 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
     {% if statusVariable %}
     await set_user_var(user_id, "{{ statusVariable }}", str(_status_code))
     {% endif %}
-
-    try:
-        await callback_query.answer()
-    except Exception:
-        pass
 
     {% if autoTransitionTo %}
     {% if autoTransitionTargetExists %}
