@@ -20,7 +20,13 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query):
     user_id = callback_query.from_user.id
 {%- if not entry.skipVarLookup %}
     _all_vars = await init_all_user_vars(user_id)
+{%- if '.' in entry.variable %}
+{%- set var_parts = entry.variable.split('.') %}
+    _dot_obj = _all_vars.get("{{ var_parts[0] }}", {})
+    val = _dot_obj.get("{{ var_parts[1] }}", "") if isinstance(_dot_obj, dict) else ""
+{%- else %}
     val = _all_vars.get("{{ entry.variable }}", "")
+{%- endif %}
     logging.info(f"Узел условия {{ entry.nodeId }}: переменная '{{ entry.variable }}' = {val}")
 {%- else %}
     logging.info(f"Узел условия {{ entry.nodeId }}: проверка системного условия или pass-through переход")
