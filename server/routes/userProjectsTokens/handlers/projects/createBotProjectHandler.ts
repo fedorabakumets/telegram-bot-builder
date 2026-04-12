@@ -33,6 +33,7 @@ export async function createBotProjectHandler(req: Request, res: Response): Prom
             ownerId: telegramId,
             name,
             description: "",
+            data: { sheets: [], version: 2 },
         });
 
         res.status(200).json({
