@@ -138,6 +138,13 @@ export function KeyboardNodeProperties({
               keyboardType={selectedNode.data.keyboardType as string}
             />
           ))}
+          {buttons.length > 0 && (
+            <KeyboardLayoutEditor
+              buttons={buttons}
+              initialLayout={selectedNode.data.keyboardLayout}
+              onLayoutChange={(layout) => onNodeUpdate(selectedNode.id, { keyboardLayout: layout })}
+            />
+          )}
         </>
       ) : (
         <>
