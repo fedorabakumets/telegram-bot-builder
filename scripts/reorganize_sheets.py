@@ -48,6 +48,7 @@ SHEETS = {
         "create-project-with-token", "check-new-project-status",
         "create-token-for-project", "check-new-token-status",
         "load-new-project", "new-project-error-msg", "new-token-error-msg",
+        "cancel-input-keyboard",
     ],
     "Токены": [
         "fetch-tokens", "check-tokens-status", "check-tokens-empty",

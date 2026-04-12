@@ -1,18 +1,23 @@
 /**
  * @fileoverview Хендлер создания токена бота через Telegram-бота
  *
- * Позволяет боту создать токен для указанного проекта от имени пользователя.
+ * Валидирует формат токена, вызывает Telegram getMe для автозаполнения
+ * имени бота, затем сохраняет токен в базу данных.
  * Идентификация происходит по telegram_id в query-параметре — без браузерной сессии.
- * Проверяет принадлежность проекта пользователю перед созданием.
  *
  * @module userProjectsTokens/handlers/tokens/createBotTokenHandler
  */
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { fetchWithProxy } from "../../../utils/telegram-proxy";
+
+/** Регулярное выражение для проверки формата токена Telegram */
+const TOKEN_REGEX = /^\d+:[A-Za-z0-9_-]{35,}$/;
 
 /**
  * Обрабатывает POST-запрос на создание токена бота через Telegram-бота.
+ * Валидирует формат токена, получает имя бота через getMe и сохраняет токен.
  *
  * @param req - Запрос с query-параметром telegram_id, params.id (project_id),
  *              body: { token: string, name?: string }
@@ -42,6 +47,12 @@ export async function createBotTokenHandler(req: Request, res: Response): Promis
             return;
         }
 
+        // Проверяем формат токена Telegram: {digits}:{alphanumeric}
+        if (!TOKEN_REGEX.test(tokenValue)) {
+            res.status(400).json({ error: "Неверный формат токена. Токен должен быть вида 123456789:ABCdef..." });
+            return;
+        }
+
         const name: string = (req.body?.name as string) || "Основной токен";
 
         const project = await storage.getBotProject(projectId);
@@ -55,12 +66,36 @@ export async function createBotTokenHandler(req: Request, res: Response): Promis
             return;
         }
 
+        // Проверяем токен через Telegram API и получаем данные бота
+        let botFirstName: string | null = null;
+        let botUsername: string | null = null;
+        try {
+            const resp = await fetchWithProxy(
+                `https://api.telegram.org/bot${tokenValue}/getMe`,
+                { signal: AbortSignal.timeout(8000) },
+            );
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.ok && data.result) {
+                    botFirstName = data.result.first_name ?? null;
+                    botUsername = data.result.username ?? null;
+                }
+            } else {
+                res.status(400).json({ error: "Токен недействителен. Проверьте токен у @BotFather." });
+                return;
+            }
+        } catch {
+            // Если Telegram недоступен — сохраняем без имени
+        }
+
         const token = await storage.createBotToken({
             projectId,
             ownerId: telegramId,
             token: tokenValue,
-            name,
+            name: botUsername ? `@${botUsername}` : name,
             isDefault: 1,
+            botFirstName: botFirstName ?? undefined,
+            botUsername: botUsername ?? undefined,
         });
 
         res.status(200).json({

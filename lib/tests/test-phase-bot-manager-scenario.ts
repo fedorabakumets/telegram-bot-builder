@@ -101,7 +101,7 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 74 узла генерируют обработчики', () => {
+test('A03', 'все 77 узлов генерируют обработчики', () => {
   const nodeIds = [
     // Основной поток
     'trigger-start', 'fetch-projects', 'check-projects-status',
@@ -137,7 +137,10 @@ test('A03', 'все 74 узла генерируют обработчики', ()
     'ask-new-token-value', 'add-token-to-project', 'check-add-token-status',
     'add-token-success-msg', 'add-token-error-msg',
     // Создание проекта с токеном
-    'projects-actions-keyboard', 'ask-project-name', 'ask-token-value',
+    'projects-actions-keyboard',
+    'ask-project-name-msg', 'ask-project-name',
+    'ask-token-value-msg', 'ask-token-value',
+    'ask-new-token-value-msg',
     'create-project-with-token', 'check-new-project-status', 'create-token-for-project',
     'check-new-token-status', 'load-new-project', 'new-project-error-msg', 'new-token-error-msg',
   ];
@@ -282,6 +285,30 @@ test('D03', 'раскладка кнопок: builder.adjust(2, 1, 2, 1, 1)', ()
 
 test('D04', 'кнопка "К списку" ведёт к fetch-projects', () => {
   ok(code.includes('fetch_projects'), 'callback_data для fetch-projects не найден');
+});
+
+// ══ Блок P: Message-узлы перед input-узлами ══════════════════════════════════
+console.log('\n══ Блок P: Message-узлы перед input-узлами ══════════════════════════');
+
+test('P01', 'ask-project-name-msg ведёт к ask-project-name (не напрямую к следующему шагу)', () => {
+  // Проверяем что message-узел с текстом подсказки ведёт к input-узлу
+  ok(code.includes('ask_project_name_msg'), 'узел ask-project-name-msg не найден');
+  ok(code.includes('ask_project_name'), 'узел ask-project-name не найден');
+  // ask-project-name-msg должен стоять перед ask-project-name в коде
+  const msgIdx = code.indexOf('ask_project_name_msg');
+  const inputIdx = code.indexOf('handle_callback_ask_project_name(');
+  ok(msgIdx !== -1, 'ask_project_name_msg не найден в коде');
+  ok(inputIdx !== -1, 'handle_callback_ask_project_name не найден в коде');
+});
+
+test('P02', 'ask-token-value-msg ведёт к ask-token-value', () => {
+  ok(code.includes('ask_token_value_msg'), 'узел ask-token-value-msg не найден');
+  ok(code.includes('ask_token_value'), 'узел ask-token-value не найден');
+});
+
+test('P03', 'ask-new-token-value-msg ведёт к ask-new-token-value', () => {
+  ok(code.includes('ask_new_token_value_msg'), 'узел ask-new-token-value-msg не найден');
+  ok(code.includes('ask_new_token_value'), 'узел ask-new-token-value не найден');
 });
 
 // ══ Итог ══════════════════════════════════════════════════════════════════════

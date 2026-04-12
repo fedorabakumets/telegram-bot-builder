@@ -662,6 +662,19 @@ test('E09', 'await callback_query.answer() присутствует', () => {
   ok(code.includes('await callback_query.answer()'), 'await callback_query.answer() не найдено');
 });
 
+test('E09b', 'callback_query.answer() вызывается ДО HTTP-запроса (убирает анимацию сразу)', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1')]);
+  const code = gen(p, 'E09b');
+  const fnIdx = code.indexOf('async def handle_callback_http1(');
+  ok(fnIdx !== -1, 'handle_callback_http1 не найден');
+  const fnBody = code.slice(fnIdx, fnIdx + 3000);
+  const answerIdx = fnBody.indexOf('await callback_query.answer()');
+  const httpIdx = fnBody.indexOf('_session.');
+  ok(answerIdx !== -1, 'await callback_query.answer() не найден в обработчике');
+  ok(httpIdx !== -1, '_session. не найден в обработчике');
+  ok(answerIdx < httpIdx, 'callback_query.answer() должен вызываться ДО HTTP-запроса (_session.)');
+});
+
 test('E10', 'Синтаксис OK при сохранении ответа и статуса', () => {
   const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
     httpRequestResponseVariable: 'api_result',
