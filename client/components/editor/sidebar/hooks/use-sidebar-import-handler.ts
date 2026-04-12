@@ -237,6 +237,12 @@ export function useSidebarImportHandler({
         clearImport();
 
         setTimeout(() => {
+          // Сохраняем ID в localStorage для гостевого режима
+          const myProjectIds = localStorage.getItem('myProjectIds') || '';
+          const ids = new Set(myProjectIds.split(',').filter(Boolean).map(Number));
+          ids.add(newProject.id);
+          localStorage.setItem('myProjectIds', Array.from(ids).join(','));
+
           // Обновить кеш проектов
           const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
           queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
@@ -244,6 +250,9 @@ export function useSidebarImportHandler({
           const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
           const { data, ...projectWithoutData } = newProject;
           queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
+
+          // Инвалидируем список чтобы сайдбар перезагрузил с новым ids
+          queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
 
           toast({
             title: "Проект импортирован",
