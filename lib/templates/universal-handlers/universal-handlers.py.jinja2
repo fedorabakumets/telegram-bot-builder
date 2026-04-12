@@ -1,7 +1,10 @@
 {#
   Универсальные обработчики
 
-  @fileoverview Fallback обработчики для необработанных сообщений
+  @fileoverview Fallback обработчики для необработанных сообщений и callback_query.
+               Fallback @dp.callback_query() обязателен — без него aiogram 3 не запускает
+               middleware (incoming_callback_trigger) для callback'ов, не совпадающих
+               ни с одним зарегистрированным фильтром, и логирует "Update is not handled".
   @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей
   @param {array}   nodes               - Все узлы бота
   @param {array}   commandNodes        - Узлы с командами (start/command)
@@ -39,3 +42,15 @@ async def handle_unhandled_message(message: types.Message):
     Нужен чтобы middleware (incoming_message_trigger) срабатывал на любой тип сообщения.
     """
     logging.info(f"📨 Получено необработанное сообщение от {message.from_user.id} (тип: {message.content_type})")
+
+
+@dp.callback_query()
+async def fallback_callback_handler(callback_query: types.CallbackQuery):
+    """
+    Catch-all обработчик для всех callback_query без специфичного обработчика.
+    Обязателен для корректной работы middleware (incoming_callback_trigger):
+    в aiogram 3 middleware запускается только если есть хотя бы один подходящий handler.
+    Без этого обработчика динамические кнопки (project_42, project_123 и т.д.)
+    не обрабатываются и aiogram логирует "Update is not handled".
+    """
+    logging.info(f"📲 Получен необработанный callback от {callback_query.from_user.id}: {callback_query.data}")

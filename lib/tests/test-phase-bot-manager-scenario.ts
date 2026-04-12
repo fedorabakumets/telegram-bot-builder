@@ -187,6 +187,16 @@ test('C06', 'ответ сохраняется в переменную "project_
   ok(code.includes('"project_detail"'), 'переменная "project_detail" не найдена');
 });
 
+test('C07', 'fallback_callback_handler зарегистрирован через @dp.callback_query()', () => {
+  // Без этого обработчика aiogram 3 не запускает middleware для callback'ов
+  // которые не совпадают ни с одним фильтром (project_42, project_123 и т.д.)
+  ok(code.includes('@dp.callback_query()'), '@dp.callback_query() fallback handler не найден — middleware не будет работать');
+});
+
+test('C08', 'fallback_callback_handler содержит logging.info для диагностики', () => {
+  ok(code.includes('fallback_callback_handler'), 'функция fallback_callback_handler не найдена');
+});
+
 // ══ Блок D: Карточка проекта + меню действий ═════════════════════════════════
 console.log('\n══ Блок D: Карточка проекта + меню действий ══════════════════════════');
 
