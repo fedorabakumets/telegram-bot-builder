@@ -34,7 +34,7 @@ SHEETS = {
         "action-result-msg", "action-error-msg",
     ],
     "Управление проектом": [
-        "rename-project-ask", "rename-project-action", "check-rename-status",
+        "rename-project-ask", "rename-project-input", "rename-project-action", "check-rename-status",
         "rename-success-msg", "rename-error-msg",
         "delete-project-confirm", "delete-confirm-keyboard",
         "delete-project-action", "check-delete-status",

@@ -101,7 +101,7 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 73 узла генерируют обработчики', () => {
+test('A03', 'все 74 узла генерируют обработчики', () => {
   const nodeIds = [
     // Основной поток
     'trigger-start', 'fetch-projects', 'check-projects-status',
@@ -121,7 +121,7 @@ test('A03', 'все 73 узла генерируют обработчики', ()
     'create-project-keyboard', 'create-project-action', 'check-create-status',
     'create-success-msg', 'create-error-msg', 'after-create-keyboard',
     // Переименование
-    'rename-project-ask', 'rename-project-action', 'check-rename-status',
+    'rename-project-ask', 'rename-project-input', 'rename-project-action', 'check-rename-status',
     'rename-success-msg', 'rename-error-msg',
     // Удаление
     'delete-project-confirm', 'delete-confirm-keyboard', 'delete-project-action',
