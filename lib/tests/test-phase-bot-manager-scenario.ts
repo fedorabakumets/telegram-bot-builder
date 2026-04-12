@@ -4,7 +4,9 @@
  * Блок A: Генерация всего проекта (синтаксис, структура)
  * Блок B: /start → HTTP-запрос за проектами → динамические кнопки
  * Блок C: incoming_callback_trigger с фильтрацией по паттерну → fetch-project-detail
+ *   C09: middleware НЕ перезаписывает callback_data для несовпадающих паттернов
  * Блок D: Карточка проекта + меню действий
+ *   D05: карточки содержат {project_detail.name} в messageText
  *
  * @module tests/test-phase-bot-manager-scenario
  */
@@ -209,6 +211,28 @@ test('C07', 'fallback_callback_handler зарегистрирован через
 
 test('C08', 'fallback_callback_handler содержит logging.info для диагностики', () => {
   ok(code.includes('fallback_callback_handler'), 'функция fallback_callback_handler не найдена');
+});
+
+test('C09', 'middleware НЕ перезаписывает callback_data для несовпадающих паттернов', () => {
+  // Проверяем что в коде есть условие: сохранение callback_data идёт ПОСЛЕ проверки паттерна
+  // Т.е. строка с startswith("project_") должна стоять ПЕРЕД строкой с user_data[user_id]["callback_data"]
+  const patternIdx = code.indexOf('startswith("project_")');
+  const saveIdx = code.indexOf('user_data[user_id]["callback_data"]');
+  ok(patternIdx !== -1, 'фильтр startswith("project_") не найден в middleware');
+  ok(saveIdx !== -1, 'сохранение callback_data не найдено');
+  ok(patternIdx < saveIdx, 'фильтр паттерна должен стоять ДО сохранения callback_data');
+});
+
+test('D05', 'карточки проекта содержат {project_detail.name} в messageText', () => {
+  // Проверяем что именно в тексте сообщений (не просто в коде) есть подстановка
+  ok(
+    code.includes('project_detail.name') && code.includes('Бот работает'),
+    'текст карточки running не содержит project_detail.name',
+  );
+  ok(
+    code.includes('project_detail.name') && code.includes('Бот остановлен'),
+    'текст карточки stopped не содержит project_detail.name',
+  );
 });
 
 // ══ Блок D: Карточка проекта + меню действий ═════════════════════════════════

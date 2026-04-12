@@ -4,6 +4,8 @@
  * Блок E: Действия start/stop/restart
  * Блок F: Навигация назад
  * Блок G: Обработка ошибок (condition узлы после fetch-projects и действий)
+ * Блок K: Читаемый статус бота
+ *   K06: replace_variables_in_text вызывается для текста карточки проекта
  *
  * @module tests/test-phase-bot-manager-scenario-2
  */
@@ -271,6 +273,18 @@ test('K04', 'project-card-unknown содержит эмодзи ⚪', () => {
 test('K05', 'старый узел project-card-msg отсутствует (заменён тремя вариантами)', () => {
   // Проверяем что нет прямого отображения botStatus через code
   ok(!code.includes('project_card_msg'), 'старый узел project-card-msg всё ещё присутствует в коде');
+});
+
+test('K06', 'replace_variables_in_text вызывается для текста карточки проекта', () => {
+  // Проверяем что в обработчиках карточек проекта вызывается replace_variables_in_text
+  // Это гарантирует что {project_detail.name} будет подставлен при отправке
+  ok(code.includes('replace_variables_in_text'), 'replace_variables_in_text не найден в коде');
+  // Проверяем что init_all_user_vars вызывается перед replace_variables_in_text
+  const initIdx = code.indexOf('init_all_user_vars');
+  const replaceIdx = code.indexOf('replace_variables_in_text');
+  ok(initIdx !== -1, 'init_all_user_vars не найден');
+  ok(replaceIdx !== -1, 'replace_variables_in_text не найден');
+  ok(initIdx < replaceIdx, 'init_all_user_vars должен вызываться ДО replace_variables_in_text');
 });
 
 // ══ Блок L: Токены проекта ════════════════════════════════════════════════════

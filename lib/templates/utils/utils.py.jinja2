@@ -87,10 +87,15 @@ async def check_auth(user_id: int) -> bool:
 
 
 async def init_all_user_vars(user_id: int) -> dict:
-    """Собирает все переменные пользователя из локального хранилища и БД
+    """Собирает все переменные пользователя из локального хранилища и БД.
+
+    После сборки разворачивает dict-значения в плоские ключи вида "var.field",
+    чтобы подстановка {project_detail.name} работала через прямой поиск по ключу
+    даже если dot-notation парсинг в replace_variables_in_text недоступен.
 
     Returns:
-        dict: Объединённый словарь всех переменных пользователя
+        dict: Объединённый словарь всех переменных пользователя,
+              включая плоские ключи вида "responseVar.field"
     """
     all_vars = dict(user_data.get(user_id, {}))
 {%- if userDatabaseEnabled %}
@@ -111,6 +116,16 @@ async def init_all_user_vars(user_id: int) -> dict:
     except Exception as e:
         logging.warning(f"⚠️ Не удалось загрузить переменные из БД: {e}")
 {%- endif %}
+    # Разворачиваем dict-значения в плоские ключи для надёжной dot-notation подстановки.
+    # Гарантирует что {project_detail.name} найдётся через all_vars["project_detail.name"]
+    # даже если JSON-парсинг в _resolve недоступен или значение хранится как строка.
+    _flat_keys = {}
+    for _k, _v in list(all_vars.items()):
+        if isinstance(_v, dict):
+            for _dk, _dv in _v.items():
+                if isinstance(_dv, (str, int, float, bool)) and _dv is not None:
+                    _flat_keys[f"{_k}.{_dk}"] = str(_dv)
+    all_vars.update(_flat_keys)
     return all_vars
 
 

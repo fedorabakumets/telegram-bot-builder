@@ -51,7 +51,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     if user_id not in user_data:
         user_data[user_id] = {}
     # Не перезаписываем если это fake callback (вызов из middleware/триггера) — реальные данные уже сохранены
-    if not getattr(callback_query, '_is_fake', False):
+    # Не перезаписываем если это goto-переход к этому узлу (callback_data == nodeId) —
+    # в этом случае реальный callback_data (например project_42) уже сохранён middleware
+    if not getattr(callback_query, '_is_fake', False) and _pressed_cb != "{{ nodeId }}":
         user_data[user_id]["callback_data"] = _pressed_cb or ""
         # Читаем текст кнопки из reply_markup сообщения — Telegram хранит его там
         _btn_text_found = ""
