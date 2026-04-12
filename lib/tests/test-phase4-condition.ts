@@ -23,6 +23,7 @@
  * Блок T: Системные операторы (is_private, is_group, is_channel)
  * Блок U: Операторы is_admin, is_premium, is_bot
  * Блок V: Операторы is_subscribed, is_not_subscribed
+ * Блок W: Dot-notation переменные (например projects.count)
  */
 
 import fs from 'fs';
@@ -2161,6 +2162,80 @@ test('J11', 'auto-transition → condition → keyboard без keyboardNodeId в
   ok(code.includes('InlineKeyboardBuilder()'), 'InlineKeyboardBuilder должен быть в коде');
   ok(code.includes('callback_data="msg2"'), 'кнопка goto должна оказаться в host message');
   syntax(code, 'j11');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК W: Dot-notation переменные (например projects.count)
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок W: Dot-notation переменные ──────────────────────────────');
+
+test('W01', 'переменная "projects.count" генерирует _dot_obj.get("count")', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'projects.count', [
+    makeBranch('greater_than', '0', 'msg1'),
+    makeBranch('else', '', 'msg2'),
+  ]), makeMessageNode('msg1'), makeMessageNode('msg2')]);
+  const code = gen(p, 'w01');
+  ok(code.includes('_dot_obj = _all_vars.get("projects", {})'), '_dot_obj = _all_vars.get("projects", {}) не найдено');
+  ok(code.includes('_dot_obj.get("count", "")'), '_dot_obj.get("count", "") не найдено');
+});
+
+test('W02', 'dot-notation не ломает числовой оператор greater_than', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'projects.count', [
+    makeBranch('greater_than', '0', 'msg1'),
+    makeBranch('else', '', 'msg2'),
+  ]), makeMessageNode('msg1'), makeMessageNode('msg2')]);
+  const code = gen(p, 'w02');
+  ok(code.includes('_num_val > 0'), '_num_val > 0 не найдено');
+});
+
+test('W03', 'dot-notation синтаксис Python OK', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'projects.count', [
+    makeBranch('greater_than', '0', 'msg1'),
+    makeBranch('else', '', 'msg2'),
+  ]), makeMessageNode('msg1'), makeMessageNode('msg2')]);
+  syntax(gen(p, 'w03'), 'w03');
+});
+
+test('W04', 'обычная переменная без точки не использует _dot_obj', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'count', [
+    makeBranch('greater_than', '0', 'msg1'),
+    makeBranch('else', '', 'msg2'),
+  ]), makeMessageNode('msg1'), makeMessageNode('msg2')]);
+  const code = gen(p, 'w04');
+  ok(!code.includes('_dot_obj'), '_dot_obj не должен быть для обычной переменной');
+  ok(code.includes('_all_vars.get("count", "")'), '_all_vars.get("count") должен быть');
+});
+
+test('W05', 'dot-notation с equals — val читается через _dot_obj', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'user.status', [
+    makeBranch('equals', 'active', 'msg1'),
+    makeBranch('else', '', 'msg2'),
+  ]), makeMessageNode('msg1'), makeMessageNode('msg2')]);
+  const code = gen(p, 'w05');
+  ok(code.includes('_dot_obj = _all_vars.get("user", {})'), '_dot_obj для user не найден');
+  ok(code.includes('_dot_obj.get("status", "")'), '_dot_obj.get("status") не найден');
+  ok(code.includes('val == "active"'), 'equals active не найден');
+  syntax(code, 'w05');
+});
+
+test('W06', 'dot-notation с filled — val читается через _dot_obj', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'response.name', [
+    makeBranch('filled', '', 'msg1'),
+    makeBranch('else', '', 'msg2'),
+  ]), makeMessageNode('msg1'), makeMessageNode('msg2')]);
+  const code = gen(p, 'w06');
+  ok(code.includes('_dot_obj = _all_vars.get("response", {})'), '_dot_obj для response не найден');
+  ok(code.includes('_dot_obj.get("name", "")'), '_dot_obj.get("name") не найден');
+  syntax(code, 'w06');
+});
+
+test('W07', 'isinstance guard присутствует в dot-notation коде', () => {
+  const p = makeCleanProject([makeConditionNode('cond1', 'projects.count', [
+    makeBranch('greater_than', '0'),
+  ])]);
+  const code = gen(p, 'w07');
+  ok(code.includes('isinstance(_dot_obj, dict)'), 'isinstance guard не найден');
 });
 
 const passed = results.filter(r => r.passed).length;

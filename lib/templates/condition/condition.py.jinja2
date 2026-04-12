@@ -4,6 +4,10 @@
   @fileoverview Генерирует Python-код для ветвления потока по значению переменной пользователя
   @param {array} conditionEntries - Массив объектов ConditionEntry
 
+  Поддерживает dot-notation в имени переменной (например "projects.count"):
+  - "projects.count" → _dot_obj = _all_vars.get("projects", {}); val = _dot_obj.get("count", "")
+  - Обычная переменная → val = _all_vars.get("variable", "")
+
   Порядок веток в сгенерированном коде:
   0. Системные операторы (is_private, is_group, is_channel, is_admin, is_premium, is_bot, is_subscribed, is_not_subscribed)
   1. Числовые операторы (greater_than, less_than, between) — всегда первыми среди переменных
