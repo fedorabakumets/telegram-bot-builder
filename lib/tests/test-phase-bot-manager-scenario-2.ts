@@ -320,6 +320,39 @@ test('L07', 'кнопка "🔑 Токены" присутствует в projec
 
 
 
+// ══ Блок N: Создание проекта с токеном ═══════════════════════════════════════
+console.log('\n══ Блок N: Создание проекта с токеном ═══════════════════════════════');
+
+test('N01', 'ask-project-name собирает ввод в new_project_name', () => {
+  ok(code.includes('ask_project_name'), 'узел ask-project-name не найден');
+  ok(code.includes('new_project_name'), 'переменная new_project_name не найдена');
+});
+
+test('N02', 'ask-token-value собирает ввод в new_token_value', () => {
+  ok(code.includes('ask_token_value'), 'узел ask-token-value не найден');
+  ok(code.includes('new_token_value'), 'переменная new_token_value не найдена');
+});
+
+test('N03', 'create-project-with-token делает POST к /api/bot/projects', () => {
+  ok(code.includes('create_project_with_token'), 'узел create-project-with-token не найден');
+  ok(code.includes('/api/bot/projects'), 'URL /api/bot/projects не найден');
+});
+
+test('N04', 'create-token-for-project делает POST к /api/bot/projects/.../tokens', () => {
+  ok(code.includes('create_token_for_project'), 'узел create-token-for-project не найден');
+  ok(code.includes('/tokens'), 'URL /tokens не найден в create-token-for-project');
+});
+
+test('N05', 'load-new-project загружает детали нового проекта', () => {
+  ok(code.includes('load_new_project'), 'узел load-new-project не найден');
+  ok(code.includes('new_project'), 'переменная new_project не найдена');
+});
+
+test('N06', 'синтаксис Python OK для всего проекта (с новыми узлами)', () => {
+  const r = checkSyntax(code, 'n06');
+  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
+});
+
 // ══ Итог ══════════════════════════════════════════════════════════════════════
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

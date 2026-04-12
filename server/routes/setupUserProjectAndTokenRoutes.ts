@@ -22,6 +22,7 @@ import { createTokenHandler } from "./userProjectsTokens/handlers/tokens/createT
 import { updateTokenHandler } from "./userProjectsTokens/handlers/tokens/updateTokenHandler";
 import { deleteTokenHandler } from "./userProjectsTokens/handlers/tokens/deleteTokenHandler";
 import { getBotProjectTokensHandler } from "./userProjectsTokens/handlers/tokens/getBotProjectTokensHandler";
+import { createBotTokenHandler } from "./userProjectsTokens/handlers/tokens/createBotTokenHandler";
 
 /**
  * Настраивает маршруты управления проектами и токенами пользователя
@@ -43,6 +44,7 @@ export function setupUserProjectAndTokenRoutes(app: Express): void {
 
     app.get("/api/user/tokens", getTokensHandler);
     app.get("/api/bot/projects/:id/tokens", getBotProjectTokensHandler);
+    app.post("/api/bot/projects/:id/tokens", createBotTokenHandler);
     app.post("/api/user/tokens", createTokenHandler);
     app.patch("/api/user/tokens/:id", updateTokenHandler);
     app.delete("/api/user/tokens/:id", deleteTokenHandler);

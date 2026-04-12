@@ -101,7 +101,7 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 50 узлов генерируют обработчики', () => {
+test('A03', 'все 60 узлов генерируют обработчики', () => {
   const nodeIds = [
     // Основной поток
     'trigger-start', 'fetch-projects', 'check-projects-status',
@@ -129,6 +129,10 @@ test('A03', 'все 50 узлов генерируют обработчики', 
     // Токены
     'fetch-tokens', 'check-tokens-status', 'check-tokens-empty',
     'tokens-msg', 'tokens-keyboard', 'no-tokens-msg', 'tokens-error-msg',
+    // Создание проекта с токеном
+    'projects-actions-keyboard', 'ask-project-name', 'ask-token-value',
+    'create-project-with-token', 'check-new-project-status', 'create-token-for-project',
+    'check-new-token-status', 'load-new-project', 'new-project-error-msg', 'new-token-error-msg',
   ];
   for (const id of nodeIds) {
     const safeName = id.replace(/-/g, '_');
@@ -173,6 +177,10 @@ test('B08', 'builder.adjust(1) — одна кнопка в ряд', () => {
 
 test('B09', 'arrayPath "items" присутствует в коде', () => {
   ok(code.includes('"items"'), 'arrayPath "items" не найден — API теперь возвращает {items: [...], count: N}');
+});
+
+test('B10', 'projects-actions-keyboard содержит кнопку "➕ Новый проект"', () => {
+  ok(code.includes('➕ Новый проект'), 'кнопка "➕ Новый проект" не найдена в projects-actions-keyboard');
 });
 
 // ══ Блок C: incoming_callback_trigger с фильтрацией ══════════════════════════
