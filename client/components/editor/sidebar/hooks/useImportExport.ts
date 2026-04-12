@@ -125,11 +125,19 @@ export function useImportExport(): UseImportExportResult {
 
       const newProject = await response.json() as BotProject;
 
+      // Сохраняем ID в localStorage для гостевого режима
+      const myProjectIds = localStorage.getItem('myProjectIds') || '';
+      const ids = new Set(myProjectIds.split(',').filter(Boolean).map(Number));
+      ids.add(newProject.id);
+      localStorage.setItem('myProjectIds', Array.from(ids).join(','));
+
       // Обновление кеша проектов
       queryClient.setQueryData<BotProject[]>(
         ['/api/projects'],
         (old = []) => [...old, newProject]
       );
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
 
       toast({
         title: '✅ Проект импортирован',

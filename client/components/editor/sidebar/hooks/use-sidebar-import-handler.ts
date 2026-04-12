@@ -253,6 +253,7 @@ export function useSidebarImportHandler({
 
           // Инвалидируем список чтобы сайдбар перезагрузил с новым ids
           queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
 
           toast({
             title: "Проект импортирован",
