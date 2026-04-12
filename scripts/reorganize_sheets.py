@@ -51,6 +51,12 @@ SHEETS = {
     "Токены": [
         "fetch-tokens", "check-tokens-status", "check-tokens-empty",
         "tokens-msg", "tokens-keyboard", "no-tokens-msg", "tokens-error-msg",
+        "incoming-token-trigger", "token-card-msg", "token-actions-keyboard",
+        "delete-token-confirm", "delete-token-confirm-keyboard",
+        "delete-token-action", "check-delete-token-status",
+        "delete-token-success-msg", "delete-token-error-msg",
+        "ask-new-token-value", "add-token-to-project", "check-add-token-status",
+        "add-token-success-msg", "add-token-error-msg",
     ],
 }
 

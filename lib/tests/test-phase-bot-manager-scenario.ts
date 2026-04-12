@@ -101,7 +101,7 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 60 узлов генерируют обработчики', () => {
+test('A03', 'все 74 узла генерируют обработчики', () => {
   const nodeIds = [
     // Основной поток
     'trigger-start', 'fetch-projects', 'check-projects-status',
@@ -126,9 +126,16 @@ test('A03', 'все 60 узлов генерируют обработчики', 
     // Удаление
     'delete-project-confirm', 'delete-confirm-keyboard', 'delete-project-action',
     'check-delete-status', 'delete-success-msg', 'delete-error-msg',
-    // Токены
+    // Токены — базовые
     'fetch-tokens', 'check-tokens-status', 'check-tokens-empty',
     'tokens-msg', 'tokens-keyboard', 'no-tokens-msg', 'tokens-error-msg',
+    // Токены — управление (новые)
+    'incoming-token-trigger', 'token-card-msg', 'token-actions-keyboard',
+    'delete-token-confirm', 'delete-token-confirm-keyboard',
+    'delete-token-action', 'check-delete-token-status',
+    'delete-token-success-msg', 'delete-token-error-msg',
+    'ask-new-token-value', 'add-token-to-project', 'check-add-token-status',
+    'add-token-success-msg', 'add-token-error-msg',
     // Создание проекта с токеном
     'projects-actions-keyboard', 'ask-project-name', 'ask-token-value',
     'create-project-with-token', 'check-new-project-status', 'create-token-for-project',
