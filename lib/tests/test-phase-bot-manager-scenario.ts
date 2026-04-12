@@ -101,7 +101,7 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 49 узлов генерируют обработчики', () => {
+test('A03', 'все 50 узлов генерируют обработчики', () => {
   const nodeIds = [
     // Основной поток
     'trigger-start', 'fetch-projects', 'check-projects-status',
@@ -115,6 +115,8 @@ test('A03', 'все 49 узлов генерируют обработчики', 
     'action-start', 'action-stop', 'action-restart',
     'check-start-status', 'check-stop-status', 'check-restart-status',
     'action-error-msg', 'action-result-msg', 'result-keyboard',
+    // Перезагрузка карточки проекта (без перезаписи callback_data)
+    'reload-project',
     // Создание проекта
     'create-project-keyboard', 'create-project-action', 'check-create-status',
     'create-success-msg', 'create-error-msg', 'after-create-keyboard',

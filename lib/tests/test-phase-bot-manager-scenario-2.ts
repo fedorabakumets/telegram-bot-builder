@@ -124,8 +124,8 @@ test('F02', 'result-keyboard содержит кнопку "К списку"', (
   ok(code.includes('К списку'), 'кнопка "К списку" не найдена');
 });
 
-test('F03', '"К проекту" ведёт к fetch-project-detail', () => {
-  ok(code.includes('fetch_project_detail'), 'callback_data для fetch-project-detail не найден');
+test('F03', '"К проекту" ведёт к reload-project (перезагрузка без перезаписи callback_data)', () => {
+  ok(code.includes('reload_project'), 'узел reload-project не найден в коде');
 });
 
 test('F04', '"К списку" ведёт к fetch-projects', () => {
