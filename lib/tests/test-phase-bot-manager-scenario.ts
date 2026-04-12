@@ -1,0 +1,263 @@
+/**
+ * @fileoverview Фаза — Сценарий управляющего бота (список проектов + карточка + действия)
+ *
+ * Тестирует полный сценарий из bots/httpи_-_сценарий_142_128/project.json:
+ *
+ * Блок A: Генерация всего проекта (синтаксис, структура)
+ * Блок B: /start → HTTP-запрос за проектами → динамические кнопки
+ * Блок C: incoming_callback_trigger → fetch-project-detail
+ * Блок D: Карточка проекта + меню действий
+ * Блок E: Действия start/stop/restart
+ * Блок F: Навигация назад
+ */
+
+import fs from 'fs';
+import { execSync } from 'child_process';
+import { generatePythonCode } from '../bot-generator.ts';
+
+/** Загружает project.json сценария */
+function loadProject() {
+  const raw = fs.readFileSync('bots/httpи_-_сценарий_142_128/project.json', 'utf-8');
+  return JSON.parse(raw);
+}
+
+/**
+ * Генерирует Python-код из проекта
+ * @param project - Объект проекта
+ * @param label - Метка для имени бота
+ */
+function gen(project: unknown, label: string): string {
+  return generatePythonCode(project as any, {
+    botName: `BotManager_${label}`,
+    userDatabaseEnabled: false,
+    enableComments: false,
+  });
+}
+
+/**
+ * Проверяет синтаксис Python-кода через py_compile
+ * @param code - Python-код
+ * @param label - Метка для временного файла
+ */
+function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {
+  const tmp = `_tmp_bms_${label}.py`;
+  fs.writeFileSync(tmp, code, 'utf-8');
+  try {
+    execSync(`python -m py_compile ${tmp}`, { stdio: 'pipe' });
+    fs.unlinkSync(tmp);
+    return { ok: true };
+  } catch (e: any) {
+    try { fs.unlinkSync(tmp); } catch {}
+    return { ok: false, error: e.stderr?.toString() ?? String(e) };
+  }
+}
+
+type Result = { id: string; name: string; passed: boolean; note: string };
+const results: Result[] = [];
+
+/**
+ * Запускает тест и записывает результат
+ * @param id - Идентификатор теста
+ * @param name - Название теста
+ * @param fn - Тело теста
+ */
+function test(id: string, name: string, fn: () => void) {
+  try {
+    fn();
+    results.push({ id, name, passed: true, note: 'OK' });
+    console.log(`  ✅ ${id}. ${name}`);
+  } catch (e: any) {
+    results.push({ id, name, passed: false, note: e.message });
+    console.log(`  ❌ ${id}. ${name}\n     → ${e.message}`);
+  }
+}
+
+/** Бросает ошибку если условие ложно */
+function ok(cond: boolean, msg: string) { if (!cond) throw new Error(msg); }
+
+/** Проверяет синтаксис Python, бросает ошибку при неудаче */
+function syntax(code: string, label: string) {
+  const r = checkSyntax(code, label);
+  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
+}
+
+// ─── Загружаем проект один раз ───────────────────────────────────────────────
+const project = loadProject();
+let code: string;
+
+console.log('\n╔════════════════════════════════════════════════════════════════════╗');
+console.log('║   Фаза — Сценарий управляющего бота (список проектов)              ║');
+console.log('╚════════════════════════════════════════════════════════════════════╝\n');
+
+// ══ Блок A: Генерация всего проекта ══════════════════════════════════════════
+console.log('══ Блок A: Генерация всего проекта ══════════════════════════════════');
+
+test('A01', 'project.json генерирует Python-код без исключений', () => {
+  code = gen(project, 'a01');
+  ok(typeof code === 'string' && code.length > 100, 'Код слишком короткий или пустой');
+});
+
+test('A02', 'синтаксис Python OK для всего проекта', () => {
+  syntax(code, 'a02');
+});
+
+test('A03', 'все 13 узлов генерируют обработчики', () => {
+  const nodeIds = [
+    'trigger-start', 'fetch-projects', 'projects-msg', 'projects-keyboard',
+    'incoming-callback-trigger', 'save-project-id', 'fetch-project-detail',
+    'project-card-msg', 'project-actions-keyboard',
+    'action-start', 'action-stop', 'action-restart',
+    'action-result-msg',
+  ];
+  for (const id of nodeIds) {
+    const safeName = id.replace(/-/g, '_');
+    ok(
+      code.includes(safeName),
+      `Обработчик для узла "${id}" не найден в коде`,
+    );
+  }
+});
+
+// ══ Блок B: /start → HTTP → динамические кнопки ══════════════════════════════
+console.log('\n══ Блок B: /start → HTTP → динамические кнопки ══════════════════════');
+
+test('B01', '/start регистрирует команду /start', () => {
+  ok(code.includes('Command("start")'), 'Command("start") не найдено');
+});
+
+test('B02', 'fetch-projects делает GET-запрос к /api/bot/projects', () => {
+  ok(code.includes('/api/bot/projects'), 'URL /api/bot/projects не найден');
+});
+
+test('B03', 'URL содержит подстановку {user_id} → telegram_id', () => {
+  ok(code.includes('telegram_id'), 'telegram_id не найден в URL');
+});
+
+test('B04', 'ответ сохраняется в переменную "projects"', () => {
+  ok(code.includes('"projects"'), 'переменная "projects" не найдена');
+});
+
+test('B05', 'projects-keyboard генерирует _resolve_dynamic_path', () => {
+  ok(code.includes('_resolve_dynamic_path'), '_resolve_dynamic_path не найдено');
+});
+
+test('B06', 'шаблон текста кнопки "📁 {name}" присутствует в коде', () => {
+  ok(code.includes('{name}'), 'шаблон {name} не найден');
+});
+
+test('B07', 'шаблон callback "project_{id}" присутствует в коде', () => {
+  ok(code.includes('project_{id}'), 'шаблон project_{id} не найден');
+});
+
+test('B08', 'builder.adjust(1) — одна кнопка в ряд', () => {
+  ok(code.includes('builder.adjust(1)'), 'builder.adjust(1) не найдено');
+});
+
+// ══ Блок C: incoming_callback_trigger → fetch-project-detail ═════════════════
+console.log('\n══ Блок C: incoming_callback_trigger → fetch-project-detail ══════════');
+
+test('C01', 'incoming_callback_trigger генерирует middleware', () => {
+  ok(
+    code.includes('incoming_callback_trigger_incoming_callback_trigger_middleware'),
+    'middleware для incoming_callback_trigger не найден',
+  );
+});
+
+test('C02', 'middleware сохраняет callback_data в user_data', () => {
+  ok(code.includes('user_data[user_id]["callback_data"]'), 'сохранение callback_data не найдено');
+});
+
+test('C03', 'fetch-project-detail использует {callback_data} в URL', () => {
+  ok(code.includes('callback_data'), 'callback_data не найден в URL fetch-project-detail');
+});
+
+test('C04', 'fetch-project-detail делает GET к /api/bot/projects/', () => {
+  ok(code.includes('/api/bot/projects/'), 'URL /api/bot/projects/ не найден');
+});
+
+test('C05', 'ответ сохраняется в переменную "project_detail"', () => {
+  ok(code.includes('"project_detail"'), 'переменная "project_detail" не найдена');
+});
+
+// ══ Блок D: Карточка проекта + меню действий ═════════════════════════════════
+console.log('\n══ Блок D: Карточка проекта + меню действий ══════════════════════════');
+
+test('D01', 'project-card-msg содержит dot-notation {project_detail.name}', () => {
+  ok(code.includes('project_detail'), 'project_detail не найден в тексте карточки');
+});
+
+test('D02', 'project-actions-keyboard генерирует 4 кнопки', () => {
+  const btnTexts = ['Запустить', 'Остановить', 'Перезапустить', 'К списку'];
+  for (const text of btnTexts) {
+    ok(code.includes(text), `Кнопка "${text}" не найдена`);
+  }
+});
+
+test('D03', 'раскладка кнопок: builder.adjust(2, 1, 1)', () => {
+  ok(code.includes('builder.adjust(2, 1, 1)'), 'builder.adjust(2, 1, 1) не найдено');
+});
+
+test('D04', 'кнопка "К списку" ведёт к fetch-projects', () => {
+  ok(code.includes('fetch_projects'), 'callback_data для fetch-projects не найден');
+});
+
+// ══ Блок E: Действия start/stop/restart ══════════════════════════════════════
+console.log('\n══ Блок E: Действия start/stop/restart ══════════════════════════════');
+
+test('E01', 'action-start делает POST к /api/projects/.../bot/start', () => {
+  ok(code.includes('/bot/start'), 'URL /bot/start не найден');
+});
+
+test('E02', 'action-stop делает POST к /api/projects/.../bot/stop', () => {
+  ok(code.includes('/bot/stop'), 'URL /bot/stop не найден');
+});
+
+test('E03', 'action-restart делает POST к /api/projects/.../bot/restart', () => {
+  ok(code.includes('/bot/restart'), 'URL /bot/restart не найден');
+});
+
+test('E04', 'URL действий содержит {project_detail.id}', () => {
+  ok(code.includes('project_detail'), 'project_detail.id не найден в URL действий');
+});
+
+test('E05', 'все три действия ведут к action-result-msg', () => {
+  ok(code.includes('action_result_msg'), 'переход к action-result-msg не найден');
+});
+
+// ══ Блок F: Навигация назад ═══════════════════════════════════════════════════
+console.log('\n══ Блок F: Навигация назад ═══════════════════════════════════════════');
+
+test('F01', 'result-keyboard содержит кнопку "К проекту"', () => {
+  ok(code.includes('К проекту'), 'кнопка "К проекту" не найдена');
+});
+
+test('F02', 'result-keyboard содержит кнопку "К списку"', () => {
+  ok(code.includes('К списку'), 'кнопка "К списку" не найдена');
+});
+
+test('F03', '"К проекту" ведёт к fetch-project-detail', () => {
+  ok(code.includes('fetch_project_detail'), 'callback_data для fetch-project-detail не найден');
+});
+
+test('F04', '"К списку" ведёт к fetch-projects', () => {
+  ok(code.includes('fetch_projects'), 'callback_data для fetch-projects не найден');
+});
+
+// ══ Итог ══════════════════════════════════════════════════════════════════════
+const passed = results.filter(r => r.passed).length;
+const failed = results.filter(r => !r.passed).length;
+const total = results.length;
+
+console.log('\n╔══════════════════════════════════════════════════════════════╗');
+const summary = `  Итог: ${passed}/${total} пройдено  |  Провалено: ${failed}`;
+console.log(`║${summary}${' '.repeat(Math.max(0, 62 - summary.length))}║`);
+console.log('╚══════════════════════════════════════════════════════════════╝');
+
+if (failed > 0) {
+  console.log('\nПровалившиеся тесты:');
+  results.filter(r => !r.passed).forEach(r => {
+    console.log(`  ❌ ${r.id}. ${r.name}`);
+    console.log(`     ${r.note}`);
+  });
+  process.exit(1);
+}
