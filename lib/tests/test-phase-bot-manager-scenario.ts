@@ -1,23 +1,21 @@
 /**
- * @fileoverview Фаза — Сценарий управляющего бота (список проектов + карточка + действия)
- *
- * Тестирует полный сценарий из bots/httpи_-_сценарий_142_128/project.json:
+ * @fileoverview Фаза — Сценарий управляющего бота (часть 1: генерация, /start, callback-trigger)
  *
  * Блок A: Генерация всего проекта (синтаксис, структура)
  * Блок B: /start → HTTP-запрос за проектами → динамические кнопки
- * Блок C: incoming_callback_trigger → fetch-project-detail
+ * Блок C: incoming_callback_trigger с фильтрацией по паттерну → fetch-project-detail
  * Блок D: Карточка проекта + меню действий
- * Блок E: Действия start/stop/restart
- * Блок F: Навигация назад
+ *
+ * @module tests/test-phase-bot-manager-scenario
  */
 
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
 
-/** Загружает project.json сценария */
+/** Загружает project.json сценария управляющего бота */
 function loadProject() {
-  const raw = fs.readFileSync('bots/httpи_-_сценарий_142_128/project.json', 'utf-8');
+  const raw = fs.readFileSync('bots/новый/новый.json', 'utf-8');
   return JSON.parse(raw);
 }
 
@@ -86,7 +84,7 @@ const project = loadProject();
 let code: string;
 
 console.log('\n╔════════════════════════════════════════════════════════════════════╗');
-console.log('║   Фаза — Сценарий управляющего бота (список проектов)              ║');
+console.log('║   Фаза — Сценарий управляющего бота (часть 1)                      ║');
 console.log('╚════════════════════════════════════════════════════════════════════╝\n');
 
 // ══ Блок A: Генерация всего проекта ══════════════════════════════════════════
@@ -101,20 +99,19 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 13 узлов генерируют обработчики', () => {
+test('A03', 'все 20 узлов генерируют обработчики', () => {
   const nodeIds = [
-    'trigger-start', 'fetch-projects', 'projects-msg', 'projects-keyboard',
+    'trigger-start', 'fetch-projects', 'check-projects-status',
+    'projects-error-msg', 'projects-msg', 'projects-keyboard',
     'incoming-callback-trigger', 'save-project-id', 'fetch-project-detail',
     'project-card-msg', 'project-actions-keyboard',
     'action-start', 'action-stop', 'action-restart',
-    'action-result-msg',
+    'check-start-status', 'check-stop-status', 'check-restart-status',
+    'action-error-msg', 'action-result-msg', 'result-keyboard',
   ];
   for (const id of nodeIds) {
     const safeName = id.replace(/-/g, '_');
-    ok(
-      code.includes(safeName),
-      `Обработчик для узла "${id}" не найден в коде`,
-    );
+    ok(code.includes(safeName), `Обработчик для узла "${id}" не найден в коде`);
   }
 });
 
@@ -153,8 +150,8 @@ test('B08', 'builder.adjust(1) — одна кнопка в ряд', () => {
   ok(code.includes('builder.adjust(1)'), 'builder.adjust(1) не найдено');
 });
 
-// ══ Блок C: incoming_callback_trigger → fetch-project-detail ═════════════════
-console.log('\n══ Блок C: incoming_callback_trigger → fetch-project-detail ══════════');
+// ══ Блок C: incoming_callback_trigger с фильтрацией ══════════════════════════
+console.log('\n══ Блок C: incoming_callback_trigger с фильтрацией ══════════════════');
 
 test('C01', 'incoming_callback_trigger генерирует middleware', () => {
   ok(
@@ -167,15 +164,19 @@ test('C02', 'middleware сохраняет callback_data в user_data', () => {
   ok(code.includes('user_data[user_id]["callback_data"]'), 'сохранение callback_data не найдено');
 });
 
-test('C03', 'fetch-project-detail использует {callback_data} в URL', () => {
+test('C03', 'middleware фильтрует по паттерну "project_" через startsWith', () => {
+  ok(code.includes('startswith("project_")'), 'фильтрация по паттерну project_ не найдена');
+});
+
+test('C04', 'fetch-project-detail использует {callback_data} в URL', () => {
   ok(code.includes('callback_data'), 'callback_data не найден в URL fetch-project-detail');
 });
 
-test('C04', 'fetch-project-detail делает GET к /api/bot/projects/', () => {
+test('C05', 'fetch-project-detail делает GET к /api/bot/projects/', () => {
   ok(code.includes('/api/bot/projects/'), 'URL /api/bot/projects/ не найден');
 });
 
-test('C05', 'ответ сохраняется в переменную "project_detail"', () => {
+test('C06', 'ответ сохраняется в переменную "project_detail"', () => {
   ok(code.includes('"project_detail"'), 'переменная "project_detail" не найдена');
 });
 
@@ -198,48 +199,6 @@ test('D03', 'раскладка кнопок: builder.adjust(2, 1, 1)', () => {
 });
 
 test('D04', 'кнопка "К списку" ведёт к fetch-projects', () => {
-  ok(code.includes('fetch_projects'), 'callback_data для fetch-projects не найден');
-});
-
-// ══ Блок E: Действия start/stop/restart ══════════════════════════════════════
-console.log('\n══ Блок E: Действия start/stop/restart ══════════════════════════════');
-
-test('E01', 'action-start делает POST к /api/projects/.../bot/start', () => {
-  ok(code.includes('/bot/start'), 'URL /bot/start не найден');
-});
-
-test('E02', 'action-stop делает POST к /api/projects/.../bot/stop', () => {
-  ok(code.includes('/bot/stop'), 'URL /bot/stop не найден');
-});
-
-test('E03', 'action-restart делает POST к /api/projects/.../bot/restart', () => {
-  ok(code.includes('/bot/restart'), 'URL /bot/restart не найден');
-});
-
-test('E04', 'URL действий содержит {project_detail.id}', () => {
-  ok(code.includes('project_detail'), 'project_detail.id не найден в URL действий');
-});
-
-test('E05', 'все три действия ведут к action-result-msg', () => {
-  ok(code.includes('action_result_msg'), 'переход к action-result-msg не найден');
-});
-
-// ══ Блок F: Навигация назад ═══════════════════════════════════════════════════
-console.log('\n══ Блок F: Навигация назад ═══════════════════════════════════════════');
-
-test('F01', 'result-keyboard содержит кнопку "К проекту"', () => {
-  ok(code.includes('К проекту'), 'кнопка "К проекту" не найдена');
-});
-
-test('F02', 'result-keyboard содержит кнопку "К списку"', () => {
-  ok(code.includes('К списку'), 'кнопка "К списку" не найдена');
-});
-
-test('F03', '"К проекту" ведёт к fetch-project-detail', () => {
-  ok(code.includes('fetch_project_detail'), 'callback_data для fetch-project-detail не найден');
-});
-
-test('F04', '"К списку" ведёт к fetch-projects', () => {
   ok(code.includes('fetch_projects'), 'callback_data для fetch-projects не найден');
 });
 

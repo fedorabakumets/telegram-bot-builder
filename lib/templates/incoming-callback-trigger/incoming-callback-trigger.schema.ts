@@ -13,6 +13,10 @@ const incomingCallbackTriggerEntrySchema = z.object({
   targetNodeId: z.string(),
   /** Тип целевого узла */
   targetNodeType: z.string(),
+  /** Паттерн фильтрации callback_data (опционально) */
+  callbackPattern: z.string().optional(),
+  /** Тип сопоставления: "startsWith" | "equals" | "contains" */
+  callbackMatchType: z.string().optional(),
 });
 
 /** Схема параметров шаблона middleware триггеров входящих callback_query */

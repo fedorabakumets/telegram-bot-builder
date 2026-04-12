@@ -11,6 +11,10 @@ export interface IncomingCallbackTriggerEntry {
   targetNodeId: string;
   /** Тип целевого узла */
   targetNodeType: string;
+  /** Паттерн фильтрации callback_data (опционально) */
+  callbackPattern?: string;
+  /** Тип сопоставления паттерна: "startsWith" | "equals" | "contains" */
+  callbackMatchType?: string;
 }
 
 /** Параметры для генерации middleware триггеров входящих callback_query */

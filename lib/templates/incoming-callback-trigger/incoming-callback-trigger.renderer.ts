@@ -34,6 +34,8 @@ export function collectIncomingCallbackTriggerEntries(nodes: Node[]): IncomingCa
       nodeId: node.id,
       targetNodeId,
       targetNodeType,
+      callbackPattern: node.data.callbackPattern ?? '',
+      callbackMatchType: node.data.callbackMatchType ?? '',
     });
   }
 

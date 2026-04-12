@@ -13,9 +13,23 @@
 {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
 
 async def incoming_callback_trigger_{{ sanitized_node_id }}_middleware(handler, event: types.CallbackQuery, data: dict):
-    """Срабатывает на каждое нажатие инлайн-кнопки пользователем"""
+    """Срабатывает на нажатие инлайн-кнопки пользователем{% if entry.callbackPattern %} (фильтр: {{ entry.callbackMatchType }} "{{ entry.callbackPattern }}"){% endif %}"""
     try:
         user_id = event.from_user.id
+        _cb_data = event.data or ""
+        {%- if entry.callbackPattern %}
+        # Фильтрация по паттерну — пропускаем неподходящие callbacks
+        {%- if entry.callbackMatchType == "startsWith" %}
+        if not _cb_data.startswith("{{ entry.callbackPattern }}"):
+            return await handler(event, data)
+        {%- elif entry.callbackMatchType == "equals" %}
+        if _cb_data != "{{ entry.callbackPattern }}":
+            return await handler(event, data)
+        {%- elif entry.callbackMatchType == "contains" %}
+        if "{{ entry.callbackPattern }}" not in _cb_data:
+            return await handler(event, data)
+        {%- endif %}
+        {%- endif %}
         logging.info(f"Нажатие кнопки от {user_id} — триггер узла {{ entry.nodeId }}")
         # Сохраняем данные нажатой кнопки
         if user_id not in user_data:
