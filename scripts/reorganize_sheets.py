@@ -19,7 +19,7 @@ BACKUP_FILE = Path("bots/новый/новый.json.bak")
 SHEETS = {
     "Список проектов": [
         "trigger-start", "fetch-projects", "check-projects-status",
-        "check-projects-empty", "projects-msg", "projects-keyboard",
+        "check-projects-empty", "projects-msg",
         "projects-actions-keyboard", "projects-error-msg", "no-projects-msg",
         "incoming-callback-trigger",
     ],

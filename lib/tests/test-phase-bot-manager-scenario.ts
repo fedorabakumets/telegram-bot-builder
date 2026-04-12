@@ -101,12 +101,12 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 74 узла генерируют обработчики', () => {
+test('A03', 'все 73 узла генерируют обработчики', () => {
   const nodeIds = [
     // Основной поток
     'trigger-start', 'fetch-projects', 'check-projects-status',
     'check-projects-empty', 'no-projects-msg',
-    'projects-error-msg', 'projects-msg', 'projects-keyboard',
+    'projects-error-msg', 'projects-msg',
     'incoming-callback-trigger', 'fetch-project-detail',
     // Статус бота
     'check-bot-status', 'project-card-running', 'project-card-stopped', 'project-card-unknown',
@@ -166,7 +166,7 @@ test('B04', 'ответ сохраняется в переменную "projects
   ok(code.includes('"projects"'), 'переменная "projects" не найдена');
 });
 
-test('B05', 'projects-keyboard генерирует _resolve_dynamic_path', () => {
+test('B05', 'projects-actions-keyboard генерирует _resolve_dynamic_path', () => {
   ok(code.includes('_resolve_dynamic_path'), '_resolve_dynamic_path не найдено');
 });
 
