@@ -9,26 +9,15 @@ import { keyboardParamsSchema } from './keyboard.schema';
 import { renderPartialTemplate } from '../template-renderer';
 import { normalizeDynamicButtonsConfig, shouldUseDynamicButtons } from './dynamic-buttons';
 
+/** Специальный ID виртуального ряда динамических кнопок */
+const DYNAMIC_PLACEHOLDER = '__dynamic__';
+
 /**
- * Генерация Python кода клавиатуры с валидацией параметров
- * @param params - Параметры клавиатуры
- * @returns Сгенерированный Python код
- *
- * @example
- * ```typescript
- * const code = generateKeyboard({
- *   keyboardType: 'inline',
- *   buttons: [
- *     { text: 'Button', action: 'goto', target: 'btn', id: 'btn_1' },
- *   ],
- *   oneTimeKeyboard: false,
- *   resizeKeyboard: true,
- * });
- * ```
- */
-/**
- * Переупорядочивает кнопки согласно keyboardLayout.rows
- * Если layout задан — кнопки идут в порядке buttonIds из rows
+ * Переупорядочивает кнопки согласно keyboardLayout.rows.
+ * Пропускает виртуальный ряд __dynamic__ — он не является реальной кнопкой.
+ * @param buttons - Массив кнопок
+ * @param keyboardLayout - Раскладка клавиатуры
+ * @returns Отсортированный массив кнопок без __dynamic__
  */
 export function sortButtonsByLayout(buttons: any[], keyboardLayout?: any): any[] {
   if (!keyboardLayout || keyboardLayout.autoLayout || !keyboardLayout.rows?.length) {
@@ -37,7 +26,9 @@ export function sortButtonsByLayout(buttons: any[], keyboardLayout?: any): any[]
   const orderedIds: string[] = [];
   for (const row of keyboardLayout.rows) {
     if (Array.isArray(row.buttonIds)) {
-      orderedIds.push(...row.buttonIds);
+      for (const id of row.buttonIds) {
+        if (id !== DYNAMIC_PLACEHOLDER) orderedIds.push(id);
+      }
     }
   }
   if (orderedIds.length === 0) return buttons;
@@ -57,13 +48,16 @@ export function sortButtonsByLayout(buttons: any[], keyboardLayout?: any): any[]
 }
 
 /**
- * Вычисляет строку аргументов для builder.adjust() на основе keyboardLayout
- * Возвращает null если нужно использовать автоматический расчёт
+ * Вычисляет строку аргументов для builder.adjust() на основе keyboardLayout.
+ * Пропускает ряды с __dynamic__ при подсчёте.
+ * @param keyboardLayout - Раскладка клавиатуры
+ * @returns Строка для builder.adjust() или null для автоматического расчёта
  */
 export function computeAdjustStr(keyboardLayout?: any): string | null {
   if (!keyboardLayout) return null;
   if (!keyboardLayout.autoLayout && keyboardLayout.rows?.length) {
     const counts = (keyboardLayout.rows as any[])
+      .filter((r: any) => !r.buttonIds?.includes(DYNAMIC_PLACEHOLDER))
       .map((r: any) => Array.isArray(r.buttonIds) ? r.buttonIds.length : 0)
       .filter((n: number) => n > 0);
     if (counts.length > 0) return counts.join(', ');
@@ -74,15 +68,88 @@ export function computeAdjustStr(keyboardLayout?: any): string | null {
   return null;
 }
 
+/**
+ * Разбивает кнопки на два массива относительно позиции __dynamic__ в раскладке.
+ * Используется для генерации смешанного режима (динамические + статические).
+ * @param buttons - Статические кнопки
+ * @param keyboardLayout - Раскладка с виртуальным рядом __dynamic__
+ * @returns Объект с массивами кнопок до и после динамического блока
+ */
+export function splitButtonsByDynamicPosition(
+  buttons: any[],
+  keyboardLayout?: any
+): { staticButtonsBefore: any[]; staticButtonsAfter: any[] } {
+  if (!keyboardLayout?.rows?.length) {
+    return { staticButtonsBefore: [], staticButtonsAfter: buttons };
+  }
+
+  const dynamicRowIndex = keyboardLayout.rows.findIndex(
+    (r: any) => Array.isArray(r.buttonIds) && r.buttonIds.includes(DYNAMIC_PLACEHOLDER)
+  );
+
+  if (dynamicRowIndex === -1) {
+    return { staticButtonsBefore: [], staticButtonsAfter: buttons };
+  }
+
+  const btnMap = new Map(buttons.map((b: any) => [b.id, b]));
+  const beforeIds: string[] = [];
+  const afterIds: string[] = [];
+
+  for (let i = 0; i < keyboardLayout.rows.length; i++) {
+    const row = keyboardLayout.rows[i];
+    if (!Array.isArray(row.buttonIds)) continue;
+    for (const id of row.buttonIds) {
+      if (id === DYNAMIC_PLACEHOLDER) continue;
+      if (i < dynamicRowIndex) beforeIds.push(id);
+      else afterIds.push(id);
+    }
+  }
+
+  const staticButtonsBefore = beforeIds.map((id: string) => btnMap.get(id)).filter(Boolean);
+  const staticButtonsAfter = afterIds.map((id: string) => btnMap.get(id)).filter(Boolean);
+
+  // Кнопки не упомянутые в layout — добавляем после
+  const mentionedIds = new Set([...beforeIds, ...afterIds]);
+  for (const btn of buttons) {
+    if (!mentionedIds.has(btn.id)) staticButtonsAfter.push(btn);
+  }
+
+  return { staticButtonsBefore, staticButtonsAfter };
+}
+
+/**
+ * Генерация Python кода клавиатуры с валидацией параметров.
+ * Поддерживает смешанный режим: динамические + статические кнопки с позиционированием через __dynamic__.
+ * @param params - Параметры клавиатуры
+ * @returns Сгенерированный Python код
+ */
 export function generateKeyboard(params: KeyboardTemplateParams): string {
-  const sortedButtons = sortButtonsByLayout(params.buttons ?? [], params.keyboardLayout);
-  const adjustStr = computeAdjustStr(params.keyboardLayout);
+  const rawButtons = params.buttons ?? [];
   const dynamicButtons = normalizeDynamicButtonsConfig(params.dynamicButtons);
   const useDynamicButtons = shouldUseDynamicButtons({
     enableDynamicButtons: params.enableDynamicButtons,
     dynamicButtons,
     keyboardType: params.keyboardType,
   });
+
+  // Определяем позиционирование статических кнопок относительно динамических
+  const hasDynamicLayout = useDynamicButtons &&
+    params.keyboardLayout?.rows?.some((r: any) => r.buttonIds?.includes(DYNAMIC_PLACEHOLDER));
+
+  let sortedButtons: any[];
+  let staticButtonsBefore: any[] | undefined;
+  let staticButtonsAfter: any[] | undefined;
+
+  if (hasDynamicLayout && rawButtons.length > 0) {
+    const split = splitButtonsByDynamicPosition(rawButtons, params.keyboardLayout);
+    staticButtonsBefore = split.staticButtonsBefore;
+    staticButtonsAfter = split.staticButtonsAfter;
+    sortedButtons = sortButtonsByLayout(rawButtons, params.keyboardLayout);
+  } else {
+    sortedButtons = sortButtonsByLayout(rawButtons, params.keyboardLayout);
+  }
+
+  const adjustStr = computeAdjustStr(params.keyboardLayout);
   const withSortedButtons = {
     ...params,
     keyboardType: useDynamicButtons ? 'inline' : params.keyboardType,
@@ -96,6 +163,8 @@ export function generateKeyboard(params: KeyboardTemplateParams): string {
     adjustStr,
     dynamicButtons: validated.dynamicButtons ?? dynamicButtons,
     enableDynamicButtons: useDynamicButtons,
+    staticButtonsBefore: staticButtonsBefore ?? [],
+    staticButtonsAfter: staticButtonsAfter ?? [],
   });
 }
 

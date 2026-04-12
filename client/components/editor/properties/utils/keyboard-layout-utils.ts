@@ -6,6 +6,41 @@
 import { Button } from '@lib/bot-generator';
 import { KeyboardLayout, KeyboardRow } from '../types/keyboard-layout';
 
+/** Специальный ID для блока динамических кнопок */
+export const DYNAMIC_BUTTONS_PLACEHOLDER_ID = '__dynamic__';
+
+/**
+ * Создаёт раскладку с блоком динамических кнопок
+ * @param buttons - Статические кнопки
+ * @param columns - Количество колонок
+ * @param dynamicPosition - Позиция динамического блока: 'before' | 'after'
+ * @returns Раскладка клавиатуры с виртуальным рядом __dynamic__
+ */
+export function createLayoutWithDynamic(
+  buttons: Button[],
+  columns: number,
+  dynamicPosition: 'before' | 'after' = 'after'
+): KeyboardLayout {
+  const staticRows: KeyboardRow[] = [];
+  for (let i = 0; i < buttons.length; i += columns) {
+    staticRows.push({ buttonIds: buttons.slice(i, i + columns).map(b => b.id) });
+  }
+  const dynamicRow: KeyboardRow = { buttonIds: [DYNAMIC_BUTTONS_PLACEHOLDER_ID] };
+  const rows = dynamicPosition === 'before'
+    ? [dynamicRow, ...staticRows]
+    : [...staticRows, dynamicRow];
+  return { rows, columns, autoLayout: false };
+}
+
+/**
+ * Проверяет, содержит ли раскладка блок динамических кнопок
+ * @param layout - Раскладка клавиатуры
+ * @returns true если раскладка содержит виртуальный ряд __dynamic__
+ */
+export function layoutHasDynamic(layout: KeyboardLayout): boolean {
+  return layout.rows.some(r => r.buttonIds.includes(DYNAMIC_BUTTONS_PLACEHOLDER_ID));
+}
+
 /**
  * Создаёт раскладку из массива кнопок
  * @param buttons - Массив кнопок

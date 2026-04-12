@@ -15,8 +15,14 @@ import { DynamicButtonsSection } from './dynamic-buttons-section';
 import { MultipleSelectionSettings } from '../questions/multiple-selection-settings';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import { normalizeDynamicButtonsConfig } from '../../utils/dynamic-buttons';
+import {
+  DYNAMIC_BUTTONS_PLACEHOLDER_ID,
+  createLayoutWithDynamic,
+  layoutHasDynamic,
+} from '../../utils/keyboard-layout-utils';
 import { Switch } from '@/components/ui/switch';
 import { generateButtonId } from '@/utils/generate-button-id';
+import React from 'react';
 
 /** Пропсы панели клавиатуры */
 interface KeyboardNodePropertiesProps {
@@ -53,6 +59,36 @@ export function KeyboardNodeProperties({
 }: KeyboardNodePropertiesProps) {
   const buttons = selectedNode.data.buttons || [];
   const enableDynamicButtons = selectedNode.data.enableDynamicButtons ?? false;
+
+  /**
+   * Виртуальная кнопка-заглушка для блока динамических кнопок.
+   * Добавляется в массив кнопок только для отображения в редакторе раскладки.
+   */
+  const dynamicPlaceholderButton: Button = {
+    id: DYNAMIC_BUTTONS_PLACEHOLDER_ID,
+    text: '⚡ Динамические кнопки',
+    action: 'goto',
+    target: '',
+  } as any;
+
+  /**
+   * Массив кнопок для передачи в KeyboardLayoutEditor.
+   * В режиме динамических кнопок добавляет виртуальную кнопку __dynamic__.
+   */
+  const buttonsForLayout: Button[] = enableDynamicButtons
+    ? [dynamicPlaceholderButton, ...buttons]
+    : buttons;
+
+  /**
+   * Раскладка с учётом блока динамических кнопок.
+   * Если раскладка ещё не содержит __dynamic__ — создаёт её с динамическим блоком после статических.
+   */
+  const layoutForDynamic = React.useMemo(() => {
+    if (!enableDynamicButtons || buttons.length === 0) return selectedNode.data.keyboardLayout;
+    const existing = selectedNode.data.keyboardLayout;
+    if (existing && layoutHasDynamic(existing)) return existing;
+    return createLayoutWithDynamic(buttons, 1, 'after');
+  }, [enableDynamicButtons, buttons, selectedNode.data.keyboardLayout]);
 
   /**
    * Переключает режим динамических кнопок.
@@ -119,9 +155,9 @@ export function KeyboardNodeProperties({
 
       {enableDynamicButtons ? (
         <>
-          {/* Подсказка: статические кнопки добавляются после динамических */}
+          {/* Подсказка: статические кнопки можно перетаскивать относительно динамических */}
           <div className="rounded-lg border border-dashed border-amber-300/60 dark:border-amber-700/50 bg-amber-50/40 dark:bg-amber-950/20 p-3 text-xs text-amber-900 dark:text-amber-100">
-            Динамические кнопки генерируются из HTTP-ответа. Статические кнопки ниже добавляются после них.
+            Динамические кнопки генерируются из HTTP-ответа. Перетащите блок ⚡ для изменения порядка.
           </div>
           <KeyboardButtonsSection selectedNode={selectedNode} onButtonAdd={onButtonAdd} />
           {buttons.map((button: any) => (
@@ -140,8 +176,8 @@ export function KeyboardNodeProperties({
           ))}
           {buttons.length > 0 && (
             <KeyboardLayoutEditor
-              buttons={buttons}
-              initialLayout={selectedNode.data.keyboardLayout}
+              buttons={buttonsForLayout}
+              initialLayout={layoutForDynamic}
               onLayoutChange={(layout) => onNodeUpdate(selectedNode.id, { keyboardLayout: layout })}
             />
           )}

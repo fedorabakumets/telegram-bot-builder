@@ -6,6 +6,7 @@
 import React from 'react';
 import { Button } from '@lib/bot-generator';
 import { KeyboardLayout } from '../../types/keyboard-layout';
+import { DYNAMIC_BUTTONS_PLACEHOLDER_ID } from '../../utils/keyboard-layout-utils';
 import { cn } from '@/utils/utils';
 
 /** Свойства компонента KeyboardGridPreview */
@@ -117,13 +118,19 @@ export function KeyboardGridPreview({
                   handleDropOnButton(e, rowIndex, buttonIndex);
                 }}
                 className={cn(
-                  'flex-1 min-w-[120px] p-3 bg-muted rounded-md text-center text-sm border shadow-sm',
-                  disabled
-                    ? 'cursor-not-allowed opacity-60'
-                    : 'cursor-move hover:bg-accent transition-colors'
+                  'flex-1 min-w-[120px] p-3 rounded-md text-center text-sm border shadow-sm',
+                  buttonId === DYNAMIC_BUTTONS_PLACEHOLDER_ID
+                    ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300/60 dark:border-amber-700/50 text-amber-800 dark:text-amber-200 cursor-move'
+                    : disabled
+                      ? 'bg-muted cursor-not-allowed opacity-60'
+                      : 'bg-muted cursor-move hover:bg-accent transition-colors'
                 )}
               >
-                {getButtonText(buttonId)}
+                {buttonId === DYNAMIC_BUTTONS_PLACEHOLDER_ID ? (
+                  <span>⚡ Динамические кнопки</span>
+                ) : (
+                  getButtonText(buttonId)
+                )}
               </div>
             ))}
           </div>
