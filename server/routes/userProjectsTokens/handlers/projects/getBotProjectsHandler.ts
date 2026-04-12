@@ -40,7 +40,12 @@ export async function getBotProjectsHandler(req: Request, res: Response): Promis
             sortOrder,
         }));
 
-        res.json(safeProjects);
+        // Возвращаем объект с массивом items и счётчиком count
+        // count позволяет боту проверить пустой список через condition-узел
+        res.json({
+            items: safeProjects,
+            count: safeProjects.length,
+        });
     } catch (error: any) {
         console.error("Ошибка получения проектов бота:", error);
         res.status(500).json({ error: "Не удалось получить проекты" });

@@ -141,6 +141,14 @@ test('G02', 'projects-error-msg содержит текст об ошибке з
   ok(code.includes('Не удалось загрузить проекты'), 'текст ошибки загрузки проектов не найден');
 });
 
+test('G02b', 'check-projects-empty condition узел присутствует в коде', () => {
+  ok(code.includes('check_projects_empty'), 'узел check-projects-empty не найден');
+});
+
+test('G02c', 'no-projects-msg содержит текст об отсутствии проектов', () => {
+  ok(code.includes('У вас пока нет проектов'), 'текст "У вас пока нет проектов" не найден');
+});
+
 test('G03', 'check-start-status condition узел присутствует в коде', () => {
   ok(code.includes('check_start_status'), 'узел check-start-status не найден');
 });

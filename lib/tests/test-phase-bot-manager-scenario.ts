@@ -99,9 +99,10 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 19 узлов генерируют обработчики', () => {
+test('A03', 'все 21 узел генерирует обработчики', () => {
   const nodeIds = [
     'trigger-start', 'fetch-projects', 'check-projects-status',
+    'check-projects-empty', 'no-projects-msg',
     'projects-error-msg', 'projects-msg', 'projects-keyboard',
     'incoming-callback-trigger', 'fetch-project-detail',
     'project-card-msg', 'project-actions-keyboard',
@@ -148,6 +149,10 @@ test('B07', 'шаблон callback "project_{id}" присутствует в к
 
 test('B08', 'builder.adjust(1) — одна кнопка в ряд', () => {
   ok(code.includes('builder.adjust(1)'), 'builder.adjust(1) не найдено');
+});
+
+test('B09', 'arrayPath "items" присутствует в коде', () => {
+  ok(code.includes('"items"'), 'arrayPath "items" не найден — API теперь возвращает {items: [...], count: N}');
 });
 
 // ══ Блок C: incoming_callback_trigger с фильтрацией ══════════════════════════
