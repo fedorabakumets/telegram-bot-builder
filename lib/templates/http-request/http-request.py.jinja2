@@ -1,7 +1,9 @@
 {#
   @fileoverview Шаблон HTTP запроса к внешнему API.
-  Генерирует callback-обработчик, который выполняет HTTP запрос через aiohttp
-  и сохраняет ответ в переменную пользователя.
+  Генерирует callback-обработчик, который выполняет HTTP запрос через aiohttp,
+  сохраняет ответ в переменную пользователя и автоматически сохраняет
+  скалярные поля словаря-ответа как плоские переменные вида responseVariable.field.
+  Это позволяет использовать {response_var.field} в URL и текстах последующих узлов.
 #}
 
 # Обработчик HTTP запроса: {{ nodeId }}
@@ -122,6 +124,12 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
 
     # Сохраняем ответ
     await set_user_var(user_id, "{{ responseVariable }}", _response_data)
+    # Автоматически сохраняем скалярные поля ответа как плоские переменные.
+    # Позволяет использовать {responseVariable.field} в URL и текстах узлов.
+    if isinstance(_response_data, dict):
+        for _fk, _fv in _response_data.items():
+            if isinstance(_fv, (str, int, float, bool)) and _fv is not None:
+                await set_user_var(user_id, "{{ responseVariable }}." + _fk, str(_fv))
     {% if statusVariable %}
     await set_user_var(user_id, "{{ statusVariable }}", str(_status_code))
     {% endif %}
