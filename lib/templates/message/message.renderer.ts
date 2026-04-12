@@ -8,6 +8,7 @@ import { messageParamsSchema } from './message.schema';
 import { renderPartialTemplate } from '../template-renderer';
 import { computeAdjustStr } from '../keyboard/keyboard.renderer';
 import { generateUserInput, nodeToUserInputParams } from '../user-input/user-input.renderer';
+import { normalizeDynamicButtonsConfig, shouldUseDynamicButtons } from '../keyboard/dynamic-buttons';
 import type { Node } from '@shared/schema';
 
 /**
@@ -32,18 +33,26 @@ export function generateMessage(params: MessageTemplateParams): string {
     ...params,
     formatMode: VALID_FORMAT_MODES.includes(params.formatMode as any) ? params.formatMode : 'none',
   };
+  const normalizedDynamicButtons = normalizeDynamicButtonsConfig(normalizedParams.dynamicButtons);
+  const useDynamicButtons = shouldUseDynamicButtons({
+    enableDynamicButtons: normalizedParams.enableDynamicButtons,
+    dynamicButtons: normalizedDynamicButtons,
+    keyboardType: normalizedParams.keyboardType,
+  });
   const validated = messageParamsSchema.parse({
     ...normalizedParams,
     userDatabaseEnabled: normalizedParams.userDatabaseEnabled ?? false,
-    keyboardType: normalizedParams.keyboardType ?? 'none',
+    keyboardType: useDynamicButtons ? 'inline' : (normalizedParams.keyboardType ?? 'none'),
     requiresAuth: normalizedParams.requiresAuth ?? false,
     adminOnly: normalizedParams.adminOnly ?? false,
     enableAutoTransition: normalizedParams.enableAutoTransition ?? false,
     allowMultipleSelection: normalizedParams.allowMultipleSelection ?? false,
     collectUserInput: normalizedParams.collectUserInput ?? false,
     enableConditionalMessages: normalizedParams.enableConditionalMessages ?? false,
+    enableDynamicButtons: useDynamicButtons,
     oneTimeKeyboard: normalizedParams.oneTimeKeyboard ?? false,
     resizeKeyboard: normalizedParams.resizeKeyboard ?? true,
+    dynamicButtons: normalizedDynamicButtons ?? normalizedParams.dynamicButtons,
   });
 
   // Вычисляем блок waiting_for_input если нужен сбор ввода

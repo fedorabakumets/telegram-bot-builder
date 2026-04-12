@@ -22,6 +22,8 @@ import {
   validParamsCopyText,
   validParamsWebApp,
   validParamsWithStyle,
+  validParamsDynamicInline,
+  validParamsDynamicInlineLegacy,
   validParamsRequestManagedBot,
 } from './keyboard.fixture';
 import { keyboardParamsSchema } from './keyboard.schema';
@@ -779,6 +781,15 @@ describe('keyboard.py.jinja2 шаблон', () => {
     });
   });
 
+  it('генерирует dynamic inline keyboard helper', () => {
+    const result = generateKeyboard(validParamsDynamicInline);
+
+    assert.ok(result.includes('def _resolve_dynamic_path('));
+    assert.ok(result.includes('replace_variables_in_text('));
+    assert.ok(result.includes('project_{id}'));
+    assert.ok(result.includes('builder.adjust(2)'));
+  });
+
   describe('keyboardParamsSchema', () => {
     describe('Валидация типов', () => {
       it('должен принимать все поля корректных типов', () => {
@@ -824,7 +835,7 @@ describe('keyboard.py.jinja2 шаблон', () => {
         const shape = keyboardParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 20);
+        assert.strictEqual(fields.length, 22);
       });
 
       it('должен использовать ZodOptional для keyboardType', () => {
@@ -845,6 +856,28 @@ describe('keyboard.py.jinja2 шаблон', () => {
       it('должен использовать ZodOptional для buttons', () => {
         const shape = keyboardParamsSchema.shape;
         assert.ok(shape.buttons.isOptional());
+      });
+
+      it('принимает dynamicButtons model', () => {
+        const result = keyboardParamsSchema.safeParse(validParamsDynamicInline);
+        assert.ok(result.success);
+        if (result.success) {
+          assert.strictEqual(result.data.enableDynamicButtons, true);
+          assert.strictEqual(result.data.dynamicButtons?.sourceVariable, 'projects');
+          assert.strictEqual(result.data.dynamicButtons?.arrayPath, 'items');
+        }
+      });
+
+      it('принимает legacy dynamicButtons поля', () => {
+        const result = keyboardParamsSchema.safeParse(validParamsDynamicInlineLegacy);
+        assert.ok(result.success);
+        if (result.success) {
+          assert.strictEqual(result.data.dynamicButtons?.sourceVariable, 'projects');
+          assert.strictEqual(result.data.dynamicButtons?.arrayPath, 'items');
+          assert.strictEqual(result.data.dynamicButtons?.textTemplate, '{name}');
+          assert.strictEqual(result.data.dynamicButtons?.callbackTemplate, 'project_{id}');
+          assert.strictEqual(result.data.dynamicButtons?.styleMode, 'template');
+        }
       });
     });
   });

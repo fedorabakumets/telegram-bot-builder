@@ -56,6 +56,30 @@ describe('message.py.jinja2 шаблон', () => {
         assert.ok(result.includes('InlineKeyboardButton'));
       });
 
+      it('должен генерировать dynamic inline keyboard helper', () => {
+        const result = generateMessage({
+          nodeId: 'projects_message',
+          messageText: 'Выберите проект:',
+          keyboardType: 'inline',
+          enableDynamicButtons: true,
+          dynamicButtons: {
+            sourceVariable: 'projects',
+            arrayPath: 'items',
+            textTemplate: '{name}',
+            callbackTemplate: 'project_{id}',
+            styleMode: 'field',
+            styleField: 'style',
+            styleTemplate: '',
+            columns: 2,
+          },
+          buttons: [],
+        });
+
+        assert.ok(result.includes('def _resolve_dynamic_path('));
+        assert.ok(result.includes('project_{id}'));
+        assert.ok(result.includes('builder.adjust(2)'));
+      });
+
       it('должен генерировать reply клавиатуру', () => {
         const result = generateMessage(validParamsReply);
 
@@ -212,6 +236,31 @@ describe('message.py.jinja2 шаблон', () => {
             formatMode: mode,
           });
           assert.ok(result.success, `Режим ${mode} должен быть валидным`);
+        }
+      });
+
+      it('принимает dynamicButtons model', () => {
+        const result = messageParamsSchema.safeParse({
+          nodeId: 'msg_123',
+          keyboardType: 'inline',
+          enableDynamicButtons: true,
+          dynamicButtons: {
+            sourceVariable: 'projects',
+            arrayPath: 'items',
+            textTemplate: '{name}',
+            callbackTemplate: 'project_{id}',
+            styleMode: 'field',
+            styleField: 'style',
+            styleTemplate: '',
+            columns: 2,
+          },
+        });
+
+        assert.ok(result.success);
+        if (result.success) {
+          assert.strictEqual(result.data.enableDynamicButtons, true);
+          assert.strictEqual(result.data.dynamicButtons?.sourceVariable, 'projects');
+          assert.strictEqual(result.data.dynamicButtons?.callbackTemplate, 'project_{id}');
         }
       });
     });

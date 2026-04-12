@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { dynamicButtonsParamsSchema } from '../keyboard/keyboard.schema';
 
 /** Схема для валидации параметров сообщения */
 export const messageParamsSchema = z.object({
@@ -28,6 +29,10 @@ export const messageParamsSchema = z.object({
   // --- Клавиатура ---
   /** Тип клавиатуры */
   keyboardType: z.enum(['inline', 'reply', 'none']).optional().default('none'),
+  /** Включить генерацию динамической inline-клавиатуры */
+  enableDynamicButtons: z.boolean().optional().default(false),
+  /** Конфигурация динамической inline-клавиатуры */
+  dynamicButtons: dynamicButtonsParamsSchema.optional(),
   /** Раскладка клавиатуры */
   keyboardLayout: z.any().optional(),
   /** Кнопки */

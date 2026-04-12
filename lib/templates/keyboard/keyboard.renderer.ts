@@ -7,6 +7,7 @@ import type { KeyboardTemplateParams } from './keyboard.params';
 import type { EnhancedNode } from '../../bot-generator/types/enhanced-node.types';
 import { keyboardParamsSchema } from './keyboard.schema';
 import { renderPartialTemplate } from '../template-renderer';
+import { normalizeDynamicButtonsConfig, shouldUseDynamicButtons } from './dynamic-buttons';
 
 /**
  * Генерация Python кода клавиатуры с валидацией параметров
@@ -76,12 +77,26 @@ export function computeAdjustStr(keyboardLayout?: any): string | null {
 export function generateKeyboard(params: KeyboardTemplateParams): string {
   const sortedButtons = sortButtonsByLayout(params.buttons ?? [], params.keyboardLayout);
   const adjustStr = computeAdjustStr(params.keyboardLayout);
+  const dynamicButtons = normalizeDynamicButtonsConfig(params.dynamicButtons);
+  const useDynamicButtons = shouldUseDynamicButtons({
+    enableDynamicButtons: params.enableDynamicButtons,
+    dynamicButtons,
+    keyboardType: params.keyboardType,
+  });
   const withSortedButtons = {
     ...params,
+    keyboardType: useDynamicButtons ? 'inline' : params.keyboardType,
     buttons: sortedButtons,
+    dynamicButtons,
+    enableDynamicButtons: useDynamicButtons,
   };
   const validated = keyboardParamsSchema.parse(withSortedButtons);
-  return renderPartialTemplate('keyboard/keyboard.py.jinja2', { ...validated, adjustStr });
+  return renderPartialTemplate('keyboard/keyboard.py.jinja2', {
+    ...validated,
+    adjustStr,
+    dynamicButtons: validated.dynamicButtons ?? dynamicButtons,
+    enableDynamicButtons: useDynamicButtons,
+  });
 }
 
 /**
@@ -135,13 +150,16 @@ export function hasInlineButtons(nodes: EnhancedNode[]): boolean {
   return nodes
     .filter(node => node !== null && node !== undefined)
     .some(node => {
+      const hasDynamicButtons = node.data?.keyboardType === 'inline' &&
+        !!node.data?.enableDynamicButtons &&
+        !!normalizeDynamicButtonsConfig(node.data?.dynamicButtons);
       const hasMain = node.data?.keyboardType === 'inline' &&
         Array.isArray(node.data?.buttons) && node.data.buttons.length > 0;
       const hasConditional = Array.isArray(node.data?.conditionalMessages) &&
         node.data.conditionalMessages.some((c: any) =>
           c.keyboardType === 'inline' && Array.isArray(c.buttons) && c.buttons.length > 0
         );
-      return hasMain || hasConditional;
+      return hasMain || hasDynamicButtons || hasConditional;
     });
 }
 

@@ -10,6 +10,8 @@
 |----------|-----|--------------|--------------|----------|
 | `keyboardType` | `'inline' \| 'reply' \| 'none'` | Да | `'none'` | Тип клавиатуры |
 | `buttons` | `Button[]` | Да | `[]` | Массив кнопок |
+| `enableDynamicButtons` | `boolean` | Нет | `false` | Включает runtime-генерацию inline-клавиатуры из HTTP response |
+| `dynamicButtons` | `DynamicButtonsConfig` | Нет | `undefined` | Конфиг dynamic buttons: `sourceVariable`, `arrayPath`, `textTemplate`, `callbackTemplate`, `styleMode`, `styleField`, `styleTemplate`, `columns` |
 | `keyboardLayout` | `KeyboardLayout` | Нет | `undefined` | Раскладка клавиатуры |
 | `oneTimeKeyboard` | `boolean` | Да | `false` | Скрыть клавиатуру после использования |
 | `resizeKeyboard` | `boolean` | Да | `true` | Изменить размер под кнопки |
@@ -40,6 +42,17 @@ interface KeyboardLayout {
   rows: Array<{ buttonIds: string[] }>;
   columns: number;
   autoLayout: boolean;
+}
+
+interface DynamicButtonsConfig {
+  sourceVariable: string;
+  arrayPath: string;
+  textTemplate: string;
+  callbackTemplate: string;
+  styleMode: 'field' | 'template' | 'none';
+  styleField: string;
+  styleTemplate: string;
+  columns: number;
 }
 ```
 
@@ -82,3 +95,33 @@ const code = generateKeyboard({
 - `default` → `customCallbackData` или `target` или `id`
 
 **Не имеют callback_data:** `url`, `web_app` (с url), `contact`, `location`, `copy_text` (с copyText), `request_managed_bot`
+
+## Dynamic inline keyboard
+
+Если `enableDynamicButtons=true`, генератор строит inline keyboard на runtime из массива внутри `dynamicButtons.sourceVariable`.
+
+Минимальный пример:
+
+```typescript
+generateKeyboard({
+  keyboardType: 'inline',
+  enableDynamicButtons: true,
+  dynamicButtons: {
+    sourceVariable: 'projects',
+    arrayPath: 'items',
+    textTemplate: '{name}',
+    callbackTemplate: 'project_{id}',
+    styleMode: 'field',
+    styleField: 'style',
+    styleTemplate: '',
+    columns: 2,
+  },
+  buttons: [],
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+});
+```
+
+Legacy compatibility:
+- `variable`, `arrayField`, `textField`, `callbackField` are still accepted by schema normalization.
+- When dynamic buttons are enabled, keyboard generation is forced to `inline`.

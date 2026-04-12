@@ -19,6 +19,8 @@
 | `keyboardType` | `'inline' \| 'reply' \| 'none'` | `'none'` | Тип клавиатуры |
 | `keyboardLayout` | `any` | - | Раскладка клавиатуры |
 | `buttons` | `Button[]` | `[]` | Кнопки |
+| `enableDynamicButtons` | `boolean` | `false` | Включает runtime-генерацию inline keyboard из HTTP response |
+| `dynamicButtons` | `DynamicButtonsConfig` | - | Конфиг dynamic buttons: `sourceVariable`, `arrayPath`, `textTemplate`, `callbackTemplate`, `styleMode`, `styleField`, `styleTemplate`, `columns` |
 | `keyboardNodeId` | `string` | - | ID отдельной `keyboard`-ноды, если клавиатура вынесена из сообщения; при его отсутствии host может быть найден по графу переходов |
 | `oneTimeKeyboard` | `boolean` | `false` | Скрыть клавиатуру после использования |
 | `resizeKeyboard` | `boolean` | - | Изменить размер клавиатуры |
@@ -316,3 +318,33 @@ if (enableAutoTransition && autoTransitionTo) {
 
 - [`command-trigger.py.jinja2`](../command-trigger/command-trigger.md) — шаблон входа по команде
 - [`keyboard.py.jinja2`](../keyboard/keyboard.md) — шаблон клавиатуры
+
+## Dynamic keyboard flow
+
+Если `MessageTemplateParams.enableDynamicButtons=true`, сообщение остаётся отдельной нодой, а клавиатура строится в следующем `keyboard`-шаблоне на основе данных, которые пришли после HTTP request.
+
+Типичный сценарий:
+
+```typescript
+generateMessage({
+  nodeId: 'projects_message',
+  messageText: 'Выберите проект:',
+  keyboardType: 'inline',
+  enableDynamicButtons: true,
+  dynamicButtons: {
+    sourceVariable: 'projects',
+    arrayPath: 'items',
+    textTemplate: '{name}',
+    callbackTemplate: 'project_{id}',
+    styleMode: 'field',
+    styleField: 'style',
+    styleTemplate: '',
+    columns: 2,
+  },
+  buttons: [],
+});
+```
+
+Backward compatibility:
+- legacy dynamic fields `variable`, `arrayField`, `textField`, `callbackField` are normalized in schema;
+- if `enableDynamicButtons` is set, the renderer forces `keyboardType: 'inline'`.

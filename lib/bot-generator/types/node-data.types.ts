@@ -8,6 +8,7 @@
  */
 
 import type { Button } from './button-types';
+import type { DynamicButtonsConfig } from '../../templates/keyboard/dynamic-buttons';
 
 /**
  * Тип клавиатуры для узла
@@ -60,6 +61,10 @@ export interface NodeData {
   buttons?: Button[];
   /** Тип клавиатуры */
   keyboardType?: KeyboardType;
+  /** Включить генерацию динамической inline-клавиатуры */
+  enableDynamicButtons?: boolean;
+  /** Конфигурация динамической inline-клавиатуры */
+  dynamicButtons?: DynamicButtonsConfig;
   /** ID С‚РѕС‡РєРё РїСЂРёРІСЏР·РєРё keyboard-ноды РІ canvas-РјРѕРґРµР»Рё */
   keyboardNodeId?: string;
   /** Текст сообщения */

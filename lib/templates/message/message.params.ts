@@ -5,6 +5,7 @@
 
 import type { Button } from '../../bot-generator/types/button-types';
 import type { KeyboardLayout } from '../types/keyboard-layout';
+import type { DynamicButtonsConfig } from '../keyboard/dynamic-buttons';
 
 /** Тип клавиатуры */
 export type KeyboardType = 'inline' | 'reply' | 'none';
@@ -39,6 +40,10 @@ export interface MessageTemplateParams {
   keyboardLayout?: KeyboardLayout;
   /** Кнопки */
   buttons?: Button[];
+  /** Включить генерацию динамической inline-клавиатуры */
+  enableDynamicButtons?: boolean;
+  /** Конфигурация динамической inline-клавиатуры */
+  dynamicButtons?: DynamicButtonsConfig;
   /** Клавиатура скрывается после использования */
   oneTimeKeyboard?: boolean;
   /** Изменить размер клавиатуры под кнопки */

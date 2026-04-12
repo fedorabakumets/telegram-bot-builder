@@ -30,7 +30,7 @@ export type ButtonAction =
   | 'request_managed_bot'; /** Запросить создание управляемого бота (Bot API 9.6, только reply) */
 
 /** Визуальный стиль кнопки (Bot API 9.4) */
-export type ButtonStyle = 'primary' | 'secondary' | 'destructive';
+export type ButtonStyle = 'primary' | 'success' | 'danger';
 
 /** Тип кнопки бота из схемы Zod */
 export type Button = z.infer<typeof buttonSchema>;

@@ -11,3 +11,4 @@ export type { DatabaseTemplateParams } from './database-params';
 export type { UtilsTemplateParams } from './utils-params';
 export type { MainTemplateParams } from './main-params';
 export type { HttpRequestTemplateParams, HttpRequestMethod } from '../http-request/http-request.params';
+export type { KeyboardLayout, KeyboardRow } from './keyboard-layout';

@@ -235,6 +235,43 @@ export const validParamsWithStyle: KeyboardTemplateParams = {
   resizeKeyboard: true,
 };
 
+/** Валидные параметры: dynamic inline keyboard */
+export const validParamsDynamicInline: KeyboardTemplateParams = {
+  keyboardType: 'inline',
+  enableDynamicButtons: true,
+  dynamicButtons: {
+    sourceVariable: 'projects',
+    arrayPath: 'items',
+    textTemplate: '{name}',
+    callbackTemplate: 'project_{id}',
+    styleMode: 'field',
+    styleField: 'style',
+    styleTemplate: '',
+    columns: 2,
+  },
+  buttons: [],
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};
+
+/** Legacy dynamic buttons payload from older canvas data */
+export const validParamsDynamicInlineLegacy = {
+  keyboardType: 'inline',
+  enableDynamicButtons: true,
+  dynamicButtons: {
+    variable: 'projects',
+    arrayField: 'items',
+    textField: '{name}',
+    callbackField: 'project_{id}',
+    styleMode: 'template',
+    styleTemplate: '{style}',
+    columns: 3,
+  },
+  buttons: [],
+  oneTimeKeyboard: false,
+  resizeKeyboard: true,
+};
+
 /** Валидные параметры: кнопка запроса управляемого бота (Bot API 9.6) */
 export const validParamsRequestManagedBot: KeyboardTemplateParams = {
   keyboardType: 'reply',

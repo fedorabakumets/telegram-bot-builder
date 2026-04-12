@@ -5,11 +5,47 @@
 
 import { z } from 'zod';
 
+export const dynamicButtonsParamsSchema = z.preprocess((value) => {
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+
+  const config = value as Record<string, unknown>;
+  return {
+    ...config,
+    sourceVariable: typeof config.sourceVariable === 'string' ? config.sourceVariable : config.variable,
+    arrayPath: typeof config.arrayPath === 'string' ? config.arrayPath : config.arrayField,
+    textTemplate: typeof config.textTemplate === 'string' ? config.textTemplate : config.textField,
+    callbackTemplate: typeof config.callbackTemplate === 'string' ? config.callbackTemplate : config.callbackField,
+  };
+}, z.object({
+  /** Имя переменной с HTTP-ответом */
+  sourceVariable: z.string().default(''),
+  /** Путь к массиву внутри ответа */
+  arrayPath: z.string().default(''),
+  /** Шаблон текста кнопки */
+  textTemplate: z.string().default(''),
+  /** Шаблон callback_data */
+  callbackTemplate: z.string().default(''),
+  /** Режим генерации стиля */
+  styleMode: z.enum(['field', 'template', 'none']).default('none'),
+  /** Поле стиля в элементе массива */
+  styleField: z.string().default(''),
+  /** Шаблон стиля */
+  styleTemplate: z.string().default(''),
+  /** Количество колонок */
+  columns: z.number().min(1).max(6).default(2),
+}).passthrough());
+
 /** Схема для валидации параметров клавиатуры */
 export const keyboardParamsSchema = z.object({
   // --- Тип и кнопки ---
   /** Тип клавиатуры */
   keyboardType: z.enum(['inline', 'reply', 'none']).optional().default('none'),
+  /** Включить генерацию динамической inline-клавиатуры */
+  enableDynamicButtons: z.boolean().optional().default(false),
+  /** Конфигурация динамической inline-клавиатуры */
+  dynamicButtons: dynamicButtonsParamsSchema.optional(),
   /** Кнопки */
   buttons: z.array(z.object({
     id: z.string(),

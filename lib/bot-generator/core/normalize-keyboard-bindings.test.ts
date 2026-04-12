@@ -207,4 +207,36 @@ describe('normalizeKeyboardBindings', () => {
     assert.equal(keyboard.data.keyboardType, 'none');
     assert.equal((keyboard.data.buttons as unknown[]).length, 0);
   });
+
+  it('переносит dynamicButtons из keyboard-узла в host message', () => {
+    const nodes = [
+      makeMessageNode('msg_1', {
+        keyboardNodeId: 'kbd_1',
+        keyboardType: 'none',
+        buttons: [],
+      }),
+      makeKeyboardNode('kbd_1', {
+        keyboardType: 'inline',
+        enableDynamicButtons: true,
+        dynamicButtons: {
+          sourceVariable: 'projects',
+          arrayPath: 'items',
+          textTemplate: '{name}',
+          callbackTemplate: 'project_{id}',
+          styleMode: 'field',
+          styleField: 'style',
+          styleTemplate: '',
+          columns: 2,
+        },
+      }),
+    ];
+
+    const normalized = normalizeKeyboardBindings(nodes, [makeConnection('msg_1', 'kbd_1')]);
+    const message = normalized.find(node => node.id === 'msg_1') as Node;
+
+    assert.equal(message.data.keyboardType, 'inline');
+    assert.equal(message.data.enableDynamicButtons, true);
+    assert.equal((message.data.dynamicButtons as Record<string, unknown>).sourceVariable, 'projects');
+    assert.equal((message.data.dynamicButtons as Record<string, unknown>).callbackTemplate, 'project_{id}');
+  });
 });

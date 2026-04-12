@@ -191,9 +191,16 @@ function buildMergedKeyboardData(
   const keyboardLayout = keyboardData.keyboardLayout;
   const hostKeyboardType = typeof hostData.keyboardType === 'string' ? hostData.keyboardType : 'none';
   const keyboardKeyboardType = typeof keyboardData.keyboardType === 'string' ? keyboardData.keyboardType : 'none';
+  const hostEnableDynamicButtons = typeof hostData.enableDynamicButtons === 'boolean' ? hostData.enableDynamicButtons : false;
+  const keyboardEnableDynamicButtons = typeof keyboardData.enableDynamicButtons === 'boolean' ? keyboardData.enableDynamicButtons : false;
   const resolvedButtons = keyboardButtons.length > 0 ? keyboardButtons : hostButtons;
   const resolvedKeyboardType = keyboardKeyboardType !== 'none' ? keyboardKeyboardType : hostKeyboardType;
   const resolvedKeyboardLayout = hasMeaningfulKeyboardLayout(keyboardLayout) ? keyboardLayout : hostLayout;
+  const resolvedEnableDynamicButtons = keyboardEnableDynamicButtons || hostEnableDynamicButtons;
+  const resolvedDynamicButtons =
+    keyboardData.dynamicButtons && typeof keyboardData.dynamicButtons === 'object'
+      ? keyboardData.dynamicButtons
+      : hostData.dynamicButtons;
   const resolvedAllowMultipleSelection =
     typeof keyboardData.allowMultipleSelection === 'boolean'
       ? keyboardData.allowMultipleSelection
@@ -212,6 +219,8 @@ function buildMergedKeyboardData(
     buttons: resolvedButtons,
     keyboardType: resolvedKeyboardType,
     keyboardLayout: resolvedKeyboardLayout,
+    enableDynamicButtons: resolvedEnableDynamicButtons,
+    dynamicButtons: resolvedDynamicButtons,
     allowMultipleSelection: resolvedAllowMultipleSelection,
     multiSelectVariable: resolvedMultiSelectVariable,
     continueButtonTarget: resolvedContinueButtonTarget,

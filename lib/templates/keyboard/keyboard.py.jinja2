@@ -28,6 +28,110 @@
 {%- if allowMultipleSelection %}2{%- elif total >= 6 %}2{%- else %}1{%- endif -%}
 {%- endmacro -%}
 
+{%- macro generateDynamicInlineKeyboardCode(dynamicButtons, indent='') -%}
+{%- set sourceVariable = dynamicButtons.sourceVariable or '' -%}
+{%- set arrayPath = dynamicButtons.arrayPath or '' -%}
+{%- set textTemplate = dynamicButtons.textTemplate or '' -%}
+{%- set callbackTemplate = dynamicButtons.callbackTemplate or '' -%}
+{%- set styleMode = dynamicButtons.styleMode or 'none' -%}
+{%- set styleField = dynamicButtons.styleField or '' -%}
+{%- set styleTemplate = dynamicButtons.styleTemplate or '' -%}
+{%- set columns = dynamicButtons.columns or 2 -%}
+{{ indent }}import json as _json
+{{ indent }}def _resolve_dynamic_path(_value, _path):
+{{ indent }}    if _path is None or str(_path).strip() == '':
+{{ indent }}        return _value
+{{ indent }}    _current = _value
+{{ indent }}    for _segment in str(_path).split('.'):
+{{ indent }}        if _current is None:
+{{ indent }}            return None
+{{ indent }}        if isinstance(_current, list):
+{{ indent }}            try:
+{{ indent }}                _index = int(_segment)
+{{ indent }}            except Exception:
+{{ indent }}                return None
+{{ indent }}            if _index < 0 or _index >= len(_current):
+{{ indent }}                return None
+{{ indent }}            _current = _current[_index]
+{{ indent }}            continue
+{{ indent }}        if isinstance(_current, dict):
+{{ indent }}            _current = _current.get(_segment)
+{{ indent }}            continue
+{{ indent }}        if hasattr(_current, _segment):
+{{ indent }}            _current = getattr(_current, _segment)
+{{ indent }}            continue
+{{ indent }}        return None
+{{ indent }}    return _current
+{{ indent }}def _normalize_dynamic_item(_item):
+{{ indent }}    if isinstance(_item, dict):
+{{ indent }}        return _item
+{{ indent }}    if hasattr(_item, 'dict'):
+{{ indent }}        try:
+{{ indent }}            return _item.dict()
+{{ indent }}        except Exception:
+{{ indent }}            pass
+{{ indent }}    if hasattr(_item, '__dict__'):
+{{ indent }}        try:
+{{ indent }}            return dict(_item.__dict__)
+{{ indent }}        except Exception:
+{{ indent }}            pass
+{{ indent }}    return {'value': _item}
+{{ indent }}def _render_dynamic_template(_template, _item):
+{{ indent }}    if not _template:
+{{ indent }}        return ''
+{{ indent }}    _item_vars = _normalize_dynamic_item(_item)
+{{ indent }}    if not isinstance(_item_vars, dict):
+{{ indent }}        _item_vars = {'value': _item}
+{{ indent }}    _filters = _item_vars.get('_variable_filters', {}) if isinstance(_item_vars, dict) else {}
+{{ indent }}    return replace_variables_in_text(_template, _item_vars, _filters)
+{{ indent }}def _normalize_dynamic_style(_item):
+{{ indent }}    if '{{ styleMode }}' == 'none':
+{{ indent }}        return None
+{{ indent }}    _item_vars = _normalize_dynamic_item(_item)
+{{ indent }}    _style_value = None
+{{ indent }}    if '{{ styleMode }}' == 'field':
+{{ indent }}        _style_value = _item_vars.get('{{ styleField }}') if isinstance(_item_vars, dict) else None
+{{ indent }}    elif '{{ styleMode }}' == 'template':
+{{ indent }}        _style_value = _render_dynamic_template({{ styleTemplate|format_python_text }}, _item_vars)
+{{ indent }}    if not _style_value:
+{{ indent }}        return None
+{{ indent }}    _style_value = str(_style_value).strip()
+{{ indent }}    return _style_value if _style_value in ('primary', 'success', 'danger') else None
+{{ indent }}_dynamic_source = all_user_vars.get("{{ sourceVariable }}")
+{{ indent }}if _dynamic_source is None:
+{{ indent }}    _dynamic_source = user_data.get(user_id, {}).get("{{ sourceVariable }}")
+{{ indent }}if isinstance(_dynamic_source, str):
+{{ indent }}    try:
+{{ indent }}        _dynamic_source = _json.loads(_dynamic_source)
+{{ indent }}    except Exception:
+{{ indent }}        pass
+{{ indent }}_dynamic_items = _resolve_dynamic_path(_dynamic_source, "{{ arrayPath }}")
+{{ indent }}if not isinstance(_dynamic_items, (list, tuple)):
+{{ indent }}    _dynamic_items = []
+{{ indent }}builder = InlineKeyboardBuilder()
+{{ indent }}_dynamic_added = 0
+{{ indent }}for _dynamic_item in _dynamic_items:
+{{ indent }}    _dynamic_item_vars = _normalize_dynamic_item(_dynamic_item)
+{{ indent }}    _dynamic_text = _render_dynamic_template({{ textTemplate|format_python_text }}, _dynamic_item_vars)
+{{ indent }}    _dynamic_callback = _render_dynamic_template({{ callbackTemplate|format_python_text }}, _dynamic_item_vars)
+{{ indent }}    if not _dynamic_text or not _dynamic_callback:
+{{ indent }}        continue
+{{ indent }}    _dynamic_callback = _dynamic_callback.encode('utf-8')[:64].decode('utf-8', 'ignore').strip()
+{{ indent }}    if not _dynamic_callback:
+{{ indent }}        continue
+{{ indent }}    _dynamic_style = _normalize_dynamic_style(_dynamic_item_vars)
+{{ indent }}    if _dynamic_style:
+{{ indent }}        builder.add(InlineKeyboardButton(text=_dynamic_text, callback_data=_dynamic_callback, style=_dynamic_style))
+{{ indent }}    else:
+{{ indent }}        builder.add(InlineKeyboardButton(text=_dynamic_text, callback_data=_dynamic_callback))
+{{ indent }}    _dynamic_added += 1
+{{ indent }}if _dynamic_added > 0:
+{{ indent }}    builder.adjust({{ columns }})
+{{ indent }}    keyboard = builder.as_markup()
+{{ indent }}else:
+{{ indent }}    keyboard = None
+{%- endmacro -%}
+
 {%- macro generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection=False, indent='') -%}
 {%- if keyboardLayout and not keyboardLayout.autoLayout and keyboardLayout.rows and keyboardLayout.rows|length > 0 -%}
 {%- set _m_counts = [] -%}
@@ -59,6 +163,8 @@
 {# ===== ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ ===== #}
 {%- set keyboardType = keyboardType or 'reply' -%}
 {%- set buttons = buttons or [] -%}
+{%- set enableDynamicButtons = enableDynamicButtons or false -%}
+{%- set dynamicButtons = dynamicButtons or none -%}
 {%- set resizeKeyboard = false if (resizeKeyboard is defined and resizeKeyboard == false) else true -%}
 {%- set oneTimeKeyboard = oneTimeKeyboard or false -%}
 {%- set allowMultipleSelection = allowMultipleSelection or false -%}
@@ -69,7 +175,9 @@
 {%- set hasMedia = (imageUrl is defined and imageUrl and (imageUrl|trim)|length > 0) or documentUrl or videoUrl or audioUrl -%}
 
 {# ===== ГЕНЕРАЦИЯ КЛАВИАТУРЫ ===== #}
-{%- if keyboardType == 'inline' and buttons|length > 0 %}
+{%- if enableDynamicButtons and dynamicButtons and keyboardType == 'inline' %}
+{{ generateDynamicInlineKeyboardCode(dynamicButtons, indent) }}
+{%- elif keyboardType == 'inline' and buttons|length > 0 %}
 {{ indent }}builder = InlineKeyboardBuilder()
 {%- if allowMultipleSelection and nodeId %}
 {{ indent }}# Инициализация состояния множественного выбора
