@@ -50,6 +50,29 @@ async function runTests() {
   // Ищем все .test.ts файлы в lib/templates (шаблоны)
   const templatesDir = join(__dirname, 'lib', 'templates');
 
+  // Ищем тесты в lib/bot-generator (core утилиты генератора)
+  const botGeneratorDir = join(__dirname, 'lib', 'bot-generator');
+
+  // Ищем тесты в client (UI утилиты)
+  const clientDir = join(__dirname, 'client');
+
+  /**
+   * Добавляет файлы из директории в список тестов с фильтрацией по паттерну
+   * @param {string} dir - Директория для поиска
+   * @param {string} pattern - Glob-паттерн
+   */
+  async function collectTests(dir, pattern) {
+    try {
+      for await (const file of glob(pattern, { cwd: dir })) {
+        const fullPath = join(dir, file);
+        if (filePattern && !fullPath.includes(filePattern)) continue;
+        if (!testFiles.includes(fullPath)) testFiles.push(fullPath);
+      }
+    } catch {
+      // директория может не существовать — игнорируем
+    }
+  }
+
   try {
     // Ищем unit тесты в lib/tests
     if (!onlyTemplates && !onlyIntegration) {
@@ -99,6 +122,12 @@ async function runTests() {
         if (filePattern && !fullPath.includes(filePattern)) continue;
         testFiles.push(fullPath);
       }
+    }
+
+    // Всегда добавляем тесты из lib/bot-generator и client (если не onlyIntegration)
+    if (!onlyIntegration) {
+      await collectTests(botGeneratorDir, '**/*.test.ts');
+      await collectTests(clientDir, '**/*.test.ts');
     }
   } catch (error) {
     console.error('Ошибка поиска тестов:', error.message);

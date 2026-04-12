@@ -89,6 +89,152 @@ describe('message.py.jinja2 шаблон', () => {
       });
     });
 
+    describe('dynamic inline keyboard helper', () => {
+      /**
+       * styleMode='template' → генерирует код для styleTemplate
+       */
+      it('styleMode template → генерирует код для styleTemplate', () => {
+        const result = generateMessage({
+          nodeId: 'msg_tmpl',
+          messageText: 'Выберите:',
+          keyboardType: 'inline',
+          enableDynamicButtons: true,
+          dynamicButtons: {
+            sourceVariable: 'projects',
+            arrayPath: 'items',
+            textTemplate: '{name}',
+            callbackTemplate: 'project_{id}',
+            styleMode: 'template',
+            styleField: '',
+            styleTemplate: '{status}',
+            columns: 2,
+          },
+          buttons: [],
+        });
+        assert.ok(result.includes("'template'"), `Ожидался код для styleMode=template, получено:\n${result}`);
+      });
+
+      /**
+       * styleMode='none' → не генерирует style код (возвращает None)
+       */
+      it('styleMode none → _normalize_dynamic_style возвращает None', () => {
+        const result = generateMessage({
+          nodeId: 'msg_none',
+          messageText: 'Выберите:',
+          keyboardType: 'inline',
+          enableDynamicButtons: true,
+          dynamicButtons: {
+            sourceVariable: 'projects',
+            arrayPath: 'items',
+            textTemplate: '{name}',
+            callbackTemplate: 'project_{id}',
+            styleMode: 'none',
+            styleField: '',
+            styleTemplate: '',
+            columns: 2,
+          },
+          buttons: [],
+        });
+        assert.ok(result.includes("'none'"), `Ожидался код для styleMode=none, получено:\n${result}`);
+        assert.ok(result.includes('return None'), `Ожидался return None для styleMode=none, получено:\n${result}`);
+      });
+
+      /**
+       * arrayPath='data.results' → вложенный путь в коде
+       */
+      it('arrayPath data.results → вложенный путь в коде', () => {
+        const result = generateMessage({
+          nodeId: 'msg_nested',
+          messageText: 'Выберите:',
+          keyboardType: 'inline',
+          enableDynamicButtons: true,
+          dynamicButtons: {
+            sourceVariable: 'response',
+            arrayPath: 'data.results',
+            textTemplate: '{name}',
+            callbackTemplate: 'item_{id}',
+            styleMode: 'none',
+            styleField: '',
+            styleTemplate: '',
+            columns: 2,
+          },
+          buttons: [],
+        });
+        assert.ok(result.includes('data.results'), `Ожидался "data.results" в коде, получено:\n${result}`);
+      });
+
+      /**
+       * Legacy поля в dynamicButtons → корректно генерируются
+       */
+      it('legacy поля в dynamicButtons → корректно генерируются', () => {
+        const result = generateMessage({
+          nodeId: 'msg_legacy',
+          messageText: 'Выберите:',
+          keyboardType: 'inline',
+          enableDynamicButtons: true,
+          dynamicButtons: {
+            variable: 'projects',
+            arrayField: 'items',
+            textField: '{name}',
+            callbackField: 'project_{id}',
+            styleMode: 'none',
+            columns: 2,
+          } as any,
+          buttons: [],
+        });
+        assert.ok(result.includes('def _resolve_dynamic_path('), 'Должен генерировать _resolve_dynamic_path');
+        assert.ok(result.includes('projects'), `Ожидался sourceVariable "projects", получено:\n${result}`);
+      });
+
+      /**
+       * columns=1 → builder.adjust(1)
+       */
+      it('columns=1 → builder.adjust(1)', () => {
+        const result = generateMessage({
+          nodeId: 'msg_col1',
+          messageText: 'Выберите:',
+          keyboardType: 'inline',
+          enableDynamicButtons: true,
+          dynamicButtons: {
+            sourceVariable: 'projects',
+            arrayPath: 'items',
+            textTemplate: '{name}',
+            callbackTemplate: 'project_{id}',
+            styleMode: 'none',
+            styleField: '',
+            styleTemplate: '',
+            columns: 1,
+          },
+          buttons: [],
+        });
+        assert.ok(result.includes('builder.adjust(1)'), `Ожидался builder.adjust(1), получено:\n${result}`);
+      });
+
+      /**
+       * columns=4 → builder.adjust(4)
+       */
+      it('columns=4 → builder.adjust(4)', () => {
+        const result = generateMessage({
+          nodeId: 'msg_col4',
+          messageText: 'Выберите:',
+          keyboardType: 'inline',
+          enableDynamicButtons: true,
+          dynamicButtons: {
+            sourceVariable: 'projects',
+            arrayPath: 'items',
+            textTemplate: '{name}',
+            callbackTemplate: 'project_{id}',
+            styleMode: 'none',
+            styleField: '',
+            styleTemplate: '',
+            columns: 4,
+          },
+          buttons: [],
+        });
+        assert.ok(result.includes('builder.adjust(4)'), `Ожидался builder.adjust(4), получено:\n${result}`);
+      });
+    });
+
     describe('Проверки безопасности', () => {
       it('должен генерировать adminOnly проверку', () => {
         const result = generateMessage(validParamsWithSecurity);

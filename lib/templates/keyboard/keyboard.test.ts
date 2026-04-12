@@ -881,4 +881,155 @@ describe('keyboard.py.jinja2 шаблон', () => {
       });
     });
   });
+
+  describe('Динамические кнопки', () => {
+    /**
+     * enableDynamicButtons: true + валидный конфиг → генерирует _resolve_dynamic_path
+     */
+    it('генерирует _resolve_dynamic_path при enableDynamicButtons=true', () => {
+      const result = generateKeyboard(validParamsDynamicInline);
+      assert.ok(result.includes('def _resolve_dynamic_path('), `Ожидался _resolve_dynamic_path, получено:\n${result}`);
+    });
+
+    /**
+     * enableDynamicButtons: true + валидный конфиг → генерирует _render_dynamic_template
+     */
+    it('генерирует _render_dynamic_template при enableDynamicButtons=true', () => {
+      const result = generateKeyboard(validParamsDynamicInline);
+      assert.ok(result.includes('def _render_dynamic_template('), `Ожидался _render_dynamic_template, получено:\n${result}`);
+    });
+
+    /**
+     * enableDynamicButtons: true + валидный конфиг → генерирует _normalize_dynamic_style
+     */
+    it('генерирует _normalize_dynamic_style при enableDynamicButtons=true', () => {
+      const result = generateKeyboard(validParamsDynamicInline);
+      assert.ok(result.includes('def _normalize_dynamic_style('), `Ожидался _normalize_dynamic_style, получено:\n${result}`);
+    });
+
+    /**
+     * columns=2 → builder.adjust(2)
+     */
+    it('генерирует builder.adjust(2) при columns=2', () => {
+      const result = generateKeyboard(validParamsDynamicInline);
+      assert.ok(result.includes('builder.adjust(2)'), `Ожидался builder.adjust(2), получено:\n${result}`);
+    });
+
+    /**
+     * columns=3 → builder.adjust(3)
+     */
+    it('генерирует builder.adjust(3) при columns=3', () => {
+      const result = generateKeyboard({
+        ...validParamsDynamicInline,
+        dynamicButtons: { ...validParamsDynamicInline.dynamicButtons!, columns: 3 },
+      });
+      assert.ok(result.includes('builder.adjust(3)'), `Ожидался builder.adjust(3), получено:\n${result}`);
+    });
+
+    /**
+     * styleMode='field' → генерирует код для styleField
+     */
+    it('styleMode field → генерирует код для styleField', () => {
+      const result = generateKeyboard(validParamsDynamicInline);
+      assert.ok(result.includes("'field'"), `Ожидался код для styleMode=field, получено:\n${result}`);
+      assert.ok(result.includes('style'), `Ожидался styleField в коде, получено:\n${result}`);
+    });
+
+    /**
+     * styleMode='template' → генерирует код для styleTemplate
+     */
+    it('styleMode template → генерирует код для styleTemplate', () => {
+      const result = generateKeyboard({
+        ...validParamsDynamicInline,
+        dynamicButtons: {
+          ...validParamsDynamicInline.dynamicButtons!,
+          styleMode: 'template',
+          styleTemplate: '{status}',
+        },
+      });
+      assert.ok(result.includes("'template'"), `Ожидался код для styleMode=template, получено:\n${result}`);
+    });
+
+    /**
+     * styleMode='none' → не генерирует style код (возвращает None)
+     */
+    it('styleMode none → _normalize_dynamic_style возвращает None', () => {
+      const result = generateKeyboard({
+        ...validParamsDynamicInline,
+        dynamicButtons: {
+          ...validParamsDynamicInline.dynamicButtons!,
+          styleMode: 'none',
+        },
+      });
+      assert.ok(result.includes("'none'"), `Ожидался код для styleMode=none, получено:\n${result}`);
+      assert.ok(result.includes('return None'), `Ожидался return None для styleMode=none, получено:\n${result}`);
+    });
+
+    /**
+     * Legacy поля (variable, arrayField, textField, callbackField) → корректно генерируют код
+     */
+    it('legacy поля корректно генерируют код', () => {
+      const result = generateKeyboard(validParamsDynamicInlineLegacy as any);
+      assert.ok(result.includes('def _resolve_dynamic_path('), 'Должен генерировать _resolve_dynamic_path');
+      assert.ok(result.includes('projects'), `Ожидался sourceVariable "projects", получено:\n${result}`);
+      assert.ok(result.includes('project_{id}'), `Ожидался callbackTemplate, получено:\n${result}`);
+    });
+
+    /**
+     * enableDynamicButtons: false → НЕ генерирует _resolve_dynamic_path
+     */
+    it('enableDynamicButtons=false → не генерирует _resolve_dynamic_path', () => {
+      const result = generateKeyboard({
+        ...validParamsDynamicInline,
+        enableDynamicButtons: false,
+      });
+      assert.ok(!result.includes('def _resolve_dynamic_path('), `Не должен генерировать _resolve_dynamic_path, получено:\n${result}`);
+    });
+
+    /**
+     * keyboardType='reply' + enableDynamicButtons=true → форсирует inline (нет ReplyKeyboardBuilder)
+     */
+    it('keyboardType reply + enableDynamicButtons=true → форсирует inline', () => {
+      const result = generateKeyboard({
+        ...validParamsDynamicInline,
+        keyboardType: 'reply',
+      });
+      assert.ok(!result.includes('ReplyKeyboardBuilder'), `Не должен использоваться ReplyKeyboardBuilder, получено:\n${result}`);
+      assert.ok(result.includes('InlineKeyboardBuilder'), `Должен использоваться InlineKeyboardBuilder, получено:\n${result}`);
+    });
+
+    /**
+     * Вложенный arrayPath "data.results" → генерируется в коде
+     */
+    it('вложенный arrayPath "data.results" → генерируется в коде', () => {
+      const result = generateKeyboard({
+        ...validParamsDynamicInline,
+        dynamicButtons: {
+          ...validParamsDynamicInline.dynamicButtons!,
+          arrayPath: 'data.results',
+        },
+      });
+      assert.ok(result.includes('data.results'), `Ожидался "data.results" в коде, получено:\n${result}`);
+    });
+
+    /**
+     * Схема принимает validParamsDynamicInline
+     */
+    it('схема принимает validParamsDynamicInline', () => {
+      const result = keyboardParamsSchema.safeParse(validParamsDynamicInline);
+      assert.ok(result.success, `Схема должна принять validParamsDynamicInline: ${JSON.stringify(result)}`);
+    });
+
+    /**
+     * Схема принимает validParamsDynamicInlineLegacy и конвертирует legacy поля
+     */
+    it('схема принимает validParamsDynamicInlineLegacy и конвертирует legacy поля', () => {
+      const result = keyboardParamsSchema.safeParse(validParamsDynamicInlineLegacy);
+      assert.ok(result.success, `Схема должна принять legacy params: ${JSON.stringify(result)}`);
+      if (result.success) {
+        assert.strictEqual(result.data.dynamicButtons?.sourceVariable, 'projects');
+        assert.strictEqual(result.data.dynamicButtons?.callbackTemplate, 'project_{id}');
+      }
+    });
+  });
 });

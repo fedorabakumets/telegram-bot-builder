@@ -222,6 +222,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         // callbackPattern: удалён — виртуальные триггеры теперь генерируются через collectVirtualCallbackTriggerEntries
         messageSendRecipients: (node.data as any)?.messageSendRecipients || [],
         saveMessageIdTo: (node.data as any)?.saveMessageIdTo || undefined,
+        enableDynamicButtons: node.data?.enableDynamicButtons ?? false,
+        dynamicButtons: node.data?.dynamicButtons,
       };
   };
 
