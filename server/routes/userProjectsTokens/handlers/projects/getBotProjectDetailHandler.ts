@@ -2,6 +2,7 @@
  * @fileoverview Хендлер получения деталей проекта для Telegram-бота
  *
  * Возвращает информацию о конкретном проекте + статус запущенного бота.
+ * Принимает либо числовой project_id, либо callback-строку вида "project_42".
  * Проверяет что проект принадлежит пользователю по telegram_id.
  * Не требует браузерной сессии.
  *
@@ -12,14 +13,26 @@ import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 
 /**
- * Возвращает детали проекта и статус бота по project_id и telegram_id.
+ * Извлекает числовой ID из строки вида "project_42" или "42"
+ * @param raw - Строка с ID
+ * @returns Числовой ID или NaN
+ */
+function parseProjectId(raw: string): number {
+    // Убираем любой нечисловой префикс вида "project_", "proj_" и т.д.
+    const match = raw.match(/(\d+)$/);
+    return match ? parseInt(match[1], 10) : NaN;
+}
+
+/**
+ * Возвращает детали проекта и статус бота.
+ * Параметр :id может быть числом (42) или callback-строкой (project_42).
  *
- * @param req - query: telegram_id, params: id (project id)
+ * @param req - query: telegram_id, params: id
  * @param res - { id, name, description, botStatus: 'running'|'stopped'|'unknown' }
  */
 export async function getBotProjectDetailHandler(req: Request, res: Response): Promise<void> {
     try {
-        const projectId = parseInt(req.params.id);
+        const projectId = parseProjectId(req.params.id);
         const telegramId = Number(req.query.telegram_id);
 
         if (!telegramId || isNaN(telegramId)) {
