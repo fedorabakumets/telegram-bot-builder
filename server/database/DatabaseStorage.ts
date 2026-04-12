@@ -540,6 +540,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
+   * Получить все гостевые проекты (owner_id IS NULL) независимо от sessionId.
+   * Используется для публичного доступа — например из Telegram-бота.
+   * @returns Массив всех гостевых проектов
+   */
+  async getAllGuestBotProjects(): Promise<BotProject[]> {
+    return await this.db.select().from(botProjects)
+      .where(isNull(botProjects.ownerId))
+      .orderBy(desc(botProjects.createdAt));
+  }
+
+  /**
    * Получить гостевые проекты по ID сессии
    * Возвращает проекты конкретной сессии + старые общие (sessionId = NULL)
    * @param sessionId - ID сессии гостевого пользователя

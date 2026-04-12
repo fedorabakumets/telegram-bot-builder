@@ -335,6 +335,12 @@ export interface IStorage {
   getGuestBotProjects(): Promise<BotProject[]>;
 
   /**
+   * Получить все гостевые проекты (owner_id IS NULL) независимо от sessionId
+   * @returns Массив всех гостевых проектов
+   */
+  getAllGuestBotProjects(): Promise<BotProject[]>;
+
+  /**
    * Получить гостевые проекты по ID сессии
    * Возвращает проекты конкретной сессии + старые общие (sessionId = NULL)
    * @param sessionId - ID сессии гостевого пользователя
