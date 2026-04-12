@@ -87,7 +87,7 @@ export function KeyboardNodeProperties({
     if (!enableDynamicButtons || buttons.length === 0) return selectedNode.data.keyboardLayout;
     const existing = selectedNode.data.keyboardLayout;
     if (existing && layoutHasDynamic(existing)) return existing;
-    return createLayoutWithDynamic(buttons, 1, 'after');
+    return createLayoutWithDynamic(buttons, 1, 'before');
   }, [enableDynamicButtons, buttons, selectedNode.data.keyboardLayout]);
 
   /**
