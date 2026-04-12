@@ -99,11 +99,11 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 20 узлов генерируют обработчики', () => {
+test('A03', 'все 19 узлов генерируют обработчики', () => {
   const nodeIds = [
     'trigger-start', 'fetch-projects', 'check-projects-status',
     'projects-error-msg', 'projects-msg', 'projects-keyboard',
-    'incoming-callback-trigger', 'save-project-id', 'fetch-project-detail',
+    'incoming-callback-trigger', 'fetch-project-detail',
     'project-card-msg', 'project-actions-keyboard',
     'action-start', 'action-stop', 'action-restart',
     'check-start-status', 'check-stop-status', 'check-restart-status',
