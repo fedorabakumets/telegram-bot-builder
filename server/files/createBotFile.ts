@@ -68,12 +68,10 @@ export async function createCompleteBotFiles(
   // Нормализуем данные проекта, добавляя все возможные поля условных сообщений
   let normalizedBotData = botData;
   try {
-    // Импортируем функцию нормализации
-    const { normalizeProjectData } = await import("@shared/scaffolding-wrapper");
-    normalizedBotData = normalizeProjectData(botData);
+    const { normalizeProjectData } = await import("../utils/normalizeProjectData");
+    normalizedBotData = normalizeProjectData({ data: botData })?.data ?? botData;
   } catch (error) {
-    console.warn("Не удалось импортировать функцию нормализации данных проекта:", error);
-    // Если не удалось импортировать, используем оригинальные данные
+    console.warn("Не удалось нормализовать данные проекта:", error);
     normalizedBotData = botData;
   }
 

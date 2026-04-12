@@ -12,7 +12,3 @@ export {
   generateDockerfile,
   generateEnvFile
 } from '../lib/scaffolding';
-
-export {
-  normalizeProjectData
-} from '../client/utils/normalize-project-data';
