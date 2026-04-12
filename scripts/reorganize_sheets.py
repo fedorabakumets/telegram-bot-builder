@@ -43,7 +43,8 @@ SHEETS = {
         "create-success-msg", "create-error-msg", "after-create-keyboard",
     ],
     "Создание с токеном": [
-        "ask-project-name", "ask-token-value",
+        "ask-project-name-msg", "ask-project-name",
+        "ask-token-value-msg", "ask-token-value",
         "create-project-with-token", "check-new-project-status",
         "create-token-for-project", "check-new-token-status",
         "load-new-project", "new-project-error-msg", "new-token-error-msg",
@@ -55,7 +56,8 @@ SHEETS = {
         "delete-token-confirm", "delete-token-confirm-keyboard",
         "delete-token-action", "check-delete-token-status",
         "delete-token-success-msg", "delete-token-error-msg",
-        "ask-new-token-value", "add-token-to-project", "check-add-token-status",
+        "ask-new-token-value-msg", "ask-new-token-value",
+        "add-token-to-project", "check-add-token-status",
         "add-token-success-msg", "add-token-error-msg",
     ],
 }
