@@ -10,7 +10,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
-import { fetchWithProxy } from "../../../utils/telegram-proxy";
+import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 
 /** Регулярное выражение для проверки формата токена Telegram */
 const TOKEN_REGEX = /^\d+:[A-Za-z0-9_-]{35,}$/;
