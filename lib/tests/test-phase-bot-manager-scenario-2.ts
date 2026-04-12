@@ -173,6 +173,29 @@ test('G08', 'condition узлы проверяют статус == 200', () => {
   ok(code.includes('== 200') || code.includes('== "200"'), 'проверка статуса 200 не найдена');
 });
 
+// ══ Блок H: Создание проекта ══════════════════════════════════════════════════
+console.log('\n══ Блок H: Создание проекта ══════════════════════════════════════════');
+
+test('H01', 'create-project-action делает POST к /api/bot/projects', () => {
+  ok(code.includes('/api/bot/projects') && (code.includes('POST') || code.includes('post')), 'POST /api/bot/projects не найден');
+});
+
+test('H02', 'check-create-status condition узел присутствует в коде', () => {
+  ok(code.includes('check_create_status'), 'узел check-create-status не найден');
+});
+
+test('H03', 'create-success-msg содержит текст об успешном создании', () => {
+  ok(code.includes('Проект создан'), 'текст "Проект создан" не найден');
+});
+
+test('H04', 'create-error-msg содержит текст об ошибке создания', () => {
+  ok(code.includes('Не удалось создать проект'), 'текст ошибки создания не найден');
+});
+
+test('H05', 'after-create-keyboard содержит кнопку возврата к списку', () => {
+  ok(code.includes('К списку проектов'), 'кнопка "К списку проектов" не найдена');
+});
+
 // ══ Итог ══════════════════════════════════════════════════════════════════════
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

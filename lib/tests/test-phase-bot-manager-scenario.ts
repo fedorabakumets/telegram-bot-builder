@@ -99,7 +99,7 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 21 узел генерирует обработчики', () => {
+test('A03', 'все 27 узлов генерируют обработчики', () => {
   const nodeIds = [
     'trigger-start', 'fetch-projects', 'check-projects-status',
     'check-projects-empty', 'no-projects-msg',
@@ -109,6 +109,8 @@ test('A03', 'все 21 узел генерирует обработчики', ()
     'action-start', 'action-stop', 'action-restart',
     'check-start-status', 'check-stop-status', 'check-restart-status',
     'action-error-msg', 'action-result-msg', 'result-keyboard',
+    'create-project-keyboard', 'create-project-action', 'check-create-status',
+    'create-success-msg', 'create-error-msg', 'after-create-keyboard',
   ];
   for (const id of nodeIds) {
     const safeName = id.replace(/-/g, '_');
