@@ -29,6 +29,12 @@ export async function createBotProjectHandler(req: Request, res: Response): Prom
 
         const name: string = (req.body?.name as string) || "Новый проект";
 
+        // Убеждаемся что пользователь существует в telegram_users (FK constraint)
+        await storage.getTelegramUserOrCreate({
+            id: telegramId,
+            firstName: "Пользователь",
+        });
+
         const project = await storage.createBotProject({
             ownerId: telegramId,
             name,
