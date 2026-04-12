@@ -118,9 +118,27 @@ export function KeyboardNodeProperties({
       )}
 
       {enableDynamicButtons ? (
-        <div className="rounded-lg border border-dashed border-amber-300/60 dark:border-amber-700/50 bg-amber-50/40 dark:bg-amber-950/20 p-3 text-xs text-amber-900 dark:text-amber-100">
-          Динамический режим скрывает ручной редактор кнопок. Превью будет строиться из шаблонов HTTP-ответа.
-        </div>
+        <>
+          {/* Подсказка: статические кнопки добавляются после динамических */}
+          <div className="rounded-lg border border-dashed border-amber-300/60 dark:border-amber-700/50 bg-amber-50/40 dark:bg-amber-950/20 p-3 text-xs text-amber-900 dark:text-amber-100">
+            Динамические кнопки генерируются из HTTP-ответа. Статические кнопки ниже добавляются после них.
+          </div>
+          <KeyboardButtonsSection selectedNode={selectedNode} onButtonAdd={onButtonAdd} />
+          {buttons.map((button: any) => (
+            <ButtonCard
+              key={button.id}
+              nodeId={selectedNode.id}
+              button={button}
+              textVariables={textVariables}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              onButtonUpdate={onButtonUpdate}
+              onButtonDelete={onButtonDelete}
+              onButtonDuplicate={handleDuplicateButton}
+              selectedNode={selectedNode}
+              keyboardType={selectedNode.data.keyboardType as string}
+            />
+          ))}
+        </>
       ) : (
         <>
           <KeyboardButtonsSection selectedNode={selectedNode} onButtonAdd={onButtonAdd} />

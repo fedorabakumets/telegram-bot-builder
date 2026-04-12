@@ -189,15 +189,8 @@ test('B09', 'arrayPath "items" присутствует в коде', () => {
   ok(code.includes('"items"'), 'arrayPath "items" не найден — API теперь возвращает {items: [...], count: N}');
 });
 
-test('B10', 'projects-actions-keyboard содержит кнопку "➕ Новый проект" в JSON', () => {
-  // Проверяем наличие кнопки в JSON-данных проекта, а не в сгенерированном коде.
-  // При enableDynamicButtons: true статические кнопки не попадают в генерируемый Python-код —
-  // это ограничение по дизайну генератора (смешанные кнопки не поддерживаются).
-  const allNodes = project.sheets.flatMap((s: any) => s.nodes);
-  const kbd = allNodes.find((n: any) => n.id === 'projects-actions-keyboard');
-  ok(kbd !== undefined, 'узел projects-actions-keyboard не найден в JSON');
-  const hasNewProjectBtn = kbd.data.buttons?.some((b: any) => b.text === '➕ Новый проект');
-  ok(hasNewProjectBtn, 'кнопка "➕ Новый проект" не найдена в projects-actions-keyboard');
+test('B10', 'projects-actions-keyboard содержит кнопку "➕ Новый проект" в сгенерированном коде', () => {
+  ok(code.includes('➕ Новый проект'), 'кнопка "➕ Новый проект" не найдена — смешанный режим кнопок не работает');
 });
 
 // ══ Блок C: incoming_callback_trigger с фильтрацией ══════════════════════════

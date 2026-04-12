@@ -27,7 +27,12 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
   const staticButtons = node.data.buttons || [];
   const previewButtons = useMemo(() => {
     if (enableDynamicButtons) {
-      return buildDynamicButtonsPreviewItems(dynamicButtons);
+      const dynamicItems = buildDynamicButtonsPreviewItems(dynamicButtons);
+      // Добавляем статические кнопки после динамических
+      if (staticButtons.length > 0) {
+        return [...dynamicItems, ...staticButtons];
+      }
+      return dynamicItems;
     }
     return staticButtons;
   }, [enableDynamicButtons, dynamicButtons, staticButtons]);
