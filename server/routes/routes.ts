@@ -401,10 +401,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
       httpOnly: true,
-      // КРИТИЧНО: sameSite: 'none' чтобы cookies передавались между popup и main window
-      // secure: false в dev (HTTP), true в prod (HTTPS)
+      // В prod: secure=true + sameSite=none (для cross-origin popup авторизации)
+      // В dev: secure=false + sameSite=lax (браузер не отправляет sameSite=none без secure)
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none'
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     }
   }));
 
@@ -422,6 +422,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Auth middleware для всех API роутов (устанавливает req.user если пользователь авторизован)
   // ВАЖНО: должен быть подключен ПОСЛЕ session middleware
   app.use("/api", authMiddleware);
+
+  // Middleware для гостевых сессий — сохраняет сессию при первом API запросе
+  // Нужно чтобы sessionId был стабильным между запросами (saveUninitialized: false)
+  app.use("/api", (req, _res, next) => {
+    if (!req.user && req.session && !req.session.telegramUser) {
+      // Помечаем сессию как инициализированную для гостя
+      (req.session as any).guest = true;
+      req.session.save(() => next());
+    } else {
+      next();
+    }
+  });
 
   // Middleware для отключения кэширования на /api/media/*
   app.use("/api/media", (_req, res, next) => {
