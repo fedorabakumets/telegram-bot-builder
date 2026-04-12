@@ -273,6 +273,39 @@ test('K05', 'старый узел project-card-msg отсутствует (за
   ok(!code.includes('project_card_msg'), 'старый узел project-card-msg всё ещё присутствует в коде');
 });
 
+// ══ Блок L: Токены проекта ════════════════════════════════════════════════════
+console.log('\n══ Блок L: Токены проекта ════════════════════════════════════════════');
+
+test('L01', 'fetch-tokens делает GET к /api/bot/projects/.../tokens', () => {
+  ok(code.includes('/tokens'), 'URL /tokens не найден');
+});
+
+test('L02', 'check-tokens-status condition узел присутствует в коде', () => {
+  ok(code.includes('check_tokens_status'), 'узел check-tokens-status не найден');
+});
+
+test('L03', 'check-tokens-empty использует dot-notation tokens.count', () => {
+  ok(code.includes('check_tokens_empty'), 'узел check-tokens-empty не найден');
+});
+
+test('L04', 'tokens-keyboard генерирует динамические кнопки из tokens.items', () => {
+  ok(code.includes('tokens_keyboard'), 'узел tokens-keyboard не найден');
+});
+
+test('L05', 'no-tokens-msg содержит текст об отсутствии токенов', () => {
+  ok(code.includes('нет токенов'), 'текст "нет токенов" не найден');
+});
+
+test('L06', 'tokens-error-msg содержит текст об ошибке загрузки токенов', () => {
+  ok(code.includes('Не удалось загрузить токены'), 'текст ошибки загрузки токенов не найден');
+});
+
+test('L07', 'кнопка "🔑 Токены" присутствует в project-actions-keyboard', () => {
+  ok(code.includes('Токены'), 'кнопка "Токены" не найдена');
+});
+
+
+
 // ══ Итог ══════════════════════════════════════════════════════════════════════
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

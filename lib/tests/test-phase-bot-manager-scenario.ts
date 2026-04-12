@@ -99,14 +99,14 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 42 узла генерируют обработчики', () => {
+test('A03', 'все 49 узлов генерируют обработчики', () => {
   const nodeIds = [
     // Основной поток
     'trigger-start', 'fetch-projects', 'check-projects-status',
     'check-projects-empty', 'no-projects-msg',
     'projects-error-msg', 'projects-msg', 'projects-keyboard',
     'incoming-callback-trigger', 'fetch-project-detail',
-    // Статус бота (улучшение 3)
+    // Статус бота
     'check-bot-status', 'project-card-running', 'project-card-stopped', 'project-card-unknown',
     'project-actions-keyboard',
     // Действия
@@ -116,12 +116,15 @@ test('A03', 'все 42 узла генерируют обработчики', ()
     // Создание проекта
     'create-project-keyboard', 'create-project-action', 'check-create-status',
     'create-success-msg', 'create-error-msg', 'after-create-keyboard',
-    // Переименование (улучшение 1)
+    // Переименование
     'rename-project-ask', 'rename-project-action', 'check-rename-status',
     'rename-success-msg', 'rename-error-msg',
-    // Удаление (улучшение 2)
+    // Удаление
     'delete-project-confirm', 'delete-confirm-keyboard', 'delete-project-action',
     'check-delete-status', 'delete-success-msg', 'delete-error-msg',
+    // Токены
+    'fetch-tokens', 'check-tokens-status', 'check-tokens-empty',
+    'tokens-msg', 'tokens-keyboard', 'no-tokens-msg', 'tokens-error-msg',
   ];
   for (const id of nodeIds) {
     const safeName = id.replace(/-/g, '_');
@@ -225,15 +228,15 @@ test('D01c', 'три варианта карточки проекта прису
   ok(code.includes('project_card_unknown'), 'узел project-card-unknown не найден');
 });
 
-test('D02', 'project-actions-keyboard генерирует 6 кнопок', () => {
-  const btnTexts = ['Запустить', 'Остановить', 'Перезапустить', 'К списку', 'Переименовать', 'Удалить'];
+test('D02', 'project-actions-keyboard генерирует 7 кнопок', () => {
+  const btnTexts = ['Запустить', 'Остановить', 'Перезапустить', 'К списку', 'Переименовать', 'Удалить', 'Токены'];
   for (const text of btnTexts) {
     ok(code.includes(text), `Кнопка "${text}" не найдена`);
   }
 });
 
-test('D03', 'раскладка кнопок: builder.adjust(2, 1, 2, 1)', () => {
-  ok(code.includes('builder.adjust(2, 1, 2, 1)'), 'builder.adjust(2, 1, 2, 1) не найдено');
+test('D03', 'раскладка кнопок: builder.adjust(2, 1, 2, 1, 1)', () => {
+  ok(code.includes('builder.adjust(2, 1, 2, 1, 1)'), 'builder.adjust(2, 1, 2, 1, 1) не найдено');
 });
 
 test('D04', 'кнопка "К списку" ведёт к fetch-projects', () => {
