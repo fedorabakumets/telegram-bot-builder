@@ -12,6 +12,8 @@ import { getProjectsHandler } from "./userProjectsTokens/handlers/projects/getPr
 import { getBotProjectsHandler } from "./userProjectsTokens/handlers/projects/getBotProjectsHandler";
 import { getBotProjectDetailHandler } from "./userProjectsTokens/handlers/projects/getBotProjectDetailHandler";
 import { createBotProjectHandler } from "./userProjectsTokens/handlers/projects/createBotProjectHandler";
+import { updateBotProjectHandler } from "./userProjectsTokens/handlers/projects/updateBotProjectHandler";
+import { deleteBotProjectHandler } from "./userProjectsTokens/handlers/projects/deleteBotProjectHandler";
 import { createProjectHandler } from "./userProjectsTokens/handlers/projects/createProjectHandler";
 import { updateProjectHandler } from "./userProjectsTokens/handlers/projects/updateProjectHandler";
 import { deleteProjectHandler } from "./userProjectsTokens/handlers/projects/deleteProjectHandler";
@@ -32,6 +34,8 @@ export function setupUserProjectAndTokenRoutes(app: Express): void {
     app.get("/api/bot/projects", getBotProjectsHandler);
     app.get("/api/bot/projects/:id", getBotProjectDetailHandler);
     app.post("/api/bot/projects", createBotProjectHandler);
+    app.patch("/api/bot/projects/:id", updateBotProjectHandler);
+    app.delete("/api/bot/projects/:id", deleteBotProjectHandler);
     app.post("/api/user/projects", createProjectHandler);
     app.patch("/api/user/projects/:id", updateProjectHandler);
     app.delete("/api/user/projects/:id", deleteProjectHandler);
