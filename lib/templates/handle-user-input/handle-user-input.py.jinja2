@@ -1,6 +1,10 @@
 {#
   Шаблон универсального обработчика пользовательского ввода
 
+  @fileoverview Генерирует Python-код обработки текстового ввода пользователя.
+  При навигации к следующему узлу (next_node_id) всегда вызывает handle_callback_*,
+  что позволяет message-узлам с enableAutoTransition выполнять автопереход к input-узлам.
+
   @param {string}  indentLevel  - базовый отступ (по умолчанию '    ')
   @param {array}   nodes        - все узлы [{id, safeName, type, data}]
   @param {array}   allNodeIds   - все ID узлов
@@ -350,22 +354,7 @@
 {% for node in nodes %}
 {{ ind6 }}{% if loop.first %}if{% else %}elif{% endif %} current_node_id == "{{ node.id }}":
 {{ ind7 }}_node_handled = True
-{{ ind7 }}# Переход к узлу {{ node.id }}
-{% if node.type == 'message' %}
-{{ ind7 }}text = {{ node.data.messageText | default('""') | tojson }}
-{{ ind7 }}user_data[user_id] = user_data.get(user_id, {})
-{% if node.data.buttons and node.data.buttons | length > 0 and node.data.keyboardType == 'inline' %}
-{{ ind7 }}builder = InlineKeyboardBuilder()
-{% for btn in node.data.buttons %}
-{{ ind7 }}builder.add(InlineKeyboardButton(text={{ btn.text | tojson }}, callback_data="{{ btn.id or btn.target or btn.text }}"))
-{% endfor %}
-{{ ind7 }}keyboard = builder.as_markup()
-{{ ind7 }}await navigate_to_node(message, current_node_id, text=text, reply_markup=keyboard)
-{% else %}
-{{ ind7 }}await navigate_to_node(message, current_node_id, text=text)
-{% endif %}
-{{ ind7 }}break  # Нет автоперехода
-{% else %}
+{{ ind7 }}# Переход к узлу {{ node.id }} через handle_callback_ (поддерживает автопереход)
 {{ ind7 }}fake_callback = SimpleNamespace(
 {{ ind7 }}    id="text_nav",
 {{ ind7 }}    from_user=message.from_user,
@@ -376,7 +365,6 @@
 {{ ind7 }})
 {{ ind7 }}await handle_callback_{{ node.safeName }}(fake_callback)
 {{ ind7 }}break
-{% endif %}
 {% endfor %}
 {{ ind6 }}if not _node_handled:
 {{ ind7 }}logging.warning(f"Неизвестный узел для навигации: {current_node_id}")
