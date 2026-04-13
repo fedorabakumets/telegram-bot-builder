@@ -129,52 +129,53 @@ export function useTelegramLogin() {
 
   /**
    * Открывает диалог авторизации Telegram.
-   * В dev-режиме (виджет недоступен) — открывает popup /api/auth/login,
-   * который после сабмита формы отправляет postMessage с данными пользователя.
+   * В dev-режиме — всегда открывает popup /api/auth/login с dev-формой.
+   * В prod — использует Telegram Login виджет.
    */
   const handleTelegramLogin = useCallback(async () => {
+    // В dev-режиме всегда используем dev-форму, не ждём виджет
+    if (isDev) {
+      const w = 500, h = 600;
+      const left = window.innerWidth / 2 - w / 2;
+      const top = window.innerHeight / 2 - h / 2;
+      const popup = window.open('/api/auth/login', 'telegram_login', `width=${w},height=${h},left=${left},top=${top}`);
+
+      /**
+       * Обрабатывает postMessage от popup с данными пользователя.
+       * @param event - MessageEvent с полем data.type === 'telegram-auth'
+       */
+      const onMessage = async (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data?.type !== 'telegram-auth') return;
+        window.removeEventListener('message', onMessage);
+        popup?.close();
+
+        const user = event.data.user;
+        try {
+          const resp = await fetch('/api/auth/dev-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ id: user.id, firstName: user.firstName, username: user.username }),
+          });
+          const data = await resp.json();
+          if (data.success && data.user) {
+            login(data.user);
+          } else {
+            toast({ title: 'Ошибка входа', description: data.error, variant: 'destructive' });
+          }
+        } catch (e) {
+          toast({ title: 'Ошибка входа', description: 'Не удалось выполнить dev-login', variant: 'destructive' });
+        }
+      };
+
+      window.addEventListener('message', onMessage);
+      return;
+    }
+
+    // Prod: используем Telegram Login виджет
     const ready = await ensureTelegramLogin();
     if (!ready || typeof window.Telegram?.Login?.open !== 'function') {
-      if (isDev) {
-        // Dev fallback — popup с формой, данные возвращаются через postMessage
-        const w = 500, h = 600;
-        const left = window.innerWidth / 2 - w / 2;
-        const top = window.innerHeight / 2 - h / 2;
-        const popup = window.open('/api/auth/login', 'telegram_login', `width=${w},height=${h},left=${left},top=${top}`);
-
-        /**
-         * Обрабатывает postMessage от popup с данными пользователя.
-         * После получения вызывает POST /api/auth/dev-login и логинит пользователя.
-         * @param event - MessageEvent с полем data.type === 'telegram-auth'
-         */
-        const onMessage = async (event: MessageEvent) => {
-          if (event.origin !== window.location.origin) return;
-          if (event.data?.type !== 'telegram-auth') return;
-          window.removeEventListener('message', onMessage);
-          popup?.close();
-
-          const user = event.data.user;
-          try {
-            const resp = await fetch('/api/auth/dev-login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ id: user.id, firstName: user.firstName, username: user.username }),
-            });
-            const data = await resp.json();
-            if (data.success && data.user) {
-              login(data.user);
-            } else {
-              toast({ title: 'Ошибка входа', description: data.error, variant: 'destructive' });
-            }
-          } catch (e) {
-            toast({ title: 'Ошибка входа', description: 'Не удалось выполнить dev-login', variant: 'destructive' });
-          }
-        };
-
-        window.addEventListener('message', onMessage);
-        return;
-      }
       toast({
         title: 'Telegram недоступен',
         description: 'Не удалось загрузить виджет. Откройте сайт в Telegram или попробуйте позже.',
