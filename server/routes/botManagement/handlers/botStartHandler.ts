@@ -12,6 +12,25 @@ import { startBot } from '../../../bots/startBot';
 import { storage } from '../../../storages/storage';
 
 /**
+ * Нормализует tokenId из тела запроса.
+ * Принимает число, числовую строку или строку вида "token_42" — возвращает число.
+ * @param raw - Сырое значение tokenId из body
+ * @returns Числовой ID или undefined если не удалось распарсить
+ */
+function parseTokenId(raw: unknown): number | undefined {
+    if (typeof raw === 'number' && !isNaN(raw)) return raw;
+    if (typeof raw === 'string') {
+        // Извлекаем последовательность цифр из конца строки: "token_42" → 42
+        const match = raw.match(/(\d+)$/);
+        if (match) {
+            const n = parseInt(match[1], 10);
+            return isNaN(n) ? undefined : n;
+        }
+    }
+    return undefined;
+}
+
+/**
  * Обрабатывает запрос на запуск бота
  *
  * @function handleBotStart
@@ -22,11 +41,13 @@ import { storage } from '../../../storages/storage';
  * @description
  * Запускает бота с указанным токеном. Если токен не передан,
  * используется токен по умолчанию для проекта.
+ * Поддерживает tokenId как число, строку "42" или "token_42".
  */
 export async function handleBotStart(req: Request, res: Response): Promise<void> {
     try {
         const projectId = parseInt(req.params.id);
-        const { token, tokenId } = req.body;
+        const { token } = req.body;
+        const tokenId = parseTokenId(req.body.tokenId);
 
         const project = await storage.getBotProject(projectId);
         if (!project) {
