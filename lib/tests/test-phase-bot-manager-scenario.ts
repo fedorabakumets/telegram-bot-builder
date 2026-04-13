@@ -272,8 +272,8 @@ test('D01c', 'три варианта карточки проекта прису
   ok(code.includes('project_card_unknown'), 'узел project-card-unknown не найден');
 });
 
-test('D02', 'project-actions-keyboard генерирует 7 кнопок', () => {
-  const btnTexts = ['Запустить', 'Остановить', 'Перезапустить', 'К списку', 'Переименовать', 'Удалить', 'Токены'];
+test('D02', 'project-actions-keyboard содержит кнопки управления проектом', () => {
+  const btnTexts = ['Запустить', 'Остановить', 'Перезапустить', 'К списку', 'Переименовать', 'Удалить', 'Добавить токен'];
   for (const text of btnTexts) {
     ok(code.includes(text), `Кнопка "${text}" не найдена`);
   }
