@@ -101,13 +101,15 @@ test('A02', 'синтаксис Python OK для всего проекта', () 
   syntax(code, 'a02');
 });
 
-test('A03', 'все 77 узлов генерируют обработчики', () => {
+test('A03', 'все узлы генерируют обработчики', () => {
   const nodeIds = [
     // Основной поток
     'trigger-start', 'fetch-projects', 'check-projects-status',
     'check-projects-empty', 'no-projects-msg',
     'projects-error-msg', 'projects-msg',
     'incoming-callback-trigger', 'fetch-project-detail',
+    // Загрузка токенов перед карточкой проекта
+    'fetch-project-tokens',
     // Статус бота
     'check-bot-status', 'project-card-running', 'project-card-stopped', 'project-card-unknown',
     'project-actions-keyboard',
@@ -129,7 +131,7 @@ test('A03', 'все 77 узлов генерируют обработчики', 
     // Токены — базовые
     'fetch-tokens', 'check-tokens-status', 'check-tokens-empty',
     'tokens-msg', 'tokens-keyboard', 'no-tokens-msg', 'tokens-error-msg',
-    // Токены — управление (новые)
+    // Токены — управление
     'incoming-token-trigger', 'token-card-msg', 'token-actions-keyboard',
     'delete-token-confirm', 'delete-token-confirm-keyboard',
     'delete-token-action', 'check-delete-token-status',
@@ -273,14 +275,20 @@ test('D01c', 'три варианта карточки проекта прису
 });
 
 test('D02', 'project-actions-keyboard содержит кнопки управления проектом', () => {
-  const btnTexts = ['Запустить', 'Остановить', 'Перезапустить', 'К списку', 'Переименовать', 'Удалить', 'Добавить токен'];
+  // Кнопки Запустить/Остановить/Перезапустить убраны из карточки проекта —
+  // управление ботом теперь через карточку токена (token-actions-keyboard)
+  const btnTexts = ['К списку', 'Переименовать', 'Удалить', 'Добавить токен'];
   for (const text of btnTexts) {
     ok(code.includes(text), `Кнопка "${text}" не найдена`);
   }
+  // Токены теперь отображаются динамически прямо в карточке проекта
+  ok(code.includes('project_tokens'), 'динамические кнопки токенов (project_tokens) не найдены');
 });
 
-test('D03', 'раскладка кнопок: builder.adjust(2, 1, 2, 1, 1)', () => {
-  ok(code.includes('builder.adjust(2, 1, 2, 1, 1)'), 'builder.adjust(2, 1, 2, 1, 1) не найдено');
+test('D03', 'раскладка кнопок карточки проекта: динамические токены + статические кнопки', () => {
+  // Новая раскладка: __dynamic__ (токены) → btn-add-token → btn-rename + btn-delete → btn-back
+  // builder.adjust генерируется из keyboardLayout без рядов __dynamic__: 1, 2, 1
+  ok(code.includes('fetch_project_tokens'), 'узел fetch-project-tokens не найден — токены не загружаются перед карточкой');
 });
 
 test('D04', 'кнопка "К списку" ведёт к fetch-projects', () => {
