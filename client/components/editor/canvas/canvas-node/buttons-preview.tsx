@@ -25,17 +25,42 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
   const effectiveKeyboardType = enableDynamicButtons ? 'inline' : keyboardType;
 
   const staticButtons = node.data.buttons || [];
+  const keyboardLayout = (node.data as any).keyboardLayout;
+
   const previewButtons = useMemo(() => {
     if (enableDynamicButtons) {
       const dynamicItems = buildDynamicButtonsPreviewItems(dynamicButtons);
-      // Добавляем статические кнопки после динамических
-      if (staticButtons.length > 0) {
-        return [...dynamicItems, ...staticButtons];
+      if (staticButtons.length === 0) return dynamicItems;
+
+      // Если есть keyboardLayout с __dynamic__ — учитываем порядок
+      if (keyboardLayout?.rows?.length) {
+        const DYNAMIC_ID = '__dynamic__';
+        const dynamicRowIdx = keyboardLayout.rows.findIndex(
+          (r: any) => Array.isArray(r.buttonIds) && r.buttonIds.includes(DYNAMIC_ID)
+        );
+        if (dynamicRowIdx !== -1) {
+          // Собираем статические кнопки до и после __dynamic__
+          const btnMap = new Map(staticButtons.map((b: any) => [b.id, b]));
+          const before: any[] = [];
+          const after: any[] = [];
+          for (let i = 0; i < keyboardLayout.rows.length; i++) {
+            const row = keyboardLayout.rows[i];
+            if (!Array.isArray(row.buttonIds)) continue;
+            for (const id of row.buttonIds) {
+              if (id === DYNAMIC_ID) continue;
+              const btn = btnMap.get(id);
+              if (btn) (i < dynamicRowIdx ? before : after).push(btn);
+            }
+          }
+          return [...before, ...dynamicItems, ...after];
+        }
       }
-      return dynamicItems;
+
+      // Дефолт: динамические сначала, статические после
+      return [...dynamicItems, ...staticButtons];
     }
     return staticButtons;
-  }, [enableDynamicButtons, dynamicButtons, staticButtons]);
+  }, [enableDynamicButtons, dynamicButtons, staticButtons, keyboardLayout]);
 
   if (previewButtons.length === 0 || effectiveKeyboardType === 'none') {
     return null;

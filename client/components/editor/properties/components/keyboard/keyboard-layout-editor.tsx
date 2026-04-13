@@ -22,6 +22,8 @@ export interface KeyboardLayoutEditorProps {
   initialLayout?: KeyboardLayout;
   /** Обработчик изменения раскладки */
   onLayoutChange?: (layout: KeyboardLayout) => void;
+  /** Конфигурация динамических кнопок для превью блока __dynamic__ */
+  dynamicButtonsConfig?: any;
 }
 
 /**
@@ -32,6 +34,7 @@ export function KeyboardLayoutEditor({
   buttons,
   initialLayout,
   onLayoutChange,
+  dynamicButtonsConfig,
 }: KeyboardLayoutEditorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const prevLayoutRef = React.useRef<KeyboardLayout | null>(null);
@@ -121,6 +124,7 @@ export function KeyboardLayoutEditor({
             buttons={buttons}
             layout={layout}
             onMoveButton={moveButton}
+            dynamicButtonsConfig={dynamicButtonsConfig}
             disabled={layout.autoLayout}
           />
         </CardContent>

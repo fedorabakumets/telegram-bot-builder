@@ -178,6 +178,7 @@ export function KeyboardNodeProperties({
             <KeyboardLayoutEditor
               buttons={buttonsForLayout}
               initialLayout={layoutForDynamic}
+              dynamicButtonsConfig={selectedNode.data.dynamicButtons}
               onLayoutChange={(layout) => onNodeUpdate(selectedNode.id, { keyboardLayout: layout })}
             />
           )}

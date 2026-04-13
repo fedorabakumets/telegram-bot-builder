@@ -7,6 +7,7 @@ import React from 'react';
 import { Button } from '@lib/bot-generator';
 import { KeyboardLayout } from '../../types/keyboard-layout';
 import { DYNAMIC_BUTTONS_PLACEHOLDER_ID } from '../../utils/keyboard-layout-utils';
+import { buildDynamicButtonsPreviewItems } from '../../utils/dynamic-buttons';
 import { cn } from '@/utils/utils';
 
 /** Свойства компонента KeyboardGridPreview */
@@ -17,6 +18,8 @@ export interface KeyboardGridPreviewProps {
   layout: KeyboardLayout;
   /** Функция перемещения кнопки */
   onMoveButton: (buttonId: string, toRow: number, toIndex: number) => void;
+  /** Конфигурация динамических кнопок для превью */
+  dynamicButtonsConfig?: any;
   /** Дополнительные CSS классы */
   className?: string;
   /** Отключён ли drag-and-drop */
@@ -31,6 +34,7 @@ export function KeyboardGridPreview({
   buttons,
   layout,
   onMoveButton,
+  dynamicButtonsConfig,
   className,
   disabled = false,
 }: KeyboardGridPreviewProps) {
@@ -127,7 +131,14 @@ export function KeyboardGridPreview({
                 )}
               >
                 {buttonId === DYNAMIC_BUTTONS_PLACEHOLDER_ID ? (
-                  <span>⚡ Динамические кнопки</span>
+                  <div className="space-y-1">
+                    {buildDynamicButtonsPreviewItems(dynamicButtonsConfig).slice(0, 2).map((item, i) => (
+                      <div key={i} className="rounded px-2 py-1 bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/50 text-xs text-blue-700 dark:text-blue-300 text-left">
+                        {item.text}
+                      </div>
+                    ))}
+                    <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">⚡ +ещё...</div>
+                  </div>
                 ) : (
                   getButtonText(buttonId)
                 )}
