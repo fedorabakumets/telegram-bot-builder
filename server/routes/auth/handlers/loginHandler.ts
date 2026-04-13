@@ -24,21 +24,17 @@ export function handleLogin(_req: Request, res: Response): void {
 
     const devForm = `
     <form id="devForm" style="margin-top:20px">
-      <p style="color:#e67e22;font-size:12px;margin-bottom:16px">⚠️ Dev-режим: реальная авторизация не требуется</p>
-      <input id="devId" type="number" placeholder="ID (любое число)" style="display:block;width:100%;margin-bottom:8px;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box" value="123456789" />
-      <input id="devFirst" type="text" placeholder="Имя" style="display:block;width:100%;margin-bottom:8px;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box" value="Dev" />
-      <input id="devUsername" type="text" placeholder="Username (без @)" style="display:block;width:100%;margin-bottom:16px;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box" value="devuser" />
-      <button type="submit" style="width:100%;padding:10px;background:#0088cc;color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">Войти как dev-пользователь</button>
+      <p style="color:#e67e22;font-size:12px;margin-bottom:16px">⚠️ Dev-режим: введите ваш Telegram ID</p>
+      <input id="devId" type="number" placeholder="Ваш Telegram ID" style="display:block;width:100%;margin-bottom:16px;padding:10px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;font-size:16px" />
+      <button type="submit" style="width:100%;padding:10px;background:#0088cc;color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">Войти</button>
     </form>
+    <p style="margin-top:12px;font-size:11px;color:#999">Узнать свой ID: напишите <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> в Telegram</p>
     <script>
       document.getElementById('devForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        const user = {
-          id: parseInt(document.getElementById('devId').value) || 123456789,
-          first_name: document.getElementById('devFirst').value || 'Dev',
-          username: document.getElementById('devUsername').value || 'devuser',
-        };
-        onTelegramAuth(user);
+        const id = parseInt(document.getElementById('devId').value);
+        if (!id) { alert('Введите Telegram ID'); return; }
+        onTelegramAuth({ id, first_name: 'Dev', username: 'dev_' + id });
       });
     </script>`;
 
