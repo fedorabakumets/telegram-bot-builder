@@ -25,7 +25,7 @@ import { exportToGoogleSheetsHandler, exportStructureToGoogleSheetsHandler } fro
 import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
 import { cleanupOrphanedFoldersHandler } from "./projectManagement/handlers/cleanupOrphanedFoldersHandler";
 import { handleGenerateCode } from "./projects/generateCode";
-import { getAdminIdsHandler, updateAdminIdsHandler } from "./projectRoutes/handlers/adminIdsHandler";
+import { getAdminIdsHandler, updateAdminIdsHandler, removeAdminIdHandler } from "./projectRoutes/handlers/adminIdsHandler";
 
 /**
  * Настраивает маршруты управления проектами
@@ -65,6 +65,7 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
     // Управление ID администраторов бота
     app.get("/api/projects/:id/admin-ids", getAdminIdsHandler);
     app.put("/api/projects/:id/admin-ids", updateAdminIdsHandler);
+    app.post("/api/projects/:id/admin-ids/remove", removeAdminIdHandler);
 
     // Экспорт в Google Таблицы
     app.post("/api/projects/:id/export-to-google-sheets", requireDbReady, exportToGoogleSheetsHandler);

@@ -1,7 +1,7 @@
 /**
  * @fileoverview Обработчики API для управления списком ID администраторов бота
  *
- * Читает и обновляет переменную ADMIN_IDS в файле .env бота.
+ * Читает, обновляет и удаляет записи в переменной ADMIN_IDS файла .env бота.
  * Файл .env находится в папке bots/bot_{projectId}_{tokenId}/.env
  *
  * @module adminIdsHandler
@@ -68,21 +68,24 @@ export async function getAdminIdsHandler(req: Request, res: Response): Promise<v
     // Сначала читаем из БД
     const project = await storage.getBotProject(projectId);
     if (project?.adminIds?.trim()) {
-      res.json({ adminIds: project.adminIds.trim() });
+      const raw = project.adminIds.trim();
+      const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+      res.json({ adminIds: raw, items: ids.map(id => ({ id })), count: ids.length });
       return;
     }
 
     // Fallback: читаем из .env файла
     const envPath = await findBotEnvPath(projectId);
     if (!envPath) {
-      res.json({ adminIds: '' });
+      res.json({ adminIds: '', items: [], count: 0 });
       return;
     }
 
     const content = readFileSync(envPath, 'utf8');
     const match = content.match(/^ADMIN_IDS=([\s\S]*?)(?=\n[A-Z_]+=|\n#|\s*$)/m);
     const raw = match ? match[1].replace(/\s+/g, ' ').trim() : '';
-    res.json({ adminIds: raw });
+    const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+    res.json({ adminIds: raw, items: ids.map(id => ({ id })), count: ids.length });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка чтения ADMIN_IDS', error: String(error) });
   }
@@ -114,5 +117,44 @@ export async function updateAdminIdsHandler(req: Request, res: Response): Promis
     res.json({ success: true, adminIds });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка обновления ADMIN_IDS', error: String(error) });
+  }
+}
+
+/**
+ * Удаляет конкретный ID из списка ADMIN_IDS
+ * @param req - Запрос с params.id (projectId) и body.adminId (callback_data вида "del_admin_123")
+ * @param res - Ответ с обновлённым списком adminIds
+ */
+export async function removeAdminIdHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const projectId = parseInt(req.params.id);
+    const { adminId } = req.body as { adminId: string };
+
+    // Извлекаем числовой ID из callback_data вида "del_admin_123"
+    const cleanId = adminId.replace(/^del_admin_/, '').trim();
+
+    const project = await storage.getBotProject(projectId);
+    const currentIds = (project?.adminIds ?? '').split(',').map(s => s.trim()).filter(Boolean);
+    const updatedIds = currentIds.filter(id => id !== cleanId);
+    const newAdminIds = updatedIds.join(',');
+
+    // Сохраняем в БД
+    await storage.updateBotProject(projectId, { adminIds: newAdminIds });
+
+    // Обновляем .env файл если существует
+    const envPath = await findBotEnvPath(projectId);
+    if (envPath) {
+      let content = readFileSync(envPath, 'utf8');
+      if (/^ADMIN_IDS=/m.test(content)) {
+        content = content.replace(/^ADMIN_IDS=.*(\n[ \t]+.*)*$/m, `ADMIN_IDS=${newAdminIds}`);
+      } else {
+        content += `\nADMIN_IDS=${newAdminIds}`;
+      }
+      writeFileSync(envPath, content, 'utf8');
+    }
+
+    res.json({ success: true, adminIds: newAdminIds });
+  } catch (error) {
+    res.status(500).json({ message: 'Ошибка удаления администратора', error: String(error) });
   }
 }
