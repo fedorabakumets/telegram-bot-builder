@@ -224,17 +224,39 @@
 
 ---
 
-## 11. Просмотр и редактирование кода через бота
+## 11. Скачивание файлов проекта через бота
 
-**Идея:** Кнопка "🐍 Код" — показывает первые N строк сгенерированного Python кода.
+**Идея:** Кнопка "� Файлы проекта" — меню скачивания всех файлов прямо в Telegram.
 
-**Что уже есть:**
-- `CodePanel.tsx` — панель кода с форматами: Python, JSON, Requirements, README, Dockerfile, .env
-- `POST /api/projects/:id/generate` — генерация кода
+**Что уже есть в `CodePanel` (6 форматов):**
+- `python` — основной код бота (`bot.py`)
+- `json` — структура проекта (`project.json`)
+- `requirements` — зависимости (`requirements.txt`)
+- `readme` — документация (`README.md`)
+- `dockerfile` — контейнеризация (`Dockerfile`)
+- `env` — переменные окружения (`.env`)
+
+Все генерируются через `useCodeGenerator` → `generateContent(format)`.
 
 **Что нужно:**
-- Bot-версия генерации с возвратом первых 3000 символов
-- Кнопки "Скачать полный файл" / "Показать ещё"
+- Эндпоинт `GET /api/bot/projects/:id/files/:format?telegram_id={user_id}` —
+  генерирует файл нужного формата и возвращает как `Content-Disposition: attachment`
+- Флоу в сценарии: кнопка "📦 Файлы" → меню форматов → HTTP GET → `sendDocument`
+
+**Меню форматов:**
+```
+[🐍 Python]  [📋 JSON]
+[📦 Requirements]
+[📖 README]
+[🐳 Dockerfile]
+[🔑 .env]
+[◀️ К проекту]
+```
+
+**Файлы:**
+- `server/routes/userProjectsTokens/handlers/projects/` — новый хендлер `getBotProjectFileHandler.ts`
+- `lib/bot-generator` — уже есть `generateRequirementsTxt`, `generateReadme`, `generateDockerfile`, `generateEnvFile`
+- `bots/новый/новый.json` — новый лист "Файлы проекта"
 
 ---
 
@@ -248,9 +270,10 @@
 | 2 | Дублирование проекта | Средняя | Высокая |
 | 3 | Статистика проекта | Средняя | Высокая |
 | 7 | Пагинация проектов | Средняя | Высокая |
-| 1.1 | Экспорт JSON | Средняя | Средняя |
-| 1.2 | Экспорт Python | Средняя | Средняя |
+| 11 | Скачивание файлов (Python/JSON/README/Dockerfile/.env) | Средняя | Высокая |
+| 1.1 | Экспорт JSON проекта | Средняя | Средняя |
+| 1.2 | Экспорт Python-кода | Средняя | Средняя |
 | 8 | Google Sheets через бота | Средняя | Средняя |
 | 9 | База данных через бота | Средняя | Средняя |
 | 10 | Сценарии через бота | Высокая | Средняя |
-| 1.3 | Импорт JSON | Высокая | Средняя |
+| 1.3 | Импорт JSON через файл в чате | Высокая | Средняя |
