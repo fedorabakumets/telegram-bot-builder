@@ -12,6 +12,7 @@ import { handleLogin } from "./auth/handlers/loginHandler";
 import { handleTelegramAuth } from "./auth/handlers/telegramAuthHandler";
 import { handleGetUser } from "./auth/handlers/getUserHandler";
 import { handleMiniAppAuth } from "./auth/handlers/miniAppAuthHandler";
+import { handleDevLogin } from "./auth/handlers/devLoginHandler";
 
 /**
  * Настраивает маршруты аутентификации через Telegram
@@ -25,4 +26,5 @@ export function setupAuthRoutes(app: Express): void {
     app.post("/api/auth/telegram", handleTelegramAuth);
     app.get("/api/auth/telegram/user/:id", handleGetUser);
     app.post("/api/auth/telegram/miniapp", handleMiniAppAuth);
+    app.post("/api/auth/dev-login", handleDevLogin);
 }

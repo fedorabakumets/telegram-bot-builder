@@ -577,6 +577,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
+   * Переносит ВСЕ гостевые проекты (owner_id IS NULL) к пользователю.
+   * Используется в dev-режиме для восстановления проектов после перезапуска сервера.
+   * @param ownerId - ID нового владельца
+   */
+  async migrateAllGuestProjects(ownerId: number): Promise<void> {
+    await this.db.update(botProjects)
+      .set({ ownerId, sessionId: null })
+      .where(isNull(botProjects.ownerId));
+  }
+
+  /**
    * Получить токены ботов пользователя из базы данных
    * @param ownerId - ID владельца
    * @param projectId - Опциональный ID проекта для фильтрации

@@ -356,6 +356,13 @@ export interface IStorage {
   migrateGuestProjects(sessionId: string, ownerId: number): Promise<void>;
 
   /**
+   * Переносит ВСЕ гостевые проекты (owner_id IS NULL) к пользователю.
+   * Используется в dev-режиме для восстановления проектов после перезапуска.
+   * @param ownerId - ID нового владельца
+   */
+  migrateAllGuestProjects(ownerId: number): Promise<void>;
+
+  /**
    * Получить токены ботов пользователя
    * @param ownerId - ID владельца
    * @param projectId - Опциональный ID проекта для фильтрации
