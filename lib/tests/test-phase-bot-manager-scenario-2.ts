@@ -391,6 +391,94 @@ test('O08', 'синтаксис Python OK (блок O)', () => {
   ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
 });
 
+// ══ Блок Q: Расширенная карточка токена ═══════════════════════════════════════
+console.log('\n══ Блок Q: Расширенная карточка токена ═══════════════════════════════');
+
+test('Q01', 'fetch-token-status делает GET к /api/bot/tokens/.../status', () => {
+  ok(code.includes('fetch_token_status'), 'узел fetch-token-status не найден');
+  ok(code.includes('/api/bot/tokens/'), 'URL /api/bot/tokens/ не найден в fetch-token-status');
+  ok(code.includes('/status'), 'путь /status не найден в fetch-token-status');
+});
+
+test('Q02', 'token-card-msg показывает статус токена через token_status', () => {
+  ok(code.includes('token_card_msg'), 'узел token-card-msg не найден');
+  ok(code.includes('token_status'), 'переменная token_status не найдена в token-card-msg');
+});
+
+test('Q03', 'token-actions-keyboard содержит кнопки Запустить и Остановить', () => {
+  ok(code.includes('token_actions_keyboard'), 'узел token-actions-keyboard не найден');
+  ok(code.includes('Запустить'), 'кнопка "Запустить" не найдена в token-actions-keyboard');
+  ok(code.includes('Остановить'), 'кнопка "Остановить" не найдена в token-actions-keyboard');
+});
+
+test('Q04', 'token-actions-keyboard содержит кнопку Администраторы', () => {
+  ok(code.includes('Администраторы'), 'кнопка "Администраторы" не найдена в token-actions-keyboard');
+});
+
+test('Q05', 'token-action-start делает POST к /api/projects/.../bot/start с tokenId', () => {
+  ok(code.includes('token_action_start'), 'узел token-action-start не найден');
+  ok(code.includes('/bot/start'), 'URL /bot/start не найден в token-action-start');
+  ok(code.includes('tokenId'), 'поле tokenId не найдено в body token-action-start');
+});
+
+test('Q06', 'token-action-stop делает POST к /api/projects/.../bot/stop с tokenId', () => {
+  ok(code.includes('token_action_stop'), 'узел token-action-stop не найден');
+  ok(code.includes('/bot/stop'), 'URL /bot/stop не найден в token-action-stop');
+  ok(code.includes('tokenId'), 'поле tokenId не найдено в body token-action-stop');
+});
+
+test('Q07', 'check-token-start-status и check-token-stop-status присутствуют в коде', () => {
+  ok(code.includes('check_token_start_status'), 'узел check-token-start-status не найден');
+  ok(code.includes('check_token_stop_status'), 'узел check-token-stop-status не найден');
+});
+
+test('Q08', 'token-action-result-msg и token-action-error-msg присутствуют в коде', () => {
+  ok(code.includes('token_action_result_msg'), 'узел token-action-result-msg не найден');
+  ok(code.includes('token_action_error_msg'), 'узел token-action-error-msg не найден');
+});
+
+test('Q09', 'token-result-keyboard содержит кнопки "К токену" и "К токенам"', () => {
+  ok(code.includes('token_result_keyboard'), 'узел token-result-keyboard не найден');
+  ok(code.includes('К токену'), 'кнопка "К токену" не найдена в token-result-keyboard');
+  ok(code.includes('К токенам'), 'кнопка "К токенам" не найдена в token-result-keyboard');
+});
+
+test('Q10', 'fetch-token-admins делает GET к /api/projects/.../admin-ids', () => {
+  ok(code.includes('fetch_token_admins'), 'узел fetch-token-admins не найден');
+  ok(code.includes('/admin-ids'), 'URL /admin-ids не найден в fetch-token-admins');
+});
+
+test('Q11', 'token-admins-msg показывает список администраторов через admins_data', () => {
+  ok(code.includes('token_admins_msg'), 'узел token-admins-msg не найден');
+  ok(code.includes('admins_data'), 'переменная admins_data не найдена в token-admins-msg');
+});
+
+test('Q12', 'token-admins-keyboard содержит кнопку "Добавить"', () => {
+  ok(code.includes('token_admins_keyboard'), 'узел token-admins-keyboard не найден');
+  ok(code.includes('Добавить'), 'кнопка "Добавить" не найдена в token-admins-keyboard');
+});
+
+test('Q13', 'ask-admin-id-input собирает ввод в переменную new_admin_id', () => {
+  ok(code.includes('ask_admin_id_input'), 'узел ask-admin-id-input не найден');
+  ok(code.includes('new_admin_id'), 'переменная new_admin_id не найдена');
+});
+
+test('Q14', 'add-admin-action делает PUT к /api/projects/.../admin-ids', () => {
+  ok(code.includes('add_admin_action'), 'узел add-admin-action не найден');
+  ok(code.includes('/admin-ids'), 'URL /admin-ids не найден в add-admin-action');
+  ok(code.includes('PUT') || code.includes('put'), 'метод PUT не найден в add-admin-action');
+});
+
+test('Q15', 'add-admin-success-msg и add-admin-error-msg присутствуют в коде', () => {
+  ok(code.includes('add_admin_success_msg'), 'узел add-admin-success-msg не найден');
+  ok(code.includes('add_admin_error_msg'), 'узел add-admin-error-msg не найден');
+});
+
+test('Q16', 'синтаксис Python OK для всего расширенного сценария (блок Q)', () => {
+  const r = checkSyntax(code, 'q16');
+  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
+});
+
 // ══ Итог ══════════════════════════════════════════════════════════════════════
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
