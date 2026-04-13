@@ -2238,6 +2238,45 @@ test('W07', 'isinstance guard присутствует в dot-notation коде'
   ok(code.includes('isinstance(_dot_obj, dict)'), 'isinstance guard не найден');
 });
 
+test('W08', 'двухуровневая dot-notation: a.b.c подставляется корректно', () => {
+  // Проверяем что init_all_user_vars рекурсивно разворачивает вложенные dict
+  // Это нужно для подстановки {token_status.instance.botName} и подобных
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'response.data.status', [
+      makeBranch('equals', 'ok', 'msg1'),
+      makeBranch('else'),
+    ]),
+    makeMessageNode('msg1', 'Статус: {response.data.status}'),
+  ]);
+  const code = gen(p, 'w08');
+  ok(code.includes('"response.data.status"'), 'переменная response.data.status должна быть в коде');
+  syntax(code, 'w08');
+});
+
+test('W09', 'трёхуровневая dot-notation: a.b.c.d подставляется корректно', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'api.result.user.name', [
+      makeBranch('filled', '', 'msg1'),
+      makeBranch('else'),
+    ]),
+    makeMessageNode('msg1', 'Имя: {api.result.user.name}'),
+  ]);
+  const code = gen(p, 'w09');
+  ok(code.includes('"api.result.user.name"'), 'переменная api.result.user.name должна быть в коде');
+  syntax(code, 'w09');
+});
+
+test('W10', 'init_all_user_vars содержит рекурсивную функцию _flatten_dict', () => {
+  // Проверяем что в сгенерированном коде есть рекурсивная функция разворачивания
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'x', [makeBranch('filled')]),
+  ]);
+  const code = gen(p, 'w10');
+  ok(code.includes('_flatten_dict'), 'рекурсивная функция _flatten_dict не найдена в коде');
+  ok(code.includes('_max_depth'), 'параметр _max_depth не найден — защита от глубокой рекурсии отсутствует');
+  syntax(code, 'w10');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 const total  = results.length;

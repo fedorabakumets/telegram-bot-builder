@@ -68,19 +68,31 @@
 
 ---
 
-## 6. Dot-notation глубже одного уровня
+## 6. Dot-notation глубже одного уровня ✅ Выполнено
 
-**Проблема:** `init_all_user_vars` разворачивает dict-значения только на один уровень (`a.b` работает, `a.b.c` — нет).
+**Проблема:** `init_all_user_vars` разворачивал dict-значения только на один уровень (`a.b` работало, `a.b.c` — нет).
 
-**Что нужно:** Рекурсивно разворачивать вложенные dict:
+**Реализовано:** Рекурсивная функция `_flatten_dict` с защитой `max_depth=5`:
 ```python
-# Сейчас: project_detail.name → "Новый проект"
-# Нужно: project_detail.address.city → "Москва"
+def _flatten_dict(_prefix, _obj, _result, _depth=0, _max_depth=5):
+    if _depth > _max_depth: return
+    if isinstance(_obj, dict):
+        for _dk, _dv in _obj.items():
+            _flatten_dict(f"{_prefix}.{_dk}", _dv, _result, _depth + 1, _max_depth)
+    elif isinstance(_obj, (str, int, float, bool)) and _obj is not None:
+        _result[_prefix] = str(_obj)
 ```
 
+Теперь работает:
+- `project_detail.name` → "Новый проект" (1 уровень)
+- `token_status.status` → "stopped" (1 уровень)
+- `token_status.instance.botName` → "блогстотеп" (2 уровня)
+- `api.result.user.name` → "Иван" (3 уровня)
+
 **Файлы:**
-- `lib/templates/utils/utils.py.jinja2` — функция `init_all_user_vars`, блок разворачивания `_flat_keys`
-- `lib/tests/test-phase4-condition.ts` — добавить тесты W08-W10 для глубокой вложенности
+- `lib/templates/utils/utils.py.jinja2` — функция `init_all_user_vars`, рекурсивный `_flatten_dict`
+- `lib/tests/test-phase4-condition.ts` — тесты W08-W10
+- `lib/tests/test-phase-bot-manager-scenario-2.ts` — тесты R01-R03
 
 ---
 

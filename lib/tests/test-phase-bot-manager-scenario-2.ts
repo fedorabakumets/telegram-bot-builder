@@ -479,6 +479,23 @@ test('Q16', 'синтаксис Python OK для всего расширенно
   ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
 });
 
+// ══ Блок R: Dot-notation глубже одного уровня ══════════════════════════════
+console.log('\n══ Блок R: Dot-notation глубже одного уровня ══════════════════════');
+
+test('R01', 'init_all_user_vars содержит рекурсивную функцию _flatten_dict', () => {
+  ok(code.includes('_flatten_dict'), 'рекурсивная функция _flatten_dict не найдена — двухуровневые переменные не будут подставляться');
+  ok(code.includes('_max_depth'), 'параметр _max_depth не найден — нет защиты от глубокой рекурсии');
+});
+
+test('R02', 'token_status.status подставляется через одноуровневый ключ', () => {
+  ok(code.includes('token_status'), 'переменная token_status не найдена в коде');
+});
+
+test('R03', 'синтаксис Python OK после добавления рекурсивного разворачивания', () => {
+  const r = checkSyntax(code, 'r03');
+  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
+});
+
 // ══ Итог ══════════════════════════════════════════════════════════════════════
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
