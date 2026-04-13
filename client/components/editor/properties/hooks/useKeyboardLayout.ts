@@ -28,9 +28,14 @@ export interface UseKeyboardLayoutReturn {
  * Хук для управления раскладкой клавиатуры
  * @param buttons - Массив кнопок узла
  * @param initialLayout - Начальная раскладка (опционально)
+ * @param onLayoutChange - Колбэк при изменении раскладки (вызывается синхронно)
  * @returns Объект с методами управления
  */
-export function useKeyboardLayout(buttons: Button[], initialLayout?: KeyboardLayout): UseKeyboardLayoutReturn {
+export function useKeyboardLayout(
+  buttons: Button[],
+  initialLayout?: KeyboardLayout,
+  onLayoutChange?: (layout: KeyboardLayout) => void,
+): UseKeyboardLayoutReturn {
   const [layout, setLayout] = useState<KeyboardLayout>(() => {
     if (initialLayout) return initialLayout;
     return createLayoutFromButtons(buttons, 2);
@@ -49,53 +54,74 @@ export function useKeyboardLayout(buttons: Button[], initialLayout?: KeyboardLay
 
   // Синхронизируем раскладку при изменении количества кнопок
   useEffect(() => {
-    const currentButtonsLength = buttons.length;
-    const prevButtonsLength = prevButtonsLengthRef.current;
-
-    // Обновляем только если количество кнопок изменилось
-    if (currentButtonsLength !== prevButtonsLength) {
-      if (layout.autoLayout) {
-        setLayout(createLayoutFromButtons(buttons, layout.columns));
-      } else {
-        // В ручном режиме тоже пересоздаём, если количество изменилось
-        setLayout(createLayoutFromButtons(buttons, layout.columns));
-      }
-      prevButtonsLengthRef.current = currentButtonsLength;
+    const currentLen = buttons.length;
+    if (currentLen !== prevButtonsLengthRef.current) {
+      setLayout(createLayoutFromButtons(buttons, layout.columns));
+      prevButtonsLengthRef.current = currentLen;
     }
-  }, [buttons.length, layout.autoLayout, layout.columns]);
+  }, [buttons.length, layout.columns]);
 
+  /**
+   * Устанавливает количество колонок и уведомляет об изменении
+   * @param columns - Новое количество колонок
+   */
   const setColumns = useCallback((columns: number) => {
-    setLayout(prev => updateLayoutColumns(prev, buttons, columns));
-  }, [buttons]);
+    setLayout(prev => {
+      const next = updateLayoutColumns(prev, buttons, columns);
+      onLayoutChange?.(next);
+      return next;
+    });
+  }, [buttons, onLayoutChange]);
 
+  /**
+   * Переключает режим авто-раскладки и уведомляет об изменении
+   */
   const toggleAutoLayout = useCallback(() => {
     setLayout(prev => {
-      const newAutoLayout = !prev.autoLayout;
-      // При включении авто-раскладки сбрасываем до 2 колонок
-      if (newAutoLayout) {
-        return createLayoutFromButtons(buttons, 2);
-      }
-      return { ...prev, autoLayout: newAutoLayout };
+      const next = !prev.autoLayout
+        ? createLayoutFromButtons(buttons, 2)
+        : { ...prev, autoLayout: false };
+      onLayoutChange?.(next);
+      return next;
     });
-  }, [buttons]);
+  }, [buttons, onLayoutChange]);
 
+  /**
+   * Перемещает кнопку и уведомляет об изменении синхронно
+   * @param buttonId - ID перемещаемой кнопки
+   * @param toRow - Целевой ряд
+   * @param toIndex - Позиция в ряду
+   */
   const moveButtonCallback = useCallback((buttonId: string, toRow: number, toIndex: number) => {
-    setLayout(prev => moveButton(prev, buttonId, toRow, toIndex));
-  }, []);
+    setLayout(prev => {
+      const next = moveButton(prev, buttonId, toRow, toIndex);
+      onLayoutChange?.(next);
+      return next;
+    });
+  }, [onLayoutChange]);
 
+  /**
+   * Добавляет пустой ряд и уведомляет об изменении
+   */
   const addRow = useCallback(() => {
-    setLayout(prev => ({
-      ...prev,
-      rows: [...prev.rows, { buttonIds: [] }],
-    }));
-  }, []);
+    setLayout(prev => {
+      const next = { ...prev, rows: [...prev.rows, { buttonIds: [] }] };
+      onLayoutChange?.(next);
+      return next;
+    });
+  }, [onLayoutChange]);
 
+  /**
+   * Удаляет ряд по индексу и уведомляет об изменении
+   * @param rowIndex - Индекс удаляемого ряда
+   */
   const removeRow = useCallback((rowIndex: number) => {
-    setLayout(prev => ({
-      ...prev,
-      rows: prev.rows.filter((_, idx) => idx !== rowIndex),
-    }));
-  }, []);
+    setLayout(prev => {
+      const next = { ...prev, rows: prev.rows.filter((_, idx) => idx !== rowIndex) };
+      onLayoutChange?.(next);
+      return next;
+    });
+  }, [onLayoutChange]);
 
   return useMemo(() => ({
     layout,

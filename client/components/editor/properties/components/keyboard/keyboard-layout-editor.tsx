@@ -29,6 +29,8 @@ export interface KeyboardLayoutEditorProps {
 /**
  * Компонент редактора раскладки клавиатуры
  * Предоставляет визуальный интерфейс для управления расположением кнопок
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
 export function KeyboardLayoutEditor({
   buttons,
@@ -37,35 +39,9 @@ export function KeyboardLayoutEditor({
   dynamicButtonsConfig,
 }: KeyboardLayoutEditorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const prevLayoutRef = React.useRef<KeyboardLayout | null>(null);
 
-  const {
-    layout,
-    setColumns,
-    toggleAutoLayout,
-    moveButton,
-    addRow,
-    removeRow,
-  } = useKeyboardLayout(buttons, initialLayout);
-
-  // Вызываем onLayoutChange при изменении раскладки
-  React.useEffect(() => {
-    // Проверяем, действительно ли layout изменился
-    const prevLayout = prevLayoutRef.current;
-    
-    if (prevLayout) {
-      const rowsChanged = JSON.stringify(prevLayout.rows) !== JSON.stringify(layout.rows);
-      const autoLayoutChanged = prevLayout.autoLayout !== layout.autoLayout;
-      const columnsChanged = prevLayout.columns !== layout.columns;
-      
-      if (!rowsChanged && !autoLayoutChanged && !columnsChanged) {
-        return; // Layout не изменился, не вызываем onLayoutChange
-      }
-    }
-
-    prevLayoutRef.current = { ...layout, rows: layout.rows.map(r => ({ ...r, buttonIds: [...r.buttonIds] })) };
-    onLayoutChange?.(layout);
-  }, [layout, onLayoutChange]);
+  const { layout, setColumns, toggleAutoLayout, moveButton, addRow, removeRow } =
+    useKeyboardLayout(buttons, initialLayout, onLayoutChange);
 
   if (buttons.length === 0) {
     return null;
@@ -73,7 +49,7 @@ export function KeyboardLayoutEditor({
 
   return (
     <Card className="transition-all">
-      <CardHeader 
+      <CardHeader
         className="cursor-pointer py-4"
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -88,7 +64,7 @@ export function KeyboardLayoutEditor({
             <div>
               <CardTitle className="text-base">Расположение кнопок</CardTitle>
               <CardDescription className="text-xs mt-0.5">
-                {layout.autoLayout 
+                {layout.autoLayout
                   ? `Авто: ${layout.columns} ${layout.columns === 1 ? 'колонка' : layout.columns < 5 ? 'колонки' : 'колонок'}`
                   : `Ручная: ${layout.rows.length} ${layout.rows.length === 1 ? 'ряд' : layout.rows.length < 5 ? 'ряда' : 'рядов'}`
                 }
