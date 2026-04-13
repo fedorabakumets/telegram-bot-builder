@@ -400,9 +400,10 @@ test('Q01', 'fetch-token-status делает GET к /api/bot/tokens/.../status',
   ok(code.includes('/status'), 'путь /status не найден в fetch-token-status');
 });
 
-test('Q02', 'token-card-msg показывает статус токена через token_status', () => {
+test('Q02', 'token-card-msg показывает статус и ID токена через двухуровневую dot-notation', () => {
   ok(code.includes('token_card_msg'), 'узел token-card-msg не найден');
   ok(code.includes('token_status'), 'переменная token_status не найдена в token-card-msg');
+  ok(code.includes('token_status.instance.tokenId'), 'двухуровневая переменная token_status.instance.tokenId не найдена — рекурсивное разворачивание не работает');
 });
 
 test('Q03', 'token-actions-keyboard содержит кнопки Запустить и Остановить', () => {
