@@ -7,6 +7,7 @@ import { registerRoutes } from "./routes/routes";
 import { log, serveStatic, setupVite } from "./routes/vite";
 import { storage } from "./storages/storage";
 import { initializeTerminalWebSocket } from './terminal/initializeTerminalWebSocket';
+import { initRedisPlatformSubscriber } from './redis/redisPlatformSubscriber';
 import { stopCleanup } from "./utils/cache";
 import { shutdownAllBots } from "./utils/graceful-shutdown";
 import { runMigrations } from "./database/runMigrations";
@@ -124,6 +125,8 @@ app.use((req, res, next) => {
 
   // Инициализируем WebSocket-сервер для терминала
   initializeTerminalWebSocket(httpServer);
+  // Подписываемся на Redis Pub/Sub события платформы
+  initRedisPlatformSubscriber();
 
   // Важно настраивать Vite только в режиме разработки и после
   // настройки всех остальных маршрутов, чтобы маршрут catch-all
