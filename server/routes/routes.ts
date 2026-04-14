@@ -396,7 +396,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   let store: session.Store;
   const redisClient = getRedisPublisher();
   if (redisClient) {
-    const { default: RedisStore } = await import('connect-redis');
+    const { RedisStore } = await import('connect-redis');
     store = new RedisStore({ client: redisClient as any, prefix: 'sess:' });
     console.log('[Session] Хранилище сессий: Redis');
   } else {
