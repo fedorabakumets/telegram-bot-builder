@@ -15,7 +15,7 @@ const REQUIRED_PYTHON_PATTERNS = [
   { pattern: 'import asyncio', name: 'import asyncio' },
   { pattern: 'Bot', name: 'Bot (from aiogram import Bot)' },
   { pattern: 'Dispatcher', name: 'Dispatcher (from aiogram import Dispatcher)' },
-  { pattern: 'Dispatcher()', name: 'Dispatcher() инициализация' },
+  { pattern: 'Dispatcher(', name: 'Dispatcher() инициализация' },
   { pattern: 'async def main():', name: 'async def main():' },
   { pattern: 'if __name__ == "__main__":', name: 'if __name__ == "__main__":' },
   { pattern: 'asyncio.run(main())', name: 'asyncio.run(main())' }
