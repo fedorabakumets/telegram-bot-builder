@@ -14,6 +14,7 @@
 import { BotDatabaseToggle } from './BotDatabaseToggle';
 import { BotAutoRestartToggle } from './BotAutoRestartToggle';
 import { BotExecutionTimer } from './BotExecutionTimer';
+import { BotLogLevelSelect } from './BotLogLevelSelect';
 import { BotAdminIds } from '../profile/BotAdminIds';
 import { BotLaunchHistory } from './BotLaunchHistory';
 import type { BotStatusResponse } from '../bot-types';
@@ -36,7 +37,7 @@ interface BotSettingsGridProps {
   /** Статусы всех ботов */
   allBotStatuses: BotStatusResponse[];
   /** Данные токена для настроек автоперезапуска */
-  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts'>;
+  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel'>;
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: {
     /** Флаг ожидания ответа */
@@ -77,6 +78,11 @@ export function BotSettingsGrid({
         tokenId={tokenId}
         autoRestart={token.autoRestart}
         maxRestartAttempts={token.maxRestartAttempts}
+      />
+      <BotLogLevelSelect
+        projectId={projectId}
+        tokenId={tokenId}
+        logLevel={token.logLevel ?? 'WARNING'}
       />
       {isBotRunning && (
         <BotExecutionTimer

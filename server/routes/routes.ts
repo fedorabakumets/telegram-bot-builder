@@ -1088,6 +1088,26 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  /**
+   * Обновление уровня логирования для токена бота
+   * PUT /api/projects/:projectId/tokens/:tokenId/log-level
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/log-level", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const { logLevel } = req.body as { logLevel: string };
+      const valid = ['DEBUG', 'INFO', 'WARNING', 'ERROR'];
+      if (!valid.includes(logLevel)) {
+        return res.status(400).json({ message: "Недопустимый уровень логирования" });
+      }
+      const updated = await storage.updateBotToken(tokenId, { logLevel });
+      if (!updated) return res.status(404).json({ message: "Токен не найден" });
+      res.json({ success: true, logLevel });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления уровня логирования" });
+    }
+  });
+
   // Set default token
   app.post("/api/projects/:projectId/tokens/:tokenId/set-default", async (req, res) => {
     try {

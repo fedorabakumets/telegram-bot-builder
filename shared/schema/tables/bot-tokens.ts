@@ -58,6 +58,8 @@ export const botTokens = pgTable("bot_tokens", {
   autoRestart: integer("auto_restart").default(0),
   /** Максимальное количество попыток автоперезапуска подряд */
   maxRestartAttempts: integer("max_restart_attempts").default(3),
+  /** Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) */
+  logLevel: text("log_level").default("WARNING"),
   /** Дата создания токена */
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления токена */
@@ -133,6 +135,8 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   autoRestart: z.number().min(0).max(1).default(0),
   /** Максимальное количество попыток автоперезапуска подряд */
   maxRestartAttempts: z.number().min(1).max(10).default(3),
+  /** Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) */
+  logLevel: z.enum(['DEBUG', 'INFO', 'WARNING', 'ERROR']).default('WARNING').optional(),
 });
 
 /** Тип записи токена бота */

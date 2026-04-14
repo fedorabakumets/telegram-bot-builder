@@ -12,12 +12,14 @@
  * @param {string} botToken - Токен бота для @BotFather
  * @param {string} adminIds - ID администраторов через запятую
  * @param {number} projectId - ID проекта
+ * @param {string} logLevel - Уровень логирования (DEBUG, INFO, WARNING, ERROR)
  * @returns {string} Содержимое .env файла
  */
 export function generateEnvFile(
   botToken: string = "YOUR_BOT_TOKEN_HERE",
   adminIds: string = "123456789",
-  projectId: number = 1
+  projectId: number = 1,
+  logLevel: string = "WARNING"
 ): string {
   const envLines: string[] = [];
 
@@ -44,7 +46,7 @@ export function generateEnvFile(
   envLines.push('API_TIMEOUT=10');
   envLines.push('');
   envLines.push('# Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL)');
-  envLines.push('LOG_LEVEL=INFO');
+  envLines.push('LOG_LEVEL=' + logLevel);
   envLines.push('');
   envLines.push('# Отключить логирование asyncpg (true/false)');
   envLines.push('DISABLE_ASYNC_LOG=true');
