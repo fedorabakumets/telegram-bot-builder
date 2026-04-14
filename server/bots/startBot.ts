@@ -281,7 +281,10 @@ export async function startBot(projectId: number, token: string, tokenId: number
         BOT_TOKEN: token,
         API_BASE_URL: process.env.NODE_ENV === 'production'
           ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost:5000'}`
-          : 'http://localhost:5000'
+          : 'http://localhost:5000',
+        // Прокидываем REDIS_URL из окружения сервера в процесс бота
+        // На Railway задаётся через переменную окружения сервиса
+        ...(process.env.REDIS_URL ? { REDIS_URL: process.env.REDIS_URL } : {})
       }
     });
 
