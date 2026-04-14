@@ -89,30 +89,46 @@ async def check_auth(user_id: int) -> bool:
 async def init_all_user_vars(user_id: int) -> dict:
     """Собирает все переменные пользователя из локального хранилища и БД.
 
-    После сборки разворачивает dict-значения в плоские ключи вида "var.field",
-    чтобы подстановка {project_detail.name} работала через прямой поиск по ключу
-    даже если dot-notation парсинг в replace_variables_in_text недоступен.
+    Использует кэш с TTL для снижения нагрузки на БД при быстрой навигации.
+    Кэш хранит данные из БД на VARS_CACHE_TTL секунд — память (user_data) всегда актуальна.
 
     Returns:
         dict: Объединённый словарь всех переменных пользователя,
               включая плоские ключи вида "responseVar.field"
     """
+    import time as _time
     all_vars = dict(user_data.get(user_id, {}))
 {%- if userDatabaseEnabled %}
     try:
         if db_pool:
-            async with db_pool.acquire() as conn:
-                row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1 AND project_id = $2", user_id, PROJECT_ID)
-                if row:
-                    for key in row.keys():
-                        if row[key] is not None:
-                            all_vars[key] = row[key]
-                    raw_user_data = row.get('user_data')
-                    if raw_user_data:
-                        import json as _json
-                        extra = _json.loads(raw_user_data) if isinstance(raw_user_data, str) else raw_user_data
-                        if isinstance(extra, dict):
-                            all_vars.update(extra)
+            # Проверяем кэш — если данные свежие, пропускаем SELECT
+            _cached = _vars_cache.get(user_id)
+            _now = _time.monotonic()
+            if _cached and (_now - _cached[0]) < VARS_CACHE_TTL:
+                # Кэш актуален: мёрджим кэшированные данные БД с актуальной памятью
+                _db_vars = _cached[1]
+                _merged = dict(_db_vars)
+                _merged.update(all_vars)  # память имеет приоритет
+                all_vars = _merged
+            else:
+                # Кэш устарел — идём в БД
+                async with db_pool.acquire() as conn:
+                    row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1 AND project_id = $2", user_id, PROJECT_ID)
+                    if row:
+                        _db_snapshot = {}
+                        for key in row.keys():
+                            if row[key] is not None:
+                                all_vars[key] = row[key]
+                                _db_snapshot[key] = row[key]
+                        raw_user_data = row.get('user_data')
+                        if raw_user_data:
+                            import json as _json
+                            extra = _json.loads(raw_user_data) if isinstance(raw_user_data, str) else raw_user_data
+                            if isinstance(extra, dict):
+                                all_vars.update(extra)
+                                _db_snapshot.update(extra)
+                        # Сохраняем снимок БД в кэш
+                        _vars_cache[user_id] = (_now, _db_snapshot)
     except Exception as e:
         logging.warning(f"⚠️ Не удалось загрузить переменные из БД: {e}")
 {%- endif %}
@@ -147,6 +163,7 @@ async def set_user_var(user_id: int, key: str, value) -> None:
 
     Запись в память — синхронная (мгновенно), запись в БД — fire-and-forget (фоново).
     Следующий узел прочитает актуальное значение из user_data без ожидания БД.
+    Инвалидирует кэш _vars_cache чтобы следующий init_all_user_vars взял свежие данные.
 
     Args:
         user_id (int): ID пользователя Telegram
@@ -156,6 +173,8 @@ async def set_user_var(user_id: int, key: str, value) -> None:
     if user_id not in user_data:
         user_data[user_id] = {}
     user_data[user_id][key] = value
+    # Инвалидируем кэш — данные изменились, следующий запрос пойдёт в БД
+    _vars_cache.pop(user_id, None)
 {%- if userDatabaseEnabled %}
     # Fire-and-forget: запись в БД идёт в фоне, не блокируя ответ пользователю
     asyncio.create_task(_persist_user_var(user_id, key, value))

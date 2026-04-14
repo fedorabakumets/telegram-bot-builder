@@ -57,6 +57,12 @@ logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")
 user_data = {}
 all_user_vars = {}  # Глобальные переменные пользователя
 
+# Кэш переменных пользователя из БД — снижает нагрузку при быстрой навигации
+# Ключ: user_id, значение: (timestamp, db_snapshot_dict)
+_vars_cache: dict = {}
+# TTL кэша переменных в секундах (настраивается через .env)
+VARS_CACHE_TTL: int = int(os.getenv("VARS_CACHE_TTL", "5"))
+
 {# Кастомное FSM-хранилище на основе PostgreSQL #}
 # Кастомное хранилище FSM на основе PostgreSQL (bot_users.user_data JSONB)
 # Примечание: update_user_data_in_db определяется позже в файле — это нормально для Python
