@@ -12,6 +12,7 @@ import { setupBotProcessListeners } from "./setupBotProcessListeners";
 import { startFlushTimer, flushBuffer } from "./botLogsBuffer";
 import { storage } from "../storages/storage";
 import { TerminalMessage } from "./TerminalMessage";
+import { exportedSessionMiddleware } from "../routes/routes";
 import "express-session";
 
 /**
@@ -51,7 +52,16 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
   wss.on("connection", (ws: WebSocket, request) => {
     console.log("Новое WebSocket-соединение для терминала");
 
-    const urlParams = new URLSearchParams(request.url?.split("?")[1]);
+    // Прикрепляем Express-сессию к WS запросу чтобы получить userId
+    const applySession = (): Promise<void> => new Promise((resolve) => {
+      if (!exportedSessionMiddleware) return resolve();
+      exportedSessionMiddleware(request as any, {} as any, resolve);
+    });
+
+    (async () => {
+      await applySession();
+
+      const urlParams = new URLSearchParams(request.url?.split("?")[1]);
     const projectIdStr = urlParams.get("projectId");
     const tokenIdStr = urlParams.get("tokenId");
 
@@ -106,6 +116,7 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
         console.warn("Некорректное сообщение от клиента:", data.toString());
       }
     });
+    })();
   });
 
   wss.on("error", (error) => {

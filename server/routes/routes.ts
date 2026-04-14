@@ -1,13 +1,19 @@
 import { insertBotTemplateSchema, insertBotTokenSchema, insertUserBotDataSchema } from "@shared/schema";
 import { ChildProcess } from "child_process";
 import PostgresStore from "connect-pg-simple";
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
 import session from "express-session";
 import { existsSync, mkdirSync, unlinkSync } from "fs";
 import { type Server } from "http";
 import multer from "multer";
 import { join } from "path";
 import { Pool } from "pg";
+
+/**
+ * Экспортируемый экземпляр session middleware для использования в WebSocket.
+ * Инициализируется в registerRoutes() и позволяет прикрепить сессию к WS запросам.
+ */
+export let exportedSessionMiddleware: RequestHandler | null = null;
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { cleanupBotStates } from "../bots/cleanupBotStates";
@@ -393,7 +399,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   const PostgresStoreConstructor = (PostgresStore as any)(session);
   const store = new PostgresStoreConstructor({ pool: pgPool });
 
-  app.use(session({
+  const sessionMiddleware = session({
     store: store,
     secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
     resave: false,
@@ -406,7 +412,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     }
-  }));
+  });
+
+  app.use(sessionMiddleware);
+  // Экспортируем для использования в WebSocket (прикрепление сессии к WS запросам)
+  exportedSessionMiddleware = sessionMiddleware;
 
   // Import projects from files in bots directory (public route - no auth required)
   app.get("/api/projects/import-from-files", async (_req, res) => {
