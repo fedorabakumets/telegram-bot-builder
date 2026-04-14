@@ -95,6 +95,11 @@ app.post('/api/webhook/:projectId/:tokenId', async (req, res) => {
 
 ### Управление портами
 
+> ⚠️ Схема "один порт на бота" работает только при небольшом количестве ботов (до ~50000 портов ОС).
+> При масштабировании до миллионов ботов нужен shared Python сервер (см. ниже).
+
+**Для малого масштаба (до ~1000 ботов):**
+
 Каждый бот получает уникальный порт для своего HTTP сервера:
 
 ```typescript
@@ -103,6 +108,19 @@ const BASE_WEBHOOK_PORT = 9000;
 const getBotWebhookPort = (projectId: number, tokenId: number) =>
   BASE_WEBHOOK_PORT + tokenId;
 ```
+
+**Для большого масштаба (1000+ ботов) — Shared Python сервер:**
+
+Один Python процесс (worker) слушает один порт, внутри него зарегистрированы все боты:
+
+```
+Telegram → POST /api/webhook/{projectId}/{tokenId}
+         → Node.js → Worker HTTP сервер (один порт)
+                   → диспетчеризация по tokenId
+                   → нужный bot dispatcher
+```
+
+Это объединяет webhook режим с worker pool архитектурой из `bot-worker-pool.md`.
 
 ### startBot.ts
 
