@@ -33,6 +33,28 @@ async def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     try:
+        # Distributed lock через Redis — защита от двойного запуска
+        # Если REDIS_URL задан и бот уже запущен — завершаемся
+        _lock_acquired = False
+        if REDIS_URL and _redis_client is not None:
+            _lock_key = f"bot:lock:{BOT_TOKEN[-10:]}"
+            _lock_acquired = await _redis_client.set(_lock_key, "1", nx=True, ex=60)
+            if not _lock_acquired:
+                logging.warning("⚠️ Бот уже запущен (Redis lock занят). Завершаем дублирующий процесс.")
+                return
+            logging.info("🔒 Redis lock получен — бот запускается")
+
+            # Фоновая задача: обновляем lock каждые 30 секунд пока бот работает
+            async def _refresh_lock():
+                while True:
+                    await asyncio.sleep(30)
+                    try:
+                        await _redis_client.expire(_lock_key, 60)
+                    except Exception:
+                        pass
+
+            asyncio.create_task(_refresh_lock())
+
         {%- if userDatabaseEnabled %}
         await init_database()
         {%- endif %}
@@ -90,6 +112,14 @@ async def main():
         if db_pool:
             await db_pool.close()
         {%- endif %}
+
+        # Освобождаем Redis lock при завершении
+        if REDIS_URL and _redis_client is not None and _lock_acquired:
+            try:
+                await _redis_client.delete(f"bot:lock:{BOT_TOKEN[-10:]}")
+                logging.info("🔓 Redis lock освобождён")
+            except Exception:
+                pass
 
         await bot.session.close()
 
