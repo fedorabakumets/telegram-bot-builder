@@ -54,8 +54,7 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
     if (tokens.length === 0) return;
     tokens.forEach((token: BotToken, index: number) => {
       const statusResponse = tokenStatuses[index]?.data as BotStatusResponse | undefined;
-      if (statusResponse?.status === 'running' && statusResponse?.instance) {
-        // Добавляем вкладку только если её ещё нет
+      if (statusResponse?.status === 'running') {
         const alreadyOpen = terminals.some(
           t => t.projectId === token.projectId && t.tokenId === token.id && t.tabType !== 'history'
         );
@@ -69,7 +68,8 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
         }
       }
     });
-  }, [tokens, tokenStatuses, projectId, projectName]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokens, ...tokenStatuses.map(s => (s.data as BotStatusResponse | undefined)?.status)]);
 
   // Обработчик запуска бота
   const handleBotStarted = (projectId: number, tokenId: number, botName: string) => {
