@@ -34,6 +34,11 @@ async def incoming_callback_trigger_{{ sanitized_node_id }}_middleware(handler, 
         {%- endif %}
         {%- endif %}
         logging.info(f"Нажатие кнопки от {user_id} — триггер узла {{ entry.nodeId }}")
+        # Сразу убираем анимацию загрузки — до выполнения любой логики
+        try:
+            await event.answer()
+        except Exception:
+            pass
         # Сохраняем данные нажатой кнопки
         if user_id not in user_data:
             user_data[user_id] = {}
