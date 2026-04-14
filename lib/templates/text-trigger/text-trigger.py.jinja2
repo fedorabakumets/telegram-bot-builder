@@ -25,7 +25,7 @@
 {% else %}
 @dp.message(lambda message: message.text and "{{ synonym | lower }}" in message.text.lower())
 {% endif %}
-async def text_trigger_{{ sanitized_node_id }}_{{ sanitized_synonym }}_handler(message: types.Message):
+async def text_trigger_{{ sanitized_node_id }}_{{ sanitized_synonym }}_handler(message: types.Message, state: FSMContext = None):
     # Текстовый триггер для узла {{ entry.nodeId }}, фраза: {{ synonym }}
     user_id = message.from_user.id
     logging.info(f"Пользователь {user_id} написал '{{ synonym }}' — триггер узла {{ entry.nodeId }}")
@@ -58,7 +58,7 @@ async def text_trigger_{{ sanitized_node_id }}_{{ sanitized_synonym }}_handler(m
                 return await self.message.answer(text, **kwargs)
 
     mock_callback = MockCallback("{{ entry.targetNodeId }}", message.from_user, message)
-    await handle_callback_{{ sanitized_target_id }}(mock_callback)
+    await handle_callback_{{ sanitized_target_id }}(mock_callback, state=state)
 
 {% endfor %}
 {% endfor %}
