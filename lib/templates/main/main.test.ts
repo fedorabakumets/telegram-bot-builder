@@ -255,6 +255,30 @@ describe('main.py.jinja2 шаблон', () => {
         const result = generateMain({ userDatabaseEnabled: false });
         assert.ok(!result.includes('drop_pending_updates'));
       });
+
+      it('должен содержать distributed lock через Redis', () => {
+        const result = generateMain({ userDatabaseEnabled: false });
+        assert.ok(result.includes('bot:lock:'), 'Redis lock ключ не найден');
+        assert.ok(result.includes('_lock_acquired'), '_lock_acquired не найден');
+        assert.ok(result.includes('nx=True'), 'nx=True (атомарный SET NX) не найден');
+      });
+
+      it('должен освобождать lock в finally', () => {
+        const result = generateMain({ userDatabaseEnabled: false });
+        assert.ok(result.includes('_lock_acquired'), 'освобождение lock не найдено');
+        assert.ok(result.includes('_redis_client.delete'), '_redis_client.delete не найден в finally');
+      });
+
+      it('должен обновлять lock TTL через _refresh_lock', () => {
+        const result = generateMain({ userDatabaseEnabled: false });
+        assert.ok(result.includes('_refresh_lock'), 'фоновая задача _refresh_lock не найдена');
+        assert.ok(result.includes('expire'), 'expire для обновления TTL не найден');
+      });
+
+      it('lock не блокирует запуск если Redis недоступен', () => {
+        const result = generateMain({ userDatabaseEnabled: false });
+        assert.ok(result.includes('if REDIS_URL and _redis_client is not None'), 'проверка доступности Redis не найдена');
+      });
     });
   });
 });

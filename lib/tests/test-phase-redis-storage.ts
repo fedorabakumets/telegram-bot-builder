@@ -207,6 +207,38 @@ test('E03', 'синтаксис Python OK (реальный проект)', () =
   syntax(codeReal, 'e03');
 });
 
+// ══ Блок F: Distributed lock ══════════════════════════════════════════════════
+console.log('\n══ Блок F: Distributed lock ══════════════════════════════════════════');
+
+test('F01', 'bot:lock: ключ присутствует в main()', () => {
+  ok(codeNoDb.includes('bot:lock:'), 'Redis lock ключ bot:lock: не найден');
+});
+
+test('F02', '_lock_acquired присутствует', () => {
+  ok(codeNoDb.includes('_lock_acquired'), '_lock_acquired не найден');
+});
+
+test('F03', 'nx=True — атомарный SET NX для lock', () => {
+  ok(codeNoDb.includes('nx=True'), 'nx=True не найден — lock не атомарный');
+});
+
+test('F04', '_refresh_lock обновляет TTL каждые 30 секунд', () => {
+  ok(codeNoDb.includes('_refresh_lock'), 'фоновая задача _refresh_lock не найдена');
+  ok(codeNoDb.includes('expire'), 'expire для обновления TTL не найден');
+});
+
+test('F05', 'lock освобождается в finally', () => {
+  ok(codeNoDb.includes('_redis_client.delete'), '_redis_client.delete не найден в finally');
+});
+
+test('F06', 'lock не блокирует запуск если Redis недоступен', () => {
+  ok(codeNoDb.includes('if REDIS_URL and _redis_client is not None'), 'проверка доступности Redis не найдена');
+});
+
+test('F07', 'синтаксис Python OK с distributed lock', () => {
+  syntax(codeNoDb, 'f07');
+});
+
 // ══ Итог ══════════════════════════════════════════════════════════════════════
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
