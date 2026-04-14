@@ -260,11 +260,17 @@ test('G03', 'публикация событий защищена проверк
 });
 
 test('G04', 'публикация событий не блокирует запуск при ошибке (try/except)', () => {
-  // Проверяем что publish обёрнут в try/except
-  const idx = codeNoDb.indexOf('_redis_client.publish');
-  ok(idx !== -1, '_redis_client.publish не найден');
-  const surrounding = codeNoDb.slice(Math.max(0, idx - 200), idx + 200);
-  ok(surrounding.includes('try:') && surrounding.includes('except'), 'publish не обёрнут в try/except');
+  // Проверяем что все вызовы publish обёрнуты в try/except
+  // Ищем по всему коду — блоки publish могут быть на расстоянии > 200 символов от try:
+  const publishCount = (codeNoDb.match(/_redis_client\.publish/g) || []).length;
+  ok(publishCount >= 2, `ожидалось >= 2 вызова publish, найдено ${publishCount}`);
+  // Каждый блок if REDIS_URL and _redis_client is not None с publish должен содержать try/except
+  const segments = codeNoDb.split('if REDIS_URL and _redis_client is not None');
+  const publishSegments = segments.filter(s => s.includes('_redis_client.publish'));
+  ok(publishSegments.length >= 2, `ожидалось >= 2 сегмента с publish, найдено ${publishSegments.length}`);
+  publishSegments.forEach((seg, i) => {
+    ok(seg.includes('try:') && seg.includes('except'), `сегмент ${i + 1} с publish не обёрнут в try/except`);
+  });
 });
 
 test('G05', 'синтаксис Python OK с Pub/Sub событиями', () => {
