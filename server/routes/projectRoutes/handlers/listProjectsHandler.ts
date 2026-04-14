@@ -10,6 +10,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
 import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegram/auth-middleware";
+import { ensureDefaultProject } from "../../../utils/ensureDefaultProject";
 
 /**
  * Обрабатывает запрос на получение списка проектов
@@ -33,6 +34,12 @@ export async function listProjectsHandler(req: Request, res: Response): Promise<
             projects = sessionId
                 ? await storage.getGuestBotProjectsBySession(sessionId)
                 : await storage.getGuestBotProjects();
+
+            // Если у гостя нет проектов — создаём дефолтный для его сессии
+            if (projects.length === 0 && sessionId) {
+                await ensureDefaultProject(sessionId);
+                projects = await storage.getGuestBotProjectsBySession(sessionId);
+            }
         }
 
         const projectsList = projects.map(({ data, ...metadata }) => metadata);

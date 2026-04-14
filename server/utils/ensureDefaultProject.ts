@@ -1,58 +1,51 @@
+/**
+ * @fileoverview Утилита создания проекта по умолчанию
+ * @module server/utils/ensureDefaultProject
+ */
+
 import { InsertBotProject } from "@shared/schema";
 import { storage } from "../storages/storage";
 
+/** Данные стартового узла для нового проекта по умолчанию */
+const DEFAULT_START_NODE = {
+  id: "start",
+  type: "start",
+  position: { x: 100, y: 100 },
+  data: {
+    messageText: "Привет! Я ваш новый бот. Нажмите /help для получения помощи.",
+    keyboardType: "none",
+    buttons: [],
+    resizeKeyboard: true,
+    oneTimeKeyboard: false,
+  },
+};
+
 /**
- * Гарантирует существование хотя бы одного проекта по умолчанию в системе.
+ * Гарантирует существование хотя бы одного проекта для указанной сессии или глобально.
  *
- * @returns Promise<void> - Асинхронная операция без возвращаемого значения
+ * Если `sessionId` передан — проверяет проекты гостя по сессии и создаёт
+ * дефолтный проект привязанный к этой сессии. Без `sessionId` — проверяет
+ * все проекты в системе (используется при старте сервера).
  *
- * @description
- * Эта асинхронная функция проверяет наличие проектов в системе. Если ни одного проекта нет,
- * она создает проект по умолчанию с базовой конфигурацией Telegram-бота, включающей:
- * - Название "Мой первый бот"
- * - Описание "Базовый бот с приветствием"
- * - Включенную базу данных пользователей
- * - Стартовый узел с приветственным сообщением
- *
- * Функция используется при инициализации системы для обеспечения наличия начального проекта,
- * с которым пользователь может начать работу.
- *
- * @example
- * ```typescript
- * await ensureDefaultProject();
- * // Если в системе не было проектов, будет создан проект по умолчанию
- * ```
- *
- * @throws {Error} Выбрасывает ошибку в случае проблем с хранилищем данных
+ * @param sessionId - ID сессии гостя (опционально)
+ * @returns Промис без возвращаемого значения
  */
-export async function ensureDefaultProject() {
+export async function ensureDefaultProject(sessionId?: string): Promise<void> {
   try {
-    const projects = await storage.getAllBotProjects();
+    const projects = sessionId
+      ? await storage.getGuestBotProjectsBySession(sessionId)
+      : await storage.getAllBotProjects();
+
     if (projects.length === 0) {
-      // Создать проект по умолчанию, если ни одного не существует
       const defaultProject: InsertBotProject = {
         name: "Мой первый бот",
         description: "Базовый бот с приветствием",
         userDatabaseEnabled: 1,
-        data: {
-          nodes: [
-            {
-              id: "start",
-              type: "start",
-              position: { x: 100, y: 100 },
-              data: {
-                messageText: "Привет! Я ваш новый бот. Нажмите /help для получения помощи.",
-                keyboardType: "none",
-                buttons: [],
-                resizeKeyboard: true,
-                oneTimeKeyboard: false
-              }
-            }
-          ]
-        }
+        sessionId: sessionId ?? null,
+        data: { nodes: [DEFAULT_START_NODE] },
       };
       await storage.createBotProject(defaultProject);
-      console.log("✅ Создан проект по умолчанию");
+      console.log("✅ Создан проект по умолчанию", sessionId ? `для сессии ${sessionId}` : "(глобальный)");
     }
   } catch (error) {
     console.error("❌ Ошибка создания проекта по умолчанию:", error);
