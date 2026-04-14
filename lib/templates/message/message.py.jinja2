@@ -39,7 +39,7 @@
 {# Декоратор слушает только nodeId — виртуальные триггеры для customCallbackData #}
 {# генерируются отдельно через collectVirtualCallbackTriggerEntries #}
 @dp.callback_query(lambda c: c.data == "{{ nodeId }}" or c.data.startswith("{{ nodeId }}_btn_"))
-async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery):
+async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery, state: FSMContext = None):
     """Обработчик перехода к узлу {{ nodeId }}"""
     user_id = callback_query.from_user.id
     logging.info(f"🔵 Переход к узлу {{ nodeId }} для пользователя {user_id}")
@@ -370,7 +370,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 
     fake_callback = FakeCallbackQuery(sent_message or callback_query.message, callback_query.from_user, "{{ autoTransitionTo }}")
     try:
-        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(fake_callback)
+        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(fake_callback, state=state)
         logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
     except Exception as e:
         logging.error(f"Ошибка при автопереходе к узлу {{ autoTransitionTo }}: {e}")

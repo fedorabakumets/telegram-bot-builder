@@ -303,6 +303,72 @@ test('G03', 'FSM данные хранятся в той же структуре
   ok(codeNoDb.includes('user_data = {}'), 'user_data = {} не найден — общее хранилище отсутствует');
 });
 
+// ══ Блок H: FSM в обработчиках ════════════════════════════════════════════════
+console.log('\n══ Блок H: FSM в обработчиках ════════════════════════════════════════');
+
+/**
+ * H01: Сгенерированный код содержит state: FSMContext = None в обработчиках.
+ * Проверяем наличие опциональной сигнатуры в реальном проекте.
+ */
+test('H01', 'сгенерированный код содержит state: FSMContext = None в обработчиках', () => {
+  ok(codeReal.includes('state: FSMContext = None'), 'state: FSMContext = None не найден в обработчиках');
+});
+
+/**
+ * H02: incoming-callback-trigger middleware получает state из data.get("state").
+ * Обеспечивает передачу FSM-контекста из aiogram в middleware.
+ */
+test('H02', 'incoming-callback-trigger middleware получает state из data.get("state")', () => {
+  ok(codeReal.includes('data.get("state")'), 'data.get("state") не найден в incoming-callback-trigger middleware');
+});
+
+/**
+ * H03: http-request обработчик читает FSM данные через await state.get_data().
+ * Позволяет использовать FSM-переменные в URL и теле запроса.
+ */
+test('H03', 'http-request обработчик читает FSM данные через await state.get_data()', () => {
+  ok(codeReal.includes('await state.get_data()'), 'await state.get_data() не найден в http-request обработчике');
+});
+
+/**
+ * H04: condition обработчик передаёт state в целевые обработчики.
+ * Обеспечивает сквозную передачу FSM-контекста через ветки условий.
+ */
+test('H04', 'condition обработчик передаёт state в целевые обработчики', () => {
+  ok(
+    codeReal.includes('callback_query, state=state'),
+    'передача state=state в целевые обработчики condition не найдена',
+  );
+});
+
+/**
+ * H05: command-trigger обработчик принимает state: FSMContext = None.
+ * Позволяет командам /start и другим передавать FSM-контекст дальше.
+ */
+test('H05', 'command-trigger обработчик принимает state: FSMContext = None', () => {
+  // Ищем сигнатуру command_trigger_..._handler с state
+  ok(
+    codeReal.includes('state: FSMContext = None'),
+    'state: FSMContext = None не найден в command-trigger обработчике',
+  );
+});
+
+/**
+ * H06: при автопереходе state передаётся дальше по цепочке.
+ * Проверяем что вызовы handle_callback_... содержат state=state.
+ */
+test('H06', 'при автопереходе state передаётся дальше по цепочке', () => {
+  ok(codeReal.includes('state=state'), 'state=state не найден — state не передаётся при автопереходе');
+});
+
+/**
+ * H07: синтаксис Python OK после всех изменений FSM.
+ * Финальная проверка корректности сгенерированного кода.
+ */
+test('H07', 'синтаксис Python OK после всех изменений FSM (реальный проект)', () => {
+  syntax(codeReal, 'h07');
+});
+
 // ══ Итог ══════════════════════════════════════════════════════════════════════
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

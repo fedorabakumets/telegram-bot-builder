@@ -4,12 +4,16 @@
   сохраняет ответ в переменную пользователя и автоматически сохраняет
   скалярные поля словаря-ответа как плоские переменные вида responseVariable.field.
   Это позволяет использовать {response_var.field} в URL и текстах последующих узлов.
+
+  @fsm Принимает опциональный state: FSMContext = None.
+       Читает FSM-данные поверх user_data (FSM имеет приоритет).
+       Передаёт state при автопереходе.
 #}
 
 # Обработчик HTTP запроса: {{ nodeId }}
 
 @dp.callback_query(lambda c: c.data == "{{ nodeId }}")
-async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
+async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, state: FSMContext = None):
     """Выполняет HTTP запрос и сохраняет ответ в переменную."""
     user_id = callback_query.from_user.id
     await init_user_variables(user_id, callback_query.from_user)
@@ -21,6 +25,14 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
         pass
 
     _all_vars = await init_all_user_vars(user_id)
+    # Читаем данные из FSM если доступен — они имеют приоритет над user_data
+    if state is not None:
+        try:
+            _fsm_data = await state.get_data()
+            if _fsm_data:
+                _all_vars.update(_fsm_data)
+        except Exception:
+            pass
 
     # Подставляем переменные в URL
     _url = "{{ url }}"
@@ -143,7 +155,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery):
 
     {% if autoTransitionTo %}
     {% if autoTransitionTargetExists %}
-    await handle_callback_{{ autoTransitionTo | replace('-', '_') | replace('.', '_') }}(callback_query)
+    await handle_callback_{{ autoTransitionTo | replace('-', '_') | replace('.', '_') }}(callback_query, state=state)
     {% else %}
     logging.warning(f"⚠️ http_request [{{ nodeId }}]: узел автоперехода не найден: {{ autoTransitionTo }}")
     {% endif %}

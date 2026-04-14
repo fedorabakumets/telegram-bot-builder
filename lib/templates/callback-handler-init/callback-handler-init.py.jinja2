@@ -30,3 +30,11 @@
 {{ ind }}# Сохраняем фильтры переменных из узла
 {{ ind }}user_data[user_id]["_variable_filters"] = {{ variableFilters | dump }}
 {% endif %}
+{{ ind }}# Синхронизируем FSM данные с user_data если state доступен
+{{ ind }}if state is not None:
+{{ ind }}    try:
+{{ ind }}        _fsm_d = await state.get_data()
+{{ ind }}        if _fsm_d:
+{{ ind }}            user_data[user_id].update(_fsm_d)
+{{ ind }}    except Exception:
+{{ ind }}        pass

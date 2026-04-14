@@ -22,7 +22,7 @@
 {%- else -%}
 @dp.callback_query(lambda c: c.data == "{{ entry.callbackData }}")
 {%- endif %}
-async def callback_trigger_{{ sanitized_node_id }}_handler(callback_query: types.CallbackQuery):
+async def callback_trigger_{{ sanitized_node_id }}_handler(callback_query: types.CallbackQuery, state: FSMContext = None):
     user_id = callback_query.from_user.id
     logging.info(f"Пользователь {user_id} нажал кнопку '{{ entry.callbackData }}' — триггер узла {{ entry.nodeId }}")
     {%- if entry.adminOnly %}
@@ -83,6 +83,6 @@ async def callback_trigger_{{ sanitized_node_id }}_handler(callback_query: types
         pass
 
     mock_callback = MockCallback("{{ entry.targetNodeId }}", callback_query.from_user, callback_query.message)
-    await handle_callback_{{ sanitized_target_id }}(mock_callback)
+    await handle_callback_{{ sanitized_target_id }}(mock_callback, state=state)
 
 {% endfor %}

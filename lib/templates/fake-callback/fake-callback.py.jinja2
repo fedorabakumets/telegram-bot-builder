@@ -27,4 +27,4 @@
 {{ ind }}    message=fake_message,
 {{ ind }}    answer=noop
 {{ ind }})
-{{ ind }}await handle_callback_{{ safeFunctionName }}(fake_callback)
+{{ ind }}await handle_callback_{{ safeFunctionName }}(fake_callback, state=state if 'state' in dir() else None)

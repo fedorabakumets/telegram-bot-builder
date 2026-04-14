@@ -5,6 +5,9 @@
     - nodeId: string          — ID узла incoming_callback_trigger
     - targetNodeId: string    — ID целевого узла
     - targetNodeType: string  — тип целевого узла
+
+  @fsm Middleware получает state из data["state"] и сохраняет callback_data в FSM.
+       Передаёт state целевому обработчику для сквозной передачи по цепочке.
 #}
 
 # Middleware триггеров входящих callback_query
@@ -51,6 +54,15 @@ async def incoming_callback_trigger_{{ sanitized_node_id }}_middleware(handler, 
         except Exception:
             pass
         user_data[user_id]["button_text"] = _ict_btn_text
+        # Синхронизируем callback_data в FSM если state доступен в контексте middleware
+        try:
+            _fsm_state = data.get("state")
+            if _fsm_state is not None:
+                _fsm_data = await _fsm_state.get_data()
+                _fsm_data["callback_data"] = event.data or ""
+                await _fsm_state.set_data(_fsm_data)
+        except Exception:
+            pass
 
         class MockCallback:
             def __init__(self, data, user, msg):
@@ -70,7 +82,9 @@ async def incoming_callback_trigger_{{ sanitized_node_id }}_middleware(handler, 
                     return await self.message.answer(text, **kwargs)
 
         mock_callback = MockCallback("{{ entry.targetNodeId }}", event.from_user, event.message)
-        await handle_callback_{{ sanitized_target_id }}(mock_callback)
+        # Передаём state целевому обработчику для сквозной передачи по цепочке
+        _state_for_target = data.get("state")
+        await handle_callback_{{ sanitized_target_id }}(mock_callback, state=_state_for_target)
     except Exception as e:
         logging.error(f"Ошибка в incoming_callback_trigger middleware: {e}")
 
