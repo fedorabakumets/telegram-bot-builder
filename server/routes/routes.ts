@@ -38,6 +38,7 @@ import { fetchWithProxy } from "../utils/telegram-proxy";
 import { setupAuthRoutes } from "./setupAuthRoutes";
 import { setupBotIntegrationRoutes } from "./setupBotIntegrationRoutes";
 import { setupGithubPushRoute } from './setupGithubPushRoute';
+import { getRedisPublisher } from "../redis/redisClient";
 import { setupProjectRoutes } from "./setupProjectRoutes";
 import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes";
 import { setupUserTemplateRoutes } from "./setupUserTemplateRoutes";
@@ -391,13 +392,21 @@ async function initializeComponents() {
  * ```
  */
 export async function registerRoutes(app: Express, httpServer?: Server): Promise<Server> {
-  // Инициализируем session middleware с PostgreSQL store
-  const pgPool = new (await import('pg')).Pool({
-    connectionString: process.env.DATABASE_URL
-  });
-
-  const PostgresStoreConstructor = (PostgresStore as any)(session);
-  const store = new PostgresStoreConstructor({ pool: pgPool });
+  // Создаём store: Redis если доступен, иначе PostgreSQL (fallback)
+  let store: session.Store;
+  const redisClient = getRedisPublisher();
+  if (redisClient) {
+    const { default: RedisStore } = await import('connect-redis');
+    store = new RedisStore({ client: redisClient as any, prefix: 'sess:' });
+    console.log('[Session] Хранилище сессий: Redis');
+  } else {
+    const pgPool = new (await import('pg')).Pool({
+      connectionString: process.env.DATABASE_URL
+    });
+    const PostgresStoreConstructor = (PostgresStore as any)(session);
+    store = new PostgresStoreConstructor({ pool: pgPool });
+    console.log('[Session] Хранилище сессий: PostgreSQL (Redis недоступен)');
+  }
 
   const sessionMiddleware = session({
     store: store,
