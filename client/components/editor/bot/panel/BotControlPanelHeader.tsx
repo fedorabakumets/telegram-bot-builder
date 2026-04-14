@@ -9,6 +9,8 @@
 
 import { Button } from '@/components/ui/button';
 import { Bot, Plus } from 'lucide-react';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { isGuest } from '@/types/telegram-user';
 
 /** Свойства заголовка панели управления ботами */
 interface BotControlPanelHeaderProps {
@@ -20,6 +22,9 @@ interface BotControlPanelHeaderProps {
  * Заголовок панели управления ботами
  */
 export function BotControlPanelHeader({ onConnectBot }: BotControlPanelHeaderProps) {
+  const { user } = useTelegramAuth();
+  const isGuestUser = !user || isGuest(user);
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
       <div className="min-w-0">
@@ -35,17 +40,19 @@ export function BotControlPanelHeader({ onConnectBot }: BotControlPanelHeaderPro
           Управление ботами из всех проектов
         </p>
       </div>
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Button
-          variant="outline"
-          onClick={onConnectBot}
-          className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto border-border hover:bg-accent h-9 px-3 sm:px-4 text-sm"
-          data-testid="button-connect-bot"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Подключить бот</span>
-        </Button>
-      </div>
+      {!isGuestUser && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            variant="outline"
+            onClick={onConnectBot}
+            className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto border-border hover:bg-accent h-9 px-3 sm:px-4 text-sm"
+            data-testid="button-connect-bot"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Подключить бот</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
