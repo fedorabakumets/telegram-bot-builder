@@ -36,10 +36,9 @@ export function ProjectBotsList({ project, projectTokens, projectBotInfo }: Proj
         const tokenStatus = allBotStatuses.find(
           s => s.tokenId === token.id || s.instance?.tokenId === token.id,
         );
-        // Считаем бота запущенным если статус running ИЛИ есть локальный таймер (запущен только что)
-        const isThisTokenRunning =
-          tokenStatus?.status === 'running' ||
-          (currentElapsedSeconds[token.id] !== undefined && currentElapsedSeconds[token.id] > 0);
+        // Считаем бота запущенным только если статус running из API
+        // currentElapsedSeconds не используем — он не очищается на вкладках где не нажимали стоп
+        const isThisTokenRunning = tokenStatus?.status === 'running';
 
         return (
           <BotCard
