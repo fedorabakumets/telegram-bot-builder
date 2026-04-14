@@ -51,6 +51,11 @@ export function generateEnvFile(
   envLines.push('# Отключить логирование asyncpg (true/false)');
   envLines.push('DISABLE_ASYNC_LOG=true');
   envLines.push('');
+  envLines.push('# Redis URL (опционально — для кэша и FSM хранилища)');
+  envLines.push('# Локально: redis://localhost:6379');
+  envLines.push('# Railway: задаётся автоматически через ${{Redis.REDIS_URL}}');
+  envLines.push('# REDIS_URL=redis://localhost:6379');
+  envLines.push('');
 
   return envLines.join('\n');
 }

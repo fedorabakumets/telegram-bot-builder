@@ -1,0 +1,61 @@
+{#
+  Шаблон Redis-хранилища для FSM aiogram
+
+  @fileoverview Класс RedisStorage — хранит FSM состояния в Redis с TTL 24 часа.
+  Используется когда REDIS_URL задан в .env бота.
+  Обратно совместим с PostgresStorage: при отсутствии REDIS_URL не используется.
+#}
+class RedisStorage(BaseStorage):
+    """Хранит FSM состояния в Redis. Используется когда REDIS_URL задан в .env."""
+
+    def __init__(self, redis_client):
+        """
+        @param redis_client - Клиент redis.asyncio
+        """
+        self._redis = redis_client
+
+    async def set_state(self, key: StorageKey, state: StateType = None) -> None:
+        """Сохраняет FSM состояние в Redis с TTL 24 часа."""
+        uid = key.user_id
+        val = state.state if state else ""
+        await self._redis.setex(f"fsm:state:{uid}", 86400, val or "")
+        # Синхронизируем с user_data для совместимости
+        if uid not in user_data:
+            user_data[uid] = {}
+        user_data[uid]["__fsm_state__"] = val
+
+    async def get_state(self, key: StorageKey) -> str | None:
+        """Читает FSM состояние из Redis."""
+        uid = key.user_id
+        val = await self._redis.get(f"fsm:state:{uid}")
+        if val is None:
+            return None
+        decoded = val.decode() if isinstance(val, bytes) else val
+        return decoded if decoded else None
+
+    async def set_data(self, key: StorageKey, data: dict) -> None:
+        """Сохраняет FSM данные в Redis с TTL 24 часа."""
+        import json as _j
+        uid = key.user_id
+        val = _j.dumps(data, ensure_ascii=False)
+        await self._redis.setex(f"fsm:data:{uid}", 86400, val)
+        if uid not in user_data:
+            user_data[uid] = {}
+        user_data[uid]["__fsm_data__"] = val
+
+    async def get_data(self, key: StorageKey) -> dict:
+        """Читает FSM данные из Redis."""
+        import json as _j
+        uid = key.user_id
+        raw = await self._redis.get(f"fsm:data:{uid}")
+        if not raw:
+            return {}
+        try:
+            decoded = raw.decode() if isinstance(raw, bytes) else raw
+            return _j.loads(decoded)
+        except Exception:
+            return {}
+
+    async def close(self) -> None:
+        """Закрывает соединение с Redis."""
+        await self._redis.aclose()

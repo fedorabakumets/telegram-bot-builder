@@ -414,7 +414,6 @@ test('H12', 'синтаксис Python OK для реального проект
 
 // ══ Блок I: Полнота FSM в цепочках ═══════════════════════════════════════════
 console.log('\n══ Блок I: Полнота FSM в цепочках ════════════════════════════════════');
-
 /**
  * I01: incoming-message-trigger передаёт state из data.
  * Проверяем что шаблон содержит data.get("state") для извлечения FSM-контекста.
@@ -453,6 +452,57 @@ test('I02', 'сгенерированный код НЕ содержит handle_
  */
 test('I03', 'синтаксис Python OK для реального проекта после всех исправлений', () => {
   syntax(codeReal, 'i03');
+});
+
+// ══ Блок J: Redis интеграция ══════════════════════════════════════════════════
+console.log('\n══ Блок J: Redis интеграция ══════════════════════════════════════════');
+
+/**
+ * J01: код содержит REDIS_URL = os.getenv("REDIS_URL").
+ * Проверяем что переменная окружения для Redis читается из .env.
+ */
+test('J01', 'код содержит REDIS_URL = os.getenv("REDIS_URL")', () => {
+  ok(codeNoDb.includes('REDIS_URL = os.getenv("REDIS_URL")'), 'REDIS_URL = os.getenv("REDIS_URL") не найден');
+});
+
+/**
+ * J02: код содержит class RedisStorage(BaseStorage).
+ * Проверяем что класс Redis-хранилища присутствует в сгенерированном коде.
+ */
+test('J02', 'код содержит class RedisStorage(BaseStorage)', () => {
+  ok(codeNoDb.includes('class RedisStorage(BaseStorage)'), 'class RedisStorage(BaseStorage) не найден');
+});
+
+/**
+ * J03: RedisStorage содержит методы set_state, get_state, set_data, get_data.
+ * Проверяем полноту реализации интерфейса BaseStorage в обоих классах.
+ */
+test('J03', 'RedisStorage содержит методы set_state, get_state, set_data, get_data', () => {
+  const setStateCount = (codeNoDb.match(/async def set_state/g) || []).length;
+  const getStateCount = (codeNoDb.match(/async def get_state/g) || []).length;
+  const setDataCount  = (codeNoDb.match(/async def set_data/g)  || []).length;
+  const getDataCount  = (codeNoDb.match(/async def get_data/g)  || []).length;
+  ok(setStateCount >= 2, `set_state должен быть в обоих классах, найдено: ${setStateCount}`);
+  ok(getStateCount >= 2, `get_state должен быть в обоих классах, найдено: ${getStateCount}`);
+  ok(setDataCount  >= 2, `set_data должен быть в обоих классах, найдено: ${setDataCount}`);
+  ok(getDataCount  >= 2, `get_data должен быть в обоих классах, найдено: ${getDataCount}`);
+});
+
+/**
+ * J04: код содержит условный выбор if REDIS_URL: для FSM хранилища.
+ * Проверяем что выбор хранилища происходит динамически в runtime.
+ */
+test('J04', 'код содержит условный выбор if REDIS_URL: для FSM хранилища', () => {
+  ok(codeNoDb.includes('if REDIS_URL:'), 'условный блок if REDIS_URL: не найден');
+});
+
+/**
+ * J05: синтаксис Python OK после добавления Redis.
+ * Финальная проверка что новый код не сломал синтаксис ни в одной конфигурации.
+ */
+test('J05', 'синтаксис Python OK после добавления Redis', () => {
+  syntax(codeNoDb, 'j05');
+  syntax(codeWithDb, 'j05db');
 });
 
 // ══ Итог ══════════════════════════════════════════════════════════════════════

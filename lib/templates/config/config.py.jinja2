@@ -1,7 +1,7 @@
 {#
   Конфигурация бота
 
-  @fileoverview Настройки бота: токены, администраторы, проект
+  @fileoverview Настройки бота: токены, администраторы, проект, FSM-хранилище (PostgreSQL или Redis)
   @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей
   @param {number|null} projectId - ID проекта для сохранения в базу данных
 #}
@@ -63,6 +63,10 @@ _vars_cache: dict = {}
 # TTL кэша переменных в секундах (настраивается через .env)
 VARS_CACHE_TTL: int = int(os.getenv("VARS_CACHE_TTL", "5"))
 
+# Redis — опциональное хранилище (задаётся через REDIS_URL в .env)
+REDIS_URL = os.getenv("REDIS_URL")
+_redis_client = None
+
 {# Кастомное FSM-хранилище на основе PostgreSQL #}
 # Кастомное хранилище FSM на основе PostgreSQL (bot_users.user_data JSONB)
 # Примечание: update_user_data_in_db определяется позже в файле — это нормально для Python
@@ -109,22 +113,21 @@ class PostgresStorage(BaseStorage):
     async def close(self) -> None:
         pass
 
-{# Создание диспетчера с FSM-хранилищем #}
-# Создание диспетчера с кастомным FSM-хранилищем
-dp = Dispatcher(storage=PostgresStorage())
+{# Класс RedisStorage для FSM (используется если REDIS_URL задан) #}
+{%- include 'redis-storage/redis-storage.py.jinja2' %}
+
+{# Выбор FSM-хранилища: Redis если REDIS_URL задан, иначе PostgresStorage #}
+# Выбираем хранилище FSM: Redis если REDIS_URL задан, иначе PostgresStorage
+if REDIS_URL:
+    import redis.asyncio as _redis_lib
+    _redis_client = _redis_lib.from_url(REDIS_URL, decode_responses=False)
+    dp = Dispatcher(storage=RedisStorage(_redis_client))
+    logging.info("🔴 FSM хранилище: Redis")
+else:
+    dp = Dispatcher(storage=PostgresStorage())
+    logging.info("🐘 FSM хранилище: PostgreSQL")
 
 {# База данных #}
-{%- if userDatabaseEnabled %}
-# ┌─────────────────────────────────────────┐
-# │           Настройки базы данных         │
-# └─────────────────────────────────────────┘
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-# ┌─────────────────────────────────────────┐
-# │      Пул соединений с базой данных    │
-# └─────────────────────────────────────────┘
-db_pool = None
-{%- endif %}
 {%- if userDatabaseEnabled %}
 # ┌─────────────────────────────────────────┐
 # │           Настройки базы данных         │

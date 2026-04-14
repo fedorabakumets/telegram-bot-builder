@@ -26,7 +26,7 @@ export function generateRequirementsTxt(): string {
     '# pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles asyncpg',
     '',
     '# Optional dependencies for extended functionality',
-    '# redis>=5.0.1  # For session storage',
+    'redis>=5.0.1  # Для Redis кэша и FSM хранилища (опционально, нужен REDIS_URL в .env)',
     '# motor>=3.3.2  # For MongoDB',
     '# pillow>=10.1.0  # For image processing'
   ];
