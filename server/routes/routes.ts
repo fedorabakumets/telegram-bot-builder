@@ -1095,6 +1095,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.put("/api/projects/:projectId/tokens/:tokenId/log-level", async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
       const { logLevel } = req.body as { logLevel: string };
       const valid = ['DEBUG', 'INFO', 'WARNING', 'ERROR'];
       if (!valid.includes(logLevel)) {
@@ -1102,6 +1103,33 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       const updated = await storage.updateBotToken(tokenId, { logLevel });
       if (!updated) return res.status(404).json({ message: "Токен не найден" });
+
+      // Обновляем .env файл бота если существует
+      try {
+        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
+        const { join } = await import('path');
+        const botsDir = join(process.cwd(), 'bots');
+        if (existsSync(botsDir)) {
+          const dirs = readdirSync(botsDir, { withFileTypes: true });
+          for (const dir of dirs) {
+            if (!dir.isDirectory()) continue;
+            const envPath = join(botsDir, dir.name, '.env');
+            if (!existsSync(envPath)) continue;
+            const content = readFileSync(envPath, 'utf8');
+            // Проверяем что это .env нужного проекта/токена
+            if (!content.includes(`PROJECT_ID=${projectId}`) && !content.includes(`BOT_TOKEN=`)) continue;
+            const updated = content.replace(/^LOG_LEVEL=.*/m, `LOG_LEVEL=${logLevel}`);
+            if (updated !== content) {
+              writeFileSync(envPath, updated, 'utf8');
+              console.log(`✅ LOG_LEVEL обновлён в ${envPath}: ${logLevel}`);
+              break;
+            }
+          }
+        }
+      } catch (envErr) {
+        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
+      }
+
       res.json({ success: true, logLevel });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления уровня логирования" });
