@@ -178,6 +178,7 @@
     "http-proxy-agent": "^8.0.0",
     "https-proxy-agent": "^8.0.0",
     "input-otp": "^1.4.2",
+    "ioredis": "^5.10.1",
     "lucide-react": "^0.563.0",
     "memorystore": "^1.6.7",
     "multer": "^2.0.1",

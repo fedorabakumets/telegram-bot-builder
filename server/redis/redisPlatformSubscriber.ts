@@ -89,12 +89,19 @@ function handleMessage(_pattern: string, channel: string, message: string): void
  */
 /**
  * Инициализирует подписку на Redis-каналы событий платформы.
- * Если Redis недоступен — повторяет попытку через 3 секунды (async инициализация).
+ * Если Redis ещё не готов — повторяет попытку через 3 секунды, максимум 10 раз.
  */
 export function initRedisPlatformSubscriber(): void {
+  let attempts = 0;
+  const MAX_ATTEMPTS = 10;
+
   const tryInit = () => {
+    attempts++;
     if (!isRedisAvailable() || !getRedisSubscriber()) {
-      console.log('[RedisSub] Redis ещё не готов — повтор через 3с...');
+      if (attempts >= MAX_ATTEMPTS) {
+        console.log('[RedisSub] Redis недоступен — подписка отключена, используется прямой вызов');
+        return;
+      }
       setTimeout(tryInit, 3000);
       return;
     }
