@@ -294,3 +294,47 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
 {%- include 'navigation/navigate-to-node.py.jinja2' %}
 
 
+
+async def _publish_log_to_redis(level: str, message: str) -> None:
+    """Публикует строку лога в Redis канал для real-time доставки.
+    Вызывается параллельно с обычным logging — не блокирует основной поток.
+
+    @param level - Уровень лога: INFO, WARNING, ERROR, DEBUG
+    @param message - Текст сообщения
+    """
+    if _redis_client is None:
+        return
+    try:
+        import json as _json
+        from datetime import datetime as _dt
+        await _redis_client.publish(
+            f"bot:logs:{PROJECT_ID}:{TOKEN_ID}",
+            _json.dumps({
+                "level": level,
+                "message": message,
+                "timestamp": _dt.now().isoformat(),
+                "projectId": PROJECT_ID,
+                "tokenId": TOKEN_ID,
+            })
+        )
+    except Exception:
+        pass
+
+
+class _RedisLogHandler(logging.Handler):
+    """Logging handler для публикации логов в Redis Pub/Sub канал."""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Публикует запись лога в Redis асинхронно через create_task."""
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(_publish_log_to_redis(record.levelname, self.format(record)))
+        except RuntimeError:
+            pass  # Event loop не запущен — пропускаем
+
+
+# Регистрируем handler если Redis доступен
+if _redis_client is not None:
+    _redis_log_handler = _RedisLogHandler()
+    _redis_log_handler.setLevel(logging.INFO)
+    logging.getLogger().addHandler(_redis_log_handler)

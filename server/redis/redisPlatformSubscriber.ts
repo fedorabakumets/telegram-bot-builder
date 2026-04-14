@@ -5,8 +5,9 @@
  * @module server/redis/redisPlatformSubscriber
  */
 
-import { getRedisSubscriber, isRedisAvailable } from './redisClient';
+import { getRedisSubscriber } from './redisClient';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
+import { waitForRedis } from './waitForRedis';
 import type { ProjectEvent } from '../terminal/ProjectEvent';
 
 /**
@@ -85,27 +86,10 @@ function handleMessage(_pattern: string, channel: string, message: string): void
 
 /**
  * Инициализирует подписку на Redis-каналы событий платформы.
- * Если Redis недоступен — функция завершается без ошибок (fallback).
- */
-/**
- * Инициализирует подписку на Redis-каналы событий платформы.
  * Если Redis ещё не готов — повторяет попытку через 3 секунды, максимум 10 раз.
  */
 export function initRedisPlatformSubscriber(): void {
-  let attempts = 0;
-  const MAX_ATTEMPTS = 10;
-
-  const tryInit = () => {
-    attempts++;
-    if (!isRedisAvailable() || !getRedisSubscriber()) {
-      if (attempts >= MAX_ATTEMPTS) {
-        console.log('[RedisSub] Redis недоступен — подписка отключена, используется прямой вызов');
-        return;
-      }
-      setTimeout(tryInit, 3000);
-      return;
-    }
-
+  waitForRedis('[RedisSub]', () => {
     getRedisSubscriber()!.psubscribe(SUBSCRIBE_PATTERN).catch((err) =>
       console.error('[RedisSub] Ошибка psubscribe:', err)
     );
@@ -116,7 +100,7 @@ export function initRedisPlatformSubscriber(): void {
     });
 
     console.log(`[RedisSub] Подписка на паттерн "${SUBSCRIBE_PATTERN}" активна`);
-  };
-
-  tryInit();
+  }, () => {
+    console.log('[RedisSub] Redis недоступен — подписка отключена, используется прямой вызов');
+  });
 }
