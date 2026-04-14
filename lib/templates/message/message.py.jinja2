@@ -119,14 +119,16 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             user_data.setdefault(user_id, {})["_avatar_fetched"] = True
         except Exception as _e:
             logging.warning(f"⚠️ Не удалось получить аватарку для {user_id}: {_e}")
-    await save_user_to_db(user_id, username, first_name, last_name, _avatar_url)
+    # Fire-and-forget: сохранение профиля не блокирует отправку сообщения
+    asyncio.create_task(save_user_to_db(user_id, username, first_name, last_name, _avatar_url))
 
-    # Инициализируем базовые переменные пользователя
+    # Инициализируем базовые переменные пользователя (память — синхронно)
     user_name = await init_user_variables(user_id, callback_query.from_user)
-    await update_user_data_in_db(user_id, "user_name", user_name)
-    await update_user_data_in_db(user_id, "first_name", first_name)
-    await update_user_data_in_db(user_id, "last_name", last_name)
-    await update_user_data_in_db(user_id, "username", username)
+    # Fire-and-forget: обновление статистики в фоне
+    asyncio.create_task(update_user_data_in_db(user_id, "user_name", user_name))
+    asyncio.create_task(update_user_data_in_db(user_id, "first_name", first_name))
+    asyncio.create_task(update_user_data_in_db(user_id, "last_name", last_name))
+    asyncio.create_task(update_user_data_in_db(user_id, "username", username))
     {% endif %}
 
     # Сохранение в локальное хранилище

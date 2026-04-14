@@ -145,6 +145,9 @@ async def save_message_to_api(user_id, message_type: str, message_text: str = No
 async def set_user_var(user_id: int, key: str, value) -> None:
     """Сохраняет переменную пользователя в локальное хранилище и БД.
 
+    Запись в память — синхронная (мгновенно), запись в БД — fire-and-forget (фоново).
+    Следующий узел прочитает актуальное значение из user_data без ожидания БД.
+
     Args:
         user_id (int): ID пользователя Telegram
         key (str): Имя переменной
@@ -154,10 +157,24 @@ async def set_user_var(user_id: int, key: str, value) -> None:
         user_data[user_id] = {}
     user_data[user_id][key] = value
 {%- if userDatabaseEnabled %}
+    # Fire-and-forget: запись в БД идёт в фоне, не блокируя ответ пользователю
+    asyncio.create_task(_persist_user_var(user_id, key, value))
+{%- endif %}
+
+
+{%- if userDatabaseEnabled %}
+async def _persist_user_var(user_id: int, key: str, value) -> None:
+    """Фоновая запись переменной пользователя в БД (вызывается через create_task).
+
+    Args:
+        user_id (int): ID пользователя Telegram
+        key (str): Имя переменной
+        value: Значение переменной
+    """
     try:
         await update_user_data_in_db(user_id, key, value)
     except Exception as e:
-        logging.warning(f"⚠️ set_user_var: не удалось сохранить {key}={value} в БД: {e}")
+        logging.warning(f"⚠️ _persist_user_var: не удалось сохранить {key} в БД: {e}")
 {%- endif %}
 
 
