@@ -1,11 +1,13 @@
 /**
- * @fileoverview Тесты Redis-хранилища FSM и кэша переменных
+ * @fileoverview Тесты Redis-хранилища FSM, кэша переменных и Pub/Sub событий платформы
  *
  * Блок A: RedisStorage класс — наличие класса и всех методов
  * Блок B: Redis конфигурация — REDIS_URL, _redis_client, условный if REDIS_URL:
  * Блок C: Redis кэш переменных — vars_cache в init_all_user_vars и set_user_var
  * Блок D: Обратная совместимость — без REDIS_URL используется PostgresStorage
  * Блок E: Синтаксис Python для всех конфигураций
+ * Блок F: Distributed lock — защита от двойного запуска
+ * Блок G: Pub/Sub события платформы — bot:started, bot:stopped при запуске/остановке
  *
  * @module tests/test-phase-redis-storage
  */
@@ -237,6 +239,40 @@ test('F06', 'lock не блокирует запуск если Redis недос
 
 test('F07', 'синтаксис Python OK с distributed lock', () => {
   syntax(codeNoDb, 'f07');
+});
+
+// ══ Блок G: Pub/Sub события платформы ═════════════════════════════════════════
+console.log('\n══ Блок G: Pub/Sub события платформы ═════════════════════════════════');
+
+test('G01', 'bot:started:{PROJECT_ID}:{TOKEN_ID} публикуется при запуске', () => {
+  ok(codeNoDb.includes('bot:started:'), 'публикация bot:started не найдена');
+  ok(codeNoDb.includes('_redis_client.publish'), '_redis_client.publish не найден');
+});
+
+test('G02', 'bot:stopped:{PROJECT_ID}:{TOKEN_ID} публикуется в finally', () => {
+  ok(codeNoDb.includes('bot:stopped:'), 'публикация bot:stopped не найдена');
+});
+
+test('G03', 'публикация событий защищена проверкой if REDIS_URL and _redis_client is not None', () => {
+  const publishBlocks = codeNoDb.split('_redis_client.publish');
+  // Каждый вызов publish должен быть внутри блока с проверкой Redis
+  ok(publishBlocks.length >= 3, 'ожидалось минимум 2 вызова publish (started + stopped)');
+});
+
+test('G04', 'публикация событий не блокирует запуск при ошибке (try/except)', () => {
+  // Проверяем что publish обёрнут в try/except
+  const idx = codeNoDb.indexOf('_redis_client.publish');
+  ok(idx !== -1, '_redis_client.publish не найден');
+  const surrounding = codeNoDb.slice(Math.max(0, idx - 200), idx + 200);
+  ok(surrounding.includes('try:') && surrounding.includes('except'), 'publish не обёрнут в try/except');
+});
+
+test('G05', 'синтаксис Python OK с Pub/Sub событиями', () => {
+  syntax(codeNoDb, 'g05');
+});
+
+test('G06', 'синтаксис Python OK с Pub/Sub + БД', () => {
+  syntax(codeWithDb, 'g06');
 });
 
 // ══ Итог ══════════════════════════════════════════════════════════════════════

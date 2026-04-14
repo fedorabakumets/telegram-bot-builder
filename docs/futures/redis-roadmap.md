@@ -25,6 +25,13 @@
 - Фоновая задача `_refresh_lock` обновляет TTL каждые 30 секунд
 - Lock освобождается в `finally` при завершении
 
+### Pub/Sub для событий платформы
+Python бот публикует события в Redis, сервер подписан и рассылает через WebSocket.
+- Каналы: `bot:started:{projectId}:{tokenId}`, `bot:stopped:{projectId}:{tokenId}`, `bot:error:{projectId}:{tokenId}`
+- Сервер подписан через паттерн `bot:*` — один subscriber на все боты
+- Fallback: если `REDIS_URL` не задан — события идут напрямую через `broadcastProjectEvent` в `startBot.ts`/`stopBot.ts`
+- Файлы: `server/redis/redisClient.ts`, `server/redis/redisPlatformSubscriber.ts`, `lib/templates/main/main.py.jinja2`
+
 ---
 
 ## Запланировано 🔜
@@ -169,6 +176,8 @@ user:message:{projectId}
 
 **Применение:** статус ботов в UI обновляется мгновенно без `setInterval`.
 
+> ✅ **Реализовано** — см. секцию "Уже реализовано"
+
 ---
 
 ## Приоритеты
@@ -180,5 +189,5 @@ user:message:{projectId}
 | 2 | Rate limiting | Средняя | Средняя |
 | 4 | Счётчики аналитики | Низкая | Средняя |
 | 5 | Отложенные сообщения | Высокая | Высокая |
-| 7 | Pub/Sub для событий | Средняя | Средняя |
+| 7 | Pub/Sub для событий | ~~Средняя~~ | ~~Средняя~~ | ✅ Готово |
 | 6 | Shared user_data | Очень высокая | Высокая (при масштабе) |
