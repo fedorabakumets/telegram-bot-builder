@@ -144,7 +144,8 @@ export async function createCompleteBotFiles(
   const envContent = generateEnvFile(
     tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
     existingAdminIds,
-    projectId
+    projectId,
+    tokenRecord?.logLevel || 'WARNING'
   );
   const envPath = join(botDir, '.env');
   writeFileSync(envPath, envContent, 'utf8');
