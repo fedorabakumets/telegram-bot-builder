@@ -392,6 +392,11 @@ async function initializeComponents() {
  * ```
  */
 export async function registerRoutes(app: Express, httpServer?: Server): Promise<Server> {
+  // Создаём pgPool — нужен для session store (fallback) и других роутов
+  const pgPool = new (await import('pg')).Pool({
+    connectionString: process.env.DATABASE_URL
+  });
+
   // Создаём store: Redis если доступен, иначе PostgreSQL (fallback)
   let store: session.Store;
   const redisClient = getRedisPublisher();
@@ -400,9 +405,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     store = new RedisStore({ client: redisClient as any, prefix: 'sess:' });
     console.log('[Session] Хранилище сессий: Redis');
   } else {
-    const pgPool = new (await import('pg')).Pool({
-      connectionString: process.env.DATABASE_URL
-    });
     const PostgresStoreConstructor = (PostgresStore as any)(session);
     store = new PostgresStoreConstructor({ pool: pgPool });
     console.log('[Session] Хранилище сессий: PostgreSQL (Redis недоступен)');
