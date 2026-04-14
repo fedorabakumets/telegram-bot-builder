@@ -64,7 +64,7 @@ async def message_{{ sanitized_node_id }}_synonym_{{ sanitized_synonym }}_handle
                 return await self.message.answer(text, **kwargs)
 
     mock_callback = MockCallback("{{ entry.nodeId }}", message.from_user, message)
-    await handle_callback_{{ sanitized_node_id }}(mock_callback)
+    await handle_callback_{{ sanitized_node_id }}(mock_callback, state=None)
 
 {# ── CONTENT MANAGEMENT синонимы (pin/unpin/delete) ── #}
 {% elif entry.nodeType in ['pin_message', 'unpin_message', 'delete_message'] %}

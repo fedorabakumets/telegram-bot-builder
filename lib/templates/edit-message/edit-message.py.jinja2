@@ -74,7 +74,7 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         {% endif %}
 
         {% if entry.targetNodeId %}
-        await handle_callback_{{ sanitized_target_id }}(callback_query)
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=None)
         {% endif %}
     except Exception as e:
         logging.error(f"Ошибка в edit_message {{ entry.nodeId }}: {e}")

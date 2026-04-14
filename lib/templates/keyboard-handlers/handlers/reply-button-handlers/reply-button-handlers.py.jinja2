@@ -50,7 +50,7 @@
 {{ indent }}        message=message,
 {{ indent }}        answer=lambda *args, **kwargs: asyncio.sleep(0)
 {{ indent }}    )
-{{ indent }}    await handle_callback_{{ targetNode.id | safe_name }}(fake_callback)
+{{ indent }}    await handle_callback_{{ targetNode.id | safe_name }}(fake_callback, state=None)
 {%- endif %}
 {%- endif -%}
 {%- endif -%}

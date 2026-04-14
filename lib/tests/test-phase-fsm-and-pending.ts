@@ -412,6 +412,49 @@ test('H12', 'синтаксис Python OK для реального проект
   syntax(codeReal, 'h12');
 });
 
+// ══ Блок I: Полнота FSM в цепочках ═══════════════════════════════════════════
+console.log('\n══ Блок I: Полнота FSM в цепочках ════════════════════════════════════');
+
+/**
+ * I01: incoming-message-trigger передаёт state из data.
+ * Проверяем что шаблон содержит data.get("state") для извлечения FSM-контекста.
+ */
+test('I01', 'incoming-message-trigger передаёт state из data (содержит data.get("state"))', () => {
+  ok(codeReal.includes('data.get("state")'), 'data.get("state") не найден в incoming-message-trigger');
+});
+
+/**
+ * I02: сгенерированный код НЕ содержит handle_callback_ без state=.
+ * Проверяем что все вызовы handle_callback_ содержат аргумент state=.
+ */
+test('I02', 'сгенерированный код НЕ содержит handle_callback_ без state=', () => {
+  // Разбиваем по строкам и ищем строки с await handle_callback_ без state=
+  // Учитываем что вызов может быть многострочным — проверяем следующие 3 строки
+  const lines = codeReal.split('\n');
+  const badCalls: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.includes('await handle_callback_')) continue;
+    // Собираем контекст вызова (до 4 строк вперёд) для поиска state=
+    const context = lines.slice(i, i + 4).join('\n');
+    if (!context.includes('state=')) {
+      badCalls.push(line.trim());
+    }
+  }
+  ok(
+    badCalls.length === 0,
+    `Найдены вызовы handle_callback_ без state=:\n${badCalls.join('\n')}`,
+  );
+});
+
+/**
+ * I03: синтаксис Python OK для реального проекта после всех исправлений.
+ * Финальная проверка что добавление state=None не сломало синтаксис.
+ */
+test('I03', 'синтаксис Python OK для реального проекта после всех исправлений', () => {
+  syntax(codeReal, 'i03');
+});
+
 // ══ Итог ══════════════════════════════════════════════════════════════════════
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

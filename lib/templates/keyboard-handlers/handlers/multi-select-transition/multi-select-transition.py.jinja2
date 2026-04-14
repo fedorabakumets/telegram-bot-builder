@@ -82,7 +82,7 @@
 {% endif %}
 {{ indent }}    return
 {% else %}
-{{ indent }}    await handle_callback_{{ targetNode.id | replace('[^a-zA-Z0-9_]', '_') }}(callback_query)
+{{ indent }}    await handle_callback_{{ targetNode.id | replace('[^a-zA-Z0-9_]', '_') }}(callback_query, state=None)
 {% endif %}
 {% set hasContent = true %}
 {% endif %}

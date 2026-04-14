@@ -45,7 +45,7 @@ async def outgoing_message_trigger_{{ sanitized_node_id }}_handler(user_id: int,
                 pass
 
         fake_cb = FakeCallbackQuery(user_id, _effective_chat_id, message_id or 0)
-        await handle_callback_{{ sanitized_target_id }}(fake_cb)
+        await handle_callback_{{ sanitized_target_id }}(fake_cb, state=None)
     except Exception as e:
         logging.error(f"Ошибка в outgoing_message_trigger {{ entry.nodeId }}: {e}")
 

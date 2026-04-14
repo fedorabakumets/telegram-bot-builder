@@ -36,7 +36,9 @@ async def incoming_message_trigger_{{ sanitized_node_id }}_middleware(handler, e
                     return await self.message.answer(text, **kwargs)
 
         mock_callback = MockCallback("{{ entry.targetNodeId }}", event.from_user, event)
-        await handle_callback_{{ sanitized_target_id }}(mock_callback)
+        # Получаем FSM-контекст из данных middleware для передачи в обработчик
+        _state = data.get("state")
+        await handle_callback_{{ sanitized_target_id }}(mock_callback, state=_state)
         # Помечаем что сообщение уже обработано триггером
         if event.from_user.id not in user_data:
             user_data[event.from_user.id] = {}

@@ -31,7 +31,7 @@
 {% for node in nodes %}
 {{ ind2 }}{% if loop.first %}if{% else %}elif{% endif %} target_node_id == "{{ node.id }}":
 {{ ind3 }}_skip_handled = True
-{{ ind3 }}await handle_callback_{{ node.safeName }}(fake_callback)
+{{ ind3 }}await handle_callback_{{ node.safeName }}(fake_callback, state=None)
 {% endfor %}
 {{ ind2 }}if not _skip_handled:
 {{ ind3 }}logging.warning(f"Неизвестный целевой узел skipDataCollection: {target_node_id}")
@@ -126,7 +126,7 @@
 {% for node in nodes %}
 {{ ind5 }}{% if loop.first %}if{% else %}elif{% endif %} target_node_id == "{{ node.id }}":
 {{ ind6 }}_goto_handled = True
-{{ ind6 }}await handle_callback_{{ node.safeName }}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+{{ ind6 }}await handle_callback_{{ node.safeName }}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message), state=None)
 {% endfor %}
 {{ ind5 }}if not _goto_handled:
 {{ ind6 }}logging.warning(f"Неизвестный целевой узел: {target_node_id}")
@@ -142,7 +142,7 @@
 {% for node in nodes %}
 {{ ind6 }}{% if loop.first %}if{% else %}elif{% endif %} next_node_id == "{{ node.id }}":
 {{ ind6 }}    _next_handled = True
-{{ ind6 }}    await handle_callback_{{ node.safeName }}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+{{ ind6 }}    await handle_callback_{{ node.safeName }}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message), state=None)
 {% endfor %}
 {{ ind6 }}if not _next_handled:
 {{ ind6 }}    logging.warning(f"Неизвестный следующий узел: {next_node_id}")
@@ -193,7 +193,7 @@
 {% for node in nodes %}
 {{ ind6 }}{% if loop.first %}if{% else %}elif{% endif %} skip_target == "{{ node.id }}":
 {{ ind6 }}    _skip_media_handled = True
-{{ ind6 }}    await handle_callback_{{ node.safeName }}(fake_callback)
+{{ ind6 }}    await handle_callback_{{ node.safeName }}(fake_callback, state=None)
 {% endfor %}
 {{ ind6 }}if not _skip_media_handled:
 {{ ind6 }}    logging.warning(f"Неизвестный целевой узел skipDataCollection медиа: {skip_target}")
@@ -363,7 +363,7 @@
 {{ ind7 }}    message=message,
 {{ ind7 }}    answer=lambda *_args, **_kwargs: asyncio.sleep(0)
 {{ ind7 }})
-{{ ind7 }}await handle_callback_{{ node.safeName }}(fake_callback)
+{{ ind7 }}await handle_callback_{{ node.safeName }}(fake_callback, state=None)
 {{ ind7 }}break
 {% endfor %}
 {{ ind6 }}if not _node_handled:

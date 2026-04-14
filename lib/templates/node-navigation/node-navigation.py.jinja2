@@ -44,7 +44,7 @@
 {{ baseIndent }}        answer=lambda: None
 {{ baseIndent }}    )
 {% if node.autoTransitionExists %}
-{{ baseIndent }}    await handle_callback_{{ node.autoTransitionSafeName }}(fake_callback)
+{{ baseIndent }}    await handle_callback_{{ node.autoTransitionSafeName }}(fake_callback, state=None)
 {% else %}
 {{ baseIndent }}    logging.warning(f"⚠️ Узел автоперехода не найден: {{ node.autoTransitionTo }}")
 {{ baseIndent }}    await fake_callback.message.answer("Переход завершен")

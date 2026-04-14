@@ -152,7 +152,7 @@ async def handle_multi_select_reply(message: types.Message):
                     message=message,
                     answer=lambda *args, **kwargs: None
                 )
-                await handle_callback_{{ button.target|safe_name }}(fake_callback)
+                await handle_callback_{{ button.target|safe_name }}(fake_callback, state=None)
 {% endif %}
                 return
 {% endif %}

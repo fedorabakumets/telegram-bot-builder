@@ -16,7 +16,7 @@
 {{ ind }}if not is_fake_callback:
 {{ ind }}    logging.info(f"⚡ Автопереход от узла {{ nodeId }} к узлу {{ autoTransitionTarget }}")
 {% if targetExists %}
-{{ ind }}    await handle_callback_{{ autoTransitionTarget | replace('-', '_') | replace('.', '_') }}(callback_query)
+{{ ind }}    await handle_callback_{{ autoTransitionTarget | replace('-', '_') | replace('.', '_') }}(callback_query, state=None)
 {% else %}
 {{ ind }}    logging.warning(f"⚠️ Узел автоперехода не найден: {{ autoTransitionTarget }}, завершаем переход")
 {{ ind }}    await callback_query.message.edit_text("Переход завершен")

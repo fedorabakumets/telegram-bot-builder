@@ -78,7 +78,7 @@ async def managed_bot_updated_trigger_{{ sanitized_node_id }}_handler(message: t
                 pass
 
         fake_cb = FakeCallbackQuery(user_id, message)
-        await handle_callback_{{ sanitized_target_id }}(fake_cb)
+        await handle_callback_{{ sanitized_target_id }}(fake_cb, state=None)
     except Exception as e:
         logging.error(f"Ошибка в managed_bot_updated_trigger {{ entry.nodeId }}: {e}")
 

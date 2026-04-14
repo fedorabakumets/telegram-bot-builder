@@ -148,7 +148,7 @@
 {{ ind4 }}    message=message,
 {{ ind4 }}    answer=lambda *args, **kwargs: None
 {{ ind4 }})
-{{ ind4 }}await handle_callback_{{ button.targetNode.safeName }}(fake_callback)
+{{ ind4 }}await handle_callback_{{ button.targetNode.safeName }}(fake_callback, state=None)
 {% endif %}
 {{ ind4 }}return
 {% endif %}
