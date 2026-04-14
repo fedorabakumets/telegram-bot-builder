@@ -44,12 +44,19 @@ interface BotControlProps {
    * @param tokenName - Имя нового токена
    */
   onTokenCreated?: (projectId: number, tokenId: number, tokenName: string) => void;
+  /**
+   * Callback при получении события bot-started через WebSocket (срабатывает на всех вкладках).
+   * Используется для очистки логов терминала на второй вкладке.
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   */
+  onBotStartedWs?: (projectId: number, tokenId: number) => void;
 }
 
 /**
  * Основной компонент управления ботами
  */
-export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted, onTokenCreated }: Omit<BotControlProps, 'projectName'> & { projectName?: string }) {
+export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted, onTokenCreated, onBotStartedWs }: Omit<BotControlProps, 'projectName'> & { projectName?: string }) {
   const [showAddBot, setShowAddBot] = useState(false);
   const [newBotToken, setNewBotToken] = useState('');
   const [projectForNewBot, setProjectForNewBot] = useState<number | null>(null);
@@ -80,7 +87,7 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
   } = useBotQueries();
 
   // Подписываемся на real-time события проектов через WebSocket
-  useBotProjectEvents(projects, { onTokenCreated });
+  useBotProjectEvents(projects, { onTokenCreated, onBotStarted: onBotStartedWs });
 
   const {
     startBotMutation,

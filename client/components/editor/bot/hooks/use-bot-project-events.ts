@@ -17,19 +17,23 @@ interface UseBotProjectEventsOptions {
    * @param tokenName - Имя нового токена
    */
   onTokenCreated?: (projectId: number, tokenId: number, tokenName: string) => void;
+  /**
+   * Callback при запуске бота — для очистки логов на всех вкладках.
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   */
+  onBotStarted?: (projectId: number, tokenId: number) => void;
 }
 
 /**
  * Подписывается на события всех проектов пользователя через одно WebSocket-соединение.
- * Обеспечивает real-time обновление списка ботов при создании/удалении токенов.
- * При создании токена вызывает onTokenCreated, если передан.
- *
- * @param _projects - Список проектов (не используется, оставлен для обратной совместимости)
- * @param options - Опциональные callback-и для событий
  */
 export function useBotProjectEvents(
   _projects: { id: number }[],
   options?: UseBotProjectEventsOptions,
 ): void {
-  useAllProjectsEventsWs({ onTokenCreated: options?.onTokenCreated });
+  useAllProjectsEventsWs({
+    onTokenCreated: options?.onTokenCreated,
+    onBotStarted: options?.onBotStarted,
+  });
 }

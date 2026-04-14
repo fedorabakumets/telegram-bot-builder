@@ -73,10 +73,14 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
 
   // Обработчик запуска бота
   const handleBotStarted = (projectId: number, tokenId: number, botName: string) => {
-    // Очищаем логи перед запуском
     const logKey = `${projectId}-${tokenId}`;
     clearLogs(logKey);
     addTerminal({ projectId, tokenId, botName, isRunning: true });
+  };
+
+  // Очистка логов при получении bot-started через WebSocket (срабатывает на всех вкладках)
+  const handleBotStartedWs = (projectId: number, tokenId: number) => {
+    clearLogs(`${projectId}-${tokenId}`);
   };
 
   // Обработчик остановки бота
@@ -114,6 +118,7 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
         onBotStopped={handleBotStopped}
         onBotDeleted={handleBotDeleted}
         onTokenCreated={handleTokenCreated}
+        onBotStartedWs={handleBotStartedWs}
       />
     </div>
   );

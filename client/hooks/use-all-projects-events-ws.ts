@@ -34,6 +34,12 @@ export interface UseAllProjectsEventsWsOptions {
    * @param tokenName - Имя нового токена
    */
   onTokenCreated?: (projectId: number, tokenId: number, tokenName: string) => void;
+  /**
+   * Callback при запуске бота — используется для очистки логов на всех вкладках.
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   */
+  onBotStarted?: (projectId: number, tokenId: number) => void;
 }
 
 /**
@@ -79,13 +85,14 @@ function handleBotEvent(
  * @param options - Опциональные callback-и для событий
  */
 export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions): void {
-  const { onTokenCreated } = options ?? {};
+  const { onTokenCreated, onBotStarted } = options ?? {};
   const queryClient = useQueryClient();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** Стабильная ссылка на callback без перезапуска эффекта */
   const onTokenCreatedRef = useRef(onTokenCreated);
   onTokenCreatedRef.current = onTokenCreated;
+  const onBotStartedRef = useRef(onBotStarted);
+  onBotStartedRef.current = onBotStarted;
   /** Флаг первого подключения — при первом onopen рефетч не нужен */
   const isFirstConnectRef = useRef(true);
 
@@ -120,6 +127,9 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
           }
           if (msg.type === 'bot-started' || msg.type === 'bot-stopped' || msg.type === 'bot-error') {
             handleBotEvent(queryClient, msg);
+          }
+          if (msg.type === 'bot-started' && msg.tokenId) {
+            onBotStartedRef.current?.(msg.projectId, msg.tokenId);
           }
         } catch {
           // Игнорируем некорректные сообщения
