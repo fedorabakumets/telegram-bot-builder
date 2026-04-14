@@ -13,6 +13,7 @@ import { handleBotStart } from './botManagement/handlers/botStartHandler';
 import { handleBotStop } from './botManagement/handlers/botStopHandler';
 import { handleBotRestart } from './botManagement/handlers/botRestartHandler';
 import { handleBotStatusByToken } from './botManagement/handlers/botStatusByTokenHandler';
+import { getBotTokenStatusHandler } from './botManagement/handlers/getBotTokenStatusHandler';
 import { handleGetLaunchHistory } from './botManagement/handlers/botLaunchHistoryHandler';
 import { handleGetLaunchLogs } from './botManagement/handlers/botLaunchLogsHandler';
 
@@ -26,6 +27,7 @@ import { handleGetLaunchLogs } from './botManagement/handlers/botLaunchLogsHandl
 export function setupBotManagementRoutes(app: Express): void {
     app.get("/api/projects/:id/bot", handleBotStatus);
     app.get("/api/tokens/:tokenId/bot-status", handleBotStatusByToken);
+    app.get("/api/bot/tokens/:tokenId/status", getBotTokenStatusHandler);
     app.get("/api/tokens/:tokenId/launch-history", handleGetLaunchHistory);
     app.get("/api/launch/:launchId/logs", handleGetLaunchLogs);
     app.post("/api/projects/:id/bot/start", handleBotStart);
