@@ -12,6 +12,7 @@ type RedisClient = {
   psubscribe(...patterns: string[]): Promise<unknown>;
   on(event: string, listener: (...args: unknown[]) => void): void;
   quit(): Promise<string>;
+  del(...keys: string[]): Promise<number>;
 };
 
 /** Клиент Redis для публикации событий */

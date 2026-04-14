@@ -22,12 +22,11 @@ async def main():
     """Главная функция запуска бота"""
     global db_pool
 
+    _stop_event = asyncio.Event()
+
     def signal_handler(signum, _frame):
         print(f"⚠️ Получен сигнал {signum}, начинаем корректное завершение...")
-        try:
-            asyncio.get_running_loop().stop()
-        except RuntimeError:
-            pass
+        _stop_event.set()
 
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
@@ -111,7 +110,11 @@ async def main():
         # Запускаем фоновую задачу TTL-очистки user_data
         asyncio.create_task(cleanup_user_data())
 
-        await dp.start_polling(bot)
+        # Запускаем polling и ждём сигнала остановки
+        polling_task = asyncio.create_task(dp.start_polling(bot))
+        await _stop_event.wait()
+        await dp.stop_polling()
+        await polling_task
     except KeyboardInterrupt:
         print("⚠️ Получен сигнал остановки, завершаем работу...")
     except SystemExit:
