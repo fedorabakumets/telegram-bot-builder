@@ -74,9 +74,25 @@ function isRedisAvailable(): boolean {
   return _available;
 }
 
+/**
+ * Возвращает текущий publisher клиент Redis (может быть null до инициализации)
+ * @returns Redis publisher или null
+ */
+function getRedisPublisher(): RedisClient | null {
+  return redisPublisher;
+}
+
+/**
+ * Возвращает текущий subscriber клиент Redis (может быть null до инициализации)
+ * @returns Redis subscriber или null
+ */
+function getRedisSubscriber(): RedisClient | null {
+  return redisSubscriber;
+}
+
 // Инициализируем при загрузке модуля
 initRedisClients().catch((err) =>
   console.error('[Redis] Ошибка инициализации:', err)
 );
 
-export { redisPublisher, redisSubscriber, isRedisAvailable };
+export { redisPublisher, redisSubscriber, isRedisAvailable, getRedisPublisher, getRedisSubscriber };

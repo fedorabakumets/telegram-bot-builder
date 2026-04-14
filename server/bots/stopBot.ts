@@ -26,7 +26,7 @@ import { processCleanups } from "../terminal/setupBotProcessListeners";
 import { storage } from '../storages/storage';
 import { flushBuffer } from '../terminal/botLogsBuffer';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
-import { redisPublisher } from '../redis/redisClient';
+import { getRedisPublisher } from '../redis/redisClient';
 
 /**
  * Останавливает запущенный экземпляр Telegram-бота по идентификатору проекта и токена
@@ -149,9 +149,9 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
     // (finally в Python может не выполниться при SIGKILL)
     try {
       const tokenRecord = await storage.getBotToken(tokenId);
-      if (tokenRecord?.token && redisPublisher) {
+      if (tokenRecord?.token && getRedisPublisher()) {
         const lockKey = `bot:lock:${tokenRecord.token.slice(-10)}`;
-        await redisPublisher.del(lockKey);
+        await getRedisPublisher()!.del(lockKey);
         console.log(`🔓 Redis lock удалён сервером для токена ${tokenId}`);
       }
     } catch {
