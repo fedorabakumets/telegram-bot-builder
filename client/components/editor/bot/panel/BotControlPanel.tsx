@@ -15,8 +15,12 @@ import { BotControlPanelHeader } from './BotControlPanelHeader';
 import { BotControlPanelLoading } from './BotControlPanelLoading';
 import { BotControlPanelEmpty } from './BotControlPanelEmpty';
 import { BotManagementInterface } from './BotManagementInterface';
+import { GuestBanner } from './GuestBanner';
 import { AddBotDialog } from '../add-bot/AddBotDialog';
 import { useBotControl } from '../bot-control-context';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
+import { isGuest } from '@/types/telegram-user';
 import type { BotProject, BotToken } from '@shared/schema';
 
 /**
@@ -60,11 +64,25 @@ export function BotControlPanel({
   createBotMutation,
   handleAddBot,
 }: BotControlPanelProps) {
-  const { setShowAddBot, setProjectForNewBot, allTokensFlat } = useBotControl();
+  const { setShowAddBot, setProjectForNewBot, allTokensFlat, allBotStatuses } = useBotControl();
+  const { user } = useTelegramAuth();
+  const { handleTelegramLogin } = useTelegramLogin();
+
+  /** Является ли текущий пользователь гостем */
+  const isGuestUser = !user || isGuest(user);
+  /** Есть ли хотя бы один запущенный бот */
+  const hasRunningBot = allBotStatuses.some(s => s?.status === 'running');
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <BotControlPanelHeader onConnectBot={() => setShowAddBot(true)} />
+
+      {isGuestUser && (
+        <GuestBanner
+          hasRunningBot={hasRunningBot}
+          onLogin={handleTelegramLogin}
+        />
+      )}
 
       {projectsLoading ? (
         <BotControlPanelLoading />
