@@ -30,10 +30,9 @@ logging.basicConfig(
 if os.getenv("DISABLE_ASYNC_LOG", "true").lower() == "true":
     logging.getLogger("asyncpg").setLevel(logging.CRITICAL)
 
-{# Создание бота и диспетчера #}
-# Создание бота и диспетчера
+{# Создание бота #}
+# Создание бота
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
 
 {# Список администраторов #}
 # Список администраторов (загружается из .env)
@@ -56,8 +55,70 @@ logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")
 {# Хранилище состояний (временное) #}
 # Хранилище пользователей (временное состояние)
 user_data = {}
+all_user_vars = {}  # Глобальные переменные пользователя
+
+{# Кастомное FSM-хранилище на основе PostgreSQL #}
+# Кастомное хранилище FSM на основе PostgreSQL (bot_users.user_data JSONB)
+# Примечание: update_user_data_in_db определяется позже в файле — это нормально для Python
+# (функция вызывается в runtime, не при определении класса)
+class PostgresStorage(BaseStorage):
+    """Хранит FSM состояния в поле user_data таблицы bot_users."""
+
+    async def set_state(self, key: StorageKey, state: StateType = None) -> None:
+        uid = key.user_id
+        val = state.state if state else None
+        if uid not in user_data:
+            user_data[uid] = {}
+        user_data[uid]["__fsm_state__"] = val
+        try:
+            await update_user_data_in_db(uid, "__fsm_state__", val)
+        except Exception:
+            pass
+
+    async def get_state(self, key: StorageKey) -> str | None:
+        uid = key.user_id
+        return user_data.get(uid, {}).get("__fsm_state__")
+
+    async def set_data(self, key: StorageKey, data: dict) -> None:
+        uid = key.user_id
+        import json as _j
+        val = _j.dumps(data, ensure_ascii=False)
+        if uid not in user_data:
+            user_data[uid] = {}
+        user_data[uid]["__fsm_data__"] = val
+        try:
+            await update_user_data_in_db(uid, "__fsm_data__", val)
+        except Exception:
+            pass
+
+    async def get_data(self, key: StorageKey) -> dict:
+        uid = key.user_id
+        raw = user_data.get(uid, {}).get("__fsm_data__", "{}")
+        try:
+            import json as _j
+            return _j.loads(raw) if raw else {}
+        except Exception:
+            return {}
+
+    async def close(self) -> None:
+        pass
+
+{# Создание диспетчера с FSM-хранилищем #}
+# Создание диспетчера с кастомным FSM-хранилищем
+dp = Dispatcher(storage=PostgresStorage())
 
 {# База данных #}
+{%- if userDatabaseEnabled %}
+# ┌─────────────────────────────────────────┐
+# │           Настройки базы данных         │
+# └─────────────────────────────────────────┘
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# ┌─────────────────────────────────────────┐
+# │      Пул соединений с базой данных    │
+# └─────────────────────────────────────────┘
+db_pool = None
+{%- endif %}
 {%- if userDatabaseEnabled %}
 # ┌─────────────────────────────────────────┐
 # │           Настройки базы данных         │

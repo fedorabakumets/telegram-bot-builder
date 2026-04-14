@@ -6,6 +6,24 @@
   @param {boolean} autoRegisterUsers - Автоматически регистрировать пользователей
 #}
 
+# Middleware для фильтрации устаревших апдейтов
+# Игнорирует сообщения старше MAX_UPDATE_AGE_SECONDS секунд (накопились пока бот был остановлен)
+MAX_UPDATE_AGE_SECONDS = int(os.getenv("MAX_UPDATE_AGE_SECONDS", "300"))
+
+async def stale_update_filter_middleware(handler, event: types.Message, data: dict):
+    """Пропускает сообщения старше MAX_UPDATE_AGE_SECONDS секунд."""
+    import time
+    try:
+        if event.date and (time.time() - event.date.timestamp()) > MAX_UPDATE_AGE_SECONDS:
+            logging.info(
+                f"⏭️ Пропущен устаревший апдейт от {event.from_user.id if event.from_user else '?'} "
+                f"(возраст {int(time.time() - event.date.timestamp())}с > {MAX_UPDATE_AGE_SECONDS}с)"
+            )
+            return  # не передаём дальше
+    except Exception:
+        pass
+    return await handler(event, data)
+
 {% if autoRegisterUsers %}
 # Middleware для автоматической регистрации пользователей
 async def register_user_middleware(handler, event: types.Message, data: dict):

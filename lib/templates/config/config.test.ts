@@ -154,7 +154,19 @@ describe('config.py.jinja2 шаблон', () => {
         assert.ok(result.includes('load_dotenv()'));
         assert.ok(result.includes('BOT_TOKEN = os.getenv'));
         assert.ok(result.includes('bot = Bot(token=BOT_TOKEN)'));
-        assert.ok(result.includes('dp = Dispatcher()'));
+        assert.ok(result.includes('dp = Dispatcher(storage=PostgresStorage())'));
+      });
+
+      it('должен содержать класс PostgresStorage(BaseStorage)', () => {
+        const result = generateConfig(validParamsAllDisabled);
+
+        assert.ok(result.includes('class PostgresStorage(BaseStorage)'));
+      });
+
+      it('должен содержать __fsm_state__ в PostgresStorage', () => {
+        const result = generateConfig(validParamsAllDisabled);
+
+        assert.ok(result.includes('__fsm_state__'));
       });
 
       it('должен включать user_data и all_user_vars', () => {

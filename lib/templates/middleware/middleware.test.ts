@@ -160,10 +160,28 @@ describe('middlewareParamsSchema', () => {
   });
 });
 
+// ─── stale_update_filter_middleware ──────────────────────────────────────────
+
+describe('stale_update_filter_middleware', () => {
+  it('присутствует в выводе generateMiddleware', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('stale_update_filter_middleware');
+  });
+
+  it('присутствует при отключённой БД', () => {
+    const r = generateMiddleware(validParamsDisabled);
+    expect(r).toContain('stale_update_filter_middleware');
+  });
+
+  it('содержит MAX_UPDATE_AGE_SECONDS', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    expect(r).toContain('MAX_UPDATE_AGE_SECONDS');
+  });
+});
+
 // ─── Производительность ──────────────────────────────────────────────────────
 
-describe('Производительность', () => {
-  it('generateMiddleware быстрее 50ms', () => {
+describe('Производительность', () => {  it('generateMiddleware быстрее 50ms', () => {
     const start = Date.now();
     generateMiddleware(validParamsEnabled);
     expect(Date.now() - start).toBeLessThan(50);

@@ -41,6 +41,9 @@ async def main():
         await set_bot_commands()
         {%- endif %}
 
+        {# Фильтр устаревших апдейтов — регистрируем первым чтобы отсеивать до всей логики #}
+        dp.message.middleware(stale_update_filter_middleware)
+
         {%- if userDatabaseEnabled %}
         dp.message.middleware(message_logging_middleware)
         dp.message.outer_middleware(BotOutgoingLoggingMiddleware())

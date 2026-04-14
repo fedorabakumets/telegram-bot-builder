@@ -240,6 +240,21 @@ describe('main.py.jinja2 шаблон', () => {
         });
         assert.ok(!result.includes('managed_bot_updated_trigger'));
       });
+
+      it('должен регистрировать stale_update_filter_middleware', () => {
+        const result = generateMain({ userDatabaseEnabled: false });
+        assert.ok(result.includes('stale_update_filter_middleware'));
+      });
+
+      it('должен регистрировать dp.message.middleware(stale_update_filter_middleware)', () => {
+        const result = generateMain({ userDatabaseEnabled: false });
+        assert.ok(result.includes('dp.message.middleware(stale_update_filter_middleware)'));
+      });
+
+      it('не должен содержать drop_pending_updates', () => {
+        const result = generateMain({ userDatabaseEnabled: false });
+        assert.ok(!result.includes('drop_pending_updates'));
+      });
     });
   });
 });
