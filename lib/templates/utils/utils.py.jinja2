@@ -106,6 +106,12 @@ async def init_all_user_vars(user_id: int) -> dict:
             # Если Redis доступен — используем его как кэш переменных
             if _redis_client is not None:
                 import json as _rj
+                from datetime import datetime as _dt
+                def _json_serial(obj):
+                    """Сериализатор для типов не поддерживаемых json.dumps (datetime и др.)"""
+                    if isinstance(obj, _dt):
+                        return obj.isoformat()
+                    return str(obj)
                 _cached_raw = await _redis_client.get(f"vars_cache:{user_id}")
                 if _cached_raw:
                     try:
@@ -133,7 +139,7 @@ async def init_all_user_vars(user_id: int) -> dict:
                                     all_vars.update(extra)
                                     _db_snapshot.update(extra)
                             # Кэшируем снимок БД в Redis с TTL
-                            await _redis_client.setex(f"vars_cache:{user_id}", VARS_CACHE_TTL, _rj.dumps(_db_snapshot, ensure_ascii=False))
+                            await _redis_client.setex(f"vars_cache:{user_id}", VARS_CACHE_TTL, _rj.dumps(_db_snapshot, ensure_ascii=False, default=_json_serial))
             else:
                 # Redis недоступен — используем _vars_cache в памяти
                 _cached = _vars_cache.get(user_id)
