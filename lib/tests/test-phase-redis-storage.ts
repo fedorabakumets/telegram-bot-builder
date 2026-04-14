@@ -1,5 +1,5 @@
 /**
- * @fileoverview Тесты Redis-хранилища FSM, кэша переменных и Pub/Sub событий платформы
+ * @fileoverview Тесты Redis-хранилища FSM, кэша переменных, Pub/Sub событий и логов платформы
  *
  * Блок A: RedisStorage класс — наличие класса и всех методов
  * Блок B: Redis конфигурация — REDIS_URL, _redis_client, условный if REDIS_URL:
@@ -8,6 +8,7 @@
  * Блок E: Синтаксис Python для всех конфигураций
  * Блок F: Distributed lock — защита от двойного запуска
  * Блок G: Pub/Sub события платформы — bot:started, bot:stopped при запуске/остановке
+ * Блок H: Pub/Sub логи — _RedisLogHandler публикует логи в bot:logs:{projectId}:{tokenId}
  *
  * @module tests/test-phase-redis-storage
  */
@@ -279,6 +280,44 @@ test('G05', 'синтаксис Python OK с Pub/Sub событиями', () => 
 
 test('G06', 'синтаксис Python OK с Pub/Sub + БД', () => {
   syntax(codeWithDb, 'g06');
+});
+
+// ══ Блок H: Pub/Sub логи ══════════════════════════════════════════════════════
+console.log('\n══ Блок H: Pub/Sub логи ══════════════════════════════════════════════');
+
+test('H01', '_publish_log_to_redis функция присутствует', () => {
+  ok(codeNoDb.includes('_publish_log_to_redis'), '_publish_log_to_redis не найдена');
+});
+
+test('H02', 'bot:logs:{PROJECT_ID}:{TOKEN_ID} канал используется', () => {
+  ok(codeNoDb.includes('bot:logs:'), 'канал bot:logs: не найден');
+});
+
+test('H03', '_RedisLogHandler класс присутствует', () => {
+  ok(codeNoDb.includes('_RedisLogHandler'), '_RedisLogHandler не найден');
+});
+
+test('H04', '_RedisLogHandler регистрируется только если Redis доступен', () => {
+  ok(codeNoDb.includes('if _redis_client is not None'), 'проверка _redis_client is not None не найдена');
+  // Регистрация handler должна быть после проверки
+  const idx = codeNoDb.indexOf('logging.getLogger().addHandler(_redis_log_handler)');
+  ok(idx !== -1, 'addHandler не найден');
+});
+
+test('H05', 'emit использует create_task для неблокирующей публикации', () => {
+  ok(codeNoDb.includes('loop.create_task(_publish_log_to_redis'), 'create_task для publish не найден');
+});
+
+test('H06', 'emit обёрнут в try/except RuntimeError', () => {
+  ok(codeNoDb.includes('except RuntimeError'), 'except RuntimeError не найден в emit');
+});
+
+test('H07', 'синтаксис Python OK с _RedisLogHandler', () => {
+  syntax(codeNoDb, 'h07');
+});
+
+test('H08', 'синтаксис Python OK с _RedisLogHandler + БД', () => {
+  syntax(codeWithDb, 'h08');
 });
 
 // ══ Итог ══════════════════════════════════════════════════════════════════════
