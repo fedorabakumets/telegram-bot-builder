@@ -8,11 +8,24 @@ import { storage } from "../storages/storage";
 
 /** Данные стартового узла для нового проекта по умолчанию */
 const DEFAULT_START_NODE = {
-  id: "start",
-  type: "start",
+  id: "start-trigger",
+  type: "command_trigger",
   position: { x: 100, y: 100 },
   data: {
-    messageText: "Привет! Я ваш новый бот. Нажмите /help для получения помощи.",
+    command: "/start",
+    autoTransitionTo: "welcome-message",
+    enableAutoTransition: true,
+    buttons: [],
+  },
+};
+
+/** Узел приветственного сообщения */
+const DEFAULT_MESSAGE_NODE = {
+  id: "welcome-message",
+  type: "send_message",
+  position: { x: 100, y: 280 },
+  data: {
+    messageText: "Привет! Я ваш новый бот. Напишите /start чтобы начать.",
     keyboardType: "none",
     buttons: [],
     resizeKeyboard: true,
@@ -42,7 +55,7 @@ export async function ensureDefaultProject(sessionId?: string): Promise<void> {
         description: "Базовый бот с приветствием",
         userDatabaseEnabled: 1,
         sessionId: sessionId ?? null,
-        data: { nodes: [DEFAULT_START_NODE] },
+        data: { nodes: [DEFAULT_START_NODE, DEFAULT_MESSAGE_NODE] },
       };
       await storage.createBotProject(defaultProject);
       console.log("✅ Создан проект по умолчанию", sessionId ? `для сессии ${sessionId}` : "(глобальный)");
