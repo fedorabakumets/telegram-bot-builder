@@ -145,7 +145,8 @@ export async function createCompleteBotFiles(
     tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
     existingAdminIds,
     projectId,
-    tokenRecord?.logLevel || 'WARNING'
+    tokenRecord?.logLevel || 'WARNING',
+    'redis://localhost:6379'
   );
   const envPath = join(botDir, '.env');
   writeFileSync(envPath, envContent, 'utf8');

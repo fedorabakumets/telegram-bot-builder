@@ -13,13 +13,15 @@
  * @param {string} adminIds - ID администраторов через запятую
  * @param {number} projectId - ID проекта
  * @param {string} logLevel - Уровень логирования (DEBUG, INFO, WARNING, ERROR)
+ * @param {string} redisUrl - URL Redis (по умолчанию localhost)
  * @returns {string} Содержимое .env файла
  */
 export function generateEnvFile(
   botToken: string = "YOUR_BOT_TOKEN_HERE",
   adminIds: string = "123456789",
   projectId: number = 1,
-  logLevel: string = "WARNING"
+  logLevel: string = "WARNING",
+  redisUrl: string = "redis://localhost:6379"
 ): string {
   const envLines: string[] = [];
 
@@ -54,7 +56,7 @@ export function generateEnvFile(
   envLines.push('# Redis URL (опционально — для кэша и FSM хранилища)');
   envLines.push('# Локально: redis://localhost:6379');
   envLines.push('# Railway: задаётся автоматически через ${{Redis.REDIS_URL}}');
-  envLines.push('# REDIS_URL=redis://localhost:6379');
+  envLines.push(`REDIS_URL=${redisUrl}`);
   envLines.push('');
 
   return envLines.join('\n');
