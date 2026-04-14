@@ -1116,13 +1116,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             const envPath = join(botsDir, dir.name, '.env');
             if (!existsSync(envPath)) continue;
             const content = readFileSync(envPath, 'utf8');
-            // Проверяем что это .env нужного проекта/токена
-            if (!content.includes(`PROJECT_ID=${projectId}`) && !content.includes(`BOT_TOKEN=`)) continue;
-            const updated = content.replace(/^LOG_LEVEL=.*/m, `LOG_LEVEL=${logLevel}`);
-            if (updated !== content) {
-              writeFileSync(envPath, updated, 'utf8');
+            // Проверяем что это .env нужного проекта по PROJECT_ID
+            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
+            const updatedContent = content.replace(/^LOG_LEVEL=.*/m, `LOG_LEVEL=${logLevel}`);
+            if (updatedContent !== content) {
+              writeFileSync(envPath, updatedContent, 'utf8');
               console.log(`✅ LOG_LEVEL обновлён в ${envPath}: ${logLevel}`);
-              break;
             }
           }
         }
