@@ -27,6 +27,7 @@
 | resizeKeyboard | boolean | Изменить размер клавиатуры | false |
 | enableAutoTransition | boolean | Автопереход включен | false |
 | autoTransitionTo | string | Цель автоперехода | '' |
+| state | FSMContext | Опциональный FSM контекст (state: FSMContext = None). Используется для чтения/записи данных между переходами. | None |
 
 ## Примеры использования
 

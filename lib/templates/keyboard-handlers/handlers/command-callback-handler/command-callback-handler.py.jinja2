@@ -18,7 +18,7 @@
 {% set command = button.target | replace('/', '') %}
 
 {{ indent }}@dp.callback_query(lambda c: c.data == "{{ callbackData }}")
-{{ indent }}async def handle_callback_{{ safeFunctionName }}(callback_query: types.CallbackQuery):
+{{ indent }}async def handle_callback_{{ safeFunctionName }}(callback_query: types.CallbackQuery, state: FSMContext = None):
 {{ indent }}    await callback_query.answer()
 {{ indent }}    logging.info(f"Обработка кнопки команды: {{ callbackData }} -> /{{ command }} (пользователь {callback_query.from_user.id})")
 {{ indent }}    # Симулируем выполнение команды /{{ command }}

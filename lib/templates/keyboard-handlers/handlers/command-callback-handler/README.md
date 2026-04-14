@@ -13,6 +13,7 @@
 | `callbackData` | `string` | Callback data для идентификации кнопки |
 | `button` | `CommandButton` | Объект кнопки с полями action, id, target, text |
 | `indentLevel` | `string` | Уровень отступа (по умолчанию `''`) |
+| `state` | `FSMContext` | Опциональный FSM контекст (state: FSMContext = None). Используется для чтения/записи данных между переходами. |
 
 ## Пример использования
 

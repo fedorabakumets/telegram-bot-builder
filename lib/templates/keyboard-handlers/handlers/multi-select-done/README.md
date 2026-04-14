@@ -12,6 +12,7 @@
 | `allNodes` | `any[]` | Да | `[]` | Массив всех узлов для поиска целевых узлов |
 | `allNodeIds` | `string[]` | Да | `[]` | Массив всех ID узлов |
 | `indentLevel` | `string` | Нет | `''` | Уровень отступа |
+| `state` | `FSMContext` | Нет | `None` | Опциональный FSM контекст (state: FSMContext = None). Используется для чтения/записи данных между переходами. |
 
 ### Структура MultiSelectDoneNode
 

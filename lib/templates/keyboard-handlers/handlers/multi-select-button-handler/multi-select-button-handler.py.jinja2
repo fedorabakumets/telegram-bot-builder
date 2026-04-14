@@ -28,7 +28,7 @@
 
 {# Создаем безопасное имя функции #}
 {% set safeFunctionName = callbackData | replace('[^a-zA-Z0-9_]', '_') %}
-{{ indent }}async def handle_callback_{{ safeFunctionName }}(callback_query: types.CallbackQuery):
+{{ indent }}async def handle_callback_{{ safeFunctionName }}(callback_query: types.CallbackQuery, state: FSMContext = None):
 {{ indent }}    await callback_query.answer()
 {{ indent }}    user_id = callback_query.from_user.id
 {{ indent }}    callback_data = callback_query.data
@@ -80,9 +80,9 @@
 {% set targetNodeObj = nodes | selectattr('id', 'equalto', nextNodeId) | first %}
 {% set targetSafeName = nextNodeId | replace('[^a-zA-Z0-9_]', '_') %}
 {% if targetNodeObj.type == 'message' %}
-{{ indent }}            await handle_callback_{{ targetSafeName }}(callback_query)
+{{ indent }}            await handle_callback_{{ targetSafeName }}(callback_query, state=state)
 {% else %}
-{{ indent }}            await handle_callback_{{ targetSafeName }}(callback_query)
+{{ indent }}            await handle_callback_{{ targetSafeName }}(callback_query, state=state)
 {% endif %}
 {% else %}
 {{ indent }}            logging.warning(f"⚠️ Целевой узел не найден: {next_node_id}, завершаем переход")

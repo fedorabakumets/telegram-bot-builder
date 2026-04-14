@@ -20,6 +20,7 @@
 | botIdManual | string | Ручной числовой ID бота | ❌ |
 | saveTokenTo | string | Переменная для сохранения токена | ❌ |
 | saveErrorTo | string | Переменная для сохранения ошибки | ❌ |
+| state | FSMContext | Опциональный FSM контекст (state: FSMContext = None). Используется для чтения/записи данных между переходами. | ❌ |
 
 ## Пример входных данных (Node[])
 

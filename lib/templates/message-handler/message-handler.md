@@ -16,6 +16,7 @@
 | targetGroupId | string | ID конкретной группы или '' | '' |
 | disableNotification | boolean | Без уведомления (pin) | false |
 | messageText | string | Текст ответа после действия | '' |
+| state | FSMContext | Опциональный FSM контекст (state: FSMContext = None). Используется для чтения/записи данных между переходами. | None |
 
 ## Примеры использования
 

@@ -12,6 +12,7 @@
 | `attachedMedia`       | `string[]` | ✅           | Массив URL медиафайлов                |
 | `enableAutoTransition`| `boolean`  | ❌           | Включить автопереход после отправки   |
 | `autoTransitionTo`    | `string`   | ❌           | ID целевого узла автоперехода         |
+| `state`               | `FSMContext` | ❌         | Опциональный FSM контекст (state: FSMContext = None). Используется для чтения/записи данных между переходами. |
 
 ## Логика определения типа файла
 

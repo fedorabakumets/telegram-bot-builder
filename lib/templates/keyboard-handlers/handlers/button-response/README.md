@@ -12,6 +12,7 @@
 | `allNodes` | `any[]` | Да | `[]` | Массив всех узлов для навигации |
 | `hasUrlButtonsInProject` | `boolean` | Нет | `false` | Есть ли URL кнопки в проекте |
 | `indentLevel` | `string` | Нет | `''` | Уровень отступа |
+| `state` | `FSMContext` | Нет | `None` | Опциональный FSM контекст (state: FSMContext = None). Используется для чтения/записи данных между переходами. |
 
 ### Структура UserInputNode
 

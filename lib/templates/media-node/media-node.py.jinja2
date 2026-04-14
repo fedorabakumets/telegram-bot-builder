@@ -54,7 +54,7 @@
 {%- endif %}
 
 @dp.callback_query(lambda c: c.data == "{{ nodeId }}")
-async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQuery):
+async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQuery, state: FSMContext = None):
     """Обработчик медиа-ноды для узла {{ nodeId }}"""
     is_fake_callback = getattr(callback_query, '_is_fake', False)
     logging.info(f"Медиа-нода {{ nodeId }}: отправка медиафайлов")
@@ -277,5 +277,5 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             pass
 
     fake_cb = FakeCallbackQuery(callback_query.message, "{{ autoTransitionTo }}")
-    await handle_callback_{{ autoTransitionTo|safe_name }}(fake_cb)
+    await handle_callback_{{ autoTransitionTo|safe_name }}(fake_cb, state=state)
 {%- endif %}

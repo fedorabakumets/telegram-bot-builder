@@ -202,6 +202,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 
     {# Универсальная замена переменных #}
     all_user_vars = await init_all_user_vars(user_id)
+    {# Читаем FSM данные — они имеют приоритет (сохраняют контекст при goto-переходах) #}
+    if state is not None:
+        try:
+            _fsm_d = await state.get_data()
+            if _fsm_d:
+                all_user_vars.update(_fsm_d)
+        except Exception:
+            pass
     {%- if hasUserIdsVariable %}
     user_ids_record = await get_user_ids_from_db(user_id)
     if user_ids_record:

@@ -51,6 +51,7 @@
 | `hasUserIdsVariable` | `boolean` | `false` | Текст использует переменную user_ids |
 | `messageSendRecipients` | `MessageSendRecipient[]` | `[]` | Список дополнительных получателей сообщения |
 | `saveMessageIdTo` | `string` | - | Имя переменной для сохранения ID отправленного сообщения |
+| `state` | `FSMContext` | `None` | Опциональный FSM контекст (state: FSMContext = None). Используется для чтения/записи данных между переходами. |
 
 ## Тип MessageSendRecipient
 

@@ -369,6 +369,49 @@ test('H07', 'синтаксис Python OK после всех изменений
   syntax(codeReal, 'h07');
 });
 
+/**
+ * H08: media-node обработчик содержит state: FSMContext = None.
+ * Проверяем что сигнатура обработчика медиа-ноды принимает опциональный FSM-контекст.
+ */
+test('H08', 'media-node обработчик содержит state: FSMContext = None', () => {
+  ok(codeReal.includes('state: FSMContext = None'), 'state: FSMContext = None не найден в media-node обработчике');
+});
+
+/**
+ * H09: map обработчик содержит state: FSMContext = None.
+ * Проверяем что сигнатура обработчика геолокации принимает опциональный FSM-контекст.
+ */
+test('H09', 'map обработчик содержит state: FSMContext = None', () => {
+  ok(codeReal.includes('state: FSMContext = None'), 'state: FSMContext = None не найден в map обработчике');
+});
+
+/**
+ * H10: message обработчик читает FSM данные через _fsm_d = await state.get_data() перед replace_variables_in_text.
+ * Критично для корректного отображения переменных из FSM-контекста (например {callback_data}).
+ */
+test('H10', 'message обработчик читает FSM данные через _fsm_d = await state.get_data() перед replace_variables_in_text', () => {
+  ok(
+    codeReal.includes('_fsm_d = await state.get_data()'),
+    '_fsm_d = await state.get_data() не найден — FSM данные не читаются перед replace_variables_in_text',
+  );
+});
+
+/**
+ * H11: при автопереходе в media-node state передаётся дальше.
+ * Проверяем что вызов следующего обработчика при автопереходе содержит state=state.
+ */
+test('H11', 'при автопереходе в media-node state передаётся дальше', () => {
+  ok(codeReal.includes('state=state'), 'state=state не найден — state не передаётся при автопереходе в media-node');
+});
+
+/**
+ * H12: синтаксис Python OK для реального проекта после всех изменений.
+ * Финальная проверка что все новые сигнатуры не сломали синтаксис.
+ */
+test('H12', 'синтаксис Python OK для реального проекта после всех изменений', () => {
+  syntax(codeReal, 'h12');
+});
+
 // ══ Итог ══════════════════════════════════════════════════════════════════════
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

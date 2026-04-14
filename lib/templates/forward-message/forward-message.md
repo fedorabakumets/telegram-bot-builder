@@ -37,6 +37,7 @@
 | `targetRecipients` | `ForwardMessageTargetRecipient[]` | `[]` | Получатели пересылки |
 | `disableNotification` | `boolean` | `false` | Тихая пересылка |
 | `hideAuthor` | `boolean` | `false` | Скрыть автора — использует `copy_message` вместо `forward_message` |
+| `state` | `FSMContext` | `None` | Опциональный FSM контекст (state: FSMContext = None). Используется для чтения/записи данных между переходами. |
 
 ## Параметры ForwardMessageTargetRecipient
 

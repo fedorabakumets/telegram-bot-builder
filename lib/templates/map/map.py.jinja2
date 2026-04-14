@@ -22,7 +22,7 @@
 #}
 
 @dp.callback_query(lambda c: c.data == "{{ nodeId }}")
-async def handle_callback_{{ nodeId|safe_name }}(callback: types.CallbackQuery):
+async def handle_callback_{{ nodeId|safe_name }}(callback: types.CallbackQuery, state: FSMContext = None):
     """Обработчик геолокации для узла {{ nodeId }}"""
     logging.info(f"Геолокация {{ nodeId }} вызвана пользователем {callback.from_user.id}")
     await callback.answer()
@@ -54,6 +54,14 @@ async def handle_callback_{{ nodeId|safe_name }}(callback: types.CallbackQuery):
 
     {# Универсальная замена переменных #}
     all_user_vars = await init_all_user_vars(user_id)
+    {# Читаем FSM данные — они имеют приоритет (сохраняют контекст при goto-переходах) #}
+    if state is not None:
+        try:
+            _fsm_d = await state.get_data()
+            if _fsm_d:
+                all_user_vars.update(_fsm_d)
+        except Exception:
+            pass
     text = replace_variables_in_text(text, all_user_vars, {})
 
     {# Клавиатура #}
@@ -114,7 +122,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback: types.CallbackQuery):
 
     fake_callback = FakeCallbackQuery(callback, "{{ autoTransitionTo }}")
     try:
-        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(fake_callback)
+        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(fake_callback, state=state)
         logging.info(f"✅ Автопереход выполнен: {{ nodeId }} -> {{ autoTransitionTo }}")
     except Exception as e:
         logging.error(f"Ошибка при автопереходе к узлу {{ autoTransitionTo }}: {e}")
