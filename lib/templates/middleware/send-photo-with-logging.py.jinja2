@@ -52,7 +52,8 @@ def _wrap_bot_send_photo(bot_instance):
             except Exception as e:
                 logging.warning(f"Не удалось извлечь кнопки из send_photo: {e}")
 
-        saved_message = await save_message_to_api(
+        # Сохраняем исходящее фото бота асинхронно (fire-and-forget)
+        _fire_save_message(
             user_id=str(chat_id),
             message_type="bot",
             message_text=caption or "[Фото]",

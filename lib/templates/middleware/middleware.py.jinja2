@@ -93,12 +93,12 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
             if not message_text or message_text == "[медиа]":
                 message_text = "[Фото]"
 
-        # Сохраняем сообщение в базу данных
-        saved_message = await save_message_to_api(
+        # Сохраняем сообщение в базу данных асинхронно (fire-and-forget)
+        _fire_save_message(
             user_id=user_id,
             message_type="user",
             message_text=message_text,
-            message_data=message_data
+            message_data=message_data,
         )
 
     except Exception as e:
@@ -131,7 +131,8 @@ async def callback_query_logging_middleware(handler, event: types.CallbackQuery,
                         break
 
         message_text_to_save = f"[Нажата кнопка: {button_text}]" if button_text else "[Нажата кнопка]"
-        await save_message_to_api(
+        # Сохраняем нажатие кнопки асинхронно (fire-and-forget)
+        _fire_save_message(
             user_id=user_id,
             message_type="user",
             message_text=message_text_to_save,

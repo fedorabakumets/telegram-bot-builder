@@ -31,3 +31,24 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
         logging.error(f"❌ Ошибка сохранения сообщения в БД: {e}")
     return None
 
+
+def _fire_save_message(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
+    """Запускает save_message_to_api в фоне (fire-and-forget).
+    Не блокирует выполнение — сообщение сохраняется асинхронно.
+
+    @param user_id - Идентификатор пользователя
+    @param message_type - Тип сообщения: "user" или "bot"
+    @param message_text - Текст сообщения (опционально)
+    @param node_id - Идентификатор узла сценария (опционально)
+    @param message_data - Дополнительные данные сообщения (опционально)
+    """
+    try:
+        asyncio.create_task(save_message_to_api(
+            user_id=user_id,
+            message_type=message_type,
+            message_text=message_text,
+            node_id=node_id,
+            message_data=message_data,
+        ))
+    except Exception as e:
+        logging.warning(f"⚠️ _fire_save_message: не удалось создать задачу: {e}")

@@ -41,7 +41,8 @@ def _wrap_bot_send_message(bot_instance):
                         message_data_obj["keyboard_type"] = "reply"
             except Exception as e:
                 logging.warning(f"Не удалось извлечь кнопки: {e}")
-        await save_message_to_api(
+        # Сохраняем исходящее сообщение бота асинхронно (fire-and-forget)
+        _fire_save_message(
             user_id=str(chat_id),
             message_type="bot",
             message_text=text,
