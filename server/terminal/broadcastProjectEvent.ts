@@ -46,6 +46,7 @@ export async function broadcastProjectEvent(projectId: number, event: ProjectEve
     const project = await storage.getBotProject(projectId);
     const userKey = project?.ownerId ? `user_${project.ownerId}` : `user_global`;
     const userConns = activeConnections.get(userKey);
+    console.log(`[broadcast] event=${event.type} projectId=${projectId} ownerId=${project?.ownerId} userKey=${userKey} activeKeys=[${[...activeConnections.keys()].join(',')}] userConns=${userConns?.size ?? 0}`);
     if (userConns) {
       sendToConnections(userConns, payload);
     }
