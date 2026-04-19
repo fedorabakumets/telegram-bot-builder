@@ -49,7 +49,8 @@ export function buildCallbackHandlerInitParams(
   nodeId: string,
   targetNode: any,
   indent: string = '    ',
-  overrideHideAfterClick?: boolean
+  overrideHideAfterClick?: boolean,
+  includeStateSync: boolean = true
 ): CallbackHandlerInitTemplateParams {
   const buttons = targetNode.data?.buttons || [];
   // Если передан override (кнопка с hideAfterClick ведёт к этому узлу) — используем его,
@@ -65,6 +66,7 @@ export function buildCallbackHandlerInitParams(
   return {
     nodeId,
     hasHideAfterClick,
+    includeStateSync,
     variableFilters,
     indentLevel: indent,
   };

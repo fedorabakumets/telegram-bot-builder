@@ -129,7 +129,9 @@ export function generateInteractiveCallbackHandlers(
     const hasHideAfterClickIncoming = nodes.some((n: any) =>
       (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === nodeId)
     );
-    code += generateCallbackHandlerInit(buildCallbackHandlerInitParams(nodeId, targetNode, '    ', hasHideAfterClickIncoming));
+    code += generateCallbackHandlerInit(
+      buildCallbackHandlerInitParams(nodeId, targetNode, '    ', hasHideAfterClickIncoming, false)
+    );
     code += '    \n';
 
     // Переменные прикреплённых медиа

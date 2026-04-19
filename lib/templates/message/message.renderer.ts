@@ -6,9 +6,10 @@
 import type { MessageTemplateParams } from './message.params';
 import { messageParamsSchema } from './message.schema';
 import { renderPartialTemplate } from '../template-renderer';
-import { computeAdjustStr } from '../keyboard/keyboard.renderer';
+import { computeAdjustStr, sortButtonsByLayout } from '../keyboard/keyboard.renderer';
 import { generateUserInput, nodeToUserInputParams } from '../user-input/user-input.renderer';
 import { normalizeDynamicButtonsConfig, shouldUseDynamicButtons } from '../keyboard/dynamic-buttons';
+import { buildStaticRowsAroundDynamic } from '../keyboard/keyboard-layout-rows';
 import type { Node } from '@shared/schema';
 
 /**
@@ -39,8 +40,16 @@ export function generateMessage(params: MessageTemplateParams): string {
     dynamicButtons: normalizedDynamicButtons,
     keyboardType: normalizedParams.keyboardType,
   });
+  const rawButtons = normalizedParams.buttons ?? [];
+  const hasDynamicLayout = useDynamicButtons &&
+    normalizedParams.keyboardLayout?.rows?.some((row: any) => row.buttonIds?.includes('__dynamic__'));
+  const sortedButtons = sortButtonsByLayout(rawButtons, normalizedParams.keyboardLayout);
+  const staticRowsAroundDynamic = hasDynamicLayout
+    ? buildStaticRowsAroundDynamic(rawButtons, normalizedParams.keyboardLayout)
+    : { staticRowsBefore: [], staticRowsAfter: [] };
   const validated = messageParamsSchema.parse({
     ...normalizedParams,
+    buttons: sortedButtons,
     userDatabaseEnabled: normalizedParams.userDatabaseEnabled ?? false,
     keyboardType: useDynamicButtons ? 'inline' : (normalizedParams.keyboardType ?? 'none'),
     requiresAuth: normalizedParams.requiresAuth ?? false,
@@ -52,7 +61,7 @@ export function generateMessage(params: MessageTemplateParams): string {
     enableDynamicButtons: useDynamicButtons,
     oneTimeKeyboard: normalizedParams.oneTimeKeyboard ?? false,
     resizeKeyboard: normalizedParams.resizeKeyboard ?? true,
-    dynamicButtons: normalizedDynamicButtons ?? normalizedParams.dynamicButtons,
+    dynamicButtons: normalizedDynamicButtons ?? normalizedParams.dynamicButtons ?? undefined,
   });
 
   // Вычисляем блок waiting_for_input если нужен сбор ввода
@@ -74,5 +83,7 @@ export function generateMessage(params: MessageTemplateParams): string {
     userInputBlock,
     callbackPattern: params.callbackPattern || params.nodeId,
     messageSendRecipients: params.messageSendRecipients || [],
+    staticRowsBefore: staticRowsAroundDynamic.staticRowsBefore,
+    staticRowsAfter: staticRowsAroundDynamic.staticRowsAfter,
   });
 }

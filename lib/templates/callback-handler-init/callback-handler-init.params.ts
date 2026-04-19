@@ -9,6 +9,8 @@ export interface CallbackHandlerInitTemplateParams {
   nodeId: string;
   /** Есть ли кнопки с hideAfterClick */
   hasHideAfterClick: boolean;
+  /** Нужно ли генерировать синхронизацию FSM через state */
+  includeStateSync?: boolean;
   /** Фильтры переменных (опционально) */
   variableFilters?: Record<string, any> | null;
   /** Уровень отступа (по умолчанию '    ') */

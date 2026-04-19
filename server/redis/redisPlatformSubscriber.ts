@@ -25,6 +25,15 @@ const CHANNEL_TYPE_MAP: Record<string, ProjectEvent['type']> = {
 };
 
 /**
+ * Проверяет, относится ли канал к Redis-логам бота.
+ * @param channel - Имя Redis-канала
+ * @returns `true`, если канал начинается с `bot:logs:`
+ */
+function isLogsChannel(channel: string): boolean {
+  return channel.startsWith('bot:logs:');
+}
+
+/**
  * Разбирает имя канала Redis и извлекает тип события, projectId и tokenId.
  * Формат канала: `bot:{action}:{projectId}:{tokenId}`
  * @param channel - Имя канала Redis
@@ -60,6 +69,9 @@ function parseChannel(channel: string): {
 function handleMessage(_pattern: string, channel: string, message: string): void {
   const parsed = parseChannel(channel);
   if (!parsed) {
+    if (isLogsChannel(channel)) {
+      return;
+    }
     console.warn(`[RedisSub] Неизвестный формат канала: ${channel}`);
     return;
   }

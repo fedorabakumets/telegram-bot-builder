@@ -68,6 +68,80 @@ describe('keyboard.py.jinja2 шаблон', () => {
         assert.ok(result.includes('one_time_keyboard=True'));
         assert.ok(result.includes('resize_keyboard=False'));
       });
+
+      it('сохраняет ручные ряды вокруг __dynamic__ без пустого builder.adjust()', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [
+            {
+              id: 'btn_add',
+              text: 'Добавить токен',
+              action: 'goto',
+              target: 'ask-token',
+              buttonType: 'normal',
+              skipDataCollection: false,
+              hideAfterClick: false,
+            },
+            {
+              id: 'btn_rename',
+              text: 'Переименовать',
+              action: 'goto',
+              target: 'rename-project',
+              buttonType: 'normal',
+              skipDataCollection: false,
+              hideAfterClick: false,
+            },
+            {
+              id: 'btn_delete',
+              text: 'Удалить',
+              action: 'goto',
+              target: 'delete-project',
+              buttonType: 'normal',
+              skipDataCollection: false,
+              hideAfterClick: false,
+            },
+            {
+              id: 'btn_back',
+              text: 'К списку',
+              action: 'goto',
+              target: 'fetch-projects',
+              buttonType: 'normal',
+              skipDataCollection: false,
+              hideAfterClick: false,
+            },
+          ],
+          enableDynamicButtons: true,
+          dynamicButtons: {
+            sourceVariable: 'project_tokens',
+            arrayPath: 'items',
+            textTemplate: '{name}',
+            callbackTemplate: 'token_{id}',
+            columns: 1,
+            styleMode: 'none',
+            styleField: '',
+            styleTemplate: '',
+          },
+          keyboardLayout: {
+            autoLayout: false,
+            columns: 2,
+            rows: [
+              { buttonIds: ['__dynamic__'] },
+              { buttonIds: ['btn_add'] },
+              { buttonIds: ['btn_rename', 'btn_delete'] },
+              { buttonIds: ['btn_back'] },
+            ],
+          },
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+
+        assert.ok(!result.includes('builder.adjust()'), `Не должно быть пустого builder.adjust():\n${result}`);
+        assert.ok(result.includes('builder.row('), `Ожидался builder.row() для ручных рядов:\n${result}`);
+        assert.ok(result.includes('callback_data="ask-token"'));
+        assert.ok(result.includes('callback_data="rename-project"'));
+        assert.ok(result.includes('callback_data="delete-project"'));
+        assert.ok(result.includes('callback_data="fetch-projects"'));
+      });
     });
 
     describe('Inline клавиатура', () => {
@@ -787,7 +861,69 @@ describe('keyboard.py.jinja2 шаблон', () => {
     assert.ok(result.includes('def _resolve_dynamic_path('));
     assert.ok(result.includes('replace_variables_in_text('));
     assert.ok(result.includes('project_{id}'));
-    assert.ok(result.includes('builder.adjust(2)'));
+    assert.ok(result.includes('builder.row(*_dynamic_row)'));
+  });
+
+  it('mixed dynamic + static manual rows сохраняет layout после __dynamic__', () => {
+    const result = generateKeyboard({
+      ...validParamsDynamicInline,
+      buttons: [
+        {
+          id: 'btn_add',
+          text: 'Добавить',
+          action: 'goto',
+          target: 'node_add',
+          buttonType: 'normal',
+          skipDataCollection: false,
+          hideAfterClick: false,
+        },
+        {
+          id: 'btn_rename',
+          text: 'Переименовать',
+          action: 'goto',
+          target: 'node_rename',
+          buttonType: 'normal',
+          skipDataCollection: false,
+          hideAfterClick: false,
+        },
+        {
+          id: 'btn_delete',
+          text: 'Удалить',
+          action: 'goto',
+          target: 'node_delete',
+          buttonType: 'normal',
+          skipDataCollection: false,
+          hideAfterClick: false,
+        },
+        {
+          id: 'btn_back',
+          text: 'Назад',
+          action: 'goto',
+          target: 'node_back',
+          buttonType: 'normal',
+          skipDataCollection: false,
+          hideAfterClick: false,
+        },
+      ],
+      keyboardLayout: {
+        autoLayout: false,
+        columns: 2,
+        rows: [
+          { buttonIds: ['__dynamic__'] },
+          { buttonIds: ['btn_add'] },
+          { buttonIds: ['btn_rename', 'btn_delete'] },
+          { buttonIds: ['btn_back'] },
+        ],
+      },
+    });
+
+    assert.ok(!result.includes('builder.adjust('), `Не ожидался builder.adjust в mixed-режиме:\n${result}`);
+    assert.ok(result.includes('builder.row(*_dynamic_row)'), `Динамические кнопки должны собираться через row():\n${result}`);
+    assert.ok(result.includes('callback_data="node_add"'), 'Должна быть кнопка node_add');
+    assert.ok(result.includes('callback_data="node_rename"'), 'Должна быть кнопка node_rename');
+    assert.ok(result.includes('callback_data="node_delete"'), 'Должна быть кнопка node_delete');
+    assert.ok(result.includes('callback_data="node_back"'), 'Должна быть кнопка node_back');
+    assert.ok(result.includes('builder.row('), `Ожидались явные строки layout:\n${result}`);
   });
 
   describe('keyboardParamsSchema', () => {
@@ -910,20 +1046,21 @@ describe('keyboard.py.jinja2 шаблон', () => {
     /**
      * columns=2 → builder.adjust(2)
      */
-    it('генерирует builder.adjust(2) при columns=2', () => {
+    it('генерирует builder.row для динамических кнопок при columns=2', () => {
       const result = generateKeyboard(validParamsDynamicInline);
-      assert.ok(result.includes('builder.adjust(2)'), `Ожидался builder.adjust(2), получено:\n${result}`);
+      assert.ok(result.includes('if len(_dynamic_row) == 2:'), `Ожидалось разбиение по 2 кнопки, получено:\n${result}`);
+      assert.ok(result.includes('builder.row(*_dynamic_row)'), `Ожидался builder.row(*_dynamic_row), получено:\n${result}`);
     });
 
     /**
      * columns=3 → builder.adjust(3)
      */
-    it('генерирует builder.adjust(3) при columns=3', () => {
+    it('генерирует builder.row для динамических кнопок при columns=3', () => {
       const result = generateKeyboard({
         ...validParamsDynamicInline,
         dynamicButtons: { ...validParamsDynamicInline.dynamicButtons!, columns: 3 },
       });
-      assert.ok(result.includes('builder.adjust(3)'), `Ожидался builder.adjust(3), получено:\n${result}`);
+      assert.ok(result.includes('if len(_dynamic_row) == 3:'), `Ожидалось разбиение по 3 кнопки, получено:\n${result}`);
     });
 
     /**

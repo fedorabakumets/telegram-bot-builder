@@ -24,6 +24,7 @@ describe('config.py.jinja2 шаблон', () => {
         const result = generateConfig(validParamsAllEnabled);
 
         assert.ok(result.includes('BOT_TOKEN = os.getenv("BOT_TOKEN")'));
+        assert.ok(result.includes('TOKEN_ID = int(os.getenv("TOKEN_ID", "0"))'));
         assert.ok(result.includes('PROJECT_ID = 123'));
         assert.ok(result.includes('DATABASE_URL = os.getenv("DATABASE_URL")'));
         assert.ok(result.includes('db_pool = None'));
@@ -33,6 +34,7 @@ describe('config.py.jinja2 шаблон', () => {
         const result = generateConfig(validParamsAllDisabled);
 
         assert.ok(result.includes('BOT_TOKEN = os.getenv("BOT_TOKEN")'));
+        assert.ok(result.includes('TOKEN_ID = int(os.getenv("TOKEN_ID", "0"))'));
         assert.ok(!result.includes('PROJECT_ID ='));
         assert.ok(!result.includes('DATABASE_URL'));
       });
@@ -153,6 +155,7 @@ describe('config.py.jinja2 шаблон', () => {
 
         assert.ok(result.includes('load_dotenv()'));
         assert.ok(result.includes('BOT_TOKEN = os.getenv'));
+        assert.ok(result.includes('TOKEN_ID = int(os.getenv("TOKEN_ID", "0"))'));
         assert.ok(result.includes('bot = Bot(token=BOT_TOKEN)'));
         assert.ok(result.includes('dp = Dispatcher(storage=PostgresStorage())'));
       });

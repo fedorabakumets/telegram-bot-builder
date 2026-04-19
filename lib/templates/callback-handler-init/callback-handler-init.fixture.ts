@@ -9,6 +9,7 @@ import type { CallbackHandlerInitTemplateParams } from './callback-handler-init.
 export const validParamsBasic: CallbackHandlerInitTemplateParams = {
   nodeId: 'node_abc',
   hasHideAfterClick: false,
+  includeStateSync: true,
   variableFilters: null,
 };
 
@@ -16,6 +17,7 @@ export const validParamsBasic: CallbackHandlerInitTemplateParams = {
 export const validParamsWithHide: CallbackHandlerInitTemplateParams = {
   nodeId: 'node_xyz',
   hasHideAfterClick: true,
+  includeStateSync: true,
   variableFilters: null,
 };
 
@@ -23,6 +25,7 @@ export const validParamsWithHide: CallbackHandlerInitTemplateParams = {
 export const validParamsWithFilters: CallbackHandlerInitTemplateParams = {
   nodeId: 'node_filtered',
   hasHideAfterClick: false,
+  includeStateSync: true,
   variableFilters: { user_role: 'admin', status: 'active' },
 };
 
@@ -30,6 +33,15 @@ export const validParamsWithFilters: CallbackHandlerInitTemplateParams = {
 export const validParamsWithIndent: CallbackHandlerInitTemplateParams = {
   nodeId: 'node_indented',
   hasHideAfterClick: false,
+  includeStateSync: true,
   variableFilters: null,
   indentLevel: '        ',
+};
+
+/** Р’Р°Р»РёРґРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹: Р±РµР· СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё FSM */
+export const validParamsWithoutStateSync: CallbackHandlerInitTemplateParams = {
+  nodeId: 'node_no_state',
+  hasHideAfterClick: false,
+  includeStateSync: false,
+  variableFilters: null,
 };

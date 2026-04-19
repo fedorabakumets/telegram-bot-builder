@@ -48,6 +48,9 @@ load_dotenv()
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# Идентификатор токена бота для сегментации данных в БД и Redis
+TOKEN_ID = int(os.getenv("TOKEN_ID", "0"))
+
 # Настройка логирования с поддержкой UTF-8
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
@@ -103,6 +106,9 @@ load_dotenv()
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# Идентификатор токена бота для сегментации данных в БД и Redis
+TOKEN_ID = int(os.getenv("TOKEN_ID", "0"))
+
 # Настройка логирования с поддержкой UTF-8
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
@@ -140,6 +146,9 @@ load_dotenv()
 
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Идентификатор токена бота для сегментации данных в БД и Redis
+TOKEN_ID = int(os.getenv("TOKEN_ID", "0"))
 
 # Настройка логирования с поддержкой UTF-8
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()

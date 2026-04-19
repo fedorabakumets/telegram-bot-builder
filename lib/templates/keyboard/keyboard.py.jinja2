@@ -28,7 +28,7 @@
 {%- if allowMultipleSelection %}2{%- elif total >= 6 %}2{%- else %}1{%- endif -%}
 {%- endmacro -%}
 
-{%- macro generateDynamicInlineKeyboardCode(dynamicButtons, indent='') -%}
+{%- macro generateDynamicInlineKeyboardCode(dynamicButtons, indent='', initializeBuilder=true, finalizeKeyboard=true) -%}
 {%- set sourceVariable = dynamicButtons.sourceVariable or '' -%}
 {%- set arrayPath = dynamicButtons.arrayPath or '' -%}
 {%- set textTemplate = dynamicButtons.textTemplate or '' -%}
@@ -108,8 +108,11 @@
 {{ indent }}_dynamic_items = _resolve_dynamic_path(_dynamic_source, "{{ arrayPath }}")
 {{ indent }}if not isinstance(_dynamic_items, (list, tuple)):
 {{ indent }}    _dynamic_items = []
+{%- if initializeBuilder %}
 {{ indent }}builder = InlineKeyboardBuilder()
+{%- endif %}
 {{ indent }}_dynamic_added = 0
+{{ indent }}_dynamic_row = []
 {{ indent }}for _dynamic_item in _dynamic_items:
 {{ indent }}    _dynamic_item_vars = _normalize_dynamic_item(_dynamic_item)
 {{ indent }}    _dynamic_text = _render_dynamic_template({{ textTemplate|format_python_text }}, _dynamic_item_vars)
@@ -121,15 +124,21 @@
 {{ indent }}        continue
 {{ indent }}    _dynamic_style = _normalize_dynamic_style(_dynamic_item_vars)
 {{ indent }}    if _dynamic_style:
-{{ indent }}        builder.add(InlineKeyboardButton(text=_dynamic_text, callback_data=_dynamic_callback, style=_dynamic_style))
+{{ indent }}        _dynamic_row.append(InlineKeyboardButton(text=_dynamic_text, callback_data=_dynamic_callback, style=_dynamic_style))
 {{ indent }}    else:
-{{ indent }}        builder.add(InlineKeyboardButton(text=_dynamic_text, callback_data=_dynamic_callback))
+{{ indent }}        _dynamic_row.append(InlineKeyboardButton(text=_dynamic_text, callback_data=_dynamic_callback))
 {{ indent }}    _dynamic_added += 1
+{{ indent }}    if len(_dynamic_row) == {{ columns }}:
+{{ indent }}        builder.row(*_dynamic_row)
+{{ indent }}        _dynamic_row = []
+{{ indent }}if _dynamic_row:
+{{ indent }}    builder.row(*_dynamic_row)
+{%- if finalizeKeyboard %}
 {{ indent }}if _dynamic_added > 0:
-{{ indent }}    builder.adjust({{ columns }})
 {{ indent }}    keyboard = builder.as_markup()
 {{ indent }}else:
 {{ indent }}    keyboard = None
+{%- endif %}
 {%- endmacro -%}
 
 {%- macro generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection=False, indent='') -%}
@@ -176,29 +185,36 @@
 
 {# ===== ГЕНЕРАЦИЯ КЛАВИАТУРЫ ===== #}
 {%- if enableDynamicButtons and dynamicButtons and keyboardType == 'inline' %}
-{%- if (staticButtonsBefore and staticButtonsBefore|length > 0) or (staticButtonsAfter and staticButtonsAfter|length > 0) %}
+{%- if (staticRowsBefore and staticRowsBefore|length > 0) or (staticRowsAfter and staticRowsAfter|length > 0) %}
 {# Смешанный режим: статические кнопки до и/или после динамических #}
 {{ indent }}builder = InlineKeyboardBuilder()
-{%- for btn in staticButtonsBefore %}
+{%- for row in staticRowsBefore %}
+{{ indent }}builder.row(
+{%- for btn in row %}
 {%- if btn.action == 'goto' or btn.action == 'complete' %}
-{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or btn.target or btn.id or 'no_action' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+{{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or btn.target or btn.id or 'no_action' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
 {%- elif btn.action == 'url' %}
-{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), url="{{ btn.url or btn.target or '#' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+{{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), url="{{ btn.url or btn.target or '#' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
 {%- else %}
-{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.id or btn.target or 'btn' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+{{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.id or btn.target or 'btn' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
 {%- endif %}
 {%- endfor %}
-{{ generateDynamicInlineKeyboardCode(dynamicButtons, indent) }}
-{%- for btn in staticButtonsAfter %}
+{{ indent }})
+{%- endfor %}
+{{ generateDynamicInlineKeyboardCode(dynamicButtons, indent, false, false) }}
+{%- for row in staticRowsAfter %}
+{{ indent }}builder.row(
+{%- for btn in row %}
 {%- if btn.action == 'goto' or btn.action == 'complete' %}
-{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or btn.target or btn.id or 'no_action' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+{{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or btn.target or btn.id or 'no_action' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
 {%- elif btn.action == 'url' %}
-{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), url="{{ btn.url or btn.target or '#' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+{{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), url="{{ btn.url or btn.target or '#' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
 {%- else %}
-{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.id or btn.target or 'btn' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+{{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.id or btn.target or 'btn' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
 {%- endif %}
 {%- endfor %}
-{{ generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection, indent) }}
+{{ indent }})
+{%- endfor %}
 {{ indent }}keyboard = builder.as_markup()
 {%- else %}
 {# Только динамические кнопки #}

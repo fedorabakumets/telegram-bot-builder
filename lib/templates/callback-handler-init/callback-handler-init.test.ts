@@ -11,6 +11,7 @@ import {
   validParamsWithHide,
   validParamsWithFilters,
   validParamsWithIndent,
+  validParamsWithoutStateSync,
 } from './callback-handler-init.fixture';
 import { callbackHandlerInitParamsSchema } from './callback-handler-init.schema';
 
@@ -55,6 +56,12 @@ describe('generateCallbackHandlerInit()', () => {
     assert.ok(result.includes('try:'));
     assert.ok(result.includes('except Exception:'));
   });
+
+  it('не генерирует обращение к state при includeStateSync=false', () => {
+    const result = generateCallbackHandlerInit(validParamsWithoutStateSync);
+    assert.ok(!result.includes('if state is not None:'));
+    assert.ok(!result.includes('await state.get_data()'));
+  });
 });
 
 describe('callbackHandlerInitParamsSchema', () => {
@@ -73,6 +80,7 @@ describe('callbackHandlerInitParamsSchema', () => {
     assert.ok(callbackHandlerInitParamsSchema.safeParse({
       nodeId: 'n',
       hasHideAfterClick: false,
+      includeStateSync: true,
       variableFilters: null,
     }).success);
   });
