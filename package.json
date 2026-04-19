@@ -35,6 +35,7 @@
     "fetch-bot-avatar": "tsx --tsconfig tsconfig.node.json scripts/fetch-bot-avatar.ts",
     "update-avatar-urls": "tsx --tsconfig tsconfig.node.json scripts/update-avatar-urls.ts",
     "delete-bots-from-users": "tsx --tsconfig tsconfig.node.json scripts/delete-bots-from-users.ts",
+    "backfill:token-segmentation": "tsx --tsconfig tsconfig.node.json scripts/backfill-token-segmentation.ts",
     "start": "npm run migrate && cross-env NODE_ENV=production tsx --tsconfig tsconfig.node.json server/index.ts",
     "build": "npm run build:client",
     "build:client": "vite build --mode production --config vite.config.ts",

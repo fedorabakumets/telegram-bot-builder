@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Контракт IStorage и создание активного экземпляра server storage
+ */
+
 import {
   type BotGroup,
   type BotInstance,
@@ -451,14 +455,14 @@ export interface IStorage {
    * @param userId - ID пользователя
    * @returns Данные пользователя бота или undefined, если не найдены
    */
-  getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined>;
+  getUserBotDataByProjectAndUser(projectId: number, userId: string, tokenId?: number | null): Promise<UserBotData | undefined>;
 
   /**
    * Получить все данные пользователей бота по ID проекта
    * @param projectId - ID проекта
    * @returns Массив данных пользователей бота
    */
-  getUserBotDataByProject(projectId: number): Promise<UserBotData[]>;
+  getUserBotDataByProject(projectId: number, tokenId?: number | null): Promise<UserBotData[]>;
 
   /**
    * Получить все данные пользователей ботов
@@ -493,7 +497,7 @@ export interface IStorage {
    * @param projectId - ID проекта
    * @returns true, если данные были удалены, иначе false
    */
-  deleteUserBotDataByProject(projectId: number): Promise<boolean>;
+  deleteUserBotDataByProject(projectId: number, tokenId?: number | null): Promise<boolean>;
 
   /**
    * Увеличить счетчик взаимодействий пользователя
@@ -516,14 +520,14 @@ export interface IStorage {
    * @param query - Поисковый запрос
    * @returns Массив найденных данных пользователей
    */
-  searchUserBotData(projectId: number, query: string): Promise<UserBotData[]>;
+  searchUserBotData(projectId: number, query: string, tokenId?: number | null): Promise<UserBotData[]>;
 
   /**
    * Получить статистику по данным пользователей бота
    * @param projectId - ID проекта
    * @returns Объект со статистикой пользователей
    */
-  getUserBotDataStats(projectId: number): Promise<{
+  getUserBotDataStats(projectId: number, tokenId?: number | null): Promise<{
     totalUsers: number;
     activeUsers: number;
     blockedUsers: number;
@@ -622,7 +626,7 @@ export interface IStorage {
    * @param limit - Ограничение количества сообщений (по умолчанию 100)
    * @returns Массив сообщений бота
    */
-  getBotMessages(projectId: number, userId: string, limit?: number): Promise<BotMessage[]>;
+  getBotMessages(projectId: number, userId: string, limit?: number, tokenId?: number | null): Promise<BotMessage[]>;
 
   /**
    * Получить сообщения бота с медиа по проекту и пользователю
@@ -633,7 +637,7 @@ export interface IStorage {
    * @param messageType - Тип сообщения: 'user' или 'bot' (опционально)
    * @returns Массив сообщений бота с медиафайлами
    */
-  getBotMessagesWithMedia(projectId: number, userId: string, limit?: number, order?: 'asc' | 'desc', messageType?: 'user' | 'bot'): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]>;
+  getBotMessagesWithMedia(projectId: number, userId: string, limit?: number, order?: 'asc' | 'desc', messageType?: 'user' | 'bot', tokenId?: number | null): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]>;
 
   /**
    * Удалить сообщения бота по проекту и пользователю
@@ -641,14 +645,14 @@ export interface IStorage {
    * @param userId - ID пользователя
    * @returns true, если сообщения были удалены, иначе false
    */
-  deleteBotMessages(projectId: number, userId: string): Promise<boolean>;
+  deleteBotMessages(projectId: number, userId: string, tokenId?: number | null): Promise<boolean>;
 
   /**
    * Удалить все сообщения бота по проекту
    * @param projectId - ID проекта
    * @returns true, если сообщения были удалены, иначе false
    */
-  deleteAllBotMessages(projectId: number): Promise<boolean>;
+  deleteAllBotMessages(projectId: number, tokenId?: number | null): Promise<boolean>;
 
   // Bot message media
   /**

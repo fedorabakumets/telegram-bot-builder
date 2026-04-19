@@ -302,8 +302,8 @@
 {{ ind3 }}try:
 {{ ind4 }}async with db_pool.acquire() as conn:
 {{ ind5 }}row = await conn.fetchrow(
-{{ ind6 }}"SELECT user_data FROM bot_users WHERE user_id = $1 AND project_id = $2",
-{{ ind6 }}user_id, PROJECT_ID
+{{ ind6 }}"SELECT user_data FROM bot_users WHERE user_id = $1 AND project_id = $2 AND token_id = $3",
+{{ ind6 }}user_id, PROJECT_ID, TOKEN_ID
 {{ ind5 }})
 {{ ind5 }}if row and row["user_data"]:
 {{ ind6 }}db_user_data = row["user_data"]
@@ -318,8 +318,8 @@
 {{ ind6 }}db_user_data = {}
 {{ ind5 }}db_user_data[variable_name] = response_data
 {{ ind5 }}await conn.execute(
-{{ ind6 }}"UPDATE bot_users SET user_data = $1 WHERE user_id = $2 AND project_id = $3",
-{{ ind6 }}json.dumps(db_user_data, ensure_ascii=False), user_id, PROJECT_ID
+{{ ind6 }}"UPDATE bot_users SET user_data = $1 WHERE user_id = $2 AND project_id = $3 AND token_id = $4",
+{{ ind6 }}json.dumps(db_user_data, ensure_ascii=False), user_id, PROJECT_ID, TOKEN_ID
 {{ ind5 }})
 {{ ind5 }}logging.info(f"✅ Сохранено в bot_users: {variable_name} = {response_data}")
 {{ ind3 }}except Exception as e:

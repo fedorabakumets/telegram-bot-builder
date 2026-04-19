@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { getRequestTokenId } from "../../../utils/resolve-request-token";
 
 /**
  * Обрабатывает запрос на удаление сообщений
@@ -22,13 +23,14 @@ export async function deleteMessagesHandler(req: Request, res: Response): Promis
     try {
         const projectId = parseInt(req.params.projectId);
         const userId = req.params.userId;
+        const tokenId = getRequestTokenId(req);
 
         if (isNaN(projectId)) {
             res.status(400).json({ message: "Неверный ID проекта" });
             return;
         }
 
-        const success = await storage.deleteBotMessages(projectId, userId);
+        const success = await storage.deleteBotMessages(projectId, userId, tokenId);
         res.json({ message: "Сообщения успешно удалены", deleted: success });
     } catch (error) {
         console.error("Ошибка удаления сообщений:", error);

@@ -4,6 +4,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 
@@ -13,6 +14,8 @@ import { apiRequest } from '@/queryClient';
 interface UseDeleteUserParams {
   /** Идентификатор проекта */
   projectId: number;
+  /** Идентификатор выбранного токена бота */
+  selectedTokenId?: number | null;
   /** Функция обновления списка пользователей */
   refetchUsers: () => void;
   /** Функция обновления статистики */
@@ -25,19 +28,21 @@ interface UseDeleteUserParams {
  * @returns Мутация удаления пользователя
  */
 export function useDeleteUser(params: UseDeleteUserParams) {
-  const { projectId, refetchUsers, refetchStats } = params;
+  const { projectId, selectedTokenId, refetchUsers, refetchStats } = params;
+  const usersQueryKey = buildUsersApiUrl(`/api/projects/${projectId}/users`, selectedTokenId);
+  const statsQueryKey = buildUsersApiUrl(`/api/projects/${projectId}/users/stats`, selectedTokenId);
   const { toast } = useToast();
   const qClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (userId: number) => {
-      console.log(`Attempting to delete user with ID: ${userId}`);
-      return apiRequest('DELETE', `/api/users/${userId}`);
-    },
-    onSuccess: (data) => {
-      console.log('User deletion successful:', data);
-      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+    mutationFn: (userId: number) =>
+      apiRequest('DELETE', `/api/users/${userId}`, {
+        projectId,
+        tokenId: selectedTokenId ?? null,
+      }),
+    onSuccess: () => {
+      qClient.removeQueries({ queryKey: [usersQueryKey, selectedTokenId] });
+      qClient.removeQueries({ queryKey: [statsQueryKey, selectedTokenId] });
 
       setTimeout(() => {
         refetchUsers();
@@ -45,7 +50,7 @@ export function useDeleteUser(params: UseDeleteUserParams) {
       }, 100);
 
       toast({
-        title: 'Пользователь удален',
+        title: 'Пользователь удалён',
         description: 'Данные пользователя успешно удалены',
       });
     },

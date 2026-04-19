@@ -15,11 +15,26 @@ import { useToggleDatabase } from './mutations/use-toggle-database';
  * @returns Объект с мутациями
  */
 export function useUserMutations(params: UseUserMutationsParams): UseUserMutationsReturn {
-  const { projectId, refetchUsers, refetchStats } = params;
+  const { projectId, selectedTokenId, refetchUsers, refetchStats } = params;
 
-  const deleteUserMutation = useDeleteUser({ projectId, refetchUsers, refetchStats });
-  const updateUserMutation = useUpdateUser({ projectId, refetchUsers, refetchStats });
-  const deleteAllUsersMutation = useDeleteAllUsers({ projectId, refetchUsers, refetchStats });
+  const deleteUserMutation = useDeleteUser({
+    projectId,
+    selectedTokenId,
+    refetchUsers,
+    refetchStats,
+  });
+  const updateUserMutation = useUpdateUser({
+    projectId,
+    selectedTokenId,
+    refetchUsers,
+    refetchStats,
+  });
+  const deleteAllUsersMutation = useDeleteAllUsers({
+    projectId,
+    selectedTokenId,
+    refetchUsers,
+    refetchStats,
+  });
   const toggleDatabaseMutation = useToggleDatabase({ projectId });
 
   return {

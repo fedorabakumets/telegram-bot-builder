@@ -5,39 +5,46 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
+import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import { BotMessageWithMedia } from '../types';
 
 /**
  * Загружает сообщения пользователя и считает статистику
- * @param {number} projectId - Идентификатор проекта
- * @param {number | undefined} userId - Идентификатор пользователя
- * @returns {{ messages: BotMessageWithMedia[], total: number, userSent: number, botSent: number }}
+ * @param projectId - Идентификатор проекта
+ * @param userId - Идентификатор пользователя
+ * @param selectedTokenId - Идентификатор выбранного токена
+ * @returns Сообщения и статистика
  */
-export function useUserMessages(projectId: number, userId: number | undefined) {
+export function useUserMessages(
+  projectId: number,
+  userId: number | undefined,
+  selectedTokenId?: number | null
+) {
+  const requestUrl = buildUsersApiUrl(
+    `/api/projects/${projectId}/users/${userId}/messages`,
+    selectedTokenId
+  );
+
   const { data: messages = [] } = useQuery<BotMessageWithMedia[]>({
-    queryKey: [`/api/projects/${projectId}/users/${userId}/messages`],
+    queryKey: [requestUrl, selectedTokenId, userId],
     enabled: !!userId,
+    queryFn: async () => {
+      const response = await fetch(requestUrl, { credentials: 'include' });
+      return response.json();
+    },
     staleTime: 0,
     select: (data) => {
-      // Защита: если данные не массив, оборачиваем объект в массив
       if (!Array.isArray(data)) {
-        if (data && typeof data === 'object') {
-          return [data];
-        }
-        return [];
+        return data && typeof data === 'object' ? [data] : [];
       }
       return data;
     },
   });
 
   const stats = useMemo(() => {
-    const userSent = messages.filter(m => m.messageType === 'user').length;
-    const botSent = messages.filter(m => m.messageType === 'bot').length;
-    return {
-      total: messages.length,
-      userSent,
-      botSent
-    };
+    const userSent = messages.filter((message) => message.messageType === 'user').length;
+    const botSent = messages.filter((message) => message.messageType === 'bot').length;
+    return { total: messages.length, userSent, botSent };
   }, [messages]);
 
   return { messages, ...stats };

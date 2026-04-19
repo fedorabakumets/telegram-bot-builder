@@ -3,7 +3,7 @@
  * @description Интерфейс пропсов для главного компонента контента БД
  */
 
-import { BotProject, UserBotData } from '@shared/schema';
+import { BotProject, BotToken, UserBotData } from '@shared/schema';
 import { SortField, SortDirection } from '../types';
 import { VariableToQuestionMap } from '../types';
 
@@ -15,6 +15,12 @@ export interface DatabaseContentProps {
   projectId: number;
   /** Название проекта */
   projectName: string;
+  /** ID выбранного токена бота */
+  selectedTokenId: number | null;
+  /** Список токенов проекта */
+  availableTokens: BotToken[];
+  /** Обработчик выбора токена бота */
+  onSelectToken: (tokenId: number | null) => void;
   /** Флаг включена ли БД */
   isDatabaseEnabled: boolean;
   /** Мутация переключения БД */

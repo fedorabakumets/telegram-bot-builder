@@ -124,7 +124,7 @@ async def init_all_user_vars(user_id: int) -> dict:
                 else:
                     # Кэш в Redis пуст — идём в БД и кэшируем результат
                     async with db_pool.acquire() as conn:
-                        row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1 AND project_id = $2", user_id, PROJECT_ID)
+                        row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1 AND project_id = $2 AND token_id = $3", user_id, PROJECT_ID, TOKEN_ID)
                         if row:
                             _db_snapshot = {}
                             for key in row.keys():
@@ -152,7 +152,7 @@ async def init_all_user_vars(user_id: int) -> dict:
                 else:
                     # Кэш устарел — идём в БД
                     async with db_pool.acquire() as conn:
-                        row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1 AND project_id = $2", user_id, PROJECT_ID)
+                        row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1 AND project_id = $2 AND token_id = $3", user_id, PROJECT_ID, TOKEN_ID)
                         if row:
                             _db_snapshot = {}
                             for key in row.keys():

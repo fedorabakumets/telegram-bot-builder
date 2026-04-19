@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Основной роутер HTTP API для проектов, токенов, интеграций и базы пользователей
+ */
+
 import { insertBotTemplateSchema, insertBotTokenSchema, insertUserBotDataSchema } from "@shared/schema";
 import { ChildProcess } from "child_process";
 import PostgresStore from "connect-pg-simple";
@@ -44,6 +48,7 @@ import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes
 import { setupUserTemplateRoutes } from "./setupUserTemplateRoutes";
 import { createUserIdsRoutes } from "./user-ids-routes";
 import { broadcastProjectEvent } from "../terminal";
+import { getRequestTokenId, resolveEffectiveProjectTokenId } from "./utils/resolve-request-token";
 
 /**
  * Глобальное хранилище активных процессов ботов
@@ -1959,8 +1964,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Get all user data for a project
   app.get("/api/projects/:id/users", async (req, res) => {
+    const projectId = parseInt(req.params.id);
+    const tokenId = getRequestTokenId(req);
+
     try {
-      const projectId = parseInt(req.params.id);
       console.log(`Fetching users for project ${projectId}`);
 
       // Connect directly to PostgreSQL to get data from bot_users table
@@ -1987,11 +1994,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           FALSE AS "isBlocked",
           CASE WHEN bu.is_bot = 1 THEN TRUE ELSE FALSE END AS "isBot"
         FROM bot_users bu
-        LEFT JOIN bot_messages bm ON bm.user_id = bu.user_id::text AND bm.project_id = $1
-        WHERE bu.is_bot = 0 AND bu.project_id = $1
+        LEFT JOIN bot_messages bm
+          ON bm.user_id = bu.user_id::text
+          AND bm.project_id = $1
+          AND ($2::integer IS NULL OR bm.token_id = $2)
+        WHERE bu.is_bot = 0
+          AND bu.project_id = $1
+          AND ($2::integer IS NULL OR bu.token_id = $2)
         GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.avatar_url, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active, bu.is_bot
         ORDER BY bu.last_interaction DESC
-      `, [projectId]);
+      `, [projectId, tokenId]);
 
       // НЕ закрываем пул - он нужен для других запросов
 
@@ -2001,7 +2013,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Error fetching user data:", error);
       // Fallback to storage interface if bot_users table doesn't exist
       try {
-        const users = await storage.getUserBotDataByProject(parseInt(req.params.id));
+        const users = await storage.getUserBotDataByProject(parseInt(req.params.id), tokenId);
         const projectId = parseInt(req.params.id);
         console.log(`Found ${users.length} users for project ${projectId} from fallback`);
         res.json(users);
@@ -2013,9 +2025,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Get user data stats for a project
   app.get("/api/projects/:id/users/stats", async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
+    const projectId = parseInt(req.params.id);
+    const tokenId = getRequestTokenId(req);
 
+    try {
       // Use direct PostgreSQL query on bot_users table
       const { Pool } = await import('pg');
       const pool = new Pool({
@@ -2032,9 +2045,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           COALESCE(COUNT(bm.id), 0) as "totalInteractions",
           CASE WHEN COUNT(DISTINCT bu.user_id) > 0 THEN COALESCE(COUNT(bm.id)::float / COUNT(DISTINCT bu.user_id), 0) ELSE 0 END as "avgInteractionsPerUser"
         FROM bot_users bu
-        LEFT JOIN bot_messages bm ON bm.user_id = bu.user_id::text AND bm.project_id = $1
+        LEFT JOIN bot_messages bm
+          ON bm.user_id = bu.user_id::text
+          AND bm.project_id = $1
+          AND ($2::integer IS NULL OR bm.token_id = $2)
         WHERE bu.project_id = $1
-      `, [projectId]);
+          AND ($2::integer IS NULL OR bu.token_id = $2)
+      `, [projectId, tokenId]);
 
       const stats = result.rows[0];
       // Convert strings to numbers
@@ -2065,7 +2082,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
           FROM user_bot_data
           WHERE project_id = $1
-        `, [req.params.id]);
+            AND ($2::integer IS NULL OR token_id = $2)
+        `, [req.params.id, tokenId]);
 
         // НЕ закрываем пул - он нужен для других запросов
 
@@ -2233,7 +2251,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const projectId = parseInt(req.params.projectId);
       const userId = req.params.userId;
-      const userData = await storage.getUserBotDataByProjectAndUser(projectId, userId);
+      const tokenId = getRequestTokenId(req);
+      const userData = await storage.getUserBotDataByProjectAndUser(projectId, userId, tokenId);
       if (!userData) {
         return res.status(404).json({ message: "User data not found" });
       }
@@ -2247,9 +2266,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post("/api/projects/:id/users", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      const tokenId = getRequestTokenId(req) ?? 0;
       const validatedData = insertUserBotDataSchema.parse({
         ...req.body,
-        projectId
+        projectId,
+        tokenId,
       });
       const userData = await storage.createUserBotData(validatedData);
       res.status(201).json(userData);
@@ -2263,9 +2284,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Update user data in bot_users table
   app.put("/api/users/:id", async (req, res) => {
-    try {
-      const userId = req.params.id; // This is telegram user_id as string
+    const userId = req.params.id; // This is telegram user_id as string
+    const projectId = Number(req.body.projectId ?? 0);
+    const requestedTokenId = getRequestTokenId(req);
+    let effectiveTokenId: number | null = null;
 
+    try {
+      effectiveTokenId = await resolveEffectiveProjectTokenId(projectId, requestedTokenId);
       // Подключаемся напрямую к PostgreSQL для обновления данных в bot_users
       const { Pool } = await import('pg');
       const pool = new Pool({
@@ -2294,11 +2319,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const query = `
         UPDATE bot_users 
         SET ${updateFields.join(', ')}, last_interaction = NOW()
-        WHERE user_id = $${paramIndex} AND project_id = $${paramIndex + 1}
+        WHERE user_id = $${paramIndex} AND project_id = $${paramIndex + 1} AND token_id = $${paramIndex + 2}
         RETURNING *
       `;
       values.push(userId);
-      values.push(req.body.projectId ?? 0);
+      values.push(projectId);
+      values.push(effectiveTokenId);
 
       console.log('Updating user:', userId, 'with query:', query, 'values:', values);
 
@@ -2316,9 +2342,19 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Ошибка обновления пользователя в bot_users:", error);
       // Fallback to regular update if bot_users table doesn't exist
       try {
-        const id = parseInt(req.params.id);
-        const validatedData = insertUserBotDataSchema.partial().parse(req.body);
-        const userData = await storage.updateUserBotData(id, validatedData);
+        const validatedData = insertUserBotDataSchema.partial().parse({
+          ...req.body,
+          projectId,
+          tokenId: effectiveTokenId ?? requestedTokenId ?? 0,
+        });
+        const existingUserData = await storage.getUserBotDataByProjectAndUser(
+          projectId,
+          userId,
+          effectiveTokenId ?? requestedTokenId
+        );
+        const userData = existingUserData
+          ? await storage.updateUserBotData(existingUserData.id, validatedData)
+          : undefined;
         if (!userData) {
           return res.status(404).json({ message: "User data not found" });
         }
@@ -2333,6 +2369,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.delete("/api/users/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const projectId = Number(req.body?.projectId ?? 0);
+      const requestedTokenId = getRequestTokenId(req);
+      const tokenId = await resolveEffectiveProjectTokenId(projectId, requestedTokenId);
 
       // Подключение к PostgreSQL для прямого удаления
       const pool = new Pool({
@@ -2343,8 +2382,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         // Удаляем сообщения пользователя из таблицы bot_messages
         try {
           const deleteMessagesResult = await pool.query(
-            `DELETE FROM bot_messages WHERE user_id = $1`,
-            [id]
+            `DELETE FROM bot_messages WHERE user_id = $1 AND project_id = $2 AND token_id = $3`,
+            [id, projectId, tokenId]
           );
 
           console.log(`Deleted ${deleteMessagesResult.rowCount || 0} messages from bot_messages for user ${id}`);
@@ -2354,8 +2393,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         // Пытаемся удалить из bot_users если пользователь передал user_id
         const deleteResult = await pool.query(
-          `DELETE FROM bot_users WHERE user_id = $1 AND project_id = $2`,
-          [id, req.body?.projectId ?? 0]
+          `DELETE FROM bot_users WHERE user_id = $1 AND project_id = $2 AND token_id = $3`,
+          [id, projectId, tokenId]
         );
 
         // НЕ закрываем пул - он нужен для других запросов
@@ -2370,7 +2409,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Fallback: удаляем из user_bot_data таблицы
-      const success = await storage.deleteUserBotData(id);
+      const existingUserData = await storage.getUserBotDataByProjectAndUser(
+        projectId,
+        String(id),
+        tokenId ?? requestedTokenId
+      );
+      const success = existingUserData
+        ? await storage.deleteUserBotData(existingUserData.id)
+        : false;
       if (!success) {
         return res.status(404).json({ message: "User data not found" });
       }
@@ -2385,6 +2431,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.delete("/api/projects/:id/users", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      const tokenId = getRequestTokenId(req);
       let totalDeleted = 0;
 
       // Подключение к PostgreSQL
@@ -2395,8 +2442,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       try {
         // Удаляем в??ех поль??ова??ел????й из таблицы bot_users для данного проекта
         const deleteResult = await pool.query(
-          `DELETE FROM bot_users WHERE project_id = $1`,
-          [projectId]
+          tokenId
+            ? `DELETE FROM bot_users WHERE project_id = $1 AND token_id = $2`
+            : `DELETE FROM bot_users WHERE project_id = $1`,
+          tokenId ? [projectId, tokenId] : [projectId]
         );
 
         totalDeleted += deleteResult.rowCount || 0;
@@ -2410,8 +2459,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Удаляем сообщения из таблицы bot_messages
       try {
         const deleteMessagesResult = await pool.query(
-          `DELETE FROM bot_messages WHERE project_id = $1`,
-          [projectId]
+          tokenId
+            ? `DELETE FROM bot_messages WHERE project_id = $1 AND token_id = $2`
+            : `DELETE FROM bot_messages WHERE project_id = $1`,
+          tokenId ? [projectId, tokenId] : [projectId]
         );
 
         totalDeleted += deleteMessagesResult.rowCount || 0;
@@ -2421,11 +2472,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Подсчитываем количество записей в user_bot_data перед удалением
-      const existingUserData = await storage.getUserBotDataByProject(projectId);
+      const existingUserData = await storage.getUserBotDataByProject(projectId, tokenId);
       const userBotDataCount = existingUserData.length;
 
       // Удаляем из user_bot_data таблицы
-      const fallbackSuccess = await storage.deleteUserBotDataByProject(projectId);
+      const fallbackSuccess = await storage.deleteUserBotDataByProject(projectId, tokenId);
       if (fallbackSuccess) {
         totalDeleted += userBotDataCount;
         console.log(`Deleted ${userBotDataCount} users from user_bot_data for project ${projectId}`);
@@ -2446,13 +2497,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get("/api/projects/:id/users/search", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      const tokenId = getRequestTokenId(req);
       const query = req.query.q as string;
 
       if (!query || query.trim().length === 0) {
         return res.status(400).json({ message: "Search query is required" });
       }
 
-      const users = await storage.searchUserBotData(projectId, query.trim());
+      const users = await storage.searchUserBotData(projectId, query.trim(), tokenId);
       res.json(users);
     } catch (error) {
       res.status(500).json({ message: "Failed to search user data" });

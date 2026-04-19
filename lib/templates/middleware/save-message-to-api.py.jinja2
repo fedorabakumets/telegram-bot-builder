@@ -12,11 +12,12 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
             message_data_json = json.dumps(message_data or {}, ensure_ascii=False)
             result = await conn.fetchrow(
                 """
-                INSERT INTO bot_messages (project_id, user_id, message_type, message_text, node_id, message_data, created_at)
-                VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                INSERT INTO bot_messages (project_id, token_id, user_id, message_type, message_text, node_id, message_data, created_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
                 RETURNING id, user_id, message_type, created_at
                 """,
                 PROJECT_ID,
+                TOKEN_ID,
                 str(user_id),
                 message_type,
                 message_text,

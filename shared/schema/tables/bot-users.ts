@@ -1,10 +1,9 @@
 /**
- * @fileoverview Таблица пользователей бота
+ * @fileoverview Таблица пользователей бота и схема вставки с поддержкой tokenId
  * @module shared/schema/tables/bot-users
  */
 
 import { pgTable, text, integer, jsonb, timestamp, bigint, primaryKey } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 /**
@@ -15,6 +14,8 @@ export const botUsers = pgTable("bot_users", {
   userId: bigint("user_id", { mode: "number" }).notNull(),
   /** Идентификатор проекта */
   projectId: integer("project_id").notNull().default(0),
+  /** Идентификатор токена бота для сегментации базы */
+  tokenId: integer("token_id").notNull().default(0),
   /** Имя пользователя в Telegram */
   username: text("username"),
   /** Имя пользователя */
@@ -23,9 +24,9 @@ export const botUsers = pgTable("bot_users", {
   lastName: text("last_name"),
   /** URL аватарки пользователя */
   avatarUrl: text("avatar_url"),
-  /** Флаг бота (0 = человек, 1 = бот) */
+  /** Флаг бота: 0 - человек, 1 - бот */
   isBot: integer("is_bot").default(0),
-  /** Дата регистрации пользователя */
+  /** Дата регистрации */
   registeredAt: timestamp("registered_at").defaultNow(),
   /** Дата последнего взаимодействия */
   lastInteraction: timestamp("last_interaction").defaultNow(),
@@ -33,41 +34,32 @@ export const botUsers = pgTable("bot_users", {
   interactionCount: integer("interaction_count").default(0),
   /** Пользовательские данные */
   userData: jsonb("user_data").default({}),
-  /** Флаг активности (0 = неактивен, 1 = активен) */
+  /** Флаг активности: 0 - неактивен, 1 - активен */
   isActive: integer("is_active").default(1),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.userId, t.projectId] }),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.projectId, table.tokenId] }),
 }));
 
-/** Схема для вставки данных пользователя бота */
-export const insertBotUserSchema = createInsertSchema(botUsers).pick({
+/** Схема вставки пользователя бота */
+export const insertBotUserSchema = z.object({
   /** Идентификатор пользователя в Telegram */
-  userId: true,
-  /** Идентификатор проекта */
-  projectId: true,
-  /** Имя пользователя в Telegram */
-  username: true,
-  /** Имя пользователя */
-  firstName: true,
-  /** Фамилия пользователя */
-  lastName: true,
-  /** Количество взаимодействий */
-  interactionCount: true,
-  /** Пользовательские данные */
-  userData: true,
-  /** Флаг активности (0 = неактивен, 1 = активен) */
-  isActive: true,
-}).extend({
-  /** Идентификатор пользователя (должен быть положительным числом) */
   userId: z.number().positive("ID пользователя должен быть положительным числом"),
   /** Идентификатор проекта */
   projectId: z.number().int().default(0),
-  /** Пользовательские данные */
-  userData: z.record(z.any()).default({}),
-  /** Флаг активности (0 = неактивен, 1 = активен) */
-  isActive: z.number().min(0).max(1).default(1),
+  /** Идентификатор токена бота */
+  tokenId: z.number().int().min(0).default(0),
+  /** Имя пользователя в Telegram */
+  username: z.string().nullable().optional(),
+  /** Имя пользователя */
+  firstName: z.string().nullable().optional(),
+  /** Фамилия пользователя */
+  lastName: z.string().nullable().optional(),
   /** Количество взаимодействий */
   interactionCount: z.number().min(0).default(0),
+  /** Пользовательские данные */
+  userData: z.record(z.any()).default({}),
+  /** Флаг активности: 0 - неактивен, 1 - активен */
+  isActive: z.number().min(0).max(1).default(1),
 });
 
 /** Тип записи пользователя бота */

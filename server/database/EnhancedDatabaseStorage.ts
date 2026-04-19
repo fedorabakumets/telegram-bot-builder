@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Расширенное хранилище поверх DatabaseStorage с кэшированием и служебными оптимизациями
+ */
+
 import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, botMessageMedia, botMessages, type BotProject, type BotTemplate, type BotToken, type InsertBotGroup, type InsertBotProject, type InsertBotTemplate, type InsertTelegramUser, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers } from "@shared/schema";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { importProjectsFromFiles } from "../files/file-import";
@@ -189,66 +193,25 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
+  /**
+   * Получает историю сообщений пользователя с медиа с поддержкой сегментации по tokenId
+   * @param projectId - Идентификатор проекта
+   * @param userId - Telegram ID пользователя
+   * @param limit - Максимальное число сообщений
+   * @param order - Порядок сортировки по времени
+   * @param messageType - Необязательный тип сообщения
+   * @param tokenId - Необязательный идентификатор токена бота
+   * @returns История сообщений с прикрепленными медиафайлами
+   */
   async getBotMessagesWithMedia(
     projectId: number,
     userId: string,
     limit: number = 100,
-    order: 'asc' | 'desc' = 'asc',
-    messageType?: 'user' | 'bot'
-  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number; }>; })[]> {
-    const whereConditions = [
-      eq(botMessages.projectId, projectId),
-      eq(botMessages.userId, userId)
-    ];
-    
-    if (messageType) {
-      whereConditions.push(eq(botMessages.messageType, messageType));
-    }
-    
-    const results = await this.db
-      .select({
-        message: botMessages,
-        mediaFile: mediaFiles,
-        mediaKind: botMessageMedia.mediaKind,
-        orderIndex: botMessageMedia.orderIndex,
-      })
-      .from(botMessages)
-      .leftJoin(botMessageMedia, eq(botMessages.id, botMessageMedia.messageId))
-      .leftJoin(mediaFiles, eq(botMessageMedia.mediaFileId, mediaFiles.id))
-      .where(and(...whereConditions))
-      .orderBy(order === 'desc' ? desc(botMessages.createdAt) : asc(botMessages.createdAt), asc(botMessageMedia.orderIndex))
-      .limit(limit * 10);
-
-    const messagesMap = new Map<number, BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number; }>; }>();
-
-    for (const row of results) {
-      const messageId = row.message.id;
-
-      if (!messagesMap.has(messageId)) {
-        messagesMap.set(messageId, {
-          ...row.message,
-          media: []
-        });
-      }
-
-      if (row.mediaFile && row.mediaKind !== null && row.orderIndex !== null) {
-        const message = messagesMap.get(messageId)!;
-        message.media!.push({
-          ...row.mediaFile,
-          mediaKind: row.mediaKind,
-          orderIndex: row.orderIndex
-        });
-      }
-    }
-
-    const messagesArray = Array.from(messagesMap.values())
-      .slice(0, limit)
-      .map(msg => ({
-        ...msg,
-        media: msg.media && msg.media.length > 0 ? msg.media : undefined
-      }));
-
-    return messagesArray;
+    order: "asc" | "desc" = "asc",
+    messageType?: "user" | "bot",
+    tokenId?: number | null
+  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]> {
+    return super.getBotMessagesWithMedia(projectId, userId, limit, order, messageType, tokenId);
   }
 
   // Пользователи Telegram

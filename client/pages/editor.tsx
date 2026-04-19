@@ -112,6 +112,12 @@ export default function Editor() {
   const [] = useState(true);
 
   /**
+   * Идентификатор выбранного токена на вкладке базы пользователей
+   * @type {number|null}
+   */
+  const [selectedDatabaseTokenId, setSelectedDatabaseTokenId] = useState<number | null>(null);
+
+  /**
    * Флаг использования гибкого макета
    * @type {boolean}
    */
@@ -1308,6 +1314,8 @@ export default function Editor() {
               projectName={activeProject.name}
               onOpenDialogPanel={handleOpenDialogPanel}
               onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
+              selectedTokenId={selectedDatabaseTokenId}
+              onSelectToken={setSelectedDatabaseTokenId}
             />
           </div>
         ) : currentTab === 'user-ids' ? (
@@ -1425,6 +1433,7 @@ export default function Editor() {
                 <DialogPanel
                   key={`dialog-${selectedDialogUser?.userId || 'none'}`}
                   projectId={activeProject.id}
+                  selectedTokenId={selectedDatabaseTokenId}
                   user={selectedDialogUser}
                   onClose={handleCloseDialogPanel}
                   onSelectUser={handleSelectDialogUser}
@@ -1436,6 +1445,7 @@ export default function Editor() {
                 <UserDetailsPanel
                   key={`userdetails-${selectedUserDetails?.userId || 'none'}`}
                   projectId={activeProject.id}
+                  selectedTokenId={selectedDatabaseTokenId}
                   user={selectedUserDetails}
                   onClose={handleCloseUserDetailsPanel}
                   onOpenDialog={handleOpenDialogPanel}
@@ -1583,6 +1593,8 @@ export default function Editor() {
                     projectName={activeProject.name}
                     onOpenDialogPanel={handleOpenDialogPanel}
                     onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
+                    selectedTokenId={selectedDatabaseTokenId}
+                    onSelectToken={setSelectedDatabaseTokenId}
                   />
                 </div>
               ) : currentTab === 'groups' ? (

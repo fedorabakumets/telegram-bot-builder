@@ -1,10 +1,9 @@
 /**
- * @fileoverview Таблица пользовательских данных бота
+ * @fileoverview Таблица user database проекта и схема вставки с поддержкой tokenId
  * @module shared/schema/tables/user-bot-data
  */
 
 import { pgTable, text, serial, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
@@ -15,8 +14,10 @@ import { botProjects } from "./bot-projects";
 export const userBotData = pgTable("user_bot_data", {
   /** Уникальный идентификатор записи */
   id: serial("id").primaryKey(),
-  /** Идентификатор проекта (ссылка на bot_projects.id) */
+  /** Идентификатор проекта */
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  /** Идентификатор токена бота для сегментации базы */
+  tokenId: integer("token_id").notNull().default(0),
   /** Идентификатор пользователя в Telegram */
   userId: text("user_id").notNull(),
   /** Имя пользователя в Telegram */
@@ -27,39 +28,39 @@ export const userBotData = pgTable("user_bot_data", {
   lastName: text("last_name"),
   /** Код языка пользователя */
   languageCode: text("language_code"),
-  /** Флаг бота (0 = человек, 1 = бот) */
+  /** Флаг бота: 0 - человек, 1 - бот */
   isBot: integer("is_bot").default(0),
-  /** Флаг премиум-статуса (0 = обычный, 1 = премиум) */
+  /** Флаг premium */
   isPremium: integer("is_premium").default(0),
   /** Время последнего взаимодействия */
   lastInteraction: timestamp("last_interaction").defaultNow(),
   /** Количество взаимодействий */
   interactionCount: integer("interaction_count").default(0),
-  /** Пользовательские данные (ответы на вопросы, формы и т.д.) */
+  /** Пользовательские данные */
   userData: jsonb("user_data").default({}),
-  /** Текущее состояние в диалоге с ботом */
+  /** Текущее состояние */
   currentState: text("current_state"),
-  /** Пользовательские настройки */
+  /** Настройки пользователя */
   preferences: jsonb("preferences").default({}),
   /** Статистика использования команд */
   commandsUsed: jsonb("commands_used").default({}),
   /** Количество сессий */
   sessionsCount: integer("sessions_count").default(1),
-  /** Общее количество отправленных сообщений */
+  /** Всего отправлено сообщений */
   totalMessagesSent: integer("total_messages_sent").default(0),
-  /** Общее количество полученных сообщений */
+  /** Всего получено сообщений */
   totalMessagesReceived: integer("total_messages_received").default(0),
   /** Информация об устройстве */
   deviceInfo: text("device_info"),
-  /** Данные геолокации (если предоставлены) */
+  /** Данные геолокации */
   locationData: jsonb("location_data"),
-  /** Контактные данные (если предоставлены) */
+  /** Контактные данные */
   contactData: jsonb("contact_data"),
-  /** Флаг блокировки (0 = не заблокирован, 1 = заблокирован) */
+  /** Флаг блокировки */
   isBlocked: integer("is_blocked").default(0),
-  /** Флаг активности (0 = неактивен, 1 = активен) */
+  /** Флаг активности */
   isActive: integer("is_active").default(1),
-  /** Теги для категоризации пользователей */
+  /** Теги пользователя */
   tags: text("tags").array().default([]),
   /** Заметки администратора */
   notes: text("notes"),
@@ -71,81 +72,58 @@ export const userBotData = pgTable("user_bot_data", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-/** Схема для вставки данных пользовательских данных бота */
-export const insertUserBotDataSchema = createInsertSchema(userBotData).pick({
-  /** Идентификатор проекта (ссылка на bot_projects.id) */
-  projectId: true,
+/** Схема вставки пользовательских данных бота */
+export const insertUserBotDataSchema = z.object({
+  /** Идентификатор проекта */
+  projectId: z.number().int(),
+  /** Идентификатор токена бота */
+  tokenId: z.number().int().min(0).default(0),
   /** Идентификатор пользователя в Telegram */
-  userId: true,
-  /** Имя пользователя в Telegram */
-  userName: true,
-  /** Имя пользователя */
-  firstName: true,
-  /** Фамилия пользователя */
-  lastName: true,
-  /** Код языка пользователя */
-  languageCode: true,
-  /** Флаг бота (0 = человек, 1 = бот) */
-  isBot: true,
-  /** Флаг премиум-статуса (0 = обычный, 1 = премиум) */
-  isPremium: true,
-  /** Время последнего взаимодействия */
-  lastInteraction: true,
-  /** Количество взаимодействий */
-  interactionCount: true,
-  /** Пользовательские данные */
-  userData: true,
-  /** Текущее состояние в диалоге с ботом */
-  currentState: true,
-  /** Пользовательские настройки */
-  preferences: true,
-  /** Статистика использования команд */
-  commandsUsed: true,
-  /** Количество сессий */
-  sessionsCount: true,
-  /** Общее количество отправленных сообщений */
-  totalMessagesSent: true,
-  /** Общее количество полученных сообщений */
-  totalMessagesReceived: true,
-  /** Информация об устройстве */
-  deviceInfo: true,
-  /** Данные геолокации */
-  locationData: true,
-  /** Контактные данные */
-  contactData: true,
-  /** Флаг блокировки */
-  isBlocked: true,
-  /** Флаг активности */
-  isActive: true,
-  /** Теги для категоризации пользователей */
-  tags: true,
-  /** Заметки администратора */
-  notes: true,
-}).extend({
-  /** Идентификатор пользователя (обязательное поле) */
   userId: z.string().min(1, "ID пользователя обязателен"),
+  /** Имя пользователя в Telegram */
+  userName: z.string().nullable().optional(),
+  /** Имя пользователя */
+  firstName: z.string().nullable().optional(),
+  /** Фамилия пользователя */
+  lastName: z.string().nullable().optional(),
+  /** Код языка пользователя */
+  languageCode: z.string().nullable().optional(),
+  /** Флаг бота */
+  isBot: z.number().min(0).max(1).default(0),
+  /** Флаг premium */
+  isPremium: z.number().min(0).max(1).default(0),
+  /** Время последнего взаимодействия */
+  lastInteraction: z.date().optional(),
+  /** Количество взаимодействий */
+  interactionCount: z.number().min(0).default(0),
   /** Пользовательские данные */
   userData: z.record(z.any()).default({}),
-  /** Пользовательские настройки */
+  /** Текущее состояние */
+  currentState: z.string().nullable().optional(),
+  /** Настройки пользователя */
   preferences: z.record(z.any()).default({}),
-  /** Статистика использования команд */
+  /** Статистика команд */
   commandsUsed: z.record(z.any()).default({}),
-  /** Теги пользователя */
-  tags: z.array(z.string()).default([]),
-  /** Флаг бота (0 = человек, 1 = бот) */
-  isBot: z.number().min(0).max(1).default(0),
-  /** Флаг премиум-статуса (0 = обычный, 1 = премиум) */
-  isPremium: z.number().min(0).max(1).default(0),
-  /** Флаг блокировки (0 = не заблокирован, 1 = заблокирован) */
-  isBlocked: z.number().min(0).max(1).default(0),
-  /** Флаг активности (0 = неактивен, 1 = активен) */
-  isActive: z.number().min(0).max(1).default(1),
   /** Количество сессий */
   sessionsCount: z.number().min(1).default(1),
-  /** Общее количество отправленных сообщений */
+  /** Всего отправлено сообщений */
   totalMessagesSent: z.number().min(0).default(0),
-  /** Общее количество полученных сообщений */
+  /** Всего получено сообщений */
   totalMessagesReceived: z.number().min(0).default(0),
+  /** Информация об устройстве */
+  deviceInfo: z.string().nullable().optional(),
+  /** Данные геолокации */
+  locationData: z.record(z.any()).nullable().optional(),
+  /** Контактные данные */
+  contactData: z.record(z.any()).nullable().optional(),
+  /** Флаг блокировки */
+  isBlocked: z.number().min(0).max(1).default(0),
+  /** Флаг активности */
+  isActive: z.number().min(0).max(1).default(1),
+  /** Теги пользователя */
+  tags: z.array(z.string()).default([]),
+  /** Заметки администратора */
+  notes: z.string().nullable().optional(),
 });
 
 /** Тип записи пользовательских данных бота */

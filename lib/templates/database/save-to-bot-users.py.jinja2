@@ -15,8 +15,8 @@
 {{ indent }}        async with db_pool.acquire() as conn:
 {{ indent }}            # Получаем текущие user_data
 {{ indent }}            row = await conn.fetchrow(
-{{ indent }}                "SELECT user_data FROM bot_users WHERE user_id = $1 AND project_id = $2",
-{{ indent }}                user_id, PROJECT_ID
+{{ indent }}                "SELECT user_data FROM bot_users WHERE user_id = $1 AND project_id = $2 AND token_id = $3",
+{{ indent }}                user_id, PROJECT_ID, TOKEN_ID
 {{ indent }}            )
 {{ indent }}
 {{ indent }}            if row and row["user_data"]:
@@ -50,8 +50,8 @@
 {{ indent }}
 {{ indent }}            # Обновляем в БД
 {{ indent }}            await conn.execute(
-{{ indent }}                "UPDATE bot_users SET user_data = $1 WHERE user_id = $2 AND project_id = $3",
-{{ indent }}                json.dumps(db_user_data, ensure_ascii=False), user_id, PROJECT_ID
+{{ indent }}                "UPDATE bot_users SET user_data = $1 WHERE user_id = $2 AND project_id = $3 AND token_id = $4",
+{{ indent }}                json.dumps(db_user_data, ensure_ascii=False), user_id, PROJECT_ID, TOKEN_ID
 {{ indent }}            )
 {{ indent }}            logging.info(f"✅ Сохранено в bot_users: {{ variableName }} = {{ valueExpression }}")
 {{ indent }}    except Exception as e:

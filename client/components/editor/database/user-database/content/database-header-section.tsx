@@ -1,11 +1,17 @@
 /**
  * @fileoverview Компонент заголовка панели БД
- * @description Отображает header, toggle и actions
+ * @description Отображает header, toggle, actions и выбор бота
  */
 
-import { DatabaseHeader, DatabaseToggle, HeaderActions, ExportInfo } from '../components/header';
-import { DatabaseContentProps } from './database-content-props';
 import { BotProject } from '@shared/schema';
+import {
+  BotTokenSelector,
+  DatabaseHeader,
+  DatabaseToggle,
+  ExportInfo,
+  HeaderActions,
+} from '../components/header';
+import { DatabaseContentProps } from './database-content-props';
 
 /**
  * Пропсы компонента DatabaseHeaderSection
@@ -15,6 +21,9 @@ interface DatabaseHeaderSectionProps
     DatabaseContentProps,
     | 'projectId'
     | 'projectName'
+    | 'selectedTokenId'
+    | 'availableTokens'
+    | 'onSelectToken'
     | 'isDatabaseEnabled'
     | 'toggleDatabaseMutation'
     | 'handleRefresh'
@@ -33,6 +42,9 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
   const {
     projectId,
     projectName,
+    selectedTokenId,
+    availableTokens,
+    onSelectToken,
     isDatabaseEnabled,
     toggleDatabaseMutation,
     handleRefresh,
@@ -42,10 +54,10 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
 
   return (
     <div className="border-b border-border/50 bg-card w-full">
-      <div className="p-3 sm:p-4 lg:p-5 space-y-4 sm:space-y-5">
+      <div className="space-y-4 p-3 sm:space-y-5 sm:p-4 lg:p-5">
         <DatabaseHeader projectName={projectName} />
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <DatabaseToggle
             isDatabaseEnabled={isDatabaseEnabled}
             onToggle={(checked) => toggleDatabaseMutation.mutate(checked)}
@@ -61,6 +73,12 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
             />
           )}
         </div>
+
+        <BotTokenSelector
+          tokens={availableTokens}
+          selectedTokenId={selectedTokenId}
+          onSelect={onSelectToken}
+        />
 
         <ExportInfo project={project} />
       </div>

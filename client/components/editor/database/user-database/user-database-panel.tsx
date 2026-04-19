@@ -3,16 +3,18 @@
  * @description Компонент верхнего уровня, объединяющий все подкомпоненты
  */
 
-import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
-import { useToast } from '@/hooks/use-toast';
-import { UserDatabasePanelProps } from './types';
+import { useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
+import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
+import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { useToast } from '@/hooks/use-toast';
 import { DatabaseContent } from './database-content';
-import { useUserDatabasePanelState } from './panel/panel-state';
-import { useUserDatabasePanelData, useUserDatabasePanelMutations } from './panel/panel-hooks';
-import { useVariableToQuestionMap, useFilteredAndSortedUsers } from './panel/panel-memo';
-import { useUserDatabasePanelHandlers } from './panel/panel-handlers';
 import { useResponsive } from './hooks/use-responsive';
+import { useUserDatabasePanelData, useUserDatabasePanelMutations } from './panel/panel-hooks';
+import { useUserDatabasePanelHandlers } from './panel/panel-handlers';
+import { useVariableToQuestionMap, useFilteredAndSortedUsers } from './panel/panel-memo';
+import { useUserDatabasePanelState } from './panel/panel-state';
+import { UserDatabasePanelProps } from './types';
 import { formatUserName } from './utils';
 
 /**
@@ -21,13 +23,27 @@ import { formatUserName } from './utils';
  * @returns JSX компонент панели
  */
 export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Element {
-  const { projectId, projectName, onOpenDialogPanel, onOpenUserDetailsPanel } = props;
+  const {
+    projectId,
+    projectName,
+    onOpenDialogPanel,
+    onOpenUserDetailsPanel,
+    selectedTokenId: selectedTokenIdProp,
+    availableTokens: availableTokensProp,
+    onSelectToken,
+  } = props;
 
-  // Хук адаптивности
   const { containerRef, visibleColumns } = useResponsive();
-
-  // Хук состояния
+  const projectTokensInfo = useProjectTokens([projectId]);
+  const projectTokens = availableTokensProp ?? projectTokensInfo[0]?.tokens ?? [];
+  const [internalSelectedTokenId, setInternalSelectedTokenId] = useState<number | null>(
+    selectedTokenIdProp ?? null
+  );
+  const resolvedSelectedTokenId = selectedTokenIdProp ?? internalSelectedTokenId;
   const { state, setters } = useUserDatabasePanelState();
+  const isMobile = useIsMobile();
+  const { toast } = useToast();
+
   const {
     searchQuery,
     sortField,
@@ -43,13 +59,6 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     setFilterPremium,
   } = setters;
 
-  // Хук мобильного режима
-  const isMobile = useIsMobile();
-
-  // Хук уведомлений
-  const { toast } = useToast();
-
-  // Хук данных
   const {
     project,
     users,
@@ -60,10 +69,10 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     refetchStats,
   } = useUserDatabasePanelData({
     projectId,
+    selectedTokenId: resolvedSelectedTokenId,
     searchQuery,
   });
 
-  // Хук мутаций
   const {
     deleteUserMutation,
     updateUserMutation,
@@ -71,11 +80,34 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     toggleDatabaseMutation,
   } = useUserDatabasePanelMutations({
     projectId,
+    selectedTokenId: resolvedSelectedTokenId,
     refetchUsers,
     refetchStats,
   });
 
-  // Memo хуки
+  useEffect(() => {
+    if (selectedTokenIdProp !== undefined) {
+      setInternalSelectedTokenId(selectedTokenIdProp ?? null);
+    }
+  }, [selectedTokenIdProp]);
+
+  useEffect(() => {
+    if (projectTokens.length === 0) {
+      return;
+    }
+
+    const hasSelectedToken = projectTokens.some((token) => token.id === resolvedSelectedTokenId);
+    if (hasSelectedToken) {
+      return;
+    }
+
+    const nextToken = projectTokens.find((token) => token.isDefault === 1) ?? projectTokens[0];
+    if (selectedTokenIdProp === undefined) {
+      setInternalSelectedTokenId(nextToken?.id ?? null);
+    }
+    onSelectToken?.(nextToken?.id ?? null);
+  }, [onSelectToken, projectTokens, resolvedSelectedTokenId, selectedTokenIdProp]);
+
   const variableToQuestionMap = useVariableToQuestionMap({
     projectData: project?.data,
   });
@@ -91,19 +123,28 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     sortDirection,
   });
 
-  // Обработчики
-  const { handleUserStatusToggle } =
-    useUserDatabasePanelHandlers(
-      { updateUserMutation, toast },
-      undefined
-    );
+  const { handleUserStatusToggle } = useUserDatabasePanelHandlers(
+    { updateUserMutation, toast },
+    undefined
+  );
 
-  // Показчик загрузки
+  /**
+   * Обновляет выбранный токен локально и снаружи
+   * @param tokenId - Новый идентификатор токена
+   */
+  function handleSelectToken(tokenId: number | null): void {
+    if (selectedTokenIdProp === undefined) {
+      setInternalSelectedTokenId(tokenId);
+    }
+
+    onSelectToken?.(tokenId);
+  }
+
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground mx-auto mb-2" />
+          <RefreshCw className="mx-auto mb-2 h-8 w-8 animate-spin text-muted-foreground" />
           <p className="text-muted-foreground">Загрузка базы данных...</p>
         </div>
       </div>
@@ -111,10 +152,13 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
   }
 
   return (
-    <div ref={containerRef} className="h-full w-full flex flex-col">
+    <div ref={containerRef} className="flex h-full w-full flex-col">
       <DatabaseContent
         projectId={projectId}
         projectName={projectName}
+        selectedTokenId={resolvedSelectedTokenId}
+        availableTokens={projectTokens}
+        onSelectToken={handleSelectToken}
         isDatabaseEnabled={project?.userDatabaseEnabled === 1}
         toggleDatabaseMutation={toggleDatabaseMutation}
         handleRefresh={() => {

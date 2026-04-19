@@ -9,6 +9,8 @@
 export interface UseUserMutationsParams {
   /** Идентификатор проекта */
   projectId: number;
+  /** Идентификатор выбранного токена бота */
+  selectedTokenId?: number | null;
   /** Функция обновления списка пользователей */
   refetchUsers: () => void;
   /** Функция обновления статистики */

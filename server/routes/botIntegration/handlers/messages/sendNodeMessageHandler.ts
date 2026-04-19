@@ -1,42 +1,42 @@
 /**
- * @fileoverview Хендлер отправки сообщения от узла
- * 
- * Отправляет пользователю сообщение от имени узла проекта,
- * поддерживая медиа, кнопки, замену переменных и форматирование.
+ * @fileoverview Хендлер отправки сообщения из узла с записью в сегмент bot_messages по effective tokenId
+ * @module botIntegration/handlers/messages/sendNodeMessageHandler
  */
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import {
   analyzeTelegramError,
-  getErrorStatusCode
+  getErrorStatusCode,
 } from "../../../../utils/telegram-error-handler";
-import { replaceVariablesInText } from "./replace-variables";
-import { extractNodeFromProject } from "./extract-node";
-import { extractMediaFromNode } from "./extract-media";
+import {
+  getRequestTokenId,
+  resolveEffectiveProjectToken,
+} from "../../../utils/resolve-request-token";
 import { extractButtonsFromNode } from "./extract-buttons";
+import { extractMediaFromNode } from "./extract-media";
+import { extractNodeFromProject } from "./extract-node";
+import { replaceVariablesInText } from "./replace-variables";
 import { sendTelegramMessage } from "./send-telegram-message";
 
 /**
- * Обрабатывает запрос на отправку сообщения от узла
- * 
- * @function sendNodeMessageHandler
- * @param {Request} req - Объект запроса
- * @param {Response} res - Объект ответа
- * @returns {Promise<void>}
+ * Обрабатывает запрос на отправку сообщения от имени узла проекта
+ * @param req - Объект запроса
+ * @param res - Объект ответа
+ * @returns Результат обработки HTTP-запроса
  */
 export async function sendNodeMessageHandler(req: Request, res: Response): Promise<void> {
   try {
-    const projectId = parseInt(req.params.projectId);
+    const projectId = Number.parseInt(req.params.projectId, 10);
     const userId = req.params.userId;
+    const requestedTokenId = getRequestTokenId(req);
     const { nodeId, userData: customUserData } = req.body;
 
-    if (isNaN(projectId) || !nodeId) {
+    if (Number.isNaN(projectId) || !nodeId) {
       res.status(400).json({ message: "projectId и nodeId обязательны" });
       return;
     }
 
-    // Получаем проект и узел
     const project = await storage.getBotProject(projectId);
     if (!project) {
       res.status(404).json({ message: "Проект не найден" });
@@ -49,48 +49,41 @@ export async function sendNodeMessageHandler(req: Request, res: Response): Promi
       return;
     }
 
-    // Получаем данные пользователя
-    const user = await storage.getUserBotDataByProjectAndUser(projectId, userId);
-    
-    // user_name может быть в userData (из вопросов) или в userName (из Telegram)
-    const userDataFromDb = user?.userData as Record<string, unknown> || {};
+    const { selectedToken, effectiveTokenId } = await resolveEffectiveProjectToken(
+      projectId,
+      requestedTokenId
+    );
+
+    if (!selectedToken || effectiveTokenId === null) {
+      res.status(400).json({ message: "Токен бота не найден" });
+      return;
+    }
+
+    const user = await storage.getUserBotDataByProjectAndUser(projectId, userId, effectiveTokenId);
+    const userDataFromDb = (user?.userData as Record<string, unknown>) || {};
     const userNameFromData = userDataFromDb.user_name;
-    
     const telegramUser = {
       id: Number(userId),
       firstName: user?.firstName || undefined,
       lastName: user?.lastName || undefined,
       username: user?.userName || undefined,
-      // Передаём user_name отдельно для приоритета
       user_name_from_db: userNameFromData ? String(userNameFromData) : undefined,
     };
-
-    // Объединяем userData
     const userData = { ...userDataFromDb, ...(customUserData || {}) };
-
-    // Получаем токен
-    const defaultToken = await storage.getDefaultBotToken(projectId);
-    if (!defaultToken) {
-      res.status(400).json({ message: "Токен бота не найден" });
-      return;
-    }
-
-    // Заменяем переменные в тексте
     const messageText = String(node.data.messageText || node.data.description || "");
-    const textWithVariables = await replaceVariablesInText({ text: messageText, userData, telegramUser, projectId });
-
-    // Извлекаем медиа и кнопки
+    const textWithVariables = await replaceVariablesInText({
+      text: messageText,
+      userData,
+      telegramUser,
+      projectId,
+    });
     const [mediaFiles, buttons] = await Promise.all([
       extractMediaFromNode(node.data, storage),
       Promise.resolve(extractButtonsFromNode(node.data)),
     ]);
-
-    // Определяем форматирование
-    const useHtml = String(node.data.formatMode) === 'html' || Boolean(node.data.markdown);
-
-    // Отправляем сообщение
+    const useHtml = String(node.data.formatMode) === "html" || Boolean(node.data.markdown);
     const result = await sendTelegramMessage(
-      defaultToken.token,
+      selectedToken.token,
       userId,
       textWithVariables,
       mediaFiles,
@@ -98,9 +91,9 @@ export async function sendNodeMessageHandler(req: Request, res: Response): Promi
       useHtml
     );
 
-    // Сохраняем в БД
     await storage.createBotMessage({
       projectId,
+      tokenId: effectiveTokenId,
       userId,
       messageType: "bot",
       messageText: textWithVariables,
@@ -112,11 +105,10 @@ export async function sendNodeMessageHandler(req: Request, res: Response): Promi
     const errorInfo = analyzeTelegramError(error);
     console.error("Ошибка отправки сообщения от узла:", errorInfo);
 
-    const statusCode = getErrorStatusCode(errorInfo.type);
-    res.status(statusCode).json({
+    res.status(getErrorStatusCode(errorInfo.type)).json({
       message: errorInfo.userFriendlyMessage,
       errorType: errorInfo.type,
-      details: process.env.NODE_ENV === 'development' ? errorInfo.message : undefined
+      details: process.env.NODE_ENV === "development" ? errorInfo.message : undefined,
     });
   }
 }

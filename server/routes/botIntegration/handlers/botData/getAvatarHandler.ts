@@ -10,6 +10,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+import { getRequestTokenId, resolveProjectBotToken } from "../../../utils/resolve-request-token";
 
 /**
  * Обрабатывает запрос на получение аватарки пользователя или бота
@@ -23,6 +24,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
     try {
         const projectId = parseInt(req.params.projectId);
         const userId = req.params.userId;
+        const tokenId = getRequestTokenId(req);
 
         if (isNaN(projectId)) {
             res.status(400).json({ message: "Неверный ID проекта" });
@@ -40,7 +42,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
         const isBotAvatar = userId === 'bot' || !!botToken;
 
         if (isBotAvatar) {
-            const tokenToUse = botToken || await storage.getDefaultBotToken(projectId);
+            const tokenToUse = botToken || await resolveProjectBotToken(projectId, tokenId);
             if (tokenToUse) {
                 const botResult = await pool.query(
                     'SELECT bot_photo_url FROM bot_tokens WHERE id = $1',
@@ -77,8 +79,10 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
         } else {
             // Ищем аватарку пользователя в bot_users
             let userResult = await pool.query(
-                'SELECT avatar_url FROM bot_users WHERE user_id = $1 AND project_id = $2',
-                [userId, projectId]
+                tokenId
+                    ? 'SELECT avatar_url FROM bot_users WHERE user_id = $1 AND project_id = $2 AND token_id = $3'
+                    : 'SELECT avatar_url FROM bot_users WHERE user_id = $1 AND project_id = $2',
+                tokenId ? [userId, projectId, tokenId] : [userId, projectId]
             );
             avatarUrl = userResult.rows[0]?.avatar_url || null;
             console.log(`[avatar] bot_users lookup: user_id=${userId}, project_id=${projectId}, found=${avatarUrl ? 'yes' : 'no'}`);
@@ -86,8 +90,10 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
             // Если не найдено, пробуем user_bot_data
             if (!avatarUrl) {
                 userResult = await pool.query(
-                    'SELECT avatar_url FROM user_bot_data WHERE user_id = $1 AND project_id = $2',
-                    [userId, projectId]
+                    tokenId
+                        ? 'SELECT avatar_url FROM user_bot_data WHERE user_id = $1 AND project_id = $2 AND token_id = $3'
+                        : 'SELECT avatar_url FROM user_bot_data WHERE user_id = $1 AND project_id = $2',
+                    tokenId ? [userId, projectId, tokenId] : [userId, projectId]
                 );
                 avatarUrl = userResult.rows[0]?.avatar_url || null;
                 console.log(`[avatar] user_bot_data lookup: found=${avatarUrl ? 'yes' : 'no'}`);

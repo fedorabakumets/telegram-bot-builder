@@ -1,9 +1,10 @@
 /**
  * @fileoverview Мутация удаления всех пользователей
- * @description Хук для очистки всей базы данных пользователей проекта
+ * @description Хук для очистки базы пользователей по выбранному токену
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 
@@ -13,6 +14,8 @@ import { apiRequest } from '@/queryClient';
 interface UseDeleteAllUsersParams {
   /** Идентификатор проекта */
   projectId: number;
+  /** Идентификатор выбранного токена бота */
+  selectedTokenId?: number | null;
   /** Функция обновления списка пользователей */
   refetchUsers: () => void;
   /** Функция обновления статистики */
@@ -25,19 +28,18 @@ interface UseDeleteAllUsersParams {
  * @returns Мутация удаления всех пользователей
  */
 export function useDeleteAllUsers(params: UseDeleteAllUsersParams) {
-  const { projectId, refetchUsers, refetchStats } = params;
+  const { projectId, selectedTokenId, refetchUsers, refetchStats } = params;
+  const usersQueryKey = buildUsersApiUrl(`/api/projects/${projectId}/users`, selectedTokenId);
+  const statsQueryKey = buildUsersApiUrl(`/api/projects/${projectId}/users/stats`, selectedTokenId);
+  const requestUrl = buildUsersApiUrl(`/api/projects/${projectId}/users`, selectedTokenId);
   const { toast } = useToast();
   const qClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => {
-      console.log(`Attempting to delete all users for project: ${projectId}`);
-      return apiRequest('DELETE', `/api/projects/${projectId}/users`);
-    },
+    mutationFn: () => apiRequest('DELETE', requestUrl),
     onSuccess: (data) => {
-      console.log('Bulk deletion successful:', data);
-      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+      qClient.removeQueries({ queryKey: [usersQueryKey, selectedTokenId] });
+      qClient.removeQueries({ queryKey: [statsQueryKey, selectedTokenId] });
 
       setTimeout(() => {
         refetchUsers();

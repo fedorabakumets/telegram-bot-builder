@@ -4,6 +4,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 
@@ -13,6 +14,8 @@ import { apiRequest } from '@/queryClient';
 interface UseSendMessageParams {
   /** Идентификатор проекта */
   projectId: number;
+  /** Идентификатор выбранного токена бота */
+  selectedTokenId?: number | null;
 }
 
 /**
@@ -21,7 +24,7 @@ interface UseSendMessageParams {
  * @returns Мутация отправки сообщения
  */
 export function useSendMessage(params: UseSendMessageParams) {
-  const { projectId } = params;
+  const { projectId, selectedTokenId } = params;
   const { toast } = useToast();
   const qClient = useQueryClient();
 
@@ -30,11 +33,16 @@ export function useSendMessage(params: UseSendMessageParams) {
       if (!userId) {
         throw new Error('User ID is required');
       }
-      return apiRequest('POST', `/api/projects/${projectId}/users/${userId}/send-message`, { messageText });
+
+      return apiRequest(
+        'POST',
+        buildUsersApiUrl(`/api/projects/${projectId}/users/${userId}/send-message`, selectedTokenId),
+        { messageText }
+      );
     },
     onSuccess: () => {
       qClient.invalidateQueries({
-        queryKey: [`/api/projects/${projectId}/users/messages`],
+        queryKey: [buildUsersApiUrl(`/api/projects/${projectId}/users/messages`, selectedTokenId), selectedTokenId],
       });
       toast({
         title: 'Сообщение отправлено',

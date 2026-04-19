@@ -1,10 +1,9 @@
 /**
- * @fileoverview Таблицы истории сообщений и связи сообщений с медиа
+ * @fileoverview Таблицы истории сообщений бота и схема вставки связей с медиа
  * @module shared/schema/tables/bot-messages
  */
 
 import { pgTable, text, serial, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
@@ -17,70 +16,74 @@ import { botMessages as botMessagesTable } from "./bot-messages";
 export const botMessages = pgTable("bot_messages", {
   /** Уникальный идентификатор сообщения */
   id: serial("id").primaryKey(),
-  /** Идентификатор проекта (ссылка на bot_projects.id) */
+  /** Идентификатор проекта */
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  /** Идентификатор токена бота для сегментации истории */
+  tokenId: integer("token_id").notNull().default(0),
   /** Идентификатор пользователя в Telegram */
   userId: text("user_id").notNull(),
-  /** Тип сообщения ("user" или "bot") */
+  /** Тип сообщения */
   messageType: text("message_type").notNull(),
   /** Текст сообщения */
   messageText: text("message_text"),
-  /** Дополнительные данные (медиа, кнопки и т.д.) */
+  /** Дополнительные данные сообщения */
   messageData: jsonb("message_data"),
-  /** ID узла бота, который отправил сообщение */
+  /** ID узла, отправившего сообщение */
   nodeId: text("node_id"),
-  /** ID основного медиа (фото/видео) для быстрого доступа */
+  /** ID основного медиа */
   primaryMediaId: integer("primary_media_id").references(() => mediaFiles.id, { onDelete: "set null" }),
   /** Дата создания сообщения */
-  createdAt: timestamp("created_at", { mode: 'date', withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow(),
 });
 
 /**
- * Таблица связи сообщений с медиафайлами (для множественных медиа)
+ * Таблица связи сообщений с медиафайлами
  */
 export const botMessageMedia = pgTable("bot_message_media", {
   /** Уникальный идентификатор связи */
   id: serial("id").primaryKey(),
-  /** ID сообщения (ссылка на bot_messages.id) */
+  /** ID сообщения */
   messageId: integer("message_id").references(() => botMessagesTable.id, { onDelete: "cascade" }).notNull(),
-  /** ID медиафайла (ссылка на media_files.id) */
+  /** ID медиафайла */
   mediaFileId: integer("media_file_id").references(() => mediaFiles.id, { onDelete: "cascade" }).notNull(),
-  /** Тип медиа ("photo", "video", "audio", "document") */
+  /** Тип медиа */
   mediaKind: text("media_kind").notNull(),
-  /** Порядковый индекс для множественных медиа */
+  /** Порядковый индекс медиа */
   orderIndex: integer("order_index").default(0),
   /** Дата создания связи */
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-/** Схема для вставки данных сообщения бота */
+/** Схема вставки сообщения бота */
 export const insertBotMessageSchema = z.object({
   /** Идентификатор проекта */
   projectId: z.number(),
+  /** Идентификатор токена бота */
+  tokenId: z.number().int().min(0).default(0),
   /** Идентификатор пользователя в Telegram */
   userId: z.string(),
-  /** Тип сообщения ("user" или "bot") */
+  /** Тип сообщения */
   messageType: z.string(),
   /** Текст сообщения */
   messageText: z.string().nullable().optional(),
-  /** Дополнительные данные (медиа, кнопки и т.д.) */
+  /** Дополнительные данные сообщения */
   messageData: z.any().nullable().optional(),
-  /** ID узла бота, который отправил сообщение */
+  /** ID узла бота */
   nodeId: z.string().nullable().optional(),
-  /** ID основного медиа (фото/видео) для быстрого доступа */
+  /** ID основного медиа */
   primaryMediaId: z.number().nullable().optional(),
 });
 
-/** Схема для вставки данных связи сообщений с медиафайлами */
-export const insertBotMessageMediaSchema = createInsertSchema(botMessageMedia).pick({
-  /** ID сообщения (ссылка на bot_messages.id) */
-  messageId: true,
-  /** ID медиафайла (ссылка на media_files.id) */
-  mediaFileId: true,
-  /** Тип медиа ("photo", "video", "audio", "document") */
-  mediaKind: true,
-  /** Порядковый индекс для множественных медиа */
-  orderIndex: true,
+/** Схема вставки связи сообщения с медиа */
+export const insertBotMessageMediaSchema = z.object({
+  /** ID сообщения */
+  messageId: z.number().int().positive(),
+  /** ID медиафайла */
+  mediaFileId: z.number().int().positive(),
+  /** Тип медиа */
+  mediaKind: z.string().min(1),
+  /** Порядковый индекс медиа */
+  orderIndex: z.number().int().min(0).default(0),
 });
 
 /** Тип записи сообщения бота */

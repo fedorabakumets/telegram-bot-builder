@@ -12,6 +12,8 @@ import { UserStats } from '../../types';
 export interface UseUserDatabaseParams {
   /** Идентификатор проекта */
   projectId: number;
+  /** Идентификатор выбранного токена бота */
+  selectedTokenId?: number | null;
   /** Поисковый запрос */
   searchQuery: string;
 }

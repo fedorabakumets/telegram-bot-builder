@@ -1,9 +1,10 @@
 /**
  * @fileoverview Хук для отправки данных узла пользователю
- * @description Отправляет сообщение от узла с поддержкой медиа, кнопок, замены переменных и форматирования
+ * @description Отправляет содержимое узла с поддержкой tokenId
  */
 
 import { useMutation } from '@tanstack/react-query';
+import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 
@@ -15,29 +16,31 @@ export interface SendNodeData {
   nodeId: string;
   /** ID пользователя */
   userId: number;
-  /** Дополнительные данные пользователя для замены переменных */
+  /** Дополнительные данные пользователя */
   userData?: Record<string, unknown>;
 }
 
 /**
  * Хук для отправки содержимого узла пользователю
  * @param projectId - Идентификатор проекта
+ * @param selectedTokenId - Идентификатор выбранного токена
  * @param onSent - Колбэк после успешной отправки
  * @returns Мутация отправки узла
  */
 export function useSendNode(
   projectId: number,
+  selectedTokenId?: number | null,
   onSent?: () => void
 ) {
   const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ nodeId, userId, userData }: SendNodeData) => {
-      // Отправляем запрос на отправку узла с поддержкой медиа и кнопок
-      return apiRequest('POST', `/api/projects/${projectId}/users/${userId}/send-node-message`, {
-        nodeId,
-        userData,
-      });
+      return apiRequest(
+        'POST',
+        buildUsersApiUrl(`/api/projects/${projectId}/users/${userId}/send-node-message`, selectedTokenId),
+        { nodeId, userData }
+      );
     },
     onSuccess: () => {
       onSent?.();

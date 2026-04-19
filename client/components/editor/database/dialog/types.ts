@@ -1,13 +1,12 @@
 /**
  * @fileoverview Типы для компонента диалоговой панели
- * Содержит расширенные типы сообщений и свойства компонентов
+ * @description Содержит расширенные типы сообщений и свойства компонентов
  */
 
 import { BotMessage, UserBotData } from '@shared/schema';
 
 /**
  * Расширенный тип сообщения бота с медиафайлами
- * Добавляет поддержку изображений к базовому типу BotMessage
  */
 export type BotMessageWithMedia = BotMessage & {
   /** Медиафайлы сообщения */
@@ -31,6 +30,8 @@ export type BotMessageWithMedia = BotMessage & {
 export interface DialogPanelProps {
   /** Идентификатор проекта */
   projectId: number;
+  /** Идентификатор выбранного токена бота */
+  selectedTokenId?: number | null;
   /** Данные пользователя для диалога */
   user: UserBotData | null;
   /** Колбэк закрытия панели */

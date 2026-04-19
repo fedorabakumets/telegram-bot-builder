@@ -1,14 +1,14 @@
 /**
  * @fileoverview Главная панель диалога с пользователем
- * Координирует все компоненты диалога
+ * @description Координирует все компоненты диалога
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { buildUsersApiUrl, formatUserName } from '../utils';
 import { DialogPanelProps, BotMessageWithMedia } from './types';
-import { formatUserName } from '../utils';
 import { useSendMessage } from './hooks/use-send-message';
 import { useBotData } from './hooks/use-bot-data';
 import { useUserList } from '@/components/editor/database/user-details/hooks/useUserList';
@@ -23,41 +23,49 @@ import { NodeSender } from './components/node-sender';
 
 /**
  * Компонент панели диалога с пользователем бота
- * @param projectId - Идентификатор проекта
- * @param user - Данные пользователя для диалога
- * @param onClose - Функция закрытия панели
- * @param onSelectUser - Функция выбора пользователя
+ * @param props - Пропсы компонента
  * @returns JSX элемент панели диалога
  */
-export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPanelProps) {
+export function DialogPanel({
+  projectId,
+  selectedTokenId,
+  user,
+  onClose,
+  onSelectUser,
+}: DialogPanelProps) {
   const [showWarning, setShowWarning] = useState(() => {
-    if (typeof window === 'undefined') return true;
+    if (typeof window === 'undefined') {
+      return true;
+    }
+
     return localStorage.getItem('dialog-warning-dismissed') !== 'true';
   });
   const messagesScrollRef = useRef<HTMLDivElement>(null);
-  const { users } = useUserList(projectId);
+  const { users } = useUserList(projectId, selectedTokenId);
   const { bot } = useBotData(projectId);
+  const requestUrl = buildUsersApiUrl(
+    `/api/projects/${projectId}/users/${user?.userId}/messages`,
+    selectedTokenId
+  );
 
   const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessageWithMedia[]>({
-    queryKey: [`/api/projects/${projectId}/users/${user?.userId}/messages`],
+    queryKey: [requestUrl, selectedTokenId, user?.userId],
     enabled: !!user?.userId,
-    staleTime: 5000, // 5 секунд
+    queryFn: async () => {
+      const response = await fetch(requestUrl, { credentials: 'include' });
+      return response.json();
+    },
+    staleTime: 5000,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     select: (data) => {
-      // Защита: если данные не массив, оборачиваем объект в массив
       if (!Array.isArray(data)) {
-        if (data && typeof data === 'object') {
-          return [data];
-        }
-        console.warn('dialog-panel: messages API returned invalid data:', data);
-        return [];
+        return data && typeof data === 'object' ? [data] : [];
       }
       return data;
     },
   });
 
-  /** Автопрокрутка к последнему сообщению */
   useEffect(() => {
     if (!messagesLoading && messages.length > 0 && messagesScrollRef.current) {
       setTimeout(() => {
@@ -69,10 +77,12 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
     }
   }, [messagesLoading, messages.length, user?.userId]);
 
-  /** Мутация отправки сообщения */
-  const sendMessageMutation = useSendMessage(projectId, user?.userId ? Number(user.userId) : undefined, () => {
-    refetchMessages();
-  });
+  const sendMessageMutation = useSendMessage(
+    projectId,
+    selectedTokenId,
+    user?.userId ? Number(user.userId) : undefined,
+    () => refetchMessages()
+  );
 
   if (!user) {
     return <NoUserSelected />;
@@ -81,7 +91,7 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
   const handleSelectUser = onSelectUser || (() => {});
 
   return (
-    <div className="h-full flex flex-col bg-background overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden bg-background">
       <DialogHeader
         user={user}
         users={users}
@@ -90,12 +100,16 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
         onClose={onClose}
       />
 
-      {showWarning && <DialogWarning onClose={() => {
-        localStorage.setItem('dialog-warning-dismissed', 'true');
-        setShowWarning(false);
-      }} />}
+      {showWarning && (
+        <DialogWarning
+          onClose={() => {
+            localStorage.setItem('dialog-warning-dismissed', 'true');
+            setShowWarning(false);
+          }}
+        />
+      )}
 
-      <ScrollArea ref={messagesScrollRef} className="flex-1 p-3 min-h-0" data-testid="dialog-messages-scroll-area">
+      <ScrollArea ref={messagesScrollRef} className="min-h-0 flex-1 p-3" data-testid="dialog-messages-scroll-area">
         {messagesLoading ? (
           <LoadingMessages />
         ) : messages.length === 0 ? (
@@ -127,6 +141,7 @@ export function DialogPanel({ projectId, user, onClose, onSelectUser }: DialogPa
 
       <NodeSender
         projectId={projectId}
+        selectedTokenId={selectedTokenId}
         userId={user?.userId ? Number(user.userId) : undefined}
         onSent={refetchMessages}
       />

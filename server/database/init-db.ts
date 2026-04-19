@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Инициализация и мягкие миграции серверной схемы базы данных
+ */
+
 import { sql } from 'drizzle-orm';
 import { db } from './db';
 
@@ -247,6 +251,7 @@ export async function initializeDatabaseTables() {
       CREATE TABLE IF NOT EXISTS user_bot_data (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
+        token_id INTEGER NOT NULL DEFAULT 0,
         user_id TEXT NOT NULL,
         user_name TEXT,
         first_name TEXT,
@@ -331,6 +336,7 @@ export async function initializeDatabaseTables() {
       CREATE TABLE IF NOT EXISTS bot_users (
         user_id BIGINT NOT NULL,
         project_id INTEGER NOT NULL DEFAULT 0,
+        token_id INTEGER NOT NULL DEFAULT 0,
         username TEXT,
         first_name TEXT,
         last_name TEXT,
@@ -339,7 +345,7 @@ export async function initializeDatabaseTables() {
         interaction_count INTEGER DEFAULT 0,
         user_data JSONB DEFAULT '{}',
         is_active INTEGER DEFAULT 1,
-        PRIMARY KEY (user_id, project_id)
+        PRIMARY KEY (user_id, project_id, token_id)
       );
     `, "Создание таблицы bot_users");
 
@@ -362,6 +368,7 @@ export async function initializeDatabaseTables() {
       CREATE TABLE IF NOT EXISTS bot_messages (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
+        token_id INTEGER NOT NULL DEFAULT 0,
         user_id TEXT NOT NULL,
         message_type TEXT NOT NULL,
         message_text TEXT,
@@ -574,6 +581,43 @@ export async function initializeDatabaseTables() {
       }
     } catch (error) {
       console.log('⚠️ Ошибка при миграции таблицы bot_users:', error);
+    }
+
+    // Миграция: добавить token_id в user_bot_data
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE user_bot_data
+        ADD COLUMN IF NOT EXISTS token_id INTEGER NOT NULL DEFAULT 0;
+      `, "Миграция: добавление token_id в user_bot_data");
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции token_id в user_bot_data:', error);
+    }
+
+    // Миграция: добавить token_id в bot_messages
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_messages
+        ADD COLUMN IF NOT EXISTS token_id INTEGER NOT NULL DEFAULT 0;
+      `, "Миграция: добавление token_id в bot_messages");
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции token_id в bot_messages:', error);
+    }
+
+    // Миграция: добавить token_id в bot_users и обновить первичный ключ
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_users
+        ADD COLUMN IF NOT EXISTS token_id INTEGER NOT NULL DEFAULT 0;
+      `, "Миграция: добавление token_id в bot_users");
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_users DROP CONSTRAINT IF EXISTS bot_users_pkey;
+      `, "Миграция: пересоздание PK bot_users");
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_users
+        ADD PRIMARY KEY (user_id, project_id, token_id);
+      `, "Миграция: добавление PK user_id + project_id + token_id");
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции token_id в bot_users:', error);
     }
 
     console.log('✅ Таблицы базы данных успешно инициализированы!');

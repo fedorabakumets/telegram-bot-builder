@@ -5,23 +5,27 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { UserBotData } from '@shared/schema';
+import { buildUsersApiUrl } from '@/components/editor/database/utils';
 
 /**
  * Загружает список пользователей проекта
- * @param {number} projectId - Идентификатор проекта
- * @returns {{ users: UserBotData[], isLoading: boolean }}
+ * @param projectId - Идентификатор проекта
+ * @param selectedTokenId - Идентификатор выбранного токена
+ * @returns Список пользователей и состояние загрузки
  */
-export function useUserList(projectId: number): { users: UserBotData[]; isLoading: boolean } {
+export function useUserList(
+  projectId: number,
+  selectedTokenId?: number | null
+): { users: UserBotData[]; isLoading: boolean } {
+  const requestUrl = buildUsersApiUrl(`/api/projects/${projectId}/users`, selectedTokenId);
+
   const { data: users = [], isLoading } = useQuery<UserBotData[]>({
-    queryKey: [`/api/projects/${projectId}/users`],
-    select: (data) => {
-      // Защита: если данные не массив, возвращаем пустой массив
-      if (!Array.isArray(data)) {
-        console.warn('useUserList: API returned non-array data:', data);
-        return [];
-      }
-      return data;
+    queryKey: [requestUrl, selectedTokenId],
+    queryFn: async () => {
+      const response = await fetch(requestUrl, { credentials: 'include' });
+      return response.json();
     },
+    select: (data) => Array.isArray(data) ? data : [],
   });
 
   return { users, isLoading };

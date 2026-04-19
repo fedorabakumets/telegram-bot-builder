@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
+ */
+
 import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type InsertBotGroup, type InsertBotInstance, type InsertBotMessage, type InsertBotMessageMedia, type InsertBotProject, type InsertBotTemplate, type InsertBotToken, type InsertGroupMember, type InsertMediaFile, type InsertTelegramUser, type InsertUserBotData, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, type InsertBotLog, botLaunchHistory, type BotLaunchHistory, type InsertBotLaunchHistory } from "@shared/schema";
 import { and, asc, desc, eq, ilike, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
@@ -806,9 +810,22 @@ export class DatabaseStorage implements IStorage {
    * @param userId - ID пользователя
    * @returns Данные пользователя бота или undefined, если не найдены
    */
-  async getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined> {
+  async getUserBotDataByProjectAndUser(
+    projectId: number,
+    userId: string,
+    tokenId?: number | null
+  ): Promise<UserBotData | undefined> {
+    const conditions = [
+      eq(userBotData.projectId, projectId),
+      eq(userBotData.userId, userId),
+    ];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(userBotData.tokenId, tokenId));
+    }
+
     const [userData] = await this.db.select().from(userBotData)
-      .where(and(eq(userBotData.projectId, projectId), eq(userBotData.userId, userId)));
+      .where(and(...conditions));
     return userData || undefined;
   }
 
@@ -817,9 +834,15 @@ export class DatabaseStorage implements IStorage {
    * @param projectId - ID проекта
    * @returns Массив данных пользователей бота
    */
-  async getUserBotDataByProject(projectId: number): Promise<UserBotData[]> {
+  async getUserBotDataByProject(projectId: number, tokenId?: number | null): Promise<UserBotData[]> {
+    const conditions = [eq(userBotData.projectId, projectId)];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(userBotData.tokenId, tokenId));
+    }
+
     return await this.db.select().from(userBotData)
-      .where(eq(userBotData.projectId, projectId))
+      .where(and(...conditions))
       .orderBy(desc(userBotData.lastInteraction));
   }
 
@@ -874,8 +897,14 @@ export class DatabaseStorage implements IStorage {
    * @param projectId - ID проекта
    * @returns true, если данные были удалены, иначе false
    */
-  async deleteUserBotDataByProject(projectId: number): Promise<boolean> {
-    const result = await this.db.delete(userBotData).where(eq(userBotData.projectId, projectId));
+  async deleteUserBotDataByProject(projectId: number, tokenId?: number | null): Promise<boolean> {
+    const conditions = [eq(userBotData.projectId, projectId)];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(userBotData.tokenId, tokenId));
+    }
+
+    const result = await this.db.delete(userBotData).where(and(...conditions));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
@@ -922,20 +951,24 @@ export class DatabaseStorage implements IStorage {
    * @param query - Поисковый запрос
    * @returns Массив найденных данных пользователей
    */
-  async searchUserBotData(projectId: number, query: string): Promise<UserBotData[]> {
+  async searchUserBotData(projectId: number, query: string, tokenId?: number | null): Promise<UserBotData[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
+    const conditions = [
+      eq(userBotData.projectId, projectId),
+      or(
+        ilike(userBotData.userName, searchTerm),
+        ilike(userBotData.firstName, searchTerm),
+        ilike(userBotData.lastName, searchTerm),
+        ilike(userBotData.notes, searchTerm)
+      ),
+    ];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(userBotData.tokenId, tokenId));
+    }
+
     return await this.db.select().from(userBotData)
-      .where(
-        and(
-          eq(userBotData.projectId, projectId),
-          or(
-            ilike(userBotData.userName, searchTerm),
-            ilike(userBotData.firstName, searchTerm),
-            ilike(userBotData.lastName, searchTerm),
-            ilike(userBotData.notes, searchTerm)
-          )
-        )
-      )
+      .where(and(...conditions))
       .orderBy(desc(userBotData.lastInteraction));
   }
 
@@ -973,7 +1006,7 @@ export class DatabaseStorage implements IStorage {
    * @param projectId - ID проекта
    * @returns Объект со статистикой пользователей
    */
-  async getUserBotDataStats(projectId: number): Promise<{
+  async getUserBotDataStats(projectId: number, tokenId?: number | null): Promise<{
     totalUsers: number;
     activeUsers: number;
     blockedUsers: number;
@@ -981,7 +1014,13 @@ export class DatabaseStorage implements IStorage {
     totalInteractions: number;
     avgInteractionsPerUser: number;
   }> {
-    const users = await this.db.select().from(userBotData).where(eq(userBotData.projectId, projectId));
+    const conditions = [eq(userBotData.projectId, projectId)];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(userBotData.tokenId, tokenId));
+    }
+
+    const users = await this.db.select().from(userBotData).where(and(...conditions));
 
     const totalUsers = users.length;
     const activeUsers = users.filter(u => u.isActive === 1).length;
@@ -1143,14 +1182,25 @@ export class DatabaseStorage implements IStorage {
    * @param limit - Ограничение количества сообщений (по умолчанию 100)
    * @returns Массив сообщений бота
    */
-  async getBotMessages(projectId: number, userId: string, limit: number = 100): Promise<BotMessage[]> {
+  async getBotMessages(
+    projectId: number,
+    userId: string,
+    limit: number = 100,
+    tokenId?: number | null
+  ): Promise<BotMessage[]> {
+    const conditions = [
+      eq(botMessages.projectId, projectId),
+      eq(botMessages.userId, userId),
+    ];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(botMessages.tokenId, tokenId));
+    }
+
     return await this.db
       .select()
       .from(botMessages)
-      .where(and(
-        eq(botMessages.projectId, projectId),
-        eq(botMessages.userId, userId)
-      ))
+      .where(and(...conditions))
       .orderBy(asc(botMessages.createdAt))
       .limit(limit);
   }
@@ -1161,13 +1211,19 @@ export class DatabaseStorage implements IStorage {
    * @param userId - ID пользователя
    * @returns true, если сообщения были удалены, иначе false
    */
-  async deleteBotMessages(projectId: number, userId: string): Promise<boolean> {
+  async deleteBotMessages(projectId: number, userId: string, tokenId?: number | null): Promise<boolean> {
+    const conditions = [
+      eq(botMessages.projectId, projectId),
+      eq(botMessages.userId, userId),
+    ];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(botMessages.tokenId, tokenId));
+    }
+
     const result = await this.db
       .delete(botMessages)
-      .where(and(
-        eq(botMessages.projectId, projectId),
-        eq(botMessages.userId, userId)
-      ));
+      .where(and(...conditions));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
@@ -1176,10 +1232,16 @@ export class DatabaseStorage implements IStorage {
    * @param projectId - ID проекта
    * @returns true, если сообщения были удалены, иначе false
    */
-  async deleteAllBotMessages(projectId: number): Promise<boolean> {
+  async deleteAllBotMessages(projectId: number, tokenId?: number | null): Promise<boolean> {
+    const conditions = [eq(botMessages.projectId, projectId)];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(botMessages.tokenId, tokenId));
+    }
+
     const result = await this.db
       .delete(botMessages)
-      .where(eq(botMessages.projectId, projectId));
+      .where(and(...conditions));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
@@ -1244,12 +1306,17 @@ export class DatabaseStorage implements IStorage {
     userId: string,
     limit: number = 100,
     order: 'asc' | 'desc' = 'asc',
-    messageType?: 'user' | 'bot'
+    messageType?: 'user' | 'bot',
+    tokenId?: number | null
   ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number; }> | undefined; })[]> {
     const whereConditions = [
       eq(botMessages.projectId, projectId),
-      eq(botMessages.userId, userId)
+      eq(botMessages.userId, userId),
     ];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      whereConditions.push(eq(botMessages.tokenId, tokenId));
+    }
     
     if (messageType) {
       whereConditions.push(eq(botMessages.messageType, messageType));

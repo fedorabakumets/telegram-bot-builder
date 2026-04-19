@@ -5,3 +5,4 @@
 
 export { formatDate } from './formatDate';
 export { formatUserName } from './formatUserName';
+export { buildUsersApiUrl } from './build-users-api-url';

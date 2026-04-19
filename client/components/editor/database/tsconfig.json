@@ -1,0 +1,23 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": ["../../../../client/*"],
+      "@lib/*": ["../../../../lib/*"],
+      "@shared/*": ["../../../../shared/*"],
+      "@assets/*": ["../../../../attached_assets/*"]
+    }
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "../../../../lib",
+    "./**/tests",
+    "./**/*.test.ts",
+    "./**/*.test.tsx"
+  ]
+}

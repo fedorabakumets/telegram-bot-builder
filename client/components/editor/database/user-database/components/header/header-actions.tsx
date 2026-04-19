@@ -33,7 +33,11 @@ export function HeaderActions({
   onDeleteAll,
 }: HeaderActionsProps): React.JSX.Element {
   return (
-    <div className="flex gap-2">
+    <div
+      className="flex gap-2"
+      data-project-id={projectId}
+      title={`Действия для проекта ${projectName}`}
+    >
       {/* <GoogleSheetsExportButton projectId={projectId} projectName={projectName} /> */}
       <AlertDialog>
         <AlertDialogTrigger asChild>

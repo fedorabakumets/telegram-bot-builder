@@ -14,7 +14,6 @@ interface MobileUserHeaderProps {
   /** Функция форматирования имени */
   formatUserName: (user: UserBotData) => string;
   /** Индекс пользователя в списке */
-  index: number;
 }
 
 /**
@@ -26,7 +25,6 @@ export function MobileUserHeader(props: MobileUserHeaderProps): React.JSX.Elemen
   const {
     user,
     formatUserName,
-    index,
   } = props;
 
   return (

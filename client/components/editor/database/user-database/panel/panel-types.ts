@@ -1,6 +1,6 @@
 /**
  * @fileoverview Типы для компонентов панели
- * @description Интерфейсы пропсов и параметров
+ * @description Интерфейсы пропсов и параметров панели базы пользователей
  */
 
 import { SortField, SortDirection } from '../types';
@@ -11,6 +11,8 @@ import { SortField, SortDirection } from '../types';
 export interface UseUserDatabaseParams {
   /** ID проекта */
   projectId: number;
+  /** Идентификатор выбранного токена бота */
+  selectedTokenId?: number | null;
   /** Поисковый запрос */
   searchQuery: string;
 }
@@ -21,6 +23,8 @@ export interface UseUserDatabaseParams {
 export interface UseUserMutationsParams {
   /** ID проекта */
   projectId: number;
+  /** Идентификатор выбранного токена бота */
+  selectedTokenId?: number | null;
   /** Функция обновления пользователей */
   refetchUsers: () => void;
   /** Функция обновления статистики */

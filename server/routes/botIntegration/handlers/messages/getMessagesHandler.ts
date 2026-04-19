@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { getRequestTokenId } from "../../../utils/resolve-request-token";
 
 /**
  * Обрабатывает запрос на получение сообщений
@@ -22,6 +23,7 @@ export async function getMessagesHandler(req: Request, res: Response): Promise<v
     try {
         const projectId = parseInt(req.params.projectId);
         const userId = req.params.userId;
+        const tokenId = getRequestTokenId(req);
         const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
         const order = req.query.order === 'desc' ? 'desc' : 'asc';
         const messageType = req.query.messageType === 'user' || req.query.messageType === 'bot' 
@@ -33,7 +35,7 @@ export async function getMessagesHandler(req: Request, res: Response): Promise<v
             return;
         }
 
-        const messages = await storage.getBotMessagesWithMedia(projectId, userId, limit, order, messageType);
+        const messages = await storage.getBotMessagesWithMedia(projectId, userId, limit, order, messageType, tokenId);
         res.json(messages);
     } catch (error) {
         console.error("Ошибка получения сообщений:", error);

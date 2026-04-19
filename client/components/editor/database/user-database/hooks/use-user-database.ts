@@ -1,6 +1,6 @@
 /**
- * @fileoverview Главный хук для загрузки данных базы данных пользователей
- * @description Агрегирует все useQuery хуки для получения данных о пользователях
+ * @fileoverview Главный хук для загрузки данных базы пользователей
+ * @description Агрегирует все query-хуки для получения данных о пользователях
  */
 
 import { UseUserDatabaseParams, UseUserDatabaseReturn } from './types';
@@ -10,24 +10,17 @@ import { useStats } from './queries/use-stats';
 import { useSearchUsers } from './queries/use-search-users';
 
 /**
- * Хук для загрузки всех данных базы данных пользователей
+ * Хук для загрузки всех данных базы пользователей
  * @param params - Параметры хука
  * @returns Объект с данными и функциями обновления
  */
 export function useUserDatabase(params: UseUserDatabaseParams): UseUserDatabaseReturn {
-  const {
-    projectId,
-    searchQuery,
-  } = params;
+  const { projectId, selectedTokenId, searchQuery } = params;
 
   const { project } = useProject({ projectId });
-
-  const { users, isUsersLoading, refetchUsers } = useUsers({ projectId });
-
-  const { stats, isStatsLoading, refetchStats } = useStats({ projectId });
-
-  const { searchResults } = useSearchUsers({ projectId, searchQuery });
-
+  const { users, isUsersLoading, refetchUsers } = useUsers({ projectId, selectedTokenId });
+  const { stats, isStatsLoading, refetchStats } = useStats({ projectId, selectedTokenId });
+  const { searchResults } = useSearchUsers({ projectId, selectedTokenId, searchQuery });
   const isLoading = isUsersLoading || isStatsLoading;
 
   return {

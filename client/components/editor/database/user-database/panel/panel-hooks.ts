@@ -52,7 +52,7 @@ interface UseUserDatabasePanelMutationsReturn {
   deleteUserMutation: any;
   /** Мутация обновления пользователя */
   updateUserMutation: any;
-  /** Мутация удаления всех */
+  /** Мутация удаления всех пользователей */
   deleteAllUsersMutation: any;
   /** Мутация переключения БД */
   toggleDatabaseMutation: any;
@@ -66,13 +66,11 @@ interface UseUserDatabasePanelMutationsReturn {
 export function useUserDatabasePanelData(
   params: UseUserDatabasePanelDataParams
 ): UseUserDatabasePanelDataReturn {
-  const {
-    projectId,
-    searchQuery,
-  } = params;
+  const { projectId, selectedTokenId, searchQuery } = params;
 
   const data = useUserDatabase({
     projectId,
+    selectedTokenId,
     searchQuery,
   });
 
@@ -95,10 +93,11 @@ export function useUserDatabasePanelData(
 export function useUserDatabasePanelMutations(
   params: UseUserDatabasePanelMutationsParams
 ): UseUserDatabasePanelMutationsReturn {
-  const { projectId, refetchUsers, refetchStats } = params;
+  const { projectId, selectedTokenId, refetchUsers, refetchStats } = params;
 
   return useUserMutations({
     projectId,
+    selectedTokenId,
     refetchUsers,
     refetchStats,
   });

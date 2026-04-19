@@ -1,50 +1,48 @@
 /**
- * Хук для загрузки последнего сообщения пользователя
- * Загружает последнее сообщение от пользователя (которое пользователь написал боту)
+ * @fileoverview Хук для загрузки последнего сообщения пользователя
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import { BotMessageWithMedia } from '../../types';
 
 /**
  * Хук для загрузки последнего сообщения пользователя
  * @param projectId - Идентификатор проекта
  * @param userId - Идентификатор пользователя
+ * @param selectedTokenId - Идентификатор выбранного токена
  * @returns Последнее сообщение и состояние загрузки
  */
-export function useLastMessage(projectId: number, userId?: number) {
+export function useLastMessage(
+  projectId: number,
+  userId?: number,
+  selectedTokenId?: number | null
+) {
+  const requestUrl = buildUsersApiUrl(
+    `/api/projects/${projectId}/users/${userId}/messages`,
+    selectedTokenId,
+    { limit: '1', order: 'desc', messageType: 'user' }
+  );
+
   return useQuery<BotMessageWithMedia | null>({
-    queryKey: [`/api/projects/${projectId}/users/${userId}/messages/last-user`],
+    queryKey: [requestUrl, selectedTokenId, userId, 'last-user'],
     enabled: !!userId,
-    staleTime: 5000, // 5 секунд
+    staleTime: 5000,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     queryFn: async () => {
-      // Запрашиваем последнее сообщение ОТ ПОЛЬЗОВАТЕЛЯ (messageType=user)
-      const url = `/api/projects/${projectId}/users/${userId}/messages?limit=1&order=desc&messageType=user`;
-      console.log('[useLastMessage] Fetching:', url);
-      
-      const response = await fetch(url);
+      const response = await fetch(requestUrl, { credentials: 'include' });
       if (!response.ok) {
-        console.error('[useLastMessage] Response not ok:', response.status);
         return null;
       }
-      
+
       const messages = await response.json();
-      console.log('[useLastMessage] Response:', messages);
-      
-      // Защита: проверяем, что messages — массив
       if (!Array.isArray(messages) || messages.length === 0) {
-        console.log('[useLastMessage] No messages found');
         return null;
       }
-      
+
       const message = messages[0];
-      console.log('[useLastMessage] Last message:', message);
-      
-      // Защита: проверяем, что message — объект
-      if (!message || typeof message !== 'object') return null;
-      return message;
+      return message && typeof message === 'object' ? message : null;
     },
   });
 }

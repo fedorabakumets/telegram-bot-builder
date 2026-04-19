@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Оптимизированная реализация storage с локальными упрощениями поверх DatabaseStorage
+ */
+
 import { type BotGroup, botGroups, type BotInstance, botInstances, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type InsertBotGroup, type InsertBotInstance, type InsertBotProject, type InsertBotTemplate, type InsertBotToken, type InsertMediaFile, type InsertUserBotData, type MediaFile, mediaFiles, type UserBotData, userBotData } from "@shared/schema";
 import { and, desc, eq, ilike, or } from "drizzle-orm";
 import { DatabaseStorage } from "./DatabaseStorage";
@@ -602,9 +606,22 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
    * @param userId - ID пользователя
    * @returns Данные пользователя бота или undefined, если не найдены
    */
-  async getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined> {
+  async getUserBotDataByProjectAndUser(
+    projectId: number,
+    userId: string,
+    tokenId?: number | null
+  ): Promise<UserBotData | undefined> {
+    const conditions = [
+      eq(userBotData.projectId, projectId),
+      eq(userBotData.userId, userId),
+    ];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(userBotData.tokenId, tokenId));
+    }
+
     const [userData] = await this.db.select().from(userBotData)
-      .where(and(eq(userBotData.projectId, projectId), eq(userBotData.userId, userId)));
+      .where(and(...conditions));
     return userData || undefined;
   }
 
@@ -613,9 +630,15 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
    * @param projectId - ID проекта
    * @returns Массив данных пользователей бота
    */
-  async getUserBotDataByProject(projectId: number): Promise<UserBotData[]> {
+  async getUserBotDataByProject(projectId: number, tokenId?: number | null): Promise<UserBotData[]> {
+    const conditions = [eq(userBotData.projectId, projectId)];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(userBotData.tokenId, tokenId));
+    }
+
     return await this.db.select().from(userBotData)
-      .where(eq(userBotData.projectId, projectId))
+      .where(and(...conditions))
       .orderBy(desc(userBotData.lastInteraction));
   }
 
@@ -671,8 +694,14 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
    * @param projectId - ID проекта
    * @returns true, если данные были удалены, иначе false
    */
-  async deleteUserBotDataByProject(projectId: number): Promise<boolean> {
-    const result = await this.db.delete(userBotData).where(eq(userBotData.projectId, projectId));
+  async deleteUserBotDataByProject(projectId: number, tokenId?: number | null): Promise<boolean> {
+    const conditions = [eq(userBotData.projectId, projectId)];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(userBotData.tokenId, tokenId));
+    }
+
+    const result = await this.db.delete(userBotData).where(and(...conditions));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
@@ -716,20 +745,24 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
    * @param query - Поисковый запрос
    * @returns Массив найденных данных пользователей
    */
-  async searchUserBotData(projectId: number, query: string): Promise<UserBotData[]> {
+  async searchUserBotData(projectId: number, query: string, tokenId?: number | null): Promise<UserBotData[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
+    const conditions = [
+      eq(userBotData.projectId, projectId),
+      or(
+        ilike(userBotData.firstName, searchTerm),
+        ilike(userBotData.lastName, searchTerm),
+        ilike(userBotData.userName, searchTerm),
+        ilike(userBotData.userId, searchTerm)
+      ),
+    ];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(userBotData.tokenId, tokenId));
+    }
+
     return await this.db.select().from(userBotData)
-      .where(
-        and(
-          eq(userBotData.projectId, projectId),
-          or(
-            ilike(userBotData.firstName, searchTerm),
-            ilike(userBotData.lastName, searchTerm),
-            ilike(userBotData.userName, searchTerm),
-            ilike(userBotData.userId, searchTerm)
-          )
-        )
-      )
+      .where(and(...conditions))
       .orderBy(desc(userBotData.lastInteraction));
   }
 
@@ -738,7 +771,7 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
    * @param projectId - ID проекта
    * @returns Объект со статистикой пользователей
    */
-  async getUserBotDataStats(projectId: number): Promise<{
+  async getUserBotDataStats(projectId: number, tokenId?: number | null): Promise<{
     totalUsers: number;
     activeUsers: number;
     blockedUsers: number;
@@ -746,8 +779,14 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
     totalInteractions: number;
     avgInteractionsPerUser: number;
   }> {
+    const conditions = [eq(userBotData.projectId, projectId)];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(userBotData.tokenId, tokenId));
+    }
+
     const users = await this.db.select().from(userBotData)
-      .where(eq(userBotData.projectId, projectId));
+      .where(and(...conditions));
 
     const totalUsers = users.length;
     const activeUsers = users.filter(u => u.isActive === 1).length;
