@@ -263,6 +263,19 @@ describe('main.py.jinja2 шаблон', () => {
         assert.ok(result.includes('nx=True'), 'nx=True (атомарный SET NX) не найден');
       });
 
+      it('не должен пересоздавать Dispatcher при переключении на Redis storage', () => {
+        const result = generateMain({ userDatabaseEnabled: false });
+        assert.ok(!result.includes('dp = Dispatcher(storage=RedisStorage(_redis_client))'));
+        assert.ok(!result.includes('dp.storage = RedisStorage(_redis_client)'));
+        assert.ok(result.includes('dp.fsm.storage = RedisStorage(_redis_client)'));
+      });
+
+      it('должен инициализировать _lock_acquired до try, чтобы finally не падал', () => {
+        const result = generateMain({ userDatabaseEnabled: false });
+        assert.ok(result.includes('_lock_acquired = False'));
+        assert.ok(result.indexOf('_lock_acquired = False') < result.indexOf('try:'));
+      });
+
       it('должен освобождать lock в finally', () => {
         const result = generateMain({ userDatabaseEnabled: false });
         assert.ok(result.includes('_lock_acquired'), 'освобождение lock не найдено');
@@ -277,7 +290,7 @@ describe('main.py.jinja2 шаблон', () => {
 
       it('lock не блокирует запуск если Redis недоступен', () => {
         const result = generateMain({ userDatabaseEnabled: false });
-        assert.ok(result.includes('if REDIS_URL and _redis_client is not None'), 'проверка доступности Redis не найдена');
+        assert.ok(result.includes('if _redis_connected and _redis_client is not None'), 'проверка доступности Redis не найдена');
       });
     });
   });

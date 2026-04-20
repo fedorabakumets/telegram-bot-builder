@@ -23,6 +23,7 @@ async def main():
     global db_pool, dp, _redis_client, _redis_connected
 
     _stop_event = asyncio.Event()
+    _lock_acquired = False
 
     def signal_handler(signum, _frame):
         print(f"⚠️ Получен сигнал {signum}, начинаем корректное завершение...")
@@ -35,16 +36,15 @@ async def main():
         # Инициализация Redis клиента (если REDIS_URL задан)
         _redis_connected = await init_redis_client()
         
-        # Если Redis успешно подключился — переинициализируем Dispatcher с RedisStorage
+        # Если Redis успешно подключился — переключаем storage у уже созданного Dispatcher
         if _redis_connected and _redis_client is not None:
-            dp = Dispatcher(storage=RedisStorage(_redis_client))
+            dp.fsm.storage = RedisStorage(_redis_client)
             logging.info("🔴 FSM хранилище: Redis")
         else:
             logging.info("🐘 FSM хранилище: PostgreSQL")
 
         # Distributed lock через Redis — защита от двойного запуска
         # Если REDIS_URL задан и бот уже запущен — завершаемся
-        _lock_acquired = False
         if _redis_connected and _redis_client is not None:
             _lock_key = f"bot:lock:{BOT_TOKEN[-10:]}"
             _lock_acquired = await _redis_client.set(_lock_key, "1", nx=True, ex=60)
