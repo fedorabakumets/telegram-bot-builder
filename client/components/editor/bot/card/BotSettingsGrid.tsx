@@ -17,6 +17,7 @@ import { BotExecutionTimer } from './BotExecutionTimer';
 import { BotLogLevelSelect } from './BotLogLevelSelect';
 import { BotAdminIds } from '../profile/BotAdminIds';
 import { BotLaunchHistory } from './BotLaunchHistory';
+import { BotLaunchSettings } from './BotLaunchSettings';
 import type { BotStatusResponse } from '../bot-types';
 import type { BotToken } from '@shared/schema';
 
@@ -67,6 +68,7 @@ export function BotSettingsGrid({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <BotLaunchSettings tokenId={tokenId} className="sm:col-span-2" />
       <BotDatabaseToggle
         projectId={projectId}
         tokenId={tokenId}
