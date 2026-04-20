@@ -155,6 +155,7 @@ async def init_database():
                     username TEXT,
                     first_name TEXT,
                     last_name TEXT,
+                    avatar_url TEXT,
                     registered_at TIMESTAMP DEFAULT NOW(),
                     last_interaction TIMESTAMP DEFAULT NOW(),
                     interaction_count INTEGER DEFAULT 0,
