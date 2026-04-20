@@ -70,10 +70,17 @@ export function setupProcessOutputListener(
     sendOutputToTerminals(content, 'stderr', projectId, tokenId, launchId);
   };
 
-  botProcess.stdout?.on('data', onStdout);
-  botProcess.stderr?.on('data', onStderr);
-  botProcess.on('exit', onExit);
-  botProcess.on('error', onError);
+  // Проверяем наличие методов before calling them
+  if (typeof botProcess.stdout?.on === 'function') {
+    botProcess.stdout.on('data', onStdout);
+  }
+  if (typeof botProcess.stderr?.on === 'function') {
+    botProcess.stderr.on('data', onStderr);
+  }
+  if (typeof botProcess.on === 'function') {
+    botProcess.on('exit', onExit);
+    botProcess.on('error', onError);
+  }
 
   /**
    * Удаляет все слушатели процесса, предотвращая утечку памяти

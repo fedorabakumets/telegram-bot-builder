@@ -41,14 +41,25 @@ export function setupBotProcessListeners() {
         const launchId = pendingLaunchIds.get(key);
         pendingLaunchIds.delete(key);
 
-        const cleanup = setupProcessOutputListener(key, value, launchId);
-        processCleanups.set(key, cleanup);
+        // Проверяем, является ли объект реальным ChildProcess перед подпиской
+        if (value.stdout || value.stderr) {
+            const cleanup = setupProcessOutputListener(key, value, launchId);
+            processCleanups.set(key, cleanup);
+        } else {
+            console.log(`[Terminal] Пропуск mock-процесса при set: ${key}`);
+        }
 
         return result;
     };
 
     console.log(`[Terminal] Проверка существующих процессов: ${botProcesses.size}`);
     for (const [key, process] of botProcesses) {
+        // Проверяем, является ли объект реальным ChildProcess
+        // Mock-процессы из createMockProcess не имеют stdout/stderr
+        if (!process.stdout && !process.stderr) {
+            console.log(`[Terminal] Пропуск mock-процесса: ${key}`);
+            continue;
+        }
         console.log(`[Terminal] Подписка на существующий процесс: ${key}`);
         const cleanup = setupProcessOutputListener(key, process);
         processCleanups.set(key, cleanup);
