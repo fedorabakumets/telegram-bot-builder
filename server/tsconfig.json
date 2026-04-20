@@ -1,0 +1,22 @@
+/**
+ * @fileoverview Локальный TypeScript-конфиг для серверной части проекта
+ * @module server/tsconfig
+ */
+{
+  "extends": "../tsconfig.server.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../shared/**/*.ts",
+    "../shared/**/*.tsx"
+  ],
+  "exclude": [
+    "../node_modules",
+    "../dist",
+    "../client",
+    "../lib"
+  ]
+}
