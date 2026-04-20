@@ -507,6 +507,15 @@ export interface IStorage {
   incrementUserInteraction(id: number): Promise<boolean>;
 
   /**
+   * Увеличить счетчик взаимодействий пользователя бота (bot_users)
+   * @param userId - ID пользователя в Telegram
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена бота
+   * @returns true, если счетчик был увеличен, иначе false
+   */
+  incrementBotUserInteraction(userId: number, projectId: number, tokenId: number): Promise<boolean>;
+
+  /**
    * Обновить состояние пользователя
    * @param id - ID данных пользователя
    * @param state - Новое состояние

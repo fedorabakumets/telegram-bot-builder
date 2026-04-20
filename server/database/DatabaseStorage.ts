@@ -929,6 +929,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
+   * Увеличить счетчик взаимодействий пользователя бота (bot_users)
+   * @param userId - ID пользователя в Telegram
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена бота
+   * @returns true, если счетчик был увеличен, иначе false
+   */
+  async incrementBotUserInteraction(
+    userId: number,
+    projectId: number,
+    tokenId: number
+  ): Promise<boolean> {
+    const conditions = [
+      eq(botUsers.userId, userId),
+      eq(botUsers.projectId, projectId),
+      eq(botUsers.tokenId, tokenId),
+    ];
+
+    const [user] = await this.db.select().from(botUsers).where(and(...conditions));
+    if (!user) return false;
+
+    const result = await this.db
+      .update(botUsers)
+      .set({
+        interactionCount: (user.interactionCount || 0) + 1,
+        lastInteraction: new Date(),
+      })
+      .where(and(...conditions));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  /**
    * Обновить состояние пользователя в базе данных
    * @param id - ID данных пользователя
    * @param state - Новое состояние
