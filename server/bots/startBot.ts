@@ -186,10 +186,11 @@ export async function startBot(projectId: number, token: string, tokenId: number
     }
 
     // Сбрасываем webhook в Telegram чтобы избежать конфликтов
+    // drop_pending_updates=false чтобы сохранить накопленные /start при остановке
     try {
-      const webhookUrl = `https://api.telegram.org/bot${token}/deleteWebhook?drop_pending_updates=true`;
+      const webhookUrl = `https://api.telegram.org/bot${token}/deleteWebhook?drop_pending_updates=false`;
       await fetchWithProxy(webhookUrl);
-      console.log(`🧹 Webhook сброшен для токена ${tokenId}`);
+      console.log(`🧹 Webhook сброшен для токена ${tokenId} (апдейты сохранены)`);
     } catch (webhookError) {
       console.log(`Не удалось сбросить webhook:`, webhookError);
     }

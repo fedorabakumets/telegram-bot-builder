@@ -20,10 +20,32 @@ function parseTokenId(raw: string): number {
 }
 
 /**
+ * Преобразует технический статус бота в понятную подпись для карточки.
+ * @param status - Технический статус бота
+ * @returns Человекочитаемая подпись статуса
+ */
+function formatStatusLabel(status: string): string {
+    if (status === 'running') {
+        return '🟢 Работает';
+    }
+    if (status === 'stopped') {
+        return '🔴 Остановлен';
+    }
+    return '⚪ Неизвестно';
+}
+
+/**
+ * Форматирует число с разделителями тысяч
+ */
+function formatNumber(num: number): string {
+    return num.toLocaleString('ru-RU');
+}
+
+/**
  * Обрабатывает GET /api/bot/tokens/:tokenId/status
  *
  * Принимает tokenId в формате `131` или `token_131`.
- * Возвращает статус бота и данные экземпляра с именем бота.
+ * Возвращает статус бота и данные экземпляра с именем и username бота.
  *
  * @param req - Объект запроса Express
  * @param res - Объект ответа Express
@@ -44,20 +66,36 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
         res.set('Expires', '0');
 
         if (isNaN(tokenId)) {
-            res.status(400).json({ status: 'stopped', instance: { botName: 'Неизвестный бот', tokenId: 0, status: 'stopped' } });
+            res.status(400).json({
+                status: 'stopped',
+                instance: {
+                    botName: 'Неизвестный бот',
+                    botUsername: null,
+                    tokenId: 0,
+                    status: 'stopped',
+                    statusLabel: formatStatusLabel('stopped'),
+                },
+            });
             return;
         }
 
-        // Получаем имя бота из таблицы bot_tokens
+        // Получаем имя и username бота из таблицы bot_tokens
         const tokenRecord = await storage.getBotToken(tokenId);
         const botName = tokenRecord?.name ?? 'Неизвестный бот';
+        const botUsername = tokenRecord?.botUsername ?? null;
 
         const instance = await storage.getBotInstanceByToken(tokenId);
 
         if (!instance) {
             res.json({
                 status: 'stopped',
-                instance: { botName, tokenId, status: 'stopped' },
+                instance: {
+                    botName,
+                    botUsername,
+                    tokenId,
+                    status: 'stopped',
+                    statusLabel: formatStatusLabel('stopped'),
+                },
             });
             return;
         }
@@ -65,6 +103,25 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
         const projectId = instance.projectId;
         const activeProcessInfo = findActiveProcessForToken(projectId, tokenId);
         let actualStatus = activeProcessInfo ? 'running' : 'stopped';
+
+        // Получаем статистику пользователей
+        let userStats = {
+            total: '0',
+            active_24h: '0',
+            active_7d: '0',
+            new_today: '0',
+        };
+        try {
+            const stats = await storage.getTokenUserStats(tokenId);
+            userStats = {
+                total: formatNumber(stats.total_users),
+                active_24h: formatNumber(stats.active_24h),
+                active_7d: formatNumber(stats.active_7d),
+                new_today: formatNumber(stats.new_today),
+            };
+        } catch (err) {
+            console.warn('[BotTokenStatus] Не удалось получить статистику:', err);
+        }
 
         // Проверяем существование процесса в системе
         if (!activeProcessInfo && instance.processId && checkProcessExists(instance.processId)) {
@@ -97,10 +154,13 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
 
         res.json({
             status: actualStatus,
+            userStats,
             instance: {
                 botName,
+                botUsername,
                 tokenId,
                 status: actualStatus,
+                statusLabel: formatStatusLabel(actualStatus),
                 startedAt: instance.startedAt,
                 processId: instance.processId,
             },

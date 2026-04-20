@@ -727,6 +727,18 @@ export interface IStorage {
    * @returns Запись истории запуска или undefined, если активного запуска нет
    */
   getActiveLaunchHistory(tokenId: number): Promise<BotLaunchHistory | undefined>;
+
+  /**
+   * Получить статистику пользователей по токену
+   * @param tokenId - ID токена
+   * @returns Объект со статистикой: total_users, active_24h, active_7d, new_today
+   */
+  getTokenUserStats(tokenId: number): Promise<{
+    total_users: number;
+    active_24h: number;
+    active_7d: number;
+    new_today: number;
+  }>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

@@ -1460,4 +1460,57 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     return record || undefined;
   }
+
+  /**
+   * Получить статистику пользователей по токену
+   * @param tokenId - ID токена
+   * @returns Объект со статистикой: total_users, active_24h, active_7d, new_today
+   */
+  async getTokenUserStats(tokenId: number): Promise<{
+    total_users: number;
+    active_24h: number;
+    active_7d: number;
+    new_today: number;
+  }> {
+    // Получаем projectId по tokenId
+    const token = await this.getBotToken(tokenId);
+    if (!token) {
+      return {
+        total_users: 0,
+        active_24h: 0,
+        active_7d: 0,
+        new_today: 0,
+      };
+    }
+
+    const conditions = [
+      eq(botUsers.projectId, token.projectId),
+      eq(botUsers.tokenId, tokenId),
+    ];
+
+    const users = await this.db.select().from(botUsers).where(and(...conditions));
+
+    const now = new Date();
+    const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const total_users = users.length;
+    const active_24h = users.filter(u => 
+      u.lastInteraction && new Date(u.lastInteraction) > dayAgo
+    ).length;
+    const active_7d = users.filter(u => 
+      u.lastInteraction && new Date(u.lastInteraction) > weekAgo
+    ).length;
+    const new_today = users.filter(u => 
+      u.lastInteraction && new Date(u.lastInteraction) >= todayStart
+    ).length;
+
+    return {
+      total_users,
+      active_24h,
+      active_7d,
+      new_today,
+    };
+  }
 }

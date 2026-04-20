@@ -24,6 +24,13 @@ function getBotStatusEmoji(status: string | null | undefined): string {
 }
 
 /**
+ * Форматирует число с разделителями тысяч
+ */
+function formatNumber(num: number): string {
+    return num.toLocaleString('ru-RU');
+}
+
+/**
  * Возвращает токены проекта для Telegram-бота.
  * Показывает: id, name, botUsername, botFirstName, isDefault, isActive, botStatus.
  * botStatus — эмодзи-индикатор: 🟢 запущен, 🔴 ошибка, ⚪ остановлен/нет данных.
@@ -67,6 +74,16 @@ export async function getBotProjectTokensHandler(req: Request, res: Response): P
             tokens.map(t => storage.getBotInstanceByToken(t.id).catch(() => null))
         );
 
+        // Загружаем статистику для каждого токена
+        const stats = await Promise.all(
+            tokens.map(t => storage.getTokenUserStats(t.id).catch(() => ({
+                total_users: 0,
+                active_24h: 0,
+                active_7d: 0,
+                new_today: 0,
+            })))
+        );
+
         const result = tokens.map((t, i) => ({
             id: t.id,
             name: t.name,
@@ -76,6 +93,12 @@ export async function getBotProjectTokensHandler(req: Request, res: Response): P
             isActive: t.isActive,
             botStatus: getBotStatusEmoji(instances[i]?.status),
             token: t.token, // на этапе разработки
+            userStats: {
+                total: formatNumber(stats[i].total_users),
+                active_24h: formatNumber(stats[i].active_24h),
+                active_7d: formatNumber(stats[i].active_7d),
+                new_today: formatNumber(stats[i].new_today),
+            },
         }));
 
         res.json({ items: result, count: result.length });

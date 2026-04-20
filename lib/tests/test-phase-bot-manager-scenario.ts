@@ -17,7 +17,7 @@ import { generatePythonCode } from '../bot-generator.ts';
 
 /** Загружает project.json сценария управляющего бота */
 function loadProject() {
-  const raw = fs.readFileSync('bots/новый/новый.json', 'utf-8');
+  const raw = fs.readFileSync('bots/импортированный_проект_2316_157_131/project.json', 'utf-8');
   return JSON.parse(raw);
 }
 
@@ -128,11 +128,11 @@ test('A03', 'все узлы генерируют обработчики', () =>
     // Удаление
     'delete-project-confirm', 'delete-confirm-keyboard', 'delete-project-action',
     'check-delete-status', 'delete-success-msg', 'delete-error-msg',
-    // Токены — базовые
+    // Токены — загрузка и карточка проекта
     'fetch-tokens', 'check-tokens-status', 'check-tokens-empty',
-    'tokens-msg', 'tokens-keyboard', 'no-tokens-msg', 'tokens-error-msg',
+    'no-tokens-msg', 'tokens-error-msg',
     // Токены — управление
-    'incoming-token-trigger', 'token-card-msg', 'token-actions-keyboard',
+    'incoming-token-trigger', 'check-token-username', 'token-card-msg', 'token-card-msg-with-username', 'token-actions-keyboard',
     'delete-token-confirm', 'delete-token-confirm-keyboard',
     'delete-token-action', 'check-delete-token-status',
     'delete-token-success-msg', 'delete-token-error-msg',
@@ -274,9 +274,8 @@ test('D01c', 'три варианта карточки проекта прису
   ok(code.includes('project_card_unknown'), 'узел project-card-unknown не найден');
 });
 
-test('D02', 'project-actions-keyboard содержит кнопки управления проектом', () => {
-  // Кнопки Запустить/Остановить/Перезапустить убраны из карточки проекта —
-  // управление ботом теперь через карточку токена (token-actions-keyboard)
+test('D02', 'project-actions-keyboard содержит кнопки управления проектом и токены', () => {
+  // Токены теперь показаны прямо в карточке проекта через динамические кнопки
   const btnTexts = ['К списку', 'Переименовать', 'Удалить', 'Добавить токен'];
   for (const text of btnTexts) {
     ok(code.includes(text), `Кнопка "${text}" не найдена`);
@@ -285,10 +284,10 @@ test('D02', 'project-actions-keyboard содержит кнопки управл
   ok(code.includes('project_tokens'), 'динамические кнопки токенов (project_tokens) не найдены');
 });
 
-test('D03', 'раскладка кнопок карточки проекта: динамические токены + статические кнопки', () => {
-  // Новая раскладка: __dynamic__ (токены) → btn-add-token → btn-rename + btn-delete → btn-back
-  // builder.adjust генерируется из keyboardLayout без рядов __dynamic__: 1, 2, 1
+test('D03', 'раскладка кнопок карточки проекта: токены и статические кнопки без отдельного экрана', () => {
+  // Токены подгружаются перед карточкой проекта и попадают в ее клавиатуру напрямую
   ok(code.includes('fetch_project_tokens'), 'узел fetch-project-tokens не найден — токены не загружаются перед карточкой');
+  ok(!/\btokens_msg\b/.test(code), 'старый узел tokens-msg все еще присутствует в коде');
 });
 
 test('D04', 'кнопка "К списку" ведёт к fetch-projects', () => {
