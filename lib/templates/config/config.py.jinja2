@@ -69,6 +69,24 @@ VARS_CACHE_TTL: int = int(os.getenv("VARS_CACHE_TTL", "5"))
 REDIS_URL = os.getenv("REDIS_URL")
 _redis_client = None
 
+# Функция инициализации Redis (вызывается асинхронно при старте)
+async def init_redis_client():
+    """Инициализирует Redis клиент если REDIS_URL задан. Возвращает True если Redis успешно подключён."""
+    global _redis_client
+    if not REDIS_URL:
+        return False
+    try:
+        import redis.asyncio as _redis_lib
+        _redis_client = _redis_lib.from_url(REDIS_URL, decode_responses=False)
+        # Проверяем подключение к Redis
+        await _redis_client.ping()
+        logging.info("🔴 Redis подключён успешно")
+        return True
+    except Exception as e:
+        logging.warning(f"⚠️ Не удалось подключиться к Redis: {e}")
+        _redis_client = None
+        return False
+
 {# Кастомное FSM-хранилище на основе PostgreSQL #}
 # Кастомное хранилище FSM на основе PostgreSQL (bot_users.user_data JSONB)
 # Примечание: update_user_data_in_db определяется позже в файле — это нормально для Python
@@ -118,16 +136,12 @@ class PostgresStorage(BaseStorage):
 {# Класс RedisStorage для FSM (используется если REDIS_URL задан) #}
 {%- include 'redis-storage/redis-storage.py.jinja2' %}
 
-{# Выбор FSM-хранилища: Redis если REDIS_URL задан, иначе PostgresStorage #}
-# Выбираем хранилище FSM: Redis если REDIS_URL задан, иначе PostgresStorage
-if REDIS_URL:
-    import redis.asyncio as _redis_lib
-    _redis_client = _redis_lib.from_url(REDIS_URL, decode_responses=False)
-    dp = Dispatcher(storage=RedisStorage(_redis_client))
-    logging.info("🔴 FSM хранилище: Redis")
-else:
-    dp = Dispatcher(storage=PostgresStorage())
-    logging.info("🐘 FSM хранилище: PostgreSQL")
+{# Выбор FSM-хранилища: Redis если REDIS_URL задан и подключён, иначе PostgresStorage #}
+# Глобальный флаг: Redis успешно подключён
+_redis_connected = False
+
+# Создаем Dispatcher — будет переинициализирован после проверки Redis
+dp = Dispatcher(storage=PostgresStorage())
 
 {# База данных #}
 {%- if userDatabaseEnabled %}

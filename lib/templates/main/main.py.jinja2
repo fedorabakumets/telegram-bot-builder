@@ -20,7 +20,7 @@ async def set_bot_commands():
 
 async def main():
     """Главная функция запуска бота"""
-    global db_pool
+    global db_pool, dp, _redis_client, _redis_connected
 
     _stop_event = asyncio.Event()
 
@@ -32,10 +32,20 @@ async def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     try:
+        # Инициализация Redis клиента (если REDIS_URL задан)
+        _redis_connected = await init_redis_client()
+        
+        # Если Redis успешно подключился — переинициализируем Dispatcher с RedisStorage
+        if _redis_connected and _redis_client is not None:
+            dp = Dispatcher(storage=RedisStorage(_redis_client))
+            logging.info("🔴 FSM хранилище: Redis")
+        else:
+            logging.info("🐘 FSM хранилище: PostgreSQL")
+
         # Distributed lock через Redis — защита от двойного запуска
         # Если REDIS_URL задан и бот уже запущен — завершаемся
         _lock_acquired = False
-        if REDIS_URL and _redis_client is not None:
+        if _redis_connected and _redis_client is not None:
             _lock_key = f"bot:lock:{BOT_TOKEN[-10:]}"
             _lock_acquired = await _redis_client.set(_lock_key, "1", nx=True, ex=60)
             if not _lock_acquired:
@@ -55,7 +65,7 @@ async def main():
             asyncio.create_task(_refresh_lock())
 
         # Публикуем событие о запуске бота в Redis (если доступен)
-        if REDIS_URL and _redis_client is not None:
+        if _redis_connected and _redis_client is not None:
             try:
                 import json as _json
                 await _redis_client.publish(
@@ -128,7 +138,7 @@ async def main():
         {%- endif %}
 
         # Освобождаем Redis lock при завершении
-        if REDIS_URL and _redis_client is not None and _lock_acquired:
+        if _redis_connected and _redis_client is not None and _lock_acquired:
             try:
                 await _redis_client.delete(f"bot:lock:{BOT_TOKEN[-10:]}")
                 logging.info("🔓 Redis lock освобождён")
@@ -136,7 +146,7 @@ async def main():
                 pass
 
         # Публикуем событие об остановке бота в Redis (если доступен)
-        if REDIS_URL and _redis_client is not None:
+        if _redis_connected and _redis_client is not None:
             try:
                 import json as _json
                 await _redis_client.publish(
