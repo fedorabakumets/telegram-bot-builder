@@ -285,7 +285,9 @@ export async function startBot(projectId: number, token: string, tokenId: number
           : 'http://localhost:5000',
         // Прокидываем REDIS_URL из окружения сервера в процесс бота
         // На Railway задаётся через переменную окружения сервиса
-        ...(process.env.REDIS_URL ? { REDIS_URL: process.env.REDIS_URL } : {})
+        ...(process.env.REDIS_URL ? { REDIS_URL: process.env.REDIS_URL } : {}),
+        // Прокидываем DATABASE_URL для ботов с включённой пользовательской БД (userDatabaseEnabled=true)
+        ...(process.env.DATABASE_URL ? { DATABASE_URL: process.env.DATABASE_URL } : {})
       }
     });
 
