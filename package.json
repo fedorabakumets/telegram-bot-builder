@@ -254,7 +254,7 @@
     "typescript": "^5.9.3",
     "vite": "^6.2.0",
     "vite-tsconfig-paths": "^6.1.0",
-    "vitest": "^4.1.4"
+    "vitest": "^2.1.9"
   },
   "optionalDependencies": {
     "bufferutil": "^4.1.0"
