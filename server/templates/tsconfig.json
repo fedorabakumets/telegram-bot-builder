@@ -1,0 +1,18 @@
+/**
+ * @fileoverview Локальный TypeScript-конфиг для папки server/templates
+ * @module server/templates/tsconfig
+ */
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "./**/*.json",
+    "../../shared/**/*.ts",
+    "../../shared/**/*.tsx"
+  ],
+  "exclude": [
+    "../../node_modules",
+    "../../dist"
+  ]
+}

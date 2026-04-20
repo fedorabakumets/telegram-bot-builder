@@ -1,0 +1,17 @@
+/**
+ * @fileoverview Локальный TypeScript-конфиг для папки server/database
+ * @module server/database/tsconfig
+ */
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../../shared/**/*.ts",
+    "../../shared/**/*.tsx"
+  ],
+  "exclude": [
+    "../../node_modules",
+    "../../dist"
+  ]
+}

@@ -1,0 +1,18 @@
+/**
+ * @fileoverview Локальный TypeScript-конфиг для папки shared
+ * @module shared/tsconfig
+ */
+{
+  "extends": "../server/tsconfig.json",
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx"
+  ],
+  "exclude": [
+    "../node_modules",
+    "../dist",
+    "../client",
+    "../lib",
+    "../server"
+  ]
+}

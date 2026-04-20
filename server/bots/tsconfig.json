@@ -1,0 +1,17 @@
+/**
+ * @fileoverview Локальный TypeScript-конфиг для папки server/bots
+ * @module server/bots/tsconfig
+ */
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../../shared/**/*.ts",
+    "../../shared/**/*.tsx"
+  ],
+  "exclude": [
+    "../../node_modules",
+    "../../dist"
+  ]
+}

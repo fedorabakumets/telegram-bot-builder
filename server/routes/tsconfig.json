@@ -1,0 +1,17 @@
+/**
+ * @fileoverview Локальный TypeScript-конфиг для папки server/routes
+ * @module server/routes/tsconfig
+ */
+{
+  "extends": "../tsconfig.json",
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../../shared/**/*.ts",
+    "../../shared/**/*.tsx"
+  ],
+  "exclude": [
+    "../../node_modules",
+    "../../dist"
+  ]
+}
