@@ -33,8 +33,25 @@ export function useTelegramAuth() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
+      const parsedUser = saved ? JSON.parse(saved) : null;
       // Если нет сохранённого пользователя — устанавливаем гостя
-      setUser(saved ? JSON.parse(saved) : GUEST_USER);
+      setUser(parsedUser ?? GUEST_USER);
+
+      // Восстанавливаем серверную сессию если пользователь уже авторизован
+      if (parsedUser && !checkIsGuest(parsedUser)) {
+        fetch('/api/auth/telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            id: parsedUser.id,
+            first_name: parsedUser.firstName,
+            last_name: parsedUser.lastName,
+            username: parsedUser.username,
+            photo_url: parsedUser.photoUrl,
+          }),
+        }).catch(e => console.error('Ошибка восстановления серверной сессии:', e));
+      }
     } catch (e) {
       console.error('Ошибка загрузки пользователя из localStorage:', e);
       setUser(GUEST_USER);
@@ -77,7 +94,8 @@ export function useTelegramAuth() {
   }, []);
 
   /**
-   * Сохраняет пользователя и инвалидирует кеш
+   * Сохраняет пользователя локально и создаёт серверную сессию через POST /api/auth/telegram.
+   * Без серверной сессии owner_id проектов остаётся null.
    * @param userData - Данные пользователя Telegram для входа
    */
   const login = (userData: TelegramUser) => {
@@ -90,6 +108,27 @@ export function useTelegramAuth() {
     } catch (e) {
       console.error('Ошибка сохранения пользователя в localStorage:', e);
     }
+
+    // Создаём серверную сессию — без этого owner_id проектов остаётся null
+    fetch('/api/auth/telegram', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        id: userData.id,
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        username: userData.username,
+        photo_url: userData.photoUrl,
+      }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) {
+          console.error('Ошибка создания серверной сессии:', data.error);
+        }
+      })
+      .catch(e => console.error('Ошибка POST /api/auth/telegram:', e));
   };
 
   /**
