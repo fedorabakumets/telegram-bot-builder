@@ -43,9 +43,9 @@ async def main():
         else:
             logging.info("🐘 FSM хранилище: PostgreSQL")
 
-        # Distributed lock через Redis — защита от двойного запуска
-        # Если REDIS_URL задан и бот уже запущен — завершаемся
-        if _redis_connected and _redis_client is not None:
+        # Distributed lock через Redis — защита от двойного запуска (только в polling режиме)
+        # В webhook режиме двойной запуск невозможен — Telegram шлёт апдейты на один URL
+        if not WEBHOOK_URL and _redis_connected and _redis_client is not None:
             _lock_key = f"bot:lock:{BOT_TOKEN[-10:]}"
             _lock_acquired = await _redis_client.set(_lock_key, "1", nx=True, ex=60)
             if not _lock_acquired:
@@ -168,8 +168,8 @@ async def main():
             await db_pool.close()
         {%- endif %}
 
-        # Освобождаем Redis lock при завершении
-        if _redis_connected and _redis_client is not None and _lock_acquired:
+        # Освобождаем Redis lock при завершении (только в polling режиме — в webhook lock не устанавливался)
+        if not WEBHOOK_URL and _redis_connected and _redis_client is not None and _lock_acquired:
             try:
                 await _redis_client.delete(f"bot:lock:{BOT_TOKEN[-10:]}")
                 logging.info("🔓 Redis lock освобождён")

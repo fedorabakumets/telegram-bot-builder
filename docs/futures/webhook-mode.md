@@ -210,10 +210,10 @@ WEBHOOK_URL=https://${RAILWAY_PUBLIC_DOMAIN}
 - [x] Управление портами ботов (`getBotWebhookPort`)
 
 ### Фаза 3 — startBot / stopBot
-- [ ] Передавать `WEBHOOK_PORT` в env процесса
-- [ ] При старте в webhook режиме — вызывать `setWebhook`
-- [ ] При остановке — вызывать `deleteWebhook`
-- [ ] Убрать distributed lock (не нужен при webhook)
+- [x] Передавать `WEBHOOK_PORT` в env процесса
+- [x] При старте в webhook режиме — вызывать `setWebhook`
+- [x] При остановке — вызывать `deleteWebhook`
+- [x] Убрать distributed lock (не нужен при webhook)
 
 ### Фаза 4 — Redis обязательный
 - [ ] Валидация: если `WEBHOOK_URL` задан — `REDIS_URL` обязателен
