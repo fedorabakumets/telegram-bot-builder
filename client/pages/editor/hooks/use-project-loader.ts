@@ -1,11 +1,13 @@
 /**
  * @fileoverview Хук загрузки проекта редактора
  *
- * Управляет загрузкой данных проекта по ID или выбору первого из списка.
+ * Управляет загрузкой данных проекта по ID или выбором первого из списка.
+ * Ожидает готовности серверной сессии перед первым запросом к API.
  */
 
 import { useQuery } from '@tanstack/react-query';
 import type { BotProject } from '@shared/schema';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 
 /** Параметры хука загрузки проекта */
 interface UseProjectLoaderOptions {
@@ -28,7 +30,8 @@ interface UseProjectLoaderResult {
 }
 
 /**
- * Хук для загрузки данных проекта
+ * Хук для загрузки данных проекта.
+ * Ждёт готовности серверной сессии чтобы проекты создавались с правильным owner_id.
  *
  * @param options - Параметры загрузки
  * @returns Результат загрузки проекта
@@ -36,17 +39,19 @@ interface UseProjectLoaderResult {
 export function useProjectLoader({
   projectId
 }: UseProjectLoaderOptions): UseProjectLoaderResult {
+  const { sessionReady } = useTelegramAuth();
+
   // Загрузка проекта по ID из URL
   const { data: currentProject, isError: projectNotFound } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectId}`],
-    enabled: !!projectId,
+    enabled: !!projectId && sessionReady,
     staleTime: 30000,
   });
 
-  // Загрузка списка проектов если нет ID в URL
+  // Загрузка списка проектов если нет ID в URL — ждём сессии
   const { data: projectsList } = useQuery<Array<Omit<BotProject, 'data'>>>({
     queryKey: ['/api/projects/list'],
-    enabled: !projectId,
+    enabled: !projectId && sessionReady,
     staleTime: 30000,
   });
 
@@ -56,7 +61,7 @@ export function useProjectLoader({
   // Загрузка первого проекта если нет ID в URL
   const { data: firstProject } = useQuery<BotProject>({
     queryKey: [`/api/projects/${effectiveProjectId}`],
-    enabled: !projectId && !!effectiveProjectId,
+    enabled: !projectId && !!effectiveProjectId && sessionReady,
     staleTime: 30000,
   });
 

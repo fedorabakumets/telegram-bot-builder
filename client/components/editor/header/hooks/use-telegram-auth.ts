@@ -20,15 +20,30 @@ const AUTH_EVENT = 'telegram-auth-change';
 /** Объект гостевого пользователя */
 const GUEST_USER: AppUser = { isGuest: true };
 
+/** Флаг предотвращения повторного восстановления сессии при монтировании */
+let sessionRestoreAttempted = false;
+/** Промис восстановления сессии — позволяет другим хукам дождаться его завершения */
+let sessionRestorePromise: Promise<void> | null = null;
+
+/**
+ * Возвращает промис восстановления серверной сессии.
+ * Используется для ожидания готовности сессии перед первым запросом к API.
+ */
+export function getSessionRestorePromise(): Promise<void> {
+  return sessionRestorePromise ?? Promise.resolve();
+}
+
 /**
  * Хук управления авторизацией.
  * При отсутствии сохранённого пользователя автоматически устанавливает гостевой режим.
  *
- * @returns Объект с пользователем, методами login/logout, флагом загрузки и хелпером isGuest
+ * @returns Объект с пользователем, методами login/logout, флагом загрузки, хелпером isGuest и флагом sessionReady
  */
 export function useTelegramAuth() {
   const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  /** true когда серверная сессия точно готова (или пользователь гость) */
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -37,9 +52,10 @@ export function useTelegramAuth() {
       // Если нет сохранённого пользователя — устанавливаем гостя
       setUser(parsedUser ?? GUEST_USER);
 
-      // Восстанавливаем серверную сессию если пользователь уже авторизован
-      if (parsedUser && !checkIsGuest(parsedUser)) {
-        fetch('/api/auth/telegram', {
+      // Восстанавливаем серверную сессию только один раз за жизнь страницы
+      if (parsedUser && !checkIsGuest(parsedUser) && !sessionRestoreAttempted) {
+        sessionRestoreAttempted = true;
+        sessionRestorePromise = fetch('/api/auth/telegram', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -50,11 +66,20 @@ export function useTelegramAuth() {
             username: parsedUser.username,
             photo_url: parsedUser.photoUrl,
           }),
-        }).catch(e => console.error('Ошибка восстановления серверной сессии:', e));
+        })
+          .then(() => { setSessionReady(true); })
+          .catch(e => {
+            console.error('Ошибка восстановления серверной сессии:', e);
+            setSessionReady(true); // разблокируем запросы даже при ошибке
+          });
+      } else {
+        // Гость или сессия уже восстанавливалась — сразу разрешаем запросы
+        setSessionReady(true);
       }
     } catch (e) {
       console.error('Ошибка загрузки пользователя из localStorage:', e);
       setUser(GUEST_USER);
+      setSessionReady(true);
     }
     setIsLoading(false);
 
@@ -154,5 +179,5 @@ export function useTelegramAuth() {
     }
   };
 
-  return { user, login, logout, isLoading, isGuest: checkIsGuest, isTelegramUser };
+  return { user, login, logout, isLoading, sessionReady, isGuest: checkIsGuest, isTelegramUser };
 }
