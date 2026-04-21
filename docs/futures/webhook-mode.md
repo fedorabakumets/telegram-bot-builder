@@ -204,10 +204,10 @@ WEBHOOK_URL=https://${RAILWAY_PUBLIC_DOMAIN}
 - [x] Написать тесты для обоих режимов
 
 ### Фаза 2 — Node.js роут
-- [ ] Создать `server/routes/setupWebhookRoutes.ts`
-- [ ] Роут `POST /api/webhook/:projectId/:tokenId`
-- [ ] Проксирование апдейта в Python HTTP сервер бота
-- [ ] Управление портами ботов (`getBotWebhookPort`)
+- [x] Создать `server/routes/setupWebhookRoutes.ts`
+- [x] Роут `POST /api/webhook/:projectId/:tokenId`
+- [x] Проксирование апдейта в Python HTTP сервер бота
+- [x] Управление портами ботов (`getBotWebhookPort`)
 
 ### Фаза 3 — startBot / stopBot
 - [ ] Передавать `WEBHOOK_PORT` в env процесса

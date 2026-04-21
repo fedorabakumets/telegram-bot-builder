@@ -42,6 +42,7 @@ import { fetchWithProxy } from "../utils/telegram-proxy";
 import { setupAuthRoutes } from "./setupAuthRoutes";
 import { setupBotIntegrationRoutes } from "./setupBotIntegrationRoutes";
 import { setupGithubPushRoute } from './setupGithubPushRoute';
+import { setupWebhookRoutes } from './setupWebhookRoutes';
 import { getRedisPublisher } from "../redis/redisClient";
 import { setupProjectRoutes } from "./setupProjectRoutes";
 import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes";
@@ -3399,6 +3400,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // GitHub push endpoint
   setupGithubPushRoute(app);
+
+  // Webhook роут: приём апдейтов от Telegram и проксирование в Python-процесс бота
+  setupWebhookRoutes(app);
 
   // Если сервер передан извне, используем его, иначе создаем новый
   if (httpServer) {
