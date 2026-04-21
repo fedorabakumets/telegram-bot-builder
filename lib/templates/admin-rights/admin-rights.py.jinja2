@@ -142,7 +142,7 @@ async def {{ safeName }}_command_handler(message: types.Message, bot):
 
 
 @dp.callback_query(lambda c: c.data == "{{ nodeId }}")
-async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, bot):
+async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, bot, state: FSMContext = None):
     """Обработчик callback для узла admin_rights: {{ nodeId }}"""
     await callback_query.answer()
     user_id = callback_query.from_user.id
