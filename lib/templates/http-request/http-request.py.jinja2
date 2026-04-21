@@ -141,6 +141,14 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     except Exception as _e:
         logging.error(f"❌ http_request [{{ nodeId }}]: ошибка запроса: {_e} | user_id={user_id}")
 
+    # Сбрасываем старые значения response-переменных перед новым запросом —
+    # чтобы устаревшие данные не попали в следующий узел через user_data
+    if user_id in user_data:
+        user_data[user_id].pop("{{ responseVariable }}", None)
+        {% if statusVariable %}
+        user_data[user_id].pop("{{ statusVariable }}", None)
+        {% endif %}
+
     # Сохраняем ответ
     await set_user_var(user_id, "{{ responseVariable }}", _response_data)
     # Автоматически сохраняем скалярные поля ответа как плоские переменные.
