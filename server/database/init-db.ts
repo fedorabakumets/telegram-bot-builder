@@ -620,60 +620,6 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при миграции token_id в bot_users:', error);
     }
 
-    // Миграция: добавление auto_restart в bot_tokens если его нет
-    try {
-      await executeWithRetry(db, sql`
-        ALTER TABLE bot_tokens ADD COLUMN IF NOT EXISTS auto_restart INTEGER DEFAULT 0;
-      `, "Миграция: добавление auto_restart в bot_tokens");
-    } catch (error) {
-      console.log('⚠️ Ошибка при миграции auto_restart в bot_tokens:', error);
-    }
-
-    // Миграция: добавление max_restart_attempts в bot_tokens если его нет
-    try {
-      await executeWithRetry(db, sql`
-        ALTER TABLE bot_tokens ADD COLUMN IF NOT EXISTS max_restart_attempts INTEGER DEFAULT 3;
-      `, "Миграция: добавление max_restart_attempts в bot_tokens");
-    } catch (error) {
-      console.log('⚠️ Ошибка при миграции max_restart_attempts в bot_tokens:', error);
-    }
-
-    // Миграция: добавление log_level в bot_tokens если его нет
-    try {
-      await executeWithRetry(db, sql`
-        ALTER TABLE bot_tokens ADD COLUMN IF NOT EXISTS log_level TEXT DEFAULT 'WARNING';
-      `, "Миграция: добавление log_level в bot_tokens");
-    } catch (error) {
-      console.log('⚠️ Ошибка при миграции log_level в bot_tokens:', error);
-    }
-
-    // Миграция: добавление launch_mode в bot_tokens если его нет
-    try {
-      await executeWithRetry(db, sql`
-        ALTER TABLE bot_tokens ADD COLUMN IF NOT EXISTS launch_mode TEXT DEFAULT 'polling';
-      `, "Миграция: добавление launch_mode в bot_tokens");
-    } catch (error) {
-      console.log('⚠️ Ошибка при миграции launch_mode в bot_tokens:', error);
-    }
-
-    // Миграция: добавление webhook_base_url в bot_tokens если его нет
-    try {
-      await executeWithRetry(db, sql`
-        ALTER TABLE bot_tokens ADD COLUMN IF NOT EXISTS webhook_base_url TEXT;
-      `, "Миграция: добавление webhook_base_url в bot_tokens");
-    } catch (error) {
-      console.log('⚠️ Ошибка при миграции webhook_base_url в bot_tokens:', error);
-    }
-
-    // Миграция: добавление webhook_secret_token в bot_tokens если его нет
-    try {
-      await executeWithRetry(db, sql`
-        ALTER TABLE bot_tokens ADD COLUMN IF NOT EXISTS webhook_secret_token TEXT;
-      `, "Миграция: добавление webhook_secret_token в bot_tokens");
-    } catch (error) {
-      console.log('⚠️ Ошибка при миграции webhook_secret_token в bot_tokens:', error);
-    }
-
     console.log('✅ Таблицы базы данных успешно инициализированы!');
     return true;
   } catch (error) {
