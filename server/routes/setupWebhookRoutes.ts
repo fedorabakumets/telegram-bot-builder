@@ -25,8 +25,7 @@ export function getBotWebhookPort(tokenId: number): number {
  * Node.js проксирует тело запроса в Python aiohttp сервер бота
  * на localhost:{BASE_WEBHOOK_PORT + tokenId}/webhook.
  *
- * Роут активен только если задан WEBHOOK_URL в окружении.
- * В polling-режиме (без WEBHOOK_URL) роут возвращает 404.
+ * Роут работает всегда — webhook режим управляется настройками токена в БД.
  *
  * @param app - Экземпляр Express приложения
  */
@@ -36,12 +35,6 @@ export function setupWebhookRoutes(app: Express): void {
    * Принимает апдейт от Telegram и пересылает в Python-процесс бота
    */
   app.post('/api/webhook/:projectId/:tokenId', async (req, res) => {
-    // Webhook режим активен только при наличии WEBHOOK_URL
-    if (!process.env.WEBHOOK_URL) {
-      res.status(404).json({ message: 'Webhook режим не активен' });
-      return;
-    }
-
     const projectId = parseInt(req.params.projectId, 10);
     const tokenId = parseInt(req.params.tokenId, 10);
 
