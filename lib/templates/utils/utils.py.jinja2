@@ -118,9 +118,12 @@ async def init_all_user_vars(user_id: int) -> dict:
                 if _cached_raw:
                     try:
                         _db_vars = _rj.loads(_cached_raw.decode() if isinstance(_cached_raw, bytes) else _cached_raw)
-                        _merged = dict(_db_vars)
-                        _merged.update(all_vars)  # память имеет приоритет
-                        all_vars = _merged
+                        # Кэш дополняет память — берём из кэша только то чего нет в памяти.
+                        # Это предотвращает перезапись актуальных значений устаревшим кэшем
+                        # (например, project_tokens при переходе между проектами).
+                        for _k, _v in _db_vars.items():
+                            if _k not in all_vars:
+                                all_vars[_k] = _v
                     except Exception:
                         pass
                 else:
@@ -146,11 +149,13 @@ async def init_all_user_vars(user_id: int) -> dict:
                 # Redis недоступен — используем _vars_cache в памяти
                 _cached = _vars_cache.get(user_id)
                 if _cached and (_now - _cached[0]) < VARS_CACHE_TTL:
-                    # Кэш актуален: мёрджим кэшированные данные БД с актуальной памятью
+                    # Кэш актуален: дополняем память кэшированными данными БД.
+                    # Берём из кэша только ключи которых нет в памяти —
+                    # так устаревший кэш не перезапишет актуальные значения из user_data.
                     _db_vars = _cached[1]
-                    _merged = dict(_db_vars)
-                    _merged.update(all_vars)  # память имеет приоритет
-                    all_vars = _merged
+                    for _k, _v in _db_vars.items():
+                        if _k not in all_vars:
+                            all_vars[_k] = _v
                 else:
                     # Кэш устарел — идём в БД
                     async with db_pool.acquire() as conn:
