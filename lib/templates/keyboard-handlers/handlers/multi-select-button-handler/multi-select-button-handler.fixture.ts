@@ -169,7 +169,7 @@ export const invalidParamsWrongButtonType = {
 /** Ожидаемый вывод: базовый с done кнопкой */
 export const expectedOutputBasic = `
     @dp.callback_query(lambda c: c.data == "ms_abc123_btn456" or c.data.startswith("ms_abc123_btn456_btn_") or c.data == "done_abc123")
-    async def handle_callback_ms_abc123_btn456(callback_query: types.CallbackQuery):
+    async def handle_callback_ms_abc123_btn456(callback_query: types.CallbackQuery, state: FSMContext = None):
         await callback_query.answer()
         user_id = callback_query.from_user.id
         callback_data = callback_query.data

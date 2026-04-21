@@ -103,7 +103,7 @@ function generateKeyboardHandler(node: Node): string {
 
   return [
     `@dp.callback_query(lambda c: c.data == "${node.id}")`,
-    `async def handle_callback_${safeName}(callback_query: types.CallbackQuery):`,
+    `async def handle_callback_${safeName}(callback_query: types.CallbackQuery, state: FSMContext = None):`,
     `    """Обработчик keyboard-ноды ${node.id} без самостоятельной отправки сообщения."""`,
     `    try:`,
     `        user_id = callback_query.from_user.id`,

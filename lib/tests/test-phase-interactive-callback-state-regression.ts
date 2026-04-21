@@ -1,5 +1,5 @@
 /**
- * @fileoverview Регресс-тест для generic interactive callback-обработчиков без state
+ * @fileoverview Регресс-тест для generic interactive callback-обработчиков с state
  * @module tests/test-phase-interactive-callback-state-regression
  */
 
@@ -9,7 +9,7 @@ import { generateCallbackHandlerInit } from '../templates/callback-handler-init/
 import { generateInteractiveCallbackHandlers } from '../templates/keyboard-handlers/interactive-callback-handlers/interactive-callback-handlers.renderer';
 
 /**
- * Создаёт минимальный generic callback-обработчик для проверки регресса со state.
+ * Создаёт минимальный generic callback-обработчик для проверки наличия state.
  * @returns Сгенерированный Python-код interactive callback-обработчика
  */
 function createGenericInteractiveHandlerCode(): string {
@@ -52,14 +52,14 @@ describe('Фаза: interactive callback state regression', () => {
     assert.ok(!code.includes('await state.get_data()'));
   });
 
-  it('generic interactive callback-обработчик не принимает state и не использует его', () => {
+  it('generic interactive callback-обработчик принимает state: FSMContext = None для совместимости с автопереходами', () => {
     const code = createGenericInteractiveHandlerCode();
 
+    // Обработчик должен принимать state для корректной работы автопереходов
     assert.match(
       code,
-      /async def handle_callback_generic_target\(callback_query: types\.CallbackQuery\):/,
+      /async def handle_callback_generic_target\(callback_query: types\.CallbackQuery, state: FSMContext = None\):/,
     );
-    assert.ok(!code.includes('async def handle_callback_generic_target(callback_query: types.CallbackQuery, state: FSMContext = None):'));
     assert.ok(!code.includes('if state is not None:'));
     assert.ok(!code.includes('await state.get_data()'));
   });

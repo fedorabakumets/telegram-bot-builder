@@ -21,7 +21,7 @@ export function generateCallbackHandlerInit(params: CallbackHandlerInitTemplateP
  * Генерирует базовую структуру callback обработчика
  */
 export function generateBaseCallbackHandlerStructure(code: string, safeFunctionName: any): string {
-  code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
+  code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery, state: FSMContext = None):\n`;
   code += '    # Безопасное получение данных из callback_query\n';
   code += '    callback_data = None  # Инициализируем переменную\n';
   code += '    try:\n';

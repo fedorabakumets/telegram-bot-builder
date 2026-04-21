@@ -188,7 +188,7 @@ export function generateUserInputNodeHandler(node: Node): string {
 
   return [
     `@dp.callback_query(lambda c: c.data == "${node.id}")`,
-    `async def handle_callback_${safeName}(callback_query: types.CallbackQuery):`,
+    `async def handle_callback_${safeName}(callback_query: types.CallbackQuery, state: FSMContext = None):`,
     `    """Обработчик узла сбора ответа ${node.id}."""`,
     '    user_id = callback_query.from_user.id',
     `    logging.info(f"Активирован input-узел ${node.id} для пользователя {user_id}")`,

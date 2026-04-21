@@ -297,7 +297,7 @@ test('A01', 'create_forum_topic генерирует callback-декоратор
 test('A02', 'create_forum_topic генерирует async def handle_callback_<nodeId>', () => {
   const code = gen(makeCleanProject([makeCreateForumTopicNode('create_forum_topic_1')]), 'a02');
   ok(
-    code.includes('async def handle_callback_create_forum_topic_1(callback_query: types.CallbackQuery):'),
+    code.includes('async def handle_callback_create_forum_topic_1(callback_query: types.CallbackQuery, state: FSMContext = None):'),
     'Обработчик handle_callback_create_forum_topic_1 должен быть в коде',
   );
 });

@@ -87,7 +87,7 @@ export const validParamsWithRecipients: MessageTemplateParams = {
 /** Ожидаемый вывод: базовое сообщение */
 export const expectedOutputBasic = `
 @dp.callback_query(lambda c: c.data == "msg_123" or c.data.startswith("msg_123_btn_"))
-async def handle_callback_msg_123(callback_query: types.CallbackQuery):
+async def handle_callback_msg_123(callback_query: types.CallbackQuery, state: FSMContext = None):
     """Обработчик перехода к узлу msg_123"""
     user_id = callback_query.from_user.id
     logging.info(f"🔵 Переход к узлу msg_123 для пользователя {user_id}")

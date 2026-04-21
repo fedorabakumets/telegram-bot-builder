@@ -114,7 +114,7 @@ export function generateInteractiveCallbackHandlers(
 
     // Декоратор и заголовок обработчика
     code += `\n@dp.callback_query(lambda c: c.data == "${callbackPattern}")\n`;
-    code += `async def handle_callback_${nodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query: types.CallbackQuery):\n`;
+    code += `async def handle_callback_${nodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query: types.CallbackQuery, state: FSMContext = None):\n`;
     code += '    try:\n';
     code += '        user_id = callback_query.from_user.id\n';
     code += `        callback_data = callback_query.data\n`;
