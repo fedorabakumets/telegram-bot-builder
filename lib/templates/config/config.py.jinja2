@@ -59,12 +59,6 @@ logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")
 user_data = {}
 all_user_vars = {}  # Глобальные переменные пользователя
 
-# Кэш переменных пользователя из БД — снижает нагрузку при быстрой навигации
-# Ключ: user_id, значение: (timestamp, db_snapshot_dict)
-_vars_cache: dict = {}
-# TTL кэша переменных в секундах (настраивается через .env)
-VARS_CACHE_TTL: int = int(os.getenv("VARS_CACHE_TTL", "5"))
-
 # Redis — опциональное хранилище (задаётся через REDIS_URL в .env)
 REDIS_URL = os.getenv("REDIS_URL")
 _redis_client = None

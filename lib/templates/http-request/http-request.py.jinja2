@@ -141,20 +141,12 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     except Exception as _e:
         logging.error(f"❌ http_request [{{ nodeId }}]: ошибка запроса: {_e} | user_id={user_id}")
 
-    # Сбрасываем старые значения response-переменных перед новым запросом —
-    # чтобы устаревшие данные не попали в следующий узел через user_data.
-    # Также инвалидируем Redis кэш синхронно — иначе init_all_user_vars
-    # может прочитать устаревшие данные из кэша до завершения HTTP запроса.
+    # Сбрасываем старые значения response-переменных перед новым запросом
     if user_id in user_data:
         user_data[user_id].pop("{{ responseVariable }}", None)
         {% if statusVariable %}
         user_data[user_id].pop("{{ statusVariable }}", None)
         {% endif %}
-    if _redis_client is not None:
-        try:
-            await _redis_client.delete(f"vars_cache:{user_id}")
-        except Exception:
-            pass
 
     # Сохраняем ответ
     await set_user_var(user_id, "{{ responseVariable }}", _response_data)
