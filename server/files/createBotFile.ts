@@ -141,12 +141,20 @@ export async function createCompleteBotFiles(
     }
   }
 
+  // Определяем webhook настройки из токена
+  const launchMode = tokenRecord?.launchMode ?? 'polling';
+  const webhookBaseUrl = tokenRecord?.webhookBaseUrl ?? null;
+  // Порт = 9000 + tokenId (уникальный для каждого бота)
+  const webhookPort = launchMode === 'webhook' && webhookBaseUrl ? 9000 + tokenId : null;
+
   const envContent = generateEnvFile(
     tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
     existingAdminIds,
     projectId,
     tokenRecord?.logLevel || 'WARNING',
-    'redis://localhost:6379'
+    'redis://localhost:6379',
+    launchMode === 'webhook' ? webhookBaseUrl : null,
+    webhookPort,
   );
   const envPath = join(botDir, '.env');
   writeFileSync(envPath, envContent, 'utf8');

@@ -9,19 +9,23 @@
 
 /**
  * Генерирует содержимое .env файла для бота
- * @param {string} botToken - Токен бота для @BotFather
- * @param {string} adminIds - ID администраторов через запятую
- * @param {number} projectId - ID проекта
- * @param {string} logLevel - Уровень логирования (DEBUG, INFO, WARNING, ERROR)
- * @param {string} redisUrl - URL Redis (по умолчанию localhost)
- * @returns {string} Содержимое .env файла
+ * @param botToken - Токен бота
+ * @param adminIds - ID администраторов через запятую
+ * @param projectId - ID проекта
+ * @param logLevel - Уровень логирования
+ * @param redisUrl - URL Redis
+ * @param webhookUrl - URL вебхука (если задан — включается webhook режим)
+ * @param webhookPort - Порт aiohttp сервера для webhook режима
+ * @returns Содержимое .env файла
  */
 export function generateEnvFile(
   botToken: string = "YOUR_BOT_TOKEN_HERE",
   adminIds: string = "123456789",
   projectId: number = 1,
   logLevel: string = "WARNING",
-  redisUrl: string = "redis://localhost:6379"
+  redisUrl: string = "redis://localhost:6379",
+  webhookUrl?: string | null,
+  webhookPort?: number | null,
 ): string {
   const envLines: string[] = [];
 
@@ -57,6 +61,18 @@ export function generateEnvFile(
   envLines.push('# Локально: redis://localhost:6379');
   envLines.push('# Railway: задаётся автоматически через ${{Redis.REDIS_URL}}');
   envLines.push(`REDIS_URL=${redisUrl}`);
+
+  // Webhook режим (опционально)
+  if (webhookUrl) {
+    envLines.push('');
+    envLines.push('# Webhook режим — URL для приёма апдейтов от Telegram');
+    envLines.push(`WEBHOOK_URL=${webhookUrl}`);
+    if (webhookPort) {
+      envLines.push('# Порт aiohttp сервера для webhook');
+      envLines.push(`WEBHOOK_PORT=${webhookPort}`);
+    }
+  }
+
   envLines.push('');
 
   return envLines.join('\n');

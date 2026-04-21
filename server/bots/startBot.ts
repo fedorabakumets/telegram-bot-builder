@@ -185,9 +185,18 @@ export async function startBot(projectId: number, token: string, tokenId: number
       console.log(`🗑️ Удалили старый процесс из памяти для токена ${tokenId}`);
     }
 
-    // В polling режиме сбрасываем webhook чтобы избежать конфликтов с предыдущим запуском
-    // В webhook режиме — Python сам установит webhook при старте через bot.set_webhook()
-    if (!process.env.WEBHOOK_URL) {
+    // Читаем настройки запуска из БД токена
+    const tokenSettings = await storage.getBotToken(tokenId);
+    const launchMode = tokenSettings?.launchMode ?? 'polling';
+    const webhookBaseUrl = tokenSettings?.webhookBaseUrl ?? null;
+    // Webhook активен если: режим webhook И задан baseUrl ИЛИ глобальный WEBHOOK_URL в env
+    const effectiveWebhookUrl = launchMode === 'webhook' && webhookBaseUrl
+      ? webhookBaseUrl
+      : process.env.WEBHOOK_URL ?? null;
+
+    // В polling режиме сбрасываем webhook чтобы избежать конфликтов
+    // В webhook режиме — Python сам установит webhook при старте
+    if (!effectiveWebhookUrl) {
       try {
         const webhookUrl = `https://api.telegram.org/bot${token}/deleteWebhook?drop_pending_updates=false`;
         await fetchWithProxy(webhookUrl);
@@ -288,9 +297,9 @@ export async function startBot(projectId: number, token: string, tokenId: number
         // Прокидываем REDIS_URL из окружения сервера в процесс бота
         // На Railway задаётся через переменную окружения сервиса
         ...(process.env.REDIS_URL ? { REDIS_URL: process.env.REDIS_URL } : {}),
-        // Webhook режим: передаём порт если WEBHOOK_URL задан
-        ...(process.env.WEBHOOK_URL ? {
-          WEBHOOK_URL: process.env.WEBHOOK_URL,
+        // Webhook режим: из настроек токена или глобального env
+        ...(effectiveWebhookUrl ? {
+          WEBHOOK_URL: effectiveWebhookUrl,
           WEBHOOK_PORT: String(9000 + tokenId),
         } : {})
       }
