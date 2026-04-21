@@ -40,8 +40,8 @@ declare global {
   }
 }
 
-/** Идентификатор Telegram-приложения */
-const CLIENT_ID = 7713154819;
+/** Идентификатор Telegram-приложения (берётся из переменной окружения VITE_TELEGRAM_CLIENT_ID) */
+const CLIENT_ID = Number(import.meta.env.VITE_TELEGRAM_CLIENT_ID) || 7713154819;
 const TELEGRAM_LOGIN_SRC = 'https://oauth.telegram.org/js/telegram-login.js?3';
 const TELEGRAM_LOGIN_SCRIPT_ID = 'telegram-login-sdk';
 
