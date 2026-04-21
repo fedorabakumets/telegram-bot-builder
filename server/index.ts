@@ -44,6 +44,8 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+/** Парсер для тела запроса с Content-Type: text/plain — используется при импорте проекта через Telegram-бота */
+app.use(express.text({ limit: '50mb', type: 'text/plain' }));
 
 /**
  * Middleware для логирования запросов к API
