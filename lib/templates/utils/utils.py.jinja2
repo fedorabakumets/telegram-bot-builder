@@ -217,10 +217,10 @@ async def set_user_var(user_id: int, key: str, value) -> None:
     user_data[user_id][key] = value
     # Инвалидируем кэш памяти — данные изменились, следующий запрос пойдёт в БД
     _vars_cache.pop(user_id, None)
-    # Инвалидируем Redis кэш если доступен
+    # Инвалидируем Redis кэш синхронно — чтобы следующий узел не прочитал устаревшие данные
     if _redis_client is not None:
         try:
-            asyncio.create_task(_redis_client.delete(f"vars_cache:{user_id}"))
+            await _redis_client.delete(f"vars_cache:{user_id}")
         except Exception:
             pass
 {%- if userDatabaseEnabled %}
