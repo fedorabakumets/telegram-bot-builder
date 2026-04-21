@@ -198,10 +198,10 @@ WEBHOOK_URL=https://${RAILWAY_PUBLIC_DOMAIN}
 ## Этапы реализации
 
 ### Фаза 1 — Python шаблон
-- [ ] Добавить `WEBHOOK_URL`, `WEBHOOK_PORT` в `config.py.jinja2`
-- [ ] Обновить `main.py.jinja2` — условное переключение polling/webhook
-- [ ] Добавить `aiohttp` в `requirements.txt` шаблон
-- [ ] Написать тесты для обоих режимов
+- [x] Добавить `WEBHOOK_URL`, `WEBHOOK_PORT` в `config.py.jinja2`
+- [x] Обновить `main.py.jinja2` — условное переключение polling/webhook
+- [x] Добавить `aiohttp` в `requirements.txt` шаблон
+- [x] Написать тесты для обоих режимов
 
 ### Фаза 2 — Node.js роут
 - [ ] Создать `server/routes/setupWebhookRoutes.ts`

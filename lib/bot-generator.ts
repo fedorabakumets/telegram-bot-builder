@@ -105,6 +105,10 @@ export interface GeneratePythonCodeOptions {
   enableComments?: boolean;
   /** Автоматически регистрировать пользователей при первом обращении */
   autoRegisterUsers?: boolean;
+  /** URL вебхука для webhook режима */
+  webhookUrl?: string | null;
+  /** Порт aiohttp сервера */
+  webhookPort?: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -153,6 +157,8 @@ function buildGenerationContext(
     enableGroupHandlers = false,
     enableComments = true,
     autoRegisterUsers = false,
+    webhookUrl = null,
+    webhookPort = null,
   } = options;
 
   const genOptions: GenerationOptions = {
@@ -162,6 +168,8 @@ function buildGenerationContext(
     enableGroupHandlers,
     projectId,
     autoRegisterUsers,
+    webhookUrl,
+    webhookPort,
   };
 
   const context = createGenerationContext(botData, botName, groups, genOptions);
@@ -218,6 +226,8 @@ function generateCodeSections(
     generateConfig({
       userDatabaseEnabled,
       projectId: context.projectId,
+      webhookUrl: context.options.webhookUrl ?? null,
+      webhookPort: context.options.webhookPort ?? null,
     })
   );
 
@@ -446,6 +456,9 @@ function generateCodeSections(
       groupMessageTriggerHandlers: nodes
         .filter(n => n.type === 'group_message_trigger' && n.data?.autoTransitionTo)
         .map(n => `group_message_trigger_${n.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`),
+      webhookUrl: context.options.webhookUrl ?? null,
+      webhookPort: context.options.webhookPort ?? null,
+      projectId: context.projectId ?? null,
     })
   );
 

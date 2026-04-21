@@ -120,11 +120,42 @@ async def main():
         # Запускаем фоновую задачу TTL-очистки user_data
         asyncio.create_task(cleanup_user_data())
 
-        # Запускаем polling и ждём сигнала остановки
-        polling_task = asyncio.create_task(dp.start_polling(bot))
-        await _stop_event.wait()
-        await dp.stop_polling()
-        await polling_task
+        # Выбор режима запуска: webhook или polling
+        if WEBHOOK_URL:
+            # Webhook режим — запускаем aiohttp сервер
+            from aiohttp import web
+            from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+
+            webhook_path = f"/api/webhook/{PROJECT_ID}/{TOKEN_ID}"
+            full_webhook_url = f"{WEBHOOK_URL.rstrip('/')}{webhook_path}"
+
+            logging.info(f"🌐 Webhook режим: {full_webhook_url}")
+            logging.info(f"🔌 Порт aiohttp: {WEBHOOK_PORT}")
+
+            await bot.set_webhook(full_webhook_url)
+
+            app = web.Application()
+            SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path="/webhook")
+            setup_application(app, dp, bot=bot)
+
+            runner = web.AppRunner(app)
+            await runner.setup()
+            site = web.TCPSite(runner, host="0.0.0.0", port=WEBHOOK_PORT)
+            await site.start()
+
+            logging.info(f"✅ Webhook сервер запущен на порту {WEBHOOK_PORT}")
+            await _stop_event.wait()
+
+            await runner.cleanup()
+            await bot.delete_webhook()
+        else:
+            # Polling режим — стандартный запуск
+            logging.info("🔄 Polling режим")
+            # Запускаем polling и ждём сигнала остановки
+            polling_task = asyncio.create_task(dp.start_polling(bot))
+            await _stop_event.wait()
+            await dp.stop_polling()
+            await polling_task
     except KeyboardInterrupt:
         print("⚠️ Получен сигнал остановки, завершаем работу...")
     except SystemExit:

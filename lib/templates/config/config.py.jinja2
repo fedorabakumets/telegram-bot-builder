@@ -69,6 +69,11 @@ VARS_CACHE_TTL: int = int(os.getenv("VARS_CACHE_TTL", "5"))
 REDIS_URL = os.getenv("REDIS_URL")
 _redis_client = None
 
+{# Webhook режим — включается если WEBHOOK_URL задан в окружении #}
+# Webhook режим — включается автоматически при наличии WEBHOOK_URL
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT", "8080"))
+
 # Функция инициализации Redis (вызывается асинхронно при старте)
 async def init_redis_client():
     """Инициализирует Redis клиент если REDIS_URL задан. Возвращает True если Redis успешно подключён."""

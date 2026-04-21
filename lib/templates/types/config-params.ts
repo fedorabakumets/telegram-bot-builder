@@ -9,4 +9,8 @@ export interface ConfigTemplateParams {
   userDatabaseEnabled: boolean;
   /** ID проекта для сохранения в базу данных */
   projectId: number | null;
+  /** URL вебхука (если задан — включается webhook режим) */
+  webhookUrl?: string | null;
+  /** Порт aiohttp сервера для webhook режима */
+  webhookPort?: number | null;
 }

@@ -285,7 +285,12 @@ export async function startBot(projectId: number, token: string, tokenId: number
           : 'http://localhost:5000',
         // Прокидываем REDIS_URL из окружения сервера в процесс бота
         // На Railway задаётся через переменную окружения сервиса
-        ...(process.env.REDIS_URL ? { REDIS_URL: process.env.REDIS_URL } : {})
+        ...(process.env.REDIS_URL ? { REDIS_URL: process.env.REDIS_URL } : {}),
+        // Webhook режим: передаём порт если WEBHOOK_URL задан
+        ...(process.env.WEBHOOK_URL ? {
+          WEBHOOK_URL: process.env.WEBHOOK_URL,
+          WEBHOOK_PORT: String(9000 + tokenId),
+        } : {})
       }
     });
 

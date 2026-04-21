@@ -30,6 +30,10 @@ export interface GenerationOptions {
   projectId?: number | null;
   /** Автоматически регистрировать пользователей при первом обращении */
   autoRegisterUsers?: boolean;
+  /** URL вебхука для webhook режима */
+  webhookUrl?: string | null;
+  /** Порт aiohttp сервера для webhook режима */
+  webhookPort?: number | null;
 }
 
 /**
@@ -45,6 +49,8 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   enableGroupHandlers: false,
   projectId: null,
   autoRegisterUsers: false,
+  webhookUrl: null,
+  webhookPort: null,
 } as const;
 
 /**

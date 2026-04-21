@@ -9,6 +9,10 @@ import { z } from 'zod';
 export const configParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().default(false),
   projectId: z.number().nullable().default(null),
+  /** URL вебхука (если задан — включается webhook режим) */
+  webhookUrl: z.string().nullable().optional().default(null),
+  /** Порт aiohttp сервера для webhook режима */
+  webhookPort: z.number().nullable().optional().default(null),
 });
 
 /** Тип параметров конфигурации (выведен из схемы) */

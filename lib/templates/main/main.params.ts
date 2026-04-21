@@ -19,4 +19,12 @@ export interface MainTemplateParams {
   managedBotUpdatedTriggerMiddlewares?: string[];
   /** Список имён обработчиков для group_message_trigger */
   groupMessageTriggerHandlers?: string[];
+  /** URL вебхука (если задан — включается webhook режим) */
+  webhookUrl?: string | null;
+  /** Порт aiohttp сервера для webhook режима */
+  webhookPort?: number | null;
+  /** ID токена для формирования пути вебхука */
+  tokenId?: number | null;
+  /** ID проекта для формирования пути вебхука */
+  projectId?: number | null;
 }
