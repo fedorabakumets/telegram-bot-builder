@@ -76,11 +76,16 @@ export async function importBotProjectHandler(req: Request, res: Response): Prom
 
         const name: string = (parsedData.name as string) || "Импортированный проект";
 
+        // Очищаем токены из импортируемых данных — токены не должны переноситься между проектами
+        const cleanData = { ...parsedData };
+        delete cleanData.botToken;
+        delete cleanData.token;
+
         const project = await storage.createBotProject({
             ownerId: telegramId,
             name,
             description: "",
-            data: parsedData,
+            data: cleanData,
         });
 
         res.status(200).json({
