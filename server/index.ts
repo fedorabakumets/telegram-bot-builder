@@ -39,6 +39,9 @@ if (process.env.TELEGRAM_PROXY_URL && process.env.TELEGRAM_PROXY_URL.trim() !== 
  * - парсинг URL-encoded данных с лимитом 50MB
  */
 const app = express();
+// Railway и другие reverse proxy передают X-Forwarded-Proto
+// Без этого Express не знает что запрос пришёл через HTTPS и не ставит secure куки
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
