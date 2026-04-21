@@ -595,10 +595,12 @@ export default function Editor() {
       }
       // Сбрасываем редактируемый контент — данные успешно применены
       setEditedJsonContent('');
+      // Сохраняем на сервер и инвалидируем кэш — чтобы левая панель увидела новые листы
+      setTimeout(() => updateProjectMutation.mutate({}), 50);
     } catch (e) {
       console.error('Ошибка применения JSON:', e);
     }
-  }, [botDataWithSheets, handleBotDataUpdate]);
+  }, [botDataWithSheets, handleBotDataUpdate, updateProjectMutation]);
 
   // Хук перемещения узла между листами
   const { moveNodeToSheet } = useMoveNodeToSheet(botDataWithSheets || undefined, handleBotDataUpdate);
