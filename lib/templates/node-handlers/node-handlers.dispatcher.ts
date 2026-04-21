@@ -40,6 +40,9 @@ import { generateGroupMessageTriggerHandlers } from '../group-message-trigger';
 import { generateConditionHandlers } from '../condition/condition.renderer';
 import { generateMediaNode } from '../media-node';
 import { generateUserInputNodeHandler } from '../user-input';
+import type { KeyboardLayout } from '../types/keyboard-layout';
+import type { DynamicButtonsConfig } from '../keyboard/dynamic-buttons';
+import type { MessageTemplateParams } from '../message/message.params';
 
 /**
  * Проверяет, использует ли текст переменные {user_ids} или {user_ids_count}
@@ -164,7 +167,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
 
   // Создаем массив всех ID узлов для генерации коротких ID (используется старыми обработчиками)
 
-  const buildMessageHandlerParams = (node: Node) => {
+  const buildMessageHandlerParams = (node: Node): MessageTemplateParams => {
       const autoTransition = getSafeAutoTransitionParams(node, nodes);
       const media = resolveMediaUrls(node.data);
       return {
@@ -177,7 +180,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         multiSelectVariable: node.data?.multiSelectVariable,
         buttons: sortButtonsByLayout(node.data?.buttons || [], node.data?.keyboardLayout),
         keyboardType: node.data?.keyboardType || 'none',
-        keyboardLayout: node.data?.keyboardLayout,
+        keyboardLayout: node.data?.keyboardLayout as KeyboardLayout | undefined,
         oneTimeKeyboard: node.data?.oneTimeKeyboard ?? false,
         resizeKeyboard: node.data?.resizeKeyboard ?? true,
         enableAutoTransition: autoTransition.enableAutoTransition,
@@ -223,7 +226,7 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
         messageSendRecipients: (node.data as any)?.messageSendRecipients || [],
         saveMessageIdTo: (node.data as any)?.saveMessageIdTo || undefined,
         enableDynamicButtons: node.data?.enableDynamicButtons ?? false,
-        dynamicButtons: node.data?.dynamicButtons,
+        dynamicButtons: node.data?.dynamicButtons as DynamicButtonsConfig | undefined,
       };
   };
 

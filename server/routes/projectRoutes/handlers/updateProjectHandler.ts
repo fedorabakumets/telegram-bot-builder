@@ -11,6 +11,7 @@ import type { Request, Response } from "express";
 import { insertBotProjectSchema } from "@shared/schema";
 import { z } from "zod";
 import { storage } from "../../../storages/storage";
+import type { StorageBotProjectUpdate } from "../../../storages/storageTypes";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { restartBotIfRunning } from "../../../bots/restartBotIfRunning";
 
@@ -47,7 +48,9 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
             }
         }
 
-        const validatedData = insertBotProjectSchema.partial().parse(req.body);
+        const validatedData = insertBotProjectSchema
+            .partial()
+            .parse(req.body) as StorageBotProjectUpdate;
         const project = await storage.updateBotProject(projectId, validatedData);
 
         if (!project) {

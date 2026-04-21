@@ -4,7 +4,6 @@
  */
 
 import { pgTable, text, serial, integer, jsonb, timestamp, bigint, real } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { telegramUsers } from "./telegram-users";
@@ -52,11 +51,37 @@ export const botProjects = pgTable("bot_projects", {
 });
 
 /** Схема для вставки данных проекта бота */
-export const insertBotProjectSchema = createInsertSchema(botProjects).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
+export const insertBotProjectSchema = z.object({
+  /** Идентификатор владельца проекта */
+  ownerId: z.number().nullable().optional(),
+  /** Название проекта */
+  name: z.string().min(1, "Название проекта обязательно"),
+  /** Описание проекта */
+  description: z.string().nullable().optional(),
+  /** JSON-данные проекта */
+  data: z.unknown(),
+  /** Токен бота */
+  botToken: z.string().nullable().optional(),
+  /** Флаг включения пользовательской базы данных */
+  userDatabaseEnabled: z.number().min(0).max(1).default(1),
+  /** ID последней экспортированной Google Таблицы пользователей */
+  lastExportedGoogleSheetId: z.string().nullable().optional(),
+  /** URL последней экспортированной Google Таблицы пользователей */
+  lastExportedGoogleSheetUrl: z.string().nullable().optional(),
+  /** Дата последнего экспорта пользователей */
+  lastExportedAt: z.date().nullable().optional(),
+  /** ID последней экспортированной Google Таблицы структуры проекта */
+  lastExportedStructureSheetId: z.string().nullable().optional(),
+  /** URL последней экспортированной Google Таблицы структуры проекта */
+  lastExportedStructureSheetUrl: z.string().nullable().optional(),
+  /** Дата последнего экспорта структуры проекта */
+  lastExportedStructureAt: z.date().nullable().optional(),
+  /** Порядок сортировки проекта */
+  sortOrder: z.number().default(0).optional(),
+  /** ID администраторов бота */
+  adminIds: z.string().default("").optional(),
+  /** ID сессии гостевого пользователя */
+  sessionId: z.string().nullable().optional(),
   /** Флаг необходимости перезапуска бота при обновлении */
   restartOnUpdate: z.boolean().default(false).optional(),
 });
@@ -65,4 +90,7 @@ export const insertBotProjectSchema = createInsertSchema(botProjects).omit({
 export type BotProject = typeof botProjects.$inferSelect;
 
 /** Тип для вставки проекта бота */
-export type InsertBotProject = z.infer<typeof insertBotProjectSchema>;
+export type InsertBotProject = Omit<typeof botProjects.$inferInsert, "id" | "createdAt" | "updatedAt"> & {
+  /** Р¤Р»Р°Рі РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РїРµСЂРµР·Р°РїСѓСЃРєР° Р±РѕС‚Р° РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё */
+  restartOnUpdate?: boolean;
+};

@@ -5,32 +5,43 @@
 import {
   type BotGroup,
   type BotInstance,
+  type BotLaunchHistory,
+  type BotLog,
   type BotMessage,
   type BotMessageMedia,
   type BotProject,
   type BotTemplate,
   type BotToken,
   type GroupMember,
-  type InsertBotGroup,
-  type InsertBotInstance,
-  type InsertBotMessage,
-  type InsertBotMessageMedia,
-  type InsertBotProject,
-  type InsertBotTemplate,
-  type InsertBotToken,
-  type InsertGroupMember,
-  type InsertMediaFile,
-  type InsertTelegramUser,
-  type InsertUserBotData,
   type MediaFile,
   type TelegramUserDB,
   type UserBotData,
-  type BotLog,
-  type InsertBotLog,
-  type BotLaunchHistory,
-  type InsertBotLaunchHistory,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
+import type {
+  StorageBotGroupInput,
+  StorageBotGroupUpdate,
+  StorageBotMessageInput,
+  StorageBotMessageMediaInput,
+  StorageBotInstanceInput,
+  StorageBotInstanceUpdate,
+  StorageBotLaunchHistoryInput,
+  StorageBotLaunchHistoryUpdate,
+  StorageBotLogInput,
+  StorageBotProjectInput,
+  StorageBotProjectUpdate,
+  StorageBotTemplateInput,
+  StorageBotTemplateUpdate,
+  StorageGroupMemberInput,
+  StorageGroupMemberUpdate,
+  StorageBotTokenInput,
+  StorageBotTokenUpdate,
+  StorageMediaFileInput,
+  StorageMediaFileUpdate,
+  StorageTelegramUserInput,
+  StorageUserBotDataInput,
+  StorageUserBotDataUpdate,
+} from "./storageTypes";
 
 /**
  * Интерфейс для хранилища данных ботов
@@ -55,7 +66,7 @@ export interface IStorage {
    * @param project - Данные для создания проекта
    * @returns Созданный проект бота
    */
-  createBotProject(project: InsertBotProject): Promise<BotProject>;
+  createBotProject(project: StorageBotProjectInput): Promise<BotProject>;
 
   /**
    * Обновить проект бота
@@ -63,7 +74,7 @@ export interface IStorage {
    * @param project - Данные для обновления
    * @returns Обновленный проект бота или undefined, если не найден
    */
-  updateBotProject(id: number, project: Partial<InsertBotProject>): Promise<BotProject | undefined>;
+  updateBotProject(id: number, project: StorageBotProjectUpdate): Promise<BotProject | undefined>;
 
   /**
    * Переупорядочивает проекты по переданному массиву ID
@@ -110,7 +121,7 @@ export interface IStorage {
    * @param instance - Данные для создания экземпляра
    * @returns Созданный экземпляр бота
    */
-  createBotInstance(instance: InsertBotInstance): Promise<BotInstance>;
+  createBotInstance(instance: StorageBotInstanceInput): Promise<BotInstance>;
 
   /**
    * Обновить экземпляр бота
@@ -118,7 +129,7 @@ export interface IStorage {
    * @param instance - Данные для обновления
    * @returns Обновленный экземпляр бота или undefined, если не найден
    */
-  updateBotInstance(id: number, instance: Partial<InsertBotInstance>): Promise<BotInstance | undefined>;
+  updateBotInstance(id: number, instance: StorageBotInstanceUpdate): Promise<BotInstance | undefined>;
 
   /**
    * Удалить экземпляр бота
@@ -160,7 +171,7 @@ export interface IStorage {
    * @param template - Данные для создания шаблона
    * @returns Созданный шаблон бота
    */
-  createBotTemplate(template: InsertBotTemplate): Promise<BotTemplate>;
+  createBotTemplate(template: StorageBotTemplateInput): Promise<BotTemplate>;
 
   /**
    * Обновить шаблон бота
@@ -168,7 +179,7 @@ export interface IStorage {
    * @param template - Данные для обновления
    * @returns Обновленный шаблон бота или undefined, если не найден
    */
-  updateBotTemplate(id: number, template: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined>;
+  updateBotTemplate(id: number, template: StorageBotTemplateUpdate): Promise<BotTemplate | undefined>;
 
   /**
    * Удалить шаблон бота
@@ -269,7 +280,7 @@ export interface IStorage {
    * @param token - Данные для создания токена
    * @returns Созданный токен бота
    */
-  createBotToken(token: InsertBotToken): Promise<BotToken>;
+  createBotToken(token: StorageBotTokenInput): Promise<BotToken>;
 
   /**
    * Обновить токен бота
@@ -277,7 +288,7 @@ export interface IStorage {
    * @param token - Данные для обновления
    * @returns Обновленный токен бота или undefined, если не найден
    */
-  updateBotToken(id: number, token: Partial<InsertBotToken>): Promise<BotToken | undefined>;
+  updateBotToken(id: number, token: StorageBotTokenUpdate): Promise<BotToken | undefined>;
 
   /**
    * Удалить токен бота
@@ -314,7 +325,7 @@ export interface IStorage {
    * @param user - Данные пользователя для создания
    * @returns Пользователь Telegram
    */
-  getTelegramUserOrCreate(user: InsertTelegramUser): Promise<TelegramUserDB>;
+  getTelegramUserOrCreate(user: StorageTelegramUserInput): Promise<TelegramUserDB>;
 
   /**
    * Удалить пользователя Telegram
@@ -409,7 +420,7 @@ export interface IStorage {
    * @param file - Данные для создания файла
    * @returns Созданный медиафайл
    */
-  createMediaFile(file: InsertMediaFile): Promise<MediaFile>;
+  createMediaFile(file: StorageMediaFileInput): Promise<MediaFile>;
 
   /**
    * Обновить медиафайл
@@ -417,7 +428,7 @@ export interface IStorage {
    * @param file - Данные для обновления
    * @returns Обновленный медиафайл или undefined, если не найден
    */
-  updateMediaFile(id: number, file: Partial<InsertMediaFile>): Promise<MediaFile | undefined>;
+  updateMediaFile(id: number, file: StorageMediaFileUpdate): Promise<MediaFile | undefined>;
 
   /**
    * Удалить медиафайл
@@ -475,7 +486,7 @@ export interface IStorage {
    * @param userData - Данные для создания
    * @returns Созданные данные пользователя бота
    */
-  createUserBotData(userData: InsertUserBotData): Promise<UserBotData>;
+  createUserBotData(userData: StorageUserBotDataInput): Promise<UserBotData>;
 
   /**
    * Обновить данные пользователя бота
@@ -483,7 +494,7 @@ export interface IStorage {
    * @param userData - Данные для обновления
    * @returns Обновленные данные пользователя бота или undefined, если не найдены
    */
-  updateUserBotData(id: number, userData: Partial<InsertUserBotData>): Promise<UserBotData | undefined>;
+  updateUserBotData(id: number, userData: StorageUserBotDataUpdate): Promise<UserBotData | undefined>;
 
   /**
    * Удалить данные пользователя бота
@@ -573,7 +584,7 @@ export interface IStorage {
    * @param group - Данные для создания группы
    * @returns Созданная группа бота
    */
-  createBotGroup(group: InsertBotGroup): Promise<BotGroup>;
+  createBotGroup(group: StorageBotGroupInput): Promise<BotGroup>;
 
   /**
    * Обновить группу бота
@@ -581,7 +592,7 @@ export interface IStorage {
    * @param group - Данные для обновления
    * @returns Обновленная группа бота или undefined, если не найдена
    */
-  updateBotGroup(id: number, group: Partial<InsertBotGroup>): Promise<BotGroup | undefined>;
+  updateBotGroup(id: number, group: StorageBotGroupUpdate): Promise<BotGroup | undefined>;
 
   /**
    * Удалить группу бота
@@ -603,7 +614,7 @@ export interface IStorage {
    * @param member - Данные для создания участника
    * @returns Созданный участник группы
    */
-  createGroupMember(member: InsertGroupMember): Promise<GroupMember>;
+  createGroupMember(member: StorageGroupMemberInput): Promise<GroupMember>;
 
   /**
    * Обновить участника группы
@@ -611,7 +622,7 @@ export interface IStorage {
    * @param member - Данные для обновления
    * @returns Обновленный участник группы или undefined, если не найден
    */
-  updateGroupMember(id: number, member: Partial<InsertGroupMember>): Promise<GroupMember | undefined>;
+  updateGroupMember(id: number, member: StorageGroupMemberUpdate): Promise<GroupMember | undefined>;
 
   /**
    * Удалить участника группы
@@ -626,7 +637,7 @@ export interface IStorage {
    * @param message - Данные для создания сообщения
    * @returns Созданное сообщение бота
    */
-  createBotMessage(message: InsertBotMessage): Promise<BotMessage>;
+  createBotMessage(message: StorageBotMessageInput): Promise<BotMessage>;
 
   /**
    * Получить сообщения бота по проекту и пользователю
@@ -669,7 +680,7 @@ export interface IStorage {
    * @param data - Данные для создания записи
    * @returns Созданная запись о медиафайле
    */
-  createBotMessageMedia(data: InsertBotMessageMedia): Promise<BotMessageMedia>;
+  createBotMessageMedia(data: StorageBotMessageMediaInput): Promise<BotMessageMedia>;
 
   /**
    * Получить медиафайлы сообщения
@@ -689,7 +700,7 @@ export interface IStorage {
    * @param logs - Массив записей для вставки
    * @returns Promise<void>
    */
-  saveBotLogs(logs: InsertBotLog[]): Promise<void>;
+  saveBotLogs(logs: StorageBotLogInput[]): Promise<void>;
 
   /**
    * Получить последние N строк логов бота
@@ -705,7 +716,7 @@ export interface IStorage {
    * @param data - Данные для создания записи
    * @returns Созданная запись истории запуска
    */
-  createLaunchHistory(data: InsertBotLaunchHistory): Promise<BotLaunchHistory>;
+  createLaunchHistory(data: StorageBotLaunchHistoryInput): Promise<BotLaunchHistory>;
 
   /**
    * Обновить запись истории запуска (при остановке или ошибке)
@@ -713,7 +724,7 @@ export interface IStorage {
    * @param data - Данные для обновления
    * @returns Promise<void>
    */
-  updateLaunchHistory(id: number, data: Partial<InsertBotLaunchHistory>): Promise<void>;
+  updateLaunchHistory(id: number, data: StorageBotLaunchHistoryUpdate): Promise<void>;
 
   /**
    * Получить последние N запусков для токена

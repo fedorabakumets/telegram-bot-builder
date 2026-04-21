@@ -106,7 +106,7 @@ export async function replaceVariablesInText(
   }
 
   // Переменные для рассылок (заглушки, так как это админская отправка)
-  variables.user_ids = [];
+  variables.user_ids = "";
   variables.user_ids_count = "0";
 
   // Заменяем все переменные в формате {variable_name} и {variable.path.nested}

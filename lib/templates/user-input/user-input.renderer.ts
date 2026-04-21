@@ -8,6 +8,11 @@ import type { UserInputTemplateParams } from './user-input.params';
 import { userInputParamsSchema } from './user-input.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
+/**
+ * Нормализует источник ввода до поддерживаемого перечисления.
+ * @param value - Исходное значение
+ * @returns Нормализованный источник ввода
+ */
 function normalizeInputSource(value: unknown): UserInputTemplateParams['inputSource'] {
   switch (value) {
     case 'any':
@@ -24,6 +29,15 @@ function normalizeInputSource(value: unknown): UserInputTemplateParams['inputSou
   }
 }
 
+/**
+ * Выбирает переменную для специализированного типа ввода.
+ * @param isDedicatedInputNode - Является ли узел отдельным input-узлом
+ * @param inputSource - Источник ввода
+ * @param expectedSource - Ожидаемый тип ввода
+ * @param explicitVariable - Явно указанная переменная
+ * @param fallbackVariable - Резервное имя переменной
+ * @returns Итоговое имя переменной
+ */
 function resolveDedicatedVariable(
   isDedicatedInputNode: boolean,
   inputSource: UserInputTemplateParams['inputSource'] | undefined,
@@ -37,7 +51,9 @@ function resolveDedicatedVariable(
 }
 
 /**
- * Вычисляет список принимаемых режимов ввода из параметров
+ * Вычисляет список принимаемых режимов ввода.
+ * @param params - Параметры шаблона
+ * @returns Поддерживаемые режимы ввода
  */
 function buildModes(params: UserInputTemplateParams): string[] {
   if (params.inputSource) {
@@ -63,11 +79,10 @@ function buildModes(params: UserInputTemplateParams): string[] {
     }
   }
 
-  // Кнопочный ввод
   if (params.inputType === 'button') {
     return params.enableTextInput ? ['button', 'text'] : ['button'];
   }
-  // Медиа/текстовый ввод
+
   const modes: string[] = [];
   if (params.enableTextInput !== false) modes.push('text');
   if (params.enablePhotoInput) modes.push('photo');
@@ -80,16 +95,21 @@ function buildModes(params: UserInputTemplateParams): string[] {
 }
 
 /**
- * Генерирует Python-код блока waiting_for_input из параметров (низкоуровневый API)
- * @param params - параметры шаблона
- * @param indentLevel - отступ для каждой строки (по умолчанию '    ')
+ * Генерирует Python-код блока waiting_for_input из параметров.
+ * @param params - Параметры шаблона
+ * @param indentLevel - Отступ для каждой строки
+ * @returns Сгенерированный блок Python-кода
  */
-export function generateUserInput(params: UserInputTemplateParams, indentLevel: string = '    '): string {
+export function generateUserInput(
+  params: UserInputTemplateParams,
+  indentLevel: string = '    ',
+): string {
   const validated = userInputParamsSchema.parse(params);
-  const modes = buildModes(validated);
+  const modes = buildModes(validated as UserInputTemplateParams);
   const raw = renderPartialTemplate('user-input/user-input.py.jinja2', { ...validated, modes });
+
   if (indentLevel === '    ') return raw;
-  // Переиндентируем: каждая непустая строка получает нужный отступ вместо 4 пробелов
+
   return raw
     .split('\n')
     .map(line => line.startsWith('    ') ? indentLevel + line.slice(4) : line)
@@ -97,106 +117,60 @@ export function generateUserInput(params: UserInputTemplateParams, indentLevel: 
 }
 
 /**
- * Собирает UserInputTemplateParams из узла графа
+ * Собирает UserInputTemplateParams из узла графа.
+ * @param node - Узел графа
+ * @returns Параметры шаблона user-input
  */
 export function nodeToUserInputParams(node: Node): UserInputTemplateParams {
   const safeName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
   const isDedicatedInputNode = node.type === 'input';
+  const nodeData = node.data as Record<string, any>;
   const inputSource = isDedicatedInputNode
-    ? normalizeInputSource(node.data.inputType || 'any')
+    ? normalizeInputSource(nodeData.inputType || 'any')
     : undefined;
   const acceptsAny = inputSource === 'any';
-  const inputVariable = node.data.inputVariable || 'input';
+  const inputVariable = nodeData.inputVariable || 'input';
 
   return {
     nodeId: node.id,
     safeName,
     inputVariable,
-    appendVariable: node.data.appendVariable ?? false,
-    inputTargetNodeId: node.data.inputTargetNodeId || (isDedicatedInputNode ? (node.data.autoTransitionTo || '') : ''),
+    appendVariable: nodeData.appendVariable ?? false,
+    inputTargetNodeId: nodeData.inputTargetNodeId || (isDedicatedInputNode ? (nodeData.autoTransitionTo || '') : ''),
     inputSource,
-    enableTextInput: isDedicatedInputNode
-      ? (acceptsAny || inputSource === 'text')
-      : (node.data.enableTextInput ?? true),
-    enablePhotoInput: isDedicatedInputNode
-      ? (acceptsAny || inputSource === 'photo')
-      : (node.data.enablePhotoInput ?? false),
-    photoInputVariable: resolveDedicatedVariable(
-      isDedicatedInputNode,
-      inputSource,
-      'photo',
-      node.data.photoInputVariable,
-      inputVariable,
-    ),
-    enableVideoInput: isDedicatedInputNode
-      ? (acceptsAny || inputSource === 'video')
-      : (node.data.enableVideoInput ?? false),
-    videoInputVariable: resolveDedicatedVariable(
-      isDedicatedInputNode,
-      inputSource,
-      'video',
-      node.data.videoInputVariable,
-      inputVariable,
-    ),
-    enableAudioInput: isDedicatedInputNode
-      ? (acceptsAny || inputSource === 'audio')
-      : (node.data.enableAudioInput ?? false),
-    audioInputVariable: resolveDedicatedVariable(
-      isDedicatedInputNode,
-      inputSource,
-      'audio',
-      node.data.audioInputVariable,
-      inputVariable,
-    ),
-    enableDocumentInput: isDedicatedInputNode
-      ? (acceptsAny || inputSource === 'document')
-      : (node.data.enableDocumentInput ?? false),
-    documentInputVariable: resolveDedicatedVariable(
-      isDedicatedInputNode,
-      inputSource,
-      'document',
-      node.data.documentInputVariable,
-      inputVariable,
-    ),
-    enableLocationInput: isDedicatedInputNode
-      ? (acceptsAny || inputSource === 'location')
-      : Boolean((node.data as any).enableLocationInput),
-    locationInputVariable: resolveDedicatedVariable(
-      isDedicatedInputNode,
-      inputSource,
-      'location',
-      (node.data as any).locationInputVariable,
-      inputVariable,
-    ),
-    enableContactInput: isDedicatedInputNode
-      ? (acceptsAny || inputSource === 'contact')
-      : Boolean((node.data as any).enableContactInput),
-    contactInputVariable: resolveDedicatedVariable(
-      isDedicatedInputNode,
-      inputSource,
-      'contact',
-      (node.data as any).contactInputVariable,
-      inputVariable,
-    ),
-    inputType: (node.data.buttons?.length > 0 && node.data.collectUserInput) ? 'button' : 'text',
-    skipButtons: (node.data.buttons || [])
+    enableTextInput: isDedicatedInputNode ? (acceptsAny || inputSource === 'text') : (nodeData.enableTextInput ?? true),
+    enablePhotoInput: isDedicatedInputNode ? (acceptsAny || inputSource === 'photo') : (nodeData.enablePhotoInput ?? false),
+    photoInputVariable: resolveDedicatedVariable(isDedicatedInputNode, inputSource, 'photo', nodeData.photoInputVariable, inputVariable),
+    enableVideoInput: isDedicatedInputNode ? (acceptsAny || inputSource === 'video') : (nodeData.enableVideoInput ?? false),
+    videoInputVariable: resolveDedicatedVariable(isDedicatedInputNode, inputSource, 'video', nodeData.videoInputVariable, inputVariable),
+    enableAudioInput: isDedicatedInputNode ? (acceptsAny || inputSource === 'audio') : (nodeData.enableAudioInput ?? false),
+    audioInputVariable: resolveDedicatedVariable(isDedicatedInputNode, inputSource, 'audio', nodeData.audioInputVariable, inputVariable),
+    enableDocumentInput: isDedicatedInputNode ? (acceptsAny || inputSource === 'document') : (nodeData.enableDocumentInput ?? false),
+    documentInputVariable: resolveDedicatedVariable(isDedicatedInputNode, inputSource, 'document', nodeData.documentInputVariable, inputVariable),
+    enableLocationInput: isDedicatedInputNode ? (acceptsAny || inputSource === 'location') : Boolean(nodeData.enableLocationInput),
+    locationInputVariable: resolveDedicatedVariable(isDedicatedInputNode, inputSource, 'location', nodeData.locationInputVariable, inputVariable),
+    enableContactInput: isDedicatedInputNode ? (acceptsAny || inputSource === 'contact') : Boolean(nodeData.enableContactInput),
+    contactInputVariable: resolveDedicatedVariable(isDedicatedInputNode, inputSource, 'contact', nodeData.contactInputVariable, inputVariable),
+    inputType: (nodeData.buttons?.length > 0 && nodeData.collectUserInput) ? 'button' : 'text',
+    skipButtons: (nodeData.buttons || [])
       .filter((btn: any) => btn.skipDataCollection === true && btn.target)
       .map((btn: any) => ({ text: btn.text, target: btn.target })),
-    validationType: ((node.data as any).validationType as UserInputTemplateParams['validationType']) ?? 'none',
-    minLength: node.data.minLength ?? 0,
-    maxLength: node.data.maxLength ?? 0,
-    retryMessage: (node.data as any).retryMessage || 'Пожалуйста, попробуйте еще раз.',
-    successMessage: node.data.successMessage || '',
-    inputPrompt: (node.data as any).inputPrompt || '',
-    inputRequired: (node.data as any).inputRequired ?? true,
-    saveToDatabase: node.data.saveToDatabase ?? true,
+    validationType: (nodeData.validationType as UserInputTemplateParams['validationType']) ?? 'none',
+    minLength: nodeData.minLength ?? 0,
+    maxLength: nodeData.maxLength ?? 0,
+    retryMessage: nodeData.retryMessage || 'Пожалуйста, попробуйте еще раз.',
+    successMessage: nodeData.successMessage || '',
+    inputPrompt: nodeData.inputPrompt || '',
+    inputRequired: nodeData.inputRequired ?? true,
+    saveToDatabase: nodeData.saveToDatabase ?? true,
   };
 }
 
 /**
- * Генерирует Python-код блока waiting_for_input из узла графа (высокоуровневый API)
- * @param node - узел графа
- * @param indentLevel - отступ для каждой строки (по умолчанию '    ')
+ * Генерирует Python-код блока waiting_for_input из узла графа.
+ * @param node - Узел графа
+ * @param indentLevel - Отступ для каждой строки
+ * @returns Сгенерированный блок Python-кода
  */
 export function generateUserInputFromNode(node: Node, indentLevel: string = '    '): string {
   return generateUserInput(nodeToUserInputParams(node), indentLevel);
@@ -204,6 +178,8 @@ export function generateUserInputFromNode(node: Node, indentLevel: string = '   
 
 /**
  * Генерирует callback-обработчик для отдельного input-узла.
+ * @param node - Узел типа input
+ * @returns Python-код обработчика
  */
 export function generateUserInputNodeHandler(node: Node): string {
   const params = nodeToUserInputParams(node);
@@ -215,7 +191,7 @@ export function generateUserInputNodeHandler(node: Node): string {
     `async def handle_callback_${safeName}(callback_query: types.CallbackQuery):`,
     `    """Обработчик узла сбора ответа ${node.id}."""`,
     '    user_id = callback_query.from_user.id',
-    `    logging.info(f"📥 Активация input-узла ${node.id} для пользователя {user_id}")`,
+    `    logging.info(f"Активирован input-узел ${node.id} для пользователя {user_id}")`,
     '',
     '    try:',
     '        await callback_query.answer()',
@@ -231,7 +207,9 @@ export function generateUserInputNodeHandler(node: Node): string {
 }
 
 /**
- * Проверяет, нужно ли генерировать блок сбора ввода для узла
+ * Проверяет, нужен ли узлу блок пользовательского ввода.
+ * @param node - Узел графа
+ * @returns true, если нужно генерировать waiting_for_input
  */
 export function nodeHasUserInput(node: Node): boolean {
   return node.type === 'input' || node.data.collectUserInput === true;

@@ -4,7 +4,6 @@
  */
 
 import { pgTable, text, serial, integer, jsonb, timestamp, bigint } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { telegramUsers } from "./telegram-users";
@@ -72,50 +71,37 @@ export const botTemplates = pgTable("bot_templates", {
 });
 
 /** Схема для вставки данных сценария бота */
-export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
-  /** Идентификатор владельца сценария */
-  ownerId: true,
-  /** Название сценария */
-  name: true,
-  /** Описание сценария */
-  description: true,
-  /** JSON-данные сценария */
-  data: true,
-  /** Категория сценария */
-  category: true,
-  /** Теги сценария */
-  tags: true,
-  /** Флаг публичности (0 = приватный, 1 = публичный) */
-  isPublic: true,
-  /** Уровень сложности */
-  difficulty: true,
-  /** Идентификатор автора сценария */
-  authorId: true,
-  /** Имя автора сценария */
-  authorName: true,
-  /** Версия сценария */
-  version: true,
-  /** URL изображения для предварительного просмотра */
-  previewImage: true,
-  /** Флаг рекомендуемости */
-  featured: true,
-  /** Язык сценария */
-  language: true,
-  /** Флаг требования токена */
-  requiresToken: true,
-  /** Сложность сценария (от 1 до 10) */
-  complexity: true,
-  /** Примерное время настройки в минутах */
-  estimatedTime: true,
-}).extend({
+export const insertBotTemplateSchema = z.object({
   /** Идентификатор владельца сценария */
   ownerId: z.number().nullable().optional(),
+  /** Название сценария */
+  name: z.string().min(1, "Название сценария обязательно"),
+  /** Описание сценария */
+  description: z.string().nullable().optional(),
+  /** JSON-данные сценария */
+  data: z.unknown(),
   /** Категория сценария */
   category: z.enum(["custom", "business", "entertainment", "education", "utility", "games", "official", "community"]).default("custom"),
+  /** Теги сценария */
+  tags: z.array(z.string()).optional(),
+  /** Флаг публичности */
+  isPublic: z.number().min(0).max(1).default(0),
   /** Уровень сложности */
   difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
+  /** Идентификатор автора сценария */
+  authorId: z.string().nullable().optional(),
+  /** Имя автора сценария */
+  authorName: z.string().nullable().optional(),
+  /** Версия сценария */
+  version: z.string().default("1.0.0").optional(),
+  /** URL изображения для предварительного просмотра */
+  previewImage: z.string().nullable().optional(),
+  /** Флаг рекомендуемости */
+  featured: z.number().min(0).max(1).default(0),
   /** Язык сценария */
   language: z.enum(["ru", "en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko"]).default("ru"),
+  /** Флаг требования токена */
+  requiresToken: z.number().min(0).max(1).default(0),
   /** Сложность сценария (от 1 до 10) */
   complexity: z.number().min(1).max(10).default(1),
   /** Примерное время настройки в минутах */
@@ -128,4 +114,4 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
 export type BotTemplate = typeof botTemplates.$inferSelect;
 
 /** Тип для вставки сценария бота */
-export type InsertBotTemplate = z.infer<typeof insertBotTemplateSchema>;
+export type InsertBotTemplate = typeof botTemplates.$inferInsert;

@@ -4,7 +4,6 @@
  */
 
 import { pgTable, text, serial, integer, jsonb, timestamp, bigint } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { botGroups } from "./bot-groups";
@@ -52,40 +51,17 @@ export const groupMembers = pgTable("group_members", {
 });
 
 /** Схема для вставки данных участника группы */
-export const insertGroupMemberSchema = createInsertSchema(groupMembers).pick({
-  /** Идентификатор группы (ссылка на bot_groups.id) */
-  groupId: true,
-  /** Идентификатор пользователя в Telegram */
-  userId: true,
-  /** Имя пользователя в Telegram */
-  username: true,
-  /** Имя пользователя */
-  firstName: true,
-  /** Фамилия пользователя */
-  lastName: true,
-  /** Статус участника */
-  status: true,
-  /** Флаг бота (0 = человек, 1 = бот) */
-  isBot: true,
-  /** Права администратора */
-  adminRights: true,
-  /** Кастомный титул администратора */
-  customTitle: true,
-  /** Ограничения участника */
-  restrictions: true,
-  /** Дата окончания ограничения */
-  restrictedUntil: true,
-  /** Дата вступления в группу */
-  joinedAt: true,
-  /** Дата последнего появления */
-  lastSeen: true,
-  /** Количество сообщений участника */
-  messageCount: true,
-  /** Флаг активности (0 = неактивен, 1 = активен) */
-  isActive: true,
-}).extend({
+export const insertGroupMemberSchema = z.object({
+  /** Идентификатор группы */
+  groupId: z.number().int(),
   /** Идентификатор пользователя (должен быть положительным числом) */
   userId: z.number().positive("ID пользователя должен быть положительным числом"),
+  /** Имя пользователя в Telegram */
+  username: z.string().nullable().optional(),
+  /** Имя пользователя */
+  firstName: z.string().nullable().optional(),
+  /** Фамилия пользователя */
+  lastName: z.string().nullable().optional(),
   /** Статус участника ("creator", "administrator", "member", "restricted", "left", "kicked") */
   status: z.enum(["creator", "administrator", "member", "restricted", "left", "kicked"]).default("member"),
   /** Флаг бота (0 = человек, 1 = бот) */
@@ -94,8 +70,16 @@ export const insertGroupMemberSchema = createInsertSchema(groupMembers).pick({
   isActive: z.number().min(0).max(1).default(1),
   /** Права администратора */
   adminRights: z.record(z.any()).default({}),
+  /** Кастомный титул администратора */
+  customTitle: z.string().nullable().optional(),
   /** Ограничения участника */
   restrictions: z.record(z.any()).default({}),
+  /** Дата окончания ограничения */
+  restrictedUntil: z.date().nullable().optional(),
+  /** Дата вступления в группу */
+  joinedAt: z.date().optional(),
+  /** Дата последнего появления */
+  lastSeen: z.date().nullable().optional(),
   /** Количество сообщений участника */
   messageCount: z.number().min(0).default(0),
 });
@@ -104,4 +88,4 @@ export const insertGroupMemberSchema = createInsertSchema(groupMembers).pick({
 export type GroupMember = typeof groupMembers.$inferSelect;
 
 /** Тип для вставки участника группы */
-export type InsertGroupMember = z.infer<typeof insertGroupMemberSchema>;
+export type InsertGroupMember = typeof groupMembers.$inferInsert;

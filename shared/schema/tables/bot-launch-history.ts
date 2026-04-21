@@ -4,7 +4,6 @@
  */
 
 import { pgTable, serial, integer, text, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
@@ -37,9 +36,21 @@ export const botLaunchHistory = pgTable("bot_launch_history", {
 });
 
 /** Схема для вставки записи истории запуска */
-export const insertBotLaunchHistorySchema = createInsertSchema(botLaunchHistory).extend({
+export const insertBotLaunchHistorySchema = z.object({
+  /** Идентификатор проекта */
+  projectId: z.number().int(),
+  /** Идентификатор токена */
+  tokenId: z.number().int(),
   /** Статус запуска */
   status: z.enum(["running", "stopped", "error"]).default("running"),
+  /** Время запуска бота */
+  startedAt: z.date().optional(),
+  /** Время остановки бота */
+  stoppedAt: z.date().nullable().optional(),
+  /** Сообщение об ошибке */
+  errorMessage: z.string().nullable().optional(),
+  /** Идентификатор системного процесса */
+  processId: z.string().nullable().optional(),
 });
 
 /** Тип записи истории запуска бота */

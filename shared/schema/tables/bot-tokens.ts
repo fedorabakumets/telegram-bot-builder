@@ -4,7 +4,6 @@
  */
 
 import { pgTable, text, serial, integer, timestamp, bigint } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
@@ -67,48 +66,9 @@ export const botTokens = pgTable("bot_tokens", {
 });
 
 /** Схема для вставки данных токена бота */
-export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
-  /** Идентификатор проекта (ссылка на bot_projects.id) */
-  projectId: true,
-  /** Идентификатор владельца токена (наследуется от проекта) */
-  ownerId: true,
-  /** Пользовательское имя для токена */
-  name: true,
-  /** Токен бота (хранится в зашифрованном виде) */
-  token: true,
-  /** Флаг токена по умолчанию (0 = нет, 1 = да) */
-  isDefault: true,
-  /** Флаг активности токена (0 = неактивен, 1 = активен) */
-  isActive: true,
-  /** Описание токена */
-  description: true,
-  /** Имя бота из Telegram API */
-  botFirstName: true,
-  /** Имя пользователя бота (@username) из Telegram API */
-  botUsername: true,
-  /** Полное описание бота из Telegram API */
-  botDescription: true,
-  /** Короткое описание бота из Telegram API */
-  botShortDescription: true,
-  /** URL аватарки бота из Telegram API */
-  botPhotoUrl: true,
-  /** Флаг возможности бота присоединяться к группам */
-  botCanJoinGroups: true,
-  /** Флаг возможности бота читать все сообщения в группах */
-  botCanReadAllGroupMessages: true,
-  /** Флаг поддержки инлайн-запросов ботом */
-  botSupportsInlineQueries: true,
-  /** Флаг наличия главного веб-приложения у бота */
-  botHasMainWebApp: true,
-  /** Флаг отслеживания времени выполнения (0 = выключено, 1 = включено) */
-  trackExecutionTime: true,
-  /** Общее время выполнения в секундах */
-  totalExecutionSeconds: true,
-  /** Флаг автоперезапуска при краше (0 = выключено, 1 = включено) */
-  autoRestart: true,
-  /** Максимальное количество попыток автоперезапуска подряд */
-  maxRestartAttempts: true,
-}).extend({
+export const insertBotTokenSchema = z.object({
+  /** Идентификатор проекта */
+  projectId: z.number().int(),
   /** Идентификатор владельца токена */
   ownerId: z.number().nullable().optional(),
   /** Название токена (обязательное поле) */
@@ -127,6 +87,8 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   botSupportsInlineQueries: z.number().min(0).max(1).optional(),
   /** Флаг наличия главного веб-приложения у бота */
   botHasMainWebApp: z.number().min(0).max(1).optional(),
+  /** Время последнего использования токена */
+  lastUsedAt: z.date().nullable().optional(),
   /** Флаг отслеживания времени выполнения (0 = выключено, 1 = включено) */
   trackExecutionTime: z.number().min(0).max(1).default(0),
   /** Общее время выполнения в секундах */
@@ -143,4 +105,4 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
 export type BotToken = typeof botTokens.$inferSelect;
 
 /** Тип для вставки токена бота */
-export type InsertBotToken = z.infer<typeof insertBotTokenSchema>;
+export type InsertBotToken = typeof botTokens.$inferInsert;

@@ -4,7 +4,6 @@
  */
 
 import { pgTable, serial, integer, text, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
@@ -37,11 +36,19 @@ export const botLogs = pgTable("bot_logs", {
 });
 
 /** Схема для вставки записи лога */
-export const insertBotLogSchema = createInsertSchema(botLogs).extend({
+export const insertBotLogSchema = z.object({
+  /** Идентификатор проекта */
+  projectId: z.number().int(),
+  /** Идентификатор токена */
+  tokenId: z.number().int(),
+  /** Содержимое строки лога */
+  content: z.string().min(1, "Содержимое лога обязательно"),
   /** Тип строки лога */
   type: z.enum(["stdout", "stderr", "status"]).default("stdout"),
   /** Идентификатор запуска (опционально) */
-  launchId: z.number().optional(),
+  launchId: z.number().int().nullable().optional(),
+  /** Временная метка создания записи */
+  timestamp: z.date().optional(),
 });
 
 /** Тип записи лога бота */

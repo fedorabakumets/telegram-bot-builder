@@ -6,13 +6,13 @@
 import { db } from "../database/db";
 import { botLogs } from "@shared/schema";
 import { sql } from "drizzle-orm";
-import type { InsertBotLog } from "@shared/schema";
 import { startLogsCleanupTimer, stopLogsCleanupTimer } from "../database/cleanupOldLogs";
+import type { StorageBotLogInput } from "../storages/storageTypes";
 
 /** Структура слота буфера для одного процесса */
 interface BufferSlot {
   /** Накопленные записи для вставки */
-  entries: InsertBotLog[];
+  entries: StorageBotLogInput[];
   /** Идентификатор текущего запуска */
   launchId?: number;
 }

@@ -4,7 +4,6 @@
  */
 
 import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
@@ -37,19 +36,27 @@ export const botInstances = pgTable("bot_instances", {
 });
 
 /** Схема для вставки данных экземпляра бота */
-export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
-  projectId: true,
-  tokenId: true,
-  status: true,
-  token: true,
-  processId: true,
-  errorMessage: true,
-  startedAt: true,
-  stoppedAt: true,
+export const insertBotInstanceSchema = z.object({
+  /** Идентификатор проекта */
+  projectId: z.number().int(),
+  /** Идентификатор токена */
+  tokenId: z.number().int(),
+  /** Статус экземпляра */
+  status: z.enum(["running", "stopped", "error"]),
+  /** Токен бота */
+  token: z.string().min(1, "Токен бота обязателен"),
+  /** Идентификатор процесса */
+  processId: z.string().nullable().optional(),
+  /** Сообщение об ошибке */
+  errorMessage: z.string().nullable().optional(),
+  /** Время запуска экземпляра */
+  startedAt: z.date().optional(),
+  /** Время остановки экземпляра */
+  stoppedAt: z.date().nullable().optional(),
 });
 
 /** Тип записи экземпляра бота */
 export type BotInstance = typeof botInstances.$inferSelect;
 
 /** Тип для вставки экземпляра бота */
-export type InsertBotInstance = z.infer<typeof insertBotInstanceSchema>;
+export type InsertBotInstance = typeof botInstances.$inferInsert;

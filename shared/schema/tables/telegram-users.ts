@@ -4,8 +4,7 @@
  */
 
 import { pgTable, text, timestamp, bigint } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import type { z } from "zod";
+import { z } from "zod";
 
 /**
  * Таблица аутентифицированных пользователей Telegram
@@ -30,13 +29,23 @@ export const telegramUsers = pgTable("telegram_users", {
 });
 
 /** Схема для вставки данных пользователя Telegram */
-export const insertTelegramUserSchema = createInsertSchema(telegramUsers).omit({
-  createdAt: true,
-  updatedAt: true,
+export const insertTelegramUserSchema = z.object({
+  /** Уникальный идентификатор пользователя в Telegram */
+  id: z.number(),
+  /** Имя пользователя */
+  firstName: z.string().min(1, "Имя пользователя обязательно"),
+  /** Фамилия пользователя */
+  lastName: z.string().nullable().optional(),
+  /** Имя пользователя в Telegram */
+  username: z.string().nullable().optional(),
+  /** URL фотографии пользователя */
+  photoUrl: z.string().nullable().optional(),
+  /** Дата аутентификации */
+  authDate: z.number().nullable().optional(),
 });
 
 /** Тип записи пользователя Telegram */
 export type TelegramUser = typeof telegramUsers.$inferSelect;
 
 /** Тип для вставки пользователя Telegram */
-export type InsertTelegramUser = z.infer<typeof insertTelegramUserSchema>;
+export type InsertTelegramUser = Omit<typeof telegramUsers.$inferInsert, "createdAt" | "updatedAt">;

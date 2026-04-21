@@ -4,6 +4,7 @@
  */
 
 import type { KeyboardTemplateParams } from './keyboard.params';
+import type { Button } from '../../bot-generator/types/button-types';
 import type { EnhancedNode } from '../../bot-generator/types/enhanced-node.types';
 import { keyboardParamsSchema } from './keyboard.schema';
 import { renderPartialTemplate } from '../template-renderer';
@@ -186,7 +187,7 @@ export function generateKeyboard(params: KeyboardTemplateParams): string {
  */
 export function processInlineButtonNodes(inlineNodes: EnhancedNode[], allReferencedNodeIds: Set<string>): void {
   inlineNodes.forEach(node => {
-    node.data.buttons.forEach((button: { action: string; target?: string }) => {
+    node.data.buttons.forEach((button: Button) => {
       if (button.action === 'goto' && button.target) {
         allReferencedNodeIds.add(button.target);
       }

@@ -2,9 +2,10 @@
  * @fileoverview Расширенное хранилище поверх DatabaseStorage с кэшированием и служебными оптимизациями
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, botMessageMedia, botMessages, type BotProject, type BotTemplate, type BotToken, type InsertBotGroup, type InsertBotProject, type InsertBotTemplate, type InsertTelegramUser, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, botMessageMedia, botMessages, type BotProject, type BotTemplate, type BotToken, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers } from "@shared/schema";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { importProjectsFromFiles } from "../files/file-import";
+import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageTelegramUserInput } from "../storages/storageTypes";
 import { DatabaseStorage } from "./DatabaseStorage";
 import { cachedOps } from "./db-cache";
 import { dbManager } from "./db-utils";
@@ -33,7 +34,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return await cachedOps.getTemplateListCached(category, () => super.getTemplatesByCategory(category));
   }
 
-  async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
+  async createBotProject(insertProject: StorageBotProjectInput): Promise<BotProject> {
     return await dbManager.executeWithRetry(async () => {
       const project = await super.createBotProject(insertProject);
       cachedOps.invalidateProject(project.id);
@@ -41,7 +42,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     });
   }
 
-  async updateBotProject(id: number, updateData: Partial<InsertBotProject>): Promise<BotProject | undefined> {
+  async updateBotProject(id: number, updateData: StorageBotProjectUpdate): Promise<BotProject | undefined> {
     return await dbManager.executeWithRetry(async () => {
       const project = await super.updateBotProject(id, updateData);
       cachedOps.invalidateProject(id);
@@ -49,7 +50,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     });
   }
 
-  async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
+  async createBotTemplate(insertTemplate: StorageBotTemplateInput): Promise<BotTemplate> {
     return await dbManager.executeWithRetry(async () => {
       const template = await super.createBotTemplate(insertTemplate);
       cachedOps.invalidateAllTemplates();
@@ -69,7 +70,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return await super.getUserBotTemplates(ownerId);
   }
 
-  async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
+  async updateBotTemplate(id: number, updateData: StorageBotTemplateUpdate): Promise<BotTemplate | undefined> {
     return await dbManager.executeWithRetry(async () => {
       const template = await super.updateBotTemplate(id, updateData);
       cachedOps.invalidateTemplate(id);
@@ -78,10 +79,10 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
   }
 
   // Поддержка транзакций для сложных операций
-  async createProjectWithTemplate(projectData: InsertBotProject, templateData: InsertBotTemplate): Promise<{ project: BotProject; template: BotTemplate; }> {
+  async createProjectWithTemplate(projectData: StorageBotProjectInput, templateData: StorageBotTemplateInput): Promise<{ project: BotProject; template: BotTemplate; }> {
     return await dbManager.transaction(async (_tx) => {
       const project = await super.createBotProject(projectData);
-      const template = await super.createBotTemplate({ ...templateData, authorId: project.id.toString() });
+      const template = await super.createBotTemplate({ ...templateData });
 
       cachedOps.invalidateProject(project.id);
       cachedOps.invalidateAllTemplates();
@@ -91,7 +92,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
   }
 
   // Массовые операции с лучшей производительностью
-  async bulkCreateTemplates(templates: InsertBotTemplate[]): Promise<BotTemplate[]> {
+  async bulkCreateTemplates(templates: StorageBotTemplateInput[]): Promise<BotTemplate[]> {
     return await dbManager.executeWithRetry(async () => {
       const results = await Promise.all(
         templates.map(template => super.createBotTemplate(template))
@@ -171,7 +172,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return group || undefined;
   }
 
-  async createBotGroup(group: InsertBotGroup): Promise<BotGroup> {
+  async createBotGroup(group: StorageBotGroupInput): Promise<BotGroup> {
     const [newGroup] = await this.db
       .insert(botGroups)
       .values(group)
@@ -179,7 +180,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return newGroup;
   }
 
-  async updateBotGroup(id: number, group: Partial<InsertBotGroup>): Promise<BotGroup | undefined> {
+  async updateBotGroup(id: number, group: StorageBotGroupUpdate): Promise<BotGroup | undefined> {
     const [updatedGroup] = await this.db
       .update(botGroups)
       .set({ ...group, updatedAt: new Date() })
@@ -220,7 +221,7 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return user || undefined;
   }
 
-  async getTelegramUserOrCreate(userData: InsertTelegramUser): Promise<TelegramUserDB> {
+  async getTelegramUserOrCreate(userData: StorageTelegramUserInput): Promise<TelegramUserDB> {
     // Проверяем, есть ли пользователь
     const existing = await this.getTelegramUser(userData.id);
     if (existing) {

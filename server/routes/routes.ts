@@ -46,9 +46,11 @@ import { getRedisPublisher } from "../redis/redisClient";
 import { setupProjectRoutes } from "./setupProjectRoutes";
 import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes";
 import { setupUserTemplateRoutes } from "./setupUserTemplateRoutes";
+import type { StorageBotTokenInput, StorageBotTokenUpdate } from "../storages/storageTypes";
 import { createUserIdsRoutes } from "./user-ids-routes";
 import { broadcastProjectEvent } from "../terminal";
 import { getRequestTokenId, resolveEffectiveProjectTokenId } from "./utils/resolve-request-token";
+import { getTelegramProxyAgent } from "../utils/telegram-proxy";
 
 /**
  * Глобальное хранилище активных процессов ботов
@@ -897,10 +899,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         ...bodyData,
         projectId,
         ownerId: getOwnerIdFromRequest(req)
-      });
+      }) as StorageBotTokenInput;
 
       // Если botUsername не передан — автоматически получаем данные бота из Telegram
-      let enrichedTokenData = { ...tokenData };
+      let enrichedTokenData: StorageBotTokenInput = { ...tokenData };
       if (!tokenData.botUsername && tokenData.token) {
         try {
           const tgRes = await fetchWithProxy(`https://api.telegram.org/bot${tokenData.token}/getMe`, {
@@ -962,7 +964,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
       }
 
-      const updateData = insertBotTokenSchema.partial().parse(req.body);
+      const updateData = insertBotTokenSchema.partial().parse(req.body) as StorageBotTokenUpdate;
 
       const token = await storage.updateBotToken(id, updateData);
       if (!token) {
@@ -1002,7 +1004,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
       }
 
-      const updateData = insertBotTokenSchema.partial().parse(req.body);
+      const updateData = insertBotTokenSchema.partial().parse(req.body) as StorageBotTokenUpdate;
 
       const updatedToken = await storage.updateBotToken(tokenId, updateData);
       if (!updatedToken) {
@@ -1123,11 +1125,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
       const { logLevel } = req.body as { logLevel: string };
-      const valid = ['DEBUG', 'INFO', 'WARNING', 'ERROR'];
-      if (!valid.includes(logLevel)) {
+      const valid = ['DEBUG', 'INFO', 'WARNING', 'ERROR'] as const;
+      if (!(valid as readonly string[]).includes(logLevel)) {
         return res.status(400).json({ message: "Недопустимый уровень логирования" });
       }
-      const updated = await storage.updateBotToken(tokenId, { logLevel });
+      const updated = await storage.updateBotToken(tokenId, { logLevel: logLevel as StorageBotTokenInput["logLevel"] });
       if (!updated) return res.status(404).json({ message: "Токен не найден" });
 
       // Обновляем .env файл бота если существует

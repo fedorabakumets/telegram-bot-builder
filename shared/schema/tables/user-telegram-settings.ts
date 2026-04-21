@@ -4,7 +4,6 @@
  */
 
 import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 /**
@@ -32,20 +31,7 @@ export const userTelegramSettings = pgTable("user_telegram_settings", {
 });
 
 /** Схема для вставки данных пользовательских настроек Telegram API */
-export const insertUserTelegramSettingsSchema = createInsertSchema(userTelegramSettings).pick({
-  /** Уникальный ID пользователя */
-  userId: true,
-  /** Telegram API ID */
-  apiId: true,
-  /** Telegram API Hash */
-  apiHash: true,
-  /** Номер телефона для авторизации */
-  phoneNumber: true,
-  /** Сохраненная сессия */
-  sessionString: true,
-  /** Флаг активности (0 = неактивен, 1 = активен) */
-  isActive: true,
-}).extend({
+export const insertUserTelegramSettingsSchema = z.object({
   /** Идентификатор пользователя (обязательное поле) */
   userId: z.string().min(1, "ID пользователя обязателен"),
   /** Telegram API ID (обязательное поле) */
@@ -53,7 +39,9 @@ export const insertUserTelegramSettingsSchema = createInsertSchema(userTelegramS
   /** Telegram API Hash (обязательное поле) */
   apiHash: z.string().min(1, "API Hash обязателен"),
   /** Номер телефона для авторизации */
-  phoneNumber: z.string().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  /** Сохраненная сессия */
+  sessionString: z.string().nullable().optional(),
   /** Флаг активности (0 = неактивен, 1 = активен) */
   isActive: z.number().min(0).max(1).default(1),
 });
@@ -62,4 +50,4 @@ export const insertUserTelegramSettingsSchema = createInsertSchema(userTelegramS
 export type UserTelegramSettings = typeof userTelegramSettings.$inferSelect;
 
 /** Тип для вставки настроек Telegram */
-export type InsertUserTelegramSettings = z.infer<typeof insertUserTelegramSettingsSchema>;
+export type InsertUserTelegramSettings = Omit<typeof userTelegramSettings.$inferInsert, "id" | "createdAt" | "updatedAt">;

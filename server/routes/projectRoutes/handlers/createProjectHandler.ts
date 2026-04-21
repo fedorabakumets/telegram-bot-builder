@@ -11,6 +11,7 @@ import type { Request, Response } from "express";
 import { insertBotProjectSchema } from "@shared/schema";
 import { z } from "zod";
 import { storage } from "../../../storages/storage";
+import type { StorageBotProjectInput } from "../../../storages/storageTypes";
 import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
@@ -24,12 +25,12 @@ import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegra
 export async function createProjectHandler(req: Request, res: Response): Promise<void> {
     try {
         const { ownerId: _ignored, ...bodyData } = req.body;
-        const validatedData = insertBotProjectSchema.parse(bodyData);
+        const validatedData = insertBotProjectSchema.parse(bodyData) as StorageBotProjectInput;
 
         const ownerId = getOwnerIdFromRequest(req);
         const sessionId = ownerId === null ? getSessionIdFromRequest(req) : null;
 
-        const projectData = {
+        const projectData: StorageBotProjectInput = {
             ...validatedData,
             ownerId,
             sessionId,

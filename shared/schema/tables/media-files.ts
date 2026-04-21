@@ -4,7 +4,6 @@
  */
 
 import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
@@ -44,28 +43,9 @@ export const mediaFiles = pgTable("media_files", {
 });
 
 /** Схема для вставки данных медиафайла */
-export const insertMediaFileSchema = createInsertSchema(mediaFiles).pick({
-  /** Идентификатор проекта (ссылка на bot_projects.id) */
-  projectId: true,
-  /** Оригинальное имя файла */
-  fileName: true,
-  /** Тип файла */
-  fileType: true,
-  /** Путь к файлу на сервере */
-  filePath: true,
-  /** Размер файла в байтах */
-  fileSize: true,
-  /** MIME тип файла */
-  mimeType: true,
-  /** URL для доступа к файлу */
-  url: true,
-  /** Описание файла */
-  description: true,
-  /** Теги для поиска */
-  tags: true,
-  /** Флаг публичности (0 = приватный, 1 = публичный) */
-  isPublic: true,
-}).extend({
+export const insertMediaFileSchema = z.object({
+  /** Идентификатор проекта */
+  projectId: z.number().int(),
   /** Имя файла (обязательное поле) */
   fileName: z.string().min(1, "Имя файла обязательно"),
   /** Тип файла ("photo", "video", "audio", "document") */
@@ -78,6 +58,8 @@ export const insertMediaFileSchema = createInsertSchema(mediaFiles).pick({
   mimeType: z.string().min(1, "MIME тип обязателен"),
   /** URL файла (обязательное поле, должен быть корректным URL) */
   url: z.string().url("Некорректный URL"),
+  /** Описание файла */
+  description: z.string().nullable().optional(),
   /** Теги файла */
   tags: z.array(z.string()).default([]),
   /** Флаг публичности (0 = приватный, 1 = публичный) */
@@ -88,4 +70,4 @@ export const insertMediaFileSchema = createInsertSchema(mediaFiles).pick({
 export type MediaFile = typeof mediaFiles.$inferSelect;
 
 /** Тип для вставки медиафайла */
-export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
+export type InsertMediaFile = typeof mediaFiles.$inferInsert;

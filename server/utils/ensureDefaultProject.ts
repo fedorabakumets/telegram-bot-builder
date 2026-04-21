@@ -3,8 +3,8 @@
  * @module server/utils/ensureDefaultProject
  */
 
-import { InsertBotProject } from "@shared/schema";
 import { storage } from "../storages/storage";
+import type { StorageBotProjectInput } from "../storages/storageTypes";
 
 /** Данные стартового узла для нового проекта по умолчанию */
 const DEFAULT_START_NODE = {
@@ -50,7 +50,7 @@ export async function ensureDefaultProject(sessionId?: string): Promise<void> {
       : await storage.getAllBotProjects();
 
     if (projects.length === 0) {
-      const defaultProject: InsertBotProject = {
+      const defaultProject: StorageBotProjectInput = {
         name: "Мой первый бот",
         description: "Базовый бот с приветствием",
         userDatabaseEnabled: 1,

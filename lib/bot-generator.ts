@@ -29,6 +29,7 @@ import { generateGroupHandlers } from './templates/group-handlers/group-handlers
 import { generateMediaFunctions } from './templates/media-functions/media-functions.renderer';
 import { generateMediaInputHandlers } from './templates/media-input-handlers';
 import { generateMessageLoggingCode } from './templates/middleware/middleware.renderer';
+import type { NodeItem } from './templates/handle-user-input/handle-user-input.params';
 import { generateDockerfile, generateReadme, generateRequirementsTxt, generateEnvFile } from './scaffolding';
 import { addAutoTransitionNodes } from './bot-generator/core/add-auto-transition-nodes';
 import { addInputTargetNodes } from './bot-generator/core/add-input-target-nodes';
@@ -68,6 +69,20 @@ function hasSkipDataCollectionButtonsInProject(nodes: Node[]): boolean {
     hasSkip((node.data as any)?.inlineButtons) ||
     ((node.data as any)?.conditionalMessages ?? []).some((message: any) => hasSkip(message?.buttons))
   );
+}
+
+/**
+ * Приводит узел графа к формату, который ожидают шаблоны универсальных обработчиков.
+ * @param node - Исходный узел графа
+ * @returns Узел в формате NodeItem
+ */
+function toTemplateNodeItem(node: Node): NodeItem {
+  return {
+    id: node.id,
+    safeName: node.id.replace(/[^a-zA-Z0-9_]/g, '_'),
+    type: node.type,
+    data: node.data as NodeItem['data'],
+  };
 }
 
 /**
@@ -359,19 +374,14 @@ function generateCodeSections(
     collectConditionEntries(nodes).map(entry => entry.nodeId)
   );
 
-  const nodesForHandlers = nodes
+  const nodesForHandlers: NodeItem[] = nodes
     .filter(node =>
       node.type !== 'command_trigger' &&
       node.type !== 'text_trigger' &&
       node.type !== 'incoming_message_trigger' &&
       (node.type !== 'condition' || validConditionNodeIds.has(node.id))
     )
-    .map(node => ({
-      id: node.id,
-      safeName: node.id.replace(/[^a-zA-Z0-9_]/g, '_'),
-      type: node.type,
-      data: node.data,
-    }));
+    .map(toTemplateNodeItem);
 
   const inputCollection = hasInputCollection(nodes);
   const mediaInputNavigationCode = nodesForHandlers.length > 0
@@ -390,13 +400,7 @@ function generateCodeSections(
   );
 
   // --- universal handlers ---
-  const commandNodes = collectCommandSourceNodes(nodes)
-    .map(node => ({
-      id: node.id,
-      safeName: node.id.replace(/[^a-zA-Z0-9_]/g, '_'),
-      type: node.type,
-      data: node.data,
-    }));
+  const commandNodes: NodeItem[] = collectCommandSourceNodes(nodes).map(toTemplateNodeItem);
 
   const hasUrlButtonsFlag = nodes.some(node =>
     Array.isArray(node.data?.buttons) &&

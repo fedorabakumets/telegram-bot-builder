@@ -53,9 +53,18 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
     console.log("Новое WebSocket-соединение для терминала");
 
     // Прикрепляем Express-сессию к WS запросу чтобы получить userId
-    const applySession = (): Promise<void> => new Promise((resolve) => {
-      if (!exportedSessionMiddleware) return resolve();
-      exportedSessionMiddleware(request as any, {} as any, resolve);
+    const applySession = (): Promise<void> => new Promise((resolve, reject) => {
+      if (!exportedSessionMiddleware) {
+        resolve();
+        return;
+      }
+      exportedSessionMiddleware(request as any, {} as any, (error?: unknown) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
     });
 
     (async () => {

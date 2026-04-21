@@ -2,9 +2,10 @@
  * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type InsertBotGroup, type InsertBotInstance, type InsertBotMessage, type InsertBotMessageMedia, type InsertBotProject, type InsertBotTemplate, type InsertBotToken, type InsertGroupMember, type InsertMediaFile, type InsertTelegramUser, type InsertUserBotData, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, type InsertBotLog, botLaunchHistory, type BotLaunchHistory, type InsertBotLaunchHistory } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory } from "@shared/schema";
 import { and, asc, desc, eq, ilike, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
+import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageUserBotDataInput, StorageUserBotDataUpdate } from "../storages/storageTypes";
 import { db } from "./db";
 
 /**
@@ -39,7 +40,7 @@ export class DatabaseStorage implements IStorage {
    * @param insertProject - Данные для создания проекта
    * @returns Созданный проект бота
    */
-  async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
+  async createBotProject(insertProject: StorageBotProjectInput): Promise<BotProject> {
     const [project] = await this.db
       .insert(botProjects)
       .values({
@@ -56,10 +57,11 @@ export class DatabaseStorage implements IStorage {
    * @param updateData - Данные для обновления
    * @returns Обновленный проект бота или undefined, если не найден
    */
-  async updateBotProject(id: number, updateData: Partial<InsertBotProject>): Promise<BotProject | undefined> {
+  async updateBotProject(id: number, updateData: StorageBotProjectUpdate): Promise<BotProject | undefined> {
+    const { restartOnUpdate: _restartOnUpdate, ...projectUpdate } = updateData;
     const [project] = await this.db
       .update(botProjects)
-      .set({ ...updateData, updatedAt: new Date() })
+      .set({ ...projectUpdate, updatedAt: new Date() })
       .where(eq(botProjects.id, id))
       .returning();
     return project || undefined;
@@ -125,7 +127,7 @@ export class DatabaseStorage implements IStorage {
    * @param insertInstance - Данные для создания экземпляра
    * @returns Созданный экземпляр бота
    */
-  async createBotInstance(insertInstance: InsertBotInstance): Promise<BotInstance> {
+  async createBotInstance(insertInstance: StorageBotInstanceInput): Promise<BotInstance> {
     const [instance] = await this.db
       .insert(botInstances)
       .values(insertInstance)
@@ -139,7 +141,7 @@ export class DatabaseStorage implements IStorage {
    * @param updateData - Данные для обновления
    * @returns Обновленный экземпляр бота или undefined, если не найден
    */
-  async updateBotInstance(id: number, updateData: Partial<InsertBotInstance>): Promise<BotInstance | undefined> {
+  async updateBotInstance(id: number, updateData: StorageBotInstanceUpdate): Promise<BotInstance | undefined> {
     const [instance] = await this.db
       .update(botInstances)
       .set(updateData)
@@ -208,7 +210,7 @@ export class DatabaseStorage implements IStorage {
    * @param insertTemplate - Данные для создания сценария
    * @returns Созданный сценарий бота
    */
-  async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
+  async createBotTemplate(insertTemplate: StorageBotTemplateInput): Promise<BotTemplate> {
     const [template] = await this.db
       .insert(botTemplates)
       .values(insertTemplate)
@@ -222,7 +224,7 @@ export class DatabaseStorage implements IStorage {
    * @param updateData - Данные для обновления
    * @returns Обновленный сценарий бота или undefined, если не найден
    */
-  async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
+  async updateBotTemplate(id: number, updateData: StorageBotTemplateUpdate): Promise<BotTemplate | undefined> {
     const [template] = await this.db
       .update(botTemplates)
       .set({ ...updateData, updatedAt: new Date() })
@@ -442,7 +444,7 @@ export class DatabaseStorage implements IStorage {
    * @param insertToken - Данные для создания токена
    * @returns Созданный токен бота
    */
-  async createBotToken(insertToken: InsertBotToken): Promise<BotToken> {
+  async createBotToken(insertToken: StorageBotTokenInput): Promise<BotToken> {
     if (insertToken.isDefault === 1) {
       await this.db.update(botTokens)
         .set({ isDefault: 0 })
@@ -462,7 +464,7 @@ export class DatabaseStorage implements IStorage {
    * @param updateData - Данные для обновления
    * @returns Обновленный токен бота или undefined, если не найден
    */
-  async updateBotToken(id: number, updateData: Partial<InsertBotToken>): Promise<BotToken | undefined> {
+  async updateBotToken(id: number, updateData: StorageBotTokenUpdate): Promise<BotToken | undefined> {
     if (updateData.isDefault === 1) {
       const [currentToken] = await this.db.select().from(botTokens).where(eq(botTokens.id, id));
       if (currentToken) {
@@ -637,7 +639,7 @@ export class DatabaseStorage implements IStorage {
    * @param userData - Данные пользователя для создания
    * @returns Пользователь Telegram
    */
-  async getTelegramUserOrCreate(userData: InsertTelegramUser): Promise<TelegramUserDB> {
+  async getTelegramUserOrCreate(userData: StorageTelegramUserInput): Promise<TelegramUserDB> {
     // Попробуем найти существующего пользователя
     const existingUser = await this.getTelegramUser(userData.id);
 
@@ -720,7 +722,7 @@ export class DatabaseStorage implements IStorage {
    * @param insertFile - Данные для создания файла
    * @returns Созданный медиафайл
    */
-  async createMediaFile(insertFile: InsertMediaFile): Promise<MediaFile> {
+  async createMediaFile(insertFile: StorageMediaFileInput): Promise<MediaFile> {
     const [file] = await this.db
       .insert(mediaFiles)
       .values(insertFile)
@@ -734,7 +736,7 @@ export class DatabaseStorage implements IStorage {
    * @param updateData - Данные для обновления
    * @returns Обновленный медиафайл или undefined, если не найден
    */
-  async updateMediaFile(id: number, updateData: Partial<InsertMediaFile>): Promise<MediaFile | undefined> {
+  async updateMediaFile(id: number, updateData: StorageMediaFileUpdate): Promise<MediaFile | undefined> {
     const [file] = await this.db
       .update(mediaFiles)
       .set({ ...updateData, updatedAt: new Date() })
@@ -859,7 +861,7 @@ export class DatabaseStorage implements IStorage {
    * @param insertUserData - Данные для создания
    * @returns Созданные данные пользователя бота
    */
-  async createUserBotData(insertUserData: InsertUserBotData): Promise<UserBotData> {
+  async createUserBotData(insertUserData: StorageUserBotDataInput): Promise<UserBotData> {
     const [userData] = await this.db
       .insert(userBotData)
       .values(insertUserData)
@@ -873,7 +875,7 @@ export class DatabaseStorage implements IStorage {
    * @param updateData - Данные для обновления
    * @returns Обновленные данные пользователя бота или undefined, если не найдены
    */
-  async updateUserBotData(id: number, updateData: Partial<InsertUserBotData>): Promise<UserBotData | undefined> {
+  async updateUserBotData(id: number, updateData: StorageUserBotDataUpdate): Promise<UserBotData | undefined> {
     const [userData] = await this.db
       .update(userBotData)
       .set({ ...updateData, updatedAt: new Date() })
@@ -1109,7 +1111,7 @@ export class DatabaseStorage implements IStorage {
    * @param insertGroup - Данные для создания группы
    * @returns Созданная группа бота
    */
-  async createBotGroup(insertGroup: InsertBotGroup): Promise<BotGroup> {
+  async createBotGroup(insertGroup: StorageBotGroupInput): Promise<BotGroup> {
     const [group] = await this.db
       .insert(botGroups)
       .values(insertGroup)
@@ -1123,7 +1125,7 @@ export class DatabaseStorage implements IStorage {
    * @param updateData - Данные для обновления
    * @returns Обновленная группа бота или undefined, если не найдена
    */
-  async updateBotGroup(id: number, updateData: Partial<InsertBotGroup>): Promise<BotGroup | undefined> {
+  async updateBotGroup(id: number, updateData: StorageBotGroupUpdate): Promise<BotGroup | undefined> {
     const [group] = await this.db
       .update(botGroups)
       .set({ ...updateData, updatedAt: new Date() })
@@ -1159,7 +1161,7 @@ export class DatabaseStorage implements IStorage {
    * @param insertMember - Данные для создания участника
    * @returns Созданный участник группы
    */
-  async createGroupMember(insertMember: InsertGroupMember): Promise<GroupMember> {
+  async createGroupMember(insertMember: StorageGroupMemberInput): Promise<GroupMember> {
     const [member] = await this.db
       .insert(groupMembers)
       .values(insertMember)
@@ -1173,7 +1175,7 @@ export class DatabaseStorage implements IStorage {
    * @param updateData - Данные для обновления
    * @returns Обновленный участник группы или undefined, если не найден
    */
-  async updateGroupMember(id: number, updateData: Partial<InsertGroupMember>): Promise<GroupMember | undefined> {
+  async updateGroupMember(id: number, updateData: StorageGroupMemberUpdate): Promise<GroupMember | undefined> {
     const [member] = await this.db
       .update(groupMembers)
       .set({ ...updateData, updatedAt: new Date() })
@@ -1198,7 +1200,7 @@ export class DatabaseStorage implements IStorage {
    * @param insertMessage - Данные для создания сообщения
    * @returns Созданное сообщение бота
    */
-  async createBotMessage(insertMessage: InsertBotMessage): Promise<BotMessage> {
+  async createBotMessage(insertMessage: StorageBotMessageInput): Promise<BotMessage> {
     const [message] = await this.db
       .insert(botMessages)
       .values(insertMessage)
@@ -1282,7 +1284,7 @@ export class DatabaseStorage implements IStorage {
    * @param data - Данные для создания записи
    * @returns Созданная запись о медиафайле
    */
-  async createBotMessageMedia(data: InsertBotMessageMedia): Promise<BotMessageMedia> {
+  async createBotMessageMedia(data: StorageBotMessageMediaInput): Promise<BotMessageMedia> {
     const [media] = await this.db
       .insert(botMessageMedia)
       .values(data)
@@ -1386,7 +1388,7 @@ export class DatabaseStorage implements IStorage {
    * @param logs - Массив записей для вставки
    * @returns Promise<void>
    */
-  async saveBotLogs(logs: InsertBotLog[]): Promise<void> {
+  async saveBotLogs(logs: StorageBotLogInput[]): Promise<void> {
     if (logs.length === 0) return;
     await this.db.insert(botLogs).values(logs);
   }
@@ -1417,7 +1419,7 @@ export class DatabaseStorage implements IStorage {
    * @param data - Данные для создания записи
    * @returns Созданная запись истории запуска
    */
-  async createLaunchHistory(data: InsertBotLaunchHistory): Promise<BotLaunchHistory> {
+  async createLaunchHistory(data: StorageBotLaunchHistoryInput): Promise<BotLaunchHistory> {
     const [record] = await this.db.insert(botLaunchHistory).values(data).returning();
 
     // Удаляем старые записи, оставляя только 20 самых новых по startedAt
@@ -1445,7 +1447,7 @@ export class DatabaseStorage implements IStorage {
    * @param data - Данные для обновления
    * @returns Promise<void>
    */
-  async updateLaunchHistory(id: number, data: Partial<InsertBotLaunchHistory>): Promise<void> {
+  async updateLaunchHistory(id: number, data: StorageBotLaunchHistoryUpdate): Promise<void> {
     await this.db.update(botLaunchHistory).set(data).where(eq(botLaunchHistory.id, id));
   }
 
