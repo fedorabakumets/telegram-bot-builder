@@ -99,6 +99,8 @@ async def init_all_user_vars(user_id: int) -> dict:
     """
     import time as _time
     all_vars = dict(user_data.get(user_id, {}))
+    # Добавляем системные переменные бота — доступны в URL и текстах узлов
+    all_vars["bot_token"] = BOT_TOKEN or ""
 {%- if userDatabaseEnabled %}
     try:
         if db_pool:
