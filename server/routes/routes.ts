@@ -1181,6 +1181,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: "launchMode должен быть 'polling' или 'webhook'" });
       }
 
+      // Читаем текущий режим до обновления
+      const currentToken = await storage.getBotToken(tokenId);
+      const previousMode = currentToken?.launchMode ?? 'polling';
+
       const updated = await storage.updateBotToken(tokenId, {
         launchMode,
         webhookBaseUrl: webhookBaseUrl ?? null,
@@ -1189,6 +1193,19 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       if (!updated) {
         return res.status(404).json({ message: "Токен не найден" });
+      }
+
+      // Если переключились с webhook на polling — снимаем webhook в Telegram
+      // чтобы не было конфликта между активным webhook и polling
+      if (previousMode === 'webhook' && launchMode === 'polling' && currentToken?.token) {
+        try {
+          const deleteUrl = `https://api.telegram.org/bot${currentToken.token}/deleteWebhook`;
+          await fetchWithProxy(deleteUrl, { signal: AbortSignal.timeout(5000) });
+          console.log(`🔗 Webhook удалён при смене режима на polling для токена ${tokenId}`);
+        } catch (webhookError) {
+          // Не критично — при следующем запуске бота deleteWebhook вызовется снова
+          console.log(`⚠️ Не удалось удалить webhook при смене режима для токена ${tokenId}:`, webhookError);
+        }
       }
 
       res.json({ success: true, launchMode, webhookBaseUrl, webhookSecretToken });
