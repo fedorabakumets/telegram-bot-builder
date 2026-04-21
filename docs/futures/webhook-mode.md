@@ -174,7 +174,11 @@ Railway автоматически предоставляет публичный
 
 ```
 WEBHOOK_URL=https://${RAILWAY_PUBLIC_DOMAIN}
+REDIS_URL=redis://...  # Обязателен при webhook режиме
 ```
+
+> ⚠️ При webhook режиме `REDIS_URL` обязателен — бот не запустится без него.
+> Redis нужен для хранения FSM состояний между апдейтами.
 
 ---
 
@@ -216,8 +220,8 @@ WEBHOOK_URL=https://${RAILWAY_PUBLIC_DOMAIN}
 - [x] Убрать distributed lock (не нужен при webhook)
 
 ### Фаза 4 — Redis обязательный
-- [ ] Валидация: если `WEBHOOK_URL` задан — `REDIS_URL` обязателен
-- [ ] Обновить документацию Railway деплоя
+- [x] Валидация: если `WEBHOOK_URL` задан — `REDIS_URL` обязателен
+- [x] Обновить документацию Railway деплоя
 
 ### Фаза 5 — Тестирование
 - [ ] Тест polling режима (локально)

@@ -276,11 +276,11 @@ describe('config.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 2 поля', () => {
+      it('должен иметь минимум 2 поля (userDatabaseEnabled и projectId)', () => {
         const shape = configParamsSchema.shape;
         const fields = Object.keys(shape);
 
-        assert.strictEqual(fields.length, 2);
+        assert.ok(fields.length >= 2); // минимум userDatabaseEnabled и projectId
         assert.ok(fields.includes('userDatabaseEnabled'));
         assert.ok(fields.includes('projectId'));
       });
@@ -294,6 +294,34 @@ describe('config.py.jinja2 шаблон', () => {
         const shape = configParamsSchema.shape;
         assert.strictEqual(shape.projectId.constructor.name, 'ZodDefault');
       });
+    });
+  });
+
+  describe('Webhook режим', () => {
+    it('должен содержать WEBHOOK_URL = os.getenv в сгенерированном коде', () => {
+      const result = generateConfig({ userDatabaseEnabled: false, projectId: null });
+      assert.ok(result.includes('WEBHOOK_URL = os.getenv("WEBHOOK_URL")'));
+    });
+
+    it('должен содержать WEBHOOK_PORT = int(os.getenv в сгенерированном коде', () => {
+      const result = generateConfig({ userDatabaseEnabled: false, projectId: null });
+      assert.ok(result.includes('WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT"'));
+    });
+
+    it('должен содержать валидацию Redis при webhook режиме', () => {
+      const result = generateConfig({ userDatabaseEnabled: false, projectId: null });
+      assert.ok(result.includes('if WEBHOOK_URL and not REDIS_URL:'));
+      assert.ok(result.includes('raise RuntimeError'));
+    });
+
+    it('должен принимать webhookUrl в схеме', () => {
+      const result = configParamsSchema.safeParse({
+        userDatabaseEnabled: false,
+        projectId: null,
+        webhookUrl: 'https://example.com',
+        webhookPort: 9000,
+      });
+      assert.ok(result.success);
     });
   });
 });

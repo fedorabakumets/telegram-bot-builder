@@ -299,6 +299,38 @@ test('C03', 'путь вебхука содержит /api/webhook/', () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
+// БЛОК D: Валидация Redis обязательного при webhook
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок D: Валидация Redis при webhook ───────────────────────────');
+
+test('D01', 'сгенерированный код содержит валидацию REDIS_URL при webhook', () => {
+  const p = makeCleanProject(makeMinimalNodes());
+  const code = generatePythonCode(p as any, {
+    botName: 'WebhookBot',
+    userDatabaseEnabled: false,
+    enableComments: false,
+    webhookUrl: 'https://example.com',
+    webhookPort: 9001,
+    projectId: 77,
+  });
+  ok(code.includes('if WEBHOOK_URL and not REDIS_URL:'), 'валидация Redis должна быть в коде');
+  ok(code.includes('raise RuntimeError'), 'RuntimeError должен быть при отсутствии Redis');
+});
+
+test('D02', 'в polling режиме условие валидации Redis присутствует (срабатывает только при WEBHOOK_URL)', () => {
+  const p = makeCleanProject(makeMinimalNodes());
+  const code = generatePythonCode(p as any, {
+    botName: 'PollingBot',
+    userDatabaseEnabled: false,
+    enableComments: false,
+  });
+  // Валидация всегда генерируется, но срабатывает только при WEBHOOK_URL
+  // Проверяем что условие правильное — if WEBHOOK_URL and not REDIS_URL
+  ok(code.includes('if WEBHOOK_URL and not REDIS_URL:'), 'условие валидации должно быть в коде');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // ИТОГИ
 // ════════════════════════════════════════════════════════════════════════════
 

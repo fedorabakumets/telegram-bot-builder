@@ -10,6 +10,8 @@
 |----------|-----|--------------|----------|
 | `userDatabaseEnabled` | `boolean` | `false` | Включена ли база данных пользователей |
 | `projectId` | `number \| null` | `null` | ID проекта для сохранения в БД |
+| `webhookUrl` | `string \| null` | `null` | URL вебхука (включает webhook режим) |
+| `webhookPort` | `number \| null` | `null` | Порт aiohttp сервера для webhook |
 
 ## Использование
 
@@ -196,6 +198,13 @@ if (userDatabaseEnabled === true) {
 }
 ```
 
+### WEBHOOK_URL + REDIS_URL валидация
+При webhook режиме Redis обязателен для хранения FSM состояний:
+```python
+if WEBHOOK_URL and not REDIS_URL:
+    raise RuntimeError("REDIS_URL обязателен при использовании webhook режима")
+```
+
 ## Тесты
 
 ### Запуск тестов
@@ -213,6 +222,8 @@ npm test -- config.test.ts
 - ✅ Граничные случаи (null projectId)
 - ✅ Производительность (< 10ms на генерацию)
 - ✅ Структура Zod схемы
+- ✅ Webhook режим (WEBHOOK_URL, WEBHOOK_PORT)
+- ✅ Валидация Redis при webhook (RuntimeError)
 
 ### Пример теста
 

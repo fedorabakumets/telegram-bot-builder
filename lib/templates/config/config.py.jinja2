@@ -74,6 +74,15 @@ _redis_client = None
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT", "8080"))
 
+{# Валидация: при webhook режиме REDIS_URL обязателен #}
+# Валидация: при webhook режиме REDIS_URL обязателен
+# FSM состояния не могут жить в памяти процесса между апдейтами
+if WEBHOOK_URL and not REDIS_URL:
+    raise RuntimeError(
+        "❌ REDIS_URL обязателен при использовании webhook режима. "
+        "Добавьте REDIS_URL в переменные окружения."
+    )
+
 # Функция инициализации Redis (вызывается асинхронно при старте)
 async def init_redis_client():
     """Инициализирует Redis клиент если REDIS_URL задан. Возвращает True если Redis успешно подключён."""

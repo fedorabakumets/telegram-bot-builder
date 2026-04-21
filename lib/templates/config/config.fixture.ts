@@ -189,3 +189,22 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # └─────────────────────────────────────────┘
 db_pool = None
 `.trim();
+
+/** Валидные параметры: webhook режим с Redis */
+export const validParamsWebhookMode: ConfigTemplateParams = {
+  userDatabaseEnabled: false,
+  projectId: 42,
+  webhookUrl: 'https://example.com',
+  webhookPort: 9042,
+};
+
+/**
+ * Невалидные параметры: webhook без Redis
+ * REDIS_URL не задан в env — должна быть RuntimeError при запуске Python
+ */
+export const invalidParamsWebhookWithoutRedis: ConfigTemplateParams = {
+  userDatabaseEnabled: false,
+  projectId: 42,
+  webhookUrl: 'https://example.com',
+  webhookPort: 9042,
+};
