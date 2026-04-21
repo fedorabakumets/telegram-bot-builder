@@ -57,13 +57,14 @@ async function updateLaunchSettings(
 /**
  * Формирует предпросмотр полного webhook URL
  * @param baseUrl - Базовый адрес сервера
- * @param tokenId - ID токена для пути
+ * @param projectId - ID проекта
+ * @param tokenId - ID токена
  * @returns Составленный URL
  */
-function buildWebhookPreview(baseUrl: string, tokenId: number): string {
+function buildWebhookPreview(baseUrl: string, projectId: number, tokenId: number): string {
   const normalized = baseUrl.trim().replace(/\/+$/, '');
-  if (!normalized) return `/api/webhook/${tokenId}`;
-  return `${normalized}/api/webhook/${tokenId}`;
+  if (!normalized) return `/api/webhook/${projectId}/${tokenId}`;
+  return `${normalized}/api/webhook/${projectId}/${tokenId}`;
 }
 
 /**
@@ -123,7 +124,7 @@ export function BotLaunchSettings({
     });
   }
 
-  const webhookPreview = buildWebhookPreview(localBaseUrl, tokenId);
+  const webhookPreview = buildWebhookPreview(localBaseUrl, projectId, tokenId);
 
   return (
     <div className={cn('space-y-3 rounded-lg border bg-muted/20 p-3 sm:p-4', className)}>
