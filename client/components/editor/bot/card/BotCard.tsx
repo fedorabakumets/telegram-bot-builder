@@ -110,6 +110,9 @@ export function BotCard({ token, project, projectBotInfo, isThisTokenRunning }: 
           allBotStatuses={allBotStatuses}
           token={token}
           toggleDatabaseMutation={toggleDatabaseMutation}
+          launchMode={token.launchMode ?? 'polling'}
+          webhookBaseUrl={token.webhookBaseUrl ?? null}
+          webhookSecretToken={token.webhookSecretToken ?? null}
         />
       </CardContent>
     </Card>

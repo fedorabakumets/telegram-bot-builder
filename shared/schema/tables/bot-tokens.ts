@@ -59,6 +59,12 @@ export const botTokens = pgTable("bot_tokens", {
   maxRestartAttempts: integer("max_restart_attempts").default(3),
   /** Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) */
   logLevel: text("log_level").default("WARNING"),
+  /** Режим запуска бота: 'polling' (по умолчанию) или 'webhook' */
+  launchMode: text("launch_mode").default("polling"),
+  /** Базовый URL для webhook режима (например https://example.com) */
+  webhookBaseUrl: text("webhook_base_url"),
+  /** Секретный токен для верификации webhook запросов */
+  webhookSecretToken: text("webhook_secret_token"),
   /** Дата создания токена */
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления токена */
@@ -99,6 +105,12 @@ export const insertBotTokenSchema = z.object({
   maxRestartAttempts: z.number().min(1).max(10).default(3),
   /** Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) */
   logLevel: z.enum(['DEBUG', 'INFO', 'WARNING', 'ERROR']).default('WARNING').optional(),
+  /** Режим запуска бота: polling или webhook */
+  launchMode: z.enum(['polling', 'webhook']).default('polling').optional(),
+  /** Базовый URL для webhook режима */
+  webhookBaseUrl: z.string().nullable().optional(),
+  /** Секретный токен для верификации webhook запросов */
+  webhookSecretToken: z.string().nullable().optional(),
 });
 
 /** Тип записи токена бота */

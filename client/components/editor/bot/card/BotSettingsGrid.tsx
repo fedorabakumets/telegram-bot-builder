@@ -46,6 +46,12 @@ interface BotSettingsGridProps {
     /** Функция мутации */
     mutate: (enabled: boolean) => void;
   };
+  /** Режим запуска бота */
+  launchMode: string | null;
+  /** Базовый URL для webhook */
+  webhookBaseUrl: string | null;
+  /** Секретный токен webhook */
+  webhookSecretToken: string | null;
 }
 
 /**
@@ -63,12 +69,22 @@ export function BotSettingsGrid({
   allBotStatuses,
   token,
   toggleDatabaseMutation,
+  launchMode,
+  webhookBaseUrl,
+  webhookSecretToken,
 }: BotSettingsGridProps) {
   const resolvedBotName = botName ?? `Бот ${tokenId}`;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <BotLaunchSettings tokenId={tokenId} className="sm:col-span-2" />
+      <BotLaunchSettings
+        tokenId={tokenId}
+        projectId={projectId}
+        launchMode={launchMode}
+        webhookBaseUrl={webhookBaseUrl}
+        webhookSecretToken={webhookSecretToken}
+        className="sm:col-span-2"
+      />
       <BotDatabaseToggle
         projectId={projectId}
         tokenId={tokenId}

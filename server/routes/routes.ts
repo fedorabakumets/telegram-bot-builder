@@ -1164,6 +1164,39 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  /**
+   * Обновление настроек режима запуска для токена бота
+   * PUT /api/projects/:projectId/tokens/:tokenId/launch-settings
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/launch-settings", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const { launchMode, webhookBaseUrl, webhookSecretToken } = req.body as {
+        launchMode: 'polling' | 'webhook';
+        webhookBaseUrl?: string | null;
+        webhookSecretToken?: string | null;
+      };
+
+      if (launchMode !== 'polling' && launchMode !== 'webhook') {
+        return res.status(400).json({ message: "launchMode должен быть 'polling' или 'webhook'" });
+      }
+
+      const updated = await storage.updateBotToken(tokenId, {
+        launchMode,
+        webhookBaseUrl: webhookBaseUrl ?? null,
+        webhookSecretToken: webhookSecretToken ?? null,
+      });
+
+      if (!updated) {
+        return res.status(404).json({ message: "Токен не найден" });
+      }
+
+      res.json({ success: true, launchMode, webhookBaseUrl, webhookSecretToken });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления настроек запуска" });
+    }
+  });
+
   // Set default token
   app.post("/api/projects/:projectId/tokens/:tokenId/set-default", async (req, res) => {
     try {
