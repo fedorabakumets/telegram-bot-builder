@@ -3,7 +3,7 @@
  *
  * Позволяет боту удалить токен по его идентификатору от имени пользователя.
  * Идентификация происходит по telegram_id в query-параметре — без браузерной сессии.
- * Проверяет принадлежность проекта токена пользователю перед удалением.
+ * Проверяет наличие доступа к проекту токена (владелец или коллаборатор) перед удалением.
  *
  * @module userProjectsTokens/handlers/tokens/deleteBotTokenHandler
  */
@@ -13,6 +13,7 @@ import { storage } from "../../../../storages/storage";
 
 /**
  * Обрабатывает DELETE-запрос на удаление токена бота через Telegram-бота.
+ * Доступно владельцу и коллабораторам проекта.
  *
  * @param req - Запрос с query-параметром telegram_id и params.tokenId
  * @param res - Ответ: { success: true } или ошибка
@@ -44,9 +45,9 @@ export async function deleteBotTokenHandler(req: Request, res: Response): Promis
             return;
         }
 
-        // Проверяем что проект токена принадлежит пользователю
-        const project = await storage.getBotProject(token.projectId);
-        if (!project || project.ownerId !== telegramId) {
+        // Проверяем доступ к проекту: владелец или коллаборатор
+        const hasAccess = await storage.hasProjectAccess(token.projectId, telegramId);
+        if (!hasAccess) {
             res.status(403).json({ error: "Нет доступа к этому токену" });
             return;
         }

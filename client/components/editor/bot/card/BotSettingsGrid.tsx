@@ -26,8 +26,8 @@ import type { BotToken } from '@shared/schema';
 interface BotSettingsGridProps {
   /** ID проекта */
   projectId: number;
-  /** Является ли текущий пользователь владельцем проекта */
-  isOwner: boolean;
+  /** Имеет ли текущий пользователь права управления (владелец или коллаборатор) */
+  canManage: boolean;
   /** ID токена */
   tokenId: number;
   /** Имя бота (для передачи в историю запусков) */
@@ -75,7 +75,7 @@ export function BotSettingsGrid({
   launchMode,
   webhookBaseUrl,
   webhookSecretToken,
-  isOwner,
+  canManage,
 }: BotSettingsGridProps) {
   const resolvedBotName = botName ?? `Бот ${tokenId}`;
 
@@ -114,7 +114,7 @@ export function BotSettingsGrid({
         />
       )}
       <BotAdminIds projectId={projectId} />
-      <ProjectCollaborators projectId={projectId} isOwner={isOwner} />
+      <ProjectCollaborators projectId={projectId} canManage={canManage} />
       <BotLaunchHistory
         tokenId={tokenId}
         projectId={projectId}

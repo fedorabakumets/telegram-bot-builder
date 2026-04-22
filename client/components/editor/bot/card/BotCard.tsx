@@ -62,9 +62,9 @@ export function BotCard({ token, project, projectBotInfo, isThisTokenRunning }: 
 
   const { user, isTelegramUser } = useTelegramAuth();
 
-  /** Является ли текущий пользователь владельцем проекта */
-  const isOwner = user && isTelegramUser(user)
-    ? user.id === project.ownerId
+  /** Имеет ли текущий пользователь права управления проектом (временно: все авторизованные; бэкенд проверит права) */
+  const canManage = user && isTelegramUser(user)
+    ? (user.id === project.ownerId || true)
     : false;
 
   return (
@@ -121,7 +121,7 @@ export function BotCard({ token, project, projectBotInfo, isThisTokenRunning }: 
           launchMode={token.launchMode ?? 'polling'}
           webhookBaseUrl={token.webhookBaseUrl ?? null}
           webhookSecretToken={token.webhookSecretToken ?? null}
-          isOwner={isOwner}
+          canManage={canManage}
         />
       </CardContent>
     </Card>

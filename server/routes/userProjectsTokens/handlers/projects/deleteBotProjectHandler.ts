@@ -3,7 +3,7 @@
  *
  * Позволяет боту удалить проект от имени пользователя.
  * Идентификация через telegram_id в query-параметре — без браузерной сессии.
- * Проверяет принадлежность проекта пользователю перед удалением.
+ * Проверяет наличие доступа к проекту (владелец или коллаборатор) перед удалением.
  *
  * @module userProjectsTokens/handlers/projects/deleteBotProjectHandler
  */
@@ -13,6 +13,7 @@ import { storage } from "../../../../storages/storage";
 
 /**
  * Обрабатывает DELETE-запрос на удаление проекта через Telegram-бота.
+ * Доступно владельцу и коллабораторам проекта.
  *
  * @param req - Запрос с query-параметром telegram_id и params.id
  * @param res - Ответ: { success: true } или ошибка
@@ -40,8 +41,9 @@ export async function deleteBotProjectHandler(req: Request, res: Response): Prom
             return;
         }
 
-        // Проверяем что проект принадлежит этому пользователю
-        if (project.ownerId !== telegramId) {
+        // Проверяем доступ: владелец или коллаборатор
+        const hasAccess = await storage.hasProjectAccess(projectId, telegramId);
+        if (!hasAccess) {
             res.status(403).json({ error: "Нет доступа к этому проекту" });
             return;
         }

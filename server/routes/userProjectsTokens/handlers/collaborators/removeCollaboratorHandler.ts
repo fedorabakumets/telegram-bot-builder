@@ -2,7 +2,7 @@
  * @fileoverview Хендлер удаления коллаборатора из проекта
  *
  * Удаляет пользователя из списка коллабораторов проекта.
- * Только владелец проекта может удалять коллабораторов.
+ * Владелец и любой коллаборатор могут удалять участников.
  *
  * @module userProjectsTokens/handlers/collaborators/removeCollaboratorHandler
  */
@@ -12,7 +12,7 @@ import { storage } from "../../../../storages/storage";
 
 /**
  * Удаляет коллаборатора из проекта.
- * Только владелец может выполнять это действие.
+ * Владелец и любой коллаборатор могут выполнять это действие.
  *
  * @param req - Запрос с query-параметром telegram_id, params.id и params.userId
  * @param res - Ответ: { success: true } или ошибка
@@ -45,9 +45,10 @@ export async function removeCollaboratorHandler(req: Request, res: Response): Pr
             return;
         }
 
-        // Только владелец может удалять коллабораторов
-        if (project.ownerId !== telegramId) {
-            res.status(403).json({ error: "Только владелец может удалять коллабораторов" });
+        // Проверяем доступ: владелец или коллаборатор
+        const hasAccess = await storage.hasProjectAccess(projectId, telegramId);
+        if (!hasAccess) {
+            res.status(403).json({ error: "Нет доступа к этому проекту" });
             return;
         }
 

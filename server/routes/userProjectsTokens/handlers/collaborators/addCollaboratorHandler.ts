@@ -2,7 +2,7 @@
  * @fileoverview Хендлер добавления коллаборатора к проекту
  *
  * Добавляет пользователя как коллаборатора проекта.
- * Только владелец проекта может добавлять коллабораторов.
+ * Владелец и любой коллаборатор могут добавлять новых участников.
  * Если пользователь не существует в telegram_users — создаёт его.
  *
  * @module userProjectsTokens/handlers/collaborators/addCollaboratorHandler
@@ -13,7 +13,8 @@ import { storage } from "../../../../storages/storage";
 
 /**
  * Добавляет коллаборатора к проекту.
- * Только владелец может выполнять это действие.
+ * Владелец и любой коллаборатор могут выполнять это действие.
+ * Пользователь может добавить себя обратно, если был удалён.
  *
  * @param req - Запрос с query-параметром telegram_id, params.id и body { user_id: number }
  * @param res - Ответ: { success: true } или ошибка
@@ -46,15 +47,10 @@ export async function addCollaboratorHandler(req: Request, res: Response): Promi
             return;
         }
 
-        // Только владелец может добавлять коллабораторов
-        if (project.ownerId !== telegramId) {
-            res.status(403).json({ error: "Только владелец может добавлять коллабораторов" });
-            return;
-        }
-
-        // Нельзя добавить самого себя
-        if (userId === telegramId) {
-            res.status(400).json({ error: "Нельзя добавить владельца как коллаборатора" });
+        // Проверяем доступ: владелец или коллаборатор
+        const hasAccess = await storage.hasProjectAccess(projectId, telegramId);
+        if (!hasAccess) {
+            res.status(403).json({ error: "Нет доступа к этому проекту" });
             return;
         }
 

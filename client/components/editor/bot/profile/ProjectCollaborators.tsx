@@ -2,7 +2,7 @@
  * @fileoverview Компонент управления участниками проекта
  *
  * Отображает список коллабораторов проекта с возможностью
- * добавления и удаления (только для владельца проекта).
+ * добавления и удаления (для владельца и коллабораторов проекта).
  *
  * @module ProjectCollaborators
  */
@@ -17,8 +17,8 @@ import { useCollaborators } from './use-collaborators';
 interface ProjectCollaboratorsProps {
   /** ID проекта */
   projectId: number;
-  /** Является ли текущий пользователь владельцем проекта */
-  isOwner: boolean;
+  /** Имеет ли текущий пользователь права управления (владелец или коллаборатор) */
+  canManage: boolean;
 }
 
 /**
@@ -27,7 +27,7 @@ interface ProjectCollaboratorsProps {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function ProjectCollaborators({ projectId, isOwner }: ProjectCollaboratorsProps) {
+export function ProjectCollaborators({ projectId, canManage }: ProjectCollaboratorsProps) {
   const { collaborators, isLoading, isAdding, isRemoving, add, remove } =
     useCollaborators(projectId);
 
@@ -83,7 +83,7 @@ export function ProjectCollaborators({ projectId, isOwner }: ProjectCollaborator
           <span className="text-xs flex-1 text-blue-700 dark:text-blue-300 truncate">
             {collab.userId}
           </span>
-          {isOwner && (
+          {canManage && (
             <Button
               size="icon"
               variant="ghost"
@@ -102,8 +102,8 @@ export function ProjectCollaborators({ projectId, isOwner }: ProjectCollaborator
         </div>
       ))}
 
-      {/* Поле добавления нового участника (только для владельца) */}
-      {isOwner && (
+      {/* Поле добавления нового участника (для владельца и коллабораторов) */}
+      {canManage && (
         <div className="flex items-center gap-1.5">
           <Input
             className="h-7 text-xs flex-1 bg-transparent border-blue-500/30 focus-visible:ring-blue-500/40 text-blue-700 dark:text-blue-300 placeholder:text-blue-400/60"
