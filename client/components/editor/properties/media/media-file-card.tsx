@@ -2,6 +2,7 @@
  * @fileoverview Карточка медиафайла
  *
  * Отображает информацию о файле с кнопками просмотра и удаления.
+ * Поддерживает переменные вида {var.path} — показывает иконку вместо img.
  *
  * @module MediaFileCard
  */
@@ -9,6 +10,15 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, X } from "lucide-react";
+
+/**
+ * Проверяет, является ли строка переменной вида {var.path}
+ * @param url - Строка для проверки
+ * @returns true если строка является переменной-плейсхолдером
+ */
+function isVariablePlaceholder(url: string): boolean {
+  return url.startsWith('{') && url.endsWith('}');
+}
 
 /** Пропсы компонента MediaFileCard */
 export interface MediaFileCardProps {
@@ -63,7 +73,12 @@ export function MediaFileCard({
         {/* Preview */}
         <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
           {fileType === 'image' || fileType === 'photo' ? (
-            <img src={url} alt={fileName} className="w-full h-full object-cover" />
+            isVariablePlaceholder(url) ? (
+              // Переменная — показываем иконку вместо img
+              <span className="text-lg">🖼️</span>
+            ) : (
+              <img src={url} alt={fileName} className="w-full h-full object-cover" />
+            )
           ) : (
             <span className="text-lg sm:text-xl">{FILE_ICONS[fileType]}</span>
           )}

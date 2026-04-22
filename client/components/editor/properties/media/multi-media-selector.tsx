@@ -223,8 +223,24 @@ export function MultiMediaSelector({
   );
 }
 
-/** Определение типа медиа по URL */
+/**
+ * Проверяет, является ли строка переменной вида {var.path}
+ * @param url - Строка для проверки
+ * @returns true если строка является переменной-плейсхолдером
+ */
+function isVariablePlaceholder(url: string): boolean {
+  return url.startsWith('{') && url.endsWith('}');
+}
+
+/**
+ * Определяет тип медиа по URL или расширению файла.
+ * Переменные вида {var.path} считаются фото по умолчанию.
+ * @param url - URL или путь к файлу
+ * @returns Тип медиа: 'image' | 'video' | 'audio' | 'document'
+ */
 function getMediaTypeByUrl(url: string): string {
+  // Переменные вида {var.path} считаем фото по умолчанию
+  if (isVariablePlaceholder(url)) return 'photo';
   const ext = url.split('.').pop()?.toLowerCase() || '';
   if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
   if (['mp4', 'avi', 'mov', 'webm'].includes(ext)) return 'video';
