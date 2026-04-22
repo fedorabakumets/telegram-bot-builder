@@ -262,6 +262,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 logging.error(f"❌ Медиафайл не найден: {image_path} (узел {{ nodeId }})")
                 return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             return await bot.send_photo(_target_chat_id, FSInputFile(image_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- elif '{' in imageUrl and '}' in imageUrl %}
+            {# imageUrl содержит переменную вида {var.path} — подставляем через replace_variables_in_text #}
+            _image_url_resolved = replace_variables_in_text("{{ imageUrl }}", all_user_vars, {})
+            if _image_url_resolved and _image_url_resolved != "{{ imageUrl }}":
+                return await bot.send_photo(_target_chat_id, _image_url_resolved, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            else:
+                logging.warning(f"⚠️ Не удалось разрешить переменную imageUrl: {{ imageUrl }} (узел {{ nodeId }})")
+                return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- else %}
             return await bot.send_photo(_target_chat_id, "{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
