@@ -268,7 +268,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             if _image_url_resolved and _image_url_resolved != "{{ imageUrl }}":
                 return await bot.send_photo(_target_chat_id, _image_url_resolved, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             else:
-                logging.warning(f"⚠️ Не удалось разрешить переменную imageUrl: {{ imageUrl }} (узел {{ nodeId }})")
+                logging.warning(f"⚠️ Не удалось разрешить переменную imageUrl: {{ imageUrl | replace('{', '{{') | replace('}', '}}') }} (узел {{ nodeId }})")
                 return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- else %}
             return await bot.send_photo(_target_chat_id, "{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
