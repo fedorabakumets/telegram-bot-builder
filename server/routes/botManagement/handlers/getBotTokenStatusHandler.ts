@@ -35,6 +35,29 @@ function formatStatusLabel(status: string): string {
 }
 
 /**
+ * Форматирует время работы бота в читаемый вид
+ * @param startedAt - Дата/время запуска бота
+ * @returns Строка вида "3д 14ч 22м" или "Только что" если меньше минуты
+ */
+function formatUptime(startedAt: Date | string | null | undefined): string {
+    if (!startedAt) return '—';
+    const start = new Date(startedAt);
+    const now = new Date();
+    const diffMs = now.getTime() - start.getTime();
+    if (diffMs < 0) return '—';
+    const totalSeconds = Math.floor(diffMs / 1000);
+    if (totalSeconds < 60) return 'Только что';
+    const minutes = Math.floor(totalSeconds / 60) % 60;
+    const hours = Math.floor(totalSeconds / 3600) % 24;
+    const days = Math.floor(totalSeconds / 86400);
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days}д`);
+    if (hours > 0) parts.push(`${hours}ч`);
+    if (minutes > 0) parts.push(`${minutes}м`);
+    return parts.length > 0 ? parts.join(' ') : 'Только что';
+}
+
+/**
  * Форматирует число с разделителями тысяч
  */
 function formatNumber(num: number): string {
@@ -95,6 +118,7 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
                     tokenId,
                     status: 'stopped',
                     statusLabel: formatStatusLabel('stopped'),
+                    uptime: null,
                 },
             });
             return;
@@ -161,6 +185,7 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
                 tokenId,
                 status: actualStatus,
                 statusLabel: formatStatusLabel(actualStatus),
+                uptime: actualStatus === 'running' ? formatUptime(instance.startedAt) : null,
                 startedAt: instance.startedAt,
                 processId: instance.processId,
             },
