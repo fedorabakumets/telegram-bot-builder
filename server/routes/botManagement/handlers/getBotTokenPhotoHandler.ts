@@ -114,7 +114,7 @@ export async function getBotTokenPhotoHandler(req: Request, res: Response): Prom
             return;
         }
 
-        const fileId = photosData.result.photos[0][0].file_id;
+        const fileId = photosData.result.photos[0][photosData.result.photos[0].length - 1].file_id;
 
         // Шаг 3: getFile — получаем file_path
         const fileResp = await fetchWithProxy(
