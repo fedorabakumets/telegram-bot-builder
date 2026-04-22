@@ -118,20 +118,24 @@ async def init_all_user_vars(user_id: int) -> dict:
     except Exception as e:
         logging.warning(f"⚠️ Не удалось загрузить переменные из БД: {e}")
 {%- endif %}
-    # Рекурсивно разворачиваем dict-значения в плоские ключи для dot-notation подстановки.
+    # Рекурсивно разворачиваем dict/list-значения в плоские ключи для dot-notation подстановки.
     # Поддерживает произвольную глубину вложенности (до max_depth уровней).
     # Гарантирует что {a.b.c} найдётся через all_vars["a.b.c"] даже при глубокой вложенности.
+    # Списки разворачиваются с числовыми индексами: photos[0][0].file_id
     def _flatten_dict(_prefix: str, _obj, _result: dict, _depth: int = 0, _max_depth: int = 5) -> None:
         if _depth > _max_depth:
             return
         if isinstance(_obj, dict):
             for _dk, _dv in _obj.items():
                 _flatten_dict(f"{_prefix}.{_dk}", _dv, _result, _depth + 1, _max_depth)
+        elif isinstance(_obj, list):
+            for _li, _lv in enumerate(_obj):
+                _flatten_dict(f"{_prefix}[{_li}]", _lv, _result, _depth + 1, _max_depth)
         elif isinstance(_obj, (str, int, float, bool)) and _obj is not None:
             _result[_prefix] = str(_obj)
     _flat_keys = {}
     for _k, _v in list(all_vars.items()):
-        if isinstance(_v, dict):
+        if isinstance(_v, (dict, list)):
             _flatten_dict(_k, _v, _flat_keys)
     all_vars.update(_flat_keys)
     return all_vars
@@ -197,12 +201,16 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
     import json as _json
 
     def _resolve(var_path: str) -> str | None:
-        """Разрешает переменную, поддерживая вложенные пути через точку"""
-        if '.' not in var_path:
-            val = variables.get(var_path)
-            return str(val) if val is not None else None
-        parts = var_path.split('.')
-        root = variables.get(parts[0])
+        """Разрешает переменную, поддерживая dot-notation и индексы массивов вида [0]"""
+        # Сначала ищем точное совпадение в плоском словаре (включая ключи вида a.b[0].c)
+        val = variables.get(var_path)
+        if val is not None:
+            return str(val)
+        # Если нет точного совпадения — пробуем обойти путь вручную
+        # Разбиваем путь на сегменты: "a.b[0][1].c" → ["a", "b", "[0]", "[1]", "c"]
+        segments = _re.split(r'\.(?![^\[]*\])', var_path)
+        root_key = segments[0]
+        root = variables.get(root_key)
         if root is None:
             return None
         # Если корень — строка, пробуем распарсить как JSON
@@ -212,20 +220,33 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
             except Exception:
                 return None
         obj = root
-        for part in parts[1:]:
-            if not isinstance(obj, dict):
-                return None
-            obj = obj.get(part)
-            if obj is None:
-                return None
-        return str(obj)
+        for seg in segments[1:]:
+            # Сегмент может содержать индексы: "photos[0][1]" или просто "field"
+            parts = _re.split(r'(\[\d+\])', seg)
+            for part in parts:
+                if not part:
+                    continue
+                idx_match = _re.fullmatch(r'\[(\d+)\]', part)
+                if idx_match:
+                    idx = int(idx_match.group(1))
+                    if not isinstance(obj, list) or idx >= len(obj):
+                        return None
+                    obj = obj[idx]
+                else:
+                    if not isinstance(obj, dict):
+                        return None
+                    obj = obj.get(part)
+                    if obj is None:
+                        return None
+        return str(obj) if obj is not None else None
 
     def _replacer(match):
         var_path = match.group(1)
         resolved = _resolve(var_path)
         return resolved if resolved is not None else match.group(0)
 
-    result = _re.sub(r'\{([\w.]+)\}', _replacer, text)
+    # Паттерн поддерживает: {var}, {a.b.c}, {a.b[0][1].c}
+    result = _re.sub(r'\{([\w.\[\]]+)\}', _replacer, text)
     return result
 
 

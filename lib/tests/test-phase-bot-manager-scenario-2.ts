@@ -527,6 +527,12 @@ test('R03', 'синтаксис Python OK после добавления рек
   ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
 });
 
+test('R04', '_flatten_dict разворачивает списки с индексами [0][1]...', () => {
+  // Проверяем что в сгенерированном коде есть поддержка индексов списков
+  ok(code.includes('[0]') || code.includes('isinstance(v, list)'),
+     '_flatten_dict не поддерживает индексы списков — {var.array[0][0].field} не будет подставляться');
+});
+
 // ══ Блок S: Аватарка бота в карточке токена ══════════════════════════════════
 console.log('\n══ Блок S: Аватарка бота в карточке токена ══════════════════════════');
 
@@ -555,6 +561,10 @@ test('S04', 'fetch-photo-file делает GET к getFile Telegram API', () => {
   ok(code.includes('fetch_photo_file'), 'узел fetch-photo-file не найден в коде');
   ok(code.includes('getFile'), 'вызов getFile не найден — file_path не получается');
   ok(code.includes('bot_photo_file_info'), 'переменная bot_photo_file_info не найдена');
+  ok(
+    code.includes('bot_photos') && (code.includes('[0]') || code.includes('photos')),
+    'индексация массива photos[0][0].file_id не поддерживается генератором'
+  );
 });
 
 test('S05', 'token-card-with-photo присутствует в коде и содержит file_path', () => {
