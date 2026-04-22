@@ -6,6 +6,8 @@
  * Блок G: Обработка ошибок (condition узлы после fetch-projects и действий)
  * Блок K: Читаемый статус бота
  *   K06: replace_variables_in_text вызывается для текста карточки проекта
+ * Блок S: Аватарка бота в карточке токена
+ *   S01–S06: цепочка fetch-bot-photo → check-bot-photo → check-photo-exists → fetch-photo-file → token-card-with-photo
  *
  * @module tests/test-phase-bot-manager-scenario-2
  */
@@ -522,6 +524,49 @@ test('R02', 'token_status.instance.statusLabel подставляется чер
 
 test('R03', 'синтаксис Python OK после добавления рекурсивного разворачивания', () => {
   const r = checkSyntax(code, 'r03');
+  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
+});
+
+// ══ Блок S: Аватарка бота в карточке токена ══════════════════════════════════
+console.log('\n══ Блок S: Аватарка бота в карточке токена ══════════════════════════');
+
+test('S01', 'fetch-bot-photo делает GET к getChat Telegram API', () => {
+  ok(code.includes('fetch_bot_photo'), 'узел fetch-bot-photo не найден в коде');
+  ok(code.includes('getChat'), 'вызов getChat не найден — аватарка не запрашивается');
+  ok(code.includes('bot_photo_status'), 'переменная bot_photo_status не найдена');
+  ok(code.includes('bot_chat_info'), 'переменная bot_chat_info не найдена');
+});
+
+test('S02', 'check-bot-photo проверяет HTTP-статус 200 от getChat', () => {
+  ok(code.includes('check_bot_photo'), 'узел check-bot-photo не найден в коде');
+  // при ошибке должен вести к token-card-msg (без фото)
+  ok(code.includes('token_card_msg'), 'fallback к token-card-msg не найден — ошибка getChat не обрабатывается');
+});
+
+test('S03', 'check-photo-exists проверяет наличие big_file_id через not_empty', () => {
+  ok(code.includes('check_photo_exists'), 'узел check-photo-exists не найден в коде');
+  ok(
+    code.includes('bot_chat_info') && code.includes('big_file_id'),
+    'проверка bot_chat_info.result.photo.big_file_id не найдена',
+  );
+});
+
+test('S04', 'fetch-photo-file делает GET к getFile Telegram API', () => {
+  ok(code.includes('fetch_photo_file'), 'узел fetch-photo-file не найден в коде');
+  ok(code.includes('getFile'), 'вызов getFile не найден — file_path не получается');
+  ok(code.includes('bot_photo_file_info'), 'переменная bot_photo_file_info не найдена');
+});
+
+test('S05', 'token-card-with-photo присутствует в коде и содержит file_path', () => {
+  ok(code.includes('token_card_with_photo'), 'узел token-card-with-photo не найден в коде');
+  ok(
+    code.includes('bot_photo_file_info') || code.includes('file_path'),
+    'ссылка на file_path не найдена в token-card-with-photo',
+  );
+});
+
+test('S06', 'синтаксис Python OK после добавления цепочки аватарки', () => {
+  const r = checkSyntax(code, 's06');
   ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
 });
 

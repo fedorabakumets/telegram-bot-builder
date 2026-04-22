@@ -138,6 +138,9 @@ test('A03', 'все узлы генерируют обработчики', () =>
     'delete-token-success-msg', 'delete-token-error-msg',
     'ask-new-token-value', 'add-token-to-project', 'check-add-token-status',
     'add-token-success-msg', 'add-token-error-msg',
+    // Аватарка бота в карточке токена
+    'fetch-bot-photo', 'check-bot-photo', 'check-photo-exists',
+    'fetch-photo-file', 'token-card-with-photo',
     // Создание проекта с токеном
     'projects-actions-keyboard',
     'ask-project-name-msg', 'ask-project-name',
