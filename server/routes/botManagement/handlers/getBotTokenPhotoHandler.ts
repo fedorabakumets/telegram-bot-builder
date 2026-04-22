@@ -1,9 +1,9 @@
 /**
  * @fileoverview Хендлер получения аватарки бота по tokenId
  *
- * Принимает tokenId, получает токен из БД, делает запросы к Telegram API
- * и возвращает готовый URL фото. Используется Telegram-ботом вместо трёх
- * отдельных нод (fetch-bot-me → fetch-bot-photos → fetch-photo-file-id).
+ * Принимает tokenId, получает токен из БД, делает запросы к Telegram API,
+ * скачивает файл локально и возвращает путь /uploads/... чтобы бот мог
+ * передать его через FSInputFile в send_photo.
  *
  * @module botManagement/handlers/getBotTokenPhotoHandler
  */
@@ -11,6 +11,10 @@
 import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
 import { fetchWithProxy } from '../../../utils/telegram-proxy';
+import { existsSync, mkdirSync, createWriteStream } from 'fs';
+import { join } from 'path';
+import { pipeline } from 'stream/promises';
+import { Readable } from 'stream';
 
 /**
  * Нормализует tokenId — срезает префикс `token_` если он есть
@@ -23,11 +27,24 @@ function parseTokenId(raw: string): number {
 }
 
 /**
+ * Скачивает файл по URL и сохраняет на диск
+ * @param url - URL для скачивания
+ * @param destPath - Путь для сохранения файла
+ */
+async function downloadFile(url: string, destPath: string): Promise<void> {
+    const resp = await fetchWithProxy(url, { signal: AbortSignal.timeout(15000) });
+    if (!resp.ok) throw new Error(`Ошибка скачивания: ${resp.status}`);
+    const dest = createWriteStream(destPath);
+    await pipeline(Readable.fromWeb(resp.body as any), dest);
+}
+
+/**
  * Обрабатывает GET /api/bot/tokens/:tokenId/photo
  *
  * Принимает tokenId в формате `131` или `token_131`.
- * Получает токен из БД, запрашивает аватарку через Telegram API
- * и возвращает готовый URL фото или null если аватарки нет.
+ * Получает токен из БД, запрашивает аватарку через Telegram API,
+ * скачивает файл в uploads/{projectId}/ и возвращает локальный путь.
+ * Бот использует этот путь через FSInputFile для send_photo.
  *
  * @param req - Объект запроса Express (query: telegram_id)
  * @param res - Объект ответа Express
@@ -99,7 +116,7 @@ export async function getBotTokenPhotoHandler(req: Request, res: Response): Prom
 
         const fileId = photosData.result.photos[0][0].file_id;
 
-        // Шаг 3: getFile — получаем file_path для построения URL
+        // Шаг 3: getFile — получаем file_path
         const fileResp = await fetchWithProxy(
             `${baseUrl}/getFile?file_id=${fileId}`,
             { signal: AbortSignal.timeout(10000) },
@@ -120,9 +137,22 @@ export async function getBotTokenPhotoHandler(req: Request, res: Response): Prom
             return;
         }
 
-        const photoUrl = `https://api.telegram.org/file/bot${token}/${fileData.result.file_path}`;
+        const telegramFileUrl = `https://api.telegram.org/file/bot${token}/${fileData.result.file_path}`;
 
-        res.json({ photoUrl, total_count: totalCount });
+        // Шаг 4: скачиваем файл в uploads/{projectId}/bot_photos/
+        const projectId = tokenRecord.projectId;
+        const uploadDir = join(process.cwd(), 'uploads', String(projectId), 'bot_photos');
+        if (!existsSync(uploadDir)) {
+            mkdirSync(uploadDir, { recursive: true });
+        }
+
+        const fileName = `token_${tokenId}_avatar.jpg`;
+        const localFilePath = join(uploadDir, fileName);
+        const localUrlPath = `/uploads/${projectId}/bot_photos/${fileName}`;
+
+        await downloadFile(telegramFileUrl, localFilePath);
+
+        res.json({ photoUrl: localUrlPath, total_count: totalCount });
     } catch (error: any) {
         console.error('[BotTokenPhoto] Ошибка:', error.message);
         res.status(500).json({ error: 'Не удалось получить аватарку', photoUrl: null });
