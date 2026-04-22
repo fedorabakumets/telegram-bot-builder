@@ -6,6 +6,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useTelegramAuth } from './use-telegram-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useAppConfig } from '@/hooks/use-app-config';
 
 declare global {
   interface Window {
@@ -41,7 +42,7 @@ declare global {
 }
 
 /** Идентификатор Telegram-приложения (берётся из переменной окружения VITE_TELEGRAM_CLIENT_ID) */
-const CLIENT_ID = Number(import.meta.env.VITE_TELEGRAM_CLIENT_ID) || 8641109156;
+const CLIENT_ID_FALLBACK = Number(import.meta.env.VITE_TELEGRAM_CLIENT_ID) || 0;
 const TELEGRAM_LOGIN_SRC = 'https://oauth.telegram.org/js/telegram-login.js?3';
 const TELEGRAM_LOGIN_SCRIPT_ID = 'telegram-login-sdk';
 
@@ -100,11 +101,16 @@ export function useTelegramLogin() {
   const didInit = useRef(false);
   const isDev = import.meta.env?.MODE === 'development';
 
+  // Читаем clientId с сервера в рантайме — решает проблему Docker build stage
+  const { data: appConfig } = useAppConfig();
+  const clientId = appConfig?.telegramClientId || CLIENT_ID_FALLBACK;
+
   const init = useCallback(() => {
     if (didInit.current) return;
     if (typeof window.Telegram?.Login?.init !== 'function') return;
+    if (!clientId) return;
     window.Telegram.Login.init(
-      { client_id: CLIENT_ID, request_access: ['write'] },
+      { client_id: clientId, request_access: ['write'] },
       (data: any) => {
         if (!data || data.error) return;
         // Маппим поля из id_token payload или user объекта
@@ -119,13 +125,13 @@ export function useTelegramLogin() {
       }
     );
     didInit.current = true;
-  }, [login]);
+  }, [login, clientId]);
 
   useEffect(() => {
-    if (typeof window.Telegram?.Login?.init === 'function') {
+    if (typeof window.Telegram?.Login?.init === 'function' && clientId) {
       init();
     }
-  }, [init]);
+  }, [init, clientId]);
 
   /**
    * Открывает диалог авторизации Telegram.
@@ -186,7 +192,7 @@ export function useTelegramLogin() {
 
     init();
     window.Telegram.Login.open();
-  }, [init, isDev, login, toast]);
+  }, [init, isDev, login, toast, clientId]);
 
   return { handleTelegramLogin };
 }
