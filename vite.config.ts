@@ -93,6 +93,9 @@ export default defineConfig(async () => {
       },
     },
     root: path.resolve(process.cwd(), "client"),
+    // Явно указываем корень проекта для поиска .env файлов,
+    // т.к. root задан как client/ и Vite иначе не найдёт .env в корне
+    envDir: path.resolve(process.cwd()),
     build: {
       outDir: path.resolve(process.cwd(), "dist"),
       emptyOutDir: true,
