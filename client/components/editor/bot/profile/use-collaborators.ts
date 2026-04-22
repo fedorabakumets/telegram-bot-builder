@@ -94,10 +94,10 @@ export function useCollaborators(projectId: number): UseCollaboratorsResult {
         `/api/bot/projects/${projectId}/collaborators?telegram_id=${currentTelegramId}`,
         { user_id: userId },
       );
-      toast({ title: 'Добавлено', description: `Участник ${userId} добавлен` });
+      toast({ title: 'Добавлено', description: `Коллаборатор ${userId} добавлен` });
       await fetchCollaborators();
     } catch {
-      toast({ title: 'Ошибка', description: 'Не удалось добавить участника', variant: 'destructive' });
+      toast({ title: 'Ошибка', description: 'Не удалось добавить коллаборатора', variant: 'destructive' });
     } finally {
       setIsAdding(false);
     }
@@ -115,10 +115,10 @@ export function useCollaborators(projectId: number): UseCollaboratorsResult {
         'DELETE',
         `/api/bot/projects/${projectId}/collaborators/${userId}?telegram_id=${currentTelegramId}`,
       );
-      toast({ title: 'Удалено', description: `Участник ${userId} удалён` });
+      toast({ title: 'Удалено', description: `Коллаборатор ${userId} удалён` });
       await fetchCollaborators();
     } catch {
-      toast({ title: 'Ошибка', description: 'Не удалось удалить участника', variant: 'destructive' });
+      toast({ title: 'Ошибка', description: 'Не удалось удалить коллаборатора', variant: 'destructive' });
     } finally {
       setIsRemoving(false);
     }

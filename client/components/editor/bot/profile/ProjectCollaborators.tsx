@@ -61,7 +61,7 @@ export function ProjectCollaborators({ projectId, isOwner }: ProjectCollaborator
           aria-hidden="true"
         />
         <span className="text-xs font-medium text-blue-700 dark:text-blue-300 flex-1">
-          Участники
+          Коллабораторы
         </span>
         {isLoading && (
           <Loader2
@@ -74,7 +74,7 @@ export function ProjectCollaborators({ projectId, isOwner }: ProjectCollaborator
       {/* Список коллабораторов */}
       {collaborators.length === 0 && !isLoading && (
         <p className="text-xs text-blue-500/60 dark:text-blue-400/50 pl-0.5">
-          Нет участников
+          Нет коллабораторов
         </p>
       )}
 
@@ -90,8 +90,8 @@ export function ProjectCollaborators({ projectId, isOwner }: ProjectCollaborator
               className="h-6 w-6 flex-shrink-0 text-blue-400 hover:text-blue-600 hover:bg-blue-500/20"
               onClick={() => remove(collab.userId)}
               disabled={isRemoving}
-              aria-label={`Удалить участника ${collab.userId}`}
-              title="Удалить участника"
+              aria-label={`Удалить коллаборатора ${collab.userId}`}
+              title="Удалить коллаборатора"
             >
               {isRemoving
                 ? <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
@@ -107,11 +107,11 @@ export function ProjectCollaborators({ projectId, isOwner }: ProjectCollaborator
         <div className="flex items-center gap-1.5">
           <Input
             className="h-7 text-xs flex-1 bg-transparent border-blue-500/30 focus-visible:ring-blue-500/40 text-blue-700 dark:text-blue-300 placeholder:text-blue-400/60"
-            placeholder="Telegram ID участника"
+            placeholder="Telegram ID коллаборатора"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            aria-label="Telegram ID нового участника"
+            aria-label="Telegram ID нового коллаборатора"
             type="number"
           />
           <Button
@@ -120,8 +120,8 @@ export function ProjectCollaborators({ projectId, isOwner }: ProjectCollaborator
             className="h-6 w-6 flex-shrink-0 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20"
             onClick={handleAdd}
             disabled={isAdding || !inputValue.trim()}
-            aria-label="Добавить участника"
-            title="Добавить участника"
+            aria-label="Добавить коллаборатора"
+            title="Добавить коллаборатора"
           >
             {isAdding
               ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
