@@ -18,6 +18,7 @@ import { BotCardHeader } from './BotCardHeader';
 import { BotCardInfo } from './BotCardInfo';
 import { BotSettingsGrid } from './BotSettingsGrid';
 import { useBotControl } from '../bot-control-context';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import type { BotProject, BotToken } from '@shared/schema';
 import type { BotInfo } from '../profile/BotProfileEditor';
 
@@ -58,6 +59,13 @@ export function BotCard({ token, project, projectBotInfo, isThisTokenRunning }: 
     setIsProfileSheetOpen,
     queryClient,
   } = useBotControl();
+
+  const { user, isTelegramUser } = useTelegramAuth();
+
+  /** Является ли текущий пользователь владельцем проекта */
+  const isOwner = user && isTelegramUser(user)
+    ? user.id === project.ownerId
+    : false;
 
   return (
     <Card className="group/card overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md dark:hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card via-card to-card/95 hover:border-border/50">
@@ -113,6 +121,7 @@ export function BotCard({ token, project, projectBotInfo, isThisTokenRunning }: 
           launchMode={token.launchMode ?? 'polling'}
           webhookBaseUrl={token.webhookBaseUrl ?? null}
           webhookSecretToken={token.webhookSecretToken ?? null}
+          isOwner={isOwner}
         />
       </CardContent>
     </Card>

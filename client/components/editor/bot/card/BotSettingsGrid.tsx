@@ -16,6 +16,7 @@ import { BotAutoRestartToggle } from './BotAutoRestartToggle';
 import { BotExecutionTimer } from './BotExecutionTimer';
 import { BotLogLevelSelect } from './BotLogLevelSelect';
 import { BotAdminIds } from '../profile/BotAdminIds';
+import { ProjectCollaborators } from '../profile/ProjectCollaborators';
 import { BotLaunchHistory } from './BotLaunchHistory';
 import { BotLaunchSettings } from './BotLaunchSettings';
 import type { BotStatusResponse } from '../bot-types';
@@ -25,6 +26,8 @@ import type { BotToken } from '@shared/schema';
 interface BotSettingsGridProps {
   /** ID проекта */
   projectId: number;
+  /** Является ли текущий пользователь владельцем проекта */
+  isOwner: boolean;
   /** ID токена */
   tokenId: number;
   /** Имя бота (для передачи в историю запусков) */
@@ -72,6 +75,7 @@ export function BotSettingsGrid({
   launchMode,
   webhookBaseUrl,
   webhookSecretToken,
+  isOwner,
 }: BotSettingsGridProps) {
   const resolvedBotName = botName ?? `Бот ${tokenId}`;
 
@@ -110,6 +114,7 @@ export function BotSettingsGrid({
         />
       )}
       <BotAdminIds projectId={projectId} />
+      <ProjectCollaborators projectId={projectId} isOwner={isOwner} />
       <BotLaunchHistory
         tokenId={tokenId}
         projectId={projectId}
