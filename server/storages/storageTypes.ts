@@ -17,6 +17,7 @@ import {
   mediaFiles,
   telegramUsers,
   userBotData,
+  projectCollaborators,
 } from "@shared/schema";
 
 /** Тип вставки проекта бота по таблице Drizzle */
@@ -87,3 +88,6 @@ export type StorageBotLaunchHistoryUpdate = Partial<StorageBotLaunchHistoryInput
 
 /** Тип вставки Telegram-пользователя по таблице Drizzle */
 export type StorageTelegramUserInput = typeof telegramUsers.$inferInsert;
+
+/** Тип вставки коллаборатора проекта по таблице Drizzle */
+export type StorageProjectCollaboratorInput = typeof projectCollaborators.$inferInsert;

@@ -16,6 +16,7 @@ import {
   type MediaFile,
   type TelegramUserDB,
   type UserBotData,
+  type ProjectCollaborator,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
 import type {
@@ -759,6 +760,39 @@ export interface IStorage {
     active_7d: number;
     new_today: number;
   }>;
+
+  // Коллабораторы проекта
+
+  /**
+   * Проверяет, имеет ли пользователь доступ к проекту (владелец или коллаборатор)
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя Telegram
+   * @returns true, если доступ есть
+   */
+  hasProjectAccess(projectId: number, userId: number): Promise<boolean>;
+
+  /**
+   * Добавляет коллаборатора к проекту
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя Telegram
+   * @param invitedBy - ID пользователя, пригласившего коллаборатора (опционально)
+   */
+  addCollaborator(projectId: number, userId: number, invitedBy?: number): Promise<void>;
+
+  /**
+   * Удаляет коллаборатора из проекта
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя Telegram
+   * @returns true, если коллаборатор был удалён
+   */
+  removeCollaborator(projectId: number, userId: number): Promise<boolean>;
+
+  /**
+   * Возвращает список коллабораторов проекта
+   * @param projectId - ID проекта
+   * @returns Массив записей коллабораторов
+   */
+  getCollaborators(projectId: number): Promise<ProjectCollaborator[]>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

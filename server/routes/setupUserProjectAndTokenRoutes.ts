@@ -26,6 +26,9 @@ import { getBotProjectTokensHandler } from "./userProjectsTokens/handlers/tokens
 import { createBotTokenHandler } from "./userProjectsTokens/handlers/tokens/createBotTokenHandler";
 import { deleteBotTokenHandler } from "./userProjectsTokens/handlers/tokens/deleteBotTokenHandler";
 import { getTokenStatsHandler } from "./userProjectsTokens/handlers/tokens/getTokenStatsHandler";
+import { getCollaboratorsHandler } from "./userProjectsTokens/handlers/collaborators/getCollaboratorsHandler";
+import { addCollaboratorHandler } from "./userProjectsTokens/handlers/collaborators/addCollaboratorHandler";
+import { removeCollaboratorHandler } from "./userProjectsTokens/handlers/collaborators/removeCollaboratorHandler";
 
 /**
  * Настраивает маршруты управления проектами и токенами пользователя
@@ -52,6 +55,10 @@ export function setupUserProjectAndTokenRoutes(app: Express): void {
     app.delete("/api/bot/tokens/:tokenId", deleteBotTokenHandler);
     app.get("/api/bot/tokens/:tokenId/stats", getTokenStatsHandler);
     app.post("/api/user/tokens", createTokenHandler);
+
+    app.get("/api/bot/projects/:id/collaborators", getCollaboratorsHandler);
+    app.post("/api/bot/projects/:id/collaborators", addCollaboratorHandler);
+    app.delete("/api/bot/projects/:id/collaborators/:userId", removeCollaboratorHandler);
     app.patch("/api/user/tokens/:id", updateTokenHandler);
     app.delete("/api/user/tokens/:id", deleteTokenHandler);
 }

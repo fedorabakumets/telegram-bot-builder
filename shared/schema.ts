@@ -61,6 +61,9 @@ export type { BotLog, InsertBotLog } from "./schema/tables/bot-logs";
 export { botLaunchHistory, insertBotLaunchHistorySchema } from "./schema/tables/bot-launch-history";
 export type { BotLaunchHistory, InsertBotLaunchHistory } from "./schema/tables/bot-launch-history";
 
+export { projectCollaborators } from "./schema/tables/project-collaborators";
+export type { ProjectCollaborator, InsertProjectCollaborator } from "./schema/tables/project-collaborators";
+
 export type TelegramUserDB = typeof telegramUsersTable.$inferSelect;
 
 // Импорты для обратной совместимости

@@ -2,7 +2,7 @@
  * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator } from "@shared/schema";
 import { and, asc, desc, eq, ilike, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageUserBotDataInput, StorageUserBotDataUpdate } from "../storages/storageTypes";
@@ -1545,5 +1545,74 @@ export class DatabaseStorage implements IStorage {
       active_7d,
       new_today,
     };
+  }
+
+  // Коллабораторы проекта
+
+  /**
+   * Проверяет, имеет ли пользователь доступ к проекту (владелец или коллаборатор)
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя Telegram
+   * @returns true, если пользователь является владельцем или коллаборатором
+   */
+  async hasProjectAccess(projectId: number, userId: number): Promise<boolean> {
+    const project = await this.getBotProject(projectId);
+    if (!project) return false;
+    if (project.ownerId === userId) return true;
+
+    const [collab] = await this.db
+      .select()
+      .from(projectCollaborators)
+      .where(
+        and(
+          eq(projectCollaborators.projectId, projectId),
+          eq(projectCollaborators.userId, userId)
+        )
+      );
+    return !!collab;
+  }
+
+  /**
+   * Добавляет коллаборатора к проекту (игнорирует дубликаты)
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя Telegram
+   * @param invitedBy - ID пригласившего пользователя (опционально)
+   */
+  async addCollaborator(projectId: number, userId: number, invitedBy?: number): Promise<void> {
+    await this.db
+      .insert(projectCollaborators)
+      .values({ projectId, userId, invitedBy: invitedBy ?? null })
+      .onConflictDoNothing();
+  }
+
+  /**
+   * Удаляет коллаборатора из проекта
+   * @param projectId - ID проекта
+   * @param userId - ID пользователя Telegram
+   * @returns true, если запись была удалена
+   */
+  async removeCollaborator(projectId: number, userId: number): Promise<boolean> {
+    const result = await this.db
+      .delete(projectCollaborators)
+      .where(
+        and(
+          eq(projectCollaborators.projectId, projectId),
+          eq(projectCollaborators.userId, userId)
+        )
+      );
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  /**
+   * Возвращает список коллабораторов проекта
+   * @param projectId - ID проекта
+   * @returns Массив записей коллабораторов, отсортированных по дате добавления
+   */
+  async getCollaborators(projectId: number): Promise<ProjectCollaborator[]> {
+    return await this.db
+      .select()
+      .from(projectCollaborators)
+      .where(eq(projectCollaborators.projectId, projectId))
+      .orderBy(projectCollaborators.createdAt);
   }
 }

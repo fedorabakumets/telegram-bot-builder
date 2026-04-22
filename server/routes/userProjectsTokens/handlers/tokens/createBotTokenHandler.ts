@@ -61,7 +61,8 @@ export async function createBotTokenHandler(req: Request, res: Response): Promis
             return;
         }
 
-        if (project.ownerId !== telegramId) {
+        // Проверяем доступ: владелец или коллаборатор
+        if (!(await storage.hasProjectAccess(projectId, telegramId))) {
             res.status(403).json({ error: "Нет доступа к этому проекту" });
             return;
         }

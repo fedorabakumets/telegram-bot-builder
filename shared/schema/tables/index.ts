@@ -53,3 +53,6 @@ export type { SheetViewState, CanvasSheet, BotDataWithSheets, BotData } from "./
 
 export { sendMessageSchema } from "./additional-schemas";
 export type { SendMessage, ComponentDefinition } from "./additional-schemas";
+
+export { projectCollaborators } from "./project-collaborators";
+export type { ProjectCollaborator, InsertProjectCollaborator } from "./project-collaborators";

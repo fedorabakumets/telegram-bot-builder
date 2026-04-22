@@ -46,8 +46,8 @@ export async function updateBotProjectHandler(req: Request, res: Response): Prom
             return;
         }
 
-        // Проверяем что проект принадлежит этому пользователю
-        if (project.ownerId !== telegramId) {
+        // Проверяем доступ: владелец или коллаборатор
+        if (!(await storage.hasProjectAccess(projectId, telegramId))) {
             res.status(403).json({ error: "Нет доступа к этому проекту" });
             return;
         }
