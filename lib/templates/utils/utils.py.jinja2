@@ -97,6 +97,16 @@ async def init_all_user_vars(user_id: int) -> dict:
     all_vars = dict(user_data.get(user_id, {}))
     # Добавляем системные переменные бота — доступны в URL и текстах узлов
     all_vars["bot_token"] = BOT_TOKEN or ""
+    # Десериализуем строковые JSON-значения обратно в dict/list
+    # (Redis FSM и другие хранилища могут сериализовать dict в строку)
+    import json as _json_init
+    for _k in list(all_vars.keys()):
+        _v = all_vars[_k]
+        if isinstance(_v, str) and len(_v) > 1 and _v[0] in ('{', '['):
+            try:
+                all_vars[_k] = _json_init.loads(_v)
+            except Exception:
+                pass
 {%- if userDatabaseEnabled %}
     try:
         if db_pool:
