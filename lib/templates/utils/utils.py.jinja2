@@ -131,6 +131,10 @@ async def init_all_user_vars(user_id: int) -> dict:
         elif isinstance(_obj, list):
             for _li, _lv in enumerate(_obj):
                 _flatten_dict(f"{_prefix}[{_li}]", _lv, _result, _depth + 1, _max_depth)
+                # Также добавляем отрицательный индекс [-N] для удобства обращения к последним элементам
+                _neg_idx = _li - len(_obj)
+                if _neg_idx != _li:
+                    _flatten_dict(f"{_prefix}[{_neg_idx}]", _lv, _result, _depth + 1, _max_depth)
         elif isinstance(_obj, (str, int, float, bool)) and _obj is not None:
             _result[_prefix] = str(_obj)
     _flat_keys = {}
@@ -221,17 +225,20 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
                 return None
         obj = root
         for seg in segments[1:]:
-            # Сегмент может содержать индексы: "photos[0][1]" или просто "field"
-            parts = _re.split(r'(\[\d+\])', seg)
+            # Сегмент может содержать индексы: "photos[0][1]", "photos[-1]" или просто "field"
+            parts = _re.split(r'(\[-?\d+\])', seg)
             for part in parts:
                 if not part:
                     continue
-                idx_match = _re.fullmatch(r'\[(\d+)\]', part)
+                idx_match = _re.fullmatch(r'\[(-?\d+)\]', part)
                 if idx_match:
                     idx = int(idx_match.group(1))
-                    if not isinstance(obj, list) or idx >= len(obj):
+                    if not isinstance(obj, list):
                         return None
-                    obj = obj[idx]
+                    try:
+                        obj = obj[idx]
+                    except IndexError:
+                        return None
                 else:
                     if not isinstance(obj, dict):
                         return None
