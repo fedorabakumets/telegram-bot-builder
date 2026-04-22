@@ -22,7 +22,7 @@ export async function removeCollaboratorHandler(req: Request, res: Response): Pr
     try {
         const telegramId = Number(req.query.telegram_id);
         const projectId = parseInt(req.params.id, 10);
-        const userId = parseInt(req.params.userId, 10);
+        const userId = Number(req.params.userId);
 
         if (!telegramId || isNaN(telegramId)) {
             res.status(400).json({ error: "Параметр telegram_id обязателен" });
