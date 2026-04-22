@@ -58,6 +58,11 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     });
   }
 
+  /**
+   * Получить проекты ботов пользователя: где он владелец или коллаборатор
+   * @param ownerId - ID пользователя
+   * @returns Массив проектов ботов пользователя
+   */
   async getUserBotProjects(ownerId: number): Promise<BotProject[]> {
     return await super.getUserBotProjects(ownerId);
   }

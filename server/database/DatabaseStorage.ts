@@ -3,7 +3,7 @@
  */
 
 import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator } from "@shared/schema";
-import { and, asc, desc, eq, ilike, isNull, notInArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageUserBotDataInput, StorageUserBotDataUpdate } from "../storages/storageTypes";
 import { db } from "./db";
@@ -525,13 +525,21 @@ export class DatabaseStorage implements IStorage {
 
   // User-specific methods (DbStorage)
   /**
-   * Получить проекты ботов пользователя из базы данных
-   * @param ownerId - ID владельца
-   * @returns Массив проектов ботов пользователя
+   * Получить проекты ботов пользователя: где он владелец или коллаборатор
+   * @param ownerId - ID пользователя
+   * @returns Массив проектов ботов пользователя (владелец + коллаборатор)
    */
   async getUserBotProjects(ownerId: number): Promise<BotProject[]> {
+    const collaboratorProjects = this.db
+      .select({ projectId: projectCollaborators.projectId })
+      .from(projectCollaborators)
+      .where(eq(projectCollaborators.userId, ownerId));
+
     return await this.db.select().from(botProjects)
-      .where(eq(botProjects.ownerId, ownerId))
+      .where(or(
+        eq(botProjects.ownerId, ownerId),
+        inArray(botProjects.id, collaboratorProjects)
+      ))
       .orderBy(desc(botProjects.createdAt));
   }
 
