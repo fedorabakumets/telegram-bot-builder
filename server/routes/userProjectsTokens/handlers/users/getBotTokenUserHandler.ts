@@ -119,6 +119,19 @@ async function fetchUserPhotoUrl(
 }
 
 /**
+ * Форматирует дату в читаемый вид для Telegram-сообщения
+ * @param date - Дата в любом формате
+ * @returns Строка вида "19.04.2026 06:53" или "—" если дата отсутствует
+ */
+function formatDate(date: Date | string | null | undefined): string {
+    if (!date) return '—';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '—';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
  * Обрабатывает GET /api/bot/tokens/:tokenId/users/:userId
  *
  * Принимает tokenId (`131` или `token_131`) и userId (`1612141295` или `user_1612141295`).
@@ -177,7 +190,12 @@ export async function getBotTokenUserHandler(req: Request, res: Response): Promi
         const user = result.rows[0];
         const photoUrl = await fetchUserPhotoUrl(token, userId, projectId);
 
-        res.json({ ...user, photoUrl });
+        res.json({
+            ...user,
+            registeredAt: formatDate(user.registeredAt),
+            lastInteraction: formatDate(user.lastInteraction),
+            photoUrl,
+        });
     } catch (error: any) {
         console.error("[BotTokenUser] Ошибка:", error.message);
         res.status(500).json({ error: "Не удалось получить пользователя" });
