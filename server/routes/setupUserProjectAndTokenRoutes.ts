@@ -24,6 +24,7 @@ import { updateTokenHandler } from "./userProjectsTokens/handlers/tokens/updateT
 import { deleteTokenHandler } from "./userProjectsTokens/handlers/tokens/deleteTokenHandler";
 import { getBotProjectTokensHandler } from "./userProjectsTokens/handlers/tokens/getBotProjectTokensHandler";
 import { getBotTokenUsersHandler } from "./userProjectsTokens/handlers/users/getBotTokenUsersHandler";
+import { getBotTokenUserHandler } from "./userProjectsTokens/handlers/users/getBotTokenUserHandler";
 import { createBotTokenHandler } from "./userProjectsTokens/handlers/tokens/createBotTokenHandler";
 import { deleteBotTokenHandler } from "./userProjectsTokens/handlers/tokens/deleteBotTokenHandler";
 import { getTokenStatsHandler } from "./userProjectsTokens/handlers/tokens/getTokenStatsHandler";
@@ -56,6 +57,7 @@ export function setupUserProjectAndTokenRoutes(app: Express): void {
     app.delete("/api/bot/tokens/:tokenId", deleteBotTokenHandler);
     app.get("/api/bot/tokens/:tokenId/stats", getTokenStatsHandler);
     app.get("/api/bot/tokens/:tokenId/users", getBotTokenUsersHandler);
+    app.get("/api/bot/tokens/:tokenId/users/:userId", getBotTokenUserHandler);
     app.post("/api/user/tokens", createTokenHandler);
 
     app.get("/api/bot/projects/:id/collaborators", getCollaboratorsHandler);
