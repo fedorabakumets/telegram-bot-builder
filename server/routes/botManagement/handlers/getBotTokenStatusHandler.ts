@@ -46,7 +46,8 @@ function formatUptime(startedAt: Date | string | null | undefined): string {
     const diffMs = now.getTime() - start.getTime();
     if (diffMs < 0) return '—';
     const totalSeconds = Math.floor(diffMs / 1000);
-    if (totalSeconds < 60) return 'Только что';
+    if (totalSeconds < 60) return `${totalSeconds}с`;
+    const seconds = totalSeconds % 60;
     const minutes = Math.floor(totalSeconds / 60) % 60;
     const hours = Math.floor(totalSeconds / 3600) % 24;
     const days = Math.floor(totalSeconds / 86400);
@@ -54,6 +55,7 @@ function formatUptime(startedAt: Date | string | null | undefined): string {
     if (days > 0) parts.push(`${days}д`);
     if (hours > 0) parts.push(`${hours}ч`);
     if (minutes > 0) parts.push(`${minutes}м`);
+    if (seconds > 0) parts.push(`${seconds}с`);
     return parts.length > 0 ? parts.join(' ') : 'Только что';
 }
 
