@@ -110,7 +110,7 @@ async def waiting_callback_input_middleware(handler, event: types.CallbackQuery,
         user_id = event.from_user.id
         if user_id in user_data and "waiting_for_input" in user_data[user_id]:
             _wfi = user_data[user_id]["waiting_for_input"]
-            if isinstance(_wfi, dict) and _wfi.get("type") == "callback":
+            if isinstance(_wfi, dict) and ("callback" in _wfi.get("modes", []) or _wfi.get("type") == "callback"):
                 _cb_variable = _wfi.get("variable", "callback_response")
                 _cb_next_node = _wfi.get("next_node_id", "")
                 _cb_data = event.data or ""

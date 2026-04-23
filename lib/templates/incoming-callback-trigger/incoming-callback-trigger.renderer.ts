@@ -76,7 +76,8 @@ function buildAllNodeRefs(nodes: Node[]): CallbackNodeRef[] {
 export function generateIncomingCallbackTriggers(
   params: IncomingCallbackTriggerTemplateParams,
 ): string {
-  if (params.entries.length === 0) return '';
+  // Генерируем если есть триггеры ИЛИ есть ноды (для waiting_callback_input_middleware)
+  if (params.entries.length === 0 && (!params.allNodes || params.allNodes.length === 0)) return '';
   const validated = incomingCallbackTriggerParamsSchema.parse(params);
   return renderPartialTemplate('incoming-callback-trigger/incoming-callback-trigger.py.jinja2', {
     incomingCallbackTriggerEntries: validated.entries,
@@ -91,9 +92,11 @@ export function generateIncomingCallbackTriggers(
  */
 export function generateIncomingCallbackTriggerHandlers(nodes: Node[]): string {
   const entries = collectIncomingCallbackTriggerEntries(nodes);
-  if (entries.length === 0) return '';
+  const allNodes = buildAllNodeRefs(nodes);
+  // Генерируем всегда если есть ноды — нужен waiting_callback_input_middleware
+  if (entries.length === 0 && allNodes.length === 0) return '';
   return generateIncomingCallbackTriggers({
     entries,
-    allNodes: buildAllNodeRefs(nodes),
+    allNodes,
   });
 }
