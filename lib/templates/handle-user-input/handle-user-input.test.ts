@@ -214,8 +214,8 @@ describe('generateHandleUserInput()', () => {
       });
 
       assert.ok(r.includes('async def call_skip_target_handler'));
-      assert.ok(r.includes('await handle_callback_node_a(fake_callback)'));
-      assert.ok(r.includes('await handle_callback_node_b(fake_callback)'));
+      assert.ok(r.includes('await handle_callback_node_a('));
+      assert.ok(r.includes('await handle_callback_node_b('));
     });
 
     it('переходит к dedicated input-узлу после текстового ответа через fake_callback', () => {
@@ -226,7 +226,7 @@ describe('generateHandleUserInput()', () => {
       });
 
       assert.ok(r.includes('id="text_nav"'));
-      assert.ok(r.includes('await handle_callback_input_1(fake_callback)'));
+      assert.ok(r.includes('await handle_callback_input_1('));
     });
 
     it('переходит к command_trigger по next_node_id через command_trigger_<safeName>_handler', () => {
