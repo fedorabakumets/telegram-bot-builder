@@ -6,6 +6,9 @@
     - targetNodeId: string    — ID целевого узла
     - targetNodeType: string  — тип целевого узла
 
+  @param {array} allNodes - Все узлы проекта [{id, safeName}] для навигации
+    в waiting_callback_input_middleware
+
   @fsm Middleware получает state из data["state"] и сохраняет callback_data в FSM.
        Передаёт state целевому обработчику для сквозной передачи по цепочке.
 #}
@@ -98,3 +101,51 @@ async def incoming_callback_trigger_{{ sanitized_node_id }}_middleware(handler, 
 dp.callback_query.middleware(incoming_callback_trigger_{{ sanitized_node_id }}_middleware)
 
 {% endfor %}
+
+{% if allNodes %}
+# Глобальный обработчик callback_query для waiting_for_input типа "callback"
+async def waiting_callback_input_middleware(handler, event: types.CallbackQuery, data: dict):
+    """Обрабатывает нажатие кнопки когда input нода ожидает callback."""
+    try:
+        user_id = event.from_user.id
+        if user_id in user_data and "waiting_for_input" in user_data[user_id]:
+            _wfi = user_data[user_id]["waiting_for_input"]
+            if isinstance(_wfi, dict) and _wfi.get("type") == "callback":
+                _cb_variable = _wfi.get("variable", "callback_response")
+                _cb_next_node = _wfi.get("next_node_id", "")
+                _cb_data = event.data or ""
+                # Сохраняем callback_data в переменную пользователя
+                await set_user_var(user_id, _cb_variable, _cb_data)
+                logging.info(f"✅ Callback ответ сохранён: {_cb_variable} = {_cb_data}")
+                # Очищаем состояние ожидания
+                del user_data[user_id]["waiting_for_input"]
+                # Отвечаем на callback чтобы убрать анимацию загрузки
+                try:
+                    await event.answer()
+                except Exception:
+                    pass
+                # Переходим к следующему узлу если указан
+                if _cb_next_node:
+                    logging.info(f"🚀 Callback input: переходим к узлу {_cb_next_node}")
+                    _cb_fake_callback = SimpleNamespace(
+                        id="callback_input_nav",
+                        from_user=event.from_user,
+                        chat_instance="",
+                        data=_cb_next_node,
+                        message=event.message,
+                        _is_fake=True,
+                        answer=lambda *_a, **_kw: asyncio.sleep(0)
+                    )
+                    _cb_state = data.get("state")
+{% for node in allNodes %}
+                    if _cb_next_node == "{{ node.id }}":
+                        await handle_callback_{{ node.safeName }}(_cb_fake_callback, state=_cb_state)
+                        return
+{% endfor %}
+                return
+    except Exception as _e:
+        logging.error(f"Ошибка в waiting_callback_input_middleware: {_e}")
+    return await handler(event, data)
+
+dp.callback_query.middleware(waiting_callback_input_middleware)
+{% endif %}

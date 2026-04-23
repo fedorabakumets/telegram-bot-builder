@@ -141,6 +141,24 @@ export const invalidParamsMissingNodeId = {
   inputVariable: 'var',
 } as unknown as UserInputTemplateParams;
 
+/** Фикстура: inputType=callback — ожидание нажатия inline-кнопки */
+export const validParamsCallbackInput: UserInputTemplateParams = {
+  nodeId: 'input_callback_1',
+  safeName: 'input_callback_1',
+  inputVariable: 'callback_response',
+  inputType: 'callback',
+  inputTargetNodeId: 'msg_done',
+  saveToDatabase: true,
+};
+
+/** Фикстура: узел типа input с inputType=callback */
+export const dedicatedCallbackInputNode: Node = makeNode('input_callback_1', 'input', {
+  inputType: 'callback',
+  inputVariable: 'callback_response',
+  inputTargetNodeId: 'msg_done',
+  appendVariable: false,
+  saveToDatabase: true,
+});
 // ─── Высокоуровневые фикстуры (Node[]) ───────────────────────────────────────
 
 function makeNode(id: string, type: string, data: Record<string, any>): Node {

@@ -20,6 +20,7 @@ import {
   validParamsDedicatedLocationInput,
   validParamsButtonInput,
   validParamsButtonWithText,
+  validParamsCallbackInput,
   invalidParamsMissingNodeId,
   nodeWithTextInput,
   nodeWithEmailValidation,
@@ -29,6 +30,7 @@ import {
   nodeWithoutCollectInput,
   dedicatedInputNode,
   dedicatedAnyInputNode,
+  dedicatedCallbackInputNode,
   nodesWithMixedInput,
 } from './user-input.fixture';
 
@@ -169,6 +171,18 @@ describe('generateUserInput()', () => {
   it('skip_buttons отсутствует если пустой массив', () => {
     const r = generateUserInput(validParamsMinimal);
     assert.ok(!r.includes('"skip_buttons"'));
+  });
+
+  it('inputType callback → type=callback и modes=["callback"]', () => {
+    const r = generateUserInput(validParamsCallbackInput);
+    assert.ok(r.includes('"type": "callback"'));
+    assert.ok(r.includes('"modes": ["callback"]'));
+  });
+
+  it('inputType callback → переменная сохраняется корректно', () => {
+    const r = generateUserInput(validParamsCallbackInput);
+    assert.ok(r.includes('"variable": "callback_response"'));
+    assert.ok(r.includes('"next_node_id": "msg_done"'));
   });
 
   it('дефолт inputVariable = "input" (совпадает с реальным кодом)', () => {
@@ -317,6 +331,13 @@ describe('generateUserInputFromNode()', () => {
     assert.ok(r.includes('"type": "contact"'));
     assert.ok(r.includes('"contact_variable": "user_contact"'));
     assert.ok(r.includes('"next_node_id": "msg_done"'));
+  });
+
+  it('генерирует type=callback для dedicated callback input-узла', () => {
+    const r = generateUserInputFromNode(dedicatedCallbackInputNode);
+    assert.ok(r.includes('"type": "callback"'));
+    assert.ok(r.includes('"modes": ["callback"]'));
+    assert.ok(r.includes('"variable": "callback_response"'));
   });
 });
 

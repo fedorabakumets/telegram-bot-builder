@@ -49,6 +49,7 @@ export const SAVE_ANSWER_SOURCE_OPTIONS: Array<{ value: string; label: string }>
   { value: 'document', label: 'Документ' },
   { value: 'location', label: 'Геолокация' },
   { value: 'contact', label: 'Контакт' },
+  { value: 'callback', label: 'Нажатие кнопки (callback)' },
 ];
 
 export function SaveAnswerProperties({

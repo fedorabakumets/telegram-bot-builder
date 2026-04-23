@@ -1847,8 +1847,125 @@ test('J03', 'большой mixed project по мотивам реального
   syntax(code, 'j03');
 });
 
-const passed = results.filter(r => r.passed).length;
-const failed = results.filter(r => !r.passed).length;
+console.log('══ Блок K: inputType=callback — ожидание нажатия inline-кнопки ══');
+
+test('K01', 'inputType=callback генерирует modes=["callback"] и type=callback', () => {
+  const project = makeFlowProject([
+    makeMessageNode('msg_1', 'Нажми кнопку', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_callback_1',
+    }),
+    makeInputNode('input_callback_1', {
+      inputType: 'callback',
+      inputVariable: 'callback_response',
+      inputTargetNodeId: 'msg_done',
+    }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+
+  const code = gen(project, 'k01');
+  const inp = block(code, 'input_callback_1');
+  assertIncludesAll(inp, [
+    '"type": "callback"',
+    '"modes": ["callback"]',
+    '"variable": "callback_response"',
+    '"next_node_id": "msg_done"',
+  ], 'K01');
+  syntax(code, 'k01');
+});
+
+test('K02', 'inputType=callback генерирует callback-handler с waiting_for_input', () => {
+  const project = makeFlowProject([
+    makeMessageNode('msg_1', 'Нажми кнопку', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_callback_1',
+    }),
+    makeInputNode('input_callback_1', {
+      inputType: 'callback',
+      inputVariable: 'user_choice',
+      inputTargetNodeId: 'msg_done',
+    }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+
+  const code = gen(project, 'k02');
+  const inp = block(code, 'input_callback_1');
+  assertIncludesAll(inp, [
+    '@dp.callback_query(lambda c: c.data == "input_callback_1")',
+    'async def handle_callback_input_callback_1',
+    '"waiting_for_input"',
+    '"variable": "user_choice"',
+  ], 'K02');
+  syntax(code, 'k02');
+});
+
+test('K03', 'текстовый ввод игнорируется когда ожидается callback', () => {
+  const project = makeFlowProject([
+    makeMessageNode('msg_1', 'Нажми кнопку', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_callback_1',
+    }),
+    makeInputNode('input_callback_1', {
+      inputType: 'callback',
+      inputVariable: 'btn_answer',
+      inputTargetNodeId: 'msg_done',
+    }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+
+  const code = gen(project, 'k03');
+  ok(
+    code.includes('ожидается нажатие кнопки (callback)'),
+    'K03: должна быть проверка игнорирования текста при ожидании callback',
+  );
+  syntax(code, 'k03');
+});
+
+test('K04', 'inputType=callback с save_to_database=false корректно генерируется', () => {
+  const project = makeFlowProject([
+    makeMessageNode('msg_1', 'Нажми кнопку', {
+      enableAutoTransition: true,
+      autoTransitionTo: 'input_callback_1',
+    }),
+    makeInputNode('input_callback_1', {
+      inputType: 'callback',
+      inputVariable: 'btn_no_db',
+      inputTargetNodeId: 'msg_done',
+      saveToDatabase: false,
+    }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+
+  const code = gen(project, 'k04');
+  const inp = block(code, 'input_callback_1');
+  assertIncludesAll(inp, ['"save_to_database": False', '"type": "callback"'], 'K04');
+  syntax(code, 'k04');
+});
+
+test('K05', 'цепочка message -> callback input -> message компилируется', () => {
+  const project = makeFlowProject([
+    makeStartNode('start_1', {
+      keyboardType: 'inline',
+      buttons: [makeButton('Выбор', 'goto', 'input_callback_1')],
+    }),
+    makeInputNode('input_callback_1', {
+      inputType: 'callback',
+      inputVariable: 'selected_option',
+      inputTargetNodeId: 'msg_result',
+    }),
+    makeMessageNode('msg_result', 'Ваш выбор сохранён'),
+  ]);
+
+  const code = gen(project, 'k05');
+  assertIncludesAll(code, [
+    'handle_callback_input_callback_1',
+    '"type": "callback"',
+    '"variable": "selected_option"',
+  ], 'K05');
+  syntax(code, 'k05');
+});
+
+const passed = results.filter(r => r.passed).length;const failed = results.filter(r => !r.passed).length;
 const total = results.length;
 
 console.log(`\nИтог: ${passed}/${total} пройдено${failed > 0 ? `, ${failed} провалено` : ' ✅'}`);

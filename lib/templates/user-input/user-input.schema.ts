@@ -6,7 +6,7 @@
 import { z } from 'zod';
 
 const inputValidationTypeSchema = z.enum(['none', 'email', 'phone', 'number']);
-const inputTypeSchema = z.enum(['text', 'button']);
+const inputTypeSchema = z.enum(['text', 'button', 'callback']);
 const inputSourceSchema = z.enum(['any', 'text', 'photo', 'video', 'audio', 'document', 'location', 'contact']);
 const skipButtonSchema = z.object({ text: z.string(), target: z.string() });
 

@@ -234,6 +234,9 @@
 {{ ind2 }}if input_type in ["photo", "video", "audio", "document", "location", "contact"]:
 {{ ind3 }}logging.info(f"Текстовый ввод от пользователя {user_id} проигнорирован - ожидается медиа ({input_type})")
 {{ ind3 }}return
+{{ ind2 }}if input_type == "callback":
+{{ ind3 }}logging.info(f"Текстовый ввод от пользователя {user_id} проигнорирован - ожидается нажатие кнопки (callback)")
+{{ ind3 }}return
 {{ ind2 }}# Валидация длины
 {{ ind2 }}if min_length > 0 and len(user_text) < min_length:
 {{ ind3 }}retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")

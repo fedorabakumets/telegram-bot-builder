@@ -5,6 +5,7 @@
 
 import type { Node } from '@shared/schema';
 import type {
+  CallbackNodeRef,
   IncomingCallbackTriggerEntry,
   IncomingCallbackTriggerTemplateParams,
 } from './incoming-callback-trigger.params';
@@ -54,6 +55,20 @@ export function collectIncomingCallbackTriggerEntries(nodes: Node[]): IncomingCa
 }
 
 /**
+ * Преобразует массив узлов в минимальные ссылки для навигации в шаблоне.
+ * @param nodes - Массив узлов холста
+ * @returns Массив CallbackNodeRef
+ */
+function buildAllNodeRefs(nodes: Node[]): CallbackNodeRef[] {
+  return nodes
+    .filter(n => n != null)
+    .map(n => ({
+      id: n.id,
+      safeName: n.id.replace(/[^a-zA-Z0-9_]/g, '_'),
+    }));
+}
+
+/**
  * Генерация Python middleware триггеров входящих callback_query из параметров.
  * @param params - Параметры шаблона
  * @returns Сгенерированный Python код
@@ -65,6 +80,7 @@ export function generateIncomingCallbackTriggers(
   const validated = incomingCallbackTriggerParamsSchema.parse(params);
   return renderPartialTemplate('incoming-callback-trigger/incoming-callback-trigger.py.jinja2', {
     incomingCallbackTriggerEntries: validated.entries,
+    allNodes: params.allNodes ?? [],
   });
 }
 
@@ -76,5 +92,8 @@ export function generateIncomingCallbackTriggers(
 export function generateIncomingCallbackTriggerHandlers(nodes: Node[]): string {
   const entries = collectIncomingCallbackTriggerEntries(nodes);
   if (entries.length === 0) return '';
-  return generateIncomingCallbackTriggers({ entries });
+  return generateIncomingCallbackTriggers({
+    entries,
+    allNodes: buildAllNodeRefs(nodes),
+  });
 }
