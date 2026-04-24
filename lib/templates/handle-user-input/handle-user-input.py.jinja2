@@ -366,7 +366,7 @@
 {{ ind7 }}    message=message,
 {{ ind7 }}    answer=lambda *_args, **_kwargs: asyncio.sleep(0)
 {{ ind7 }})
-{{ ind7 }}await handle_callback_{{ node.safeName }}(fake_callback, state=None)
+{{ ind7 }}await handle_callback_{{ node.safeName }}(fake_callback)  # state=None
 {{ ind7 }}break
 {% endfor %}
 {{ ind6 }}if not _node_handled:

@@ -36,9 +36,9 @@
 {%- endif %}
 
 {# Обработчик callback для навигации к узлу #}
-{# Декоратор слушает только nodeId — виртуальные триггеры для customCallbackData #}
-{# генерируются отдельно через collectVirtualCallbackTriggerEntries #}
-@dp.callback_query(lambda c: c.data == "{{ nodeId }}" or c.data.startswith("{{ nodeId }}_btn_"))
+{# Если задан callbackPattern (customCallbackData) — декоратор слушает его, иначе nodeId #}
+{%- set _cb_pattern = callbackPattern if callbackPattern else nodeId %}
+@dp.callback_query(lambda c: c.data == "{{ _cb_pattern }}"{% if not callbackPattern %} or c.data.startswith("{{ nodeId }}_btn_"){% endif %})
 async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery, state: FSMContext = None):
     """Обработчик перехода к узлу {{ nodeId }}"""
     user_id = callback_query.from_user.id

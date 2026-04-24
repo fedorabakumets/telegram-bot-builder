@@ -57,12 +57,18 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
         .replace(/"/g, '\\"')
         .replace(/\n/g, '\\n')
         .replace(/\r/g, '');
+
+      /** Тип целевого узла — нужен для корректной генерации вызова в шаблоне */
+      const targetNode = b.target ? validNodes.find(n => n.id === b.target) : undefined;
+      const targetNodeType = targetNode?.type ?? 'message';
+
       return {
         id: b.id ?? '',
         operator: b.operator,
         value: sanitizeValue(b.value ?? ''),
         value2: sanitizeValue(b.value2 ?? ''),
         target: b.target,
+        targetNodeType,
         isFirstNumeric,
         isFirstString,
         isFirstSystem,
@@ -109,6 +115,8 @@ function enrichEntries(entries: ConditionEntry[]): any[] {
       if (isFirstSystem) firstSystemSeen = true;
       return {
         ...b,
+        /** Тип целевого узла сохраняется из исходной ветки если уже есть */
+        targetNodeType: b.targetNodeType ?? 'message',
         isFirstNumeric,
         isFirstString,
         isFirstSystem,
