@@ -58,8 +58,8 @@ describe('keyboard.py.jinja2 шаблон', () => {
 
         assert.ok(result.includes('InlineKeyboardBuilder'));
         assert.ok(result.includes('builder.adjust(2, 2)'));
-        assert.ok(result.includes('callback_data="btn1"'));
-        assert.ok(result.includes('callback_data="btn4"'));
+        assert.ok(result.includes('callback_data="btn1|Button 1"'));
+        assert.ok(result.includes('callback_data="btn4|Button 4"'));
       });
 
       it('должен генерировать oneTimeKeyboard', () => {
@@ -137,10 +137,10 @@ describe('keyboard.py.jinja2 шаблон', () => {
 
         assert.ok(!result.includes('builder.adjust()'), `Не должно быть пустого builder.adjust():\n${result}`);
         assert.ok(result.includes('builder.row('), `Ожидался builder.row() для ручных рядов:\n${result}`);
-        assert.ok(result.includes('callback_data="ask-token"'));
-        assert.ok(result.includes('callback_data="rename-project"'));
-        assert.ok(result.includes('callback_data="delete-project"'));
-        assert.ok(result.includes('callback_data="fetch-projects"'));
+        assert.ok(result.includes('callback_data="ask-token|Добавить токен"'));
+        assert.ok(result.includes('callback_data="rename-project|Переименовать"'));
+        assert.ok(result.includes('callback_data="delete-project|Удалить"'));
+        assert.ok(result.includes('callback_data="fetch-projects|К списку"'));
       });
     });
 
@@ -148,8 +148,8 @@ describe('keyboard.py.jinja2 шаблон', () => {
       it('должен генерировать callback кнопки', () => {
         const result = generateKeyboard(validParamsInline);
 
-        assert.ok(result.includes('callback_data="btn_stats"'));
-        assert.ok(result.includes('callback_data="btn_settings"'));
+        assert.ok(result.includes('callback_data="btn_stats|📊 Статистика"'));
+        assert.ok(result.includes('callback_data="btn_settings|⚙️ Настройки"'));
       });
 
       it('должен генерировать URL кнопки', () => {
@@ -201,8 +201,8 @@ describe('keyboard.py.jinja2 шаблон', () => {
         const result = generateKeyboard(validParamsWithLayout);
 
         assert.ok(result.includes('builder.adjust(2, 2)'), `Ожидался builder.adjust(2, 2), получено:\n${result}`);
-        assert.ok(result.includes('callback_data="btn1"'));
-        assert.ok(result.includes('callback_data="btn3"'));
+        assert.ok(result.includes('callback_data="btn1|Button 1"'));
+        assert.ok(result.includes('callback_data="btn3|Button 3"'));
       });
 
       it('не должен генерировать builder.adjust(, ) при пустых buttonIds', () => {
@@ -233,10 +233,10 @@ describe('keyboard.py.jinja2 шаблон', () => {
 
         // Ручная раскладка: rows = [[btn_1, btn_2], [btn_3, btn_4]]
         // Кнопки должны идти в порядке btn1 → btn2 → btn3 → btn4
-        const btn1Index = result.indexOf('callback_data="btn1"');
-        const btn2Index = result.indexOf('callback_data="btn2"');
-        const btn3Index = result.indexOf('callback_data="btn3"');
-        const btn4Index = result.indexOf('callback_data="btn4"');
+        const btn1Index = result.indexOf('callback_data="btn1|Button 1"');
+        const btn2Index = result.indexOf('callback_data="btn2|Button 2"');
+        const btn3Index = result.indexOf('callback_data="btn3|Button 3"');
+        const btn4Index = result.indexOf('callback_data="btn4|Button 4"');
 
         assert.ok(btn1Index !== -1, 'btn1 не найден');
         assert.ok(btn1Index < btn2Index && btn2Index < btn3Index && btn3Index < btn4Index,
@@ -399,7 +399,7 @@ describe('keyboard.py.jinja2 шаблон', () => {
           resizeKeyboard: true,
         });
 
-        assert.ok(result.includes('callback_data="node_back"'), `Ожидался callback_data="node_back", получено:\n${result}`);
+        assert.ok(result.includes('callback_data="node_back|Назад"'), `Ожидался callback_data="node_back|Назад", получено:\n${result}`);
       });
     });
 
@@ -535,7 +535,7 @@ describe('keyboard.py.jinja2 шаблон', () => {
       it('copy_text кнопка работает вместе с другими inline кнопками', () => {
         const result = generateKeyboard(validParamsCopyText);
         assert.ok(result.includes('CopyTextButton'), 'Должна быть copy_text кнопка');
-        assert.ok(result.includes('callback_data="next_node"'), 'Должна быть goto кнопка');
+        assert.ok(result.includes('callback_data="next_node|Перейти"'), 'Должна быть goto кнопка');
         assert.ok(result.includes('InlineKeyboardBuilder'), 'Должен использоваться InlineKeyboardBuilder');
       });
     });
@@ -584,7 +584,7 @@ describe('keyboard.py.jinja2 шаблон', () => {
       it('web_app кнопка работает вместе с другими inline кнопками', () => {
         const result = generateKeyboard(validParamsWebApp);
         assert.ok(result.includes('WebAppInfo'), 'Должна быть web_app кнопка');
-        assert.ok(result.includes('callback_data="next_node"'), 'Должна быть goto кнопка');
+        assert.ok(result.includes('callback_data="next_node|Перейти"'), 'Должна быть goto кнопка');
         assert.ok(result.includes('InlineKeyboardBuilder'), 'Должен использоваться InlineKeyboardBuilder');
       });
 
@@ -705,7 +705,7 @@ describe('keyboard.py.jinja2 шаблон', () => {
           oneTimeKeyboard: false,
           resizeKeyboard: true,
         });
-        assert.ok(result.includes('callback_data="node_del"'), 'Должен быть callback_data');
+        assert.ok(result.includes('callback_data="node_del|Удалить"'), 'Должен быть callback_data');
         assert.ok(result.includes('style="danger"'), 'Должен быть style="danger"');
       });
 
@@ -919,10 +919,10 @@ describe('keyboard.py.jinja2 шаблон', () => {
 
     assert.ok(!result.includes('builder.adjust('), `Не ожидался builder.adjust в mixed-режиме:\n${result}`);
     assert.ok(result.includes('builder.row(*_dynamic_row)'), `Динамические кнопки должны собираться через row():\n${result}`);
-    assert.ok(result.includes('callback_data="node_add"'), 'Должна быть кнопка node_add');
-    assert.ok(result.includes('callback_data="node_rename"'), 'Должна быть кнопка node_rename');
-    assert.ok(result.includes('callback_data="node_delete"'), 'Должна быть кнопка node_delete');
-    assert.ok(result.includes('callback_data="node_back"'), 'Должна быть кнопка node_back');
+    assert.ok(result.includes('callback_data="node_add|Добавить"'), 'Должна быть кнопка node_add');
+    assert.ok(result.includes('callback_data="node_rename|Переименовать"'), 'Должна быть кнопка node_rename');
+    assert.ok(result.includes('callback_data="node_delete|Удалить"'), 'Должна быть кнопка node_delete');
+    assert.ok(result.includes('callback_data="node_back|Назад"'), 'Должна быть кнопка node_back');
     assert.ok(result.includes('builder.row('), `Ожидались явные строки layout:\n${result}`);
   });
 

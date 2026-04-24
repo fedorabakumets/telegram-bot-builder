@@ -112,9 +112,16 @@ async def waiting_callback_input_middleware(handler, event: types.CallbackQuery,
             _wfi = user_data[user_id]["waiting_for_input"]
             if isinstance(_wfi, dict) and ("callback" in _wfi.get("modes", []) or _wfi.get("type") == "callback"):
                 _cb_variable = _wfi.get("variable", "callback_response")
-                _cb_next_node = _wfi.get("next_node_id", "")
-                _cb_data = event.data or ""
-                # Сохраняем callback_data в переменную пользователя
+                _cb_raw = event.data or ""
+                # Если callback_data содержит разделитель |, разбиваем на ID узла и текст кнопки
+                if "|" in _cb_raw:
+                    _cb_node_id, _cb_button_text = _cb_raw.split("|", 1)
+                    _cb_data = _cb_button_text  # сохраняем текст кнопки в переменную
+                    _cb_next_node = _cb_node_id  # используем ID узла для навигации
+                else:
+                    _cb_data = _cb_raw
+                    _cb_next_node = _wfi.get("next_node_id", "")
+                # Сохраняем текст кнопки (или callback_data) в переменную пользователя
                 await set_user_var(user_id, _cb_variable, _cb_data)
                 logging.info(f"✅ Callback ответ сохранён: {_cb_variable} = {_cb_data}")
                 # Очищаем состояние ожидания

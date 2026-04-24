@@ -192,7 +192,7 @@
 {{ indent }}builder.row(
 {%- for btn in row %}
 {%- if btn.action == 'goto' or btn.action == 'complete' %}
-{{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or btn.target or btn.id or 'no_action' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
+{{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or ((btn.target or btn.id or 'no_action') ~ '|' ~ btn.text) }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
 {%- elif btn.action == 'url' %}
 {{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), url="{{ btn.url or btn.target or '#' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
 {%- else %}
@@ -206,7 +206,7 @@
 {{ indent }}builder.row(
 {%- for btn in row %}
 {%- if btn.action == 'goto' or btn.action == 'complete' %}
-{{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or btn.target or btn.id or 'no_action' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
+{{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or ((btn.target or btn.id or 'no_action') ~ '|' ~ btn.text) }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
 {%- elif btn.action == 'url' %}
 {{ indent }}    InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), url="{{ btn.url or btn.target or '#' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}){{ "," if not loop.last }}
 {%- else %}
@@ -223,7 +223,7 @@
 {# Добавляем статические кнопки после динамических с учётом keyboardLayout #}
 {%- for btn in buttons %}
 {%- if btn.action == 'goto' or btn.action == 'complete' %}
-{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or btn.target or btn.id or 'no_action' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or ((btn.target or btn.id or 'no_action') ~ '|' ~ btn.text) }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
 {%- elif btn.action == 'url' %}
 {{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), url="{{ btn.url or btn.target or '#' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
 {%- else %}
@@ -273,7 +273,7 @@
 {%- elif btn.action == 'complete' and allowMultipleSelection %}
 {{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="done_{{ effectiveNodeId }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
 {%- elif btn.action == 'goto' or btn.action == 'complete' %}
-{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or btn.target or btn.id or 'no_action' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+{{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.customCallbackData or ((btn.target or btn.id or 'no_action') ~ '|' ~ btn.text) }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
 {%- elif btn.action == 'copy_text' and btn.copyText %}
 {{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), copy_text=CopyTextButton(text="{{ btn.copyText }}"){% if btn.style %}, style="{{ btn.style }}"{% endif %}))
 {%- elif btn.action == 'copy_text' %}

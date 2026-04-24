@@ -181,8 +181,8 @@ export const invalidParamsMissingField = {
 /** Ожидаемый вывод: inline клавиатура */
 export const expectedOutputInline = `
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📊 Статистика", callback_data="btn_stats"))
-    builder.add(InlineKeyboardButton(text="⚙️ Настройки", callback_data="btn_settings"))
+    builder.add(InlineKeyboardButton(text="📊 Статистика", callback_data="btn_stats|📊 Статистика"))
+    builder.add(InlineKeyboardButton(text="⚙️ Настройки", callback_data="btn_settings|⚙️ Настройки"))
     builder.add(InlineKeyboardButton(text="🌐 Сайт", url="https://example.com"))
     keyboard = builder.as_markup()
 `.trim();
