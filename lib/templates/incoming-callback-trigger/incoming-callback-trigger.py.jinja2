@@ -113,8 +113,24 @@ async def waiting_callback_input_middleware(handler, event: types.CallbackQuery,
             if isinstance(_wfi, dict) and ("callback" in _wfi.get("modes", []) or _wfi.get("type") == "callback"):
                 _cb_variable = _wfi.get("variable", "callback_response")
                 _cb_next_node = _wfi.get("next_node_id", "")
-                _cb_data = event.data or ""
-                # Сохраняем callback_data в переменную пользователя
+                _cb_raw = event.data or ""
+                # Пытаемся извлечь текст кнопки из reply_markup по callback_data
+                _cb_btn_text = ""
+                try:
+                    if event.message and hasattr(event.message, "reply_markup"):
+                        _rm = event.message.reply_markup
+                        if _rm and hasattr(_rm, "inline_keyboard"):
+                            for _row in _rm.inline_keyboard:
+                                for _btn in _row:
+                                    if getattr(_btn, "callback_data", None) == _cb_raw:
+                                        _cb_btn_text = _btn.text or ""
+                                        break
+                                if _cb_btn_text:
+                                    break
+                except Exception:
+                    pass
+                # Сохраняем текст кнопки если нашли, иначе callback_data
+                _cb_data = _cb_btn_text if _cb_btn_text else _cb_raw
                 await set_user_var(user_id, _cb_variable, _cb_data)
                 logging.info(f"✅ Callback ответ сохранён: {_cb_variable} = {_cb_data}")
                 # Очищаем состояние ожидания
