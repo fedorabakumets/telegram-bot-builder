@@ -12,6 +12,7 @@
  * Блок I: Взаимодействие с другими action-узлами (8 тестов)
  * Блок J: Полные реальные сценарии (8 тестов)
  * Блок K: keyboardNodeId и динамические кнопки (8 тестов)
+ * Блок L: Отсутствие дублирующихся обработчиков (8 тестов)
  */
 
 import fs from 'fs';
@@ -1451,6 +1452,242 @@ test('K08', 'полный сценарий пагинации: http_request → 
   ok(code.includes('InlineKeyboardBuilder'), 'InlineKeyboardBuilder должен быть в коде');
   ok(code.includes('for _edit_item in _edit_items'), 'цикл по динамическим кнопкам должен быть в коде');
   syntax(code, 'k08');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК L: Отсутствие дублирующихся обработчиков
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок L: Отсутствие дублирующихся обработчиков ─────────────────');
+
+test('L01', 'keyboard-нода только для edit_message → функция handle_callback_kb_only не определяется как самостоятельный обработчик → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_kb_only'),
+    makeEditMessageNode('em_kb_only', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_only',
+    }),
+    makeKeyboardNode('kb_only', {
+      buttons: [{ id: 'btn1', text: 'Кнопка', action: 'goto', target: 'msg1' }],
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'l01');
+  // Самостоятельный обработчик keyboard-ноды не должен быть определён
+  const defs = (code.match(/async def handle_callback_kb_only/g) || []).length;
+  ok(defs === 0, `async def handle_callback_kb_only не должна быть определена, найдено: ${defs}`);
+  syntax(code, 'l01');
+});
+
+test('L02', 'keyboard-нода только для edit_message → декоратор @dp.callback_query для kb_only отсутствует → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_kb_only'),
+    makeEditMessageNode('em_kb_only', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_only',
+    }),
+    makeKeyboardNode('kb_only', {
+      buttons: [{ id: 'btn1', text: 'Кнопка', action: 'goto', target: 'msg1' }],
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'l02');
+  // Декоратор самостоятельного keyboard-обработчика не должен присутствовать
+  const decorators = (code.match(/@dp\.callback_query\(lambda c: c\.data == "kb_only"\)/g) || []).length;
+  ok(decorators === 0, `декоратор для kb_only не должен быть в коде, найдено: ${decorators}`);
+  syntax(code, 'l02');
+});
+
+test('L03', 'keyboard-нода привязана к message-хосту И к edit_message → два обработчика (message + edit_message) → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'msg_with_kb'),
+    {
+      id: 'msg_with_kb', type: 'message',
+      position: { x: 0, y: 0 },
+      data: {
+        messageText: 'Меню',
+        buttons: [],
+        keyboardType: 'none',
+        formatMode: 'none',
+        markdown: false,
+        keyboardNodeId: 'kb_shared',  // message-хост явно ссылается на keyboard-ноду
+      },
+    },
+    makeKeyboardNode('kb_shared', {
+      buttons: [{ id: 'btn1', text: 'Редактировать', action: 'goto', target: 'em_shared' }],
+    }),
+    makeCallbackTriggerNode('cb_edit', 'em_shared'),
+    makeEditMessageNode('em_shared', 'msg_done', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_shared',
+    }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+  const code = gen(p, 'l03');
+  ok(code.includes('handle_callback_msg_with_kb'), 'обработчик message-узла должен быть в коде');
+  ok(code.includes('handle_callback_em_shared'), 'обработчик edit_message должен быть в коде');
+  syntax(code, 'l03');
+});
+
+test('L04', 'две keyboard-ноды: одна только для edit_message, другая для message → kb_edit_only не генерирует самостоятельный обработчик → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'msg_host'),
+    {
+      id: 'msg_host', type: 'message',
+      position: { x: 0, y: 0 },
+      data: {
+        messageText: 'Меню',
+        buttons: [],
+        keyboardType: 'none',
+        formatMode: 'none',
+        markdown: false,
+        keyboardNodeId: 'kb_for_msg',
+      },
+    },
+    makeKeyboardNode('kb_for_msg', {
+      buttons: [{ id: 'btn1', text: 'Кнопка', action: 'goto', target: 'msg_host' }],
+    }),
+    makeCallbackTriggerNode('cb_edit', 'em_edit'),
+    makeEditMessageNode('em_edit', 'msg_host', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_edit_only',
+    }),
+    makeKeyboardNode('kb_edit_only', {
+      buttons: [{ id: 'btn2', text: 'Закрыть', action: 'goto', target: 'msg_host' }],
+    }),
+    makeMessageNode('msg_host', 'Готово'),
+  ]);
+  const code = gen(p, 'l04');
+  // kb_edit_only только для edit_message — самостоятельный обработчик не должен быть определён
+  const kbEditOnlyDefs = (code.match(/async def handle_callback_kb_edit_only/g) || []).length;
+  ok(kbEditOnlyDefs === 0, `async def handle_callback_kb_edit_only не должна быть определена, найдено: ${kbEditOnlyDefs}`);
+  // Обработчик edit_message должен присутствовать
+  ok(code.includes('handle_callback_em_edit'), 'handle_callback_em_edit должен быть в коде');
+  syntax(code, 'l04');
+});
+
+test('L05', 'keyboard-нода только для edit_message с динамическими кнопками → цикл for _edit_item в коде, самостоятельный обработчик не определяется → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_dyn_only'),
+    makeEditMessageNode('em_dyn_only', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_dyn_only',
+    }),
+    makeKeyboardNode('kb_dyn_only', {
+      enableDynamicButtons: true,
+      dynamicButtons: {
+        sourceVariable: 'items',
+        arrayPath: 'list',
+        textTemplate: '{name}',
+        callbackTemplate: 'item_{id}',
+        columns: 1,
+      },
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'l05');
+  ok(code.includes('for _edit_item in _edit_items'), 'цикл for _edit_item in _edit_items должен быть в коде');
+  // Самостоятельный обработчик keyboard-ноды не должен быть определён
+  const kbHandlerDefs = (code.match(/async def handle_callback_kb_dyn_only/g) || []).length;
+  ok(kbHandlerDefs === 0, `async def handle_callback_kb_dyn_only не должна быть определена, найдено: ${kbHandlerDefs}`);
+  syntax(code, 'l05');
+});
+
+test('L06', 'полный сценарий пагинации: edit-kb-next-only (edit_message) + kb-next-only (только для edit_message) → самостоятельный обработчик kb-next-only не определяется → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb_page', 'fetch-bot-users'),
+    makeHttpRequestNode('fetch-bot-users', 'https://api.example.com/users?page=1', 'check-has-next'),
+    makeConditionNode('check-has-next', 'edit-kb-next-only'),
+    makeEditMessageNode('edit-kb-next-only', 'msg_list', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      keyboardNodeId: 'kb-next-only',
+    }),
+    makeKeyboardNode('kb-next-only', {
+      enableDynamicButtons: true,
+      dynamicButtons: {
+        sourceVariable: 'users_response',
+        arrayPath: 'users',
+        textTemplate: '{name} ({role})',
+        callbackTemplate: 'select_user_{id}',
+        columns: 1,
+      },
+      buttons: [
+        { id: 'btn_next', text: '➡️ Далее', action: 'goto', target: 'cb_page', customCallbackData: 'page_next' },
+      ],
+    }),
+    makeMessageNode('msg_list', 'Список пользователей'),
+  ]);
+  const code = gen(p, 'l06');
+  // Обработчик edit_message должен присутствовать
+  ok(code.includes('handle_callback_edit_kb_next_only'), 'handle_callback_edit_kb_next_only должен быть в коде');
+  // Самостоятельный keyboard-обработчик не должен быть определён
+  const kbDefs = (code.match(/async def handle_callback_kb_next_only/g) || []).length;
+  ok(kbDefs === 0, `async def handle_callback_kb_next_only не должна быть определена, найдено: ${kbDefs}`);
+  // Декоратор для kb-next-only не должен присутствовать
+  const kbDecorators = (code.match(/@dp\.callback_query\(lambda c: c\.data == "kb-next-only"\)/g) || []).length;
+  ok(kbDecorators === 0, `декоратор для kb-next-only не должен быть в коде, найдено: ${kbDecorators}`);
+  syntax(code, 'l06');
+});
+
+test('L07', 'keyboard-нода без привязки ни к message ни к edit_message (orphan) → очищается нормализатором → в коде нет её кнопок → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'msg1'),
+    makeMessageNode('msg1', 'Привет'),
+    makeKeyboardNode('kb_orphan', {
+      buttons: [{ id: 'btn_orphan', text: 'Сирота', action: 'goto', target: 'msg1', customCallbackData: 'orphan_btn_unique_xyz' }],
+    }),
+  ]);
+  const code = gen(p, 'l07');
+  ok(!code.includes('orphan_btn_unique_xyz'), 'кнопки orphan-ноды не должны быть в коде');
+  syntax(code, 'l07');
+});
+
+test('L08', 'три edit_message каждый со своей keyboard-нодой (только для edit_message) → три обработчика edit_message, ни одного самостоятельного keyboard-обработчика → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb_a', 'em_a'),
+    makeCallbackTriggerNode('cb_b', 'em_b'),
+    makeCallbackTriggerNode('cb_c', 'em_c'),
+    makeEditMessageNode('em_a', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_a',
+    }),
+    makeEditMessageNode('em_b', 'msg2', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_b',
+    }),
+    makeEditMessageNode('em_c', 'msg3', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_c',
+    }),
+    makeKeyboardNode('kb_a', { buttons: [{ id: 'btn_a', text: 'A', action: 'goto', target: 'msg1' }] }),
+    makeKeyboardNode('kb_b', { buttons: [{ id: 'btn_b', text: 'B', action: 'goto', target: 'msg2' }] }),
+    makeKeyboardNode('kb_c', { buttons: [{ id: 'btn_c', text: 'C', action: 'goto', target: 'msg3' }] }),
+    makeMessageNode('msg1', 'Ответ A'),
+    makeMessageNode('msg2', 'Ответ B'),
+    makeMessageNode('msg3', 'Ответ C'),
+  ]);
+  const code = gen(p, 'l08');
+  // Обработчики edit_message должны быть определены
+  ok(code.includes('handle_callback_em_a'), 'handle_callback_em_a должен быть в коде');
+  ok(code.includes('handle_callback_em_b'), 'handle_callback_em_b должен быть в коде');
+  ok(code.includes('handle_callback_em_c'), 'handle_callback_em_c должен быть в коде');
+  // Самостоятельные keyboard-обработчики не должны быть определены
+  const kbADefs = (code.match(/async def handle_callback_kb_a/g) || []).length;
+  const kbBDefs = (code.match(/async def handle_callback_kb_b/g) || []).length;
+  const kbCDefs = (code.match(/async def handle_callback_kb_c/g) || []).length;
+  ok(kbADefs === 0, `async def handle_callback_kb_a не должна быть определена, найдено: ${kbADefs}`);
+  ok(kbBDefs === 0, `async def handle_callback_kb_b не должна быть определена, найдено: ${kbBDefs}`);
+  ok(kbCDefs === 0, `async def handle_callback_kb_c не должна быть определена, найдено: ${kbCDefs}`);
+  syntax(code, 'l08');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────
