@@ -56,3 +56,6 @@ export type { SendMessage, ComponentDefinition } from "./additional-schemas";
 
 export { projectCollaborators } from "./project-collaborators";
 export type { ProjectCollaborator, InsertProjectCollaborator } from "./project-collaborators";
+
+export { appSettings } from "./app-settings";
+export type { AppSetting, InsertAppSetting } from "./app-settings";
