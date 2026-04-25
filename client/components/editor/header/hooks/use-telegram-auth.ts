@@ -130,6 +130,8 @@ export function useTelegramAuth() {
       queryClient.removeQueries({ queryKey: ['/api/templates/category/custom', 'guest'] });
       queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom', userData.id] });
       invalidateAuthQueries(queryClient);
+      // Оповещаем все экземпляры хука (в т.ч. AuthGuard) о входе
+      window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: { user: userData } }));
     } catch (e) {
       console.error('Ошибка сохранения пользователя в localStorage:', e);
     }

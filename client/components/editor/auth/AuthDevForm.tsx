@@ -7,8 +7,9 @@ import { useState } from 'react';
 import { Loader2, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useToast } from '@/hooks/use-toast';
+import { queryClient } from '@/queryClient';
+import { invalidateAuthQueries } from '@/utils/invalidate-auth-queries';
 
 /**
  * Форма входа по Telegram ID для dev-режима.
@@ -19,7 +20,6 @@ import { useToast } from '@/hooks/use-toast';
 export function AuthDevForm() {
   const [telegramId, setTelegramId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useTelegramAuth();
   const { toast } = useToast();
 
   /**
@@ -44,7 +44,11 @@ export function AuthDevForm() {
       });
       const data = await resp.json();
       if (data.success && data.user) {
-        login(data.user);
+        const user = data.user;
+        // Сохраняем в localStorage и оповещаем все экземпляры хука
+        localStorage.setItem('telegramUser', JSON.stringify(user));
+        invalidateAuthQueries(queryClient);
+        window.dispatchEvent(new CustomEvent('telegram-auth-change', { detail: { user } }));
       } else {
         toast({ title: 'Ошибка входа', description: data.error, variant: 'destructive' });
       }
