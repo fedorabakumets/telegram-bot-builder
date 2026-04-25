@@ -8,6 +8,7 @@ import { queryClient } from '@/queryClient';
 import type { AppUser, TelegramUser } from '@/types/telegram-user';
 import { isGuest as checkIsGuest, isTelegramUser } from '@/types/telegram-user';
 import { invalidateAuthQueries } from '@/utils/invalidate-auth-queries';
+import { clearUserCache } from '@/utils/invalidate-auth-queries';
 
 export type { TelegramUser, AppUser };
 
@@ -135,6 +136,8 @@ export function useTelegramAuth() {
     setUser(userData);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+      // Очищаем кеш предыдущего пользователя перед загрузкой данных нового
+      clearUserCache(queryClient);
       queryClient.removeQueries({ queryKey: ['/api/templates/category/custom', 'guest'] });
       queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom', userData.id] });
       invalidateAuthQueries(queryClient);
@@ -183,6 +186,8 @@ export function useTelegramAuth() {
     setUser(GUEST_USER);
     try {
       localStorage.removeItem(STORAGE_KEY);
+      // Очищаем весь кеш пользователя при выходе
+      clearUserCache(queryClient);
       invalidateAuthQueries(queryClient);
       // Оповещаем все экземпляры хука (в т.ч. AuthGuard) о выходе
       window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: { user: GUEST_USER } }));
