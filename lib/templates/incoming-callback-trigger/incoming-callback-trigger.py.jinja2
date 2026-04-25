@@ -46,6 +46,11 @@ async def incoming_callback_trigger_{{ sanitized_node_id }}_middleware(handler, 
         if user_id not in user_data:
             user_data[user_id] = {}
         user_data[user_id]["callback_data"] = event.data or ""
+        {%- if entry.callbackDataStripPrefix %}
+        # Убираем префикс "{{ entry.callbackDataStripPrefix }}" из callback_data
+        if user_data[user_id]["callback_data"].startswith("{{ entry.callbackDataStripPrefix }}"):
+            user_data[user_id]["callback_data"] = user_data[user_id]["callback_data"][{{ entry.callbackDataStripPrefix | length }}:]
+        {%- endif %}
         # Читаем текст кнопки из reply_markup
         _ict_btn_text = ""
         try:

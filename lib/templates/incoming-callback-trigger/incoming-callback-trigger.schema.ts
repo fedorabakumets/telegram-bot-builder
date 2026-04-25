@@ -17,6 +17,8 @@ const incomingCallbackTriggerEntrySchema = z.object({
   callbackPattern: z.string().optional(),
   /** Тип сопоставления: "startsWith" | "equals" | "contains" */
   callbackMatchType: z.string().optional(),
+  /** Префикс для удаления из callback_data перед сохранением */
+  callbackDataStripPrefix: z.string().optional(),
 });
 
 /** Схема параметров шаблона middleware триггеров входящих callback_query */

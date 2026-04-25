@@ -41,6 +41,9 @@ export function collectIncomingCallbackTriggerEntries(nodes: Node[]): IncomingCa
     const callbackMatchType = typeof nodeData.callbackMatchType === 'string'
       ? nodeData.callbackMatchType
       : (typeof nodeData.matchType === 'string' ? nodeData.matchType : '');
+    const callbackDataStripPrefix = typeof nodeData.callbackDataStripPrefix === 'string'
+      ? nodeData.callbackDataStripPrefix
+      : '';
 
     entries.push({
       nodeId: node.id,
@@ -48,6 +51,7 @@ export function collectIncomingCallbackTriggerEntries(nodes: Node[]): IncomingCa
       targetNodeType,
       callbackPattern,
       callbackMatchType,
+      ...(callbackDataStripPrefix ? { callbackDataStripPrefix } : {}),
     });
   }
 
