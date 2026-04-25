@@ -4,6 +4,7 @@
  * Валидирует формат токена, вызывает Telegram getMe для автозаполнения
  * имени бота, затем сохраняет токен в базу данных.
  * Идентификация происходит по telegram_id в query-параметре — без браузерной сессии.
+ * Содержит защиту от дублирования: если токен уже существует в проекте — возвращает существующий.
  *
  * @module userProjectsTokens/handlers/tokens/createBotTokenHandler
  */
@@ -87,6 +88,20 @@ export async function createBotTokenHandler(req: Request, res: Response): Promis
             }
         } catch {
             // Если Telegram недоступен — сохраняем без имени
+        }
+
+        // Проверяем дубли: если токен с таким значением уже есть в проекте — возвращаем существующий
+        const existingTokens = await storage.getBotTokensByProject(projectId);
+        const duplicate = existingTokens.find(t => t.token === tokenValue);
+        if (duplicate) {
+            console.log(`[createBotTokenHandler] Токен уже существует (id=${duplicate.id}), возвращаем существующий`);
+            res.status(200).json({
+                id: duplicate.id,
+                name: duplicate.name,
+                projectId: duplicate.projectId,
+                createdAt: duplicate.createdAt,
+            });
+            return;
         }
 
         const token = await storage.createBotToken({

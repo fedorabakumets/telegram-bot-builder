@@ -931,6 +931,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
       }
 
+      // Проверяем дубли: если токен с таким значением уже есть в проекте — возвращаем существующий
+      if (enrichedTokenData.token) {
+        const existingTokens = await storage.getBotTokensByProject(projectId);
+        const duplicate = existingTokens.find(t => t.token === enrichedTokenData.token);
+        if (duplicate) {
+          console.log(`[routes] Токен уже существует в проекте (id=${duplicate.id}), возвращаем существующий`);
+          return res.status(200).json(duplicate);
+        }
+      }
+
       const token = await storage.createBotToken(enrichedTokenData);
 
       broadcastProjectEvent(projectId, {
