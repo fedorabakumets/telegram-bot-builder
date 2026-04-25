@@ -64,7 +64,9 @@ export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
 
   return (
     <Tabs value={activeTerminalId || ''} onValueChange={handleValueChange}>
-      <TabsList className="w-full justify-start">
+      {/* Обёртка для горизонтального скролла при большом количестве вкладок */}
+      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+      <TabsList className="w-max min-w-full justify-start">
         {terminals.map(terminal => {
           const key = getTabKey(terminal);
           const isHistory = terminal.tabType === 'history';
@@ -100,6 +102,7 @@ export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
           );
         })}
       </TabsList>
+      </div>
     </Tabs>
   );
 }
