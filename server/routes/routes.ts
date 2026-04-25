@@ -36,6 +36,7 @@ import { telegramAuthService } from "../telegram/telegram-auth-service";
 import { createQRClient } from "../telegram/services/auth/create-qr-client";
 import { userTelegramSettings } from "@shared/schema";
 import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
+import { setupGuard } from "../middleware/setup-guard";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { fetchWithProxy } from "../utils/telegram-proxy";
@@ -450,6 +451,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Auth middleware для всех API роутов (устанавливает req.user если пользователь авторизован)
   // ВАЖНО: должен быть подключен ПОСЛЕ session middleware
+  app.use("/api", setupGuard);
   app.use("/api", authMiddleware);
 
   // Middleware для гостевых сессий — сохраняет сессию при первом API запросе
