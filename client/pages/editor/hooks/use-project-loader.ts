@@ -3,11 +3,14 @@
  *
  * Управляет загрузкой данных проекта по ID или выбором первого из списка.
  * Ожидает готовности серверной сессии перед первым запросом к API.
+ * При пустом списке проектов автоматически создаёт дефолтный проект.
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BotProject } from '@shared/schema';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { apiRequest } from '@/queryClient';
 
 /** Параметры хука загрузки проекта */
 interface UseProjectLoaderOptions {
@@ -29,9 +32,40 @@ interface UseProjectLoaderResult {
   isProjectNotFound: boolean;
 }
 
+/** Стартовые данные нового проекта по умолчанию */
+const DEFAULT_PROJECT_DATA = {
+  nodes: [
+    {
+      id: 'start-message',
+      type: 'message' as const,
+      position: { x: 400, y: 300 },
+      data: {
+        messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
+        keyboardType: 'none' as const,
+        buttons: [],
+        showInMenu: true,
+      },
+    },
+    {
+      id: 'start-command-trigger',
+      type: 'command_trigger' as const,
+      position: { x: 100, y: 300 },
+      data: {
+        command: '/start',
+        description: 'Запустить бота',
+        showInMenu: true,
+        autoTransitionTo: 'start-message',
+        sourceNodeId: 'start-message',
+      },
+    },
+  ],
+  connections: [],
+};
+
 /**
  * Хук для загрузки данных проекта.
  * Ждёт готовности серверной сессии чтобы проекты создавались с правильным owner_id.
+ * Если список проектов пустой — автоматически создаёт первый проект.
  *
  * @param options - Параметры загрузки
  * @returns Результат загрузки проекта
@@ -40,6 +74,8 @@ export function useProjectLoader({
   projectId
 }: UseProjectLoaderOptions): UseProjectLoaderResult {
   const { sessionReady } = useTelegramAuth();
+  const queryClient = useQueryClient();
+  const isCreatingRef = useRef(false);
 
   // Загрузка проекта по ID из URL
   const { data: currentProject, isError: projectNotFound } = useQuery<BotProject>({
@@ -54,6 +90,31 @@ export function useProjectLoader({
     enabled: !projectId && sessionReady,
     staleTime: 30000,
   });
+
+  // Автосоздание дефолтного проекта если список пустой
+  useEffect(() => {
+    if (!sessionReady) return;
+    if (projectId) return;
+    if (projectsList === undefined) return; // ещё грузится
+    if (projectsList.length > 0) return;    // проекты есть
+    if (isCreatingRef.current) return;      // уже создаём
+
+    isCreatingRef.current = true;
+    apiRequest('POST', '/api/projects', {
+      name: 'Новый бот 1',
+      description: '',
+      data: DEFAULT_PROJECT_DATA,
+    })
+      .then((newProject: BotProject) => {
+        queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], [newProject]);
+        queryClient.setQueryData<BotProject[]>(['/api/projects'], [newProject]);
+        queryClient.setQueryData<BotProject>([`/api/projects/${newProject.id}`], newProject);
+      })
+      .catch(e => {
+        console.error('Ошибка автосоздания проекта:', e);
+        isCreatingRef.current = false;
+      });
+  }, [sessionReady, projectId, projectsList, queryClient]);
 
   // Эффективный ID проекта
   const effectiveProjectId = projectId || projectsList?.[0]?.id;
