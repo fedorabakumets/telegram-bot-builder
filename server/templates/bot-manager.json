@@ -1,7 +1,7 @@
 {
   "name": "🤖 Bot Manager — Управление ботами",
   "description": "Полнофункциональный менеджер Telegram-ботов: список проектов, карточка токена, управление пользователями с пагинацией, администраторы, импорт/экспорт проектов.",
-  "category": "tools",
+  "category": "utility",
   "tags": [
     "bot-manager",
     "управление",
@@ -12,13 +12,13 @@
     "администраторы"
   ],
   "isPublic": 1,
-  "difficulty": "advanced",
+  "difficulty": "hard",
   "authorName": "Система",
   "version": "2.1.0",
   "featured": 1,
   "language": "ru",
   "complexity": 9,
-  "estimatedTime": 0,
+  "estimatedTime": 30,
   "data": {
     "sheets": [
       {
