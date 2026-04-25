@@ -24,13 +24,14 @@ import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { BotLogsProvider } from "./components/editor/bot/contexts/bot-logs-context";
 import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/ActiveTerminalsContext";
-import { AuthGuard } from "@/components/editor/auth";
+import { SetupGuard } from "@/components/editor/setup";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
 const Editor = lazy(() => import("@/pages/editor"));
 const TemplatesPage = lazy(() => import("@/components/editor/scenariy"));
 const NotFound = lazy(() => import("@/pages/not-found"));
+const SetupPage = lazy(() => import("@/pages/setup"));
 
 /**
  * @brief Компонент индикатора загрузки
@@ -76,7 +77,9 @@ function LoadingSpinner() {
 function Router() {
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <AuthGuard>
+      {/* Роут настройки доступен без авторизации */}
+      <Route path="/setup" component={SetupPage} />
+      <SetupGuard>
         <Switch>
           <Route path="/projects" component={Home} />
           <Route path="/templates" component={TemplatesPage} />
@@ -85,7 +88,7 @@ function Router() {
           <Route path="/" component={Editor} />
           <Route component={NotFound} />
         </Switch>
-      </AuthGuard>
+      </SetupGuard>
     </Suspense>
   );
 }
