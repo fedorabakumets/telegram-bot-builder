@@ -62,7 +62,7 @@ export function SetupInstructions() {
         {/* Скриншот: где найти Login Widget в BotFather */}
         <div className="pt-2">
           <img
-            src="/assets/images/botfather_login_widget.png"
+            src="/assets/images/botfather-login-widget.png"
             alt="Login Widget в меню BotFather"
             className="w-full rounded-lg border border-border/40 opacity-90"
           />
