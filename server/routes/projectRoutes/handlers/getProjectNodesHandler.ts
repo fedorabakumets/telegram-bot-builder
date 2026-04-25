@@ -38,9 +38,12 @@ export async function getProjectNodesHandler(req: Request, res: Response): Promi
         }
 
         const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
-            res.status(403).json({ message: "Нет прав доступа к проекту" });
-            return;
+        if (ownerId !== null) {
+            const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+            if (!hasAccess) {
+                res.status(403).json({ message: "Нет прав доступа к проекту" });
+                return;
+            }
         }
 
         // Извлекаем узлы из данных проекта (поддержка старого и нового формата)

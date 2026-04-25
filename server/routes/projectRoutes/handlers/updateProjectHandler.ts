@@ -42,7 +42,8 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
                 res.status(404).json({ message: "Проект не найден" });
                 return;
             }
-            if (existingProject.ownerId !== null && existingProject.ownerId !== ownerId) {
+            const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+            if (!hasAccess) {
                 res.status(403).json({ message: "Нет прав на редактирование проекта" });
                 return;
             }

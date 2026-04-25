@@ -9,7 +9,6 @@
 
 import type { Express } from "express";
 import { getOwnerIdFromRequest } from "../telegram/auth-middleware";
-import { canDeleteProject } from "./projectManagement/utils/permissionChecker";
 import { deleteProject } from "./projectManagement/utils/projectDeleter";
 import { storage } from "../storages/storage";
 
@@ -35,9 +34,12 @@ export function setupDeleteProjectRoute(app: Express, requireDbReady: (_req: any
             console.log(`✅ Проект ${id} найден: ${project.name}`);
 
             const ownerId = getOwnerIdFromRequest(req);
-            if (!canDeleteProject(project.ownerId, ownerId)) {
-                console.log(`❌ Пользователь ${ownerId} не имеет прав на удаление проекта ${id}`);
-                return res.status(403).json({ message: "Нет прав на удаление проекта" });
+            if (ownerId !== null) {
+                const hasAccess = await storage.hasProjectAccess(id, ownerId);
+                if (!hasAccess) {
+                    console.log(`❌ Пользователь ${ownerId} не имеет прав на удаление проекта ${id}`);
+                    return res.status(403).json({ message: "Нет прав на удаление проекта" });
+                }
             }
 
             const result = await deleteProject(id);

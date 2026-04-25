@@ -30,9 +30,12 @@ export async function exportToGoogleSheetsHandler(req: Request, res: Response): 
         }
 
         const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
-            res.status(403).json({ message: "Нет прав доступа к проекту" });
-            return;
+        if (ownerId !== null) {
+            const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+            if (!hasAccess) {
+                res.status(403).json({ message: "Нет прав доступа к проекту" });
+                return;
+            }
         }
 
         const { data: exportData, projectName } = req.body;
@@ -118,9 +121,12 @@ export async function exportStructureToGoogleSheetsHandler(req: Request, res: Re
         }
 
         const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
-            res.status(403).json({ message: "Нет прав доступа к проекту" });
-            return;
+        if (ownerId !== null) {
+            const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+            if (!hasAccess) {
+                res.status(403).json({ message: "Нет прав доступа к проекту" });
+                return;
+            }
         }
 
         const { exportStructureToGoogleSheets } = await import("../../../google-sheets/export-structure");

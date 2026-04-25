@@ -572,7 +572,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         if (!project) {
           return res.status(404).json({ message: "Project not found" });
         }
-        if (project.ownerId !== ownerId) {
+        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+        if (!hasAccess) {
           return res.status(403).json({ message: "You don't have permission to view this project's tokens" });
         }
       }
@@ -889,7 +890,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         if (!project) {
           return res.status(404).json({ message: "Project not found" });
         }
-        if (project.ownerId !== ownerId) {
+        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+        if (!hasAccess) {
           return res.status(403).json({ message: "You don't have permission to add tokens to this project" });
         }
       }
@@ -994,7 +996,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         if (!project) {
           return res.status(404).json({ message: "Project not found" });
         }
-        if (project.ownerId !== ownerId) {
+        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+        if (!hasAccess) {
           return res.status(403).json({ message: "You don't have permission to modify tokens in this project" });
         }
 
@@ -1259,7 +1262,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         if (!project) {
           return res.status(404).json({ message: "Project not found" });
         }
-        if (project.ownerId !== ownerId) {
+        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+        if (!hasAccess) {
           return res.status(403).json({ message: "You don't have permission to access this project's tokens" });
         }
       }
