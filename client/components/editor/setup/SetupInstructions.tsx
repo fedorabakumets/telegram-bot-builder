@@ -27,10 +27,11 @@ const STEPS: Step[] = [
   { num: 2, text: 'My Bots → выбери нужного бота' },
   { num: 3, text: 'Нажми Login Widget (см. скриншот ниже)' },
   { num: 4, text: 'Нажми "Switch to OpenID Connect Login" (см. скриншот ниже)' },
-  { num: 5, text: 'Добавь Allowed URLs — домен сайта (например https://example.com). Без этого логин не работает' },
-  { num: 6, text: 'После добавления URL BotFather покажет Client ID и Client Secret — скопируй оба' },
-  { num: 7, text: 'Bot Username — имя бота без символа @ (видно в профиле бота)' },
-  { num: 8, text: 'Bot Token — опционально, для Mini App. Получи через /token в @BotFather' },
+  { num: 5, text: 'В диалоге подтверждения нажми Confirm (см. скриншот ниже)' },
+  { num: 6, text: 'Добавь Allowed URLs — домен сайта (например https://example.com). Без этого логин не работает' },
+  { num: 7, text: 'После добавления URL BotFather покажет Client ID и Client Secret — скопируй оба' },
+  { num: 8, text: 'Bot Username — имя бота без символа @ (видно в профиле бота)' },
+  { num: 9, text: 'Bot Token — опционально, для Mini App. Получи через /token в @BotFather' },
 ];
 
 /**
@@ -90,7 +91,28 @@ export function SetupInstructions() {
           />
         </div>
 
-        {STEPS.slice(4).map(({ num, text }) => (
+        {STEPS.slice(4, 5).map(({ num, text }) => (
+          <div key={num} className="flex items-start gap-3">
+            <Badge
+              variant="outline"
+              className="h-6 w-6 shrink-0 rounded-full p-0 flex items-center justify-center text-xs font-bold border-primary/40 text-primary"
+            >
+              {num}
+            </Badge>
+            <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
+          </div>
+        ))}
+
+        {/* Скриншот: диалог подтверждения Confirm — после шага 5 */}
+        <div className="py-1">
+          <img
+            src="/assets/images/botfather-confirm-oidc.png"
+            alt="Подтверждение переключения на OAuth 2.0"
+            className="w-full rounded-lg border border-border/40 opacity-90"
+          />
+        </div>
+
+        {STEPS.slice(5).map(({ num, text }) => (
           <div key={num} className="flex items-start gap-3">
             <Badge
               variant="outline"
