@@ -30,6 +30,26 @@ const editMessageEntrySchema = z.object({
   editKeyboardMode: z.string(),
   /** ID keyboard-узла */
   editKeyboardNodeId: z.string(),
+  /** Кнопки keyboard-узла */
+  keyboardButtons: z.array(z.object({
+    id: z.string(),
+    text: z.string(),
+    action: z.string(),
+    target: z.string().optional(),
+    url: z.string().optional(),
+    customCallbackData: z.string().optional(),
+    style: z.string().optional(),
+  })).optional().default([]),
+  /** Конфигурация динамических кнопок */
+  keyboardDynamicButtons: z.object({
+    sourceVariable: z.string(),
+    arrayPath: z.string(),
+    textTemplate: z.string(),
+    callbackTemplate: z.string(),
+    columns: z.number(),
+  }).nullable().optional(),
+  /** Включены ли динамические кнопки */
+  keyboardEnableDynamicButtons: z.boolean().optional().default(false),
 });
 
 /**

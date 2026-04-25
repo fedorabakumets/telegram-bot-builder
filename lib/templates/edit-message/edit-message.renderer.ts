@@ -28,6 +28,21 @@ export function collectEditMessageEntries(nodes: Node[]): EditMessageEntry[] {
     const targetNode = nodeMap.get(targetNodeId);
     const targetNodeType = targetNode?.type ?? 'message';
 
+    const editKeyboardNodeId: string = (node.data as any)?.editKeyboardNodeId ?? '';
+
+    // Находим keyboard-узел и извлекаем его кнопки
+    const kbNode = editKeyboardNodeId ? nodeMap.get(editKeyboardNodeId) : undefined;
+    const keyboardButtons = kbNode ? ((kbNode.data as any)?.buttons ?? []) : [];
+    const keyboardEnableDynamicButtons = kbNode ? !!((kbNode.data as any)?.enableDynamicButtons) : false;
+    const rawDynamic = kbNode ? ((kbNode.data as any)?.dynamicButtons ?? null) : null;
+    const keyboardDynamicButtons = (keyboardEnableDynamicButtons && rawDynamic) ? {
+      sourceVariable: rawDynamic.sourceVariable ?? '',
+      arrayPath: rawDynamic.arrayPath ?? '',
+      textTemplate: rawDynamic.textTemplate ?? '',
+      callbackTemplate: rawDynamic.callbackTemplate ?? '',
+      columns: rawDynamic.columns ?? 2,
+    } : null;
+
     entries.push({
       nodeId: node.id,
       targetNodeId,
@@ -38,7 +53,10 @@ export function collectEditMessageEntries(nodes: Node[]): EditMessageEntry[] {
       editMessageIdSource: (node.data as any)?.editMessageIdSource ?? 'last_bot_message',
       editMessageIdManual: (node.data as any)?.editMessageIdManual ?? '',
       editKeyboardMode: (node.data as any)?.editKeyboardMode ?? 'keep',
-      editKeyboardNodeId: (node.data as any)?.editKeyboardNodeId ?? '',
+      editKeyboardNodeId,
+      keyboardButtons,
+      keyboardEnableDynamicButtons,
+      keyboardDynamicButtons,
     });
   }
 

@@ -27,6 +27,38 @@ export interface EditMessageEntry {
   editKeyboardMode: string;
   /** ID keyboard-узла (если editKeyboardMode === 'node') */
   editKeyboardNodeId: string;
+  /** Кнопки keyboard-узла (предварительно разрешённые из графа) */
+  keyboardButtons?: Array<{
+    /** ID кнопки */
+    id: string;
+    /** Текст кнопки */
+    text: string;
+    /** Действие: goto, url и т.д. */
+    action: string;
+    /** Целевой узел */
+    target?: string;
+    /** URL для url-кнопок */
+    url?: string;
+    /** Кастомный callback_data */
+    customCallbackData?: string;
+    /** Стиль кнопки */
+    style?: string;
+  }>;
+  /** Конфигурация динамических кнопок keyboard-узла */
+  keyboardDynamicButtons?: {
+    /** Имя переменной с данными */
+    sourceVariable: string;
+    /** Путь к массиву */
+    arrayPath: string;
+    /** Шаблон текста */
+    textTemplate: string;
+    /** Шаблон callback */
+    callbackTemplate: string;
+    /** Количество колонок */
+    columns: number;
+  } | null;
+  /** Включены ли динамические кнопки */
+  keyboardEnableDynamicButtons?: boolean;
 }
 
 /**

@@ -67,8 +67,44 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         {% if entry.editMode in ['markup', 'both'] %}
         {% if entry.editKeyboardMode == 'remove' %}
         await bot.edit_message_reply_markup(chat_id=_chat_id, message_id=_msg_id, reply_markup=None)
+        {% elif entry.editKeyboardMode == 'node' %}
+        # Строим клавиатуру из keyboard-узла {{ entry.editKeyboardNodeId }}
+        _all_vars = await init_all_user_vars(user_id)
+        _edit_builder = InlineKeyboardBuilder()
+        {% if entry.keyboardEnableDynamicButtons and entry.keyboardDynamicButtons %}
+        import json as _json_edit
+        _edit_source = _all_vars.get("{{ entry.keyboardDynamicButtons.sourceVariable }}")
+        if isinstance(_edit_source, str):
+            try:
+                _edit_source = _json_edit.loads(_edit_source)
+            except Exception:
+                _edit_source = None
+        _edit_items = []
+        if isinstance(_edit_source, dict):
+            _edit_items = _edit_source.get("{{ entry.keyboardDynamicButtons.arrayPath }}", []) if "{{ entry.keyboardDynamicButtons.arrayPath }}" else _edit_source
+        elif isinstance(_edit_source, list):
+            _edit_items = _edit_source
+        for _edit_item in _edit_items:
+            if not isinstance(_edit_item, dict):
+                continue
+            _edit_text = replace_variables_in_text("{{ entry.keyboardDynamicButtons.textTemplate }}", _edit_item, {})
+            _edit_cb = replace_variables_in_text("{{ entry.keyboardDynamicButtons.callbackTemplate }}", _edit_item, {})
+            if _edit_text and _edit_cb:
+                _edit_builder.add(InlineKeyboardButton(text=_edit_text, callback_data=_edit_cb[:64]))
+        _edit_builder.adjust({{ entry.keyboardDynamicButtons.columns }})
+        {% endif %}
+        {% for btn in entry.keyboardButtons %}
+        {% if btn.action == 'url' %}
+        _edit_builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text | format_python_text }}, _all_vars, {}), url="{{ btn.url or '#' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+        {% elif btn.action == 'goto' or btn.action == 'complete' %}
+        _edit_builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text | format_python_text }}, _all_vars, {}), callback_data={% if btn.customCallbackData and '{' in btn.customCallbackData %}replace_variables_in_text("{{ btn.customCallbackData }}", _all_vars, {}){% else %}"{{ btn.customCallbackData or btn.target or btn.id or 'btn' }}"{% endif %}{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
         {% else %}
-        # Клавиатура: режим {{ entry.editKeyboardMode }}
+        _edit_builder.add(InlineKeyboardButton(text=replace_variables_in_text({{ btn.text | format_python_text }}, _all_vars, {}), callback_data="{{ btn.id or 'btn' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
+        {% endif %}
+        {% endfor %}
+        _edit_keyboard = _edit_builder.as_markup()
+        await bot.edit_message_reply_markup(chat_id=_chat_id, message_id=_msg_id, reply_markup=_edit_keyboard)
+        {% else %}
         await bot.edit_message_reply_markup(chat_id=_chat_id, message_id=_msg_id, reply_markup=None)
         {% endif %}
         {% endif %}
