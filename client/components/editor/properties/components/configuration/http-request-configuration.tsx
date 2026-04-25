@@ -275,6 +275,102 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
           />
         </div>
       </Section>
+
+      <Section>
+        <SectionLabel>Пагинация</SectionLabel>
+        <CheckOption
+          id="enablePagination"
+          label="Включить пагинацию"
+          checked={!!(data.httpRequestEnablePagination)}
+          onCheckedChange={(v) => upd({ httpRequestEnablePagination: v })}
+        />
+
+        {data.httpRequestEnablePagination && (
+          <div className="mt-3 space-y-3">
+            {/* Режим пагинации */}
+            <div className="flex gap-2 items-center">
+              <Label className="text-xs text-muted-foreground w-24 shrink-0">Режим</Label>
+              <Select
+                value={(data.httpRequestPaginationMode as string) || 'interactive'}
+                onValueChange={(v) => upd({ httpRequestPaginationMode: v as any })}
+              >
+                <SelectTrigger className="h-7 text-xs flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="interactive" className="text-xs">Интерактивный (кнопки)</SelectItem>
+                  <SelectItem value="fetch_all" className="text-xs">Собрать все страницы</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Поле с total */}
+            <div className="flex gap-2 items-center">
+              <Label className="text-xs text-muted-foreground w-24 shrink-0">Поле total</Label>
+              <Input
+                placeholder="count"
+                value={(data.httpRequestPaginationTotalField as string) || ''}
+                onChange={(e) => upd({ httpRequestPaginationTotalField: e.target.value })}
+                className="h-7 font-mono text-xs flex-1"
+              />
+            </div>
+
+            {/* Поле с массивом */}
+            <div className="flex gap-2 items-center">
+              <Label className="text-xs text-muted-foreground w-24 shrink-0">Поле items</Label>
+              <Input
+                placeholder="items"
+                value={(data.httpRequestPaginationItemsField as string) || ''}
+                onChange={(e) => upd({ httpRequestPaginationItemsField: e.target.value })}
+                className="h-7 font-mono text-xs flex-1"
+              />
+            </div>
+
+            {/* Лимит */}
+            <div className="flex gap-2 items-center">
+              <Label className="text-xs text-muted-foreground w-24 shrink-0">Лимит</Label>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                placeholder="10"
+                value={(data.httpRequestPaginationLimit as number) ?? 10}
+                onChange={(e) => upd({ httpRequestPaginationLimit: parseInt(e.target.value) || 10 })}
+                className="h-7 font-mono text-xs w-20"
+              />
+            </div>
+
+            {/* Переменная offset — только для interactive */}
+            {(data.httpRequestPaginationMode as string) !== 'fetch_all' && (
+              <div className="flex gap-2 items-center">
+                <Label className="text-xs text-muted-foreground w-24 shrink-0">Переменная offset</Label>
+                <Input
+                  placeholder="page_offset"
+                  value={(data.httpRequestPaginationOffsetVar as string) || ''}
+                  onChange={(e) => upd({ httpRequestPaginationOffsetVar: e.target.value })}
+                  className="h-7 font-mono text-xs flex-1"
+                />
+              </div>
+            )}
+
+            {/* Макс страниц — только для fetch_all */}
+            {(data.httpRequestPaginationMode as string) === 'fetch_all' && (
+              <div className="flex gap-2 items-center">
+                <Label className="text-xs text-muted-foreground w-24 shrink-0">Макс. страниц</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  placeholder="20"
+                  value={(data.httpRequestPaginationMaxPages as number) ?? 20}
+                  onChange={(e) => upd({ httpRequestPaginationMaxPages: parseInt(e.target.value) || 20 })}
+                  className="h-7 font-mono text-xs w-20"
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </Section>
     </div>
   );
 }

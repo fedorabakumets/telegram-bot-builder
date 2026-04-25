@@ -693,6 +693,20 @@ export const nodeSchema = z.object({
     httpRequestIgnoreSsl: z.boolean().default(false).optional(),
     /** Следовать редиректам */
     httpRequestFollowRedirects: z.boolean().default(true).optional(),
+    /** Включить пагинацию для HTTP запроса */
+    httpRequestEnablePagination: z.boolean().default(false).optional(),
+    /** Режим пагинации: interactive — кнопки, fetch_all — собрать все страницы */
+    httpRequestPaginationMode: z.enum(['interactive', 'fetch_all']).default('interactive').optional(),
+    /** Имя переменной offset для интерактивной пагинации */
+    httpRequestPaginationOffsetVar: z.string().optional(),
+    /** Поле с общим количеством записей в ответе API */
+    httpRequestPaginationTotalField: z.string().default('count').optional(),
+    /** Поле с массивом элементов в ответе API */
+    httpRequestPaginationItemsField: z.string().default('items').optional(),
+    /** Количество элементов на страницу */
+    httpRequestPaginationLimit: z.number().default(10).optional(),
+    /** Максимальное количество страниц для режима fetch_all */
+    httpRequestPaginationMaxPages: z.number().default(20).optional(),
   }),
 });
 
