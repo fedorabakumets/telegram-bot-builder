@@ -1,5 +1,5 @@
 /**
- * @fileoverview Пошаговая инструкция по получению данных из BotFather
+ * @fileoverview Пошаговая инструкция по получению данных из BotFather для Telegram Login
  * @module components/editor/setup/SetupInstructions
  */
 
@@ -21,18 +21,20 @@ interface Step {
   text: string;
 }
 
-/** Шаги инструкции по получению данных из BotFather */
+/** Шаги инструкции по настройке Telegram Login через BotFather */
 const STEPS: Step[] = [
-  { num: 1, text: 'Открой @BotFather в Telegram' },
-  { num: 2, text: 'Отправь /mybots → выбери нужного бота' },
-  { num: 3, text: 'Bot Settings → Web Login → скопируй Client ID и Client Secret' },
-  { num: 4, text: 'Bot Username — имя бота без символа @' },
-  { num: 5, text: 'Bot Token — из команды /token (нужен для Mini App, опционально)' },
+  { num: 1, text: 'Открой мини-приложение @BotFather в Telegram' },
+  { num: 2, text: 'My Bots → выбери нужного бота' },
+  { num: 3, text: 'Bot Settings → Web Login → добавь Allowed URLs (домен сайта, например https://example.com)' },
+  { num: 4, text: 'После добавления URL BotFather покажет Client ID и Client Secret — скопируй оба' },
+  { num: 5, text: 'Bot Username — имя бота без символа @ (видно в профиле бота)' },
+  { num: 6, text: 'Bot Token — опционально, нужен для Mini App авторизации. Получи через /token в @BotFather' },
 ];
 
 /**
- * Компонент пошаговой инструкции по настройке Telegram-интеграции.
- * Отображает карточку с нумерованными шагами для получения данных из BotFather.
+ * Компонент пошаговой инструкции по настройке Telegram Login.
+ * Отображает карточку с нумерованными шагами для получения данных из BotFather
+ * согласно официальной документации Telegram Login.
  *
  * @returns JSX элемент с инструкцией
  */
@@ -58,6 +60,17 @@ export function SetupInstructions() {
         ))}
         <p className="text-xs text-muted-foreground/70 pt-2 border-t border-border/30">
           Все данные хранятся только на вашем сервере и не передаются третьим лицам.
+        </p>
+        <p className="text-xs text-muted-foreground/60">
+          📖 Подробнее:{' '}
+          <a
+            href="https://core.telegram.org/bots/telegram-login"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-muted-foreground transition-colors"
+          >
+            core.telegram.org/bots/telegram-login
+          </a>
         </p>
       </CardContent>
     </Card>
