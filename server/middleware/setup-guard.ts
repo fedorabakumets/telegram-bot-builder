@@ -11,25 +11,27 @@ import type { Request, Response, NextFunction } from "express";
 import { isConfigured } from "../services/app-settings.service";
 
 /**
- * Пути, которые всегда пропускаются вне зависимости от статуса настройки.
- * Позволяют клиенту получить конфиг, выполнить setup и проверить здоровье сервиса.
+ * Пути (без префикса /api), которые всегда пропускаются.
+ * При подключении через app.use("/api", ...) Express обрезает /api из req.path.
  */
 const EXCLUDED_PATHS = [
-  "/api/setup/status",
-  "/api/setup",
-  "/api/config",
-  "/api/health",
-  "/api",
+  "/setup/status",
+  "/setup",
+  "/config",
+  "/health",
+  "/",
+  "",
 ];
 
 /**
  * Проверяет, исключён ли путь из проверки настройки.
+ * Сравнивает с req.path (без префикса /api).
  *
- * @param path - Путь запроса (req.path)
+ * @param path - Путь запроса (req.path, без /api)
  * @returns `true` если путь исключён и должен быть пропущен
  */
 function isExcluded(path: string): boolean {
-  return EXCLUDED_PATHS.includes(path) || path.startsWith("/api/auth/");
+  return EXCLUDED_PATHS.includes(path) || path.startsWith("/auth/");
 }
 
 /**
