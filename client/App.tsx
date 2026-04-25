@@ -31,7 +31,6 @@ const Home = lazy(() => import("@/pages/home"));
 const Editor = lazy(() => import("@/pages/editor"));
 const TemplatesPage = lazy(() => import("@/components/editor/scenariy"));
 const NotFound = lazy(() => import("@/pages/not-found"));
-const SetupPage = lazy(() => import("@/pages/setup"));
 
 /**
  * @brief Компонент индикатора загрузки
@@ -77,8 +76,6 @@ function LoadingSpinner() {
 function Router() {
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      {/* Роут настройки доступен без авторизации */}
-      <Route path="/setup" component={SetupPage} />
       <SetupGuard>
         <Switch>
           <Route path="/projects" component={Home} />
