@@ -1,13 +1,15 @@
 /**
  * @fileoverview API handler для генерации Python кода бота
  * 
- * Обрабатывает POST /api/projects/:id/generate запросы
+ * Обрабатывает POST /api/projects/:id/generate запросы.
+ * Включает проверку прав доступа к проекту для авторизованных пользователей.
  * 
  * @module server/routes/projects/generateCode
  */
 
 import type { Request, Response } from 'express';
 import { storage } from '../../storages/storage';
+import { getOwnerIdFromRequest } from '../../telegram/auth-middleware';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { resolve, dirname } from 'path';
@@ -48,6 +50,17 @@ async function loadGenerator(): Promise<(data: any, opts: any) => string> {
 export async function handleGenerateCode(req: Request, res: Response): Promise<void> {
   try {
     const projectId = parseInt(req.params.id, 10);
+
+    // Проверяем права доступа к проекту для авторизованных пользователей
+    const ownerId = getOwnerIdFromRequest(req);
+    if (ownerId !== null) {
+      const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+      if (!hasAccess) {
+        res.status(403).json({ message: "Нет прав доступа к проекту" });
+        return;
+      }
+    }
+
     const { userDatabaseEnabled = false, enableComments = true, enableLogging = false } = req.body;
 
     // Получаем проект из БД

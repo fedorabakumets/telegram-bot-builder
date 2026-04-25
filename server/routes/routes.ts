@@ -2024,6 +2024,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
 
+    // Проверяем права доступа к проекту для авторизованных пользователей
+    const ownerId = getOwnerIdFromRequest(req);
+    if (ownerId !== null) {
+      const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Нет прав доступа к проекту" });
+      }
+    }
+
     try {
       console.log(`Fetching users for project ${projectId}`);
 
@@ -2084,6 +2093,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get("/api/projects/:id/users/stats", async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
+
+    // Проверяем права доступа к проекту для авторизованных пользователей
+    const ownerId = getOwnerIdFromRequest(req);
+    if (ownerId !== null) {
+      const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Нет прав доступа к проекту" });
+      }
+    }
 
     try {
       // Use direct PostgreSQL query on bot_users table
@@ -2489,6 +2507,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const projectId = parseInt(req.params.id);
       const tokenId = getRequestTokenId(req);
+
+      // Проверяем права доступа к проекту для авторизованных пользователей
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Нет прав доступа к проекту" });
+        }
+      }
+
       let totalDeleted = 0;
 
       // Подключение к PostgreSQL
@@ -2556,6 +2584,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const projectId = parseInt(req.params.id);
       const tokenId = getRequestTokenId(req);
       const query = req.query.q as string;
+
+      // Проверяем права доступа к проекту для авторизованных пользователей
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Нет прав доступа к проекту" });
+        }
+      }
 
       if (!query || query.trim().length === 0) {
         return res.status(400).json({ message: "Search query is required" });
