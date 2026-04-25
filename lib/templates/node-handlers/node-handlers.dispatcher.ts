@@ -401,6 +401,9 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
     // Пропускаем condition-узлы — они уже обработаны выше
     if (node.type === 'condition') return;
 
+    // Пропускаем keyboard-ноды используемые только edit_message — их обработчик уже сгенерирован
+    if (node.type === 'keyboard' && (node.data as any)?._editMessageOnly === true) return;
+
     codeLines.push(`\n# @@NODE_START:${node.id}@@\n`);
 
     const handler = nodeHandlers[node.type];

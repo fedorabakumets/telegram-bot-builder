@@ -311,9 +311,14 @@ export function normalizeKeyboardBindings(nodes: Node[], connections: GraphConne
       delete (hostNode.data as Record<string, unknown>).keyboardNodeId;
     }
 
-    // Не очищаем ноду если она используется edit_message — её данные нужны renderer'у
+    // Не очищаем ноду если она используется edit_message — её данные нужны renderer'у.
+    // Но меняем тип на специальный маркер чтобы keyboard-обработчик не генерировался дважды.
     if (!editMessageKeyboardNodeIds.has(keyboardNodeId)) {
       clearKeyboardNodeData(keyboardNode);
+    } else if (hostIds.length === 0) {
+      // Нода используется ТОЛЬКО edit_message (не привязана к message-хосту).
+      // Помечаем специальным флагом — данные сохраняем, но keyboard-обработчик не нужен.
+      (keyboardNode.data as Record<string, unknown>)._editMessageOnly = true;
     }
     processedKeyboardNodes.add(keyboardNodeId);
   }
