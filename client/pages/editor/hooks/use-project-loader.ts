@@ -32,34 +32,42 @@ interface UseProjectLoaderResult {
   isProjectNotFound: boolean;
 }
 
-/** Стартовые данные нового проекта по умолчанию */
+/** Стартовые данные нового проекта по умолчанию — новый формат с sheets */
 const DEFAULT_PROJECT_DATA = {
-  nodes: [
+  version: 2,
+  activeSheetId: 'sheet-1',
+  sheets: [
     {
-      id: 'start-message',
-      type: 'message' as const,
-      position: { x: 400, y: 300 },
-      data: {
-        messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
-        keyboardType: 'none' as const,
-        buttons: [],
-        showInMenu: true,
-      },
-    },
-    {
-      id: 'start-command-trigger',
-      type: 'command_trigger' as const,
-      position: { x: 100, y: 300 },
-      data: {
-        command: '/start',
-        description: 'Запустить бота',
-        showInMenu: true,
-        autoTransitionTo: 'start-message',
-        sourceNodeId: 'start-message',
-      },
+      id: 'sheet-1',
+      name: 'Лист 1',
+      nodes: [
+        {
+          id: 'start-message',
+          type: 'message' as const,
+          position: { x: 400, y: 300 },
+          data: {
+            messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
+            keyboardType: 'none' as const,
+            buttons: [],
+            showInMenu: true,
+          },
+        },
+        {
+          id: 'start-command-trigger',
+          type: 'command_trigger' as const,
+          position: { x: 100, y: 300 },
+          data: {
+            command: '/start',
+            description: 'Запустить бота',
+            showInMenu: true,
+            autoTransitionTo: 'start-message',
+            sourceNodeId: 'start-message',
+          },
+        },
+      ],
+      connections: [],
     },
   ],
-  connections: [],
 };
 
 /**
