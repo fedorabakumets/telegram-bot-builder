@@ -70,6 +70,12 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
     app.use("/uploads", express.static(uploadsPath));
   }
 
+  // Раздача файлов из assets в режиме разработки (скриншоты, изображения для UI)
+  const assetsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "assets");
+  if (fs.existsSync(assetsPath)) {
+    app.use("/assets", express.static(assetsPath));
+  }
+
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 

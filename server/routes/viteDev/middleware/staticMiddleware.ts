@@ -41,6 +41,12 @@ export function serveStatic(app: Express): void {
     app.use("/uploads", express.static(uploadsPath));
   }
 
+  // Раздача файлов из assets (скриншоты, изображения для UI)
+  const assetsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "assets");
+  if (fs.existsSync(assetsPath)) {
+    app.use("/assets", express.static(assetsPath));
+  }
+
   // Раздача файлов из папок uploads в директории bots/
   const botsPath = path.resolve(import.meta.dirname, "..", "..", "..", "..", "bots");
   if (fs.existsSync(botsPath)) {
