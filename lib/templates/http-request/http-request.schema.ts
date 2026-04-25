@@ -69,6 +69,20 @@ export const httpRequestParamsSchema = z.object({
   ignoreSsl: z.boolean().optional().default(false),
   /** Следовать редиректам */
   followRedirects: z.boolean().optional().default(true),
+  /** Включить пагинацию */
+  enablePagination: z.boolean().optional().default(false),
+  /** Режим пагинации: interactive — кнопки Далее/Назад, fetch_all — собрать все страницы */
+  paginationMode: z.enum(['interactive', 'fetch_all']).optional().default('interactive'),
+  /** Имя переменной offset для интерактивной пагинации */
+  paginationOffsetVar: z.string().optional().default(''),
+  /** Поле с общим количеством записей в ответе API */
+  paginationTotalField: z.string().optional().default('count'),
+  /** Поле с массивом элементов в ответе API */
+  paginationItemsField: z.string().optional().default('items'),
+  /** Количество элементов на страницу */
+  paginationLimit: z.number().optional().default(10),
+  /** Максимальное количество страниц для режима fetch_all */
+  paginationMaxPages: z.number().optional().default(20),
 });
 
 /** Тип параметров шаблона http_request */

@@ -160,6 +160,70 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     await set_user_var(user_id, "{{ statusVariable }}", str(_status_code))
     {% endif %}
 
+    {% if enablePagination and paginationMode == 'interactive' %}
+    # Интерактивная пагинация — вычисляем nextOffset и prevOffset
+    if isinstance(_response_data, dict):
+        _pag_total = _response_data.get("{{ paginationTotalField }}", 0)
+        try:
+            _pag_total = int(_pag_total)
+        except (ValueError, TypeError):
+            _pag_total = 0
+        _pag_offset = 0
+        {% if paginationOffsetVar %}
+        try:
+            _pag_offset = int(_all_vars.get("{{ paginationOffsetVar }}", 0) or 0)
+        except (ValueError, TypeError):
+            _pag_offset = 0
+        {% endif %}
+        _pag_limit = {{ paginationLimit }}
+        _next_offset = _pag_offset + _pag_limit if _pag_offset + _pag_limit < _pag_total else None
+        _prev_offset = max(0, _pag_offset - _pag_limit) if _pag_offset > 0 else None
+        await set_user_var(user_id, "{{ responseVariable }}.nextOffset", str(_next_offset) if _next_offset is not None else "")
+        await set_user_var(user_id, "{{ responseVariable }}.prevOffset", str(_prev_offset) if _prev_offset is not None else "")
+        await set_user_var(user_id, "{{ responseVariable }}.currentPage", str(_pag_offset // _pag_limit + 1))
+        await set_user_var(user_id, "{{ responseVariable }}.totalPages", str((_pag_total + _pag_limit - 1) // _pag_limit) if _pag_total > 0 else "0")
+    {% endif %}
+
+    {% if enablePagination and paginationMode == 'fetch_all' %}
+    # Режим fetch_all — собираем все страницы в один массив
+    if isinstance(_response_data, dict) and "{{ paginationItemsField }}" in _response_data:
+        _all_items = list(_response_data.get("{{ paginationItemsField }}", []))
+        _fa_total = int(_response_data.get("{{ paginationTotalField }}", 0) or 0)
+        _fa_limit = {{ paginationLimit }}
+        _fa_max_pages = {{ paginationMaxPages }}
+        _fa_offset = _fa_limit
+        _fa_page = 1
+        while _fa_offset < _fa_total and _fa_page < _fa_max_pages:
+            try:
+                _fa_url = "{{ url }}"
+                _fa_url = replace_variables_in_text(_fa_url, _all_vars, {})
+                _fa_sep = '&' if '?' in _fa_url else '?'
+                _fa_url = _fa_url + _fa_sep + f"limit={_fa_limit}&offset={_fa_offset}"
+                import aiohttp as _aiohttp2
+                async with _aiohttp2.ClientSession() as _fa_session:
+                    async with _fa_session.get(
+                        _fa_url,
+                        headers=_headers or None,
+                        timeout=_aiohttp2.ClientTimeout(total={{ timeout }})
+                    ) as _fa_resp:
+                        _fa_data = await _fa_resp.json(content_type=None)
+                        _fa_items = _fa_data.get("{{ paginationItemsField }}", [])
+                        if not _fa_items:
+                            break
+                        _all_items.extend(_fa_items)
+            except Exception as _fa_e:
+                logging.warning(f"http_request [{{ nodeId }}] fetch_all страница {_fa_page + 1}: {_fa_e}")
+                break
+            _fa_offset += _fa_limit
+            _fa_page += 1
+        # Сохраняем полный список поверх ответа
+        _response_data["{{ paginationItemsField }}"] = _all_items
+        _response_data["{{ paginationTotalField }}"] = len(_all_items)
+        await set_user_var(user_id, "{{ responseVariable }}", _response_data)
+        await set_user_var(user_id, "{{ responseVariable }}.{{ paginationTotalField }}", str(len(_all_items)))
+        logging.info(f"📦 http_request [{{ nodeId }}] fetch_all: собрано {len(_all_items)} элементов за {_fa_page} страниц")
+    {% endif %}
+
     {% if autoTransitionTo %}
     {% if autoTransitionTargetExists %}
     await handle_callback_{{ autoTransitionTo | replace('-', '_') | replace('.', '_') }}(callback_query, state=state)

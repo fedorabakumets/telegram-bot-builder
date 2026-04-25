@@ -25,6 +25,9 @@ import {
   validParamsWithQueryParams,
   validParamsFormEncoded,
   validParamsIgnoreErrors,
+  validParamsInteractivePagination,
+  validParamsFetchAll,
+  httpRequestNodePagination,
 } from './http-request.fixture';
 
 describe('generateHttpRequest()', () => {
@@ -102,7 +105,7 @@ describe('generateHttpRequest()', () => {
       autoTransitionTo: 'next_node',
       autoTransitionTargetExists: true,
     });
-    expect(code).toContain('await handle_callback_next_node(callback_query)');
+    expect(code).toContain('await handle_callback_next_node(callback_query, state=state)');
   });
 
   it('логирует предупреждение если узел автоперехода не найден', () => {
@@ -239,5 +242,54 @@ describe('generateHttpRequestFromNode()', () => {
   it('рендерит код POST узла с телом', () => {
     const code = generateHttpRequestFromNode(httpRequestNodePost);
     expect(code).toContain('_body_raw_str');
+  });
+});
+
+describe('пагинация', () => {
+  it('интерактивная пагинация: генерирует вычисление nextOffset и prevOffset', () => {
+    const code = generateHttpRequest(validParamsInteractivePagination);
+    expect(code).toContain('nextOffset');
+    expect(code).toContain('prevOffset');
+    expect(code).toContain('_pag_total');
+    expect(code).toContain('_pag_offset');
+  });
+
+  it('интерактивная пагинация: использует paginationOffsetVar для чтения текущего offset', () => {
+    const code = generateHttpRequest(validParamsInteractivePagination);
+    expect(code).toContain('"users_offset"');
+  });
+
+  it('интерактивная пагинация: сохраняет currentPage и totalPages', () => {
+    const code = generateHttpRequest(validParamsInteractivePagination);
+    expect(code).toContain('currentPage');
+    expect(code).toContain('totalPages');
+  });
+
+  it('fetch_all: генерирует цикл сбора страниц', () => {
+    const code = generateHttpRequest(validParamsFetchAll);
+    expect(code).toContain('_all_items');
+    expect(code).toContain('_fa_offset');
+    expect(code).toContain('fetch_all');
+  });
+
+  it('fetch_all: использует paginationMaxPages как ограничитель цикла', () => {
+    const code = generateHttpRequest(validParamsFetchAll);
+    expect(code).toContain('_fa_max_pages');
+    expect(code).toContain('10'); // paginationMaxPages
+  });
+
+  it('без пагинации: не генерирует код пагинации', () => {
+    const code = generateHttpRequest(validParamsGet);
+    expect(code).not.toContain('_pag_total');
+    expect(code).not.toContain('_all_items');
+  });
+
+  it('nodeToHttpRequestParams: корректно читает поля пагинации из node.data', () => {
+    const params = nodeToHttpRequestParams(httpRequestNodePagination);
+    expect(params.enablePagination).toBe(true);
+    expect(params.paginationMode).toBe('interactive');
+    expect(params.paginationOffsetVar).toBe('users_offset');
+    expect(params.paginationTotalField).toBe('count');
+    expect(params.paginationLimit).toBe(10);
   });
 });
