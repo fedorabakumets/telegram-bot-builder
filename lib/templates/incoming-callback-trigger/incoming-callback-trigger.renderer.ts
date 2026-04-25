@@ -5,6 +5,7 @@
 
 import type { Node } from '@shared/schema';
 import type {
+  CallbackNodeRef,
   IncomingCallbackTriggerEntry,
   IncomingCallbackTriggerTemplateParams,
 } from './incoming-callback-trigger.params';
@@ -54,6 +55,20 @@ export function collectIncomingCallbackTriggerEntries(nodes: Node[]): IncomingCa
 }
 
 /**
+ * Преобразует массив узлов в минимальные ссылки для навигации в шаблоне.
+ * @param nodes - Массив узлов холста
+ * @returns Массив CallbackNodeRef
+ */
+function buildAllNodeRefs(nodes: Node[]): CallbackNodeRef[] {
+  return nodes
+    .filter(n => n != null)
+    .map(n => ({
+      id: n.id,
+      safeName: n.id.replace(/[^a-zA-Z0-9_]/g, '_'),
+    }));
+}
+
+/**
  * Генерация Python middleware триггеров входящих callback_query из параметров.
  * @param params - Параметры шаблона
  * @returns Сгенерированный Python код
@@ -61,10 +76,12 @@ export function collectIncomingCallbackTriggerEntries(nodes: Node[]): IncomingCa
 export function generateIncomingCallbackTriggers(
   params: IncomingCallbackTriggerTemplateParams,
 ): string {
-  if (params.entries.length === 0) return '';
+  // Генерируем если есть триггеры ИЛИ есть ноды (для waiting_callback_input_middleware)
+  if (params.entries.length === 0 && (!params.allNodes || params.allNodes.length === 0)) return '';
   const validated = incomingCallbackTriggerParamsSchema.parse(params);
   return renderPartialTemplate('incoming-callback-trigger/incoming-callback-trigger.py.jinja2', {
     incomingCallbackTriggerEntries: validated.entries,
+    allNodes: params.allNodes ?? [],
   });
 }
 
@@ -75,6 +92,11 @@ export function generateIncomingCallbackTriggers(
  */
 export function generateIncomingCallbackTriggerHandlers(nodes: Node[]): string {
   const entries = collectIncomingCallbackTriggerEntries(nodes);
-  if (entries.length === 0) return '';
-  return generateIncomingCallbackTriggers({ entries });
+  const allNodes = buildAllNodeRefs(nodes);
+  // Генерируем всегда если есть ноды — нужен waiting_callback_input_middleware
+  if (entries.length === 0 && allNodes.length === 0) return '';
+  return generateIncomingCallbackTriggers({
+    entries,
+    allNodes,
+  });
 }

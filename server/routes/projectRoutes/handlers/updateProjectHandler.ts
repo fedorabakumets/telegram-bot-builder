@@ -3,6 +3,7 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на обновление проекта.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module projectRoutes/handlers/updateProjectHandler
  */
@@ -12,7 +13,6 @@ import { insertBotProjectSchema } from "@shared/schema";
 import { z } from "zod";
 import { storage } from "../../../storages/storage";
 import type { StorageBotProjectUpdate } from "../../../storages/storageTypes";
-import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { restartBotIfRunning } from "../../../bots/restartBotIfRunning";
 
 /**
@@ -33,19 +33,6 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
                 error: 'ID проекта должен быть числом'
             });
             return;
-        }
-
-        const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId !== null) {
-            const existingProject = await storage.getBotProject(projectId);
-            if (!existingProject) {
-                res.status(404).json({ message: "Проект не найден" });
-                return;
-            }
-            if (existingProject.ownerId !== null && existingProject.ownerId !== ownerId) {
-                res.status(403).json({ message: "Нет прав на редактирование проекта" });
-                return;
-            }
         }
 
         const validatedData = insertBotProjectSchema

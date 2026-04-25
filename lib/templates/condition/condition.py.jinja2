@@ -13,7 +13,25 @@
   1. Числовые операторы (greater_than, less_than, between) — всегда первыми среди переменных
   2. Строковые операторы (equals, contains, filled, empty)
   3. else — всегда последней
+
+  Для keyboard-узлов вызов генерируется без state=state (keyboard-нода не принимает state).
+  Для всех остальных типов узлов вызов генерируется с state=state.
 #}
+
+{#- Макрос: генерирует вызов handle_callback для ветки.
+    Для keyboard и input узлов — без state=state, для остальных — с state=state. #}
+{%- macro branch_call(branch) -%}
+{%- if branch.target -%}
+{%- set sanitized_target = branch.target | safe_name -%}
+{%- if branch.targetNodeType == 'keyboard' or branch.targetNodeType == 'input' -%}
+await handle_callback_{{ sanitized_target }}(callback_query)
+{%- else -%}
+await handle_callback_{{ sanitized_target }}(callback_query, state=state)
+{%- endif -%}
+{%- else -%}
+pass
+{%- endif -%}
+{%- endmacro -%}
 
 # Обработчики узлов условия
 {% for entry in conditionEntries %}
@@ -100,55 +118,51 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query, state: FSMCont
 {%- if not entry.hasConditionalBranch %}
 {%- for branch in entry.branches %}
 {%- if branch.operator == 'else' %}
-{%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
     if True:
         # Ветка по умолчанию
-        {{ "await handle_callback_" + sanitized_target + "(callback_query, state=state)" if branch.target else "pass" }}
+        {{ branch_call(branch) }}
 {%- endif %}
 {%- endfor %}
 {% endif %}
-{#- Проход 0: системные операторы (is_private, is_group, is_channel, is_admin, is_premium, is_bot, is_subscribed, is_not_subscribed) #}
+{#- Проход 0: системные операторы #}
 {%- for branch in entry.branches %}
 {%- if branch.operator == 'is_private' or branch.operator == 'is_group' or branch.operator == 'is_channel' or branch.operator == 'is_admin' or branch.operator == 'is_premium' or branch.operator == 'is_bot' or branch.operator == 'is_subscribed' or branch.operator == 'is_not_subscribed' %}
-{%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
 {%- if branch.isFirstSystem %}
     if {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% elif branch.operator == 'is_admin' %}callback_query.from_user.id in ADMIN_IDS{% elif branch.operator == 'is_premium' %}getattr(callback_query.from_user, 'is_premium', False){% elif branch.operator == 'is_bot' %}getattr(callback_query.from_user, 'is_bot', False){% elif branch.operator == 'is_subscribed' %}await _is_user_subscribed("{{ branch.value }}"){% elif branch.operator == 'is_not_subscribed' %}not await _is_user_subscribed("{{ branch.value }}"){% endif %}:
         # Ветка: {{ branch.operator }}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query, state=state)" if branch.target else "pass" }}
+        {{ branch_call(branch) }}
 {%- else %}
     elif {% if branch.operator == 'is_private' %}callback_query.message.chat.type == 'private'{% elif branch.operator == 'is_group' %}callback_query.message.chat.type in ('group', 'supergroup'){% elif branch.operator == 'is_channel' %}callback_query.message.chat.type == 'channel'{% elif branch.operator == 'is_admin' %}callback_query.from_user.id in ADMIN_IDS{% elif branch.operator == 'is_premium' %}getattr(callback_query.from_user, 'is_premium', False){% elif branch.operator == 'is_bot' %}getattr(callback_query.from_user, 'is_bot', False){% elif branch.operator == 'is_subscribed' %}await _is_user_subscribed("{{ branch.value }}"){% elif branch.operator == 'is_not_subscribed' %}not await _is_user_subscribed("{{ branch.value }}"){% endif %}:
         # Ветка: {{ branch.operator }}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query, state=state)" if branch.target else "pass" }}
+        {{ branch_call(branch) }}
 {%- endif %}
 {%- endif %}
 {%- endfor %}
 {#- Проход 1: числовые операторы (greater_than, less_than, between) #}
 {%- for branch in entry.branches %}
 {%- if branch.operator == 'greater_than' or branch.operator == 'less_than' or branch.operator == 'between' %}
-{%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
 {%- if branch.isFirstNumeric %}
     if {% if branch.operator == 'greater_than' %}_num_val is not None and _num_val > {{ branch.value if branch.value else '0' }}{% elif branch.operator == 'less_than' %}_num_val is not None and _num_val < {{ branch.value if branch.value else '0' }}{% elif branch.operator == 'between' %}_num_val is not None and {{ branch.value if branch.value else '0' }} <= _num_val <= {{ branch.value2 if branch.value2 else '0' }}{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} {{ branch.value }}{% endif %}{% if branch.value2 %} {{ branch.value2 }}{% endif %}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query, state=state)" if branch.target else "pass" }}
+        {{ branch_call(branch) }}
 {%- else %}
     elif {% if branch.operator == 'greater_than' %}_num_val is not None and _num_val > {{ branch.value if branch.value else '0' }}{% elif branch.operator == 'less_than' %}_num_val is not None and _num_val < {{ branch.value if branch.value else '0' }}{% elif branch.operator == 'between' %}_num_val is not None and {{ branch.value if branch.value else '0' }} <= _num_val <= {{ branch.value2 if branch.value2 else '0' }}{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} {{ branch.value }}{% endif %}{% if branch.value2 %} {{ branch.value2 }}{% endif %}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query, state=state)" if branch.target else "pass" }}
+        {{ branch_call(branch) }}
 {%- endif %}
 {%- endif %}
 {%- endfor %}
 {#- Проход 2: строковые операторы (filled, empty, equals, contains) #}
 {%- for branch in entry.branches %}
 {%- if branch.operator == 'filled' or branch.operator == 'empty' or branch.operator == 'equals' or branch.operator == 'contains' %}
-{%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
 {%- if branch.isFirstString and not entry.hasNumericBranch and not entry.hasSystemBranch %}
     if {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}val == "{{ branch.value }}"{% elif branch.operator == 'contains' %}"{{ branch.value }}" in val{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} == "{{ branch.value }}"{% endif %}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query, state=state)" if branch.target else "pass" }}
+        {{ branch_call(branch) }}
 {%- else %}
     elif {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}val == "{{ branch.value }}"{% elif branch.operator == 'contains' %}"{{ branch.value }}" in val{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} == "{{ branch.value }}"{% endif %}
-        {{ "await handle_callback_" + sanitized_target + "(callback_query, state=state)" if branch.target else "pass" }}
+        {{ branch_call(branch) }}
 {%- endif %}
 {%- endif %}
 {%- endfor %}
@@ -156,10 +170,9 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query, state: FSMCont
 {%- if entry.hasConditionalBranch %}
 {%- for branch in entry.branches %}
 {%- if branch.operator == 'else' %}
-{%- set sanitized_target = branch.target | safe_name if branch.target else '' %}
     else:
         # Ветка по умолчанию
-        {{ "await handle_callback_" + sanitized_target + "(callback_query, state=state)" if branch.target else "pass" }}
+        {{ branch_call(branch) }}
 {%- endif %}
 {%- endfor %}
 {%- endif %}

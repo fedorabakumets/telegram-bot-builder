@@ -26,6 +26,7 @@ import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHand
 import { cleanupOrphanedFoldersHandler } from "./projectManagement/handlers/cleanupOrphanedFoldersHandler";
 import { handleGenerateCode } from "./projects/generateCode";
 import { getAdminIdsHandler, updateAdminIdsHandler, removeAdminIdHandler } from "./projectRoutes/handlers/adminIdsHandler";
+import { requireProjectAccess } from "../middleware/requireProjectAccess";
 
 /**
  * Настраивает маршруты управления проектами
@@ -39,37 +40,37 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
     // Маршруты проектов
     app.get("/api/projects/list", requireDbReady, listProjectsHandler);
     app.get("/api/projects", requireDbReady, getAllProjectsHandler);
-    app.get("/api/projects/:id", requireDbReady, getProjectHandler);
-    app.get("/api/projects/:projectId/nodes", requireDbReady, getProjectNodesHandler);
-    app.get("/api/projects/:projectId/nodes/:nodeId", requireDbReady, getProjectNodeHandler);
+    app.get("/api/projects/:id", requireDbReady, requireProjectAccess, getProjectHandler);
+    app.get("/api/projects/:projectId/nodes", requireDbReady, requireProjectAccess, getProjectNodesHandler);
+    app.get("/api/projects/:projectId/nodes/:nodeId", requireDbReady, requireProjectAccess, getProjectNodeHandler);
     app.post("/api/projects", requireDbReady, createProjectHandler);
     app.put("/api/projects/reorder", requireDbReady, reorderProjectsHandler);
-    app.put("/api/projects/:id", requireDbReady, updateProjectHandler);
+    app.put("/api/projects/:id", requireDbReady, requireProjectAccess, updateProjectHandler);
 
     // Удаление проекта
     setupDeleteProjectRoute(app, requireDbReady);
 
     // Экспорт проекта в Python
-    app.post("/api/projects/:id/export", exportProjectHandler);
+    app.post("/api/projects/:id/export", requireProjectAccess, exportProjectHandler);
 
     // Генерация Python кода
-    app.post("/api/projects/:id/generate", requireDbReady, handleGenerateCode);
+    app.post("/api/projects/:id/generate", requireDbReady, requireProjectAccess, handleGenerateCode);
 
     // Управление токеном
-    app.get("/api/projects/:id/token", getTokenHandler);
-    app.delete("/api/projects/:id/token", clearTokenHandler);
+    app.get("/api/projects/:id/token", requireProjectAccess, getTokenHandler);
+    app.delete("/api/projects/:id/token", requireProjectAccess, clearTokenHandler);
 
     // Настройки генерации комментариев
     app.post("/api/settings/comments-generation", updateCommentsSettingsHandler);
 
     // Управление ID администраторов бота
-    app.get("/api/projects/:id/admin-ids", getAdminIdsHandler);
-    app.put("/api/projects/:id/admin-ids", updateAdminIdsHandler);
-    app.post("/api/projects/:id/admin-ids/remove", removeAdminIdHandler);
+    app.get("/api/projects/:id/admin-ids", requireProjectAccess, getAdminIdsHandler);
+    app.put("/api/projects/:id/admin-ids", requireProjectAccess, updateAdminIdsHandler);
+    app.post("/api/projects/:id/admin-ids/remove", requireProjectAccess, removeAdminIdHandler);
 
     // Экспорт в Google Таблицы
-    app.post("/api/projects/:id/export-to-google-sheets", requireDbReady, exportToGoogleSheetsHandler);
-    app.post("/api/projects/:id/export-structure-to-google-sheets", requireDbReady, exportStructureToGoogleSheetsHandler);
+    app.post("/api/projects/:id/export-to-google-sheets", requireDbReady, requireProjectAccess, exportToGoogleSheetsHandler);
+    app.post("/api/projects/:id/export-structure-to-google-sheets", requireDbReady, requireProjectAccess, exportStructureToGoogleSheetsHandler);
 
     // Загрузка изображений по URL
     app.post("/api/media/upload-from-url", requireDbReady, uploadImageHandler);

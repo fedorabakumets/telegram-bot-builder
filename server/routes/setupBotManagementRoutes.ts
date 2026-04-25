@@ -8,6 +8,7 @@
  */
 
 import type { Express } from 'express';
+import { requireProjectAccess } from '../middleware/requireProjectAccess';
 import { handleBotStatus } from './botManagement/handlers/botStatusHandler';
 import { handleBotStart } from './botManagement/handlers/botStartHandler';
 import { handleBotStop } from './botManagement/handlers/botStopHandler';
@@ -26,13 +27,13 @@ import { handleGetLaunchLogs } from './botManagement/handlers/botLaunchLogsHandl
  * @returns {void}
  */
 export function setupBotManagementRoutes(app: Express): void {
-    app.get("/api/projects/:id/bot", handleBotStatus);
+    app.get("/api/projects/:id/bot", requireProjectAccess, handleBotStatus);
     app.get("/api/tokens/:tokenId/bot-status", handleBotStatusByToken);
     app.get("/api/bot/tokens/:tokenId/status", getBotTokenStatusHandler);
     app.get("/api/bot/tokens/:tokenId/photo", getBotTokenPhotoHandler);
     app.get("/api/tokens/:tokenId/launch-history", handleGetLaunchHistory);
     app.get("/api/launch/:launchId/logs", handleGetLaunchLogs);
-    app.post("/api/projects/:id/bot/start", handleBotStart);
-    app.post("/api/projects/:id/bot/stop", handleBotStop);
-    app.post("/api/projects/:id/bot/restart", handleBotRestart);
+    app.post("/api/projects/:id/bot/start", requireProjectAccess, handleBotStart);
+    app.post("/api/projects/:id/bot/stop", requireProjectAccess, handleBotStop);
+    app.post("/api/projects/:id/bot/restart", requireProjectAccess, handleBotRestart);
 }

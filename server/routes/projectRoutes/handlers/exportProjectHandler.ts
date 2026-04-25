@@ -3,6 +3,7 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на экспорт проекта в Python код.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module projectRoutes/handlers/exportProjectHandler
  */
@@ -22,6 +23,7 @@ import { storage } from "../../../storages/storage";
 export async function exportProjectHandler(req: Request, res: Response): Promise<void> {
     try {
         const id = parseInt(req.params.id);
+
         const project = await storage.getBotProject(id);
 
         if (!project) {

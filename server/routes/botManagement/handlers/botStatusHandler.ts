@@ -3,6 +3,7 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на получение статуса бота для указанного проекта.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module botManagement/handlers/botStatusHandler
  */
@@ -28,6 +29,7 @@ import { restoreProcessTracking } from '../utils/processRestorer';
 export async function handleBotStatus(req: Request, res: Response): Promise<void> {
     try {
         const projectId = parseInt(req.params.id);
+
         const instance = await storage.getBotInstance(projectId);
         
         if (!instance) {

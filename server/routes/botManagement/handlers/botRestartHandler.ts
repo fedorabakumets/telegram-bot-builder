@@ -3,6 +3,7 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на перезапуск бота для указанного проекта.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module botManagement/handlers/botRestartHandler
  */

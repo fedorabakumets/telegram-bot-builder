@@ -3,6 +3,7 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на запуск бота для указанного проекта.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module botManagement/handlers/botStartHandler
  */
@@ -46,6 +47,7 @@ function parseTokenId(raw: unknown): number | undefined {
 export async function handleBotStart(req: Request, res: Response): Promise<void> {
     try {
         const projectId = parseInt(req.params.id);
+
         const { token } = req.body;
         const tokenId = parseTokenId(req.body.tokenId);
 

@@ -59,7 +59,7 @@ function buildModes(params: UserInputTemplateParams): string[] {
   if (params.inputSource) {
     switch (params.inputSource) {
       case 'any':
-        return ['text', 'photo', 'video', 'audio', 'document', 'location', 'contact'];
+        return ['text', 'photo', 'video', 'audio', 'document', 'location', 'contact', 'callback'];
       case 'text':
         return ['text'];
       case 'photo':
@@ -77,6 +77,10 @@ function buildModes(params: UserInputTemplateParams): string[] {
       default:
         break;
     }
+  }
+
+  if (params.inputType === 'callback') {
+    return ['callback'];
   }
 
   if (params.inputType === 'button') {
@@ -125,7 +129,8 @@ export function nodeToUserInputParams(node: Node): UserInputTemplateParams {
   const safeName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
   const isDedicatedInputNode = node.type === 'input';
   const nodeData = node.data as Record<string, any>;
-  const inputSource = isDedicatedInputNode
+  const isCallbackInput = isDedicatedInputNode && nodeData.inputType === 'callback';
+  const inputSource = isDedicatedInputNode && !isCallbackInput
     ? normalizeInputSource(nodeData.inputType || 'any')
     : undefined;
   const acceptsAny = inputSource === 'any';
@@ -151,7 +156,9 @@ export function nodeToUserInputParams(node: Node): UserInputTemplateParams {
     locationInputVariable: resolveDedicatedVariable(isDedicatedInputNode, inputSource, 'location', nodeData.locationInputVariable, inputVariable),
     enableContactInput: isDedicatedInputNode ? (acceptsAny || inputSource === 'contact') : Boolean(nodeData.enableContactInput),
     contactInputVariable: resolveDedicatedVariable(isDedicatedInputNode, inputSource, 'contact', nodeData.contactInputVariable, inputVariable),
-    inputType: (nodeData.buttons?.length > 0 && nodeData.collectUserInput) ? 'button' : 'text',
+    inputType: isDedicatedInputNode && nodeData.inputType === 'callback'
+      ? 'callback'
+      : (nodeData.buttons?.length > 0 && nodeData.collectUserInput) ? 'button' : 'text',
     skipButtons: (nodeData.buttons || [])
       .filter((btn: any) => btn.skipDataCollection === true && btn.target)
       .map((btn: any) => ({ text: btn.text, target: btn.target })),

@@ -3,13 +3,13 @@
  *
  * Этот модуль предоставляет функции для обработки запросов
  * на экспорт данных пользователей и структуры проекта в Google Таблицы.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module projectRoutes/handlers/googleSheetsHandlers
  */
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
  * Обрабатывает запрос на экспорт данных пользователей в Google Таблицы
@@ -26,12 +26,6 @@ export async function exportToGoogleSheetsHandler(req: Request, res: Response): 
 
         if (!project) {
             res.status(404).json({ message: "Проект не найден" });
-            return;
-        }
-
-        const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
-            res.status(403).json({ message: "Нет прав доступа к проекту" });
             return;
         }
 
@@ -114,12 +108,6 @@ export async function exportStructureToGoogleSheetsHandler(req: Request, res: Re
 
         if (!project) {
             res.status(404).json({ message: "Проект не найден" });
-            return;
-        }
-
-        const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
-            res.status(403).json({ message: "Нет прав доступа к проекту" });
             return;
         }
 

@@ -3,12 +3,14 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на остановку бота для указанного проекта.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module botManagement/handlers/botStopHandler
  */
 
 import type { Request, Response } from 'express';
 import { stopBot } from '../../../bots/stopBot';
+import { storage } from '../../../storages/storage';
 
 /**
  * Нормализует tokenId из тела запроса.
@@ -43,6 +45,7 @@ function parseTokenId(raw: unknown): number | undefined {
 export async function handleBotStop(req: Request, res: Response): Promise<void> {
     try {
         const projectId = parseInt(req.params.id);
+
         const tokenId = parseTokenId(req.body.tokenId);
 
         if (!tokenId) {

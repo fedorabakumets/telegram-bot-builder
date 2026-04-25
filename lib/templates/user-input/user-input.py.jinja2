@@ -26,6 +26,63 @@
 
 {# ── modes передаётся готовым массивом из renderer ── #}
 {% set firstMode = modes[0] if modes else "text" %}
+{%- if 'callback' in modes %}
+    # Прямая обработка callback: если вызван с реальным нажатием (не fake) — сразу сохраняем и переходим
+    # Также обрабатываем fake-вызов от callback_trigger если button_text уже сохранён триггером
+    _is_fake_cb = getattr(callback_query, '_is_fake', False)
+    _trigger_btn_text = user_data.get(user_id, {}).get("button_text", "") if _is_fake_cb else ""
+    if _trigger_btn_text:
+        # Триггер уже извлёк текст кнопки — используем его напрямую
+        await set_user_var(user_id, "{{ inputVariable }}", _trigger_btn_text)
+        logging.info(f"✅ Callback input (от триггера): {{ inputVariable }} = {_trigger_btn_text}")
+        user_data.get(user_id, {}).pop("button_text", None)
+        {%- if inputTargetNodeId %}
+        _trigger_fake = SimpleNamespace(
+            id="trigger_cb_nav",
+            from_user=callback_query.from_user,
+            chat_instance="",
+            data="{{ inputTargetNodeId }}",
+            message=callback_query.message,
+            _is_fake=True,
+            answer=lambda *_a, **_kw: asyncio.sleep(0)
+        )
+        await handle_callback_{{ inputTargetNodeId | safe_name }}(_trigger_fake, state=state)
+        {%- endif %}
+        return
+    if not _is_fake_cb and hasattr(callback_query, 'message') and callback_query.message:
+        # Читаем текст нажатой кнопки из reply_markup по уникальному тексту
+        _direct_btn_text = ""
+        try:
+            _rm = callback_query.message.reply_markup
+            if _rm and hasattr(_rm, "inline_keyboard"):
+                for _row in _rm.inline_keyboard:
+                    for _btn in _row:
+                        if getattr(_btn, "callback_data", None) == (callback_query.data or ""):
+                            _direct_btn_text = _btn.text or ""
+                            break
+                    if _direct_btn_text:
+                        break
+        except Exception:
+            pass
+        # Сохраняем текст кнопки (или callback_data если текст не найден)
+        _direct_value = _direct_btn_text if _direct_btn_text else (callback_query.data or "")
+        await set_user_var(user_id, "{{ inputVariable }}", _direct_value)
+        logging.info(f"✅ Callback input (прямой): {{ inputVariable }} = {_direct_value}")
+        {%- if inputTargetNodeId %}
+        # Переходим к следующему узлу через fake-callback с флагом _is_fake=True
+        _direct_fake = SimpleNamespace(
+            id="direct_cb_nav",
+            from_user=callback_query.from_user,
+            chat_instance="",
+            data="{{ inputTargetNodeId }}",
+            message=callback_query.message,
+            _is_fake=True,
+            answer=lambda *_a, **_kw: asyncio.sleep(0)
+        )
+        await handle_callback_{{ inputTargetNodeId | safe_name }}(_direct_fake, state=state)
+        {%- endif %}
+        return
+{%- endif %}
 
     # Устанавливаем состояние ожидания ввода для узла {{ nodeId }}
     user_data[user_id] = user_data.get(user_id, {})

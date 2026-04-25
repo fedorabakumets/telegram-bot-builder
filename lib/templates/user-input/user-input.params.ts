@@ -18,7 +18,7 @@ export type InputSource =
   | 'contact';
 
 /** Legacy-режим сбора ввода */
-export type InputType = 'text' | 'button';
+export type InputType = 'text' | 'button' | 'callback';
 
 /** Параметры для генерации блока waiting_for_input */
 export interface UserInputTemplateParams {

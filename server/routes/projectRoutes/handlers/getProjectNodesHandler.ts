@@ -3,13 +3,13 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на получение всех узлов проекта.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module projectRoutes/handlers/getProjectNodesHandler
  */
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
  * Обрабатывает запрос на получение узлов проекта
@@ -34,12 +34,6 @@ export async function getProjectNodesHandler(req: Request, res: Response): Promi
         const project = await storage.getBotProject(projectId);
         if (!project) {
             res.status(404).json({ message: "Проект не найден" });
-            return;
-        }
-
-        const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
-            res.status(403).json({ message: "Нет прав доступа к проекту" });
             return;
         }
 

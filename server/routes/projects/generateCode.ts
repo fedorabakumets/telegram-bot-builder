@@ -1,7 +1,8 @@
 /**
  * @fileoverview API handler для генерации Python кода бота
  * 
- * Обрабатывает POST /api/projects/:id/generate запросы
+ * Обрабатывает POST /api/projects/:id/generate запросы.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  * 
  * @module server/routes/projects/generateCode
  */
@@ -48,6 +49,7 @@ async function loadGenerator(): Promise<(data: any, opts: any) => string> {
 export async function handleGenerateCode(req: Request, res: Response): Promise<void> {
   try {
     const projectId = parseInt(req.params.id, 10);
+
     const { userDatabaseEnabled = false, enableComments = true, enableLogging = false } = req.body;
 
     // Получаем проект из БД

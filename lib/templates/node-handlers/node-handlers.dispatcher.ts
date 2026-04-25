@@ -51,6 +51,30 @@ function hasUserIdsVar(text: string): boolean {
   return /\{user_ids(?:_count)?\}/.test(text || '');
 }
 
+/**
+ * Ищет customCallbackData среди кнопок всех узлов, ведущих к указанному nodeId.
+ * Применяется для кнопок с action === 'goto' или action === 'command'.
+ *
+ * @param nodeId - ID целевого узла
+ * @param nodes - Массив всех узлов проекта
+ * @returns Кастомный callback_data или undefined
+ */
+function findCustomCallbackDataForNode(nodeId: string, nodes: Node[]): string | undefined {
+  for (const node of nodes) {
+    const buttons: any[] = node.data?.buttons || [];
+    for (const btn of buttons) {
+      if (
+        btn.target === nodeId &&
+        (btn.action === 'goto' || btn.action === 'command') &&
+        btn.customCallbackData
+      ) {
+        return btn.customCallbackData as string;
+      }
+    }
+  }
+  return undefined;
+}
+
 function getSafeAutoTransitionParams(node: Node, nodes: Node[]): {
   enableAutoTransition: boolean;
   autoTransitionTo?: string;
@@ -223,6 +247,8 @@ export function generateNodeHandlers(nodes: Node[], userDatabaseEnabled: boolean
           (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === node.id)
         ),
         // callbackPattern: удалён — виртуальные триггеры теперь генерируются через collectVirtualCallbackTriggerEntries
+        // Если есть customCallbackData среди кнопок, ведущих к этому узлу — используем его как паттерн
+        callbackPattern: findCustomCallbackDataForNode(node.id, nodes),
         messageSendRecipients: (node.data as any)?.messageSendRecipients || [],
         saveMessageIdTo: (node.data as any)?.saveMessageIdTo || undefined,
         enableDynamicButtons: node.data?.enableDynamicButtons ?? false,
