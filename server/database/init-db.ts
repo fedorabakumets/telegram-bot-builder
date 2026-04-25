@@ -61,6 +61,7 @@ async function executeWithRetry(db: any, query: any, description: string, maxRet
  * - user_telegram_settings: настройки Telegram API пользователей
  * - bot_messages: сообщения ботов
  * - bot_message_media: медиафайлы к сообщениям ботов
+ * - app_settings: глобальные настройки приложения (ключ-значение)
  *
  * Также выполняет миграции для добавления новых столбцов в существующие таблицы,
  * если они отсутствуют.
@@ -389,6 +390,14 @@ export async function initializeDatabaseTables() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `, "Создание таблицы bot_message_media");
+
+    await executeWithRetry(db, sql`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `, "Создание таблицы app_settings");
 
     // Миграция: добавление primary_media_id в bot_messages если его нет
     try {
