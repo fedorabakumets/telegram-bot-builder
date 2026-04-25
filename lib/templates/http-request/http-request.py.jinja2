@@ -34,6 +34,13 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
         except Exception:
             pass
 
+    {% if enablePagination and paginationMode == 'interactive' and paginationOffsetVar %}
+    # Инициализируем переменную offset если не задана (первый вход в список)
+    if not _all_vars.get("{{ paginationOffsetVar }}"):
+        _all_vars["{{ paginationOffsetVar }}"] = "0"
+        await set_user_var(user_id, "{{ paginationOffsetVar }}", "0")
+    {% endif %}
+
     # Подставляем переменные в URL
     _url = "{{ url }}"
     _url = replace_variables_in_text(_url, _all_vars, {})

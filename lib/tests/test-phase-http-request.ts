@@ -1396,6 +1396,24 @@ test('N08', 'Синтаксис Python OK для fetch_all', () => {
   syntax(code, 'N08');
 });
 
+test('N09', 'Интерактивная пагинация: инициализирует offset в "0" при первом входе', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('fetch_users', {
+    httpRequestResponseVariable: 'users_data',
+    httpRequestEnablePagination: true,
+    httpRequestPaginationMode: 'interactive',
+    httpRequestPaginationOffsetVar: 'users_offset',
+    httpRequestPaginationLimit: 10,
+  })]);
+  const code = gen(p, 'N09');
+  ok(code.includes('"users_offset"'), '"users_offset" не найден в коде инициализации');
+  // Инициализация должна быть ДО подстановки переменных в URL
+  const initIdx = code.indexOf('_all_vars.get("users_offset")');
+  const urlIdx = code.indexOf('replace_variables_in_text(_url');
+  ok(initIdx !== -1, '_all_vars.get("users_offset") не найден');
+  ok(initIdx < urlIdx, 'Инициализация offset должна быть ДО replace_variables_in_text(_url)');
+  syntax(code, 'N09');
+});
+
 // ─── Итог ────────────────────────────────────────────────────────────────────
 
 const passed = results.filter(r => r.passed).length;
