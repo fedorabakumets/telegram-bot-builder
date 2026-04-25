@@ -35,6 +35,8 @@ const ENV_FALLBACK: Record<string, string | undefined> = {
   telegram_client_secret: process.env.TELEGRAM_CLIENT_SECRET,
   telegram_bot_username:
     process.env.VITE_TELEGRAM_BOT_USERNAME ?? process.env.TELEGRAM_BOT_USERNAME,
+  telegram_bot_token:
+    process.env.TELEGRAM_BOT_TOKEN ?? process.env.VITE_TELEGRAM_BOT_TOKEN,
 };
 
 /**
@@ -154,6 +156,7 @@ export async function seedSettingsFromEnv(): Promise<void> {
     ["telegram_client_id", process.env.TELEGRAM_CLIENT_ID ?? process.env.VITE_TELEGRAM_CLIENT_ID],
     ["telegram_client_secret", process.env.TELEGRAM_CLIENT_SECRET],
     ["telegram_bot_username", process.env.VITE_TELEGRAM_BOT_USERNAME ?? process.env.TELEGRAM_BOT_USERNAME],
+    ["telegram_bot_token", process.env.TELEGRAM_BOT_TOKEN ?? process.env.VITE_TELEGRAM_BOT_TOKEN],
   ];
 
   for (const [key, value] of pairs) {

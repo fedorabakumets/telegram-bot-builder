@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
 import { regenerateSession, saveSession } from '../utils/sessionUtils';
+import { getSetting } from '../../../services/app-settings.service';
 
 /**
  * Верифицирует Telegram Mini App initData через HMAC-SHA256
@@ -45,7 +46,7 @@ export async function handleMiniAppAuth(req: Request, res: Response): Promise<vo
       return;
     }
 
-    const botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN;
+    const botToken = await getSetting("telegram_bot_token");
     if (!botToken) {
       // В dev-режиме пропускаем верификацию
       if (process.env.NODE_ENV !== 'development') {
