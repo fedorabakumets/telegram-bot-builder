@@ -47,6 +47,19 @@ const ADD_LAUNCH_ID_TO_BOT_LOGS = `
 `;
 
 /**
+ * SQL для создания таблицы настроек приложения.
+ * Используется Setup Wizard для хранения конфигурации Telegram Login
+ * и других параметров, настраиваемых через UI без редеплоя.
+ */
+const CREATE_APP_SETTINGS_TABLE = `
+  CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW()
+  );
+`;
+
+/**
  * Запускает все необходимые миграции базы данных
  * @returns Promise<void>
  */
@@ -59,6 +72,8 @@ export async function runMigrations(): Promise<void> {
     console.log("[Migrations] Таблица bot_launch_history готова");
     await client.query(ADD_LAUNCH_ID_TO_BOT_LOGS);
     console.log("[Migrations] Колонка launch_id в bot_logs готова");
+    await client.query(CREATE_APP_SETTINGS_TABLE);
+    console.log("[Migrations] Таблица app_settings готова");
   } catch (err) {
     console.error("[Migrations] Ошибка выполнения миграций:", err);
   } finally {
