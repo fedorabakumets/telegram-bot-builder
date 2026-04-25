@@ -4,6 +4,7 @@
  */
 
 import { pool } from "./db";
+import { seedSettingsFromEnv } from "../services/app-settings.service";
 
 /**
  * SQL для создания таблицы логов ботов
@@ -79,4 +80,7 @@ export async function runMigrations(): Promise<void> {
   } finally {
     client.release();
   }
+
+  await seedSettingsFromEnv();
+  console.log("[Migrations] Seed настроек из env завершён");
 }

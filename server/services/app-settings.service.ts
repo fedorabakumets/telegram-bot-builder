@@ -38,6 +38,31 @@ const ENV_FALLBACK: Record<string, string | undefined> = {
 };
 
 /**
+ * Читает настройку только из кэша и БД, без fallback на process.env.
+ * Используется при seed для проверки наличия значения именно в БД.
+ *
+ * @param key - Ключ настройки
+ * @returns Значение из БД или undefined если запись отсутствует
+ */
+async function getSettingFromDb(key: string): Promise<string | undefined> {
+  const cached = cache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+  const rows = await db
+    .select()
+    .from(appSettings)
+    .where(eq(appSettings.key, key))
+    .limit(1);
+
+  if (rows.length > 0) {
+    const value = rows[0].value;
+    cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
+    return value;
+  }
+  return undefined;
+}
+
+/**
  * Получить значение настройки по ключу.
  *
  * Порядок поиска: кэш → БД → process.env (fallback).
@@ -113,4 +138,30 @@ export async function getAllSettings(): Promise<Record<string, string>> {
 export async function isConfigured(): Promise<boolean> {
   const values = await Promise.all(REQUIRED_KEYS.map(getSetting));
   return values.every((v) => typeof v === "string" && v.trim().length > 0);
+}
+
+/**
+ * Переносит значения из process.env в таблицу app_settings при первом запуске.
+ *
+ * Для каждого обязательного ключа: если значение есть в env, но отсутствует в БД —
+ * записывает его в БД. Уже существующие записи не перезаписываются.
+ * Вызывается один раз при старте сервера после миграций.
+ *
+ * @returns Promise<void>
+ */
+export async function seedSettingsFromEnv(): Promise<void> {
+  const pairs: Array<[string, string | undefined]> = [
+    ["telegram_client_id", process.env.TELEGRAM_CLIENT_ID ?? process.env.VITE_TELEGRAM_CLIENT_ID],
+    ["telegram_client_secret", process.env.TELEGRAM_CLIENT_SECRET],
+    ["telegram_bot_username", process.env.VITE_TELEGRAM_BOT_USERNAME ?? process.env.TELEGRAM_BOT_USERNAME],
+  ];
+
+  for (const [key, value] of pairs) {
+    if (!value?.trim()) continue;
+    const existing = await getSettingFromDb(key);
+    if (!existing) {
+      await setSetting(key, value);
+      console.log(`[AppSettings] Перенесено из env в БД: ${key}`);
+    }
+  }
 }
