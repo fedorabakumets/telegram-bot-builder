@@ -132,12 +132,20 @@ export async function getAllSettings(): Promise<Record<string, string>> {
 /**
  * Проверить, настроены ли все обязательные ключи приложения.
  *
- * Считает приложение настроенным, если все три ключа присутствуют и непустые:
- * `telegram_client_id`, `telegram_client_secret`, `telegram_bot_username`.
+ * В режиме разработки (`NODE_ENV=development`) всегда возвращает `true`,
+ * чтобы не блокировать запуск при отсутствии настроек в БД.
  *
- * @returns `true` если все обязательные ключи заданы
+ * В production считает приложение настроенным, если все три ключа
+ * присутствуют и непустые: `telegram_client_id`, `telegram_client_secret`,
+ * `telegram_bot_username`.
+ *
+ * @returns `true` если все обязательные ключи заданы (или режим разработки)
  */
 export async function isConfigured(): Promise<boolean> {
+  // В dev-режиме считаем настроенным даже без данных в БД
+  if (process.env.NODE_ENV === "development") {
+    return true;
+  }
   const values = await Promise.all(REQUIRED_KEYS.map(getSetting));
   return values.every((v) => typeof v === "string" && v.trim().length > 0);
 }

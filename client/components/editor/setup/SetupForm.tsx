@@ -1,5 +1,8 @@
 /**
  * @fileoverview Форма первоначальной настройки Telegram-интеграции
+ *
+ * В dev-режиме отображает кнопку "Пропустить" для обхода обязательной настройки.
+ *
  * @module components/editor/setup/SetupForm
  */
 
@@ -10,6 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSetupMutation, type SetupPayload } from './hooks/use-setup';
+
+/** true если приложение запущено в dev-режиме (Vite) */
+const isDev = import.meta.env.DEV;
 
 /**
  * Свойства компонента SetupForm
@@ -109,6 +115,16 @@ export function SetupForm({ onSuccess }: SetupFormProps) {
         {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Сохранить и продолжить
       </Button>
+      {isDev && (
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full text-muted-foreground text-xs"
+          onClick={onSuccess}
+        >
+          Пропустить (только для разработки)
+        </Button>
+      )}
     </form>
   );
 }
