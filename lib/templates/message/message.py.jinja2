@@ -326,6 +326,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {%- if saveMessageIdTo %}
     if sent_message and hasattr(sent_message, 'message_id'):
         user_data[user_id]["{{ saveMessageIdTo }}"] = sent_message.message_id
+        await set_user_var(user_id, "{{ saveMessageIdTo }}", sent_message.message_id)
         logging.info(f"💾 ID сообщения сохранён в переменную '{{ saveMessageIdTo }}': {sent_message.message_id}")
     {%- endif %}
 
