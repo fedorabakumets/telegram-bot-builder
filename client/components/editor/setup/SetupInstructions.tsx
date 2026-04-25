@@ -47,7 +47,7 @@ export function SetupInstructions() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {STEPS.map(({ num, text }) => (
+        {STEPS.slice(0, 3).map(({ num, text }) => (
           <div key={num} className="flex items-start gap-3">
             <Badge
               variant="outline"
@@ -59,14 +59,26 @@ export function SetupInstructions() {
           </div>
         ))}
 
-        {/* Скриншот: где найти Login Widget в BotFather */}
-        <div className="pt-2">
+        {/* Скриншот: где найти Login Widget в BotFather — после шага 3 */}
+        <div className="py-1">
           <img
             src="/assets/images/botfather-login-widget.png"
             alt="Login Widget в меню BotFather"
             className="w-full rounded-lg border border-border/40 opacity-90"
           />
         </div>
+
+        {STEPS.slice(3).map(({ num, text }) => (
+          <div key={num} className="flex items-start gap-3">
+            <Badge
+              variant="outline"
+              className="h-6 w-6 shrink-0 rounded-full p-0 flex items-center justify-center text-xs font-bold border-primary/40 text-primary"
+            >
+              {num}
+            </Badge>
+            <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
+          </div>
+        ))}
 
         <p className="text-xs text-muted-foreground/70 pt-1 border-t border-border/30">
           Все данные хранятся только на вашем сервере и не передаются третьим лицам.
