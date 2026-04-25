@@ -35,8 +35,9 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
             pass
 
     {% if enablePagination and paginationMode == 'interactive' and paginationOffsetVar %}
-    # Инициализируем переменную offset если не задана (первый вход в список)
-    if not _all_vars.get("{{ paginationOffsetVar }}"):
+    # Инициализируем переменную offset если не задана или не является числом (первый вход в список)
+    _pag_offset_raw = str(_all_vars.get("{{ paginationOffsetVar }}", "") or "")
+    if not _pag_offset_raw.strip().lstrip('-').isdigit():
         _all_vars["{{ paginationOffsetVar }}"] = "0"
         await set_user_var(user_id, "{{ paginationOffsetVar }}", "0")
     {% endif %}
