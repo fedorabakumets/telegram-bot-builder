@@ -1,25 +1,28 @@
 /**
  * @fileoverview Хендлер страницы входа
  *
- * Этот модуль предоставляет функцию для отображения
- * страницы входа с виджетом Telegram.
+ * Отображает страницу входа с виджетом Telegram.
+ * Читает Client ID и Bot Username из app_settings (БД),
+ * с fallback на process.env для обратной совместимости.
  *
  * @module auth/handlers/loginHandler
  */
 
 import type { Request, Response } from "express";
+import { getSetting } from "../../../services/app-settings.service";
 
 /**
  * Обрабатывает запрос на страницу входа
  *
- * @function handleLogin
- * @param {Request} _req - Объект запроса (не используется)
- * @param {Response} res - Объект ответа
- * @returns {void}
+ * @param _req - Объект запроса (не используется)
+ * @param res - Объект ответа
+ * @returns Promise<void>
  */
-export function handleLogin(_req: Request, res: Response): void {
-    const botUsername = process.env.VITE_TELEGRAM_BOT_USERNAME || 'botcraft_studio_bot';
+export async function handleLogin(_req: Request, res: Response): Promise<void> {
+    const botUsernameRaw = await getSetting("telegram_bot_username") || 'botcraft_studio_bot';
+    const botUsername = botUsernameRaw;
     const cleanBotUsername = botUsername.replace('@', '');
+    const clientId = await getSetting("telegram_client_id") || '0';
     const isDev = process.env.NODE_ENV === 'development';
 
     const devForm = `
@@ -75,7 +78,7 @@ export function handleLogin(_req: Request, res: Response): void {
     <button id="tgLoginBtn" style="padding:10px 24px;background:#0088cc;color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">Войти через Telegram</button>
     <script>
       Telegram.Login.init({
-        client_id: ${process.env.TELEGRAM_CLIENT_ID || 0},
+        client_id: ${clientId},
         request_access: ['write'],
       }, function(user) { if (user) onTelegramAuth(user); });
       document.getElementById('tgLoginBtn').addEventListener('click', function() { Telegram.Login.open(); });
