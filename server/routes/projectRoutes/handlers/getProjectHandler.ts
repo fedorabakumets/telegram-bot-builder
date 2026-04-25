@@ -44,10 +44,13 @@ export async function getProjectHandler(req: Request, res: Response): Promise<vo
 
         const ownerId = getOwnerIdFromRequest(req);
 
-        // Авторизованный пользователь — проверяем владельца
+        // Авторизованный пользователь — проверяем владельца или коллаборатора
         if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
-            res.status(403).json({ message: "Нет прав доступа к проекту" });
-            return;
+            const isCollaborator = await storage.hasProjectAccess(id, ownerId);
+            if (!isCollaborator) {
+                res.status(403).json({ message: "Нет прав доступа к проекту" });
+                return;
+            }
         }
 
         const normalizedProject = normalizeProjectData(project);
