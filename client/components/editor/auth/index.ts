@@ -6,3 +6,4 @@
 export { AuthScreen } from './AuthScreen';
 export { AuthGuard } from './AuthGuard';
 export { AuthTelegramButton } from './AuthTelegramButton';
+export { AuthDevForm } from './AuthDevForm';

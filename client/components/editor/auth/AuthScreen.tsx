@@ -12,12 +12,16 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { AuthTelegramButton } from './AuthTelegramButton';
+import { AuthDevForm } from './AuthDevForm';
 import { useAuthScreen } from './hooks/use-auth-screen';
+
+/** true если приложение запущено в dev-режиме */
+const isDev = import.meta.env.MODE === 'development';
 
 /**
  * Экран авторизации приложения.
- * Отображает карточку по центру экрана с кнопкой входа через Telegram.
- * Использует хук useAuthScreen для управления логикой входа.
+ * В dev-режиме показывает инлайн-форму ввода Telegram ID.
+ * В prod-режиме показывает кнопку входа через Telegram.
  *
  * @returns JSX элемент экрана авторизации
  */
@@ -42,10 +46,11 @@ export function AuthScreen() {
         </CardHeader>
 
         <CardContent className="pt-2">
-          <AuthTelegramButton
-            onClick={handleTelegramLogin}
-            isLoading={isLoading}
-          />
+          {isDev ? (
+            <AuthDevForm />
+          ) : (
+            <AuthTelegramButton onClick={handleTelegramLogin} isLoading={isLoading} />
+          )}
         </CardContent>
       </Card>
     </div>
