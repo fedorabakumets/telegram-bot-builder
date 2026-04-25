@@ -9,6 +9,8 @@
 
 import { Input } from '@/components/ui/input';
 import type { Button } from '@shared/schema';
+import type { ProjectVariable } from '../../utils/variables-utils';
+import { ButtonCallbackVariablePicker } from './button-callback-variable-picker';
 
 /** Максимальный размер callback_data в байтах (ограничение Telegram) */
 const MAX_CALLBACK_BYTES = 64;
@@ -27,6 +29,8 @@ interface ButtonCallbackFieldProps {
   keyboardType?: string;
   /** Функция обновления кнопки */
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
+  /** Пользовательские переменные из проекта */
+  textVariables?: ProjectVariable[];
 }
 
 /**
@@ -74,6 +78,7 @@ export function ButtonCallbackField({
   button,
   keyboardType,
   onButtonUpdate,
+  textVariables,
 }: ButtonCallbackFieldProps) {
   if (keyboardType !== 'inline') return null;
   if (!INLINE_ACTIONS.includes(button.action as InlineAction)) return null;
@@ -85,9 +90,17 @@ export function ButtonCallbackField({
 
   return (
     <div className="space-y-1">
-      <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 select-none">
-        callback_data
-      </span>
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 select-none">
+          callback_data
+        </span>
+        <ButtonCallbackVariablePicker
+          nodeId={nodeId}
+          button={button}
+          textVariables={textVariables ?? []}
+          onButtonUpdate={onButtonUpdate}
+        />
+      </div>
       <Input
         value={currentValue}
         onChange={(e) =>

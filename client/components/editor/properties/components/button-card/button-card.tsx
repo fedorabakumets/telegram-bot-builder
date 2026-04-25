@@ -123,6 +123,7 @@ export function ButtonCard({
             button={button}
             keyboardType={keyboardType}
             onButtonUpdate={onButtonUpdate}
+            textVariables={textVariables}
           />
         </>
       )}
