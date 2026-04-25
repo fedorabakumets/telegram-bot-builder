@@ -109,6 +109,8 @@ export function useProjectLoader({
         queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], [newProject]);
         queryClient.setQueryData<BotProject[]>(['/api/projects'], [newProject]);
         queryClient.setQueryData<BotProject>([`/api/projects/${newProject.id}`], newProject);
+        // Инвалидируем чтобы сайдбар подхватил новый проект
+        queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       })
       .catch(e => {
         console.error('Ошибка автосоздания проекта:', e);

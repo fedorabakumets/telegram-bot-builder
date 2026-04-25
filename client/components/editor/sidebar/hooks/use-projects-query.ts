@@ -4,6 +4,7 @@
  * @module components/editor/sidebar/hooks/use-projects-query
  */
 
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/queryClient';
 import type { BotProject } from '@shared/schema';
@@ -37,6 +38,13 @@ export function useProjectsQuery(): UseProjectsQueryResult {
     staleTime: 0, // Данные всегда считаются устаревшими
     enabled: sessionReady, // Ждём готовности серверной сессии
   });
+
+  // Рефетч при появлении sessionReady — подхватывает проекты созданные автоматически
+  useEffect(() => {
+    if (sessionReady) {
+      refetch();
+    }
+  }, [sessionReady]);
 
   return {
     projects: data || [],
