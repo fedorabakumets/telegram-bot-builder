@@ -1566,7 +1566,8 @@ export class DatabaseStorage implements IStorage {
   async hasProjectAccess(projectId: number, userId: number): Promise<boolean> {
     const project = await this.getBotProject(projectId);
     if (!project) return false;
-    if (project.ownerId === userId) return true;
+    // Явное приведение к числу — bigint из PostgreSQL может вернуться строкой
+    if (Number(project.ownerId) === Number(userId)) return true;
 
     const [collab] = await this.db
       .select()
