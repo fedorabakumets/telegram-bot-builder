@@ -113,7 +113,12 @@ export async function getBotTokenUsersHandler(req: Request, res: Response): Prom
             [projectId, tokenId, limit, offset]
         );
 
-        res.json({ items: usersResult.rows, count });
+        const nextOffset = offset + limit < count ? offset + limit : null;
+        const prevOffset = offset > 0 ? Math.max(0, offset - limit) : null;
+        const fromItem = count > 0 ? offset + 1 : 0;
+        const toItem = Math.min(offset + usersResult.rows.length, count);
+
+        res.json({ items: usersResult.rows, count, nextOffset, prevOffset, fromItem, toItem });
     } catch (error: any) {
         console.error("[BotTokenUsers] Ошибка:", error.message);
         res.status(500).json({ error: "Не удалось получить пользователей" });
