@@ -172,35 +172,27 @@ export default function Home() {
   };
 
   const getNodeCount = (project: any) => {
+    // Используем предподсчитанное поле с сервера
+    if (typeof project.nodeCount === 'number') return project.nodeCount;
     if (!project.data || typeof project.data !== 'object') return 0;
-    
-    // Проверяем, новый формат с листами или старый
     if (SheetsManager.isNewFormat(project.data)) {
       const sheets = (project.data as any).sheets || [];
       return sheets.reduce((total: number, sheet: any) => total + (sheet.nodes?.length || 0), 0);
-    } else {
-      const data = project.data as { nodes?: any[] };
-      return data.nodes?.length || 0;
     }
+    return (project.data as { nodes?: any[] }).nodes?.length || 0;
   };
 
   const getSheetsInfo = (project: any) => {
+    // Используем предподсчитанное поле с сервера
+    if (typeof project.sheetsCount === 'number') {
+      return { count: project.sheetsCount, names: [] };
+    }
     if (!project.data || typeof project.data !== 'object') return { count: 0, names: [] };
-    
-    // Проверяем, новый формат с листами или старый
     if (SheetsManager.isNewFormat(project.data)) {
       const sheets = (project.data as any).sheets || [];
-      return {
-        count: sheets.length,
-        names: sheets.map((sheet: any) => sheet.name || 'Лист')
-      };
-    } else {
-      // Старый формат - один лист
-      return {
-        count: 1,
-        names: ['Главный лист']
-      };
+      return { count: sheets.length, names: sheets.map((s: any) => s.name || 'Лист') };
     }
+    return { count: 1, names: ['Главный лист'] };
   };
 
 
