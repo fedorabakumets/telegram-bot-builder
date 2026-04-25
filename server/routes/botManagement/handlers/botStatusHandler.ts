@@ -3,7 +3,7 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на получение статуса бота для указанного проекта.
- * Включает проверку прав доступа к проекту для авторизованных пользователей.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module botManagement/handlers/botStatusHandler
  */
@@ -13,7 +13,6 @@ import { findActiveProcessForProject } from '../../../utils/findActiveProcessFor
 import { storage } from '../../../storages/storage';
 import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils/processChecker';
 import { restoreProcessTracking } from '../utils/processRestorer';
-import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 
 /**
  * Обрабатывает запрос на получение статуса бота
@@ -30,16 +29,6 @@ import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 export async function handleBotStatus(req: Request, res: Response): Promise<void> {
     try {
         const projectId = parseInt(req.params.id);
-
-        // Проверяем права доступа к проекту для авторизованных пользователей
-        const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId !== null) {
-            const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-            if (!hasAccess) {
-                res.status(403).json({ message: "Нет прав доступа к проекту" });
-                return;
-            }
-        }
 
         const instance = await storage.getBotInstance(projectId);
         

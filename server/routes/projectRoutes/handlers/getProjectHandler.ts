@@ -3,13 +3,13 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на получение конкретного проекта по идентификатору.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module projectRoutes/handlers/getProjectHandler
  */
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { normalizeProjectData } from "../../../utils/normalizeProjectData";
 
 /**
@@ -40,17 +40,6 @@ export async function getProjectHandler(req: Request, res: Response): Promise<vo
         if (!project) {
             res.status(404).json({ message: "Проект не найден" });
             return;
-        }
-
-        const ownerId = getOwnerIdFromRequest(req);
-
-        // Авторизованный пользователь — проверяем владельца или коллаборатора
-        if (ownerId !== null && project.ownerId !== null && project.ownerId !== ownerId) {
-            const isCollaborator = await storage.hasProjectAccess(id, ownerId);
-            if (!isCollaborator) {
-                res.status(403).json({ message: "Нет прав доступа к проекту" });
-                return;
-            }
         }
 
         const normalizedProject = normalizeProjectData(project);

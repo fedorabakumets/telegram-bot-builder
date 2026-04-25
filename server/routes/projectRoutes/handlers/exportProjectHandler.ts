@@ -3,7 +3,7 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на экспорт проекта в Python код.
- * Включает проверку прав доступа к проекту для авторизованных пользователей.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module projectRoutes/handlers/exportProjectHandler
  */
@@ -11,7 +11,6 @@
 import type { Request, Response } from "express";
 import { URL } from "node:url";
 import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
  * Обрабатывает запрос на экспорт проекта
@@ -24,16 +23,6 @@ import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 export async function exportProjectHandler(req: Request, res: Response): Promise<void> {
     try {
         const id = parseInt(req.params.id);
-
-        // Проверяем права доступа к проекту для авторизованных пользователей
-        const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId !== null) {
-            const hasAccess = await storage.hasProjectAccess(id, ownerId);
-            if (!hasAccess) {
-                res.status(403).json({ message: "Нет прав доступа к проекту" });
-                return;
-            }
-        }
 
         const project = await storage.getBotProject(id);
 

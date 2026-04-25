@@ -3,7 +3,7 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на запуск бота для указанного проекта.
- * Включает проверку прав доступа к проекту для авторизованных пользователей.
+ * Проверка доступа выполняется middleware requireProjectAccess.
  *
  * @module botManagement/handlers/botStartHandler
  */
@@ -11,7 +11,6 @@
 import type { Request, Response } from 'express';
 import { startBot } from '../../../bots/startBot';
 import { storage } from '../../../storages/storage';
-import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 
 /**
  * Нормализует tokenId из тела запроса.
@@ -48,16 +47,6 @@ function parseTokenId(raw: unknown): number | undefined {
 export async function handleBotStart(req: Request, res: Response): Promise<void> {
     try {
         const projectId = parseInt(req.params.id);
-
-        // Проверяем права доступа к проекту для авторизованных пользователей
-        const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId !== null) {
-            const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-            if (!hasAccess) {
-                res.status(403).json({ message: "Нет прав доступа к проекту" });
-                return;
-            }
-        }
 
         const { token } = req.body;
         const tokenId = parseTokenId(req.body.tokenId);

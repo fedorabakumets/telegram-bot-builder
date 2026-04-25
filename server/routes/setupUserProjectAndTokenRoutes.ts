@@ -8,6 +8,7 @@
  */
 
 import type { Express } from "express";
+import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { getProjectsHandler } from "./userProjectsTokens/handlers/projects/getProjectsHandler";
 import { getBotProjectsHandler } from "./userProjectsTokens/handlers/projects/getBotProjectsHandler";
 import { getBotProjectDetailHandler } from "./userProjectsTokens/handlers/projects/getBotProjectDetailHandler";
@@ -42,27 +43,27 @@ import { removeCollaboratorHandler } from "./userProjectsTokens/handlers/collabo
 export function setupUserProjectAndTokenRoutes(app: Express): void {
     app.get("/api/user/projects", getProjectsHandler);
     app.get("/api/bot/projects", getBotProjectsHandler);
-    app.get("/api/bot/projects/:id", getBotProjectDetailHandler);
+    app.get("/api/bot/projects/:id", requireProjectAccess, getBotProjectDetailHandler);
     app.post("/api/bot/projects", createBotProjectHandler);
     app.post("/api/bot/projects/import", importBotProjectHandler);
-    app.patch("/api/bot/projects/:id", updateBotProjectHandler);
-    app.delete("/api/bot/projects/:id", deleteBotProjectHandler);
+    app.patch("/api/bot/projects/:id", requireProjectAccess, updateBotProjectHandler);
+    app.delete("/api/bot/projects/:id", requireProjectAccess, deleteBotProjectHandler);
     app.post("/api/user/projects", createProjectHandler);
     app.patch("/api/user/projects/:id", updateProjectHandler);
     app.delete("/api/user/projects/:id", deleteProjectHandler);
 
     app.get("/api/user/tokens", getTokensHandler);
-    app.get("/api/bot/projects/:id/tokens", getBotProjectTokensHandler);
-    app.post("/api/bot/projects/:id/tokens", createBotTokenHandler);
+    app.get("/api/bot/projects/:id/tokens", requireProjectAccess, getBotProjectTokensHandler);
+    app.post("/api/bot/projects/:id/tokens", requireProjectAccess, createBotTokenHandler);
     app.delete("/api/bot/tokens/:tokenId", deleteBotTokenHandler);
     app.get("/api/bot/tokens/:tokenId/stats", getTokenStatsHandler);
     app.get("/api/bot/tokens/:tokenId/users", getBotTokenUsersHandler);
     app.get("/api/bot/tokens/:tokenId/users/:userId", getBotTokenUserHandler);
     app.post("/api/user/tokens", createTokenHandler);
 
-    app.get("/api/bot/projects/:id/collaborators", getCollaboratorsHandler);
-    app.post("/api/bot/projects/:id/collaborators", addCollaboratorHandler);
-    app.delete("/api/bot/projects/:id/collaborators/:userId", removeCollaboratorHandler);
+    app.get("/api/bot/projects/:id/collaborators", requireProjectAccess, getCollaboratorsHandler);
+    app.post("/api/bot/projects/:id/collaborators", requireProjectAccess, addCollaboratorHandler);
+    app.delete("/api/bot/projects/:id/collaborators/:userId", requireProjectAccess, removeCollaboratorHandler);
     app.patch("/api/user/tokens/:id", updateTokenHandler);
     app.delete("/api/user/tokens/:id", deleteTokenHandler);
 }
