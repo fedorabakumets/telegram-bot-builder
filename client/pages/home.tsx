@@ -11,9 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Bot, Edit, Trash2, Calendar, User, Download, Shield } from 'lucide-react';
+import { Plus, Bot, Edit, Trash2, Calendar, User, Download } from 'lucide-react';
 import { ThemeToggle } from '@/components/editor/header/components/theme-toggle';
-import { TelegramAuth } from '@/components/editor/telegram-client/telegram-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import type { BotProject } from '@shared/schema';
@@ -48,7 +47,6 @@ type CreateProjectForm = z.infer<typeof createProjectSchema>;
 export default function Home() {
   const [, setLocation] = useLocation();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -258,10 +256,6 @@ export default function Home() {
           </div>
           
           <div className="flex space-x-2">
-            <Button variant="outline" onClick={() => setIsAuthDialogOpen(true)}>
-              <Shield className="h-4 w-4 mr-2" />
-              Авторизация Telegram
-            </Button>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -420,17 +414,6 @@ export default function Home() {
           </div>
         )}
       </main>
-      <TelegramAuth 
-        open={isAuthDialogOpen} 
-        onOpenChange={setIsAuthDialogOpen}
-        onSuccess={() => {
-          toast({
-            title: "Авторизация успешна",
-            description: "Вы успешно авторизовали свой Telegram клиент.",
-          });
-          setIsAuthDialogOpen(false);
-        }}
-      />
     </div>
   );
 }
